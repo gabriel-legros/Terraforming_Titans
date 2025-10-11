@@ -226,6 +226,11 @@
     color: #ffffff;
     border: 1px solid #444;
 }
+.dark-mode .galaxy-operations-launch__auto-threshold {
+    background: rgba(10, 18, 30, 0.85);
+    color: #f0f7ff;
+    border-color: rgba(124, 176, 244, 0.4);
+}
 .dark-mode .research-item {
     background-color: #2d2d2d;
     border-color: #444;

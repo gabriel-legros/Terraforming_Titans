@@ -584,7 +584,7 @@ const GalaxyOperationUI = (() => {
 
         const autoLaunchThresholdSuffix = doc.createElement('span');
         autoLaunchThresholdSuffix.className = 'galaxy-operations-launch__auto-suffix';
-        autoLaunchThresholdSuffix.textContent = '× of enemy defense';
+        autoLaunchThresholdSuffix.textContent = 'times enemy defense';
         autoLaunchLabel.appendChild(autoLaunchThresholdSuffix);
 
         launchControls.appendChild(autoLaunchLabel);
@@ -760,7 +760,7 @@ const GalaxyOperationUI = (() => {
         if (operationsAutoThresholdInput) {
             const thresholdValue = getAutoLaunchThreshold();
             operationsAutoThresholdInput.value = formatAutoThresholdDisplay(thresholdValue);
-            operationsAutoThresholdInput.disabled = true;
+            operationsAutoThresholdInput.disabled = false;
         }
 
         const storedAutoEnabled = selectedKey ? getOperationAutoState(selectedKey) : false;
@@ -779,8 +779,8 @@ const GalaxyOperationUI = (() => {
             operationsProgressFill.style.width = '0%';
             operationsProgressLabel.textContent = '';
             if (operationsAutoCheckbox) {
-            operationsAutoCheckbox.disabled = true;
-            operationsAutoCheckbox.checked = false;
+                operationsAutoCheckbox.disabled = true;
+                operationsAutoCheckbox.checked = false;
             }
             if (operationsAutoThresholdInput) {
                 operationsAutoThresholdInput.disabled = true;

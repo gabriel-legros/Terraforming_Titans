@@ -935,8 +935,15 @@
 }
 
 .galaxy-operations-launch__auto-threshold {
-  width: 60px;
-  min-width: 60px;
+  width: 62px;
+  min-width: 62px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(124, 176, 244, 0.4);
+  background: rgba(10, 18, 30, 0.85);
+  color: #f0f7ff;
+  box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
 }
 
 .galaxy-operations-launch__button {
