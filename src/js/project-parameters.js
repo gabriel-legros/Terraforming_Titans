@@ -61,15 +61,15 @@ const projectParameters = {
     category :"resources",
     cost: {
     },
-    duration: 180000,  // Duration of the project in milliseconds
+    duration: 60000,  // Duration of the project in milliseconds
     description: "Use chemical rockets to import colonists",
     repeatable: true,  // Flag indicating if the project is repeatable
-    maxRepeatCount: Infinity,  // Maximum of 5 repeats allowed
+    maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
       resourceGain: {
         colony: {
-          colonists: 10
+          colonists: 5
         }
       }
     }
