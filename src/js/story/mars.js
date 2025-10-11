@@ -536,7 +536,7 @@ var progressMars = {
         id: "chapter1.24b",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror—think of it as Mars wearing a fancy white tuxedo that bounces all the sunlight back to the party.  0 absorbs all the light, like a black hole in formal wear.  In our case, we want to warm Mars, so lowering the albedo can help—get that tuxedo a little dusty, if you catch my drift.  Just a warning though : life, water, ice might end up covering up your dust later on, turning our little black dress number back into a winter wonderland.'",
+        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror—like a shiny new penny that bounces sunlight right back where it came from.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, turning our heat-absorbing sponge back into a reflective penny again.'",
         prerequisites: ["chapter1.24"],
         objectives: [{
           type: 'collection',
