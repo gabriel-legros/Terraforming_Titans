@@ -969,14 +969,24 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
 
 
 
+const ATMOSPHERIC_GAS_IMPORTS = new Set(['carbonDioxide', 'inertGas', 'hydrogen']);
+
 function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
   const gainArray = [];
   const suffix = perSecond ? '/s' : '';
+  const pressureSuffix = `Pa${suffix}`;
   for (const category in totalResourceGain) {
     for (const resource in totalResourceGain[category]) {
       const resourceDisplayName = resources[category][resource].displayName ||
         resource.charAt(0).toUpperCase() + resource.slice(1);
-      gainArray.push(`${resourceDisplayName}: ${formatNumber(totalResourceGain[category][resource], true)}${suffix}`);
+      const amount = totalResourceGain[category][resource];
+      let entry = `${resourceDisplayName}: ${formatNumber(amount, true)}${suffix}`;
+      if (category === 'atmospheric' && ATMOSPHERIC_GAS_IMPORTS.has(resource)) {
+        const { gravity, radius } = terraforming.celestialParameters;
+        const pressure = calculateAtmosphericPressure(amount, gravity, radius);
+        entry += ` / ${formatNumber(pressure, true, 1, true)}${pressureSuffix}`;
+      }
+      gainArray.push(entry);
     }
   }
   return `Total Gain: ${gainArray.join(', ')}`;
