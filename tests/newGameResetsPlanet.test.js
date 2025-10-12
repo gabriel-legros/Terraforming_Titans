@@ -36,6 +36,8 @@ describe('new game resets to Mars', () => {
     doc.getElementsByClassName = () => [];
     doc.addEventListener = () => {};
     doc.removeEventListener = () => {};
+    doc.body.appendChild = () => nullElement;
+    doc.body.removeChild = () => nullElement;
 
     const originalWindow = global.window;
     const originalDocument = global.document;

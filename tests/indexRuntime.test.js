@@ -38,6 +38,8 @@ describe('index.html runtime', () => {
     doc.querySelectorAll = () => [];
     doc.getElementsByClassName = () => [];
     doc.addEventListener = () => {};
+    doc.body.appendChild = () => nullElement;
+    doc.body.removeChild = () => nullElement;
 
     const originalWindow = global.window;
     const originalDocument = global.document;
