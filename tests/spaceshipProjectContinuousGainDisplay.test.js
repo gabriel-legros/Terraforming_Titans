@@ -112,4 +112,116 @@ describe('SpaceshipProject continuous total gain UI', () => {
     const text = ctx.projectElements.waterImport.totalGainElement.textContent;
     expect(text).toBe('Total Gain: Ice: 2000000/s');
   });
+
+  test('atmospheric import shows pressure totals', () => {
+    const dom = new JSDOM(`<!DOCTYPE html><div class="projects-subtab-content-wrapper"><div id="resources-projects-list" class="projects-list"></div></div>`, { runScripts: 'outside-only' });
+
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.capitalizeFirstLetter = str => str.charAt(0).toUpperCase() + str.slice(1);
+    ctx.formatNumber = n => n.toString();
+    ctx.formatBigInteger = n => n.toString();
+    ctx.projectElements = {};
+    ctx.resources = {
+      atmospheric: {
+        inertGas: { displayName: 'Nitrogen', value: 0, increase() {}, decrease() {} },
+      },
+      special: { spaceships: { value: 50 } }
+    };
+    ctx.shipEfficiency = 1;
+    ctx.terraforming = { celestialParameters: { gravity: 1, radius: 1 } };
+    ctx.calculateAtmosphericPressure = (mass, gravity, radius) => mass * gravity * radius;
+    ctx.EffectableEntity = EffectableEntity;
+    vm.createContext(ctx);
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projectsUI.js'), 'utf8');
+    vm.runInContext(uiCode + '; this.createProjectItem = createProjectItem; this.updateProjectUI = updateProjectUI; this.initializeProjectsUI = initializeProjectsUI; this.projectElements = projectElements;', ctx);
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const miningCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceMiningProject.js'), 'utf8');
+    vm.runInContext(miningCode + '; this.SpaceMiningProject = SpaceMiningProject;', ctx);
+
+    const config = {
+      name: 'nitrogenImport',
+      category: 'resources',
+      cost: {},
+      duration: 1000,
+      description: '',
+      repeatable: false,
+      maxRepeatCount: 1,
+      unlocked: true,
+      attributes: { spaceMining: true, costPerShip: {}, resourceGainPerShip: { atmospheric: { inertGas: 1000 } } }
+    };
+    const project = new ctx.SpaceMiningProject(config, 'nitrogenImport');
+    ctx.projectManager = { projects: { nitrogenImport: project }, isBooleanFlagSet: () => false, getProjectStatuses: () => Object.values({ nitrogenImport: project }) };
+
+    ctx.initializeProjectsUI();
+    ctx.createProjectItem(project);
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
+
+    project.assignSpaceships(50);
+    ctx.updateProjectUI('nitrogenImport');
+
+    const text = ctx.projectElements.nitrogenImport.totalGainElement.textContent;
+    expect(text).toBe('Total Gain: Nitrogen: 1000 / 1000Pa');
+  });
+
+  test('continuous atmospheric import shows pressure rate', () => {
+    const dom = new JSDOM(`<!DOCTYPE html><div class="projects-subtab-content-wrapper"><div id="resources-projects-list" class="projects-list"></div></div>`, { runScripts: 'outside-only' });
+
+    const ctx = dom.getInternalVMContext();
+    ctx.document = dom.window.document;
+    ctx.console = console;
+    ctx.capitalizeFirstLetter = str => str.charAt(0).toUpperCase() + str.slice(1);
+    ctx.formatNumber = n => n.toString();
+    ctx.formatBigInteger = n => n.toString();
+    ctx.projectElements = {};
+    ctx.resources = {
+      atmospheric: {
+        inertGas: { displayName: 'Nitrogen', value: 0, increase() {}, decrease() {} },
+      },
+      special: { spaceships: { value: 150 } }
+    };
+    ctx.shipEfficiency = 1;
+    ctx.terraforming = { celestialParameters: { gravity: 1, radius: 1 } };
+    ctx.calculateAtmosphericPressure = (mass, gravity, radius) => mass * gravity * radius;
+    ctx.EffectableEntity = EffectableEntity;
+    vm.createContext(ctx);
+
+    const projectsCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projects.js'), 'utf8');
+    vm.runInContext(projectsCode + '; this.Project = Project;', ctx);
+    const uiCode = fs.readFileSync(path.join(__dirname, '..', 'src/js', 'projectsUI.js'), 'utf8');
+    vm.runInContext(uiCode + '; this.createProjectItem = createProjectItem; this.updateProjectUI = updateProjectUI; this.initializeProjectsUI = initializeProjectsUI; this.projectElements = projectElements;', ctx);
+    const spaceshipCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceshipProject.js'), 'utf8');
+    vm.runInContext(spaceshipCode + '; this.SpaceshipProject = SpaceshipProject;', ctx);
+    const miningCode = fs.readFileSync(path.join(__dirname, '..', 'src/js/projects', 'SpaceMiningProject.js'), 'utf8');
+    vm.runInContext(miningCode + '; this.SpaceMiningProject = SpaceMiningProject;', ctx);
+
+    const config = {
+      name: 'nitrogenImport',
+      category: 'resources',
+      cost: {},
+      duration: 1000,
+      description: '',
+      repeatable: false,
+      maxRepeatCount: 1,
+      unlocked: true,
+      attributes: { spaceMining: true, costPerShip: {}, resourceGainPerShip: { atmospheric: { inertGas: 1000 } } }
+    };
+    const project = new ctx.SpaceMiningProject(config, 'nitrogenImport');
+    ctx.projectManager = { projects: { nitrogenImport: project }, isBooleanFlagSet: () => false, getProjectStatuses: () => Object.values({ nitrogenImport: project }) };
+
+    ctx.initializeProjectsUI();
+    ctx.createProjectItem(project);
+    ctx.projectElements = vm.runInContext('projectElements', ctx);
+
+    project.assignSpaceships(150);
+    ctx.updateProjectUI('nitrogenImport');
+
+    const text = ctx.projectElements.nitrogenImport.totalGainElement.textContent;
+    expect(text).toBe('Total Gain: Nitrogen: 150000/s / 150000Pa/s');
+  });
 });
