@@ -2464,6 +2464,44 @@ function clearIncomingAttackPanel(cache) {
     }
 }
 
+function parseGalaxySectorKey(key) {
+    if (!key) {
+        return null;
+    }
+    const parts = String(key).split(',');
+    if (parts.length !== 2) {
+        return null;
+    }
+    const q = Number(parts[0]);
+    const r = Number(parts[1]);
+    if (!Number.isFinite(q) || !Number.isFinite(r)) {
+        return null;
+    }
+    return { q, r };
+}
+
+function handleIncomingAttackSectorClick(event) {
+    const button = event?.currentTarget;
+    if (!button || !galaxyUICache) {
+        return;
+    }
+    const key = button.dataset ? button.dataset.sectorKey : '';
+    if (!key) {
+        return;
+    }
+    const manager = galaxyManager;
+    if (!manager || !manager.enabled) {
+        return;
+    }
+    const coordinates = parseGalaxySectorKey(key);
+    if (!coordinates) {
+        return;
+    }
+    const lookup = galaxyUICache.hexLookup;
+    const hex = lookup ? lookup.get(key) : null;
+    selectGalaxySector({ q: coordinates.q, r: coordinates.r, hex });
+}
+
 function ensureAttackCard(cache, attack) {
     const entries = cache.attackEntries;
     const key = attack.sectorKey || attack.attackerId;
@@ -2495,6 +2533,15 @@ function ensureAttackCard(cache, attack) {
     powerNode.className = 'galaxy-attack-card__power';
     const sectorNode = doc.createElement('span');
     sectorNode.className = 'galaxy-attack-card__sector';
+    const sectorLabel = doc.createElement('span');
+    sectorLabel.className = 'galaxy-attack-card__sector-label';
+    sectorLabel.textContent = 'Target: ';
+    const sectorButton = doc.createElement('button');
+    sectorButton.type = 'button';
+    sectorButton.className = 'galaxy-attack-card__sector-button';
+    sectorButton.addEventListener('click', handleIncomingAttackSectorClick);
+    sectorNode.appendChild(sectorLabel);
+    sectorNode.appendChild(sectorButton);
     details.appendChild(powerNode);
     details.appendChild(sectorNode);
 
@@ -2506,7 +2553,8 @@ function ensureAttackCard(cache, attack) {
         factionNode,
         timerNode,
         powerNode,
-        sectorNode
+        sectorNode,
+        sectorButton
     };
     entries.set(key, entry);
     return entry;
@@ -2530,7 +2578,18 @@ function updateIncomingAttackPanel(manager, cache) {
         record.timerNode.textContent = formatAttackCountdown(attack.remainingMs);
         const formattedPower = formatFleetValue(attack.power);
         record.powerNode.textContent = `Power: ${formattedPower}`;
-        record.sectorNode.textContent = `Target: ${attack.sectorName}`;
+        if (record.sectorButton) {
+            const sectorKey = attack.sectorKey || '';
+            const sectorName = attack.sectorName || 'Unknown sector';
+            record.sectorButton.textContent = sectorName;
+            record.sectorButton.dataset.sectorKey = sectorKey;
+            record.sectorButton.disabled = sectorKey === '';
+            if (sectorKey) {
+                record.sectorButton.setAttribute('aria-label', `View sector ${sectorName}`);
+            } else {
+                record.sectorButton.removeAttribute('aria-label');
+            }
+        }
         if (record.element.parentNode !== cache.attackList) {
             cache.attackList.appendChild(record.element);
         }
