@@ -704,6 +704,43 @@
   min-width: 140px;
 }
 
+.galaxy-attack-card__sector {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.galaxy-attack-card__sector-label {
+  flex: 0 0 auto;
+}
+
+.galaxy-attack-card__sector-button {
+  flex: 0 0 auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.galaxy-attack-card__sector-button:hover {
+  color: #fff2f2;
+}
+
+.galaxy-attack-card__sector-button:focus-visible {
+  outline: 2px solid rgba(255, 222, 222, 0.85);
+  outline-offset: 2px;
+}
+
+.galaxy-attack-card__sector-button:disabled {
+  cursor: default;
+  text-decoration: none;
+  opacity: 0.6;
+}
+
 .galaxy-defense-section {
   display: flex;
   flex-direction: column;
