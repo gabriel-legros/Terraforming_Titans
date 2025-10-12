@@ -370,6 +370,7 @@ class GalaxyManager extends EffectableEntity {
         if (this.operationManager) {
             this.operationManager.update(deltaMs);
         }
+        this.#updateIncomingAttackWarning();
     }
 
     enable(targetId, { autoSwitch = true } = {}) {
@@ -476,6 +477,7 @@ class GalaxyManager extends EffectableEntity {
             faction.updateFleetCapacity(this);
         });
         this.refreshUIVisibility();
+        this.#updateIncomingAttackWarning();
     }
 
     #serializeFleetUpgrades() {
@@ -522,6 +524,7 @@ class GalaxyManager extends EffectableEntity {
         }
         this.initialize();
         this.enable();
+        this.#updateIncomingAttackWarning();
     }
 
     getSector(q, r) {
@@ -831,7 +834,15 @@ class GalaxyManager extends EffectableEntity {
         if (!this.operationManager) {
             return null;
         }
-        return this.operationManager.startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance });
+        const operation = this.operationManager.startOperation({
+            sectorKey,
+            factionId,
+            assignedPower,
+            durationMs,
+            successChance
+        });
+        this.#updateIncomingAttackWarning();
+        return operation;
     }
 
     getTerraformedWorldCount() {
@@ -1083,6 +1094,37 @@ class GalaxyManager extends EffectableEntity {
         this.factions.forEach((faction) => {
             faction?.markBorderDirty?.();
         });
+    }
+
+    #updateIncomingAttackWarning() {
+        const setter = globalThis?.setSpaceIncomingAttackWarning;
+        if (!setter) {
+            return;
+        }
+        const operations = this.operationManager?.operations;
+        if (!operations || operations.size === 0) {
+            setter.call(globalThis, false);
+            return;
+        }
+        let hasIncomingAttack = false;
+        for (const operation of operations.values()) {
+            if (!operation || operation.status !== 'running') {
+                continue;
+            }
+            if (!operation.factionId || operation.factionId === galaxyUhfId) {
+                continue;
+            }
+            const sector = this.sectors.get(operation.sectorKey);
+            if (!sector) {
+                continue;
+            }
+            const uhfControl = Number(sector.getControlValue?.(galaxyUhfId)) || 0;
+            if (uhfControl > 0) {
+                hasIncomingAttack = true;
+                break;
+            }
+        }
+        setter.call(globalThis, hasIncomingAttack);
     }
 
     #updateSectorControl(sector, mutator) {
