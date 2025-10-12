@@ -166,6 +166,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 100,
     maintenanceFactor: 1,
+    automationBuildingsDropDown: ['fusionPowerPlant'],
     unlocked: false
   },
   superalloyFoundry: {
@@ -322,6 +323,7 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     aerostatReduction: 0.002,
+    automationBuildingsDropDown: ['superconductorFactory'],
     unlocked: false
   },
   dysonReceiver: {
