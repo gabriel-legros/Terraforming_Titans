@@ -177,6 +177,16 @@ class SpaceStorageProject extends SpaceshipProject {
     return { transfers, total };
   }
 
+  applyShipOperationRateTooltip(durationSeconds, includeWithdraw = false) {
+    if (durationSeconds <= 0) return;
+    this.pendingTransfers.forEach(t => {
+      if (t.mode !== 'store' && (!includeWithdraw || t.mode !== 'withdraw')) return;
+      const res = resources[t.category][t.resource];
+      const rate = t.amount / durationSeconds;
+      res.modifyRate(t.mode === 'store' ? -rate : rate, 'Space storage transfer', 'project');
+    });
+  }
+
   canStart() {
     const base = Object.getPrototypeOf(SpaceshipProject.prototype);
     return base.canStart.call(this);
@@ -215,13 +225,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationIsPaused = false;
     const durationSeconds = this.shipOperationStartingDuration / 1000;
     if (durationSeconds > 0) {
-      plan.transfers.forEach(t => {
-        if (t.mode === 'store') {
-          const res = resources[t.category][t.resource];
-          const rate = -t.amount / durationSeconds;
-          res.modifyRate(rate, 'Space storage transfer', 'project');
-        }
-      });
+      this.applyShipOperationRateTooltip(durationSeconds, this.shipOperationAutoStart);
     }
     return true;
   }
@@ -237,6 +241,12 @@ class SpaceStorageProject extends SpaceshipProject {
 
   updateShipOperation(deltaTime) {
     if (!this.shipOperationIsActive || this.shipOperationIsPaused) return;
+    if (this.shipOperationAutoStart) {
+      const durationSeconds = this.shipOperationStartingDuration / 1000;
+      if (durationSeconds > 0) {
+        this.applyShipOperationRateTooltip(durationSeconds, true);
+      }
+    }
     this.shipOperationRemainingTime -= deltaTime;
     if (this.shipOperationRemainingTime <= 0) {
       this.completeShipOperation();
@@ -308,7 +318,7 @@ class SpaceStorageProject extends SpaceshipProject {
       if (t.mode === 'withdraw') {
         const res = resources[t.category][t.resource];
         res.increase(t.amount);
-        if (durationSeconds > 0) {
+        if (!this.shipOperationAutoStart && durationSeconds > 0) {
           const rate = t.amount / durationSeconds;
           res.modifyRate(rate, 'Space storage transfer', 'project');
         }
