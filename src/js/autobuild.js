@@ -512,7 +512,7 @@ function autoBuild(buildings, delta = 0) {
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (building.autoBuildEnabled || building.autoActiveEnabled) {
-            const base = building.autoBuildBasis === 'workers' ? workerCap : population;
+            const base = building.getAutoBuildBase(population, workerCap, buildings);
             const targetCount = Math.ceil(((building.autoBuildPercent || 0)* base) / 100);
 
             buildingInfos.push({ building, targetCount });

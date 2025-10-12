@@ -63,7 +63,8 @@ class Building extends EffectableEntity {
         requiresProductivity,
         requiresLand,
         temperatureMaintenanceImmune,
-        aerostatReduction
+        aerostatReduction,
+        automationBuildingsDropDown
       } = config;
   
       this.name = buildingName;
@@ -91,8 +92,25 @@ class Building extends EffectableEntity {
         Number.isFinite(aerostatReduction) ? aerostatReduction : 0
       );
 
+      this.automationBuildingsDropDown = Array.isArray(automationBuildingsDropDown)
+        ? automationBuildingsDropDown.slice()
+        : null;
+
       this.updateResourceStorage();
     }
+
+  getAutoBuildBase(population, workerCap, collection) {
+    const basis = `${this.autoBuildBasis || 'population'}`;
+    if (basis === 'workers') {
+      return workerCap;
+    }
+    if (basis.startsWith('building:')) {
+      const targetCollection = collection || {};
+      const target = targetCollection[basis.slice(9)];
+      return target ? target.count : 0;
+    }
+    return population;
+  }
 
   // Internal: apply production/displayName for the active recipe (if configured)
   _applyRecipeMapping() {
