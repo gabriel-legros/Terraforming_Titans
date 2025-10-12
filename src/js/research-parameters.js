@@ -1047,6 +1047,21 @@ const researchParameters = {
         ],
       },
       {
+        id: 'surface_food_production',
+        name: 'Surface Food Production',
+        description: 'Surface Biomass can now produce food passively at a rate 0.01 food pack per ton of biomass.',
+        cost: { research: 1_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'surfaceFoodProduction',
+            value: true,
+          },
+        ],
+      },
+      {
         id: 'terraforming_sensor',
         name: 'Terraforming measurements',
         description: 'Unlocks the terraforming tab, which allows monitoring of terraforming parameters.',

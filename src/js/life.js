@@ -838,6 +838,21 @@ class LifeManager extends EffectableEntity {
               }
           }
       }
+
+      if (this.isBooleanFlagSet('surfaceFoodProduction')) {
+          const biomassResource = resources.surface?.biomass;
+          const foodResource = resources.colony?.food;
+          const biomassAmount = biomassResource?.value || 0;
+
+          if (foodResource && biomassAmount > 0) {
+              const foodPerSecond = biomassAmount * 0.01;
+              foodResource.modifyRate(foodPerSecond, 'Surface Biomass', 'life');
+
+              if (secondsMultiplier > 0) {
+                  foodResource.increase(foodPerSecond * secondsMultiplier);
+              }
+          }
+      }
   }
 
 
