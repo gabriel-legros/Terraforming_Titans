@@ -75,7 +75,7 @@ class DysonReceiver extends Building {
 
     const formattedCollectors = collectors.toLocaleString('en-US');
     const formattedCap = cap.toLocaleString('en-US');
-    tooltip.title = `Dyson receivers are capped by swarm collectors. ${formattedCollectors} collectors allow ${formattedCap} receivers.`;
+    tooltip.title = `Dyson receivers constructions are capped by swarm collectors, and you cannot build more than this cap. ${formattedCollectors} collectors allow ${formattedCap} receivers.`;
   }
 
   initUI(_, cache) {
