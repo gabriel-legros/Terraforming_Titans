@@ -17,6 +17,17 @@ const combinedBuildingRowCache = {};
 const structureUIElements = {};
 let structureUICacheInvalidated = true;
 
+function resolveAutoBuildBasisValue(structure, select) {
+  const basis = `${structure.autoBuildBasis || 'population'}`;
+  for (let i = 0; i < select.options.length; i += 1) {
+    if (select.options[i].value === basis) {
+      return basis;
+    }
+  }
+  structure.autoBuildBasis = 'population';
+  return 'population';
+}
+
 function rebuildStructureUICache() {
   buildingContainerIds.forEach(id => {
     const container = document.getElementById(id);
@@ -428,7 +439,15 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   workerOption.value = 'workers';
   workerOption.textContent = 'workers';
   autoBuildBasisSelect.appendChild(workerOption);
-  autoBuildBasisSelect.value = structure.autoBuildBasis || 'population';
+  if (Array.isArray(structure.automationBuildingsDropDown)) {
+    structure.automationBuildingsDropDown.forEach(name => {
+      const option = document.createElement('option');
+      option.value = `building:${name}`;
+      option.textContent = (buildings[name] && buildings[name].displayName) || name;
+      autoBuildBasisSelect.appendChild(option);
+    });
+  }
+  autoBuildBasisSelect.value = resolveAutoBuildBasisValue(structure, autoBuildBasisSelect);
   autoBuildBasisSelect.addEventListener('change', () => {
     structure.autoBuildBasis = autoBuildBasisSelect.value;
   });
@@ -530,7 +549,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setActiveButton.addEventListener('click', () => {
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
-    const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
+    const base = structure.getAutoBuildBase(pop, workerCap, buildings);
     const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
@@ -1025,7 +1044,7 @@ function updateDecreaseButtonText(button, buildCount) {
           els.autoBuildPriority.checked = structure.autoBuildPriority;
         }
 
-        const base = structure.autoBuildBasis === 'workers' ? workerCap : pop;
+        const base = structure.getAutoBuildBase(pop, workerCap, buildings);
         const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
         const targetEl = els.autoBuildTarget || document.getElementById(`${structure.name}-auto-build-target`);
         if (targetEl) {
@@ -1040,7 +1059,10 @@ function updateDecreaseButtonText(button, buildCount) {
         }
 
         if (els.autoBuildBasisSelect) {
-          els.autoBuildBasisSelect.value = structure.autoBuildBasis || 'population';
+          const newValue = resolveAutoBuildBasisValue(structure, els.autoBuildBasisSelect);
+          if (els.autoBuildBasisSelect.value !== newValue) {
+            els.autoBuildBasisSelect.value = newValue;
+          }
         }
         if (els.autoActiveCheckbox) {
           els.autoActiveCheckbox.checked = structure.autoActiveEnabled;

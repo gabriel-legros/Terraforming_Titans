@@ -28,6 +28,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    automationBuildingsDropDown: ['glassSmelter'],
     unlocked: false
   },
   iceHarvester: {
@@ -104,6 +105,7 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     aerostatReduction: 1,
+    automationBuildingsDropDown: ['sandQuarry'],
     unlocked: false
   },
   hydroponicFarm: {
