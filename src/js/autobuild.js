@@ -112,6 +112,25 @@ function cloneCostObject(cost) {
     return clone;
 }
 
+function resolveAutoBuildBase(structure, population, workerCap, collection) {
+    const baseMethod = structure?.getAutoBuildBase;
+    if (baseMethod?.call) {
+        return baseMethod.call(structure, population, workerCap, collection);
+    }
+
+    const basis = `${structure?.autoBuildBasis || 'population'}`;
+    if (basis === 'workers') {
+        return workerCap;
+    }
+
+    if (basis.startsWith('building:')) {
+        const target = collection?.[basis.slice(9)];
+        return target?.count || 0;
+    }
+
+    return population;
+}
+
 function resetAutoBuildPartialFlags(structures) {
     if (!structures) return;
     for (const name in structures) {
@@ -512,7 +531,7 @@ function autoBuild(buildings, delta = 0) {
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (building.autoBuildEnabled || building.autoActiveEnabled) {
-            const base = building.getAutoBuildBase(population, workerCap, buildings);
+            const base = resolveAutoBuildBase(building, population, workerCap, buildings);
             const targetCount = Math.ceil(((building.autoBuildPercent || 0)* base) / 100);
 
             buildingInfos.push({ building, targetCount });
@@ -618,6 +637,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         autoBuild,
         autobuildCostTracker,
+        resolveAutoBuildBase,
         captureAutoBuildSettings,
         restoreAutoBuildSettings,
         constructionOfficeState,
@@ -636,6 +656,7 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
     window.autoBuild = autoBuild;
     window.autobuildCostTracker = autobuildCostTracker;
+    window.resolveAutoBuildBase = resolveAutoBuildBase;
     window.captureAutoBuildSettings = captureAutoBuildSettings;
     window.restoreAutoBuildSettings = restoreAutoBuildSettings;
     window.constructionOfficeState = constructionOfficeState;
