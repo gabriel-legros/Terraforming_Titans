@@ -19,6 +19,18 @@ let journalObjectiveContainer = null;
 let journalNavContainerElement = null;
 let cachedJournalWorlds = null;
 let journalChapterMetaById = null;
+let collapsedJournalWorlds = new Set();
+
+const PRIMARY_DIRECTIVE_WORLD_ID = 'primary';
+const PRIMARY_DIRECTIVE_LABEL = 'Primary Directive';
+const PRIMARY_DIRECTIVE_CHAPTER_ID = 'chapter.primaryDirective';
+const PRIMARY_DIRECTIVE_CHAPTER_NUMBER = 0;
+const PRIMARY_DIRECTIVE_TITLE = 'Primary Directives';
+const PRIMARY_DIRECTIVE_LINES = [
+  'Directive 1: Establish a sustainable habitat on Mars for human colonization.',
+  'Directive 2: Ensure the safety and well-being of all colonists.',
+  'Directive 3: Maintain operational stability.'
+];
 
 if (typeof globalThis.requestAnimationFrame === 'undefined') {
   globalThis.requestAnimationFrame = cb =>
@@ -82,7 +94,6 @@ function ensureJournalWorldData() {
   if (cachedJournalWorlds && journalChapterMetaById) {
     return cachedJournalWorlds;
   }
-  cachedJournalWorlds = [];
   journalChapterMetaById = new Map();
   const worlds = [
     { id: 'mars', label: 'Mars', source: progressMars },
@@ -92,6 +103,7 @@ function ensureJournalWorldData() {
     { id: 'vega2', label: 'Vega-2', source: progressVega2 },
     { id: 'venus', label: 'Venus', source: progressVenus }
   ].filter(world => world.source && Array.isArray(world.source.chapters));
+  const standardWorlds = [];
   worlds.forEach(world => {
     const chapters = world.source.chapters;
     chapters.forEach(chapter => {
@@ -99,12 +111,19 @@ function ensureJournalWorldData() {
         journalChapterMetaById.set(chapter.id, { worldId: world.id, chapter: chapter.chapter });
       }
     });
-    cachedJournalWorlds.push({
+    standardWorlds.push({
       id: world.id,
       label: world.label,
       chapters
     });
   });
+  const directiveChapter = { id: PRIMARY_DIRECTIVE_CHAPTER_ID, chapter: PRIMARY_DIRECTIVE_CHAPTER_NUMBER, title: PRIMARY_DIRECTIVE_TITLE };
+  journalChapterMetaById.set(PRIMARY_DIRECTIVE_CHAPTER_ID, { worldId: PRIMARY_DIRECTIVE_WORLD_ID, chapter: PRIMARY_DIRECTIVE_CHAPTER_NUMBER });
+  cachedJournalWorlds = [{
+    id: PRIMARY_DIRECTIVE_WORLD_ID,
+    label: PRIMARY_DIRECTIVE_LABEL,
+    chapters: [directiveChapter]
+  }].concat(standardWorlds);
   return cachedJournalWorlds;
 }
 
@@ -112,6 +131,7 @@ function buildJournalIndex() {
   const worlds = ensureJournalWorldData();
   journalIndexContainer.innerHTML = '';
   const seenByWorld = new Map();
+  const unlockedChaptersByWorld = new Map();
   journalHistorySources.forEach(source => {
     if (source && source.type === 'chapter') {
       if (journalChapterMetaById) {
@@ -121,6 +141,10 @@ function buildJournalIndex() {
             seenByWorld.set(meta.worldId, new Set());
           }
           seenByWorld.get(meta.worldId).add(meta.chapter);
+          if (!unlockedChaptersByWorld.has(meta.worldId)) {
+            unlockedChaptersByWorld.set(meta.worldId, new Set());
+          }
+          unlockedChaptersByWorld.get(meta.worldId).add(meta.chapter);
         }
       }
     }
@@ -129,6 +153,9 @@ function buildJournalIndex() {
   worlds.forEach(world => {
     const block = document.createElement('div');
     block.className = 'journal-index-world';
+    if (collapsedJournalWorlds.has(world.id)) {
+      block.classList.add('collapsed');
+    }
 
     const header = document.createElement('button');
     header.type = 'button';
@@ -136,8 +163,32 @@ function buildJournalIndex() {
     header.textContent = world.label;
     header.addEventListener('click', () => {
       block.classList.toggle('collapsed');
+      if (block.classList.contains('collapsed')) {
+        collapsedJournalWorlds.add(world.id);
+      } else {
+        collapsedJournalWorlds.delete(world.id);
+      }
     });
     block.appendChild(header);
+
+    if (world.id === PRIMARY_DIRECTIVE_WORLD_ID) {
+      const directivesList = document.createElement('ul');
+      directivesList.className = 'journal-index-chapters';
+      PRIMARY_DIRECTIVE_LINES.forEach(line => {
+        const item = document.createElement('li');
+        item.className = 'journal-index-directive';
+        item.textContent = line;
+        directivesList.appendChild(item);
+      });
+      block.appendChild(directivesList);
+      journalIndexContainer.appendChild(block);
+      return;
+    }
+
+    const unlockedForWorld = unlockedChaptersByWorld.get(world.id);
+    if (!unlockedForWorld || unlockedForWorld.size === 0) {
+      return;
+    }
 
     const list = document.createElement('ul');
     list.className = 'journal-index-chapters';
@@ -151,18 +202,16 @@ function buildJournalIndex() {
     });
     chaptersByNumber.sort((a, b) => a - b);
 
-    const unlockedForWorld = seenByWorld.get(world.id) || new Set();
     chaptersByNumber.forEach(chapterNumber => {
+      if (!unlockedForWorld.has(chapterNumber)) {
+        return;
+      }
       const item = document.createElement('li');
       item.className = 'journal-index-chapter';
-      item.textContent = `Chapter ${chapterNumber}`;
-      if (unlockedForWorld.has(chapterNumber)) {
-        item.addEventListener('click', () => {
-          jumpJournalToWorldChapter(world.id, chapterNumber);
-        });
-      } else {
-        item.classList.add('locked');
-      }
+      item.textContent = world.id === PRIMARY_DIRECTIVE_WORLD_ID ? PRIMARY_DIRECTIVE_TITLE : `Chapter ${chapterNumber}`;
+      item.addEventListener('click', () => {
+        jumpJournalToWorldChapter(world.id, chapterNumber);
+      });
       list.appendChild(item);
     });
 
@@ -202,6 +251,9 @@ function toggleJournalIndex() {
 }
 
 function jumpJournalToWorldChapter(worldId, chapterNumber) {
+  if (worldId === PRIMARY_DIRECTIVE_WORLD_ID) {
+    return;
+  }
   closeJournalIndex();
   const groups = getJournalChapterGroups();
   const index = groups.findIndex(group => group.worldId === worldId && group.chapterNum === chapterNumber);

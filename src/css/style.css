@@ -316,6 +316,10 @@ body.journal-collapsed .tab-content {
     transform: rotate(-90deg);
 }
 
+.journal-index-world.collapsed .journal-index-chapters {
+    display: none;
+}
+
 .journal-index-chapters {
     list-style: none;
     margin: 4px 0 0;
@@ -325,6 +329,10 @@ body.journal-collapsed .tab-content {
 .journal-index-chapter {
     margin: 4px 0;
     cursor: pointer;
+}
+
+.journal-index-directive {
+    cursor: default;
 }
 
 .journal-index-chapter.locked {
