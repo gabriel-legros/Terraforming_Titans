@@ -320,11 +320,25 @@ var progressMars = {
             }]
       },
       {
+        id: "chapter1.15b",
+        type: "journal",
+        chapter: 0,
+        narrative: "Glass production is essential for colonization.  Objective :  accumulate 10 tons of glass.",
+        prerequisites: ["chapter1.15"],
+        objectives: [{
+            type: 'collection',
+            resourceType: 'colony',
+            resource: 'glass',
+            quantity: 10
+        }],
+        reward: []
+      },
+      {
         id: "chapter1.16",
         type: "journal",
         chapter: 0,
         narrative: "Processing blueprint: solarPanel.btb...",
-        prerequisites: ["chapter1.15"],
+        prerequisites: ["chapter1.15b"],
         objectives: [
         ],
         reward: [{
