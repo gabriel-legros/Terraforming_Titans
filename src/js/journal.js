@@ -11,6 +11,14 @@ let journalTyping = false;  // flag indicating an entry is currently being typed
 let journalCurrentEventId = null; // id of the event whose text is typing
 let journalUserScrolling = false;
 let journalChapterIndex = 0;
+let journalIndexVisible = false;
+let journalIndexContainer = null;
+let journalIndexIcon = null;
+let journalEntriesContainer = null;
+let journalObjectiveContainer = null;
+let journalNavContainerElement = null;
+let cachedJournalWorlds = null;
+let journalChapterMetaById = null;
 
 if (typeof globalThis.requestAnimationFrame === 'undefined') {
   globalThis.requestAnimationFrame = cb =>
@@ -38,22 +46,28 @@ function getChapterNumberFromSource(src) {
 }
 
 function getJournalChapterGroups() {
+  ensureJournalWorldData();
   const groups = [];
   let current = null;
   let currentNum = null;
+  let currentWorldId = null;
   for (let i = 0; i < journalHistoryData.length; i++) {
     const src = journalHistorySources[i];
     const text = journalHistoryData[i];
     const chNum = getChapterNumberFromSource(src);
+    const meta = src && src.id ? journalChapterMetaById && journalChapterMetaById.get(src.id) : null;
+    const worldId = meta ? meta.worldId : null;
     if (chNum !== null) {
-      if (chNum !== currentNum) {
+      if (chNum !== currentNum || worldId !== currentWorldId) {
         currentNum = chNum;
-        current = chNum >= 0 ? { chapterId: src.id, chapterNum: chNum, entries: [], sources: [] } : null;
+        currentWorldId = worldId;
+        current = chNum >= 0 ? { chapterId: src.id, chapterNum: chNum, worldId, entries: [], sources: [] } : null;
         if (current) groups.push(current);
       }
     } else if (!current) {
       currentNum = null;
-      current = { chapterId: null, chapterNum: null, entries: [], sources: [] };
+      currentWorldId = null;
+      current = { chapterId: null, chapterNum: null, worldId: null, entries: [], sources: [] };
       // group without chapter number is not shown when navigating but keep for completeness
     }
     if (current) {
@@ -62,6 +76,138 @@ function getJournalChapterGroups() {
     }
   }
   return groups;
+}
+
+function ensureJournalWorldData() {
+  if (cachedJournalWorlds && journalChapterMetaById) {
+    return cachedJournalWorlds;
+  }
+  cachedJournalWorlds = [];
+  journalChapterMetaById = new Map();
+  const worlds = [
+    { id: 'mars', label: 'Mars', source: progressMars },
+    { id: 'titan', label: 'Titan', source: progressTitan },
+    { id: 'callisto', label: 'Callisto', source: progressCallisto },
+    { id: 'ganymede', label: 'Ganymede', source: progressGanymede },
+    { id: 'vega2', label: 'Vega-2', source: progressVega2 },
+    { id: 'venus', label: 'Venus', source: progressVenus }
+  ].filter(world => world.source && Array.isArray(world.source.chapters));
+  worlds.forEach(world => {
+    const chapters = world.source.chapters;
+    chapters.forEach(chapter => {
+      if (chapter && chapter.id) {
+        journalChapterMetaById.set(chapter.id, { worldId: world.id, chapter: chapter.chapter });
+      }
+    });
+    cachedJournalWorlds.push({
+      id: world.id,
+      label: world.label,
+      chapters
+    });
+  });
+  return cachedJournalWorlds;
+}
+
+function buildJournalIndex() {
+  const worlds = ensureJournalWorldData();
+  journalIndexContainer.innerHTML = '';
+  const seenByWorld = new Map();
+  journalHistorySources.forEach(source => {
+    if (source && source.type === 'chapter') {
+      if (journalChapterMetaById) {
+        const meta = journalChapterMetaById.get(source.id);
+        if (meta) {
+          if (!seenByWorld.has(meta.worldId)) {
+            seenByWorld.set(meta.worldId, new Set());
+          }
+          seenByWorld.get(meta.worldId).add(meta.chapter);
+        }
+      }
+    }
+  });
+
+  worlds.forEach(world => {
+    const block = document.createElement('div');
+    block.className = 'journal-index-world';
+
+    const header = document.createElement('button');
+    header.type = 'button';
+    header.className = 'journal-index-world-header';
+    header.textContent = world.label;
+    header.addEventListener('click', () => {
+      block.classList.toggle('collapsed');
+    });
+    block.appendChild(header);
+
+    const list = document.createElement('ul');
+    list.className = 'journal-index-chapters';
+
+    const chaptersByNumber = [];
+    world.chapters.forEach(chapter => {
+      const num = chapter.chapter;
+      if (num >= 0 && !chaptersByNumber.includes(num)) {
+        chaptersByNumber.push(num);
+      }
+    });
+    chaptersByNumber.sort((a, b) => a - b);
+
+    const unlockedForWorld = seenByWorld.get(world.id) || new Set();
+    chaptersByNumber.forEach(chapterNumber => {
+      const item = document.createElement('li');
+      item.className = 'journal-index-chapter';
+      item.textContent = `Chapter ${chapterNumber}`;
+      if (unlockedForWorld.has(chapterNumber)) {
+        item.addEventListener('click', () => {
+          jumpJournalToWorldChapter(world.id, chapterNumber);
+        });
+      } else {
+        item.classList.add('locked');
+      }
+      list.appendChild(item);
+    });
+
+    block.appendChild(list);
+    journalIndexContainer.appendChild(block);
+  });
+}
+
+function openJournalIndex() {
+  ensureJournalWorldData();
+  journalIndexVisible = true;
+  journalIndexIcon.classList.add('active');
+  journalIndexIcon.title = 'Hide journal index';
+  journalIndexContainer.classList.remove('hidden');
+  journalEntriesContainer.classList.add('hidden');
+  journalObjectiveContainer.classList.add('hidden');
+  journalNavContainerElement.classList.add('hidden');
+  buildJournalIndex();
+}
+
+function closeJournalIndex() {
+  journalIndexVisible = false;
+  journalIndexIcon.classList.remove('active');
+  journalIndexIcon.title = 'Show journal index';
+  journalIndexContainer.classList.add('hidden');
+  journalEntriesContainer.classList.remove('hidden');
+  journalObjectiveContainer.classList.remove('hidden');
+  journalNavContainerElement.classList.remove('hidden');
+}
+
+function toggleJournalIndex() {
+  if (journalIndexVisible) {
+    closeJournalIndex();
+    return;
+  }
+  openJournalIndex();
+}
+
+function jumpJournalToWorldChapter(worldId, chapterNumber) {
+  closeJournalIndex();
+  const groups = getJournalChapterGroups();
+  const index = groups.findIndex(group => group.worldId === worldId && group.chapterNum === chapterNumber);
+  if (index >= 0) {
+    displayJournalChapter(index);
+  }
 }
 
 function updateJournalNavArrows() {
@@ -143,6 +289,9 @@ function processNextJournalEntry() {
     journalChapterIndex = newGroupsLength - 1;
   }
   updateJournalNavArrows();
+  if (journalIndexVisible) {
+    buildJournalIndex();
+  }
 
   let index = 0;
   let lastTimestamp = 0;
@@ -228,6 +377,9 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
   }
   journalChapterIndex = getJournalChapterGroups().length - 1;
   updateJournalNavArrows();
+  if (journalIndexVisible) {
+    buildJournalIndex();
+  }
 }
 
 /**
@@ -253,6 +405,9 @@ function clearJournal() {
   if (journalContainer) journalContainer.scrollTop = 0;
   journalChapterIndex = getJournalChapterGroups().length - 1;
   updateJournalNavArrows();
+  if (journalIndexVisible) {
+    buildJournalIndex();
+  }
 }
 
 /**
@@ -285,6 +440,9 @@ function toggleJournal() {
   const showButton = document.getElementById('show-journal-button');
   journalCollapsed = !journalCollapsed;
   if (journalCollapsed) {
+    if (journalIndexVisible) {
+      closeJournalIndex();
+    }
     journal.classList.add('collapsed');
     showButton.classList.remove('hidden');
     updateShowJournalButtonPosition();
@@ -375,6 +533,14 @@ function mapSourcesToText(sources) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  journalEntriesContainer = document.getElementById('journal-entries');
+  journalIndexContainer = document.getElementById('journal-index');
+  journalIndexIcon = document.getElementById('journal-index-icon');
+  journalObjectiveContainer = document.getElementById('current-objective');
+  journalNavContainerElement = document.getElementById('journal-nav-container');
+  if (journalIndexIcon) {
+    journalIndexIcon.addEventListener('click', toggleJournalIndex);
+  }
   const toggleIcon = document.getElementById('journal-toggle-icon');
   if (toggleIcon) {
     toggleIcon.addEventListener('click', toggleJournal);
