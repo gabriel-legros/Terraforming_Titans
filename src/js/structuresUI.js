@@ -28,6 +28,25 @@ function resolveAutoBuildBasisValue(structure, select) {
   return 'population';
 }
 
+function getAutoBuildBaseValue(structure, population, workerCap, collection) {
+  const baseMethod = structure?.getAutoBuildBase;
+  if (baseMethod?.call) {
+    return baseMethod.call(structure, population, workerCap, collection);
+  }
+
+  const basis = `${structure?.autoBuildBasis || 'population'}`;
+  if (basis === 'workers') {
+    return workerCap;
+  }
+
+  if (basis.startsWith('building:')) {
+    const target = collection?.[basis.slice(9)];
+    return target?.count || 0;
+  }
+
+  return population;
+}
+
 function rebuildStructureUICache() {
   buildingContainerIds.forEach(id => {
     const container = document.getElementById(id);
@@ -549,7 +568,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setActiveButton.addEventListener('click', () => {
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
-    const base = structure.getAutoBuildBase(pop, workerCap, buildings);
+    const baseCollection = typeof buildings !== 'undefined' ? buildings : undefined;
+    const base = getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
     const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
@@ -1044,7 +1064,8 @@ function updateDecreaseButtonText(button, buildCount) {
           els.autoBuildPriority.checked = structure.autoBuildPriority;
         }
 
-        const base = structure.getAutoBuildBase(pop, workerCap, buildings);
+        const buildingCollection = typeof buildings !== 'undefined' ? buildings : structures;
+        const base = getAutoBuildBaseValue(structure, pop, workerCap, buildingCollection);
         const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
         const targetEl = els.autoBuildTarget || document.getElementById(`${structure.name}-auto-build-target`);
         if (targetEl) {
