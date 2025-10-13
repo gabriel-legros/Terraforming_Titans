@@ -286,24 +286,29 @@ body.journal-collapsed .tab-content {
 
 .journal-index {
     margin-top: 10px;
-    border-top: 1px solid #444;
+    border-top: 1px solid #ccc;
     padding-top: 8px;
 }
 
 .journal-index-world {
     margin-bottom: 10px;
+    background-color: #f3f3f3;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .journal-index-world-header {
     display: flex;
     align-items: center;
     width: 100%;
-    background: none;
+    background: linear-gradient(#fafafa, #e9e9e9);
     border: 0;
-    color: inherit;
+    color: #222;
     cursor: pointer;
     font-weight: 600;
-    padding: 4px 0;
+    padding: 6px 10px;
 }
 
 .journal-index-world-header::before {
@@ -322,16 +327,20 @@ body.journal-collapsed .tab-content {
 
 .journal-index-chapters {
     list-style: none;
-    margin: 4px 0 0;
-    padding: 0 0 0 18px;
+    margin: 0;
+    padding: 8px 12px 10px;
+    background-color: #fff;
 }
 
 .journal-index-chapter {
-    margin: 4px 0;
+    margin: 2px 0;
     cursor: pointer;
+    color: #333;
 }
 
 .journal-index-directive {
+    margin: 2px 0;
+    color: #333;
     cursor: default;
 }
 
