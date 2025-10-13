@@ -627,7 +627,6 @@ class GalacticMarketProject extends Project {
       }
     }
 
-    let sellScale = 1;
     sellTransactions.forEach((transaction) => {
       const resourceObject = resources[transaction.category]?.[transaction.resource];
       const availableAmount = resourceObject ? resourceObject.value : 0;
@@ -635,18 +634,12 @@ class GalacticMarketProject extends Project {
       if (requiredAmount > availableAmount) {
         this.shortfallLastTick = this.shortfallLastTick || requiredAmount > 0;
         if (availableAmount <= 0) {
-          sellScale = 0;
+          transaction.quantity = 0;
         } else {
-          sellScale = Math.min(sellScale, availableAmount / requiredAmount);
+          transaction.quantity *= availableAmount / requiredAmount;
         }
       }
     });
-
-    if (sellScale < 1) {
-      sellTransactions.forEach((transaction) => {
-        transaction.quantity *= sellScale;
-      });
-    }
 
     let totalSellRevenuePerSecond = 0;
     sellTransactions.forEach((transaction) => {
