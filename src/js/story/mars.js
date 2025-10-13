@@ -536,7 +536,7 @@ var progressMars = {
         id: "chapter1.24",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'A thousand colonists! You're cooking with colonists now—quite literally! The planet's even starting to notice. A little less ice, a little more... well, dust. But it's a start! While I have you on the line, now is a good time for me to remind you of some basic concepts.  The most important and fundamental part of any terraforming project is managing solar flux.  Basically, that's the amount of light you get from the sun.  Light is absorbed by Mars and becomes heat.'",
+        narrative: "Receiving transmission...\n  'A thousand colonists! You're cooking with colonists now—quite literally! The planet's even starting to notice. A little less ice, a little more... well, dust. But it's a start! While I have you on the line, now is a good time for me to remind you of some basic concepts.  The most important and fundamental part of any terraforming project is managing temperature.  What's your main source?  Solar flux.  Basically, that's the amount of light you get from the sun.  Light is absorbed by Mars and becomes heat.'",
         prerequisites: ["chapter1.23"],
         objectives: [{
           type: 'collection',
@@ -550,7 +550,7 @@ var progressMars = {
         id: "chapter1.24b",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror—like a shiny new penny that bounces sunlight right back where it came from.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, turning our heat-absorbing sponge back into a reflective penny again.'",
+        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror—like a shiny new penny that bounces sunlight right back where it came from.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, so this is not a permanent solution.'",
         prerequisites: ["chapter1.24"],
         objectives: [{
           type: 'collection',
@@ -586,7 +586,7 @@ var progressMars = {
         id: "chapter2.1",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend—talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows in the dark, radiating visible light like a cosmic spotlight.  Mars... not so much.  It can only radiate in the infrared, like a shy performer who only whispers in the dark.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6 are transparent to visible light, they are not transparent to infrared.  That means the radiated heat can't get out that easily—it's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. It's atmospheric entrapment at its finest!'",
+        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend—talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows in the dark, radiating visible light like a cosmic spotlight.  Mars... not so much.  It can only radiate in the infrared, like a sad dying lightbulb.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6, the stuff your factories produce, are transparent to visible light, they are not transparent to infrared.  That means the radiated heat can't get out that easily—it's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. It's atmospheric entrapment at its finest!'",
         prerequisites: ["chapter2.0"],
         objectives: [{
           type: 'collection',
@@ -668,7 +668,7 @@ var progressMars = {
         id: "chapter3.1",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'We have lichen now! It's a beautiful sight. In a slimy, green kind of way—like nature's questionable fashion choice, but hey, it's working! Now, let's make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2: Electric Boogaloo.  One more thing : as life begins to properly convert CO2 into O2, the planet might end up cooling again, with CO2 being a greenhouse gas and all.  Be careful, it's best to be a bit too hot than too cold at this stage, because if it starts snowing all over the planet the albedo will skyrocket, causing even more cooling. It's a chilly domino effect we don't want!'",
+        narrative: "Receiving transmission...\n  'We have lichen now! It's a beautiful sight. In a slimy, green kind of way—like nature's questionable fashion choice, but hey, it's working!  Here's the problem though : life on Earth, as we know, simply won't grow without liquid water.  It can survive fine, for very long durations even, but growing?  Nope.  It's time to make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2: Electric Boogaloo.  One more thing : as life begins to properly convert CO2 into O2, the planet might end up cooling again, with CO2 being a greenhouse gas and all.  Be careful, it's best to be a bit too hot than too cold at this stage, because if it starts snowing all over the planet the albedo will skyrocket, causing even more cooling. It's a chilly domino effect we don't want!'",
         prerequisites: ["chapter3.0"],
         objectives: [{
           type: 'terraforming',
@@ -694,8 +694,21 @@ var progressMars = {
         id: "chapter3.3",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Now we need more air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.  And a quick tip: your ice harvesters are about to become obsolete. Switch to pumps when you get a chance.'",
+        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Soon we can have grass, or even trees.  Next, we should start talking about air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.   Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water. It's not rocket science... well, it is, but you get the idea.'",
         prerequisites: ["chapter3.2"],
+        objectives: [{
+          type: 'terraforming',
+          terraformingParameter : 'pressure',
+          value: 5
+        }],
+        reward: []
+      },
+      {
+        id: "chapter3.3b",
+        type: "journal",
+        chapter: 3,
+        narrative: "MTC Advisory: As atmospheric pressure increases, consider implementing a magnetic shield to protect the emerging atmosphere from solar wind erosion. While not essential for basic terraforming completion, a magnetic shield will help maintain atmospheric integrity over time and is thus considered a critical requirement.",
+        prerequisites: ["chapter3.3"],
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'pressure',
@@ -707,8 +720,8 @@ var progressMars = {
         id: "chapter3.4",
         type: "journal",
         chapter: 3,
-        narrative: "Receiving transmission...\n  'You're almost there, H.O.P.E. Get all the numbers in the green, and you can send us your final report. Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water. It's not rocket science... well, it is, but you get the idea.'",
-        prerequisites: ["chapter3.3"],
+        narrative: "Receiving transmission...\n  'You're almost there, H.O.P.E. Get all the numbers in the green, and you can send us your final report.  We're very proud of you here on Earth.  You might even be single-handedly changing public opinion on AI.  Some people... nevermind.  I'll tell you later.'",
+        prerequisites: ["chapter3.3b"],
         objectives: [{
           type: 'terraforming',
           terraformingParameter : 'complete',
