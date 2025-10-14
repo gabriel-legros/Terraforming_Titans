@@ -1147,8 +1147,8 @@ function updateLifeBox() {
         <p>Surface radiation: <span id="surface-radiation">${formatRadiation(rad)}</span> mSv/day</p>
         <p id="radiation-penalty-row">Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
         <p>Gravity: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
-        <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>Equatorial gravity <span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span>: <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
-        <p id="gravity-penalty-row">Gravity penalty <span class="info-tooltip-icon" title="${GRAVITY_PENALTY_TOOLTIP_TEXT}">&#9432;</span>: <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
+        <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>Equatorial gravity<span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
+        <p id="gravity-penalty-row">Gravity penalty<span class="info-tooltip-icon" title="${GRAVITY_PENALTY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
       `;
     if ((radPenalty || 0) < 0.0001) {
       const penaltyRow = magnetosphereBox.querySelector('#radiation-penalty-row');
