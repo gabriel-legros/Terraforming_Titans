@@ -56,6 +56,7 @@ describe('GalaxyFactionAI sector defense scaling', () => {
             key: '0,0',
             q: 0,
             r: 0,
+            getValue: () => 100,
             getControlBreakdown: () => ([
                 { factionId: 'test', value: 0.6 },
                 { factionId: 'enemy', value: 0.4 }
@@ -106,5 +107,20 @@ describe('GalaxyFactionAI sector defense scaling', () => {
         faction.update(60000, manager);
 
         expect(manager.startOperation).not.toHaveBeenCalled();
+    });
+
+    it('scales sector defense with adoption and doctrine levels', () => {
+        const sector = createSector();
+        const manager = createManager(sector);
+        const faction = new GalaxyFactionAI({ id: 'test' });
+
+        const baseDefense = faction.getSectorDefense(sector, manager);
+        expect(baseDefense).toBe(60);
+
+        faction.electronicAdoption = 0.4;
+        faction.uhfDoctrineAdoption = 0.3;
+
+        const scaledDefense = faction.getSectorDefense(sector, manager);
+        expect(scaledDefense).toBeCloseTo(102);
     });
 });

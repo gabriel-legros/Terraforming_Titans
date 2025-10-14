@@ -54,6 +54,19 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         this.#distributeFleetToBorders(manager);
     }
 
+    getSectorDefense(sector, manager) {
+        const baseDefense = super.getSectorDefense(sector, manager);
+        if (!(baseDefense > 0)) {
+            return baseDefense;
+        }
+        const multiplier = this.#resolveDefenseAdoptionMultiplier();
+        if (!(multiplier > 0)) {
+            return baseDefense;
+        }
+        const scaledDefense = baseDefense * multiplier;
+        return scaledDefense > 0 ? scaledDefense : 0;
+    }
+
     updateFleetCapacity(manager) {
         super.updateFleetCapacity(manager);
         const doctrine = this.#updateDoctrineAdoption(manager);
