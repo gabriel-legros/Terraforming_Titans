@@ -260,3 +260,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Introduced a Bioworkforce advanced research that unlocks a lifeManager flag for future bioworkforce integration.
 - Galaxy sectors now advertise conquest rewards, with default Habitable World payouts configured in sector parameters.
 - Encapsulated the Import Resources project UI in a dedicated ImportResourcesProjectUI class and delegated specialized rendering logic from projectsUI.
+- Galaxy faction AI now scales defensive fleet reserves with their electronics adoption and UHF doctrine adaptation levels.
+- Galaxy faction AI sector defense now scales with their electronics adoption and UHF doctrine adaptation levels.
