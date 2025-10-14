@@ -484,15 +484,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (!(capacity > 0) || !(this.defensiveness > 0)) {
             return 0;
         }
-        const adoptionMultiplier = this.#resolveDefenseAdoptionMultiplier();
-        if (!(adoptionMultiplier > 0)) {
-            return 0;
-        }
-        const floor = capacity * this.defensiveness * adoptionMultiplier;
-        if (!(floor > 0)) {
-            return 0;
-        }
-        return floor > capacity ? capacity : floor;
+        return capacity * this.defensiveness;
     }
 
     #resolveDefenseAdoptionMultiplier() {
