@@ -37,6 +37,8 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             : Math.max(0, startingCount);
         const providedAdoption = this.#coerceAdoption(options?.electronicAdoption);
         this.electronicAdoption = providedAdoption !== null ? providedAdoption : 0;
+        const providedDoctrine = this.#coerceAdoption(options?.uhfDoctrineAdoption);
+        this.uhfDoctrineAdoption = providedDoctrine !== null ? providedDoctrine : 0;
         if (this.id === CEWINSII_FACTION_ID) {
             this.electronicAdoption = 0;
         }
@@ -54,6 +56,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
 
     updateFleetCapacity(manager) {
         super.updateFleetCapacity(manager);
+        const doctrine = this.#updateDoctrineAdoption(manager);
         const baseCapacity = Number.isFinite(this.fleetCapacity) ? Math.max(0, this.fleetCapacity) : 0;
         if (!(baseCapacity > 0)) {
             this.fleetCapacity = 0;
@@ -61,7 +64,8 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         }
         const adoption = this.#coerceAdoption(this.electronicAdoption);
         const sanitizedAdoption = adoption !== null ? adoption : 0;
-        const multiplier = 1 + sanitizedAdoption * 5;
+        const sanitizedDoctrine = doctrine !== null ? doctrine : 0;
+        const multiplier = 1 + sanitizedAdoption * 5 + sanitizedDoctrine * 5;
         if (!(multiplier > 0)) {
             this.fleetCapacity = baseCapacity;
             return;
@@ -526,6 +530,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
     toJSON() {
         const baseState = super.toJSON();
         baseState.electronicAdoption = this.#coerceAdoption(this.electronicAdoption) ?? 0;
+        baseState.uhfDoctrineAdoption = this.#coerceAdoption(this.uhfDoctrineAdoption) ?? 0;
         baseState.originalControlledSectorCount = this.#coerceOriginalCount(this.originalControlledSectorCount) ?? 0;
         return baseState;
     }
@@ -539,10 +544,12 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         const savedAdoption = this.#coerceAdoption(state?.electronicAdoption);
         if (this.id === CEWINSII_FACTION_ID) {
             this.electronicAdoption = 0;
-            return;
-        }
-        if (savedAdoption !== null && savedAdoption > this.electronicAdoption) {
+        } else if (savedAdoption !== null && savedAdoption > this.electronicAdoption) {
             this.electronicAdoption = savedAdoption;
+        }
+        const savedDoctrine = this.#coerceAdoption(state?.uhfDoctrineAdoption);
+        if (savedDoctrine !== null && savedDoctrine > this.uhfDoctrineAdoption) {
+            this.uhfDoctrineAdoption = savedDoctrine;
         }
     }
 
@@ -587,6 +594,34 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             return numeric;
         }
         return Math.min(1, numeric / 100);
+    }
+
+    #resolveUhfThreat(manager) {
+        if (!manager || typeof manager.getFaction !== 'function') {
+            return 0;
+        }
+        const uhfFaction = manager.getFaction(uhfFactionId);
+        if (!uhfFaction || typeof uhfFaction.getControlledSectorKeys !== 'function') {
+            return 0;
+        }
+        const controlledKeys = uhfFaction.getControlledSectorKeys(manager);
+        if (!Array.isArray(controlledKeys)) {
+            return 0;
+        }
+        return controlledKeys.length;
+    }
+
+    #updateDoctrineAdoption(manager) {
+        const current = this.#coerceAdoption(this.uhfDoctrineAdoption) ?? 0;
+        const threat = this.#resolveUhfThreat(manager);
+        if (!(threat > 0)) {
+            this.uhfDoctrineAdoption = current;
+            return current;
+        }
+        const normalized = Math.max(0, Math.min(1, threat / 40));
+        const updated = normalized > current ? normalized : current;
+        this.uhfDoctrineAdoption = updated;
+        return updated;
     }
 
     #coerceOriginalCount(value) {
