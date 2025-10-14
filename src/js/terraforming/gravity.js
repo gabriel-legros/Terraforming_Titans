@@ -7,7 +7,7 @@ function createNoGravityPenalty() {
   return { multiplier: 1, linearIncrease: 0, exponentialIncrease: 0 };
 }
 
-function calculateGravityCostPenalty(gravity) {
+function calculatePenaltyComponents(gravity) {
   if (!Number.isFinite(gravity)) {
     return createNoGravityPenalty();
   }
@@ -23,6 +23,69 @@ function calculateGravityCostPenalty(gravity) {
 
   const multiplier = 1 + linearIncrease + exponentialIncrease;
   return { multiplier, linearIncrease, exponentialIncrease };
+}
+
+function calculateGravityCostPenalty(input) {
+  if (Number.isFinite(input)) {
+    return calculatePenaltyComponents(input);
+  }
+
+  const params = input || {};
+  const gravity = Number.isFinite(params.gravity) ? params.gravity : null;
+  if (!Number.isFinite(gravity)) {
+    return createNoGravityPenalty();
+  }
+
+  const totalLand = Number.isFinite(params.totalLand) ? Math.max(params.totalLand, 0) : 0;
+  const usedLand = Number.isFinite(params.usedLand) ? Math.max(params.usedLand, 0) : 0;
+  const equatorialGravity = Number.isFinite(params.equatorialGravity)
+    ? params.equatorialGravity
+    : gravity;
+
+  const surfacePenalty = calculatePenaltyComponents(gravity);
+
+  if (!(totalLand > 0) || usedLand <= 0) {
+    return equatorialGravity === gravity
+      ? surfacePenalty
+      : calculatePenaltyComponents(equatorialGravity);
+  }
+
+  const landFraction = Math.min(1, usedLand / totalLand);
+  if (!(landFraction > 0)) {
+    return equatorialGravity === gravity
+      ? surfacePenalty
+      : calculatePenaltyComponents(equatorialGravity);
+  }
+
+  const equatorialPortion = Math.min(landFraction, 0.25);
+  const surfacePortion = Math.max(0, landFraction - 0.25);
+  const usedPortion = equatorialPortion + surfacePortion;
+
+  if (!(usedPortion > 0)) {
+    return equatorialGravity === gravity
+      ? surfacePenalty
+      : calculatePenaltyComponents(equatorialGravity);
+  }
+
+  const equatorialPenalty = equatorialGravity === gravity
+    ? surfacePenalty
+    : calculatePenaltyComponents(equatorialGravity);
+
+  const equatorialWeight = equatorialPortion / usedPortion;
+  const surfaceWeight = surfacePortion / usedPortion;
+
+  const linearIncrease =
+    equatorialPenalty.linearIncrease * equatorialWeight +
+    surfacePenalty.linearIncrease * surfaceWeight;
+  const exponentialIncrease =
+    equatorialPenalty.exponentialIncrease * equatorialWeight +
+    surfacePenalty.exponentialIncrease * surfaceWeight;
+
+  return {
+    multiplier: 1 + linearIncrease + exponentialIncrease,
+    linearIncrease,
+    exponentialIncrease,
+  };
 }
 
 function calculateApparentEquatorialGravity(params = {}) {
