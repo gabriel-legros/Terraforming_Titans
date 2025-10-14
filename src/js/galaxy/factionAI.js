@@ -492,7 +492,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         const doctrine = this.#coerceAdoption(this.uhfDoctrineAdoption);
         const sanitizedAdoption = adoption !== null ? adoption : 0;
         const sanitizedDoctrine = doctrine !== null ? doctrine : 0;
-        const bonus = sanitizedAdoption + sanitizedDoctrine;
+        const bonus = 5*sanitizedAdoption + 5*sanitizedDoctrine;
         if (!(bonus > 0)) {
             return 1;
         }
