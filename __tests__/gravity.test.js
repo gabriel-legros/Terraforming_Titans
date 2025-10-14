@@ -35,5 +35,55 @@ describe('gravity helpers', () => {
       expect(penalty.multiplier).toBeGreaterThan(1);
       expect(penalty.exponentialIncrease).toBeGreaterThan(0);
     });
+
+    it('weights equatorial and surface penalties by used land share', () => {
+      const gravity = 30;
+      const equatorialGravity = 26;
+      const totalLand = 100;
+      const usedLand = 30;
+
+      const blended = calculateGravityCostPenalty({
+        gravity,
+        equatorialGravity,
+        totalLand,
+        usedLand,
+      });
+
+      const equatorialPenalty = calculateGravityCostPenalty(equatorialGravity);
+      const surfacePenalty = calculateGravityCostPenalty(gravity);
+
+      const equatorialShare = 0.25 / (usedLand / totalLand);
+      const surfaceShare = (usedLand / totalLand - 0.25) / (usedLand / totalLand);
+
+      const expectedMultiplier =
+        equatorialShare * equatorialPenalty.multiplier +
+        surfaceShare * surfacePenalty.multiplier;
+      const expectedLinear =
+        equatorialShare * equatorialPenalty.linearIncrease +
+        surfaceShare * surfacePenalty.linearIncrease;
+      const expectedExponential =
+        equatorialShare * equatorialPenalty.exponentialIncrease +
+        surfaceShare * surfacePenalty.exponentialIncrease;
+
+      expect(blended.multiplier).toBeCloseTo(expectedMultiplier, 6);
+      expect(blended.linearIncrease).toBeCloseTo(expectedLinear, 6);
+      expect(blended.exponentialIncrease).toBeCloseTo(expectedExponential, 6);
+    });
+
+    it('falls back to the equatorial penalty when no land is in use', () => {
+      const gravity = 30;
+      const equatorialGravity = 26;
+      const totalLand = 100;
+
+      const penalty = calculateGravityCostPenalty({
+        gravity,
+        equatorialGravity,
+        totalLand,
+        usedLand: 0,
+      });
+
+      const equatorialPenalty = calculateGravityCostPenalty(equatorialGravity);
+      expect(penalty).toEqual(equatorialPenalty);
+    });
   });
 });

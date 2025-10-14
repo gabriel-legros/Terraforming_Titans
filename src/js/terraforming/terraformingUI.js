@@ -169,6 +169,12 @@ const EQUATORIAL_GRAVITY_TOOLTIP_TEXT = [
   'This value subtracts the centrifugal term (ω²R) so you see the effective pull felt on the surface.'
 ].join('\n');
 
+const GRAVITY_PENALTY_TOOLTIP_TEXT = [
+  'Gravity penalties blend equatorial and surface gravity based on developed land.',
+  'The first 25% of used land applies the equatorial gravity penalty, with any additional land using the full surface gravity.',
+  'For example, using 30% of land applies (25/30)×equatorial penalty plus (5/30)×surface gravity penalty.'
+].join('\n');
+
 function getTemperatureMaintenanceImmuneTooltip() {
   const buildingMap = globalThis?.buildings ?? {};
   const immuneNames = [];
@@ -1142,7 +1148,7 @@ function updateLifeBox() {
         <p id="radiation-penalty-row">Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
         <p>Gravity: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
         <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>Equatorial gravity <span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span>: <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
-        <p id="gravity-penalty-row">Gravity penalty: <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
+        <p id="gravity-penalty-row">Gravity penalty <span class="info-tooltip-icon" title="${GRAVITY_PENALTY_TOOLTIP_TEXT}">&#9432;</span>: <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
       `;
     if ((radPenalty || 0) < 0.0001) {
       const penaltyRow = magnetosphereBox.querySelector('#radiation-penalty-row');
