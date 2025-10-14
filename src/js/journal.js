@@ -21,6 +21,34 @@ let cachedJournalWorlds = null;
 let journalChapterMetaById = null;
 let collapsedJournalWorlds = new Set();
 
+const storySourceCache = new Map();
+
+function loadStoryModule(modulePath) {
+  try {
+    return require(modulePath);
+  } catch (err) {
+    return null;
+  }
+}
+
+function getStorySource(getter, modulePath) {
+  if (storySourceCache.has(modulePath)) {
+    return storySourceCache.get(modulePath);
+  }
+  let source;
+  try {
+    source = getter();
+  } catch (err) {
+    if (!err || err.name !== 'ReferenceError') {
+      throw err;
+    }
+    source = null;
+  }
+  const resolved = source || loadStoryModule(modulePath);
+  storySourceCache.set(modulePath, resolved);
+  return resolved;
+}
+
 const PRIMARY_DIRECTIVE_WORLD_ID = 'primary';
 const PRIMARY_DIRECTIVE_LABEL = 'Primary Directive';
 const PRIMARY_DIRECTIVE_CHAPTER_ID = 'chapter.primaryDirective';
@@ -96,12 +124,12 @@ function ensureJournalWorldData() {
   }
   journalChapterMetaById = new Map();
   const worlds = [
-    { id: 'mars', label: 'Mars', source: progressMars },
-    { id: 'titan', label: 'Titan', source: progressTitan },
-    { id: 'callisto', label: 'Callisto', source: progressCallisto },
-    { id: 'ganymede', label: 'Ganymede', source: progressGanymede },
-    { id: 'vega2', label: 'Vega-2', source: progressVega2 },
-    { id: 'venus', label: 'Venus', source: progressVenus }
+    { id: 'mars', label: 'Mars', source: getStorySource(() => progressMars, './story/mars.js') },
+    { id: 'titan', label: 'Titan', source: getStorySource(() => progressTitan, './story/titan.js') },
+    { id: 'callisto', label: 'Callisto', source: getStorySource(() => progressCallisto, './story/callisto.js') },
+    { id: 'ganymede', label: 'Ganymede', source: getStorySource(() => progressGanymede, './story/ganymede.js') },
+    { id: 'vega2', label: 'Vega-2', source: getStorySource(() => progressVega2, './story/vega2.js') },
+    { id: 'venus', label: 'Venus', source: getStorySource(() => progressVenus, './story/venus.js') }
   ].filter(world => world.source && Array.isArray(world.source.chapters));
   const standardWorlds = [];
   worlds.forEach(world => {
