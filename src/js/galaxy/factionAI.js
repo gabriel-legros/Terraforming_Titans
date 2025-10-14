@@ -471,7 +471,27 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (!(capacity > 0) || !(this.defensiveness > 0)) {
             return 0;
         }
-        return capacity * this.defensiveness;
+        const adoptionMultiplier = this.#resolveDefenseAdoptionMultiplier();
+        if (!(adoptionMultiplier > 0)) {
+            return 0;
+        }
+        const floor = capacity * this.defensiveness * adoptionMultiplier;
+        if (!(floor > 0)) {
+            return 0;
+        }
+        return floor > capacity ? capacity : floor;
+    }
+
+    #resolveDefenseAdoptionMultiplier() {
+        const adoption = this.#coerceAdoption(this.electronicAdoption);
+        const doctrine = this.#coerceAdoption(this.uhfDoctrineAdoption);
+        const sanitizedAdoption = adoption !== null ? adoption : 0;
+        const sanitizedDoctrine = doctrine !== null ? doctrine : 0;
+        const bonus = sanitizedAdoption + sanitizedDoctrine;
+        if (!(bonus > 0)) {
+            return 1;
+        }
+        return 1 + bonus;
     }
 
     #resolveOperationPower() {
