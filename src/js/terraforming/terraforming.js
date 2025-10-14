@@ -15,12 +15,35 @@ const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
 const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
 const KPA_PER_ATM = 101.325;
-const GRAVITY_LINEAR_THRESHOLD = 10;
-const GRAVITY_EXPONENTIAL_THRESHOLD = 20;
-const GRAVITY_LINEAR_RATE = 0.1;
-const GRAVITY_EXPONENTIAL_INTERVAL = 10;
 
-function createNoGravityPenalty() {
+let calculateApparentEquatorialGravityHelper;
+let calculateGravityCostPenaltyHelper;
+let createNoGravityPenaltyHelper;
+
+if (typeof module !== 'undefined' && module.exports) {
+  ({
+    calculateApparentEquatorialGravity: calculateApparentEquatorialGravityHelper,
+    calculateGravityCostPenalty: calculateGravityCostPenaltyHelper,
+    createNoGravityPenalty: createNoGravityPenaltyHelper,
+  } = require('./gravity.js'));
+} else if (typeof window !== 'undefined') {
+  calculateApparentEquatorialGravityHelper = window.calculateApparentEquatorialGravity;
+  calculateGravityCostPenaltyHelper = window.calculateGravityCostPenalty;
+  createNoGravityPenaltyHelper = window.createNoGravityPenalty;
+}
+
+function getApparentEquatorialGravity(params) {
+  if (calculateApparentEquatorialGravityHelper) {
+    return calculateApparentEquatorialGravityHelper(params);
+  }
+  const gravity = params && Number.isFinite(params.gravity) ? params.gravity : 0;
+  return gravity;
+}
+
+function getNoGravityPenalty() {
+  if (createNoGravityPenaltyHelper) {
+    return createNoGravityPenaltyHelper();
+  }
   return { multiplier: 1, linearIncrease: 0, exponentialIncrease: 0 };
 }
 
@@ -198,6 +221,8 @@ class Terraforming extends EffectableEntity{
     this.initialCelestialParameters.starLuminosity = starLuminosity;
     setStarLuminosity(starLuminosity);
 
+    this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
+
     this.lifeParameters = lifeParameters; // Load external life parameters
     this.zonalCoverageCache = {};
 
@@ -374,7 +399,7 @@ class Terraforming extends EffectableEntity{
       this.gravityPenaltyEnabled = Boolean(globalThis.currentPlanetParameters?.gravityPenaltyEnabled);
       this.gravityCostPenalty = this.gravityPenaltyEnabled
         ? this.calculateGravityCostPenalty()
-        : createNoGravityPenalty();
+        : getNoGravityPenalty();
 
   }
 
@@ -1181,6 +1206,8 @@ class Terraforming extends EffectableEntity{
       // Update temperature with the new heat-capacity-aware integration
       this.updateSurfaceTemperature(deltaTime, options);
 
+      this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
+
       // Update Resources will be called by resources.js
       //this.updateResources(deltaTime);
 
@@ -1439,21 +1466,9 @@ class Terraforming extends EffectableEntity{
 
     calculateGravityCostPenalty() {
       const gravity = this.celestialParameters.gravity;
-      if (!Number.isFinite(gravity)) {
-        return { multiplier: 1, linearIncrease: 0, exponentialIncrease: 0 };
-      }
-
-      const linearExcess = Math.max(0, gravity - GRAVITY_LINEAR_THRESHOLD);
-      const linearIncrease = linearExcess * GRAVITY_LINEAR_RATE;
-
-      let exponentialIncrease = 0;
-      if (gravity > GRAVITY_EXPONENTIAL_THRESHOLD) {
-        const exponent = (gravity - GRAVITY_EXPONENTIAL_THRESHOLD) / GRAVITY_EXPONENTIAL_INTERVAL;
-        exponentialIncrease = Math.pow(2, exponent) - 1;
-      }
-
-      const multiplier = 1 + linearIncrease + exponentialIncrease;
-      return { multiplier, linearIncrease, exponentialIncrease };
+      return calculateGravityCostPenaltyHelper
+        ? calculateGravityCostPenaltyHelper(gravity)
+        : getNoGravityPenalty();
     }
 
     calculateMaintenancePenalty() {
@@ -1599,7 +1614,7 @@ class Terraforming extends EffectableEntity{
           }
         }
       } else {
-        this.gravityCostPenalty = createNoGravityPenalty();
+        this.gravityCostPenalty = getNoGravityPenalty();
       }
 
       if (typeof buildings !== 'undefined') {
@@ -1987,6 +2002,8 @@ synchronizeGlobalResources() {
           this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
       }
 
+      this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
+
   } // End loadState
 
 } // End Terraforming Class
@@ -2002,11 +2019,13 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports.getEffectiveLifeFraction = getEffectiveLifeFraction;
   module.exports.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER_CONST;
   module.exports.buildAtmosphereContext = buildAtmosphereContext;
+  module.exports.calculateApparentEquatorialGravity = getApparentEquatorialGravity;
 } else {
   globalThis.setStarLuminosity = setStarLuminosity;
   globalThis.getStarLuminosity = getStarLuminosity;
   globalThis.Terraforming = Terraforming;
   globalThis.buildAtmosphereContext = buildAtmosphereContext;
+  globalThis.calculateApparentEquatorialGravity = (...args) => getApparentEquatorialGravity(...args);
 }
 
 

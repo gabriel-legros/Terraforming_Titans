@@ -164,6 +164,11 @@ const CLOUD_AND_HAZE_TOOLTIP_TEXT = [
   "Condensed clouds return vapor to the surface as rain, snow, or acid drizzle, while haze and calcite aerosols add their own reflective layers on top of the cloud contribution."
 ].join('\n');
 
+const EQUATORIAL_GRAVITY_TOOLTIP_TEXT = [
+  'Planetary rotation slightly reduces apparent gravity at the equator.',
+  'This value subtracts the centrifugal term (ω²R) so you see the effective pull felt on the surface.'
+].join('\n');
+
 function getTemperatureMaintenanceImmuneTooltip() {
   const buildingMap = globalThis?.buildings ?? {};
   const immuneNames = [];
@@ -1116,6 +1121,11 @@ function updateLifeBox() {
         ? terraforming.celestialParameters.gravity
         : 0;
       const gravityPenaltyData = terraforming.gravityCostPenalty || { multiplier: 1 };
+      const equatorialGravity = Number.isFinite(terraforming.apparentEquatorialGravity)
+        ? terraforming.apparentEquatorialGravity
+        : gravityValue;
+      const shouldShowEquatorialGravity = gravityValue > 10;
+      const equatorialGravityRowStyle = shouldShowEquatorialGravity ? '' : ' style="display: none;"';
       const gravityPenaltyMultiplier = Number.isFinite(gravityPenaltyData.multiplier)
         ? gravityPenaltyData.multiplier
         : 1;
@@ -1131,6 +1141,7 @@ function updateLifeBox() {
         <p>Surface radiation: <span id="surface-radiation">${formatRadiation(rad)}</span> mSv/day</p>
         <p id="radiation-penalty-row">Radiation penalty: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
         <p>Gravity: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
+        <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>Equatorial gravity <span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span>: <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
         <p id="gravity-penalty-row">Gravity penalty: <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
       `;
     if ((radPenalty || 0) < 0.0001) {
@@ -1154,6 +1165,8 @@ function updateLifeBox() {
       orbitalRadiation: magnetosphereBox.querySelector('#orbital-radiation'),
       surfaceRadiationPenalty: magnetosphereBox.querySelector('#surface-radiation-penalty'),
       gravityValue: magnetosphereBox.querySelector('#terraforming-gravity-value'),
+      equatorialGravityRow: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-row'),
+      equatorialGravityValue: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-value'),
       gravityPenaltyRow: magnetosphereBox.querySelector('#gravity-penalty-row'),
       gravityPenaltyValue: magnetosphereBox.querySelector('#terraforming-gravity-penalty')
     };
@@ -1169,6 +1182,8 @@ function updateLifeBox() {
     const orbitalRadiation = els.orbitalRadiation;
     const surfaceRadiationPenalty = els.surfaceRadiationPenalty;
     const gravityValue = els.gravityValue;
+    const equatorialGravityRow = els.equatorialGravityRow;
+    const equatorialGravityValue = els.equatorialGravityValue;
     const gravityPenaltyRow = els.gravityPenaltyRow;
     const gravityPenaltyValue = els.gravityPenaltyValue;
 
@@ -1200,11 +1215,25 @@ function updateLifeBox() {
       }
     }
 
+    let gravity = 0;
+    if (Number.isFinite(terraforming.celestialParameters.gravity)) {
+      gravity = terraforming.celestialParameters.gravity;
+    }
     if (gravityValue) {
-      const gravity = Number.isFinite(terraforming.celestialParameters.gravity)
-        ? terraforming.celestialParameters.gravity
-        : 0;
       gravityValue.textContent = formatNumber(gravity, false, 2);
+    }
+    if (equatorialGravityRow) {
+      if (gravity > 10) {
+        equatorialGravityRow.style.display = '';
+        if (equatorialGravityValue) {
+          const equatorialValue = Number.isFinite(terraforming.apparentEquatorialGravity)
+            ? terraforming.apparentEquatorialGravity
+            : gravity;
+          equatorialGravityValue.textContent = formatNumber(equatorialValue, false, 2);
+        }
+      } else {
+        equatorialGravityRow.style.display = 'none';
+      }
     }
 
     if (gravityPenaltyRow && gravityPenaltyValue) {
