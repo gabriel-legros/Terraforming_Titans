@@ -183,6 +183,7 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
 ## Updates
+- Galaxy factions now accumulate an irreversible UHF doctrine adaptation multiplier that scales with rising UHF threat and stacks with electronics adoption.
 - Added a `permanentProjectDisable` effect that removes projects from the UI and project manager updates when triggered.
 - Added a Mega Particle Accelerator advanced research that unlocks an infinitely repeatable Particle Accelerator megaproject.
 - Added a Surface Food Production research that lets surface biomass passively produce food once unlocked.
