@@ -39,13 +39,21 @@ class DayNightCycle {
       return {
         dayProgress: this.dayProgress,
         elapsedTime: this.elapsedTime,
+        dayDuration: this.dayDuration,
       };
     }
 
     // Method to load the state into DayNightCycle
   loadState(state) {
-    this.dayProgress = state.dayProgress || 0;
-    this.elapsedTime = state.elapsedTime || 0;
+    const safeState = state || {};
+    const { dayProgress = 0, elapsedTime = 0 } = safeState;
+    this.dayProgress = dayProgress;
+    this.elapsedTime = elapsedTime;
+
+    const duration = Number(safeState.dayDuration);
+    if (Number.isFinite(duration) && duration > 0) {
+      this.dayDuration = duration;
+    }
   }
 }
 
