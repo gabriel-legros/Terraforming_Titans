@@ -806,7 +806,7 @@ class Terraforming extends EffectableEntity{
 
     updateSurfaceTemperature(deltaTimeMs = 0, options = {}) {
         const groundAlbedo = this.luminosity.groundAlbedo;
-        const rotationPeriodH = this.celestialParameters.rotationPeriod || 24;
+        const rotationPeriodH = Math.abs(this.celestialParameters.rotationPeriod) || 24;
         const gSurface = this.celestialParameters.gravity || 9.81;
 
         const { composition, totalMass } = this.calculateAtmosphericComposition();
