@@ -39,7 +39,15 @@ function formatEnergy(J){
   return formatNumber(J / 86400);
 }
 
-function getRotHours(p){ return p && p.rotationPeriod>0?p.rotationPeriod:24; }
+function getRotationPeriodHours(p){
+  const period = p?.rotationPeriod;
+  return period && isFinite(period) ? period : 24;
+}
+
+function getRotHours(p){
+  const period = getRotationPeriodHours(p);
+  return Math.abs(period) || 24;
+}
 
 function spinDeltaV(Rkm,curH,tgtH){
   const R=Rkm*1e3,w1=2*Math.PI/(curH*3600),w2=2*Math.PI/(tgtH*3600);
@@ -48,7 +56,7 @@ function spinDeltaV(Rkm,curH,tgtH){
 
 function spinEnergyRemaining(p, Rkm, targetDays, tpRatio){
   const k = p.kInertia || 0.4;                 // allow parameter override
-  const curH = getRotHours(p);
+  const curH = getRotationPeriodHours(p);
   const dvEq = Math.abs(
         2*Math.PI/(targetDays*24*3600) - 2*Math.PI/(curH*3600)) * (Rkm*1e3);
   return k * p.mass * dvEq / tpRatio;
@@ -344,7 +352,7 @@ class PlanetaryThrustersProject extends Project{
     if(this.spinInvest){
       if(resetEnergy || this.spinStartDays===null){
         this.energySpentSpin=0;
-        this.spinStartDays=getRotHours(p)/24;
+        this.spinStartDays=getRotationPeriodHours(p)/24;
       }
       this.dVreq=spinDeltaV(p.radius,this.spinStartDays*24,this.tgtDays*24);
       return;
@@ -383,7 +391,7 @@ class PlanetaryThrustersProject extends Project{
     // If the project state says we escaped, mirror that onto the planet on load
     if(this.escapeComplete && p && !p.hasEscapedParent){ p.hasEscapedParent = true; }
 
-    this.el.rotNow.textContent = fmt(getRotHours(p)/24,false,3)+" days";
+    this.el.rotNow.textContent = fmt(getRotationPeriodHours(p)/24,false,3)+" days";
     // Show parent-centric radius when truly bound; heliocentric AU otherwise
     this.el.distNow.textContent = isBoundToParent(p)
       ? fmt(p.parentBody.orbitRadius||0,false,0)+" km"
@@ -406,7 +414,7 @@ class PlanetaryThrustersProject extends Project{
       }catch(e){ tgtDays=1; }
       this.tgtDays = tgtDays;
       if(p && p.radius){
-        const dv=spinDeltaV(p.radius,getRotHours(p),tgtDays*24);
+        const dv=spinDeltaV(p.radius,getRotationPeriodHours(p),tgtDays*24);
         this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
         this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,tgtDays,this.getThrustPowerRatio()));
       }
@@ -538,21 +546,36 @@ class PlanetaryThrustersProject extends Project{
     this.dVdone += dvTick;
 
     if(this.spinInvest){
-      const curHours = getRotHours(p);
-      const curDays = curHours / 24;
-      const sign = this.tgtDays < curDays ? 1 : -1;
-      const dOmega = sign * dvTick / (p.radius * 1e3);
-      const omega = 2 * Math.PI / (curHours * 3600) + dOmega;
-      let newPeriod = 2 * Math.PI / omega / 3600;
+      const radiusMeters = (p.radius || 0) * 1e3;
+      if(!radiusMeters){
+        this.spinInvest = false;
+        this.dVreq = this.dVdone = 0;
+        this.activeMode = null;
+        return;
+      }
+
+      const currentHours = getRotationPeriodHours(p);
       const targetHours = this.tgtDays * 24;
-      const overshoot = (sign > 0 && newPeriod < targetHours) ||
-                        (sign < 0 && newPeriod > targetHours);
+      const currentSign = currentHours < 0 ? -1 : 1;
+      const targetSign = targetHours < 0 ? -1 : 1;
+      const currentOmega = (2 * Math.PI) / (Math.abs(currentHours) * 3600);
+      const targetOmega = (2 * Math.PI) / (Math.max(Math.abs(targetHours), 1e-6) * 3600);
+      const signedCurrentOmega = currentOmega * currentSign;
+      const signedTargetOmega = targetOmega * targetSign;
+      const diff = signedTargetOmega - signedCurrentOmega;
+      const omegaStep = (dvTick / radiusMeters) * (diff >= 0 ? 1 : -1);
+      let nextOmega = signedCurrentOmega + omegaStep;
+      const nextDiff = signedTargetOmega - nextOmega;
+      const overshoot = diff >= 0 ? nextDiff <= 0 : nextDiff >= 0;
       if (overshoot || this.dVdone >= this.dVreq) {
-        newPeriod = targetHours;
+        nextOmega = signedTargetOmega;
         this.spinInvest = false;
         this.dVreq = this.dVdone = 0;
         this.activeMode = null;
       }
+      const magnitude = Math.abs(nextOmega);
+      const periodHours = magnitude ? (2 * Math.PI) / (magnitude * 3600) : Math.max(Math.abs(targetHours), 1e-6);
+      const newPeriod = nextOmega < 0 ? -periodHours : periodHours;
       p.rotationPeriod = newPeriod;
       if (typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
         const oldDur = dayNightCycle.dayDuration;
