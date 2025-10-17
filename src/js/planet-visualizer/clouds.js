@@ -95,15 +95,18 @@
       this._cloudBlobState = { items, lastDays: 0 };
     }
 
-    let days = 0;
+    let signedDays = 0;
     if (typeof dayNightCycle !== 'undefined' && dayNightCycle && typeof dayNightCycle.dayDuration === 'number') {
-      days = (dayNightCycle.elapsedTime || 0) / Math.max(1, dayNightCycle.dayDuration);
+      const duration = dayNightCycle.dayDuration;
+      const direction = Math.sign(duration || 1) || 1;
+      const magnitude = Math.max(1, Math.abs(duration));
+      signedDays = ((dayNightCycle.elapsedTime || 0) / magnitude) * direction;
     } else {
-      days = (performance.now() / 1000) / 60;
+      signedDays = (performance.now() / 1000) / 60;
     }
     const state = this._cloudBlobState;
-    const deltaDays = Math.max(0, Math.min(0.2, days - (state.lastDays || 0)));
-    state.lastDays = days;
+    const deltaDays = Math.max(-0.2, Math.min(0.2, signedDays - (state.lastDays || 0)));
+    state.lastDays = signedDays;
 
     const items = state.items;
     for (let i = 0; i < items.length; i++) {
