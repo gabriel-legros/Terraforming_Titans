@@ -11,23 +11,28 @@ const ESCAPE_L1_FACTOR = 1.0;             // scale of Hill-radius target for esc
 
 // rotationPeriodToDuration is defined globally in the browser but must be
 // required explicitly when running under Node.js for tests
-let rotationPeriodToDurationFunc = (typeof globalThis !== 'undefined' &&
-  globalThis.rotationPeriodToDuration) ? globalThis.rotationPeriodToDuration : null;
-try {
-  if (typeof require === 'function') {
-    ({ rotationPeriodToDuration: rotationPeriodToDurationFunc } = require('../day-night-cycle.js'));
-  }
-} catch (e) {}
-
-if (typeof makeCollapsibleCard === 'undefined') {
-  var makeCollapsibleCard = (typeof globalThis !== 'undefined' && globalThis.makeCollapsibleCard)
-    ? globalThis.makeCollapsibleCard
-    : null;
+let rotationPeriodToDurationFunc = null;
+if (typeof rotationPeriodToDuration === 'function') {
+  rotationPeriodToDurationFunc = rotationPeriodToDuration;
+} else {
   try {
-    if (!makeCollapsibleCard && typeof require === 'function') {
-      ({ makeCollapsibleCard } = require('../ui-utils.js'));
+    if (typeof require === 'function') {
+      ({ rotationPeriodToDuration: rotationPeriodToDurationFunc } = require('../day-night-cycle.js'));
     }
-  } catch (e) {}
+  } catch (error) {
+    rotationPeriodToDurationFunc = null;
+  }
+}
+
+let collapsibleCardFactory = typeof makeCollapsibleCard === 'function' ? makeCollapsibleCard : null;
+if (!collapsibleCardFactory) {
+  try {
+    if (typeof require === 'function') {
+      ({ makeCollapsibleCard: collapsibleCardFactory } = require('../ui-utils.js'));
+    }
+  } catch (error) {
+    collapsibleCardFactory = null;
+  }
 }
 
 /* ---------- helpers ---------------------------------------------------- */
@@ -35,22 +40,75 @@ const fmt=(n,int=false,d=0)=>isNaN(n)?"–":
   n.toLocaleString(undefined,int?{maximumFractionDigits:0}:
                              {minimumFractionDigits:d,maximumFractionDigits:d});
 
+const MIN_SPIN_DAYS = 0.1;
+
+function normalizeRotationState(p){
+  if(!p) return { hours:24, direction:1 };
+  let period = Number(p.rotationPeriod);
+  if(Number.isFinite(period) && period < 0){
+    period = Math.abs(period);
+    p.rotationPeriod = period;
+    p.rotationDirection = -1;
+  }
+  if(!Number.isFinite(period) || period <= 0){
+    period = 24;
+    p.rotationPeriod = period;
+  }
+  let direction = p.rotationDirection;
+  if(direction !== 1 && direction !== -1){
+    direction = 1;
+    p.rotationDirection = direction;
+  }
+  return { hours: period, direction };
+}
+
 function formatEnergy(J){
   return formatNumber(J / 86400);
 }
 
-function getRotHours(p){ return p && p.rotationPeriod>0?p.rotationPeriod:24; }
+function ensureRotationDirection(p){
+  return normalizeRotationState(p).direction;
+}
+
+function getRotHours(p){
+  return normalizeRotationState(p).hours;
+}
+
+function getSignedRotHours(p){
+  const state = normalizeRotationState(p);
+  return state.hours * state.direction;
+}
+
+function parseSpinTarget(raw){
+  const n=Number(raw);
+  if(!Number.isFinite(n)){
+    return { raw:1, sign:1, magnitude:1, hours:24, signedHours:24 };
+  }
+  const sign=n<0?-1:1;
+  const magnitude=Math.max(Math.abs(n),MIN_SPIN_DAYS);
+  const rawValue=sign*magnitude;
+  const hours=magnitude*24;
+  return { raw:rawValue, sign, magnitude, hours, signedHours:sign*hours };
+}
 
 function spinDeltaV(Rkm,curH,tgtH){
-  const R=Rkm*1e3,w1=2*Math.PI/(curH*3600),w2=2*Math.PI/(tgtH*3600);
+  const R=Rkm*1e3;
+  const sec1=curH*3600;
+  const sec2=tgtH*3600;
+  const w1=sec1!==0?2*Math.PI/sec1:0;
+  const w2=sec2!==0?2*Math.PI/sec2:0;
   return Math.abs((w2-w1)*R);
 }
 
 function spinEnergyRemaining(p, Rkm, targetDays, tpRatio){
   const k = p.kInertia || 0.4;                 // allow parameter override
-  const curH = getRotHours(p);
-  const dvEq = Math.abs(
-        2*Math.PI/(targetDays*24*3600) - 2*Math.PI/(curH*3600)) * (Rkm*1e3);
+  const curH = getSignedRotHours(p);
+  const target = parseSpinTarget(targetDays);
+  const secCur = curH * 3600;
+  const secTgt = target.signedHours * 3600;
+  const wCur = secCur !== 0 ? 2*Math.PI / secCur : 0;
+  const wTgt = secTgt !== 0 ? 2*Math.PI / secTgt : 0;
+  const dvEq = Math.abs(wTgt - wCur) * (Rkm*1e3);
   return k * p.mass * dvEq / tpRatio;
 }
 
@@ -150,7 +208,7 @@ class PlanetaryThrustersProject extends Project{
       <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
     </div>`;
     const spinCard=document.createElement('div');spinCard.className="info-card";spinCard.innerHTML=spinHTML;c.appendChild(spinCard);
-    if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(spinCard);
+    if (collapsibleCardFactory) collapsibleCardFactory(spinCard);
     spinCard.style.display=this.isCompleted?"block":"none";
 
     /* motion */
@@ -178,7 +236,7 @@ class PlanetaryThrustersProject extends Project{
       <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
     </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
-    if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(motCard);
+    if (collapsibleCardFactory) collapsibleCardFactory(motCard);
     motCard.style.display=this.isCompleted?"block":"none";
 
     /* power */
@@ -202,7 +260,7 @@ class PlanetaryThrustersProject extends Project{
       </div>
     </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
-    if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(pwrCard);
+    if (collapsibleCardFactory) collapsibleCardFactory(pwrCard);
     pwrCard.style.display=this.isCompleted?"block":"none";
 
     /* refs */
@@ -269,15 +327,12 @@ class PlanetaryThrustersProject extends Project{
   calcSpinCost(){
     const p = terraforming.celestialParameters;
     if(!p) return;
-    let tgt=1;
-    try{
-      const v=this.el.rotTarget&&this.el.rotTarget.value;
-      const n=parseFloat(v);
-      if(!isNaN(n)) tgt=n;
-    }catch(e){ tgt=1; }
-    const changed = tgt !== this.tgtDays;
-    this.tgtDays=tgt;
-    const dv=spinDeltaV(p.radius,getRotHours(p),this.tgtDays*24);
+    normalizeRotationState(p);
+    const parsed=this.el.rotTarget?parseSpinTarget(this.el.rotTarget.value):parseSpinTarget(this.tgtDays);
+    const changed = parsed.raw !== this.tgtDays;
+    this.tgtDays = parsed.raw;
+    if(this.el.rotTarget) this.el.rotTarget.value = this.tgtDays;
+    const dv=spinDeltaV(p.radius,getSignedRotHours(p),parsed.signedHours);
     this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
     this.el.rotE.textContent =formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio()));
     if(changed){
@@ -290,6 +345,7 @@ class PlanetaryThrustersProject extends Project{
   calcMotionCost(){
     const p = terraforming.celestialParameters;
     if(!p) return;
+    normalizeRotationState(p);
     // If we've escaped previously, ignore parent for preview and show heliocentric costs
     if(!isBoundToParent(p)){
       let tgt=1;
@@ -339,14 +395,16 @@ class PlanetaryThrustersProject extends Project{
   prepareJob(resetDV=false, resetEnergy=false){
     const p = terraforming.celestialParameters;
     if(!p) return;
+    normalizeRotationState(p);
     if(resetDV) this.dVdone=0;
 
     if(this.spinInvest){
       if(resetEnergy || this.spinStartDays===null){
         this.energySpentSpin=0;
-        this.spinStartDays=getRotHours(p)/24;
+        this.spinStartDays=getSignedRotHours(p)/24;
       }
-      this.dVreq=spinDeltaV(p.radius,this.spinStartDays*24,this.tgtDays*24);
+      const target = parseSpinTarget(this.tgtDays);
+      this.dVreq=spinDeltaV(p.radius,this.spinStartDays*24,target.signedHours);
       return;
     }
 
@@ -379,11 +437,13 @@ class PlanetaryThrustersProject extends Project{
     if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
     if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
     const p = terraforming.celestialParameters;
+    normalizeRotationState(p);
 
     // If the project state says we escaped, mirror that onto the planet on load
     if(this.escapeComplete && p && !p.hasEscapedParent){ p.hasEscapedParent = true; }
 
-    this.el.rotNow.textContent = fmt(getRotHours(p)/24,false,3)+" days";
+    const signedRotDays = p ? getSignedRotHours(p)/24 : 1;
+    this.el.rotNow.textContent = fmt(signedRotDays,false,3)+" days";
     // Show parent-centric radius when truly bound; heliocentric AU otherwise
     this.el.distNow.textContent = isBoundToParent(p)
       ? fmt(p.parentBody.orbitRadius||0,false,0)+" km"
@@ -398,17 +458,13 @@ class PlanetaryThrustersProject extends Project{
 
     /* delta v and energy refresh */
     if(this.el.rotTarget){
-      let tgtDays = 1;
-      try{
-        const v=this.el.rotTarget.value;
-        const n=parseFloat(v);
-        if(!isNaN(n)) tgtDays=n;
-      }catch(e){ tgtDays=1; }
-      this.tgtDays = tgtDays;
+      const parsed=parseSpinTarget(this.tgtDays);
+      this.tgtDays = parsed.raw;
+      if(this.el.rotTarget) this.el.rotTarget.value = this.tgtDays;
       if(p && p.radius){
-        const dv=spinDeltaV(p.radius,getRotHours(p),tgtDays*24);
+        const dv=spinDeltaV(p.radius,getSignedRotHours(p),parsed.signedHours);
         this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
-        this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,tgtDays,this.getThrustPowerRatio()));
+        this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio()));
       }
     }
 
@@ -480,6 +536,7 @@ class PlanetaryThrustersProject extends Project{
     }
     const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
+    normalizeRotationState(p);
     if(this.escapeComplete && !p.hasEscapedParent){ p.hasEscapedParent = true; }
     this.lastActiveTime = dtMs;
   }
@@ -500,6 +557,7 @@ class PlanetaryThrustersProject extends Project{
     }
     const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
+    normalizeRotationState(p);
     if(this.autoStart === false && resources?.colony?.energy?.modifyRate){
       resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
     }
@@ -538,29 +596,50 @@ class PlanetaryThrustersProject extends Project{
     this.dVdone += dvTick;
 
     if(this.spinInvest){
-      const curHours = getRotHours(p);
-      const curDays = curHours / 24;
-      const sign = this.tgtDays < curDays ? 1 : -1;
-      const dOmega = sign * dvTick / (p.radius * 1e3);
-      const omega = 2 * Math.PI / (curHours * 3600) + dOmega;
-      let newPeriod = 2 * Math.PI / omega / 3600;
-      const targetHours = this.tgtDays * 24;
-      const overshoot = (sign > 0 && newPeriod < targetHours) ||
-                        (sign < 0 && newPeriod > targetHours);
-      if (overshoot || this.dVdone >= this.dVreq) {
-        newPeriod = targetHours;
+      const radiusMeters = (p.radius || 0) * 1e3;
+      if(radiusMeters <= 0){ this.lastActiveTime = 0; return; }
+      const currentHoursSigned = getSignedRotHours(p);
+      const currentSeconds = currentHoursSigned * 3600;
+      const currentOmega = currentSeconds !== 0 ? 2 * Math.PI / currentSeconds : 0;
+      const target = parseSpinTarget(this.tgtDays);
+      const targetSeconds = target.signedHours * 3600;
+      const targetOmega = targetSeconds !== 0 ? 2 * Math.PI / targetSeconds : 0;
+      const deltaOmega = targetOmega - currentOmega;
+      if(Math.abs(deltaOmega) < 1e-15 && this.dVreq === 0){
+        this.spinInvest = false;
+        this.activeMode = null;
+        this.updateUI();
+        this.lastActiveTime = 0;
+        return;
+      }
+      const stepDir = deltaOmega >= 0 ? 1 : -1;
+      const dOmega = stepDir * dvTick / radiusMeters;
+      let newOmega = currentOmega + dOmega;
+      const reached = (stepDir > 0 && newOmega >= targetOmega) ||
+                      (stepDir < 0 && newOmega <= targetOmega) ||
+                      this.dVdone >= this.dVreq;
+      if(reached){
+        newOmega = targetOmega;
         this.spinInvest = false;
         this.dVreq = this.dVdone = 0;
         this.activeMode = null;
       }
-      p.rotationPeriod = newPeriod;
+      const omegaSign = newOmega === 0 ? target.sign || ensureRotationDirection(p) : (newOmega > 0 ? 1 : -1);
+      const omegaMag = Math.abs(newOmega);
+      const minOmega = 1e-15;
+      const clampedOmega = Math.max(omegaMag, minOmega);
+      const rawHours = (2 * Math.PI / clampedOmega) / 3600;
+      const newHours = Math.min(rawHours, 1e9);
+      p.rotationPeriod = newHours;
+      p.rotationDirection = omegaSign;
       if (typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
         const oldDur = dayNightCycle.dayDuration;
         const progress = typeof dayNightCycle.getDayProgress === 'function'
           ? dayNightCycle.getDayProgress()
           : 0;
         const daysElapsed = dayNightCycle.elapsedTime / oldDur;
-        dayNightCycle.dayDuration = rotationPeriodToDurationFunc(newPeriod);
+        const durationHours = Math.max(newHours, MIN_SPIN_DAYS);
+        dayNightCycle.dayDuration = rotationPeriodToDurationFunc(durationHours);
         dayNightCycle.elapsedTime = daysElapsed * dayNightCycle.dayDuration;
         if (typeof dayNightCycle.setDayProgress === 'function') {
           dayNightCycle.setDayProgress(progress);
@@ -645,7 +724,8 @@ class PlanetaryThrustersProject extends Project{
     this.step = state.step || 1;
     this.spinInvest = state.spinInvest || false;
     this.motionInvest = state.motionInvest || false;
-    this.tgtDays = state.tgtDays || 1;
+    const targetState = parseSpinTarget(state.tgtDays ?? this.tgtDays);
+    this.tgtDays = targetState.raw;
     this.tgtAU = state.tgtAU || 1;
     this.dVreq = state.dVreq || 0;
     this.dVdone = state.dVdone || 0;
@@ -658,7 +738,10 @@ class PlanetaryThrustersProject extends Project{
 
     // If the planet exists already and we previously escaped, mirror the flag onto it
     const p = terraforming.celestialParameters;
-    if(p && this.escapeComplete){ p.hasEscapedParent = true; }
+    if(p){
+      if(this.escapeComplete && !p.hasEscapedParent){ p.hasEscapedParent = true; }
+      normalizeRotationState(p);
+    }
 
     if(this.el && Object.keys(this.el).length){
       if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
@@ -671,5 +754,5 @@ class PlanetaryThrustersProject extends Project{
 }
 
 /* expose */
-if(typeof globalThis!=="undefined")globalThis.PlanetaryThrustersProject=PlanetaryThrustersProject;
+if(typeof window !== 'undefined'){ window.PlanetaryThrustersProject = PlanetaryThrustersProject; }
 if(typeof module!=="undefined")module.exports=PlanetaryThrustersProject;
