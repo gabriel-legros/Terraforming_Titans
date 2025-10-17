@@ -225,26 +225,11 @@ var progressMars = {
         ]
       },
       {
-        id: "chapter1.10",
-        type: "journal",
-        chapter: 0,
-        narrative: "Processing blueprint: waterTank.btb...",
-        prerequisites: ["chapter1.9"],
-        objectives: [
-        ],
-        reward: [{
-            target: 'building',
-            targetId: 'waterTank',
-            type: 'enable'
-        }
-        ]
-      },
-      {
         id: "chapter1.11",
         type: "journal",
         chapter: 0,
         narrative: "Objective: Construct an Ore Mine to initiate mineral extraction.",
-        prerequisites: ["chapter1.10"],
+        prerequisites: ["chapter1.9"],
         objectives: [{
             type: 'building',
             buildingName: 'oreMine',
@@ -372,11 +357,26 @@ var progressMars = {
             },]
       },
       {
+        id: "chapter1.17b",
+        type: "journal",
+        chapter: 0,
+        narrative: "Processing blueprint: waterTank.btb...",
+        prerequisites: ["chapter1.17"],
+        objectives: [
+        ],
+        reward: [{
+            target: 'building',
+            targetId: 'waterTank',
+            type: 'enable'
+        }
+        ]
+      },
+      {
         id: "chapter1.18",
         type: "journal",
         chapter: 0,
         narrative: "Colony establishment protocols initiated. Water is a critical requirement. Blueprint unlocked: iceHarvester.btb. Objective: Accumulate 100 units of water.",
-        prerequisites: ["chapter1.17"],
+        prerequisites: ["chapter1.17b"],
         objectives: [
         ],
         reward: [        {
