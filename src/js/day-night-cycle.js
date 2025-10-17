@@ -4,34 +4,46 @@ let dayNightProgressText = null;
 let dayNightSun = null; // NEW
 
 class DayNightCycle {
-    constructor(dayDuration) {
-      this.dayDuration = dayDuration;
+    constructor(dayDuration, rotationDirection = 1) {
+      const safeDuration = Math.max(Math.abs(dayDuration) || 1, 1);
+      this.dayDuration = safeDuration;
+      this.rotationDirection = rotationDirection < 0 ? -1 : 1;
       this.elapsedTime = 0;
+      this.rotationTime = 0;
       this.dayProgress = 0;
     }
-  
+
     update(delta) {
+      const duration = Math.max(this.dayDuration, 1);
       this.elapsedTime += delta;
-      this.dayProgress = (this.elapsedTime % this.dayDuration) / this.dayDuration;
+      this.rotationTime += delta * this.rotationDirection;
+      const wrappedTime = ((this.rotationTime % duration) + duration) % duration;
+      this.dayProgress = wrappedTime / duration;
     }
-  
+
   isDay() {
       if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
         return true;
       }
-      return this.dayProgress < 0.5;
+      return this.getDayProgress() < 0.5;
   }
-  
+
     isNight() {
       return !this.isDay();
     }
-  
+
     getDayProgress() {
+      const progress = Math.max(0, Math.min(1, this.dayProgress));
+      if (progress !== this.dayProgress) {
+        this.dayProgress = progress;
+      }
       return this.dayProgress;
     }
 
     setDayProgress(dayProgress) {
-      this.dayProgress = dayProgress;
+      const clampedProgress = Math.max(0, Math.min(1, dayProgress));
+      this.dayProgress = clampedProgress;
+      this.rotationTime = clampedProgress * this.dayDuration;
     }
 
     // Method to get the current state of DayNightCycle for saving
@@ -40,27 +52,31 @@ class DayNightCycle {
         dayProgress: this.dayProgress,
         elapsedTime: this.elapsedTime,
         dayDuration: this.dayDuration,
+        rotationDirection: this.rotationDirection,
       };
     }
 
     // Method to load the state into DayNightCycle
   loadState(state) {
     const safeState = state || {};
-    const { dayProgress = 0, elapsedTime = 0 } = safeState;
-    this.dayProgress = dayProgress;
-    this.elapsedTime = elapsedTime;
-
     const duration = Number(safeState.dayDuration);
     if (Number.isFinite(duration) && duration > 0) {
       this.dayDuration = duration;
     }
+    this.rotationDirection = safeState.rotationDirection < 0 ? -1 : 1;
+    this.elapsedTime = safeState.elapsedTime || 0;
+    this.setDayProgress(safeState.dayProgress || 0);
   }
 }
 
 // Convert a rotation period in hours to a day-night cycle duration in
-// milliseconds using one Earth day as one minute.
+// milliseconds using one Earth day as one minute. Returns the absolute
+// duration with a direction flag for retrograde rotation handling.
 function rotationPeriodToDuration(rotationHours) {
-  return (rotationHours / 24) * 30000;
+  const direction = rotationHours < 0 ? -1 : 1;
+  const absHours = Math.abs(rotationHours) || 1;
+  const duration = (absHours / 24) * 30000;
+  return { duration, direction };
 }
 
 function resetDayNightContainerCache() {
@@ -94,8 +110,10 @@ function updateDayNightDisplay() {
   }
   if (container) container.style.display = 'block';
 
-  const dayProgress = Math.max(0, Math.min(1, dayNightCycle.getDayProgress()));
+  const dayProgress = dayNightCycle.getDayProgress();
   const dayProgressPercent = dayProgress * 100;
+  const rotationDirection = dayNightCycle.rotationDirection < 0 ? -1 : 1;
+  const progressForSun = rotationDirection < 0 ? 1 - dayProgress : dayProgress;
 
   if (!dayNightProgressBar) dayNightProgressBar = document.getElementById('day-night-progress-bar');
   if (!dayNightProgressText) dayNightProgressText = document.getElementById('progress-text');
@@ -120,7 +138,7 @@ function updateDayNightDisplay() {
     // At 100%: left = barWidth (fully off screen on right)
     const startX = -sunWidth;
     const endX   = barWidth;
-    const x = startX + (endX - startX) * dayProgress;
+    const x = startX + (endX - startX) * progressForSun;
     dayNightSun.style.left = `${x}px`;
 
     // Fade rules:

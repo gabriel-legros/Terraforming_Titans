@@ -559,13 +559,16 @@ class PlanetaryThrustersProject extends Project{
         const progress = typeof dayNightCycle.getDayProgress === 'function'
           ? dayNightCycle.getDayProgress()
           : 0;
-        const daysElapsed = dayNightCycle.elapsedTime / oldDur;
-        dayNightCycle.dayDuration = rotationPeriodToDurationFunc(newPeriod);
+        const daysElapsed = oldDur > 0 ? dayNightCycle.elapsedTime / oldDur : 0;
+        const durationData = rotationPeriodToDurationFunc(newPeriod);
+        dayNightCycle.dayDuration = durationData.duration;
+        dayNightCycle.rotationDirection = durationData.direction;
         dayNightCycle.elapsedTime = daysElapsed * dayNightCycle.dayDuration;
         if (typeof dayNightCycle.setDayProgress === 'function') {
           dayNightCycle.setDayProgress(progress);
         } else {
           dayNightCycle.dayProgress = progress;
+          dayNightCycle.rotationTime = progress * dayNightCycle.dayDuration;
         }
       }
       this.updateUI();

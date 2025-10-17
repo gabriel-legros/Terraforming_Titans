@@ -33,8 +33,8 @@ function create() {
 
   // Set up the game scene, objects, and initial state
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
-  const dayDuration = rotationPeriodToDuration(rotation);
-  dayNightCycle = new DayNightCycle(dayDuration);
+  const { duration: dayDuration, direction: rotationDirection } = rotationPeriodToDuration(rotation);
+  dayNightCycle = new DayNightCycle(dayDuration, rotationDirection);
   updateDayNightDisplay();
 
   // Initialize resources
@@ -198,8 +198,8 @@ function initializeGameState(options = {}) {
   playTimeSeconds = 0;
 
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
-  const dayDuration = rotationPeriodToDuration(rotation);
-  dayNightCycle = new DayNightCycle(dayDuration);
+  const dayDurationData = rotationPeriodToDuration(rotation);
+  dayNightCycle = new DayNightCycle(dayDurationData.duration, dayDurationData.direction);
   const existingResources = resources;
   resources = createResources(currentPlanetParameters.resources);
   if (existingResources) {
