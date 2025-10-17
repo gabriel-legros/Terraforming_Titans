@@ -98,9 +98,11 @@
     let signedDays = 0;
     if (typeof dayNightCycle !== 'undefined' && dayNightCycle && typeof dayNightCycle.dayDuration === 'number') {
       const duration = dayNightCycle.dayDuration;
-      const direction = Math.sign(duration || 1) || 1;
       const magnitude = Math.max(1, Math.abs(duration));
-      signedDays = ((dayNightCycle.elapsedTime || 0) / magnitude) * direction;
+      const time = Number.isFinite(dayNightCycle.rotationTime)
+        ? dayNightCycle.rotationTime
+        : (dayNightCycle.elapsedTime || 0) * (dayNightCycle.rotationDirection < 0 ? -1 : 1);
+      signedDays = time / magnitude;
     } else {
       signedDays = (performance.now() / 1000) / 60;
     }
