@@ -1080,7 +1080,7 @@ function updateLifeBox() {
     const avgBiomassCoverage = calculateAverageCoverage(terraforming, 'biomass');
 
     const effectiveTarget = getEffectiveLifeFraction(terraforming);
-    lifeBox.style.borderColor = avgBiomassCoverage > effectiveTarget ? 'green' : 'red';
+    lifeBox.style.borderColor = avgBiomassCoverage >= effectiveTarget ? 'green' : 'red';
     if (els.target) els.target.textContent = `Target : Life coverage above ${(effectiveTarget * 100).toFixed(0)}%.`;
 
     // Calculate zonal coverage percentages
