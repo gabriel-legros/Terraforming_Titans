@@ -707,6 +707,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
         dismiss.textContent = 'Are You Sure?';
       } else {
         warpGateCommand.dismissMember(teamIndex, slotIndex);
+        if (activeDialog) activeDialog._restoreStats = false;
         closeRecruitDialog();
         redrawWGCTeamCards();
       }
