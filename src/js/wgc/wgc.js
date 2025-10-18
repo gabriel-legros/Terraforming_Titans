@@ -229,7 +229,9 @@ class WarpGateCommand extends EffectableEntity {
         dc = 40 + difficulty * 4;
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          const damage = Math.max(0, 2 * difficulty);
+          let damage = 2 * difficulty;
+          if (event.skill === 'wit') damage *= 0.5;
+          damage = Math.max(0, damage);
           team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
           if (damage > 0) {
             damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
@@ -240,7 +242,24 @@ class WarpGateCommand extends EffectableEntity {
       case 'individual': {
         const members = team.filter(m => m);
         if (members.length === 0) return { success: false, artifact: false };
-        const member = members[Math.floor(Math.random() * members.length)];
+        let member = members[Math.floor(Math.random() * members.length)];
+        if (event.skill === 'athletics') {
+          let lowest = Number.POSITIVE_INFINITY;
+          const pool = [];
+          members.forEach(m => {
+            const value = m.athletics;
+            if (value < lowest) {
+              lowest = value;
+              pool.length = 0;
+              pool.push(m);
+            } else if (value === lowest) {
+              pool.push(m);
+            }
+          });
+          if (pool.length) {
+            member = pool[Math.floor(Math.random() * pool.length)];
+          }
+        }
         roller = member;
         const leader = team[0];
         baseSkill = applyMult(member[event.skill], event.skill);
@@ -250,7 +269,10 @@ class WarpGateCommand extends EffectableEntity {
         dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          const damage = Math.max(0, 5 * difficulty);
+          let damage = 5 * difficulty;
+          if (event.skill === 'power') damage *= 2;
+          if (event.skill === 'wit') damage *= 0.5;
+          damage = Math.max(0, damage);
           member.health = Math.max(member.health - damage, 0);
           if (damage > 0) {
             const name = member && member.firstName ? ` (${member.firstName})` : '';
