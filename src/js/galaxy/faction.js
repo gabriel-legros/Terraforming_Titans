@@ -749,15 +749,12 @@ class GalaxyFaction {
             manualTotal += value;
         });
         if (!(capacity > 0)) {
-            if (this.defenseAssignments.size > 0) {
-                this.defenseAssignments.clear();
-            }
             if (this.autoDefenseAssignments.size > 0) {
                 this.autoDefenseAssignments.clear();
             }
-            this.defenseAssignmentsTotal = 0;
-            this.manualDefenseTotal = 0;
             this.autoDefenseTotal = 0;
+            this.manualDefenseTotal = manualTotal;
+            this.defenseAssignmentsTotal = manualTotal;
             return;
         }
         if (manualTotal > capacity && manualTotal > 0) {
