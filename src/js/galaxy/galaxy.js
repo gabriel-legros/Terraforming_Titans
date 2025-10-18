@@ -457,6 +457,9 @@ class GalaxyManager extends EffectableEntity {
                 factionStateMap.set(entry.id, entry);
             });
         }
+        if (state && Array.isArray(state.fleetUpgrades)) {
+            this.#loadFleetUpgrades(state.fleetUpgrades);
+        }
         this.#initializeFactionFleets();
         this.factions.forEach((faction) => {
             const factionState = factionStateMap.get(faction.id);
@@ -464,9 +467,6 @@ class GalaxyManager extends EffectableEntity {
                 faction.loadState(factionState, this);
             }
         });
-        if (state && Array.isArray(state.fleetUpgrades)) {
-            this.#loadFleetUpgrades(state.fleetUpgrades);
-        }
         if (state && Number.isFinite(state.successfulOperations)) {
             this.successfulOperations = Math.max(0, state.successfulOperations);
         }

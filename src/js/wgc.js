@@ -35,7 +35,7 @@ class WarpGateCommand extends EffectableEntity {
     super({ description: 'Warp Gate Command manager' });
     this.enabled = false;
     this.teams = Array.from({ length: 4 }, () => Array(4).fill(null));
-    this.operations = Array.from({ length: 4 }, () => ({ active: false, progress: 0, timer: 0, difficulty: 0, artifacts: 0, successes: 0, summary: '', number: 1, nextEvent: 60 }));
+    this.operations = Array.from({ length: 4 }, () => ({ active: false, progress: 0, timer: 0, difficulty: 0, artifacts: 0, successes: 0, summary: '', number: 1, nextEvent: 60, eventQueue: [], currentEventIndex: 0 }));
     this.teamOperationCounts = Array(4).fill(0);
     this.teamNextOperationNumber = Array(4).fill(1);
     this.logs = Array.from({ length: 4 }, () => []);
@@ -43,8 +43,6 @@ class WarpGateCommand extends EffectableEntity {
     this.totalOperations = 0;
     this.totalArtifacts = 0;
     this.highestDifficulty = -1;
-    this.pendingCombat = false;
-    this.combatDifficulty = 1;
     this.rdUpgrades = {
       wgtEquipment: { purchases: 0, max: 900 },
       componentsEfficiency: { purchases: 0, max: 400 },
@@ -73,14 +71,6 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   chooseEvent(teamIndex = 0) {
-    if (this.pendingCombat) {
-      this.pendingCombat = false;
-      const combatEvent = baseOperationEvents.find(e => e.type === 'combat');
-      const event = Object.assign({}, combatEvent, { difficultyMultiplier: this.combatDifficulty });
-      this.combatDifficulty = 1;
-      return event;
-    }
-
     const events = baseOperationEvents.map(ev => {
       const e = { ...ev };
       const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].hazardousBiomass : 'Neutral';
@@ -102,6 +92,28 @@ class WarpGateCommand extends EffectableEntity {
       if (r < 0) return ev;
     }
     return weightedEvents[0];
+  }
+
+  cloneEvent(event) {
+    if (!event) return null;
+    return { ...event };
+  }
+
+  generateOperationEvents(teamIndex, count = 10) {
+    const list = [];
+    for (let i = 0; i < count; i++) {
+      const event = this.cloneEvent(this.chooseEvent(teamIndex));
+      if (event) list.push(event);
+    }
+    return list;
+  }
+
+  getEventDelay(event, teamIndex) {
+    if (event && event.type === 'science' && event.specialty === 'Natural Scientist') {
+      const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].artifact : 'Neutral';
+      if (stance === 'Careful') return 180;
+    }
+    return 60;
   }
 
   roll(dice) {
@@ -192,10 +204,6 @@ class WarpGateCommand extends EffectableEntity {
         rollResult = this.roll(1);
         dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
-        if (!success && event.specialty === 'Social Scientist') {
-          this.pendingCombat = true;
-          this.combatDifficulty = 1.25;
-        }
         break;
       }
       case 'combat': {
@@ -254,12 +262,9 @@ class WarpGateCommand extends EffectableEntity {
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 
     if (!success && event.escalate) {
-      if (event.specialty === 'Social Scientist') {
-        this.pendingCombat = true;
-        this.combatDifficulty = 1.25;
-      } else {
-        const combatEvent = baseOperationEvents.find(e => e.type === 'combat');
-        this.resolveEvent(teamIndex, combatEvent);
+      if (event.specialty !== 'Social Scientist') {
+        const combatBase = baseOperationEvents.find(e => e.type === 'combat');
+        if (combatBase) this.resolveEvent(teamIndex, this.cloneEvent(combatBase));
       }
     }
 
@@ -362,28 +367,40 @@ class WarpGateCommand extends EffectableEntity {
       this.facilityCooldown = Math.max(0, this.facilityCooldown - seconds);
     }
     this.operations.forEach((op, idx) => {
-      if (op.active) {
-        op.timer += seconds;
-        while (op.timer >= op.nextEvent && op.nextEvent <= 540) {
-          this.resolveEvent(idx, this.chooseEvent(idx));
-          op.nextEvent += 60;
-        }
-
-        const loops = Math.floor(op.timer / 600);
-        if (loops > 0) {
-          for (let i = 0; i < loops; i++) {
-            this.finishOperation(idx);
+      if (!op.active) return;
+      op.timer += seconds;
+      if (!Array.isArray(op.eventQueue)) op.eventQueue = this.generateOperationEvents(idx);
+      if (!Number.isFinite(op.currentEventIndex)) op.currentEventIndex = 0;
+      if (!Number.isFinite(op.nextEvent) || op.nextEvent <= 0) op.nextEvent = 60;
+      while (op.currentEventIndex < op.eventQueue.length && op.timer >= op.nextEvent) {
+        const event = op.eventQueue[op.currentEventIndex];
+        const result = this.resolveEvent(idx, event);
+        op.currentEventIndex += 1;
+        if (!result.success && event.type === 'science' && event.specialty === 'Social Scientist') {
+          const combatBase = baseOperationEvents.find(e => e.type === 'combat');
+          const extraCombat = this.cloneEvent(combatBase);
+          if (extraCombat) {
+            extraCombat.difficultyMultiplier = 1.25;
+            op.eventQueue.splice(op.currentEventIndex, 0, extraCombat);
           }
-          this.totalOperations += loops;
-          op.timer -= loops * 600;
-          op.nextEvent = 60;
-          op.number = this.teamNextOperationNumber[idx];
-          this.teamNextOperationNumber[idx] += 1;
-          op.summary = operationStartText;
-          this.addLog(idx, `=== Operation #${op.number} ===`);
         }
-        op.progress = op.timer / 600;
+        const delay = this.getEventDelay(event, idx);
+        op.nextEvent += delay;
       }
+
+      const finishedEvents = op.currentEventIndex >= (op.eventQueue ? op.eventQueue.length : 0);
+      const readyToFinish = finishedEvents && op.timer >= 600;
+      if (readyToFinish) {
+        this.finishOperation(idx);
+        this.totalOperations += 1;
+        op.timer -= 600;
+        op.number = this.teamNextOperationNumber[idx];
+        this.teamNextOperationNumber[idx] += 1;
+        op.summary = operationStartText;
+        this.addLog(idx, `=== Operation #${op.number} ===`);
+      }
+      const totalDuration = Math.max(600, op.nextEvent || 600);
+      op.progress = Math.min(1, op.timer / totalDuration);
     });
 
     const minuteFraction = seconds / 60;
@@ -459,6 +476,9 @@ class WarpGateCommand extends EffectableEntity {
     this.teamOperationCounts[teamIndex] += 1;
     op.artifacts = 0;
     op.successes = 0;
+    op.eventQueue = this.generateOperationEvents(teamIndex);
+    op.currentEventIndex = 0;
+    op.nextEvent = 60;
     this.addLog(teamIndex, '');
   }
 
@@ -474,6 +494,8 @@ class WarpGateCommand extends EffectableEntity {
     op.nextEvent = 60;
     op.artifacts = 0;
     op.successes = 0;
+    op.eventQueue = this.generateOperationEvents(teamIndex);
+    op.currentEventIndex = 0;
     op.number = this.teamNextOperationNumber[teamIndex];
     this.teamNextOperationNumber[teamIndex] += 1;
     op.difficulty = diff;
@@ -490,6 +512,8 @@ class WarpGateCommand extends EffectableEntity {
       op.progress = 0;
       op.timer = 0;
       op.nextEvent = 60;
+      op.eventQueue = [];
+      op.currentEventIndex = 0;
     }
   }
 
@@ -539,7 +563,9 @@ class WarpGateCommand extends EffectableEntity {
         successes: op.successes,
         summary: op.summary,
         number: op.number,
-        nextEvent: op.nextEvent
+        nextEvent: op.nextEvent,
+        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(evt => ({ ...evt })) : [],
+        currentEventIndex: Number.isFinite(op.currentEventIndex) ? op.currentEventIndex : 0
       })),
       teamOperationCounts: this.teamOperationCounts.slice(),
       teamNextOperationNumber: this.teamNextOperationNumber.slice(),
@@ -547,8 +573,6 @@ class WarpGateCommand extends EffectableEntity {
       totalOperations: this.totalOperations,
       totalArtifacts: this.totalArtifacts,
       highestDifficulty: this.highestDifficulty,
-      pendingCombat: this.pendingCombat,
-      combatDifficulty: this.combatDifficulty,
       stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact })),
       facilities: { ...this.facilities },
       facilityCooldown: this.facilityCooldown,
@@ -587,6 +611,8 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary || '',
         number: op.number || 1,
         nextEvent: op.nextEvent || 60,
+        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(evt => ({ ...evt })) : [],
+        currentEventIndex: Number.isFinite(op.currentEventIndex) ? op.currentEventIndex : 0
       };
     });
 
@@ -632,8 +658,19 @@ class WarpGateCommand extends EffectableEntity {
     this.totalOperations = data.totalOperations || 0;
     this.totalArtifacts = data.totalArtifacts || 0;
     this.highestDifficulty = typeof data.highestDifficulty === 'number' ? data.highestDifficulty : -1;
-    this.pendingCombat = data.pendingCombat || false;
-    this.combatDifficulty = data.combatDifficulty || 1;
+    this.operations.forEach((op, i) => {
+      if (op.active) {
+        if (!Array.isArray(op.eventQueue) || op.eventQueue.length === 0) {
+          op.eventQueue = this.generateOperationEvents(i);
+          op.currentEventIndex = 0;
+          op.nextEvent = 60;
+        }
+      } else {
+        op.eventQueue = [];
+        op.currentEventIndex = 0;
+        op.nextEvent = 60;
+      }
+    });
   }
 
   renameTeam(index, name) {
