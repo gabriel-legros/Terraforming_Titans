@@ -52,7 +52,9 @@ class WarpGateCommand extends EffectableEntity {
       progressStartValue: 0,
       progressTargetValue: 0,
       progressIntervalStart: 0,
-      progressIntervalDuration: 0
+      progressIntervalDuration: 0,
+      nextDifficultyModifier: 1,
+      nextArtifactModifier: 1
     }));
     this.teamOperationCounts = Array(4).fill(0);
     this.teamNextOperationNumber = Array(4).fill(1);
@@ -95,11 +97,14 @@ class WarpGateCommand extends EffectableEntity {
       if (e.name === 'Social Science challenge') {
         if (stance === 'Negotiation') e.weight *= 2;
         if (stance === 'Aggressive') e.weight = 0;
+        if (stance === 'Recon') e.weight *= 1.5;
       }
       if (e.type === 'combat') {
         if (stance === 'Negotiation') e.weight *= 0.5;
         if (stance === 'Aggressive') e.weight *= 2;
+        if (stance === 'Recon') e.weight *= 0.7;
       }
+      if (e.skill === 'wit' && stance === 'Recon') e.weight *= 1.5;
       return e;
     });
     const weightedEvents = events.filter(e => (e.weight ?? 1) > 0);
@@ -133,6 +138,7 @@ class WarpGateCommand extends EffectableEntity {
     if (event && event.type === 'science' && event.specialty === 'Natural Scientist') {
       const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].artifact : 'Neutral';
       if (stance === 'Careful') return 180;
+      if (stance === 'Rapid Extraction') return 30;
     }
     return 60;
   }
@@ -206,7 +212,18 @@ class WarpGateCommand extends EffectableEntity {
     let baseSkill = 0;
     let leaderBonus = 0;
     const op = this.operations[teamIndex];
-    const difficulty = op ? op.difficulty || 0 : 0;
+    const hazardStance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].hazardousBiomass : 'Neutral';
+    let difficulty = 0;
+    let artifactModifier = 1;
+    if (op) {
+      const nextDiff = Number.isFinite(op.nextDifficultyModifier) && op.nextDifficultyModifier > 0 ? op.nextDifficultyModifier : 1;
+      const nextArtifact = Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1;
+      artifactModifier = nextArtifact;
+      op.nextDifficultyModifier = 1;
+      op.nextArtifactModifier = 1;
+      const baseDifficulty = op.difficulty || 0;
+      difficulty = baseDifficulty * nextDiff;
+    }
     const pMult = 1 + this.facilities.shootingRange * 0.01;
     const aMult = 1 + this.facilities.obstacleCourse * 0.01;
     const wMult = 1 + this.facilities.library * 0.01;
@@ -228,13 +245,29 @@ class WarpGateCommand extends EffectableEntity {
         rollResult = this.roll(4);
         dc = 40 + difficulty * 4;
         success = rollResult.sum + skillTotal >= dc;
-        if (!success) {
+        if (success) {
+          if (event.skill === 'athletics' && op) {
+            const current = Number.isFinite(op.nextDifficultyModifier) && op.nextDifficultyModifier > 0 ? op.nextDifficultyModifier : 1;
+            op.nextDifficultyModifier = current * 0.75;
+          }
+          if (event.skill === 'wit' && op) {
+            const current = Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1;
+            op.nextArtifactModifier = current * 2;
+          }
+        } else {
           let damage = 2 * difficulty;
           if (event.skill === 'wit') damage *= 0.5;
           damage = Math.max(0, damage);
           team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
           if (damage > 0) {
             damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
+          }
+          if (event.skill === 'athletics' && op) {
+            op.nextEvent += 120;
+          }
+          if (event.skill === 'wit' && op) {
+            const current = Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1;
+            op.nextArtifactModifier = current * 0.5;
           }
         }
         break;
@@ -320,10 +353,16 @@ class WarpGateCommand extends EffectableEntity {
     }
 
     const stanceObj = this.stances && this.stances[teamIndex] ? this.stances[teamIndex] : { artifact: 'Neutral' };
+    if (!success && hazardStance === 'Recon' && op) {
+      op.nextEvent += 60;
+    }
     const equip = this.rdUpgrades.wgtEquipment ? this.rdUpgrades.wgtEquipment.purchases : 0;
     let artifactChance = Math.min(0.1 + equip * 0.001, 1);
     if (event.specialty === 'Natural Scientist' && stanceObj.artifact === 'Careful') {
       artifactChance = Math.min(artifactChance * 2, 1);
+    }
+    if (stanceObj.artifact === 'Rapid Extraction') {
+      artifactChance = Math.max(0, artifactChance * 0.25);
     }
     let artifact = success && Math.random() < artifactChance;
     const critical = event.type === 'individual' && rollResult.rolls.includes(20);
@@ -336,7 +375,7 @@ class WarpGateCommand extends EffectableEntity {
     if (artifact) {
       artifactReward = 1 + (difficulty > 0 ? difficulty * 0.1 : 0);
       const mult = event.artifactMultiplier || (event.specialty === 'Natural Scientist' ? 2 : 1);
-      artifactReward *= mult;
+      artifactReward *= mult * artifactModifier;
       op.artifacts += artifactReward;
     }
     const rollsStr = rollResult.rolls.join(',');
@@ -596,6 +635,8 @@ class WarpGateCommand extends EffectableEntity {
     op.progressTargetValue = 0;
     op.progressIntervalStart = 0;
     op.progressIntervalDuration = 0;
+    op.nextDifficultyModifier = 1;
+    op.nextArtifactModifier = 1;
     op.progress = 0;
     this.addLog(teamIndex, '');
   }
@@ -624,6 +665,8 @@ class WarpGateCommand extends EffectableEntity {
     this.teamNextOperationNumber[teamIndex] += 1;
     op.difficulty = diff;
     op.summary = operationStartText;
+    op.nextDifficultyModifier = 1;
+    op.nextArtifactModifier = 1;
     this.refreshOperationProgress(op, teamIndex);
     op.progress = this.calculateOperationProgress(op);
     this.addLog(teamIndex, `=== Operation #${op.number} ===`);
@@ -645,6 +688,8 @@ class WarpGateCommand extends EffectableEntity {
       op.progressTargetValue = 0;
       op.progressIntervalStart = 0;
       op.progressIntervalDuration = 0;
+      op.nextDifficultyModifier = 1;
+      op.nextArtifactModifier = 1;
     }
   }
 
@@ -702,7 +747,9 @@ class WarpGateCommand extends EffectableEntity {
         progressStartValue: Number.isFinite(op.progressStartValue) ? op.progressStartValue : 0,
         progressTargetValue: Number.isFinite(op.progressTargetValue) ? op.progressTargetValue : 0,
         progressIntervalStart: Number.isFinite(op.progressIntervalStart) ? op.progressIntervalStart : 0,
-        progressIntervalDuration: Number.isFinite(op.progressIntervalDuration) ? op.progressIntervalDuration : 0
+        progressIntervalDuration: Number.isFinite(op.progressIntervalDuration) ? op.progressIntervalDuration : 0,
+        nextDifficultyModifier: Number.isFinite(op.nextDifficultyModifier) ? op.nextDifficultyModifier : 1,
+        nextArtifactModifier: Number.isFinite(op.nextArtifactModifier) ? op.nextArtifactModifier : 1
       })),
       teamOperationCounts: this.teamOperationCounts.slice(),
       teamNextOperationNumber: this.teamNextOperationNumber.slice(),
@@ -755,7 +802,9 @@ class WarpGateCommand extends EffectableEntity {
         progressStartValue: Number.isFinite(op.progressStartValue) ? op.progressStartValue : 0,
         progressTargetValue: Number.isFinite(op.progressTargetValue) ? op.progressTargetValue : 0,
         progressIntervalStart: Number.isFinite(op.progressIntervalStart) ? op.progressIntervalStart : 0,
-        progressIntervalDuration: Number.isFinite(op.progressIntervalDuration) ? op.progressIntervalDuration : 0
+        progressIntervalDuration: Number.isFinite(op.progressIntervalDuration) ? op.progressIntervalDuration : 0,
+        nextDifficultyModifier: Number.isFinite(op.nextDifficultyModifier) && op.nextDifficultyModifier > 0 ? op.nextDifficultyModifier : 1,
+        nextArtifactModifier: Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1
       };
     });
 
@@ -826,6 +875,8 @@ class WarpGateCommand extends EffectableEntity {
         op.progressIntervalStart = 0;
         op.progressIntervalDuration = 0;
         op.baseEventsCompleted = 0;
+        op.nextDifficultyModifier = 1;
+        op.nextArtifactModifier = 1;
       }
     });
   }

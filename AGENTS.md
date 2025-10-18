@@ -188,6 +188,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Warp Gate Command skill editor gained an Auto assignment column that distributes points each tick according to player-provided ratios, updates live while the dialog is open, and ignores zero entries.
 - Warp Gate Command recruitment dialog now auto-rolls names for new members and adds a Roll button beside the name inputs, drawing from 100-name first/last pools.
 - Warp Gate Command operations now assign solo athletics events to the least athletic member and adjust failure damage for power and wit challenges.
+- Team athletics operations now ease the next challenge after a success or delay it after a failure, while team wits outcomes modify the next artifact payout.
+- Hazardous Biomass stances gained a Recon option and artifact stances gained Rapid Extraction, adjusting event pacing, weights, and artifact odds.
 - Editing a Warp Gate Command member now spends stat points immediately while Cancel restores the original stats to avoid conflicts with Auto allocation.
 - Centralized terraforming gravity helpers in `src/js/terraforming/gravity.js` so apparent gravity and penalties reuse the same calculations.
 - Galaxy factions now accumulate an irreversible UHF doctrine adaptation multiplier that scales with rising UHF threat and stacks with electronics adoption.
