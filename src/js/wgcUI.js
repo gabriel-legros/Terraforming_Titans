@@ -296,14 +296,18 @@ function populateFacilityMenu() {
 }
 
 function closeRecruitDialog() {
-  if (activeDialog && activeDialog.parentElement) {
+  if (!activeDialog) return;
+  const editingMember = activeDialog._member;
+  if (editingMember) editingMember.isBeingEdited = false;
+  if (activeDialog.parentElement) {
     document.body.removeChild(activeDialog);
-    activeDialog = null;
   }
+  activeDialog = null;
 }
 
 function openRecruitDialog(teamIndex, slotIndex, member) {
   closeRecruitDialog();
+  if (member) member.isBeingEdited = true;
   const overlay = document.createElement('div');
   overlay.classList.add('wgc-popup-overlay');
 
@@ -355,6 +359,13 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   classDescDiv.textContent = classDescriptions[classSelect.value] || '';
   win.appendChild(classDescDiv);
 
+  let baseStats = member ? WGCTeamMember.getBaseStats(member.classType) : WGCTeamMember.getBaseStats(classSelect.value);
+  const statValues = {
+    power: member ? member.power : baseStats.power,
+    athletics: member ? member.athletics : baseStats.athletics,
+    wit: member ? member.wit : baseStats.wit
+  };
+
   const lvl = member ? member.level : 1;
   const xp = member ? Math.floor(member.xp || 0) : 0;
   const xpReq = member ? member.getXPForNextLevel() : 10;
@@ -363,23 +374,94 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const level = document.createElement('div');
   level.classList.add('wgc-member-level');
   level.textContent = `Level: ${lvl} | XP: ${xp} / ${xpReq} | HP: ${formatNumber(hp)} / ${hpMax}`;
-  win.appendChild(level);
 
-  const pointsToSpend = member ? member.getPointsToAllocate() : 5;
+  const metaRow = document.createElement('div');
+  metaRow.classList.add('wgc-member-meta');
+  metaRow.appendChild(level);
+
+  if (member) {
+    const respecButton = document.createElement('button');
+    respecButton.textContent = 'Respec';
+    respecButton.classList.add('wgc-respec-button');
+    respecButton.title = 'Refund all allocated skill points.';
+    respecButton.addEventListener('click', () => {
+      member.respec();
+      baseStats = WGCTeamMember.getBaseStats(member.classType);
+      statValues.power = member.power;
+      statValues.athletics = member.athletics;
+      statValues.wit = member.wit;
+      alloc.power = 0;
+      alloc.athletics = 0;
+      alloc.wit = 0;
+      pointsBudget = member.getPointsToAllocate();
+      Object.keys(statValueEls).forEach(key => {
+        statValueEls[key].textContent = statValues[key];
+      });
+      remainingSpan.textContent = `Points left: ${pointsBudget}`;
+      if (activeDialog) activeDialog._statValues = statValues;
+    });
+    metaRow.appendChild(respecButton);
+  }
+
+  win.appendChild(metaRow);
+
+  const autoState = {
+    enabled: !!(member && member.autoEnabled),
+    ratios: {
+      power: member ? member.autoRatios.power : 0,
+      athletics: member ? member.autoRatios.athletics : 0,
+      wit: member ? member.autoRatios.wit : 0
+    }
+  };
+
+  let pointsBudget = member ? member.getPointsToAllocate() : 5;
   const alloc = { power: 0, athletics: 0, wit: 0 };
   const remainingSpan = document.createElement('div');
-  remainingSpan.textContent = `Points left: ${pointsToSpend}`;
+  remainingSpan.textContent = `Points left: ${pointsBudget}`;
+
+  const statsWrapper = document.createElement('div');
+  statsWrapper.classList.add('wgc-stats-wrapper');
+
+  const headerRow = document.createElement('div');
+  headerRow.classList.add('wgc-stat-container', 'wgc-stat-header-row');
+
+  const headerSkill = document.createElement('span');
+  headerSkill.textContent = 'Skill';
+  headerRow.appendChild(headerSkill);
+
+  const headerPoints = document.createElement('span');
+  headerPoints.classList.add('wgc-stat-value');
+  headerPoints.textContent = 'Points';
+  headerRow.appendChild(headerPoints);
+
+  const headerSpacer = document.createElement('span');
+  headerSpacer.classList.add('wgc-stat-button-placeholder');
+  headerRow.appendChild(headerSpacer);
+
+  const autoToggle = document.createElement('label');
+  autoToggle.classList.add('wgc-auto-toggle');
+  const autoText = document.createElement('span');
+  autoText.textContent = 'Auto';
+  autoToggle.appendChild(autoText);
+  const autoInfo = document.createElement('span');
+  autoInfo.className = 'info-tooltip-icon';
+  autoInfo.innerHTML = '&#9432;';
+  autoInfo.title = 'Automatically assigns points each update to match the ratios below. Ratios set to 0 are ignored.';
+  autoToggle.appendChild(autoInfo);
+  const autoCheckbox = document.createElement('input');
+  autoCheckbox.type = 'checkbox';
+  autoCheckbox.checked = autoState.enabled;
+  autoToggle.appendChild(autoCheckbox);
+  headerRow.appendChild(autoToggle);
+
+  statsWrapper.appendChild(headerRow);
 
   const statsDiv = document.createElement('div');
   statsDiv.classList.add('wgc-stats-grid');
+  statsWrapper.appendChild(statsDiv);
 
-  const baseStats = member ? WGCTeamMember.getBaseStats(member.classType) : WGCTeamMember.getBaseStats(classSelect.value);
-  const statValues = {
-    power: member ? member.power : baseStats.power,
-    athletics: member ? member.athletics : baseStats.athletics,
-    wit: member ? member.wit : baseStats.wit
-  };
-
+  const statValueEls = {};
+  const autoInputs = {};
   ['power','athletics','wit'].forEach(stat => {
     const statContainer = document.createElement('div');
     statContainer.classList.add('wgc-stat-container');
@@ -392,38 +474,71 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     valueSpan.textContent = statValues[stat];
     valueSpan.classList.add('wgc-stat-value');
     statContainer.appendChild(valueSpan);
+    statValueEls[stat] = valueSpan;
 
     const addButton = document.createElement('button');
     addButton.textContent = '+';
     addButton.addEventListener('click', () => {
       const totalAllocated = alloc.power + alloc.athletics + alloc.wit;
-      if (totalAllocated < pointsToSpend) {
-        alloc[stat]++;
+      if (totalAllocated < pointsBudget) {
+        alloc[stat] += 1;
         valueSpan.textContent = statValues[stat] + alloc[stat];
-        remainingSpan.textContent = `Points left: ${pointsToSpend - (totalAllocated + 1)}`;
+        remainingSpan.textContent = `Points left: ${pointsBudget - (totalAllocated + 1)}`;
       }
     });
     statContainer.appendChild(addButton);
+
+    const autoInput = document.createElement('input');
+    autoInput.type = 'number';
+    autoInput.min = '0';
+    autoInput.step = '1';
+    autoInput.classList.add('wgc-auto-input');
+    autoInput.value = autoState.ratios[stat] || 0;
+    autoInput.placeholder = '0';
+    autoInput.addEventListener('input', () => {
+      const parsed = Math.max(0, Math.floor(Number(autoInput.value) || 0));
+      autoInput.value = parsed;
+      autoState.ratios[stat] = parsed;
+      if (member) member.applyAutoSettings(member.autoEnabled, autoState.ratios);
+    });
+    statContainer.appendChild(autoInput);
+    autoInputs[stat] = autoInput;
+
     statsDiv.appendChild(statContainer);
   });
 
+  const syncAutoInputs = () => {
+    const disabled = !autoState.enabled;
+    Object.values(autoInputs).forEach(input => {
+      if (!input) return;
+      input.classList.toggle('wgc-auto-input-off', disabled);
+    });
+  };
+  syncAutoInputs();
+
+  autoCheckbox.addEventListener('change', () => {
+    autoState.enabled = autoCheckbox.checked;
+    if (member) member.applyAutoSettings(autoState.enabled, autoState.ratios);
+    syncAutoInputs();
+  });
+
   classSelect.addEventListener('change', () => {
-    const newBaseStats = WGCTeamMember.getBaseStats(classSelect.value);
-    statValues.power = newBaseStats.power;
-    statValues.athletics = newBaseStats.athletics;
-    statValues.wit = newBaseStats.wit;
+    baseStats = WGCTeamMember.getBaseStats(classSelect.value);
+    statValues.power = baseStats.power;
+    statValues.athletics = baseStats.athletics;
+    statValues.wit = baseStats.wit;
     alloc.power = 0;
     alloc.athletics = 0;
     alloc.wit = 0;
-    const statContainers = statsDiv.querySelectorAll('.wgc-stat-container');
-    statContainers.forEach((container, index) => {
-      const statName = ['power', 'athletics', 'wit'][index];
-      container.querySelector('span:nth-child(2)').textContent = statValues[statName];
-    });
-    remainingSpan.textContent = `Points left: ${pointsToSpend}`;
+    pointsBudget = 5;
+    statValueEls.power.textContent = statValues.power;
+    statValueEls.athletics.textContent = statValues.athletics;
+    statValueEls.wit.textContent = statValues.wit;
+    remainingSpan.textContent = `Points left: ${pointsBudget}`;
     classDescDiv.textContent = classDescriptions[classSelect.value] || '';
   });
-  win.appendChild(statsDiv);
+
+  win.appendChild(statsWrapper);
   win.appendChild(remainingSpan);
 
   const buttonContainer = document.createElement('div');
@@ -440,8 +555,10 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
       member.firstName = firstName;
       member.lastName = lastName;
       member.allocatePoints(alloc);
+      member.applyAutoSettings(autoState.enabled, autoState.ratios);
     } else {
       const m = WGCTeamMember.create(firstName, lastName, classSelect.value, alloc);
+      m.applyAutoSettings(autoState.enabled, autoState.ratios);
       warpGateCommand.recruitMember(teamIndex, slotIndex, m);
     }
     closeRecruitDialog();
@@ -483,6 +600,12 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   activeDialog._levelEl = level;
   activeDialog._alloc = alloc;
   activeDialog._remainingSpan = remainingSpan;
+  activeDialog._autoState = autoState;
+  activeDialog._autoInputs = autoInputs;
+  activeDialog._autoCheckbox = autoCheckbox;
+  activeDialog._statValueEls = statValueEls;
+  activeDialog._statValues = statValues;
+  activeDialog._syncAutoInputs = syncAutoInputs;
 }
 
 function generateWGCLayout() {
@@ -791,6 +914,12 @@ function updateWGCUI() {
     const lvlEl = activeDialog._levelEl;
     const remSpan = activeDialog._remainingSpan;
     const alloc = activeDialog._alloc || { power: 0, athletics: 0, wit: 0 };
+    const autoInputs = activeDialog._autoInputs || null;
+    const autoCheckbox = activeDialog._autoCheckbox || null;
+    const autoState = activeDialog._autoState || null;
+    const statValueEls = activeDialog._statValueEls || null;
+    const statValues = activeDialog._statValues || null;
+    const syncAutoInputs = activeDialog._syncAutoInputs || null;
     if (lvlEl) {
       const xpReq = m.getXPForNextLevel();
       lvlEl.textContent = `Level: ${m.level} | XP: ${Math.floor(m.xp || 0)} / ${xpReq} | HP: ${formatNumber(m.health)} / ${m.maxHealth}`;
@@ -799,6 +928,29 @@ function updateWGCUI() {
       const pts = m.getPointsToAllocate() - (alloc.power + alloc.athletics + alloc.wit);
       remSpan.textContent = `Points left: ${pts}`;
     }
+    if (statValueEls && statValues) {
+      ['power', 'athletics', 'wit'].forEach(stat => {
+        statValues[stat] = m[stat];
+        const display = statValues[stat] + (alloc[stat] || 0);
+        if (statValueEls[stat]) statValueEls[stat].textContent = display;
+      });
+    }
+    if (autoState) {
+      autoState.enabled = m.autoEnabled;
+    }
+    if (autoCheckbox) {
+      autoCheckbox.checked = m.autoEnabled;
+    }
+    if (autoInputs) {
+      ['power', 'athletics', 'wit'].forEach(stat => {
+        const val = m.autoRatios[stat] || 0;
+        if (autoInputs[stat] && Number(autoInputs[stat].value) !== val) {
+          autoInputs[stat].value = val;
+        }
+        if (autoState && autoState.ratios) autoState.ratios[stat] = val;
+      });
+    }
+    if (syncAutoInputs) syncAutoInputs();
   }
 }
 

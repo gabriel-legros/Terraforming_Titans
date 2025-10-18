@@ -381,6 +381,18 @@ class WarpGateCommand extends EffectableEntity {
         if (m) m.health = Math.min(m.health + heal, m.maxHealth);
       });
     });
+
+    let autoChanged = false;
+    this.teams.forEach(team => {
+      team.forEach(m => {
+        if (m && m.autoAllocate && m.autoAllocate()) {
+          autoChanged = true;
+        }
+      });
+    });
+    if (autoChanged && typeof updateWGCUI === 'function') {
+      updateWGCUI();
+    }
   }
 
   finishOperation(teamIndex) {

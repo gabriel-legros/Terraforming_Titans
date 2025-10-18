@@ -333,31 +333,85 @@
   gap: 10px;
 }
 
+.wgc-stats-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 15px 0;
+}
+
 .wgc-stats-grid {
   display: grid;
   gap: 10px;
-  margin: 15px 0;
 }
 
 .wgc-stat-container {
   display: grid;
-  grid-template-columns: 1fr auto 40px;
+  grid-template-columns: 1fr 70px 40px 64px;
   align-items: center;
   background-color: var(--wgc-bg-dark);
-  padding: 5px 10px;
+  padding: 6px 10px;
   border-radius: 3px;
   border: 1px solid var(--wgc-bg-light);
+  column-gap: 10px;
+}
+
+.wgc-stat-header-row {
+  background-color: transparent;
+  border: none;
+  color: var(--wgc-text-medium);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  padding: 0 10px;
+}
+
+.wgc-stat-header-row span {
+  font-weight: 600;
 }
 
 .wgc-stat-value {
   text-align: right;
-  padding-right: 15px;
+  padding-right: 0;
   font-weight: bold;
 }
 
 .wgc-stat-container button {
   padding-top: 2px;
   padding-bottom: 2px;
+}
+
+.wgc-stat-header-row .wgc-auto-toggle {
+  justify-self: flex-end;
+}
+
+.wgc-stat-button-placeholder {
+  visibility: hidden;
+}
+
+.wgc-auto-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.wgc-auto-toggle input {
+  width: auto;
+  margin: 0;
+}
+
+.wgc-auto-input {
+  width: 100%;
+  padding: 4px 6px;
+  text-align: right;
+  border-radius: 3px;
+  border: 1px solid var(--wgc-bg-light);
+  background-color: var(--wgc-bg-medium);
+  color: var(--wgc-text-light);
+}
+
+.wgc-auto-input-off {
+  opacity: 0.6;
 }
 
 .wgc-popup-window h2 {
@@ -374,6 +428,23 @@
   padding: 8px;
   margin-bottom: 0;
   box-sizing: border-box;
+}
+
+.wgc-popup-window .wgc-respec-button {
+  width: auto;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  margin-left: auto;
+}
+
+.wgc-member-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wgc-member-level {
+  flex: 1;
 }
 
 .wgc-dialog-buttons {
