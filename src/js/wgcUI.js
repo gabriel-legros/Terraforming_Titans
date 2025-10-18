@@ -79,6 +79,30 @@ const classDescriptions = {
 };
 let activeDialog = null;
 
+function escapeWGCLogHTML(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatWGCLogLine(line) {
+  const escaped = escapeWGCLogHTML(line);
+  if (!escaped) return '&nbsp;';
+  const damagePattern = /Damage:\s*(-[0-9][0-9.,]*(?:\s?[A-Za-z%]+)*)/g;
+  const artifactPattern = /\+\s*[0-9][0-9.,]*\sArtifact[s]?/g;
+  const withDamage = escaped.replace(damagePattern, (_, amount) => `Damage: <span class="wgc-log-damage">${amount}</span>`);
+  return withDamage.replace(artifactPattern, match => `<span class="wgc-log-artifact">${match}</span>`);
+}
+
+function renderWGCLogLines(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return '';
+  return entries.map(line => `<div class="wgc-log-line">${formatWGCLogLine(line)}</div>`).join('');
+}
+
 function showWGCTab() {
   wgcTabVisible = true;
   if (typeof hopeSubtabManager !== 'undefined' && hopeSubtabManager) {
@@ -176,7 +200,7 @@ function generateWGCTeamCards() {
           <div class="operation-progress-bar" style="width: ${op.progress * 100}%"></div>
         </div>
         <div class="operation-summary${op.active ? '' : ' hidden'}">${op.summary || ''}</div>
-        <div class="team-log hidden"><pre></pre></div>
+        <div class="team-log hidden"><div class="team-log-content"></div></div>
         ${lockMarkup}
       </div>`;
   }).join('');
@@ -206,7 +230,7 @@ function invalidateWGCTeamCache() {
       progressContainer: card.querySelector('.operation-progress'),
       progressBar: card.querySelector('.operation-progress-bar'),
       summaryEl: card.querySelector('.operation-summary'),
-      logEl: card.querySelector('.team-log pre'),
+      logEl: card.querySelector('.team-log-content'),
       lockOverlay: card.querySelector('.wgc-team-locked'),
       slots
     };
@@ -952,7 +976,8 @@ function updateWGCUI() {
       }
     }
     if (logEl) {
-      logEl.textContent = (warpGateCommand.logs[tIdx] || []).join('\n');
+      const logEntries = warpGateCommand.logs[tIdx] || [];
+      logEl.innerHTML = renderWGCLogLines(logEntries);
     }
 
     slots.forEach(({ slot, bar }, sIdx) => {

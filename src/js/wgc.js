@@ -127,6 +127,7 @@ class WarpGateCommand extends EffectableEntity {
     const pMult = 1 + this.facilities.shootingRange * 0.01;
     const aMult = 1 + this.facilities.obstacleCourse * 0.01;
     const wMult = 1 + this.facilities.library * 0.01;
+    let damageDetail = '';
 
     const applyMult = (val, skill) => {
       if (skill === 'power') return val * pMult;
@@ -145,7 +146,11 @@ class WarpGateCommand extends EffectableEntity {
         dc = 40 + difficulty * 4;
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          team.forEach(m => { if (m) m.health = Math.max(m.health - 2 * difficulty, 0); });
+          const damage = Math.max(0, 2 * difficulty);
+          team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
+          if (damage > 0) {
+            damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
+          }
         }
         break;
       }
@@ -162,7 +167,12 @@ class WarpGateCommand extends EffectableEntity {
         dc = 10 + difficulty;
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          member.health = Math.max(member.health - 5 * difficulty, 0);
+          const damage = Math.max(0, 5 * difficulty);
+          member.health = Math.max(member.health - damage, 0);
+          if (damage > 0) {
+            const name = member && member.firstName ? ` (${member.firstName})` : '';
+            damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP${name}`;
+          }
         }
         break;
       }
@@ -198,7 +208,11 @@ class WarpGateCommand extends EffectableEntity {
         dc = 40 * (event.difficultyMultiplier || 1) + difficulty;
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          team.forEach(m => { if (m) m.health = Math.max(m.health - 5 * difficulty, 0); });
+          const damage = Math.max(0, 5 * difficulty);
+          team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
+          if (damage > 0) {
+            damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
+          }
         }
         break;
       }
@@ -234,7 +248,8 @@ class WarpGateCommand extends EffectableEntity {
       if (leaderBonus) skillDetail += ` + leader ${formatNumber(leaderBonus, false, 2)}`;
     }
     const total = rollResult.sum + skillTotal;
-    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${dc} => ${outcome}${artText}`;
+    const damageText = damageDetail ? ` | ${damageDetail}` : '';
+    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${dc} => ${outcome}${artText}${damageText}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 

@@ -516,11 +516,23 @@
   border-radius: 3px;
 }
 
-.team-log pre {
+.team-log-content {
   white-space: pre-wrap;
   font-size: 0.75em;
   margin: 0;
   color: var(--wgc-text-medium);
+}
+
+.wgc-log-line {
+  display: block;
+}
+
+.wgc-log-artifact {
+  color: var(--wgc-green);
+}
+
+.wgc-log-damage {
+  color: var(--wgc-red);
 }
 
 /* Locked Overlay */
