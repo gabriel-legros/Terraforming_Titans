@@ -3,7 +3,7 @@ let wgcUIInitialized = false;
 if (typeof globalThis.formatNumber === 'undefined') {
   try {
     if (typeof require !== 'undefined') {
-      globalThis.formatNumber = require('./numbers.js').formatNumber;
+      globalThis.formatNumber = require('../numbers.js').formatNumber;
     }
   } catch (e) {}
   if (typeof globalThis.formatNumber === 'undefined') {

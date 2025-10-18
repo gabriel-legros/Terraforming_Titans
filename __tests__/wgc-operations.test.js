@@ -21,8 +21,8 @@ afterEach(() => {
   Math.random = originalRandom;
 });
 
-const { WGCTeamMember } = require('../src/js/team-member.js');
-const { WarpGateCommand } = require('../src/js/wgc.js');
+const { WGCTeamMember } = require('../src/js/wgc/team-member.js');
+const { WarpGateCommand } = require('../src/js/wgc/wgc.js');
 
 function createMember(firstName, classType) {
   return new WGCTeamMember({
