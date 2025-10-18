@@ -40,6 +40,30 @@ const facilityDescriptions = {
 const facilityElements = {};
 const teamElements = [];
 var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+const wgcFirstNamePool = [
+  'Aiden','Amelia','Andrew','Aria','Benjamin','Brielle','Caleb','Chloe','Daniel','Delilah',
+  'Elijah','Emery','Ethan','Evelyn','Felix','Fiona','Gabriel','Gianna','Harper','Henry',
+  'Isaac','Isla','Jack','Jade','Kai','Keira','Liam','Lila','Mason','Maya',
+  'Nolan','Nora','Oliver','Olive','Parker','Penelope','Quentin','Quinn','Rowan','Ruby',
+  'Samuel','Sienna','Theo','Tessa','Victor','Violet','Weston','Willow','Xavier','Zara',
+  'Adrian','Alice','Blake','Bianca','Carter','Clara','Damon','Daphne','Easton','Elise',
+  'Finn','Freya','Grayson','Gemma','Hudson','Hazel','Ivan','Ivy','Jasper','June',
+  'Kieran','Kendall','Logan','Lena','Miles','Mira','Noel','Nadia','Owen','Ophelia',
+  'Peter','Piper','Reid','Rosa','Silas','Sage','Tristan','Thalia','Ulysses','Uma',
+  'Wade','Wren','Xander','Ximena','Yosef','Yara','Zane','Zia','Callum','Esme'
+];
+const wgcLastNamePool = [
+  'Adams','Archer','Baker','Bennett','Brooks','Carter','Clarke','Coleman','Collins','Cooper',
+  'Dawson','Dixon','Ellis','Evans','Fisher','Foster','Gardner','Garrett','Gibson','Graham',
+  'Grant','Gray','Greene','Griffin','Hale','Hamilton','Harper','Harris','Hayes','Henderson',
+  'Hoffman','Holland','Howard','Hudson','Hunt','Hunter','Jackson','Jenkins','Johnson','Keller',
+  'Kelly','Kennedy','King','Lawson','Lee','Lewis','Logan','Marshall','Martin','Mason',
+  'Matthews','Maxwell','Mitchell','Monroe','Morgan','Murray','Nelson','Newman','Nichols','Norris',
+  'Oliver','Parker','Patterson','Payne','Perkins','Perry','Porter','Ramsey','Reed','Reynolds',
+  'Rhodes','Rivera','Robbins','Rogers','Ross','Sanders','Sawyer','Schmidt','Sharp','Shelton',
+  'Shepherd','Simmons','Spencer','Steele','Stevenson','Stone','Sutton','Tate','Taylor','Thornton',
+  'Townsend','Turner','Tyler','Valdez','Vaughn','Wagner','Wallace','Walters','Warren','Watts'
+];
 const teamUnlocks = [0, 100, 500, 1000];
 const classImages = {
   'Team Leader': 'assets/images/team_leader.png',
@@ -318,19 +342,61 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   title.textContent = member ? 'Edit Member' : 'Recruit Member';
   win.appendChild(title);
 
+  const getRandomFromPool = pool => pool[Math.floor(Math.random() * pool.length)];
+
+  const nameContainer = document.createElement('div');
+  nameContainer.classList.add('wgc-name-container');
+  const nameInputs = document.createElement('div');
+  nameInputs.classList.add('wgc-name-inputs');
+
   const firstNameField = document.createElement('input');
   firstNameField.type = 'text';
   firstNameField.placeholder = 'First Name (required)';
   firstNameField.value = member ? member.firstName : '';
   firstNameField.classList.add('wgc-dialog-field');
-  win.appendChild(firstNameField);
+  nameInputs.appendChild(firstNameField);
 
   const lastNameField = document.createElement('input');
   lastNameField.type = 'text';
   lastNameField.placeholder = 'Last Name';
   lastNameField.value = member ? member.lastName : '';
   lastNameField.classList.add('wgc-dialog-field');
-  win.appendChild(lastNameField);
+  nameInputs.appendChild(lastNameField);
+
+  nameContainer.appendChild(nameInputs);
+
+  const rollButton = document.createElement('button');
+  rollButton.type = 'button';
+  rollButton.classList.add('wgc-roll-name-button');
+  rollButton.textContent = 'Roll';
+  rollButton.title = 'Roll random names';
+  const assignRandomFirst = (focus = true) => {
+    firstNameField.value = getRandomFromPool(wgcFirstNamePool);
+    if (focus) {
+      firstNameField.focus();
+      firstNameField.select();
+    }
+  };
+  const assignRandomLast = (focus = true) => {
+    lastNameField.value = getRandomFromPool(wgcLastNamePool);
+    if (focus) {
+      lastNameField.focus();
+      lastNameField.select();
+    }
+  };
+  const rollBothNames = (focusFirst = true) => {
+    assignRandomFirst(false);
+    assignRandomLast(false);
+    if (focusFirst) {
+      firstNameField.focus();
+      firstNameField.select();
+    }
+  };
+  rollButton.addEventListener('click', () => {
+    rollBothNames(true);
+  });
+  nameContainer.appendChild(rollButton);
+  win.appendChild(nameContainer);
 
   const classSelect = document.createElement('select');
   classSelect.classList.add('wgc-dialog-field');
@@ -606,6 +672,15 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   activeDialog._statValueEls = statValueEls;
   activeDialog._statValues = statValues;
   activeDialog._syncAutoInputs = syncAutoInputs;
+
+  if (!member) {
+    rollBothNames(false);
+    firstNameField.focus();
+    firstNameField.select();
+  } else {
+    firstNameField.focus();
+    firstNameField.select();
+  }
 }
 
 function generateWGCLayout() {

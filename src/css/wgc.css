@@ -430,6 +430,33 @@
   box-sizing: border-box;
 }
 
+.wgc-name-container {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.wgc-name-inputs {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wgc-name-inputs .wgc-dialog-field {
+  width: 100%;
+}
+
+.wgc-roll-name-button {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.wgc-popup-window .wgc-roll-name-button {
+  width: 42px;
+  padding: 4px 6px;
+}
+
 .wgc-popup-window .wgc-respec-button {
   width: auto;
   flex-shrink: 0;
