@@ -57,6 +57,9 @@
 /* Info tooltip icon + box behavior */
 .info-tooltip-icon {
   position: relative;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', 'Symbola', sans-serif;
+  font-weight: 400;
+  text-transform: none;
 }
 
 .info-tooltip-icon .resource-tooltip {
@@ -76,4 +79,3 @@
   top: auto;
   transform: translateX(-50%) translateY(-4px);
 }
-

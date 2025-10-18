@@ -198,7 +198,7 @@
 
   /* Style for the info tooltip icon */
   .info-tooltip-icon {
-    font-weight: bold;
+    font-weight: 400;
     color: #007bff; /* A distinct blue color */
     cursor: help; /* Indicate it provides help on hover */
     margin-left: 4px; /* Add a little space before the icon */

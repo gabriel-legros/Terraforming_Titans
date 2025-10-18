@@ -40,6 +40,17 @@ const facilityDescriptions = {
 const facilityElements = {};
 const teamElements = [];
 var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+const teamRulesTooltip = [
+  'Special rules:',
+  '- Solo athletics challenges target the least athletic member (random if tied).',
+  '- Failed power checks deal double damage; failed wit checks deal half.',
+  '- Team Leaders lend half their skill on solo and science challenges.',
+  '- Soldiers count double Power in combat challenges.',
+  '- Negotiation stances halve combat weight and double social science weight.',
+  '- Aggressive stances remove social science challenges and double combat weight.',
+  '- Careful artifact stance doubles Natural Science artifact chance but delays the next event.',
+  '- Failing science challenges may escalate into combat.'
+].join('\n');
 const wgcFirstNamePool = [
   'Aiden','Amelia','Andrew','Aria','Benjamin','Brielle','Caleb','Chloe','Daniel','Delilah',
   'Elijah','Emery','Ethan','Evelyn','Felix','Fiona','Gabriel','Gianna','Harper','Henry',
@@ -765,7 +776,7 @@ function generateWGCLayout() {
         </div>
         <div class="wgc-right">
           <div class="wgc-card" id="wgc-teams-section">
-            <h3>Teams</h3>
+            <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
             <div id="wgc-team-cards"></div>
           </div>
         </div>
