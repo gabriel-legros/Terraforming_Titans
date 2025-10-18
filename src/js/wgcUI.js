@@ -346,11 +346,20 @@ function populateFacilityMenu() {
 function closeRecruitDialog() {
   if (!activeDialog) return;
   const editingMember = activeDialog._member;
-  if (editingMember) editingMember.isBeingEdited = false;
+  if (editingMember) {
+    if (activeDialog._restoreStats && activeDialog._originalStats) {
+      const original = activeDialog._originalStats;
+      editingMember.power = original.power;
+      editingMember.athletics = original.athletics;
+      editingMember.wit = original.wit;
+    }
+    editingMember.isBeingEdited = false;
+  }
   if (activeDialog.parentElement) {
     document.body.removeChild(activeDialog);
   }
   activeDialog = null;
+  if (typeof updateWGCUI === 'function') updateWGCUI();
 }
 
 function openRecruitDialog(teamIndex, slotIndex, member) {
@@ -365,6 +374,12 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const title = document.createElement('h2');
   title.textContent = member ? 'Edit Member' : 'Recruit Member';
   win.appendChild(title);
+
+  const originalStats = member ? {
+    power: member.power,
+    athletics: member.athletics,
+    wit: member.wit
+  } : null;
 
   const getRandomFromPool = pool => pool[Math.floor(Math.random() * pool.length)];
 
@@ -483,11 +498,8 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
       alloc.power = 0;
       alloc.athletics = 0;
       alloc.wit = 0;
-      pointsBudget = member.getPointsToAllocate();
-      Object.keys(statValueEls).forEach(key => {
-        statValueEls[key].textContent = statValues[key];
-      });
-      remainingSpan.textContent = `Points left: ${pointsBudget}`;
+      updateStatDisplay();
+      updateRemainingPoints();
       if (activeDialog) activeDialog._statValues = statValues;
     });
     metaRow.appendChild(respecButton);
@@ -507,7 +519,24 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   let pointsBudget = member ? member.getPointsToAllocate() : 5;
   const alloc = { power: 0, athletics: 0, wit: 0 };
   const remainingSpan = document.createElement('div');
-  remainingSpan.textContent = `Points left: ${pointsBudget}`;
+  const statValueEls = {};
+  const autoInputs = {};
+
+  const updateStatDisplay = () => {
+    ['power', 'athletics', 'wit'].forEach(stat => {
+      const display = member ? member[stat] : statValues[stat] + alloc[stat];
+      if (statValueEls[stat]) statValueEls[stat].textContent = display;
+    });
+  };
+
+  const updateRemainingPoints = () => {
+    if (member) {
+      remainingSpan.textContent = `Points left: ${member.getPointsToAllocate()}`;
+    } else {
+      const totalAllocated = alloc.power + alloc.athletics + alloc.wit;
+      remainingSpan.textContent = `Points left: ${pointsBudget - totalAllocated}`;
+    }
+  };
 
   const statsWrapper = document.createElement('div');
   statsWrapper.classList.add('wgc-stats-wrapper');
@@ -550,8 +579,6 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   statsDiv.classList.add('wgc-stats-grid');
   statsWrapper.appendChild(statsDiv);
 
-  const statValueEls = {};
-  const autoInputs = {};
   ['power','athletics','wit'].forEach(stat => {
     const statContainer = document.createElement('div');
     statContainer.classList.add('wgc-stat-container');
@@ -569,12 +596,17 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     const addButton = document.createElement('button');
     addButton.textContent = '+';
     addButton.addEventListener('click', () => {
-      const totalAllocated = alloc.power + alloc.athletics + alloc.wit;
-      if (totalAllocated < pointsBudget) {
+      if (member) {
+        if (member.getPointsToAllocate() <= 0) return;
+        member[stat] += 1;
+        statValues[stat] = member[stat];
+      } else {
+        const totalAllocated = alloc.power + alloc.athletics + alloc.wit;
+        if (totalAllocated >= pointsBudget) return;
         alloc[stat] += 1;
-        valueSpan.textContent = statValues[stat] + alloc[stat];
-        remainingSpan.textContent = `Points left: ${pointsBudget - (totalAllocated + 1)}`;
       }
+      updateStatDisplay();
+      updateRemainingPoints();
     });
     statContainer.appendChild(addButton);
 
@@ -621,14 +653,14 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     alloc.athletics = 0;
     alloc.wit = 0;
     pointsBudget = 5;
-    statValueEls.power.textContent = statValues.power;
-    statValueEls.athletics.textContent = statValues.athletics;
-    statValueEls.wit.textContent = statValues.wit;
-    remainingSpan.textContent = `Points left: ${pointsBudget}`;
+    updateStatDisplay();
+    updateRemainingPoints();
     classDescDiv.textContent = classDescriptions[classSelect.value] || '';
   });
 
   win.appendChild(statsWrapper);
+  updateStatDisplay();
+  updateRemainingPoints();
   win.appendChild(remainingSpan);
 
   const buttonContainer = document.createElement('div');
@@ -644,13 +676,13 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     if (member) {
       member.firstName = firstName;
       member.lastName = lastName;
-      member.allocatePoints(alloc);
       member.applyAutoSettings(autoState.enabled, autoState.ratios);
     } else {
       const m = WGCTeamMember.create(firstName, lastName, classSelect.value, alloc);
       m.applyAutoSettings(autoState.enabled, autoState.ratios);
       warpGateCommand.recruitMember(teamIndex, slotIndex, m);
     }
+    if (activeDialog) activeDialog._restoreStats = false;
     closeRecruitDialog();
     redrawWGCTeamCards();
   });
@@ -696,6 +728,8 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   activeDialog._statValueEls = statValueEls;
   activeDialog._statValues = statValues;
   activeDialog._syncAutoInputs = syncAutoInputs;
+  activeDialog._originalStats = originalStats;
+  activeDialog._restoreStats = !!member;
 
   if (!member) {
     rollBothNames(false);
@@ -1013,7 +1047,6 @@ function updateWGCUI() {
     const m = activeDialog._member;
     const lvlEl = activeDialog._levelEl;
     const remSpan = activeDialog._remainingSpan;
-    const alloc = activeDialog._alloc || { power: 0, athletics: 0, wit: 0 };
     const autoInputs = activeDialog._autoInputs || null;
     const autoCheckbox = activeDialog._autoCheckbox || null;
     const autoState = activeDialog._autoState || null;
@@ -1025,14 +1058,12 @@ function updateWGCUI() {
       lvlEl.textContent = `Level: ${m.level} | XP: ${Math.floor(m.xp || 0)} / ${xpReq} | HP: ${formatNumber(m.health)} / ${m.maxHealth}`;
     }
     if (remSpan) {
-      const pts = m.getPointsToAllocate() - (alloc.power + alloc.athletics + alloc.wit);
-      remSpan.textContent = `Points left: ${pts}`;
+      remSpan.textContent = `Points left: ${m.getPointsToAllocate()}`;
     }
     if (statValueEls && statValues) {
       ['power', 'athletics', 'wit'].forEach(stat => {
         statValues[stat] = m[stat];
-        const display = statValues[stat] + (alloc[stat] || 0);
-        if (statValueEls[stat]) statValueEls[stat].textContent = display;
+        if (statValueEls[stat]) statValueEls[stat].textContent = statValues[stat];
       });
     }
     if (autoState) {
