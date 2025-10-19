@@ -320,15 +320,16 @@ const GalaxyOperationUI = (() => {
         return Math.max(0, Math.min(numeric, maxValue));
     }
 
-    function resolveOperationSuccessChance(manager, sectorKey, assignedPower) {
+    function resolveOperationSuccessChance(manager, sectorKey, assignedPower, factionId) {
         if (!manager?.getOperationSuccessChance) {
             return 0;
         }
+        const attackerId = factionId || ((typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
+            ? globalThis.UHF_FACTION_ID
+            : 'uhf');
         const chance = manager.getOperationSuccessChance({
             sectorKey,
-            factionId: (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
-                ? globalThis.UHF_FACTION_ID
-                : 'uhf',
+            factionId: attackerId,
             assignedPower
         });
         if (!Number.isFinite(chance)) {
@@ -459,12 +460,14 @@ const GalaxyOperationUI = (() => {
         if (!sectorKey || !sector) {
             return;
         }
-        const faction = manager.getFaction((typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
+        const fallbackFactionId = (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
             ? globalThis.UHF_FACTION_ID
-            : 'uhf');
+            : 'uhf';
+        const faction = manager.getFaction(fallbackFactionId);
         if (!faction) {
             return;
         }
+        const uhfFactionId = faction.id || fallbackFactionId;
         if (isSectorFullyControlled(manager, sector, faction)) {
             return;
         }
@@ -480,12 +483,10 @@ const GalaxyOperationUI = (() => {
         if (!antimatterResource || antimatterValue < cost) {
             return;
         }
-        const successChance = resolveOperationSuccessChance(manager, sectorKey, assignment);
+        const successChance = resolveOperationSuccessChance(manager, sectorKey, assignment, uhfFactionId);
         const operation = manager.startOperation({
             sectorKey,
-            factionId: (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
-                ? globalThis.UHF_FACTION_ID
-                : 'uhf',
+            factionId: uhfFactionId,
             assignedPower: assignment,
             successChance,
             durationMs: getDefaultOperationDurationMs()
@@ -850,9 +851,11 @@ const GalaxyOperationUI = (() => {
             return;
         }
 
-        const faction = manager.getFaction((typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
+        const fallbackFactionId = (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
             ? globalThis.UHF_FACTION_ID
-            : 'uhf');
+            : 'uhf';
+        const faction = manager.getFaction(fallbackFactionId);
+        const uhfFactionId = faction?.id || fallbackFactionId;
         if (isSectorFullyControlled(manager, sector, faction)) {
             operationsEmpty.classList.remove('is-hidden');
             operationsEmpty.textContent = 'Sector already fully controlled by the UHF.';
@@ -874,7 +877,7 @@ const GalaxyOperationUI = (() => {
         operationsForm.classList.remove('is-hidden');
         operationsAvailable.textContent = `Available: ${formatter(availablePower, false, 2)}`;
 
-        const operation = manager.getOperationForSector(selection.key);
+        const operation = manager.getOperationForSector(selection.key, uhfFactionId);
         const hasOperation = !!operation;
         const operationRunning = hasOperation && operation.status === 'running';
         if (operationRunning) {
@@ -885,9 +888,7 @@ const GalaxyOperationUI = (() => {
         }
 
         const sectorPower = manager.getSectorDefensePower
-            ? manager.getSectorDefensePower(selection.key, (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
-                ? globalThis.UHF_FACTION_ID
-                : 'uhf')
+            ? manager.getSectorDefensePower(selection.key, uhfFactionId)
             : 0;
         const autoThresholdValue = getAutoLaunchThreshold();
         const requiredThreshold = sectorPower > 0 ? sectorPower * autoThresholdValue : 0;
@@ -906,16 +907,14 @@ const GalaxyOperationUI = (() => {
 
         const lossEstimate = manager?.getOperationLossEstimate?.({
             sectorKey: selection.key,
-            factionId: (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
-                ? globalThis.UHF_FACTION_ID
-                : 'uhf',
+            factionId: uhfFactionId,
             assignedPower: assignment,
             reservedPower: assignment,
             offensePower: assignment
         });
 
         const successChance = assignment > 0
-            ? resolveOperationSuccessChance(manager, selection.key, assignment)
+            ? resolveOperationSuccessChance(manager, selection.key, assignment, uhfFactionId)
             : 0;
         const meetsAutoThreshold = requiredThreshold <= 0 ? assignment > 0 : assignment >= requiredThreshold;
 

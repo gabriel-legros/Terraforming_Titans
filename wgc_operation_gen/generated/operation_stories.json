@@ -1,0 +1,535 @@
+[
+  {
+    "id": "wgc_operation_story_20251019T000828Z",
+    "title": "Warp Gate Command Operation 00828Z",
+    "summary": "Event: combat",
+    "model": "GPT-5",
+    "createdAt": "20251019T000828Z",
+    "events": [
+      {
+        "step": 1,
+        "name": "Combat challenge",
+        "type": "combat",
+        "skill": null,
+        "specialty": null,
+        "lines": [
+          "Event: combat",
+          "Gate flares; hostiles breach. $TEAM_MEMBER_1 anchors shield line.",
+          "$TEAM_MEMBER_3 calls targets; $TEAM_MEMBER_4 suppresses with coilgun bursts."
+        ]
+      },
+      {
+        "step": 2,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Event: team athletics",
+          "Rubble-choked corridor ahead; timed dash to the relay.",
+          "$TEAM_MEMBER_1, $TEAM_MEMBER_2, $TEAM_MEMBER_3, $TEAM_MEMBER_4 vault debris in sync."
+        ]
+      },
+      {
+        "step": 3,
+        "name": "Social Science challenge",
+        "type": "science",
+        "skill": null,
+        "specialty": "Social Scientist",
+        "lines": [
+          "Event: science Social Scientist",
+          "Civilians panic at the outpost gate.",
+          "$TEAM_MEMBER_SELECTED de-escalates, mapping social ties to stabilize the crowd."
+        ]
+      },
+      {
+        "step": 4,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Event: individual athletics",
+          "Collapsed gantry blocks the plasma valve.",
+          "$TEAM_MEMBER_2 free-climbs under fire to crank the manual release."
+        ]
+      },
+      {
+        "step": 5,
+        "name": "Social Science challenge",
+        "type": "science",
+        "skill": null,
+        "specialty": "Social Scientist",
+        "lines": [
+          "Event: science Social Scientist",
+          "Ritual dispute halts access to the archive.",
+          "$TEAM_MEMBER_SELECTED decodes norms, brokers oath exchange for safe passage."
+        ]
+      },
+      {
+        "step": 6,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Event: individual athletics",
+          "Mag-lock jammed on drone bay hatch.",
+          "$TEAM_MEMBER_3 sprints, slides, and force-levers the panel before detonation."
+        ]
+      },
+      {
+        "step": 7,
+        "name": "Team Power Challenge",
+        "type": "team",
+        "skill": "power",
+        "specialty": null,
+        "lines": [
+          "Event: team power",
+          "Aux grid brownouts threaten the gate.",
+          "$TEAM_MEMBER_1 and $TEAM_MEMBER_4 parallel-link capacitors; team hauls coils into place."
+        ]
+      },
+      {
+        "step": 8,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Event: individual athletics",
+          "Data core ejected down shaft.",
+          "$TEAM_MEMBER_4 rappels fast, pendulums across, snatches the core mid-swing."
+        ]
+      },
+      {
+        "step": 9,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Event: team athletics",
+          "Meteor dust storm overtakes the ridge.",
+          "Squad pace-lines; $TEAM_MEMBER_2 sets cadence while others rotate windward."
+        ]
+      },
+      {
+        "step": 10,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Event: individual athletics",
+          "Final sprint to dial home as horizon flares.",
+          "$TEAM_MEMBER_1 hurdles barricades and palms the last chevron lock."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wgc_operation_story_20251019T001040Z",
+    "title": "Warp Gate Command Operation 01040Z",
+    "summary": "Warp ring stabilizes over a calcified forest",
+    "model": "GPT-5",
+    "createdAt": "20251019T001040Z",
+    "events": [
+      {
+        "step": 1,
+        "name": "Natural Science challenge",
+        "type": "science",
+        "skill": null,
+        "specialty": "Natural Scientist",
+        "lines": [
+          "Warp ring stabilizes over a calcified forest",
+          "$TEAM_MEMBER_SELECTED maps mineral blooms",
+          "Natural Scientist confirms safe path through reactive dust"
+        ]
+      },
+      {
+        "step": 2,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Gravity surge hits the corridor mid-run",
+          "$TEAM_MEMBER_1 calls cadence, team vaults debris",
+          "Athletics carries them before the floor shears"
+        ]
+      },
+      {
+        "step": 3,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Wind tunnel ignites from canyon vents",
+          "$TEAM_MEMBER_2 anchors a line, team low-crawls",
+          "Athletics keeps spacing tight under gusts"
+        ]
+      },
+      {
+        "step": 4,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Collapsed bridge, sixty-foot gap",
+          "$TEAM_MEMBER_3 sprints, throws grapnel, swings clean",
+          "Athletics saves precious minutes on the clock"
+        ]
+      },
+      {
+        "step": 5,
+        "name": "Team Power Challenge",
+        "type": "team",
+        "skill": "power",
+        "specialty": null,
+        "lines": [
+          "Bulkhead door jammed by fused rails",
+          "$TEAM_MEMBER_4 and $TEAM_MEMBER_1 brace and heave",
+          "Power opens a wedge wide enough for packs"
+        ]
+      },
+      {
+        "step": 6,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Mag-tiles flicker, pattern unstable",
+          "Team coordinates steps on the lit grid",
+          "Athletics timing avoids a hard drop"
+        ]
+      },
+      {
+        "step": 7,
+        "name": "Combat challenge",
+        "type": "combat",
+        "skill": null,
+        "specialty": null,
+        "lines": [
+          "Contact at the spillway, three hostiles",
+          "$TEAM_MEMBER_SELECTED marks lanes, short bursts",
+          "Controlled fire drops them without alarms"
+        ]
+      },
+      {
+        "step": 8,
+        "name": "Team Power Challenge",
+        "type": "team",
+        "skill": "power",
+        "specialty": null,
+        "lines": [
+          "Freight lift seized with cargo overload",
+          "Team rig pulleys, muscles straining",
+          "Power hauls the platform to upper decks"
+        ]
+      },
+      {
+        "step": 9,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Flooded gallery ahead, current strong",
+          "Linked harnesses, synchronized strides",
+          "Athletics pushes through without losing kit"
+        ]
+      },
+      {
+        "step": 10,
+        "name": "Team Power Challenge",
+        "type": "team",
+        "skill": "power",
+        "specialty": null,
+        "lines": [
+          "Sealed vault resists remote commands",
+          "Team plants spreader jacks, steady pressure",
+          "Power cracks it clean, mission corridor opens"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wgc_operation_story_20251019T001240Z",
+    "title": "Warp Gate Command Operation 01240Z",
+    "summary": "Warp ring hums to life; surge warnings spike.",
+    "model": "GPT-5",
+    "createdAt": "20251019T001240Z",
+    "events": [
+      {
+        "step": 1,
+        "name": "Team Power Challenge",
+        "type": "team",
+        "skill": "power",
+        "specialty": null,
+        "lines": [
+          "Warp ring hums to life; surge warnings spike.",
+          "$TEAM_MEMBER_1 calls the push; synchronized brace.",
+          "Team channels power to stabilize the aperture."
+        ]
+      },
+      {
+        "step": 2,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "$TEAM_MEMBER_SELECTED sprints for the iris control.",
+          "Debris litters the deck, floor plates slick.",
+          "A leap clears the gap; manual override engaged."
+        ]
+      },
+      {
+        "step": 3,
+        "name": "Social Science challenge",
+        "type": "science",
+        "skill": null,
+        "specialty": "Social Scientist",
+        "lines": [
+          "Local envoy bristles at our presence.",
+          "$TEAM_MEMBER_2 presents cultural brief, calm and direct.",
+          "Tension eases; corridor access granted."
+        ]
+      },
+      {
+        "step": 4,
+        "name": "Team Power Challenge",
+        "type": "team",
+        "skill": "power",
+        "specialty": null,
+        "lines": [
+          "Seismic ripple jolts the platform.",
+          "$TEAM_MEMBER_3 anchors the conduit; others heave.",
+          "Gate field holds under coordinated strain."
+        ]
+      },
+      {
+        "step": 5,
+        "name": "Team Wits Challenge",
+        "type": "team",
+        "skill": "wit",
+        "specialty": null,
+        "lines": [
+          "Encrypted riddle gates the inner vault.",
+          "$TEAM_MEMBER_4 maps patterns, thinks three moves ahead.",
+          "Trap logic unraveled; route unlocked."
+        ]
+      },
+      {
+        "step": 6,
+        "name": "Team Power Challenge",
+        "type": "team",
+        "skill": "power",
+        "specialty": null,
+        "lines": [
+          "Power grid buckles under feedback.",
+          "Team forms daisy-chain with dampeners.",
+          "Surge diverted; systems ride the wave."
+        ]
+      },
+      {
+        "step": 7,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "$TEAM_MEMBER_SELECTED races the collapsing span.",
+          "Breath measured, stride clean despite armor.",
+          "Hands grip the far rail; haul to safety."
+        ]
+      },
+      {
+        "step": 8,
+        "name": "Combat challenge",
+        "type": "combat",
+        "skill": null,
+        "specialty": null,
+        "lines": [
+          "Hostiles breach with arc blades.",
+          "$TEAM_MEMBER_1 drops smoke; controlled fields of fire.",
+          "Room cleared, minimal expenditure."
+        ]
+      },
+      {
+        "step": 9,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Gravity flickers; footing unreliable.",
+          "Team times jumps, momentum shared by grip lines.",
+          "Athletic relay carries gear across."
+        ]
+      },
+      {
+        "step": 10,
+        "name": "Combat challenge",
+        "type": "combat",
+        "skill": null,
+        "specialty": null,
+        "lines": [
+          "Last stand at the control dais.",
+          "$TEAM_MEMBER_2 marks targets; $TEAM_MEMBER_3 covers reloads.",
+          "Final volley drops the leader; quiet returns."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wgc_operation_story_20251019T002017Z",
+    "title": "Warp Gate Command Operation 02017Z",
+    "summary": "The team stepped through the shimmering warp gate, emerging into a vast, rugged canyon under twin suns.",
+    "model": "Grok-4",
+    "createdAt": "20251019T002017Z",
+    "events": [
+      {
+        "step": 1,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "The team stepped through the shimmering warp gate, emerging into a vast, rugged canyon under twin suns.",
+          "$TEAM_MEMBER_1 led the way, scouting for stable footing as loose rocks shifted under their boots.",
+          "Together, they navigated a treacherous ravine, leaping across gaps and pulling each other up steep inclines.",
+          "Sweat poured down their faces, but their coordinated efforts got them across without a single fall.",
+          "Finally, they reached solid ground, hearts pounding from the exertion."
+        ]
+      },
+      {
+        "step": 2,
+        "name": "Combat challenge",
+        "type": "combat",
+        "skill": null,
+        "specialty": null,
+        "lines": [
+          "Alerted by distant roars, the team spotted a pack of armored beasts charging from the shadows.",
+          "$TEAM_MEMBER_2 raised their rifle, firing precise shots to hold the line while $TEAM_MEMBER_3 flanked left.",
+          "Explosions of dirt erupted as the creatures lunged, but the team's disciplined fire kept them at bay.",
+          "$TEAM_MEMBER_4 tossed a grenade into the fray, scattering the pack and forcing a retreat.",
+          "The air cleared, leaving the team victorious but vigilant for more threats."
+        ]
+      },
+      {
+        "step": 3,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "Ahead loomed a massive, vine-choked wall blocking their path to the ancient ruins.",
+          "The team rigged climbing gear, with $TEAM_MEMBER_1 anchoring ropes for the ascent.",
+          "Hand over hand, they pulled themselves up, muscles straining against the slick surface.",
+          "A sudden slip nearly sent $TEAM_MEMBER_3 tumbling, but quick grabs from the others saved the day.",
+          "At the top, they collapsed in exhaustion, surveying the sprawling landscape below."
+        ]
+      },
+      {
+        "step": 4,
+        "name": "Social Science challenge",
+        "type": "science",
+        "skill": null,
+        "specialty": "Social Scientist",
+        "lines": [
+          "Entering a hidden village, the team encountered wary inhabitants with intricate tattoos and ritual garb.",
+          "$TEAM_MEMBER_4, drawing on social expertise, approached the elders with open palms and respectful gestures.",
+          "Through careful observation of customs and shared stories, trust began to build over a communal fire.",
+          "Insights into their society's hierarchies unlocked a map to hidden artifacts, sealed with a pact of alliance.",
+          "The exchange deepened the team's understanding of this world's fragile peace."
+        ]
+      },
+      {
+        "step": 5,
+        "name": "Team Wits Challenge",
+        "type": "team",
+        "skill": "wit",
+        "specialty": null,
+        "lines": [
+          "Confronted by a sealed chamber door etched with cryptic symbols, the team huddled to decipher the puzzle.",
+          "$TEAM_MEMBER_1 suggested linking patterns to local myths, while $TEAM_MEMBER_2 tested logical sequences.",
+          "Wits sharp, they debated theories, eliminating dead ends with clever deductions.",
+          "A breakthrough came when $TEAM_MEMBER_3 connected dots to a forgotten legend, unlocking the mechanism.",
+          "The door groaned open, revealing treasures that rewarded their collective ingenuity."
+        ]
+      },
+      {
+        "step": 6,
+        "name": "Team Power Challenge",
+        "type": "team",
+        "skill": "power",
+        "specialty": null,
+        "lines": [
+          "Faced with a colossal stone barrier guarded by energy fields, the team prepared to force their way through.",
+          "$TEAM_MEMBER_4 channeled raw power, overriding the fields with a jury-rigged device.",
+          "Together, they heaved against the stone, muscles and tech amplifying their strength.",
+          "Sparks flew as the barrier cracked, yielding to their unyielding determination.",
+          "With a final push, the path cleared, empowering them for the trials ahead."
+        ]
+      },
+      {
+        "step": 7,
+        "name": "Team Athletics Challenge",
+        "type": "team",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "A raging river cut through the valley, its currents too fierce for a simple crossing.",
+          "The team fashioned a makeshift raft from fallen logs, lashing them tight with cords.",
+          "Paddling in unison, they battled the whitewater, steering clear of jagged rocks.",
+          "Waves crashed over them, but their athletic prowess kept the raft afloat and on course.",
+          "They emerged on the far bank, drenched but triumphant in their teamwork."
+        ]
+      },
+      {
+        "step": 8,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "$TEAM_MEMBER_1 spotted a narrow ledge leading to a vantage point, deciding to scale it alone for reconnaissance.",
+          "Gripping handholds with iron resolve, they inched upward, wind whipping at their gear.",
+          "A loose rock gave way, testing their reflexes as they swung to safety.",
+          "Reaching the summit, they signaled the team below, having secured a strategic overview."
+        ]
+      },
+      {
+        "step": 9,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "$TEAM_MEMBER_2 volunteered for a solo sprint across unstable ground to retrieve a fallen sensor probe.",
+          "Dodging fissures that opened without warning, they leaped with precision and speed.",
+          "Adrenaline fueled each bound, muscles burning as the earth trembled beneath.",
+          "Grabbing the probe, they raced back, collapsing safely with the vital data in hand."
+        ]
+      },
+      {
+        "step": 10,
+        "name": "Individual Athletics Challenge",
+        "type": "individual",
+        "skill": "athletics",
+        "specialty": null,
+        "lines": [
+          "$TEAM_MEMBER_3 took on the final dash through a collapsing tunnel to activate an escape beacon.",
+          "Weaving between falling debris, their agility shone in every dodge and vault.",
+          "The tunnel narrowed, forcing a desperate crawl under a crumbling arch.",
+          "Emerging just in time, they hit the beacon, ensuring the team's safe extraction."
+        ]
+      }
+    ]
+  }
+]

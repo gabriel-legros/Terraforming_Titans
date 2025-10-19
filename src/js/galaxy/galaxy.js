@@ -620,11 +620,11 @@ class GalaxyManager extends EffectableEntity {
         return Array.from(this.factions.values());
     }
 
-    getOperationForSector(sectorKey) {
+    getOperationForSector(sectorKey, factionId) {
         if (!this.operationManager) {
             return null;
         }
-        return this.operationManager.getOperationForSector(sectorKey);
+        return this.operationManager.getOperationForSector(sectorKey, factionId);
     }
 
     getSectorDefensePower(sectorKey, attackerId) {

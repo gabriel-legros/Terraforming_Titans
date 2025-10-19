@@ -161,11 +161,22 @@ class GalaxyOperationManager {
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
     }
 
-    getOperationForSector(sectorKey) {
+    getOperationForSector(sectorKey, factionId) {
         if (!sectorKey) {
             return null;
         }
-        return this.operations.get(sectorKey) || null;
+        const operation = this.operations.get(sectorKey) || null;
+        if (!operation) {
+            return null;
+        }
+        if (!factionId) {
+            return operation;
+        }
+        const ownerId = operation.factionId || this.uhfFactionId;
+        if (ownerId !== factionId) {
+            return null;
+        }
+        return operation;
     }
 
     getOperationStep(sectorKey) {
