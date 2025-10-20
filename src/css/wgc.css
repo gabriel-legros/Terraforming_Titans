@@ -57,6 +57,18 @@
   box-shadow: var(--wgc-accent-glow);
 }
 
+.wgc-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.wgc-card-header h3 {
+  margin: 0;
+}
+
 /* Team Card */
 .wgc-team-card {
   background-color: var(--wgc-bg-dark);
@@ -305,6 +317,80 @@
   width: 60px;
   text-align: center;
   color-scheme: dark;
+}
+
+.wgc-container .wgc-story-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--wgc-text-light);
+  text-transform: none;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: none;
+}
+
+.wgc-container .wgc-story-toggle__track {
+  width: 44px;
+  height: 22px;
+  background-color: var(--wgc-bg-light);
+  border-radius: 999px;
+  position: relative;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wgc-container .wgc-story-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--wgc-text-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__track {
+  background-color: var(--wgc-border-color);
+  box-shadow: var(--wgc-accent-glow);
+}
+
+.wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__thumb {
+  transform: translateX(22px);
+}
+
+.wgc-container .wgc-story-toggle:focus-visible {
+  outline: 2px solid var(--wgc-border-color);
+  outline-offset: 2px;
+}
+
+.wgc-container .wgc-story-toggle__label {
+  font-weight: 600;
+  color: var(--wgc-text-light);
+  min-width: 88px;
+  text-align: left;
+}
+
+.wgc-container .wgc-story-toggle.is-hidden .wgc-story-toggle__track {
+  background-color: var(--wgc-bg-light);
+  box-shadow: none;
+}
+
+.wgc-container .wgc-story-toggle:hover {
+  background: transparent;
+  color: var(--wgc-text-light);
+  border: none;
+  box-shadow: none;
+}
+
+.wgc-container .wgc-story-toggle:hover .wgc-story-toggle__track {
+  box-shadow: none;
 }
 
 /* R&D and Facilities List */

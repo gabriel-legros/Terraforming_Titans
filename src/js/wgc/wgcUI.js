@@ -28,11 +28,12 @@ function scrollWGCLogToBottom(target) {
 function updateWGCStoryToggleButton() {
   if (!wgcStoryToggleButton || typeof warpGateCommand === 'undefined') return;
   const hidden = !!warpGateCommand.hideStoryLogs;
-  if (wgcStoryToggleLabel) {
-    wgcStoryToggleLabel.textContent = hidden ? 'Show Story' : 'Hide Story';
-  }
-  wgcStoryToggleButton.classList.toggle('active', !hidden);
+  wgcStoryToggleButton.classList.toggle('is-visible', !hidden);
+  wgcStoryToggleButton.classList.toggle('is-hidden', hidden);
   wgcStoryToggleButton.setAttribute('aria-pressed', hidden ? 'false' : 'true');
+  if (wgcStoryToggleLabel) {
+    wgcStoryToggleLabel.textContent = hidden ? 'Hide Story' : 'Show Story';
+  }
 }
 function queueWGCLogScroll(teamIndex) {
   if (!Number.isInteger(teamIndex) || teamIndex < 0) return;
@@ -835,10 +836,10 @@ function generateWGCLayout() {
             <div class="wgc-card-header">
               <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
               <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
-                <span class="wgc-story-toggle__track">
+                <span class="wgc-story-toggle__track" aria-hidden="true">
                   <span class="wgc-story-toggle__thumb"></span>
                 </span>
-                <span class="wgc-story-toggle__label">Hide Story</span>
+                <span class="wgc-story-toggle__label">Show Story</span>
               </button>
             </div>
             <div id="wgc-team-cards"></div>
@@ -873,7 +874,9 @@ function initializeWGCUI() {
   if (container) {
     container.innerHTML = generateWGCLayout();
     wgcStoryToggleButton = container.querySelector('#wgc-story-toggle');
-    wgcStoryToggleLabel = wgcStoryToggleButton ? wgcStoryToggleButton.querySelector('.wgc-story-toggle__label') : null;
+    if (wgcStoryToggleButton) {
+      wgcStoryToggleLabel = wgcStoryToggleButton.querySelector('.wgc-story-toggle__label');
+    }
     if (wgcStoryToggleButton) {
       wgcStoryToggleButton.addEventListener('click', () => {
         if (typeof warpGateCommand === 'undefined') return;
