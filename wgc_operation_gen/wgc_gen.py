@@ -18,7 +18,7 @@ BASE_EVENTS: List[Dict[str, Any]] = [
 ]
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "generated"
-OUTPUT_PATH = OUTPUT_DIR / "operation_stories.json"
+OUTPUT_PATH = OUTPUT_DIR / "operation_stories.js"
 DEFAULT_MODEL = os.environ.get("POE_MODEL", "Grok-4")
 POE_API_KEY = os.environ.get("POE_API_KEY")
 POE_BASE_URL = os.environ.get("POE_BASE_URL", "https://api.poe.com/v1")
@@ -141,16 +141,44 @@ def build_record(lines: List[List[str]], events: List[Dict[str, Any]], model: st
     return payload
 
 
+def load_existing_records() -> List[Dict[str, Any]]:
+    if not OUTPUT_PATH.exists():
+        return []
+    raw = OUTPUT_PATH.read_text("utf-8")
+    start = raw.find('[')
+    end = raw.rfind(']')
+    if start == -1 or end == -1 or end < start:
+        raise ValueError("operation_stories.js is not in the expected format.")
+    payload = raw[start:end + 1]
+    data = json.loads(payload)
+    if not isinstance(data, list):
+        raise ValueError("operation_stories.js must wrap a JSON array.")
+    return data
+
+
+def write_records(records: List[Dict[str, Any]]) -> None:
+    json_payload = json.dumps(records, indent=2, ensure_ascii=True)
+    lines = json_payload.split('\n')
+    indented = '\n'.join(line if idx == 0 else f"  {line}" for idx, line in enumerate(lines))
+    bundle = (
+        "(function(root){\n"
+        f"  const stories = {indented};\n"
+        "  if (typeof module !== 'undefined' && module.exports) {\n"
+        "    module.exports = stories;\n"
+        "  }\n"
+        "  if (root) {\n"
+        "    root.WGC_OPERATION_STORIES = stories;\n"
+        "  }\n"
+        "})(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));\n"
+    )
+    OUTPUT_PATH.write_text(bundle, "utf-8")
+
+
 def append_record(record: Dict[str, Any]) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    if OUTPUT_PATH.exists():
-        existing = json.loads(OUTPUT_PATH.read_text("utf-8"))
-        if not isinstance(existing, list):
-            raise ValueError("operation_stories.json must contain a JSON array.")
-    else:
-        existing = []
+    existing = load_existing_records()
     existing.append(record)
-    OUTPUT_PATH.write_text(json.dumps(existing, indent=2, ensure_ascii=True) + "\n", "utf-8")
+    write_records(existing)
 
 
 def main() -> None:

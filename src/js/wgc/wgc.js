@@ -30,6 +30,62 @@ const operationStartText = 'Setting out through Warp Gate';
 
 const defaultTeamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
 
+const baseEventTemplatesByName = baseOperationEvents.reduce((map, evt) => {
+  map[evt.name] = evt;
+  return map;
+}, Object.create(null));
+
+const operationStoriesModulePaths = [
+  '../../../assets/wgc_ops/operation_stories.js',
+  '../../../assets/wgc_ops/operation_stories.json'
+];
+let cachedOperationStories = null;
+
+function ensureOperationStoriesLoaded() {
+  if (Array.isArray(cachedOperationStories)) {
+    return cachedOperationStories;
+  }
+  if (typeof window !== 'undefined' && window && Array.isArray(window.WGC_OPERATION_STORIES)) {
+    cachedOperationStories = window.WGC_OPERATION_STORIES;
+    return cachedOperationStories;
+  }
+  if (isNodeWGC) {
+    for (const path of operationStoriesModulePaths) {
+      try {
+        const data = require(path);
+        cachedOperationStories = Array.isArray(data) ? data : [];
+        return cachedOperationStories;
+      } catch (err) {}
+    }
+    cachedOperationStories = [];
+    return cachedOperationStories;
+  }
+  cachedOperationStories = [];
+  return cachedOperationStories;
+}
+
+function getOperationStories() {
+  const stories = ensureOperationStoriesLoaded();
+  if (Array.isArray(stories) && stories.length > 0) {
+    return stories;
+  }
+  return null;
+}
+
+function replaceStoryPlaceholders(line, team, selected) {
+  if (!line) return '';
+  const roster = Array.isArray(team) ? team : [];
+  let formatted = line.replace(/\$TEAM_MEMBER_([1-4])/g, (_, rawIndex) => {
+    const index = parseInt(rawIndex, 10) - 1;
+    const member = roster[index];
+    if (member && member.firstName) return member.firstName;
+    return `Member ${rawIndex}`;
+  });
+  const preferred = selected && selected.firstName ? selected.firstName : (roster[0] && roster[0].firstName ? roster[0].firstName : 'Operative');
+  formatted = formatted.replace(/\$TEAM_MEMBER_SELECTED/g, preferred);
+  return formatted;
+}
+
 class WarpGateCommand extends EffectableEntity {
   constructor() {
     super({ description: 'Warp Gate Command manager' });
@@ -81,6 +137,8 @@ class WarpGateCommand extends EffectableEntity {
     };
     this.facilityCooldown = 0;
     this.teamNames = defaultTeamNames.slice();
+    this.hideStoryLogs = false;
+    ensureOperationStoriesLoaded();
   }
 
   addLog(teamIndex, text) {
@@ -88,6 +146,12 @@ class WarpGateCommand extends EffectableEntity {
     const log = this.logs[teamIndex];
     log.push(text);
     if (log.length > 100) log.shift();
+    if (typeof invalidateWGCTeamCache === 'function') {
+      invalidateWGCTeamCache();
+    }
+    if (typeof queueWGCLogScroll === 'function') {
+      queueWGCLogScroll(teamIndex);
+    }
   }
 
   chooseEvent(teamIndex = 0) {
@@ -133,16 +197,64 @@ class WarpGateCommand extends EffectableEntity {
     return { ...event };
   }
 
-  generateOperationEvents(teamIndex, count = 10) {
+  generateOperationEvents(op, teamIndex, count = 10) {
     const list = [];
-    for (let i = 0; i < count; i++) {
-      const event = this.cloneEvent(this.chooseEvent(teamIndex));
-      if (event) {
-        event.isBase = true;
-        list.push(event);
+    const stories = getOperationStories();
+    if (stories && stories.length > 0) {
+      const selected = stories[Math.floor(Math.random() * stories.length)];
+      const storyEvents = selected && Array.isArray(selected.events) ? selected.events.slice(0, count) : [];
+      if (storyEvents.length === count) {
+        let invalid = false;
+        for (let i = 0; i < storyEvents.length; i += 1) {
+          const storyEvent = storyEvents[i];
+          const template = baseEventTemplatesByName[storyEvent.name] || null;
+          const event = template ? { ...template } : { name: storyEvent.name };
+          if (storyEvent.type) event.type = storyEvent.type;
+          if (storyEvent.skill) event.skill = storyEvent.skill;
+          if (storyEvent.specialty) event.specialty = storyEvent.specialty;
+          if (Array.isArray(storyEvent.lines) && storyEvent.lines.length > 0) {
+            event.storyLines = storyEvent.lines.slice();
+          }
+          event.storyStep = storyEvent.step || (list.length + 1);
+          event.isBase = true;
+          if (!event.type) {
+            invalid = true;
+            break;
+          }
+          this.applyStanceDifficulty(event, teamIndex);
+          list.push(event);
+        }
+        if (invalid) {
+          list.length = 0;
+        }
+      }
+    }
+    if (list.length !== count) {
+      list.length = 0;
+      for (let i = 0; i < count; i++) {
+        const event = this.cloneEvent(this.chooseEvent(teamIndex));
+        if (event) {
+          event.isBase = true;
+          list.push(event);
+        }
       }
     }
     return list;
+  }
+
+  logStoryStep(teamIndex, op, event, roller) {
+    if (this.hideStoryLogs) return;
+    if (!event || !Array.isArray(event.storyLines) || event.storyLines.length === 0) return;
+    const team = this.teams[teamIndex];
+    const operationNumber = op && op.number ? op.number : '?';
+    const baseStep = Number.isFinite(event.storyStep) ? event.storyStep : (op && Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted + 1 : 1);
+    const formattedLines = event.storyLines.map(line => {
+      const formatted = replaceStoryPlaceholders(line, team, roller);
+      return formatted ? formatted.trim() : '';
+    }).filter(text => text);
+    if (formattedLines.length === 0) return;
+    const paragraph = formattedLines.join(' ');
+    this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${operationNumber} - Story Step ${baseStep}: ${paragraph}`);
   }
 
   getEventDelay(event, teamIndex) {
@@ -403,6 +515,7 @@ class WarpGateCommand extends EffectableEntity {
     }
     const total = rollResult.sum + skillTotal;
     const damageText = damageDetail ? ` | ${damageDetail}` : '';
+    this.logStoryStep(teamIndex, op, event, roller);
     const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${formatNumber(dc, false, 2)} => ${outcome}${artText}${damageText}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
@@ -525,7 +638,7 @@ class WarpGateCommand extends EffectableEntity {
         return;
       }
       op.timer += seconds;
-      if (!Array.isArray(op.eventQueue)) op.eventQueue = this.generateOperationEvents(idx);
+      if (!Array.isArray(op.eventQueue)) op.eventQueue = this.generateOperationEvents(op, idx);
       if (!Number.isFinite(op.currentEventIndex)) op.currentEventIndex = 0;
       if (!Number.isFinite(op.nextEvent) || op.nextEvent <= 0) op.nextEvent = 60;
       if (!Number.isFinite(op.baseEventsTotal) || op.baseEventsTotal <= 0) op.baseEventsTotal = 10;
@@ -641,7 +754,7 @@ class WarpGateCommand extends EffectableEntity {
     this.teamOperationCounts[teamIndex] += 1;
     op.artifacts = 0;
     op.successes = 0;
-    op.eventQueue = this.generateOperationEvents(teamIndex);
+    op.eventQueue = this.generateOperationEvents(op, teamIndex);
     op.currentEventIndex = 0;
     op.nextEvent = 60;
     op.baseEventsTotal = 10;
@@ -668,7 +781,7 @@ class WarpGateCommand extends EffectableEntity {
     op.nextEvent = 60;
     op.artifacts = 0;
     op.successes = 0;
-    op.eventQueue = this.generateOperationEvents(teamIndex);
+    op.eventQueue = this.generateOperationEvents(op, teamIndex);
     op.currentEventIndex = 0;
     op.baseEventsTotal = 10;
     op.baseEventsCompleted = 0;
@@ -775,12 +888,14 @@ class WarpGateCommand extends EffectableEntity {
       stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact })),
       facilities: { ...this.facilities },
       facilityCooldown: this.facilityCooldown,
-      teamNames: this.teamNames.slice()
+      teamNames: this.teamNames.slice(),
+      hideStoryLogs: !!this.hideStoryLogs
     };
   }
 
   loadState(data = {}) {
     this.enabled = data.enabled || false;
+    this.hideStoryLogs = !!data.hideStoryLogs;
     if (data.upgrades) {
       for (const k in data.upgrades) {
         if (this.rdUpgrades[k]) {
@@ -874,7 +989,7 @@ class WarpGateCommand extends EffectableEntity {
       }
       if (op.active) {
         if (!Array.isArray(op.eventQueue) || op.eventQueue.length === 0) {
-          op.eventQueue = this.generateOperationEvents(i);
+          op.eventQueue = this.generateOperationEvents(op, i);
           op.currentEventIndex = 0;
           op.nextEvent = 60;
         }

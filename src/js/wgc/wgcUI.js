@@ -1,5 +1,43 @@
 let wgcTabVisible = false;
 let wgcUIInitialized = false;
+let wgcStoryToggleButton = null;
+let wgcStoryToggleLabel = null;
+const wgcPendingLogScroll = new Set();
+
+function queueWGCRender(callback) {
+  const scheduler = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+    ? window.requestAnimationFrame
+    : handler => setTimeout(handler, 0);
+  scheduler(callback);
+}
+
+function isWGCLogPinned(container) {
+  if (!container) return false;
+  const remaining = container.scrollHeight - container.scrollTop - container.clientHeight;
+  return remaining <= 4;
+}
+
+function scrollWGCLogToBottom(target) {
+  if (!target) return;
+  target.scrollTop = target.scrollHeight;
+  queueWGCRender(() => {
+    target.scrollTop = target.scrollHeight;
+  });
+}
+
+function updateWGCStoryToggleButton() {
+  if (!wgcStoryToggleButton || typeof warpGateCommand === 'undefined') return;
+  const hidden = !!warpGateCommand.hideStoryLogs;
+  if (wgcStoryToggleLabel) {
+    wgcStoryToggleLabel.textContent = hidden ? 'Show Story' : 'Hide Story';
+  }
+  wgcStoryToggleButton.classList.toggle('active', !hidden);
+  wgcStoryToggleButton.setAttribute('aria-pressed', hidden ? 'false' : 'true');
+}
+function queueWGCLogScroll(teamIndex) {
+  if (!Number.isInteger(teamIndex) || teamIndex < 0) return;
+  wgcPendingLogScroll.add(teamIndex);
+}
 if (typeof globalThis.formatNumber === 'undefined') {
   try {
     if (typeof require !== 'undefined') {
@@ -111,7 +149,12 @@ function formatWGCLogLine(line) {
 
 function renderWGCLogLines(entries) {
   if (!Array.isArray(entries) || entries.length === 0) return '';
-  return entries.map(line => `<div class="wgc-log-line">${formatWGCLogLine(line)}</div>`).join('');
+  const hideStory = typeof warpGateCommand !== 'undefined' && warpGateCommand.hideStoryLogs;
+  const filtered = hideStory
+    ? entries.filter(line => typeof line !== 'string' || line.indexOf('Story Step') === -1)
+    : entries;
+  if (filtered.length === 0) return '';
+  return filtered.map(line => `<div class="wgc-log-line">${formatWGCLogLine(line)}</div>`).join('');
 }
 
 function showWGCTab() {
@@ -224,6 +267,7 @@ function generateWGCTeamCards() {
 }
 
 function invalidateWGCTeamCache() {
+  const previous = teamElements.slice();
   teamElements.length = 0;
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   names.forEach((_, tIdx) => {
@@ -232,12 +276,16 @@ function invalidateWGCTeamCache() {
       teamElements[tIdx] = null;
       return;
     }
+    const logContainer = card.querySelector('.team-log');
+    const logContent = card.querySelector('.team-log-content');
     const slots = Array.from(card.querySelectorAll('.team-slot')).map(slot => ({
       slot,
       bar: slot.querySelector('.team-hp-bar-fill'),
       indicator: slot.querySelector('.unspent-points-indicator') || null
     }));
-    teamElements[tIdx] = {
+    const prev = previous[tIdx];
+    const hideStory = typeof warpGateCommand !== 'undefined' && !!warpGateCommand.hideStoryLogs;
+    const entry = {
       card,
       startBtn: card.querySelector('.start-button'),
       recallBtn: card.querySelector('.recall-button'),
@@ -247,10 +295,29 @@ function invalidateWGCTeamCache() {
       progressContainer: card.querySelector('.operation-progress'),
       progressBar: card.querySelector('.operation-progress-bar'),
       summaryEl: card.querySelector('.operation-summary'),
-      logEl: card.querySelector('.team-log-content'),
+      logContainer,
+      logEl: logContent,
+      logPinned: prev && prev.logPinned === false ? false : isWGCLogPinned(logContainer),
+      lastRenderedCount: prev ? prev.lastRenderedCount || 0 : 0,
+      lastRenderedHideState: prev ? prev.lastRenderedHideState : hideStory,
+      lastRenderedHtml: prev ? prev.lastRenderedHtml || '' : '',
       lockOverlay: card.querySelector('.wgc-team-locked'),
       slots
     };
+    teamElements[tIdx] = entry;
+    if (logContainer) {
+      logContainer.dataset.teamIndex = `${tIdx}`;
+      if (!logContainer._wgcScrollHandler) {
+        logContainer.addEventListener('scroll', () => {
+          const idx = Number(logContainer.dataset.teamIndex);
+          if (Number.isNaN(idx)) return;
+          const target = teamElements[idx];
+          if (!target) return;
+          target.logPinned = isWGCLogPinned(logContainer);
+        });
+        logContainer._wgcScrollHandler = true;
+      }
+    }
   });
 }
 
@@ -765,7 +832,15 @@ function generateWGCLayout() {
       <div class="wgc-main">
         <div class="wgc-left">
           <div class="wgc-card" id="wgc-teams-section">
-            <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
+            <div class="wgc-card-header">
+              <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
+              <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
+                <span class="wgc-story-toggle__track">
+                  <span class="wgc-story-toggle__thumb"></span>
+                </span>
+                <span class="wgc-story-toggle__label">Hide Story</span>
+              </button>
+            </div>
             <div id="wgc-team-cards"></div>
           </div>
         </div>
@@ -797,6 +872,17 @@ function initializeWGCUI() {
   const container = document.getElementById('wgc-hope');
   if (container) {
     container.innerHTML = generateWGCLayout();
+    wgcStoryToggleButton = container.querySelector('#wgc-story-toggle');
+    wgcStoryToggleLabel = wgcStoryToggleButton ? wgcStoryToggleButton.querySelector('.wgc-story-toggle__label') : null;
+    if (wgcStoryToggleButton) {
+      wgcStoryToggleButton.addEventListener('click', () => {
+        if (typeof warpGateCommand === 'undefined') return;
+        warpGateCommand.hideStoryLogs = !warpGateCommand.hideStoryLogs;
+        updateWGCStoryToggleButton();
+        updateWGCUI();
+      });
+      updateWGCStoryToggleButton();
+    }
     const teamContainer = container.querySelector('#wgc-team-cards');
     if (teamContainer) {
       teamContainer.innerHTML = generateWGCTeamCards();
@@ -818,9 +904,14 @@ function initializeWGCUI() {
         }
         if (e.target.classList.contains('log-toggle')) {
           const t = parseInt(e.target.dataset.team, 10);
-          const card = e.target.closest('.wgc-team-card');
-          const log = card.querySelector('.team-log');
-          if (log) log.classList.toggle('hidden');
+          const refs = teamElements[t];
+          if (!refs || !refs.logContainer) return;
+          const { logContainer } = refs;
+          logContainer.classList.toggle('hidden');
+          if (!logContainer.classList.contains('hidden')) {
+            scrollWGCLogToBottom(logContainer);
+            refs.logPinned = true;
+          }
           return;
         }
         if (e.target.classList.contains('rename-team-icon')) {
@@ -909,6 +1000,7 @@ function initializeWGCUI() {
 
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
+  updateWGCStoryToggleButton();
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
     opEl.textContent = `Operations Completed: ${warpGateCommand.totalOperations}`;
@@ -982,6 +1074,7 @@ function updateWGCUI() {
       progressContainer,
       progressBar,
       summaryEl,
+      logContainer,
       logEl,
       lockOverlay,
       slots
@@ -1029,7 +1122,33 @@ function updateWGCUI() {
     }
     if (logEl) {
       const logEntries = warpGateCommand.logs[tIdx] || [];
-      logEl.innerHTML = renderWGCLogLines(logEntries);
+      const hideStory = typeof warpGateCommand !== 'undefined' && warpGateCommand.hideStoryLogs;
+      const visibleEntries = hideStory
+        ? logEntries.filter(line => typeof line !== 'string' || line.indexOf('Story Step') === -1)
+        : logEntries;
+      const visibleCount = visibleEntries.length;
+      const logVisible = logContainer && !logContainer.classList.contains('hidden');
+      const wasPinned = logVisible ? isWGCLogPinned(logContainer) : refs.logPinned !== false;
+      const newHtml = renderWGCLogLines(logEntries);
+      const contentChanged = newHtml !== refs.lastRenderedHtml;
+      const forceScroll = wgcPendingLogScroll.has(tIdx);
+      if (contentChanged) {
+        logEl.innerHTML = newHtml;
+        refs.lastRenderedHtml = newHtml;
+        refs.lastRenderedCount = visibleCount;
+        refs.lastRenderedHideState = hideStory;
+      }
+      if (logVisible) {
+        if ((contentChanged && visibleCount > 0 && refs.logPinned !== false && wasPinned) || forceScroll) {
+          scrollWGCLogToBottom(logContainer);
+          refs.logPinned = true;
+        } else {
+          refs.logPinned = isWGCLogPinned(logContainer);
+        }
+      }
+      if (forceScroll) {
+        wgcPendingLogScroll.delete(tIdx);
+      }
     }
 
     slots.forEach(({ slot, bar }, sIdx) => {
@@ -1123,6 +1242,7 @@ if (typeof module !== 'undefined' && module.exports) {
     updateWGCUI,
     redrawWGCTeamCards,
     invalidateWGCTeamCache,
+    queueWGCLogScroll,
     populateRDMenu,
     populateFacilityMenu,
     generateWGCTeamCards,
