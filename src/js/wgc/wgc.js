@@ -91,30 +91,41 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   chooseEvent(teamIndex = 0) {
-    const events = baseOperationEvents.map(ev => {
-      const e = { ...ev };
-      const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].hazardousBiomass : 'Neutral';
-      if (e.name === 'Social Science challenge') {
-        if (stance === 'Negotiation') e.weight *= 2;
-        if (stance === 'Aggressive') e.weight = 0;
-        if (stance === 'Recon') e.weight *= 1.5;
-      }
-      if (e.type === 'combat') {
-        if (stance === 'Negotiation') e.weight *= 0.5;
-        if (stance === 'Aggressive') e.weight *= 2;
-        if (stance === 'Recon') e.weight *= 0.7;
-      }
-      if (e.skill === 'wit' && stance === 'Recon') e.weight *= 1.5;
-      return e;
-    });
+    const events = baseOperationEvents.map(ev => ({ ...ev }));
     const weightedEvents = events.filter(e => (e.weight ?? 1) > 0);
     const total = weightedEvents.reduce((s, e) => s + (e.weight ?? 1), 0);
     let r = Math.random() * total;
+    let selected = weightedEvents[0] || null;
     for (const ev of weightedEvents) {
       r -= ev.weight ?? 1;
-      if (r < 0) return ev;
+      if (r < 0) {
+        selected = ev;
+        break;
+      }
     }
-    return weightedEvents[0];
+    return this.applyStanceDifficulty(selected, teamIndex);
+  }
+
+  applyStanceDifficulty(event, teamIndex) {
+    if (!event) return event;
+    const stanceObj = this.stances && this.stances[teamIndex] ? this.stances[teamIndex] : null;
+    let modifier = 1;
+    if (stanceObj && stanceObj.hazardousBiomass) {
+      const stance = stanceObj.hazardousBiomass;
+      if (stance === 'Negotiation') {
+        if (event.name === 'Social Science challenge') modifier *= 0.9;
+        if (event.type === 'combat') modifier *= 1.1;
+      } else if (stance === 'Aggressive') {
+        if (event.name === 'Social Science challenge') modifier *= 1.25;
+        if (event.type === 'combat') modifier *= 0.85;
+      } else if (stance === 'Recon') {
+        if (event.type === 'combat') modifier *= 0.85;
+        if (event.skill === 'athletics') modifier *= 1.25;
+        if (event.skill === 'wit') modifier *= 0.9;
+      }
+    }
+    event.stanceDifficultyModifier = modifier;
+    return event;
   }
 
   cloneEvent(event) {
@@ -224,6 +235,8 @@ class WarpGateCommand extends EffectableEntity {
       const baseDifficulty = op.difficulty || 0;
       difficulty = baseDifficulty * nextDiff;
     }
+    const stanceDifficultyModifier = event && Number.isFinite(event.stanceDifficultyModifier) && event.stanceDifficultyModifier > 0 ? event.stanceDifficultyModifier : 1;
+    const scaledDifficulty = difficulty * stanceDifficultyModifier;
     const pMult = 1 + this.facilities.shootingRange * 0.01;
     const aMult = 1 + this.facilities.obstacleCourse * 0.01;
     const wMult = 1 + this.facilities.library * 0.01;
@@ -243,7 +256,7 @@ class WarpGateCommand extends EffectableEntity {
           return s + applyMult(m[event.skill], event.skill);
         }, 0);
         rollResult = this.roll(4);
-        dc = 40 + difficulty * 4;
+        dc = Math.max(0, (40 + difficulty * 4) * stanceDifficultyModifier);
         success = rollResult.sum + skillTotal >= dc;
         if (success) {
           if (event.skill === 'athletics' && op) {
@@ -255,7 +268,7 @@ class WarpGateCommand extends EffectableEntity {
             op.nextArtifactModifier = current * 2;
           }
         } else {
-          let damage = 2 * difficulty;
+          let damage = 2 * scaledDifficulty;
           if (event.skill === 'wit') damage *= 0.5;
           damage = Math.max(0, damage);
           team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
@@ -299,10 +312,10 @@ class WarpGateCommand extends EffectableEntity {
         leaderBonus = leader ? Math.floor(applyMult(leader[event.skill], event.skill) / 2) : 0;
         skillTotal = baseSkill + leaderBonus;
         rollResult = this.roll(1);
-        dc = 10 + difficulty;
+        dc = Math.max(0, (10 + difficulty) * stanceDifficultyModifier);
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          let damage = 5 * difficulty;
+          let damage = 5 * scaledDifficulty;
           if (event.skill === 'power') damage *= 2;
           if (event.skill === 'wit') damage *= 0.5;
           damage = Math.max(0, damage);
@@ -328,7 +341,7 @@ class WarpGateCommand extends EffectableEntity {
         skillTotal = baseSkill + leaderBonus;
         roller = m;
         rollResult = this.roll(1);
-        dc = 10 + difficulty;
+        dc = Math.max(0, (10 + difficulty) * stanceDifficultyModifier);
         success = rollResult.sum + skillTotal >= dc;
         break;
       }
@@ -339,10 +352,11 @@ class WarpGateCommand extends EffectableEntity {
           return s + applyMult(mem.power, 'power') * mult;
         }, 0);
         rollResult = this.roll(4);
-        dc = 40 * (event.difficultyMultiplier || 1) + difficulty;
+        const combatMult = event && event.difficultyMultiplier ? event.difficultyMultiplier : 1;
+        dc = Math.max(0, (40 * combatMult + difficulty) * stanceDifficultyModifier);
         success = rollResult.sum + skillTotal >= dc;
         if (!success) {
-          const damage = Math.max(0, 5 * difficulty);
+          const damage = Math.max(0, 5 * scaledDifficulty);
           team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
           if (damage > 0) {
             damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
@@ -373,7 +387,7 @@ class WarpGateCommand extends EffectableEntity {
     if (success) op.successes += 1;
     let artifactReward = 0;
     if (artifact) {
-      artifactReward = 1 + (difficulty > 0 ? difficulty * 0.1 : 0);
+      artifactReward = 1 + (scaledDifficulty > 0 ? scaledDifficulty * 0.1 : 0);
       const mult = event.artifactMultiplier || (event.specialty === 'Natural Scientist' ? 2 : 1);
       artifactReward *= mult * artifactModifier;
       op.artifacts += artifactReward;
@@ -389,7 +403,7 @@ class WarpGateCommand extends EffectableEntity {
     }
     const total = rollResult.sum + skillTotal;
     const damageText = damageDetail ? ` | ${damageDetail}` : '';
-    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${dc} => ${outcome}${artText}${damageText}`;
+    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${formatNumber(dc, false, 2)} => ${outcome}${artText}${damageText}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 
@@ -400,6 +414,7 @@ class WarpGateCommand extends EffectableEntity {
           const extra = this.cloneEvent(combatBase);
           if (extra) {
             extra.isBase = false;
+            this.applyStanceDifficulty(extra, teamIndex);
             this.resolveEvent(teamIndex, extra);
           }
         }

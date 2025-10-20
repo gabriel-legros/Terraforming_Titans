@@ -42,18 +42,14 @@ const teamElements = [];
 var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
 const teamRulesTooltip = [
   'Special rules:',
-  '- Solo athletics challenges target the least athletic member (random if tied).',
-  '- Failed power checks deal double damage; failed wit checks deal half.',
-  '- Team Leaders lend half their skill on solo and science challenges.',
-  '- Soldiers count double Power in combat challenges.',
-  '- Team athletics successes ease the next challenge by 25%; failures delay it by 120s.',
-  '- Team wits successes double the next artifact reward; failures halve it.',
-  '- Negotiation stances halve combat weight and double social science weight.',
-  '- Aggressive stances remove social science challenges and double combat weight.',
-  '- Recon stances boost social and wit events while adding 60s to the next event on failures.',
-  '- Careful artifact stance doubles Natural Science artifact chance but delays the next event.',
-  '- Rapid Extraction halves Natural Science downtime but reduces artifact finds by 75%.',
-  '- Failing science challenges may escalate into combat.'
+  '- Team Power Challenge: Uses every member\'s Power; failed checks deal double damage.',
+  '- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.',
+  '- Team Wits Challenge: Uses team Wit; successes double the next artifact reward, failures halve it.',
+  '- Individual Athletics Challenge: Targets the least athletic member (random if tied) with the leader lending half their skill.',
+  '- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.',
+  '- Social Science Challenge: Social Scientists excel; failures may escalate into combat.',
+  '- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.',
+  '- Team Leaders lend half their skill on solo and science challenges.'
 ].join('\n');
 const wgcFirstNamePool = [
   'Aiden','Amelia','Andrew','Aria','Benjamin','Brielle','Caleb','Chloe','Daniel','Delilah',
@@ -183,7 +179,7 @@ function generateWGCTeamCards() {
           <div class="team-slots">${slotMarkup}</div>
           <div class="team-stances">
             <div class="team-stance">
-              <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Negotiation halves combat challenge weight and doubles social science weight. Aggressive removes social science challenges and doubles combat weight. Recon increases social and wit challenge weight but failures add 60 seconds to the next event.">&#9432;</span></label>
+              <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures still add 60 seconds.">&#9432;</span></label>
               <select class="hbi-select" data-team="${tIdx}">
                 <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
                 <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
@@ -192,7 +188,7 @@ function generateWGCTeamCards() {
               </select>
             </div>
             <div class="team-stance">
-              <label>Scientific Artifact Retrieval <span class="info-tooltip-icon" title="Careful doubles artifact chance on Natural Science challenges but delays the next event by triple the time. Rapid Extraction halves the downtime but reduces artifact chance by 75%.">&#9432;</span></label>
+              <label>Scientific Artifact Retrieval <span class="info-tooltip-icon" title="Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves downtime but reduces artifact finds by 75%.">&#9432;</span></label>
               <select class="artifact-select" data-team="${tIdx}">
                 <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
                 <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
