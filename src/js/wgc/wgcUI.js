@@ -174,39 +174,43 @@ function generateWGCTeamCards() {
     const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
-        <div class="team-header">Team <span class="team-name" data-team="${tIdx}">${name}</span><button class="rename-team-icon" data-team="${tIdx}" title="Rename Team">&#9998;</button></div>
         <div class="wgc-team-body">
-          <div class="team-slots">${slotMarkup}</div>
-          <div class="team-stances">
-            <div class="team-stance">
-              <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures still add 60 seconds.">&#9432;</span></label>
-              <select class="hbi-select" data-team="${tIdx}">
-                <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
-                <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
-                <option value="Aggressive"${stanceVal === 'Aggressive' ? ' selected' : ''}>Aggressive</option>
-                <option value="Recon"${stanceVal === 'Recon' ? ' selected' : ''}>Recon</option>
-              </select>
-            </div>
-            <div class="team-stance">
-              <label>Scientific Artifact Retrieval <span class="info-tooltip-icon" title="Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves downtime but reduces artifact finds by 75%.">&#9432;</span></label>
-              <select class="artifact-select" data-team="${tIdx}">
-                <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
-                <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
-                <option value="Rapid Extraction"${artVal === 'Rapid Extraction' ? ' selected' : ''}>Rapid Extraction</option>
-              </select>
-            </div>
+          <div class="team-main">
+            <div class="team-header">Team <span class="team-name" data-team="${tIdx}">${name}</span><button class="rename-team-icon" data-team="${tIdx}" title="Rename Team">&#9998;</button></div>
+            <div class="team-slots">${slotMarkup}</div>
           </div>
           <div class="team-controls">
-            <div class="difficulty-container">
-            <div class="difficulty-label">
-              <span>Difficulty</span>
-              <span class="info-tooltip-icon" title="Raises all challenge DCs (team +4 per level, individual +1 per level). Artifact and XP rewards increase by 10% per level. Failed individual checks deal 5 HP per level to the selected member while failed team checks damage all members for 2 HP per level. Failed combat checks damage all members for 5 HP per level.">&#9432;</span>
+            <div class="team-controls-left">
+              <div class="team-stance">
+                <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures still add 60 seconds.">&#9432;</span></label>
+                <select class="hbi-select" data-team="${tIdx}">
+                  <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
+                  <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
+                  <option value="Aggressive"${stanceVal === 'Aggressive' ? ' selected' : ''}>Aggressive</option>
+                  <option value="Recon"${stanceVal === 'Recon' ? ' selected' : ''}>Recon</option>
+                </select>
               </div>
-              <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0" />
+              <div class="team-stance">
+                <label>Scientific Artifact Retrieval <span class="info-tooltip-icon" title="Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves downtime but reduces artifact finds by 75%.">&#9432;</span></label>
+                <select class="artifact-select" data-team="${tIdx}">
+                  <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
+                  <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
+                  <option value="Rapid Extraction"${artVal === 'Rapid Extraction' ? ' selected' : ''}>Rapid Extraction</option>
+                </select>
+              </div>
             </div>
-            <button class="start-button" data-team="${tIdx}">Start</button>
-            <button class="recall-button" data-team="${tIdx}">Recall</button>
-            <button class="log-toggle" data-team="${tIdx}">Log</button>
+            <div class="team-controls-right">
+              <div class="difficulty-container">
+              <div class="difficulty-label">
+                <span>Difficulty</span>
+                <span class="info-tooltip-icon" title="Raises all challenge DCs (team +4 per level, individual +1 per level). Artifact and XP rewards increase by 10% per level. Failed individual checks deal 5 HP per level to the selected member while failed team checks damage all members for 2 HP per level. Failed combat checks damage all members for 5 HP per level.">&#9432;</span>
+                </div>
+                <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0" />
+              </div>
+              <button class="start-button" data-team="${tIdx}">Start</button>
+              <button class="recall-button" data-team="${tIdx}">Recall</button>
+              <button class="log-toggle" data-team="${tIdx}">Log</button>
+            </div>
           </div>
         </div>
         <div class="operation-progress${op.active ? '' : ' hidden'}">
