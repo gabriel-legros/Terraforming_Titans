@@ -764,6 +764,12 @@ function generateWGCLayout() {
     <div class="wgc-container">
       <div class="wgc-main">
         <div class="wgc-left">
+          <div class="wgc-card" id="wgc-teams-section">
+            <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
+            <div id="wgc-team-cards"></div>
+          </div>
+        </div>
+        <div class="wgc-right">
           <div class="wgc-card" id="wgc-rd-section">
             <h3>R&D</h3>
             <div id="wgc-rd-menu"></div>
@@ -778,12 +784,6 @@ function generateWGCLayout() {
             <div id="wgc-stat-operation"></div>
             <div id="wgc-stat-artifact"></div>
             <div id="wgc-stat-difficulty"></div>
-          </div>
-        </div>
-        <div class="wgc-right">
-          <div class="wgc-card" id="wgc-teams-section">
-            <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
-            <div id="wgc-team-cards"></div>
           </div>
         </div>
       </div>

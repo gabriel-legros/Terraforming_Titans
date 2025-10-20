@@ -30,20 +30,23 @@
   display: flex;
   gap: 15px;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .wgc-left {
-  flex: 1;
+  flex: 1 1 420px;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  min-width: 750px;
 }
 
 .wgc-right {
-  flex: 2;
+  flex: 1 1 300px;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  min-width: 260px;
 }
 
 .wgc-card {
@@ -114,7 +117,7 @@
 
 .wgc-team-body {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   align-items: flex-start;
 }
 
