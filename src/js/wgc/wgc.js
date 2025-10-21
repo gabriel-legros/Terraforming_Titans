@@ -499,7 +499,7 @@ class WarpGateCommand extends EffectableEntity {
     if (success) op.successes += 1;
     let artifactReward = 0;
     if (artifact) {
-      artifactReward = 1 + (scaledDifficulty > 0 ? scaledDifficulty * 0.1 : 0);
+      artifactReward = 1 + op.difficulty * 0.1;
       const mult = event.artifactMultiplier || (event.specialty === 'Natural Scientist' ? 2 : 1);
       artifactReward *= mult * artifactModifier;
       op.artifacts += artifactReward;
