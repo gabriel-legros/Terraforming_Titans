@@ -1,9 +1,10 @@
+import argparse
 import json
 import os
 import random
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import openai
 
@@ -17,9 +18,37 @@ BASE_EVENTS: List[Dict[str, Any]] = [
     {"name": "Combat challenge", "type": "combat", "weight": 1},
 ]
 
+THEME_KEYWORDS: List[str] = [
+    "forest", "ruin", "battery", "desert", "glacier", "swamp", "reef", "crater", "vault", "hive",
+    "temple", "portal", "archive", "lab", "mine", "outpost", "beacon", "relay", "bunker", "reactor",
+    "shipwreck", "canyon", "oasis", "tundra", "trench", "citadel", "monolith", "observatory", "cavern",
+    "market", "scrapyard", "spire", "dome", "station", "array", "silo", "quarry", "forge", "foundry",
+    "lighthouse", "garrison", "embassy", "shrine", "caravan", "depot", "hangar", "labyrinth", "farm",
+    "orchard", "jungle", "meadow", "volcano", "geyser", "lagoon", "delta", "plateau", "ridge", "icefield",
+    "asteroid", "comet", "nebula", "magnetar", "pulsar", "wormhole", "gateway", "nexus", "library",
+    "museum", "armory", "barracks", "prison", "laboratory", "clinic", "hospital", "nursery", "greenhouse",
+    "refinery", "distillery", "generator", "turbine", "pipeline", "aqueduct", "reservoir", "dam", "bridge",
+    "tunnel", "subway", "rail", "dock", "harbor", "shipyard", "launchpad", "impact", "basin", "steppe",
+    "savanna", "rainforest", "catacomb", "crypt", "workshop", "mesa", "badlands", "bog", "atoll", "shoal",
+    "strait", "fjord", "taiga", "moor", "heath", "glade", "dune", "isthmus", "peninsula", "headland", "cliff",
+    "bluff", "escarpment", "gorge", "ravine", "chasm", "sinkhole", "cenote", "karst", "grotto", "abyss",
+    "rift", "void", "halo", "corona", "flare", "aurora", "eclipse", "transit", "alignment", "resonance",
+    "vortex", "maelstrom", "cyclone", "squall", "thunderhead", "blizzard", "whiteout", "permafrost", "iceberg",
+    "floe", "scree", "talus", "fault", "fumarole", "caldera", "maar", "tuff", "obsidian", "basalt", "granite",
+    "quartz", "crystal", "diamond", "amber", "ore", "isotope", "plasma", "quasar", "blazar", "singularity",
+    "star", "planet", "moon", "satellite", "ring", "belt", "cluster", "voidspace", "riftgate", "rime", "stepwell",
+    "cistern", "canal", "sluice", "lock", "aquifer", "spring", "waterfall", "cascade", "rapids", "whirlpool",
+    "marsh", "fen", "mire", "peatland", "mangrove", "deltaic", "shoals", "backwater", "headwater", "estuary",
+    "seamount", "trenchline", "shelf", "abyssal", "upwelling", "tower", "mast", "antenna", "dish", "transmitter",
+    "receiver", "uplink", "downlink", "console", "terminal", "mainframe", "server", "node", "hub", "router",
+    "switch", "matrix", "cache", "starport", "spaceport", "pier", "quay", "wharf", "marina", "warehouse",
+    "factory", "smelter", "kiln", "furnace", "crucible", "storm",
+]
+
 OUTPUT_DIR = Path(__file__).resolve().parent / "generated"
 OUTPUT_PATH = OUTPUT_DIR / "operation_stories.js"
 DEFAULT_MODEL = os.environ.get("POE_MODEL", "Grok-4")
+DEFAULT_STEP_COUNT = 10
 POE_API_KEY = os.environ.get("POE_API_KEY")
 POE_BASE_URL = os.environ.get("POE_BASE_URL", "https://api.poe.com/v1")
 
@@ -40,21 +69,68 @@ def pick_event() -> Dict[str, Any]:
     return dict(chosen)
 
 
-def generate_event_plan(step_count: int = 10) -> List[Dict[str, Any]]:
+def generate_event_plan(step_count: int = DEFAULT_STEP_COUNT) -> List[Dict[str, Any]]:
     return [pick_event() for _ in range(step_count)]
 
 
-def build_prompt(events: List[Dict[str, Any]]) -> str:
+def normalize_event(event: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(event, dict):
+        raise ValueError("Event entries must be objects with at least 'name' and 'type'.")
+    if "name" not in event or "type" not in event:
+        raise ValueError("Event entries must include 'name' and 'type' keys.")
+    normalized: Dict[str, Any] = {
+        "name": str(event["name"]),
+        "type": str(event["type"]),
+    }
+    if "skill" in event:
+        normalized["skill"] = str(event["skill"])
+    if "specialty" in event:
+        normalized["specialty"] = str(event["specialty"])
+    if "weight" in event:
+        normalized["weight"] = event["weight"]
+    return normalized
+
+
+def load_event_plans(paths: List[str]) -> List[List[Dict[str, Any]]]:
+    plans: List[List[Dict[str, Any]]] = []
+    for raw_path in paths:
+        path = Path(raw_path).expanduser()
+        data = json.loads(path.read_text("utf-8"))
+        if not isinstance(data, list) or not data:
+            raise ValueError(f"{path} must contain a JSON array of event definitions.")
+        if all(isinstance(item, dict) for item in data):
+            plans.append([normalize_event(item) for item in data])
+        elif all(isinstance(item, list) for item in data):
+            for nested in data:
+                if not nested:
+                    raise ValueError(f"{path} includes an empty event plan.")
+                plans.append([normalize_event(item) for item in nested])
+        else:
+            raise ValueError(f"{path} contains an unsupported event format.")
+    return plans
+
+
+def build_prompt(events: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
+    if not events:
+        raise ValueError("Event plan cannot be empty.")
+    total_steps = len(events)
+    selected_keywords = random.sample(THEME_KEYWORDS, k=3)
     lines = [
         "Create a cinematic Warp Gate Command operation report inspired by Stargate, but without any direct Stargate reference.",
-        "Return ONLY a JSON array with exactly ten string entries.",
-        "Each string must describe a single event separated by newline characters.  Do not include a number, or the name of the event in each string.  Just skip straight to the story.",
-        "Use placeholders $TEAM_MEMBER_1, $TEAM_MEMBER_2, $TEAM_MEMBER_3, $TEAM_MEMBER_4, or $TEAM_MEMBER_SELECTED when a line should mention a specific operative.",
-        "Keep the tone adventurous but grounded in tactical science fiction.  No crazy science terminology or technobabble.",
-        "Do not add numbering, keys, narration outside the ten strings, or trailing commentary.",
-        "Be verbose and detailed.  Try to write a story that makes sense using the space provided.  Keep it to between 2 and 10 lines per step.",
+        f"Return ONLY a JSON array with exactly {total_steps} string entries.",
+        "Each string must describe a single event separated by newline characters. Do not include a number, or the name of the event in each string. Just skip straight to the story.",
+        "Use placeholders $TEAM_MEMBER_1, $TEAM_MEMBER_2, $TEAM_MEMBER_3, $TEAM_MEMBER_4 to refer to party members. You should use $TEAM_MEMBER_SELECTED to refer to the team member selected for an individual challenge.",
+        "Keep the tone adventurous but grounded in tactical science fiction. No crazy science terminology or technobabble.",
+        "Come up with a common theme and maintain story consistency.",
+        f"Do not add numbering, keys, narration outside the {total_steps} strings, or trailing commentary.",
+        "Be verbose and detailed. Try to write a story that makes sense using the space provided. Keep it to between 2 and 10 lines per step.",
         "Use non-gendered pronouns for team members, or refer to them directly by name"
     ]
+
+    lines.append(
+        "Themes: The story must prominently feature the following three keywords as recurring settings, imagery, or objectives: "
+        f"{', '.join(selected_keywords)}. Integrate all three, but keep it realistic.  Do not overuse them and keep them consistent."
+    )
 
     lines.append("Event plan:")
     for idx, event in enumerate(events, start=1):
@@ -66,11 +142,11 @@ def build_prompt(events: List[Dict[str, Any]]) -> str:
         details = ", ".join(detail_parts)
         lines.append(f"{idx}. {event['name']} ({details})")
 
-    return "\n".join(lines)
+    return "\n".join(lines), selected_keywords
 
 
-def request_story(client: openai.OpenAI, model: str, events: List[Dict[str, Any]]) -> str:
-    prompt = build_prompt(events)
+def request_story(client: openai.OpenAI, model: str, events: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
+    prompt, keywords = build_prompt(events)
     response = client.chat.completions.create(
         model=model,
         messages=[
@@ -86,7 +162,7 @@ def request_story(client: openai.OpenAI, model: str, events: List[Dict[str, Any]
     message = response.choices[0].message.content
     if not isinstance(message, str) or not message.strip():
         raise ValueError("Model returned an empty response.")
-    return message.strip()
+    return message.strip(), keywords
 
 
 def parse_story(raw: str) -> Any:
@@ -97,8 +173,9 @@ def parse_story(raw: str) -> Any:
 
 
 def validate_story_lines(payload: Any, events: List[Dict[str, Any]]) -> List[List[str]]:
-    if not isinstance(payload, list) or len(payload) != len(events):
-        raise ValueError("Story must be a JSON array with exactly ten strings.")
+    expected_steps = len(events)
+    if not isinstance(payload, list) or len(payload) != expected_steps:
+        raise ValueError(f"Story must be a JSON array with exactly {expected_steps} strings.")
 
     sanitized: List[List[str]] = []
     for idx, entry in enumerate(payload, start=1):
@@ -106,7 +183,9 @@ def validate_story_lines(payload: Any, events: List[Dict[str, Any]]) -> List[Lis
             raise ValueError(f"Step {idx} must be a string.")
         segments = [segment.strip() for segment in entry.splitlines() if segment.strip()]
         if not 2 <= len(segments) <= 10:
-            raise ValueError(f"Step {idx} must contain ten non-empty lines separated by newlines.  Currently contains {segments}")
+            raise ValueError(
+                f"Step {idx} must contain between 2 and 10 non-empty lines separated by newlines. Currently contains {segments}"
+            )
         for segment in segments:
             if len(segment) > 1000:
                 raise ValueError(f"Step {idx} includes a line longer than 1000 characters.")
@@ -181,18 +260,77 @@ def append_record(record: Dict[str, Any]) -> None:
     write_records(existing)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate Warp Gate Command operation stories.")
+    parser.add_argument(
+        "--runs",
+        type=int,
+        default=100,
+        help="Number of stories to generate (default: 100).",
+    )
+    parser.add_argument(
+        "--events-file",
+        action="append",
+        dest="event_files",
+        default=[],
+        help="Path to a JSON file defining an ordered list of events. Can be provided multiple times.",
+    )
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help=f"Override the model used for generation (default: {DEFAULT_MODEL}).",
+    )
+    parser.add_argument(
+        "--steps",
+        type=int,
+        default=DEFAULT_STEP_COUNT,
+        help=f"Number of events per randomly generated plan (default: {DEFAULT_STEP_COUNT}).",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print parsed steps for each successful run.",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
+    try:
+        event_plans = load_event_plans(args.event_files) if args.event_files else []
+    except Exception as exc:  # noqa: broad-except - fallback to random plan generation
+        print(f"Failed to load custom event plans: {exc}. Falling back to random plans.")
+        event_plans = []
+
     client = create_client()
-    events = generate_event_plan()
-    raw_story = request_story(client, DEFAULT_MODEL, events)
-    print("Model response:", raw_story)
-    story_lines = validate_story_lines(parse_story(raw_story), events)
-    print("Parsed steps:")
-    for idx, entry in enumerate(story_lines, start=1):
-        print(f"{idx}: {' | '.join(entry)}")
-    record = build_record(story_lines, events, DEFAULT_MODEL)
-    append_record(record)
-    print(f"Story appended to {OUTPUT_PATH}")
+    successes = 0
+    for attempt in range(args.runs):
+        try:
+            if event_plans:
+                template = event_plans[attempt % len(event_plans)]
+                events = [dict(item) for item in template]
+            else:
+                events = generate_event_plan(args.steps)
+
+            raw_story, keywords = request_story(client, args.model, events)
+            story_lines = validate_story_lines(parse_story(raw_story), events)
+
+            print(f"Run {attempt + 1}/{args.runs} keywords: {', '.join(keywords)}")
+
+            if args.verbose:
+                print("Parsed steps:")
+                for idx, entry in enumerate(story_lines, start=1):
+                    print(f"{idx}: {' | '.join(entry)}")
+
+            record = build_record(story_lines, events, args.model)
+            append_record(record)
+            summary_line = story_lines[0][0] if story_lines and story_lines[0] else record["summary"]
+            print(f"Run {attempt + 1}/{args.runs} appended {record['id']}: {summary_line}")
+            successes += 1
+        except Exception as exc:  # noqa: broad-except - continue to next attempt on failure
+            print(f"Run {attempt + 1}/{args.runs} skipped due to error: {exc}")
+
+    print(f"Completed {successes} successful runs out of {args.runs}. Output written to {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":
