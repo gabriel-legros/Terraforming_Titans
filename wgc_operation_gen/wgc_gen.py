@@ -119,7 +119,7 @@ def build_prompt(events: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
         "Create a cinematic Warp Gate Command operation report inspired by Stargate, but without any direct Stargate reference.",
         f"Return ONLY a JSON array with exactly {total_steps} string entries.",
         "Each string must describe a single event separated by newline characters. Do not include a number, or the name of the event in each string. Just skip straight to the story.",
-        "Use placeholders $TEAM_MEMBER_1, $TEAM_MEMBER_2, $TEAM_MEMBER_3, $TEAM_MEMBER_4 to refer to party members. You should use $TEAM_MEMBER_SELECTED to refer to the team member selected for an individual challenge.",
+        "Use placeholders $TEAM_MEMBER_1, $TEAM_MEMBER_2, $TEAM_MEMBER_3, $TEAM_MEMBER_4 to refer to party members. You should use $TEAM_MEMBER_SELECTED to refer to the team member selected for an individual challenge.  Natural Science and Social Science challenges are also individual challenges.",
         "Keep the tone adventurous but grounded in tactical science fiction. No crazy science terminology or technobabble.",
         "Come up with a common theme and maintain story consistency.",
         f"Do not add numbering, keys, narration outside the {total_steps} strings, or trailing commentary.",

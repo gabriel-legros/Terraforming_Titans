@@ -184,7 +184,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Emerging from the rainforest's edge, the team encountered a group of local scavengers guarding the scrapyard's perimeter under the nebula's ethereal light.",
-            "$TEAM_MEMBER_2, the social scientist, stepped forward to negotiate access.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, stepped forward to negotiate access.",
             "Drawing on knowledge of cultural norms and body language, they engaged in a tense discussion, interpreting subtle cues to build trust.",
             "By sharing stories of mutual hardships in nebula-affected worlds, they convinced the scavengers to grant passage without conflict.",
             "The team moved deeper into the twisted metal remnants, grateful for the peaceful resolution."
@@ -444,7 +444,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "At the heart of the ruin depot, the team discovered a chamber with peculiar mineral deposits, echoing caravan tales of hidden energies.",
-            "$TEAM_MEMBER_4, the natural scientist, examined the crystals, assessing their composition through field tests.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examined the crystals, assessing their composition through field tests.",
             "Identifying reactive elements that could power simple devices, they devised a way to stabilize a collapsing ruin arch.",
             "This insight not only preserved the structure but also illuminated carvings depicting caravan routes through similar ruins.",
             "Their expertise turned potential disaster into a deeper understanding of the world's geological wonders."
@@ -626,7 +626,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team stepped through the warp gate into a biting wind, surrounded by vast icefields that stretched endlessly under a pale sky.",
-            "$TEAM_MEMBER_1, the natural scientist, knelt to examine crystalline formations in the ice, identifying geothermal vents beneath that could power ancient structures.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt to examine crystalline formations in the ice, identifying geothermal vents beneath that could power ancient structures.",
             "They collected samples, noting how the ice preserved organic matter from eons ago, crucial for understanding the planet's ecosystem.",
             "This discovery pointed toward hidden barracks nearby, potentially sheltering relics from a forgotten civilization."
           ]
@@ -651,7 +651,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "Arriving at weathered barracks half-buried in snow, $TEAM_MEMBER_2, the social scientist, deciphered faded inscriptions on the walls depicting communal rituals.",
+            "Arriving at weathered barracks half-buried in snow, $TEAM_MEMBER_SELECTED, the social scientist, deciphered faded inscriptions on the walls depicting communal rituals.",
             "They interpreted the symbols as evidence of a hierarchical society that once thrived here, using the barracks for both living quarters and strategic planning.",
             "By analyzing interpersonal dynamics etched in stone, $TEAM_MEMBER_2 uncovered clues about alliances that might explain the forge's purpose.",
             "This insight helped the team navigate potential cultural traps hidden within the structure."
@@ -765,7 +765,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team stepped through the warp gate into a vast basin, its cracked earth stretching endlessly under a harsh sun.",
-            "$TEAM_MEMBER_2, the social scientist, approached a group of nomadic locals gathered near a water source.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a group of nomadic locals gathered near a water source.",
             "Through careful observation of their gestures and customs, $TEAM_MEMBER_2 initiated contact, explaining the team's peaceful intentions.",
             "The locals shared stories of ancient guardians in the surrounding canyons, hinting at a powerful battery hidden deep within.",
             "Building trust, $TEAM_MEMBER_2 exchanged small tools for guidance toward the canyon paths.",
@@ -932,7 +932,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "In the harbor's makeshift command post, $TEAM_MEMBER_2, the social scientist, initiated contact with wary local informants.",
+            "In the harbor's makeshift command post, $TEAM_MEMBER_SELECTED, the social scientist, initiated contact with wary local informants.",
             "Drawing on cultural knowledge, they decoded subtle gestures hinting at alliances hidden in lighthouse signals.",
             "Discussions revealed nebula storms disrupting trade routes, fostering distrust among factions.",
             "$TEAM_MEMBER_2 built rapport by sharing insights on harbor economies, easing tensions and gaining intel on enemy movements.",
@@ -1205,7 +1205,7 @@
     {
       "id": "wgc_operation_story_20251021T002959Z",
       "title": "Warp Gate Command Operation 02959Z",
-      "summary": "$TEAM_MEMBER_1, the social scientist, approached the nomadic tribe encamped at the edge of the vast icefield.",
+      "summary": "$TEAM_MEMBER_SELECTED, the social scientist, approached the nomadic tribe encamped at the edge of the vast icefield.",
       "model": "Grok-4",
       "createdAt": "20251021T002959Z",
       "events": [
@@ -1216,7 +1216,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_1, the social scientist, approached the nomadic tribe encamped at the edge of the vast icefield.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached the nomadic tribe encamped at the edge of the vast icefield.",
             "They observed the group's rituals, noting how elders shared stories around a flickering fire.",
             "By engaging in careful conversation, $TEAM_MEMBER_1 deciphered clues about an ancient path leading to the plateau.",
             "The tribe warned of hidden dangers in the frozen expanse, but offered a map etched on animal hide.",
@@ -1244,7 +1244,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_2, the natural scientist, knelt on the frozen icefield to examine crystalline formations.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt on the frozen icefield to examine crystalline formations.",
             "They collected samples of the unusual ice, testing for stability with a portable analyzer.",
             "Discovering weak points that could collapse underfoot, $TEAM_MEMBER_2 mapped a safer route to the plateau.",
             "This insight prevented the team from falling into hidden crevasses.",
@@ -1506,7 +1506,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_2, the natural scientist, examined the beacon's crystalline structure, noting how it drew energy from geothermal vents below.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examined the beacon's crystalline structure, noting how it drew energy from geothermal vents below.",
             "They collected soil samples around its base, analyzing mineral compositions that hinted at a hidden battery network sustaining the armory's defenses.",
             "With careful calibration, they deciphered patterns in the beacon's pulses, revealing safe routes through the foggy valleys."
           ]
@@ -2209,7 +2209,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "In a chamber filled with holographic displays of ancient societies, $TEAM_MEMBER_1, the social scientist, analyzed faded inscriptions depicting tribal rituals tied to solar flares.",
+            "In a chamber filled with holographic displays of ancient societies, $TEAM_MEMBER_SELECTED, the social scientist, analyzed faded inscriptions depicting tribal rituals tied to solar flares.",
             "They deciphered symbols showing how communities used flare predictions for gatherings, integrating the data into their mission logs.",
             "This insight revealed a cultural key to accessing restricted server files, blending anthropology with the moon's harsh environment."
           ]
@@ -2221,7 +2221,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "Venturing into a natural cavern beneath the server ruins, $TEAM_MEMBER_2, the natural scientist, studied geological samples affected by the moon's frequent seismic activity.",
+            "Venturing into a natural cavern beneath the server ruins, $TEAM_MEMBER_SELECTED, the natural scientist, studied geological samples affected by the moon's frequent seismic activity.",
             "They identified mineral veins that could conduct energy from solar flares, explaining the site's power source.",
             "This knowledge helped the team navigate unstable tunnels, avoiding collapse-prone areas."
           ]
@@ -2245,7 +2245,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "Exploring a side room with interactive consoles, $TEAM_MEMBER_4, the social scientist, delved into records of societal collapses triggered by unmanaged solar flares.",
+            "Exploring a side room with interactive consoles, $TEAM_MEMBER_SELECTED, the social scientist, delved into records of societal collapses triggered by unmanaged solar flares.",
             "They pieced together behavioral patterns, revealing strategies for community resilience that could apply to modern colonies.",
             "This analysis granted access to encrypted server protocols, enriching their understanding of the moon's historical significance."
           ]
@@ -2283,7 +2283,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "In the final archive room, $TEAM_MEMBER_1, the social scientist, examined artifacts of a lost civilization's flare-worshipping cults.",
+            "In the final archive room, $TEAM_MEMBER_SELECTED, the social scientist, examined artifacts of a lost civilization's flare-worshipping cults.",
             "They analyzed ritual texts stored on the servers, uncovering how these beliefs shaped societal structures on this moon.",
             "This deep dive provided the last piece needed to download critical data, tying together the mission's objectives."
           ]
@@ -2457,7 +2457,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_2, the social scientist, deciphers the vault's murals depicting an ancient society's rituals around the quasar.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, deciphers the vault's murals depicting an ancient society's rituals around the quasar.",
             "Observing patterns in the hive-like social structure illustrated, they identify key diplomatic gestures.",
             "Using this knowledge, they mimic a greeting sequence on the control panel, unlocking a hidden chamber without alerting guardians.",
             "The team nods in approval as lights flicker on, revealing more about the civilization's quasar worship."
@@ -2470,7 +2470,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_3, the natural scientist, examines the bioluminescent fungi lining the vault's walls, noting their response to quasar radiation.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examines the bioluminescent fungi lining the vault's walls, noting their response to quasar radiation.",
             "Sampling the growth, they analyze how it sustains the hive's ecosystem in this harsh environment.",
             "Discovering a symbiotic relationship, they formulate a non-lethal repellent to keep the insects at bay.",
             "Applying it carefully, the path clears, allowing safe passage deeper into the structure."
@@ -2599,7 +2599,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_4, the social scientist, approaches a group of indigenous dwellers near the monolith.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approaches a group of indigenous dwellers near the monolith.",
             "They observe the locals' rituals, noting how they circle the stone structure with rhythmic chants.",
             "Drawing on knowledge of cultural anthropology, $TEAM_MEMBER_4 deciphers gestures that reveal the monolith's role in their folklore.",
             "The team learns that the monolith guards a hidden portal, activated only through specific communal rites.",
@@ -3042,7 +3042,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team stepped through the warp gate into a vast granite quarry under a sky swirling with nebula-like dust clouds.",
-            "$TEAM_MEMBER_1, the social scientist, approached a group of local workers huddled around a campfire.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a group of local workers huddled around a campfire.",
             "They engaged in conversation, learning about ancient quarry rituals tied to the granite veins and the ethereal nebula overhead.",
             "By sharing stories and building trust, $TEAM_MEMBER_1 uncovered hidden maps of the quarry's deepest sections.",
             "The workers, moved by the exchange, offered guidance on navigating the treacherous paths carved from solid granite."
@@ -3121,7 +3121,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "In a cavernous section of the quarry, $TEAM_MEMBER_3, the natural scientist, examined samples of granite infused with unusual minerals.",
+            "In a cavernous section of the quarry, $TEAM_MEMBER_SELECTED, the natural scientist, examined samples of granite infused with unusual minerals.",
             "They analyzed the rock's composition, noting how nebula dust had altered its properties over time.",
             "Using field tools, $TEAM_MEMBER_3 identified a vein rich in rare elements, crucial for the mission's objectives.",
             "This discovery pointed to a sustainable way to harvest the granite without destabilizing the quarry structure."
@@ -3134,7 +3134,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_2, the social scientist, mediated a tense standoff with rival quarry clans under the nebula sky.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, mediated a tense standoff with rival quarry clans under the nebula sky.",
             "They listened to grievances about territorial rights over prime granite deposits.",
             "By proposing a shared access agreement inspired by ancient quarry traditions, $TEAM_MEMBER_2 diffused the conflict.",
             "The clans agreed to a truce, allowing the team passage through disputed areas, with promises of mutual benefit from the nebula-influenced resources."
@@ -3160,7 +3160,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_4, the natural scientist, studied the ecosystem within the quarry, where nebula particulates had created unique flora clinging to granite walls.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, studied the ecosystem within the quarry, where nebula particulates had created unique flora clinging to granite walls.",
             "They collected data on how these plants stabilized the soil, preventing erosion in the harsh environment.",
             "Identifying a pattern in the growth linked to nebula cycles, $TEAM_MEMBER_4 devised a plan to reinforce unstable sections of the quarry.",
             "This insight ensured the team's safe extraction of key granite artifacts without causing ecological collapse."
@@ -3483,7 +3483,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_3, the social scientist, approached a group of indigenous dwellers harvesting in the orchard. Using keen observation of their gestures and speech patterns, they initiated contact by offering a small tool from the kit. The locals, wary at first, shared stories of the karst caves' sacred status, revealing maps etched on bark that pointed to mangrove fringes.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a group of indigenous dwellers harvesting in the orchard. Using keen observation of their gestures and speech patterns, they initiated contact by offering a small tool from the kit. The locals, wary at first, shared stories of the karst caves' sacred status, revealing maps etched on bark that pointed to mangrove fringes.",
             "Building rapport, $TEAM_MEMBER_3 interpreted subtle social cues, negotiating for safe passage and gaining insights into tribal alliances that could aid the mission."
           ]
         },
@@ -3494,7 +3494,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "In the depths of a karst cave system, $TEAM_MEMBER_4, the natural scientist, analyzed glowing fungi clinging to the walls. Sampling the bioluminescent growth, they determined it was a key pollinator for the nearby orchard's unusual fruits. This discovery explained the ecosystem's balance, linking underground rivers to surface vegetation.",
+            "In the depths of a karst cave system, $TEAM_MEMBER_SELECTED, the natural scientist, analyzed glowing fungi clinging to the walls. Sampling the bioluminescent growth, they determined it was a key pollinator for the nearby orchard's unusual fruits. This discovery explained the ecosystem's balance, linking underground rivers to surface vegetation.",
             "Documenting the findings, $TEAM_MEMBER_4 noted how mineral-rich water from the karst fed into mangrove estuaries, sustaining the entire biome."
           ]
         },
@@ -3885,7 +3885,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_4, the natural scientist, took the lead as they entered a lush glade surrounded by dense foliage.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, took the lead as they entered a lush glade surrounded by dense foliage.",
             "Examining strange flora with bioluminescent veins, they identified a potential hazard: vines that released spores when disturbed.",
             "Carefully collecting samples, $TEAM_MEMBER_4 analyzed the ecosystem, noting how the glade's soil composition supported rapid plant growth.",
             "They discovered a hidden spring feeding into the river, linking back to the quay's water source.",
@@ -3900,7 +3900,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "Deeper in the glade, they encountered remnants of an old settlement, prompting $TEAM_MEMBER_1, the social scientist, to investigate.",
+            "Deeper in the glade, they encountered remnants of an old settlement, prompting $TEAM_MEMBER_SELECTED, the social scientist, to investigate.",
             "Observing faded markings on stone ruins, $TEAM_MEMBER_1 interpreted them as symbols of a long-lost culture's trade routes.",
             "They pieced together that the glade served as a communal gathering spot, with paths leading to a nearby depot for storage.",
             "Discussing potential alliances with any surviving locals, $TEAM_MEMBER_1 analyzed behavioral patterns from artifacts.",
@@ -4343,7 +4343,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "As the team approached the orchard's edge, where fruit-laden trees dotted the savanna's fringe, $TEAM_MEMBER_2, the natural scientist, took point.",
+            "As the team approached the orchard's edge, where fruit-laden trees dotted the savanna's fringe, $TEAM_MEMBER_SELECTED, the natural scientist, took point.",
             "They examined strange vines entwining the trunks, identifying them as a symbiotic species that could release toxic spores if disturbed.",
             "Carefully sampling leaves and soil, $TEAM_MEMBER_2 formulated a neutralizing agent from local herbs.",
             "The team applied it, watching the vines retract harmlessly, clearing a safe path deeper into the orchard.",
@@ -5366,7 +5366,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Advancing through the tundra, the team encountered a nomadic group huddled near a makeshift camp.",
-            "$TEAM_MEMBER_2, the social scientist, initiated contact, observing their customs and language patterns.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, initiated contact, observing their customs and language patterns.",
             "Building trust, they shared stories of the ancient lighthouse that guided travelers across the mire.",
             "Through careful negotiation, $TEAM_MEMBER_2 uncovered maps of safe paths through the frozen bogs.",
             "The exchange revealed local lore about the tundra's harsh cycles and the mire's hidden dangers."
@@ -5422,7 +5422,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "At the mire's boundary, unusual flora pulsed with bioluminescent light, mimicking tundra ice.",
-            "$TEAM_MEMBER_3, the natural scientist, analyzed samples, identifying toxic spores in the bog.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, analyzed samples, identifying toxic spores in the bog.",
             "They mapped out safe zones, avoiding the mire's deceptive sinks that could swallow explorers.",
             "Drawing parallels to tundra ecosystems, $TEAM_MEMBER_3 formulated a traversal strategy.",
             "This knowledge prevented mishaps, steering the team toward the lighthouse's base."
@@ -5816,7 +5816,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_2, the natural scientist, examines the peculiar mineral deposits coating the refinery's pipes, identifying volatile gases seeping from cracks in the volcanic belt.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examines the peculiar mineral deposits coating the refinery's pipes, identifying volatile gases seeping from cracks in the volcanic belt.",
             "They collect samples carefully, analyzing the composition to predict potential eruptions that could destabilize the area.",
             "Using field equipment, $TEAM_MEMBER_2 maps out safe paths through the hazardous zone, warning the team of toxic fumes and unstable lava tubes hidden beneath the surface.",
             "Their expertise ensures the group avoids a deadly gas pocket, allowing them to proceed deeper into the refinery without incident."
@@ -6241,7 +6241,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team stepped through the warp gate into a misty fen, where dense fog clung to the ground and unfamiliar flora dotted the landscape.",
-            "$TEAM_MEMBER_1, the natural scientist, knelt to examine a cluster of bioluminescent plants that resembled an overgrown nursery, their pods pulsing with faint light.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt to examine a cluster of bioluminescent plants that resembled an overgrown nursery, their pods pulsing with faint light.",
             "Analyzing the soil, $TEAM_MEMBER_1 discovered that the plants released spores in response to moisture levels, potentially hazardous if inhaled.",
             "Using a field kit, $TEAM_MEMBER_1 isolated the spore mechanism, determining safe passage required avoiding certain damp patches in the fen.",
             "The team adjusted their route accordingly, pressing forward with newfound caution."
@@ -6353,7 +6353,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Approaching what seemed like ruins integrated into the fen, the team encountered signs of an ancient society, with carvings depicting nursery rituals and whirlpool symbols.",
-            "$TEAM_MEMBER_3, the social scientist, deciphered the inscriptions, interpreting them as cultural warnings about the ecosystem's guardians.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, deciphered the inscriptions, interpreting them as cultural warnings about the ecosystem's guardians.",
             "Discussing with the team, $TEAM_MEMBER_3 pieced together societal structures, revealing how inhabitants revered the fen as a sacred nursery.",
             "This insight suggested non-aggressive approaches to future encounters, fostering understanding of the alien culture.",
             "Armed with this knowledge, the team proceeded with respect for the historical context."
@@ -6784,7 +6784,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Deeper in the vault, inscriptions detailed social conflicts over cascade water rights in this star-worshipping society.",
-            "$TEAM_MEMBER_3, the social scientist, delved into the texts, mapping out tribal dynamics and resolutions.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, delved into the texts, mapping out tribal dynamics and resolutions.",
             "By cross-referencing with earlier murals, they pieced together a narrative of unity forged in the desert's trials.",
             "This understanding activated a holographic display, revealing maps of hidden oases.",
             "The social insights proved crucial, steering the team toward the final objective."
@@ -6809,7 +6809,7 @@
     {
       "id": "wgc_operation_story_20251021T011329Z",
       "title": "Warp Gate Command Operation 11329Z",
-      "summary": "$TEAM_MEMBER_1, the social scientist, approached the indigenous guardians at the cavern entrance, using their expertise in cultural anthropology to interpret ancient carvings depicting star patterns.",
+      "summary": "$TEAM_MEMBER_SELECTED, the social scientist, approached the indigenous guardians at the cavern entrance, using their expertise in cultural anthropology to interpret ancient carvings depicting star patterns.",
       "model": "Grok-4",
       "createdAt": "20251021T011329Z",
       "events": [
@@ -6820,7 +6820,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_1, the social scientist, approached the indigenous guardians at the cavern entrance, using their expertise in cultural anthropology to interpret ancient carvings depicting star patterns.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached the indigenous guardians at the cavern entrance, using their expertise in cultural anthropology to interpret ancient carvings depicting star patterns.",
             "They engaged in a dialogue, exchanging stories of celestial myths to gain permission to enter, carefully navigating the guardians' traditions without offending their beliefs.",
             "Through patient negotiation, $TEAM_MEMBER_1 uncovered clues about the server's location hidden within the folklore, securing the team's safe passage deeper into the cavern."
           ]
@@ -6868,7 +6868,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_2, the natural scientist, examined the bioluminescent fungi illuminating the cavern paths, identifying species that reacted to star-aligned vibrations.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examined the bioluminescent fungi illuminating the cavern paths, identifying species that reacted to star-aligned vibrations.",
             "They collected samples and tested reactions, discovering a pattern that activated natural light sources to reveal hidden server conduits.",
             "This breakthrough guided the team through darkened tunnels, ensuring they avoided toxic spores while progressing toward the central chamber."
           ]
@@ -7135,7 +7135,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Emerging from a side tunnel, the team met a faction of scholars guarding ancient texts near the gateway.",
-            "$TEAM_MEMBER_2, the social scientist, engaged them in debate, drawing on knowledge of societal structures to earn respect.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, engaged them in debate, drawing on knowledge of societal structures to earn respect.",
             "They unraveled myths about the headwater's role in sustaining life through interconnected worlds.",
             "By sharing insights into human cooperation, $TEAM_MEMBER_2 persuaded the scholars to reveal hidden inscriptions.",
             "The exchange fostered mutual understanding, with the scholars offering guidance on navigating the catacombs' social hierarchies.",
@@ -7249,7 +7249,7 @@
           "lines": [
             "The team materialized in the vast desert expanse, the warp gate humming behind them as it stabilized.",
             "Surrounded by towering dunes that shifted under the relentless wind, they spotted a brilliant comet streaking across the twilight sky, its tail casting an eerie glow over the sands.",
-            "$TEAM_MEMBER_1, the natural scientist, knelt to examine the unusual mineral deposits in the desert floor, analyzing how the comet's proximity might be altering the soil composition.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt to examine the unusual mineral deposits in the desert floor, analyzing how the comet's proximity might be altering the soil composition.",
             "Using portable scanners, they identified trace elements likely from the comet's debris, hypothesizing that it could affect local water sources hidden beneath the dunes.",
             "The findings suggested potential instability in the desert terrain ahead, urging caution as the team prepared to move forward."
           ]
@@ -8062,7 +8062,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "In a hidden taiga encampment near the ravine, the team consulted $TEAM_MEMBER_3, the social scientist, to interpret carvings depicting ancient societies and their beacon rituals.",
+            "In a hidden taiga encampment near the ravine, the team consulted $TEAM_MEMBER_SELECTED, the social scientist, to interpret carvings depicting ancient societies and their beacon rituals.",
             "$TEAM_MEMBER_3 analyzed the social dynamics shown, deducing alliances and conflicts that explained the beacon's protective mechanisms.",
             "By applying knowledge of group behaviors, $TEAM_MEMBER_3 unlocked a cultural code, revealing a map to the primary beacon without alerting any lingering descendants."
           ]
@@ -8097,7 +8097,7 @@
     {
       "id": "wgc_operation_story_20251021T012129Z",
       "title": "Warp Gate Command Operation 12129Z",
-      "summary": "The team emerges from the warp gate into a misty peatland, where $TEAM_MEMBER_1, the social scientist, approaches a group of indigenous dwellers huddled around a fire.",
+      "summary": "The team emerges from the warp gate into a misty peatland, where $TEAM_MEMBER_SELECTED, the social scientist, approaches a group of indigenous dwellers huddled around a fire.",
       "model": "Grok-4",
       "createdAt": "20251021T012129Z",
       "events": [
@@ -8108,7 +8108,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "The team emerges from the warp gate into a misty peatland, where $TEAM_MEMBER_1, the social scientist, approaches a group of indigenous dwellers huddled around a fire.",
+            "The team emerges from the warp gate into a misty peatland, where $TEAM_MEMBER_SELECTED, the social scientist, approaches a group of indigenous dwellers huddled around a fire.",
             "They observe the locals' rituals, noting how they share stories of ancient visitors, carefully documenting social structures to gain trust and learn about a hidden laboratory nearby.",
             "$TEAM_MEMBER_1 engages in conversation, using gestures and shared food to bridge cultural gaps, uncovering clues about the lab's location amid the boggy terrain."
           ]
@@ -8367,7 +8367,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team stepped through the warp gate into a vast quartz cavern, where ancient carvings hinted at a long-lost civilization.",
-            "$TEAM_MEMBER_1, the social scientist, approached a group of indigenous observers gathered around a glowing quartz altar.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a group of indigenous observers gathered around a glowing quartz altar.",
             "Through careful dialogue and cultural analysis, they deciphered the rituals, gaining the locals' trust and crucial information about the path to the observatory.",
             "The exchange revealed warnings of impending squalls that could disrupt their journey.",
             "With newfound allies, the team prepared to move forward, enriched by the social insights."
@@ -8449,7 +8449,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "At the base of the observatory, $TEAM_MEMBER_2, the natural scientist, examined the surrounding quartz formations altered by frequent squalls.",
+            "At the base of the observatory, $TEAM_MEMBER_SELECTED, the natural scientist, examined the surrounding quartz formations altered by frequent squalls.",
             "Analyzing soil samples and crystal structures, they identified a safe entry point eroded by weather patterns.",
             "This scientific insight prevented a potential collapse, guiding the team through a natural tunnel.",
             "The observatory's interior loomed ahead, filled with ancient instruments attuned to the planet's stormy cycles.",
@@ -8515,7 +8515,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team arrived at the edge of the vast dune fields, where shifting sands stretched toward the horizon under a sky dotted with distant quasar glows.",
-            "$TEAM_MEMBER_1, the natural scientist, knelt to examine the soil composition, noting how the quasar's radiation had altered the mineral structures.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt to examine the soil composition, noting how the quasar's radiation had altered the mineral structures.",
             "They collected samples from the dune crests, analyzing how wind patterns and heat from the quasar affected erosion rates.",
             "After hours of fieldwork, $TEAM_MEMBER_1 confirmed the dunes' stability for traversal, mapping safe paths around unstable sinkholes.",
             "This data was crucial for the team's advance toward the abandoned station in the distance."
@@ -8529,7 +8529,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Approaching the station's outer perimeter, the team encountered remnants of an ancient settlement buried in the dunes.",
-            "$TEAM_MEMBER_2, the social scientist, deciphered faded inscriptions on the station walls, revealing societal norms influenced by quasar worship.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, deciphered faded inscriptions on the station walls, revealing societal norms influenced by quasar worship.",
             "They interviewed holographic records of past inhabitants, understanding how the quasar's cycles dictated community rituals and migrations across the dunes.",
             "By piecing together cultural artifacts, $TEAM_MEMBER_2 uncovered alliances formed to protect the station from sandstorms.",
             "This insight helped the team navigate social traps designed to deter outsiders."
@@ -8664,7 +8664,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team stepped through the warp gate into a vast glade on the alien world, surrounded by dense foliage and the faint hum of distant machinery.",
-            "$TEAM_MEMBER_1, the natural scientist, knelt to examine the soil, identifying exotic flora that could provide clues to the ecosystem.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt to examine the soil, identifying exotic flora that could provide clues to the ecosystem.",
             "They analyzed samples from glowing vines intertwined with rusted metal structures, revealing how the plants had adapted to harness energy from the nearby quasar.",
             "This knowledge helped map safe paths through the glade toward the ancient shipyard ruins.",
             "The team noted how the quasar's radiation influenced local biology, ensuring they avoided toxic areas."
@@ -9358,7 +9358,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team stepped through the warp gate into a humid rainforest, where glowing plasma vents dotted the landscape, releasing ionized gases from underground fissures.",
-            "$TEAM_MEMBER_1, the natural scientist, analyzed the plasma emissions, identifying safe paths through the volatile terrain by studying soil samples and gas compositions.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, analyzed the plasma emissions, identifying safe paths through the volatile terrain by studying soil samples and gas compositions.",
             "They determined that the vents followed predictable cycles, allowing the team to proceed without triggering explosive releases.",
             "This knowledge was crucial for navigating toward the ancient library ruins rumored to hold forgotten knowledge."
           ]
@@ -9454,7 +9454,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "Inside the ancient library, $TEAM_MEMBER_4, the social scientist, examined murals and texts depicting societies that harnessed plasma for energy in rainforest settings.",
+            "Inside the ancient library, $TEAM_MEMBER_SELECTED, the social scientist, examined murals and texts depicting societies that harnessed plasma for energy in rainforest settings.",
             "They interpreted cultural symbols, revealing how these people structured their communities around natural plasma phenomena.",
             "This insight helped the team understand rituals needed to access hidden archives, blending anthropology with the expedition's goals."
           ]
@@ -9642,7 +9642,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_2, the social scientist, approached a holographic array projecting images of long-lost inhabitants around a communal kiln.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a holographic array projecting images of long-lost inhabitants around a communal kiln.",
             "They analyzed the subtle cues in the projections\u2014gestures, symbols, and interactions that hinted at rituals tied to the kiln's firing cycles.",
             "By interpreting these social patterns, $TEAM_MEMBER_2 deciphered a code that unlocked a sealed door, revealing passages etched with stories of communal forging.",
             "The air filled with echoes of ancient voices, guiding the team toward the heart of the complex.",
@@ -9701,7 +9701,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_3, the natural scientist, examined samples from the crucible's residue, identifying mineral compositions that could stabilize the unstable ground.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examined samples from the crucible's residue, identifying mineral compositions that could stabilize the unstable ground.",
             "They mixed compounds on-site, using heat from a nearby kiln to catalyze reactions without exotic tools.",
             "This analysis revealed a way to neutralize toxic fumes emanating from fissures, clearing the air for safe passage.",
             "The team watched as the vapors dissipated, revealing hidden inscriptions on the walls.",
@@ -10073,7 +10073,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team stepped through the warp gate into a vast desert landscape, where a distant caravan of nomads wound through the dunes, their silhouettes hazy in the heat.",
-            "$TEAM_MEMBER_1, the social scientist, approached the caravan leaders, engaging in a tense negotiation to gain passage and information about the ancient stepwell ahead.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached the caravan leaders, engaging in a tense negotiation to gain passage and information about the ancient stepwell ahead.",
             "Using keen observation of their customs, $TEAM_MEMBER_1 deciphered subtle gestures and bartered with rare off-world trinkets, securing an alliance that promised guidance to the site's hidden antenna array."
           ]
         },
@@ -10181,7 +10181,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "In the stepwell's core chamber, an overgrown ecosystem of alien flora blocked access to the central antenna, its vines pulsing with bioluminescent energy.",
-            "$TEAM_MEMBER_4, the natural scientist, examined the plants, identifying non-toxic pathways and using environmental knowledge to clear a safe route without disturbing the balance.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examined the plants, identifying non-toxic pathways and using environmental knowledge to clear a safe route without disturbing the balance.",
             "The team advanced, the antenna now fully revealed as a towering relic, its signals syncing with the warp gate for extraction, while the caravan above signaled farewell."
           ]
         }
@@ -10351,7 +10351,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team stepped through the warp gate into a humid world blanketed by vast mires, where twisted vines and murky waters stretched endlessly.",
-            "$TEAM_MEMBER_1, the social scientist, approached a cluster of weathered stone carvings resembling a hive's entrance, etched with symbols of an ancient society.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a cluster of weathered stone carvings resembling a hive's entrance, etched with symbols of an ancient society.",
             "They deciphered the inscriptions, revealing rituals that once powered a central generator, fostering alliances among long-lost tribes.",
             "By interpreting the social hierarchies depicted, $TEAM_MEMBER_1 unlocked a hidden compartment containing maps to the generator's core."
           ]
@@ -10490,7 +10490,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team stepped through the shimmering wormhole, emerging into a lush, alien forest where unfamiliar flora pulsed with bioluminescent light.",
-            "$TEAM_MEMBER_1, the natural scientist, knelt to examine the soil and plants, identifying toxic spores that could harm the group if inhaled.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt to examine the soil and plants, identifying toxic spores that could harm the group if inhaled.",
             "Using a portable analyzer, they isolated a safe path by mapping out non-toxic zones, ensuring the team's safe passage toward the distant tower silhouetted against the horizon.",
             "Their quick assessment prevented potential respiratory issues, allowing the mission to proceed without delay."
           ]
@@ -10542,7 +10542,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Inside the tower, murals depicted ancient societies that once guarded the wormhole.",
-            "$TEAM_MEMBER_2, the social scientist, studied the symbols, interpreting cultural rituals that emphasized communal harmony.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, studied the symbols, interpreting cultural rituals that emphasized communal harmony.",
             "By decoding interpersonal dynamics from the artwork, they uncovered a hidden chamber's access code based on alliance gestures.",
             "This insight fostered a non-violent approach, aligning the team's strategy with the depicted values to avoid triggering more defenses."
           ]
@@ -10629,7 +10629,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team steps through the warp gate, emerging into a vast caldera where steam rises from fissures in the ground.",
-            "$TEAM_MEMBER_1, the natural scientist, quickly assesses the volcanic soil, identifying safe paths by testing mineral compositions with a handheld analyzer.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, quickly assesses the volcanic soil, identifying safe paths by testing mineral compositions with a handheld analyzer.",
             "They note the headwater of a river trickling from a nearby spring, its purity suggesting it's fed by underground aquifers untouched by the caldera's heat.",
             "In the distance, a towering spire of ancient rock formations looms, possibly a key to unlocking the site's secrets.",
             "With careful observations, $TEAM_MEMBER_1 maps out geothermal vents to avoid, ensuring the team's safe initial traversal."
@@ -10863,7 +10863,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Deeper in the spire, strange murals depicted hive-like societies, prompting a social science evaluation.",
-            "$TEAM_MEMBER_3, the social scientist, interpreted the symbols as representations of a structured alien hierarchy within the caldera ecosystem.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, interpreted the symbols as representations of a structured alien hierarchy within the caldera ecosystem.",
             "Observing patterns in the artwork, they deduced communication methods used by the hive inhabitants.",
             "This understanding suggested non-aggressive approaches to potential encounters.",
             "Correlating with observed behaviors, $TEAM_MEMBER_3 hypothesized alliances or rivalries among hive factions.",
@@ -10957,7 +10957,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team stepped through the warp gate onto the sandy shores of a vast atoll, its ring-shaped lagoon shimmering under dual suns.",
-            "$TEAM_MEMBER_2, the social scientist, approached a group of indigenous islanders gathered around a fire pit.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a group of indigenous islanders gathered around a fire pit.",
             "They engaged in a detailed exchange, learning about local customs and the legends of a hidden hive structure deep within the atoll's coral formations.",
             "By interpreting subtle gestures and sharing stories, $TEAM_MEMBER_2 gained their trust, securing a map etched on a palm leaf that pointed to an ancient belt of reefs guarding the hive entrance."
           ]
@@ -11259,7 +11259,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_3, the social scientist, approached a group of local nomads huddled on a large floe, their faces weathered by constant squalls.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a group of local nomads huddled on a large floe, their faces weathered by constant squalls.",
             "Observing their gestures and sparse words, $TEAM_MEMBER_3 deciphered the cultural nuances of their warnings about hidden reefs beneath the ice.",
             "Building rapport, $TEAM_MEMBER_3 shared stories of similar harsh worlds, earning trust and vital information on safe passages.",
             "The nomads revealed ancient tales of squalls that guarded submerged treasures, guiding the team toward their objective.",
@@ -11375,7 +11375,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_4, the natural scientist, analyzed samples from the reef core, identifying geological formations shaped by ancient squalls and floe impacts.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, analyzed samples from the reef core, identifying geological formations shaped by ancient squalls and floe impacts.",
             "Using portable scanners, $TEAM_MEMBER_4 determined the artifact's composition, linking it to subsurface energy sources.",
             "Observations confirmed how reefs interacted with floe movements, providing data to stabilize the extraction.",
             "$TEAM_MEMBER_4's insights revealed environmental hazards, allowing the team to safely retrieve the objective.",
@@ -12005,7 +12005,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Approaching the archive's outer perimeter, the team met nomadic inhabitants guarding the site.",
-            "$TEAM_MEMBER_2, the Social Scientist, initiated contact, observing their rituals and communication cues to build trust.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, initiated contact, observing their rituals and communication cues to build trust.",
             "By interpreting gestures and shared stories of the badlands' history, $TEAM_MEMBER_2 negotiated passage.",
             "They uncovered legends of the beacon as a sacred relic, easing tensions and gaining valuable insights.",
             "This diplomatic exchange revealed hidden entrances to the archive, fostering an alliance."
@@ -12255,7 +12255,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team stepped through the warp gate into a dusty outpost beside a wide canal, where locals gathered suspiciously around the water's edge.",
-            "$TEAM_MEMBER_1, the social scientist, approached the group of settlers, using keen observation of their body language and customs to initiate dialogue.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached the group of settlers, using keen observation of their body language and customs to initiate dialogue.",
             "They explained the team's mission to reach the distant hospital amid rumors of incoming asteroids, carefully building trust by sharing stories of similar worlds.",
             "Through patient negotiation, $TEAM_MEMBER_1 uncovered vital information about safe paths along the canal network, avoiding hostile factions.",
             "The locals, convinced by the empathetic approach, provided a map etched on a weathered tablet, marking hidden dangers from recent asteroid impacts."
@@ -12282,7 +12282,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "Navigating the canal's winding banks, the team encountered a peculiar geological formation exposed by erosion, hinting at asteroid minerals in the soil.",
-            "$TEAM_MEMBER_2, the natural scientist, knelt to examine samples, testing for stability to ensure the ground wouldn't collapse underfoot.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt to examine samples, testing for stability to ensure the ground wouldn't collapse underfoot.",
             "Using a portable analyzer, they identified volatile compounds that could react with water, advising the team to avoid certain sections near the hospital approach.",
             "This insight prevented a potential landslide, keeping the mission on track amid the asteroid-scarred landscape."
           ]
@@ -12544,7 +12544,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team stepped through the warp gate onto a vast plateau, where dark thunderheads loomed overhead, casting shadows over the jagged fault lines cracking the ground.",
-            "$TEAM_MEMBER_1, the social scientist, approached a group of local nomads huddled near the edge, using keen observation of their gestures and sparse words to decipher their warnings about the unstable terrain.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, approached a group of local nomads huddled near the edge, using keen observation of their gestures and sparse words to decipher their warnings about the unstable terrain.",
             "By building rapport through shared stories of survival, $TEAM_MEMBER_1 convinced them to reveal a hidden path avoiding the most dangerous faults, securing safe passage for the team."
           ]
         },
@@ -12628,7 +12628,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "At the plateau's heart, unusual flora near a seismic fault puzzled the team under the oppressive thunderheads.",
-            "$TEAM_MEMBER_3, the natural scientist, examined soil samples and plant structures, identifying toxic elements leached from the fault that could aid in creating a protective barrier.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examined soil samples and plant structures, identifying toxic elements leached from the fault that could aid in creating a protective barrier.",
             "This insight allowed the team to harvest safe specimens, turning the environment's dangers into an asset for their ongoing exploration."
           ]
         },
@@ -12790,7 +12790,7 @@
     {
       "id": "wgc_operation_story_20251021T015042Z",
       "title": "Warp Gate Command Operation 15042Z",
-      "summary": "The team stepped through the warp gate into a misty marsh, where $TEAM_MEMBER_1, the social scientist, approached a group of wary locals gathered around a campfire.",
+      "summary": "The team stepped through the warp gate into a misty marsh, where $TEAM_MEMBER_SELECTED, the social scientist, approached a group of wary locals gathered around a campfire.",
       "model": "Grok-4",
       "createdAt": "20251021T015042Z",
       "events": [
@@ -12801,7 +12801,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "The team stepped through the warp gate into a misty marsh, where $TEAM_MEMBER_1, the social scientist, approached a group of wary locals gathered around a campfire.",
+            "The team stepped through the warp gate into a misty marsh, where $TEAM_MEMBER_SELECTED, the social scientist, approached a group of wary locals gathered around a campfire.",
             "They observed the intricate social customs, noting how the marsh dwellers exchanged stories and tokens to build trust.",
             "$TEAM_MEMBER_1 engaged in a delicate negotiation, using knowledge of cultural norms to gain information about the ancient foundry hidden in the nearby ravine.",
             "Through careful dialogue, they uncovered hints about guardians and traps protecting the site.",
@@ -12829,7 +12829,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "Navigating the marsh's treacherous waters, $TEAM_MEMBER_2, the natural scientist, analyzed the toxic flora blocking their route to the ravine.",
+            "Navigating the marsh's treacherous waters, $TEAM_MEMBER_SELECTED, the natural scientist, analyzed the toxic flora blocking their route to the ravine.",
             "They collected samples of glowing fungi and tested soil acidity, identifying a safe path through the bog.",
             "Observations revealed how the marsh ecosystem interacted with the ravine's mineral runoff, creating natural barriers.",
             "Using field equipment, $TEAM_MEMBER_2 formulated a compound to neutralize the hazards, clearing the way.",
@@ -12927,7 +12927,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "Returning to the foundry for final extraction, $TEAM_MEMBER_2, the natural scientist, examined anomalous energy readings from the ravine's core.",
+            "Returning to the foundry for final extraction, $TEAM_MEMBER_SELECTED, the natural scientist, examined anomalous energy readings from the ravine's core.",
             "They studied mineral deposits influenced by marsh groundwater, hypothesizing a stable power source.",
             "Field tests confirmed the composition, allowing calibration of equipment to harness it safely.",
             "This discovery tied the ecosystems together, providing key data for the mission's success.",
@@ -13100,7 +13100,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team steps through the warp gate into a vast, dimly lit hangar, its walls echoing with the hum of ancient machinery.",
-            "$TEAM_MEMBER_1, the natural scientist, examines the unusual mineral deposits on the floor, identifying them as remnants from a geothermal kiln process.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examines the unusual mineral deposits on the floor, identifying them as remnants from a geothermal kiln process.",
             "They analyze the composition, determining it's safe to proceed without triggering any environmental hazards.",
             "The air is thick with dust, but the assessment reveals no toxic elements, allowing the team to move forward confidently."
           ]
@@ -13126,7 +13126,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "Entering the tunnel, the team discovers murals depicting an alien society's rituals around a central kiln-like structure.",
-            "$TEAM_MEMBER_2, the social scientist, interprets the symbols, uncovering clues about the culture's reverence for forging and communal gatherings in hangars.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, interprets the symbols, uncovering clues about the culture's reverence for forging and communal gatherings in hangars.",
             "Their analysis reveals a hidden message about unity and strength, which helps in deciphering a puzzle lock on a nearby door.",
             "The insights foster team morale as they press on through the winding passage."
           ]
@@ -13570,7 +13570,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_2, the natural scientist, knelt at the edge of the stepwell, sampling the murky water.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, knelt at the edge of the stepwell, sampling the murky water.",
             "They analyzed the composition, noting unusual mineral deposits that hinted at geothermal activity.",
             "Using a portable kit, $TEAM_MEMBER_2 identified traces of bioluminescent algae, potentially key to the site's energy source.",
             "The team watched as $TEAM_MEMBER_2 pieced together how the stepwell fed into underground aquifers.",
@@ -13599,7 +13599,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_4, the social scientist, examined faded inscriptions on the stepwell walls, depicting communal rituals.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, examined faded inscriptions on the stepwell walls, depicting communal rituals.",
             "They interpreted symbols of water sharing and societal hierarchies, drawing parallels to ancient Earth cultures.",
             "By decoding the social dynamics, $TEAM_MEMBER_4 uncovered a clue about guardian roles in the ruins.",
             "The team discussed how these insights might predict traps or alliances with any remnants.",
@@ -13710,7 +13710,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The team steps through the warp gate onto a barren world orbiting close to a distant quasar, its intense radiation pulsing like a heartbeat in the sky.",
-            "$TEAM_MEMBER_1, the natural scientist, scans the volatile atmosphere, identifying toxic gases swirling in vortex-like patterns.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, scans the volatile atmosphere, identifying toxic gases swirling in vortex-like patterns.",
             "They adjust the team's suits to filter out the hazardous elements, ensuring safe passage toward the ancient crucible ruins ahead.",
             "Observations confirm the quasar's energy is fueling these atmospheric vortexes, creating a natural barrier.",
             "With precise calculations, $TEAM_MEMBER_1 stabilizes a path through the swirling winds."
@@ -13807,7 +13807,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "In a chamber adorned with social artifacts, $TEAM_MEMBER_3, the social scientist, interprets holographic records of an ancient civilization influenced by the quasar.",
+            "In a chamber adorned with social artifacts, $TEAM_MEMBER_SELECTED, the social scientist, interprets holographic records of an ancient civilization influenced by the quasar.",
             "They decode rituals involving the crucible as a testing ground for leaders, with vortexes symbolizing trials.",
             "By reconstructing a diplomatic gesture from the holograms, they gain alliance with automated guardians.",
             "This understanding prevents hostile responses, opening paths to restricted areas.",
@@ -13901,7 +13901,7 @@
           "specialty": "Natural Scientist",
           "lines": [
             "The jungle floor revealed unusual flora near the cache site, prompting a natural science assessment.",
-            "$TEAM_MEMBER_1, the natural scientist, examined bioluminescent plants that could indicate toxic soil or hidden dangers.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examined bioluminescent plants that could indicate toxic soil or hidden dangers.",
             "They collected samples, noting how the ecosystem adapted to the encroaching floe influences from nearby icy rivers.",
             "Analyzing growth patterns, $TEAM_MEMBER_1 deduced safe passage routes avoiding poisonous vines.",
             "This insight guided the team forward, blending science with survival instincts."
@@ -14319,7 +14319,7 @@
           "skill": null,
           "specialty": "Social Scientist",
           "lines": [
-            "$TEAM_MEMBER_3, the social scientist, analyzed the holographic logs in the laboratory's archives, deciphering the cultural symbols etched into the walls.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, analyzed the holographic logs in the laboratory's archives, deciphering the cultural symbols etched into the walls.",
             "They pieced together the story of a long-lost civilization that revered the fumaroles as sacred sites, using them in rituals tied to their mainframe's data rituals.",
             "By interpreting the social hierarchies depicted, $TEAM_MEMBER_3 unlocked a hidden compartment revealing maps to the central mainframe."
           ]
@@ -14354,7 +14354,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_4, the natural scientist, collected samples from the fumarole vents near the laboratory entrance, testing the gaseous emissions with portable analyzers.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, collected samples from the fumarole vents near the laboratory entrance, testing the gaseous emissions with portable analyzers.",
             "They identified a unique mineral compound that could stabilize the mainframe's overheating core, noting how the vents' heat mimicked the system's energy fluctuations.",
             "This breakthrough allowed the team to proceed without triggering environmental hazards."
           ]
@@ -14576,7 +14576,7 @@
           "skill": null,
           "specialty": "Natural Scientist",
           "lines": [
-            "$TEAM_MEMBER_3, the natural scientist, examined samples from the asteroid's surface, noting unusual mineral compositions that glowed faintly.",
+            "$TEAM_MEMBER_SELECTED, the natural scientist, examined samples from the asteroid's surface, noting unusual mineral compositions that glowed faintly.",
             "They analyzed the rock's density and heat resistance, hypothesizing it formed under extreme pressures akin to a natural crucible.",
             "Using portable scanners, they mapped geothermal vents leading toward the wormhole's energy signature.",
             "The data revealed stable isotopes that could reinforce the team's equipment against the asteroid's harsh environment.",
@@ -14837,7 +14837,7 @@
           "specialty": "Social Scientist",
           "lines": [
             "The team arrived at the edge of the ancient village nestled against a towering bluff of weathered tuff, where locals guarded access to the sacred maar crater.",
-            "$TEAM_MEMBER_1, the social scientist, stepped forward to engage the elders in conversation, drawing on knowledge of cultural rituals to build trust.",
+            "$TEAM_MEMBER_SELECTED, the social scientist, stepped forward to engage the elders in conversation, drawing on knowledge of cultural rituals to build trust.",
             "Through careful dialogue and shared stories, they uncovered hints about hidden paths leading into the volcanic landscape.",
             "The elders, impressed by the respectful approach, revealed a map etched on a slab of tuff, pointing toward the maar's rim.",
             "This breakthrough allowed the team to proceed without conflict, blending diplomacy with tactical insight."
