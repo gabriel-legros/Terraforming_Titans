@@ -216,6 +216,8 @@ function generateWGCTeamCards() {
       `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>${teamUnlocks[tIdx]} Operations Completed</div>`;
     const stanceVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
     const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
+    const progressValue = Math.max(0, Math.min(1, op.progress || 0));
+    const progressPercent = (progressValue * 100).toFixed(2);
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
         <div class="wgc-team-body">
@@ -258,7 +260,7 @@ function generateWGCTeamCards() {
           </div>
         </div>
         <div class="operation-progress${op.active ? '' : ' hidden'}">
-          <div class="operation-progress-bar" style="width: ${op.progress * 100}%"></div>
+          <div class="operation-progress-bar" style="width: ${progressPercent}%"></div>
         </div>
         <div class="operation-summary${op.active ? '' : ' hidden'}">${op.summary || ''}</div>
         <div class="team-log hidden"><div class="team-log-content"></div></div>
@@ -1109,7 +1111,8 @@ function updateWGCUI() {
     if (progressContainer && progressBar) {
       if (op.active) {
         progressContainer.classList.remove('hidden');
-        progressBar.style.width = `${Math.floor(op.progress * 100)}%`;
+        const percent = Math.max(0, Math.min(100, (op.progress || 0) * 100));
+        progressBar.style.width = `${percent.toFixed(2)}%`;
         if (summaryEl) {
           summaryEl.classList.remove('hidden');
           summaryEl.textContent = op.summary || '';
