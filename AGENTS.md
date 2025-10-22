@@ -194,6 +194,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Warp Gate Command operations now draw their ten-step event queues from `assets/wgc_ops/operation_stories.js` and log each story line before the existing roll summaries so the narrative plays out alongside the results.
 - Warp Gate Command Teams card gained a Hide Story toggle that suppresses narrative log entries when enabled and remembers the setting between sessions.
 - Editing a Warp Gate Command member now spends stat points immediately while Cancel restores the original stats to avoid conflicts with Auto allocation.
+- Team Wits challenges now treat Natural and Social Scientists as contributing 1.5x Wit, with tooltips updated to explain the new bonus.
 - Centralized terraforming gravity helpers in `src/js/terraforming/gravity.js` so apparent gravity and penalties reuse the same calculations.
 - Galaxy factions now accumulate an irreversible UHF doctrine adaptation multiplier that scales with rising UHF threat and stacks with electronics adoption.
 - Added a `permanentProjectDisable` effect that removes projects from the UI and project manager updates when triggered.

@@ -389,7 +389,11 @@ class WarpGateCommand extends EffectableEntity {
         diceCount = 4;
         skillTotal = team.reduce((s, m) => {
           if (!m) return s;
-          return s + applyMult(m[event.skill], event.skill);
+          let contribution = applyMult(m[event.skill], event.skill);
+          if (event.skill === 'wit' && (m.classType === 'Natural Scientist' || m.classType === 'Social Scientist')) {
+            contribution *= 1.5;
+          }
+          return s + contribution;
         }, 0);
         dc = Math.max(0, (40 + difficulty * 4) * stanceDifficultyModifier);
         if (event.skill === 'athletics' && op) {

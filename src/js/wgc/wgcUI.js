@@ -81,14 +81,14 @@ const teamElements = [];
 var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
 const teamRulesTooltip = [
   'Special rules:',
-  '- Team Power Challenge: Uses every member\'s Power; failed checks deal double damage.',
+  '- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.',
   '- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.',
-  '- Team Wits Challenge: Uses team Wit; successes double the next artifact reward, failures halve it.',
-  '- Individual Athletics Challenge: Targets the least athletic member (random if tied) with the leader lending half their skill.',
+  '- Team Wits Challenge: Uses team Wit; Natural and Social Scientists contribute 1.5x their Wit; successes double the next artifact reward, failures halve it.',
+  '- Individual Power Challenge: Failed checks deal double damage.',
+  '- Individual Athletics Challenge: Targets the most athletic member (random if tied).',
   '- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.',
   '- Social Science Challenge: Social Scientists excel; failures may escalate into combat.',
   '- Science challenges never deal damage on failure.',
-  '- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.',
   '- Team Leaders lend half their skill on solo and science challenges.'
 ].join('\n');
 const wgcFirstNamePool = [
@@ -125,8 +125,8 @@ const classImages = {
 const classDescriptions = {
   'Team Leader': 'Balances all skills and lends half their skill to others.',
   'Soldier': 'Combat expert whose Power counts double in combat challenges.',
-  'Natural Scientist': 'Researcher who excels at natural science challenges and doubles artifact rewards.',
-  'Social Scientist': 'Diplomatic specialist handling social science challenges and reducing conflict.'
+  'Natural Scientist': 'Researcher who excels at natural science challenges, doubles artifact rewards, and contributes 1.5x Wit to team Wits challenges.',
+  'Social Scientist': 'Diplomatic specialist handling social science challenges, reducing conflict, and contributing 1.5x Wit to team Wits challenges.'
 };
 let activeDialog = null;
 
