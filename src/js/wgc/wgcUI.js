@@ -81,7 +81,7 @@ const teamElements = [];
 var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
 const teamRulesTooltip = [
   'Special rules:',
-  '- Team Power Challenge: Uses every member\'s Power; failed checks deal double damage.',
+  '- Individual Team Power Challenge: Picks a random operative to test their Power (with leader support); failures deal double damage to that member.',
   '- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.',
   '- Team Wits Challenge: Uses team Wit; successes double the next artifact reward, failures halve it.',
   '- Individual Athletics Challenge: Targets the least athletic member (random if tied) with the leader lending half their skill.',

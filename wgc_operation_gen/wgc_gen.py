@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Tuple
 import openai
 
 BASE_EVENTS: List[Dict[str, Any]] = [
-    {"name": "Team Power Challenge", "type": "team", "skill": "power", "weight": 1},
+    {"name": "Individual Team Power Challenge", "type": "individual", "skill": "power", "weight": 1},
     {"name": "Team Athletics Challenge", "type": "team", "skill": "athletics", "weight": 1},
     {"name": "Team Wits Challenge", "type": "team", "skill": "wit", "weight": 1},
     {"name": "Individual Athletics Challenge", "type": "individual", "skill": "athletics", "weight": 1},
