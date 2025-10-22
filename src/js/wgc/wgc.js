@@ -17,7 +17,7 @@ if (typeof globalThis.formatNumber === 'undefined') {
 }
 
 const baseOperationEvents = [
-  { name: 'Team Power Challenge', type: 'team', skill: 'power', weight: 1 },
+  { name: 'Individual Team Power Challenge', type: 'individual', skill: 'power', weight: 1, aliases: ['Team Power Challenge'] },
   { name: 'Team Athletics Challenge', type: 'team', skill: 'athletics', weight: 1 },
   { name: 'Team Wits Challenge', type: 'team', skill: 'wit', weight: 1 },
   { name: 'Individual Athletics Challenge', type: 'individual', skill: 'athletics', weight: 1 },
@@ -36,7 +36,15 @@ const facilityLabels = {
 };
 
 const baseEventTemplatesByName = baseOperationEvents.reduce((map, evt) => {
-  map[evt.name] = evt;
+  const { aliases, ...template } = evt;
+  map[evt.name] = template;
+  if (Array.isArray(aliases)) {
+    aliases.map(String).forEach(alias => {
+      if (!(alias in map)) {
+        map[alias] = template;
+      }
+    });
+  }
   return map;
 }, Object.create(null));
 
@@ -167,7 +175,10 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   chooseEvent(teamIndex = 0) {
-    const events = baseOperationEvents.map(ev => ({ ...ev }));
+    const events = baseOperationEvents.map(ev => {
+      const { aliases, ...rest } = ev;
+      return { ...rest };
+    });
     const weightedEvents = events.filter(e => (e.weight ?? 1) > 0);
     const total = weightedEvents.reduce((s, e) => s + (e.weight ?? 1), 0);
     let r = Math.random() * total;
@@ -221,9 +232,10 @@ class WarpGateCommand extends EffectableEntity {
           const storyEvent = storyEvents[i];
           const template = baseEventTemplatesByName[storyEvent.name] || null;
           const event = template ? { ...template } : { name: storyEvent.name };
-          if (storyEvent.type) event.type = storyEvent.type;
-          if (storyEvent.skill) event.skill = storyEvent.skill;
-          if (storyEvent.specialty) event.specialty = storyEvent.specialty;
+          const usedAlias = !!template && event.name !== storyEvent.name;
+          if (storyEvent.type && !usedAlias) event.type = storyEvent.type;
+          if (storyEvent.skill && !usedAlias) event.skill = storyEvent.skill;
+          if (storyEvent.specialty && !usedAlias) event.specialty = storyEvent.specialty;
           if (Array.isArray(storyEvent.lines) && storyEvent.lines.length > 0) {
             event.storyLines = storyEvent.lines.slice();
           }
@@ -431,15 +443,15 @@ class WarpGateCommand extends EffectableEntity {
         if (members.length === 0) return { success: false, artifact: false };
         let member = members[Math.floor(Math.random() * members.length)];
         if (event.skill === 'athletics') {
-          let lowest = Number.POSITIVE_INFINITY;
+          let highest = Number.NEGATIVE_INFINITY;
           const pool = [];
           members.forEach(m => {
             const value = m.athletics;
-            if (value < lowest) {
-              lowest = value;
+            if (value > highest) {
+              highest = value;
               pool.length = 0;
               pool.push(m);
-            } else if (value === lowest) {
+            } else if (value === highest) {
               pool.push(m);
             }
           });
