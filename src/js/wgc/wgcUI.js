@@ -72,9 +72,9 @@ const facilityItems = {
 const facilityDescriptions = {
   infirmary: 'Increases team healing rate by 1% per level.\nEmergency triage heals the lowest-health teammate for 5% / 10% / 15% / 20% HP at 10 / 25 / 50 / 100 upgrades when operations begin.',
   barracks: 'Increases XP gained from operations by 1% per level.\nCritical successes in individual challenges multiply XP gains by 2 / 3 / 5 / 10 at 10 / 25 / 50 / 100.',
-  shootingRange: 'Boosts Power for challenges by 1% per level.\nProvides 1 / 2 / 3 rerolls at 10 / 25 / 50 for Power checks and Combat challenges (one per challenge). Level 100 converts a rerolled failure into a success.',
-  obstacleCourse: 'Boosts Athletics for challenges by 1% per level.\nGrants 1 / 2 / 3 rerolls at 10 / 25 / 50 for individual or team Athletics checks (one per challenge). Level 100 converts a rerolled failure into a success.',
-  library: 'Boosts Wit for challenges by 1% per level.\nSupplies 1 / 2 / 3 rerolls at 10 / 25 / 50 for team Wit and Science challenges (one per challenge). Level 100 converts a rerolled failure into a success.'
+  shootingRange: 'Boosts Power for challenges by 1% per level.\nProvides 1 / 2 / 3 rerolls at 10 / 25 / 50 for Power checks and Combat challenges (one per challenge). Level 100 converts a failure into a success.',
+  obstacleCourse: 'Boosts Athletics for challenges by 1% per level.\nGrants 1 / 2 / 3 rerolls at 10 / 25 / 50 for individual or team Athletics checks (one per challenge). Level 100 converts a failure into a success.',
+  library: 'Boosts Wit for challenges by 1% per level.\nSupplies 1 / 2 / 3 rerolls at 10 / 25 / 50 for team Wit and Science challenges (one per challenge). Level 100 converts a failure into a success.'
 };
 const facilityElements = {};
 const teamElements = [];
