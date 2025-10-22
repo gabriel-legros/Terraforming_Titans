@@ -478,18 +478,6 @@ class WarpGateCommand extends EffectableEntity {
         roller = m;
         diceCount = 1;
         dc = Math.max(0, (10 + difficulty) * stanceDifficultyModifier);
-        const scienceSkill = event.skill || 'wit';
-        let damage = 5 * scaledDifficulty;
-        if (scienceSkill === 'power') damage *= 2;
-        if (scienceSkill === 'wit') damage *= 0.5;
-        damage = Math.max(0, damage);
-        if (damage > 0) {
-          const name = m && m.firstName ? ` (${m.firstName})` : '';
-          failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP${name}`;
-          failureActions.push(() => {
-            m.health = Math.max(m.health - damage, 0);
-          });
-        }
         break;
       }
       case 'combat': {

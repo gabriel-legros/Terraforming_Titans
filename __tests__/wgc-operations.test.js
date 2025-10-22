@@ -117,4 +117,88 @@ describe('WarpGateCommand operation queue', () => {
     wgc.update(30000);
     expect(op.progress).toBeCloseTo(0.15, 2);
   });
+
+  test('level 100 shooting range converts failed combat with no reroll into success', () => {
+    const wgc = new WarpGateCommand();
+    fillTeam(wgc, 0);
+    wgc.facilities.shootingRange = 100;
+    Math.random = () => 0.1;
+    expect(wgc.startOperation(0, 0)).toBe(true);
+
+    const op = wgc.operations[0];
+    wgc.teams[0].forEach(member => { member.power = 0; });
+    op.eventQueue[0] = {
+      name: 'Combat challenge',
+      type: 'combat',
+      isBase: true
+    };
+    op.facilityRerolls.shootingRange = 0;
+    wgc.roll = dice => ({ sum: dice, rolls: Array(dice).fill(1) });
+    Math.random = () => 0.99;
+
+    wgc.update(60000);
+
+    expect(op.successes).toBe(1);
+    expect(op.summary).toContain('fail-safe success');
+    wgc.teams[0].forEach(member => {
+      expect(member.health).toBe(member.maxHealth);
+    });
+  });
+
+  test('level 100 shooting range converts post-reroll failure into success', () => {
+    const wgc = new WarpGateCommand();
+    fillTeam(wgc, 0);
+    wgc.facilities.shootingRange = 100;
+    Math.random = () => 0.1;
+    expect(wgc.startOperation(0, 0)).toBe(true);
+
+    const op = wgc.operations[0];
+    wgc.teams[0].forEach(member => { member.power = 0; });
+    op.eventQueue[0] = {
+      name: 'Combat challenge',
+      type: 'combat',
+      isBase: true
+    };
+    op.facilityRerolls.shootingRange = 1;
+    let rollCount = 0;
+    wgc.roll = dice => {
+      rollCount += 1;
+      return { sum: dice, rolls: Array(dice).fill(1) };
+    };
+    Math.random = () => 0.99;
+
+    wgc.update(60000);
+
+    expect(rollCount).toBe(2);
+    expect(op.successes).toBe(1);
+    expect(op.facilityRerolls.shootingRange).toBe(0);
+    expect(op.summary).toContain('fail-safe success');
+  });
+
+  test('barracks level 100 multiplies individual critical XP', () => {
+    const wgc = new WarpGateCommand();
+    fillTeam(wgc, 0);
+    wgc.facilities.barracks = 100;
+    Math.random = () => 0.25;
+    expect(wgc.startOperation(0, 0)).toBe(true);
+
+    const op = wgc.operations[0];
+    const event = { name: 'Solo Power', type: 'individual', skill: 'power', isBase: true };
+    wgc.roll = () => ({ sum: 20, rolls: [20] });
+
+    wgc.resolveEvent(0, event);
+    expect(op.criticalXpMultiplier).toBe(10);
+    expect(wgc.facilities.barracks).toBe(100);
+    op.successes = 1;
+    op.difficulty = 0;
+    const expectedBase = op.successes * (1 + 0.1 * op.difficulty);
+    const expectedTotal = expectedBase * op.criticalXpMultiplier;
+    const challengeSummary = op.summary;
+
+    wgc.finishOperation(0);
+    wgc.teams[0].forEach(member => {
+      expect(member.xp).toBeCloseTo(expectedTotal);
+    });
+    expect(challengeSummary).toContain('Barracks XP x10');
+  });
 });
