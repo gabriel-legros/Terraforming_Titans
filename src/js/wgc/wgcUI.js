@@ -87,6 +87,7 @@ const teamRulesTooltip = [
   '- Individual Athletics Challenge: Targets the least athletic member (random if tied) with the leader lending half their skill.',
   '- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.',
   '- Social Science Challenge: Social Scientists excel; failures may escalate into combat.',
+  '- Science challenges never deal damage on failure.',
   '- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.',
   '- Team Leaders lend half their skill on solo and science challenges.'
 ].join('\n');
