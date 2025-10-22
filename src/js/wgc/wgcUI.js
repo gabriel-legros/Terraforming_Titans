@@ -228,7 +228,7 @@ function generateWGCTeamCards() {
           <div class="team-controls">
             <div class="team-controls-left">
               <div class="team-stance">
-                <label>Hazardous Biomass Interactions <span class="info-tooltip-icon" title="Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures still add 60 seconds.">&#9432;</span></label>
+                <label>Hazardous Biomass <span class="info-tooltip-icon" title="Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures still add 60 seconds.">&#9432;</span></label>
                 <select class="hbi-select" data-team="${tIdx}">
                   <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
                   <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
@@ -237,7 +237,7 @@ function generateWGCTeamCards() {
                 </select>
               </div>
               <div class="team-stance">
-                <label>Scientific Artifact Retrieval <span class="info-tooltip-icon" title="Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves downtime but reduces artifact finds by 75%.">&#9432;</span></label>
+                <label>Scientific Artifact <span class="info-tooltip-icon" title="Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves downtime but reduces artifact finds by 75%.">&#9432;</span></label>
                 <select class="artifact-select" data-team="${tIdx}">
                   <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
                   <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
