@@ -84,7 +84,7 @@ const teamRulesTooltip = [
   '- Individual Team Power Challenge: Picks a random operative to test their Power (with leader support); failures deal double damage to that member.',
   '- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.',
   '- Team Wits Challenge: Uses team Wit; successes double the next artifact reward, failures halve it.',
-  '- Individual Athletics Challenge: Targets the least athletic member (random if tied) with the leader lending half their skill.',
+  '- Individual Athletics Challenge: Targets the most athletic member (random if tied) with the leader lending half their skill.',
   '- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.',
   '- Social Science Challenge: Social Scientists excel; failures may escalate into combat.',
   '- Science challenges never deal damage on failure.',

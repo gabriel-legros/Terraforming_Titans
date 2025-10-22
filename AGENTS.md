@@ -187,7 +187,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Warp Gate Command edit member dialog now includes a Respec button that refunds all allocated skill points for rapid reassignment.
 - Warp Gate Command skill editor gained an Auto assignment column that distributes points each tick according to player-provided ratios, updates live while the dialog is open, and ignores zero entries.
 - Warp Gate Command recruitment dialog now auto-rolls names for new members and adds a Roll button beside the name inputs, drawing from 100-name first/last pools.
-- Warp Gate Command operations now assign solo athletics events to the least athletic member and adjust failure damage for power and wit challenges.
+- Warp Gate Command operations now assign solo athletics events to the most athletic member and adjust failure damage for power and wit challenges.
 - Team athletics operations now ease the next challenge after a success or delay it after a failure, while team wits outcomes modify the next artifact payout.
 - Hazardous Biomass stances gained a Recon option and artifact stances gained Rapid Extraction, adjusting event pacing, weights, and artifact odds.
 - Added `wgc_operation_gen/wgc_gen.py` to generate validated 10-step Stargate-inspired Warp Gate Command micro stories (captured as arrays of newline-delimited strings) and append them to `wgc_operation_gen/generated/operation_stories.js`.

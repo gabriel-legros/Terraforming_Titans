@@ -439,15 +439,15 @@ class WarpGateCommand extends EffectableEntity {
         if (members.length === 0) return { success: false, artifact: false };
         let member = members[Math.floor(Math.random() * members.length)];
         if (event.skill === 'athletics') {
-          let lowest = Number.POSITIVE_INFINITY;
+          let highest = Number.NEGATIVE_INFINITY;
           const pool = [];
           members.forEach(m => {
             const value = m.athletics;
-            if (value < lowest) {
-              lowest = value;
+            if (value > highest) {
+              highest = value;
               pool.length = 0;
               pool.push(m);
-            } else if (value === lowest) {
+            } else if (value === highest) {
               pool.push(m);
             }
           });
