@@ -449,7 +449,7 @@ class WarpGateCommand extends EffectableEntity {
         leaderBonus = leader ? Math.floor(applyMult(leader[event.skill], event.skill) / 2) : 0;
         skillTotal = baseSkill + leaderBonus;
         diceCount = 1;
-        dc = Math.max(0, (10 + difficulty) * stanceDifficultyModifier);
+        dc = Math.max(0, (10 + 1.5*difficulty) * stanceDifficultyModifier);
         let damage = 5 * scaledDifficulty;
         if (event.skill === 'power') damage *= 2;
         if (event.skill === 'wit') damage *= 0.5;
@@ -477,7 +477,7 @@ class WarpGateCommand extends EffectableEntity {
         skillTotal = baseSkill + leaderBonus;
         roller = m;
         diceCount = 1;
-        dc = Math.max(0, (10 + difficulty) * stanceDifficultyModifier);
+        dc = Math.max(0, (10 + 1.5*difficulty) * stanceDifficultyModifier);
         break;
       }
       case 'combat': {
@@ -488,7 +488,7 @@ class WarpGateCommand extends EffectableEntity {
         }, 0);
         diceCount = 4;
         const combatMult = event && event.difficultyMultiplier ? event.difficultyMultiplier : 1;
-        dc = Math.max(0, (40 * combatMult + difficulty) * stanceDifficultyModifier);
+        dc = Math.max(0, (40 * combatMult + 4*difficulty) * stanceDifficultyModifier);
         const damage = Math.max(0, 5 * scaledDifficulty);
         if (damage > 0) {
           failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
