@@ -668,7 +668,7 @@
 }
 
 .team-log {
-  max-height: 100px;
+  max-height: 125px;
   overflow-y: auto;
   background-color: var(--wgc-bg-dark);
   border: 1px solid var(--wgc-bg-light);
