@@ -29,6 +29,11 @@ const baseOperationEvents = [
 const operationStartText = 'Setting out through Warp Gate';
 
 const defaultTeamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+const facilityLabels = {
+  shootingRange: 'Shooting Range',
+  obstacleCourse: 'Obstacle Course',
+  library: 'Library'
+};
 
 const baseEventTemplatesByName = baseOperationEvents.reduce((map, evt) => {
   map[evt.name] = evt;
@@ -110,7 +115,14 @@ class WarpGateCommand extends EffectableEntity {
       progressIntervalStart: 0,
       progressIntervalDuration: 0,
       nextDifficultyModifier: 1,
-      nextArtifactModifier: 1
+      nextArtifactModifier: 1,
+      facilityRerolls: {
+        shootingRange: 0,
+        obstacleCourse: 0,
+        library: 0
+      },
+      criticalSuccessCount: 0,
+      criticalSuccessWeight: 0
     }));
     this.teamOperationCounts = Array(4).fill(0);
     this.teamNextOperationNumber = Array(4).fill(1);
@@ -327,7 +339,6 @@ class WarpGateCommand extends EffectableEntity {
   resolveEvent(teamIndex, event) {
     const team = this.teams[teamIndex];
     if (!team) return { success: false, artifact: false };
-    let success = false;
     let rollResult = { sum: 0, rolls: [] };
     let dc = 0;
     let skillTotal = 0;
@@ -353,6 +364,18 @@ class WarpGateCommand extends EffectableEntity {
     const aMult = 1 + this.facilities.obstacleCourse * 0.01;
     const wMult = 1 + this.facilities.library * 0.01;
     let damageDetail = '';
+    let failureDamageDetail = '';
+    let rerollNote = '';
+    let criticalNote = '';
+    let rerollUsed = false;
+    let failConverted = false;
+    let success = false;
+    let diceCount = 0;
+    const successActions = [];
+    const failureActions = [];
+    const facilityKey = this.getFacilityKeyForEvent(event);
+    const facilityLevel = facilityKey ? (this.facilities[facilityKey] || 0) : 0;
+    const facilityLabel = facilityKey ? (facilityLabels[facilityKey] || facilityKey) : '';
 
     const applyMult = (val, skill) => {
       if (skill === 'power') return val * pMult;
@@ -363,37 +386,39 @@ class WarpGateCommand extends EffectableEntity {
 
     switch (event.type) {
       case 'team': {
+        diceCount = 4;
         skillTotal = team.reduce((s, m) => {
           if (!m) return s;
           return s + applyMult(m[event.skill], event.skill);
         }, 0);
-        rollResult = this.roll(4);
         dc = Math.max(0, (40 + difficulty * 4) * stanceDifficultyModifier);
-        success = rollResult.sum + skillTotal >= dc;
-        if (success) {
-          if (event.skill === 'athletics' && op) {
+        if (event.skill === 'athletics' && op) {
+          successActions.push(() => {
             const current = Number.isFinite(op.nextDifficultyModifier) && op.nextDifficultyModifier > 0 ? op.nextDifficultyModifier : 1;
             op.nextDifficultyModifier = current * 0.75;
-          }
-          if (event.skill === 'wit' && op) {
+          });
+          failureActions.push(() => {
+            op.nextEvent += 120;
+          });
+        }
+        if (event.skill === 'wit' && op) {
+          successActions.push(() => {
             const current = Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1;
             op.nextArtifactModifier = current * 2;
-          }
-        } else {
-          let damage = 2 * scaledDifficulty;
-          if (event.skill === 'wit') damage *= 0.5;
-          damage = Math.max(0, damage);
-          team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
-          if (damage > 0) {
-            damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
-          }
-          if (event.skill === 'athletics' && op) {
-            op.nextEvent += 120;
-          }
-          if (event.skill === 'wit' && op) {
+          });
+          failureActions.push(() => {
             const current = Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1;
             op.nextArtifactModifier = current * 0.5;
-          }
+          });
+        }
+        let damage = 2 * scaledDifficulty;
+        if (event.skill === 'wit') damage *= 0.5;
+        damage = Math.max(0, damage);
+        if (damage > 0) {
+          failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
+          failureActions.push(() => {
+            team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
+          });
         }
         break;
       }
@@ -423,19 +448,18 @@ class WarpGateCommand extends EffectableEntity {
         baseSkill = applyMult(member[event.skill], event.skill);
         leaderBonus = leader ? Math.floor(applyMult(leader[event.skill], event.skill) / 2) : 0;
         skillTotal = baseSkill + leaderBonus;
-        rollResult = this.roll(1);
+        diceCount = 1;
         dc = Math.max(0, (10 + difficulty) * stanceDifficultyModifier);
-        success = rollResult.sum + skillTotal >= dc;
-        if (!success) {
-          let damage = 5 * scaledDifficulty;
-          if (event.skill === 'power') damage *= 2;
-          if (event.skill === 'wit') damage *= 0.5;
-          damage = Math.max(0, damage);
-          member.health = Math.max(member.health - damage, 0);
-          if (damage > 0) {
-            const name = member && member.firstName ? ` (${member.firstName})` : '';
-            damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP${name}`;
-          }
+        let damage = 5 * scaledDifficulty;
+        if (event.skill === 'power') damage *= 2;
+        if (event.skill === 'wit') damage *= 0.5;
+        damage = Math.max(0, damage);
+        if (damage > 0) {
+          const name = member && member.firstName ? ` (${member.firstName})` : '';
+          failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP${name}`;
+          failureActions.push(() => {
+            member.health = Math.max(member.health - damage, 0);
+          });
         }
         break;
       }
@@ -452,9 +476,20 @@ class WarpGateCommand extends EffectableEntity {
         leaderBonus = leader ? Math.floor(applyMult(leader.wit, 'wit') / 2) : 0;
         skillTotal = baseSkill + leaderBonus;
         roller = m;
-        rollResult = this.roll(1);
+        diceCount = 1;
         dc = Math.max(0, (10 + difficulty) * stanceDifficultyModifier);
-        success = rollResult.sum + skillTotal >= dc;
+        const scienceSkill = event.skill || 'wit';
+        let damage = 5 * scaledDifficulty;
+        if (scienceSkill === 'power') damage *= 2;
+        if (scienceSkill === 'wit') damage *= 0.5;
+        damage = Math.max(0, damage);
+        if (damage > 0) {
+          const name = m && m.firstName ? ` (${m.firstName})` : '';
+          failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP${name}`;
+          failureActions.push(() => {
+            m.health = Math.max(m.health - damage, 0);
+          });
+        }
         break;
       }
       case 'combat': {
@@ -463,19 +498,66 @@ class WarpGateCommand extends EffectableEntity {
           const mult = mem.classType === 'Soldier' ? 2 : 1;
           return s + applyMult(mem.power, 'power') * mult;
         }, 0);
-        rollResult = this.roll(4);
+        diceCount = 4;
         const combatMult = event && event.difficultyMultiplier ? event.difficultyMultiplier : 1;
         dc = Math.max(0, (40 * combatMult + difficulty) * stanceDifficultyModifier);
-        success = rollResult.sum + skillTotal >= dc;
-        if (!success) {
-          const damage = Math.max(0, 5 * scaledDifficulty);
-          team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
-          if (damage > 0) {
-            damageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
-          }
+        const damage = Math.max(0, 5 * scaledDifficulty);
+        if (damage > 0) {
+          failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
+          failureActions.push(() => {
+            team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
+          });
         }
         break;
       }
+    }
+
+    if (diceCount <= 0) diceCount = 1;
+    rollResult = this.roll(diceCount);
+    const initialRolls = rollResult.rolls.slice();
+    const initialTotal = rollResult.sum + skillTotal;
+    success = initialTotal >= dc;
+
+    if (!success) {
+      const rerollInfo = this.consumeFacilityReroll(op, event);
+      if (rerollInfo) {
+        rerollUsed = true;
+        const rerollRoll = this.roll(diceCount);
+        const rerollTotal = rerollRoll.sum + skillTotal;
+        const initialStr = `[${initialRolls.join(',')}]`;
+        const rerollStr = `[${rerollRoll.rolls.join(',')}]`;
+        rollResult = rerollRoll;
+        success = rerollTotal >= dc;
+        if (!success && rerollInfo.level >= 100) {
+          success = true;
+          failConverted = true;
+        }
+        if (failConverted) {
+          rerollNote = ` | ${rerollInfo.label} reroll ${initialStr}->${rerollStr} (fail-safe success)`;
+        } else if (success) {
+          rerollNote = ` | ${rerollInfo.label} reroll ${initialStr}->${rerollStr}`;
+        } else {
+          rerollNote = ` | ${rerollInfo.label} reroll ${initialStr}->${rerollStr} (still failed)`;
+        }
+      }
+    }
+
+    if (!success && !failConverted && facilityLevel >= 100) {
+      success = true;
+      failConverted = true;
+      const label = facilityLabel || (facilityKey || 'Facility');
+      if (rerollNote) {
+        rerollNote += ` | ${label} fail-safe success`;
+      } else {
+        rerollNote = ` | ${label} fail-safe success`;
+      }
+    }
+
+    if (success) {
+      successActions.forEach(fn => fn());
+    } else {
+      failureActions.forEach(fn => fn());
+      damageDetail = failureDamageDetail;
     }
 
     const stanceObj = this.stances && this.stances[teamIndex] ? this.stances[teamIndex] : { artifact: 'Neutral' };
@@ -495,6 +577,10 @@ class WarpGateCommand extends EffectableEntity {
     if (critical) {
       success = true;
       artifact = true;
+      const bonus = this.applyBarracksCriticalBonus(op);
+      if (bonus > 1) {
+        criticalNote = ` | Barracks XP x${formatNumber(bonus, false, 2)}`;
+      }
     }
     if (success) op.successes += 1;
     let artifactReward = 0;
@@ -516,7 +602,7 @@ class WarpGateCommand extends EffectableEntity {
     const total = rollResult.sum + skillTotal;
     const damageText = damageDetail ? ` | ${damageDetail}` : '';
     this.logStoryStep(teamIndex, op, event, roller);
-    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${formatNumber(dc, false, 2)} => ${outcome}${artText}${damageText}`;
+    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${formatNumber(dc, false, 2)} => ${outcome}${artText}${damageText}${rerollNote}${criticalNote}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
 
@@ -674,6 +760,10 @@ class WarpGateCommand extends EffectableEntity {
         this.refreshOperationProgress(op, idx);
         op.number = this.teamNextOperationNumber[idx];
         this.teamNextOperationNumber[idx] += 1;
+        this.applyInfirmaryOperationHeal(idx);
+        op.facilityRerolls = this.buildFacilityRerollPool();
+        op.criticalSuccessCount = 0;
+        op.criticalSuccessWeight = 0;
         op.summary = operationStartText;
         this.addLog(idx, `=== Operation #${op.number} ===`);
       }
@@ -716,7 +806,13 @@ class WarpGateCommand extends EffectableEntity {
     this.totalArtifacts += art;
     const team = this.teams[teamIndex];
     if (team) {
-      const xpGain = successes * (1 + 0.1 * (op.difficulty || 0)) * (1 + this.facilities.barracks * 0.01);
+      const barracksBase = 1 + this.facilities.barracks * 0.01;
+      const difficultyFactor = 1 + 0.1 * (op.difficulty || 0);
+      const criticalCount = Number.isFinite(op.criticalSuccessCount) ? op.criticalSuccessCount : 0;
+      const criticalWeight = Number.isFinite(op.criticalSuccessWeight) ? op.criticalSuccessWeight : 0;
+      const nonCriticalSuccesses = Math.max(0, successes - criticalCount);
+      const effectiveSuccesses = nonCriticalSuccesses + criticalWeight;
+      const xpGain = effectiveSuccesses * difficultyFactor * barracksBase;
       const currentMax = team.reduce((mx, m) => m && m.xp > mx ? m.xp : mx, 0);
       const newMax = currentMax + xpGain;
       team.forEach(m => {
@@ -766,7 +862,102 @@ class WarpGateCommand extends EffectableEntity {
     op.nextDifficultyModifier = 1;
     op.nextArtifactModifier = 1;
     op.progress = 0;
+    op.facilityRerolls = this.buildFacilityRerollPool();
+    op.criticalSuccessCount = 0;
+    op.criticalSuccessWeight = 0;
     this.addLog(teamIndex, '');
+  }
+
+  applyInfirmaryOperationHeal(teamIndex) {
+    const roster = this.teams[teamIndex];
+    if (!Array.isArray(roster)) return;
+    const level = this.facilities.infirmary || 0;
+    let percent = 0;
+    if (level >= 100) percent = 0.2;
+    else if (level >= 50) percent = 0.15;
+    else if (level >= 25) percent = 0.1;
+    else if (level >= 10) percent = 0.05;
+    if (percent <= 0) return;
+    let target = null;
+    let lowestRatio = Infinity;
+    for (const member of roster) {
+      if (!member || member.maxHealth <= 0) continue;
+      const ratio = member.health / member.maxHealth;
+      if (ratio < lowestRatio) {
+        lowestRatio = ratio;
+        target = member;
+      }
+    }
+    if (!target) return;
+    const healAmount = target.maxHealth * percent;
+    target.health = Math.min(target.maxHealth, target.health + healAmount);
+  }
+
+  getFacilityRerollBudget(level) {
+    if (level >= 50) return 3;
+    if (level >= 25) return 2;
+    if (level >= 10) return 1;
+    return 0;
+  }
+
+  buildFacilityRerollPool() {
+    return {
+      shootingRange: this.getFacilityRerollBudget(this.facilities.shootingRange || 0),
+      obstacleCourse: this.getFacilityRerollBudget(this.facilities.obstacleCourse || 0),
+      library: this.getFacilityRerollBudget(this.facilities.library || 0)
+    };
+  }
+
+  getFacilityKeyForEvent(event) {
+    if (!event) return null;
+    if (event.type === 'combat') return 'shootingRange';
+    if (event.type === 'science') return 'library';
+    const skill = event.skill || '';
+    if (skill === 'power') return 'shootingRange';
+    if (skill === 'athletics') return 'obstacleCourse';
+    if (skill === 'wit') return 'library';
+    return null;
+  }
+
+  consumeFacilityReroll(op, event) {
+    if (!op) return null;
+    const key = this.getFacilityKeyForEvent(event);
+    if (!key) return null;
+    if (!op.facilityRerolls) {
+      op.facilityRerolls = this.buildFacilityRerollPool();
+    }
+    const remaining = op.facilityRerolls[key] || 0;
+    if (remaining <= 0) return null;
+    op.facilityRerolls[key] = remaining - 1;
+    return {
+      key,
+      label: facilityLabels[key] || key,
+      level: this.facilities[key] || 0
+    };
+  }
+
+  getBarracksCriticalMultiplier(level) {
+    if (level >= 100) return 10;
+    if (level >= 50) return 5;
+    if (level >= 25) return 3;
+    if (level >= 10) return 2;
+    return 1;
+  }
+
+  applyBarracksCriticalBonus(op) {
+    if (!op) return 1;
+    const level = this.facilities.barracks || 0;
+    const bonus = this.getBarracksCriticalMultiplier(level);
+    if (bonus <= 1) return 1;
+    if (!Number.isFinite(op.criticalSuccessCount) || op.criticalSuccessCount < 0) {
+      op.criticalSuccessCount = 0;
+    }
+    if (!Number.isFinite(op.criticalSuccessWeight) || op.criticalSuccessWeight < 0) {
+      op.criticalSuccessWeight = 0;
+    }
+    op.criticalSuccessCount += 1;
+    op.criticalSuccessWeight += bonus;
+    return bonus;
   }
 
   startOperation(teamIndex, difficulty = 0) {
@@ -795,6 +986,10 @@ class WarpGateCommand extends EffectableEntity {
     op.summary = operationStartText;
     op.nextDifficultyModifier = 1;
     op.nextArtifactModifier = 1;
+    op.facilityRerolls = this.buildFacilityRerollPool();
+    op.criticalSuccessCount = 0;
+    op.criticalSuccessWeight = 0;
+    this.applyInfirmaryOperationHeal(teamIndex);
     this.refreshOperationProgress(op, teamIndex);
     op.progress = this.calculateOperationProgress(op);
     this.addLog(teamIndex, `=== Operation #${op.number} ===`);
@@ -818,6 +1013,8 @@ class WarpGateCommand extends EffectableEntity {
       op.progressIntervalDuration = 0;
       op.nextDifficultyModifier = 1;
       op.nextArtifactModifier = 1;
+      op.criticalSuccessCount = 0;
+      op.criticalSuccessWeight = 0;
     }
   }
 
@@ -877,7 +1074,18 @@ class WarpGateCommand extends EffectableEntity {
         progressIntervalStart: Number.isFinite(op.progressIntervalStart) ? op.progressIntervalStart : 0,
         progressIntervalDuration: Number.isFinite(op.progressIntervalDuration) ? op.progressIntervalDuration : 0,
         nextDifficultyModifier: Number.isFinite(op.nextDifficultyModifier) ? op.nextDifficultyModifier : 1,
-        nextArtifactModifier: Number.isFinite(op.nextArtifactModifier) ? op.nextArtifactModifier : 1
+        nextArtifactModifier: Number.isFinite(op.nextArtifactModifier) ? op.nextArtifactModifier : 1,
+        facilityRerolls: op.facilityRerolls ? {
+          shootingRange: op.facilityRerolls.shootingRange || 0,
+          obstacleCourse: op.facilityRerolls.obstacleCourse || 0,
+          library: op.facilityRerolls.library || 0
+        } : {
+          shootingRange: 0,
+          obstacleCourse: 0,
+          library: 0
+        },
+        criticalSuccessCount: Number.isFinite(op.criticalSuccessCount) ? op.criticalSuccessCount : 0,
+        criticalSuccessWeight: Number.isFinite(op.criticalSuccessWeight) ? op.criticalSuccessWeight : 0
       })),
       teamOperationCounts: this.teamOperationCounts.slice(),
       teamNextOperationNumber: this.teamNextOperationNumber.slice(),
@@ -934,7 +1142,14 @@ class WarpGateCommand extends EffectableEntity {
         progressIntervalStart: Number.isFinite(op.progressIntervalStart) ? op.progressIntervalStart : 0,
         progressIntervalDuration: Number.isFinite(op.progressIntervalDuration) ? op.progressIntervalDuration : 0,
         nextDifficultyModifier: Number.isFinite(op.nextDifficultyModifier) && op.nextDifficultyModifier > 0 ? op.nextDifficultyModifier : 1,
-        nextArtifactModifier: Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1
+        nextArtifactModifier: Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1,
+        facilityRerolls: {
+          shootingRange: Number.isFinite(op.facilityRerolls && op.facilityRerolls.shootingRange) ? op.facilityRerolls.shootingRange : this.getFacilityRerollBudget(this.facilities.shootingRange || 0),
+          obstacleCourse: Number.isFinite(op.facilityRerolls && op.facilityRerolls.obstacleCourse) ? op.facilityRerolls.obstacleCourse : this.getFacilityRerollBudget(this.facilities.obstacleCourse || 0),
+          library: Number.isFinite(op.facilityRerolls && op.facilityRerolls.library) ? op.facilityRerolls.library : this.getFacilityRerollBudget(this.facilities.library || 0)
+        },
+        criticalSuccessCount: Number.isFinite(op.criticalSuccessCount) ? op.criticalSuccessCount : 0,
+        criticalSuccessWeight: Number.isFinite(op.criticalSuccessWeight) ? op.criticalSuccessWeight : (Number.isFinite(op.criticalXpMultiplier) && op.criticalXpMultiplier > 1 ? op.criticalXpMultiplier : 0)
       };
     });
 
@@ -995,6 +1210,9 @@ class WarpGateCommand extends EffectableEntity {
         }
         this.refreshOperationProgress(op, i);
         op.progress = this.calculateOperationProgress(op);
+        if (!Number.isFinite(op.criticalXpMultiplier) || op.criticalXpMultiplier < 1) {
+          op.criticalXpMultiplier = 1;
+        }
       } else {
         op.eventQueue = [];
         op.currentEventIndex = 0;
@@ -1007,6 +1225,7 @@ class WarpGateCommand extends EffectableEntity {
         op.baseEventsCompleted = 0;
         op.nextDifficultyModifier = 1;
         op.nextArtifactModifier = 1;
+        op.criticalXpMultiplier = 1;
       }
     });
   }
