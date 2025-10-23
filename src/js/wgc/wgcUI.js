@@ -251,7 +251,7 @@ function generateWGCTeamCards() {
               <div class="difficulty-container">
               <div class="difficulty-label">
                 <span>Difficulty</span>
-                <span class="info-tooltip-icon" title="Raises all challenge DCs (team +4 per level, individual +1 per level). Artifact and XP rewards increase by 10% per level. Failed individual checks deal 5 HP per level to the selected member while failed team checks damage all members for 2 HP per level. Failed combat checks damage all members for 5 HP per level.">&#9432;</span>
+                <span class="info-tooltip-icon" title="Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level before stance modifiers). Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.">&#9432;</span>
                 </div>
                 <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0" />
               </div>
