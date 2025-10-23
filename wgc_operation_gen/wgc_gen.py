@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Tuple
 import openai
 
 BASE_EVENTS: List[Dict[str, Any]] = [
-    {"name": "Individual Team Power Challenge", "type": "individual", "skill": "power", "weight": 1},
+    {"name": "Individual Power Challenge", "type": "individual", "skill": "power", "weight": 1},
     {"name": "Team Athletics Challenge", "type": "team", "skill": "athletics", "weight": 1},
     {"name": "Team Wits Challenge", "type": "team", "skill": "wit", "weight": 1},
     {"name": "Individual Athletics Challenge", "type": "individual", "skill": "athletics", "weight": 1},
@@ -124,7 +124,9 @@ def build_prompt(events: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
         "Come up with a common theme and maintain story consistency.",
         f"Do not add numbering, keys, narration outside the {total_steps} strings, or trailing commentary.",
         "Be verbose and detailed. Try to write a story that makes sense using the space provided. Keep it to between 2 and 10 lines per step.",
-        "Use non-gendered pronouns for team members, or refer to them directly by name"
+        "Use non-gendered pronouns for team members, or refer to them directly by name",
+        "Begin every story with coming out of the warp gate",
+        "Around step 7 or 8, try to have a surprising twist or turn in the story, but don't explicitly present it as a twist."
     ]
 
     lines.append(
