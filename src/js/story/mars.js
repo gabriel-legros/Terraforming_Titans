@@ -473,7 +473,7 @@ var progressMars = {
             type: 'collection',
             resourceType: 'colony',
             resource: 'colonists',
-            quantity: 10
+            quantity: 5
         }],
         reward: [,
             {
