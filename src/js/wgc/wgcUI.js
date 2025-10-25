@@ -81,6 +81,7 @@ const teamElements = [];
 var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
 const teamRulesTooltip = [
   'Warp Gate Command dispatches specialist teams through the warp gate to confront threats, gather alien artifacts, and bring back intel for humanity.  Everyone involved is a volunteer and the cream of the crop humanity has to offer.',
+  'Operations happen in 10 steps, each with a distinct challenge.  Challenges have their own special rules.',
   'Special rules:',
   '- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.',
   '- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.',
