@@ -803,6 +803,30 @@ const venusOverrides = {
   }
 };
 
+const umbraOverrides = {
+  name: 'Umbra',
+  star: {
+    name: 'Nyx-13',
+    spectralType: 'K4V',
+    luminositySolar: 0.36,
+    massSolar: 0.75,
+    temperatureK: 4550,
+    habitableZone: { inner: 0.47, outer: 0.88 }
+  },
+  celestialParameters: {
+    distanceFromSun: 0.64,
+    gravity: 3.8,
+    radius: 3321,
+    mass: 6.11e23,
+    albedo: 0.18,
+    rotationPeriod: 26.9,
+    starLuminosity: 0.36,
+  },
+  visualization: {
+    baseColor: '#1d2a44',
+  }
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -811,7 +835,8 @@ const planetSpecificOverrides = {
   callisto: callistoOverrides,
   ganymede: ganymedeOverrides,
   vega2: vega2Overrides,
-  venus: venusOverrides
+  venus: venusOverrides,
+  umbra: umbraOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -849,6 +874,7 @@ const planetParameters = {
     ganymede: getPlanetParameters('ganymede'),
     vega2: getPlanetParameters('vega2'),
     venus: getPlanetParameters('venus'),
+    umbra: getPlanetParameters('umbra'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,

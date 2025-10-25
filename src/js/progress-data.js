@@ -30,6 +30,11 @@ if (typeof progressVenus === 'undefined') {
     try { progressVenus = require('./story/venus.js'); } catch (e) {}
   }
 }
+if (typeof progressUmbra === 'undefined') {
+  if (typeof module !== 'undefined') {
+    try { progressUmbra = require('./story/umbra.js'); } catch (e) {}
+  }
+}
 
 function mergeProgress(source) {
   if (!source) return;
@@ -47,6 +52,7 @@ mergeProgress(typeof progressCallisto !== 'undefined' ? progressCallisto : null)
 mergeProgress(typeof progressGanymede !== 'undefined' ? progressGanymede : null);
 mergeProgress(typeof progressVega2 !== 'undefined' ? progressVega2 : null);
 mergeProgress(typeof progressVenus !== 'undefined' ? progressVenus : null);
+mergeProgress(typeof progressUmbra !== 'undefined' ? progressUmbra : null);
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);

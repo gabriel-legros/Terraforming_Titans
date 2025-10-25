@@ -734,6 +734,28 @@ progressVenus.chapters.push(
       { target: 'rwgManager', type: 'unlockType', targetId: 'venus-like' }
     ]
   },
+  {
+    id: "chapter20.18",
+    type: "journal",
+    chapter: 20,
+    narrative: "Mary: 'Sensors picked up a dim orange star beyond the Concordat lanes. Umbra waits there, cloaked in volcanic glass.'\nH.O.P.E.: 'Shadowed orbit offers reduced cult surveillance. Immediate colonization recommended.'",
+    prerequisites: ["impossible"],
+    objectives: [],
+    reward: [
+      { target: 'spaceManager', targetId: 'umbra', type: 'enable' }
+    ]
+  },
+  {
+    id: "chapter20.19",
+    type: "journal",
+    chapter: 20,
+    narrative: "1st Primary Directive: Humanity’s survival demands expansion. Venus habitat secured. **New terraforming target designated: Umbra.**",
+    prerequisites: ["chapter20.18"],
+    objectives: [
+      { type: 'currentPlanet', planetId: 'umbra' }
+    ],
+    reward: []
+  },
 );
 
 if (globalThis.module && globalThis.module.exports) {
