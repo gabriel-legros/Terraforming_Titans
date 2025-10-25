@@ -12,6 +12,13 @@ class PopulationModule extends EffectableEntity {
       this.totalWorkersRequiredNormal = 0;
       this.totalWorkersRequiredLow = 0;
       this.lastGrowthPerSecond = 0; // Tracks actual population change per second
+      this.starvationShortage = 0;
+      this.energyShortage = 0;
+      this.componentsCoverage = 1;
+      this.starvationDecayRate = 0;
+      this.energyDecayRate = 0;
+      this.gravityDecayRate = 0;
+      this.gravityMitigation = 0;
     }
 
   getEffectiveGrowthMultiplier(){
@@ -42,6 +49,43 @@ class PopulationModule extends EffectableEntity {
     const currentPopulation = this.populationResource.value;
     if(currentPopulation === 0) return 0;
     return (this.lastGrowthPerSecond / currentPopulation) * 100;
+  }
+
+  getWeightedNeedFulfillment(needKey) {
+    let weightedFulfillment = 0;
+    let totalCapacity = 0;
+
+    for (const colonyName in colonies) {
+      const colony = colonies[colonyName];
+      const capacity = colony.active * colony.storage.colony.colonists;
+      if (capacity <= 0) {
+        continue;
+      }
+
+      const filledNeeds = colony.filledNeeds || {};
+      const fulfillment = filledNeeds[needKey] ?? 0;
+
+      weightedFulfillment += fulfillment * capacity;
+      totalCapacity += capacity;
+    }
+
+    if (totalCapacity === 0) {
+      return 1;
+    }
+
+    const averageFulfillment = weightedFulfillment / totalCapacity;
+    return Math.min(1, Math.max(0, averageFulfillment));
+  }
+
+  calculateCapacityFactor(population, populationCap) {
+    if (populationCap <= 0) {
+      return 0;
+    }
+    const ratio = population / populationCap;
+    if (ratio >= 1) {
+      return 0;
+    }
+    return 1 - ratio;
   }
   
     calculateGrowthRate() {
@@ -84,45 +128,63 @@ class PopulationModule extends EffectableEntity {
         currentPopulation = populationCap;
       }
 
-      this.growthRate = this.calculateGrowthRate();
+      this.growthRate = Math.max(0, this.calculateGrowthRate());
 
       // Calculate logistic growth/decay
-      let populationChange = 0;
-  
-      if (this.growthRate > 0 && populationCap > 0) {
-        // Logistic growth formula: dP/dt = r * P * (1 - P / K)
-        const logisticGrowth = this.growthRate * currentPopulation * (1 - currentPopulation / populationCap) * this.getEffectiveGrowthMultiplier();
-        this.lastGrowthPerSecond = logisticGrowth;
-        populationChange = logisticGrowth * (deltaTime / 1000);
-      } else if (this.growthRate < 0) {
-        // Decay even if population is above the cap
-        const decayRate = this.growthRate * currentPopulation;
-        this.lastGrowthPerSecond = decayRate;
-        populationChange = decayRate * (deltaTime / 1000);
-      } else if (currentPopulation > populationCap && currentPopulation > 0) {
-        // Decay when cap is 0
-        const decayRate = -0.1 * currentPopulation;
-        this.lastGrowthPerSecond = decayRate;
-        populationChange = decayRate * (deltaTime / 1000);
-      } else {
-        this.lastGrowthPerSecond = 0;
+      const growthMultiplier = this.getEffectiveGrowthMultiplier();
+      const capacityFactor = this.calculateCapacityFactor(currentPopulation, populationCap);
+      const baseGrowthRate = Math.max(0, this.growthRate);
+      const growthPerSecond = baseGrowthRate * currentPopulation * capacityFactor * growthMultiplier;
+
+      // Calculate decay from shortages
+      const seconds = deltaTime > 0 ? deltaTime / 1000 : 0;
+      const starvationCoverage = this.getWeightedNeedFulfillment('food');
+      const energyCoverage = this.getWeightedNeedFulfillment('energy');
+      const componentsCoverage = this.getWeightedNeedFulfillment('components');
+
+      this.starvationShortage = 1 - starvationCoverage;
+      this.energyShortage = 1 - energyCoverage;
+      this.componentsCoverage = componentsCoverage;
+
+      this.starvationDecayRate = this.starvationShortage / 360;
+      this.energyDecayRate = this.energyShortage / 90;
+
+      const starvationDecayPerSecond = this.starvationDecayRate * currentPopulation;
+      const energyDecayPerSecond = this.energyDecayRate * currentPopulation;
+
+      const gravityValue = terraforming?.celestialParameters?.gravity ?? 0;
+      const gravityExcess = Math.max(0, gravityValue - 20);
+      const gravityRatePerSecond = gravityExcess === 0 ? 0 : (0.0001 * gravityExcess) / 86400;
+      const mechanicalAssistance = colonySliderSettings?.mechanicalAssistance ?? 0;
+      const mitigation = Math.min(0.5, mechanicalAssistance * componentsCoverage * 0.5);
+      this.gravityMitigation = mitigation;
+      this.gravityDecayRate = gravityRatePerSecond * (1 - mitigation);
+      const gravityDecayPerSecond = this.gravityDecayRate * currentPopulation;
+
+      const totalDecayPerSecond = starvationDecayPerSecond + energyDecayPerSecond + gravityDecayPerSecond;
+      const netPerSecond = growthPerSecond - totalDecayPerSecond;
+
+      this.lastGrowthPerSecond = netPerSecond;
+      const populationChange = netPerSecond * seconds;
+
+      if (growthPerSecond > 0) {
+        this.populationResource.modifyRate(growthPerSecond, 'Population Growth', 'population');
       }
-  
+      if (starvationDecayPerSecond > 0) {
+        this.populationResource.modifyRate(-starvationDecayPerSecond, 'Starvation', 'population');
+      }
+      if (energyDecayPerSecond > 0) {
+        this.populationResource.modifyRate(-energyDecayPerSecond, 'Energy Shortage', 'population');
+      }
+      if (gravityDecayPerSecond > 0) {
+        this.populationResource.modifyRate(-gravityDecayPerSecond, 'Gravity Strain', 'population');
+      }
+
       // Apply the population change and update production/consumption rates
       if (populationChange > 0) {
         this.populationResource.increase(populationChange);
-          this.populationResource.modifyRate(
-            populationChange * (1000 / deltaTime),
-            'Growth',
-            'population'
-          );
       } else if (populationChange < 0) {
         this.populationResource.decrease(-populationChange);
-          this.populationResource.modifyRate(
-            populationChange * (1000 / deltaTime),
-            'Decay',
-            'population'
-          );
       }
 
       if(currentPopulation < 1)

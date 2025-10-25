@@ -1,6 +1,11 @@
 // Colony sliders management
 
 let mechanicalAssistanceRow;
+let mechanicalAssistanceInfo;
+let mechanicalAssistanceEffect;
+let mechanicalAssistanceValue;
+let mechanicalAssistanceInput;
+let mechanicalAssistanceRefresh;
 
 function initializeColonySlidersUI() {
   const container = document.getElementById('colony-sliders-container');
@@ -312,7 +317,7 @@ function initializeColonySlidersUI() {
   mechLabel.textContent = 'Mechanical Assistance ';
   const mechInfo = document.createElement('span');
   mechInfo.classList.add('info-tooltip-icon');
-  mechInfo.title = 'Reduces gravity penalty for colony growth; mitigation scales with slider level and Components need fill.';
+  mechInfo.title = 'Mechanical Assistance mitigates up to 50% of high-gravity decay.';
   mechInfo.innerHTML = '&#9432;';
   mechLabel.appendChild(mechInfo);
   mechanicalAssistanceRow.appendChild(mechLabel);
@@ -361,6 +366,74 @@ function initializeColonySlidersUI() {
   mechanicalAssistanceRow.style.display = colonySliderSettings.isBooleanFlagSet('mechanicalAssistance') ? 'grid' : 'none';
   body.appendChild(mechanicalAssistanceRow);
 
+  mechanicalAssistanceInfo = mechInfo;
+  mechanicalAssistanceEffect = mechEffect;
+  mechanicalAssistanceValue = mechValue;
+  mechanicalAssistanceInput = mechInput;
+
+  const refreshMechanicalAssistanceDetails = () => {
+    let sliderValue;
+    try {
+      sliderValue = parseFloat(mechanicalAssistanceInput.value);
+    } catch (e) {
+      sliderValue = NaN;
+    }
+    if (isNaN(sliderValue)) {
+      sliderValue = colonySliderSettings.mechanicalAssistance;
+    }
+
+    let componentsCoverage;
+    try {
+      componentsCoverage = populationModule.componentsCoverage;
+    } catch (e) {
+      componentsCoverage = 1;
+    }
+    if (!(componentsCoverage >= 0)) {
+      componentsCoverage = 0;
+    }
+    if (componentsCoverage > 1) {
+      componentsCoverage = 1;
+    }
+
+    const mitigationPercent = Math.min(50, sliderValue * componentsCoverage * 50);
+    const mitigationText = mitigationPercent.toFixed(1).replace(/\.0$/, '');
+    const sliderText = sliderValue.toFixed(1);
+
+    if (mechanicalAssistanceValue) {
+      mechanicalAssistanceValue.textContent = `${sliderText}x`;
+    }
+    if (mechanicalAssistanceEffect) {
+      mechanicalAssistanceEffect.textContent = `Gravity decay reduction: -${mitigationText}%`;
+    }
+
+    let gravity;
+    try {
+      gravity = terraforming.celestialParameters.gravity;
+    } catch (e) {
+      gravity = 0;
+    }
+    if (!(gravity >= 0)) {
+      gravity = 0;
+    }
+    const aboveTwenty = Math.max(0, gravity - 20);
+    const coveragePercent = (Math.round(componentsCoverage * 1000) / 10).toFixed(1).replace(/\.0$/, '');
+    const effectiveMitigation = (Math.round(mitigationPercent * 10) / 10).toFixed(1).replace(/\.0$/, '');
+    const remaining = (Math.round(Math.max(0, 50 - mitigationPercent) * 10) / 10).toFixed(1).replace(/\.0$/, '');
+
+    if (mechanicalAssistanceInfo) {
+      mechanicalAssistanceInfo.title = [
+        'Mechanical Assistance mitigates up to 50% of high-gravity decay.',
+        `Slider: ${sliderText}x.`,
+        `Components coverage: ${coveragePercent}%.`,
+        `Current gravity: ${gravity.toFixed(2)} m/s² (${aboveTwenty.toFixed(2)} above 20).`,
+        `Effective mitigation: ${effectiveMitigation}% of gravity decay.`,
+        `Remaining decay: ${remaining}% of the original high-gravity loss per day when gravity exceeds 20 m/s².`
+      ].join('\n');
+    }
+  };
+
+  mechanicalAssistanceRefresh = refreshMechanicalAssistanceDetails;
+
   card.appendChild(body);
   container.appendChild(card);
 
@@ -391,29 +464,25 @@ function initializeColonySlidersUI() {
     setOreMineWorkerAssist(v);
   });
 
-  const updateMechanicalValue = (val) => {
-    if (mechValue && mechEffect) {
-      mechValue.textContent = `${val.toFixed(1)}x`;
-      const mitigation = Math.round(val * 25);
-      mechEffect.textContent = `Mitigation: -${mitigation}%`;
-    }
-  };
-
   let initialMech;
   try { initialMech = parseFloat(mechInput.value); } catch (e) { initialMech = NaN; }
   if (isNaN(initialMech)) initialMech = colonySliderSettings.mechanicalAssistance;
-  updateMechanicalValue(initialMech);
+  mechInput.value = initialMech;
+  refreshMechanicalAssistanceDetails();
   mechInput.addEventListener('input', () => {
     let v;
     try { v = parseFloat(mechInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.mechanicalAssistance;
-    updateMechanicalValue(v);
+    mechInput.value = v;
+    refreshMechanicalAssistanceDetails();
   });
   mechInput.addEventListener('change', () => {
     let v;
     try { v = parseFloat(mechInput.value); } catch (e) { v = NaN; }
     if (isNaN(v)) v = colonySliderSettings.mechanicalAssistance;
     setMechanicalAssistance(v);
+    mechInput.value = v;
+    refreshMechanicalAssistanceDetails();
   });
 }
 
@@ -427,6 +496,9 @@ function updateColonySlidersUI() {
   const gravity = terraforming.celestialParameters.gravity;
   const hasPenalty = gravity > 10;
   mechanicalAssistanceRow.style.display = unlocked && hasPenalty ? 'grid' : 'none';
+  if (mechanicalAssistanceRefresh) {
+    mechanicalAssistanceRefresh();
+  }
 }
 
 if (typeof module !== "undefined" && module.exports) {

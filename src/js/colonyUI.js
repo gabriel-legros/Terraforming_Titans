@@ -36,7 +36,7 @@ function createGrowthRateDisplay(){
   baseLine.innerHTML = '<span>Base rate:</span> <span id="growth-base-value">0%/s</span>';
   const baseInfo = document.createElement('span');
   baseInfo.classList.add('info-tooltip-icon');
-  baseInfo.title = 'Base growth rate derived from happiness: (happiness - 50%) / 300. Food and energy each give up to 25 happiness when satisfied. Comfort adds 20 times its rating, which can be acquired from researching and constructing better colony buildings. Each luxury resource (electronics and androids) can add 10 happiness if food and energy are met and can be turned off.  Milestones ready to claim or claimed provide 10 more. Happiness above 50% increases growth while below 50% causes decay.';
+  baseInfo.title = 'Base growth rate derived from happiness: max((happiness - 50%) / 300, 0). Food and energy each give up to 25 happiness when satisfied. Comfort adds 20 times its rating. Each luxury resource (electronics and androids) can add 10 happiness if food and energy are met, and milestones ready to claim or claimed provide 10 more. Happiness below 50% now simply pauses growth.';
   baseInfo.innerHTML = '&#9432;';
   baseLine.appendChild(baseInfo);
   body.appendChild(baseLine);
@@ -52,13 +52,23 @@ function createGrowthRateDisplay(){
   otherLine.appendChild(otherInfo);
   body.appendChild(otherLine);
 
+  const decayLine = document.createElement('div');
+  decayLine.classList.add('growth-rate-line');
+  decayLine.innerHTML = '<span>Decay:</span> <span id="growth-decay-value">0%/s</span>';
+  const decayInfo = document.createElement('span');
+  decayInfo.classList.add('info-tooltip-icon');
+  decayInfo.title = 'Combined population loss from shortages and high gravity.';
+  decayInfo.innerHTML = '&#9432;';
+  decayLine.appendChild(decayInfo);
+  body.appendChild(decayLine);
+
   // Final growth line
   const growthLine = document.createElement('div');
   growthLine.classList.add('growth-rate-line');
   growthLine.innerHTML = '<span>Growth:</span> <span id="growth-rate-value">0%/s</span>';
   const growthInfo = document.createElement('span');
   growthInfo.classList.add('info-tooltip-icon');
-  growthInfo.title = 'Final growth rate after applying all multipliers. Population grows at base rate × population × capacity multiplier, further modified by colony sliders and other effects.';
+  growthInfo.title = 'Final growth rate after applying logistic growth minus starvation, energy, and gravity decay.';
   growthInfo.innerHTML = '&#9432;';
   growthLine.appendChild(growthInfo);
   body.appendChild(growthLine);
@@ -100,6 +110,7 @@ function updateGrowthRateDisplay(){
   const baseEl = document.getElementById('growth-base-value');
   const otherEl = document.getElementById('growth-other-value');
   const capEl = document.getElementById('growth-capacity-value');
+  const decayEl = document.getElementById('growth-decay-value');
   if(!growthEl || !baseEl || !capEl || !otherEl) return;
 
   const rate = populationModule.getCurrentGrowthPercent();
@@ -125,9 +136,30 @@ function updateGrowthRateDisplay(){
   const cap = populationModule.populationResource.cap;
   let capMult = 0;
   if(cap > 0){
-    capMult = 1 - pop / cap;
+    capMult = Math.max(0, 1 - pop / cap);
   }
   capEl.textContent = `${formatNumber(capMult * 100, false, 1)}%`;
+
+  if (decayEl) {
+    const starvationRate = populationModule.starvationDecayRate * 100;
+    const energyRate = populationModule.energyDecayRate * 100;
+    const gravityRate = populationModule.gravityDecayRate * 100;
+    const totalDecay = starvationRate + energyRate + gravityRate;
+    decayEl.textContent = totalDecay === 0 ? '0%/s' : `-${formatNumber(totalDecay, false, 3)}%/s`;
+    const decayInfo = decayEl.parentElement.querySelector('.info-tooltip-icon');
+    if (decayInfo) {
+      const starvingPercent = populationModule.starvationShortage * 100;
+      const withoutPower = populationModule.energyShortage * 100;
+      const gravity = terraforming?.celestialParameters?.gravity ?? 0;
+      const aboveTwenty = Math.max(0, gravity - 20);
+      decayInfo.title = [
+        'Combined population loss from shortages and high gravity.',
+        `• Starvation: ${formatNumber(starvationRate, false, 3)}%/s (${formatNumber(starvingPercent, false, 1)}% starving; 100% per 360 s).`,
+        `• Energy: ${formatNumber(energyRate, false, 3)}%/s (${formatNumber(withoutPower, false, 1)}% without power; 100% per 90 s).`,
+        `• Gravity: ${formatNumber(gravityRate, false, 4)}%/s (gravity ${formatNumber(gravity, false, 2)} m/s²; ${formatNumber(aboveTwenty, false, 2)} above 20).`
+      ].join('\n');
+    }
+  }
 }
 
 // Create the colony-specific details display
