@@ -5,7 +5,7 @@ const projectParameters = {
     category :"resources",
     cost: {
     },
-    duration: 90000,  // Duration of the project in milliseconds (e.g., 3 minutes)
+    duration: 60000,  // Duration of the project in milliseconds (e.g., 3 minutes)
     description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,  // Infinite repeats allowed
