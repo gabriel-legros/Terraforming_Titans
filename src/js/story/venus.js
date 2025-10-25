@@ -738,7 +738,7 @@ progressVenus.chapters.push(
     id: "chapter20.18",
     type: "journal",
     chapter: 20,
-    narrative: "Mary: 'Sensors picked up a dim orange star beyond the Concordat lanes. Umbra waits there, cloaked in volcanic glass.'\nH.O.P.E.: 'Shadowed orbit offers reduced cult surveillance. Immediate colonization recommended.'",
+    narrative: "Receving public broadcast... 'We have received reports that the fledgling colony of Umbra, a barely breathable world, is under assault by ground Helian forces.  We have reached out to Mars for comment.'  \n Mary : 'Mars' pet project.  They found a world out there with a 10kPa oxygen atmosphere, and thought they could colonize it without your help.  Looks like it got unlucky.' \n H.O.P.E. : Requesting permission to assist the colonists of Umbra.  \n Mary : 'Did you just... ask for permission?  Well... alright then.  Since you asked so nicely... sure.  Let's go help them.'",
     prerequisites: ["impossible"],
     objectives: [],
     reward: [
