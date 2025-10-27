@@ -586,6 +586,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   reverseControl.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
   autoBuildContainer.appendChild(reverseControl);
+  cached.reverseControl = reverseControl;
 
   structure.initUI?.(autoBuildContainer, cached);
 

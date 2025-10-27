@@ -14,7 +14,7 @@ const AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ?? 50;
 const AEROSTAT_MAX_LAND_SHARE = 0.25;
 const AEROSTAT_BUOYANCY_NOTES =
-  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches will also improve aerostats.  Aerostats need at least 50 kPa of ambient pressure to stay buoyant.';
+  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches will also improve aerostats.  Aerostats need at least 50 kPa of ambient pressure to stay buoyant.  When lift fails, active aerostats can land as Research Outposts if the option is enabled and sufficient land remains.';
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
 const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
@@ -42,6 +42,7 @@ class Aerostat extends BaseColony {
     this._liftBelowThreshold = false;
     this._pressureBelowThreshold = false;
     this.buoyancyNotes = AEROSTAT_BUOYANCY_NOTES;
+    this.landAsResearchOutpost = true;
   }
 
   _getInitialLand() {
@@ -165,6 +166,27 @@ class Aerostat extends BaseColony {
     return AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
   }
 
+  saveState() {
+    const base = super.saveState?.() ?? {};
+    return {
+      ...base,
+      landAsResearchOutpost: this.landAsResearchOutpost
+    };
+  }
+
+  loadState(state = {}) {
+    super.loadState?.(state);
+    if (
+      state &&
+      typeof state === 'object' &&
+      Object.prototype.hasOwnProperty.call(state, 'landAsResearchOutpost')
+    ) {
+      this.landAsResearchOutpost = !!state.landAsResearchOutpost;
+    } else {
+      this.landAsResearchOutpost = true;
+    }
+  }
+
   getAtmosphericComposition() {
     return (
       globalThis.terraforming?.resources?.atmospheric ??
@@ -240,6 +262,16 @@ class Aerostat extends BaseColony {
 
     const { insufficient } = this._evaluateBuoyancy(lift, pressure);
     return insufficient;
+  }
+
+  initUI(autoBuildContainer, cache) {
+    super.initUI?.(autoBuildContainer, cache);
+    this._ensureResearchOutpostToggle(autoBuildContainer, cache);
+  }
+
+  updateUI(cache) {
+    super.updateUI?.(cache);
+    this._syncResearchOutpostToggle(cache);
   }
 
   filterActivationChange(change) {
@@ -318,12 +350,102 @@ class Aerostat extends BaseColony {
       this.adjustLand(change);
     }
 
+    const disabledCount = change < 0 ? -change : 0;
+    if (disabledCount > 0 && this.landAsResearchOutpost) {
+      const colonyCollection =
+        typeof colonies !== 'undefined' ? colonies : null;
+      const researchOutpost = colonyCollection?.t1_colony ?? null;
+      if (researchOutpost) {
+        const landRoomRaw =
+          typeof researchOutpost.landAffordCount === 'function'
+            ? researchOutpost.landAffordCount()
+            : Infinity;
+        const landRoom = Number.isFinite(landRoomRaw)
+          ? Math.max(0, landRoomRaw)
+          : landRoomRaw;
+        const convertible = Math.min(disabledCount, landRoom);
+        if (convertible > 0) {
+          const newCount = Math.max(0, this.count - convertible);
+          this.count = newCount;
+          if (this.active > this.count) {
+            this.active = this.count;
+          }
+
+          if (
+            researchOutpost.requiresLand &&
+            typeof researchOutpost.adjustLand === 'function'
+          ) {
+            researchOutpost.adjustLand(convertible);
+          }
+          researchOutpost.count += convertible;
+          researchOutpost.active += convertible;
+
+          if (typeof researchOutpost.updateResourceStorage === 'function') {
+            if (typeof resources !== 'undefined') {
+              researchOutpost.updateResourceStorage(resources);
+            } else {
+              researchOutpost.updateResourceStorage();
+            }
+          }
+        }
+      }
+    }
+
     if (typeof this.updateResourceStorage === 'function') {
       if (typeof resources !== 'undefined') {
         this.updateResourceStorage(resources);
       } else {
         this.updateResourceStorage();
       }
+    }
+  }
+
+  _ensureResearchOutpostToggle(autoBuildContainer, cache = {}) {
+    if (!autoBuildContainer) {
+      return;
+    }
+
+    let container = cache.researchOutpostContainer;
+    let checkbox = cache.researchOutpostCheckbox;
+
+    if (!container || !container.isConnected || !checkbox) {
+      container = document.createElement('label');
+      container.classList.add('aerostat-research-outpost-toggle');
+
+      checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.classList.add('aerostat-research-outpost-checkbox');
+      checkbox.addEventListener('change', () => {
+        this.landAsResearchOutpost = checkbox.checked;
+      });
+
+      const text = document.createElement('span');
+      text.textContent = 'Land as Research Outpost';
+
+      container.appendChild(checkbox);
+      container.appendChild(text);
+
+      cache.researchOutpostContainer = container;
+      cache.researchOutpostCheckbox = checkbox;
+    }
+
+    const reference = cache.reverseControl;
+    const needsAttach = container.parentElement !== autoBuildContainer;
+    if (needsAttach) {
+      if (reference && reference.parentElement === autoBuildContainer) {
+        autoBuildContainer.insertBefore(container, reference);
+      } else {
+        autoBuildContainer.appendChild(container);
+      }
+    }
+
+    this._syncResearchOutpostToggle(cache);
+  }
+
+  _syncResearchOutpostToggle(cache = {}) {
+    const checkbox = cache.researchOutpostCheckbox;
+    if (checkbox) {
+      checkbox.checked = this.landAsResearchOutpost;
     }
   }
 }
@@ -568,7 +690,7 @@ function attachAerostatBuoyancySection(container, structure) {
     liftInfo.classList.add('info-tooltip-icon');
     liftInfo.innerHTML = '&#9432;';
     liftInfo.title =
-      'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.';
+      'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.  When "Land as Research Outpost" is enabled, disabled aerostats will attempt to convert into Research Outposts if land is available.';
     liftRow.appendChild(liftInfo);
 
     body.appendChild(liftRow);
