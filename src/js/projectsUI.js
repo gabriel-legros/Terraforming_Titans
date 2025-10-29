@@ -342,6 +342,9 @@ function createProjectItem(project) {
     autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
     autoStartTravelResetCheckbox.addEventListener('change', (event) => {
       project.autoStartUncheckOnTravel = event.target.checked;
+      if (project.name === 'dysonSwarmReceiver' && typeof updateDysonSwarmUI === 'function') {
+        updateDysonSwarmUI(project);
+      }
     });
     autoStartTravelResetLabel = document.createElement('label');
     autoStartTravelResetLabel.htmlFor = autoStartTravelResetCheckbox.id;
