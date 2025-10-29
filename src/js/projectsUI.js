@@ -332,6 +332,23 @@ function createProjectItem(project) {
   autoStartLabel.textContent = 'Auto start';
   autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
+  const showTravelReset = project.name === 'dysonSwarmReceiver' || project.attributes?.spaceStorage;
+  let autoStartTravelResetCheckbox = null;
+  let autoStartTravelResetLabel = null;
+  if (showTravelReset) {
+    autoStartTravelResetCheckbox = document.createElement('input');
+    autoStartTravelResetCheckbox.type = 'checkbox';
+    autoStartTravelResetCheckbox.id = `${project.name}-auto-start-travel-reset`;
+    autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
+    autoStartTravelResetCheckbox.addEventListener('change', (event) => {
+      project.autoStartUncheckOnTravel = event.target.checked;
+    });
+    autoStartTravelResetLabel = document.createElement('label');
+    autoStartTravelResetLabel.htmlFor = autoStartTravelResetCheckbox.id;
+    autoStartTravelResetLabel.textContent = 'Uncheck on travelling';
+    autoStartCheckboxContainer.appendChild(autoStartTravelResetCheckbox);
+    autoStartCheckboxContainer.appendChild(autoStartTravelResetLabel);
+  }
   automationSettingsContainer.appendChild(autoStartCheckboxContainer);
   cardFooter.appendChild(automationSettingsContainer);
 
@@ -347,6 +364,8 @@ function createProjectItem(project) {
     autoStartCheckbox: autoStartCheckbox,
     autoStartCheckboxContainer: autoStartCheckboxContainer,
     autoStartLabel: autoStartLabel,
+    autoStartTravelResetCheckbox: autoStartTravelResetCheckbox,
+    autoStartTravelResetLabel: autoStartTravelResetLabel,
     automationSettingsContainer: automationSettingsContainer,
     cardFooter: cardFooter,
     upButton: upButton,
@@ -671,6 +690,9 @@ function updateProjectUI(projectName) {
   // Set the auto-start checkbox state based on the project data
   if (elements.autoStartCheckbox) {
     elements.autoStartCheckbox.checked = project.autoStart || false;
+  }
+  if (elements.autoStartTravelResetCheckbox) {
+    elements.autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
   }
   if (elements.autoStartLabel) {
     const continuous = project.isContinuous();
