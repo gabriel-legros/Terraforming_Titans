@@ -161,7 +161,14 @@ class PopulationModule extends EffectableEntity {
       this.gravityDecayRate = gravityRatePerSecond * (1 - mitigation);
       const gravityDecayPerSecond = this.gravityDecayRate * currentPopulation;
 
-      const totalDecayPerSecond = starvationDecayPerSecond + energyDecayPerSecond + gravityDecayPerSecond;
+      let overpopulationDecayPerSecond = 0;
+      if (currentPopulation > populationCap) {
+        const populationExcess = currentPopulation - populationCap;
+        overpopulationDecayPerSecond = populationExcess * 0.01;
+      }
+
+      const totalDecayPerSecond =
+        starvationDecayPerSecond + energyDecayPerSecond + gravityDecayPerSecond + overpopulationDecayPerSecond;
       const netPerSecond = growthPerSecond - totalDecayPerSecond;
 
       this.lastGrowthPerSecond = netPerSecond;
@@ -178,6 +185,9 @@ class PopulationModule extends EffectableEntity {
       }
       if (gravityDecayPerSecond > 0) {
         this.populationResource.modifyRate(-gravityDecayPerSecond, 'Gravity Strain', 'population');
+      }
+      if (overpopulationDecayPerSecond > 0) {
+        this.populationResource.modifyRate(-overpopulationDecayPerSecond, 'Overpopulation', 'population');
       }
 
       // Apply the population change and update production/consumption rates
