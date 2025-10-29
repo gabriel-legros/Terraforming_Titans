@@ -14,6 +14,7 @@ class Project extends EffectableEntity {
     this.repeatCount = 0; // Track the current number of times the project has been repeated
     this.shownStorySteps = new Set(); // Track which story steps have been displayed
     this.autoStart = false;
+    this.autoStartUncheckOnTravel = false;
     this.isPaused = false; // Whether the project is paused due to missing sustain cost
     this.shortfallLastTick = false; // Tracks if resource consumption failed last tick
     this.alertedWhenUnlocked = this.unlocked ? true : false;
@@ -570,6 +571,7 @@ class Project extends EffectableEntity {
       repeatCount: this.repeatCount,
       pendingResourceGains: this.pendingResourceGains || [],
       autoStart: this.autoStart,
+      autoStartUncheckOnTravel: this.autoStartUncheckOnTravel === true,
       shownStorySteps: Array.from(this.shownStorySteps),
       alertedWhenUnlocked: this.alertedWhenUnlocked,
     };
@@ -594,6 +596,7 @@ class Project extends EffectableEntity {
     }
     this.effects = [];
     this.autoStart = state.autoStart;
+    this.autoStartUncheckOnTravel = state.autoStartUncheckOnTravel === true;
     this.shownStorySteps = new Set(state.shownStorySteps || []);
     this.alertedWhenUnlocked = state.alertedWhenUnlocked || false;
     if (this.attributes.completionEffect && (this.isCompleted || this.repeatCount > 0)) {
@@ -952,8 +955,12 @@ class ProjectManager extends EffectableEntity {
     for (const name in this.projects) {
       const project = this.projects[name];
       const state = {};
+      const resetAuto = project.autoStartUncheckOnTravel === true;
       if (preserveAuto) {
-        state.autoStart = project.autoStart;
+        state.autoStart = resetAuto ? false : project.autoStart;
+      }
+      if (resetAuto) {
+        state.autoStartUncheckOnTravel = true;
       }
       if (typeof project.saveTravelState === 'function') {
         Object.assign(state, project.saveTravelState());
@@ -975,10 +982,28 @@ class ProjectManager extends EffectableEntity {
         project.autoStart = state.autoStart;
       }
       if (typeof project.loadTravelState === 'function') {
-        const { autoStart, ...projectState } = state;
+        const { autoStart, autoStartUncheckOnTravel, ...projectState } = state;
         project.loadTravelState(projectState);
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'autoStartUncheckOnTravel')) {
+        project.autoStartUncheckOnTravel = state.autoStartUncheckOnTravel === true;
+      }
+      if (project.autoStartUncheckOnTravel) {
+        if (project.autoStart) {
+          project.autoStart = false;
+        }
+        if (typeof updateProjectUI === 'function') {
+          updateProjectUI(name);
+        }
       }
     }
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    Project,
+    ProjectManager,
+  };
 }
 
