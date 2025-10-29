@@ -187,17 +187,31 @@ describe('WarpGateCommand operation queue', () => {
     wgc.roll = () => ({ sum: 20, rolls: [20] });
 
     wgc.resolveEvent(0, event);
-    expect(op.criticalXpMultiplier).toBe(10);
+    expect(op.criticalSuccessCount).toBe(1);
+    expect(op.criticalSuccessWeight).toBe(10);
     expect(wgc.facilities.barracks).toBe(100);
     op.successes = 1;
     op.difficulty = 0;
-    const expectedBase = op.successes * (1 + 0.1 * op.difficulty);
-    const expectedTotal = expectedBase * op.criticalXpMultiplier;
+    const difficultyFactor = 1 + 0.1 * op.difficulty;
+    const barracksBase = 1 + wgc.facilities.barracks * 0.01;
+    const criticalCount = Math.max(0, op.criticalSuccessCount);
+    const nonCriticalSuccesses = Math.max(0, op.successes - criticalCount);
+    const effectiveSuccesses = nonCriticalSuccesses + op.criticalSuccessWeight;
+    const expectedTotal = effectiveSuccesses * difficultyFactor * barracksBase;
     const challengeSummary = op.summary;
+    const initialMembers = wgc.teams[0].map(member => ({ level: member.level, xp: member.xp }));
 
     wgc.finishOperation(0);
     wgc.teams[0].forEach(member => {
-      expect(member.xp).toBeCloseTo(expectedTotal);
+      const starting = initialMembers.shift();
+      let expectedLevel = starting.level;
+      let expectedXp = starting.xp + expectedTotal;
+      while (expectedXp >= expectedLevel * 10) {
+        expectedXp -= expectedLevel * 10;
+        expectedLevel += 1;
+      }
+      expect(member.level).toBe(expectedLevel);
+      expect(member.xp).toBeCloseTo(expectedXp);
     });
     expect(challengeSummary).toContain('Barracks XP x10');
   });
