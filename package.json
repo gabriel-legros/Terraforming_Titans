@@ -1,18 +1,28 @@
 {
-  "name": "terraforming_titans",
+  "name": "terraforming-titans",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "test": "jest"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "jsdom": "^23.2.0"
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "babel-jest": "^30.2.0",
+    "jest": "^30.2.0",
+    "jest-environment-node": "^30.2.0",
+    "jsdom": "^27.0.1"
   },
   "jest": {
     "testEnvironment": "node",
     "testMatch": [
       "**/__tests__/**/*.test.js"
+    ],
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!jsdom|abab|cssom|cssstyle|data-urls|decimal.js|domexception|html-encoding-sniffer|is-potential-custom-element-name|nwsapi|parse5|saxes|symbol-tree|tough-cookie|w3c-xmlserializer|webidl-conversions|whatwg-url|xml-name-validator)"
     ]
   }
 }
