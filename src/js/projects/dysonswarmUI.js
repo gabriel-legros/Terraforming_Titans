@@ -24,10 +24,18 @@ function renderDysonSwarmUI(project, container) {
       </div>
       <div class="stat-item collector-cost-container"><span class="stat-label">Collector Cost:</span><span id="ds-collector-cost"></span></div>
       <div class="progress-button-container"><button id="ds-start" class="progress-button"></button></div>
-      <div class="checkbox-container"><input type="checkbox" id="ds-auto"><label for="ds-auto">Auto start</label></div>
+      <div class="checkbox-container">
+        <input type="checkbox" id="ds-auto">
+        <label for="ds-auto">Auto start</label>
+        <input type="checkbox" id="ds-auto-travel-reset">
+        <label for="ds-auto-travel-reset">Uncheck on travelling</label>
+      </div>
     </div>`;
   if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
   container.appendChild(card);
+
+  const autoCheckbox = card.querySelector('#ds-auto');
+  const travelResetCheckbox = card.querySelector('#ds-auto-travel-reset');
 
   projectElements[project.name] = {
     ...projectElements[project.name],
@@ -37,11 +45,17 @@ function renderDysonSwarmUI(project, container) {
     totalPowerDisplay: card.querySelector('#ds-total-power'),
     costDisplay: card.querySelector('#ds-collector-cost'),
     startButton: card.querySelector('#ds-start'),
-    autoCheckbox: card.querySelector('#ds-auto')
+    autoCheckbox,
+    autoStartTravelResetCheckbox: travelResetCheckbox,
+    collectorAutoStartTravelResetCheckbox: travelResetCheckbox,
   };
 
   card.querySelector('#ds-start').addEventListener('click', () => project.startCollector());
-  card.querySelector('#ds-auto').addEventListener('change', e => { project.autoDeployCollectors = e.target.checked; });
+  autoCheckbox.addEventListener('change', e => { project.autoDeployCollectors = e.target.checked; });
+  travelResetCheckbox.addEventListener('change', e => {
+    project.autoStartUncheckOnTravel = e.target.checked;
+    updateDysonSwarmUI(project);
+  });
 }
 
 function updateDysonSwarmUI(project) {
@@ -77,6 +91,14 @@ function updateDysonSwarmUI(project) {
     els.autoCheckbox.parentElement.style.display = canAuto ? '' : 'none';
     els.autoCheckbox.disabled = !canAuto;
   }
+  if (els.autoStartTravelResetCheckbox) {
+    els.autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
+    els.autoStartTravelResetCheckbox.disabled = !(project.unlocked || project.collectors > 0);
+  }
+  if (els.collectorAutoStartTravelResetCheckbox) {
+    els.collectorAutoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
+    els.collectorAutoStartTravelResetCheckbox.disabled = !(project.unlocked || project.collectors > 0);
+  }
   if (els.totalPowerDisplay) {
     els.totalPowerDisplay.parentElement.style.display = (project.unlocked && project.isCompleted) ? '' : 'none';
   }
@@ -93,6 +115,9 @@ function updateDysonSwarmUI(project) {
     els.startButton.disabled = !can;
   }
   els.autoCheckbox.checked = project.autoDeployCollectors;
+  if (els.autoStartTravelResetCheckbox) {
+    els.autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
+  }
 }
 
 if (typeof globalThis !== 'undefined') {
