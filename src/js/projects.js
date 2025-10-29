@@ -965,6 +965,9 @@ class ProjectManager extends EffectableEntity {
       if (typeof project.saveTravelState === 'function') {
         Object.assign(state, project.saveTravelState());
       }
+      if (resetAuto && 'autoDeployCollectors' in project) {
+        state.autoDeployCollectors = false;
+      }
       if (Object.keys(state).length > 0) {
         travelState[name] = state;
       }
@@ -983,6 +986,9 @@ class ProjectManager extends EffectableEntity {
       }
       if (typeof project.loadTravelState === 'function') {
         const { autoStart, autoStartUncheckOnTravel, ...projectState } = state;
+        if ((autoStartUncheckOnTravel === true || project.autoStartUncheckOnTravel === true) && 'autoDeployCollectors' in projectState) {
+          projectState.autoDeployCollectors = false;
+        }
         project.loadTravelState(projectState);
       }
       if (Object.prototype.hasOwnProperty.call(state, 'autoStartUncheckOnTravel')) {
@@ -991,6 +997,9 @@ class ProjectManager extends EffectableEntity {
       if (project.autoStartUncheckOnTravel) {
         if (project.autoStart) {
           project.autoStart = false;
+        }
+        if ('autoDeployCollectors' in project && project.autoDeployCollectors) {
+          project.autoDeployCollectors = false;
         }
         if (typeof updateProjectUI === 'function') {
           updateProjectUI(name);
