@@ -1,5 +1,9 @@
 const DEFAULT_OPERATION_AUTO_THRESHOLD = 2.1;
 
+const R507_SECTOR_LABEL = 'R5-07';
+const R507_SECTOR_KEY = '4,-5';
+const R507_UHF_CONTROL_FLOOR = 0.1;
+
 const GALAXY_OPERATION_HEX_DIRECTIONS = Array.isArray(globalThis?.HEX_NEIGHBOR_DIRECTIONS)
     ? globalThis.HEX_NEIGHBOR_DIRECTIONS
     : [
@@ -548,8 +552,10 @@ class GalaxyOperationManager {
         if (typeof this.updateSectorControl !== 'function') {
             return;
         }
+        const protectUhfControl = this.#shouldProtectUhfControl(sector, operation);
         this.updateSectorControl(sector, (target) => {
             let remainingReduction = gain;
+            const enforceUhfFloor = protectUhfControl && this.#isProtectedUhfSector(target);
             entries.forEach(([defenderId, value], index) => {
                 if (!(remainingReduction > 0)) {
                     return;
@@ -561,7 +567,17 @@ class GalaxyOperationManager {
                 }
                 const factionsRemaining = entries.length - index;
                 const share = factionsRemaining > 0 ? remainingReduction / factionsRemaining : remainingReduction;
-                const reduction = Math.min(numericValue, share);
+                let maxReduction = numericValue;
+                if (enforceUhfFloor && defenderId === this.uhfFactionId) {
+                    const floor = this.#resolveProtectedUhfFloor(target, defenderId);
+                    if (floor > 0) {
+                        maxReduction = Math.max(0, numericValue - floor);
+                    }
+                }
+                if (!(maxReduction > 0)) {
+                    return;
+                }
+                const reduction = Math.min(maxReduction, share);
                 const nextValue = numericValue - reduction;
                 remainingReduction -= reduction;
                 if (nextValue > 0) {
@@ -582,6 +598,40 @@ class GalaxyOperationManager {
                 target.clearControl(factionId);
             }
         });
+    }
+
+    #shouldProtectUhfControl(sector, operation) {
+        if (!sector || !operation) {
+            return false;
+        }
+        const attackerId = operation.factionId || this.uhfFactionId;
+        if (attackerId === this.uhfFactionId) {
+            return false;
+        }
+        return this.#isProtectedUhfSector(sector);
+    }
+
+    #isProtectedUhfSector(sector) {
+        if (!sector) {
+            return false;
+        }
+        if (sector.key === R507_SECTOR_KEY) {
+            return true;
+        }
+        if (typeof sector.getDisplayName === 'function' && sector.getDisplayName() === R507_SECTOR_LABEL) {
+            return true;
+        }
+        return false;
+    }
+
+    #resolveProtectedUhfFloor(sector, factionId) {
+        if (factionId !== this.uhfFactionId) {
+            return 0;
+        }
+        if (!this.#isProtectedUhfSector(sector)) {
+            return 0;
+        }
+        return R507_UHF_CONTROL_FLOOR;
     }
 
     #serializeOperation(operation) {
