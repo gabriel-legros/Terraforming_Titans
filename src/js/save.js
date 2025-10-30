@@ -133,15 +133,6 @@ function loadGame(slotOrCustomString) {
   try {
     const gameState = JSON.parse(savedState);
 
-    if (typeof hazardManager !== 'undefined' && hazardManager) {
-      if (typeof hazardManager.disable === 'function') {
-        hazardManager.disable();
-      }
-      if (typeof hazardManager.initialize === 'function') {
-        hazardManager.initialize({});
-      }
-    }
-
       // Load space state first so planet parameters are correct
       const savedSpace = gameState.spaceManager || gameState.spaceState;
       if (savedSpace) {
