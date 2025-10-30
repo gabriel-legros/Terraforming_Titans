@@ -6,6 +6,14 @@ const hazardUICache = {
   parameterRows: {},
   parameterNameSpans: {},
   parameterValueSpans: {},
+  sectionContainers: {},
+  sectionHeaders: {},
+  sectionLists: {},
+  sectionRows: {},
+  sectionNameSpans: {},
+  sectionValueSpans: {},
+  lastRenderedRows: {},
+  lastRenderedSections: {},
   initialized: false
 };
 
@@ -78,11 +86,123 @@ function formatHazardValue(value) {
     return value.join(', ');
   }
   if (value && typeof value === 'object') {
+    const hasMin = Object.prototype.hasOwnProperty.call(value, 'min');
+    const hasMax = Object.prototype.hasOwnProperty.call(value, 'max');
+    const hasUnit = Object.prototype.hasOwnProperty.call(value, 'unit');
+
+    if (hasMin || hasMax) {
+      const minText = hasMin ? formatHazardValue(value.min) : '—';
+      const maxText = hasMax ? formatHazardValue(value.max) : '—';
+      const unitText = hasUnit ? ` ${value.unit}` : '';
+      const extraEntries = Object.entries(value)
+        .filter(([key]) => key !== 'min' && key !== 'max' && key !== 'unit');
+
+      if (extraEntries.length === 0) {
+        return `${minText} – ${maxText}${unitText}`;
+      }
+
+      const extraText = extraEntries
+        .map(([name, val]) => `${formatHazardLabel(name)}: ${formatHazardValue(val)}`)
+        .join('; ');
+
+      return `${minText} – ${maxText}${unitText}${extraText ? ` (${extraText})` : ''}`;
+    }
+
     return Object.entries(value)
       .map(([name, val]) => `${formatHazardLabel(name)}: ${formatHazardValue(val)}`)
       .join('; ');
   }
   return value !== undefined && value !== null ? String(value) : '—';
+}
+
+function ensureHazardSection(key) {
+  let container = hazardUICache.sectionContainers[key];
+  if (!container) {
+    container = document.createElement('div');
+    container.classList.add('hazard-section');
+
+    const header = document.createElement('h4');
+    header.classList.add('hazard-section-title');
+    container.appendChild(header);
+
+    const rowsContainer = document.createElement('div');
+    rowsContainer.classList.add('hazard-section-rows');
+    container.appendChild(rowsContainer);
+
+    hazardUICache.sectionContainers[key] = container;
+    hazardUICache.sectionHeaders[key] = header;
+    hazardUICache.sectionLists[key] = rowsContainer;
+    hazardUICache.sectionRows[key] = {};
+    hazardUICache.sectionNameSpans[key] = {};
+    hazardUICache.sectionValueSpans[key] = {};
+  }
+
+  return container;
+}
+
+function updateHazardSectionRows(sectionKey, sectionData) {
+  const list = hazardUICache.sectionLists[sectionKey];
+  if (!list) {
+    return;
+  }
+
+  const rowCache = hazardUICache.sectionRows[sectionKey];
+  const nameCache = hazardUICache.sectionNameSpans[sectionKey];
+  const valueCache = hazardUICache.sectionValueSpans[sectionKey];
+
+  const entries = (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData))
+    ? Object.entries(sectionData)
+    : [['value', sectionData]];
+
+  const fragment = document.createDocumentFragment();
+  const activeKeys = {};
+
+  entries.forEach(([key, value]) => {
+    const label = formatHazardLabel(key);
+    const formatted = formatHazardValue(value);
+
+    let row = rowCache[key];
+    let nameSpan = nameCache[key];
+    let valueSpan = valueCache[key];
+
+    if (!row) {
+      row = document.createElement('div');
+      row.classList.add('hazard-parameter-row');
+
+      nameSpan = document.createElement('span');
+      nameSpan.classList.add('hazard-parameter-name');
+      row.appendChild(nameSpan);
+
+      valueSpan = document.createElement('span');
+      valueSpan.classList.add('hazard-parameter-value');
+      row.appendChild(valueSpan);
+
+      rowCache[key] = row;
+      nameCache[key] = nameSpan;
+      valueCache[key] = valueSpan;
+    }
+
+    if (nameSpan.textContent !== label) {
+      nameSpan.textContent = label;
+    }
+
+    if (valueSpan.textContent !== formatted) {
+      valueSpan.textContent = formatted;
+    }
+
+    fragment.appendChild(row);
+    activeKeys[key] = true;
+  });
+
+  list.replaceChildren(fragment);
+
+  Object.keys(rowCache).forEach((key) => {
+    if (!activeKeys[key]) {
+      delete rowCache[key];
+      delete nameCache[key];
+      delete valueCache[key];
+    }
+  });
 }
 
 function updateHazardUI(parameters = {}) {
@@ -102,6 +222,14 @@ function updateHazardUI(parameters = {}) {
     hazardUICache.parameterRows = {};
     hazardUICache.parameterNameSpans = {};
     hazardUICache.parameterValueSpans = {};
+    hazardUICache.sectionContainers = {};
+    hazardUICache.sectionHeaders = {};
+    hazardUICache.sectionLists = {};
+    hazardUICache.sectionRows = {};
+    hazardUICache.sectionNameSpans = {};
+    hazardUICache.sectionValueSpans = {};
+    hazardUICache.lastRenderedRows = {};
+    hazardUICache.lastRenderedSections = {};
     return;
   }
 
@@ -109,11 +237,36 @@ function updateHazardUI(parameters = {}) {
   list.classList.remove('hidden');
 
   const fragment = document.createDocumentFragment();
-  const activeKeys = {};
+  const activeRows = {};
+  const activeSections = {};
 
   keys.forEach((key) => {
+    const value = parameters[key];
+    const isSection = value && typeof value === 'object' && !Array.isArray(value);
+
+    if (isSection) {
+      const sectionContainer = ensureHazardSection(key);
+      const header = hazardUICache.sectionHeaders[key];
+      if (header) {
+        const label = formatHazardLabel(key);
+        if (header.textContent !== label) {
+          header.textContent = label;
+        }
+      }
+
+      const serialized = JSON.stringify(value);
+      if (hazardUICache.lastRenderedSections[key] !== serialized) {
+        updateHazardSectionRows(key, value);
+        hazardUICache.lastRenderedSections[key] = serialized;
+      }
+
+      fragment.appendChild(sectionContainer);
+      activeSections[key] = true;
+      return;
+    }
+
     const label = formatHazardLabel(key);
-    const value = formatHazardValue(parameters[key]);
+    const formatted = formatHazardValue(value);
 
     let row = hazardUICache.parameterRows[key];
     let nameSpan = hazardUICache.parameterNameSpans[key];
@@ -136,20 +289,39 @@ function updateHazardUI(parameters = {}) {
       hazardUICache.parameterValueSpans[key] = valueSpan;
     }
 
-    nameSpan.textContent = label;
-    valueSpan.textContent = value;
+    if (nameSpan.textContent !== label) {
+      nameSpan.textContent = label;
+    }
+
+    if (hazardUICache.lastRenderedRows[key] !== formatted) {
+      valueSpan.textContent = formatted;
+      hazardUICache.lastRenderedRows[key] = formatted;
+    }
 
     fragment.appendChild(row);
-    activeKeys[key] = true;
+    activeRows[key] = true;
   });
 
   list.replaceChildren(fragment);
 
   Object.keys(hazardUICache.parameterRows).forEach((key) => {
-    if (!activeKeys[key]) {
+    if (!activeRows[key]) {
       delete hazardUICache.parameterRows[key];
       delete hazardUICache.parameterNameSpans[key];
       delete hazardUICache.parameterValueSpans[key];
+      delete hazardUICache.lastRenderedRows[key];
+    }
+  });
+
+  Object.keys(hazardUICache.sectionContainers).forEach((key) => {
+    if (!activeSections[key]) {
+      delete hazardUICache.sectionContainers[key];
+      delete hazardUICache.sectionHeaders[key];
+      delete hazardUICache.sectionLists[key];
+      delete hazardUICache.sectionRows[key];
+      delete hazardUICache.sectionNameSpans[key];
+      delete hazardUICache.sectionValueSpans[key];
+      delete hazardUICache.lastRenderedSections[key];
     }
   });
 }

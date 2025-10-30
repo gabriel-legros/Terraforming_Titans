@@ -111,6 +111,7 @@ const defaultPlanetParameters = {
     temperatureK: 5778,
     habitableZone: { inner: 0.95, outer: 1.4 }
   },
+  hazards: {},
   celestialParameters : {
     distanceFromSun: 1.52, // Default (Mars)
     gravity: 3.711, // Default (Mars)
@@ -825,6 +826,15 @@ const umbraOverrides = {
   },
   visualization: {
     baseColor: '#1d2a44',
+  },
+  hazards: {
+    hazardousBiomass: {
+      oxygenPressure: { min: 16.0, max: 23.0, unit: 'kPa' },
+      atmosphericPressure: { min: 70.0, max: 110.0, unit: 'kPa' },
+      landPreference: 'Land',
+      temperaturePreference: { min: 273.15, max: 303.15, unit: 'K' },
+      radiationPreference: { min: 0, max: 0.01, unit: 'Sv/h' }
+    }
   }
 };
 

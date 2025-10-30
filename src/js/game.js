@@ -198,7 +198,10 @@ function initializeGameState(options = {}) {
   playTimeSeconds = 0;
 
   hazardManager = setHazardManager(new HazardManager());
-  hazardManager.initialize({});
+  const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
+    ? currentPlanetParameters.hazards
+    : {};
+  hazardManager.initialize(planetHazards);
   hazardManager.updateUI();
 
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;

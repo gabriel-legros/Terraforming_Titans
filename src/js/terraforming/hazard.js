@@ -1,9 +1,23 @@
 let hazardManager = null;
 
+function cloneHazardParameters(parameters) {
+  if (!parameters || typeof parameters !== 'object') {
+    return {};
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(parameters));
+  } catch (error) {
+    console.error('Failed to clone hazard parameters.', error);
+    return {};
+  }
+}
+
 class HazardManager {
   constructor() {
     this.enabled = false;
     this.parameters = {};
+    this.lastSerializedParameters = '';
   }
 
   enable() {
@@ -25,9 +39,14 @@ class HazardManager {
   }
 
   initialize(parameters = {}) {
-    this.parameters = { ...parameters };
+    const cloned = cloneHazardParameters(parameters);
+    const serialized = JSON.stringify(cloned);
+    const changed = serialized !== this.lastSerializedParameters;
 
-    if (this.enabled) {
+    this.parameters = cloned;
+    this.lastSerializedParameters = serialized;
+
+    if (changed && this.enabled) {
       this.updateUI();
     }
   }
@@ -52,7 +71,7 @@ class HazardManager {
 
   save() {
     return {
-      parameters: { ...this.parameters }
+      parameters: cloneHazardParameters(this.parameters)
     };
   }
 
