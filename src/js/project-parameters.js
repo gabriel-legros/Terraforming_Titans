@@ -56,7 +56,7 @@ const projectParameters = {
     }
   },
   import_colonists_1: {
-    type: 'Project',
+    type: 'ImportColonistsProject',
     name: "Import colonists",
     category :"resources",
     cost: {
