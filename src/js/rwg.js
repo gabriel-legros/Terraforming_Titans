@@ -422,7 +422,7 @@ const DEFAULT_PARAMS = {
     }
   },
   colonyCaps: { energy: 50_000_000, metal: 5000, silicon: 5000, glass: 5000, water: 5000, food: 5000, components: 500, electronics: 200, superconductors: 200, androids: 1000 },
-  specials: { includeAlbedoUpgrades: true, includeSpaceships: true, includeAlienArtifact: true },
+  specials: { includeAlbedoUpgrades: true, includeSpaceships: true, includeAlienArtifact: true, includeCrusaders: true },
   magnetosphere: {
     chanceByType: {
       "venus-like": 0.02, "mars-like": 0.06, "cold-desert": 0.12,
@@ -799,6 +799,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: "Albedo upgrades", hasCap: true, baseCap: landHa * 10000, initialValue: 0, unlocked: false };
   if (DEFAULT_PARAMS.specials.includeSpaceships)    special.spaceships      = { name: "Spaceships", hasCap: false, initialValue: 0, unlocked: false };
   if (DEFAULT_PARAMS.specials.includeAlienArtifact) special.alienArtifact   = { name: "Alien artifact", hasCap: false, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeCrusaders)     special.crusaders      = { name: "Crusaders", hasCap: false, initialValue: 0, unlocked: false };
 
   // Optional parent body for moons
   let parentBody = undefined; if (isMoon) { const gg = (function makeGasGiant(r) { const Mj = 1.898e27; return { mass: randRange(r, 0.3, 3.0) * Mj, radius_km: randRange(r, 30000, 80000), orbitRadius_km: Math.floor(randRange(r, 600000, 2500000)) }; })(mulberry32(seed ^ 0xFACE)); parentBody = { name: "Gas Giant", mass: gg.mass, radius: gg.radius_km, orbitRadius: gg.orbitRadius_km }; }
