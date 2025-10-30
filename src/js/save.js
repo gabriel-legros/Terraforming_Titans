@@ -89,6 +89,7 @@ function getGameState() {
     journalHistorySources: typeof journalHistorySources !== 'undefined' ? journalHistorySources : undefined,
     goldenAsteroid: (typeof goldenAsteroid !== 'undefined' && typeof goldenAsteroid.saveState === 'function') ? goldenAsteroid.saveState() : undefined,
     nanotechManager: (typeof nanotechManager !== 'undefined' && typeof nanotechManager.saveState === 'function') ? nanotechManager.saveState() : undefined,
+    hazardManager: (typeof hazardManager !== 'undefined' && typeof hazardManager.save === 'function') ? hazardManager.save() : undefined,
     solisManager: (typeof solisManager !== 'undefined' && typeof solisManager.saveState === 'function') ? solisManager.saveState() : undefined,
     warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
     lifeDesigner: (typeof lifeDesigner !== 'undefined' && typeof lifeDesigner.saveState === 'function') ? lifeDesigner.saveState() : undefined,
@@ -131,6 +132,15 @@ function loadGame(slotOrCustomString) {
 
   try {
     const gameState = JSON.parse(savedState);
+
+    if (typeof hazardManager !== 'undefined' && hazardManager) {
+      if (typeof hazardManager.disable === 'function') {
+        hazardManager.disable();
+      }
+      if (typeof hazardManager.initialize === 'function') {
+        hazardManager.initialize({});
+      }
+    }
 
       // Load space state first so planet parameters are correct
       const savedSpace = gameState.spaceManager || gameState.spaceState;
@@ -410,6 +420,9 @@ function loadGame(slotOrCustomString) {
 
     if(gameState.nanotechManager){
       nanotechManager.loadState(gameState.nanotechManager);
+    }
+    if (gameState.hazardManager && typeof hazardManager !== 'undefined' && typeof hazardManager.load === 'function') {
+      hazardManager.load(gameState.hazardManager);
     }
 
     if (gameState.galaxyManager && typeof galaxyManager !== 'undefined' && galaxyManager) {

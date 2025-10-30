@@ -194,6 +194,7 @@ class Terraforming extends EffectableEntity{
     this.summaryUnlocked = false;
     this.lifeDesignerUnlocked = false;
     this.milestonesUnlocked = false;
+    this.hazardsUnlocked = false;
     this.initialLand = resources.surface?.land?.value || 0;
 
     // Clone so config values remain immutable
@@ -1244,6 +1245,18 @@ class Terraforming extends EffectableEntity{
       if (effect.flagId === 'milestonesUnlocked' && typeof setTerraformingMilestonesVisibility === 'function') {
         setTerraformingMilestonesVisibility(!!effect.value);
       }
+      if (
+        effect.flagId === 'hazardsUnlocked' &&
+        effect.value &&
+        typeof hazardManager !== 'undefined' &&
+        hazardManager &&
+        typeof hazardManager.enable === 'function'
+      ) {
+        hazardManager.enable();
+      }
+      if (effect.flagId === 'hazardsUnlocked') {
+        this.hazardsUnlocked = !!effect.value;
+      }
     }
 
     removeEffect(effect) {
@@ -1272,6 +1285,16 @@ class Terraforming extends EffectableEntity{
       ) {
         setTerraformingMilestonesVisibility(false);
       }
+      if (
+        effect.type === 'booleanFlag' &&
+        effect.flagId === 'hazardsUnlocked' &&
+        typeof hazardManager !== 'undefined' &&
+        hazardManager &&
+        typeof hazardManager.disable === 'function'
+      ) {
+        hazardManager.disable();
+        this.hazardsUnlocked = false;
+      }
       return result;
     }
 
@@ -1289,8 +1312,20 @@ class Terraforming extends EffectableEntity{
         if (typeof setTerraformingLifeVisibility === 'function') {
           setTerraformingLifeVisibility(this.lifeDesignerUnlocked);
         }
+        if (typeof setTerraformingHazardsVisibility === 'function') {
+          const hazardsEnabled = typeof hazardManager !== 'undefined' && hazardManager && hazardManager.enabled;
+          setTerraformingHazardsVisibility(!!hazardsEnabled);
+        }
         if (typeof setTerraformingMilestonesVisibility === 'function') {
           setTerraformingMilestonesVisibility(this.milestonesUnlocked);
+        }
+        if (
+          typeof hazardManager !== 'undefined' &&
+          hazardManager &&
+          hazardManager.enabled &&
+          typeof hazardManager.updateUI === 'function'
+        ) {
+          hazardManager.updateUI();
         }
         createTerraformingSummaryUI();
         if(!this.initialValuesCalculated){

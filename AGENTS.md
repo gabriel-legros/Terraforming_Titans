@@ -277,3 +277,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Galaxy faction AI now scales defensive fleet reserves with their electronics adoption and UHF doctrine adaptation levels.
 - Galaxy faction AI sector defense now scales with their electronics adoption and UHF doctrine adaptation levels.
 - Population growth now relies on separate starvation, energy, and high-gravity attrition rates while the Colony tab breaks out each contribution alongside base growth.
+- Added a Hazards terraforming subtab managed by HazardManager with hazard.js and hazardUI.js modules.

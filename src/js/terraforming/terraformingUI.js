@@ -47,6 +47,8 @@ const terraformingTabElements = {
   worldContent: null,
   lifeButton: null,
   lifeContent: null,
+  hazardsButton: null,
+  hazardsContent: null,
   milestonesButton: null,
   milestonesContent: null,
 };
@@ -84,6 +86,8 @@ function cacheTerraformingTabElements() {
   terraformingTabElements.worldContent = terraformingTabElements.contentMap['world-terraforming'] || null;
   terraformingTabElements.lifeButton = terraformingTabElements.buttonMap['life-terraforming'] || null;
   terraformingTabElements.lifeContent = terraformingTabElements.contentMap['life-terraforming'] || null;
+  terraformingTabElements.hazardsButton = terraformingTabElements.buttonMap['hazard-terraforming'] || null;
+  terraformingTabElements.hazardsContent = terraformingTabElements.contentMap['hazard-terraforming'] || null;
   terraformingTabElements.milestonesButton = terraformingTabElements.buttonMap['milestone-terraforming'] || null;
   terraformingTabElements.milestonesContent = terraformingTabElements.contentMap['milestone-terraforming'] || null;
 
@@ -211,6 +215,8 @@ function resetTerraformingUI() {
   terraformingTabElements.worldContent = null;
   terraformingTabElements.lifeButton = null;
   terraformingTabElements.lifeContent = null;
+  terraformingTabElements.hazardsButton = null;
+  terraformingTabElements.hazardsContent = null;
   terraformingTabElements.milestonesButton = null;
   terraformingTabElements.milestonesContent = null;
   Object.keys(terraformingUICache).forEach(key => {
@@ -353,6 +359,29 @@ function setTerraformingLifeVisibility(unlocked) {
   }
 }
 
+function setTerraformingHazardsVisibility(unlocked) {
+  cacheTerraformingTabElements();
+
+  const { hazardsButton, hazardsContent } = terraformingTabElements;
+  if (!hazardsButton || !hazardsContent) {
+    return;
+  }
+
+  if (unlocked) {
+    hazardsButton.classList.remove('hidden');
+    hazardsContent.classList.remove('hidden');
+    if (typeof initializeHazardUI === 'function') {
+      initializeHazardUI();
+    }
+  } else {
+    hazardsButton.classList.add('hidden');
+    hazardsContent.classList.add('hidden');
+    if (hazardsButton.classList.contains('active') || hazardsContent.classList.contains('active')) {
+      activateTerraformingSubtab('world-terraforming');
+    }
+  }
+}
+
 function setTerraformingMilestonesVisibility(unlocked) {
   cacheTerraformingTabElements();
 
@@ -461,6 +490,14 @@ function updateTerraformingUI(deltaSeconds) {
 
     if (isTerraformingWorldSubtabActive()) {
       planetVisualizer.animate(deltaSeconds);
+    }
+
+    if (
+      typeof hazardManager !== 'undefined' &&
+      hazardManager &&
+      typeof hazardManager.updateUI === 'function'
+    ) {
+      hazardManager.updateUI();
     }
   }
 

@@ -192,10 +192,14 @@ function initializeGameState(options = {}) {
     }
     nanotechManager.reset();
   }
-  
+
   globalEffects = new EffectableEntity({description : 'Manages global effects'});
 
   playTimeSeconds = 0;
+
+  hazardManager = setHazardManager(new HazardManager());
+  hazardManager.initialize({});
+  hazardManager.updateUI();
 
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const dayDurationData = rotationPeriodToDuration(rotation);

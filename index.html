@@ -147,6 +147,8 @@
     <script src="src/js/terraforming/atmospheric-utils.js"></script>
     <script src="src/js/terraforming/atmospheric-chemistry.js"></script>
     <script src="src/js/terraforming/terraforming.js"></script>
+    <script src="src/js/terraforming/hazard.js"></script>
+    <script src="src/js/terraforming/hazardUI.js"></script>
     <script src="src/js/terraforming/terraformingUI.js"></script>
     <script src="src/js/life.js"></script>
     <script src="src/js/lifeUI.js"></script>
@@ -407,6 +409,7 @@
           <div class="terraforming-subtab active" data-subtab="world-terraforming">World (Alpha)</div>
           <div class="terraforming-subtab hidden" data-subtab="summary-terraforming">Summary</div>
           <div class="terraforming-subtab hidden" data-subtab="life-terraforming">Life</div>
+          <div class="terraforming-subtab hidden" data-subtab="hazard-terraforming">Hazards</div>
           <div class="terraforming-subtab hidden" data-subtab="milestone-terraforming">Milestones<span id="milestone-subtab-alert" class="milestone-alert">!</span></div>
         </div>
       <div class="terraforming-subtab-content-wrapper">
@@ -419,6 +422,7 @@
             <h2>Life</h2>
              <!-- Life UI goes here -->
           </div>
+          <div id = "hazard-terraforming" class="terraforming-subtab-content hidden"></div>
           <div id = "milestone-terraforming" class="terraforming-subtab-content hidden">
             <h2>Milestones</h2>
             <div class="milestone-options">
