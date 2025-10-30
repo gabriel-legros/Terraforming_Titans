@@ -11,7 +11,14 @@
 - Do not use globalThis.  It never ever ends up working out because the objects you are looking for are never actually attached to it.  Use the global variable directly instead, or adapt your test accordingly.
 - Keep code short, concise and easily readable.  Avoid any unnecessary checks for objects that should obviously exist.
 - When taking screenshots, if you want it to succeed, you must modify DEBUG_MODE from src/js/debug_constants.js to true, otherwise you will not be able to skip the intro cutscene.
-- Added a travel auto-start reset preference for Dyson Swarm and Space Storage projects.
+
+# Testing
+- Run `npm ci` to install dependencies before running tests.
+- Save test output to a file so you don't have to rerun it just to read the results.
+- Do not commit `test.log`; it is for local reference only and is ignored via `.gitignore`.
+- Run tests **once** in non-watch mode with `CI=true npm test` and report how many passed or failed. Pipe the command to `tee` (e.g., `CI=true npm test 2>&1 | tee test.log`) so the results are both displayed and stored.
+- Write tests for any new feature.
+- Avoid asserting on exact story text; check IDs or prerequisites instead.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
@@ -98,14 +105,6 @@ The `nanotechManager` oversees a self-replicating swarm unlocked by **Nanotechno
   calls `initializeGameState({ preserveManagers: true })` followed by `updateSpaceUI()`.
 Failing to use these helpers may leave the DOM bound to outdated objects.
 To ensure this works properly, every feature in the game that has an UI should have an enabled true/false attribute.  When updating its display, if the flag is true, the feature should be revealed.  If false, it should be hidden.  This flag should not be saved/loaded.  Instead, story unlocks, researches and other things will re enable it as needed.
-
-# Testing
-- Run `npm ci` to install dependencies before running tests.
-- Save test output to a file so you don't have to rerun it just to read the results.
-- Do not commit `test.log`; it is for local reference only and is ignored via `.gitignore`.
-- Run tests **once** in non-watch mode with `CI=true npm test` and report how many passed or failed. Pipe the command to `tee` (e.g., `CI=true npm test 2>&1 | tee test.log`) so the results are both displayed and stored.
-- Write tests for any new feature.
-- Avoid asserting on exact story text; check IDs or prerequisites instead.
 
 # Storytelling style
 After Earth's destruction, prefix each character's dialogue with their name the
