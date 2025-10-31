@@ -98,7 +98,6 @@ class GalaxyOperationManager {
                 this.operations.delete(key);
             });
         }
-        this.#processAutoLaunch();
     }
 
     saveState() {
