@@ -98,6 +98,7 @@ class GalaxyOperationManager {
                 this.operations.delete(key);
             });
         }
+        this.#processAutoLaunch();
     }
 
     saveState() {
@@ -512,9 +513,6 @@ class GalaxyOperationManager {
         operation.defenderLosses = defenderLosses;
         operation.result = isSuccessful ? 'success' : 'failure';
         operation.status = 'completed';
-        if (typeof this.refreshUI === 'function') {
-            this.refreshUI();
-        }
     }
 
     #applyOperationSuccess(operation) {
