@@ -102,7 +102,48 @@ class Research {
       return true;
     }
 
+    processAutoResearchQueue() {
+      const unlocked = this.autoResearchEnabled || this.isBooleanFlagSet('autoResearchEnabled');
+      if (!unlocked) {
+        return;
+      }
+
+      const preset = this.getAutoResearchPreset(this.currentAutoResearchPreset);
+      if (!preset) {
+        return;
+      }
+
+      for (const category in this.researches) {
+        if (category === 'advanced') {
+          continue;
+        }
+
+        const list = this.researches[category];
+        for (let i = 0; i < list.length; i += 1) {
+          const research = list[i];
+          if (research.isResearched) {
+            continue;
+          }
+          if (!preset[research.id]) {
+            continue;
+          }
+          if (!this.isResearchDisplayable(research)) {
+            continue;
+          }
+          if (!this.isResearchAvailable(research.id)) {
+            continue;
+          }
+          if (!canAffordResearch(research)) {
+            continue;
+          }
+          this.completeResearch(research.id);
+        }
+      }
+    }
+
     update(deltaTime) {
+      this.processAutoResearchQueue();
+
       if (!resources || !resources.colony || !resources.colony.advancedResearch) return;
       if (!resources.colony.advancedResearch.unlocked) return;
       if (typeof spaceManager === 'undefined') return;

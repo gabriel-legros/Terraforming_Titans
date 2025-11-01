@@ -59,7 +59,7 @@ function updateAllResearchButtons(researchData) {
         researchData[tab].forEach((researchItem) => {
             const elements = researchElementCache.get(researchItem.id);
             if (!elements) return;
-            const { button, costEl, descEl, container } = elements;
+            const { button, costEl, descEl, container, autoCheckbox } = elements;
 
             if (researchItem.isResearched) {
                 container.classList.add('completed-research');
@@ -80,6 +80,18 @@ function updateAllResearchButtons(researchData) {
                 } else {
                     costEl.textContent = 'Cost: ???';
                     descEl.textContent = '???';
+                }
+            }
+
+            if (autoCheckbox) {
+                const unlocked = researchManager.autoResearchEnabled ||
+                    researchManager.isBooleanFlagSet('autoResearchEnabled');
+                autoCheckbox.style.display = unlocked ? '' : 'none';
+                if (unlocked) {
+                    autoCheckbox.checked = researchManager.isAutoResearchEnabled(
+                        researchManager.currentAutoResearchPreset,
+                        researchItem.id
+                    );
                 }
             }
         });
@@ -288,6 +300,34 @@ function loadResearchCategory(category) {
             researchContainer.style.display = 'none';
         }
 
+        let autoCheckbox = null;
+        if (category !== 'advanced') {
+            autoCheckbox = document.createElement('input');
+            autoCheckbox.type = 'checkbox';
+            autoCheckbox.classList.add('research-auto-checkbox');
+            autoCheckbox.checked = researchManager.isAutoResearchEnabled(
+                researchManager.currentAutoResearchPreset,
+                research.id
+            );
+            autoCheckbox.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+            autoCheckbox.addEventListener('change', () => {
+                const applied = researchManager.setAutoResearchEnabled(
+                    researchManager.currentAutoResearchPreset,
+                    research.id,
+                    autoCheckbox.checked
+                );
+                if (!applied) {
+                    autoCheckbox.checked = false;
+                }
+            });
+            const unlocked = researchManager.autoResearchEnabled ||
+                researchManager.isBooleanFlagSet('autoResearchEnabled');
+            autoCheckbox.style.display = unlocked ? '' : 'none';
+            researchContainer.appendChild(autoCheckbox);
+        }
+
         // Append button, cost, and description to the research container
         researchContainer.appendChild(researchButton);
         researchContainer.appendChild(researchCost);
@@ -301,6 +341,7 @@ function loadResearchCategory(category) {
             button: researchButton,
             costEl: researchCost,
             descEl: researchDescription,
+            autoCheckbox,
         });
     });
 }
