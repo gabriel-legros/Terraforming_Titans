@@ -226,6 +226,12 @@ class Terraforming extends EffectableEntity{
 
     this.lifeParameters = lifeParameters; // Load external life parameters
     this.zonalCoverageCache = {};
+    this.atmosphericPressureCache = {
+        totalPressure: 0,
+        totalPressureKPa: 0,
+        pressureByKey: {},
+        availableByKey: {},
+    };
 
     this.initialValuesCalculated = false;
     this.equilibriumWaterCondensationParameter = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
@@ -613,11 +619,7 @@ class Terraforming extends EffectableEntity{
             totalPressure: globalTotalPressurePa,
             pressureByKey,
             availableByKey,
-        } = buildAtmosphereContext(
-            this.resources.atmospheric,
-            gravity,
-            this.celestialParameters.radius
-        );
+        } = this.atmosphericPressureCache;
         const globalMethanePressurePa = pressureByKey.atmosphericMethane || 0;
         const globalOxygenPressurePa = pressureByKey.oxygen || 0;
         const availableGlobalMethaneGas = availableByKey.atmosphericMethane || 0;
@@ -666,6 +668,7 @@ class Terraforming extends EffectableEntity{
         }
 
         this.synchronizeGlobalResources();
+        this._updateAtmosphericPressureCache();
       }
 
     // Function to update luminosity properties
@@ -1201,9 +1204,21 @@ class Terraforming extends EffectableEntity{
         }
     }
 
+    _updateAtmosphericPressureCache() {
+        const cache = buildAtmosphereContext(
+            this.resources.atmospheric,
+            this.celestialParameters.gravity,
+            this.celestialParameters.radius
+        );
+        cache.totalPressureKPa = cache.totalPressure / 1000;
+        this.atmosphericPressureCache = cache;
+        return cache;
+    }
+
     update(deltaTime = 0, options = {}) {
       this.synchronizeGlobalResources();
       this._updateZonalCoverageCache(); // New call at the start of the update tick
+      this._updateAtmosphericPressureCache();
 
       //First update luminosity
       this.updateLuminosity();
@@ -1351,17 +1366,8 @@ class Terraforming extends EffectableEntity{
     
     // Calculates the current total global atmospheric pressure (in kPa) from global resources
     calculateTotalPressure() {
-        const atmos = this.resources.atmospheric || {};
-        let totalPressurePa = 0;
-        for (const gas in atmos) {
-            const amount = atmos[gas].value || 0;
-            totalPressurePa += calculateAtmosphericPressure(
-                amount,
-                this.celestialParameters.gravity,
-                this.celestialParameters.radius
-            );
-        }
-        return totalPressurePa / 1000; // Convert Pa to kPa
+        const cache = this._updateAtmosphericPressureCache();
+        return cache.totalPressure / 1000; // Convert Pa to kPa
     }
 
     calculateAtmosphericComposition() {
