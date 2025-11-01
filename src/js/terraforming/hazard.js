@@ -544,7 +544,7 @@ class HazardManager {
       const liquidCo2 = Number.isFinite(cache.liquidCO2) ? cache.liquidCO2 : 0;
       const liquidMethane = Number.isFinite(cache.liquidMethane) ? cache.liquidMethane : 0;
       const combinedCoverage = Math.min(1, Math.max(0, liquidWater + liquidCo2 + liquidMethane));
-      const zonePenalty = (1 - combinedCoverage) * severity;
+      const zonePenalty = combinedCoverage * severity;
       if (!zonePenalty) {
         return;
       }
