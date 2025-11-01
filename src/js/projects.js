@@ -207,9 +207,7 @@ class Project extends EffectableEntity {
         const required = cost[category][resource];
         if (storageProj) {
           const key = resource === 'water' ? 'liquidWater' : resource;
-          const stored = storageProj.resourceUsage[key] || 0;
-          const reserve = storageProj.strategicReserve || 0;
-          const usable = Math.max(0, stored - reserve);
+          const usable = storageProj.getAvailableStoredResource(key);
           const available = resources[category][resource].value + usable;
           if (available < required) {
             return false;
@@ -232,8 +230,7 @@ class Project extends EffectableEntity {
         let remaining = cost[category][resource];
         if (storageProj) {
           const key = resource === 'water' ? 'liquidWater' : resource;
-          const reserve = storageProj.strategicReserve || 0;
-          const availableFromStorage = Math.max(0, (storageProj.resourceUsage[key] || 0) - reserve);
+          const availableFromStorage = storageProj.getAvailableStoredResource(key);
           if (storageProj.prioritizeMegaProjects) {
             const fromStorage = Math.min(availableFromStorage, remaining);
             if (fromStorage > 0) {
@@ -495,9 +492,7 @@ class Project extends EffectableEntity {
     const storageProj = projectManager?.projects?.spaceStorage;
     if (!storageProj) return false;
     const key = resource === 'water' ? 'liquidWater' : resource;
-    const stored = storageProj.resourceUsage[key] || 0;
-    const reserve = storageProj.strategicReserve || 0;
-    const usable = Math.max(0, stored - reserve);
+    const usable = storageProj.getAvailableStoredResource(key);
     if (storageProj.prioritizeMegaProjects) {
       return usable >= amount;
     }

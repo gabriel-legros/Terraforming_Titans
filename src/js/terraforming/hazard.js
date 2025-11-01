@@ -13,6 +13,59 @@ function cloneHazardParameters(parameters) {
   }
 }
 
+function isPlainObject(value) {
+  return value !== null && value.constructor === Object;
+}
+
+function withHazardSeverity(entry, defaultSeverity = 1) {
+  if (!isPlainObject(entry)) {
+    return { value: entry, severity: defaultSeverity };
+  }
+
+  const result = { ...entry };
+  if (!Object.prototype.hasOwnProperty.call(result, 'severity')) {
+    result.severity = defaultSeverity;
+  }
+
+  return result;
+}
+
+function normalizeHazardousBiomassParameters(parameters) {
+  const source = isPlainObject(parameters) ? parameters : {};
+  const normalized = {};
+
+  Object.keys(source).forEach((key) => {
+    normalized[key] = withHazardSeverity(source[key]);
+  });
+
+  if (!Object.prototype.hasOwnProperty.call(normalized, 'baseGrowth')) {
+    normalized.baseGrowth = { value: 0, severity: 1 };
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(normalized, 'invasivenessResistance')) {
+    normalized.invasivenessResistance = { value: 0, severity: 1 };
+  }
+
+  return normalized;
+}
+
+function normalizeHazardParameters(parameters) {
+  const source = isPlainObject(parameters) ? parameters : {};
+  const normalized = {};
+
+  Object.keys(source).forEach((key) => {
+    const value = source[key];
+    if (key === 'hazardousBiomass') {
+      normalized[key] = normalizeHazardousBiomassParameters(value);
+      return;
+    }
+
+    normalized[key] = value;
+  });
+
+  return normalized;
+}
+
 class HazardManager {
   constructor() {
     this.enabled = false;
@@ -40,10 +93,11 @@ class HazardManager {
 
   initialize(parameters = {}) {
     const cloned = cloneHazardParameters(parameters);
-    const serialized = JSON.stringify(cloned);
+    const normalized = normalizeHazardParameters(cloned);
+    const serialized = JSON.stringify(normalized);
     const changed = serialized !== this.lastSerializedParameters;
 
-    this.parameters = cloned;
+    this.parameters = normalized;
     this.lastSerializedParameters = serialized;
 
     if (changed && this.enabled) {

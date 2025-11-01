@@ -44,8 +44,8 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
         const required = this.collectorCost[cat][res];
         if (storageProj) {
           const key = res === 'water' ? 'liquidWater' : res;
-          const stored = storageProj.resourceUsage[key] || 0;
-          const available = resources[cat][res].value + stored;
+          const usable = storageProj.getAvailableStoredResource(key);
+          const available = resources[cat][res].value + usable;
           if (available < required) return false;
         } else if (resources[cat][res].value < required) {
           return false;
@@ -63,7 +63,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
         if (storageProj) {
           const key = res === 'water' ? 'liquidWater' : res;
           if (storageProj.prioritizeMegaProjects) {
-            const fromStorage = Math.min(storageProj.resourceUsage[key] || 0, remaining);
+            const fromStorage = Math.min(storageProj.getAvailableStoredResource(key), remaining);
             if (fromStorage > 0) {
               storageProj.resourceUsage[key] -= fromStorage;
               storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
@@ -80,7 +80,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
               remaining -= fromColony;
             }
             if (remaining > 0) {
-              const fromStorage = Math.min(storageProj.resourceUsage[key] || 0, remaining);
+              const fromStorage = Math.min(storageProj.getAvailableStoredResource(key), remaining);
               if (fromStorage > 0) {
                 storageProj.resourceUsage[key] -= fromStorage;
                 storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
