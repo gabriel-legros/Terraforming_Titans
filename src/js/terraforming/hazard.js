@@ -2,6 +2,8 @@ let hazardManager = null;
 let getZonePercentageHelper;
 let zonesList;
 
+const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = 1;
+
 if (typeof module !== 'undefined' && module.exports) {
   ({ getZonePercentage: getZonePercentageHelper, ZONES: zonesList } = require('./zones.js'));
 } else if (typeof window !== 'undefined') {
@@ -186,8 +188,15 @@ class HazardManager {
 
     const hazardous = this.parameters.hazardousBiomass;
     const growth = hazardous && hazardous.baseGrowth;
+    const zoneKeys = Array.isArray(zonesList) && zonesList.length
+      ? zonesList
+      : Object.keys(terraforming.zonalSurface);
+    const zoneEntries = zoneKeys
+      .map((zone) => ({ zone, data: terraforming.zonalSurface[zone] }))
+      .filter((entry) => entry.data);
+    const deltaSeconds = deltaTime > 0 ? deltaTime / 1000 : 0;
 
-    if (deltaTime && hazardous && growth && getZonePercentageHelper) {
+    if (deltaTime && hazardous && growth && getZonePercentageHelper && zoneEntries.length) {
       const growthPercent = Number.isFinite(growth.value) ? growth.value : 0;
       const maxDensity = Number.isFinite(growth.maxDensity) ? growth.maxDensity : 0;
       const surfaceArea = terraforming.celestialParameters && terraforming.celestialParameters.surfaceArea;
@@ -196,16 +205,9 @@ class HazardManager {
         const growthPenalty = this.calculateHazardousBiomassGrowthPenalty(hazardous, terraforming);
         const adjustedGrowthPercent = growthPercent - growthPenalty;
         const growthRate = adjustedGrowthPercent / 100;
-        const deltaSeconds = deltaTime / 1000;
-        const zoneKeys = Array.isArray(zonesList) && zonesList.length
-          ? zonesList
-          : Object.keys(terraforming.zonalSurface);
 
-        zoneKeys.forEach((zone) => {
-          const zoneData = terraforming.zonalSurface[zone];
-          if (!zoneData) {
-            return;
-          }
+        zoneEntries.forEach(({ zone, data }) => {
+          const zoneData = data;
 
           const zoneArea = surfaceArea * getZonePercentageHelper(zone);
           if (!zoneArea) {
@@ -237,6 +239,37 @@ class HazardManager {
 
           zoneData.hazardousBiomass = nextBiomass > upperBound ? upperBound : nextBiomass;
         });
+      }
+    }
+
+    if (deltaSeconds > 0 && HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER > 0 && zoneEntries.length) {
+      const crusaderCount = Number.isFinite(resources?.special?.crusaders?.value)
+        ? resources.special.crusaders.value
+        : 0;
+
+      if (crusaderCount > 0) {
+        const totalBiomass = zoneEntries.reduce((sum, entry) => {
+          const zoneBiomass = Number.isFinite(entry.data.hazardousBiomass)
+            ? entry.data.hazardousBiomass
+            : 0;
+          return zoneBiomass > 0 ? sum + zoneBiomass : sum;
+        }, 0);
+
+        if (totalBiomass > 0) {
+          const totalReduction = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER * crusaderCount * deltaSeconds;
+
+          zoneEntries.forEach((entry) => {
+            const zoneData = entry.data;
+            if (!Number.isFinite(zoneData.hazardousBiomass) || zoneData.hazardousBiomass <= 0) {
+              return;
+            }
+
+            const share = zoneData.hazardousBiomass / totalBiomass;
+            const reduction = totalReduction * share;
+            const nextValue = zoneData.hazardousBiomass - reduction;
+            zoneData.hazardousBiomass = nextValue > 0 ? nextValue : 0;
+          });
+        }
       }
     }
 
