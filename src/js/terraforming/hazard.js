@@ -39,11 +39,27 @@ function withHazardSeverity(entry, defaultSeverity = 1) {
   return result;
 }
 
+function normalizeHazardPenalties(penalties) {
+  const source = isPlainObject(penalties) ? penalties : {};
+  const normalized = {};
+
+  Object.keys(source).forEach((key) => {
+    normalized[key] = withHazardSeverity(source[key]);
+  });
+
+  return normalized;
+}
+
 function normalizeHazardousBiomassParameters(parameters) {
   const source = isPlainObject(parameters) ? parameters : {};
   const normalized = {};
 
   Object.keys(source).forEach((key) => {
+    if (key === 'penalties') {
+      normalized.penalties = normalizeHazardPenalties(source.penalties);
+      return;
+    }
+
     normalized[key] = withHazardSeverity(source[key]);
   });
 
@@ -57,6 +73,10 @@ function normalizeHazardousBiomassParameters(parameters) {
 
   if (!Object.prototype.hasOwnProperty.call(normalized, 'invasivenessResistance')) {
     normalized.invasivenessResistance = { value: 0, severity: 1 };
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(normalized, 'penalties')) {
+    normalized.penalties = {};
   }
 
   return normalized;
@@ -216,6 +236,14 @@ class HazardManager {
 
       zoneData.hazardousBiomass = nextBiomass > upperBound ? upperBound : nextBiomass;
     });
+  }
+
+  getHazardPenalties(key) {
+    if (!key || !Object.prototype.hasOwnProperty.call(this.parameters, key)) {
+      return {};
+    }
+
+    return cloneHazardParameters(this.parameters[key].penalties);
   }
 }
 
