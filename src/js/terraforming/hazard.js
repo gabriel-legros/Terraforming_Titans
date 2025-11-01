@@ -169,7 +169,6 @@ class HazardManager {
   }
 
   load(data) {
-    this.disable();
 
     const incoming = data && typeof data === 'object' ? data.parameters || {} : {};
     this.initialize(incoming);
