@@ -50,6 +50,12 @@ class SpaceStorageProject extends SpaceshipProject {
     return perShip * scalingFactor;
   }
 
+  getAvailableStoredResource(resourceKey) {
+    const stored = this.resourceUsage[resourceKey] || 0;
+    const reserve = this.strategicReserve || 0;
+    return Math.max(0, stored - reserve);
+  }
+
   calculateSpaceshipAdjustedDuration() {
     const maxShipsForDurationReduction = 100;
     if (this.isShipOperationContinuous()) {
