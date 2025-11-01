@@ -30,6 +30,7 @@ class Resource extends EffectableEntity {
     this.productionRate = 0;
     this.consumptionRate = 0;
     this.reserved = resourceData.reserved || 0;
+    this.reservedSources = {};
     this.unlocked = resourceData.unlocked;
     this.maintenanceConversion = resourceData.maintenanceConversion || {}; // Stores any maintenance conversion mapping
     this.maintenanceMultiplier = resourceData.maintenanceMultiplier !== undefined ? resourceData.maintenanceMultiplier : 1; // Multiplier for maintenance costs
@@ -138,6 +139,25 @@ class Resource extends EffectableEntity {
 
   release(amount) {
     this.reserved = Math.max(this.reserved - amount, 0);
+  }
+
+  setReservedAmountForSource(source, amount) {
+    const key = source || 'default';
+    const previous = this.reservedSources[key] || 0;
+    const sanitized = Number.isFinite(amount) && amount > 0 ? amount : 0;
+
+    this.reserved = Math.max(0, this.reserved - previous);
+
+    if (sanitized > 0) {
+      this.reservedSources[key] = sanitized;
+      this.reserved += sanitized;
+    } else {
+      delete this.reservedSources[key];
+    }
+  }
+
+  getReservedAmountForSource(source) {
+    return this.reservedSources[source] || 0;
   }
 
   addDeposit(amount = 1) {

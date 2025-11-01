@@ -992,19 +992,33 @@ function updateResourceRateDisplay(resource){
     if (resource.name === 'land') {
       let avail = valueDiv._avail;
       let used = valueDiv._used;
+      let hazard = valueDiv._hazard;
       if (!avail || !used) {
         clearElement(valueDiv);
         avail = document.createElement('div');
         valueDiv.appendChild(avail);
         used = document.createElement('div');
         valueDiv.appendChild(used);
+        hazard = document.createElement('div');
+        valueDiv.appendChild(hazard);
         valueDiv._avail = avail;
         valueDiv._used = used;
+        valueDiv._hazard = hazard;
+      } else if (!hazard) {
+        hazard = document.createElement('div');
+        valueDiv.appendChild(hazard);
+        valueDiv._hazard = hazard;
       }
       const availText = `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`;
       const usedText = `Used ${formatNumber(resource.reserved, false, 3)}`;
       if (avail.textContent !== availText) avail.textContent = availText;
       if (used.textContent !== usedText) used.textContent = usedText;
+      const hazardReserved = resource.getReservedAmountForSource
+        ? resource.getReservedAmountForSource('hazardousBiomass')
+        : 0;
+      const hazardText = `Hazardous biomass ${formatNumber(hazardReserved, false, 3)}`;
+      if (hazard.textContent !== hazardText) hazard.textContent = hazardText;
+      hazard.style.display = hazardReserved > 0 ? '' : 'none';
     } else {
       const text = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
       if (valueDiv.textContent !== text) valueDiv.textContent = text;
