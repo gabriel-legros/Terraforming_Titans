@@ -282,3 +282,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Population growth now relies on separate starvation, energy, and high-gravity attrition rates while the Colony tab breaks out each contribution alongside base growth.
 - Added a Hazards terraforming subtab managed by HazardManager with hazard.js and hazardUI.js modules.
 - HazardManager now loads per-planet hazard definitions, including Umbra's hazardous biomass preferences.
+- Hazard penalties now scale global build costs, maintenance, and population growth based on hazard definitions.
