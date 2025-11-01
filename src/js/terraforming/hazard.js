@@ -1,4 +1,13 @@
 let hazardManager = null;
+let getZonePercentageHelper;
+let zonesList;
+
+if (typeof module !== 'undefined' && module.exports) {
+  ({ getZonePercentage: getZonePercentageHelper, ZONES: zonesList } = require('./zones.js'));
+} else if (typeof window !== 'undefined') {
+  getZonePercentageHelper = window.getZonePercentage;
+  zonesList = window.ZONES;
+}
 
 function cloneHazardParameters(parameters) {
   if (!parameters || typeof parameters !== 'object') {
@@ -39,7 +48,11 @@ function normalizeHazardousBiomassParameters(parameters) {
   });
 
   if (!Object.prototype.hasOwnProperty.call(normalized, 'baseGrowth')) {
-    normalized.baseGrowth = { value: 0, severity: 1 };
+    normalized.baseGrowth = { value: 0, severity: 1, maxDensity: 0 };
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(normalized.baseGrowth, 'maxDensity')) {
+    normalized.baseGrowth.maxDensity = 0;
   }
 
   if (!Object.prototype.hasOwnProperty.call(normalized, 'invasivenessResistance')) {
@@ -134,6 +147,73 @@ class HazardManager {
 
     const incoming = data && typeof data === 'object' ? data.parameters || {} : {};
     this.initialize(incoming);
+  }
+
+  update(deltaTime = 0, terraforming = null) {
+    if (!deltaTime || !terraforming || !terraforming.zonalSurface) {
+      return;
+    }
+
+    const hazardous = this.parameters.hazardousBiomass;
+    if (!hazardous || !hazardous.baseGrowth) {
+      return;
+    }
+
+    const growth = hazardous.baseGrowth;
+    const growthPercent = Number.isFinite(growth.value) ? growth.value : 0;
+    const severity = Number.isFinite(growth.severity) ? growth.severity : 1;
+    const maxDensity = Number.isFinite(growth.maxDensity) ? growth.maxDensity : 0;
+
+    if (!growthPercent || maxDensity <= 0) {
+      return;
+    }
+
+    const surfaceArea = terraforming.celestialParameters && terraforming.celestialParameters.surfaceArea;
+    if (!surfaceArea || surfaceArea <= 0 || !getZonePercentageHelper) {
+      return;
+    }
+
+    const growthRate = (growthPercent / 100) * severity;
+    const zoneKeys = Array.isArray(zonesList) && zonesList.length
+      ? zonesList
+      : Object.keys(terraforming.zonalSurface);
+
+    zoneKeys.forEach((zone) => {
+      const zoneData = terraforming.zonalSurface[zone];
+      if (!zoneData) {
+        return;
+      }
+
+      const zoneArea = surfaceArea * getZonePercentageHelper(zone);
+      if (!zoneArea) {
+        return;
+      }
+
+      const currentBiomass = Number.isFinite(zoneData.hazardousBiomass)
+        ? zoneData.hazardousBiomass
+        : 0;
+
+      if (!currentBiomass) {
+        return;
+      }
+
+      const carryingCapacity = zoneArea * maxDensity;
+      if (!carryingCapacity) {
+        return;
+      }
+
+      const logisticTerm = 1 - currentBiomass / carryingCapacity;
+      const deltaBiomass = growthRate * currentBiomass * logisticTerm * deltaTime;
+      const nextBiomass = currentBiomass + deltaBiomass;
+      const upperBound = carryingCapacity;
+
+      if (nextBiomass <= 0) {
+        zoneData.hazardousBiomass = 0;
+        return;
+      }
+
+      zoneData.hazardousBiomass = nextBiomass > upperBound ? upperBound : nextBiomass;
+    });
   }
 }
 
