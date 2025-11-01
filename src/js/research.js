@@ -22,7 +22,9 @@ class Research {
       this.researches = {};
       this.advancedResearchUnlocked = false;
       this.orderDirty = false;
-  
+      this.autoResearchPresets = [];
+      this.currentAutoResearchPreset = 1;
+
       // Load research data and create Research instances
       for (const category in researchData) {
         this.researches[category] = researchData[category].map(
@@ -41,6 +43,62 @@ class Research {
 
       this.sortAllResearches();
       this.orderDirty = false;
+      this.createAutoResearchPreset();
+    }
+
+    createAutoResearchPreset() {
+      const preset = {};
+      this.populateAutoResearchPreset(preset);
+      this.autoResearchPresets.push(preset);
+      return this.autoResearchPresets.length;
+    }
+
+    populateAutoResearchPreset(target) {
+      for (const category in this.researches) {
+        this.researches[category].forEach((research) => {
+          if (!Object.prototype.hasOwnProperty.call(target, research.id)) {
+            target[research.id] = false;
+          }
+        });
+      }
+    }
+
+    ensureAutoResearchPresetsAreComplete() {
+      this.autoResearchPresets.forEach((preset) => {
+        this.populateAutoResearchPreset(preset);
+      });
+    }
+
+    getAutoResearchPreset(presetIndex) {
+      if (!Number.isInteger(presetIndex)) {
+        return null;
+      }
+      const index = presetIndex - 1;
+      if (index < 0 || index >= this.autoResearchPresets.length) {
+        return null;
+      }
+      return this.autoResearchPresets[index];
+    }
+
+    isAutoResearchEnabled(presetIndex, researchId) {
+      const preset = this.getAutoResearchPreset(presetIndex);
+      if (!preset || !Object.prototype.hasOwnProperty.call(preset, researchId)) {
+        return false;
+      }
+      return Boolean(preset[researchId]);
+    }
+
+    setAutoResearchEnabled(presetIndex, researchId, enabled) {
+      const preset = this.getAutoResearchPreset(presetIndex);
+      if (!preset) {
+        return false;
+      }
+      this.populateAutoResearchPreset(preset);
+      if (!Object.prototype.hasOwnProperty.call(preset, researchId)) {
+        return false;
+      }
+      preset[researchId] = Boolean(enabled);
+      return true;
     }
 
     update(deltaTime) {
@@ -83,12 +141,24 @@ class Research {
           alertedWhenUnlocked: research.alertedWhenUnlocked,
         }));
       }
-      return researchState;
+      return {
+        researches: researchState,
+        autoResearchPresets: this.autoResearchPresets.map((preset) => ({ ...preset })),
+        currentAutoResearchPreset: this.currentAutoResearchPreset,
+      };
     }
-  
+
     loadState(researchState) {
-      for (const category in researchState) {
-        const savedResearches = researchState[category];
+      if (!researchState) {
+        this.autoResearchPresets = [];
+        this.createAutoResearchPreset();
+        return;
+      }
+
+      const savedResearchState = researchState.researches || researchState;
+
+      for (const category in savedResearchState) {
+        const savedResearches = savedResearchState[category];
         savedResearches.forEach((savedResearch) => {
           const research = this.getResearchById(savedResearch.id);
           if (research) {
@@ -101,6 +171,26 @@ class Research {
         });
       }
       this.sortAllResearches();
+
+      const savedPresets = researchState.autoResearchPresets;
+      this.autoResearchPresets = [];
+      if (Array.isArray(savedPresets) && savedPresets.length > 0) {
+        savedPresets.forEach((preset) => {
+          const copy = { ...preset };
+          this.populateAutoResearchPreset(copy);
+          this.autoResearchPresets.push(copy);
+        });
+      } else {
+        this.createAutoResearchPreset();
+      }
+      this.ensureAutoResearchPresetsAreComplete();
+
+      const selectedPreset = researchState.currentAutoResearchPreset;
+      if (Number.isInteger(selectedPreset) && selectedPreset >= 1 && selectedPreset <= this.autoResearchPresets.length) {
+        this.currentAutoResearchPreset = selectedPreset;
+      } else {
+        this.currentAutoResearchPreset = 1;
+      }
     }
   
     // Get a specific research by its ID
