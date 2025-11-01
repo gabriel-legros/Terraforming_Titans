@@ -1738,6 +1738,20 @@ class Terraforming extends EffectableEntity{
           });
         }
       }
+
+      if (
+        typeof hazardManager !== 'undefined' &&
+        hazardManager &&
+        typeof hazardManager.applyHazardEffects === 'function'
+      ) {
+        hazardManager.applyHazardEffects({
+          addEffect,
+          structures: typeof structures !== 'undefined' ? structures : {},
+          colonies: typeof colonies !== 'undefined' ? colonies : {},
+          buildings: typeof buildings !== 'undefined' ? buildings : {},
+          populationModule,
+        });
+      }
       // End of applyTerraformingEffects method body
     }
 

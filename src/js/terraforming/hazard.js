@@ -104,6 +104,11 @@ class HazardManager {
     this.enabled = false;
     this.parameters = {};
     this.lastSerializedParameters = '';
+    this.cachedPenaltyMultipliers = {
+      buildCost: 1,
+      maintenanceCost: 1,
+      populationGrowth: 1,
+    };
   }
 
   enable() {
@@ -132,6 +137,7 @@ class HazardManager {
 
     this.parameters = normalized;
     this.lastSerializedParameters = serialized;
+    this.cachedPenaltyMultipliers = this.calculatePenaltyMultipliers();
 
     if (changed && this.enabled) {
       this.updateUI();
@@ -244,6 +250,141 @@ class HazardManager {
     }
 
     return cloneHazardParameters(this.parameters[key].penalties);
+  }
+
+  getPenaltyMultipliers() {
+    if (!this.parameters || Object.keys(this.parameters).length === 0) {
+      return this.cachedPenaltyMultipliers;
+    }
+
+    this.cachedPenaltyMultipliers = this.calculatePenaltyMultipliers();
+    return this.cachedPenaltyMultipliers;
+  }
+
+  calculatePenaltyMultipliers() {
+    return {
+      buildCost: this.calculatePenaltyMultiplier('buildCost', (penalty) => 1 + penalty),
+      maintenanceCost: this.calculatePenaltyMultiplier('maintenanceCost', (penalty) => 1 + penalty),
+      populationGrowth: this.calculatePenaltyMultiplier('populationGrowth', (penalty) => 1 / (1 + penalty)),
+    };
+  }
+
+  calculatePenaltyMultiplier(key, transform) {
+    let multiplier = 1;
+
+    Object.keys(this.parameters).forEach((hazardKey) => {
+      const hazard = this.parameters[hazardKey];
+      if (!hazard || !hazard.penalties || !hazard.penalties[key]) {
+        return;
+      }
+
+      const penalty = hazard.penalties[key];
+      const penaltyValue = this.getPenaltyValue(penalty);
+      if (!penaltyValue) {
+        return;
+      }
+
+      const transformed = transform(penaltyValue);
+      multiplier *= Number.isFinite(transformed) && transformed > 0 ? transformed : 1;
+    });
+
+    return multiplier;
+  }
+
+  getPenaltyValue(penalty) {
+    if (!penalty) {
+      return 0;
+    }
+
+    const value = Number.isFinite(penalty.value) ? penalty.value : 0;
+    const severity = Number.isFinite(penalty.severity) ? penalty.severity : 1;
+    return value * severity;
+  }
+
+  applyHazardEffects(context = {}) {
+    if (!context || typeof context.addEffect !== 'function') {
+      return;
+    }
+
+    const {
+      addEffect: applyEffect,
+      structures = {},
+      colonies = {},
+      buildings = {},
+      populationModule = null,
+    } = context;
+
+    const penaltyMultipliers = this.getPenaltyMultipliers();
+    const buildCostMultiplier = penaltyMultipliers.buildCost;
+    const maintenanceMultiplier = penaltyMultipliers.maintenanceCost;
+    const populationMultiplier = penaltyMultipliers.populationGrowth;
+
+    Object.keys(structures).forEach((id) => {
+      const structure = structures[id];
+      if (!structure || !structure.cost) {
+        return;
+      }
+
+      const target = Object.prototype.hasOwnProperty.call(colonies, id)
+        ? 'colony'
+        : 'building';
+
+      Object.keys(structure.cost).forEach((category) => {
+        const categoryCosts = structure.cost[category];
+        if (!categoryCosts) {
+          return;
+        }
+
+        Object.keys(categoryCosts).forEach((resource) => {
+          applyEffect({
+            effectId: `hazardBuildCostPenalty-${category}-${resource}`,
+            target,
+            targetId: id,
+            type: 'resourceCostMultiplier',
+            resourceCategory: category,
+            resourceId: resource,
+            value: buildCostMultiplier,
+            sourceId: 'hazardPenalties',
+          });
+        });
+      });
+    });
+
+    Object.keys(buildings).forEach((id) => {
+      if (!buildings[id]) {
+        return;
+      }
+
+      applyEffect({
+        effectId: 'hazardMaintenancePenalty',
+        target: 'building',
+        targetId: id,
+        type: 'maintenanceMultiplier',
+        value: maintenanceMultiplier,
+        sourceId: 'hazardPenalties',
+      });
+    });
+
+    Object.keys(colonies).forEach((id) => {
+      applyEffect({
+        effectId: 'hazardMaintenancePenalty',
+        target: 'colony',
+        targetId: id,
+        type: 'maintenanceMultiplier',
+        value: maintenanceMultiplier,
+        sourceId: 'hazardPenalties',
+      });
+    });
+
+    if (populationModule) {
+      applyEffect({
+        effectId: 'hazardPopulationPenalty',
+        target: 'population',
+        type: 'growthMultiplier',
+        value: populationMultiplier,
+        sourceId: 'hazardPenalties',
+      });
+    }
   }
 }
 
