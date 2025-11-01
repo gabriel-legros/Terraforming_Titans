@@ -277,12 +277,13 @@ var progressMars = {
             target: 'building',
             targetId: 'sandQuarry',
             type: 'enable'
-        },            {
+        },
+            {
               target: 'resource',
               resourceType: 'colony',
               targetId: 'silicon',
               type: 'enable'
-            },,]
+            }]
       },
       {
         id: "chapter1.15",

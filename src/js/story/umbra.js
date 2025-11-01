@@ -17,6 +17,12 @@ progressUmbra.chapters.push(
         type: 'booleanFlag',
         flagId: 'crusaderImportEnabled',
         value: true
+      },            
+      {
+        target: 'resource',
+        resourceType: 'special',
+        targetId: 'hazardousBiomass',
+        type: 'enable'
       }
     ]
   },
