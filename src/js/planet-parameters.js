@@ -814,29 +814,139 @@ const venusOverrides = {
 const umbraOverrides = {
   name: 'Umbra',
   star: {
-    name: 'Nyx-13',
+    name: 'Nyx',
     spectralType: 'K4V',
-    luminositySolar: 0.36,
-    massSolar: 0.75,
-    temperatureK: 4550,
-    habitableZone: { inner: 0.47, outer: 0.88 }
+    luminositySolar: 0.0048246,
+    massSolar: 0.2178,
+    temperatureK: 2799,
+    habitableZone: { inner: 0.06598656748303425, outer: 0.0951595762650073 }
   },
   celestialParameters: {
-    distanceFromSun: 0.64,
-    gravity: 3.8,
-    radius: 3321,
-    mass: 6.11e23,
-    albedo: 0.18,
-    rotationPeriod: 26.9,
-    starLuminosity: 0.36,
+    distanceFromSun: 0.06830154005049452,
+    gravity: 3.895302304848209,
+    radius: 3263.280726516782,
+    mass: 6.215045552249502e+23,
+    albedo: 0.25,
+    rotationPeriod: 18.728781030979007,
+    starLuminosity: 0.0048246,
+    parentBody: {
+      name: 'Nyx-1',
+      radius: 71492,       // km
+      mass: 4.255130726862839e+27,      // kg
+      orbitRadius: 33349.90930277854, // km
+    }
   },
   visualization: {
     baseColor: '#1d2a44',
+  },
+"resources": {
+    "surface": {
+      "ice": {
+        "initialValue": 371024812010584.3
+      },
+      "liquidWater": {
+        "initialValue": 704889858873.709
+      },
+      "dryIce": {
+        "initialValue": 0
+      },
+      "liquidCO2": {
+        "initialValue": 0
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
+      }
+    },
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 35235251297749.41
+      },
+      "atmosphericWater": {
+        "initialValue": 5250832941.441801
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
+    }
+  },
+  "zonalWater": {
+    "tropical": {
+      "liquid": 566054780114.1189,
+      "ice": 0,
+      "buriedIce": 0
+    },
+    "temperate": {
+      "liquid": 138835078759.59012,
+      "ice": 34275847678.10241,
+      "buriedIce": 0
+    },
+    "polar": {
+      "liquid": 1.97236826e-316,
+      "ice": 370990536162906.2,
+      "buriedIce": 0
+    }
   },
   zonalSurface: {
     tropical: { biomass: 0, hazardousBiomass: 1_000_000 },
     temperate: { biomass: 0, hazardousBiomass: 1_000_000 },
     polar: { biomass: 0, hazardousBiomass: 100_000 }
+  },
+  "zonalHydrocarbons": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }
+  },
+  "zonalCO2": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "initial": 285.5070416705251,
+      "value": 285.5070416586453,
+      "day": 308.720880976926,
+      "night": 262.29320234036453
+    },
+    "temperate": {
+      "initial": 265.19657546832224,
+      "value": 265.1965754597524,
+      "day": 285.4274695790454,
+      "night": 244.9656813404594
+    },
+    "polar": {
+      "initial": 178.38772519432067,
+      "value": 178.3877251843534,
+      "day": 186.768411927358,
+      "night": 170.0070384413488
+    }
   },
   hazards: {
     hazardousBiomass: {

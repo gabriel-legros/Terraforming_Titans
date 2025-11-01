@@ -86,6 +86,7 @@
           dryIce: terraforming.zonalCO2[zone]?.ice || 0,
           liquidCO2: terraforming.zonalCO2[zone]?.liquid || 0,
           biomass: terraforming.zonalSurface[zone]?.biomass || 0,
+          hazardousBiomass: terraforming.zonalSurface[zone]?.hazardousBiomass || 0,
           liquidMethane: terraforming.zonalHydrocarbons[zone]?.liquid || 0,
           hydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.ice || 0,
           buriedHydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.buriedIce || 0
@@ -142,7 +143,8 @@
         buriedIce: values.zones[zone].buriedIce
       };
       zonalSurface[zone] = {
-        biomass: values.zones[zone].biomass
+        biomass: values.zones[zone].biomass,
+        hazardousBiomass:  values.zones[zone].hazardousBiomass,
       };
       zonalHydrocarbons[zone] = {
         liquid: values.zones[zone].liquidMethane,
