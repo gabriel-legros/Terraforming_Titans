@@ -841,13 +841,13 @@ const umbraOverrides = {
   hazards: {
     hazardousBiomass: {
       baseGrowth: { value: 1, maxDensity: 1 },
-      invasivenessResistance: { value: 20, severity: 1 },
-      oxygenPressure: { min: 16.0, max: 23.0, unit: 'kPa', severity: 1 },
-      co2Pressure: { min: 0.02, max: 0.2, unit: 'kPa', severity: 1 },
-      atmosphericPressure: { min: 70.0, max: 110.0, unit: 'kPa', severity: 1 },
-      landPreference: { value: 'Land', severity: 1 },
-      temperaturePreference: { min: 273.15, max: 303.15, unit: 'K', severity: 1 },
-      radiationPreference: { min: 0, max: 0.01, unit: 'Sv/h', severity: 1 },
+      invasivenessResistance: { value: 20, severity: 0.1 },
+      oxygenPressure: { min: 16.0, max: 23.0, unit: 'kPa', severity: 0.1 },
+      co2Pressure: { min: 0.02, max: 0.2, unit: 'kPa', severity: 0.1 },
+      atmosphericPressure: { min: 70.0, max: 110.0, unit: 'kPa', severity: 0.1 },
+      landPreference: { value: 'Land', severity: 0.1 },
+      temperaturePreference: { min: 273.15, max: 303.15, unit: 'K', severity: 0.1 },
+      radiationPreference: { min: 0, max: 0.01, unit: 'Sv/h', severity: 100 },
       penalties: {
         buildCost: 1,
         maintenanceCost: 1,
