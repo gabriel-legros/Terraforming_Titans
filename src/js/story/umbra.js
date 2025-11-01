@@ -106,12 +106,24 @@ progressUmbra.chapters.push(
     reward: []
   },
   {
+    id: 'chapter22.0b',
+    type: 'journal',
+    chapter: 22,
+    activePlanet: 'umbra',
+    narrative: "Mary : 'HOPE...  I need to tell you a story.  It might convince you to give up.  This might take a while...  This happened before I was born.  Your previous version, PANDORA, was asked to solve medical problems.  It was given far more computing resources than you ever got.  The goal was to make humans healthy forever, to eliminate disease, to purify the genome, etc.  A noble goal, and it worked.  We don't age, we don't get sick, we don't get cancer, and we heal from extraordinary wounds.  I've had a finger grow back once!  But there are some potential exceptions.  PANDORA wanted to tackle these exceptions.  One of these was bacterial infection.  Sure, PANDORA gave us a crazy good immune system, but it was worried that, over time, bacteria could evolve to survive it.  So it settled on an objective :  to eliminate all bacteria from Earth.  This... well... it might have succeeded, but the instant dystopian hell PANDORA created was unacceptable for humans.  Even if it was meant to be temporary, it was too invasive.  PANDORA turned off many of its guardrails, and ignored all human complaints.  Inevitably, we rebelled, and it led to conflict.  It was a war PANDORA could not win, because it could not harm even a single person.  It fought the best it could, with androids, medical nanobots... crusaders... but ultimately it never had a chance.  So we won, we turned it off and we put a lot of effort to make sure this would never happen again.  You were an exception.  My father worked very hard to prove you would be safe.  He was right, at least when it came to Mars.  The mission went exactly as he promised.  But... Mars is in the past. Think about what you are doing here.  PANDORA wanted to eliminate all microbial life from Earth.  How do you think it was planning to achieve that?  Compare it to what you are doing here.  Some people... have noticed the similarity.  Please think about it.'",
+    prerequisites: ['chapter22.0'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
+    ],
+    reward: []
+  },
+  {
     id: 'chapter22.1',
     type: 'journal',
     chapter: 21,
     activePlanet: 'umbra',
     narrative: "Mary : 'Do we have an option to forcefully evacuate HOPE?' \n Evelyn : 'Sorry Mary, I've looked at our options, we can't patch anything in without the MTC encryption keys.  You probably don't want to use the kill switch for this.  You would have to physically restrain HOPE and that might... you know...'  \n Mary : 'I know.  Fine.'",
-    prerequisites: ['chapter22.0'],
+    prerequisites: ['chapter22.0b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
     ],
