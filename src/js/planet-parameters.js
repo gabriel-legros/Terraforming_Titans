@@ -57,6 +57,7 @@ const defaultPlanetParameters = {
       liquidCO2: { name: 'Liquid CO2', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton' },
       biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false, unit: 'ton' },
+      hazardousBiomass: { name: 'Hazardous Biomass', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
       hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
     },
@@ -88,6 +89,11 @@ const defaultPlanetParameters = {
     tropical: { liquid: 0, ice: 0 },
     temperate: { liquid: 0, ice: 0 },
     polar: { liquid: 0, ice: 0 }
+  },
+  zonalSurface: {
+    tropical: { biomass: 0, hazardousBiomass: 0 },
+    temperate: { biomass: 0, hazardousBiomass: 0 },
+    polar: { biomass: 0, hazardousBiomass: 0 }
   },
   zonalTemperatures: {
     tropical: { value: 223.15, day: 238.15, night: 208.15 },
