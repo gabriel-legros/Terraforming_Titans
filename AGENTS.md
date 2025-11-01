@@ -240,6 +240,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Antimatter is now produced automatically based on terraformed worlds and capped at ten hours of output.
 - Antimatter stockpiles now persist when travelling between planets, matching alien artifact preservation.
 - Introduced a Galactic Market Concordat advanced research that unlocks the Galactic Market project while permanently retiring cargo rockets and metal exports.
+- Space storage now supports silicon and hydrogen stockpiles.
 
 - Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
 - Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
