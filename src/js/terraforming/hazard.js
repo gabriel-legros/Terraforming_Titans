@@ -154,6 +154,8 @@ class HazardManager {
       return;
     }
 
+    const deltaSeconds = deltaTime / 1000;
+
     const hazardous = this.parameters.hazardousBiomass;
     if (!hazardous || !hazardous.baseGrowth) {
       return;
@@ -173,7 +175,7 @@ class HazardManager {
       return;
     }
 
-    const growthRate = (growthPercent / 100) * severity;
+    const growthRate = (growthPercent / 100);
     const zoneKeys = Array.isArray(zonesList) && zonesList.length
       ? zonesList
       : Object.keys(terraforming.zonalSurface);
@@ -203,7 +205,7 @@ class HazardManager {
       }
 
       const logisticTerm = 1 - currentBiomass / carryingCapacity;
-      const deltaBiomass = growthRate * currentBiomass * logisticTerm * deltaTime;
+      const deltaBiomass = growthRate * currentBiomass * logisticTerm * deltaSeconds / 1000;
       const nextBiomass = currentBiomass + deltaBiomass;
       const upperBound = carryingCapacity;
 

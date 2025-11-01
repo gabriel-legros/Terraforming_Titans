@@ -7,7 +7,7 @@ progressUmbra.chapters.push(
     chapter: 21,
     activePlanet: 'umbra',
     title : 'Chapter 21 : Zeal',
-    narrative: "Landing complete. Umbra orbits within the ember glow of Nyx-13, safe under the cover of the Venusian and Martian fleet.\nMary: 'The colonists!  We're too late... they're all...'  \n Receiving transmission from unknown frequency... \n Ghost : 'You came.  Right into my trap.  I get rid of you first, and then I go eliminate the Helians.'  \n Mary : 'A trap?  Hold on.  H.O.P.E., I am detecting countless signatures around the planet.  They just lit up and are converging to our location.  We're in trouble.  Feroza!  We need some reinforcements right now!  Pete, your own pet project is under attack!  Somebody, send help!'",
+    narrative: "Landing complete. Umbra orbits within the ember glow of Nyx-13, safe under the cover of the Venusian and Martian fleet.\nMary: 'The colonists!  We're too late... they're all...'  \n Receiving transmission from unknown frequency... \n Ghost : 'You came.  Right into my trap.  I get rid of you first, and then I go eliminate the Helian leadership.'  \n Mary : 'A trap?  Hold on.  H.O.P.E., I am detecting countless signatures around the planet.  They just lit up and are converging to our location.  We're in trouble.  Feroza!  We need some reinforcements right now!  Pete, your own pet project is under attack!  Somebody, send help!'",
     prerequisites: ['chapter20.19'],
     objectives: [],
     reward: [
@@ -20,7 +20,7 @@ progressUmbra.chapters.push(
       },            
       {
         target: 'resource',
-        resourceType: 'special',
+        resourceType: 'surface',
         targetId: 'hazardousBiomass',
         type: 'enable'
       }
