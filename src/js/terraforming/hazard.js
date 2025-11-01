@@ -350,6 +350,7 @@ class HazardManager {
     penalty += this.calculateTemperatureGrowthPenalty(terraforming, hazardousParameters.temperaturePreference);
     penalty += this.calculateRadiationGrowthPenalty(terraforming, hazardousParameters.radiationPreference);
     penalty += this.calculateLandPreferencePenalty(terraforming, hazardousParameters.landPreference);
+    penalty += this.calculateInvasivenessGrowthPenalty(terraforming, hazardousParameters.invasivenessResistance);
 
     return penalty;
   }
@@ -558,6 +559,95 @@ class HazardManager {
     });
 
     return penalty;
+  }
+
+  calculateInvasivenessGrowthPenalty(terraforming, entry) {
+    if (!entry || !terraforming || !terraforming.zonalSurface) {
+      return 0;
+    }
+
+    const severity = Number.isFinite(entry.severity) ? entry.severity : 1;
+    if (!severity) {
+      return 0;
+    }
+
+    const invasivenessDifference = this.getLifeDesignInvasiveness() - (Number.isFinite(entry.value) ? entry.value : 0);
+    if (!invasivenessDifference) {
+      return 0;
+    }
+
+    const zoneKeys = Array.isArray(zonesList) && zonesList.length
+      ? zonesList
+      : Object.keys(terraforming.zonalSurface);
+    const zoneCount = zoneKeys.length || 1;
+
+    let penalty = 0;
+
+    zoneKeys.forEach((zone) => {
+      const density = this.calculateZoneLifeDensity(terraforming, zone);
+      if (!density) {
+        return;
+      }
+
+      const weight = this.getZoneWeight(zone, zoneCount);
+      if (!weight) {
+        return;
+      }
+
+      penalty += density * invasivenessDifference * severity * weight;
+    });
+
+    return penalty;
+  }
+
+  calculateZoneLifeDensity(terraforming, zone) {
+    const zoneData = terraforming.zonalSurface && terraforming.zonalSurface[zone];
+    if (!zoneData) {
+      return 0;
+    }
+
+    const biomass = Number.isFinite(zoneData.biomass) ? zoneData.biomass : 0;
+    if (!biomass) {
+      return 0;
+    }
+
+    const surfaceArea = terraforming.celestialParameters && Number.isFinite(terraforming.celestialParameters.surfaceArea)
+      ? terraforming.celestialParameters.surfaceArea
+      : 0;
+    if (!surfaceArea) {
+      return 0;
+    }
+
+    const percentage = getZonePercentageHelper ? getZonePercentageHelper(zone) : 0;
+    if (!percentage) {
+      return 0;
+    }
+
+    const zoneArea = surfaceArea * percentage;
+    if (!zoneArea) {
+      return 0;
+    }
+
+    return biomass / zoneArea;
+  }
+
+  getLifeDesignInvasiveness() {
+    let designer = null;
+
+    if (typeof lifeDesigner !== 'undefined' && lifeDesigner) {
+      designer = lifeDesigner;
+    } else if (typeof window !== 'undefined' && window.lifeDesigner) {
+      designer = window.lifeDesigner;
+    } else if (typeof global !== 'undefined' && global.lifeDesigner) {
+      designer = global.lifeDesigner;
+    }
+
+    if (!designer || !designer.currentDesign || !designer.currentDesign.invasiveness) {
+      return 0;
+    }
+
+    const value = designer.currentDesign.invasiveness.value;
+    return Number.isFinite(value) ? value : 0;
   }
 
   getZoneWeight(zone, zoneCount) {
