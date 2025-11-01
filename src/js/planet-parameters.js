@@ -846,7 +846,12 @@ const umbraOverrides = {
       atmosphericPressure: { min: 70.0, max: 110.0, unit: 'kPa', severity: 1 },
       landPreference: { value: 'Land', severity: 1 },
       temperaturePreference: { min: 273.15, max: 303.15, unit: 'K', severity: 1 },
-      radiationPreference: { min: 0, max: 0.01, unit: 'Sv/h', severity: 1 }
+      radiationPreference: { min: 0, max: 0.01, unit: 'Sv/h', severity: 1 },
+      penalties: {
+        buildCost: 1,
+        maintenanceCost: 1,
+        populationGrowth: 1
+      }
     }
   }
 };
