@@ -4,6 +4,16 @@ let zonesList;
 
 const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = 1;
 
+try {
+  window.hazardousBiomassRemovalConstant = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER;
+} catch (error) {
+  try {
+    global.hazardousBiomassRemovalConstant = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER;
+  } catch (innerError) {
+    // Environment without window/global exposure (tests)
+  }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   ({ getZonePercentage: getZonePercentageHelper, ZONES: zonesList } = require('./zones.js'));
 } else if (typeof window !== 'undefined') {

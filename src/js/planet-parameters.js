@@ -861,8 +861,12 @@ const umbraOverrides = {
       }
     },
     "atmospheric": {
+      "oxygen": {
+        "initialValue": 4e14
+      },
+      "inertGas": { "initialValue": 3e15 }, // Override name and value
       "carbonDioxide": {
-        "initialValue": 35235251297749.41
+        "initialValue": 25035251297749.41
       },
       "atmosphericWater": {
         "initialValue": 5250832941.441801
@@ -896,9 +900,9 @@ const umbraOverrides = {
     }
   },
   zonalSurface: {
-    tropical: { biomass: 0, hazardousBiomass: 1_000_000 },
-    temperate: { biomass: 0, hazardousBiomass: 1_000_000 },
-    polar: { biomass: 0, hazardousBiomass: 100_000 }
+    tropical: { biomass: 0, hazardousBiomass: 5_000_000_000 },
+    temperate: { biomass: 0, hazardousBiomass: 5_000_000_000 },
+    polar: { biomass: 0, hazardousBiomass: 1_00_000_000 }
   },
   "zonalHydrocarbons": {
     "tropical": {

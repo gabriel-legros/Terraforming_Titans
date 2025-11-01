@@ -283,3 +283,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Hazards terraforming subtab managed by HazardManager with hazard.js and hazardUI.js modules.
 - HazardManager now loads per-planet hazard definitions, including Umbra's hazardous biomass preferences.
 - Hazard penalties now scale global build costs, maintenance, and population growth based on hazard definitions.
+- Rebuilt the hazardous biomass UI with a battle-themed control bar, live crusader and penalty readouts, and per-zone growth factor breakdowns.
+- Hazardous biomass growth summary now appears between crusader and penalty cards, while base growth and total penalty rows live under Growth Modifiers.
