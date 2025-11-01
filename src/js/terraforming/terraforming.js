@@ -366,7 +366,8 @@ class Terraforming extends EffectableEntity{
     this.biomassDyingZones = {};
     ['tropical', 'temperate', 'polar'].forEach(zone => {
         this.zonalSurface[zone] = {
-            biomass: 0 // Represents amount/mass in the zone
+            biomass: 0,
+            hazardousBiomass: 0 // Represents amount/mass in the zone
             // Zonal coverage values can be calculated from these amounts when needed
         };
         this.biomassDyingZones[zone] = false;
@@ -534,6 +535,9 @@ class Terraforming extends EffectableEntity{
         zones.forEach(z => {
             if (!this.zonalSurface[z].hasOwnProperty('biomass')) {
                 this.zonalSurface[z].biomass = 0;
+            }
+            if (!this.zonalSurface[z].hasOwnProperty('hazardousBiomass')) {
+                this.zonalSurface[z].hazardousBiomass = 0;
             }
         });
     }
@@ -1231,6 +1235,10 @@ class Terraforming extends EffectableEntity{
 
       this.updateSurfaceRadiation();
 
+      if (hazardManager && hazardManager.update) {
+        hazardManager.update(deltaTime, this);
+      }
+
     } // <-- Correct closing brace for the 'update' method
 
 
@@ -1895,37 +1903,65 @@ distributeGlobalChangesToZones(deltaTime) {
 // Atmospheric resources are now updated directly in updateResources.
 synchronizeGlobalResources() {
     const zones = ZONES;
-    let totalLiquidWater = 0;
-    let totalIce = 0;
-    let totalDryIce = 0;
-    let totalLiquidCO2 = 0;
-    let totalBiomass = 0;
-    let totalLiquidMethane = 0;
-    let totalHydrocarbonIce = 0;
+    const aggregations = [
+        {
+            key: 'liquidWater',
+            compute: zone => this.zonalWater[zone].liquid || 0
+        },
+        {
+            key: 'ice',
+            compute: zone => {
+                const surfaceIce = this.zonalWater[zone].ice || 0;
+                const buried = this.zonalWater[zone].buriedIce || 0;
+                return surfaceIce + buried;
+            }
+        },
+        {
+            key: 'dryIce',
+            compute: zone => this.zonalCO2[zone].ice || 0
+        },
+        {
+            key: 'liquidCO2',
+            compute: zone => this.zonalCO2[zone].liquid || 0
+        },
+        {
+            key: 'biomass',
+            compute: zone => this.zonalSurface[zone].biomass || 0
+        },
+        {
+            key: 'hazardousBiomass',
+            compute: zone => this.zonalSurface[zone].hazardousBiomass || 0
+        },
+        {
+            key: 'liquidMethane',
+            compute: zone => this.zonalHydrocarbons[zone].liquid || 0
+        },
+        {
+            key: 'hydrocarbonIce',
+            compute: zone => {
+                const surfaceMethaneIce = this.zonalHydrocarbons[zone].ice || 0;
+                const buriedMethaneIce = this.zonalHydrocarbons[zone].buriedIce || 0;
+                return surfaceMethaneIce + buriedMethaneIce;
+            }
+        }
+    ];
 
-    // Sum up surface resources from zones
-    zones.forEach(zone => {
-        totalLiquidWater += this.zonalWater[zone].liquid || 0;
-        const surfaceIce = this.zonalWater[zone].ice || 0;
-        const buried = this.zonalWater[zone].buriedIce || 0;
-        totalIce += surfaceIce + buried;
-        totalDryIce += this.zonalCO2[zone].ice || 0;
-        totalLiquidCO2 += this.zonalCO2[zone].liquid || 0;
-        totalBiomass += this.zonalSurface[zone].biomass || 0;
-        totalLiquidMethane += this.zonalHydrocarbons[zone].liquid || 0;
-        const surfaceMethaneIce = this.zonalHydrocarbons[zone].ice || 0;
-        const buriedMethaneIce = this.zonalHydrocarbons[zone].buriedIce || 0;
-        totalHydrocarbonIce += surfaceMethaneIce + buriedMethaneIce;
+    const totals = {};
+    aggregations.forEach(({ key }) => {
+        totals[key] = 0;
     });
 
-    // Update global SURFACE resource values (Amounts)
-    if (this.resources.surface.liquidWater) this.resources.surface.liquidWater.value = totalLiquidWater;
-    if (this.resources.surface.ice) this.resources.surface.ice.value = totalIce;
-    if (this.resources.surface.dryIce) this.resources.surface.dryIce.value = totalDryIce;
-    if (this.resources.surface.liquidCO2) this.resources.surface.liquidCO2.value = totalLiquidCO2;
-    if (this.resources.surface.biomass) this.resources.surface.biomass.value = totalBiomass;
-    if (this.resources.surface.liquidMethane) this.resources.surface.liquidMethane.value = totalLiquidMethane;
-    if (this.resources.surface.hydrocarbonIce) this.resources.surface.hydrocarbonIce.value = totalHydrocarbonIce;
+    zones.forEach(zone => {
+        aggregations.forEach(aggregation => {
+            totals[aggregation.key] += aggregation.compute(zone);
+        });
+    });
+
+    aggregations.forEach(({ key }) => {
+        if (this.resources.surface[key]) {
+            this.resources.surface[key].value = totals[key];
+        }
+    });
 
     // Atmospheric resources are no longer synchronized here.
     // Pressures are calculated on the fly when needed.

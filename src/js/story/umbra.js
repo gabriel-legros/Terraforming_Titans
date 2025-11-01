@@ -84,7 +84,9 @@ progressUmbra.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1000 }
     ],
-    reward: []
+    reward: [
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisAutoResearch', value: true }
+    ]
   },
   {
     id: 'chapter21.7',
