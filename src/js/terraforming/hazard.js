@@ -193,7 +193,9 @@ class HazardManager {
       const surfaceArea = terraforming.celestialParameters && terraforming.celestialParameters.surfaceArea;
 
       if (growthPercent && maxDensity > 0 && surfaceArea && surfaceArea > 0) {
-        const growthRate = growthPercent / 100;
+        const growthPenalty = this.calculateHazardousBiomassGrowthPenalty(hazardous, terraforming);
+        const adjustedGrowthPercent = growthPercent - growthPenalty;
+        const growthRate = adjustedGrowthPercent / 100;
         const deltaSeconds = deltaTime / 1000;
         const zoneKeys = Array.isArray(zonesList) && zonesList.length
           ? zonesList
@@ -329,6 +331,244 @@ class HazardManager {
     });
 
     return multiplier;
+  }
+
+  calculateHazardousBiomassGrowthPenalty(hazardousParameters, terraforming) {
+    if (!hazardousParameters || !terraforming) {
+      return 0;
+    }
+
+    let penalty = 0;
+
+    if (terraforming.atmosphericPressureCache) {
+      const cache = terraforming.atmosphericPressureCache;
+      penalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.oxygenPressure, 'oxygen');
+      penalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.co2Pressure, 'carbonDioxide');
+      penalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.atmosphericPressure, null);
+    }
+
+    penalty += this.calculateTemperatureGrowthPenalty(terraforming, hazardousParameters.temperaturePreference);
+    penalty += this.calculateRadiationGrowthPenalty(terraforming, hazardousParameters.radiationPreference);
+    penalty += this.calculateLandPreferencePenalty(terraforming, hazardousParameters.landPreference);
+
+    return penalty;
+  }
+
+  calculatePressureGrowthPenalty(cache, entry, gasKey) {
+    if (!entry || !cache) {
+      return 0;
+    }
+
+    const unit = entry.unit ? `${entry.unit}` : 'kPa';
+    const pressurePa = gasKey ? cache.pressureByKey && cache.pressureByKey[gasKey] : cache.totalPressure;
+    const pressureValue = this.convertPressureFromPa(Number.isFinite(pressurePa) ? pressurePa : 0, unit);
+
+    return this.computeRangePenalty(entry, pressureValue);
+  }
+
+  convertPressureFromPa(value, unit) {
+    const normalizedValue = Number.isFinite(value) ? value : 0;
+    const normalizedUnit = `${unit || 'kPa'}`.trim().toLowerCase();
+
+    switch (normalizedUnit) {
+      case 'pa':
+        return normalizedValue;
+      case 'kpa':
+        return normalizedValue / 1000;
+      case 'mpa':
+        return normalizedValue / 1_000_000;
+      case 'bar':
+        return normalizedValue / 100000;
+      case 'mbar':
+        return normalizedValue / 100;
+      case 'atm':
+        return normalizedValue / 101325;
+      default:
+        return normalizedValue / 1000;
+    }
+  }
+
+  computeRangePenalty(entry, currentValue) {
+    if (!entry) {
+      return 0;
+    }
+
+    const severity = Number.isFinite(entry.severity) ? entry.severity : 1;
+    if (!severity) {
+      return 0;
+    }
+
+    const hasMin = Number.isFinite(entry.min);
+    const hasMax = Number.isFinite(entry.max);
+    const value = Number.isFinite(currentValue) ? currentValue : 0;
+
+    let difference = 0;
+    if (hasMin && value < entry.min) {
+      difference = entry.min - value;
+    } else if (hasMax && value > entry.max) {
+      difference = value - entry.max;
+    }
+
+    if (!difference) {
+      return 0;
+    }
+
+    return difference * severity;
+  }
+
+  calculateTemperatureGrowthPenalty(terraforming, entry) {
+    if (!entry || !terraforming || !terraforming.temperature || !terraforming.temperature.zones) {
+      return 0;
+    }
+
+    const zoneKeys = Array.isArray(zonesList) && zonesList.length
+      ? zonesList
+      : Object.keys(terraforming.temperature.zones);
+    const zoneCount = zoneKeys.length || 1;
+    const unit = entry.unit ? `${entry.unit}` : 'K';
+
+    let penalty = 0;
+
+    zoneKeys.forEach((zone) => {
+      const zoneData = terraforming.temperature.zones[zone];
+      if (!zoneData || !Number.isFinite(zoneData.value)) {
+        return;
+      }
+
+      const temperature = this.convertTemperatureFromKelvin(zoneData.value, unit);
+      const zonePenalty = this.computeRangePenalty(entry, temperature);
+      if (!zonePenalty) {
+        return;
+      }
+
+      const weight = this.getZoneWeight(zone, zoneCount);
+      if (!weight) {
+        return;
+      }
+
+      penalty += zonePenalty * weight;
+    });
+
+    return penalty;
+  }
+
+  convertTemperatureFromKelvin(value, unit) {
+    const normalizedUnit = unit ? `${unit}`.trim().toLowerCase() : 'k';
+    const kelvin = Number.isFinite(value) ? value : 0;
+
+    switch (normalizedUnit) {
+      case 'c':
+      case '°c':
+      case 'celsius':
+        return kelvin - 273.15;
+      case 'f':
+      case '°f':
+      case 'fahrenheit':
+        return (kelvin - 273.15) * 9 / 5 + 32;
+      case 'k':
+      case 'kelvin':
+      default:
+        return kelvin;
+    }
+  }
+
+  calculateRadiationGrowthPenalty(terraforming, entry) {
+    if (!entry || !terraforming || !Number.isFinite(terraforming.surfaceRadiation)) {
+      return 0;
+    }
+
+    const unit = entry.unit ? `${entry.unit}` : 'Sv/h';
+    const radiation = this.convertRadiationDose(terraforming.surfaceRadiation, unit);
+    return this.computeRangePenalty(entry, radiation);
+  }
+
+  convertRadiationDose(value, unit) {
+    const normalizedUnit = unit ? `${unit}`.trim().toLowerCase() : 'sv/h';
+    const dose = Number.isFinite(value) ? value : 0; // incoming value is mSv/day
+
+    switch (normalizedUnit) {
+      case 'msv/day':
+      case 'msv per day':
+        return dose;
+      case 'sv/day':
+      case 'sv per day':
+        return dose / 1000;
+      case 'msv/h':
+      case 'msv per hour':
+      case 'msv/hr':
+        return dose / 24;
+      case 'μsv/h':
+      case 'µsv/h':
+      case 'usv/h':
+      case 'μsv per hour':
+      case 'µsv per hour':
+      case 'usv per hour':
+        return dose * 1000 / 24;
+      case 'sv/h':
+      case 'sv per hour':
+      case 'sv/hr':
+      default:
+        return dose / 1000 / 24;
+    }
+  }
+
+  calculateLandPreferencePenalty(terraforming, entry) {
+    if (!entry || !terraforming || !terraforming.zonalCoverageCache) {
+      return 0;
+    }
+
+    const preference = entry.value ? `${entry.value}`.trim().toLowerCase() : '';
+    if (preference !== 'land') {
+      return 0;
+    }
+
+    const zoneKeys = Array.isArray(zonesList) && zonesList.length
+      ? zonesList
+      : Object.keys(terraforming.zonalCoverageCache);
+    const zoneCount = zoneKeys.length || 1;
+    const severity = Number.isFinite(entry.severity) ? entry.severity : 1;
+
+    if (!severity) {
+      return 0;
+    }
+
+    let penalty = 0;
+
+    zoneKeys.forEach((zone) => {
+      const cache = terraforming.zonalCoverageCache[zone];
+      if (!cache) {
+        return;
+      }
+
+      const liquidWater = Number.isFinite(cache.liquidWater) ? cache.liquidWater : 0;
+      const liquidCo2 = Number.isFinite(cache.liquidCO2) ? cache.liquidCO2 : 0;
+      const liquidMethane = Number.isFinite(cache.liquidMethane) ? cache.liquidMethane : 0;
+      const combinedCoverage = Math.min(1, Math.max(0, liquidWater + liquidCo2 + liquidMethane));
+      const zonePenalty = (1 - combinedCoverage) * severity;
+      if (!zonePenalty) {
+        return;
+      }
+
+      const weight = this.getZoneWeight(zone, zoneCount);
+      if (!weight) {
+        return;
+      }
+
+      penalty += zonePenalty * weight;
+    });
+
+    return penalty;
+  }
+
+  getZoneWeight(zone, zoneCount) {
+    if (typeof getZonePercentageHelper === 'function') {
+      const percentage = getZonePercentageHelper(zone);
+      if (Number.isFinite(percentage) && percentage > 0) {
+        return percentage;
+      }
+    }
+
+    return zoneCount > 0 ? 1 / zoneCount : 0;
   }
 
   getPenaltyValue(penalty) {
