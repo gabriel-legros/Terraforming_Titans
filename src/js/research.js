@@ -24,6 +24,7 @@ class Research {
       this.orderDirty = false;
       this.autoResearchPresets = [];
       this.currentAutoResearchPreset = 1;
+      this.autoResearchEnabled = false;
 
       // Load research data and create Research instances
       for (const category in researchData) {

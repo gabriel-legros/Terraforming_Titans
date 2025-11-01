@@ -55,8 +55,29 @@ class SolisManager extends EffectableEntity {
       research: { baseCost: 10, purchases: 0 },
       terraformingMeasurements: { baseCost: 300, purchases: 0, max: 1 },
       advancedOversight: { baseCost: 1000, purchases: 0, max: 1 },
-      researchUpgrade: { baseCost: 100, purchases: 0, max: RESEARCH_UPGRADE_ORDER.length }
+      researchUpgrade: { baseCost: 100, purchases: 0, max: RESEARCH_UPGRADE_ORDER.length },
+      autoResearch: { baseCost: 1000, purchases: 0, max: 1, enabled: false }
     };
+  }
+
+  isUpgradeEnabled(key) {
+    const upgrade = this.shopUpgrades[key];
+    if (!upgrade) {
+      return false;
+    }
+    if (typeof upgrade.enabled === 'boolean') {
+      return upgrade.enabled;
+    }
+    return true;
+  }
+
+  setUpgradeEnabled(key, enabled) {
+    const upgrade = this.shopUpgrades[key];
+    if (!upgrade) {
+      return false;
+    }
+    upgrade.enabled = Boolean(enabled);
+    return true;
   }
 
   getTerraformedWorldBonus() {
@@ -158,12 +179,13 @@ class SolisManager extends EffectableEntity {
     const up = this.shopUpgrades[key];
     if (!up) return 0;
     if (typeof up.max === 'number' && up.purchases >= up.max) return 0;
+    if (!this.isUpgradeEnabled(key)) return 0;
     return up.baseCost * (up.purchases + 1);
   }
 
   purchaseUpgrade(key) {
     const up = this.shopUpgrades[key];
-    if (!up) return false;
+    if (!up || !this.isUpgradeEnabled(key)) return false;
     if (typeof up.max === 'number' && up.purchases >= up.max) {
       return false;
     }
@@ -208,6 +230,15 @@ class SolisManager extends EffectableEntity {
         flagId: 'advancedOversight',
         value: true,
         effectId: 'solisAdvancedOversight',
+        sourceId: 'solisShop'
+      });
+    } else if (key === 'autoResearch' && typeof addEffect === 'function') {
+      addEffect({
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'autoResearchEnabled',
+        value: true,
+        effectId: 'solisAutoResearch',
         sourceId: 'solisShop'
       });
     } else if (key === 'startingShips') {
@@ -315,6 +346,18 @@ class SolisManager extends EffectableEntity {
     this.applyResearchUpgrade();
     this.applyTerraformingMeasurementUpgrade();
 
+    const autoResearchUpgrade = this.shopUpgrades.autoResearch;
+    if (autoResearchUpgrade && autoResearchUpgrade.purchases > 0 && typeof addEffect === 'function') {
+      addEffect({
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'autoResearchEnabled',
+        value: true,
+        effectId: 'solisAutoResearch',
+        sourceId: 'solisShop'
+      });
+    }
+
     const startingShipsUpgrade = this.shopUpgrades.startingShips;
     if (startingShipsUpgrade && startingShipsUpgrade.purchases > 0) {
       const ships = resources?.special?.spaceships;
@@ -386,6 +429,13 @@ class SolisManager extends EffectableEntity {
       upgrades: Object.keys(this.shopUpgrades).reduce((o, k) => {
         o[k] = this.shopUpgrades[k].purchases;
         return o;
+      }, {}),
+      enabledUpgrades: Object.keys(this.shopUpgrades).reduce((o, k) => {
+        const upgrade = this.shopUpgrades[k];
+        if (typeof upgrade.enabled === 'boolean') {
+          o[k] = upgrade.enabled;
+        }
+        return o;
       }, {})
     };
   }
@@ -404,6 +454,13 @@ class SolisManager extends EffectableEntity {
           this.shopUpgrades[k].purchases = data.upgrades[k];
         } else if (k === 'alienArtifactResearch' && this.shopUpgrades.researchUpgrade) {
           this.shopUpgrades.researchUpgrade.purchases = data.upgrades[k];
+        }
+      }
+    }
+    if (data.enabledUpgrades) {
+      for (const key in data.enabledUpgrades) {
+        if (this.shopUpgrades[key]) {
+          this.shopUpgrades[key].enabled = Boolean(data.enabledUpgrades[key]);
         }
       }
     }
