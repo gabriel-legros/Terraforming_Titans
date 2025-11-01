@@ -17,12 +17,18 @@ progressUmbra.chapters.push(
         type: 'booleanFlag',
         flagId: 'crusaderImportEnabled',
         value: true
-      },            
+      },
       {
         target: 'resource',
         resourceType: 'surface',
         targetId: 'hazardousBiomass',
         type: 'enable'
+      },
+      {
+        target: 'terraforming',
+        type: 'booleanFlag',
+        flagId: 'hazardsUnlocked',
+        value: true
       }
     ]
   },
