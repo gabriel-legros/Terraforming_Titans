@@ -843,6 +843,7 @@ const umbraOverrides = {
       baseGrowth: { value: 1, maxDensity: 1 },
       invasivenessResistance: { value: 20, severity: 1 },
       oxygenPressure: { min: 16.0, max: 23.0, unit: 'kPa', severity: 1 },
+      co2Pressure: { min: 0.02, max: 0.2, unit: 'kPa', severity: 1 },
       atmosphericPressure: { min: 70.0, max: 110.0, unit: 'kPa', severity: 1 },
       landPreference: { value: 'Land', severity: 1 },
       temperaturePreference: { min: 273.15, max: 303.15, unit: 'K', severity: 1 },
