@@ -106,6 +106,7 @@ class HazardManager {
     this.enabled = false;
     this.parameters = {};
     this.lastSerializedParameters = '';
+    this.cachedHazardousBiomassControl = 0;
     this.cachedPenaltyMultipliers = {
       buildCost: 1,
       maintenanceCost: 1,
@@ -140,7 +141,7 @@ class HazardManager {
 
     this.parameters = normalized;
     this.lastSerializedParameters = serialized;
-    this.cachedPenaltyMultipliers = this.calculatePenaltyMultipliers();
+    this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
 
     const activeTerraforming = typeof terraforming !== 'undefined' ? terraforming : null;
     this.updateHazardousLandReservation(activeTerraforming);
@@ -278,6 +279,7 @@ class HazardManager {
 
   updateHazardousLandReservation(terraforming) {
     if (typeof resources === 'undefined' || !resources || !resources.surface || !resources.surface.land) {
+      this.updateHazardousBiomassControl(0);
       return;
     }
 
@@ -308,7 +310,28 @@ class HazardManager {
       });
     }
 
+    const landCandidates = [
+      terraforming?.initialLand,
+      landResource.initialValue,
+    ];
+
+    let initialLand = 0;
+    for (let index = 0; index < landCandidates.length; index += 1) {
+      const candidate = landCandidates[index];
+      if (Number.isFinite(candidate) && candidate > 0) {
+        initialLand = candidate;
+        break;
+      }
+    }
+
     const reservedLand = maxDensity > 0 ? totalBiomass / maxDensity : 0;
+
+    const carryingCapacity = maxDensity > 0 && initialLand > 0
+      ? initialLand * maxDensity
+      : 0;
+
+    const controlShare = carryingCapacity > 0 ? totalBiomass / carryingCapacity : 0;
+    this.updateHazardousBiomassControl(controlShare);
 
     if (typeof landResource.setReservedAmountForSource === 'function') {
       landResource.setReservedAmountForSource('hazardousBiomass', reservedLand);
@@ -332,19 +355,48 @@ class HazardManager {
       return this.cachedPenaltyMultipliers;
     }
 
-    this.cachedPenaltyMultipliers = this.calculatePenaltyMultipliers();
+    this.cachedPenaltyMultipliers = this.calculatePenaltyMultipliers(this.cachedHazardousBiomassControl);
     return this.cachedPenaltyMultipliers;
   }
 
-  calculatePenaltyMultipliers() {
+  getHazardousBiomassControl() {
+    return this.cachedHazardousBiomassControl;
+  }
+
+  updateHazardousBiomassControl(control, forceUpdate = false) {
+    const normalized = this.normalizeHazardControl(control);
+    const difference = Math.abs(normalized - this.cachedHazardousBiomassControl);
+
+    this.cachedHazardousBiomassControl = normalized;
+
+    if (forceUpdate || difference > 1e-9) {
+      this.cachedPenaltyMultipliers = this.calculatePenaltyMultipliers(normalized);
+    }
+  }
+
+  normalizeHazardControl(value) {
+    if (!Number.isFinite(value) || value <= 0) {
+      return 0;
+    }
+
+    return value >= 1 ? 1 : value;
+  }
+
+  calculatePenaltyMultipliers(control = 0) {
+    const normalizedControl = this.normalizeHazardControl(control);
+
     return {
-      buildCost: this.calculatePenaltyMultiplier('buildCost', (penalty) => 1 + penalty),
-      maintenanceCost: this.calculatePenaltyMultiplier('maintenanceCost', (penalty) => 1 + penalty),
-      populationGrowth: this.calculatePenaltyMultiplier('populationGrowth', (penalty) => 1 / (1 + penalty)),
+      buildCost: this.calculatePenaltyMultiplier('buildCost', (penalty) => 1 + penalty, normalizedControl),
+      maintenanceCost: this.calculatePenaltyMultiplier('maintenanceCost', (penalty) => 1 + penalty, normalizedControl),
+      populationGrowth: this.calculatePenaltyMultiplier('populationGrowth', (penalty) => 1 / (1 + penalty), normalizedControl),
     };
   }
 
-  calculatePenaltyMultiplier(key, transform) {
+  calculatePenaltyMultiplier(key, transform, control = 0) {
+    if (!control) {
+      return 1;
+    }
+
     let multiplier = 1;
 
     Object.keys(this.parameters).forEach((hazardKey) => {
@@ -359,7 +411,12 @@ class HazardManager {
         return;
       }
 
-      const transformed = transform(penaltyValue);
+      const scaledPenalty = penaltyValue * control;
+      if (!scaledPenalty) {
+        return;
+      }
+
+      const transformed = transform(scaledPenalty);
       multiplier *= Number.isFinite(transformed) && transformed > 0 ? transformed : 1;
     });
 
