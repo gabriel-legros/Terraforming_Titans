@@ -28,6 +28,9 @@ const hazardUICache = {
   factorGrid: null,
   factorHeaderRow: null,
   factorRows: {},
+  zoneTable: null,
+  zoneTableBody: null,
+  zoneRows: [],
   formatter: undefined,
   lastControlShare: null,
   lastCrusaderSummary: '',
@@ -320,16 +323,100 @@ function formatCrusaderSummary(summary) {
 
 function formatZoneSummary(zoneGrowth = []) {
   if (!zoneGrowth || zoneGrowth.length === 0) {
-    return 'Zones stable: 0 ton/s';
+    return {
+      table: [
+        { zone: 'Zones stable', rate: '0 ton/s', percent: '0%/s' }
+      ],
+      text: 'Zones stable: 0 ton/s'
+    };
   }
 
-  return zoneGrowth
-    .map((entry) => {
-      const rateText = formatSignedValue(entry.growthPerSecond, 3, 'ton/s');
-      const percentText = formatSignedPercentage(entry.percentPerSecond, 3);
-      return `${capitalize(entry.zone)}: ${rateText} (${percentText}/s)`;
-    })
+  const rows = zoneGrowth.map((entry) => ({
+    zone: capitalize(entry.zone),
+    rate: formatSignedValue(entry.growthPerSecond, 3, 'ton/s'),
+    percent: `${formatSignedPercentage(entry.percentPerSecond, 3)}/s`
+  }));
+
+  const text = rows
+    .map(({ zone, rate, percent }) => `${zone}: ${rate} (${percent})`)
     .join('\n');
+
+  return {
+    table: rows,
+    text
+  };
+}
+
+function renderZoneGrowthTable(rows = []) {
+  if (!hazardUICache.zoneTableBody) {
+    return;
+  }
+
+  const doc = getDocument();
+  if (!doc) {
+    return;
+  }
+
+  if (!Array.isArray(hazardUICache.zoneRows)) {
+    hazardUICache.zoneRows = [];
+  }
+
+  const existing = hazardUICache.zoneRows;
+
+  // Remove extra rows if the new data is shorter
+  if (existing.length > rows.length) {
+    const removed = existing.splice(rows.length);
+    removed.forEach((record) => {
+      if (record && record.row && record.row.parentNode) {
+        record.row.parentNode.removeChild(record.row);
+      }
+    });
+  }
+
+  // Add missing rows
+  for (let index = existing.length; index < rows.length; index += 1) {
+    const row = doc.createElement('tr');
+
+    const zoneCell = doc.createElement('td');
+    zoneCell.className = 'hazard-zone-table__zone';
+
+    const rateCell = doc.createElement('td');
+    rateCell.className = 'hazard-zone-table__value hazard-zone-table__value--rate';
+
+    const percentCell = doc.createElement('td');
+    percentCell.className = 'hazard-zone-table__value hazard-zone-table__value--percent';
+
+    row.appendChild(zoneCell);
+    row.appendChild(rateCell);
+    row.appendChild(percentCell);
+    hazardUICache.zoneTableBody.appendChild(row);
+
+    existing.push({
+      row,
+      zoneCell,
+      rateCell,
+      percentCell
+    });
+  }
+
+  rows.forEach((entry, index) => {
+    const record = existing[index];
+    if (!record) {
+      return;
+    }
+
+    if (record.zoneCell.textContent !== entry.zone) {
+      record.zoneCell.textContent = entry.zone;
+    }
+
+    if (record.rateCell.textContent !== entry.rate) {
+      record.rateCell.textContent = entry.rate;
+    }
+
+    if (record.percentCell.textContent !== entry.percent) {
+      record.percentCell.textContent = entry.percent;
+    }
+  });
 }
 
 function computePenaltySummary(multipliers) {
@@ -843,6 +930,34 @@ function ensureLayout() {
   summaryCenter.appendChild(summaryCenterHeader);
   summaryCenter.appendChild(summaryCenterBody);
 
+  const zoneTable = doc.createElement('table');
+  zoneTable.className = 'hazard-zone-table';
+
+  const zoneHead = doc.createElement('thead');
+  const zoneHeadRow = doc.createElement('tr');
+
+  const zoneHeadZone = doc.createElement('th');
+  zoneHeadZone.textContent = 'Zone';
+
+  const zoneHeadGrowth = doc.createElement('th');
+  zoneHeadGrowth.className = 'hazard-zone-table__head hazard-zone-table__head--value';
+  zoneHeadGrowth.textContent = 'Growth';
+
+  const zoneHeadPercent = doc.createElement('th');
+  zoneHeadPercent.className = 'hazard-zone-table__head hazard-zone-table__head--value';
+  zoneHeadPercent.textContent = 'Δ%/s';
+
+  zoneHeadRow.appendChild(zoneHeadZone);
+  zoneHeadRow.appendChild(zoneHeadGrowth);
+  zoneHeadRow.appendChild(zoneHeadPercent);
+  zoneHead.appendChild(zoneHeadRow);
+
+  const zoneBody = doc.createElement('tbody');
+
+  zoneTable.appendChild(zoneHead);
+  zoneTable.appendChild(zoneBody);
+  summaryCenterBody.appendChild(zoneTable);
+
   summaryRow.appendChild(summaryLeft);
   summaryRow.appendChild(summaryCenter);
   summaryRow.appendChild(summaryRight);
@@ -936,6 +1051,9 @@ function ensureLayout() {
   hazardUICache.summaryCenter = summaryCenter;
   hazardUICache.summaryCenterHeader = summaryCenterHeader;
   hazardUICache.summaryCenterBody = summaryCenterBody;
+  hazardUICache.zoneTable = zoneTable;
+  hazardUICache.zoneTableBody = zoneBody;
+  hazardUICache.zoneRows = [];
   hazardUICache.summaryRight = summaryRight;
   hazardUICache.summaryRightHeader = summaryRightHeader;
   hazardUICache.summaryRightBody = summaryRightBody;
@@ -990,13 +1108,19 @@ function updateSummaryLines(crusaderSummary, zoneSummary, penaltySummary) {
     hazardUICache.summaryLeftBody.textContent = crusaderSummary;
   }
 
-  if (hazardUICache.summaryCenterBody && hazardUICache.summaryCenterBody.textContent !== zoneSummary) {
-    hazardUICache.summaryCenterBody.textContent = zoneSummary;
-  }
-
   if (hazardUICache.summaryRightBody && hazardUICache.summaryRightBody.textContent !== penaltySummary) {
     hazardUICache.summaryRightBody.textContent = penaltySummary;
   }
+
+  if (!zoneSummary) {
+    return;
+  }
+
+  if (hazardUICache.summaryCenterBody) {
+    hazardUICache.summaryCenterBody.setAttribute('aria-label', zoneSummary.text || '');
+  }
+
+  renderZoneGrowthTable(zoneSummary.table || []);
 }
 
 function updateGrowthSummaryRows(summary) {
@@ -1061,6 +1185,7 @@ function updateHazardUI(parameters = {}) {
   const crusaderStats = computeCrusaderSummary(resourcesState || {});
   const crusaderSummary = formatCrusaderSummary(crusaderStats);
   const zoneSummary = formatZoneSummary(totals.zoneGrowth || []);
+  const zoneSummaryText = zoneSummary ? zoneSummary.text : '';
 
   const multipliers = manager && manager.getPenaltyMultipliers
     ? manager.getPenaltyMultipliers()
@@ -1069,13 +1194,15 @@ function updateHazardUI(parameters = {}) {
 
   if (
     crusaderSummary !== hazardUICache.lastCrusaderSummary ||
-    zoneSummary !== hazardUICache.lastZoneSummary ||
+    zoneSummaryText !== hazardUICache.lastZoneSummary ||
     penaltySummary !== hazardUICache.lastPenaltySummary
   ) {
     updateSummaryLines(crusaderSummary, zoneSummary, penaltySummary);
     hazardUICache.lastCrusaderSummary = crusaderSummary;
-    hazardUICache.lastZoneSummary = zoneSummary;
+    hazardUICache.lastZoneSummary = zoneSummaryText;
     hazardUICache.lastPenaltySummary = penaltySummary;
+  } else if (!Array.isArray(hazardUICache.zoneRows) || hazardUICache.zoneRows.length === 0) {
+    updateSummaryLines(crusaderSummary, zoneSummary, penaltySummary);
   }
 
   const growthSummary = buildGrowthFactors(hazard, manager, terraformingState);

@@ -191,7 +191,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Warp Gate Command operations now assign solo athletics events to the most athletic member and adjust failure damage for power and wit challenges.
 - Team athletics operations now ease the next challenge after a success or delay it after a failure, while team wits outcomes modify the next artifact payout.
 - Hazardous Biomass stances gained a Recon option and artifact stances gained Rapid Extraction, adjusting event pacing, weights, and artifact odds.
-- Hazardous biomass growth now applies per-zone penalties, and both the Zone Growth summary and growth modifier readouts show each zone's actual adjusted percentage.
+- Hazardous biomass growth now applies per-zone penalties, and both the Zone Growth summary and growth modifier readouts show each zone's actual adjusted percentage in a dedicated table.
 - Added `wgc_operation_gen/wgc_gen.py` to generate validated 10-step Stargate-inspired Warp Gate Command micro stories (captured as arrays of newline-delimited strings) and append them to `wgc_operation_gen/generated/operation_stories.js`.
 - Warp Gate Command operations now draw their ten-step event queues from `assets/wgc_ops/operation_stories.js` and log each story line before the existing roll summaries so the narrative plays out alongside the results.
 - Warp Gate Command Teams card gained a Hide Story toggle that suppresses narrative log entries when enabled and remembers the setting between sessions.
