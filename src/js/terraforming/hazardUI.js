@@ -216,7 +216,7 @@ function ensureHeaderRow() {
 
   const penaltyHead = doc.createElement('div');
   penaltyHead.className = 'hazard-factor-cell hazard-factor-cell--penalty';
-  penaltyHead.textContent = 'Penalty';
+  penaltyHead.textContent = 'Growth Penalty';
 
   headerRow.appendChild(factorHead);
   headerRow.appendChild(valueHead);
@@ -410,7 +410,7 @@ function updateControlBar(controlShare, totals) {
 
   const detailText = [
     `Hazardous Biomass: ${formatNumeric(biomass, 2)} ton`,
-    initialLand ? `Reserved Land: ${formatNumeric(reservedLand, 2)} / ${formatNumeric(initialLand, 2)} land` : '',
+    initialLand ? `Occupied Land: ${formatNumeric(reservedLand, 2)} / ${formatNumeric(initialLand, 2)} land` : '',
     capacity ? `Carrying Capacity: ${formatNumeric(capacity, 2)} ton` : ''
   ].filter(Boolean).join(' | ');
 
@@ -439,16 +439,25 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
   const values = [];
   const penalties = [];
   let totalPenalty = 0;
+  const zoneCount = zones.length || 1;
 
   zones.forEach((zone) => {
     const zoneData = terraformingState.temperature.zones[zone];
     const tempKelvin = zoneData && Number.isFinite(zoneData.value) ? zoneData.value : 0;
     const converted = convert(tempKelvin, unit);
     const rawPenalty = computePenalty(entry, converted);
-    const weightedPenalty = rawPenalty * zoneWeight(zone, zones.length);
+    if (!rawPenalty) {
+      values.push(`${capitalize(zone)}: ${formatValueWithUnit(converted, unit, 2)}`);
+      penalties.push(`${capitalize(zone)}: 0%`);
+      return;
+    }
+
+    const weight = zoneWeight(zone, zoneCount);
+    const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
+    const weightedPenalty = rawPenalty * normalizedWeight;
 
     values.push(`${capitalize(zone)}: ${formatValueWithUnit(converted, unit, 2)}`);
-    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-weightedPenalty, 3)}`);
+    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-rawPenalty, 3)}`);
     totalPenalty += weightedPenalty;
   });
 
@@ -580,6 +589,7 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
   const values = [];
   const penalties = [];
   let totalPenalty = 0;
+  const zoneCount = zones.length || 1;
 
   zones.forEach((zone) => {
     const cache = coverageCache[zone];
@@ -589,10 +599,12 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
 
     const combined = Math.min(1, Math.max(0, liquidWater + liquidCO2 + liquidMethane));
     const zonePenalty = combined * severity;
-    const weightedPenalty = zonePenalty * zoneWeight(zone, zones.length);
+    const weight = zoneWeight(zone, zoneCount);
+    const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
+    const weightedPenalty = zonePenalty * normalizedWeight;
 
     values.push(`${capitalize(zone)}: ${formatPercentage(combined * 100, 2)}`);
-    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-weightedPenalty, 3)}`);
+    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-zonePenalty, 3)}`);
     totalPenalty += weightedPenalty;
   });
 
@@ -633,7 +645,7 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
   if (!difference) {
     return {
       key: 'invasivenessResistance',
-      label: 'Invasiveness',
+      label: 'Biomass Invasiveness',
       info: `Target ${formatNumeric(entry.value || 0, 2)} • Severity ×${formatNumeric(severity, 3)}`,
       values: [`Current Design: ${formatNumeric(currentInvasiveness, 2)}`],
       penalties: [`Penalty: 0%`],
@@ -644,17 +656,26 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
   const values = [`Current Design: ${formatNumeric(currentInvasiveness, 2)}`, `Target: ${formatNumeric(entry.value || 0, 2)}`];
   const penalties = [];
   let totalPenalty = 0;
+  const zoneCount = zones.length || 1;
 
   zones.forEach((zone) => {
     const density = densityCalculator(terraformingState, zone);
-    const weightedPenalty = density * difference * severity * zoneWeight(zone, zones.length);
-    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-weightedPenalty, 3)}`);
+    const zonePenalty = density * difference * severity;
+    if (!zonePenalty) {
+      penalties.push(`${capitalize(zone)}: 0%`);
+      return;
+    }
+
+    const weight = zoneWeight(zone, zoneCount);
+    const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
+    const weightedPenalty = zonePenalty * normalizedWeight;
+    penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-zonePenalty, 3)}`);
     totalPenalty += weightedPenalty;
   });
 
   return {
     key: 'invasivenessResistance',
-    label: 'Invasiveness',
+    label: 'Biomass Invasiveness',
     info: `Target ${formatNumeric(entry.value || 0, 2)} • Severity ×${formatNumeric(severity, 3)}`,
     values,
     penalties,
@@ -887,7 +908,7 @@ function ensureLayout() {
   penaltySummary.className = 'hazard-factor-summary';
   const penaltySummaryLabel = doc.createElement('span');
   penaltySummaryLabel.className = 'hazard-factor-summary__label';
-  penaltySummaryLabel.textContent = 'Total Penalty';
+  penaltySummaryLabel.textContent = 'Total Average Penalty';
   const penaltySummaryValue = doc.createElement('span');
   penaltySummaryValue.className = 'hazard-factor-summary__value';
   penaltySummary.appendChild(penaltySummaryLabel);
@@ -1029,7 +1050,7 @@ function updateHazardUI(parameters = {}) {
     const detailText = hazardUICache.barDetails.textContent;
     const newDetailText = [
       `Hazardous Biomass: ${formatNumeric(totals.biomass, 2)} ton`,
-      totals.initialLand ? `Reserved Land: ${formatNumeric(totals.reservedLand, 2)} / ${formatNumeric(totals.initialLand, 2)} land` : '',
+      totals.initialLand ? `Occupied Land: ${formatNumeric(totals.reservedLand, 2)} / ${formatNumeric(totals.initialLand, 2)} land` : '',
       totals.initialLand && totals.maxDensity ? `Carrying Capacity: ${formatNumeric(totals.initialLand * totals.maxDensity, 2)} ton` : ''
     ].filter(Boolean).join(' | ');
     if (detailText !== newDetailText) {
@@ -1083,18 +1104,33 @@ function computeZoneGrowth(terraformingState, hazardParameters, manager, zones) 
   const baseGrowth = hazardParameters && hazardParameters.baseGrowth;
   const baseRatePercent = Number.isFinite(baseGrowth && baseGrowth.value) ? baseGrowth.value : 0;
   const maxDensity = Number.isFinite(baseGrowth && baseGrowth.maxDensity) ? baseGrowth.maxDensity : 0;
-  const growthPenalty = manager && manager.calculateHazardousBiomassGrowthPenalty
-    ? manager.calculateHazardousBiomassGrowthPenalty(hazardParameters, terraformingState)
-    : 0;
-  const netGrowthPercent = baseRatePercent - growthPenalty;
-  const netGrowthRate = netGrowthPercent / 100;
 
-  if (!terraformingState || !terraformingState.zonalSurface || !Number.isFinite(netGrowthRate)) {
+  let penaltyDetails = null;
+  if (manager && manager.calculateHazardousBiomassGrowthPenaltyDetails) {
+    penaltyDetails = manager.calculateHazardousBiomassGrowthPenaltyDetails(hazardParameters, terraformingState);
+  }
+
+  const totalPenalty = penaltyDetails && Number.isFinite(penaltyDetails.totalPenalty)
+    ? penaltyDetails.totalPenalty
+    : (manager && manager.calculateHazardousBiomassGrowthPenalty
+      ? manager.calculateHazardousBiomassGrowthPenalty(hazardParameters, terraformingState)
+      : 0);
+  const globalPenalty = penaltyDetails && Number.isFinite(penaltyDetails.globalPenalty)
+    ? penaltyDetails.globalPenalty
+    : totalPenalty;
+  const zonePenaltyMap = penaltyDetails && penaltyDetails.zonePenalties
+    ? penaltyDetails.zonePenalties
+    : {};
+
+  const fallbackNetPercent = baseRatePercent - totalPenalty;
+
+  if (!terraformingState || !terraformingState.zonalSurface) {
     return zones.map((zone) => ({
       zone,
       biomass: 0,
       growthPerSecond: 0,
-      netGrowthPercent: netGrowthPercent
+      netGrowthPercent: fallbackNetPercent,
+      penaltyPercent: totalPenalty
     }));
   }
 
@@ -1144,22 +1180,31 @@ function computeZoneGrowth(terraformingState, hazardParameters, manager, zones) 
     const zoneArea = surfaceArea * percentage;
     const carryingCapacity = zoneArea && maxDensity ? zoneArea * maxDensity : 0;
 
+    const zonePenalty = Number.isFinite(zonePenaltyMap[zone]) ? zonePenaltyMap[zone] : 0;
+    const zoneNetPercent = baseRatePercent - globalPenalty - zonePenalty;
+    const normalizedNetPercent = Number.isFinite(zoneNetPercent) ? zoneNetPercent : 0;
+    const zoneNetRate = normalizedNetPercent / 100;
+
     let growthPerSecond = 0;
-    if (zoneBiomass > 0 && carryingCapacity > 0) {
+    if (zoneBiomass > 0 && carryingCapacity > 0 && Number.isFinite(zoneNetRate)) {
       const logisticTerm = 1 - zoneBiomass / carryingCapacity;
-      growthPerSecond = netGrowthRate * zoneBiomass * logisticTerm;
+      growthPerSecond = zoneNetRate * zoneBiomass * logisticTerm;
     }
 
     const percentPerSecond = zoneBiomass > 0
       ? (growthPerSecond / zoneBiomass) * 100
-      : 0;
+      : normalizedNetPercent;
+
+    const combinedPenalty = globalPenalty + zonePenalty;
+    const normalizedPenalty = Number.isFinite(combinedPenalty) ? combinedPenalty : 0;
 
     return {
       zone,
       biomass: zoneBiomass,
       growthPerSecond,
-      netGrowthPercent,
-      percentPerSecond
+      netGrowthPercent: normalizedNetPercent,
+      percentPerSecond,
+      penaltyPercent: normalizedPenalty
     };
   });
 }
