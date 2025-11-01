@@ -193,9 +193,7 @@ class HazardManager {
       const surfaceArea = terraforming.celestialParameters && terraforming.celestialParameters.surfaceArea;
 
       if (growthPercent && maxDensity > 0 && surfaceArea && surfaceArea > 0) {
-        const growthPenalty = this.calculateAtmosphericGrowthPenalty(hazardous, terraforming);
-        const adjustedGrowthPercent = growthPercent - growthPenalty;
-        const growthRate = adjustedGrowthPercent / 100;
+        const growthRate = growthPercent / 100;
         const deltaSeconds = deltaTime / 1000;
         const zoneKeys = Array.isArray(zonesList) && zonesList.length
           ? zonesList
@@ -331,83 +329,6 @@ class HazardManager {
     });
 
     return multiplier;
-  }
-
-  calculateAtmosphericGrowthPenalty(hazardousParameters, terraforming) {
-    if (!hazardousParameters || !terraforming || !terraforming.atmosphericPressureCache) {
-      return 0;
-    }
-
-    const cache = terraforming.atmosphericPressureCache;
-    let penalty = 0;
-
-    penalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.oxygenPressure, 'oxygen');
-    penalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.co2Pressure, 'carbonDioxide');
-    penalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.atmosphericPressure, null);
-
-    return penalty;
-  }
-
-  calculatePressureGrowthPenalty(cache, entry, gasKey) {
-    if (!entry || !cache) {
-      return 0;
-    }
-
-    const unit = entry.unit ? `${entry.unit}` : 'kPa';
-    const pressurePa = gasKey ? cache.pressureByKey && cache.pressureByKey[gasKey] : cache.totalPressure;
-    const pressureValue = this.convertPressureFromPa(Number.isFinite(pressurePa) ? pressurePa : 0, unit);
-
-    return this.computePressurePenalty(entry, pressureValue);
-  }
-
-  convertPressureFromPa(value, unit) {
-    const normalizedValue = Number.isFinite(value) ? value : 0;
-    const normalizedUnit = `${unit || 'kPa'}`.trim().toLowerCase();
-
-    switch (normalizedUnit) {
-      case 'pa':
-        return normalizedValue;
-      case 'kpa':
-        return normalizedValue / 1000;
-      case 'mpa':
-        return normalizedValue / 1_000_000;
-      case 'bar':
-        return normalizedValue / 100000;
-      case 'mbar':
-        return normalizedValue / 100;
-      case 'atm':
-        return normalizedValue / 101325;
-      default:
-        return normalizedValue / 1000;
-    }
-  }
-
-  computePressurePenalty(entry, currentValue) {
-    if (!entry) {
-      return 0;
-    }
-
-    const severity = Number.isFinite(entry.severity) ? entry.severity : 1;
-    if (!severity) {
-      return 0;
-    }
-
-    const hasMin = Number.isFinite(entry.min);
-    const hasMax = Number.isFinite(entry.max);
-    const value = Number.isFinite(currentValue) ? currentValue : 0;
-
-    let difference = 0;
-    if (hasMin && value < entry.min) {
-      difference = entry.min - value;
-    } else if (hasMax && value > entry.max) {
-      difference = value - entry.max;
-    }
-
-    if (!difference) {
-      return 0;
-    }
-
-    return difference * severity;
   }
 
   getPenaltyValue(penalty) {
