@@ -1,5 +1,5 @@
 # Instructions
-- Document major feature updates in this file.
+- Document major feature updates in this file, under the appropriate section.  You may add sections.
 - Keep imports and exports browser friendly for loading via **index.html**.
 - The game needs to be able to run from a browser-like environment.
 - Place story projects in **progress-data.js** near the chapter where they unlock.
