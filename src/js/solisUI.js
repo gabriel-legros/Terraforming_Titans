@@ -15,8 +15,11 @@ const shopDescriptions = {
   research: 'Increase starting research points by 100',
   terraformingMeasurements: 'Permanently unlock Terraforming measurements research across colonies',
   advancedOversight: 'Enables advanced oversight for the space mirror facility, which can precisely control mirrors and lanterns based on a target temperature.',
-  researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase'
+  researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase',
+  autoResearch: 'Enable automatic research assignment for unlocked technologies'
 };
+
+const automationShopKeys = ['autoResearch'];
 
 function showSolisTab() {
   solisTabVisible = true;
@@ -259,6 +262,15 @@ function initializeSolisUI() {
     }
   }
 
+  const automationShopItems = document.getElementById('solis-automation-shop-items');
+  if (automationShopItems) {
+    const parent = automationShopItems.parentElement;
+    parent.classList.add('solis-shop-container', 'hidden');
+    const title = document.createElement('h3');
+    title.textContent = 'Automation Upgrades';
+    parent.insertBefore(title, automationShopItems);
+  }
+
   const questText = document.getElementById('solis-quest-text');
   if (questText) {
     questText.textContent = '';
@@ -319,6 +331,8 @@ function updateSolisUI() {
   const donationLabel = document.getElementById('solis-donation-label');
   const researchShop = document.getElementById('solis-research-shop');
   const researchShopItems = document.getElementById('solis-research-shop-items');
+  const automationShop = document.getElementById('solis-automation-shop');
+  const automationShopItems = document.getElementById('solis-automation-shop-items');
 
   const flag = solisManager.isBooleanFlagSet && solisManager.isBooleanFlagSet('solisAlienArtifactUpgrade');
   if (donationSection) donationSection.classList.toggle('hidden', !flag);
@@ -328,6 +342,24 @@ function updateSolisUI() {
   const solis1 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade1'));
   const solis2 = Boolean(managerRef?.isBooleanFlagSet?.('solisUpgrade2'));
   const terraformingFlag = Boolean(managerRef?.isBooleanFlagSet?.('solisTerraformingMeasurements'));
+  let automationVisible = 0;
+  automationShopKeys.forEach((key) => {
+    const enabled = solisManager.isUpgradeEnabled?.(key) ?? true;
+    const record = shopElements[key];
+    if (enabled) {
+      automationVisible += 1;
+      if (!record && automationShopItems) {
+        const item = createShopItem(key);
+        automationShopItems.appendChild(item);
+      }
+    } else if (record) {
+      record.item.remove();
+      delete shopElements[key];
+    }
+  });
+  if (automationShop) {
+    automationShop.classList.toggle('hidden', automationVisible === 0);
+  }
   ['research'].forEach(k => {
     const record = shopElements[k];
     if (solis1) {
