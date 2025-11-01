@@ -1235,6 +1235,10 @@ class Terraforming extends EffectableEntity{
 
       this.updateSurfaceRadiation();
 
+      if (hazardManager && hazardManager.update) {
+        hazardManager.update(deltaTime, this);
+      }
+
     } // <-- Correct closing brace for the 'update' method
 
 
