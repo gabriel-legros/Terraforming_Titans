@@ -833,6 +833,11 @@ const umbraOverrides = {
   visualization: {
     baseColor: '#1d2a44',
   },
+  zonalSurface: {
+    tropical: { biomass: 0, hazardousBiomass: 1_000_000 },
+    temperate: { biomass: 0, hazardousBiomass: 1_000_000 },
+    polar: { biomass: 0, hazardousBiomass: 100_000 }
+  },
   hazards: {
     hazardousBiomass: {
       baseGrowth: { value: 1, severity: 1 },
