@@ -668,6 +668,9 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
     return null;
   }
 
+  const preferenceRaw = entry.value ? `${entry.value}`.trim().toLowerCase() : '';
+  const isLandPreference = preferenceRaw === 'land';
+  const preferenceLabel = preferenceRaw ? capitalize(preferenceRaw) : 'Unknown';
   const coverageCache = terraformingState.zonalCoverageCache;
   const zoneWeight = manager.getZoneWeight
     ? manager.getZoneWeight.bind(manager)
@@ -685,7 +688,7 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
     const liquidMethane = cache && Number.isFinite(cache.liquidMethane) ? cache.liquidMethane : 0;
 
     const combined = Math.min(1, Math.max(0, liquidWater + liquidCO2 + liquidMethane));
-    const zonePenalty = combined * severity;
+    const zonePenalty = isLandPreference ? combined * severity : 0;
     const weight = zoneWeight(zone, zoneCount);
     const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
     const weightedPenalty = zonePenalty * normalizedWeight;
@@ -697,8 +700,11 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
 
   return {
     key: 'landPreference',
-    label: 'Preferred Terrain',
-    info: `Severity ×${formatNumeric(severity, 3)}`,
+    label: `Preferred Terrain (${preferenceLabel})`,
+    info: `Preference ${preferenceLabel} • Severity ×${formatNumeric(severity, 3)}`,
+    tooltip: isLandPreference
+      ? 'Each zone adds (liquid water + liquid CO₂ + liquid methane coverage) × severity to the penalty. Zone penalties are averaged using zone surface share.'
+      : 'No growth penalty is currently applied for this preference.',
     values,
     penalties,
     totalPenalty
@@ -847,8 +853,22 @@ function updateFactorGrid(summary) {
     const record = ensureFactorRow(factor.key);
     activeKeys[factor.key] = true;
 
-    if (record.labelTitle.textContent !== factor.label) {
-      record.labelTitle.textContent = factor.label;
+    const desiredLabel = factor.label || '';
+    const desiredTooltip = factor.tooltip || '';
+    const currentLabel = record.labelTitle.dataset ? record.labelTitle.dataset.label || '' : '';
+    const currentTooltip = record.labelTitle.dataset ? record.labelTitle.dataset.tooltip || '' : '';
+
+    if (desiredLabel !== currentLabel || desiredTooltip !== currentTooltip) {
+      record.labelTitle.textContent = desiredLabel;
+      if (!record.labelTitle.dataset) {
+        record.labelTitle.dataset = {};
+      }
+      record.labelTitle.dataset.label = desiredLabel;
+      record.labelTitle.dataset.tooltip = desiredTooltip;
+
+      if (desiredTooltip) {
+        record.labelTitle.appendChild(createInfoIcon(desiredTooltip));
+      }
     }
 
     if (record.labelInfo.textContent !== factor.info) {

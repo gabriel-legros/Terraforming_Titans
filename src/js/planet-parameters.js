@@ -841,6 +841,7 @@ const umbraOverrides = {
   },
 "resources": {
     "surface": {
+       land: { initialValue: 13_382_000_000 },
       "ice": {
         "initialValue": 371024812010584.3
       },
