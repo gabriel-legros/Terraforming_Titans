@@ -687,13 +687,13 @@ class HazardManager {
       return 0;
     }
 
-    const unit = entry.unit ? `${entry.unit}` : 'Sv/h';
+    const unit = entry.unit ? `${entry.unit}` : 'mSv/day';
     const radiation = this.convertRadiationDose(terraforming.surfaceRadiation, unit);
     return this.computeRangePenalty(entry, radiation);
   }
 
   convertRadiationDose(value, unit) {
-    const normalizedUnit = unit ? `${unit}`.trim().toLowerCase() : 'sv/h';
+    const normalizedUnit = unit ? `${unit}`.trim().toLowerCase() : 'msv/day';
     const dose = Number.isFinite(value) ? value : 0; // incoming value is mSv/day
 
     switch (normalizedUnit) {
@@ -717,8 +717,9 @@ class HazardManager {
       case 'sv/h':
       case 'sv per hour':
       case 'sv/hr':
-      default:
         return dose / 1000 / 24;
+      default:
+        return dose;
     }
   }
 
