@@ -1162,6 +1162,9 @@ function updateResourceRateDisplay(resource){
         case 'biomass':
           val = terraforming.zonalSurface?.[zone]?.biomass;
           break;
+        case 'hazardousBiomass':
+          val = terraforming.zonalSurface?.[zone]?.hazardousBiomass;
+          break;
         case 'liquidMethane':
           val = terraforming.zonalHydrocarbons?.[zone]?.liquid;
           break;
