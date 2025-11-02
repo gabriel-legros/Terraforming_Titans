@@ -262,7 +262,13 @@ progressUmbra.chapters.push(
     prerequisites: ['chapter22.6'],
     objectives: [
     ],
-    reward: []
+    reward: [
+      {
+        target: 'galaxyManager',
+        type: 'fleetCapacityMultiplier',
+        value: 1.5
+      }
+    ]
   }
 );
 
