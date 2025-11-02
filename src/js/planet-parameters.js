@@ -841,6 +841,12 @@ const umbraOverrides = {
   },
  "resources": {
     "atmospheric": {
+      "oxygen": {
+        "initialValue": 400000000000000
+      },
+      "inertGas": {
+        "initialValue": 3000000000000000
+      },
       "carbonDioxide": {
         "initialValue": 25035251297749.41
       },

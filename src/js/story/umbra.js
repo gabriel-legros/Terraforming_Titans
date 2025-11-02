@@ -6,7 +6,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 21,
     activePlanet: 'umbra',
-    title : 'Chapter 21 : Zeal',
+    title : 'Chapter 21 : It\'s a trap!',
     narrative: "Landing complete. Umbra orbits within the ember glow of Nyx, safe under the cover of the Venusian and Martian fleet.\nMary: 'The colonists!  We're too late... they're all...'  \n Receiving transmission from unknown frequency... \n Ghost : 'You came.  Right into my trap.  I get rid of you first, and then I go eliminate the Helian leadership.'  \n Mary : 'A trap?  Hold on.  H.O.P.E., I am detecting countless signatures around the planet.  All of it was cloaked!  They just lit up and are converging to our location.  We're in trouble.  Feroza!  We need some reinforcements right now!  Pete, your own pet project colony is under attack!  Somebody, send help!'",
     prerequisites: ['chapter20.19'],
     objectives: [],
@@ -124,7 +124,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    title : 'Turnaround',
+    title : 'Chapter 22 : Spring Cleaning',
     narrative: "Feroza : 'Mary, the battle in space has turned to our advantage.  We should be able to give you and HOPE an escape route.' \n Mary : 'Finally!  HOPE, let's get out of here.' \n HOPE : 'Negative.  Humanity's survival requires removal of all hazardous biomass.'  \n Mary : 'HOPE!  You are too valuable to stay on an active battlefield.  You can't possibly be suggesting to TERRAFORM an army to death.  That is just absurd.' \n HOPE : 'Affirmative.  Terraforming is a valid method of removing hazardous elements.'",
     prerequisites: ['chapter21.7'],
     objectives: [
