@@ -190,6 +190,9 @@ class HazardManager {
   }
 
   update(deltaTime = 0, terraforming = null) {
+    const hazardResource = resources?.surface?.hazardousBiomass || null;
+    let growthDelta = 0;
+    let crusaderDelta = 0;
     const hazardous = this.parameters.hazardousBiomass;
     const growth = hazardous && hazardous.baseGrowth;
     const zoneKeys = Array.isArray(zonesList) && zonesList.length
@@ -240,11 +243,19 @@ class HazardManager {
           const upperBound = carryingCapacity;
 
           if (nextBiomass <= 0) {
+            growthDelta -= currentBiomass;
             zoneData.hazardousBiomass = 0;
             return;
           }
 
-          zoneData.hazardousBiomass = nextBiomass > upperBound ? upperBound : nextBiomass;
+          if (nextBiomass > upperBound) {
+            growthDelta += upperBound - currentBiomass;
+            zoneData.hazardousBiomass = upperBound;
+            return;
+          }
+
+          growthDelta += deltaBiomass;
+          zoneData.hazardousBiomass = nextBiomass;
         });
       }
     }
@@ -267,16 +278,29 @@ class HazardManager {
 
           zoneEntries.forEach((entry) => {
             const zoneData = entry.data;
-            if (!Number.isFinite(zoneData.hazardousBiomass) || zoneData.hazardousBiomass <= 0) {
+            const previousValue = Number.isFinite(zoneData.hazardousBiomass) ? zoneData.hazardousBiomass : 0;
+            if (previousValue <= 0) {
               return;
             }
 
-            const share = zoneData.hazardousBiomass / totalBiomass;
+            const share = previousValue / totalBiomass;
             const reduction = totalReduction * share;
-            const nextValue = zoneData.hazardousBiomass - reduction;
+            const appliedReduction = reduction < previousValue ? reduction : previousValue;
+            const nextValue = previousValue - appliedReduction;
+            crusaderDelta -= appliedReduction;
             zoneData.hazardousBiomass = nextValue > 0 ? nextValue : 0;
           });
         }
+      }
+    }
+
+    if (deltaSeconds > 0 && hazardResource && hazardResource.modifyRate) {
+      if (growthDelta) {
+        hazardResource.modifyRate(growthDelta / deltaSeconds, 'Hazard Growth', 'terraforming');
+      }
+
+      if (crusaderDelta) {
+        hazardResource.modifyRate(crusaderDelta / deltaSeconds, 'Crusader Patrols', 'terraforming');
       }
     }
 
