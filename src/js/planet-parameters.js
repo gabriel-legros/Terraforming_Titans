@@ -964,8 +964,8 @@ const umbraOverrides = {
       },
       radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 100 },
       penalties: {
-        buildCost: 1,
-        maintenanceCost: 1,
+        buildCost: 0.75,
+        maintenanceCost: 0.75,
         populationGrowth: 1
       }
     }

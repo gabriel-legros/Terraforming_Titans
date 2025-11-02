@@ -61,16 +61,17 @@ class ImportColonistsProject extends Project {
     separator.textContent = ': ';
     wrapper.appendChild(separator);
 
-    const crusaderTooltip = document.createElement('span');
-    crusaderTooltip.classList.add('info-tooltip-icon');
-    crusaderTooltip.innerHTML = '&#9432;';
-    crusaderTooltip.title = 'Crusaders count as two workers, do not grow or produce research, and can eliminate hazardous biomass.';
-    crusaderTooltip.style.display = 'none';
-    wrapper.appendChild(crusaderTooltip);
-
     const amount = document.createElement('span');
     amount.classList.add('import-target-amount');
     wrapper.appendChild(amount);
+
+    const crusaderTooltip = document.createElement('span');
+    crusaderTooltip.classList.add('info-tooltip-icon');
+    crusaderTooltip.innerHTML = '&#9432;';
+    crusaderTooltip.title = 'Crusaders do not grow or produce research, but can eliminate hazardous biomass.';
+    crusaderTooltip.style.display = 'none';
+    crusaderTooltip.style.marginLeft = '4px';
+    wrapper.appendChild(crusaderTooltip);
 
     gainList.appendChild(wrapper);
 

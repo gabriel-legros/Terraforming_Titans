@@ -57,7 +57,12 @@ progressUmbra.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'special', resource: 'crusaders', quantity: 10 }
     ],
-    reward: []
+    reward: [      {
+        target: 'resource',
+        resourceType: 'special',
+        targetId: 'crusaders',
+        type: 'enable'
+      },]
   },
   {
     id: 'chapter21.3',
