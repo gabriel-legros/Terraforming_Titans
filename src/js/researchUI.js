@@ -59,7 +59,7 @@ function updateAllResearchButtons(researchData) {
         researchData[tab].forEach((researchItem) => {
             const elements = researchElementCache.get(researchItem.id);
             if (!elements) return;
-            const { button, costEl, descEl, container, autoCheckbox, autoCheckboxLabel } = elements;
+            const { button, costEl, descEl, container, autoCheckbox } = elements;
 
             if (researchItem.isResearched) {
                 container.classList.add('completed-research');
@@ -86,11 +86,7 @@ function updateAllResearchButtons(researchData) {
             if (autoCheckbox) {
                 const unlocked = researchManager.autoResearchEnabled ||
                     researchManager.isBooleanFlagSet('autoResearchEnabled');
-                if (autoCheckboxLabel) {
-                    autoCheckboxLabel.style.display = unlocked ? '' : 'none';
-                } else {
-                    autoCheckbox.style.display = unlocked ? '' : 'none';
-                }
+                autoCheckbox.style.display = unlocked ? '' : 'none';
                 if (unlocked) {
                     autoCheckbox.checked = researchManager.isAutoResearchEnabled(
                         researchManager.currentAutoResearchPreset,
@@ -305,7 +301,6 @@ function loadResearchCategory(category) {
         }
 
         let autoCheckbox = null;
-        let autoCheckboxLabel = null;
         if (category !== 'advanced') {
             autoCheckbox = document.createElement('input');
             autoCheckbox.type = 'checkbox';
@@ -329,15 +324,8 @@ function loadResearchCategory(category) {
             });
             const unlocked = researchManager.autoResearchEnabled ||
                 researchManager.isBooleanFlagSet('autoResearchEnabled');
-            autoCheckboxLabel = document.createElement('label');
-            autoCheckboxLabel.classList.add('research-auto-checkbox-label');
-            autoCheckboxLabel.appendChild(autoCheckbox);
-            autoCheckboxLabel.appendChild(document.createTextNode('Auto Research'));
-            autoCheckboxLabel.style.display = unlocked ? '' : 'none';
-            autoCheckboxLabel.addEventListener('click', (event) => {
-                event.stopPropagation();
-            });
-            researchContainer.appendChild(autoCheckboxLabel);
+            autoCheckbox.style.display = unlocked ? '' : 'none';
+            researchContainer.appendChild(autoCheckbox);
         }
 
         // Append button, cost, and description to the research container
@@ -354,7 +342,6 @@ function loadResearchCategory(category) {
             costEl: researchCost,
             descEl: researchDescription,
             autoCheckbox,
-            autoCheckboxLabel,
         });
     });
 }
