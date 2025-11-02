@@ -288,8 +288,8 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
         }
     }
 
-    for (const { resObj, ratio } of entries) {
-        if (ratio <= lowestRatio + ratioTolerance) {
+    for (const { resObj, ratio, meta } of entries) {
+        if (ratio <= lowestRatio + ratioTolerance && meta?.type !== 'deposit') {
             resObj.autobuildShortage = true;
         }
     }
