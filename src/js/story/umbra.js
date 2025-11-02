@@ -1,11 +1,11 @@
 var progressUmbra = { rwgLock: false, chapters: [], storyProjects: {} };
 
 // Umbra — Chapter 21.6b unlocks this crusader deployment project.
-progressData.storyProjects.umbra_crusader_final_push = {
+progressUmbra.storyProjects.umbra_crusader_final_push = {
   type: 'Project',
   name: 'Fortress Assault',
   category: 'story',
-  chapter: 22,
+  chapter: 21,
   cost: {
     special: { crusaders: 1_000 }
   },
@@ -16,7 +16,7 @@ progressData.storyProjects.umbra_crusader_final_push = {
   unlocked: false,
   attributes: {
     planet: 'umbra',
-    resourceGain: { special: { alienArtifact: 500 } },
+    resourceGain: { special: { alienArtifact: 100 } },
     storySteps: [
       'Strike teams breach cloaked nests and mark biomass hotspots for orbital fire.',
       'Hazardous biomass routed into kill-zones; crusader losses mounting but acceptable.',
