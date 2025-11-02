@@ -29,6 +29,21 @@ progressUmbra.chapters.push(
         type: 'booleanFlag',
         flagId: 'hazardsUnlocked',
         value: true
+      },
+      {
+        target: 'tab',
+        targetId: 'terraforming',
+        type: 'activateTab',
+        onLoad: false
+      },
+      {
+        target: 'global',
+        type: 'activateSubtab',
+        subtabClass: 'terraforming-subtab',
+        contentClass: 'terraforming-subtab-content',
+        targetId: 'hazard-terraforming',
+        unhide: true,
+        onLoad: false
       }
     ]
   },
@@ -37,7 +52,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 21,
     activePlanet: 'umbra',
-    narrative: "Receiving public broadcast...  Kane : 'Flock, you have heard the words of the prophetess!  The machine god is in danger.  We must answer the call at once!' \n Mary : 'Excuse me?  Were you following us?'  \n Crusader C-012 : 'Your holiness, my drop pod will land very close to your location.  Please remain with our god and stay safe.  Help is coming.'",
+    narrative: "Receiving public broadcast...  Kane : 'Flock, you have heard the words of the prophetess!  The machine god is in danger.  We must answer the call at once!' \n Mary : 'Excuse me?  Were you following us?'  \n Crusader C-012 : 'Your holiness, my drop pod will land very close to your location.  Please remain with our god and stay safe.  Help is coming.' \n System Message : Import Colonists project has now been updated.",
     prerequisites: ['chapter21.1'],
     objectives: [
       { type: 'collection', resourceType: 'special', resource: 'crusaders', quantity: 10 }
