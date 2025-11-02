@@ -126,73 +126,6 @@ function formatRange(entry) {
   return `${minText} – ${maxText}`;
 }
 
-function convertRadiationToBase(value, unit) {
-  const amount = Number.isFinite(value) ? value : 0;
-  const normalized = `${unit || 'mSv/day'}`.trim().toLowerCase();
-
-  switch (normalized) {
-    case 'msv/day':
-    case 'msv per day':
-      return amount;
-    case 'sv/day':
-    case 'sv per day':
-      return amount * 1000;
-    case 'msv/h':
-    case 'msv per hour':
-    case 'msv/hr':
-      return amount * 24;
-    case 'μsv/h':
-    case 'µsv/h':
-    case 'usv/h':
-    case 'μsv per hour':
-    case 'µsv per hour':
-    case 'usv per hour':
-      return amount * 24 / 1000;
-    case 'sv/h':
-    case 'sv per hour':
-    case 'sv/hr':
-      return amount * 24 * 1000;
-    default:
-      return amount;
-  }
-}
-
-function convertRadiationFromBase(value, unit) {
-  const base = Number.isFinite(value) ? value : 0;
-  const normalized = `${unit || 'mSv/day'}`.trim().toLowerCase();
-
-  switch (normalized) {
-    case 'msv/day':
-    case 'msv per day':
-      return base;
-    case 'sv/day':
-    case 'sv per day':
-      return base / 1000;
-    case 'msv/h':
-    case 'msv per hour':
-    case 'msv/hr':
-      return base / 24;
-    case 'μsv/h':
-    case 'µsv/h':
-    case 'usv/h':
-    case 'μsv per hour':
-    case 'µsv per hour':
-    case 'usv per hour':
-      return base * 1000 / 24;
-    case 'sv/h':
-    case 'sv per hour':
-    case 'sv/hr':
-      return base / (24 * 1000);
-    default:
-      return base;
-  }
-}
-
-function convertRadiationValue(value, fromUnit, toUnit) {
-  const base = convertRadiationToBase(value, fromUnit);
-  return convertRadiationFromBase(base, toUnit);
-}
-
 function capitalize(text) {
   if (!text) {
     return '';
@@ -693,42 +626,33 @@ function buildRadiationFactor(hazard, manager, terraformingState) {
     return null;
   }
 
-  const calculationUnit = entry.unit || 'mSv/day';
-  const displayUnit = 'mSv/day';
+  const unit = entry.unit || 'mSv/day';
   const penalty = manager.calculateRadiationGrowthPenalty
     ? manager.calculateRadiationGrowthPenalty(terraformingState, entry)
     : 0;
 
   const infoParts = [];
-  const minDisplay = entry.min !== undefined && entry.min !== null
-    ? convertRadiationValue(entry.min, calculationUnit, displayUnit)
-    : null;
-  const maxDisplay = entry.max !== undefined && entry.max !== null
-    ? convertRadiationValue(entry.max, calculationUnit, displayUnit)
-    : null;
+  const hasMin = entry.min !== undefined && entry.min !== null;
+  const hasMax = entry.max !== undefined && entry.max !== null;
 
-  if (minDisplay !== null || maxDisplay !== null) {
-    const minText = minDisplay !== null ? formatNumeric(minDisplay, 3) : '—';
-    const maxText = maxDisplay !== null ? formatNumeric(maxDisplay, 3) : '—';
-    infoParts.push(`Range ${minText}–${maxText} ${displayUnit}`);
+  if (hasMin || hasMax) {
+    const minText = hasMin ? formatNumeric(entry.min, 3) : '—';
+    const maxText = hasMax ? formatNumeric(entry.max, 3) : '—';
+    infoParts.push(`Range ${minText}–${maxText} ${unit}`);
   }
   if (Number.isFinite(entry.severity)) {
     infoParts.push(`Severity ×${formatNumeric(entry.severity, 3)}`);
   }
 
-  let currentDose = 0;
-  const baseDose = Number.isFinite(terraformingState.surfaceRadiation) ? terraformingState.surfaceRadiation : 0;
-  if (manager.convertRadiationDose && Number.isFinite(baseDose)) {
-    currentDose = manager.convertRadiationDose(baseDose, displayUnit);
-  } else if (Number.isFinite(baseDose)) {
-    currentDose = baseDose;
-  }
+  const currentDose = Number.isFinite(terraformingState.surfaceRadiation)
+    ? terraformingState.surfaceRadiation
+    : 0;
 
   return {
     key: 'radiationPreference',
     label: 'Radiation',
     info: infoParts.join(' • '),
-    values: [`Current: ${formatValueWithUnit(currentDose, displayUnit, 3)}`],
+    values: [`Current: ${formatValueWithUnit(currentDose, unit, 3)}`],
     penalties: [`Penalty: ${formatSignedPercentage(-penalty, 3)}`],
     totalPenalty: penalty
   };
