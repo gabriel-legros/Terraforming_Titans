@@ -230,6 +230,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Planet ice rendering now grows from either the poles or the tropics based on zonal coverage, blending smoothly with water-style noise for organic transitions.
 - Solis Upgrade Two unlocks a Solis shop option to pre-purchase starting cargo ships for 100 points each.
 - Added an Automation Upgrades Solis shop that offers an Auto Research purchase enabling automatic research assignment.
+- The solisAutoResearch story flag now reveals the Automation Upgrades shop so the Auto Research purchase appears when unlocked.
 - Oxygen factories now vent hydrogen alongside oxygen to reflect electrolysis byproducts.
 - Colony research tiers two through six now grant aerostat colonies +10 comfort each via a new `addComfort` effect type.
 - Adrien Solis now offers a permanent Terraforming measurements research unlock in his shop once chapter 18.4d is completed.

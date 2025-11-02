@@ -19,6 +19,13 @@ describe('SolisManager automation upgrades', () => {
       addAndReplace() {}
       removeEffect() {}
       applyEffect() {}
+      applyBooleanFlag(effect) {
+        if (effect.value) {
+          this.booleanFlags.add(effect.flagId);
+        } else {
+          this.booleanFlags.delete(effect.flagId);
+        }
+      }
       applyActiveEffects() {}
       isBooleanFlagSet(flag) {
         return this.booleanFlags.has(flag);
@@ -26,6 +33,16 @@ describe('SolisManager automation upgrades', () => {
     };
 
     ({ SolisManager } = require('../src/js/solis.js'));
+  });
+
+  test('solisAutoResearch flag toggles automation shop availability', () => {
+    const manager = new SolisManager();
+
+    manager.applyBooleanFlag({ flagId: 'solisAutoResearch', value: true });
+    expect(manager.isUpgradeEnabled('autoResearch')).toBe(true);
+
+    manager.applyBooleanFlag({ flagId: 'solisAutoResearch', value: false });
+    expect(manager.isUpgradeEnabled('autoResearch')).toBe(false);
   });
 
   afterEach(() => {

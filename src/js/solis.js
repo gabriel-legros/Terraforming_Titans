@@ -80,6 +80,13 @@ class SolisManager extends EffectableEntity {
     return true;
   }
 
+  applyBooleanFlag(effect) {
+    super.applyBooleanFlag(effect);
+    if (effect.flagId === 'solisAutoResearch') {
+      this.setUpgradeEnabled('autoResearch', !!effect.value);
+    }
+  }
+
   getTerraformedWorldBonus() {
     if (
       typeof spaceManager !== 'undefined' &&
@@ -305,6 +312,8 @@ class SolisManager extends EffectableEntity {
   }
 
   reapplyEffects() {
+    this.setUpgradeEnabled('autoResearch', this.isBooleanFlagSet('solisAutoResearch'));
+
     const count = this.shopUpgrades.funding.purchases;
     if (count > 0 && typeof addEffect === 'function') {
       addEffect({
