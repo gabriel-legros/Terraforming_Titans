@@ -59,7 +59,7 @@ function updateAllResearchButtons(researchData) {
         researchData[tab].forEach((researchItem) => {
             const elements = researchElementCache.get(researchItem.id);
             if (!elements) return;
-            const { button, costEl, descEl, container, autoCheckbox } = elements;
+            const { button, costEl, descEl, container, autoCheckbox, autoLabel } = elements;
 
             if (researchItem.isResearched) {
                 container.classList.add('completed-research');
@@ -86,6 +86,9 @@ function updateAllResearchButtons(researchData) {
             if (autoCheckbox) {
                 const unlocked = researchManager.autoResearchEnabled ||
                     researchManager.isBooleanFlagSet('autoResearchEnabled');
+                if (autoLabel) {
+                    autoLabel.style.display = unlocked ? '' : 'none';
+                }
                 autoCheckbox.style.display = unlocked ? '' : 'none';
                 if (unlocked) {
                     autoCheckbox.checked = researchManager.isAutoResearchEnabled(
@@ -301,6 +304,7 @@ function loadResearchCategory(category) {
         }
 
         let autoCheckbox = null;
+        let autoLabel = null;
         if (category !== 'advanced') {
             autoCheckbox = document.createElement('input');
             autoCheckbox.type = 'checkbox';
@@ -325,7 +329,12 @@ function loadResearchCategory(category) {
             const unlocked = researchManager.autoResearchEnabled ||
                 researchManager.isBooleanFlagSet('autoResearchEnabled');
             autoCheckbox.style.display = unlocked ? '' : 'none';
-            researchContainer.appendChild(autoCheckbox);
+            autoLabel = document.createElement('label');
+            autoLabel.classList.add('research-auto-label');
+            autoLabel.textContent = 'Auto Research ';
+            autoLabel.appendChild(autoCheckbox);
+            autoLabel.style.display = unlocked ? '' : 'none';
+            researchContainer.appendChild(autoLabel);
         }
 
         // Append button, cost, and description to the research container
@@ -342,6 +351,7 @@ function loadResearchCategory(category) {
             costEl: researchCost,
             descEl: researchDescription,
             autoCheckbox,
+            autoLabel,
         });
     });
 }
