@@ -122,7 +122,8 @@ progressUmbra.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 2000 }
     ],
     reward: [
-      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisAutoResearch', value: true }
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisAutoResearch', value: true },
+      { target: 'project', targetId: 'umbra_crusader_final_push', type: 'enable' }
     ]
   },
   {

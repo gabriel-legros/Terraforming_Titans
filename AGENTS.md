@@ -287,3 +287,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Rebuilt the hazardous biomass UI with a battle-themed control bar, live crusader and penalty readouts, and per-zone growth factor breakdowns.
 - Hazardous biomass growth summary now appears between crusader and penalty cards, while base growth and total penalty rows live under Growth Modifiers.
 - Added a depletion progress objective type that completes when resources are at or below the target amount.
+- Added a Crusader Final Push story project on Umbra that unlocks after chapter 21.6b and awards alien artifacts for crusader deployments.
