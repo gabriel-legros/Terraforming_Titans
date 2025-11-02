@@ -333,7 +333,7 @@ function formatZoneSummary(zoneGrowth = []) {
 
   const rows = zoneGrowth.map((entry) => ({
     zone: capitalize(entry.zone),
-    rate: formatSignedValue(entry.growthPerSecond, 3, 'ton/s'),
+    rate: formatSignedValue(entry.growthPerSecond, 2, '/s'),
     percent: `${formatSignedPercentage(entry.percentPerSecond, 3)}/s`
   }));
 
