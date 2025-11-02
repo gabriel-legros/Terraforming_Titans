@@ -87,6 +87,7 @@ describe('Hazard zone penalties', () => {
         temperate: { hazardousBiomass: 1_000 },
         polar: { hazardousBiomass: 1_000 },
       },
+      initialLand: 1_000_000,
       celestialParameters: {
         surfaceArea: 1_000_000,
       },
