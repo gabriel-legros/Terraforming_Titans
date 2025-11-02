@@ -1079,35 +1079,6 @@ function createWaterBox(row) {
       lifeHeading.appendChild(lifeInfo);
     }
 
-    const hazardHeader = document.createElement('p');
-    hazardHeader.classList.add('terraforming-subheading');
-    hazardHeader.textContent = 'Hazardous Biomass';
-    lifeBox.appendChild(hazardHeader);
-
-    const hazardTable = document.createElement('table');
-    hazardTable.id = 'hazardous-biomass-table';
-    hazardTable.innerHTML = `
-      <thead>
-        <tr>
-          <th>Region</th>
-          <th>Amount (t)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Overall</td><td id="hazardous-biomass-overall">0</td></tr>
-        <tr><td>Polar</td><td id="hazardous-biomass-polar">0</td></tr>
-        <tr><td>Temperate</td><td id="hazardous-biomass-temperate">0</td></tr>
-        <tr><td>Tropical</td><td id="hazardous-biomass-tropical">0</td></tr>
-      </tbody>
-    `;
-    lifeBox.appendChild(hazardTable);
-
-    const hazardTarget = document.createElement('span');
-    hazardTarget.id = 'life-hazard-target';
-    hazardTarget.classList.add('terraforming-target');
-    hazardTarget.textContent = 'Hazardous biomass must be 0 in all zones.';
-    lifeBox.appendChild(hazardTarget);
-
     const targetSpan = document.createElement('span');
     targetSpan.textContent = "Target : Life coverage at least 50%.";
     targetSpan.style.marginTop = 'auto';
@@ -1126,11 +1097,6 @@ function createWaterBox(row) {
       photoPolar: lifeBox.querySelector('#life-photo-polar'),
       photoTemperate: lifeBox.querySelector('#life-photo-temperate'),
       photoTropical: lifeBox.querySelector('#life-photo-tropical'),
-      hazardOverall: lifeBox.querySelector('#hazardous-biomass-overall'),
-      hazardPolar: lifeBox.querySelector('#hazardous-biomass-polar'),
-      hazardTemperate: lifeBox.querySelector('#hazardous-biomass-temperate'),
-      hazardTropical: lifeBox.querySelector('#hazardous-biomass-tropical'),
-      hazardTarget
     };
 }
 
