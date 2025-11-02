@@ -145,6 +145,35 @@ describe('ImportColonistsProject resource routing', () => {
     expect(resources.special.crusaders.unlocked).toBe(true);
   });
 
+  test('exposes crusader gain through effective resource gain when selected', () => {
+    const project = new ImportColonistsProject({
+      attributes: { resourceGain: { colony: { colonists: 5 } } },
+      cost: {},
+      duration: 1000,
+    }, 'import_colonists_1');
+
+    project.booleanFlags.add('crusaderImportEnabled');
+    project.setImportTarget('crusaders');
+
+    const gain = project.getEffectiveResourceGain();
+
+    expect(gain.special.crusaders).toBe(5);
+    expect(gain.colony).toBeUndefined();
+  });
+
+  test('retains colonist gain mapping when crusaders are not selected', () => {
+    const project = new ImportColonistsProject({
+      attributes: { resourceGain: { colony: { colonists: 5 } } },
+      cost: {},
+      duration: 1000,
+    }, 'import_colonists_1');
+
+    const gain = project.getEffectiveResourceGain();
+
+    expect(gain.colony.colonists).toBe(5);
+    expect(gain.special).toBeUndefined();
+  });
+
   test('ignores crusader selection when flag is disabled', () => {
     const project = new ImportColonistsProject({
       attributes: { resourceGain: { colony: { colonists: 5 } } },
