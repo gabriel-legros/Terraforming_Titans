@@ -687,40 +687,10 @@ class HazardManager {
       return 0;
     }
 
-    const unit = entry.unit ? `${entry.unit}` : 'mSv/day';
-    const radiation = this.convertRadiationDose(terraforming.surfaceRadiation, unit);
+    const radiation = Number.isFinite(terraforming.surfaceRadiation)
+      ? terraforming.surfaceRadiation
+      : 0;
     return this.computeRangePenalty(entry, radiation);
-  }
-
-  convertRadiationDose(value, unit) {
-    const normalizedUnit = unit ? `${unit}`.trim().toLowerCase() : 'msv/day';
-    const dose = Number.isFinite(value) ? value : 0; // incoming value is mSv/day
-
-    switch (normalizedUnit) {
-      case 'msv/day':
-      case 'msv per day':
-        return dose;
-      case 'sv/day':
-      case 'sv per day':
-        return dose / 1000;
-      case 'msv/h':
-      case 'msv per hour':
-      case 'msv/hr':
-        return dose / 24;
-      case 'μsv/h':
-      case 'µsv/h':
-      case 'usv/h':
-      case 'μsv per hour':
-      case 'µsv per hour':
-      case 'usv per hour':
-        return dose * 1000 / 24;
-      case 'sv/h':
-      case 'sv per hour':
-      case 'sv/hr':
-        return dose / 1000 / 24;
-      default:
-        return dose;
-    }
   }
 
   calculateLandPreferencePenalty(terraforming, entry) {
