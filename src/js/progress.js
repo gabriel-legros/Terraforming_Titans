@@ -301,6 +301,7 @@ class StoryManager {
        // ... (your existing logic) ...
         switch (objective.type) {
             case 'collection':
+            case 'depletion': {
                 // Check if the target resource exists before accessing value
                 const resourceCategory = resources[objective.resourceType];
                 if (!resourceCategory || !resourceCategory[objective.resource]) {
@@ -310,7 +311,9 @@ class StoryManager {
                 // Allow objectives to compare against a resource's cap instead of its value
                 const resourceObj = resourceCategory[objective.resource];
                 const targetValue = objective.checkCap ? resourceObj.cap : resourceObj.value;
-                return compareValues(targetValue, objective.quantity, objective.comparison);
+                const comparison = objective.type === 'depletion' ? (objective.comparison || 'lte') : objective.comparison;
+                return compareValues(targetValue, objective.quantity, comparison);
+            }
             case 'building':
                 const building = buildings[objective.buildingName];
                 return building ? building.count >= objective.quantity : false;
@@ -386,12 +389,17 @@ class StoryManager {
         if (!objective) return '';
         const format = typeof formatNumber === 'function' ? formatNumber : (n => n);
         switch (objective.type) {
-            case 'collection': {
+            case 'collection':
+            case 'depletion': {
                 const resCat = resources[objective.resourceType] || {};
                 const resObj = resCat[objective.resource] || {};
                 const current = objective.checkCap ? (resObj.cap || 0) : (resObj.value || 0);
                 const name = resObj.displayName || objective.resource;
                 const label = objective.checkCap ? `${name} Cap` : name;
+                if (objective.type === 'depletion') {
+                    const target = format(objective.quantity, true);
+                    return `${label}: ${format(Math.floor(current), true)} ≤ ${target}`;
+                }
                 return `${label}: ${format(Math.floor(current), true)}/${format(objective.quantity, true)}`;
             }
             case 'building': {
