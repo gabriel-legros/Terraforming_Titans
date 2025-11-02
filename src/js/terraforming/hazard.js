@@ -582,7 +582,7 @@ class HazardManager {
 
     const defaultSeverity = Number.isFinite(entry.severity) ? entry.severity : 1;
     const severityBelow = Number.isFinite(entry.severityBelow) ? entry.severityBelow : defaultSeverity;
-    const severityHigh = Number.isFinite(entry.severityHigh) ? entry.severityHigh : defaultSeverity;
+    const severityAbove = Number.isFinite(entry.severityAbove) ? entry.severityAbove : defaultSeverity;
 
     const hasMin = Number.isFinite(entry.min);
     const hasMax = Number.isFinite(entry.max);
@@ -597,7 +597,7 @@ class HazardManager {
     }
 
     if (hasMax && value > entry.max) {
-      const severity = Number.isFinite(severityHigh) ? severityHigh : 0;
+      const severity = Number.isFinite(severityAbove) ? severityAbove : 0;
       if (!severity) {
         return 0;
       }

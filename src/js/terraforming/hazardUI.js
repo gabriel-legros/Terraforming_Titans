@@ -137,8 +137,8 @@ function formatSeverityDetails(entry) {
     details.push(`Severity Below ×${formatNumeric(entry.severityBelow, 3)}`);
   }
 
-  if (Number.isFinite(entry.severityHigh)) {
-    details.push(`Severity High ×${formatNumeric(entry.severityHigh, 3)}`);
+  if (Number.isFinite(entry.severityAbove)) {
+    details.push(`Severity Above ×${formatNumeric(entry.severityAbove, 3)}`);
   }
 
   if (!details.length && Number.isFinite(entry.severity)) {
