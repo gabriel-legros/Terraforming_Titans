@@ -7,7 +7,7 @@ progressUmbra.chapters.push(
     chapter: 21,
     activePlanet: 'umbra',
     title : 'Chapter 21 : Zeal',
-    narrative: "Landing complete. Umbra orbits within the ember glow of Nyx-13, safe under the cover of the Venusian and Martian fleet.\nMary: 'The colonists!  We're too late... they're all...'  \n Receiving transmission from unknown frequency... \n Ghost : 'You came.  Right into my trap.  I get rid of you first, and then I go eliminate the Helian leadership.'  \n Mary : 'A trap?  Hold on.  H.O.P.E., I am detecting countless signatures around the planet.  They just lit up and are converging to our location.  We're in trouble.  Feroza!  We need some reinforcements right now!  Pete, your own pet project is under attack!  Somebody, send help!'",
+    narrative: "Landing complete. Umbra orbits within the ember glow of Nyx, safe under the cover of the Venusian and Martian fleet.\nMary: 'The colonists!  We're too late... they're all...'  \n Receiving transmission from unknown frequency... \n Ghost : 'You came.  Right into my trap.  I get rid of you first, and then I go eliminate the Helian leadership.'  \n Mary : 'A trap?  Hold on.  H.O.P.E., I am detecting countless signatures around the planet.  They just lit up and are converging to our location.  We're in trouble.  Feroza!  We need some reinforcements right now!  Pete, your own pet project is under attack!  Somebody, send help!'",
     prerequisites: ['chapter20.19'],
     objectives: [],
     reward: [
@@ -95,12 +95,25 @@ progressUmbra.chapters.push(
     ]
   },
   {
+    id: 'chapter21.6b',
+    type: 'journal',
+    chapter: 21,
+    activePlanet: 'umbra',
+    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  Please listen and stay calm.  A cloaked thermonuclear ICBM is on your way to your location.  My team and I have managed to steal its transponder data.  There is no time to discuss the implication of them using electronics in an ICBM.  I am forwarding this data to you right now and you need to hand it over to those *crusaders* around you immediately.' \n Mary : 'Oh!  Yes.  Of course.  Thank you.'",
+    prerequisites: ['chapter21.6'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 2000 }
+    ],
+    reward: [
+    ]
+  },
+  {
     id: 'chapter21.7',
     type: 'journal',
     chapter: 21,
     activePlanet: 'umbra',
-    narrative: "Solis : *ahem* 'My sensors are pointing at some very interesting supply cache not too far from one the colonies.  Could be profitable...  On an unrelated note...'  \n Mary : 'Solis, did you sell the serum to Kane and his cult?'  \n Solis : 'Of course not.  These are baseless accusations.  They did approach me for it of course.' \n Mary :  'So you're admitting to having it?'  \n Solis : 'Yes, but not to selling it.  I am not the only oligarch out there.  Kane is... not stable enough for business.  Anyway, as I was saying... my R&D team has a new item available for sale!'",
-    prerequisites: ['chapter21.6'],
+    narrative: "Solis : *ahem* 'My sensors are pointing at some very interesting supply cache not too far from one the defensive colonies.  Could be profitable...  On an unrelated note...'  \n Mary : 'Solis, did you sell the serum to Kane and his cult?'  \n Solis : 'Of course not.  These are baseless accusations.  They did approach me for it of course.' \n Mary :  'So you're admitting to having it?'  \n Solis : 'Yes, but not to selling it.  I am not the only oligarch out there.  Kane is... not stable enough for business.  Anyway, as I was saying... my R&D team has a new item available for sale!'",
+    prerequisites: ['chapter21.6b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
     ],
@@ -160,7 +173,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Ghost : 'I see what you are trying to achieve.  I respect it, but you should know I am not going to fall for it.' \n $WGC_TEAM1_LEADER$ : 'He's preparing something very dangerous.  HOPE, I am sorry to say this but... you really ought to leave.  I can't stop it this time.'",
+    narrative: "Ghost : 'I see what you are trying to achieve.  I respect it, but you should know I am not going to fall for it.' \n $WGC_TEAM1_LEADER$ : 'He's preparing something very dangerous.  Ever heard of a supervolcano?  HOPE, I am sorry to say this but... you really ought to leave.  I can't stop it this time.'",
     prerequisites: ['chapter22.1b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
@@ -172,7 +185,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Firefly : 'My predecessor failed to destroy you.  It will be my honour instead!  You will all perish!'  \n Mary : 'What happened to Ghost?' \n $WGC_TEAM1_LEADER$ : 'He's been sent to the Okoth front.  They made too strong a move.  Priorities set by the regency council.  Firefly is a moron.  First thing he did was cancel that actual good plan Ghost had.  We've practically won.'",
+    narrative: "Receiving transmission from a new unknown frequency...  \n Firefly : 'My predecessor failed to destroy you.  It will be my honour instead!  You will all perish!'  \n Mary : 'What happened to Ghost?' \n $WGC_TEAM1_LEADER$ : 'He's been sent to the Okoth front.  The Okoth made a big play.  Priorities set by the regency council.  They needed Ghost there so they replaced him here.  Firefly is a moron.  First thing he did was cancel that actual good plan Ghost had.  We've practically won.'",
     prerequisites: ['chapter22.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
@@ -199,7 +212,7 @@ progressUmbra.chapters.push(
     narrative: "Mary : 'The enemy has turned so passive.  You can have your pick on how you actually want to get rid of what's left.' \n Objective : Eliminate all hazardous biomass to continue.",
     prerequisites: ['chapter22.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
+      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 100_000_000 }
     ],
     reward: []
   },
@@ -211,7 +224,7 @@ progressUmbra.chapters.push(
     narrative: "Pete : 'Mary, are you seriously going to let your machine commit mass murder like that?' \n Mary : 'Pete, are you seriously going to let the killing of tens of thousands of martians go unpunished?' \n  Pete : 'Point taken.  Proceed.  You have my approval.'",
     prerequisites: ['chapter22.5'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
+      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 10_000_000 }
     ],
     reward: []
   },
@@ -220,10 +233,10 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Kane : 'In the name of the Machine God, cleanse this world of all Hazard!  May its will be done!' \n Mary : 'Did his therapist actually sign his release?  Was she named Harley Quinn or something?'  \n  Evelyn : 'I'll look into it' \n Mary : 'Thanks Evelyn.'  Objective : Eliminate all hazardous biomass to continue.",
+    narrative: "Kane : 'In the name of the Machine God, cleanse this world of all Hazard!  May its will be done!' \n Mary : 'Did his psychiatrist actually sign his release?  Was she named Harley Quinn or something?'  \n  Evelyn : 'I'll look into it' \n Mary : 'Thanks Evelyn.'  \n Objective : Eliminate all hazardous biomass to continue.",
     prerequisites: ['chapter22.5'],
     objectives: [
-//New objective here
+      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 0 }
     ],
     reward: []
   },
