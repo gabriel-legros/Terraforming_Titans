@@ -463,8 +463,26 @@ class Terraforming extends EffectableEntity{
     return (calculateAverageCoverage(this, 'biomass') >= getEffectiveLifeFraction(this));
   }
 
+  getHazardClearanceStatus() {
+    const tolerance = 1e-6;
+    for (const zone of ZONES) {
+      if ((this.zonalSurface[zone]?.hazardousBiomass || 0) > tolerance) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   getTerraformingStatus() {
-    return (this.getTemperatureStatus() && this.getAtmosphereStatus() && this.getWaterStatus() && this.getLuminosityStatus() && this.getLifeStatus() && this.getMagnetosphereStatus());
+    return (
+      this.getTemperatureStatus() &&
+      this.getAtmosphereStatus() &&
+      this.getWaterStatus() &&
+      this.getLuminosityStatus() &&
+      this.getLifeStatus() &&
+      this.getHazardClearanceStatus() &&
+      this.getMagnetosphereStatus()
+    );
   }
 
 
