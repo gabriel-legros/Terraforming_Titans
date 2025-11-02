@@ -145,7 +145,7 @@ function formatSeverityDetails(entry) {
     details.push(`Severity ×${formatNumeric(entry.severity, 3)}`);
   }
 
-  return details.join(' • ');
+  return details.join('\n');
 }
 
 function capitalize(text) {
@@ -583,7 +583,7 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
   return {
     key: 'temperaturePreference',
     label: 'Temperature',
-    info: infoParts.join(' • '),
+    info: infoParts.join('\n'),
     values,
     penalties,
     totalPenalty
@@ -637,7 +637,7 @@ function buildPressureFactor(hazard, manager, cache, fieldKey, label) {
   return {
     key: fieldKey,
     label,
-    info: infoParts.join(' • '),
+    info: infoParts.join('\n'),
     values: [`Current: ${formatValueWithUnit(converted, unit, 3)}`],
     penalties: [`Penalty: ${formatSignedPercentage(-penalty, 3)}`],
     totalPenalty: penalty
@@ -676,7 +676,7 @@ function buildRadiationFactor(hazard, manager, terraformingState) {
   return {
     key: 'radiationPreference',
     label: 'Radiation',
-    info: infoParts.join(' • '),
+    info: infoParts.join('\n'),
     values: [`Current: ${formatValueWithUnit(currentDose, unit, 3)}`],
     penalties: [`Penalty: ${formatSignedPercentage(-penalty, 3)}`],
     totalPenalty: penalty
@@ -727,7 +727,7 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
   return {
     key: 'landPreference',
     label: `Preferred Terrain (${preferenceLabel})`,
-    info: `Preference ${preferenceLabel} • Severity ×${formatNumeric(severity, 3)}`,
+    info: `Preference ${preferenceLabel}\nSeverity ×${formatNumeric(severity, 3)}`,
     tooltip: isLandPreference
       ? 'Each zone adds (liquid water + liquid CO₂ + liquid methane coverage) × severity to the penalty. Zone penalties are averaged using zone surface share.'
       : 'No growth penalty is currently applied for this preference.',
@@ -766,7 +766,7 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
       key: 'invasivenessResistance',
       label: 'Biomass Invasiveness',
       tooltip: 'If current invasiveness exceeds the target, each zone adds (density × (current − target) × severity), averaged using zone surface share.',
-      info: `Target ${formatNumeric(entry.value || 0, 2)} • Severity ×${formatNumeric(severity, 3)}`,
+      info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatNumeric(severity, 3)}`,
       values: [`Current Design: ${formatNumeric(currentInvasiveness, 2)}`],
       penalties: [`Penalty: 0%`],
       totalPenalty: 0
@@ -797,7 +797,7 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
     key: 'invasivenessResistance',
     label: 'Biomass Invasiveness',
     tooltip: 'Zone penalty = life density × (current invasiveness − target) × severity. Totals use zone surface share weighting.',
-    info: `Target ${formatNumeric(entry.value || 0, 2)} • Severity ×${formatNumeric(severity, 3)}`,
+    info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatNumeric(severity, 3)}`,
     values,
     penalties,
     totalPenalty

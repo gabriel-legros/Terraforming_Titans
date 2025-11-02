@@ -330,7 +330,7 @@ class HazardManager {
       }
     }
 
-    const reservedLand = maxDensity > 0 ? totalBiomass / maxDensity : 0;
+    const reservedLand = maxDensity > 0 ? Math.min(totalBiomass / maxDensity, initialLand) : 0;
 
     const carryingCapacity = maxDensity > 0 && initialLand > 0
       ? initialLand * maxDensity

@@ -841,12 +841,11 @@ const umbraOverrides = {
   },
 "resources": {
     "surface": {
-       land: { initialValue: 13_382_000_000 },
       "ice": {
-        "initialValue": 371024812010584.3
+        "initialValue": 371727445267466.94
       },
       "liquidWater": {
-        "initialValue": 704889858873.709
+        "initialValue": 7308938184.268074
       },
       "dryIce": {
         "initialValue": 0
@@ -862,15 +861,11 @@ const umbraOverrides = {
       }
     },
     "atmospheric": {
-      "oxygen": {
-        "initialValue": 4e14
-      },
-      "inertGas": { "initialValue": 3e15 }, // Override name and value
       "carbonDioxide": {
         "initialValue": 25035251297749.41
       },
       "atmosphericWater": {
-        "initialValue": 5250832941.441801
+        "initialValue": 198496685.6161533
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -885,25 +880,34 @@ const umbraOverrides = {
   },
   "zonalWater": {
     "tropical": {
-      "liquid": 566054780114.1189,
+      "liquid": 7102061753.386642,
       "ice": 0,
       "buriedIce": 0
     },
     "temperate": {
-      "liquid": 138835078759.59012,
-      "ice": 34275847678.10241,
+      "liquid": 206876430.88143116,
+      "ice": 78189182.62250374,
       "buriedIce": 0
     },
     "polar": {
       "liquid": 1.97236826e-316,
-      "ice": 370990536162906.2,
+      "ice": 371727367078284.3,
       "buriedIce": 0
     }
   },
-  zonalSurface: {
-    tropical: { biomass: 0, hazardousBiomass: 5_000_000_000 },
-    temperate: { biomass: 0, hazardousBiomass: 5_000_000_000 },
-    polar: { biomass: 0, hazardousBiomass: 1_00_000_000 }
+  "zonalSurface": {
+    "tropical": {
+      "biomass": 0,
+      "hazardousBiomass": 28945176728.830032
+    },
+    "temperate": {
+      "biomass": 0,
+      "hazardousBiomass": 24475244245.078247
+    },
+    "polar": {
+      "biomass": 0,
+      "hazardousBiomass": 105623383.13937804
+    }
   },
   "zonalHydrocarbons": {
     "tropical": {
@@ -935,22 +939,22 @@ const umbraOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "initial": 285.5070416705251,
-      "value": 285.5070416586453,
-      "day": 308.720880976926,
-      "night": 262.29320234036453
+      "initial": 285.5070416586453,
+      "value": 283.90370873109873,
+      "day": 287.174471554439,
+      "night": 280.6329459077585
     },
     "temperate": {
-      "initial": 265.19657546832224,
-      "value": 265.1965754597524,
-      "day": 285.4274695790454,
-      "night": 244.9656813404594
+      "initial": 265.1965754597524,
+      "value": 263.9502917158075,
+      "day": 266.67021973441405,
+      "night": 261.23036369720097
     },
     "polar": {
-      "initial": 178.38772519432067,
-      "value": 178.3877251843534,
-      "day": 186.768411927358,
-      "night": 170.0070384413488
+      "initial": 178.3877251843534,
+      "value": 179.9439245471281,
+      "day": 180.9542111152396,
+      "night": 178.9336379790166
     }
   },
   hazards: {
@@ -965,8 +969,8 @@ const umbraOverrides = {
         min: 273.15,
         max: 303.15,
         unit: 'K',
-        severityBelow: 0.01,
-        severityHigh: 0.01
+        severityBelow: 0.0025,
+        severityHigh: 0.0050
       },
       radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 100 },
       penalties: {
