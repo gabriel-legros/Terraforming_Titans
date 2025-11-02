@@ -580,27 +580,31 @@ class HazardManager {
       return 0;
     }
 
-    const severity = Number.isFinite(entry.severity) ? entry.severity : 1;
-    if (!severity) {
-      return 0;
-    }
+    const defaultSeverity = Number.isFinite(entry.severity) ? entry.severity : 1;
+    const severityBelow = Number.isFinite(entry.severityBelow) ? entry.severityBelow : defaultSeverity;
+    const severityHigh = Number.isFinite(entry.severityHigh) ? entry.severityHigh : defaultSeverity;
 
     const hasMin = Number.isFinite(entry.min);
     const hasMax = Number.isFinite(entry.max);
     const value = Number.isFinite(currentValue) ? currentValue : 0;
 
-    let difference = 0;
     if (hasMin && value < entry.min) {
-      difference = entry.min - value;
-    } else if (hasMax && value > entry.max) {
-      difference = value - entry.max;
+      const severity = Number.isFinite(severityBelow) ? severityBelow : 0;
+      if (!severity) {
+        return 0;
+      }
+      return (entry.min - value) * severity;
     }
 
-    if (!difference) {
-      return 0;
+    if (hasMax && value > entry.max) {
+      const severity = Number.isFinite(severityHigh) ? severityHigh : 0;
+      if (!severity) {
+        return 0;
+      }
+      return (value - entry.max) * severity;
     }
 
-    return difference * severity;
+    return 0;
   }
 
   calculateTemperatureGrowthPenalty(terraforming, entry) {
