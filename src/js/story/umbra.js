@@ -238,7 +238,7 @@ progressUmbra.chapters.push(
       type: 'terraforming',
       terraformingParameter : 'complete',
     }],
-    reward: []
+    reward: [      { target: 'spaceManager', type: 'setRwgLock', targetId: 'umbra', value: true },]
   },
   {
     id: 'chapter22.7',
