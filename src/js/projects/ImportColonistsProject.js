@@ -107,14 +107,15 @@ class ImportColonistsProject extends Project {
     }
 
     const gain = this.getEffectiveResourceGain();
-    const colonistGain = gain.colony && gain.colony.colonists ? gain.colony.colonists : 0;
-    amountSpan.textContent = formatNumber(colonistGain, true);
+    const target = this.getImportTarget();
+    const amount = this.getImportAmountFromGain(gain, target);
+    amountSpan.textContent = formatNumber(amount, true);
   }
 
   applyResourceGain() {
     const gain = this.getEffectiveResourceGain();
-    const amount = gain.colony && gain.colony.colonists ? gain.colony.colonists : 0;
     const target = this.getImportTarget();
+    const amount = this.getImportAmountFromGain(gain, target);
     if (amount <= 0) {
       return;
     }
@@ -129,6 +130,41 @@ class ImportColonistsProject extends Project {
     } else {
       resources.colony.colonists.increase(amount);
     }
+  }
+
+  getImportAmountFromGain(gain, target = this.getImportTarget()) {
+    if (target === 'crusaders') {
+      return gain.special?.crusaders ?? 0;
+    }
+    return gain.colony?.colonists ?? 0;
+  }
+
+  getEffectiveResourceGain() {
+    const gain = super.getEffectiveResourceGain();
+    if (!this.canImportCrusaders() || this.getImportTarget() !== 'crusaders') {
+      return gain;
+    }
+
+    const crusaderGain = gain.colony?.colonists ?? 0;
+    const adjustedGain = {};
+
+    for (const category in gain) {
+      for (const resource in gain[category]) {
+        if (category === 'colony' && resource === 'colonists') {
+          continue;
+        }
+        if (!adjustedGain[category]) {
+          adjustedGain[category] = {};
+        }
+        adjustedGain[category][resource] = gain[category][resource];
+      }
+    }
+
+    if (!adjustedGain.special) {
+      adjustedGain.special = {};
+    }
+    adjustedGain.special.crusaders = crusaderGain;
+    return adjustedGain;
   }
 
   saveState() {
