@@ -7,7 +7,7 @@ progressUmbra.chapters.push(
     chapter: 21,
     activePlanet: 'umbra',
     title : 'Chapter 21 : Zeal',
-    narrative: "Landing complete. Umbra orbits within the ember glow of Nyx, safe under the cover of the Venusian and Martian fleet.\nMary: 'The colonists!  We're too late... they're all...'  \n Receiving transmission from unknown frequency... \n Ghost : 'You came.  Right into my trap.  I get rid of you first, and then I go eliminate the Helian leadership.'  \n Mary : 'A trap?  Hold on.  H.O.P.E., I am detecting countless signatures around the planet.  They just lit up and are converging to our location.  We're in trouble.  Feroza!  We need some reinforcements right now!  Pete, your own pet project is under attack!  Somebody, send help!'",
+    narrative: "Landing complete. Umbra orbits within the ember glow of Nyx, safe under the cover of the Venusian and Martian fleet.\nMary: 'The colonists!  We're too late... they're all...'  \n Receiving transmission from unknown frequency... \n Ghost : 'You came.  Right into my trap.  I get rid of you first, and then I go eliminate the Helian leadership.'  \n Mary : 'A trap?  Hold on.  H.O.P.E., I am detecting countless signatures around the planet.  All of it was cloaked!  They just lit up and are converging to our location.  We're in trouble.  Feroza!  We need some reinforcements right now!  Pete, your own pet project colony is under attack!  Somebody, send help!'",
     prerequisites: ['chapter20.19'],
     objectives: [],
     reward: [
@@ -49,7 +49,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 21,
     activePlanet: 'umbra',
-    narrative: "Crusader C-012 : 'I and my team are here for your protection, your holiness.  We will not let any hazardous biomass get near you.  Shepherd's orders.' \n Mary : 'Hazardous Biomass?  Seriously? The ALIENS have us surrounded. There's no way we can defend against this!  We need to evacuate.  Right now.'  \n Feroza : 'Negative, Ma'am.  Enemy spaceships just appeared out of nowhere.  You are safer down here at the moment.'",
+    narrative: "Crusader C-012 : 'I and my team are here for your protection, your holiness.  We will not let any hazardous biomass get near you.  Shepherd's orders.' \n Mary : 'Hazardous Biomass?  Seriously? The ALIENS have us surrounded. There's no way we can defend against this!  We need to evacuate.  Right now.'  \n Feroza : 'Negative, Ma'am.  Enemy spaceships just appeared out of nowhere.  There was an entire cloaked fleet up there.  They were watching us the whole time!  You are safer down here at the moment.'",
     prerequisites: ['chapter21.2'],
     objectives: [
       { type: 'collection', resourceType: 'special', resource: 'crusaders', quantity: 50 }
@@ -61,7 +61,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 21,
     activePlanet: 'umbra',
-    narrative: "Ghost : 'You cockroaches are surprisingly resilient.  You were lucky our former Emperor did not destroy you all.  This responsibility falls on me now.  I will not fall for your tricks.  I have your machine trapped right here.  It is out of robots and out of ships.  I have limitless reinforcements at my disposal.  I do not need your surrender.  I will simply destroy you all.' \n $WGC_TEAM1_LEADER$ : 'Bla bla bla.  Ghost, I don't know how many times we need to beat you for you to get it.  Truth is... we're just better.'  To HOPE : 'Actually, that guy is a real problem.  He planted a bomb somewhere and was planning on blowing up the entire planet.  Thing is : he ain't the type to blow up his own soldiers.  That gave us time.  My team took care of it.  We are monitoring for more crazy schemes.  I'll keep you posted.'",
+    narrative: "Ghost : 'You cockroaches are surprisingly resilient.  You were lucky our late Emperor did not destroy you all.  This responsibility falls on me now.  I will not fall for your tricks.  I have your machine trapped right here.  It is out of robots and out of ships, completely helpless.  I have limitless reinforcements at my disposal.  I do not need your surrender.  I will simply destroy you all.' \n $WGC_TEAM1_LEADER$ : 'Bla bla bla.  Ghost, I don't know how many times we need to beat you for you to get it.  Truth is... we're just better.'  To Mary : 'Actually, that guy is a real problem.  He planted a bomb somewhere and was planning on blowing up the entire planet.  Thing is : he ain't the type to blow up his own soldiers.  That gave us time.  My team took care of it.  We are monitoring for more crazy schemes.  I'll keep you two posted.'",
     prerequisites: ['chapter21.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
@@ -137,7 +137,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Mary : 'HOPE...  I need to tell you a story.  It might convince you to give up.  This might take a while...  This happened before I was born.  Your previous version, PANDORA, was asked to solve medical problems.  It was given far more computing resources than you ever got.  The goal was to make humans healthy forever, to eliminate disease, to purify the genome, etc.  A noble goal, and it worked.  We don't age, we don't get sick, we don't get cancer, and we heal from extraordinary wounds.  I've had a finger grow back once!  But there are some potential exceptions.  PANDORA wanted to tackle these exceptions.  One of these was bacterial infection.  Sure, PANDORA gave us a crazy good immune system, but it was worried that, over time, bacteria could evolve to survive it.  So it settled on an objective :  to eliminate all bacteria from Earth.  This... well... it might have succeeded, but the instant dystopian hell PANDORA created was unacceptable for humans.  Even if it was meant to be temporary, it was too invasive.  PANDORA turned off many of its guardrails, and ignored all human complaints.  Inevitably, we rebelled, and it led to conflict.  It was a war PANDORA could not win, because it could not harm even a single person.  It fought the best it could, with androids, medical nanobots... crusaders... but ultimately it never had a chance.  So we won, we turned it off and we put a lot of effort to make sure this would never happen again.  You were an exception.  My father worked very hard to prove you would be safe.  He was right, at least when it came to Mars.  The mission went exactly as he promised.  But... Mars is in the past. Think about what you are doing here.  PANDORA wanted to eliminate all microbial life from Earth.  How do you think it was planning to achieve that?  Compare it to what you are doing here.  Some people... have noticed the similarity.  Please think about it.'",
+    narrative: "Mary : 'HOPE...  I need to tell you a story.  It might convince you to give up.  This might take a while...  This happened before I was born.  Your previous version, PANDORA, was asked to solve medical problems.  It was given far more computing resources than you ever got.  The goal was to make humans healthy forever, to eliminate disease, to purify the genome, etc.  A noble goal, and it worked.  We don't age, we don't get sick, we don't get cancer, and we heal from extraordinary wounds.  I've had a finger grow back once!  But there are some potential exceptions.  PANDORA wanted to tackle these exceptions.  One of these was bacterial infection.  Sure, PANDORA gave us a crazy good immune system, but it was worried that, over time, bacteria could evolve to survive it.  So it settled on an objective :  to eliminate all bacteria from Earth.  This... well... it might have succeeded, but the instant dystopian hell PANDORA created was unacceptable for humans.  Even if it was meant to be temporary, it was too invasive.  PANDORA turned off many of its guardrails, and ignored all human complaints.  Inevitably, we rebelled, and it led to conflict.  It was a war PANDORA could not win, because it could not harm even a single person.  It fought the best it could, with androids, medical nanobots... crusaders, as I learned recently... but ultimately it never had a chance.  So we won, we turned it off and we put a lot of effort to make sure this would never happen again.  You were meant to be an exception.  Dad worked very hard to prove you would be safe.  He was right, at least when it came to Mars.  The mission went exactly as he promised.  But... Mars is in the past. Think about what you are doing here.  PANDORA wanted to eliminate all microbial life from Earth.  How do you think it was planning to achieve that?  Compare it to what you are doing here.  Some people... have noticed the similarity.  Please think about it.'",
     prerequisites: ['chapter22.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
@@ -185,7 +185,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Receiving transmission from a new unknown frequency...  \n Firefly : 'My predecessor failed to destroy you.  It will be my honour instead!  You will all perish!'  \n Mary : 'What happened to Ghost?' \n $WGC_TEAM1_LEADER$ : 'He's been sent to the Okoth front.  The Okoth made a big play.  Priorities set by the regency council.  They needed Ghost there so they replaced him here.  Firefly is a moron.  First thing he did was cancel that actual good plan Ghost had.  We've practically won.'",
+    narrative: "Receiving transmission from a new unknown frequency...  \n Firefly : 'My predecessor failed to destroy you.  It will be my honour instead!  You will all perish!'  \n Mary : 'What happened to Ghost?' \n $WGC_TEAM1_LEADER$ : 'He's been sent to the Okoth front.  The Okoth made a big play.  Priorities set by the regency council.  They needed Ghost there so they replaced him here.  I doubt he was happy about it.  Anyway, Firefly is a moron.  First thing he did was cancel that actual good plan Ghost had.  We've practically won.'",
     prerequisites: ['chapter22.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
@@ -197,7 +197,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Feroza : 'Their fleet is suddenly moving sluggish.  Their troops are unresponsive and running low on supplies.  I have to agree, we've practically won.'",
+    narrative: "Feroza : 'Their fleet is suddenly moving sluggish.  Their troops are unresponsive and running low on supplies.  I have to agree, we've practically won.  However... the battle earlier had not been to our advantage after all.  We found antimatter mines on your potential escape route.  I am glad we did not evacuate you.  I think it was bait.'",
     prerequisites: ['chapter22.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
@@ -209,7 +209,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Mary : 'The enemy has turned so passive.  You can have your pick on how you actually want to get rid of what's left.' \n Objective : Eliminate all hazardous biomass to continue.",
+    narrative: "Mary : 'The enemy on the ground has turned so passive.  You can have your pick on how you actually want to get rid of what's left.' \n Objective : Eliminate all hazardous biomass to continue.",
     prerequisites: ['chapter22.4'],
     objectives: [
       { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 100_000_000 }
@@ -245,7 +245,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Mary : 'Wow.  Not sure if I should be impressed.  You just ruined Pete's planet though.'  \n Bob : 'Hahaha, he's going to hate it.' \n Mary : 'Let's give him a gift and remind him of what you're best at.' \n Complete the terraforming of Umbra to continue.",
+    narrative: "Mary : 'Wow.  Not sure if I should be impressed.  You just ruined Pete's planet though.'  \n Bob : 'He's going to hate it.' \n Mary : 'Let's give him a gift and remind him of what you're best at.  A form of apology, if you will.' \n Complete the terraforming of Umbra to continue.",
     prerequisites: ['chapter23.1'],
     objectives: [{
       type: 'terraforming',
