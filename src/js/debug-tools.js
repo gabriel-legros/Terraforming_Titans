@@ -69,6 +69,8 @@
       co2: resources.atmospheric.carbonDioxide?.value || 0,
       waterVapor: resources.atmospheric.atmosphericWater?.value || 0,
       atmosphericMethane: resources.atmospheric.atmosphericMethane?.value || 0,
+      oxygen: resources.atmospheric.oxygen?.value || 0,
+      inertGas: resources.atmospheric.inertGas?.value || 0,
       hydrogen: resources.atmospheric.hydrogen?.value || 0,
       sulfuricAcid: resources.atmospheric.sulfuricAcid?.value || 0,
       buriedIce: 0
@@ -103,7 +105,7 @@
   }
 
   function isStable(prev, cur, threshold) {
-    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','co2','waterVapor','liquidMethane','hydrocarbonIce','atmosphericMethane','hydrogen','sulfuricAcid'];
+    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','co2','waterVapor','liquidMethane','hydrocarbonIce','atmosphericMethane','oxygen','inertGas','hydrogen','sulfuricAcid'];
     for (const k of keys) {
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
@@ -128,6 +130,8 @@
       carbonDioxide: { initialValue: values.global.co2 },
       atmosphericWater: { initialValue: values.global.waterVapor },
       atmosphericMethane: { initialValue: values.global.atmosphericMethane },
+      oxygen: { initialValue: values.global.oxygen },
+      inertGas: { initialValue: values.global.inertGas },
       hydrogen: { initialValue: values.global.hydrogen },
       sulfuricAcid: { initialValue: values.global.sulfuricAcid }
     };
@@ -156,7 +160,6 @@
       };
       const zoneTemps = (values.temperatures && values.temperatures[zone]) || {};
       zonalTemperatures[zone] = {
-        initial: zoneTemps.initial || 0,
         value: zoneTemps.value || 0,
         day: zoneTemps.day || 0,
         night: zoneTemps.night || 0
@@ -176,7 +179,6 @@
       const zoneTemps = source[zone] || {};
       const closing = index === zonesList.length - 1 ? '' : ',';
       lines.push(`    "${zone}": {`);
-      lines.push(`      "initial": ${zoneTemps.initial ?? 0},`);
       lines.push(`      "value": ${zoneTemps.value ?? 0},`);
       lines.push(`      "day": ${zoneTemps.day ?? 0},`);
       lines.push(`      "night": ${zoneTemps.night ?? 0}`);
@@ -188,9 +190,14 @@
 
   function logTerraformingOverride() {
     const values = captureValues();
-    const snippet = generateOverrideSnippet(values);
+    const override = buildOverrideObject(values);
+    const snippet = JSON.stringify(override, null, 2);
+    const oxygenOverride = override.atmospheric?.oxygen?.initialValue || 0;
+    const inertOverride = override.atmospheric?.inertGas?.initialValue || 0;
     console.log('Override snippet:\n' + snippet);
-    console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(values.temperatures || {}));
+    console.log('Oxygen override initialValue:', oxygenOverride);
+    console.log('Inert gas override initialValue:', inertOverride);
+    console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(override.zonalTemperatures || {}));
     return snippet;
   }
 
