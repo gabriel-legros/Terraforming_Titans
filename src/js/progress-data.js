@@ -54,31 +54,6 @@ mergeProgress(typeof progressVega2 !== 'undefined' ? progressVega2 : null);
 mergeProgress(typeof progressVenus !== 'undefined' ? progressVenus : null);
 mergeProgress(typeof progressUmbra !== 'undefined' ? progressUmbra : null);
 
-// Umbra — Chapter 21.6b unlocks this crusader deployment project.
-progressData.storyProjects.umbra_crusader_final_push = {
-  type: 'Project',
-  name: 'Crusader Final Push',
-  category: 'story',
-  chapter: 22,
-  cost: {
-    special: { crusaders: 1_000 }
-  },
-  duration: 600_000, // 10 min
-  description: 'Commit crusader strike teams to dismantle the remaining alien footholds.',
-  repeatable: true,
-  maxRepeatCount: 1,
-  unlocked: false,
-  attributes: {
-    planet: 'umbra',
-    resourceGain: { special: { alienArtifact: 500 } },
-    storySteps: [
-      'Strike teams breach cloaked nests and mark biomass hotspots for orbital fire.',
-      'Hazardous biomass routed into kill-zones; crusader losses mounting but acceptable.',
-      'Last pockets collapse. Crusaders recover caches of alien artifacts from the ruins.'
-    ]
-  }
-};
-
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
 }

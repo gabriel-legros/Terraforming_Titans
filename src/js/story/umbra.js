@@ -1,5 +1,30 @@
 var progressUmbra = { rwgLock: false, chapters: [], storyProjects: {} };
 
+// Umbra — Chapter 21.6b unlocks this crusader deployment project.
+progressData.storyProjects.umbra_crusader_final_push = {
+  type: 'Project',
+  name: 'Fortress Assault',
+  category: 'story',
+  chapter: 22,
+  cost: {
+    special: { crusaders: 1_000 }
+  },
+  duration: 600_000, // 10 min
+  description: 'Commit crusader strike teams to dismantle the Hazardous Biomass fortress.',
+  repeatable: true,
+  maxRepeatCount: 3,
+  unlocked: false,
+  attributes: {
+    planet: 'umbra',
+    resourceGain: { special: { alienArtifact: 500 } },
+    storySteps: [
+      'Strike teams breach cloaked nests and mark biomass hotspots for orbital fire.',
+      'Hazardous biomass routed into kill-zones; crusader losses mounting but acceptable.',
+      'Last pockets collapse. Crusaders recover caches of alien artifacts from the ruins.'
+    ]
+  }
+};
+
 progressUmbra.chapters.push(
   {
     id: 'chapter21.1',
