@@ -186,17 +186,10 @@ class HazardManager {
   }
 
   load(data) {
-
-    const incoming = data && typeof data === 'object' ? data.parameters || {} : {};
-    this.initialize(incoming);
+    this.initialize(currentPlanetParameters.hazards);
   }
 
   update(deltaTime = 0, terraforming = null) {
-    if (!terraforming || !terraforming.zonalSurface) {
-      this.updateHazardousLandReservation(null);
-      return;
-    }
-
     const hazardous = this.parameters.hazardousBiomass;
     const growth = hazardous && hazardous.baseGrowth;
     const zoneKeys = Array.isArray(zonesList) && zonesList.length

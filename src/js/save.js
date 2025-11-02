@@ -412,6 +412,7 @@ function loadGame(slotOrCustomString) {
     if(gameState.nanotechManager){
       nanotechManager.loadState(gameState.nanotechManager);
     }
+    
     if (gameState.hazardManager && typeof hazardManager !== 'undefined' && typeof hazardManager.load === 'function') {
       hazardManager.load(gameState.hazardManager);
     }
