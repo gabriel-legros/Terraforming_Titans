@@ -203,9 +203,9 @@ class HazardManager {
     if (deltaTime && hazardous && growth && getZonePercentageHelper && zoneEntries.length) {
       const growthPercent = Number.isFinite(growth.value) ? growth.value : 0;
       const maxDensity = Number.isFinite(growth.maxDensity) ? growth.maxDensity : 0;
-      const surfaceArea = terraforming.celestialParameters && terraforming.celestialParameters.surfaceArea;
+      const landArea = terraforming.initialLand;
 
-      if (growthPercent && maxDensity > 0 && surfaceArea && surfaceArea > 0) {
+      if (growthPercent && maxDensity > 0) {
         const penaltyDetails = this.calculateHazardousBiomassGrowthPenaltyDetails(hazardous, terraforming);
         const globalPenalty = penaltyDetails.globalPenalty;
         const zonePenaltyMap = penaltyDetails.zonePenalties || {};
@@ -213,7 +213,7 @@ class HazardManager {
         zoneEntries.forEach(({ zone, data }) => {
           const zoneData = data;
 
-          const zoneArea = surfaceArea * getZonePercentageHelper(zone);
+          const zoneArea = landArea * getZonePercentageHelper(zone);
           if (!zoneArea) {
             return;
           }

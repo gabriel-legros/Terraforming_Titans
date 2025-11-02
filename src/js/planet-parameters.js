@@ -840,6 +840,10 @@ const umbraOverrides = {
     baseColor: '#1d2a44',
   },
  "resources": {
+    "surface":
+    {
+              land: { initialValue: 13_382_000_000 },
+    },
     "atmospheric": {
       "oxygen": {
         "initialValue": 400000000000000
@@ -884,15 +888,15 @@ const umbraOverrides = {
   "zonalSurface": {
     "tropical": {
       "biomass": 0,
-      "hazardousBiomass": 28945533171.683525
+      "hazardousBiomass": 5336060040.357645
     },
     "temperate": {
       "biomass": 0,
-      "hazardousBiomass": 24475516877.957798
+      "hazardousBiomass": 6936037875.064085
     },
     "polar": {
       "biomass": 0,
-      "hazardousBiomass": 105623423.90781794
+      "hazardousBiomass": 1109902084.57827
     }
   },
   "zonalHydrocarbons": {
