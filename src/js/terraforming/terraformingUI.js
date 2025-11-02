@@ -1079,6 +1079,35 @@ function createWaterBox(row) {
       lifeHeading.appendChild(lifeInfo);
     }
 
+    const hazardHeader = document.createElement('p');
+    hazardHeader.classList.add('terraforming-subheading');
+    hazardHeader.textContent = 'Hazardous Biomass';
+    lifeBox.appendChild(hazardHeader);
+
+    const hazardTable = document.createElement('table');
+    hazardTable.id = 'hazardous-biomass-table';
+    hazardTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Region</th>
+          <th>Amount (t)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Overall</td><td id="hazardous-biomass-overall">0</td></tr>
+        <tr><td>Polar</td><td id="hazardous-biomass-polar">0</td></tr>
+        <tr><td>Temperate</td><td id="hazardous-biomass-temperate">0</td></tr>
+        <tr><td>Tropical</td><td id="hazardous-biomass-tropical">0</td></tr>
+      </tbody>
+    `;
+    lifeBox.appendChild(hazardTable);
+
+    const hazardTarget = document.createElement('span');
+    hazardTarget.id = 'life-hazard-target';
+    hazardTarget.classList.add('terraforming-target');
+    hazardTarget.textContent = 'Hazardous biomass must be 0 in all zones.';
+    lifeBox.appendChild(hazardTarget);
+
     const targetSpan = document.createElement('span');
     targetSpan.textContent = "Target : Life coverage at least 50%.";
     targetSpan.style.marginTop = 'auto';
@@ -1088,7 +1117,7 @@ function createWaterBox(row) {
     row.appendChild(lifeBox);
     terraformingUICache.life = {
       box: lifeBox,
-      target: lifeBox.querySelector('.terraforming-target'),
+      target: targetSpan,
       coverageOverall: lifeBox.querySelector('#life-coverage-overall'),
       coveragePolar: lifeBox.querySelector('#life-coverage-polar'),
       coverageTemperate: lifeBox.querySelector('#life-coverage-temperate'),
@@ -1096,7 +1125,12 @@ function createWaterBox(row) {
       photoOverall: lifeBox.querySelector('#life-photo-overall'),
       photoPolar: lifeBox.querySelector('#life-photo-polar'),
       photoTemperate: lifeBox.querySelector('#life-photo-temperate'),
-      photoTropical: lifeBox.querySelector('#life-photo-tropical')
+      photoTropical: lifeBox.querySelector('#life-photo-tropical'),
+      hazardOverall: lifeBox.querySelector('#hazardous-biomass-overall'),
+      hazardPolar: lifeBox.querySelector('#hazardous-biomass-polar'),
+      hazardTemperate: lifeBox.querySelector('#hazardous-biomass-temperate'),
+      hazardTropical: lifeBox.querySelector('#hazardous-biomass-tropical'),
+      hazardTarget
     };
 }
 
@@ -1105,7 +1139,6 @@ function updateLifeBox() {
     const lifeBox = els.box;
     if (!lifeBox) return;
     const zones = ZONES;
-    const surfaceArea = terraforming.celestialParameters.surfaceArea;
 
     // Calculate total biomass from zonal data
     let totalBiomass = 0;
@@ -1117,8 +1150,42 @@ function updateLifeBox() {
     const avgBiomassCoverage = calculateAverageCoverage(terraforming, 'biomass');
 
     const effectiveTarget = getEffectiveLifeFraction(terraforming);
-    lifeBox.style.borderColor = avgBiomassCoverage >= effectiveTarget ? 'green' : 'red';
+    const hazardTolerance = 1e-6;
+    const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
+      ? terraforming.getHazardClearanceStatus()
+      : zones.every(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) <= hazardTolerance);
+    const lifeTargetMet = avgBiomassCoverage >= effectiveTarget;
+    lifeBox.style.borderColor = lifeTargetMet && hazardsCleared ? 'green' : 'red';
     if (els.target) els.target.textContent = `Target : Life coverage above ${(effectiveTarget * 100).toFixed(0)}%.`;
+
+    const hazardPolar = terraforming.zonalSurface.polar?.hazardousBiomass || 0;
+    const hazardTemperate = terraforming.zonalSurface.temperate?.hazardousBiomass || 0;
+    const hazardTropical = terraforming.zonalSurface.tropical?.hazardousBiomass || 0;
+    const hazardTotal = hazardPolar + hazardTemperate + hazardTropical;
+    const hazardEntries = [
+      [els.hazardOverall, hazardTotal],
+      [els.hazardPolar, hazardPolar],
+      [els.hazardTemperate, hazardTemperate],
+      [els.hazardTropical, hazardTropical]
+    ];
+    hazardEntries.forEach(([node, value]) => {
+      if (!node) return;
+      node.textContent = formatNumber(value, true, 2);
+      node.style.color = value > hazardTolerance ? 'red' : '';
+    });
+
+    if (els.hazardTarget) {
+      if (hazardsCleared) {
+        els.hazardTarget.textContent = 'Hazardous biomass cleared in all zones.';
+        els.hazardTarget.style.color = '';
+      } else {
+        const remainingZones = zones
+          .filter(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) > hazardTolerance)
+          .map(zone => zone.charAt(0).toUpperCase() + zone.slice(1));
+        els.hazardTarget.textContent = `Remove hazardous biomass from: ${remainingZones.join(', ')}.`;
+        els.hazardTarget.style.color = 'red';
+      }
+    }
 
     // Calculate zonal coverage percentages
     const polarCov = terraforming.zonalCoverageCache['polar']?.biomass ?? 0;
@@ -1793,6 +1860,18 @@ function updateLifeBox() {
     const button = doc ? doc.getElementById('complete-terraforming-button') : null;
 
     if (!button) return;
+
+  const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
+    ? terraforming.getHazardClearanceStatus()
+    : true;
+
+  if (!hazardsCleared) {
+      button.textContent = 'Remove Hazardous Biomass First';
+      button.style.backgroundColor = 'red';
+      button.style.cursor = 'not-allowed';
+      button.disabled = true;
+      return;
+  }
 
   const planetTerraformed = (typeof spaceManager !== 'undefined' &&
     typeof spaceManager.getCurrentPlanetKey === 'function' &&
