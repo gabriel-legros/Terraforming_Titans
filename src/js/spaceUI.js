@@ -357,10 +357,9 @@ function initializeSpaceUI(spaceManager) {
         const statsDiv = document.createElement('div');
         statsDiv.classList.add('planet-stats');
         statsDiv.innerHTML = `
-            <p><strong>Distance:</strong><span>${celestial.distanceFromSun} AU</span></p>
-            <p><strong>Gravity:</strong><span>${celestial.gravity} m/s²</span></p>
+            <p><strong>Distance:</strong><span>${formatNumber(celestial.distanceFromSun, false, 2)} AU</span></p>
+            <p><strong>Gravity:</strong><span>${formatNumber(celestial.gravity, false, 2)} m/s²</span></p>
             <p><strong>Radius:</strong><span>${format(celestial.radius)} km</span></p>
-            <p><strong>Albedo:</strong><span>${celestial.albedo}</span></p>
             <p><strong>Status:</strong><span class="planet-status"></span></p>
         `;
         planetDiv.appendChild(statsDiv);

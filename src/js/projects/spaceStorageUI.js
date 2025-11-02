@@ -102,12 +102,21 @@ if (typeof SpaceStorageProject !== 'undefined') {
     return container;
   };
 
+  SpaceStorageProject.prototype.attachShipAutoStartToAssignment = function (runContainer) {
+    if (!runContainer) return false;
+    const projectEls = projectElements[this.name];
+    if (!projectEls) return false;
+    const { autoAssignCheckboxContainer } = projectEls;
+    if (autoAssignCheckboxContainer) {
+      autoAssignCheckboxContainer.appendChild(runContainer);
+      return true;
+    }
+    return false;
+  };
+
   SpaceStorageProject.prototype.renderAutomationUI = function (container) {
     const els = projectElements[this.name] || {};
-    if (
-      els.shipAutoStartContainer &&
-      els.shipAutoStartContainer.parentElement !== container
-    ) {
+    if (!els.shipAutoStartContainer || !els.shipAutoStartContainer.isConnected) {
       delete els.shipAutoStartCheckbox;
       delete els.shipAutoStartLabel;
       delete els.shipAutoStartContainer;
@@ -116,12 +125,28 @@ if (typeof SpaceStorageProject !== 'undefined') {
       delete els.strategicReserveInput;
       delete els.strategicReserveContainer;
     }
+
     if (!els.shipAutoStartContainer) {
       const ship = this.createShipAutoStartCheckbox();
       const prioritize = this.createPrioritizeMegaCheckbox();
       const reserve = this.createStrategicReserveInput();
-      container.append(ship, prioritize, reserve);
+      if (!this.attachShipAutoStartToAssignment(ship)) {
+        container.appendChild(ship);
+      }
+      container.append(prioritize, reserve);
+    } else {
+      const placed = this.attachShipAutoStartToAssignment(els.shipAutoStartContainer);
+      if (!placed && els.shipAutoStartContainer.parentElement !== container) {
+        container.appendChild(els.shipAutoStartContainer);
+      }
+      if (els.prioritizeMegaContainer && els.prioritizeMegaContainer.parentElement !== container) {
+        container.appendChild(els.prioritizeMegaContainer);
+      }
+      if (els.strategicReserveContainer && els.strategicReserveContainer.parentElement !== container) {
+        container.appendChild(els.strategicReserveContainer);
+      }
     }
+
     invalidateAutomationSettingsCache(this.name);
   };
 }

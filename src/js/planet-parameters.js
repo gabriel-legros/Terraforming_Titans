@@ -839,33 +839,13 @@ const umbraOverrides = {
   visualization: {
     baseColor: '#1d2a44',
   },
-"resources": {
-    "surface": {
-      "ice": {
-        "initialValue": 371727445267466.94
-      },
-      "liquidWater": {
-        "initialValue": 7308938184.268074
-      },
-      "dryIce": {
-        "initialValue": 0
-      },
-      "liquidCO2": {
-        "initialValue": 0
-      },
-      "liquidMethane": {
-        "initialValue": 0
-      },
-      "hydrocarbonIce": {
-        "initialValue": 0
-      }
-    },
+ "resources": {
     "atmospheric": {
       "carbonDioxide": {
         "initialValue": 25035251297749.41
       },
       "atmosphericWater": {
-        "initialValue": 198496685.6161533
+        "initialValue": 198496685.61613703
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -880,33 +860,33 @@ const umbraOverrides = {
   },
   "zonalWater": {
     "tropical": {
-      "liquid": 7102061753.386642,
+      "liquid": 7102061753.385252,
       "ice": 0,
       "buriedIce": 0
     },
     "temperate": {
-      "liquid": 206876430.88143116,
-      "ice": 78189182.62250374,
+      "liquid": 206876430.88135812,
+      "ice": 78189182.6224777,
       "buriedIce": 0
     },
     "polar": {
       "liquid": 1.97236826e-316,
-      "ice": 371727367078284.3,
+      "ice": 371727367078295.7,
       "buriedIce": 0
     }
   },
   "zonalSurface": {
     "tropical": {
       "biomass": 0,
-      "hazardousBiomass": 28945176728.830032
+      "hazardousBiomass": 28945533171.683525
     },
     "temperate": {
       "biomass": 0,
-      "hazardousBiomass": 24475244245.078247
+      "hazardousBiomass": 24475516877.957798
     },
     "polar": {
       "biomass": 0,
-      "hazardousBiomass": 105623383.13937804
+      "hazardousBiomass": 105623423.90781794
     }
   },
   "zonalHydrocarbons": {
@@ -952,9 +932,9 @@ const umbraOverrides = {
     },
     "polar": {
       "initial": 178.3877251843534,
-      "value": 179.9439245471281,
-      "day": 180.9542111152396,
-      "night": 178.9336379790166
+      "value": 179.94392454712792,
+      "day": 180.95421111523942,
+      "night": 178.93363797901642
     }
   },
   hazards: {
