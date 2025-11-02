@@ -126,6 +126,28 @@ function formatRange(entry) {
   return `${minText} – ${maxText}`;
 }
 
+function formatSeverityDetails(entry) {
+  if (!entry) {
+    return '';
+  }
+
+  const details = [];
+
+  if (Number.isFinite(entry.severityBelow)) {
+    details.push(`Severity Below ×${formatNumeric(entry.severityBelow, 3)}`);
+  }
+
+  if (Number.isFinite(entry.severityHigh)) {
+    details.push(`Severity High ×${formatNumeric(entry.severityHigh, 3)}`);
+  }
+
+  if (!details.length && Number.isFinite(entry.severity)) {
+    details.push(`Severity ×${formatNumeric(entry.severity, 3)}`);
+  }
+
+  return details.join(' • ');
+}
+
 function capitalize(text) {
   if (!text) {
     return '';
@@ -553,8 +575,9 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
   if (rangeText) {
     infoParts.push(rangeText);
   }
-  if (Number.isFinite(entry.severity)) {
-    infoParts.push(`Severity ×${formatNumeric(entry.severity, 3)}`);
+  const severityText = formatSeverityDetails(entry);
+  if (severityText) {
+    infoParts.push(severityText);
   }
 
   return {
@@ -606,8 +629,9 @@ function buildPressureFactor(hazard, manager, cache, fieldKey, label) {
   if (rangeText) {
     infoParts.push(rangeText);
   }
-  if (Number.isFinite(entry.severity)) {
-    infoParts.push(`Severity ×${formatNumeric(entry.severity, 3)}`);
+  const severityText = formatSeverityDetails(entry);
+  if (severityText) {
+    infoParts.push(severityText);
   }
 
   return {
@@ -640,8 +664,9 @@ function buildRadiationFactor(hazard, manager, terraformingState) {
     const maxText = hasMax ? formatNumeric(entry.max, 3) : '—';
     infoParts.push(`Range ${minText}–${maxText} ${unit}`);
   }
-  if (Number.isFinite(entry.severity)) {
-    infoParts.push(`Severity ×${formatNumeric(entry.severity, 3)}`);
+  const severityText = formatSeverityDetails(entry);
+  if (severityText) {
+    infoParts.push(severityText);
   }
 
   const currentDose = Number.isFinite(terraformingState.surfaceRadiation)

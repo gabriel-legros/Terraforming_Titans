@@ -961,7 +961,13 @@ const umbraOverrides = {
       co2Pressure: { min: 10, max: 50, unit: 'kPa', severity: 0.01 },
       atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.001 },
       landPreference: { value: 'Land', severity: 0.005 },
-      temperaturePreference: { min: 273.15, max: 303.15, unit: 'K', severity: 0.01 },
+      temperaturePreference: {
+        min: 273.15,
+        max: 303.15,
+        unit: 'K',
+        severityBelow: 0.01,
+        severityHigh: 0.01
+      },
       radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 100 },
       penalties: {
         buildCost: 1,
