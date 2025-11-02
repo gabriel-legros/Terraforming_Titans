@@ -61,6 +61,13 @@ class ImportColonistsProject extends Project {
     separator.textContent = ': ';
     wrapper.appendChild(separator);
 
+    const crusaderTooltip = document.createElement('span');
+    crusaderTooltip.classList.add('info-tooltip-icon');
+    crusaderTooltip.innerHTML = '&#9432;';
+    crusaderTooltip.title = 'Crusaders count as two workers, do not grow or produce research, and can eliminate hazardous biomass.';
+    crusaderTooltip.style.display = 'none';
+    wrapper.appendChild(crusaderTooltip);
+
     const amount = document.createElement('span');
     amount.classList.add('import-target-amount');
     wrapper.appendChild(amount);
@@ -72,6 +79,7 @@ class ImportColonistsProject extends Project {
     elements.importTargetLabel = label;
     elements.importTargetSelect = select;
     elements.importTargetSeparator = separator;
+    elements.crusaderTooltip = crusaderTooltip;
     elements.importAmountSpan = amount;
 
     this.updateUI();
@@ -82,6 +90,7 @@ class ImportColonistsProject extends Project {
     const select = elements.importTargetSelect;
     const label = elements.importTargetLabel;
     const amountSpan = elements.importAmountSpan;
+    const crusaderTooltip = elements.crusaderTooltip;
 
     const crusaderEnabled = this.canImportCrusaders();
 
@@ -89,10 +98,12 @@ class ImportColonistsProject extends Project {
       select.value = this.importTarget;
       select.style.display = '';
       label.style.display = 'none';
+      crusaderTooltip.style.display = '';
     } else {
       label.textContent = resources.colony.colonists.displayName;
       label.style.display = '';
       select.style.display = 'none';
+      crusaderTooltip.style.display = 'none';
     }
 
     const gain = this.getEffectiveResourceGain();
