@@ -617,6 +617,7 @@ function addOrRemoveEffect(effect, action) {
     'researchManager' : researchManager,
     'solisManager' : solisManager,
     'spaceManager' : spaceManager,
+    'space': spaceManager,
     'warpGateCommand' : warpGateCommand,
     'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,

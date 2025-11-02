@@ -555,6 +555,21 @@ class SpaceManager extends EffectableEntity {
         }
     }
 
+    activateTab(tabId) {
+        const tabElement = document.querySelector(`[data-tab="${tabId}"]`);
+        const tabContentElement = document.getElementById(tabId);
+
+        if (!tabElement || !tabContentElement) {
+            return;
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        tabElement.classList.add('active');
+        tabContentElement.classList.add('active');
+    }
+
     /**
      * Gets the full status object for a specific planet.
      * @param {string} planetKey - The key of the planet.

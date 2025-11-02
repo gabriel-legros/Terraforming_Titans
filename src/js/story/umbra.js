@@ -29,6 +29,21 @@ progressUmbra.chapters.push(
         type: 'booleanFlag',
         flagId: 'hazardsUnlocked',
         value: true
+      },
+      {
+        target: 'space',
+        targetId: 'terraforming',
+        type: 'activateTab',
+        onLoad: false
+      },
+      {
+        target: 'space',
+        type: 'activateSubtab',
+        subtabClass: 'terraforming-subtab',
+        contentClass: 'terraforming-subtab-content',
+        targetId: 'hazard-terraforming',
+        unhide: true,
+        onLoad: false
       }
     ]
   },
