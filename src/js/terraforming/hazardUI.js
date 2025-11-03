@@ -79,6 +79,15 @@ function formatNumeric(value, decimals = 2) {
   return Number(value || 0).toFixed(decimals);
 }
 
+function formatSeverityValue(value, decimals = 3) {
+  if (!Number.isFinite(value)) {
+    return '0';
+  }
+
+  const text = Number(value).toFixed(decimals);
+  return text.replace(/\.?0+$/, '');
+}
+
 function formatSignedPercentage(value, decimals = 2) {
   if (!Number.isFinite(value) || !value) {
     return '0%';
@@ -134,15 +143,15 @@ function formatSeverityDetails(entry) {
   const details = [];
 
   if (Number.isFinite(entry.severityBelow)) {
-    details.push(`Severity Below ×${formatNumeric(entry.severityBelow, 3)}`);
+    details.push(`Severity Below ×${formatSeverityValue(entry.severityBelow)}`);
   }
 
   if (Number.isFinite(entry.severityHigh)) {
-    details.push(`Severity Above ×${formatNumeric(entry.severityHigh, 3)}`);
+    details.push(`Severity Above ×${formatSeverityValue(entry.severityHigh)}`);
   }
 
   if (!details.length && Number.isFinite(entry.severity)) {
-    details.push(`Severity ×${formatNumeric(entry.severity, 3)}`);
+    details.push(`Severity ×${formatSeverityValue(entry.severity)}`);
   }
 
   return details.join('\n');
@@ -727,7 +736,7 @@ function buildLandFactor(hazard, manager, terraformingState, zones) {
   return {
     key: 'landPreference',
     label: `Preferred Terrain (${preferenceLabel})`,
-    info: `Preference ${preferenceLabel}\nSeverity ×${formatNumeric(severity, 3)}`,
+    info: `Preference ${preferenceLabel}\nSeverity ×${formatSeverityValue(severity)}`,
     tooltip: isLandPreference
       ? 'Each zone adds (liquid water + liquid CO₂ + liquid methane coverage) × severity to the penalty. Zone penalties are averaged using zone surface share.'
       : 'No growth penalty is currently applied for this preference.',
@@ -766,7 +775,7 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
       key: 'invasivenessResistance',
       label: 'Biomass Invasiveness',
       tooltip: 'If current invasiveness exceeds the target, each zone adds (density × (current − target) × severity), averaged using zone surface share.',
-      info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatNumeric(severity, 3)}`,
+      info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatSeverityValue(severity)}`,
       values: [`Current Design: ${formatNumeric(currentInvasiveness, 2)}`],
       penalties: [`Penalty: 0%`],
       totalPenalty: 0
@@ -797,7 +806,7 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
     key: 'invasivenessResistance',
     label: 'Biomass Invasiveness',
     tooltip: 'Zone penalty = life density × (current invasiveness − target) × severity. Totals use zone surface share weighting.',
-    info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatNumeric(severity, 3)}`,
+    info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatSeverityValue(severity)}`,
     values,
     penalties,
     totalPenalty
@@ -972,6 +981,10 @@ function ensureLayout() {
   const summaryCenterHeader = doc.createElement('div');
   summaryCenterHeader.className = 'hazard-summary__header';
   summaryCenterHeader.textContent = 'Zone Growth';
+  const zoneGrowthTooltip = createInfoIcon(
+    'Zone growth = net growth rate × hazardous biomass × logistic term. The logistic term is 1 − (biomass ÷ carrying capacity). Carrying capacity equals the zone’s land share × maximum density, so growth slows as biomass approaches that limit and turns negative when penalties outweigh base growth.'
+  );
+  summaryCenterHeader.appendChild(zoneGrowthTooltip);
   const summaryCenterBody = doc.createElement('div');
   summaryCenterBody.className = 'hazard-summary__body';
   summaryCenter.appendChild(summaryCenterHeader);
@@ -1308,6 +1321,12 @@ function computeZoneGrowth(terraformingState, hazardParameters, manager, zones) 
     }));
   }
 
+  const resourcesState = getResources();
+  const landResource = resourcesState && resourcesState.surface && resourcesState.surface.land;
+  const terraformingLand = Number.isFinite(terraformingState.initialLand) ? terraformingState.initialLand : 0;
+  const fallbackLand = landResource && Number.isFinite(landResource.initialValue) ? landResource.initialValue : 0;
+  const initialLand = terraformingLand || fallbackLand || 0;
+
   const shareResolver = (() => {
     if (manager && typeof manager.getZoneWeight === 'function') {
       return (zone, count) => manager.getZoneWeight(zone, count);
@@ -1348,10 +1367,7 @@ function computeZoneGrowth(terraformingState, hazardParameters, manager, zones) 
       percentage = zones.length ? 1 / zones.length : 0;
     }
 
-    const surfaceArea = terraformingState.celestialParameters && Number.isFinite(terraformingState.celestialParameters.surfaceArea)
-      ? terraformingState.celestialParameters.surfaceArea
-      : 0;
-    const zoneArea = surfaceArea * percentage;
+    const zoneArea = initialLand && percentage ? initialLand * percentage : 0;
     const carryingCapacity = zoneArea && maxDensity ? zoneArea * maxDensity : 0;
 
     const zonePenalty = Number.isFinite(zonePenaltyMap[zone]) ? zonePenaltyMap[zone] : 0;
@@ -1361,7 +1377,9 @@ function computeZoneGrowth(terraformingState, hazardParameters, manager, zones) 
 
     let growthPerSecond = 0;
     if (zoneBiomass > 0 && carryingCapacity > 0 && Number.isFinite(zoneNetRate)) {
-      const logisticTerm = 1 - zoneBiomass / carryingCapacity;
+      const logisticTerm = zoneNetRate > 0
+        ? 1 - (zoneBiomass / carryingCapacity)
+        : 1;
       growthPerSecond = zoneNetRate * zoneBiomass * logisticTerm;
     }
 

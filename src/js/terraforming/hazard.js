@@ -298,7 +298,9 @@ class HazardManager {
 
     if (deltaSeconds > 0 && hazardResource && hazardResource.modifyRate) {
       if (growthDelta) {
-        hazardResource.modifyRate(growthDelta / deltaSeconds, 'Hazard Growth', 'terraforming');
+        const growthRate = growthDelta / deltaSeconds;
+        const growthLabel = growthRate < 0 ? 'Hazard Decay' : 'Hazard Growth';
+        hazardResource.modifyRate(growthRate, growthLabel, 'terraforming');
       }
 
       if (crusaderDelta) {

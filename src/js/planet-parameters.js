@@ -953,14 +953,14 @@ const umbraOverrides = {
       invasivenessResistance: { value: 20, severity: 0.005 },
       oxygenPressure: { min: 0, max: 10, unit: 'kPa', severity: 0.01 },
       co2Pressure: { min: 10, max: 50, unit: 'kPa', severity: 0.01 },
-      atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.001 },
+      atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.002 },
       landPreference: { value: 'Land', severity: 0.005 },
       temperaturePreference: {
         min: 273.15,
         max: 303.15,
         unit: 'K',
-        severityBelow: 0.0025,
-        severityHigh: 0.0050
+        severityBelow: 0.004,
+        severityHigh: 0.005
       },
       radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 0.1 },
       penalties: {
