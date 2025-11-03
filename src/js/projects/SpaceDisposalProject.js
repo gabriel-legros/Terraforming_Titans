@@ -288,7 +288,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const ghg = resources.atmospheric.greenhouseGas;
     const originalAmount = ghg.value;
     const removal = Math.min(removed, originalAmount);
-    const originalTemp = terraforming.temperature.value;
+    const originalTemp = terraforming.temperature.trend;
 
     const saveTempState =
       typeof terraforming.saveTemperatureState === 'function'
@@ -306,15 +306,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     try {
       ghg.value = originalAmount - removal;
       if (canUpdateSurfaceTemperature) {
-        terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+        terraforming.updateSurfaceTemperature(0);
       }
-      newTemp = terraforming.temperature?.value ?? newTemp;
+      newTemp = terraforming.temperature?.trend ?? newTemp;
     } finally {
       ghg.value = originalAmount;
       if (snapshot && restoreTempState) {
         restoreTempState(snapshot);
       } else if (canUpdateSurfaceTemperature) {
-        terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+        terraforming.updateSurfaceTemperature(0);
       }
     }
 
