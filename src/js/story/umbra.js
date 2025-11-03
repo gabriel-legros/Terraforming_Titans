@@ -256,14 +256,15 @@ progressUmbra.chapters.push(
     narrative: "Mary : 'The enemy on the ground has turned so passive.  You can have your pick on how you actually want to get rid of what's left.' \n Objective : Eliminate all hazardous biomass.",
     prerequisites: ['chapter22.4'],
     objectives: [
-      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 10_000_000_000 }
+      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 13_000_000_000 }
     ],
     reward: []
   },
   {
     id: 'chapter23.0',
     type: 'journal',
-    chapter: 22,
+    chapter: 23,
+    title :  'Chapter 23 : Taking out the trash',
     activePlanet: 'umbra',
     narrative: "Pete : 'Mary, are you seriously going to let your machine commit mass murder like that?' \n Mary : 'Pete, are you seriously going to let the killing of tens of thousands of martians go unpunished?' \n  Pete : 'Point taken.  Proceed.  You have my approval.'",
     prerequisites: ['chapter22.5'],
@@ -275,10 +276,10 @@ progressUmbra.chapters.push(
   {
     id: 'chapter23.1',
     type: 'journal',
-    chapter: 22,
+    chapter: 23,
     activePlanet: 'umbra',
     narrative: "Kane : 'In the name of the Machine God, cleanse this world of all Hazard!  May its will be done!' \n Mary : 'Did his psychiatrist actually sign his release?  Was she named Harley Quinn or something?'  \n  Evelyn : 'I'll look into it' \n Mary : 'Thanks Evelyn.'  \n Objective : Eliminate all hazardous biomass to continue.",
-    prerequisites: ['chapter22.5'],
+    prerequisites: ['chapter23.0'],
     objectives: [
       { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 0 }
     ],
@@ -287,7 +288,7 @@ progressUmbra.chapters.push(
   {
     id: 'chapter23.2',
     type: 'journal',
-    chapter: 22,
+    chapter: 23,
     activePlanet: 'umbra',
     narrative: "Mary : 'Wow.  Not sure if I should be impressed.  You just ruined Pete's planet though.'  \n Bob : 'He's going to hate it.' \n Mary : 'Let's give him a gift and remind him of what you're best at.  A form of apology, if you will.' \n Complete the terraforming of Umbra to continue.",
     prerequisites: ['chapter23.1'],
@@ -298,12 +299,12 @@ progressUmbra.chapters.push(
     reward: [      { target: 'spaceManager', type: 'setRwgLock', targetId: 'umbra', value: true },]
   },
   {
-    id: 'chapter22.7',
+    id: 'chapter23.3',
     type: 'journal',
-    chapter: 22,
+    chapter: 23,
     activePlanet: 'umbra',
     narrative: "Feroza : 'Ma'am, I have news.  We managed to board an enemy ship and recover it intact.'  \n Evelyn : 'That's incredible!  We can dismantle it from the inside and learn everything we can from it.' \n 'Mary' : *whistles* 'Well, that's going to make it easier to fight them.' \n System Message : UHF Fleet Power increase by x1.5.",
-    prerequisites: ['chapter22.6'],
+    prerequisites: ['chapter23.2'],
     objectives: [
     ],
     reward: [

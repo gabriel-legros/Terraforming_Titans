@@ -739,7 +739,7 @@ progressVenus.chapters.push(
     type: "journal",
     chapter: 20,
     narrative: "Receving public broadcast... 'We have received reports that the fledgling colony of Umbra, a barely breathable world, is under assault by ground Cewinsii forces.  We have reached out to Mars for comment.'  \n Mary : 'Mars' pet project.  They found a world out there with a 10kPa oxygen atmosphere, and thought they could colonize it without your help.  Looks like it got unlucky.' \n H.O.P.E. : Requesting permission to assist the colonists of Umbra.  \n Mary : 'Did you just... ask for permission?  Well... alright then.  Since you asked so nicely... sure.  Let's take the Venusian fleet out for a ride and go help them.'",
-    prerequisites: ["impossible"],
+    prerequisites: ["chapter20.17"],
     objectives: [],
     reward: [
       { target: 'spaceManager', targetId: 'umbra', type: 'enable' }

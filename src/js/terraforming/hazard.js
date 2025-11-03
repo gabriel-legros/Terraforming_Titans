@@ -2,7 +2,7 @@ let hazardManager = null;
 let getZonePercentageHelper;
 let zonesList;
 
-const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = 1;
+const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = 5;
 
 try {
   window.hazardousBiomassRemovalConstant = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER;
