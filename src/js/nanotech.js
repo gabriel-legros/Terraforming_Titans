@@ -187,62 +187,99 @@ class NanotechManager extends EffectableEntity {
       controlsSection.insertAdjacentElement('afterend', container);
       container.innerHTML = `
         <div class="card-header"><span class="card-title">Nanocolony</span></div>
-        <div class="card-body">
-          <div class="stats-grid two-col">
-            <div class="stat-item">
-              <span class="stat-label">Nanobots:</span>
-              <span class="stat-value"><span id="nanobot-count">1</span>/<span id="nanobot-cap">1</span></span>
+        <div class="card-body nanotech-card-body">
+          <div class="nanotech-summary-grid">
+            <div class="nanotech-summary-card">
+              <span class="summary-label">Nanobots</span>
+              <div class="summary-value">
+                <span id="nanobot-count">1</span>
+                <span class="summary-divider">/</span>
+                <span id="nanobot-cap">1</span>
+              </div>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">Growth rate:</span>
-              <span class="stat-value" id="nanobot-growth-rate">0%</span>
+            <div class="nanotech-summary-card">
+              <span class="summary-label">Growth rate</span>
+              <span class="summary-value" id="nanobot-growth-rate">0%</span>
+            </div>
+            <div class="nanotech-summary-card nanotech-energy-card">
+              <div class="summary-label">
+                Energy allocation <span class="info-tooltip-icon" title="Percentage of power: Maximum percentage of total energy production the swarm may consume per second. Absolute (MW): Fixed energy limit in megawatts the swarm may consume per second.">&#9432;</span>
+              </div>
+              <div class="nanotech-energy-limit">
+                <input type="text" id="nanotech-energy-limit" value="${this.maxEnergyPercent}">
+                <select id="nanotech-energy-limit-mode">
+                  <option value="percent" selected>percentage of power</option>
+                  <option value="absolute">absolute (MW)</option>
+                </select>
+              </div>
+              <div class="nanotech-energy-stats">
+                <div class="energy-stat">
+                  <span class="energy-label">Growth boost</span>
+                  <span class="energy-value" id="nanotech-growth-impact">+0.00%</span>
+                </div>
+                <div class="energy-stat">
+                  <span class="energy-label">Draw</span>
+                  <span class="energy-value" id="nanotech-growth-energy">0 W</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="control-group">
-            <label for="nanotech-energy-limit">Energy Use Limit <span class="info-tooltip-icon" title="Percentage of power: Maximum percentage of total energy production the swarm may consume per second. Absolute (MW): Fixed energy limit in megawatts the swarm may consume per second.">&#9432;</span></label>
-            <div style="display: flex; gap: 4px;">
-              <input type="text" id="nanotech-energy-limit" value="${this.maxEnergyPercent}" style="flex:1;">
-              <select id="nanotech-energy-limit-mode" style="flex:1;">
-                <option value="percent" selected>percentage of power</option>
-                <option value="absolute">absolute (MW)</option>
-              </select>
+          <p class="nanotech-hint">The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</p>
+          <div class="nanotech-stage">
+            <div class="nanotech-stage-header">
+              <h4>Stage I</h4>
             </div>
-            <span id="nanotech-growth-impact" class="slider-value">+0.00%</span>
-            <span id="nanotech-growth-energy" class="slider-value">0 W</span>
-          </div>
-          <div class="slider-description"><small>The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects.  When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</small></div>
-
-          <h4>Stage I</h4>
-          <div class="control-group">
-            <label for="nanotech-silicon-slider">Silicon Consumption</label>
-            <div class="slider-container">
-              <input type="range" id="nanotech-silicon-slider" class="pretty-slider" min="0" max="10" step="1">
-              <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+            <div class="nanotech-slider-grid">
+              <div class="nanotech-slider-card">
+                <div class="slider-header">
+                  <span class="slider-title">Silicon Consumption</span>
+                  <div class="slider-values">
+                    <span id="nanotech-silicon-impact">+0.00%</span>
+                    <span id="nanotech-silicon-rate">0 ton/s</span>
+                  </div>
+                </div>
+                <div class="slider-control">
+                  <div class="slider-container">
+                    <input type="range" id="nanotech-silicon-slider" class="pretty-slider" min="0" max="10" step="1">
+                    <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+                  </div>
+                </div>
+                <p class="slider-description">Consumes silicon to boost growth.</p>
+              </div>
+              <div class="nanotech-slider-card">
+                <div class="slider-header">
+                  <span class="slider-title">Maintenance I</span>
+                  <div class="slider-values">
+                    <span id="nanotech-maintenance-impact">0.00%</span>
+                    <span id="nanotech-maintenance-rate">0%</span>
+                  </div>
+                </div>
+                <div class="slider-control">
+                  <div class="slider-container">
+                    <input type="range" id="nanotech-maintenance-slider" class="pretty-slider" min="0" max="10" step="1">
+                    <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+                  </div>
+                </div>
+                <p class="slider-description">Reduces metal, glass, and water maintenance by up to 50%.</p>
+              </div>
+              <div class="nanotech-slider-card">
+                <div class="slider-header">
+                  <span class="slider-title">Glass Production</span>
+                  <div class="slider-values">
+                    <span id="nanotech-glass-impact">0.00%</span>
+                    <span id="nanotech-glass-rate">0 ton/s</span>
+                  </div>
+                </div>
+                <div class="slider-control">
+                  <div class="slider-container">
+                    <input type="range" id="nanotech-glass-slider" class="pretty-slider" min="0" max="10" step="1">
+                    <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+                  </div>
+                </div>
+                <p class="slider-description">Diverts growth to fabricate glass.</p>
+              </div>
             </div>
-            <span id="nanotech-silicon-impact" class="slider-value">+0.00%</span>
-            <span id="nanotech-silicon-rate" class="slider-value">0 ton/s</span>
           </div>
-          <div class="slider-description"><small>Consumes silicon to boost growth.</small></div>
-          <div class="control-group">
-            <label for="nanotech-maintenance-slider">Maintenance I</label>
-            <div class="slider-container">
-              <input type="range" id="nanotech-maintenance-slider" class="pretty-slider" min="0" max="10" step="1">
-              <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
-            </div>
-            <span id="nanotech-maintenance-impact" class="slider-value">0.00%</span>
-            <span id="nanotech-maintenance-rate" class="slider-value">0%</span>
-          </div>
-          <div class="slider-description"><small>Reduces metal, glass, and water maintenance by up to 50%.</small></div>
-          <div class="control-group">
-            <label for="nanotech-glass-slider">Glass Production</label>
-            <div class="slider-container">
-              <input type="range" id="nanotech-glass-slider" class="pretty-slider" min="0" max="10" step="1">
-              <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
-            </div>
-            <span id="nanotech-glass-impact" class="slider-value">0.00%</span>
-            <span id="nanotech-glass-rate" class="slider-value">0 ton/s</span>
-          </div>
-          <div class="slider-description"><small>Diverts growth to fabricate glass.</small></div>
         </div>`;
       document
         .getElementById('nanotech-silicon-slider')

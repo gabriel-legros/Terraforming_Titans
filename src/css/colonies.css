@@ -232,91 +232,176 @@ input[type="range"].pretty-slider::-moz-range-thumb {
 
 /* --- Nanocolony Card --- */
 #nanocolony-container .card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 16px;
 }
 
-#nanocolony-container .stats-grid {
-    display: grid;
-    gap: 8px;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+#nanocolony-container .nanotech-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-#nanocolony-container .stat-item {
-    background-color: #fff;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
+#nanocolony-container .nanotech-summary-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-#nanocolony-container .stat-label {
-    font-weight: 600;
-    color: #6c757d;
-    display: block;
-    font-size: 0.9em;
+#nanocolony-container .nanotech-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 12px;
 }
 
-#nanocolony-container .stat-value {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #343a40;
+#nanocolony-container .nanotech-summary-card .summary-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-#nanocolony-container .control-group {
-    display: grid;
-    grid-template-columns: 100px minmax(0, 1fr) 80px 200px;
-    align-items: center;
-    gap: 8px;
-    max-width: 700px;
+#nanocolony-container .nanotech-summary-card .summary-value {
+  font-size: 1.25em;
+  font-weight: 700;
+  color: #212529;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 }
 
-#nanocolony-container .control-group label {
-    font-weight: 600;
-    color: #495057;
-    font-size: 0.9em;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+#nanocolony-container .nanotech-summary-card .summary-divider {
+  color: #adb5bd;
+  font-weight: 400;
 }
 
-#nanocolony-container .control-group .slider-container {
-    position: relative;
-    flex-grow: 1;
-    width: 100%;
-    min-width: 150px;
-    display: flex;
-    align-items: center;
+#nanocolony-container .nanotech-energy-card .nanotech-energy-limit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-#nanocolony-container .control-group input[type="range"] {
-    width: 100%;
+#nanocolony-container .nanotech-energy-card .nanotech-energy-limit input,
+#nanocolony-container .nanotech-energy-card .nanotech-energy-limit select {
+  flex: 1 1 140px;
+  min-width: 100px;
 }
 
-#nanocolony-container .slider-value {
-    font-size: 1em;
-    font-weight: bold;
-    color: #343a40;
-    min-width: 40px;
-    text-align: right;
+#nanocolony-container .nanotech-energy-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-#nanocolony-container .slider-description {
-    font-size: 0.8em;
-    color: #6c757d;
-    margin-top: -8px;
-    margin-left: 158px;
-    padding-bottom: 8px;
-    grid-column: 2 / -1;
+#nanocolony-container .nanotech-energy-stats .energy-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-#nanocolony-container h4 {
-    margin-top: 10px;
-    margin-bottom: 5px;
-    font-size: 1.1em;
-    color: #495057;
-    border-bottom: 1px solid #dee2e6;
-    padding-bottom: 5px;
+#nanocolony-container .nanotech-energy-stats .energy-label {
+  font-size: 0.8em;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+#nanocolony-container .nanotech-energy-stats .energy-value {
+  font-size: 1em;
+  font-weight: 600;
+  color: #343a40;
+}
+
+#nanocolony-container .nanotech-hint {
+  margin: -4px 0 0;
+  font-size: 0.85em;
+  color: #6c757d;
+}
+
+#nanocolony-container .nanotech-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#nanocolony-container .nanotech-stage-header h4 {
+  margin: 0;
+  font-size: 1.05em;
+  color: #495057;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 6px;
+}
+
+#nanocolony-container .nanotech-slider-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+#nanocolony-container .nanotech-slider-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+#nanocolony-container .nanotech-slider-card .slider-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 52px;
+}
+
+#nanocolony-container .nanotech-slider-card .slider-title {
+  font-weight: 600;
+  color: #495057;
+  line-height: 1.2;
+}
+
+#nanocolony-container .nanotech-slider-card .slider-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-weight: 600;
+  color: #343a40;
+}
+
+#nanocolony-container .nanotech-slider-card .slider-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#nanocolony-container .nanotech-slider-card .slider-control .slider-container {
+  width: 100%;
+}
+
+#nanocolony-container .nanotech-slider-card .slider-description {
+  margin: 0;
+  font-size: 0.85em;
+  color: #6c757d;
+}
+
+#nanocolony-container .nanotech-slider-card .slider-description + .slider-description {
+  margin-top: -8px;
+}
+
+#nanocolony-container .nanotech-slider-card .slider-values span {
+  min-width: 70px;
+  text-align: right;
 }
 .colony-buoyancy-card .card-body {
   font-size: 0.9em;
