@@ -962,7 +962,7 @@ const umbraOverrides = {
         severityBelow: 0.0025,
         severityHigh: 0.0050
       },
-      radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 100 },
+      radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 0.1 },
       penalties: {
         buildCost: 0.75,
         maintenanceCost: 0.75,

@@ -238,7 +238,7 @@ class HazardManager {
           const zonePenaltyValue = Number.isFinite(zonePenaltyMap[zone]) ? zonePenaltyMap[zone] : 0;
           const adjustedGrowthPercent = growthPercent - globalPenalty - zonePenaltyValue;
           const growthRate = adjustedGrowthPercent / 100;
-          const deltaBiomass = growthRate * currentBiomass * logisticTerm * deltaSeconds / 1000;
+          const deltaBiomass = growthRate * currentBiomass * logisticTerm * deltaSeconds;
           const nextBiomass = currentBiomass + deltaBiomass;
           const upperBound = carryingCapacity;
 

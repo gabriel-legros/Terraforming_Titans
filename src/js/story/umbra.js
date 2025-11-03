@@ -16,7 +16,7 @@ progressUmbra.storyProjects.umbra_crusader_final_push = {
   unlocked: false,
   attributes: {
     planet: 'umbra',
-    resourceGain: { special: { alienArtifact: 100 } },
+    resourceGain: { special: { alienArtifact: 25 } },
     storySteps: [
       'Strike teams breach cloaked nests and mark biomass hotspots for orbital fire.',
       'Hazardous biomass routed into kill-zones; crusader losses mounting but acceptable.',
@@ -191,7 +191,7 @@ progressUmbra.chapters.push(
   {
     id: 'chapter22.1',
     type: 'journal',
-    chapter: 21,
+    chapter: 22,
     activePlanet: 'umbra',
     narrative: "Mary : 'Do we have an option to forcefully evacuate HOPE?' \n Evelyn : 'Sorry Mary, I've looked at our options, we can't patch anything in without the MTC encryption keys.  You probably don't want to use the kill switch for this.  You would have to physically restrain HOPE and that might... you know...'  \n Mary : 'I know.  Fine.'",
     prerequisites: ['chapter22.0b'],
@@ -229,7 +229,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Receiving transmission from a new unknown frequency...  \n Firefly : 'My predecessor failed to destroy you.  It will be my honour instead!  You will all perish!'  \n Mary : 'What happened to Ghost?' \n $WGC_TEAM1_LEADER$ : 'He's been sent to the Okoth front.  The Okoth made a big play.  Priorities set by the regency council.  They needed Ghost there so they replaced him here.  I doubt he was happy about it.  Anyway, Firefly is a moron.  First thing he did was cancel that actual good plan Ghost had.  We've practically won.'",
+    narrative: "Receiving transmission from a new unknown frequency...  \n Firefly : 'My predecessor failed to destroy you.  It will be my honour instead!  You will all perish!'  \n Mary : 'What happened to Ghost?' \n $WGC_TEAM1_LEADER$ : 'Oh so that's what this was about!  He's been sent to the Okoth front.  The Okoth made a big play the empire could not ignore.  I am sure Ghost would have preferred to stay here but...  priorities are set by the regency council.  They needed Ghost there so they replaced him here.  I doubt he was happy about it.  Anyway, Firefly is a moron.  First thing he did was cancel that actual good plan Ghost had.  We've practically won.'",
     prerequisites: ['chapter22.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
