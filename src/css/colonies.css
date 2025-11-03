@@ -386,6 +386,9 @@ input[type="range"].pretty-slider::-moz-range-thumb {
 }
 
 #nanocolony-container .nanotech-slider-card .slider-control .slider-container {
+  position: relative;
+  display: flex;
+  align-items: center;
   width: 100%;
 }
 

@@ -116,6 +116,69 @@
     color: #ffffff;
 }
 
+.dark-mode #nanocolony-container .nanotech-summary-card,
+.dark-mode #nanocolony-container .nanotech-slider-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-mode #nanocolony-container .nanotech-summary-card .summary-label {
+    color: #bbbbbb;
+}
+
+.dark-mode #nanocolony-container .nanotech-summary-card .summary-value {
+    color: #ffffff;
+}
+
+.dark-mode #nanocolony-container .nanotech-energy-card .nanotech-energy-limit input,
+.dark-mode #nanocolony-container .nanotech-energy-card .nanotech-energy-limit select {
+    background-color: #121212;
+    border: 1px solid #555;
+    color: #ffffff;
+}
+
+.dark-mode #nanocolony-container .nanotech-energy-stats .energy-label {
+    color: #9ca3af;
+}
+
+.dark-mode #nanocolony-container .nanotech-energy-stats .energy-value {
+    color: #f0f0f0;
+}
+
+.dark-mode #nanocolony-container .nanotech-hint,
+.dark-mode #nanocolony-container .nanotech-slider-card .slider-description {
+    color: #9ca3af;
+}
+
+.dark-mode #nanocolony-container .nanotech-stage-header h4 {
+    color: #f0f0f0;
+    border-bottom-color: #444;
+}
+
+.dark-mode #nanocolony-container .nanotech-slider-card .slider-title,
+.dark-mode #nanocolony-container .nanotech-slider-card .slider-values {
+    color: #f0f0f0;
+}
+
+.dark-mode #nanocolony-container .slider-container .tick-marks span {
+    background-color: #555;
+}
+
+.dark-mode #nanocolony-container .slider-container .tick-marks span:first-child,
+.dark-mode #nanocolony-container .slider-container .tick-marks span:last-child {
+    background-color: transparent;
+}
+
+.dark-mode #nanocolony-container input[type="range"].pretty-slider::-webkit-slider-runnable-track,
+.dark-mode #nanocolony-container input[type="range"].pretty-slider::-moz-range-track {
+    background: #4d4d4d;
+}
+
+.dark-mode #nanocolony-container input[type="range"].pretty-slider::-webkit-slider-thumb,
+.dark-mode #nanocolony-container input[type="range"].pretty-slider::-moz-range-thumb {
+    background-color: #dddddd;
+}
+
 .dark-mode .mirror-oversight-card select {
     background-color: #1e1e1e;
     border-color: #444;
