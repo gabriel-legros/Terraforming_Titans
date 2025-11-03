@@ -39,8 +39,11 @@ function hideLoadingOverlay() {
 }
 
 function recalculateLandUsage() {
-  if (!resources || !resources.surface || !resources.surface.land) return;
+  const landResource = resources?.surface?.land;
+  if (!landResource) return;
+
   let reserved = 0;
+
   if (typeof buildings !== 'undefined') {
     for (const name in buildings) {
       const b = buildings[name];
@@ -49,6 +52,7 @@ function recalculateLandUsage() {
       }
     }
   }
+
   if (typeof colonies !== 'undefined') {
     for (const name in colonies) {
       const c = colonies[name];
@@ -57,7 +61,12 @@ function recalculateLandUsage() {
       }
     }
   }
-  resources.surface.land.reserved = reserved;
+
+  const hazardousReserved = landResource.getReservedAmountForSource
+    ? (landResource.getReservedAmountForSource.call(landResource, 'hazardousBiomass') || 0)
+    : (Number.isFinite(landResource._hazardousBiomassReserved) ? landResource._hazardousBiomassReserved : 0);
+
+  landResource.reserved = reserved + (hazardousReserved || 0);
 }
 
 function getGameState() {
