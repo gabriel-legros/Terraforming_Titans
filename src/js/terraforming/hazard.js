@@ -122,6 +122,7 @@ class HazardManager {
       maintenanceCost: 1,
       populationGrowth: 1,
     };
+    this.crusaderTargetZone = 'any';
   }
 
   enable() {
@@ -179,14 +180,58 @@ class HazardManager {
     }
   }
 
+  getCrusaderTargetZone() {
+    return this.crusaderTargetZone || 'any';
+  }
+
+  setCrusaderTargetZone(zone) {
+    let normalized = 'any';
+    if (typeof zone === 'string') {
+      const trimmed = zone.trim();
+      if (trimmed) {
+        normalized = trimmed.toLowerCase();
+      }
+    }
+
+    if (normalized !== 'any') {
+      let knownZones = [];
+      if (Array.isArray(zonesList) && zonesList.length) {
+        knownZones = zonesList;
+      } else if (typeof terraforming !== 'undefined' && terraforming && terraforming.zonalSurface) {
+        knownZones = Object.keys(terraforming.zonalSurface);
+      }
+
+      if (knownZones.indexOf(normalized) === -1) {
+        normalized = 'any';
+      }
+    }
+
+    if (this.crusaderTargetZone === normalized) {
+      return this.crusaderTargetZone;
+    }
+
+    this.crusaderTargetZone = normalized;
+
+    if (this.enabled) {
+      this.updateUI();
+    }
+
+    return this.crusaderTargetZone;
+  }
+
   save() {
     return {
-      parameters: cloneHazardParameters(this.parameters)
+      parameters: cloneHazardParameters(this.parameters),
+      crusaderTargetZone: this.getCrusaderTargetZone()
     };
   }
 
   load(data) {
     this.initialize(currentPlanetParameters.hazards);
+    const storedTarget = data && typeof data.crusaderTargetZone === 'string'
+      ? data.crusaderTargetZone
+      : 'any';
+    this.setCrusaderTargetZone(storedTarget);
   }
 
   update(deltaTime = 0, terraforming = null) {
@@ -277,21 +322,78 @@ class HazardManager {
 
         if (totalBiomass > 0) {
           const totalReduction = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER * crusaderCount * deltaSeconds;
+          let remainingReduction = totalReduction;
 
-          zoneEntries.forEach((entry) => {
-            const zoneData = entry.data;
-            const previousValue = Number.isFinite(zoneData.hazardousBiomass) ? zoneData.hazardousBiomass : 0;
-            if (previousValue <= 0) {
-              return;
+          const targetZone = this.getCrusaderTargetZone ? this.getCrusaderTargetZone() : 'any';
+          let focusEntry = null;
+
+          if (targetZone && targetZone !== 'any') {
+            for (let index = 0; index < zoneEntries.length; index += 1) {
+              const candidate = zoneEntries[index];
+              if (candidate && candidate.zone === targetZone) {
+                focusEntry = candidate;
+                break;
+              }
             }
+          }
 
-            const share = previousValue / totalBiomass;
-            const reduction = totalReduction * share;
-            const appliedReduction = reduction < previousValue ? reduction : previousValue;
-            const nextValue = previousValue - appliedReduction;
-            crusaderDelta -= appliedReduction;
-            zoneData.hazardousBiomass = nextValue > 0 ? nextValue : 0;
-          });
+          if (focusEntry) {
+            const focusData = focusEntry.data;
+            const previousValue = Number.isFinite(focusData.hazardousBiomass) ? focusData.hazardousBiomass : 0;
+            if (previousValue > 0) {
+              const appliedReduction = remainingReduction < previousValue ? remainingReduction : previousValue;
+              const nextValue = previousValue - appliedReduction;
+              if (appliedReduction > 0) {
+                crusaderDelta -= appliedReduction;
+                focusData.hazardousBiomass = nextValue > 0 ? nextValue : 0;
+                remainingReduction -= appliedReduction;
+              }
+            }
+          }
+
+          if (remainingReduction > 0) {
+            const availableBiomass = zoneEntries.reduce((sum, entry) => {
+              const zoneData = entry && entry.data;
+              const zoneBiomass = zoneData && Number.isFinite(zoneData.hazardousBiomass)
+                ? zoneData.hazardousBiomass
+                : 0;
+              return zoneBiomass > 0 ? sum + zoneBiomass : sum;
+            }, 0);
+
+            if (availableBiomass > 0) {
+              const baseRemaining = remainingReduction;
+              let sharedReduction = 0;
+
+              zoneEntries.forEach((entry) => {
+                const zoneData = entry && entry.data;
+                const zoneBiomass = zoneData && Number.isFinite(zoneData.hazardousBiomass)
+                  ? zoneData.hazardousBiomass
+                  : 0;
+                if (zoneBiomass <= 0) {
+                  return;
+                }
+
+                const share = zoneBiomass / availableBiomass;
+                let desiredReduction = baseRemaining * share;
+                if (desiredReduction > zoneBiomass) {
+                  desiredReduction = zoneBiomass;
+                }
+
+                if (!desiredReduction) {
+                  return;
+                }
+
+                const nextValue = zoneBiomass - desiredReduction;
+                crusaderDelta -= desiredReduction;
+                zoneData.hazardousBiomass = nextValue > 0 ? nextValue : 0;
+                sharedReduction += desiredReduction;
+              });
+
+              if (sharedReduction > 0) {
+                remainingReduction -= sharedReduction;
+              }
+            }
+          }
         }
       }
     }

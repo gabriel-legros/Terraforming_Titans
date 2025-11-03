@@ -32,6 +32,9 @@ const hazardUICache = {
   zoneTableBody: null,
   zoneRows: [],
   formatter: undefined,
+  crusaderSummaryText: null,
+  crusaderFocusSelect: null,
+  crusaderFocusOptionKeys: null,
   lastControlShare: null,
   lastCrusaderSummary: '',
   lastZoneSummary: '',
@@ -318,7 +321,7 @@ function clearUnusedFactorRows(activeKeys) {
   });
 }
 
-function computeCrusaderSummary(resourcesState) {
+function computeCrusaderSummary(resourcesState, manager) {
   const specialResources = resourcesState && resourcesState.special;
   const crusaderResource = specialResources && specialResources.crusaders;
   const crusaderCount = crusaderResource && crusaderResource.value ? crusaderResource.value : 0;
@@ -335,6 +338,9 @@ function computeCrusaderSummary(resourcesState) {
   const totalRemovalPerSecond = crusaderCount * removalConstant;
   return {
     count: crusaderCount,
+    focusZone: manager && manager.getCrusaderTargetZone
+      ? manager.getCrusaderTargetZone()
+      : 'any',
     removalRate: {
       total: totalRemovalPerSecond
     }
@@ -448,6 +454,59 @@ function renderZoneGrowthTable(rows = []) {
       record.percentCell.textContent = entry.percent;
     }
   });
+}
+
+function refreshCrusaderFocusSelect(zones = []) {
+  const select = hazardUICache.crusaderFocusSelect;
+  if (!select) {
+    return;
+  }
+
+  const doc = getDocument();
+  if (!doc) {
+    return;
+  }
+
+  const manager = getHazardManager();
+  const focusZone = manager && manager.getCrusaderTargetZone
+    ? manager.getCrusaderTargetZone()
+    : 'any';
+
+  const normalizedZones = Array.isArray(zones) ? zones : [];
+  const optionKeys = ['any'].concat(normalizedZones);
+  const previousKeys = Array.isArray(hazardUICache.crusaderFocusOptionKeys)
+    ? hazardUICache.crusaderFocusOptionKeys
+    : [];
+
+  let needsRebuild = optionKeys.length !== previousKeys.length;
+  if (!needsRebuild) {
+    for (let index = 0; index < optionKeys.length; index += 1) {
+      if (optionKeys[index] !== previousKeys[index]) {
+        needsRebuild = true;
+        break;
+      }
+    }
+  }
+
+  if (needsRebuild) {
+    while (select.firstChild) {
+      select.removeChild(select.firstChild);
+    }
+
+    optionKeys.forEach((key) => {
+      const option = doc.createElement('option');
+      option.value = key;
+      option.textContent = key === 'any' ? 'Any' : capitalize(key);
+      select.appendChild(option);
+    });
+
+    hazardUICache.crusaderFocusOptionKeys = optionKeys;
+  }
+
+  const desiredValue = optionKeys.indexOf(focusZone) !== -1 ? focusZone : 'any';
+  if (select.value !== desiredValue) {
+    select.value = desiredValue;
+  }
 }
 
 function computePenaltySummary(multipliers) {
@@ -963,6 +1022,25 @@ function ensureLayout() {
   summaryLeftHeader.textContent = 'Crusader Response';
   const summaryLeftBody = doc.createElement('div');
   summaryLeftBody.className = 'hazard-summary__body';
+  const crusaderSummaryText = doc.createElement('div');
+  crusaderSummaryText.className = 'hazard-crusader-summary';
+  const crusaderFocusControls = doc.createElement('div');
+  crusaderFocusControls.className = 'hazard-crusader-focus';
+  const crusaderFocusLabel = doc.createElement('label');
+  crusaderFocusLabel.className = 'hazard-crusader-focus__label';
+  crusaderFocusLabel.textContent = 'Focus Zone';
+  const crusaderFocusSelect = doc.createElement('select');
+  crusaderFocusSelect.className = 'hazard-crusader-focus__select';
+  crusaderFocusSelect.addEventListener('change', () => {
+    const managerRef = getHazardManager();
+    if (managerRef && managerRef.setCrusaderTargetZone) {
+      managerRef.setCrusaderTargetZone(crusaderFocusSelect.value);
+    }
+  });
+  crusaderFocusLabel.appendChild(crusaderFocusSelect);
+  crusaderFocusControls.appendChild(crusaderFocusLabel);
+  summaryLeftBody.appendChild(crusaderSummaryText);
+  summaryLeftBody.appendChild(crusaderFocusControls);
   summaryLeft.appendChild(summaryLeftHeader);
   summaryLeft.appendChild(summaryLeftBody);
 
@@ -1108,6 +1186,9 @@ function ensureLayout() {
   hazardUICache.summaryLeft = summaryLeft;
   hazardUICache.summaryLeftHeader = summaryLeftHeader;
   hazardUICache.summaryLeftBody = summaryLeftBody;
+  hazardUICache.crusaderSummaryText = crusaderSummaryText;
+  hazardUICache.crusaderFocusSelect = crusaderFocusSelect;
+  hazardUICache.crusaderFocusOptionKeys = null;
   hazardUICache.summaryCenter = summaryCenter;
   hazardUICache.summaryCenterHeader = summaryCenterHeader;
   hazardUICache.summaryCenterBody = summaryCenterBody;
@@ -1164,8 +1245,8 @@ function toggleEmptyState(showEmpty) {
 }
 
 function updateSummaryLines(crusaderSummary, zoneSummary, penaltySummary) {
-  if (hazardUICache.summaryLeftBody && hazardUICache.summaryLeftBody.textContent !== crusaderSummary) {
-    hazardUICache.summaryLeftBody.textContent = crusaderSummary;
+  if (hazardUICache.crusaderSummaryText && hazardUICache.crusaderSummaryText.textContent !== crusaderSummary) {
+    hazardUICache.crusaderSummaryText.textContent = crusaderSummary;
   }
 
   if (hazardUICache.summaryRightBody && hazardUICache.summaryRightBody.textContent !== penaltySummary) {
@@ -1227,6 +1308,7 @@ function updateHazardUI(parameters = {}) {
     : 0;
 
   const totals = computeHazardTotals(terraformingState, hazard, manager);
+  refreshCrusaderFocusSelect(totals.zones || []);
   if (controlShare !== hazardUICache.lastControlShare) {
     updateControlBar(controlShare, totals);
     hazardUICache.lastControlShare = controlShare;
@@ -1242,7 +1324,7 @@ function updateHazardUI(parameters = {}) {
     }
   }
 
-  const crusaderStats = computeCrusaderSummary(resourcesState || {});
+  const crusaderStats = computeCrusaderSummary(resourcesState || {}, manager);
   const crusaderSummary = formatCrusaderSummary(crusaderStats);
   const zoneSummary = formatZoneSummary(totals.zoneGrowth || []);
   const zoneSummaryText = zoneSummary ? zoneSummary.text : '';

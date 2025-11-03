@@ -63,6 +63,58 @@
   color: #d7e4ff;
 }
 
+.hazard-crusader-summary {
+  margin: 0;
+  white-space: inherit;
+}
+
+.hazard-crusader-focus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: #cfe1ff;
+}
+
+.hazard-crusader-focus__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.hazard-crusader-focus__select {
+  appearance: none;
+  background-color: rgba(17, 33, 58, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  color: #f4f8ff;
+  padding: 2px 20px 2px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23d7ebff' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, rgba(88, 140, 255, 0.35), rgba(36, 86, 182, 0.25));
+  background-repeat: no-repeat, no-repeat;
+  background-position: right 12px center, 0 0;
+  background-size: 10px 6px, 100% 100%;
+}
+
+.hazard-crusader-focus__select:focus {
+  outline: none;
+  border-color: rgba(110, 166, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(110, 166, 255, 0.25);
+}
+
+.hazard-crusader-focus__select option {
+  color: #0b1324;
+  background: #ffffff;
+}
+
 .hazard-zone-table {
   width: 100%;
   border-collapse: collapse;
