@@ -253,10 +253,10 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Mary : 'The enemy on the ground has turned so passive.  You can have your pick on how you actually want to get rid of what's left.' \n Objective : Eliminate all hazardous biomass to continue.",
+    narrative: "Mary : 'The enemy on the ground has turned so passive.  You can have your pick on how you actually want to get rid of what's left.' \n Objective : Eliminate all hazardous biomass.",
     prerequisites: ['chapter22.4'],
     objectives: [
-      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 100_000_000 }
+      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 10_000_000_000 }
     ],
     reward: []
   },
@@ -268,7 +268,7 @@ progressUmbra.chapters.push(
     narrative: "Pete : 'Mary, are you seriously going to let your machine commit mass murder like that?' \n Mary : 'Pete, are you seriously going to let the killing of tens of thousands of martians go unpunished?' \n  Pete : 'Point taken.  Proceed.  You have my approval.'",
     prerequisites: ['chapter22.5'],
     objectives: [
-      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 10_000_000 }
+      { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 1_000_000_000 }
     ],
     reward: []
   },
