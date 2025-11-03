@@ -562,11 +562,38 @@ class Building extends EffectableEntity {
   }
 
   adjustLand(amount){
-    if(amount > 0){
-      resources.surface.land.reserve(amount * this.requiresLand);
-    } else {
-      resources.surface.land.release(-amount * this.requiresLand);
+    if (!this.requiresLand) {
+      return true;
     }
+
+    const landResource = resources?.surface?.land;
+    if (!landResource) {
+      return false;
+    }
+
+    const normalizedChange = Number.isFinite(amount) ? amount : 0;
+    const currentActive = Number.isFinite(this.active) ? this.active : 0;
+    const targetActive = Math.max(0, currentActive + normalizedChange);
+    const targetReserved = targetActive * this.requiresLand;
+    const sourceKey = `building:${this.name}`;
+
+    if (!landResource.setReservedAmountForSource) {
+      return false;
+    }
+
+    const currentReservedForSource = landResource.getReservedAmountForSource
+      ? landResource.getReservedAmountForSource(sourceKey)
+      : 0;
+    const additionalRequired = targetReserved - currentReservedForSource;
+
+    if (additionalRequired > 0 && landResource.isAvailable) {
+      if (!landResource.isAvailable(additionalRequired)) {
+        return false;
+      }
+    }
+
+    landResource.setReservedAmountForSource(sourceKey, targetReserved);
+    return true;
   }
 
   maxBuildable(reservePercent = 0, additionalReserves = null) {
@@ -622,7 +649,7 @@ class Building extends EffectableEntity {
         }
       }
       if(this.requiresLand && activate){
-        resources.surface.land.reserve(this.requiresLand*buildCount);
+        this.adjustLand(buildCount);
       }
       const oldActive = this.active;
       const oldProductivity = this.productivity;

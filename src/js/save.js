@@ -42,31 +42,71 @@ function recalculateLandUsage() {
   const landResource = resources?.surface?.land;
   if (!landResource) return;
 
-  let reserved = 0;
+  if (!landResource.setReservedAmountForSource || !landResource.getReservedAmountForSource) {
+    let reserved = 0;
 
-  if (typeof buildings !== 'undefined') {
-    for (const name in buildings) {
-      const b = buildings[name];
-      if (b.requiresLand && b.active > 0) {
-        reserved += b.active * b.requiresLand;
+    if (typeof buildings !== 'undefined') {
+      for (const name in buildings) {
+        const b = buildings[name];
+        if (b.requiresLand && b.active > 0) {
+          reserved += b.active * b.requiresLand;
+        }
       }
     }
+
+    if (typeof colonies !== 'undefined') {
+      for (const name in colonies) {
+        const c = colonies[name];
+        if (c.requiresLand && c.active > 0) {
+          reserved += c.active * c.requiresLand;
+        }
+      }
+    }
+
+    const hazardousReserved = landResource.getReservedAmountForSource
+      ? landResource.getReservedAmountForSource('hazardousBiomass') || 0
+      : (Number.isFinite(landResource._hazardousBiomassReserved) ? landResource._hazardousBiomassReserved : 0);
+
+    landResource.reserved = reserved + (hazardousReserved || 0);
+    return;
+  }
+
+  const trackedSources = landResource.reservedSources || {};
+  for (const key in trackedSources) {
+    if (key.startsWith('building:')) {
+      delete trackedSources[key];
+    }
+  }
+
+  if (trackedSources.default !== undefined) {
+    delete trackedSources.default;
+  }
+
+  if (landResource.recalculateReservedFromSources) {
+    landResource.recalculateReservedFromSources();
+  }
+
+  const applyReservations = collection => {
+    for (const name in collection) {
+      const entity = collection[name];
+      if (!entity || !entity.requiresLand) continue;
+      const active = Number.isFinite(entity.active) ? entity.active : 0;
+      const amount = active > 0 ? active * entity.requiresLand : 0;
+      landResource.setReservedAmountForSource(`building:${name}`, amount);
+    }
+  };
+
+  if (typeof buildings !== 'undefined') {
+    applyReservations(buildings);
   }
 
   if (typeof colonies !== 'undefined') {
-    for (const name in colonies) {
-      const c = colonies[name];
-      if (c.requiresLand && c.active > 0) {
-        reserved += c.active * c.requiresLand;
-      }
-    }
+    applyReservations(colonies);
   }
 
-  const hazardousReserved = landResource.getReservedAmountForSource
-    ? (landResource.getReservedAmountForSource.call(landResource, 'hazardousBiomass') || 0)
-    : (Number.isFinite(landResource._hazardousBiomassReserved) ? landResource._hazardousBiomassReserved : 0);
-
-  landResource.reserved = reserved + (hazardousReserved || 0);
+  if (landResource.recalculateReservedFromSources) {
+    landResource.recalculateReservedFromSources();
+  }
 }
 
 function getGameState() {

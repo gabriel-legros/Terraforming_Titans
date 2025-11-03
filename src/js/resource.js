@@ -143,17 +143,54 @@ class Resource extends EffectableEntity {
 
   setReservedAmountForSource(source, amount) {
     const key = source || 'default';
-    const previous = this.reservedSources[key] || 0;
     const sanitized = Number.isFinite(amount) && amount > 0 ? amount : 0;
+    const existing = this.reservedSources[key] || 0;
 
-    this.reserved = Math.max(0, this.reserved - previous);
+    let tracked = 0;
+    for (const [existingKey, value] of Object.entries(this.reservedSources)) {
+      if (existingKey === 'default') continue;
+      if (Number.isFinite(value) && value > 0) {
+        tracked += value;
+      }
+    }
+
+    const unsourced = Math.max(0, this.reserved - tracked);
+    const previousDefault = this.reservedSources.default || 0;
+
+    if (unsourced > 0) {
+      this.reservedSources.default = unsourced;
+    } else {
+      delete this.reservedSources.default;
+    }
 
     if (sanitized > 0) {
       this.reservedSources[key] = sanitized;
-      this.reserved += sanitized;
     } else {
       delete this.reservedSources[key];
     }
+
+    const updated = this.reservedSources[key] || 0;
+    const defaultChanged =
+      (unsourced > 0 && previousDefault !== unsourced) ||
+      (unsourced === 0 && previousDefault !== 0);
+
+    if (updated !== existing || defaultChanged) {
+      this.recalculateReservedFromSources();
+    }
+
+    return updated;
+  }
+
+  recalculateReservedFromSources() {
+    let totalReserved = 0;
+
+    for (const value of Object.values(this.reservedSources)) {
+      if (Number.isFinite(value) && value > 0) {
+        totalReserved += value;
+      }
+    }
+
+    this.reserved = totalReserved;
   }
 
   getReservedAmountForSource(source) {
