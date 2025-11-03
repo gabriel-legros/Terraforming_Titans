@@ -421,8 +421,7 @@ function reconcileLandResourceValue() {
     }
   }
 
-  const reserved = Math.max(0, landResource.reserved || 0);
-  landResource.value = Math.max(totalLand, reserved);
+  landResource.value = totalLand;
 }
 
 if (typeof globalThis !== 'undefined') {
