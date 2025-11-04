@@ -993,7 +993,6 @@ class WarpGateCommand extends EffectableEntity {
     op.facilityRerolls = this.buildFacilityRerollPool();
     op.criticalSuccessCount = 0;
     op.criticalSuccessWeight = 0;
-    this.applyInfirmaryOperationHeal(teamIndex);
     this.refreshOperationProgress(op, teamIndex);
     op.progress = this.calculateOperationProgress(op);
     this.addLog(teamIndex, `=== Operation #${op.number} ===`);
