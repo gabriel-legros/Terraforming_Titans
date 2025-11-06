@@ -303,7 +303,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 23,
     activePlanet: 'umbra',
-    narrative: "Feroza : 'Ma'am, I have news.  We managed to board an enemy ship and recover it intact.'  \n Evelyn : 'That's incredible!  We can dismantle it from the inside and learn everything we can from it.' \n 'Mary' : *whistles* 'Well, that's going to make it easier to fight them.' \n System Message : UHF Fleet Power increase by x1.5.",
+    narrative: "Feroza : 'Ma'am, I have news.  We managed to board an enemy ship and recover it intact, cloaking device included.'  \n Evelyn : 'That's incredible!  We can dismantle it from the inside and learn everything we can from it.' \n Mary : *whistles* 'Well, that's going to make it easier to fight them.' \n System Message : Effective UHF Fleet Power Capacity increased by x1.25.",
     prerequisites: ['chapter23.2'],
     objectives: [
     ],
@@ -311,7 +311,7 @@ progressUmbra.chapters.push(
       {
         target: 'galaxyManager',
         type: 'fleetCapacityMultiplier',
-        value: 1.5
+        value: 1.25
       }
     ]
   }
