@@ -201,6 +201,27 @@ class MilestonesManager {
 
     // Load the state of milestones and additional attributes from a provided object
     loadState(state) {
+        if (!state) {
+            return;
+        }
+
+        this.removeEffects();
+
+        this.countdownActive = false;
+        this.countdownRemainingTime = 0;
+
+        if (this.countdownElement) {
+            this.countdownElement.remove();
+            this.countdownElement = null;
+        }
+
+        if (typeof document !== 'undefined') {
+            const festivalContainer = document.getElementById('festival-container');
+            if (festivalContainer && festivalContainer.querySelectorAll) {
+                festivalContainer.querySelectorAll('.festival-countdown').forEach(element => element.remove());
+            }
+        }
+
         if (state.milestones) {
             this.milestones.forEach(milestone => {
                 if (state.milestones[milestone.name]) {
