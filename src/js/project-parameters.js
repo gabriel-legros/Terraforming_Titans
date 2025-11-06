@@ -538,6 +538,27 @@ const projectParameters = {
       workersPerCompletion: 1_000_000_000,
     }
   },
+  lifters: {
+    type: 'LiftersProject',
+    name: 'Lifters',
+    category: 'mega',
+    cost: {
+      colony: {
+        superalloys: 1_000_000_000,
+        electronics: 250_000_000,
+        superconductors: 200_000_000,
+        components: 50_000_000,
+      }
+    },
+    duration: 300000,
+    description: 'Assemble space-rated lifting platforms to accelerate orbital logistics.  Each installation persists between worlds and benefits from every terraformed colony assisting the build.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+    }
+  },
   disposeResources : {
     type: 'SpaceDisposalProject',
     name : "Resource Disposal",

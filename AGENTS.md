@@ -293,3 +293,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Hazardous biomass growth summary now appears between crusader and penalty cards, while base growth and total penalty rows live under Growth Modifiers.
 - Added a depletion progress objective type that completes when resources are at or below the target amount.
 - Added a Crusader Final Push story project on Umbra that unlocks after chapter 21.6b and awards alien artifacts for crusader deployments.
+- Added a Lifting advanced research that unlocks repeatable Lifters mega projects which persist across planets and draw on space storage.

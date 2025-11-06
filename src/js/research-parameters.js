@@ -1673,6 +1673,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'lifting',
+        name: 'Lifting',
+        description: 'Unlocks a fleet of orbital lifters capable of assembling massive projects with assistance from every terraformed world.',
+        cost: { advancedResearch: 750000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'lifters',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'bioworkforce',
         name: 'Bioworkforce',
         description: 'Scientists were too busy wondering whether or not they could, they did not stop to ask themselves whether or not they should.  Extends the life designer with an extra ability.',
