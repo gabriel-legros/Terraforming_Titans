@@ -896,7 +896,7 @@ const umbraOverrides = {
     },
     "polar": {
       "biomass": 0,
-      "hazardousBiomass": 1109902084.57827
+      "hazardousBiomass": 0
     }
   },
   "zonalHydrocarbons": {
