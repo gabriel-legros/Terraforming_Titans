@@ -1675,7 +1675,7 @@ const researchParameters = {
       {
         id: 'lifting',
         name: 'Lifting',
-        description: 'Unlocks a fleet of orbital lifters capable of assembling massive projects with assistance from every terraformed world.',
+        description: 'Unlocks a repeatable mega project for the assembly of Lifters, persistent vessels capable of extracting hydrogen from gas giants or stripping an atmosphere at a great energy cost.',
         cost: { advancedResearch: 750000 },
         prerequisites: [],
         effects: [
