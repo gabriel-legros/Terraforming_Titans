@@ -1616,6 +1616,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'nanotechnology_stage_2',
+        name: 'Nanotechnology Stage II',
+        description: 'Expands the nanocolony program.',
+        cost: { advancedResearch: 625000 },
+        prerequisites: ['nanotechnology_stage_1'],
+        effects: [
+          {
+            target: 'nanotechManager',
+            type: 'booleanFlag',
+            flagId: 'stage2_enabled',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'orbital_rings',
         name: 'Orbital Rings',
         description: 'Unlocks a new megastructure project for constructing orbital rings.',
