@@ -896,7 +896,7 @@ const umbraOverrides = {
     },
     "polar": {
       "biomass": 0,
-      "hazardousBiomass": 0
+      "hazardousBiomass": 1109902084.57827
     }
   },
   "zonalHydrocarbons": {
@@ -956,7 +956,7 @@ const umbraOverrides = {
       atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.002 },
       landPreference: { value: 'Land', severity: 0.005 },
       temperaturePreference: {
-        min: 273.15,
+        min: 223.15,
         max: 303.15,
         unit: 'K',
         severityBelow: 0.004,
