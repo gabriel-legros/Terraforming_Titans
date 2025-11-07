@@ -551,12 +551,14 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Assemble space-rated lifting platforms to accelerate orbital logistics.  Persists between worlds.  Each terraformed world reduces expansion time.',
+    description: 'Assemble space-rated lifting platforms that either siphon hydrogen into space storage or peel away the local atmosphere.  Persists between worlds, scales with terraformed worlds, and taps unused Dyson power.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
       canUseSpaceStorage: true,
+      lifterUnitRate: 1_000_000,
+      lifterEnergyPerUnit: 10_000_000,
     }
   },
   disposeResources : {
