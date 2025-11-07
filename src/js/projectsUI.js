@@ -332,7 +332,9 @@ function createProjectItem(project) {
   autoStartLabel.textContent = 'Auto start';
   autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
-  const showTravelReset = project.name === 'dysonSwarmReceiver' || project.attributes?.spaceStorage;
+  const showTravelReset = project.name === 'dysonSwarmReceiver' ||
+    project.attributes?.spaceStorage ||
+    project.attributes?.canUseSpaceStorage;
   let autoStartTravelResetCheckbox = null;
   let autoStartTravelResetLabel = null;
   if (showTravelReset) {
