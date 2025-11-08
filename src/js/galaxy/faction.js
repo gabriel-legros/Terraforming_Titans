@@ -527,15 +527,19 @@ class GalaxyFaction {
 
     getOperationalFleetPower(manager) {
         const available = Number.isFinite(this.fleetPower) && this.fleetPower > 0 ? this.fleetPower : 0;
+        if (!(available > 0)) {
+            return 0;
+        }
         if (this.id !== UHF_FACTION_ID) {
             return available;
         }
-        this.#syncDefenseAssignments(manager);
-        if (!(this.autoDefenseTotal > 0)) {
-            return 0;
+        const reservation = this.getDefenseReservation(manager);
+        const reserved = Number(reservation);
+        if (!Number.isFinite(reserved) || reserved <= 0) {
+            return available;
         }
-        const pool = Math.min(this.autoDefenseTotal, available);
-        return pool > 0 ? pool : 0;
+        const remaining = available - reserved;
+        return remaining > 0 ? remaining : 0;
     }
 
     setDefenseAssignment(sectorKey, value, manager) {

@@ -151,6 +151,27 @@ const GalaxyOperationUI = (() => {
         operationsAllocations.set(key, normalized);
     }
 
+    function resolveOperationsAvailablePower(manager, faction) {
+        if (!faction) {
+            return 0;
+        }
+        const operational = faction.getOperationalFleetPower?.(manager);
+        if (Number.isFinite(operational) && operational > 0) {
+            return operational;
+        }
+        const fleet = Number(faction.fleetPower);
+        if (!Number.isFinite(fleet) || fleet <= 0) {
+            return 0;
+        }
+        const reservation = faction.getDefenseReservation?.(manager)
+            ?? manager?.getDefenseReservation?.(faction.id);
+        if (!Number.isFinite(reservation) || reservation <= 0) {
+            return fleet;
+        }
+        const available = fleet - reservation;
+        return available > 0 ? available : 0;
+    }
+
     function getStoredStep(key) {
         if (!key) {
             return 1;
@@ -363,7 +384,7 @@ const GalaxyOperationUI = (() => {
         const faction = manager.getFaction((typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
             ? globalThis.UHF_FACTION_ID
             : 'uhf');
-        const availablePower = faction ? Math.max(0, faction.fleetPower) : 0;
+        const availablePower = resolveOperationsAvailablePower(manager, faction);
         let current = getStoredAllocation(key);
         let step = getStoredStep(key);
         let shouldUpdateAllocation = true;
@@ -467,7 +488,7 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const uhfFactionId = faction.id || fallbackFactionId;
-        const availablePower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0 ? faction.fleetPower : 0;
+        const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(sectorKey);
         const assignment = clampAssignment(stored, availablePower);
         if (!(assignment > 0)) {
@@ -866,7 +887,7 @@ const GalaxyOperationUI = (() => {
             disableAllControls();
             return;
         }
-        const availablePower = faction ? Math.max(0, faction.fleetPower) : 0;
+        const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(selection.key);
         let assignment = clampAssignment(stored, availablePower);
         const step = getStoredStep(selection.key);
