@@ -554,13 +554,26 @@ function getSelectedSectorKey() {
 
 
 
+function normalizeDefenseStepSize(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        return 1;
+    }
+    const floored = Math.max(1, Math.floor(numeric));
+    let normalized = 1;
+    while (normalized * 10 <= floored) {
+        normalized *= 10;
+    }
+    return normalized;
+}
+
 function updateDefenseStepDisplay(step) {
     if (!galaxyUICache || !galaxyUICache.defenseButtons) {
         return;
     }
     const buttons = galaxyUICache.defenseButtons;
-    const sanitized = Number.isFinite(step) && step > 0 ? Math.max(1, Math.floor(step)) : 1;
-    const formatted = formatDefenseInteger(sanitized);
+    const normalized = normalizeDefenseStepSize(step);
+    const formatted = formatDefenseInteger(normalized);
     if (buttons.decrement) {
         buttons.decrement.textContent = `-${formatted}`;
     }
@@ -569,6 +582,9 @@ function updateDefenseStepDisplay(step) {
     }
     if (buttons.zero) {
         buttons.zero.textContent = '0';
+    }
+    if (buttons.max) {
+        buttons.max.textContent = 'Max';
     }
     if (buttons.divide) {
         buttons.divide.textContent = '/10';
@@ -587,7 +603,7 @@ function getDefenseStepForSector(sectorKey) {
     if (!faction || typeof faction.getDefenseStep !== 'function') {
         return 1;
     }
-    return Math.max(1, Math.floor(faction.getDefenseStep(sectorKey)));
+    return normalizeDefenseStepSize(faction.getDefenseStep(sectorKey));
 }
 
 function setDefenseStepForSector(sectorKey, value) {
@@ -1267,13 +1283,10 @@ function handleDefenseButtonClick(event) {
         target = current > 0 ? Math.max(0, current - step) : 0;
         break;
     case 'divide': {
-        if (step > 1) {
-            const reduced = Math.floor(step / 10);
-            step = reduced >= 1 ? reduced : 1;
-        } else {
-            step = 1;
-        }
-        setDefenseStepForSector(key, step);
+        const reduced = step > 1 ? Math.floor(step / 10) : 1;
+        const resolved = reduced > 0 ? reduced : 1;
+        setDefenseStepForSector(key, resolved);
+        step = getDefenseStepForSector(key);
         updateDefenseStepDisplay(step);
         renderSelectedSectorDetails();
         return;
@@ -1281,13 +1294,25 @@ function handleDefenseButtonClick(event) {
     case 'multiply': {
         const multiplied = step * 10;
         const bounded = Number.isFinite(multiplied) ? multiplied : step;
-        const cap = Number.isFinite(capacity) && capacity > 0 ? Math.floor(capacity) : bounded;
-        step = Math.max(1, Math.min(cap > 0 ? cap : bounded, Math.floor(bounded)));
-        setDefenseStepForSector(key, step);
+        const capacityLimit = Number.isFinite(capacity) && capacity > 0
+            ? Math.floor(capacity)
+            : 0;
+        const limit = Math.floor(bounded);
+        const resolved = capacityLimit > 0
+            ? Math.min(capacityLimit, limit)
+            : limit;
+        const normalized = resolved > 0 ? resolved : 1;
+        setDefenseStepForSector(key, normalized);
+        step = getDefenseStepForSector(key);
         updateDefenseStepDisplay(step);
         renderSelectedSectorDetails();
         return;
     }
+    case 'max':
+        if (Number.isFinite(capacity) && capacity > 0) {
+            target = Math.floor(capacity);
+        }
+        break;
     default:
         break;
     }
@@ -2101,6 +2126,7 @@ function cacheGalaxyElements() {
         { key: 'zero', label: '0', group: 'primary' },
         { key: 'decrement', label: '-1', group: 'primary' },
         { key: 'increment', label: '+1', group: 'primary' },
+        { key: 'max', label: 'Max', group: 'primary' },
         { key: 'divide', label: '/10', group: 'secondary' },
         { key: 'multiply', label: 'x10', group: 'secondary' }
     ].forEach(({ key, label, group }) => {

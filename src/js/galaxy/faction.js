@@ -54,6 +54,19 @@ function getRewardWorldCount(sector) {
     return total;
 }
 
+function normalizeDefenseStepValue(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        return 1;
+    }
+    const floored = Math.max(1, Math.floor(numeric));
+    let normalized = 1;
+    while (normalized * 10 <= floored) {
+        normalized *= 10;
+    }
+    return normalized;
+}
+
 class GalaxyFaction {
     constructor({ id, name, color, startingSectors } = {}) {
         this.id = id || '';
@@ -474,7 +487,11 @@ class GalaxyFaction {
         if (!Number.isFinite(value) || value <= 0) {
             return 1;
         }
-        return Math.max(1, Math.floor(value));
+        const step = normalizeDefenseStepValue(value);
+        if (step !== value) {
+            this.defenseStepSizes.set(sectorKey, step);
+        }
+        return step;
     }
 
     getDefenseReservation(manager) {
@@ -595,7 +612,7 @@ class GalaxyFaction {
             this.defenseStepSizes.delete(sectorKey);
             return 1;
         }
-        const step = Math.max(1, Math.floor(numeric));
+        const step = normalizeDefenseStepValue(numeric);
         this.defenseStepSizes.set(sectorKey, step);
         return step;
     }
@@ -692,7 +709,7 @@ class GalaxyFaction {
                     if (!sectorKey || !Number.isFinite(numericValue) || numericValue <= 0) {
                         return;
                     }
-                    this.defenseStepSizes.set(String(sectorKey), Math.max(1, Math.floor(numericValue)));
+                    this.defenseStepSizes.set(String(sectorKey), normalizeDefenseStepValue(numericValue));
                 });
             }
             this.#syncDefenseAssignments(manager);
