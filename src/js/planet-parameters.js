@@ -351,7 +351,7 @@ const titanOverrides = {
       name: 'Saturn',
       radius: 60268,        // km
       mass: 5.683e26,       // kg
-      orbitRadius: 1221870, // km
+      orbitRadius: 1_221_870, // km
       refDistance_Rp: 10,                 // convenient pivot in R_S
       parentBeltAtRef_mSvPerDay: 3.5,      // chosen so Titan @20.3 RS is ~0.05 airless
       beltFalloffExp: 6
@@ -833,7 +833,10 @@ const umbraOverrides = {
       name: 'Nyx-1',
       radius: 71492,       // km
       mass: 4.255130726862839e+27,      // kg
-      orbitRadius: 33349.90930277854, // km
+      orbitRadius: 1_330_049.90930277854, // km
+      refDistance_Rp: 9.4,                 // Europa
+      parentBeltAtRef_mSvPerDay: 5400,     // airless daily dose at Europa
+      beltFalloffExp: 10
     }
   },
   visualization: {
