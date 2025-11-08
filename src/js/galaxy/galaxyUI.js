@@ -573,7 +573,10 @@ function updateDefenseStepDisplay(step) {
     }
     const buttons = galaxyUICache.defenseButtons;
     const normalized = normalizeDefenseStepSize(step);
-    const formatted = formatDefenseInteger(normalized);
+    const formatStep = typeof formatNumber === 'function'
+        ? (value) => formatNumber(value, true)
+        : formatDefenseInteger;
+    const formatted = formatStep(normalized);
     if (buttons.decrement) {
         buttons.decrement.textContent = `-${formatted}`;
     }
@@ -693,12 +696,6 @@ function formatPercentDisplay(value) {
 }
 
 
-
-
-
-
-
-
 function handleFleetUpgradePurchase(event) {
     const button = event?.currentTarget;
     const upgradeKey = button?.dataset?.upgrade;
@@ -709,7 +706,6 @@ function handleFleetUpgradePurchase(event) {
     if (!manager.purchaseFleetUpgrade(upgradeKey)) {
         return;
     }
-    updateGalaxyUI();
 }
 
 function handleSectorLockToggle() {
@@ -1214,8 +1210,7 @@ function updateSectorDefenseSection() {
     }
 
     if (cache.defenseInput) {
-        cache.defenseInput.value = `${Math.max(0, Math.round(manualAssigned))}`;
-        cache.defenseInput.disabled = false;
+        cache.defenseInput.value = formatDefenseDisplayValue(manualAssigned);
     }
     if (cache.defenseButtons) {
         Object.values(cache.defenseButtons).forEach((button) => {
@@ -1225,29 +1220,6 @@ function updateSectorDefenseSection() {
             button.disabled = false;
         });
     }
-}
-
-function handleDefenseInputChange(event) {
-    const cache = galaxyUICache;
-    const manager = galaxyManager;
-    if (!cache || !manager || !manager.enabled) {
-        return;
-    }
-    const selection = cache.selectedSector;
-    if (!selection) {
-        event.target.value = '0';
-        return;
-    }
-    const key = selection.key;
-    const rawValue = event.target.value;
-    if (event.type === 'input' && typeof rawValue === 'string' && rawValue.trim() === '') {
-        return;
-    }
-    const numeric = Number(rawValue);
-    const sanitized = Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : 0;
-    const applied = manager.setDefenseAssignment({ factionId: UHF_FACTION_KEY, sectorKey: key, value: sanitized });
-    event.target.value = `${Math.max(0, Math.round(applied))}`;
-    renderSelectedSectorDetails();
 }
 
 function handleDefenseButtonClick(event) {
@@ -1319,7 +1291,7 @@ function handleDefenseButtonClick(event) {
 
     const applied = manager.setDefenseAssignment({ factionId: UHF_FACTION_KEY, sectorKey: key, value: target });
     if (cache.defenseInput) {
-        cache.defenseInput.value = `${Math.max(0, Math.round(applied))}`;
+        cache.defenseInput.value = formatDefenseDisplayValue(applied);
     }
     renderSelectedSectorDetails();
 }
@@ -1383,6 +1355,15 @@ function formatDefenseInteger(value) {
         return GALAXY_DEFENSE_INT_FORMATTER.format(rounded);
     }
     return String(rounded);
+}
+
+function formatDefenseDisplayValue(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        return '0.00';
+    }
+    const rounded = Math.round(numeric * 100) / 100;
+    return rounded.toFixed(2);
 }
 
 function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
@@ -2108,53 +2089,42 @@ function cacheGalaxyElements() {
     const defenseRow = doc.createElement('div');
     defenseRow.className = 'galaxy-defense-form__row';
     const defenseInput = doc.createElement('input');
-    defenseInput.type = 'number';
-    defenseInput.min = '0';
-    defenseInput.step = '1';
+    defenseInput.type = 'text';
+    defenseInput.readOnly = true;
+    defenseInput.tabIndex = -1;
+    defenseInput.setAttribute('aria-readonly', 'true');
     defenseInput.className = 'galaxy-defense-form__input';
+    defenseInput.value = formatDefenseDisplayValue(0);
     defenseRow.appendChild(defenseInput);
 
-    const defenseButtonsPrimary = doc.createElement('div');
-    defenseButtonsPrimary.className = 'galaxy-defense-form__buttons';
-    const defenseButtonsSecondary = doc.createElement('div');
-    defenseButtonsSecondary.className = 'galaxy-defense-form__buttons galaxy-defense-form__buttons--secondary';
-    const defenseButtonsColumn = doc.createElement('div');
-    defenseButtonsColumn.className = 'galaxy-defense-form__button-column';
+    const defenseButtonsContainer = doc.createElement('div');
+    defenseButtonsContainer.className = 'galaxy-defense-form__buttons';
 
     const defenseButtons = {};
     [
-        { key: 'zero', label: '0', group: 'primary' },
-        { key: 'decrement', label: '-1', group: 'primary' },
-        { key: 'increment', label: '+1', group: 'primary' },
-        { key: 'max', label: 'Max', group: 'primary' },
-        { key: 'divide', label: '/10', group: 'secondary' },
-        { key: 'multiply', label: 'x10', group: 'secondary' }
-    ].forEach(({ key, label, group }) => {
+        { key: 'zero', label: '0' },
+        { key: 'decrement', label: '-1' },
+        { key: 'increment', label: '+1' },
+        { key: 'max', label: 'Max' },
+        { key: 'divide', label: '/10' },
+        { key: 'multiply', label: 'x10' }
+    ].forEach(({ key, label }) => {
         const button = doc.createElement('button');
         button.type = 'button';
         button.className = 'galaxy-defense-form__button';
         button.dataset.action = key;
         button.textContent = label;
-        if (group === 'secondary') {
-            defenseButtonsSecondary.appendChild(button);
-        } else {
-            defenseButtonsPrimary.appendChild(button);
-        }
+        defenseButtonsContainer.appendChild(button);
         defenseButtons[key] = button;
     });
 
-    defenseButtonsColumn.appendChild(defenseButtonsPrimary);
-    defenseButtonsColumn.appendChild(defenseButtonsSecondary);
-    defenseRow.appendChild(defenseButtonsColumn);
+    defenseRow.appendChild(defenseButtonsContainer);
 
     defenseForm.append(defenseMeta, defenseSummary, defenseRow);
     defenseSection.appendChild(defenseForm);
     attackContent.appendChild(defenseSection);
     incomingAttacks.body.appendChild(attackContent);
 
-    defenseInput.addEventListener('input', handleDefenseInputChange);
-    defenseInput.addEventListener('change', handleDefenseInputChange);
-    defenseInput.addEventListener('blur', handleDefenseInputChange);
     Object.values(defenseButtons).forEach((button) => {
         button.addEventListener('click', handleDefenseButtonClick);
     });

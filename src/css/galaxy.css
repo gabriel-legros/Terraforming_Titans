@@ -801,37 +801,30 @@
 
 .galaxy-defense-form__row {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: stretch;
   gap: 12px;
 }
 
 .galaxy-defense-form__input {
-  flex: 0 0 96px;
-  padding: 8px 10px;
+  flex: 1 1 140px;
+  min-width: 110px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid rgba(220, 128, 128, 0.32);
   background: rgba(28, 8, 8, 0.64);
   color: #ffeaea;
   font-weight: 600;
-  font-size: 0.9rem;
-  text-align: right;
-}
-
-.galaxy-defense-form__button-column {
-  flex: 1 1 220px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  font-size: 0.95rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .galaxy-defense-form__buttons {
+  flex: 1 1 220px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
   gap: 8px;
-}
-
-.galaxy-defense-form__buttons--secondary {
-  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
 }
 
 .galaxy-defense-form__button {
@@ -929,6 +922,8 @@
   color: #f0f7ff;
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
+  text-align: center;
+  font-weight: 600;
 }
 
 .galaxy-operations-form__input:disabled {

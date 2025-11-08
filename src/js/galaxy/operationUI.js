@@ -359,21 +359,6 @@ const GalaxyOperationUI = (() => {
         return Math.max(0, Math.min(1, chance));
     }
 
-    function handleOperationsInputChange(event) {
-        const cache = getCache();
-        if (!cache) {
-            return;
-        }
-        const manager = getManager();
-        const key = cache.selectedSector?.key || null;
-        if (!key) {
-            return;
-        }
-        const value = normalizeAssignment(event.target.value);
-        setStoredAllocation(key, value);
-        updateOperationsPanel(manager, cache);
-    }
-
     function adjustAllocationByAction(action) {
         const cache = getCache();
         const manager = getManager();
@@ -559,10 +544,12 @@ const GalaxyOperationUI = (() => {
         form.appendChild(powerRow);
 
         const powerInput = doc.createElement('input');
-        powerInput.type = 'number';
-        powerInput.min = '0';
-        powerInput.step = '1';
+        powerInput.type = 'text';
+        powerInput.readOnly = true;
+        powerInput.tabIndex = -1;
+        powerInput.setAttribute('aria-readonly', 'true');
         powerInput.className = 'galaxy-operations-form__input';
+        powerInput.value = formatOperationsInputValue(0);
         powerRow.appendChild(powerInput);
 
         const buttonGroup = doc.createElement('div');
@@ -736,8 +723,6 @@ const GalaxyOperationUI = (() => {
             operationsStatusMessage: statusMessage
         };
 
-        powerInput.addEventListener('change', handleOperationsInputChange);
-        powerInput.addEventListener('input', handleOperationsInputChange);
 
         container.appendChild(panel);
         return cache;
@@ -788,7 +773,6 @@ const GalaxyOperationUI = (() => {
 
         operationsStatusMessage.textContent = '';
 
-        operationsInput.step = stepSize;
         updateOperationsStepDisplay(stepSize, formatter);
 
         if (operationsDurationLabel) {
