@@ -456,8 +456,7 @@ const GalaxyOperationUI = (() => {
         }
         const selection = cache.selectedSector;
         const sectorKey = selection.key;
-        const sector = manager.getSector(selection.q, selection.r);
-        if (!sectorKey || !sector) {
+        if (!sectorKey) {
             return;
         }
         const fallbackFactionId = (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
@@ -468,10 +467,7 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const uhfFactionId = faction.id || fallbackFactionId;
-        if (isSectorFullyControlled(manager, sector, faction)) {
-            return;
-        }
-        const availablePower = Math.max(0, faction.fleetPower);
+        const availablePower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0 ? faction.fleetPower : 0;
         const stored = getStoredAllocation(sectorKey);
         const assignment = clampAssignment(stored, availablePower);
         if (!(assignment > 0)) {
@@ -479,21 +475,23 @@ const GalaxyOperationUI = (() => {
         }
         const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
         const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
-        const cost = assignment * 1000;
-        if (!antimatterResource || antimatterValue < cost) {
+        const plannedCost = assignment * 1000;
+        if (!antimatterResource || antimatterValue < plannedCost) {
             return;
         }
-        const successChance = resolveOperationSuccessChance(manager, sectorKey, assignment, uhfFactionId);
         const operation = manager.startOperation({
             sectorKey,
             factionId: uhfFactionId,
             assignedPower: assignment,
-            successChance,
             durationMs: getDefaultOperationDurationMs()
         });
         if (!operation) {
             return;
         }
+        const appliedPower = Number.isFinite(operation.assignedPower) && operation.assignedPower > 0
+            ? operation.assignedPower
+            : assignment;
+        const cost = appliedPower * 1000;
         if (antimatterResource) {
             antimatterResource.value = Math.max(0, antimatterValue - cost);
         }
