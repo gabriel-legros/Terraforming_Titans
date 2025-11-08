@@ -43,6 +43,10 @@
     border-left: 2px solid #444;
 }
 
+.dark-mode .journal-header {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
 .dark-mode .journal-index {
     border-top: 1px solid #444;
 }

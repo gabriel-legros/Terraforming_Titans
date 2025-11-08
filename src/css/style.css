@@ -196,9 +196,47 @@ body.journal-collapsed .tab-content {
     height: calc(100vh - 120px); /* Scale with window height minus top area */
 }
 
+.journal-header {
+    position: sticky;
+    top: -15px;
+    z-index: 2;
+    background-color: inherit;
+    margin: -15px -15px 12px;
+    padding: 15px 15px 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.journal-header h3 {
+    margin: 0;
+}
+
+.journal-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.05em;
+}
+
+.journal-title-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.journal-title-label {
+    font-weight: 600;
+}
+
+#journal-nav-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
 /* Journal entries */
 #journal-entries {
-    margin-top: 10px;
+    margin-top: 0;
 }
 
 #journal-entries p {
@@ -263,12 +301,6 @@ body.journal-collapsed .tab-content {
     color: gray;
     cursor: default;
     pointer-events: none;
-}
-
-#journal-nav-container {
-    position: absolute;
-    right: 10px;
-    top: 30px;
 }
 
 .journal-index-icon {
