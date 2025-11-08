@@ -560,6 +560,7 @@ const projectParameters = {
       canUseSpaceStorage: true,
       lifterUnitRate: 10_000_000,
       lifterEnergyPerUnit: 10_000_000,
+      canUseDysonOverflow: true,
     }
   },
   disposeResources : {

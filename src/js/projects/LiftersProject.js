@@ -183,7 +183,10 @@ class LiftersProject extends TerraformingDurationProject {
     }
     const colonyEnergy = resources?.colony?.energy;
     const pending = accumulatedChanges?.colony?.energy || 0;
-    const availableColony = colonyEnergy ? Math.max((colonyEnergy.value || 0) + pending, 0) : 0;
+    const canUseColonyEnergy = this.isColonyEnergyAllowed();
+    const availableColony = (!canUseColonyEnergy || !colonyEnergy)
+      ? 0
+      : Math.max((colonyEnergy.value || 0) + pending, 0);
     const dysonAvailable = this.getDysonOverflowPerSecond() * seconds;
     const totalAvailable = availableColony + dysonAvailable;
     const energyUsed = Math.min(energyRequired, totalAvailable);
@@ -343,6 +346,9 @@ class LiftersProject extends TerraformingDurationProject {
       return { cost: {}, gain: {} };
     }
     const energyRate = cappedUnits * this.energyPerUnit;
+    if (!this.isColonyEnergyAllowed()) {
+      return { cost: {}, gain: {} };
+    }
     const colonyEnergy = resources?.colony?.energy;
     colonyEnergy?.modifyRate?.(-energyRate, 'Lifting', 'project');
     return { cost: { colony: { energy: energyRate * seconds } }, gain: {} };
@@ -385,6 +391,9 @@ class LiftersProject extends TerraformingDurationProject {
       state.remainingTime = this.remainingTime;
       state.startingDuration = this.startingDuration;
     }
+    if (this.attributes?.canUseDysonOverflow) {
+      state.allowColonyEnergyUse = this.allowColonyEnergyUse === true;
+    }
     return state;
   }
 
@@ -395,6 +404,9 @@ class LiftersProject extends TerraformingDurationProject {
     this.isCompleted = false;
     this.setLastTickStats();
     this.updateStatus('Idle');
+    if (this.attributes?.canUseDysonOverflow) {
+      this.allowColonyEnergyUse = state.allowColonyEnergyUse === true;
+    }
     if (state.isActive) {
       this.isActive = true;
       this.startingDuration = state.startingDuration || this.getEffectiveDuration();

@@ -295,3 +295,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Crusader Final Push story project on Umbra that unlocks after chapter 21.6b and awards alien artifacts for crusader deployments.
 - Added a Lifting advanced research that unlocks repeatable Lifters mega projects which persist across planets and draw on space storage.
 - Lifters gained a Dyson-style control card with a Run toggle, gas giant hydrogen harvesting, atmosphere stripping, per-lifter capacity readouts, and explicit use of unused Dyson Swarm energy.
+- Lifters now provide an automation toggle to permit colony energy usage when Dyson overflow energy cannot sustain operations.
