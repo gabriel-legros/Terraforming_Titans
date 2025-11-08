@@ -141,7 +141,7 @@ function showSpaceGalaxyTab() {
         initializeGalaxyUI();
     }
     if (typeof updateGalaxyUI === 'function') {
-        updateGalaxyUI();
+        updateGalaxyUI({ force: true });
     }
 }
 
@@ -279,6 +279,11 @@ function updateSpaceRandomVisibility() {
 function initializeSpaceTabs() {
     if (typeof SubtabManager !== 'function') return;
     spaceSubtabManager = new SubtabManager('.space-subtab', '.space-subtab-content', true);
+    spaceSubtabManager.onActivate((id) => {
+        if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
+            updateGalaxyUI({ force: true });
+        }
+    });
 }
 
 function activateSpaceSubtab(subtabId) {
