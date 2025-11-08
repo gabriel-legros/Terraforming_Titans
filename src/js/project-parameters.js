@@ -544,11 +544,11 @@ const projectParameters = {
     category: 'mega',
     cost: {
       colony: {
-        superalloys: 100_000,
-        electronics: 1_000_000,
-        superconductors: 100_000_000,
-        metal: 1_000_000_000,
-        components: 50_000_000,
+        superalloys: 1_000_000,
+        electronics: 10_000_000,
+        superconductors: 1_000_000_000,
+        metal: 10_000_000_000,
+        components: 500_000_000,
       }
     },
     duration: 60000,
