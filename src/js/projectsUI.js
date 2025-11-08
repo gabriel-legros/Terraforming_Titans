@@ -332,12 +332,16 @@ function createProjectItem(project) {
   autoStartLabel.textContent = 'Auto start';
   autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
+  automationSettingsContainer.appendChild(autoStartCheckboxContainer);
+
   const showTravelReset = project.name === 'dysonSwarmReceiver' ||
     project.attributes?.spaceStorage ||
     project.attributes?.canUseSpaceStorage;
   let autoStartTravelResetCheckbox = null;
   let autoStartTravelResetLabel = null;
   if (showTravelReset) {
+    const autoStartTravelResetContainer = document.createElement('div');
+    autoStartTravelResetContainer.classList.add('checkbox-container');
     autoStartTravelResetCheckbox = document.createElement('input');
     autoStartTravelResetCheckbox.type = 'checkbox';
     autoStartTravelResetCheckbox.id = `${project.name}-auto-start-travel-reset`;
@@ -351,10 +355,10 @@ function createProjectItem(project) {
     autoStartTravelResetLabel = document.createElement('label');
     autoStartTravelResetLabel.htmlFor = autoStartTravelResetCheckbox.id;
     autoStartTravelResetLabel.textContent = 'Uncheck on travelling';
-    autoStartCheckboxContainer.appendChild(autoStartTravelResetCheckbox);
-    autoStartCheckboxContainer.appendChild(autoStartTravelResetLabel);
+    autoStartTravelResetContainer.appendChild(autoStartTravelResetCheckbox);
+    autoStartTravelResetContainer.appendChild(autoStartTravelResetLabel);
+    automationSettingsContainer.appendChild(autoStartTravelResetContainer);
   }
-  automationSettingsContainer.appendChild(autoStartCheckboxContainer);
 
   let allowColonyEnergyCheckbox = null;
   let allowColonyEnergyContainer = null;
