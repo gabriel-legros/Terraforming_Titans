@@ -99,7 +99,7 @@ function renderLiftersUI(project, container) {
 
   const note = document.createElement('p');
   note.classList.add('project-description', 'lifters-note');
-  note.textContent = 'Gas giant harvests feed hydrogen directly into space storage, atmosphere mode peels every gas proportionally, and unused Dyson energy automatically backs lifters when receivers are capped.';
+  note.textContent = 'Gas giant harvests feed hydrogen directly into space storage, atmosphere mode peels every gas proportionally, getting rid of it.  Unused Dyson energy is used first.';
   body.appendChild(note);
 
   card.appendChild(body);
