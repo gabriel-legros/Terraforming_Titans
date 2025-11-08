@@ -930,9 +930,12 @@ class GalaxyOperationManager {
             if (currentOperation && currentOperation.status === 'running') {
                 return;
             }
-            const availablePower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0
-                ? faction.fleetPower
-                : 0;
+            let availablePower = faction.getOperationalFleetPower?.(this.manager);
+            if (!Number.isFinite(availablePower) || availablePower <= 0) {
+                availablePower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0
+                    ? faction.fleetPower
+                    : 0;
+            }
             if (!(availablePower > 0)) {
                 return;
             }

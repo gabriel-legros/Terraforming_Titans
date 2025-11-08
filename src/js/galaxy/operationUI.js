@@ -151,6 +151,27 @@ const GalaxyOperationUI = (() => {
         operationsAllocations.set(key, normalized);
     }
 
+    function resolveOperationsAvailablePower(manager, faction) {
+        if (!faction) {
+            return 0;
+        }
+        const operational = faction.getOperationalFleetPower?.(manager);
+        if (Number.isFinite(operational) && operational > 0) {
+            return operational;
+        }
+        const fleet = Number(faction.fleetPower);
+        if (!Number.isFinite(fleet) || fleet <= 0) {
+            return 0;
+        }
+        const reservation = faction.getDefenseReservation?.(manager)
+            ?? manager?.getDefenseReservation?.(faction.id);
+        if (!Number.isFinite(reservation) || reservation <= 0) {
+            return fleet;
+        }
+        const available = fleet - reservation;
+        return available > 0 ? available : 0;
+    }
+
     function getStoredStep(key) {
         if (!key) {
             return 1;
@@ -363,7 +384,7 @@ const GalaxyOperationUI = (() => {
         const faction = manager.getFaction((typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
             ? globalThis.UHF_FACTION_ID
             : 'uhf');
-        const availablePower = faction ? Math.max(0, faction.fleetPower) : 0;
+        const availablePower = resolveOperationsAvailablePower(manager, faction);
         let current = getStoredAllocation(key);
         let step = getStoredStep(key);
         let shouldUpdateAllocation = true;
@@ -456,8 +477,7 @@ const GalaxyOperationUI = (() => {
         }
         const selection = cache.selectedSector;
         const sectorKey = selection.key;
-        const sector = manager.getSector(selection.q, selection.r);
-        if (!sectorKey || !sector) {
+        if (!sectorKey) {
             return;
         }
         const fallbackFactionId = (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
@@ -468,10 +488,7 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const uhfFactionId = faction.id || fallbackFactionId;
-        if (isSectorFullyControlled(manager, sector, faction)) {
-            return;
-        }
-        const availablePower = Math.max(0, faction.fleetPower);
+        const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(sectorKey);
         const assignment = clampAssignment(stored, availablePower);
         if (!(assignment > 0)) {
@@ -479,21 +496,23 @@ const GalaxyOperationUI = (() => {
         }
         const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
         const antimatterValue = antimatterResource ? Number(antimatterResource.value) : 0;
-        const cost = assignment * 1000;
-        if (!antimatterResource || antimatterValue < cost) {
+        const plannedCost = assignment * 1000;
+        if (!antimatterResource || antimatterValue < plannedCost) {
             return;
         }
-        const successChance = resolveOperationSuccessChance(manager, sectorKey, assignment, uhfFactionId);
         const operation = manager.startOperation({
             sectorKey,
             factionId: uhfFactionId,
             assignedPower: assignment,
-            successChance,
             durationMs: getDefaultOperationDurationMs()
         });
         if (!operation) {
             return;
         }
+        const appliedPower = Number.isFinite(operation.assignedPower) && operation.assignedPower > 0
+            ? operation.assignedPower
+            : assignment;
+        const cost = appliedPower * 1000;
         if (antimatterResource) {
             antimatterResource.value = Math.max(0, antimatterValue - cost);
         }
@@ -868,7 +887,7 @@ const GalaxyOperationUI = (() => {
             disableAllControls();
             return;
         }
-        const availablePower = faction ? Math.max(0, faction.fleetPower) : 0;
+        const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(selection.key);
         let assignment = clampAssignment(stored, availablePower);
         const step = getStoredStep(selection.key);
