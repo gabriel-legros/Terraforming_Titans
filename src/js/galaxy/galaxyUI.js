@@ -131,6 +131,19 @@ let galaxyUICache = null;
 const supportsPointerEvents = typeof window !== 'undefined' && 'PointerEvent' in window;
 let legacyPanAttached = false;
 
+function isGalaxySubtabActive() {
+    const doc = globalThis?.document;
+    if (!doc) {
+        return true;
+    }
+    const button = doc.querySelector?.('[data-subtab="space-galaxy"]');
+    if (button?.classList?.contains('active')) {
+        return true;
+    }
+    const content = doc.getElementById?.('space-galaxy');
+    return !!content?.classList?.contains('active');
+}
+
 function formatFleetValue(value) {
     if (!Number.isFinite(value)) {
         return '0';
@@ -2659,14 +2672,17 @@ function initializeGalaxyUI() {
     if (!cache) {
         return;
     }
-    updateGalaxyUI();
+    updateGalaxyUI({ force: true });
 }
 
-function updateGalaxyUI() {
+function updateGalaxyUI(options = {}) {
     const cache = galaxyUICache || cacheGalaxyElements();
     if (!cache) {
         return;
     }
+
+    const { force = false } = options;
+    const subtabActive = isGalaxySubtabActive();
 
     const manager = galaxyManager;
     const enabled = !!(manager && manager.enabled);
@@ -2694,6 +2710,10 @@ function updateGalaxyUI() {
         updateFleetShopDisplay(null, cache);
         clearIncomingAttackPanel(cache);
         refreshEmptyStates();
+        return;
+    }
+
+    if (!force && !subtabActive) {
         return;
     }
 

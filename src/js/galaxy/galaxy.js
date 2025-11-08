@@ -390,7 +390,7 @@ class GalaxyManager extends EffectableEntity {
                 initializeGalaxyUI();
             }
             if (typeof updateGalaxyUI === 'function') {
-                updateGalaxyUI();
+                updateGalaxyUI({ force: true });
             }
         } else if (typeof hideSpaceGalaxyTab === 'function') {
             hideSpaceGalaxyTab();
