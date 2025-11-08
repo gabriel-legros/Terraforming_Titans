@@ -552,7 +552,7 @@ const projectParameters = {
       }
     },
     duration: 60000,
-    description: 'Assemble space-rated lifting platforms that either siphon hydrogen into space storage or peel away the local atmosphere, using inefficient energy beams.  Persists between worlds, scales with terraformed worlds, and taps unused Dyson power.',
+    description: 'Assemble space-rated lifting platforms that either siphon hydrogen into space storage or peel away the local atmosphere, using inefficient energy beams.  Persists between worlds, duration scales with terraformed worlds, and taps unused Dyson power.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
