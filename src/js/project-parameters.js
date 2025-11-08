@@ -544,20 +544,21 @@ const projectParameters = {
     category: 'mega',
     cost: {
       colony: {
-        superalloys: 1_000_000_000,
-        electronics: 250_000_000,
-        superconductors: 200_000_000,
+        superalloys: 100_000,
+        electronics: 1_000_000,
+        superconductors: 100_000_000,
+        metal: 1_000_000_000,
         components: 50_000_000,
       }
     },
-    duration: 300000,
-    description: 'Assemble space-rated lifting platforms that either siphon hydrogen into space storage or peel away the local atmosphere.  Persists between worlds, scales with terraformed worlds, and taps unused Dyson power.',
+    duration: 60000,
+    description: 'Assemble space-rated lifting platforms that either siphon hydrogen into space storage or peel away the local atmosphere, using inefficient energy beams.  Persists between worlds, scales with terraformed worlds, and taps unused Dyson power.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
       canUseSpaceStorage: true,
-      lifterUnitRate: 1_000_000,
+      lifterUnitRate: 10_000_000,
       lifterEnergyPerUnit: 10_000_000,
     }
   },
