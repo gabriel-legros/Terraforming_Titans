@@ -957,7 +957,7 @@ const umbraOverrides = {
       oxygenPressure: { min: 0, max: 10, unit: 'kPa', severity: 0.01 },
       co2Pressure: { min: 10, max: 50, unit: 'kPa', severity: 0.01 },
       atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.002 },
-      landPreference: { value: 'Land', severity: 0.5 },
+      landPreference: { value: 'Land', severity: 0.1 },
       temperaturePreference: {
         min: 223.15,
         max: 303.15,
