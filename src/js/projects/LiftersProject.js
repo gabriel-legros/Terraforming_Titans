@@ -191,8 +191,9 @@ class LiftersProject extends TerraformingDurationProject {
     const dysonAvailable = this.getDysonOverflowPerSecond() * seconds;
     const totalAvailable = availableColony + dysonAvailable;
     const energyUsed = Math.min(energyRequired, totalAvailable);
-    const colonyUsed = Math.min(energyUsed, availableColony);
-    const dysonEnergyUsed = Math.max(energyUsed - colonyUsed, 0);
+    const dysonEnergyUsed = Math.min(energyUsed, dysonAvailable);
+    const colonyUsed = Math.min(Math.max(energyUsed - dysonEnergyUsed, 0), availableColony);
+    const totalUsed = colonyUsed + dysonEnergyUsed;
     if (colonyUsed > 0 && colonyEnergy) {
       if (accumulatedChanges) {
         accumulatedChanges.colony ||= {};
@@ -203,7 +204,7 @@ class LiftersProject extends TerraformingDurationProject {
         colonyEnergy.value = Math.max(0, (colonyEnergy.value || 0) - colonyUsed);
       }
     }
-    return { energyUsed, colonyUsed, dysonEnergyUsed, dysonAvailable };
+    return { energyUsed: totalUsed, colonyUsed, dysonEnergyUsed, dysonAvailable };
   }
 
   refundColonyEnergy(amount, accumulatedChanges) {
