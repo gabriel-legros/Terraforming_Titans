@@ -160,6 +160,48 @@ function formatSeverityDetails(entry) {
   return details.join('\n');
 }
 
+function normalizeTemperatureUnit(unit) {
+  return unit ? `${unit}`.trim().toLowerCase() : '';
+}
+
+function convertTemperatureValueToKelvin(value, unit) {
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+
+  const normalized = normalizeTemperatureUnit(unit);
+  if (normalized === 'c' || normalized === '°c' || normalized === 'celsius') {
+    return value + 273.15;
+  }
+  if (normalized === 'f' || normalized === '°f' || normalized === 'fahrenheit') {
+    return (value - 32) * 5 / 9 + 273.15;
+  }
+  return value;
+}
+
+function formatTemperatureRange(entry, entryUnit, displayUnit, convertDisplay) {
+  if (!entry) {
+    return '';
+  }
+
+  const minDefined = entry.min !== undefined && entry.min !== null;
+  const maxDefined = entry.max !== undefined && entry.max !== null;
+  if (!minDefined && !maxDefined) {
+    return '';
+  }
+
+  const minKelvin = minDefined ? convertTemperatureValueToKelvin(entry.min, entryUnit) : null;
+  const maxKelvin = maxDefined ? convertTemperatureValueToKelvin(entry.max, entryUnit) : null;
+
+  const minText = minDefined && Number.isFinite(minKelvin)
+    ? formatValueWithUnit(convertDisplay(minKelvin), displayUnit, 2)
+    : '—';
+  const maxText = maxDefined && Number.isFinite(maxKelvin)
+    ? formatValueWithUnit(convertDisplay(maxKelvin), displayUnit, 2)
+    : '—';
+  return `${minText} – ${maxText}`;
+}
+
 function capitalize(text) {
   if (!text) {
     return '';
@@ -602,16 +644,59 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
     return null;
   }
 
-  const unit = entry.unit || 'K';
-  const convert = manager.convertTemperatureFromKelvin
+  const entryUnit = entry.unit || 'K';
+  const convertForEntry = manager.convertTemperatureFromKelvin
     ? manager.convertTemperatureFromKelvin.bind(manager)
-    : (value, targetUnit) => (targetUnit && targetUnit.toLowerCase() === 'c' ? value - 273.15 : value);
+    : (value, targetUnit) => {
+      if (!targetUnit) {
+        return value;
+      }
+      const normalized = normalizeTemperatureUnit(targetUnit);
+      if (normalized === 'c' || normalized === '°c' || normalized === 'celsius') {
+        return value - 273.15;
+      }
+      if (normalized === 'f' || normalized === '°f' || normalized === 'fahrenheit') {
+        return (value - 273.15) * 9 / 5 + 32;
+      }
+      return value;
+    };
   const computePenalty = manager.computeRangePenalty
     ? manager.computeRangePenalty.bind(manager)
     : () => 0;
   const zoneWeight = manager.getZoneWeight
     ? manager.getZoneWeight.bind(manager)
     : (zone, count) => (count ? 1 / count : 0);
+
+  let displayUnit = entryUnit;
+  try {
+    const candidate = getTemperatureUnit();
+    if (candidate) {
+      displayUnit = candidate;
+    }
+  } catch (error) {
+    displayUnit = entryUnit;
+  }
+
+  let convertForDisplay;
+  try {
+    const converter = toDisplayTemperature;
+    convertForDisplay = converter && converter.call
+      ? (value) => converter(value)
+      : null;
+  } catch (error) {
+    convertForDisplay = null;
+  }
+
+  if (!convertForDisplay) {
+    const normalizedDisplayUnit = normalizeTemperatureUnit(displayUnit);
+    if (normalizedDisplayUnit === 'c' || normalizedDisplayUnit === '°c' || normalizedDisplayUnit === 'celsius') {
+      convertForDisplay = (value) => value - 273.15;
+    } else if (normalizedDisplayUnit === 'f' || normalizedDisplayUnit === '°f' || normalizedDisplayUnit === 'fahrenheit') {
+      convertForDisplay = (value) => (value - 273.15) * 9 / 5 + 32;
+    } else {
+      convertForDisplay = (value) => value;
+    }
+  }
 
   const values = [];
   const penalties = [];
@@ -621,10 +706,10 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
   zones.forEach((zone) => {
     const zoneData = terraformingState.temperature.zones[zone];
     const tempKelvin = zoneData && Number.isFinite(zoneData.value) ? zoneData.value : 0;
-    const converted = convert(tempKelvin, unit);
+    const converted = convertForEntry(tempKelvin, entryUnit);
     const rawPenalty = computePenalty(entry, converted);
     if (!rawPenalty) {
-      values.push(`${capitalize(zone)}: ${formatValueWithUnit(converted, unit, 2)}`);
+      values.push(`${capitalize(zone)}: ${formatValueWithUnit(convertForDisplay(tempKelvin), displayUnit, 2)}`);
       penalties.push(`${capitalize(zone)}: 0%`);
       return;
     }
@@ -633,13 +718,13 @@ function buildTemperatureFactor(hazard, manager, terraformingState, zones) {
     const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
     const weightedPenalty = rawPenalty * normalizedWeight;
 
-    values.push(`${capitalize(zone)}: ${formatValueWithUnit(converted, unit, 2)}`);
+    values.push(`${capitalize(zone)}: ${formatValueWithUnit(convertForDisplay(tempKelvin), displayUnit, 2)}`);
     penalties.push(`${capitalize(zone)}: ${formatSignedPercentage(-rawPenalty, 3)}`);
     totalPenalty += weightedPenalty;
   });
 
   const infoParts = [];
-  const rangeText = formatRange(entry);
+  const rangeText = formatTemperatureRange(entry, entryUnit, displayUnit, convertForDisplay);
   if (rangeText) {
     infoParts.push(rangeText);
   }
