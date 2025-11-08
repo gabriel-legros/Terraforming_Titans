@@ -78,7 +78,7 @@ const GalaxyOperationUI = (() => {
     }
 
     function getDefaultOperationDurationMs() {
-        const provided = globalThis?.GALAXY_OPERATION_DURATION_MS;
+        const provided = GALAXY_OPERATION_DURATION_MS;
         if (Number.isFinite(provided) && provided > 0) {
             return provided;
         }
