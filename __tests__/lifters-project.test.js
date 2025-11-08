@@ -23,7 +23,7 @@ describe('LiftersProject', () => {
     description: '',
     repeatable: true,
     unlocked: true,
-    attributes: { canUseSpaceStorage: true },
+    attributes: { canUseSpaceStorage: true, canUseDysonOverflow: true },
   }, 'lifters');
 
   const createResource = (value = 0) => {
@@ -91,6 +91,18 @@ describe('LiftersProject', () => {
     global.formatNumber = (value) => value;
   };
 
+  const setDysonOverflow = (energyPerSecond) => {
+    projectManager.projects.dysonSwarmReceiver = {
+      collectors: energyPerSecond > 0 ? 1 : 0,
+      energyPerCollector: energyPerSecond > 0 ? energyPerSecond : 0,
+    };
+    buildings.dysonReceiver = {
+      active: 0,
+      production: { colony: { energy: 0 } },
+      productivity: 0,
+    };
+  };
+
   beforeEach(() => {
     jest.resetModules();
     loadProject();
@@ -135,6 +147,7 @@ describe('LiftersProject', () => {
       isActive: true,
       remainingTime: 120000,
       startingDuration: 180000,
+      allowColonyEnergyUse: false,
     });
 
     loadProject();
@@ -169,6 +182,8 @@ describe('LiftersProject', () => {
     const project = createProject();
     project.repeatCount = 2;
     project.setRunning(true);
+    project.setAllowColonyEnergyUse(true);
+    setDysonOverflow(0);
     const storage = projectManager.projects.spaceStorage;
     const changes = createAccumulatedChanges();
 
@@ -188,6 +203,7 @@ describe('LiftersProject', () => {
     project.repeatCount = 1;
     project.setMode('stripAtmosphere');
     project.setRunning(true);
+    setDysonOverflow(project.unitRatePerLifter * project.energyPerUnit);
     const changes = createAccumulatedChanges();
 
     project.applyCostAndGain(1000, changes, 1);
@@ -207,8 +223,7 @@ describe('LiftersProject', () => {
     resources.colony.energy.value = 0;
     const storage = projectManager.projects.spaceStorage;
     storage.usedStorage = 0;
-    projectManager.projects.dysonSwarmReceiver = { collectors: 5, energyPerCollector: 1000 };
-    buildings.dysonReceiver = { active: 0, production: { colony: { energy: 1000 } }, productivity: 0 };
+    setDysonOverflow(5000);
     const changes = createAccumulatedChanges();
 
     project.applyCostAndGain(1000, changes, 1);
@@ -219,10 +234,28 @@ describe('LiftersProject', () => {
     expect(project.statusText).toBe('Running');
   });
 
+  it('defaults to running only on Dyson overflow energy when colony usage is disabled', () => {
+    const project = createProject();
+    project.repeatCount = 1;
+    project.setRunning(true);
+    setDysonOverflow(project.unitRatePerLifter * project.energyPerUnit);
+    const storage = projectManager.projects.spaceStorage;
+    const changes = createAccumulatedChanges();
+
+    project.applyCostAndGain(1000, changes, 1);
+
+    expect(project.allowColonyEnergyUse).toBe(false);
+    expect(changes.colony.energy).toBe(0);
+    expect(storage.resourceUsage.hydrogen).toBe(project.unitRatePerLifter);
+    expect(project.lastDysonEnergyPerSecond).toBe(project.unitRatePerLifter * project.energyPerUnit);
+    expect(project.statusText).toBe('Running');
+  });
+
   it('draws from Dyson overflow before consuming colony energy when both are available', () => {
     const project = createProject();
     project.repeatCount = 1;
     project.setRunning(true);
+    project.setAllowColonyEnergyUse(true);
     projectManager.projects.dysonSwarmReceiver = { collectors: 5, energyPerCollector: 1_000_000 };
     buildings.dysonReceiver = { active: 0, production: { colony: { energy: 1_000_000 } }, productivity: 0 };
     const changes = createAccumulatedChanges();
@@ -239,6 +272,7 @@ describe('LiftersProject', () => {
     const project = createProject();
     project.repeatCount = 1;
     project.setRunning(true);
+    project.setAllowColonyEnergyUse(true);
     resources.colony.energy.modifyRate.mockReset();
 
     project.estimateCostAndGain(1000, true, 1);

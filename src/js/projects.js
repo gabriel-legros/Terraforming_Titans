@@ -19,6 +19,9 @@ class Project extends EffectableEntity {
     this.shortfallLastTick = false; // Tracks if resource consumption failed last tick
     this.alertedWhenUnlocked = this.unlocked ? true : false;
     this.permanentlyDisabled = false;
+    if (this.attributes?.canUseDysonOverflow) {
+      this.allowColonyEnergyUse = false;
+    }
   }
 
   initializeFromConfig(config, name) {
@@ -557,7 +560,7 @@ class Project extends EffectableEntity {
   applyCostAndGain(deltaTime = 1000) {}
 
   saveState() {
-    return {
+    const state = {
       isActive: this.isActive,
       isPaused: this.isPaused,
       isCompleted: this.isCompleted,
@@ -570,6 +573,10 @@ class Project extends EffectableEntity {
       shownStorySteps: Array.from(this.shownStorySteps),
       alertedWhenUnlocked: this.alertedWhenUnlocked,
     };
+    if (this.attributes?.canUseDysonOverflow) {
+      state.allowColonyEnergyUse = this.allowColonyEnergyUse === true;
+    }
+    return state;
   }
 
   loadState(state) {
@@ -594,9 +601,30 @@ class Project extends EffectableEntity {
     this.autoStartUncheckOnTravel = state.autoStartUncheckOnTravel === true;
     this.shownStorySteps = new Set(state.shownStorySteps || []);
     this.alertedWhenUnlocked = state.alertedWhenUnlocked || false;
+    if (this.attributes?.canUseDysonOverflow) {
+      this.allowColonyEnergyUse = state.allowColonyEnergyUse === true;
+    }
     if (this.attributes.completionEffect && (this.isCompleted || this.repeatCount > 0)) {
       this.applyCompletionEffect();
     }
+  }
+
+  setAllowColonyEnergyUse(allow) {
+    if (!this.attributes?.canUseDysonOverflow) {
+      return;
+    }
+    const next = allow === true;
+    if (this.allowColonyEnergyUse === next) {
+      return;
+    }
+    this.allowColonyEnergyUse = next;
+  }
+
+  isColonyEnergyAllowed() {
+    if (!this.attributes?.canUseDysonOverflow) {
+      return true;
+    }
+    return this.allowColonyEnergyUse === true;
   }
   
 }
