@@ -82,6 +82,7 @@ if (!galaxyOperationUI && typeof globalThis !== 'undefined' && globalThis.Galaxy
 const OPERATION_ARROW_LINE_WIDTH = 4;
 const OPERATION_ARROW_MARGIN = 24;
 const OPERATION_ARROW_MIN_LENGTH = 18;
+const GALAXY_MAP_REFRESH_INTERVAL_MS = 1000;
 
 const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
@@ -1999,7 +2000,8 @@ function cacheGalaxyElements() {
         lastViewWidth: 0,
         lastViewHeight: 0,
         isPointerDown: false,
-        preventNextClick: false
+        preventNextClick: false,
+        lastMapRefresh: 0
     };
 
     if (supportsPointerEvents) {
@@ -2716,6 +2718,7 @@ function updateGalaxyUI(options = {}) {
         updateFleetShopDisplay(null, cache);
         clearIncomingAttackPanel(cache);
         refreshEmptyStates();
+        cache.mapState.lastMapRefresh = 0;
         return;
     }
 
@@ -2749,8 +2752,17 @@ function updateGalaxyUI(options = {}) {
     updateFleetShopDisplay(manager, cache);
     updateIncomingAttackPanel(manager, cache);
     updateSectorDefenseSection();
-    updateGalaxyHexControlColors(manager, cache);
-    galaxyOperationUI?.updateOperationArrows?.(manager, cache);
+    const mapState = cache.mapState;
+    const now = Date.now();
+    let shouldRefreshMap = force;
+    if (!shouldRefreshMap) {
+        shouldRefreshMap = (now - mapState.lastMapRefresh) >= GALAXY_MAP_REFRESH_INTERVAL_MS;
+    }
+    if (shouldRefreshMap) {
+        mapState.lastMapRefresh = now;
+        updateGalaxyHexControlColors(manager, cache);
+        galaxyOperationUI?.updateOperationArrows?.(manager, cache);
+    }
     renderSelectedSectorDetails();
     refreshEmptyStates();
     if (cache.mapState.deferredCenter && cache.mapWrapper && cache.mapWrapper.offsetParent) {

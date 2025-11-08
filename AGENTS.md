@@ -258,6 +258,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
 - Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
 - Galaxy map hexes now display zebra stripes combining the top two factions, scaling stripe width with the runner-up's control share.
+- Galaxy hex visuals now refresh at most once per second so the map no longer re-renders every tick.
 - Galaxy factions now track fleet capacity and power, with the UHF scaling from terraformed worlds and other factions drawing capacity from sector control.
 - The Galaxy Upgrades pane now hosts a Fleet Logistics Shop where players invest advanced research, Solis points, alien artifacts, or skill points for stacking fleet capacity multipliers.
 - Galaxy faction control caches only rebuild when sector ownership changes, and the galaxy map now displays shield badges on UHF sectors plus skull badges on contested or bordering alien sectors with sector power folded into each total.
