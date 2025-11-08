@@ -219,6 +219,22 @@ describe('LiftersProject', () => {
     expect(project.statusText).toBe('Running');
   });
 
+  it('draws from Dyson overflow before consuming colony energy when both are available', () => {
+    const project = createProject();
+    project.repeatCount = 1;
+    project.setRunning(true);
+    projectManager.projects.dysonSwarmReceiver = { collectors: 5, energyPerCollector: 1_000_000 };
+    buildings.dysonReceiver = { active: 0, production: { colony: { energy: 1_000_000 } }, productivity: 0 };
+    const changes = createAccumulatedChanges();
+
+    project.applyCostAndGain(1000, changes, 1);
+
+    const expectedTotal = project.unitRatePerLifter * project.energyPerUnit;
+    expect(project.lastDysonEnergyPerSecond).toBe(5_000_000);
+    expect(changes.colony.energy).toBe(-(expectedTotal - project.lastDysonEnergyPerSecond));
+    expect(project.statusText).toBe('Running');
+  });
+
   it('reports lifting energy usage in estimateCostAndGain when running', () => {
     const project = createProject();
     project.repeatCount = 1;
