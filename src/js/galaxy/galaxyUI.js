@@ -1117,6 +1117,17 @@ function renderSelectedSectorDetails() {
 }
 
 
+function setDefenseControlsVisibility(visible) {
+    if (!galaxyUICache) {
+        return;
+    }
+    const form = galaxyUICache.defenseForm;
+    if (form) {
+        form.hidden = !visible;
+        form.style.display = visible ? '' : 'none';
+    }
+}
+
 function updateSectorDefenseSection() {
     const cache = galaxyUICache;
     if (!cache || !cache.defenseSection) {
@@ -1127,12 +1138,14 @@ function updateSectorDefenseSection() {
     const enabled = !!(manager && manager.enabled);
     if (!enabled) {
         section.classList.add('is-hidden');
+        setDefenseControlsVisibility(false);
         return;
     }
     section.classList.remove('is-hidden');
     const selection = cache.selectedSector;
     if (!selection) {
         section.classList.add('is-hidden');
+        setDefenseControlsVisibility(false);
         return;
     }
     const sector = manager?.getSector?.(selection.q, selection.r);
@@ -1141,9 +1154,7 @@ function updateSectorDefenseSection() {
             cache.defenseWarning.textContent = 'Sector data unavailable.';
             cache.defenseWarning.classList.remove('is-hidden');
         }
-        if (cache.defenseForm) {
-            cache.defenseForm.classList.add('is-hidden');
-        }
+        setDefenseControlsVisibility(false);
         return;
     }
 
@@ -1154,9 +1165,7 @@ function updateSectorDefenseSection() {
             cache.defenseWarning.textContent = 'UHF must control this sector to station defensive fleets.';
             cache.defenseWarning.classList.remove('is-hidden');
         }
-        if (cache.defenseForm) {
-            cache.defenseForm.classList.add('is-hidden');
-        }
+        setDefenseControlsVisibility(false);
         return;
     }
 
@@ -1166,18 +1175,14 @@ function updateSectorDefenseSection() {
             cache.defenseWarning.textContent = 'Expand fleet logistics to unlock defensive deployments.';
             cache.defenseWarning.classList.remove('is-hidden');
         }
-        if (cache.defenseForm) {
-            cache.defenseForm.classList.add('is-hidden');
-        }
+        setDefenseControlsVisibility(false);
         return;
     }
 
     if (cache.defenseWarning) {
         cache.defenseWarning.classList.add('is-hidden');
     }
-    if (cache.defenseForm) {
-        cache.defenseForm.classList.remove('is-hidden');
-    }
+    setDefenseControlsVisibility(true);
 
     const sectorName = selection.displayName === 'Core'
         ? 'Core'
@@ -2071,7 +2076,8 @@ function cacheGalaxyElements() {
     defenseSection.appendChild(defenseWarning);
 
     const defenseForm = doc.createElement('div');
-    defenseForm.className = 'galaxy-defense-form is-hidden';
+    defenseForm.className = 'galaxy-defense-form';
+    defenseForm.hidden = true;
 
     const defenseMeta = doc.createElement('div');
     defenseMeta.className = 'galaxy-defense-form__meta';
@@ -2625,7 +2631,7 @@ function updateIncomingAttackPanel(manager, cache) {
 
     const hasEntries = incomingAttacks.length > 0;
     globalThis?.setSpaceIncomingAttackWarning?.(hasEntries);
-    const defenseVisible = cache.defenseForm ? !cache.defenseForm.classList.contains('is-hidden') : false;
+    const defenseVisible = cache.defenseForm ? !cache.defenseForm.hidden : false;
     if (cache.attackContent) {
         cache.attackContent.classList.toggle('is-populated', hasEntries || defenseVisible);
     }
