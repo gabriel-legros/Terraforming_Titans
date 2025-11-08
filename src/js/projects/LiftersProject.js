@@ -3,6 +3,14 @@ const LIFTER_MODES = {
   ATMOSPHERE_STRIP: 'stripAtmosphere',
 };
 
+let dysonManagerInstance = null;
+
+if (typeof module !== 'undefined' && module.exports) {
+  dysonManagerInstance = require('../dyson-manager.js');
+} else if (typeof window !== 'undefined') {
+  dysonManagerInstance = window.dysonManager || null;
+}
+
 class LiftersProject extends TerraformingDurationProject {
   constructor(config, name) {
     super(config, name);
@@ -67,19 +75,7 @@ class LiftersProject extends TerraformingDurationProject {
   }
 
   getDysonOverflowPerSecond() {
-    const dysonProject = projectManager?.projects?.dysonSwarmReceiver;
-    if (!dysonProject || !dysonProject.collectors || !dysonProject.energyPerCollector) {
-      return 0;
-    }
-    const total = dysonProject.collectors * dysonProject.energyPerCollector;
-    const receiver = buildings?.dysonReceiver;
-    if (!receiver || !receiver.active || !receiver.production?.colony?.energy) {
-      return Math.max(total, 0);
-    }
-    const perBuilding = receiver.production.colony.energy;
-    const productivity = receiver.productivity ?? 0;
-    const used = perBuilding * receiver.active * Math.max(productivity, 0);
-    return Math.max(total - used, 0);
+    return dysonManagerInstance?.getOverflowEnergyPerSecond?.() || 0;
   }
 
   getGasModeCapacityLimit() {
