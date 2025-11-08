@@ -463,10 +463,7 @@ class GalaxyFaction {
         if (this.id !== UHF_FACTION_ID) {
             return 0;
         }
-        const total = Number.isFinite(this.defenseAssignmentsTotal)
-            ? this.defenseAssignmentsTotal
-            : this.manualDefenseTotal + this.autoDefenseTotal;
-        return Math.max(0, total);
+        return this.manualDefenseTotal;
     }
 
     getDefenseStep(sectorKey) {
