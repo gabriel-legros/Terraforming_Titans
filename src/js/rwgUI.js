@@ -499,6 +499,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       overlay.style.display = 'flex';
       overlay.style.alignItems = 'center';
       overlay.style.justifyContent = 'center';
+      overlay.style.zIndex = 3;
 
       const win = document.createElement('div');
       win.style.background = '#222';
