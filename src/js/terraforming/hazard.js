@@ -835,7 +835,7 @@ class HazardManager {
     }
 
     const preference = entry.value ? `${entry.value}`.trim().toLowerCase() : '';
-    if (preference !== 'land') {
+    if (preference !== 'land' && preference !== 'liquid') {
       return result;
     }
 
@@ -862,11 +862,14 @@ class HazardManager {
       const liquidCo2 = Number.isFinite(cache.liquidCO2) ? cache.liquidCO2 : 0;
       const liquidMethane = Number.isFinite(cache.liquidMethane) ? cache.liquidMethane : 0;
       const combinedCoverage = Math.min(1, Math.max(0, liquidWater + liquidCo2 + liquidMethane));
-      if (!combinedCoverage) {
+      const penaltyCoverage = preference === 'land'
+        ? combinedCoverage
+        : Math.max(0, 1 - combinedCoverage);
+      if (!penaltyCoverage) {
         return;
       }
 
-      const rawPenalty = combinedCoverage * severity;
+      const rawPenalty = penaltyCoverage * severity;
       if (!rawPenalty) {
         return;
       }

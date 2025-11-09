@@ -86,6 +86,20 @@
     return output;
   }
 
+  const ZONE_KEYS = ['tropical', 'temperate', 'polar'];
+
+  let tuneHazardousBiomassForWorldFn = typeof tuneHazardousBiomassForWorld === 'function'
+    ? tuneHazardousBiomassForWorld
+    : null;
+  if (!tuneHazardousBiomassForWorldFn && typeof module !== 'undefined' && module.exports) {
+    try {
+      const rwgModule = require('./rwg.js');
+      if (rwgModule && typeof rwgModule.tuneHazardousBiomassForWorld === 'function') {
+        tuneHazardousBiomassForWorldFn = rwgModule.tuneHazardousBiomassForWorld;
+      }
+    } catch (_) {}
+  }
+
   function buildSandboxResourcesFromOverride(overrideResources) {
     const res = {};
     for (const cat of Object.keys(overrideResources)) {
@@ -101,6 +115,170 @@
       }
     }
     return res;
+  }
+
+  function clamp01(value) {
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+    if (value <= 0) {
+      return 0;
+    }
+    if (value >= 1) {
+      return 1;
+    }
+    return value;
+  }
+
+  function buildHazardEquilibrationContext(override, terra) {
+    if (!override) {
+      return null;
+    }
+
+    const context = {};
+
+    if (terra && terra.temperature && Number.isFinite(terra.temperature.value)) {
+      context.meanTemperatureK = terra.temperature.value;
+    } else if (override.finalTemps && Number.isFinite(override.finalTemps.mean)) {
+      context.meanTemperatureK = override.finalTemps.mean;
+    } else if (override.celestialParameters
+      && override.celestialParameters.temperature
+      && Number.isFinite(override.celestialParameters.temperature.mean)) {
+      context.meanTemperatureK = override.celestialParameters.temperature.mean;
+    } else if (override.classification && Number.isFinite(override.classification.TeqK)) {
+      context.meanTemperatureK = override.classification.TeqK;
+    }
+
+    let gravity;
+    if (override.celestialParameters && Number.isFinite(override.celestialParameters.gravity)) {
+      gravity = override.celestialParameters.gravity;
+    } else if (terra && terra.celestialParameters && Number.isFinite(terra.celestialParameters.gravity)) {
+      gravity = terra.celestialParameters.gravity;
+    }
+
+    let radius;
+    if (override.celestialParameters && Number.isFinite(override.celestialParameters.radius)) {
+      radius = override.celestialParameters.radius;
+    } else if (terra && terra.celestialParameters && Number.isFinite(terra.celestialParameters.radius)) {
+      radius = terra.celestialParameters.radius;
+    }
+
+    let totalMassKg;
+    let co2Fraction;
+    if (terra && typeof terra.calculateAtmosphericComposition === 'function') {
+      const compositionInfo = terra.calculateAtmosphericComposition();
+      if (compositionInfo) {
+        if (Number.isFinite(compositionInfo.totalMass) && compositionInfo.totalMass > 0) {
+          totalMassKg = compositionInfo.totalMass;
+        }
+        if (compositionInfo.composition && Number.isFinite(compositionInfo.composition.co2)) {
+          co2Fraction = compositionInfo.composition.co2;
+        }
+      }
+    }
+
+    const atmosphericResources = override.resources && override.resources.atmospheric
+      ? override.resources.atmospheric
+      : null;
+    if ((!Number.isFinite(totalMassKg) || totalMassKg <= 0 || !Number.isFinite(co2Fraction)) && atmosphericResources) {
+      let totalTons = 0;
+      let co2Tons = 0;
+      for (const key of Object.keys(atmosphericResources)) {
+        const entry = atmosphericResources[key];
+        const value = entry && Number.isFinite(entry.initialValue) ? entry.initialValue : 0;
+        if (value > 0) {
+          totalTons += value;
+          if (key === 'carbonDioxide') {
+            co2Tons += value;
+          }
+        }
+      }
+      if ((!Number.isFinite(totalMassKg) || totalMassKg <= 0) && totalTons > 0) {
+        totalMassKg = totalTons * 1000;
+      }
+      if (!Number.isFinite(co2Fraction) && totalTons > 0) {
+        co2Fraction = co2Tons / totalTons;
+      }
+    }
+
+    if (Number.isFinite(totalMassKg)
+      && totalMassKg > 0
+      && Number.isFinite(gravity)
+      && gravity > 0
+      && Number.isFinite(radius)
+      && radius > 0
+      && typeof calculateAtmosphericPressure === 'function') {
+      const pressurePa = calculateAtmosphericPressure(totalMassKg / 1000, gravity, radius);
+      if (Number.isFinite(pressurePa) && pressurePa >= 0) {
+        context.surfacePressureKPa = pressurePa / 1000;
+      }
+    }
+
+    if ((!Number.isFinite(context.surfacePressureKPa))
+      && override.celestialParameters
+      && Number.isFinite(override.celestialParameters.surfacePressureKPa)) {
+      context.surfacePressureKPa = override.celestialParameters.surfacePressureKPa;
+    }
+
+    if (Number.isFinite(context.surfacePressureKPa) && Number.isFinite(co2Fraction)) {
+      const clampedFraction = Math.max(0, Math.min(1, co2Fraction));
+      context.co2PressureKPa = context.surfacePressureKPa * clampedFraction;
+    }
+
+    let surfaceArea = 0;
+    if (override.celestialParameters && Number.isFinite(override.celestialParameters.surfaceArea)) {
+      surfaceArea = override.celestialParameters.surfaceArea;
+    } else if (terra && terra.celestialParameters && Number.isFinite(terra.celestialParameters.surfaceArea)) {
+      surfaceArea = terra.celestialParameters.surfaceArea;
+    }
+
+    const zonalCoverage = (terra && terra.zonalCoverageCache) || override.zonalCoverageCache || null;
+    if (zonalCoverage) {
+      let liquidArea = 0;
+      let totalArea = 0;
+      for (const zone of ZONE_KEYS) {
+        const zoneData = zonalCoverage[zone] || {};
+        let zoneArea = Number.isFinite(zoneData.zoneArea) ? zoneData.zoneArea : 0;
+        if (zoneArea <= 0 && surfaceArea > 0) {
+          let weight = 1 / ZONE_KEYS.length;
+          if (typeof getZonePercentage === 'function') {
+            const percentage = getZonePercentage(zone);
+            if (Number.isFinite(percentage) && percentage > 0) {
+              weight = percentage;
+            }
+          }
+          zoneArea = surfaceArea * weight;
+        }
+        if (zoneArea <= 0) {
+          continue;
+        }
+        totalArea += zoneArea;
+        const liquidWater = clamp01(zoneData.liquidWater || 0);
+        const liquidMethane = clamp01(zoneData.liquidMethane || 0);
+        const liquidCO2 = clamp01(zoneData.liquidCO2 || 0);
+        const coverage = Math.max(0, Math.min(1, liquidWater + liquidMethane + liquidCO2));
+        liquidArea += coverage * zoneArea;
+      }
+      if (totalArea > 0) {
+        context.isLiquidWorld = (liquidArea / totalArea) > 0.5;
+      }
+    }
+
+    return context;
+  }
+
+  function applyPostEquilibrationHazardTuning(override, terra) {
+    if (!override || !override.hazards || !override.hazards.hazardousBiomass) {
+      return;
+    }
+    if (!tuneHazardousBiomassForWorldFn) {
+      return;
+    }
+    const context = buildHazardEquilibrationContext(override, terra);
+    if (!context) {
+      return;
+    }
+    tuneHazardousBiomassForWorldFn({ hazards: override.hazards }, context);
   }
 
   function copyBackToOverrideFromSandbox(override, sandboxResources, terra) {
@@ -275,6 +453,7 @@
           globalThis.calculateZoneSolarFluxWithFacility = prevFacilityFn;
           if (!ok) return;
           const outOverride = copyBackToOverrideFromSandbox(fullParams, sandboxResources, terra);
+          applyPostEquilibrationHazardTuning(outOverride, terra);
           console.log('Equilibration finished. Final terraforming object:', terra);
           resolve({ override: outOverride, steps: stepIdx });
         }
