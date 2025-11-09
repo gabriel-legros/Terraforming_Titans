@@ -103,4 +103,29 @@ describe('Hazard zone penalties', () => {
     expect(tropicalBiomass).toBeGreaterThan(temperateBiomass);
     expect(temperateBiomass).toBeGreaterThan(polarBiomass);
   });
+
+  it('penalizes land-heavy zones when hazardous biomass prefers liquids', () => {
+    hazardManager.initialize({
+      hazardousBiomass: {
+        landPreference: { value: 'Liquid', severity: 0.5 },
+      },
+    });
+
+    const terraforming = {
+      zonalCoverageCache: {
+        tropical: { liquidWater: 0, liquidCO2: 0, liquidMethane: 0 },
+        temperate: { liquidWater: 0.6, liquidCO2: 0, liquidMethane: 0 },
+        polar: { liquidWater: 0, liquidCO2: 0.3, liquidMethane: 0 },
+      },
+    };
+
+    const details = hazardManager.calculateLandPreferencePenaltyDetails(
+      terraforming,
+      hazardManager.parameters.hazardousBiomass.landPreference,
+    );
+
+    expect(details.zonePenalties.tropical).toBeCloseTo(0.5, 5);
+    expect(details.zonePenalties.temperate).toBeCloseTo(0.2, 5);
+    expect(details.zonePenalties.polar).toBeCloseTo(0.35, 5);
+  });
 });

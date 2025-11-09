@@ -774,6 +774,67 @@ function applyHazardPreset(hazardKey, { landHa, params, surface, zonalSurface })
   return { hazards: { [hazardKey]: hazardConfig }, totalBiomass };
 }
 
+function tuneHazardousBiomassForWorld(hazardOverride, context) {
+  if (!hazardOverride || !hazardOverride.hazards) {
+    return;
+  }
+
+  const hazardous = hazardOverride.hazards.hazardousBiomass;
+  if (!hazardous) {
+    return;
+  }
+
+  const safeContext = context || {};
+  const { meanTemperatureK, surfacePressureKPa, co2PressureKPa, isLiquidWorld } = safeContext;
+
+  if (Number.isFinite(meanTemperatureK)) {
+    const entry = hazardous.temperaturePreference || {};
+    const radius = Math.max(Math.abs(meanTemperatureK) * 0.1, 30);
+    const min = Math.max(0, meanTemperatureK - radius);
+    const max = Math.max(min, meanTemperatureK + radius);
+    hazardous.temperaturePreference = {
+      ...entry,
+      min,
+      max,
+      unit: entry.unit || 'K'
+    };
+  }
+
+  if (Number.isFinite(surfacePressureKPa)) {
+    const entry = hazardous.atmosphericPressure || {};
+    const radius = Math.max(surfacePressureKPa * 0.5, 10);
+    const min = Math.max(0, surfacePressureKPa - radius);
+    const max = Math.max(min, surfacePressureKPa + radius);
+    hazardous.atmosphericPressure = {
+      ...entry,
+      min,
+      max,
+      unit: entry.unit || 'kPa'
+    };
+  }
+
+  if (Number.isFinite(co2PressureKPa)) {
+    const entry = hazardous.co2Pressure || {};
+    const radius = Math.max(co2PressureKPa * 0.5, 1);
+    const min = Math.max(0, co2PressureKPa - radius);
+    const max = Math.max(min, co2PressureKPa + radius);
+    hazardous.co2Pressure = {
+      ...entry,
+      min,
+      max,
+      unit: entry.unit || 'kPa'
+    };
+  }
+
+  const preferenceEntry = hazardous.landPreference || {};
+  const severity = Number.isFinite(preferenceEntry.severity) ? preferenceEntry.severity : 0.1;
+  hazardous.landPreference = {
+    ...preferenceEntry,
+    value: isLiquidWorld ? 'Liquid' : 'Land',
+    severity
+  };
+}
+
 function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard = 'none' }, params) {
   const rng = mulberry32(seed);
   let classification;
@@ -829,9 +890,25 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   for (const g in atmo) { const m = atmo[g]?.initialValue || 0; compMass[g] = m; totalAtmoMass += m; }
   const composition = {}; if (totalAtmoMass > 0) { if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass; if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass; if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass; if (compMass.hydrogen) composition.h2 = compMass.hydrogen / totalAtmoMass; if (compMass.sulfuricAcid) composition.h2so4 = compMass.sulfuricAcid / totalAtmoMass; }
   const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
+  const surfacePressureKPa = Number.isFinite(surfacePressureBar) ? Math.max(0, surfacePressureBar * 100) : 0;
   const SOLAR_FLUX_1AU = 1361; const flux = (SOLAR_FLUX_1AU * (star.luminositySolar || 1)) / (aAU * aAU);
   const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, rotationPeriodH: rotation, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
   classification.Teq = temps.mean;
+
+  const co2Mass = compMass.carbonDioxide || 0;
+  const co2Fraction = totalAtmoMass > 0 ? Math.min(1, Math.max(0, co2Mass / totalAtmoMass)) : 0;
+  const co2PressureKPa = surfacePressureKPa * co2Fraction;
+  const oceanFraction = Number.isFinite(surfaceFractions.ocean) ? surfaceFractions.ocean : 0;
+  const hydroFraction = Number.isFinite(surfaceFractions.hydrocarbon) ? surfaceFractions.hydrocarbon : 0;
+  const liquidFraction = Math.min(1, Math.max(0, oceanFraction + hydroFraction));
+  if (hazardOverride) {
+    tuneHazardousBiomassForWorld(hazardOverride, {
+      meanTemperatureK: temps.mean,
+      surfacePressureKPa,
+      co2PressureKPa,
+      isLiquidWorld: liquidFraction > 0.5
+    });
+  }
 
   // Natural magnetosphere roll (centralized)
   const magChance = (params.magnetosphere.chanceByType[type] ?? params.magnetosphere.defaultChance);
@@ -1188,6 +1265,7 @@ if (typeof globalThis !== "undefined") {
   globalThis.DEFAULT_SECTOR_LABEL = DEFAULT_SECTOR_LABEL;
   globalThis.RWG_WORLD_TYPES = RWG_WORLD_TYPES;
   globalThis.RWG_TYPE_BASE_COLORS = RWG_TYPE_BASE_COLORS;
+  globalThis.tuneHazardousBiomassForWorld = tuneHazardousBiomassForWorld;
 }
 
 // CommonJS exports
@@ -1200,5 +1278,6 @@ try {
     DEFAULT_PARAMS,
     RWG_WORLD_TYPES,
     RWG_TYPE_BASE_COLORS,
+    tuneHazardousBiomassForWorld,
   };
 } catch (_) {}
