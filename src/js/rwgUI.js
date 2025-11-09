@@ -16,6 +16,7 @@ let rwgSeedEl;
 let rwgTargetEl;
 let rwgTypeEl;
 let rwgOrbitEl;
+let rwgHazardEl;
 let rwgResultEl;
 
 if (!globalThis.__rwgGravityHelpers) {
@@ -78,16 +79,64 @@ if (!rwgGravityHelpers.createGravityWarning) {
 var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMultiplier;
 var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
+const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass' };
+
+function refreshHazardSelect() {
+  if (!rwgHazardEl) return;
+  const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
+  const featureUnlocked = mgr && typeof mgr.isFeatureUnlocked === 'function'
+    ? mgr.isFeatureUnlocked('hazards')
+    : false;
+  if (!featureUnlocked) {
+    rwgHazardEl.style.display = 'none';
+    if (rwgHazardEl.value !== 'none') rwgHazardEl.value = 'none';
+    return;
+  }
+
+  rwgHazardEl.style.display = '';
+  const hazards = mgr && typeof mgr.getAvailableHazards === 'function'
+    ? mgr.getAvailableHazards()
+    : [];
+  const key = JSON.stringify(hazards);
+  if (rwgHazardEl.dataset.lastHazardList !== key) {
+    const frag = document.createDocumentFragment();
+    const noneOpt = document.createElement('option');
+    noneOpt.value = 'none';
+    noneOpt.textContent = 'Hazards: None';
+    frag.appendChild(noneOpt);
+    hazards.forEach((id) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = `Hazards: ${hazardDisplayNames[id] || id}`;
+      frag.appendChild(opt);
+    });
+    rwgHazardEl.innerHTML = '';
+    rwgHazardEl.appendChild(frag);
+    rwgHazardEl.dataset.lastHazardList = key;
+  }
+
+  const hasSelection = Array.from(rwgHazardEl.options).some((opt) => opt.value === rwgHazardEl.value);
+  if (!hasSelection) {
+    rwgHazardEl.value = 'none';
+  }
+}
+
 function encodeSeedOptions(seed, opts = {}) {
   const t = opts.target ?? 'auto';
   const ty = opts.type ?? 'auto';
   const o = opts.orbitPreset ?? 'auto';
-  return `${seed}|${t}|${ty}|${o}`;
+  const h = opts.hazard ?? 'auto';
+  return `${seed}|${t}|${ty}|${o}|${h}`;
 }
 
 function decodeSeedOptions(str) {
-  const [seed, t = 'auto', ty = 'auto', o = 'auto'] = String(str).split('|');
-  return { seed, options: { target: t, type: ty, orbitPreset: o } };
+  const parts = String(str).split('|');
+  const seed = parts[0] || '';
+  const t = parts[1] ?? 'auto';
+  const ty = parts[2] ?? 'auto';
+  const o = parts[3] ?? 'auto';
+  const h = parts[4] ?? 'auto';
+  return { seed, options: { target: t, type: ty, orbitPreset: o, hazard: h } };
 }
 
 function initializeRandomWorldUI() {
@@ -126,6 +175,9 @@ function initializeRandomWorldUI() {
         <option value="cold">Orbit: Cold</option>
         <option value="very-cold">Orbit: Very Cold</option>
       </select>
+      <select id="rwg-hazard" style="display:none;">
+        <option value="none" selected>Hazards: None</option>
+      </select>
     </div>
     <div>
       <button id="rwg-generate-planet" class="rwg-btn primary">Generate World</button>
@@ -137,6 +189,11 @@ function initializeRandomWorldUI() {
   rwgTargetEl = container.querySelector('#rwg-target');
   rwgTypeEl = container.querySelector('#rwg-type');
   rwgOrbitEl = container.querySelector('#rwg-orbit');
+  rwgHazardEl = container.querySelector('#rwg-hazard');
+  if (rwgHazardEl) {
+    rwgHazardEl.dataset.lastHazardList = '[]';
+    refreshHazardSelect();
+  }
 
   if (rwgTypeEl) {
     const typeOrder = [
@@ -236,17 +293,24 @@ function initializeRandomWorldUI() {
     const targetSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-target'));
     const orbitSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-orbit'));
     const typeSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-type'));
+    refreshHazardSelect();
     if (seedInput) {
       const { seed, options } = decodeSeedOptions(seedInput);
       if (targetSel) targetSel.value = options.target;
       if (orbitSel) orbitSel.value = options.orbitPreset;
       if (typeSel) typeSel.value = options.type;
-      drawSingle(seed, options);
+      const hazardOption = options.hazard && options.hazard !== 'auto' ? options.hazard : 'none';
+      if (rwgHazardEl) {
+        const hasOption = Array.from(rwgHazardEl.options).some(opt => opt.value === hazardOption);
+        rwgHazardEl.value = hasOption ? hazardOption : 'none';
+      }
+      drawSingle(seed, { ...options, hazard: hazardOption });
     } else {
       const target = targetSel.value;
       const orbit = orbitSel.value;
       const type = typeSel.value;
-      drawSingle(undefined, { target, orbitPreset: orbit, type });
+      const hazard = rwgHazardEl ? rwgHazardEl.value : 'none';
+      drawSingle(undefined, { target, orbitPreset: orbit, type, hazard });
     }
   });
 
@@ -262,6 +326,8 @@ function ensureRandomWorldUI() {
 function updateRandomWorldUI() {
   const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
   if (!mgr) return;
+
+  refreshHazardSelect();
 
   if (rwgOrbitEl) {
     Array.from(rwgOrbitEl.options).forEach(opt => {
@@ -358,8 +424,21 @@ function attachTravelHandler(res, sStr) {
 
 function drawSingle(seed, options) {
   if (typeof generateRandomPlanet !== 'function') return;
+  refreshHazardSelect();
+  const hazardSelect = rwgHazardEl;
+  const hazardOption = options?.hazard ?? (hazardSelect ? hazardSelect.value : 'none');
+  const normalizedHazard = !hazardOption || hazardOption === 'auto' ? 'none' : hazardOption;
+  if (hazardSelect) {
+    const hasOption = Array.from(hazardSelect.options).some(opt => opt.value === normalizedHazard);
+    hazardSelect.value = hasOption ? normalizedHazard : 'none';
+  }
+  const resolvedOptions = {
+    target: options?.target,
+    orbitPreset: options?.orbitPreset,
+    type: options?.type,
+    hazard: normalizedHazard
+  };
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
-  const seedKey = encodeSeedOptions(sStr, options);
 
   const orbitSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-orbit'));
   const orbitOptions = orbitSelect
@@ -376,12 +455,19 @@ function drawSingle(seed, options) {
     : undefined;
 
   let res = generateRandomPlanet(sStr, {
-    target: options?.target,
-    orbitPreset: options?.orbitPreset,
+    target: resolvedOptions.target,
+    orbitPreset: resolvedOptions.orbitPreset,
     availableOrbits: orbitOptions,
-    type: options?.type,
-    availableTypes: typeOptions
+    type: resolvedOptions.type,
+    availableTypes: typeOptions,
+    hazard: normalizedHazard
   });
+  const appliedHazard = res?.hazard || normalizedHazard;
+  if (hazardSelect) {
+    const hasApplied = Array.from(hazardSelect.options).some(opt => opt.value === appliedHazard);
+    hazardSelect.value = hasApplied ? appliedHazard : 'none';
+  }
+  const seedKey = encodeSeedOptions(sStr, { ...resolvedOptions, hazard: appliedHazard });
   let archetype = res.archetype;
   const box = document.getElementById('rwg-result');
   if (!box) return;
@@ -606,6 +692,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const sectorChip = (galaxyEnabled && c.sector)
     ? `<div class="rwg-chip"><div class="label">Sector</div><div class="value">${c.sector}</div></div>`
     : '';
+  const featureBlock = renderFeatureBlock(res);
   const warningMsg = lockedByStory
     ? 'You must complete the story for the current world first'
     : (alreadyTerraformed
@@ -652,6 +739,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
           ${renderResourceRow('Liquid CH₄', surf.liquidMethane)}
           ${renderResourceRow('CH₄ Ice', surf.hydrocarbonIce)}
         </div>
+        ${featureBlock}
       </div>
     </div>`;
 
@@ -690,6 +778,21 @@ function renderResourceRow(label, resource) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const v = (amount === undefined || amount === null) ? '—' : fmt(amount);
   return `<div class="rwg-row"><span>${label}</span><span>${v}</span></div>`;
+}
+
+function renderFeatureBlock(res) {
+  const hazards = res.override?.hazards || res.merged?.hazards;
+  if (!hazards) return '';
+  const rows = [];
+  if (hazards.hazardousBiomass) {
+    const resource = res.override?.resources?.surface?.hazardousBiomass
+      || res.merged?.resources?.surface?.hazardousBiomass;
+    if (resource && Number.isFinite(resource.initialValue) && resource.initialValue > 0) {
+      rows.push(renderResourceRow('Hazardous Biomass', resource));
+    }
+  }
+  if (!rows.length) return '';
+  return `<div><h4>Features</h4>${rows.join('')}</div>`;
 }
 
 function estimateGasPressure(res, gasKey) {

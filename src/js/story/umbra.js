@@ -296,7 +296,11 @@ progressUmbra.chapters.push(
       type: 'terraforming',
       terraformingParameter : 'complete',
     }],
-    reward: [      { target: 'spaceManager', type: 'setRwgLock', targetId: 'umbra', value: true },]
+    reward: [
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'umbra', value: true },
+      { target: 'rwgManager', type: 'unlockFeature', targetId: 'hazards' },
+      { target: 'rwgManager', type: 'allowHazard', targetId: 'hazardousBiomass' }
+    ]
   },
   {
     id: 'chapter23.3',

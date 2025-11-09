@@ -435,6 +435,32 @@ const DEFAULT_PARAMS = {
   }
 };
 
+const RWG_HAZARD_PRESETS = {
+  hazardousBiomass: {
+    baseGrowth: { value: 0.4, maxDensity: 1 },
+    invasivenessResistance: { value: 20, severity: 0.005 },
+    oxygenPressure: { min: 0, max: 10, unit: 'kPa', severity: 0.01 },
+    co2Pressure: { min: 10, max: 50, unit: 'kPa', severity: 0.01 },
+    atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.002 },
+    landPreference: { value: 'Land', severity: 0.1 },
+    temperaturePreference: {
+      min: 223.15,
+      max: 303.15,
+      unit: 'K',
+      severityBelow: 0.004,
+      severityHigh: 0.005
+    },
+    radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 0.1 },
+    penalties: {
+      buildCost: 0.75,
+      maintenanceCost: 0.75,
+      populationGrowth: 1
+    }
+  }
+};
+
+const RWG_HAZARD_ORDER = ['hazardousBiomass'];
+
 
 function resolveParams(current, overrides) { return deepMerge(current || DEFAULT_PARAMS, overrides || {}); }
 
@@ -442,7 +468,7 @@ function resolveParams(current, overrides) { return deepMerge(current || DEFAULT
 // Supports both legacy k=v annotations and positional: S|<planet|moon>|<type>|<orbitPreset>
 function parseSeedSpec(seedInput) {
   let base = "";
-  let ann = {}; // { target, type, orbitPreset, aAU }
+  let ann = {}; // { target, type, orbitPreset, hazard, aAU }
   let seedInt;
   if (typeof seedInput === "string") {
     const segs = seedInput.split("|");
@@ -460,6 +486,7 @@ function parseSeedSpec(seedInput) {
         if (k === "t" || k === "type" || k === "archetype") ann.type = v;
         else if (k === "o" || k === "orbit" || k === "orbitpreset") ann.orbitPreset = v;
         else if (k === "tg" || k === "target") ann.target = v.toLowerCase();
+        else if (k === "hazard" || k === "haz" || k === "feature") ann.hazard = v;
         else if (k === "d" || k === "au") {
           const num = parseFloat(v);
           if (!Number.isNaN(num)) ann.aAU = num;
@@ -469,11 +496,12 @@ function parseSeedSpec(seedInput) {
       }
     }
     if (unkeyed.length) {
-      const [p0, p1, p2] = unkeyed;
+      const [p0, p1, p2, p3] = unkeyed;
       const p0l = (p0 || "").toLowerCase();
       if (p0l === "planet" || p0l === "moon") ann.target = p0l;
       if (p1) ann.type = p1;
       if (p2) ann.orbitPreset = p2;
+      if (p3) ann.hazard = p3;
     }
     seedInt = baseIsInt ? (parseInt(base, 10) >>> 0) : hashStringToInt(base);
   } else {
@@ -482,11 +510,12 @@ function parseSeedSpec(seedInput) {
   }
   return { seedInt, baseSeed: base, ann };
 }
-function buildSeedSpec(baseInt, { target, type, orbitPreset } = {}) {
+function buildSeedSpec(baseInt, { target, type, orbitPreset, hazard } = {}) {
   const parts = [String(baseInt >>> 0)];
   if (target) parts.push(String(target));
   if (type) parts.push(String(type));
   if (orbitPreset) parts.push(String(orbitPreset));
+  if (hazard) parts.push(String(hazard));
   return parts.join("|");
 }
 
@@ -635,6 +664,14 @@ function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   return gas;
 }
 function depositsFromLandHa(landHa, params) { const areaTotal = Math.round(landHa / params.deposits.areaPerDepositHa); const maxDeposits = Math.round(areaTotal * params.deposits.maxDepositsFraction); return { areaTotal, maxDeposits }; }
+function cloneDefaultSurfaceResource(key) {
+  const defaults = globalThis.defaultPlanetParameters?.resources?.surface;
+  if (defaults && defaults[key]) {
+    return JSON.parse(JSON.stringify(defaults[key]));
+  }
+  return { initialValue: 0, hasCap: false, unlocked: false };
+}
+
 function buildVolatiles(archetype, Teq, landHa, rng, params) {
   const landScale = landHa / params.volatiles.referenceLandHa;
   const surface = {
@@ -647,6 +684,9 @@ function buildVolatiles(archetype, Teq, landHa, rng, params) {
     scrapMetal: { initialValue: 0, unlocked: false, unit: "ton" },
     biomass: { initialValue: 0, hasCap: false, unlocked: false, unit: "ton" },
   };
+  const hazardousBiomass = cloneDefaultSurfaceResource('hazardousBiomass');
+  hazardousBiomass.initialValue = 0;
+  surface.hazardousBiomass = hazardousBiomass;
   const H2O_total = (params.volatiles.H2O_total[archetype] ?? 5e14) * landScale;
   const CH4_total = (params.volatiles.CH4_total[archetype] ?? 0) * landScale;
   if (Teq < 273) { surface.ice.initialValue = H2O_total * 0.999; if (Teq < 195) surface.dryIce.initialValue = 1e10 * landScale; }
@@ -710,7 +750,31 @@ const zonalCO2 = { tropical: { liquid: 0, ice: 0 }, temperate: { liquid: 0, ice:
 }
 
 // ===================== Planet override =====================
-function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
+function applyHazardPreset(hazardKey, { landHa, params, surface, zonalSurface }) {
+  if (!hazardKey || hazardKey === 'none') return null;
+  const preset = RWG_HAZARD_PRESETS[hazardKey];
+  if (!preset) return null;
+  const hazardConfig = JSON.parse(JSON.stringify(preset));
+  const density = Number.isFinite(hazardConfig?.baseGrowth?.maxDensity)
+    ? hazardConfig.baseGrowth.maxDensity
+    : 0;
+  const fractions = getZoneFractionsSafe(params);
+  const zones = ['tropical', 'temperate', 'polar'];
+  let totalBiomass = 0;
+  zones.forEach((zone) => {
+    const share = fractions[zone] || 0;
+    const amount = density > 0 ? landHa * share * density : 0;
+    if (!zonalSurface[zone]) zonalSurface[zone] = {};
+    zonalSurface[zone].hazardousBiomass = amount;
+    totalBiomass += amount;
+  });
+  const resource = surface.hazardousBiomass || cloneDefaultSurfaceResource('hazardousBiomass');
+  resource.initialValue = totalBiomass;
+  surface.hazardousBiomass = resource;
+  return { hazards: { [hazardKey]: hazardConfig }, totalBiomass };
+}
+
+function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard = 'none' }, params) {
   const rng = mulberry32(seed);
   let classification;
   if (forcedType) {
@@ -732,6 +796,12 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
   if (type === "venus-like") rotation = randRange(rng, 5200, 6400);
   const albedo = classification.albedo;
   const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng, params);
+  const hazardOverride = applyHazardPreset(forcedHazard, {
+    landHa,
+    params,
+    surface,
+    zonalSurface: zonal.zonalSurface
+  });
   const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
   const tmpTerraforming = { ...zonal, celestialParameters: { surfaceArea } };
   const zonesList = ["tropical","temperate","polar"]; const zonalCoverageCache = {};
@@ -826,6 +896,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
     ...zonal,
+    ...(hazardOverride ? { hazards: hazardOverride.hazards } : {}),
     zonalCoverageCache,
     finalTemps: { mean: temps.mean, day: temps.day, night: temps.night },
     fundingRate: Math.round(randRange(mulberry32(seed ^ 0xB00B), 5, 15)),
@@ -836,7 +907,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType }, params) {
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },
-    rwgMeta: { generatorSeedInt: seed }
+    rwgMeta: { generatorSeedInt: seed, selectedHazard: forcedHazard }
   };
   return overrides;
 }
@@ -899,6 +970,8 @@ class RwgManager extends EffectableEntity {
     this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
     this.lockedOrbits = new Set(["hot"]);
     this.lockedTypes = new Set(["venus-like"]);
+    this.lockedFeatures = new Set(['hazards']);
+    this.lockedHazards = new Set(['hazardousBiomass']);
   }
   // Param API
   setParams(overrides) { this.params = resolveParams(this.params, overrides); }
@@ -921,6 +994,14 @@ class RwgManager extends EffectableEntity {
     return base.filter((t) => !this.lockedTypes.has(t));
   }
 
+  isFeatureUnlocked(feature) { return !this.lockedFeatures.has(feature); }
+  lockFeature(feature) { if (feature) this.lockedFeatures.add(feature); }
+  unlockFeature(feature) { if (feature) this.lockedFeatures.delete(feature); }
+  getAvailableHazards() { return RWG_HAZARD_ORDER.filter((h) => !this.lockedHazards.has(h)); }
+  isHazardUnlocked(id) { return !id ? false : !this.lockedHazards.has(id); }
+  lockHazard(id) { if (id) this.lockedHazards.add(id); }
+  unlockHazard(id) { if (id) this.lockedHazards.delete(id); }
+
   applyEffect(effect) {
     if (effect.type === 'unlockOrbit') {
       this.unlockOrbit(effect.targetId);
@@ -930,6 +1011,14 @@ class RwgManager extends EffectableEntity {
       this.unlockType(effect.targetId);
     } else if (effect.type === 'lockType') {
       this.lockType(effect.targetId);
+    } else if (effect.type === 'unlockFeature') {
+      this.unlockFeature(effect.targetId);
+    } else if (effect.type === 'lockFeature') {
+      this.lockFeature(effect.targetId);
+    } else if (effect.type === 'allowHazard' || effect.type === 'unlockHazard') {
+      this.unlockHazard(effect.targetId);
+    } else if (effect.type === 'lockHazard' || effect.type === 'forbidHazard') {
+      this.lockHazard(effect.targetId);
     } else if (effect.type === 'enable' && effect.type2 === 'orbit') {
       // Backward compatibility for older save effects
       this.unlockOrbit(effect.targetId);
@@ -942,6 +1031,11 @@ class RwgManager extends EffectableEntity {
 
     // Star
     const star = opts.star ?? generateStar(S ^ 0x1234, P);
+
+    let forcedHazard = opts.hazard ?? seedAnn?.hazard;
+    if (!forcedHazard || forcedHazard === 'auto') forcedHazard = 'none';
+    if (forcedHazard !== 'none' && !this.isFeatureUnlocked('hazards')) forcedHazard = 'none';
+    if (forcedHazard !== 'none' && !this.isHazardUnlocked(forcedHazard)) forcedHazard = 'none';
 
     // Orbit preset & aAU — single orbit RNG stream
     const rngOrbit = mulberry32(S ^ 0xF00D);
@@ -1021,12 +1115,28 @@ class RwgManager extends EffectableEntity {
     }
 
     // Generate the rest using S directly
-    const override = buildPlanetOverride({ seed: S ^ 0xBEEF, star, aAU, isMoon, forcedType }, P);
+    const override = buildPlanetOverride({ seed: S ^ 0xBEEF, star, aAU, isMoon, forcedType, forcedHazard }, P);
 
     // Canonical seed string (positional), always returned
-    const canonicalSeed = buildSeedSpec(S, { target: isMoon ? "moon" : "planet", type: forcedType, orbitPreset: usedPreset });
+    const canonicalSeed = buildSeedSpec(S, {
+      target: isMoon ? "moon" : "planet",
+      type: forcedType,
+      orbitPreset: usedPreset,
+      hazard: forcedHazard !== 'none' ? forcedHazard : undefined
+    });
 
-    return { star, orbitAU: aAU, orbitPreset: usedPreset, isMoon, archetype: forcedType, seedInt: S, seedString: canonicalSeed, override, merged: deepMerge(defaultPlanetParameters, override) };
+    return {
+      star,
+      orbitAU: aAU,
+      orbitPreset: usedPreset,
+      isMoon,
+      archetype: forcedType,
+      hazard: forcedHazard,
+      seedInt: S,
+      seedString: canonicalSeed,
+      override,
+      merged: deepMerge(defaultPlanetParameters, override)
+    };
   }
 
   generateSystem(seed, planetCount, opts = {}) {
