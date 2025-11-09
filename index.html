@@ -449,19 +449,54 @@
             </div>
             <div class="space-subtab-content-wrapper">
                 <div id="space-story" class="space-subtab-content active">
-                    <div id="current-world-section">
-                        <div id="current-world-header">Current World: <span id="current-world-name"></span></div>
-                        <div id="current-world-details-container" class="details-container">
-                            <div class="summary-header">
-                                <span class="summary-arrow">▶</span> Original Properties
+                    <div class="space-story-layout">
+                        <section id="current-world-section" class="space-card current-world-card">
+                            <div id="current-world-header" class="space-card-header">
+                                <div class="space-card-label">Current World</div>
+                                <div class="space-card-title"><span id="current-world-name"></span></div>
                             </div>
-                            <div id="current-world-details" class="details-content hidden"></div>
-                        </div>
-                    </div>
-                    <h2 class="section-title">World Selection</h2>
-                    <div id="planet-selection-options"></div>
-                    <div id="travel-status">
-                        <!-- Status messages about travel preparation/progress -->
+                            <div id="current-world-details-container" class="details-container">
+                                <div class="summary-header">
+                                    <span class="summary-arrow">▶</span>
+                                    <span class="summary-title">Original Properties</span>
+                                </div>
+                                <div id="current-world-details" class="details-content hidden"></div>
+                            </div>
+                        </section>
+                        <section class="space-card selection-card">
+                            <div class="space-card-header space-selection-header">
+                                <div>
+                                    <h2 class="space-card-title">World Selection</h2>
+                                    <p class="space-card-subtitle">Finish terraforming to unlock your next destination.</p>
+                                </div>
+                                <div id="travel-status" class="space-travel-status">
+                                    <!-- Status messages about travel preparation/progress -->
+                                </div>
+                            </div>
+                            <div id="planet-selection-options" class="planet-grid"></div>
+                        </section>
+                        <section class="space-card space-stats-card">
+                            <div class="space-stats-header">
+                                <h3 class="space-card-title">Statistics</h3>
+                                <p class="space-card-subtitle">Track how far the campaign has spread.</p>
+                            </div>
+                            <div class="space-stats-grid">
+                                <div class="space-stat-card">
+                                    <div class="space-stat-label">
+                                        Unique worlds terraformed
+                                        <span id="space-stat-unique-tooltip" class="info-tooltip-icon">&#9432;</span>
+                                    </div>
+                                    <div id="space-stat-unique-value" class="space-stat-value">0</div>
+                                </div>
+                                <div class="space-stat-card">
+                                    <div class="space-stat-label">
+                                        Effective worlds terraformed
+                                        <span id="space-stat-effective-tooltip" class="info-tooltip-icon">&#9432;</span>
+                                    </div>
+                                    <div id="space-stat-effective-value" class="space-stat-value">0</div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
                 </div>
                 <div id="space-random" class="space-subtab-content hidden">

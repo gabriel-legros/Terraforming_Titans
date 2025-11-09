@@ -193,4 +193,85 @@
   .rwg-columns { grid-template-columns: 1fr; }
 }
 
+/* Visited worlds history */
+.rwg-history {
+  border: 1px solid var(--rwg-border);
+  background: var(--rwg-card);
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 14px;
+}
+
+.rwg-history-title {
+  margin: 0 0 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+  color: var(--rwg-fg);
+}
+
+.rwg-history-head,
+.rwg-history-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 140px 280px 120px 120px 1fr;
+  gap: 8px;
+  padding: 8px 10px;
+  align-items: center;
+  color: var(--rwg-fg);
+  line-height: 1.35;
+}
+
+.rwg-history-head {
+  border-bottom: 1px solid var(--rwg-border);
+  font-weight: 600;
+  padding-top: 2px;
+  padding-bottom: 6px;
+}
+
+.rwg-history-row:nth-child(odd):not(.rwg-history-head) {
+  background: var(--rwg-muted);
+}
+
+.rwg-history-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+#rwg-history-page {
+  color: var(--rwg-fg);
+  font-weight: 600;
+}
+
+.rwg-history-row .seed {
+  font-family: monospace;
+  color: var(--rwg-fg-dim);
+  white-space: normal;
+  word-break: break-all;
+  overflow: visible;
+  user-select: text;
+  cursor: text;
+}
+
+.rwg-history-row .pop {
+  text-align: right;
+}
+
+.rwg-history-row .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--rwg-fg);
+}
+
+.rwg-history-row .state-current,
+.state-current {
+  color: #9bd36a;
+  font-weight: 600;
+}
+
 

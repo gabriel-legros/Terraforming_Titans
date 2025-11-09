@@ -20,6 +20,10 @@ let spaceSubtabManager = null;
 // Cache the last rendered world so we can skip redundant updates
 let lastWorldKey = null;
 let lastWorldSeed = null;
+let spaceStatUniqueValueEl = null;
+let spaceStatEffectiveValueEl = null;
+let spaceStatUniqueTooltipEl = null;
+let spaceStatEffectiveTooltipEl = null;
 
 const galaxyTabElements = { button: null, content: null };
 const spaceTabAlertElements = { button: null, warning: null };
@@ -331,6 +335,10 @@ function initializeSpaceUI(spaceManager) {
 
     const optionsContainer = document.getElementById('planet-selection-options');
     const statusContainer = document.getElementById('travel-status');
+    spaceStatUniqueValueEl = document.getElementById('space-stat-unique-value');
+    spaceStatEffectiveValueEl = document.getElementById('space-stat-effective-value');
+    spaceStatUniqueTooltipEl = document.getElementById('space-stat-unique-tooltip');
+    spaceStatEffectiveTooltipEl = document.getElementById('space-stat-effective-tooltip');
 
     if (!optionsContainer) {
         console.error("Space UI critical element '#planet-selection-options' not found.");
@@ -410,6 +418,7 @@ function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
     updateSpaceRandomVisibility();
     updateCurrentWorldUI();
+    updateSpaceStatsUI();
 
     const statusContainer = document.getElementById('travel-status');
     const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;
@@ -422,8 +431,9 @@ function updateSpaceUI() {
 
     if (statusContainer) {
         const showWarning = currentSeed === null && !isTerraformed;
-        statusContainer.style.display = showWarning ? 'block' : 'none';
-        statusContainer.textContent = showWarning ? 'Current planet must be fully terraformed before traveling.' : '';
+        statusContainer.style.display = showWarning ? 'flex' : 'none';
+        statusContainer.classList.toggle('hidden', !showWarning);
+        statusContainer.textContent = showWarning ? 'Terraform this world before charting a new course.' : '';
     }
 
     Object.entries(allPlanetData).forEach(([key, data]) => {
@@ -431,19 +441,24 @@ function updateSpaceUI() {
         if (!ui) return;
 
         const isEnabled = _spaceManagerInstance.isPlanetEnabled(key);
-        ui.container.style.display = isEnabled ? 'block' : 'none';
+        ui.container.style.display = isEnabled ? 'flex' : 'none';
 
-        const isTerraformed = _spaceManagerInstance.isPlanetTerraformed(key);
+        const cardIsCurrent = key === currentKey;
+        const cardTerraformed = _spaceManagerInstance.isPlanetTerraformed(key);
+        const cardLocked = !cardIsCurrent && !cardTerraformed && !canChangePlanet;
+
+        ui.container.classList.toggle('current', cardIsCurrent);
+        ui.container.classList.toggle('terraformed', cardTerraformed);
+        ui.container.classList.toggle('disabled', cardLocked);
+
         ui.nameHeading.textContent = data.name;
-        ui.nameHeading.style.color = isTerraformed ? '#4CAF50' : '';
-        ui.statusSpan.textContent = isTerraformed ? 'Terraforming Complete' : 'Terraforming pending';
-        ui.statusSpan.style.color = isTerraformed ? '#4CAF50' : '';
+        ui.statusSpan.textContent = cardTerraformed ? 'Terraforming Complete' : 'Terraforming pending';
 
-        if (key === currentKey) {
+        if (cardIsCurrent) {
             ui.button.textContent = 'Current Location';
             ui.button.disabled = true;
             ui.button.title = `You are currently at ${data.name}.`;
-        } else if (isTerraformed) {
+        } else if (cardTerraformed) {
             ui.button.textContent = 'Already Terraformed';
             ui.button.disabled = true;
             ui.button.title = `${data.name} has already been terraformed.`;
@@ -453,6 +468,26 @@ function updateSpaceUI() {
             ui.button.title = canChangePlanet ? `Travel to ${data.name}` : 'Finish terraforming before traveling';
         }
     });
+}
+
+function updateSpaceStatsUI() {
+    if (!spaceStatUniqueValueEl || !spaceStatEffectiveValueEl) {
+        return;
+    }
+    const uniqueCount = _spaceManagerInstance.getUnmodifiedTerraformedWorldCount();
+    const effectiveCount = _spaceManagerInstance.getTerraformedPlanetCount();
+    spaceStatUniqueValueEl.textContent = uniqueCount;
+    spaceStatEffectiveValueEl.textContent = effectiveCount;
+    const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
+    if (spaceStatUniqueTooltipEl) {
+        const uniqueBase = 'Counts every distinct story world and saved random seed you have fully terraformed. Ignores all other bonuses.';
+        spaceStatUniqueTooltipEl.title = `${uniqueBase}`;
+    }
+    if (spaceStatEffectiveTooltipEl) {
+        const effectiveBase = 'Includes worlds from other sources. This value influence advanced research, Solis rewards, mega structure expansion speed, and export caps.';
+        const effectiveGalaxy = galaxyUnlocked ? ' With galaxy unlocked, this value also determines fleet capacity.' : '';
+        spaceStatEffectiveTooltipEl.title = `${effectiveBase}${effectiveGalaxy}`;
+    }
 }
 
 // Handle click events for selecting planets
