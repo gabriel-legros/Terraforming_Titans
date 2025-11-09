@@ -100,6 +100,16 @@
     } catch (_) {}
   }
 
+  let HazardManagerCtor = typeof HazardManager === 'function'
+    ? HazardManager
+    : null;
+  if (!HazardManagerCtor && typeof module !== 'undefined' && module.exports) {
+    try {
+      const hazardModule = require('./terraforming/hazard.js');
+      HazardManagerCtor = hazardModule && hazardModule.HazardManager ? hazardModule.HazardManager : HazardManagerCtor;
+    } catch (_) {}
+  }
+
   function buildSandboxResourcesFromOverride(overrideResources) {
     const res = {};
     for (const cat of Object.keys(overrideResources)) {
@@ -279,6 +289,110 @@
       return;
     }
     tuneHazardousBiomassForWorldFn({ hazards: override.hazards }, context);
+
+    const hazardous = override.hazards.hazardousBiomass;
+    const hazardManagerInstance = HazardManagerCtor ? new HazardManagerCtor() : null;
+    const penaltyDetails = hazardManagerInstance
+      ? hazardManagerInstance.calculateHazardousBiomassGrowthPenaltyDetails(hazardous, terra)
+      : { globalPenalty: 0, zonePenalties: {} };
+
+    const zoneSurface = override.zonalSurface || (override.zonalSurface = {});
+    const zoneKeysSource = [];
+    if (terra && terra.zonalSurface) {
+      zoneKeysSource.push(...Object.keys(terra.zonalSurface));
+    }
+    zoneKeysSource.push(...Object.keys(zoneSurface));
+    if (!zoneKeysSource.length) {
+      zoneKeysSource.push(...ZONE_KEYS);
+    }
+    const zoneKeys = Array.from(new Set(zoneKeysSource));
+    const zoneCount = zoneKeys.length || 1;
+
+    const landCandidates = [
+      terra ? terra.initialLand : null,
+      override.resources && override.resources.surface && override.resources.surface.land
+        ? override.resources.surface.land.initialValue
+        : null,
+    ];
+    let landArea = 0;
+    for (let index = 0; index < landCandidates.length; index += 1) {
+      const candidate = landCandidates[index];
+      if (Number.isFinite(candidate) && candidate > 0) {
+        landArea = candidate;
+        break;
+      }
+    }
+
+    const surfaceAreaCandidate = terra && terra.celestialParameters
+      ? terra.celestialParameters.surfaceArea
+      : null;
+    const surfaceArea = Number.isFinite(surfaceAreaCandidate) && surfaceAreaCandidate > 0
+      ? surfaceAreaCandidate
+      : 0;
+    const getZonePercentageFn = globalThis.getZonePercentage || null;
+
+    const resolveZoneArea = (zone) => {
+      const cacheEntry = terra && terra.zonalCoverageCache ? terra.zonalCoverageCache[zone] : null;
+      const cachedArea = cacheEntry && Number.isFinite(cacheEntry.zoneArea) ? cacheEntry.zoneArea : 0;
+      if (cachedArea > 0) {
+        return cachedArea;
+      }
+
+      if (landArea > 0) {
+        if (getZonePercentageFn) {
+          const percentage = getZonePercentageFn(zone);
+          if (Number.isFinite(percentage) && percentage > 0) {
+            return landArea * percentage;
+          }
+        }
+        return landArea / zoneCount;
+      }
+
+      if (surfaceArea > 0) {
+        if (getZonePercentageFn) {
+          const percentage = getZonePercentageFn(zone);
+          if (Number.isFinite(percentage) && percentage > 0) {
+            return surfaceArea * percentage;
+          }
+        }
+        return surfaceArea / zoneCount;
+      }
+
+      return 0;
+    };
+
+    const baseGrowth = hazardous.baseGrowth || {};
+    const baseGrowthPercent = Number.isFinite(baseGrowth.value) ? baseGrowth.value : 0;
+    const maxDensity = Number.isFinite(baseGrowth.maxDensity) && baseGrowth.maxDensity > 0
+      ? baseGrowth.maxDensity
+      : 0;
+
+    const globalPenalty = Number.isFinite(penaltyDetails.globalPenalty) ? penaltyDetails.globalPenalty : 0;
+    const zonePenaltyMap = penaltyDetails.zonePenalties || {};
+
+    let totalBiomass = 0;
+    for (let index = 0; index < zoneKeys.length; index += 1) {
+      const zone = zoneKeys[index];
+      const zoneOutput = zoneSurface[zone] || (zoneSurface[zone] = {});
+      const zonePenalty = Number.isFinite(zonePenaltyMap[zone]) ? zonePenaltyMap[zone] : 0;
+      const zoneGrowthPercent = baseGrowthPercent - globalPenalty - zonePenalty;
+      const zoneArea = resolveZoneArea(zone);
+      const hasPositiveGrowth = zoneGrowthPercent > 0 && zoneArea > 0 && maxDensity > 0;
+      const zoneBiomass = hasPositiveGrowth ? zoneArea * maxDensity : 0;
+
+      zoneOutput.hazardousBiomass = zoneBiomass;
+      if (terra && terra.zonalSurface && terra.zonalSurface[zone]) {
+        terra.zonalSurface[zone].hazardousBiomass = zoneBiomass;
+      }
+
+      totalBiomass += zoneBiomass;
+    }
+
+    override.resources = override.resources || {};
+    override.resources.surface = override.resources.surface || {};
+    const hazardousResource = override.resources.surface.hazardousBiomass
+      || (override.resources.surface.hazardousBiomass = {});
+    hazardousResource.initialValue = totalBiomass;
   }
 
   function copyBackToOverrideFromSandbox(override, sandboxResources, terra) {
