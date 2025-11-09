@@ -1055,7 +1055,7 @@ function ensureLayout() {
 
   const message = doc.createElement('p');
   message.className = 'hazard-card__message hidden';
-  message.textContent = 'Hazardous biomass has not been detected.';
+  message.textContent = 'No Hazards Detected';
   card.appendChild(message);
 
   const summaryRow = doc.createElement('div');
@@ -1262,30 +1262,40 @@ function toggleEmptyState(showEmpty) {
   }
 
   if (showEmpty) {
+    // Show a simple "No Hazards Detected" message and hide the rest of the card contents
     hazardUICache.card.classList.add('hazard-card--empty');
-    hazardUICache.message.classList.remove('hidden');
-    hazardUICache.factorsSection.classList.add('hidden');
-    if (hazardUICache.summaryRow) {
-      hazardUICache.summaryRow.classList.add('hidden');
+    if (hazardUICache.title) {
+      hazardUICache.title.style.display = 'none';
     }
-    if (hazardUICache.summaryCenter) {
-      hazardUICache.summaryCenter.classList.add('hidden');
+    if (hazardUICache.message) {
+      hazardUICache.message.style.display = 'block';
+    }
+    if (hazardUICache.summaryRow) {
+      hazardUICache.summaryRow.style.display = 'none';
     }
     if (hazardUICache.barWrapper) {
-      hazardUICache.barWrapper.classList.add('hidden');
+      hazardUICache.barWrapper.style.display = 'none';
+    }
+    if (hazardUICache.factorsSection) {
+      hazardUICache.factorsSection.style.display = 'none';
     }
   } else {
+    // Restore full hazard card layout
     hazardUICache.card.classList.remove('hazard-card--empty');
-    hazardUICache.message.classList.add('hidden');
-    hazardUICache.factorsSection.classList.remove('hidden');
-    if (hazardUICache.summaryRow) {
-      hazardUICache.summaryRow.classList.remove('hidden');
+    if (hazardUICache.title) {
+      hazardUICache.title.style.display = '';
     }
-    if (hazardUICache.summaryCenter) {
-      hazardUICache.summaryCenter.classList.remove('hidden');
+    if (hazardUICache.message) {
+      hazardUICache.message.style.display = 'none';
+    }
+    if (hazardUICache.summaryRow) {
+      hazardUICache.summaryRow.style.display = '';
     }
     if (hazardUICache.barWrapper) {
-      hazardUICache.barWrapper.classList.remove('hidden');
+      hazardUICache.barWrapper.style.display = '';
+    }
+    if (hazardUICache.factorsSection) {
+      hazardUICache.factorsSection.style.display = '';
     }
   }
 }

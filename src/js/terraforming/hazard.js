@@ -145,7 +145,7 @@ class HazardManager {
   }
 
   initialize(parameters = {}) {
-    const cloned = cloneHazardParameters(parameters);
+    const cloned = cloneHazardParameters(currentPlanetParameters.hazards);
     const normalized = normalizeHazardParameters(cloned);
     const serialized = JSON.stringify(normalized);
     const changed = serialized !== this.lastSerializedParameters;
