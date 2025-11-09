@@ -378,7 +378,7 @@
       const zoneGrowthPercent = baseGrowthPercent - globalPenalty - zonePenalty;
       const zoneArea = resolveZoneArea(zone);
       const hasPositiveGrowth = zoneGrowthPercent > 0 && zoneArea > 0 && maxDensity > 0;
-      const zoneBiomass = hasPositiveGrowth ? zoneArea * maxDensity : 0;
+      const zoneBiomass = hasPositiveGrowth ? zoneArea / 10000 * maxDensity : 0;
 
       zoneOutput.hazardousBiomass = zoneBiomass;
       if (terra && terra.zonalSurface && terra.zonalSurface[zone]) {
