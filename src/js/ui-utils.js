@@ -29,93 +29,140 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
 }
 
 function addTooltipHover(anchor, tooltip) {
-  if (!anchor || !tooltip) return;
-  anchor.addEventListener('mouseenter', () => {
-    tooltip._isActive = true;
-    const isResource = !!tooltip._columnsInfo || !!tooltip.closest('.resource-item');
-    const isInfo = !!tooltip.closest('.info-tooltip-icon');
-    tooltip.classList.remove('above', 'three-column');
+  if (!anchor) return;
+  const tooltipEl = tooltip || anchor.querySelector && anchor.querySelector('.resource-tooltip');
+  if (!tooltipEl) return;
+
+  let pointerActive = false;
+
+  const handleDocumentPointerDown = (event) => {
+    if (!pointerActive) return;
+    if (anchor.contains(event.target) || tooltipEl.contains(event.target)) return;
+    setPointerActive(false);
+    hideTooltip();
+  };
+
+  const setPointerActive = (active) => {
+    pointerActive = active;
+    if (active) {
+      anchor.classList.add('tooltip-active');
+      document.addEventListener('pointerdown', handleDocumentPointerDown, true);
+    } else {
+      anchor.classList.remove('tooltip-active');
+      document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
+    }
+  };
+
+  const showTooltip = () => {
+    tooltipEl._isActive = true;
+    const isResource = !!tooltipEl._columnsInfo || !!tooltipEl.closest('.resource-item');
+    tooltipEl.classList.remove('above', 'three-column');
 
     if (isResource) {
-      if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 1);
+      if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltipEl, 1);
 
       // Show invisibly to measure
-      const prevDisplay = tooltip.style.display;
-      const prevVisibility = tooltip.style.visibility;
-      tooltip.style.display = 'block';
-      tooltip.style.visibility = 'hidden';
+      const prevDisplay = tooltipEl.style.display;
+      tooltipEl.style.display = 'block';
+      tooltipEl.style.visibility = 'hidden';
 
       const aRect = anchor.getBoundingClientRect();
       const centerHorizontally = () => {
-        tooltip.style.left = `${aRect.left + aRect.width / 2}px`;
-        tooltip.style.transform = 'translateX(-50%)';
+        tooltipEl.style.left = `${aRect.left + aRect.width / 2}px`;
+        tooltipEl.style.transform = 'translateX(-50%)';
       };
       const clampHorizontally = () => {
-        const rect = tooltip.getBoundingClientRect();
+        const rect = tooltipEl.getBoundingClientRect();
         const margin = 4;
         if (rect.left < margin) {
-          tooltip.style.left = `${margin}px`;
-          tooltip.style.transform = 'none';
+          tooltipEl.style.left = `${margin}px`;
+          tooltipEl.style.transform = 'none';
         } else if (rect.right > window.innerWidth - margin) {
-          tooltip.style.left = `${Math.max(window.innerWidth - margin - rect.width, margin)}px`;
-          tooltip.style.transform = 'none';
+          tooltipEl.style.left = `${Math.max(window.innerWidth - margin - rect.width, margin)}px`;
+          tooltipEl.style.transform = 'none';
         }
       };
       const place = (mode) => {
         centerHorizontally();
         if (mode === 'below') {
-          tooltip.classList.remove('above');
-          tooltip.style.top = `${aRect.bottom + 4}px`;
+          tooltipEl.classList.remove('above');
+          tooltipEl.style.top = `${aRect.bottom + 4}px`;
         } else {
-          const tRect = tooltip.getBoundingClientRect();
-          tooltip.classList.add('above');
-          tooltip.style.top = `${aRect.top - tRect.height - 4}px`;
+          const tRect = tooltipEl.getBoundingClientRect();
+          tooltipEl.classList.add('above');
+          tooltipEl.style.top = `${aRect.top - tRect.height - 4}px`;
         }
         clampHorizontally();
       };
       // below -> above
       place('below');
-      let rect = tooltip.getBoundingClientRect();
+      let rect = tooltipEl.getBoundingClientRect();
       let placed = rect.bottom <= window.innerHeight;
       if (!placed) {
         place('above');
-        rect = tooltip.getBoundingClientRect();
+        rect = tooltipEl.getBoundingClientRect();
         placed = rect.top >= 0;
       }
       // three-column fallback
       if (!placed) {
-        if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 3);
-        tooltip.classList.add('three-column');
-        tooltip.style.display = 'flex';
+        if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltipEl, 3);
+        tooltipEl.classList.add('three-column');
+        tooltipEl.style.display = 'flex';
         place('below');
-        rect = tooltip.getBoundingClientRect();
+        rect = tooltipEl.getBoundingClientRect();
         placed = rect.bottom <= window.innerHeight;
         if (!placed) place('above');
       }
-      tooltip.style.visibility = 'visible';
-      tooltip.style.display = prevDisplay || '';
+      tooltipEl.style.visibility = 'visible';
+      tooltipEl.style.display = prevDisplay || '';
     } else {
       // Use CSS positioning; just choose above if no space below
-      const prevDisplay = tooltip.style.display;
-      const prevVisibility = tooltip.style.visibility;
-      tooltip.style.display = 'block';
-      tooltip.style.visibility = 'hidden';
-      const rect = tooltip.getBoundingClientRect();
-      if (rect.bottom > window.innerHeight) tooltip.classList.add('above');
-      else tooltip.classList.remove('above');
-      tooltip.style.visibility = 'visible';
-      tooltip.style.display = prevDisplay || '';
+      const prevDisplay = tooltipEl.style.display;
+      tooltipEl.style.display = 'block';
+      tooltipEl.style.visibility = 'hidden';
+      const rect = tooltipEl.getBoundingClientRect();
+      if (rect.bottom > window.innerHeight) tooltipEl.classList.add('above');
+      else tooltipEl.classList.remove('above');
+      tooltipEl.style.visibility = 'visible';
+      tooltipEl.style.display = prevDisplay || '';
     }
+  };
+
+  const hideTooltip = () => {
+    tooltipEl._isActive = false;
+    tooltipEl.classList.remove('above', 'three-column');
+    if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltipEl, 1);
+    tooltipEl.style.top = '';
+    tooltipEl.style.left = '';
+    tooltipEl.style.transform = '';
+    tooltipEl.style.display = '';
+    tooltipEl.style.visibility = '';
+  };
+
+  anchor.addEventListener('mouseenter', () => {
+    showTooltip();
   });
   anchor.addEventListener('mouseleave', () => {
-    tooltip._isActive = false;
-    tooltip.classList.remove('above', 'three-column');
-    if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltip, 1);
-    tooltip.style.top = '';
-    tooltip.style.left = '';
-    tooltip.style.transform = '';
-    tooltip.style.display = '';
-    tooltip.style.visibility = '';
+    if (pointerActive) return;
+    hideTooltip();
+  });
+  anchor.addEventListener('focusin', () => {
+    showTooltip();
+  });
+  anchor.addEventListener('focusout', () => {
+    if (pointerActive) return;
+    hideTooltip();
+  });
+  anchor.addEventListener('pointerdown', (event) => {
+    const type = event.pointerType;
+    if (type && type === 'mouse') return;
+    if (!pointerActive) {
+      setPointerActive(true);
+      showTooltip();
+    } else {
+      setPointerActive(false);
+      hideTooltip();
+    }
   });
 }
 
