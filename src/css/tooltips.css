@@ -29,12 +29,16 @@
   pointer-events: none; /* Let mouse pass through so hovering another resource hides this */
 }
 
-.resource-item:hover .resource-tooltip {
+.resource-item:hover .resource-tooltip,
+.resource-item.tooltip-active .resource-tooltip,
+.resource-item:focus-within .resource-tooltip {
   display: block;
 }
 
 /* Ensure three-column layout wins over the generic hover rule */
-.resource-item:hover .resource-tooltip.three-column {
+.resource-item:hover .resource-tooltip.three-column,
+.resource-item.tooltip-active .resource-tooltip.three-column,
+.resource-item:focus-within .resource-tooltip.three-column {
   display: flex;
 }
 
@@ -70,8 +74,15 @@
   pointer-events: none;
 }
 
-.info-tooltip-icon:hover .resource-tooltip {
+.info-tooltip-icon:hover .resource-tooltip,
+.info-tooltip-icon.tooltip-active .resource-tooltip,
+.info-tooltip-icon:focus-within .resource-tooltip {
   display: block;
+}
+
+.info-tooltip-icon.tooltip-active .resource-tooltip.three-column,
+.info-tooltip-icon:focus-within .resource-tooltip.three-column {
+  display: flex;
 }
 
 .info-tooltip-icon .resource-tooltip.above {
