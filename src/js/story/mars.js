@@ -551,7 +551,7 @@ var progressMars = {
         id: "chapter1.24b",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror—like a shiny new penny that bounces sunlight right back where it came from.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, so this is not a permanent solution.'",
+        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror, like a mirror.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, so this is not a permanent solution.'",
         prerequisites: ["chapter1.24"],
         objectives: [{
           type: 'collection',
@@ -587,7 +587,7 @@ var progressMars = {
         id: "chapter2.1",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend—talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows in the dark, radiating visible light like a cosmic spotlight.  Mars... not so much.  It can only radiate in the infrared, like a sad dying lightbulb.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6, the stuff your factories produce, are transparent to visible light, they are not transparent to infrared.  That means the radiated heat can't get out that easily—it's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. It's atmospheric entrapment at its finest!'",
+        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend—talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows, radiating visible light like a lightbulb.  Mars... not so much.  It can only radiate in the infrared, like a sad dying lightbulb.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6, the stuff your factories produce, are transparent to visible light, they are not transparent to infrared.  That means light can get in, but can't get out that easily—it's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. It's atmospheric entrapment at its finest!'",
         prerequisites: ["chapter2.0"],
         objectives: [{
           type: 'collection',
