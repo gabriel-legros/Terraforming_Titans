@@ -143,39 +143,42 @@ const marsOverrides = {
     },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 22586751011604.14
+        "initialValue": 22587612740864.754
       },
       "atmosphericWater": {
-        "initialValue": 181626.02920164465
-      }
+        "initialValue": 182028.8501557519
+      },
     },
   },
   "zonalWater": {
     "tropical": {
       "liquid": 0,
-      "ice": 94552.17155813596,
+      "ice": 94760.80115009601,
       "buriedIce": 1100000000000000
     },
     "temperate": {
       "liquid": 0,
-      "ice": 161404.9657716578,
+      "ice": 161761.88577741338,
       "buriedIce": 1900000000000000
     },
     "polar": {
       "liquid": 0,
-      "ice": 4500007957967200,
+      "ice": 4500007957966698,
       "buriedIce": 700000000000000
     }
   },
   "zonalSurface": {
     "tropical": {
-      "biomass": 0
+      "biomass": 0,
+      "hazardousBiomass": 0
     },
     "temperate": {
-      "biomass": 0
+      "biomass": 0,
+      "hazardousBiomass": 0
     },
     "polar": {
-      "biomass": 0
+      "biomass": 0,
+      "hazardousBiomass": 0
     }
   },
   "zonalHydrocarbons": {
@@ -203,24 +206,24 @@ const marsOverrides = {
     },
     "polar": {
       "liquid": 0,
-      "ice": 1412059551109.7017
+      "ice": 1411197821847.7566
     }
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 231.2286503392303,
-      "day": 249.55911944105176,
-      "night": 212.89818123740886
+      "value": 231.22872528422934,
+      "day": 249.55906405113797,
+      "night": 212.89838651732072
     },
     "temperate": {
-      "value": 214.7863554832772,
-      "day": 230.0295607413293,
-      "night": 199.54315022522508
+      "value": 214.7864251746139,
+      "day": 230.02952204908632,
+      "night": 199.54332830014147
     },
     "polar": {
-      "value": 137.52938473264217,
-      "day": 143.54430122284998,
-      "night": 131.51446824243436
+      "value": 137.53738321609248,
+      "day": 143.5522343223192,
+      "night": 131.52253210986575
     }
   },
   fundingRate: 10,
