@@ -793,7 +793,8 @@ function renderFeatureBlock(res) {
     }
   }
   if (!rows.length) return '';
-  return `<div><h4>Features</h4>${rows.join('')}</div>`;
+  const tooltip = '<span class="info-tooltip-icon" title="Terraforming a random world that contains a hazard grants double RWG rewards.">&#9432;</span>';
+  return `<div><h4>Features ${tooltip}</h4>${rows.join('')}</div>`;
 }
 
 function estimateGasPressure(res, gasKey) {

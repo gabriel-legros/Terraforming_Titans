@@ -18,6 +18,20 @@ const RWG_BUILDING_OUTPUT = {
   sandQuarry: 'Sand Harvester',
 };
 
+function hasRandomWorldHazard(status) {
+  const original = status && status.original;
+  if (!original) return false;
+  const hazard = original.hazard;
+  if (hazard && hazard !== 'none') {
+    if ((hazard.length && hazard.length > 0) || Object.keys(hazard).length) return true;
+  }
+  const override = original.override || original.merged || null;
+  if (override && override.rwgMeta && override.rwgMeta.selectedHazard && override.rwgMeta.selectedHazard !== 'none') return true;
+  const hazards = (override && override.hazards) || original.hazards || null;
+  if (hazards && Object.keys(hazards).length) return true;
+  return false;
+}
+
 function _titleCaseArchetype(t) {
   try {
     return String(t)
@@ -73,20 +87,26 @@ function _computeRWGEffectsSummary() {
   }
 
   const counts = {};
+  const hazardBonuses = {};
   const statuses = sm.randomWorldStatuses || {};
   for (const k in statuses) {
     const st = statuses[k];
     const cls = st && st.original && st.original.override && st.original.override.classification;
     const type = (typeof cls === 'string') ? cls : (cls && cls.archetype);
-    if (st && st.terraformed && type) counts[type] = (counts[type] || 0) + 1;
+    if (st && st.terraformed && type) {
+      counts[type] = (counts[type] || 0) + 1;
+      if (hasRandomWorldHazard(st)) hazardBonuses[type] = (hazardBonuses[type] || 0) + 1;
+    }
   }
 
   const out = [];
   for (const [type, effects] of Object.entries(RWG)) {
     if (!unlocked.has(type)) continue;
-    const count = counts[type] || 0;
+    const baseCount = counts[type] || 0;
+    const bonus = hazardBonuses[type] || 0;
+    const effectiveCount = baseCount + bonus;
     const effs = effects.map(eff => {
-      const raw = typeof eff.computeValue === 'function' ? eff.computeValue(count, eff) : eff.value;
+      const raw = typeof eff.computeValue === 'function' ? eff.computeValue(effectiveCount, eff) : eff.value;
       let display = '';
       let descr = eff.description || '';
       if (eff.type === 'productionMultiplier') {
@@ -98,7 +118,7 @@ function _computeRWGEffectsSummary() {
       } else if (eff.type === 'projectDurationMultiplier') {
         // Show as divided by (1 + factor * count)
         const f = typeof eff.factor === 'number' ? eff.factor : 0.1;
-        const divisor = 1 + f * count;
+        const divisor = 1 + f * effectiveCount;
         const name = RWG_PROJECT_NAMES[eff.targetId] || eff.targetId || 'Project';
         const fEach = (f * 100).toFixed(0);
         descr = descr || `${name} duration (${fEach}% each)`;
@@ -117,15 +137,15 @@ function _computeRWGEffectsSummary() {
       } else if (eff.type === 'extraTerraformedWorlds') {
         // Super-Earth: counts as extra worlds; display +N not xN
         descr = descr || 'Counts as an extra world';
-        display = `+${(raw ?? count)}`;
+        display = `+${(raw ?? effectiveCount)}`;
       } else if (typeof raw === 'number') {
         display = `x${raw.toFixed(3)}`;
       }
       return { effectId: eff.effectId, type: eff.type, description: descr, display };
     });
-    out.push({ type, count, effects: effs });
+    out.push({ type, count: baseCount, hazardBonus: bonus, totalCount: effectiveCount, effects: effs });
   }
-  
+
   return out;
 }
 
@@ -154,6 +174,7 @@ function updateRWGEffectsUI() {
     // Flip once per group
     altFlip = !altFlip;
     const groupAlt = altFlip ? ' alt' : '';
+    const countText = entry.hazardBonus ? `${entry.count}+${entry.hazardBonus}` : `${entry.count}`;
     // Header row per type
     parts.push(`
       <div class="rwg-effects-row rwg-effects-head${groupAlt}" data-type="${entry.type}">
@@ -166,7 +187,7 @@ function updateRWGEffectsUI() {
       parts.push(`
         <div class="rwg-effects-row rwg-effects-body${groupAlt}" data-effect="${eff.effectId}">
           <span class="col-desc"><small>${eff.description || ''}</small></span>
-          <span class="col-count">${entry.count}</span>
+          <span class="col-count">${countText}</span>
           <span class="col-effect">${eff.display || ''}</span>
         </div>
       `);

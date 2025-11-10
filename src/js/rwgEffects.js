@@ -101,23 +101,41 @@ const RWG_EFFECTS = {
   ],
 };
 
+function hasRandomWorldHazard(status) {
+  const original = status && status.original;
+  if (!original) return false;
+  const hazard = original.hazard;
+  if (hazard && hazard !== 'none') {
+    if ((hazard.length && hazard.length > 0) || Object.keys(hazard).length) return true;
+  }
+  const override = original.override || original.merged || null;
+  if (override && override.rwgMeta && override.rwgMeta.selectedHazard && override.rwgMeta.selectedHazard !== 'none') return true;
+  const hazards = (override && override.hazards) || original.hazards || null;
+  if (hazards && Object.keys(hazards).length) return true;
+  return false;
+}
+
 function applyRWGEffects() {
   if (typeof spaceManager === "undefined" || typeof addEffect !== "function") return;
 
   const counts = {};
+  const hazardBonuses = {};
   const statuses = spaceManager.randomWorldStatuses || {};
   for (const seed in statuses) {
     const st = statuses[seed];
     const type = st?.original?.archetype || st?.original?.override?.classification?.archetype;
     if (st?.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
+      if (hasRandomWorldHazard(st)) hazardBonuses[type] = (hazardBonuses[type] || 0) + 1;
     }
   }
 
   for (const [type, effects] of Object.entries(RWG_EFFECTS)) {
-    const count = counts[type] || 0;
+    const baseCount = counts[type] || 0;
+    const bonus = hazardBonuses[type] || 0;
+    const effectiveCount = baseCount + bonus;
     for (const eff of effects) {
-      const value = typeof eff.computeValue === "function" ? eff.computeValue(count, eff) : eff.value;
+      const value = typeof eff.computeValue === "function" ? eff.computeValue(effectiveCount, eff) : eff.value;
       addEffect({
         effectId: eff.effectId,
         sourceId: `rwg-${type}`,
