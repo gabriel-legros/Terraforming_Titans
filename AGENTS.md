@@ -300,3 +300,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Lifting advanced research that unlocks repeatable Lifters mega projects which persist across planets and draw on space storage.
 - Lifters gained a Dyson-style control card with a Run toggle, gas giant hydrogen harvesting, atmosphere stripping, per-lifter capacity readouts, and explicit use of unused Dyson Swarm energy.
 - Lifters now provide an automation toggle to permit colony energy usage when Dyson overflow energy cannot sustain operations.
+- Random worlds that include hazards now grant double RWG effects when terraformed, and the RWG UI displays the hazard bonus as an added count.
