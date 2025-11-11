@@ -484,7 +484,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time.  Resources in space storage may also be used for certain special projects.  Space storage capacity and resources in storage persist between worlds.',
+    description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time.  Resources in space storage may also be used to pay for most mega projects (planetary thrusters excepted).  Space storage capacity and resources in storage persist between worlds.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
