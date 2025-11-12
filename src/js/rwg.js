@@ -810,7 +810,7 @@ function tuneHazardousBiomassForWorld(hazardOverride, context) {
     const min = Math.max(0, surfacePressureKPa - radius);
     const max = Math.max(min, surfacePressureKPa + radius);
     const rangeWidth = Math.max(max - min, 1);
-    const severityScale = 0.4 / rangeWidth;
+    const severityScale = 400 / rangeWidth;
     hazardous.atmosphericPressure = {
       ...entry,
       min,
@@ -826,7 +826,7 @@ function tuneHazardousBiomassForWorld(hazardOverride, context) {
     const min = Math.max(0, co2PressureKPa - radius);
     const max = Math.max(min, co2PressureKPa + radius);
     const rangeWidth = Math.max(max - min, 1);
-    const severityScale = 0.4 / rangeWidth;
+    const severityScale = 400 / rangeWidth;
     hazardous.co2Pressure = {
       ...entry,
       min,
