@@ -817,11 +817,40 @@ function updateStatisticsDisplay() {
   el.textContent = formatPlayTime(totalPlayTimeSeconds);
 }
 
+// Add save and load related listeners
+function addSaveLoadListeners() {
+  // Event listener for "New Game" button
+  document.getElementById('new-game-button').addEventListener('click', () => {
+    if (confirm("Are you sure you want to start a new game? Any unsaved progress will be lost.")) {
+      if (typeof startNewGame === 'function') {
+        startNewGame();
+      } else {
+        initializeGameState();
+        if (typeof openTerraformingWorldTab === 'function') {
+          openTerraformingWorldTab();
+        }
+      }
+    }
+  });
+
+  // Event listener for the "Save to File" button
+  document.getElementById('save-to-file-button').addEventListener('click', saveGameToFile);
+
+  // Event listener for the "Load from File" button trigger
+  document.getElementById('load-from-file-button').addEventListener('click', function() {
+    document.getElementById('load-from-file-input').click();
+  });
+
+  // Event listener for the actual file input change
+  document.getElementById('load-from-file-input').addEventListener('change', loadGameFromFile);
+}
+
 // Call the function to add event listeners when the page loads
 if (typeof document !== 'undefined' && document.addEventListener) {
   document.addEventListener('DOMContentLoaded', () => {
     initializeLoadingOverlay();
     addSaveSlotListeners();
+    addSaveLoadListeners();
   });
 }
 
