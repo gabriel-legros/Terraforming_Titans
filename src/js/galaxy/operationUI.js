@@ -190,7 +190,7 @@ const GalaxyOperationUI = (() => {
         if (!manager) {
             return;
         }
-        const operations = manager.operationManager?.operations || manager.operations;
+        const operations = manager.operationManager?.operations;
         operations?.forEach?.((operation, key) => {
             if (!operation || operation.status !== 'running') {
                 return;
@@ -1008,7 +1008,7 @@ const GalaxyOperationUI = (() => {
         const arrowCache = cache.operationArrows;
         const hexLookup = cache.hexLookup;
         cache.mapOperationsLayer.replaceChildren();
-        const operations = manager.operationManager?.operations || manager.operations;
+        const operations = manager.operationManager?.operations;
         if (!operations || typeof operations.forEach !== 'function') {
             return;
         }

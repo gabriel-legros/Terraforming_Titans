@@ -320,7 +320,6 @@ class GalaxyManager extends EffectableEntity {
             this.fleetUpgradePurchases[key] = 0;
         });
         this.successfulOperations = 0;
-        this.operations = new Map();
         const operationHooks = {
             uhfFactionId: galaxyUhfId,
             hasNeighboringStronghold: (sector, factionId) => this.#hasNeighboringStronghold(sector, factionId),
@@ -340,10 +339,8 @@ class GalaxyManager extends EffectableEntity {
         };
         if (GalaxyOperationManagerClass) {
             this.operationManager = new GalaxyOperationManagerClass(this, {
-                ...operationHooks,
-                operations: this.operations
+                ...operationHooks
             });
-            this.operations = this.operationManager.operations;
         } else {
             this.operationManager = null;
         }
@@ -518,9 +515,6 @@ class GalaxyManager extends EffectableEntity {
         this.sectors.clear();
         if (this.operationManager) {
             this.operationManager.reset();
-            this.operations = this.operationManager.operations;
-        } else {
-            this.operations.clear();
         }
         this.initialize();
         this.enable();
