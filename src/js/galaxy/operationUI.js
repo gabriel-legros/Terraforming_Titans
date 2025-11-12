@@ -5,25 +5,6 @@ const GalaxyOperationUI = (() => {
     let cachedAutoLaunchThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
     let context = { manager: null, cache: null };
 
-    function isSectorFullyControlled(manager, sector, faction) {
-        if (!manager || !sector) {
-            return false;
-        }
-        const operationManager = manager.operationManager;
-        const factionId = faction?.id || operationManager?.uhfFactionId || 'uhf';
-        if (operationManager?.isFactionFullControlSector?.(sector, factionId)) {
-            return true;
-        }
-        const totalControl = sector.getTotalControlValue?.();
-        if (!Number.isFinite(totalControl) || totalControl <= 0) {
-            return false;
-        }
-        const controlValue = sector.getControlValue?.(factionId);
-        if (!Number.isFinite(controlValue)) {
-            return false;
-        }
-        return Math.abs(controlValue - totalControl) <= 1e-6;
-    }
 
     function getManager() {
         return galaxyManager;
@@ -64,18 +45,6 @@ const GalaxyOperationUI = (() => {
         }
     }
 
-    function getNumberFormatter() {
-        if (typeof formatNumber === 'function') {
-            return formatNumber;
-        }
-        return (value) => {
-            const numeric = Number(value);
-            if (!Number.isFinite(numeric)) {
-                return '0';
-            }
-            return Math.round(numeric * 100) / 100;
-        };
-    }
 
     function getDefaultOperationDurationMs() {
         const provided = GALAXY_OPERATION_DURATION_MS;
@@ -761,7 +730,6 @@ const GalaxyOperationUI = (() => {
         }
 
         const manager = managerOverride || getManager();
-        const formatter = getNumberFormatter();
         const selection = cache.selectedSector;
         const enabled = !!(manager && manager.enabled);
         updateOperationArrows(manager, cache);
@@ -773,7 +741,7 @@ const GalaxyOperationUI = (() => {
 
         operationsStatusMessage.textContent = '';
 
-        updateOperationsStepDisplay(stepSize, formatter);
+        updateOperationsStepDisplay(stepSize, formatNumber);
 
         if (operationsDurationLabel) {
             operationsDurationLabel.textContent = 'Duration';
@@ -859,7 +827,7 @@ const GalaxyOperationUI = (() => {
             : 'uhf';
         const faction = manager.getFaction(fallbackFactionId);
         const uhfFactionId = faction?.id || fallbackFactionId;
-        if (isSectorFullyControlled(manager, sector, faction)) {
+        if (GalaxySector.isFullyControlled(sector, faction)) {
             operationsEmpty.classList.remove('is-hidden');
             operationsEmpty.textContent = 'Sector already fully controlled by the UHF.';
             operationsForm.classList.add('is-hidden');
@@ -878,7 +846,7 @@ const GalaxyOperationUI = (() => {
 
         operationsEmpty.classList.add('is-hidden');
         operationsForm.classList.remove('is-hidden');
-        operationsAvailable.textContent = `Available: ${formatter(availablePower, false, 2)}`;
+        operationsAvailable.textContent = `Available: ${formatNumber(availablePower, false, 2)}`;
 
         const operation = manager.getOperationForSector(selection.key, uhfFactionId);
         const hasOperation = !!operation;
@@ -906,7 +874,7 @@ const GalaxyOperationUI = (() => {
         operationsInput.value = formatOperationsInputValue(assignment);
 
         const antimatterCost = assignment * 1000;
-        operationsCostValue.textContent = formatter(antimatterCost, true);
+        operationsCostValue.textContent = formatNumber(antimatterCost, true);
 
         const lossEstimate = manager?.getOperationLossEstimate?.({
             sectorKey: selection.key,
@@ -940,7 +908,7 @@ const GalaxyOperationUI = (() => {
             const lossDisplay = successChance > 0
                 ? (Number.isFinite(successLoss) ? successLoss : assignment)
                 : (Number.isFinite(failureLoss) ? failureLoss : assignment);
-            operationsSummaryItems.loss.textContent = `-${formatter(lossDisplay, false, 2)} power`;
+            operationsSummaryItems.loss.textContent = `-${formatNumber(lossDisplay, false, 2)} power`;
         }
 
         const hasFleetPower = availablePower > 0;
@@ -997,12 +965,12 @@ const GalaxyOperationUI = (() => {
                 statusMessage = 'Assign fleet power to begin an operation.';
             } else if (!hasAntimatter) {
                 const deficit = antimatterCost - antimatterValue;
-                statusMessage = `Insufficient antimatter by ${formatter(deficit, true)}.`;
+                statusMessage = `Insufficient antimatter by ${formatNumber(deficit, true)}.`;
             } else if (!hasChance) {
-                statusMessage = `Assign more than ${formatter(sectorPower, false, 0)} power for a chance of success.`;
+                statusMessage = `Assign more than ${formatNumber(sectorPower, false, 0)} power for a chance of success.`;
             }
             if (statusMessage === '' && storedAutoEnabled && !meetsAutoThreshold && requiredAutoPower > 0) {
-                statusMessage = `Auto launch requires ${formatter(requiredAutoPower, false, 2)} power.`;
+                statusMessage = `Auto launch requires ${formatNumber(requiredAutoPower, false, 2)} power.`;
             }
         }
         operationsStatusMessage.textContent = statusMessage;

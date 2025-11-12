@@ -288,6 +288,25 @@ class GalaxySector {
         return sanitized;
     }
 
+    static isFullyControlled(sector, faction) {
+        if (!sector) {
+            return false;
+        }
+        const factionId = faction?.id || galaxyManager?.operationManager?.uhfFactionId || 'uhf';
+        if (galaxyManager?.operationManager?.isFactionFullControlSector?.(sector, factionId)) {
+            return true;
+        }
+        const totalControl = sector.getTotalControlValue?.();
+        if (!Number.isFinite(totalControl) || totalControl <= 0) {
+            return false;
+        }
+        const controlValue = sector.getControlValue?.(factionId);
+        if (!Number.isFinite(controlValue)) {
+            return false;
+        }
+        return Math.abs(controlValue - totalControl) <= 1e-6;
+    }
+
     toJSON() {
         return {
             q: this.q,
