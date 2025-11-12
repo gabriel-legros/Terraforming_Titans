@@ -26,6 +26,21 @@ function preload() {
 }
 
 function create() {
+  initializeDefaultGlobals();
+
+  if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
+      initializeGameState();
+      if (typeof openTerraformingWorldTab === 'function') {
+        openTerraformingWorldTab();
+      }
+      if (typeof hideLoadingOverlay === 'function') {
+        hideLoadingOverlay();
+      }
+    }
+    return;
+}
+
+function initializeDefaultGlobals(){
   // Instantiate the TabManager and load tabs from the constant
   tabManager = new TabManager({
     description: 'Manages game tabs and unlocks them based on effects.',
@@ -126,16 +141,7 @@ function create() {
     galaxyManager.initialize();
   }
 
-  if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
-      initializeGameState();
-      if (typeof openTerraformingWorldTab === 'function') {
-        openTerraformingWorldTab();
-      }
-      if (typeof hideLoadingOverlay === 'function') {
-        hideLoadingOverlay();
-      }
-    }
-    return;
+  rwgManager = new RwgManager();
 }
 
 function initializeGameState(options = {}) {

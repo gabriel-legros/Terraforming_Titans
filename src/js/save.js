@@ -156,7 +156,12 @@ function getGameState() {
 }
 
 // Load game state from a specific slot or custom string
-function loadGame(slotOrCustomString) {
+function loadGame(slotOrCustomString, recreate = true) {
+
+  if(recreate){
+    initializeDefaultGlobals();
+  }
+
   if (slotOrCustomString === undefined) {
     console.log('No slot or custom string provided. Loading aborted.');
     return;
@@ -776,7 +781,7 @@ function loadMostRecentSave() {
   }
 
   if (mostRecentSlot) {
-    loadGame(`gameState_${mostRecentSlot}`);
+    loadGame(`gameState_${mostRecentSlot}`, recreate = false);
     console.log(`Loaded most recent save from slot ${mostRecentSlot}.`);
     return true;
   } else {

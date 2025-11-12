@@ -1262,32 +1262,5 @@ class RwgManager extends EffectableEntity {
 }
 
 // Instance + wrappers
-const rwgManager = new RwgManager();
 function generateRandomPlanet(seed, opts) { return rwgManager.generateRandomPlanet(seed, opts); }
 function generateSystem(seed, planetCount, opts) { return rwgManager.generateSystem(seed, planetCount, opts); }
-
-// Expose globals (browser)
-if (typeof globalThis !== "undefined") {
-  globalThis.rwgManager = rwgManager;
-  globalThis.generateRandomPlanet = generateRandomPlanet;
-  globalThis.generateSystem = generateSystem;
-  globalThis.DEFAULT_PARAMS = DEFAULT_PARAMS;
-  globalThis.DEFAULT_SECTOR_LABEL = DEFAULT_SECTOR_LABEL;
-  globalThis.RWG_WORLD_TYPES = RWG_WORLD_TYPES;
-  globalThis.RWG_TYPE_BASE_COLORS = RWG_TYPE_BASE_COLORS;
-  globalThis.tuneHazardousBiomassForWorld = tuneHazardousBiomassForWorld;
-}
-
-// CommonJS exports
-try {
-  module.exports = {
-    RwgManager,
-    rwgManager,
-    generateRandomPlanet,
-    generateSystem,
-    DEFAULT_PARAMS,
-    RWG_WORLD_TYPES,
-    RWG_TYPE_BASE_COLORS,
-    tuneHazardousBiomassForWorld,
-  };
-} catch (_) {}
