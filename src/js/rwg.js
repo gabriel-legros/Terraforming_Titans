@@ -792,11 +792,15 @@ function tuneHazardousBiomassForWorld(hazardOverride, context) {
     const radius = Math.max(Math.abs(meanTemperatureK) * 0.1, 30);
     const min = Math.max(0, meanTemperatureK - radius);
     const max = Math.max(min, meanTemperatureK + radius);
+    const rangeWidth = Math.max(max - min, 1);
+    const severityScale = 0.4 / rangeWidth;
     hazardous.temperaturePreference = {
       ...entry,
       min,
       max,
-      unit: entry.unit || 'K'
+      unit: entry.unit || 'K',
+      severityBelow: severityScale,
+      severityHigh: severityScale
     };
   }
 
@@ -805,11 +809,14 @@ function tuneHazardousBiomassForWorld(hazardOverride, context) {
     const radius = Math.max(surfacePressureKPa * 0.5, 10);
     const min = Math.max(0, surfacePressureKPa - radius);
     const max = Math.max(min, surfacePressureKPa + radius);
+    const rangeWidth = Math.max(max - min, 1);
+    const severityScale = 0.4 / rangeWidth;
     hazardous.atmosphericPressure = {
       ...entry,
       min,
       max,
-      unit: entry.unit || 'kPa'
+      unit: entry.unit || 'kPa',
+      severity: severityScale
     };
   }
 
@@ -818,11 +825,14 @@ function tuneHazardousBiomassForWorld(hazardOverride, context) {
     const radius = Math.max(co2PressureKPa * 0.5, 1);
     const min = Math.max(0, co2PressureKPa - radius);
     const max = Math.max(min, co2PressureKPa + radius);
+    const rangeWidth = Math.max(max - min, 1);
+    const severityScale = 0.4 / rangeWidth;
     hazardous.co2Pressure = {
       ...entry,
       min,
       max,
-      unit: entry.unit || 'kPa'
+      unit: entry.unit || 'kPa',
+      severity: severityScale
     };
   }
 
