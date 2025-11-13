@@ -723,6 +723,71 @@ class SpaceManager extends EffectableEntity {
         }
     }
 
+    _isCurrentWorldTerraformed() {
+        if (this.currentRandomSeed !== null) {
+            const activeSeed = String(this.currentRandomSeed);
+            return this.isSeedTerraformed(activeSeed);
+        }
+        return this.isPlanetTerraformed(this.currentPlanetKey);
+    }
+
+    _applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed) {
+        if (firstVisit && departingTerraformed && !destinationTerraformed && skillManager) {
+            skillManager.skillPoints += 1;
+            notifySkillPointGained(1);
+        }
+    }
+
+    _finalizeTravelInitialization(options) {
+        const params = options?.planetParameters;
+        if (options?.updateDefaultPlanet && options?.planetKey) {
+            defaultPlanet = options.planetKey;
+        }
+        if (params) {
+            currentPlanetParameters = params;
+        }
+        initializeGameState({ preserveManagers: true, preserveJournal: true });
+    }
+
+    travelToStoryPlanet(targetKey) {
+        if (!targetKey) {
+            console.warn('SpaceManager: No planet key provided for travel.');
+            return false;
+        }
+        if (this.currentRandomSeed === null && !this.isPlanetTerraformed(this.currentPlanetKey)) {
+            console.warn('SpaceManager: Cannot travel until the current planet is terraformed.');
+            return false;
+        }
+        if (!this.isPlanetEnabled(targetKey)) {
+            console.warn(`SpaceManager: Planet ${targetKey} is not available yet.`);
+            return false;
+        }
+        if (this.isPlanetTerraformed(targetKey)) {
+            console.warn(`SpaceManager: Planet ${targetKey} has already been terraformed.`);
+            return false;
+        }
+
+        const departingTerraformed = this._isCurrentWorldTerraformed();
+        this.prepareForTravel();
+        if (!this.changeCurrentPlanet(targetKey)) {
+            return false;
+        }
+
+        this.currentRandomSeed = null;
+        this.currentRandomName = '';
+
+        const firstVisit = this.visitPlanet(targetKey);
+        const destinationTerraformed = this.isPlanetTerraformed(targetKey);
+        this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
+        const params = planetParameters[targetKey] || defaultPlanetParameters;
+        this._finalizeTravelInitialization({
+            planetKey: targetKey,
+            planetParameters: params,
+            updateDefaultPlanet: true
+        });
+        return true;
+    }
+
     travelToRandomWorld(res, seed) {
         if (this.isRandomTravelLocked()) {
             console.warn('SpaceManager: Random world travel is locked for the current world.');
@@ -735,9 +800,7 @@ class SpaceManager extends EffectableEntity {
             return false;
         }
 
-        const departingTerraformed = this.currentRandomSeed !== null
-            ? this.isSeedTerraformed(String(this.currentRandomSeed))
-            : this.isPlanetTerraformed(this.currentPlanetKey);
+        const departingTerraformed = this._isCurrentWorldTerraformed();
 
         const existing = this.randomWorldStatuses[s];
         const firstVisit = !existing?.visited;
@@ -765,16 +828,11 @@ class SpaceManager extends EffectableEntity {
             existing.visited = true;
         }
 
-        if (firstVisit && departingTerraformed && !destinationTerraformed && typeof skillManager !== 'undefined' && skillManager) {
-            skillManager.skillPoints += 1;
-            if (typeof notifySkillPointGained === 'function') {
-                notifySkillPointGained(1);
-            }
-        }
-        globalThis.currentPlanetParameters = res?.merged;
-        if (typeof initializeGameState === 'function') {
-            initializeGameState({ preserveManagers: true, preserveJournal: true });
-        }
+        this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
+        const mergedParams = res?.merged || existing?.original?.merged || null;
+        this._finalizeTravelInitialization({
+            planetParameters: mergedParams
+        });
         return true;
     }
 

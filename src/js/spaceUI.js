@@ -508,47 +508,15 @@ function selectPlanet(planetKey, force){
         console.error('SpaceManager not initialized');
         return;
     }
-    const currentKey = _spaceManagerInstance.getCurrentPlanetKey();
-    const currentSeed = _spaceManagerInstance.getCurrentRandomSeed ? _spaceManagerInstance.getCurrentRandomSeed() : null;
-    if(currentSeed === null && !_spaceManagerInstance.isPlanetTerraformed(currentKey)) {
-        console.warn('Cannot travel until current planet is terraformed.');
-        return;
-    }
-    if(!_spaceManagerInstance.isPlanetEnabled(planetKey)) {
-        console.warn('Planet not yet available.');
-        return;
-    }
-    if(_spaceManagerInstance.isPlanetTerraformed(planetKey)) {
-        console.warn('Target planet already terraformed.');
-        return;
-    }
     if(!force && planetParameters[planetKey]?.travelWarning){
         showTravelWarningPopup(planetParameters[planetKey].travelWarning, () => selectPlanet(planetKey, true));
         return;
     }
-    const storageState = _spaceManagerInstance.prepareForTravel();
-
-    if(!_spaceManagerInstance.changeCurrentPlanet(planetKey)) return;
-
-    // World has changed, invalidate cached details before rebuilding UI
+    const travelled = _spaceManagerInstance.travelToStoryPlanet(planetKey);
+    if (!travelled) {
+        return;
+    }
     resetCurrentWorldCache();
-
-    const firstVisit = _spaceManagerInstance.visitPlanet(planetKey);
-    const departingTerraformed = _spaceManagerInstance.isPlanetTerraformed(currentKey);
-    const destinationTerraformed = _spaceManagerInstance.isPlanetTerraformed(planetKey);
-    if(firstVisit && departingTerraformed && !destinationTerraformed && typeof skillManager !== 'undefined' && skillManager){
-        skillManager.skillPoints += 1;
-        if (typeof notifySkillPointGained === 'function') {
-            notifySkillPointGained(1);
-        }
-    }
-
-    if(planetParameters[planetKey]){
-        defaultPlanet = planetKey;
-        currentPlanetParameters = planetParameters[planetKey];
-    }
-
-    initializeGameState({preserveManagers: true, preserveJournal: true});
 
     if (typeof openTerraformingWorldTab === 'function') {
       openTerraformingWorldTab();
