@@ -197,7 +197,7 @@ try {
 } catch (_) {}
 
 // World type metadata
-const RWG_WORLD_TYPES = {
+globalThis.RWG_WORLD_TYPES = {
   "mars-like": { displayName: "Mars-like" },
   "cold-desert": { displayName: "Desert" },
   "icy-moon": { displayName: "Water-rich" },
@@ -207,6 +207,7 @@ const RWG_WORLD_TYPES = {
   "super-earth": { displayName: "Super-Earth" },
   "venus-like": { displayName: "Venus-like" },
 };
+const RWG_WORLD_TYPES = globalThis.RWG_WORLD_TYPES;
 
 const RWG_TYPE_BASE_COLORS = {
   "mars-like": "#8a2a2a",

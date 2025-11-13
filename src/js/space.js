@@ -77,7 +77,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 var generateRandomPlanet = globalThis.generateRandomPlanet;
 if (typeof module !== 'undefined' && module.exports) {
-    ({ generateRandomPlanet } = require('./rwg.js'));
+    ({ generateRandomPlanet } = require('./rwg/rwg.js'));
 }
 
 class SpaceManager extends EffectableEntity {

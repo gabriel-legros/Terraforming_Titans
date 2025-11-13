@@ -719,7 +719,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div class="rwg-chip"><div class="label">Flux</div><div class="value">${fmt((fluxWm2).toFixed ? fluxWm2.toFixed(0) : fluxWm2)} W/m²</div></div>
         <div class="rwg-chip"><div class="label">Magnetosphere</div><div class="value">${c.hasNaturalMagnetosphere ? 'Yes' : 'No'}</div></div>
         <div class="rwg-chip"><div class="label">Geo (max)</div><div class="value">${geoMax > 0 ? fmt(geoMax) : '—'}</div></div>
-        <div class="rwg-chip"><div class="label">Type</div><div class="value">${forcedType && forcedType !== 'auto' ? forcedType : (cls?.archetype || '—')}</div></div>
+        <div class="rwg-chip"><div class="label">Type</div><div class="value">${forcedType && forcedType !== 'auto' ? (RWG_WORLD_TYPES[forcedType]?.displayName || forcedType) : (cls?.archetype ? (RWG_WORLD_TYPES[cls.archetype]?.displayName || cls.archetype) : '—')}</div></div>
         <div class="rwg-chip"><div class="label">Teq</div><div class="value">${teqDisplay ? fmt(toDisplayTemp(teqDisplay)) + ' ' + tempUnit : '—'}</div></div>
         <div class="rwg-chip"><div class="label">Mean T</div><div class="value">${meanTVal}</div></div>
         <div class="rwg-chip"><div class="label">Day T</div><div class="value">${dayTVal}</div></div>
@@ -881,10 +881,11 @@ function renderHistoryPage() {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const header = `<div class="rwg-history-head"><span>Name</span><span>Type</span><span>Seed</span><span>Population</span><span>State</span><span>Departed</span></div>`;
   const rows = slice.map(r => {
+    const displayType = RWG_WORLD_TYPES[r.type]?.displayName || r.type;
     const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
     const pop = fmt(r.colonists || 0);
     const stateCls = r.state === 'Current' ? 'state-current' : '';
-    return `<div class="rwg-history-row"><span class="name" title="${r.name}">${r.name}</span><span>${r.type}</span><span class="seed" title="${r.seed}">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${r.state}</span><span>${d}</span></div>`;
+    return `<div class="rwg-history-row"><span class="name" title="${r.name}">${r.name}</span><span>${displayType}</span><span class="seed" title="${r.seed}">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${r.state}</span><span>${d}</span></div>`;
   }).join('');
   historyListEl.innerHTML = header + rows;
   const totalPages = Math.max(Math.ceil(historyData.length / 10), 1);
