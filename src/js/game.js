@@ -28,6 +28,9 @@ function preload() {
 function create() {
   initializeDefaultGlobals();
 
+  // Initialize the Planet Visualizer (Terraforming -> World subtab)
+  window.initializePlanetVisualizerUI();
+  
   if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
       initializeGameState();
       if (typeof openTerraformingWorldTab === 'function') {
@@ -113,11 +116,6 @@ function initializeDefaultGlobals(){
   // Expose a stable reference for UI modules (avoid DOM id 'terraforming' collisions)
   if (typeof window !== 'undefined') {
     window.terraformingManager = terraforming;
-  }
-
-  // Initialize the Planet Visualizer (Terraforming -> World subtab)
-  if (typeof window !== 'undefined' && typeof window.initializePlanetVisualizerUI === 'function') {
-    window.initializePlanetVisualizerUI();
   }
 
   goldenAsteroid = new GoldenAsteroid();
