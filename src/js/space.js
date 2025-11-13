@@ -775,22 +775,6 @@ class SpaceManager extends EffectableEntity {
         if (typeof initializeGameState === 'function') {
             initializeGameState({ preserveManagers: true, preserveJournal: true });
         }
-        if (storageState && projectManager?.projects?.spaceStorage?.loadTravelState) {
-            projectManager.projects.spaceStorage.loadTravelState(storageState);
-            if (typeof updateProjectUI === 'function') {
-                updateProjectUI('spaceStorage');
-            }
-        }
-        const ringProj = projectManager?.projects?.orbitalRing;
-        if (ringProj) {
-            ringProj.currentWorldHasRing = this.currentWorldHasOrbitalRing();
-            if (typeof updateProjectUI === 'function') {
-                updateProjectUI('orbitalRing');
-            }
-        }
-        if (typeof updateSpaceUI === 'function') {
-            updateSpaceUI();
-        }
         return true;
     }
 

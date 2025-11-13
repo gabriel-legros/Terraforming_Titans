@@ -550,14 +550,9 @@ function selectPlanet(planetKey, force){
 
     initializeGameState({preserveManagers: true, preserveJournal: true});
 
-    if (storageState && projectManager?.projects?.spaceStorage?.loadTravelState) {
-        projectManager.projects.spaceStorage.loadTravelState(storageState);
-        if (typeof updateProjectUI === 'function') {
-            updateProjectUI('spaceStorage');
-        }
+    if (typeof openTerraformingWorldTab === 'function') {
+      openTerraformingWorldTab();
     }
-
-    updateSpaceUI();
 }
 
 function updateCurrentWorldUI() {
