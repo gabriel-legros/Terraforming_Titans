@@ -147,8 +147,12 @@ function formatWGCLogLine(line) {
   if (!escaped) return '&nbsp;';
   const damagePattern = /Damage:\s*(-[0-9][0-9.,]*(?:\s?[A-Za-z%]+)*)/g;
   const artifactPattern = /\+\s*[0-9][0-9.,]*\sArtifact[s]?/g;
+  const successPattern = /\bSuccess\b/g;
+  const failurePattern = /\bFailure\b/g;
   const withDamage = escaped.replace(damagePattern, (_, amount) => `Damage: <span class="wgc-log-damage">${amount}</span>`);
-  return withDamage.replace(artifactPattern, match => `<span class="wgc-log-artifact">${match}</span>`);
+  const withArtifacts = withDamage.replace(artifactPattern, match => `<span class="wgc-log-artifact">${match}</span>`);
+  const withSuccess = withArtifacts.replace(successPattern, () => '<span class="wgc-log-success">Success</span>');
+  return withSuccess.replace(failurePattern, () => '<span class="wgc-log-failure">Failure</span>');
 }
 
 function renderWGCLogLines(entries) {
