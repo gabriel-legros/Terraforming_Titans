@@ -696,6 +696,14 @@
   color: var(--wgc-red);
 }
 
+.wgc-log-success {
+  color: var(--wgc-green);
+}
+
+.wgc-log-failure {
+  color: var(--wgc-red);
+}
+
 /* Locked Overlay */
 .wgc-team-locked {
   position: absolute;
