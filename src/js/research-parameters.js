@@ -1749,6 +1749,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'warpnet',
+        name: 'Warpnet',
+        description: "An upgrade to humanity's greatest invention.  Enables instant communication from anywhere to anywhere, at great energy cost.  Enables a new colony slider that boosts research production.",
+        cost: { advancedResearch: 875000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'colonySliders',
+            type: 'booleanFlag',
+            flagId: 'warpnet',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'ship_smelting',
         name: 'Ship smelting',
         description: 'Ships can now smelt asteroids directly, allowing them to carry more metal.',

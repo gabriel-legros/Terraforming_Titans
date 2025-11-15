@@ -6,6 +6,12 @@ let mechanicalAssistanceEffect;
 let mechanicalAssistanceValue;
 let mechanicalAssistanceInput;
 let mechanicalAssistanceRefresh;
+let warpnetRow;
+let warpnetInfo;
+let warpnetEffect;
+let warpnetValue;
+let warpnetInput;
+let warpnetRefresh;
 
 function initializeColonySlidersUI() {
   const container = document.getElementById('colony-sliders-container');
@@ -434,6 +440,101 @@ function initializeColonySlidersUI() {
 
   mechanicalAssistanceRefresh = refreshMechanicalAssistanceDetails;
 
+  // Warpnet slider
+  warpnetRow = document.createElement('div');
+  warpnetRow.classList.add('colony-slider');
+  warpnetRow.id = 'warpnet-row';
+  const warpnetLabel = document.createElement('label');
+  warpnetLabel.htmlFor = 'warpnet-slider';
+  warpnetLabel.textContent = 'Warpnet ';
+  const warpnetInfoIcon = document.createElement('span');
+  warpnetInfoIcon.classList.add('info-tooltip-icon');
+  warpnetInfoIcon.title = 'Warpnet funnels instant communication to coordinate research output.';
+  warpnetInfoIcon.innerHTML = '&#9432;';
+  warpnetLabel.appendChild(warpnetInfoIcon);
+  warpnetRow.appendChild(warpnetLabel);
+
+  const warpnetValueSpan = document.createElement('span');
+  warpnetValueSpan.id = 'warpnet-slider-value';
+  warpnetValueSpan.classList.add('slider-value');
+  warpnetRow.appendChild(warpnetValueSpan);
+
+  const warpnetRange = document.createElement('input');
+  warpnetRange.type = 'range';
+  warpnetRange.min = 0;
+  warpnetRange.max = 10;
+  warpnetRange.step = 1;
+  warpnetRange.id = 'warpnet-slider';
+  warpnetRange.value = colonySliderSettings.warpnetLevel;
+  warpnetRange.setAttribute('list', 'warpnet-slider-ticks');
+  warpnetRange.classList.add('pretty-slider');
+
+  const warpnetSliderContainer = document.createElement('div');
+  warpnetSliderContainer.classList.add('slider-container');
+  warpnetSliderContainer.appendChild(warpnetRange);
+
+  const warpnetTickMarks = document.createElement('div');
+  warpnetTickMarks.classList.add('tick-marks');
+  for (let i = 0; i <= 10; i += 1) {
+    const tick = document.createElement('span');
+    warpnetTickMarks.appendChild(tick);
+  }
+  warpnetSliderContainer.appendChild(warpnetTickMarks);
+  warpnetRow.appendChild(warpnetSliderContainer);
+
+  const warpnetEffectSpan = document.createElement('span');
+  warpnetEffectSpan.id = 'warpnet-slider-effect';
+  warpnetEffectSpan.classList.add('slider-effect');
+  warpnetRow.appendChild(warpnetEffectSpan);
+
+  const warpnetList = document.createElement('datalist');
+  warpnetList.id = 'warpnet-slider-ticks';
+  for (let i = 0; i <= 10; i += 1) {
+    const option = document.createElement('option');
+    option.value = i;
+    warpnetList.appendChild(option);
+  }
+  container.appendChild(warpnetList);
+  warpnetRow.style.display = colonySliderSettings.isBooleanFlagSet('warpnet') ? 'grid' : 'none';
+  body.appendChild(warpnetRow);
+
+  warpnetInfo = warpnetInfoIcon;
+  warpnetEffect = warpnetEffectSpan;
+  warpnetValue = warpnetValueSpan;
+  warpnetInput = warpnetRange;
+
+  const refreshWarpnetDetails = () => {
+    let sliderValue;
+    try {
+      sliderValue = parseInt(warpnetInput.value, 10);
+    } catch (e) {
+      sliderValue = NaN;
+    }
+    if (isNaN(sliderValue)) {
+      sliderValue = colonySliderSettings.warpnetLevel;
+    }
+
+    const label = sliderValue === 0 ? 'x1' : `x1e${sliderValue}`;
+    const percent = sliderValue * 100;
+
+    if (warpnetValue) {
+      warpnetValue.textContent = label;
+    }
+    if (warpnetEffect) {
+      warpnetEffect.textContent = `Research: +${percent}%`;
+    }
+    if (warpnetInfo) {
+      warpnetInfo.title = [
+        'Warpnet funnels instant communication to coordinate research output.',
+        `Slider: ${label}.`,
+        `Global research boost: +${percent}%`,
+        'Energy cost scales steeply with Warpnet intensity.'
+      ].join('\n');
+    }
+  };
+
+  warpnetRefresh = refreshWarpnetDetails;
+
   card.appendChild(body);
   container.appendChild(card);
 
@@ -484,20 +585,53 @@ function initializeColonySlidersUI() {
     mechInput.value = v;
     refreshMechanicalAssistanceDetails();
   });
+
+  let initialWarpnet;
+  try { initialWarpnet = parseInt(warpnetInput.value, 10); } catch (e) { initialWarpnet = NaN; }
+  if (isNaN(initialWarpnet)) initialWarpnet = colonySliderSettings.warpnetLevel;
+  warpnetInput.value = initialWarpnet;
+  refreshWarpnetDetails();
+  warpnetInput.addEventListener('input', () => {
+    let v;
+    try { v = parseInt(warpnetInput.value, 10); } catch (e) { v = NaN; }
+    if (isNaN(v)) v = colonySliderSettings.warpnetLevel;
+    warpnetInput.value = v;
+    refreshWarpnetDetails();
+  });
+  warpnetInput.addEventListener('change', () => {
+    let v;
+    try { v = parseInt(warpnetInput.value, 10); } catch (e) { v = NaN; }
+    if (isNaN(v)) v = colonySliderSettings.warpnetLevel;
+    setWarpnetLevel(v);
+    warpnetInput.value = v;
+    refreshWarpnetDetails();
+  });
 }
 
 function updateColonySlidersUI() {
   if (!mechanicalAssistanceRow) {
     mechanicalAssistanceRow = document.getElementById('mechanical-assistance-row');
   }
-  if (!mechanicalAssistanceRow) return;
   const manager = colonySliderSettings;
-  const unlocked = manager.isBooleanFlagSet('mechanicalAssistance');
-  const gravity = terraforming.celestialParameters.gravity;
-  const hasPenalty = gravity > 10;
-  mechanicalAssistanceRow.style.display = unlocked && hasPenalty ? 'grid' : 'none';
-  if (mechanicalAssistanceRefresh) {
-    mechanicalAssistanceRefresh();
+  if (mechanicalAssistanceRow) {
+    const unlocked = manager.isBooleanFlagSet('mechanicalAssistance');
+    const gravity = terraforming.celestialParameters.gravity;
+    const hasPenalty = gravity > 10;
+    mechanicalAssistanceRow.style.display = unlocked && hasPenalty ? 'grid' : 'none';
+    if (mechanicalAssistanceRefresh) {
+      mechanicalAssistanceRefresh();
+    }
+  }
+
+  if (!warpnetRow) {
+    warpnetRow = document.getElementById('warpnet-row');
+  }
+  if (warpnetRow) {
+    const warpnetUnlocked = manager.isBooleanFlagSet('warpnet');
+    warpnetRow.style.display = warpnetUnlocked ? 'grid' : 'none';
+    if (warpnetRefresh) {
+      warpnetRefresh();
+    }
   }
 }
 
