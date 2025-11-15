@@ -39,6 +39,27 @@ function formatEnergy(J){
   return formatNumber(J / 86400);
 }
 
+function formatSeconds(seconds){
+  if(!Number.isFinite(seconds)) return '—';
+  if(seconds <= 0) return '0s';
+  if(seconds >= 86400){
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    return `${days}d ${hours}h`;
+  }
+  if(seconds >= 3600){
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  }
+  if(seconds >= 60){
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${minutes}m ${secs}s`;
+  }
+  return `${Math.max(1, Math.ceil(seconds))}s`;
+}
+
 function getRotationPeriodHours(p){
   const period = p?.rotationPeriod;
   return period && isFinite(period) ? period : 24;
@@ -147,13 +168,14 @@ class PlanetaryThrustersProject extends Project{
     /* spin */
     const spinHTML=`<div class="card-header"><span class="card-title">Spin <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's rotation period. When you check Invest, continuous thruster power is applied toward the target day length, consuming colony Energy per second. Progress is measured in equivalent Δv; when the target is reached, investment stops automatically.">&#9432;</span></span></div>
     <div class="card-body">
-      <div class="stats-grid five-col">
+      <div class="stats-grid six-col">
         <div><span class="stat-label">Rotation:</span><span id="rotNow" class="stat-value">—</span></div>
         <div><span class="stat-label">Target:</span>
              <input id="rotTarget" type="number" min="0.1" step="0.1" value="1"><span>day</span></div>
         <div><span class="stat-label">Equiv. Δv:</span><span id="rotDv" class="stat-value">—</span></div>
         <div><span class="stat-label">Energy Cost:</span><span id="rotE" class="stat-value">—</span></div>
         <div><span class="stat-label">Energy Spent:</span><span id="rotSpent" class="stat-value">0</span></div>
+        <div><span class="stat-label">Burn Time:</span><span id="rotBurn" class="stat-value">—</span></div>
       </div>
       <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
     </div>`;
@@ -164,7 +186,7 @@ class PlanetaryThrustersProject extends Project{
     /* motion */
     const motHTML=`<div class="card-header"><span class="card-title">Motion <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's orbit. If bound to a parent body (moon), investment first drives a slow spiral to the Hill radius (escape). After escape, investment changes heliocentric distance toward the target AU. Investment consumes Energy continuously; only one mode (Spin or Motion) can be active at a time.">&#9432;</span></span></div>
     <div class="card-body">
-      <div class="stats-grid five-col">
+      <div class="stats-grid six-col">
         <div><span class="stat-label">Distance:</span><span id="distNow" class="stat-value">—</span></div>
         <div id="parentRow" style="display:none;">
            <span class="stat-label">Around:</span><span id="parentName" class="stat-value">—</span>
@@ -181,6 +203,7 @@ class PlanetaryThrustersProject extends Project{
         </div>
         <div><span class="stat-label">Energy Cost:</span><span id="distE" class="stat-value">—</span></div>
         <div><span class="stat-label">Energy Spent:</span><span id="distSpent" class="stat-value">0</span></div>
+        <div><span class="stat-label">Burn Time:</span><span id="distBurn" class="stat-value">—</span></div>
       </div>
       <div class="invest-container left"><label><input id="distInvest" type="checkbox"> Invest</label></div>
       <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
@@ -219,11 +242,13 @@ class PlanetaryThrustersProject extends Project{
     const distDvEl = g('#distDv', motCard);
     this.el={spinCard, motCard, pwrCard,
       rotNow:g('#rotNow',spinCard),rotTarget:g('#rotTarget',spinCard),
-      rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),rotSpent:g('#rotSpent',spinCard),
+      rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
+      rotSpent:g('#rotSpent',spinCard),rotBurn:g('#rotBurn',spinCard),
       distNow:g('#distNow',motCard),distTarget:distTargetEl,
       distTargetRow:distTargetEl.parentElement,
       distDv:distDvEl,distDvRow:distDvEl.parentElement,
-      distE:g('#distE',motCard),distCb:g('#distInvest',motCard),distSpent:g('#distSpent',motCard),
+      distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
+      distSpent:g('#distSpent',motCard),distBurn:g('#distBurn',motCard),
       escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
       hillRow:g('#hillRow',motCard),hillVal:g('#hillVal',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
@@ -276,7 +301,10 @@ class PlanetaryThrustersProject extends Project{
 /* ---------- cost calculations ---------------------------------------- */
   calcSpinCost(){
     const p = terraforming.celestialParameters;
-    if(!p) return;
+    if(!p){
+      this.setBurnTime(this.el ? this.el.rotBurn : null, Number.NaN);
+      return;
+    }
     let tgt=1;
     try{
       const v=this.el.rotTarget&&this.el.rotTarget.value;
@@ -286,8 +314,10 @@ class PlanetaryThrustersProject extends Project{
     const changed = tgt !== this.tgtDays;
     this.tgtDays=tgt;
     const dv=spinDeltaV(p.radius,getRotHours(p),this.tgtDays*24);
+    const energyRem = spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio());
     this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
-    this.el.rotE.textContent =formatEnergy(spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio()));
+    this.el.rotE.textContent =formatEnergy(energyRem);
+    this.setBurnTime(this.el.rotBurn, energyRem);
     if(changed){
       this.energySpentSpin=0;
       this.spinStartDays=null;
@@ -297,7 +327,10 @@ class PlanetaryThrustersProject extends Project{
 
   calcMotionCost(){
     const p = terraforming.celestialParameters;
-    if(!p) return;
+    if(!p){
+      this.setBurnTime(this.el ? this.el.distBurn : null, Number.NaN);
+      return;
+    }
     // If we've escaped previously, ignore parent for preview and show heliocentric costs
     if(!isBoundToParent(p)){
       let tgt=1;
@@ -314,7 +347,9 @@ class PlanetaryThrustersProject extends Project{
       const starM = getStarMassKgFromCurrent();
       const dv=spiralDeltaV(p.distanceFromSun||this.tgtAU,this.tgtAU, G*starM);
       this.el.distDv.textContent=fmt(dv,false,3)+" m/s";
-      this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dv,this.getThrustPowerRatio()));
+      const energyRem = translationalEnergyRemaining(p,dv,this.getThrustPowerRatio());
+      this.el.distE.textContent=formatEnergy(energyRem);
+      this.setBurnTime(this.el.distBurn, energyRem);
       if(changed){
         this.energySpentMotion=0;
         this.startAU=null;
@@ -339,8 +374,28 @@ class PlanetaryThrustersProject extends Project{
     this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
     this.el.parentName.textContent = parent.name || "Parent";
     this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
-    this.el.distE.textContent = formatEnergy(p.mass * escArrival / this.getThrustPowerRatio());
+    const energyRem = p.mass * escArrival / this.getThrustPowerRatio();
+    this.el.distE.textContent = formatEnergy(energyRem);
+    this.setBurnTime(this.el.distBurn, energyRem);
     if(this.motionInvest && this.dVreq===0) { this.prepareJob(true,false); this.activeMode='motion'; }
+  }
+
+  setBurnTime(el, energyRequired){
+    if(!el) return;
+    if(!Number.isFinite(energyRequired)){
+      el.textContent = '—';
+      return;
+    }
+    if(energyRequired <= 0){
+      el.textContent = '0s';
+      return;
+    }
+    const watts = this.power * 86400;
+    if(!Number.isFinite(watts) || watts <= 0){
+      el.textContent = '—';
+      return;
+    }
+    el.textContent = formatSeconds(energyRequired / watts);
   }
 
 /* ---------- job preparation ------------------------------------------ */
@@ -415,8 +470,12 @@ class PlanetaryThrustersProject extends Project{
       this.tgtDays = tgtDays;
       if(p && p.radius){
         const dv=spinDeltaV(p.radius,getRotationPeriodHours(p),tgtDays*24);
+        const energyRem = spinEnergyRemaining(p,p.radius,tgtDays,this.getThrustPowerRatio());
         this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
-        this.el.rotE.textContent=formatEnergy(spinEnergyRemaining(p,p.radius,tgtDays,this.getThrustPowerRatio()));
+        this.el.rotE.textContent=formatEnergy(energyRem);
+        this.setBurnTime(this.el.rotBurn, energyRem);
+      }else{
+        this.setBurnTime(this.el.rotBurn, Number.NaN);
       }
     }
 
@@ -444,7 +503,9 @@ class PlanetaryThrustersProject extends Project{
         this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
 
         // Energy cost reflects **remaining** Δv (not job bookkeeping)
-        this.el.distE.textContent = formatEnergy(p.mass * dvRemaining / this.getThrustPowerRatio());
+        const energyRem = p.mass * dvRemaining / this.getThrustPowerRatio();
+        this.el.distE.textContent = formatEnergy(energyRem);
+        this.setBurnTime(this.el.distBurn, energyRem);
       }else if(p){
         let tgtAU = 1;
         try{
@@ -463,7 +524,11 @@ class PlanetaryThrustersProject extends Project{
         // For heliocentric moves, show remaining dv based on job when active
         const usingJob  = this.motionInvest && this.dVreq > 0;
         const dvRem     = usingJob ? Math.max(0,this.dVreq-this.dVdone) : dvPreview;
-        this.el.distE.textContent=formatEnergy(translationalEnergyRemaining(p,dvRem,this.getThrustPowerRatio()));
+        const energyRem = translationalEnergyRemaining(p,dvRem,this.getThrustPowerRatio());
+        this.el.distE.textContent=formatEnergy(energyRem);
+        this.setBurnTime(this.el.distBurn, energyRem);
+      }else{
+        this.setBurnTime(this.el.distBurn, Number.NaN);
       }
     }
 
