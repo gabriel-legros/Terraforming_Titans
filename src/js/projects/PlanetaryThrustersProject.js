@@ -42,6 +42,13 @@ function formatEnergy(J){
 function formatSeconds(seconds){
   if(!Number.isFinite(seconds)) return '—';
   if(seconds <= 0) return '0s';
+  const secondsPerYear = 365 * 24 * 3600;
+  if(seconds >= secondsPerYear){
+    const years = seconds / secondsPerYear;
+    const formattedYears = formatNumber(years, false, 1);
+    const suffix = Math.abs(years - 1) < 1e-9 ? 'year' : 'years';
+    return `${formattedYears} ${suffix}`;
+  }
   if(seconds >= 86400){
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
