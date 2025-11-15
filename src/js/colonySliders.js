@@ -10,6 +10,7 @@ class ColonySlidersManager extends EffectableEntity {
     this.luxuryWater = 1;
     this.oreMineWorkers = 0;
     this.mechanicalAssistance = 0;
+    this.warpnetLevel = 0;
   }
 
   setWorkforceRatio(value) {
@@ -103,6 +104,25 @@ class ColonySlidersManager extends EffectableEntity {
         valueSpan.textContent = `${value.toFixed(1)}x`;
         const mitigation = Math.round(value * 25);
         effectSpan.textContent = `Mitigation: -${mitigation}%`;
+      }
+    }
+  }
+
+  setWarpnetLevel(value) {
+    value = Math.min(10, Math.max(0, Math.round(value)));
+    this.warpnetLevel = value;
+    this.applyWarpnetEffects(value);
+
+    if (typeof document !== 'undefined') {
+      const input = document.getElementById('warpnet-slider');
+      if (input) input.value = value.toString();
+      const valueSpan = document.getElementById('warpnet-slider-value');
+      const effectSpan = document.getElementById('warpnet-slider-effect');
+      if (valueSpan && effectSpan) {
+        const label = value === 0 ? 'x1' : `x1e${value}`;
+        const percent = value * 100;
+        valueSpan.textContent = label;
+        effectSpan.textContent = `Research: +${percent}%`;
       }
     }
   }
@@ -219,7 +239,17 @@ class ColonySlidersManager extends EffectableEntity {
         effectId: 'mechanicalAssistanceComponents',
         sourceId: 'mechanicalAssistance'
       };
-        addEffect(effect);
+      addEffect(effect);
+    });
+  }
+
+  applyWarpnetEffects(value = this.warpnetLevel) {
+    addEffect({
+      target: 'global',
+      type: 'globalResearchBoost',
+      value: value,
+      effectId: 'warpnetResearchBoost',
+      sourceId: 'warpnet'
     });
   }
 
@@ -229,6 +259,7 @@ class ColonySlidersManager extends EffectableEntity {
     this.applyLuxuryWaterEffects();
     this.applyOreMineWorkerEffects();
     this.applyMechanicalAssistanceEffects();
+    this.applyWarpnetEffects();
   }
 
   saveState() {
@@ -238,6 +269,7 @@ class ColonySlidersManager extends EffectableEntity {
       luxuryWater: this.luxuryWater,
       oreMineWorkers: this.oreMineWorkers,
       mechanicalAssistance: this.mechanicalAssistance,
+      warpnetLevel: this.warpnetLevel,
     };
   }
 
@@ -248,6 +280,7 @@ class ColonySlidersManager extends EffectableEntity {
     this.setLuxuryWaterMultiplier(state.luxuryWater ?? 1);
     this.setOreMineWorkerAssist(state.oreMineWorkers ?? 0);
     this.setMechanicalAssistance(state.mechanicalAssistance ?? 0);
+    this.setWarpnetLevel(state.warpnetLevel ?? 0);
   }
 
   applyBooleanFlag(effect) {
@@ -260,6 +293,7 @@ class ColonySlidersManager extends EffectableEntity {
     this.setLuxuryWaterMultiplier(1);
     this.setOreMineWorkerAssist(0);
     this.setMechanicalAssistance(0);
+    this.setWarpnetLevel(0);
   }
 }
 
@@ -287,6 +321,10 @@ function setMechanicalAssistance(value) {
   colonySliderSettings.setMechanicalAssistance(value);
 }
 
+function setWarpnetLevel(value) {
+  colonySliderSettings.setWarpnetLevel(value);
+}
+
 function updateColonySlidersEffect() {
   colonySliderSettings.updateColonySlidersEffect();
 }
@@ -304,6 +342,7 @@ if (typeof module !== 'undefined' && module.exports) {
     setLuxuryWaterMultiplier,
     setOreMineWorkerAssist,
     setMechanicalAssistance,
+    setWarpnetLevel,
     updateColonySlidersEffect,
     resetColonySliders
   };
