@@ -244,12 +244,27 @@ class ColonySlidersManager extends EffectableEntity {
   }
 
   applyWarpnetEffects(value = this.warpnetLevel) {
+    const energyMultiplier = value === 0 ? 1 : Math.pow(10, value);
+
     addEffect({
       target: 'global',
       type: 'globalResearchBoost',
       value: value,
       effectId: 'warpnetResearchBoost',
       sourceId: 'warpnet'
+    });
+
+    colonyIds.forEach(colonyId => {
+      addEffect({
+        target: 'colony',
+        targetId: colonyId,
+        type: 'resourceConsumptionMultiplier',
+        resourceCategory: 'colony',
+        resourceTarget: 'energy',
+        value: energyMultiplier,
+        effectId: 'warpnetEnergyConsumption',
+        sourceId: 'warpnet'
+      });
     });
   }
 
