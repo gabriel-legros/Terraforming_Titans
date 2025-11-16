@@ -36,7 +36,14 @@ function createGrowthRateDisplay(){
   baseLine.innerHTML = '<span>Base rate:</span> <span id="growth-base-value">0%/s</span>';
   const baseInfo = document.createElement('span');
   baseInfo.classList.add('info-tooltip-icon');
-  baseInfo.title = 'Base growth rate derived from happiness: max((happiness - 50%) / 300, 0). Food and energy each give up to 25 happiness when satisfied. Comfort adds 20 times its rating. Each luxury resource (electronics and androids) can add 10 happiness if food and energy are met, and milestones ready to claim or claimed provide 10 more. Happiness below 50% simply pauses growth.';
+  baseInfo.title = [
+    'Base growth rate derived from happiness: max((happiness - 50%) / 300, 0).',
+    '- Food and energy each grant up to +25 happiness when satisfied.',
+    '- Comfort adds 20× its rating.',
+    '- Electronics and androids each add up to +10 happiness when food and energy are met.',
+    '- Milestones ready to claim or claimed add +10 happiness.',
+    '- Happiness below 50% pauses growth.'
+  ].join('\n');
   baseInfo.innerHTML = '&#9432;';
   baseLine.appendChild(baseInfo);
   body.appendChild(baseLine);
