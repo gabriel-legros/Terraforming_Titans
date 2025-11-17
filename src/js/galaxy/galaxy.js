@@ -902,6 +902,13 @@ class GalaxyManager extends EffectableEntity {
         return base > 0 ? base : 1;
     }
 
+    getFleetUpgradeTotalMultiplier() {
+        return GALAXY_FLEET_UPGRADE_KEYS.reduce(
+            (total, key) => total * this.getFleetUpgradeMultiplier(key),
+            1
+        );
+    }
+
     getEffectFleetCapacityMultiplier() {
         let multiplier = 1;
         this.activeEffects.forEach((effect) => {
@@ -918,10 +925,7 @@ class GalaxyManager extends EffectableEntity {
 
     getFleetCapacityMultiplier() {
         const effectMultiplier = this.getEffectFleetCapacityMultiplier();
-        const upgradeMultiplier = GALAXY_FLEET_UPGRADE_KEYS.reduce(
-            (total, key) => total * this.getFleetUpgradeMultiplier(key),
-            1
-        );
+        const upgradeMultiplier = this.getFleetUpgradeTotalMultiplier();
         return effectMultiplier * upgradeMultiplier;
     }
 
