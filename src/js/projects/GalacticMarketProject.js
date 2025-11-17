@@ -8,6 +8,7 @@ class GalacticMarketProject extends Project {
     this.sellSelections = [];
     this.startingDuration = Infinity;
     this.remainingTime = Infinity;
+    this.manualRunRemainingTime = 0;
   }
 
   isContinuous() {
@@ -519,11 +520,14 @@ class GalacticMarketProject extends Project {
     if (!this.canStart(resources)) {
       return false;
     }
+    const automationUnlocked = projectManager?.isBooleanFlagSet?.('automateSpecialProjects');
     this.shortfallLastTick = false;
     this.isActive = true;
     this.isPaused = false;
-    this.startingDuration = Infinity;
-    this.remainingTime = Infinity;
+    this.manualRunRemainingTime = automationUnlocked ? 0 : 1000;
+    this.autoStart = automationUnlocked ? this.autoStart : true;
+    this.startingDuration = this.manualRunRemainingTime || Infinity;
+    this.remainingTime = this.startingDuration;
     return true;
   }
 
@@ -584,10 +588,13 @@ class GalacticMarketProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    const automationUnlocked = projectManager?.isBooleanFlagSet?.('automateSpecialProjects');
+    const manualRunActive = !automationUnlocked && this.manualRunRemainingTime > 0;
     this.shortfallLastTick = false;
-    if (!this.isActive || !this.autoStart) return;
+    if (!manualRunActive && (!this.isActive || !this.autoStart)) return;
 
-    const seconds = deltaTime / 1000;
+    const effectiveDeltaTime = manualRunActive ? Math.min(deltaTime, this.manualRunRemainingTime) : deltaTime;
+    const seconds = effectiveDeltaTime / 1000;
     const buyTransactions = [];
     let buyCostPerSecond = 0;
 
@@ -694,6 +701,18 @@ class GalacticMarketProject extends Project {
         }
       }
     });
+
+    if (manualRunActive) {
+      this.manualRunRemainingTime = Math.max(0, this.manualRunRemainingTime - effectiveDeltaTime);
+      this.remainingTime = this.manualRunRemainingTime;
+      if (this.manualRunRemainingTime <= 0) {
+        this.autoStart = false;
+        this.isActive = false;
+        this.startingDuration = Infinity;
+        this.remainingTime = Infinity;
+        updateProjectUI?.(this.name);
+      }
+    }
   }
 
   saveState() {
