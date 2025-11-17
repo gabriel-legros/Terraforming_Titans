@@ -2188,8 +2188,24 @@ function cacheGalaxyElements() {
     logisticsCapacityValue.textContent = '0';
     logisticsCapacityRow.appendChild(logisticsCapacityLabel);
     logisticsCapacityRow.appendChild(logisticsCapacityValue);
+
+    const storyMultiplierRow = doc.createElement('div');
+    storyMultiplierRow.className = 'galaxy-logistics-stat';
+    const storyMultiplierLabel = doc.createElement('span');
+    storyMultiplierLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
+    storyMultiplierLabel.textContent = 'Story Multiplier';
+    storyMultiplierLabel.appendChild(createInfoTooltip(
+        doc,
+        'Fleet capacity bonus granted by completed story chapters.'
+    ));
+    const storyMultiplierValue = doc.createElement('span');
+    storyMultiplierValue.className = 'galaxy-logistics-stat__value';
+    storyMultiplierValue.textContent = `${formatFleetMultiplier(1)}x`;
+    storyMultiplierRow.appendChild(storyMultiplierLabel);
+    storyMultiplierRow.appendChild(storyMultiplierValue);
     logisticsStats.appendChild(logisticsPowerRow);
     logisticsStats.appendChild(logisticsCapacityRow);
+    logisticsStats.appendChild(storyMultiplierRow);
 
     const threatRow = doc.createElement('div');
     threatRow.className = 'galaxy-logistics-stat';
@@ -2357,6 +2373,7 @@ function cacheGalaxyElements() {
         logisticsStats,
         logisticsPowerValue,
         logisticsCapacityValue,
+        logisticsStoryMultiplierValue: storyMultiplierValue,
         logisticsThreatValue: threatValue,
         logisticsOperationsValue: operationsValue,
         fleetShop: {
@@ -2431,7 +2448,7 @@ function updateFleetShopDisplay(manager, cache) {
     if (!shop) {
         return;
     }
-    const totalMultiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
+    const totalMultiplier = manager?.getFleetUpgradeTotalMultiplier?.() ?? 1;
     if (shop.totalValue) {
         shop.totalValue.textContent = `${formatFleetMultiplier(totalMultiplier)}x`;
     }
@@ -2655,6 +2672,7 @@ function updateLogisticsDisplay(manager, cache) {
     }
     const powerNode = cache.logisticsPowerValue;
     const capacityNode = cache.logisticsCapacityValue;
+    const storyNode = cache.logisticsStoryMultiplierValue;
     const threatNode = cache.logisticsThreatValue;
     const operationsNode = cache.logisticsOperationsValue;
     if (!powerNode || !capacityNode) {
@@ -2665,6 +2683,10 @@ function updateLogisticsDisplay(manager, cache) {
     const capacity = Number.isFinite(faction?.fleetCapacity) ? faction.fleetCapacity : 0;
     powerNode.textContent = formatFleetValue(power);
     capacityNode.textContent = formatFleetValue(capacity);
+    if (storyNode) {
+        const storyMultiplier = manager?.getEffectFleetCapacityMultiplier?.() ?? 1;
+        storyNode.textContent = `${formatFleetMultiplier(storyMultiplier)}x`;
+    }
     if (threatNode) {
         const ratio = manager?.getUhfControlRatio?.() ?? 0;
         threatNode.textContent = formatPercentDisplay(ratio);

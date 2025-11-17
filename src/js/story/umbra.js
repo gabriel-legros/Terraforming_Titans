@@ -315,7 +315,8 @@ progressUmbra.chapters.push(
       {
         target: 'galaxyManager',
         type: 'fleetCapacityMultiplier',
-        value: 1.25
+        value: 1.25,
+        sourceId: 'chapter23.3'
       }
     ]
   }
