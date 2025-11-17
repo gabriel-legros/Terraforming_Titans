@@ -316,6 +316,7 @@ progressUmbra.chapters.push(
         target: 'galaxyManager',
         type: 'fleetCapacityMultiplier',
         value: 1.25,
+        effectId: 'umbraFleetUpgrade',
         sourceId: 'chapter23.3'
       }
     ]
