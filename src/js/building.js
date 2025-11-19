@@ -17,6 +17,7 @@ class Building extends EffectableEntity {
 
     this.autoBuildEnabled = false;
     this.autoBuildPercent = 0.1;
+    this.autoBuildStep = 0.01;
     this.autoBuildPriority = false;
     this.autoBuildBasis = 'population';
     this.workerPriority = 0; // -1 low, 0 normal, 1 high
@@ -150,6 +151,7 @@ class Building extends EffectableEntity {
       alertedWhenUnlocked: this.alertedWhenUnlocked,
       autoBuildEnabled: this.autoBuildEnabled,
       autoBuildPercent: this.autoBuildPercent,
+      autoBuildStep: this.autoBuildStep,
       autoBuildPriority: this.autoBuildPriority,
       autoBuildBasis: this.autoBuildBasis,
       workerPriority: this.workerPriority,
@@ -183,6 +185,10 @@ class Building extends EffectableEntity {
     if ('alertedWhenUnlocked' in state) this.alertedWhenUnlocked = state.alertedWhenUnlocked;
     if ('autoBuildEnabled' in state) this.autoBuildEnabled = state.autoBuildEnabled;
     if ('autoBuildPercent' in state) this.autoBuildPercent = state.autoBuildPercent;
+    if ('autoBuildStep' in state) this.autoBuildStep = state.autoBuildStep;
+    if (!Number.isFinite(this.autoBuildStep) || this.autoBuildStep <= 0) {
+      this.autoBuildStep = 0.01;
+    }
     if ('autoBuildPriority' in state) this.autoBuildPriority = state.autoBuildPriority;
     if ('autoBuildBasis' in state) this.autoBuildBasis = state.autoBuildBasis;
     if ('workerPriority' in state) this.workerPriority = state.workerPriority;

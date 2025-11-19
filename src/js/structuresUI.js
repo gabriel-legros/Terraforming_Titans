@@ -17,6 +17,152 @@ const combinedBuildingRowCache = {};
 const structureUIElements = {};
 let structureUICacheInvalidated = true;
 
+const AUTO_BUILD_DEFAULT_STEP = 0.01;
+const AUTO_BUILD_MIN_STEP = 0.000001;
+const AUTO_BUILD_MAX_STEP = 1000000;
+
+function sanitizeAutoBuildStep(value) {
+  if (!Number.isFinite(value) || value <= 0) return AUTO_BUILD_DEFAULT_STEP;
+  if (value < AUTO_BUILD_MIN_STEP) return AUTO_BUILD_MIN_STEP;
+  if (value > AUTO_BUILD_MAX_STEP) return AUTO_BUILD_MAX_STEP;
+  return value;
+}
+
+function formatAutoBuildStepValue(step) {
+  const normalized = sanitizeAutoBuildStep(step);
+  let decimals = 2;
+  if (normalized < 1) decimals = 3;
+  if (normalized < 0.1) decimals = 4;
+  if (normalized < 0.01) decimals = 5;
+  if (normalized < 0.001) decimals = 6;
+  return Number(normalized.toFixed(decimals)).toString();
+}
+
+function updateAutoBuildStepButtonLabels(structure, incrementBtn, decrementBtn) {
+  if (!structure) return;
+  structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
+  const label = formatAutoBuildStepValue(structure.autoBuildStep);
+  if (incrementBtn) incrementBtn.textContent = `+${label}`;
+  if (decrementBtn) decrementBtn.textContent = `-${label}`;
+}
+
+function refreshAutoBuildTarget(structure) {
+  if (!structure || typeof resources === 'undefined' || !resources.colony) return;
+  const els = structureUIElements[structure.name];
+  if (!els) return;
+  const pop = resources.colony.colonists?.value || 0;
+  const workerCap = resources.colony.workers?.cap || 0;
+  const collection = typeof buildings !== 'undefined' ? buildings : undefined;
+  const autoBuildUsesMax = structure.autoBuildBasis === 'max';
+  const base = autoBuildUsesMax ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, collection);
+  const targetCount = autoBuildUsesMax
+    ? Infinity
+    : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+
+  if (els.autoBuildTarget) {
+    const targetText = autoBuildUsesMax ? 'Target : Max' : `Target : ${formatBigInteger(targetCount)}`;
+    if (els.autoBuildTarget.textContent !== targetText) {
+      els.autoBuildTarget.textContent = targetText;
+    }
+    const targetColor = structure.autoBuildPartial ? 'orange' : '';
+    if (els.autoBuildTarget.style.color !== targetColor) {
+      els.autoBuildTarget.style.color = targetColor;
+    }
+  }
+
+  if (els.autoBuildInput) {
+    els.autoBuildInput.disabled = autoBuildUsesMax;
+    if (document.activeElement !== els.autoBuildInput) {
+      const value = Number.isFinite(structure.autoBuildPercent) ? structure.autoBuildPercent : 0;
+      const newValue = `${value}`;
+      if (els.autoBuildInput.value !== newValue) {
+        els.autoBuildInput.value = newValue;
+      }
+    }
+  }
+
+  if (els.autoBuildStepIncrement && els.autoBuildStepDecrement) {
+    updateAutoBuildStepButtonLabels(structure, els.autoBuildStepIncrement, els.autoBuildStepDecrement);
+  }
+
+  const shouldDisableButtons = autoBuildUsesMax;
+  ['autoBuildStepIncrement', 'autoBuildStepDecrement', 'autoBuildStepMultiply', 'autoBuildStepDivide'].forEach(key => {
+    const btn = els[key];
+    if (btn) {
+      btn.disabled = shouldDisableButtons;
+    }
+  });
+}
+
+function applyAutoBuildDelta(structure, input, delta) {
+  if (!structure || !input || !Number.isFinite(delta)) return;
+  structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
+  const parsed = parseFloat(input.value);
+  const current = Number.isFinite(parsed) ? parsed : 0;
+  const next = Math.max(0, current + delta);
+  const normalized = Number(next.toFixed(6));
+  structure.autoBuildPercent = normalized;
+  input.value = `${normalized}`;
+  refreshAutoBuildTarget(structure);
+}
+
+function createAutoBuildStepControls(structure, autoBuildInput) {
+  structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
+
+  const grid = document.createElement('div');
+  grid.classList.add('auto-build-step-grid');
+
+  const incrementButton = document.createElement('button');
+  incrementButton.type = 'button';
+  incrementButton.classList.add('auto-build-step-button', 'auto-build-step-increase');
+  grid.appendChild(incrementButton);
+
+  const multiplyButton = document.createElement('button');
+  multiplyButton.type = 'button';
+  multiplyButton.classList.add('auto-build-step-button', 'auto-build-step-multiply');
+  multiplyButton.textContent = 'x10';
+  grid.appendChild(multiplyButton);
+
+  const decrementButton = document.createElement('button');
+  decrementButton.type = 'button';
+  decrementButton.classList.add('auto-build-step-button', 'auto-build-step-decrease');
+  grid.appendChild(decrementButton);
+
+  const divideButton = document.createElement('button');
+  divideButton.type = 'button';
+  divideButton.classList.add('auto-build-step-button', 'auto-build-step-divide');
+  divideButton.textContent = '/10';
+  grid.appendChild(divideButton);
+
+  updateAutoBuildStepButtonLabels(structure, incrementButton, decrementButton);
+
+  incrementButton.addEventListener('click', () => {
+    applyAutoBuildDelta(structure, autoBuildInput, structure.autoBuildStep);
+  });
+
+  decrementButton.addEventListener('click', () => {
+    applyAutoBuildDelta(structure, autoBuildInput, -structure.autoBuildStep);
+  });
+
+  multiplyButton.addEventListener('click', () => {
+    structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep * 10);
+    updateAutoBuildStepButtonLabels(structure, incrementButton, decrementButton);
+  });
+
+  divideButton.addEventListener('click', () => {
+    structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep / 10);
+    updateAutoBuildStepButtonLabels(structure, incrementButton, decrementButton);
+  });
+
+  return {
+    grid,
+    incrementButton,
+    decrementButton,
+    multiplyButton,
+    divideButton
+  };
+}
+
 function resolveAutoBuildBasisValue(structure, select) {
   const basis = `${structure.autoBuildBasis || 'population'}`;
   for (let i = 0; i < select.options.length; i += 1) {
@@ -455,24 +601,25 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   structureUIElements[structure.name].autoBuildCheckbox = autoBuildCheckbox;
 
   const autoBuildLabel = document.createElement('span');
-  autoBuildLabel.textContent = 'Auto-build % of ';
+  autoBuildLabel.textContent = 'Auto-build ';
   autoBuildInputContainer.appendChild(autoBuildLabel);
 
   const autoBuildBasisSelect = document.createElement('select');
   autoBuildBasisSelect.classList.add('auto-build-basis');
   const popOption = document.createElement('option');
   popOption.value = 'population';
-  popOption.textContent = 'pop';
+  popOption.textContent = '% of pop';
   autoBuildBasisSelect.appendChild(popOption);
   const workerOption = document.createElement('option');
   workerOption.value = 'workers';
-  workerOption.textContent = 'workers';
+  workerOption.textContent = '% of workers';
   autoBuildBasisSelect.appendChild(workerOption);
   if (Array.isArray(structure.automationBuildingsDropDown)) {
     structure.automationBuildingsDropDown.forEach(name => {
       const option = document.createElement('option');
       option.value = `building:${name}`;
-      option.textContent = (buildings[name] && buildings[name].displayName) || name;
+      const displayName = (buildings[name] && buildings[name].displayName) || name;
+      option.textContent = `% of ${displayName}`;
       autoBuildBasisSelect.appendChild(option);
     });
   }
@@ -483,13 +630,32 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     autoBuildBasisSelect.appendChild(maxOption);
   }
   autoBuildBasisSelect.value = resolveAutoBuildBasisValue(structure, autoBuildBasisSelect);
-  autoBuildBasisSelect.addEventListener('change', () => {
-    structure.autoBuildBasis = autoBuildBasisSelect.value;
-    updateAutoBuildInputState(structure, autoBuildBasisSelect, autoBuildInput);
-  });
   autoBuildInputContainer.appendChild(autoBuildBasisSelect);
+
+  const autoBuildPriorityLabel = document.createElement('label');
+  autoBuildPriorityLabel.textContent = 'Prioritize';
+  const autoBuildPriority = document.createElement('input');
+  autoBuildPriority.type = 'checkbox';
+  autoBuildPriority.classList.add('auto-build-priority');
+  autoBuildPriority.id = `${structure.name}-auto-build-priority`;
+  autoBuildPriority.checked = structure.autoBuildPriority;
+  autoBuildPriority.addEventListener('change', () => {
+    structure.autoBuildPriority = autoBuildPriority.checked;
+  });
+  autoBuildPriorityLabel.prepend(autoBuildPriority);
+  autoBuildInputContainer.appendChild(autoBuildPriorityLabel);
+  structureUIElements[structure.name].autoBuildPriority = autoBuildPriority;
+
   structureUIElements[structure.name].autoBuildBasisSelect = autoBuildBasisSelect;
-  autoBuildInputContainer.appendChild(document.createTextNode(': '));
+  autoBuildContainer.appendChild(autoBuildInputContainer);
+
+  const autoBuildControlsRow = document.createElement('div');
+  autoBuildControlsRow.classList.add('auto-build-controls-row');
+  autoBuildContainer.appendChild(autoBuildControlsRow);
+
+  const autoBuildInputWrapper = document.createElement('div');
+  autoBuildInputWrapper.classList.add('auto-build-input-wrapper');
+  autoBuildControlsRow.appendChild(autoBuildInputWrapper);
 
   const autoBuildInput = document.createElement('input');
   autoBuildInput.type = 'number';
@@ -499,15 +665,27 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   autoBuildInput.addEventListener('input', () => {
     const autoBuildPercent = parseFloat(autoBuildInput.value);
-    structure.autoBuildPercent = autoBuildPercent;
-    // Additional logic to handle the auto-build percentage can go here
+    structure.autoBuildPercent = Number.isFinite(autoBuildPercent) ? autoBuildPercent : 0;
+    refreshAutoBuildTarget(structure);
   });
 
   updateAutoBuildInputState(structure, autoBuildBasisSelect, autoBuildInput);
 
-  autoBuildInputContainer.appendChild(autoBuildInput);
+  autoBuildInputWrapper.appendChild(autoBuildInput);
 
-  autoBuildContainer.appendChild(autoBuildInputContainer);
+  const autoBuildStepControls = createAutoBuildStepControls(structure, autoBuildInput);
+  autoBuildInputWrapper.appendChild(autoBuildStepControls.grid);
+  structureUIElements[structure.name].autoBuildStepIncrement = autoBuildStepControls.incrementButton;
+  structureUIElements[structure.name].autoBuildStepDecrement = autoBuildStepControls.decrementButton;
+  structureUIElements[structure.name].autoBuildStepMultiply = autoBuildStepControls.multiplyButton;
+  structureUIElements[structure.name].autoBuildStepDivide = autoBuildStepControls.divideButton;
+
+  autoBuildBasisSelect.addEventListener('change', () => {
+    structure.autoBuildBasis = autoBuildBasisSelect.value;
+    updateAutoBuildInputState(structure, autoBuildBasisSelect, autoBuildInput);
+    refreshAutoBuildTarget(structure);
+  });
+
   structureUIElements[structure.name].autoBuildInputContainer = autoBuildInputContainer;
   structureUIElements[structure.name].autoBuildInput = autoBuildInput;
   cached.autoBuildInputContainer = autoBuildInputContainer;
@@ -542,28 +720,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structureUIElements[structure.name].autoUpgradeContainer = autoUpgradeContainer;
   }
 
-  const autoBuildPriorityLabel = document.createElement('label');
-  autoBuildPriorityLabel.textContent = 'Prioritize';
-  const autoBuildPriority = document.createElement('input');
-  autoBuildPriority.type = 'checkbox';
-  autoBuildPriority.classList.add('auto-build-priority');
-  autoBuildPriority.id = `${structure.name}-auto-build-priority`;
-  autoBuildPriority.checked = structure.autoBuildPriority;
-  autoBuildPriority.addEventListener('change', () => {
-    structure.autoBuildPriority = autoBuildPriority.checked;
-  });
-  autoBuildPriorityLabel.prepend(autoBuildPriority);
-  autoBuildTargetContainer.appendChild(autoBuildPriorityLabel);
-  structureUIElements[structure.name].autoBuildPriority = autoBuildPriority;
-
-  autoBuildContainer.appendChild(autoBuildTargetContainer);
-
-  if (autoUpgradeContainer) {
-    autoBuildContainer.appendChild(autoUpgradeContainer);
-  }
-
-  const setActiveContainer = document.createElement('div');
-  setActiveContainer.classList.add('auto-build-setactive-container');
   const setActiveButton = document.createElement('button');
   setActiveButton.id = `${structure.name}-set-active-button`;
 
@@ -596,8 +752,17 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     adjustStructureActivation(structure, change);
     updateBuildingDisplay(buildings);
   });
+
+  autoBuildContainer.appendChild(autoBuildTargetContainer);
+
+  const setActiveContainer = document.createElement('div');
+  setActiveContainer.classList.add('auto-build-setactive-container');
   setActiveContainer.appendChild(setActiveButton);
   autoBuildContainer.appendChild(setActiveContainer);
+
+  if (autoUpgradeContainer) {
+    autoBuildContainer.appendChild(autoUpgradeContainer);
+  }
   cached.autoBuildContainer = autoBuildContainer;
 
   // Reversal toggle button (for buildings that support it)
@@ -611,6 +776,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   structure.initUI?.(autoBuildContainer, cached);
 
   combinedStructureRow.append(autoBuildContainer);
+
+  refreshAutoBuildTarget(structure);
 
   collapseArrow.addEventListener('click', () => {
     cached.collapsed = !cached.collapsed;
@@ -1009,8 +1176,6 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureDisplay(structures) {
-    const pop = resources.colony.colonists.value;
-    const workerCap = resources.colony.workers?.cap || 0;
     for (const structureName in structures) {
       const structure = structures[structureName];
       const els = structureUIElements[structureName] || {};
@@ -1077,7 +1242,6 @@ function updateDecreaseButtonText(button, buildCount) {
         autoBuildContainer.style.display = globalEffects.isBooleanFlagSet('automateConstruction') ? 'flex' : 'none';
         
         // Set auto-build checkbox based on autoBuildEnabled
-        const els = structureUIElements[structureName] || {};
         if (els.autoBuildCheckbox) {
           els.autoBuildCheckbox.checked = structure.autoBuildEnabled;
         }
@@ -1085,27 +1249,7 @@ function updateDecreaseButtonText(button, buildCount) {
           els.autoBuildPriority.checked = structure.autoBuildPriority;
         }
 
-        const buildingCollection = typeof buildings !== 'undefined' ? buildings : structures;
-        const autoBuildUsesMax = structure.autoBuildBasis === 'max';
-        const base = autoBuildUsesMax ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, buildingCollection);
-        const targetCount = autoBuildUsesMax
-          ? Infinity
-          : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
-        const targetEl = els.autoBuildTarget || document.getElementById(`${structure.name}-auto-build-target`);
-        if (targetEl) {
-          const targetText = autoBuildUsesMax ? 'Target : Max' : `Target : ${formatBigInteger(targetCount)}`;
-          if (targetEl.textContent !== targetText) {
-            targetEl.textContent = targetText;
-          }
-          const targetColor = structure.autoBuildPartial ? 'orange' : '';
-          if (targetEl.style.color !== targetColor) {
-            targetEl.style.color = targetColor;
-          }
-        }
-
-        if (els.autoBuildInput) {
-          els.autoBuildInput.disabled = autoBuildUsesMax;
-        }
+        refreshAutoBuildTarget(structure);
 
         if (els.autoBuildBasisSelect) {
           const newValue = resolveAutoBuildBasisValue(structure, els.autoBuildBasisSelect);
