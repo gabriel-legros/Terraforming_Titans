@@ -30,6 +30,9 @@ function deepMerge(target, source) {
 // --- Default Planet Parameters (Based largely on Mars) ---
 const defaultPlanetParameters = {
   name: 'Default Planet', // Will be overridden by specific planets
+  specialAttributes: {
+    hasSand: true,
+  },
   resources: {
     colony: {
       funding: { name: 'Funding', initialValue: 0, unlocked: false },

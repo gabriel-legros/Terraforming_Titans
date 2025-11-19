@@ -1192,7 +1192,10 @@ function updateDecreaseButtonText(button, buildCount) {
       const buildDisplay = els.buildCountDisplay || document.getElementById(`${structureName}-build-count`);
   
       // Update visibility based on unlocked state
-      if (structure.unlocked && structureRow && !structure.isHidden) {
+      const isVisible = typeof structure.isVisible === 'function'
+        ? structure.isVisible()
+        : structure.unlocked && !structure.isHidden;
+      if (isVisible && structureRow) {
         combinedStructureRow.style.display = 'flex'; // Show the building when unlocked
       } else {
         combinedStructureRow.style.display = 'none';
