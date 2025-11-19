@@ -11,7 +11,7 @@ progressSolisPrime.chapters.push(
     chapter: 30,
     title: 'Solis Prime: Foundation',
     narrative: "System Briefing: Solis Prime colonists need stable footing before we scale population targets.",
-    prerequisites: [],
+    prerequisites: ['impossible2'],
     objectives: [],
     reward: []
   },
