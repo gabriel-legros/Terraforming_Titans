@@ -43,6 +43,10 @@ class Building extends EffectableEntity {
     this._applyRecipeMapping();
   }
 
+  isVisible() {
+    return this.unlocked && !this.isHidden;
+  }
+
     // Method to initialize configurable properties
     initializeFromConfig(config, buildingName) {
       const {
@@ -974,6 +978,7 @@ class Building extends EffectableEntity {
 
 const constructors = {
   oreMine: 'OreMine',
+  sandQuarry: 'SandQuarry',
   ghgFactory: 'GhgFactory',
   oxygenFactory: 'OxygenFactory',
   massDriver: 'MassDriver',
