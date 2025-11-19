@@ -251,6 +251,8 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Feature updates
 - Autobuild basis drop-downs now include a Max option for ore mines, geothermal generators, and Dyson Swarm receivers so they chase the highest buildable count without relying on percentage targets.
+- Added a silicon asteroid mining special project alongside metal extraction.
+- Silicon asteroid mining now requires the siliconMiningUnlocked research flag granted by story effects before Shipbuilding can enable it.
 
 - Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.
 - Galaxy sectors now track faction control through dedicated GalaxyFaction and GalaxySector classes, coloring the map by the dominant controller.
