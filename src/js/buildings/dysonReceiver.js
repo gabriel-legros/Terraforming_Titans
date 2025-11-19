@@ -1,4 +1,23 @@
 class DysonReceiver extends Building {
+  getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
+    const base = super.getAutoBuildMaxCount(reservePercent, additionalReserves);
+    const project = projectManager?.projects?.dysonSwarmReceiver;
+    const perBuilding = this.production?.colony?.energy || 0;
+
+    if (!project || !project.isCompleted || perBuilding <= 0) {
+      return 0;
+    }
+
+    const totalEnergy = (project.collectors || 0) * (project.energyPerCollector || 0);
+    const cap = Math.floor(totalEnergy / perBuilding);
+    if (cap <= 0) {
+      return 0;
+    }
+
+    const remaining = Math.max(cap - this.count, 0);
+    return Math.min(base, remaining);
+  }
+
   build(buildCount = 1, activate = true) {
     const project = projectManager?.projects?.dysonSwarmReceiver;
     if (!project) {

@@ -28,6 +28,16 @@ function resolveAutoBuildBasisValue(structure, select) {
   return 'population';
 }
 
+function updateAutoBuildInputState(structure, basisSelect, input) {
+  if (!basisSelect || !input) return;
+  const disableInput = basisSelect.value === 'max';
+  input.disabled = disableInput;
+  if (disableInput && structure.autoBuildBasis !== 'max') {
+    basisSelect.value = resolveAutoBuildBasisValue(structure, basisSelect);
+    input.disabled = basisSelect.value === 'max';
+  }
+}
+
 function getAutoBuildBaseValue(structure, population, workerCap, collection) {
   const baseMethod = structure?.getAutoBuildBase;
   if (baseMethod?.call) {
@@ -466,9 +476,16 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       autoBuildBasisSelect.appendChild(option);
     });
   }
+  if (structure.autoBuildMaxOption) {
+    const maxOption = document.createElement('option');
+    maxOption.value = 'max';
+    maxOption.textContent = 'max';
+    autoBuildBasisSelect.appendChild(maxOption);
+  }
   autoBuildBasisSelect.value = resolveAutoBuildBasisValue(structure, autoBuildBasisSelect);
   autoBuildBasisSelect.addEventListener('change', () => {
     structure.autoBuildBasis = autoBuildBasisSelect.value;
+    updateAutoBuildInputState(structure, autoBuildBasisSelect, autoBuildInput);
   });
   autoBuildInputContainer.appendChild(autoBuildBasisSelect);
   structureUIElements[structure.name].autoBuildBasisSelect = autoBuildBasisSelect;
@@ -486,10 +503,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     // Additional logic to handle the auto-build percentage can go here
   });
 
+  updateAutoBuildInputState(structure, autoBuildBasisSelect, autoBuildInput);
+
   autoBuildInputContainer.appendChild(autoBuildInput);
 
   autoBuildContainer.appendChild(autoBuildInputContainer);
   structureUIElements[structure.name].autoBuildInputContainer = autoBuildInputContainer;
+  structureUIElements[structure.name].autoBuildInput = autoBuildInput;
   cached.autoBuildInputContainer = autoBuildInputContainer;
 
   const autoBuildTarget = document.createElement('span');
@@ -1066,11 +1086,14 @@ function updateDecreaseButtonText(button, buildCount) {
         }
 
         const buildingCollection = typeof buildings !== 'undefined' ? buildings : structures;
-        const base = getAutoBuildBaseValue(structure, pop, workerCap, buildingCollection);
-        const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+        const autoBuildUsesMax = structure.autoBuildBasis === 'max';
+        const base = autoBuildUsesMax ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, buildingCollection);
+        const targetCount = autoBuildUsesMax
+          ? Infinity
+          : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
         const targetEl = els.autoBuildTarget || document.getElementById(`${structure.name}-auto-build-target`);
         if (targetEl) {
-          const targetText = `Target : ${formatBigInteger(targetCount)}`;
+          const targetText = autoBuildUsesMax ? 'Target : Max' : `Target : ${formatBigInteger(targetCount)}`;
           if (targetEl.textContent !== targetText) {
             targetEl.textContent = targetText;
           }
@@ -1078,6 +1101,10 @@ function updateDecreaseButtonText(button, buildCount) {
           if (targetEl.style.color !== targetColor) {
             targetEl.style.color = targetColor;
           }
+        }
+
+        if (els.autoBuildInput) {
+          els.autoBuildInput.disabled = autoBuildUsesMax;
         }
 
         if (els.autoBuildBasisSelect) {
