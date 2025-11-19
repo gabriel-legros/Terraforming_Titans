@@ -980,6 +980,9 @@ const umbraOverrides = {
 
 const solisPrimeOverrides = {
   name: 'Solis Prime',
+  specialAttributes: {
+    hasSand: false,
+  },
   celestialParameters: {
     distanceFromSun: 0,
     gravity: 9.12,
@@ -991,7 +994,7 @@ const solisPrimeOverrides = {
     rogue: true
   },
   visualization: {
-    baseColor: '#1f2433',
+    baseColor: '#d4af37',
   }
 };
 
