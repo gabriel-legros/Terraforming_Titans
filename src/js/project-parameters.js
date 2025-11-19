@@ -228,6 +228,22 @@ const projectParameters = {
       resourceGainPerShip : {colony: {metal : 500000}}
     }
   },
+  siliconSpaceMining: {
+    type: 'SpaceMiningProject',
+    name: "Silicon Asteroid Mining",
+    category :"resources",
+    cost: {},
+    duration: 100000,
+    description: "Use your spaceships to mine asteroids for silicon. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier. Without a space elevator, the metal cost per ship reduces the silicon returned.",
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      spaceMining : true,
+      costPerShip : {colony : {metal : 100000, energy : 100000000000}},
+      resourceGainPerShip : {colony: {silicon : 500000}}
+    }
+  },
   carbonSpaceMining: {
     type: 'SpaceMiningProject',
     name: "Carbon Asteroid Mining",
@@ -325,6 +341,14 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'oreSpaceMining',
+          type : 'resourceCostMultiplier',
+          resourceCategory : 'colony',
+          resourceId : 'metal',
+          value : 0
+        },
+        {
+          target : 'project',
+          targetId : 'siliconSpaceMining',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',

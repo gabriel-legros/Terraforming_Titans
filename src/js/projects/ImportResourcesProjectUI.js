@@ -8,6 +8,7 @@ class ImportResourcesProjectUI {
   } = {}) {
     this.projectNames = [
       'oreSpaceMining',
+      'siliconSpaceMining',
       'carbonSpaceMining',
       'waterSpaceMining',
       'nitrogenSpaceMining',

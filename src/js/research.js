@@ -25,6 +25,7 @@ class Research {
       this.autoResearchPresets = [];
       this.currentAutoResearchPreset = 1;
       this.autoResearchEnabled = false;
+      this.pendingConditionalEffects = new Map();
 
       // Load research data and create Research instances
       for (const category in researchData) {
@@ -404,15 +405,61 @@ class Research {
 
   // Apply research effects to the target
   applyResearchEffects(research) {
-    research.effects.forEach((effect) => {
-      addEffect({...effect, sourceId: research})
+    research.effects.forEach((effect, index) => {
+      this.applyResearchEffect(research, effect, index);
     });
+  }
+
+  applyResearchEffect(research, effect, index) {
+    const requiredFlags = this.normalizeRequiredResearchFlags(effect);
+    const effectId = effect.effectId || `${research.id}_${index}`;
+    const sourceId = research.id;
+
+    if (requiredFlags.length > 0 && !requiredFlags.every(flagId => this.isBooleanFlagSet(flagId))) {
+      this.queueConditionalResearchEffect(effectId, sourceId, effect, requiredFlags);
+      return;
+    }
+
+    this.pendingConditionalEffects.delete(effectId);
+    addEffect({ ...effect, sourceId, effectId });
+  }
+
+  queueConditionalResearchEffect(effectId, sourceId, effect, requiredFlags) {
+    if (this.pendingConditionalEffects.has(effectId)) {
+      return;
+    }
+
+    this.pendingConditionalEffects.set(effectId, {
+      sourceId,
+      effect: { ...effect, effectId },
+      requiredFlags,
+    });
+  }
+
+  applyPendingConditionalEffects() {
+    this.pendingConditionalEffects.forEach((entry, effectId) => {
+      if (entry.requiredFlags.every(flagId => this.isBooleanFlagSet(flagId))) {
+        addEffect({ ...entry.effect, sourceId: entry.sourceId });
+        this.pendingConditionalEffects.delete(effectId);
+      }
+    });
+  }
+
+  normalizeRequiredResearchFlags(effect) {
+    if (!effect.requiredResearchFlags) {
+      return [];
+    }
+
+    return Array.isArray(effect.requiredResearchFlags)
+      ? effect.requiredResearchFlags
+      : [effect.requiredResearchFlags];
   }
 
   addAndReplace(effect) {
     super.addAndReplace(effect);
     if (effect.type === 'booleanFlag' && effect.value) {
       this.checkResearchUnlocks();
+      this.applyPendingConditionalEffects();
     }
   }
 
@@ -420,6 +467,12 @@ class Research {
   removeResearchEffects(research) {
     research.effects.forEach((effect) => {
       removeEffect({ ...effect, sourceId: research.id });
+    });
+
+    this.pendingConditionalEffects.forEach((entry, effectId) => {
+      if (entry.sourceId === research.id) {
+        this.pendingConditionalEffects.delete(effectId);
+      }
     });
   }
 

@@ -515,6 +515,11 @@ const researchParameters = {
             targetId : 'oreSpaceMining',
             type: 'enable'
           },
+          {target : 'project',
+            targetId : 'siliconSpaceMining',
+            type: 'enable',
+            requiredResearchFlags: ['siliconMiningUnlocked']
+          },
         {
           target : 'project',
           targetId : 'disposeResources',
@@ -1766,13 +1771,19 @@ const researchParameters = {
       {
         id: 'ship_smelting',
         name: 'Ship smelting',
-        description: 'Ships can now smelt asteroids directly, allowing them to carry more metal.',
+        description: 'Ships can now smelt asteroids directly, allowing them to carry more metal and silicon.',
         cost: { advancedResearch: 200000 },
         prerequisites: [],
         effects: [
           {
             target: 'project',
             targetId: 'oreSpaceMining',
+            type: 'shipCapacityMultiplier',
+            value: 2
+          },
+          {
+            target: 'project',
+            targetId: 'siliconSpaceMining',
             type: 'shipCapacityMultiplier',
             value: 2
           }
