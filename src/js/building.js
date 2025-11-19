@@ -64,7 +64,8 @@ class Building extends EffectableEntity {
         requiresLand,
         temperatureMaintenanceImmune,
         aerostatReduction,
-        automationBuildingsDropDown
+        automationBuildingsDropDown,
+        autoBuildMaxOption
       } = config;
   
       this.name = buildingName;
@@ -96,8 +97,20 @@ class Building extends EffectableEntity {
         ? automationBuildingsDropDown.slice()
         : null;
 
+      this.autoBuildMaxOption = !!autoBuildMaxOption;
+
       this.updateResourceStorage();
     }
+
+  getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
+    let maxBuildable = this.maxBuildable(reservePercent, additionalReserves);
+
+    if (this.requiresLand && typeof this.landAffordCount === 'function') {
+      maxBuildable = Math.min(maxBuildable, this.landAffordCount());
+    }
+
+    return Math.max(maxBuildable, 0);
+  }
 
   getAutoBuildBase(population, workerCap, collection) {
     const basis = `${this.autoBuildBasis || 'population'}`;

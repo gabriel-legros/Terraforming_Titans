@@ -13,7 +13,8 @@ const buildingsParameters = {
     requiresDeposit: { underground: { ore: 1 } },
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    autoBuildMaxOption: true
   },
   sandQuarry: {
     name: 'Sand Quarry',
@@ -273,7 +274,8 @@ const buildingsParameters = {
     requiresDeposit: { underground: { geothermal: 1 } },
     requiresWorker: 0,
     maintenanceFactor: 0.5,
-    unlocked: false
+    unlocked: false,
+    autoBuildMaxOption: true
   },
   hydrocarbonGenerator: {
     name: 'Methane Flare',
@@ -340,6 +342,7 @@ const buildingsParameters = {
     requiresWorker: 0,
     maintenanceFactor: 1,
     unlocked: false,
+    autoBuildMaxOption: true,
     temperatureMaintenanceImmune: true
   },
   superalloyFusionReactor: {

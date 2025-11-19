@@ -119,6 +119,9 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
     }
 
     const basis = `${structure?.autoBuildBasis || 'population'}`;
+    if (basis === 'max') {
+        return 0;
+    }
     if (basis === 'workers') {
         return workerCap;
     }
@@ -129,6 +132,20 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
     }
 
     return population;
+}
+
+function resolveAutoBuildMaxCount(structure, reservePercent, additionalReserves) {
+    const getter = structure?.getAutoBuildMaxCount;
+    if (getter?.call) {
+        return getter.call(structure, reservePercent, additionalReserves);
+    }
+
+    let maxBuildable = structure.maxBuildable(reservePercent, additionalReserves);
+    if (structure.requiresLand && typeof structure.landAffordCount === 'function') {
+        maxBuildable = Math.min(maxBuildable, structure.landAffordCount());
+    }
+
+    return Math.max(maxBuildable, 0);
 }
 
 function resetAutoBuildPartialFlags(structures) {
@@ -531,20 +548,22 @@ function autoBuild(buildings, delta = 0) {
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (building.autoBuildEnabled || building.autoActiveEnabled) {
-            const base = resolveAutoBuildBase(building, population, workerCap, buildings);
-            const targetCount = Math.ceil(((building.autoBuildPercent || 0)* base) / 100);
+            const usesMaxBasis = building.autoBuildBasis === 'max';
+            const base = usesMaxBasis ? 0 : resolveAutoBuildBase(building, population, workerCap, buildings);
+            const targetCount = usesMaxBasis ? Infinity : Math.ceil(((building.autoBuildPercent || 0)* base) / 100);
 
             buildingInfos.push({ building, targetCount });
 
             if (building.autoBuildEnabled) {
-                const currentRatio = building.count / targetCount;
-                const requiredAmount = targetCount - building.count;
+                const currentRatio = usesMaxBasis ? 0 : building.count / targetCount;
+                const requiredAmount = usesMaxBasis ? 1 : targetCount - building.count;
 
                 if (requiredAmount > 0) {
                     buildableBuildings.push({
                         building,
                         currentRatio,
                         requiredAmount,
+                        maxMode: usesMaxBasis,
                     });
                 }
             }
@@ -566,26 +585,30 @@ function autoBuild(buildings, delta = 0) {
     });
 
     // Step 3: Efficiently allocate builds
-    buildableBuildings.forEach(({ building, requiredAmount }) => {
+    buildableBuildings.forEach(({ building, requiredAmount, maxMode }) => {
         let buildCount = 0;
         const reserve = constructionOfficeState.strategicReserve;
         const extraReserves = building.autoBuildPriority ? null : prioritizedReserve;
-        const canBuildFull = building.canAfford(requiredAmount, reserve, extraReserves);
+        const desiredAmount = maxMode
+            ? resolveAutoBuildMaxCount(building, reserve, extraReserves)
+            : requiredAmount;
+        if (desiredAmount <= 0) {
+            return;
+        }
+        const canBuildFull = building.canAfford(desiredAmount, reserve, extraReserves);
         if (!canBuildFull) {
             building.autoBuildPartial = true;
-            markAutoBuildShortages(building, requiredAmount, reserve, extraReserves);
+            markAutoBuildShortages(building, desiredAmount, reserve, extraReserves);
         }
         if (canBuildFull) {
-            buildCount = requiredAmount;
+            buildCount = desiredAmount;
         } else {
-            let maxBuildable = building.maxBuildable(reserve, extraReserves);
+            const fallback = maxMode
+                ? desiredAmount
+                : resolveAutoBuildMaxCount(building, reserve, extraReserves);
 
-            if (building.requiresLand && typeof building.landAffordCount === 'function') {
-                maxBuildable = Math.min(maxBuildable, building.landAffordCount());
-            }
-
-            if (maxBuildable > 0) {
-                buildCount = maxBuildable;
+            if (fallback > 0) {
+                buildCount = fallback;
             }
         }
 
