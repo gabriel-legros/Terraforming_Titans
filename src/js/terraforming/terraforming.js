@@ -1,7 +1,7 @@
 const SOLAR_LUMINOSITY_W = 3.828e26; // Base solar luminosity (W)
 let starLuminosityMultiplier = 1; // Multiplier relative to Sol
 function setStarLuminosity(multiplier) {
-  starLuminosityMultiplier = multiplier || 1;
+  starLuminosityMultiplier = Number.isFinite(multiplier) ? multiplier : 1;
 }
 function getStarLuminosity() {
   return starLuminosityMultiplier;
@@ -11,6 +11,7 @@ const EPSILON = 0.622; // Molecular weight ratio
 const AU_METER = 149597870700;
 
 const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
+const BACKGROUND_SOLAR_FLUX = 6e-6;
 const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
 const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
@@ -217,7 +218,9 @@ class Terraforming extends EffectableEntity{
         this.initialCelestialParameters.crossSectionArea = Math.PI * Math.pow(initRadiusMeters, 2);
     }
 
-    const starLuminosity = this.celestialParameters.starLuminosity || 1;
+    const starLuminosity = Number.isFinite(this.celestialParameters.starLuminosity)
+      ? this.celestialParameters.starLuminosity
+      : 1;
     this.celestialParameters.starLuminosity = starLuminosity;
     this.initialCelestialParameters.starLuminosity = starLuminosity;
     setStarLuminosity(starLuminosity);
@@ -1437,8 +1440,17 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateSolarFlux(distanceFromSun){
+      if (this.celestialParameters && this.celestialParameters.rogue) {
+        return BACKGROUND_SOLAR_FLUX;
+      }
+      const validDistance = Number.isFinite(distanceFromSun) && distanceFromSun > 0
+        ? distanceFromSun
+        : (this.celestialParameters.distanceFromSun || 0) * AU_METER;
+      if (!validDistance) {
+        return BACKGROUND_SOLAR_FLUX;
+      }
       const lum = SOLAR_LUMINOSITY_W * starLuminosityMultiplier;
-      return lum / (4*Math.PI * Math.pow(distanceFromSun, 2)); // W/m²
+      return lum / (4*Math.PI * Math.pow(validDistance, 2)); // W/m²
     }
 
     calculateModifiedSolarFlux(distanceFromSunInMeters){
@@ -1463,7 +1475,7 @@ class Terraforming extends EffectableEntity{
       const mirrorContribution = mirrorFlux * mirrors * reverseFactor;
       const total = baseFlux + mirrorContribution + lanternFlux;
 
-      return Math.max(total, 6e-6);
+      return Math.max(total, BACKGROUND_SOLAR_FLUX);
     }
 
     calculateLanternFlux(){
