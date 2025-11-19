@@ -978,6 +978,23 @@ const umbraOverrides = {
   }
 };
 
+const solisPrimeOverrides = {
+  name: 'Solis Prime',
+  celestialParameters: {
+    distanceFromSun: 0,
+    gravity: 9.12,
+    radius: 6020,
+    mass: 4.6e24,
+    albedo: 0.14,
+    rotationPeriod: 19,
+    starLuminosity: 0,
+    rogue: true
+  },
+  visualization: {
+    baseColor: '#1f2433',
+  }
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -987,7 +1004,8 @@ const planetSpecificOverrides = {
   ganymede: ganymedeOverrides,
   vega2: vega2Overrides,
   venus: venusOverrides,
-  umbra: umbraOverrides
+  umbra: umbraOverrides,
+  solisprime: solisPrimeOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -1010,7 +1028,13 @@ function getPlanetParameters(planetName) {
   }
 
   // Perform a deep merge of defaults and the specific planet's overrides
-  return deepMerge(defaultPlanetParameters, overrides);
+  const mergedParameters = deepMerge(defaultPlanetParameters, overrides);
+
+  if (mergedParameters.celestialParameters && mergedParameters.celestialParameters.rogue) {
+    delete mergedParameters.star;
+  }
+
+  return mergedParameters;
 }
 
 // --- Export Structure ---
@@ -1026,6 +1050,7 @@ const planetParameters = {
     vega2: getPlanetParameters('vega2'),
     venus: getPlanetParameters('venus'),
     umbra: getPlanetParameters('umbra'),
+    solisprime: getPlanetParameters('solisprime'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
