@@ -29,6 +29,12 @@ class Resource extends EffectableEntity {
     // Keep overall rates for potential display/compatibility, calculated by summing typed rates
     this.productionRate = 0;
     this.consumptionRate = 0;
+    this.projectedProductionRate = 0;
+    this.projectedConsumptionRate = 0;
+    this.projectedProductionRateByType = {};
+    this.projectedConsumptionRateByType = {};
+    this.projectedProductionRateBySource = {};
+    this.projectedConsumptionRateBySource = {};
     this.reserved = resourceData.reserved || 0;
     this.reservedSources = {};
     this.unlocked = resourceData.unlocked;
@@ -300,14 +306,58 @@ class Resource extends EffectableEntity {
   }
 
   // Resets all rate trackers
-  resetRates() {
-      this.productionRate = 0;
-      this.consumptionRate = 0;
-      this.productionRateByType = {};
-      this.consumptionRateByType = {};
-      this.productionRateBySource = {}; // Also reset the aggregated source map
-      this.consumptionRateBySource = {}; // Also reset the aggregated source map
-      this.overflowRate = 0;
+  resetRates({ keepProjected = false } = {}) {
+    this.productionRate = 0;
+    this.consumptionRate = 0;
+    this.productionRateByType = {};
+    this.consumptionRateByType = {};
+    this.productionRateBySource = {}; // Also reset the aggregated source map
+    this.consumptionRateBySource = {}; // Also reset the aggregated source map
+    this.overflowRate = 0;
+
+    if (!keepProjected) {
+      this.projectedProductionRate = 0;
+      this.projectedConsumptionRate = 0;
+      this.projectedProductionRateByType = {};
+      this.projectedConsumptionRateByType = {};
+      this.projectedProductionRateBySource = {};
+      this.projectedConsumptionRateBySource = {};
+    }
+  }
+
+  saveProjectedRates() {
+    this.projectedProductionRate = this.productionRate;
+    this.projectedConsumptionRate = this.consumptionRate;
+
+    this.projectedProductionRateByType = {};
+    for (const rateType in this.productionRateByType) {
+      this.projectedProductionRateByType[rateType] = { ...this.productionRateByType[rateType] };
+    }
+
+    this.projectedConsumptionRateByType = {};
+    for (const rateType in this.consumptionRateByType) {
+      this.projectedConsumptionRateByType[rateType] = { ...this.consumptionRateByType[rateType] };
+    }
+
+    this.projectedProductionRateBySource = {};
+    for (const rateType in this.productionRateByType) {
+      for (const source in this.productionRateByType[rateType]) {
+        if (!this.projectedProductionRateBySource[source]) {
+          this.projectedProductionRateBySource[source] = 0;
+        }
+        this.projectedProductionRateBySource[source] += this.productionRateByType[rateType][source];
+      }
+    }
+
+    this.projectedConsumptionRateBySource = {};
+    for (const rateType in this.consumptionRateByType) {
+      for (const source in this.consumptionRateByType[rateType]) {
+        if (!this.projectedConsumptionRateBySource[source]) {
+          this.projectedConsumptionRateBySource[source] = 0;
+        }
+        this.projectedConsumptionRateBySource[source] += this.consumptionRateByType[rateType][source];
+      }
+    }
   }
 
   enable() {
@@ -498,6 +548,12 @@ function calculateProductionRates(deltaTime, buildings) {
     // Specify 'funding' as the rateType
     resources.colony.funding.modifyRate(fundingIncreaseRate, 'Funding', 'funding'); // Update funding production rate
   }
+
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      resources[category][resourceName].saveProjectedRates();
+    }
+  }
 }
 
 function produceResources(deltaTime, buildings) {
@@ -544,7 +600,7 @@ function produceResources(deltaTime, buildings) {
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       const resource = resources[category][resourceName];
-      resource.resetRates(); // Reset typed rates
+      resource.resetRates({ keepProjected: true }); // Reset typed rates
       if(resource.name != 'workers'){
         resource.updateStorageCap();
       }
