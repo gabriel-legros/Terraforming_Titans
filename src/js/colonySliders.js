@@ -81,7 +81,8 @@ class ColonySlidersManager extends EffectableEntity {
       const valueSpan = document.getElementById('ore-worker-slider-value');
       const effectSpan = document.getElementById('ore-worker-slider-effect');
       if (valueSpan && effectSpan) {
-        const workers = value * 10;
+        const minesBuilt = buildings?.oreMine?.count ?? 0;
+        const workers = value * 10 * minesBuilt;
         valueSpan.textContent = `${workers}`;
         const mult = value === 0 ? 0 : value;
         const percent = (mult * 100).toFixed(0);

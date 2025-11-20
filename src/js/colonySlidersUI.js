@@ -540,7 +540,8 @@ function initializeColonySlidersUI() {
 
   const updateOreValue = (val) => {
     if (oreValue && oreEffect) {
-      const workers = val * 10;
+      const minesBuilt = buildings?.oreMine?.count ?? 0;
+      const workers = val * 10 * minesBuilt;
       oreValue.textContent = `${workers}`;
       const mult = val === 0 ? 0 : val;
       const percent = (mult * 100).toFixed(0);
