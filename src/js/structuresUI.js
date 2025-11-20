@@ -53,11 +53,8 @@ function refreshAutoBuildTarget(structure) {
   const pop = resources.colony.colonists?.value || 0;
   const workerCap = resources.colony.workers?.cap || 0;
   const collection = typeof buildings !== 'undefined' ? buildings : undefined;
-  const autoBuildUsesMax = structure.autoBuildBasis === 'max';
-  const base = autoBuildUsesMax ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, collection);
-  const targetCount = autoBuildUsesMax
-    ? Infinity
-    : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+  const targetCount = getAutoBuildTargetCount(structure, pop, workerCap, collection);
+  const autoBuildUsesMax = targetCount === Infinity;
 
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesMax ? 'Target : Max' : `Target : ${formatBigInteger(targetCount)}`;
@@ -191,6 +188,9 @@ function getAutoBuildBaseValue(structure, population, workerCap, collection) {
   }
 
   const basis = `${structure?.autoBuildBasis || 'population'}`;
+  if (basis === 'maintain') {
+    return 0;
+  }
   if (basis === 'workers') {
     return workerCap;
   }
@@ -201,6 +201,20 @@ function getAutoBuildBaseValue(structure, population, workerCap, collection) {
   }
 
   return population;
+}
+
+function getAutoBuildTargetCount(structure, population, workerCap, collection) {
+  if (!structure) return 0;
+  const basis = `${structure.autoBuildBasis || 'population'}`;
+  if (basis === 'max') {
+    return Infinity;
+  }
+  if (basis === 'maintain' && structure.getMaintainAutoBuildTarget) {
+    return structure.getMaintainAutoBuildTarget(structure.autoBuildPercent);
+  }
+
+  const base = getAutoBuildBaseValue(structure, population, workerCap, collection);
+  return Math.ceil((structure.autoBuildPercent * base || 0) / 100);
 }
 
 function rebuildStructureUICache() {
@@ -614,6 +628,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   workerOption.value = 'workers';
   workerOption.textContent = '% of workers';
   autoBuildBasisSelect.appendChild(workerOption);
+  const maintainTarget = !isColony && structure.getSingleProductionResource ? structure.getSingleProductionResource() : null;
+  if (maintainTarget) {
+    const maintainOption = document.createElement('option');
+    maintainOption.value = 'maintain';
+    maintainOption.textContent = 'Maintain +X/s';
+    autoBuildBasisSelect.appendChild(maintainOption);
+  }
   if (Array.isArray(structure.automationBuildingsDropDown)) {
     structure.automationBuildingsDropDown.forEach(name => {
       const option = document.createElement('option');
@@ -745,8 +766,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
     const baseCollection = typeof buildings !== 'undefined' ? buildings : undefined;
-    const base = getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
-    const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+    const targetCount = getAutoBuildTargetCount(structure, pop, workerCap, baseCollection);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
     adjustStructureActivation(structure, change);
