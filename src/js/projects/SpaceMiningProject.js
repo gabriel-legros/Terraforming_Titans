@@ -77,6 +77,12 @@ class SpaceMiningProject extends SpaceshipProject {
     input.addEventListener('input', () => {
       const val = parseFloat(input.value);
       const unitProp = `${key}Unit`;
+      if (!Number.isFinite(val)) {
+        input.value = this[unitProp] === 'Pa'
+          ? this[thresholdProp] * 1000
+          : this[thresholdProp];
+        return;
+      }
       this[thresholdProp] = this[unitProp] === 'Pa' ? (val / 1000) : val;
     });
     control.appendChild(input);
