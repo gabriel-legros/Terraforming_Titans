@@ -10,6 +10,15 @@ const SOL_STAR = {
     habitableZone: { inner: 0.95, outer: 1.37 }
 };
 
+const ROGUE_STAR = {
+    name: 'Rogue Space',
+    spectralType: '—',
+    luminositySolar: 0,
+    massSolar: 0,
+    temperatureK: 0,
+    habitableZone: { inner: 0, outer: 0 }
+};
+
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 
 function normalizeSectorLabel(value) {
@@ -510,10 +519,15 @@ class SpaceManager extends EffectableEntity {
         merged.resources.surface.liquidMethane.initialValue = totalLiquidMethane;
         merged.resources.surface.hydrocarbonIce.initialValue = totalHydrocarbonIce;
 
-        let star = override?.star || base?.star || SOL_STAR;
-        star = JSON.parse(JSON.stringify(star));
-        if (merged.celestialParameters?.starLuminosity != null && star.luminositySolar == null) {
-            star.luminositySolar = merged.celestialParameters.starLuminosity;
+        const isRogue = merged.celestialParameters?.rogue;
+        const starSource = override?.star || base?.star || (isRogue ? ROGUE_STAR : SOL_STAR);
+        const star = JSON.parse(JSON.stringify(starSource));
+        const starLuminosity = merged.celestialParameters?.starLuminosity;
+        if (starLuminosity != null) {
+            star.luminositySolar = starLuminosity;
+        }
+        if (isRogue && !star.name) {
+            star.name = 'Rogue Space';
         }
         return { merged, override, star };
     }

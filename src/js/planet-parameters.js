@@ -988,8 +988,8 @@ const solisPrimeOverrides = {
   },
   celestialParameters: {
     distanceFromSun: 0,
-    gravity: 9.12,
-    radius: 6020,
+    gravity: 4.9,
+    radius: 6300,
     mass: 4.6e24,
     albedo: 0.14,
     rotationPeriod: 19,
@@ -998,6 +998,132 @@ const solisPrimeOverrides = {
   },
   visualization: {
     baseColor: '#d4af37',
+  },
+ "resources": {
+    land: { initialValue : 49_876_000_000 },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+    },
+    "surface": {
+      "ice": {
+        "initialValue": 2905755111246688.5
+      },
+      "liquidWater": {
+        "initialValue": 0
+      },
+      "dryIce": {
+        "initialValue": 0
+      },
+      "liquidCO2": {
+        "initialValue": 0
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
+      }
+    },
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 0
+      },
+      "atmosphericWater": {
+        "initialValue": 0
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 0
+      },
+      "inertGas": {
+        "initialValue": 0
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
+    }
+  },
+  "zonalWater": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 290937936633937.6,
+      "buriedIce": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 1702476415693995.5,
+      "buriedIce": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 912340758918755.4,
+      "buriedIce": 0
+    }
+  },
+  "zonalSurface": {
+    "tropical": {
+      "biomass": 0,
+      "hazardousBiomass": 0
+    },
+    "temperate": {
+      "biomass": 0,
+      "hazardousBiomass": 0
+    },
+    "polar": {
+      "biomass": 0,
+      "hazardousBiomass": 0
+    }
+  },
+  "zonalHydrocarbons": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }
+  },
+  "zonalCO2": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 2.8891734851947493,
+      "day": 2.8896410895264353,
+      "night": 2.8887058808630632
+    },
+    "temperate": {
+      "value": 2.757257044517093,
+      "day": 2.757700698734165,
+      "night": 2.7568133903000214
+    },
+    "polar": {
+      "value": 2.6356152141031823,
+      "day": 2.636035363213399,
+      "night": 2.6351950649929656
+    }
   }
 };
 
