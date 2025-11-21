@@ -205,6 +205,7 @@ class SpaceshipProject extends Project {
 
     const assignmentContainer = document.createElement('div');
     assignmentContainer.classList.add('spaceship-assignment-container');
+    const assignmentButtons = [];
   
     const assignedAndAvailableContainer = document.createElement('div');
     assignedAndAvailableContainer.classList.add('assigned-and-available-container');
@@ -235,6 +236,7 @@ class SpaceshipProject extends Project {
       button.textContent = text;
       button.addEventListener('click', onClick);
       parent.appendChild(button);
+      assignmentButtons.push(button);
       return button;
     };
   
@@ -262,7 +264,7 @@ class SpaceshipProject extends Project {
       plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
     }, multiplierContainer);
   
-    const autoAssignContainer = this.createAutoAssignSpaceshipsCheckbox();
+    const autoAssignContainer = this.createAutoAssignSpaceshipsCheckbox(assignmentButtons, assignmentContainer);
   
     assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer, autoAssignContainer);
     sectionContainer.appendChild(assignmentContainer);
@@ -312,7 +314,7 @@ class SpaceshipProject extends Project {
     // This will be handled in the new createProjectDetailsGridUI method
   }
 
-  createAutoAssignSpaceshipsCheckbox() {
+  createAutoAssignSpaceshipsCheckbox(assignmentButtons = null, assignmentContainer = null) {
     const autoAssignCheckboxContainer = document.createElement('div');
     autoAssignCheckboxContainer.classList.add('checkbox-container', 'auto-assign-container');
   
@@ -351,6 +353,8 @@ class SpaceshipProject extends Project {
       ...projectElements[this.name],
       autoAssignCheckbox,
       autoAssignCheckboxContainer,
+      assignmentButtons,
+      assignmentContainer,
     };
 
     return autoAssignCheckboxContainer;
