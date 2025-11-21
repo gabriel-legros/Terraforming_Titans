@@ -236,6 +236,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added an Automation Upgrades Solis shop that offers an Auto Research purchase enabling automatic research assignment.
 - The solisAutoResearch story flag now reveals the Automation Upgrades shop so the Auto Research purchase appears when unlocked.
 - Added an Automation manager and HOPE Automation tab unlocked via the Solis Ship Assignment upgrade from Umbra chapter 23.4; purchasing it enables ship-assignment automation.
+- Added spaceship automation presets with weighted step-based assignments, project exclusion toggles, and manual control locking while active.
 - Oxygen factories now vent hydrogen alongside oxygen to reflect electrolysis byproducts.
 - Colony research tiers two through six now grant aerostat colonies +10 comfort each via a new `addComfort` effect type.
 - Adrien Solis now offers a permanent Terraforming measurements research unlock in his shop once chapter 18.4d is completed.

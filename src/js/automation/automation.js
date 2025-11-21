@@ -1,3 +1,10 @@
+let SpaceshipAutomationRef = typeof SpaceshipAutomation !== 'undefined' ? SpaceshipAutomation : null;
+if (!SpaceshipAutomationRef && typeof require === 'function') {
+  try {
+    SpaceshipAutomationRef = require('./spaceship-automation.js').SpaceshipAutomation;
+  } catch (e) {}
+}
+
 class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
@@ -5,6 +12,7 @@ class AutomationManager extends EffectableEntity {
     this.features = {
       automationShipAssignment: false
     };
+    this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef() : null;
   }
 
   enable() {
@@ -21,6 +29,9 @@ class AutomationManager extends EffectableEntity {
 
   setFeature(flagId, value) {
     this.features[flagId] = !!value;
+    if (typeof queueAutomationUIRefresh === 'function') {
+      queueAutomationUIRefresh();
+    }
     this.updateUI();
   }
 
@@ -29,12 +40,18 @@ class AutomationManager extends EffectableEntity {
   }
 
   updateUI() {
+    if (typeof queueAutomationUIRefresh === 'function') {
+      queueAutomationUIRefresh();
+    }
     updateAutomationVisibility();
     updateAutomationUI();
   }
 
   reapplyEffects() {
     this.setFeature('automationShipAssignment', this.isBooleanFlagSet('automationShipAssignment'));
+    if (this.spaceshipAutomation) {
+      this.spaceshipAutomation.unlockManualControls();
+    }
     if (this.enabled) {
       this.updateUI();
     }
@@ -44,7 +61,8 @@ class AutomationManager extends EffectableEntity {
     return {
       enabled: this.enabled,
       features: { ...this.features },
-      booleanFlags: Array.from(this.booleanFlags)
+      booleanFlags: Array.from(this.booleanFlags),
+      spaceshipAutomation: this.spaceshipAutomation ? this.spaceshipAutomation.saveState() : null
     };
   }
 
@@ -53,10 +71,17 @@ class AutomationManager extends EffectableEntity {
     this.features = Object.assign({ automationShipAssignment: false }, data.features || {});
     const flags = Array.isArray(data.booleanFlags) ? data.booleanFlags : [];
     this.booleanFlags = new Set(flags);
+    if (data.spaceshipAutomation && this.spaceshipAutomation) {
+      this.spaceshipAutomation.loadState(data.spaceshipAutomation);
+    }
     this.reapplyEffects();
   }
 
-  update() {}
+  update(delta) {
+    if (this.spaceshipAutomation) {
+      this.spaceshipAutomation.update(delta || 0);
+    }
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

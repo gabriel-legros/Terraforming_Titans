@@ -1,0 +1,164 @@
+.automation-container {
+  margin-top: 12px;
+}
+
+.automation-card {
+  border: 1px solid #c7ced8;
+  border-radius: 6px;
+  margin-top: 12px;
+  background: #f5f7fa;
+  box-shadow: 0 1px 0 #dfe4ec inset;
+}
+
+.automation-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: linear-gradient(#d9dfe6, #cfd6df);
+  border-radius: 6px 6px 0 0;
+}
+
+.automation-title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.automation-title {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.automation-status {
+  display: none;
+}
+
+.automation-collapse {
+  border: none;
+  background: transparent;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+}
+
+.automation-description {
+  margin: 8px 10px 6px;
+  color: #2f3a4d;
+}
+
+.automation-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 10px 10px;
+}
+
+.automation-preset-row,
+.automation-add-entry-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.automation-preset-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.automation-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.automation-step {
+  border: 1px solid #dbe1ec;
+  border-radius: 6px;
+  padding: 10px;
+  background: #fff;
+}
+
+.automation-step-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.automation-limit-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.automation-step-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.automation-entry {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+
+.automation-weight {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.automation-entry-exclude {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.automation-add-entry-row button,
+.automation-add-step {
+  background: #2a4db8;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.automation-add-entry-row button:disabled,
+.automation-add-step:disabled {
+  background: #c3cad7;
+  cursor: not-allowed;
+}
+
+.automation-preset-buttons button,
+.automation-step-header button,
+.automation-entry button {
+  border: 1px solid #c4cad7;
+  background: #f1f4f9;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.automation-preset-buttons button:hover,
+.automation-step-header button:hover,
+.automation-entry button:hover,
+.automation-collapse:hover {
+  background: #e2e7f2;
+}
