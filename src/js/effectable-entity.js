@@ -244,8 +244,12 @@ class EffectableEntity {
 
     applyInstantResourceGain(effect) {
       const amount = effect.quantity !== undefined ? effect.quantity : effect.value;
-      if (typeof amount === 'number' && typeof this.increase === 'function') {
-        this.increase(amount);
+      if (typeof amount === 'number') {
+        if (effect.ignoreCap) {
+          this.value += amount;
+        } else if (typeof this.increase === 'function') {
+          this.increase(amount);
+        }
       }
       // Remove the effect immediately to prevent reapplication
       this.activeEffects = this.activeEffects.filter(e => e !== effect);

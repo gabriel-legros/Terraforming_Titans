@@ -17,7 +17,6 @@ progressSolisPrime.chapters.push(
       target: 'global',
       type: 'triggerGoldenAsteroidEffect',
       duration: 36000000,
-      onLoad: false,
       oneTimeFlag: true
     }]
   },
@@ -25,17 +24,36 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.1a',
     type: 'journal',
     chapter: 24,
-    narrative: 'Stabilize the first wave of settlers.',
+    narrative: "Solis : 'Indeed!  Beautiful, isn't it?  You may have noticed there are no metals, besides gold, and no silicon.  I have prepared for this.  Dropping some metal and silicon near your location...'",
     prerequisites: ['solisPrime.1'],
     objectives: [
     ],
-    reward: []
+    reward: [
+      {
+        target: 'resource',
+        resourceType: 'colony',
+        targetId: 'metal',
+        type: 'instantResourceGain',
+        quantity: 100000000,
+        ignoreCap: true,
+        oneTimeFlag: true
+      },
+      {
+        target: 'resource',
+        resourceType: 'colony',
+        targetId: 'silicon',
+        type: 'instantResourceGain',
+        quantity: 100000000,
+        ignoreCap: true,
+        oneTimeFlag: true
+      }
+    ]
   },
   {
     id: 'solisPrime.1b',
     type: 'journal',
     chapter: 24,
-    narrative: 'Bring early logistics online for a modest colony.',
+    narrative: "Mary : 'Hold on!  You can't just skip the explanation.  How did you find this?  Why is there a planet made of gold out here?  What's going on?'",
     prerequisites: ['solisPrime.1a'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
