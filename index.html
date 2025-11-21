@@ -100,6 +100,7 @@
     <script src="src/js/colonySliders.js"></script>
     <script src="src/js/colonySlidersUI.js"></script>
     <script src="src/js/nanotech.js"></script>
+    <script src="src/js/automation/automation.js"></script>
     <script src="src/js/projects.js"></script>
     <script src="src/js/projects/SpaceshipProject.js"></script>
     <script src="src/js/projects/TerraformingDurationProject.js"></script>
@@ -163,6 +164,7 @@
     <script src="src/js/lifeUI.js"></script>
     <script src="src/js/milestones.js"></script>
     <script src="src/js/milestonesUI.js"></script>
+    <script src="src/js/automation/automationUI.js"></script>
     <script src="src/js/hopeUI.js"></script>
     <script src="src/js/solis.js"></script>
     <script src="src/js/solisUI.js"></script>
@@ -521,6 +523,7 @@
                 <div class="hope-subtab active" data-subtab="awakening-hope">Awakening<span id="awakening-subtab-alert" class="hope-alert">!</span></div>
                 <div class="hope-subtab hidden" data-subtab="solis-hope">Solis<span id="solis-subtab-alert" class="hope-alert">!</span></div>
                 <div class="hope-subtab hidden" data-subtab="wgc-hope">WGC<span id="wgc-subtab-alert" class="hope-alert">!</span></div>
+                <div class="hope-subtab hidden" data-subtab="automation-hope">Automation</div>
             </div>
             <div class="hope-subtab-content-wrapper">
                 <div id="awakening-hope" class="hope-subtab-content active">
@@ -570,6 +573,19 @@
                 </div>
                 <div id="wgc-hope" class="hope-subtab-content hidden">
                     <!-- UI generated dynamically -->
+                </div>
+                <div id="automation-hope" class="hope-subtab-content hidden">
+                    <div class="automation-container">
+                        <div class="automation-card" id="automation-ship-assignment">
+                            <div class="automation-card-header">
+                                <h3>Ship Assignment</h3>
+                                <span id="automation-ship-assignment-status" class="automation-status">Locked</span>
+                            </div>
+                            <div id="automation-ship-assignment-description" class="automation-description">
+                                Manage automation upgrades to unlock ship assignment controls.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

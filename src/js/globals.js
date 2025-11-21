@@ -37,6 +37,7 @@ let lifeManager;
 let researchManager;
 let fundingModule;
 let spaceManager;
+let automationManager;
 
 let gameSettings = {
   useCelsius: false,

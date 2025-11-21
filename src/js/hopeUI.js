@@ -51,6 +51,7 @@ function initializeHopeUI() {
     if (typeof initializeSkillsUI === 'function') {
         initializeSkillsUI();
     }
+    initializeAutomationUI();
     if (typeof initializeSolisUI === 'function') {
         initializeSolisUI();
     }
@@ -82,6 +83,7 @@ function updateHopeAlert() {
 }
 
 function updateHopeUI() {
+    updateAutomationVisibility();
     if (typeof updateSolisVisibility === 'function') {
         updateSolisVisibility();
     }
@@ -97,6 +99,7 @@ function updateHopeUI() {
     if (typeof updateWGCUI === 'function') {
         updateWGCUI();
     }
+    updateAutomationUI();
     updateHopeAlert();
 }
 

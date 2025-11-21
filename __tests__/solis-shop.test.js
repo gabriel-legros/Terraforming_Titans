@@ -82,6 +82,39 @@ describe('SolisManager automation upgrades', () => {
     }));
   });
 
+  test('shipAssignment upgrade stays locked until enabled', () => {
+    const manager = new SolisManager();
+    manager.solisPoints = 600;
+
+    expect(manager.isUpgradeEnabled('shipAssignment')).toBe(false);
+    expect(manager.getUpgradeCost('shipAssignment')).toBe(0);
+    expect(manager.purchaseUpgrade('shipAssignment')).toBe(false);
+    expect(addEffectMock).not.toHaveBeenCalled();
+  });
+
+  test('shipAssignment purchase enables automation manager and flag', () => {
+    const manager = new SolisManager();
+    manager.setUpgradeEnabled('shipAssignment', true);
+    manager.solisPoints = 750;
+
+    expect(manager.getUpgradeCost('shipAssignment')).toBe(500);
+    expect(manager.purchaseUpgrade('shipAssignment')).toBe(true);
+    expect(manager.shopUpgrades.shipAssignment.purchases).toBe(1);
+    expect(manager.solisPoints).toBe(250);
+    expect(addEffectMock).toHaveBeenCalledWith(expect.objectContaining({
+      target: 'automationManager',
+      type: 'enable',
+      effectId: 'solisAutomationEnable'
+    }));
+    expect(addEffectMock).toHaveBeenCalledWith(expect.objectContaining({
+      target: 'automationManager',
+      type: 'booleanFlag',
+      flagId: 'automationShipAssignment',
+      value: true,
+      effectId: 'solisAutomationShipAssignment'
+    }));
+  });
+
   test('autoResearch enabled state persists through save and load', () => {
     const manager = new SolisManager();
     manager.setUpgradeEnabled('autoResearch', true);
@@ -103,6 +136,25 @@ describe('SolisManager automation upgrades', () => {
       effectId: 'solisAutoResearch',
       flagId: 'autoResearchEnabled',
       target: 'researchManager'
+    }));
+  });
+
+  test('reapplyEffects reapplies shipAssignment flags when purchased', () => {
+    const manager = new SolisManager();
+    manager.shopUpgrades.shipAssignment.purchases = 1;
+
+    manager.reapplyEffects();
+
+    expect(addEffectMock).toHaveBeenCalledWith(expect.objectContaining({
+      target: 'automationManager',
+      type: 'enable',
+      effectId: 'solisAutomationEnable'
+    }));
+    expect(addEffectMock).toHaveBeenCalledWith(expect.objectContaining({
+      target: 'automationManager',
+      flagId: 'automationShipAssignment',
+      type: 'booleanFlag',
+      effectId: 'solisAutomationShipAssignment'
     }));
   });
 });

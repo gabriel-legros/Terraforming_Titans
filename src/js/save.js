@@ -139,6 +139,7 @@ function getGameState() {
     goldenAsteroid: (typeof goldenAsteroid !== 'undefined' && typeof goldenAsteroid.saveState === 'function') ? goldenAsteroid.saveState() : undefined,
     nanotechManager: (typeof nanotechManager !== 'undefined' && typeof nanotechManager.saveState === 'function') ? nanotechManager.saveState() : undefined,
     hazardManager: (typeof hazardManager !== 'undefined' && typeof hazardManager.save === 'function') ? hazardManager.save() : undefined,
+    automationManager: automationManager && automationManager.saveState ? automationManager.saveState() : undefined,
     solisManager: (typeof solisManager !== 'undefined' && typeof solisManager.saveState === 'function') ? solisManager.saveState() : undefined,
     warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
     lifeDesigner: (typeof lifeDesigner !== 'undefined' && typeof lifeDesigner.saveState === 'function') ? lifeDesigner.saveState() : undefined,
@@ -465,6 +466,11 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if(gameState.nanotechManager){
       nanotechManager.loadState(gameState.nanotechManager);
+    }
+
+    if (gameState.automationManager && automationManager && automationManager.loadState) {
+      automationManager.loadState(gameState.automationManager);
+      updateAutomationVisibility?.();
     }
     
     if (gameState.hazardManager && typeof hazardManager !== 'undefined' && typeof hazardManager.load === 'function') {

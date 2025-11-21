@@ -120,6 +120,7 @@ function initializeDefaultGlobals(){
 
   goldenAsteroid = new GoldenAsteroid();
 
+  automationManager = new AutomationManager();
   solisManager = new SolisManager();
   warpGateCommand = new WarpGateCommand();
 
@@ -340,6 +341,9 @@ function initializeGameState(options = {}) {
 
   goldenAsteroid = new GoldenAsteroid();
 
+  if (!preserveManagers || !automationManager) {
+    automationManager = new AutomationManager();
+  }
   if (!preserveManagers || !solisManager) {
     solisManager = new SolisManager();
   }
@@ -403,6 +407,9 @@ function initializeGameState(options = {}) {
   if (preserveManagers && skillManager && typeof skillManager.reapplyEffects === 'function') {
     skillManager.reapplyEffects();
   }
+  if (preserveManagers && automationManager && typeof automationManager.reapplyEffects === 'function') {
+    automationManager.reapplyEffects();
+  }
   if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
     solisManager.reapplyEffects();
   }
@@ -447,6 +454,9 @@ function updateLogic(delta) {
 
   if (solisManager) {
     solisManager.update(delta);
+  }
+  if (automationManager) {
+    automationManager.update(delta);
   }
   if (warpGateCommand) {
     warpGateCommand.update(delta);

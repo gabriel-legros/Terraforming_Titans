@@ -16,10 +16,11 @@ const shopDescriptions = {
   terraformingMeasurements: 'Permanently unlock Terraforming measurements research across colonies',
   advancedOversight: 'Enables advanced oversight for the space mirror facility, which can precisely control mirrors and lanterns based on a target temperature.',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase',
-  autoResearch: 'Enable automatic research assignment for unlocked technologies'
+  autoResearch: 'Enable automatic research assignment for unlocked technologies',
+  shipAssignment: 'Enable automatic cargo ship assignment when reserves allow'
 };
 
-const automationShopKeys = ['autoResearch'];
+const automationShopKeys = ['autoResearch', 'shipAssignment'];
 
 function showSolisTab() {
   solisTabVisible = true;
