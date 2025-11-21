@@ -122,9 +122,6 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
     if (basis === 'max') {
         return 0;
     }
-    if (basis === 'maintain') {
-        return 0;
-    }
     if (basis === 'workers') {
         return workerCap;
     }
@@ -135,20 +132,6 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
     }
 
     return population;
-}
-
-function resolveAutoBuildTarget(structure, population, workerCap, collection) {
-    if (!structure) return 0;
-    const basis = `${structure.autoBuildBasis || 'population'}`;
-    if (basis === 'max') {
-        return Infinity;
-    }
-    if (basis === 'maintain' && structure.getMaintainAutoBuildTarget) {
-        return structure.getMaintainAutoBuildTarget(structure.autoBuildPercent);
-    }
-
-    const base = resolveAutoBuildBase(structure, population, workerCap, collection);
-    return Math.ceil(((structure.autoBuildPercent || 0) * base) / 100);
 }
 
 function resolveAutoBuildMaxCount(structure, reservePercent, additionalReserves) {
@@ -573,14 +556,14 @@ function autoBuild(buildings, delta = 0) {
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (building.autoBuildEnabled || building.autoActiveEnabled) {
-            const targetCount = resolveAutoBuildTarget(building, population, workerCap, buildings);
-            const usesMaxBasis = targetCount === Infinity;
+            const usesMaxBasis = building.autoBuildBasis === 'max';
+            const base = usesMaxBasis ? 0 : resolveAutoBuildBase(building, population, workerCap, buildings);
+            const targetCount = usesMaxBasis ? Infinity : Math.ceil(((building.autoBuildPercent || 0)* base) / 100);
 
             buildingInfos.push({ building, targetCount });
 
             if (building.autoBuildEnabled) {
-                const divisor = Math.max(targetCount, 1);
-                const currentRatio = usesMaxBasis ? 0 : building.count / divisor;
+                const currentRatio = usesMaxBasis ? 0 : building.count / targetCount;
                 const requiredAmount = usesMaxBasis ? 1 : targetCount - building.count;
 
                 if (requiredAmount > 0) {
@@ -686,7 +669,6 @@ if (typeof module !== 'undefined' && module.exports) {
         autoBuild,
         autobuildCostTracker,
         resolveAutoBuildBase,
-        resolveAutoBuildTarget,
         captureAutoBuildSettings,
         restoreAutoBuildSettings,
         constructionOfficeState,
@@ -706,7 +688,6 @@ if (typeof window !== 'undefined') {
     window.autoBuild = autoBuild;
     window.autobuildCostTracker = autobuildCostTracker;
     window.resolveAutoBuildBase = resolveAutoBuildBase;
-    window.resolveAutoBuildTarget = resolveAutoBuildTarget;
     window.captureAutoBuildSettings = captureAutoBuildSettings;
     window.restoreAutoBuildSettings = restoreAutoBuildSettings;
     window.constructionOfficeState = constructionOfficeState;

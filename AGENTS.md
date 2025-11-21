@@ -251,7 +251,6 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Feature updates
 - Autobuild basis drop-downs now include a Max option for ore mines, geothermal generators, and Dyson Swarm receivers so they chase the highest buildable count without relying on percentage targets.
-- Autobuild now offers a Maintain +X/s basis for single-output, non-energy buildings that uses projected rates to keep desired production surpluses.
 - Added a silicon asteroid mining special project alongside metal extraction.
 - Silicon asteroid mining now requires the siliconMiningUnlocked research flag granted by story effects before Shipbuilding can enable it.
 
