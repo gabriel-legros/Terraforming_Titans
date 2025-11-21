@@ -41,7 +41,7 @@ function createGrowthRateDisplay(){
     '- Food and energy each grant up to +25 happiness when satisfied.',
     '- Comfort adds 20× its rating.',
     '- Electronics and androids each add up to +10 happiness when food and energy are met.',
-    '- Milestones ready to claim or claimed add +10 happiness.',
+    '- Milestones ready to claim or claimed add +0.5 happiness each.',
     '- Happiness below 50% pauses growth.'
   ].join('\n');
   baseInfo.innerHTML = '&#9432;';
