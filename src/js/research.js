@@ -58,11 +58,31 @@ class Research {
     populateAutoResearchPreset(target) {
       for (const category in this.researches) {
         this.researches[category].forEach((research) => {
-          if (!Object.prototype.hasOwnProperty.call(target, research.id)) {
-            target[research.id] = false;
-          }
+          target[research.id] = this.normalizeAutoResearchEntry(target[research.id]);
         });
       }
+    }
+
+    normalizeAutoResearchEntry(entry) {
+      if (entry && typeof entry === 'object') {
+        return {
+          enabled: Boolean(entry.enabled),
+          priority: this.normalizeAutoResearchPriority(entry.priority),
+        };
+      }
+
+      return {
+        enabled: Boolean(entry),
+        priority: 4,
+      };
+    }
+
+    normalizeAutoResearchPriority(priority) {
+      const parsed = Number.parseInt(priority, 10);
+      if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 4) {
+        return parsed;
+      }
+      return 4;
     }
 
     ensureAutoResearchPresetsAreComplete() {
@@ -87,7 +107,9 @@ class Research {
       if (!preset || !Object.prototype.hasOwnProperty.call(preset, researchId)) {
         return false;
       }
-      return Boolean(preset[researchId]);
+      const entry = this.normalizeAutoResearchEntry(preset[researchId]);
+      preset[researchId] = entry;
+      return Boolean(entry.enabled);
     }
 
     setAutoResearchEnabled(presetIndex, researchId, enabled) {
@@ -99,8 +121,37 @@ class Research {
       if (!Object.prototype.hasOwnProperty.call(preset, researchId)) {
         return false;
       }
-      preset[researchId] = Boolean(enabled);
+      preset[researchId] = this.normalizeAutoResearchEntry({
+        ...preset[researchId],
+        enabled,
+      });
       return true;
+    }
+
+    setAutoResearchPriority(presetIndex, researchId, priority) {
+      const preset = this.getAutoResearchPreset(presetIndex);
+      if (!preset) {
+        return false;
+      }
+      this.populateAutoResearchPreset(preset);
+      if (!Object.prototype.hasOwnProperty.call(preset, researchId)) {
+        return false;
+      }
+      preset[researchId] = this.normalizeAutoResearchEntry({
+        ...preset[researchId],
+        priority,
+      });
+      return true;
+    }
+
+    getAutoResearchPriority(presetIndex, researchId) {
+      const preset = this.getAutoResearchPreset(presetIndex);
+      if (!preset || !Object.prototype.hasOwnProperty.call(preset, researchId)) {
+        return 4;
+      }
+      const entry = this.normalizeAutoResearchEntry(preset[researchId]);
+      preset[researchId] = entry;
+      return entry.priority;
     }
 
     processAutoResearchQueue() {
@@ -114,6 +165,7 @@ class Research {
         return;
       }
 
+      const candidates = [];
       for (const category in this.researches) {
         if (category === 'advanced') {
           continue;
@@ -125,7 +177,9 @@ class Research {
           if (research.isResearched) {
             continue;
           }
-          if (!preset[research.id]) {
+          const entry = this.normalizeAutoResearchEntry(preset[research.id]);
+          preset[research.id] = entry;
+          if (!entry.enabled) {
             continue;
           }
           if (!this.isResearchDisplayable(research)) {
@@ -137,9 +191,30 @@ class Research {
           if (!canAffordResearch(research)) {
             continue;
           }
-          this.completeResearch(research.id);
+          candidates.push({
+            research,
+            priority: this.normalizeAutoResearchPriority(entry.priority),
+            cost: this.calculateResearchTotalCost(research),
+          });
         }
       }
+
+      if (candidates.length === 0) {
+        return;
+      }
+
+      candidates.sort((a, b) => {
+        if (a.priority !== b.priority) {
+          return a.priority - b.priority;
+        }
+        return a.cost - b.cost;
+      });
+
+      candidates.forEach((candidate) => {
+        if (canAffordResearch(candidate.research)) {
+          this.completeResearch(candidate.research.id);
+        }
+      });
     }
 
     update(deltaTime) {
@@ -186,7 +261,14 @@ class Research {
       }
       return {
         researches: researchState,
-        autoResearchPresets: this.autoResearchPresets.map((preset) => ({ ...preset })),
+        autoResearchPresets: this.autoResearchPresets.map((preset) => {
+          const presetCopy = {};
+          for (const key in preset) {
+            const entry = this.normalizeAutoResearchEntry(preset[key]);
+            presetCopy[key] = { ...entry };
+          }
+          return presetCopy;
+        }),
         currentAutoResearchPreset: this.currentAutoResearchPreset,
       };
     }
@@ -219,7 +301,10 @@ class Research {
       this.autoResearchPresets = [];
       if (Array.isArray(savedPresets) && savedPresets.length > 0) {
         savedPresets.forEach((preset) => {
-          const copy = { ...preset };
+          const copy = {};
+          for (const key in preset) {
+            copy[key] = this.normalizeAutoResearchEntry(preset[key]);
+          }
           this.populateAutoResearchPreset(copy);
           this.autoResearchPresets.push(copy);
         });

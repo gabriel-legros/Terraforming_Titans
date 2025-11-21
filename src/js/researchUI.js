@@ -59,7 +59,7 @@ function updateAllResearchButtons(researchData) {
         researchData[tab].forEach((researchItem) => {
             const elements = researchElementCache.get(researchItem.id);
             if (!elements) return;
-            const { button, costEl, descEl, container, autoCheckbox, autoLabel } = elements;
+            const { button, costEl, descEl, container, autoCheckbox, autoLabel, autoPrioritySelect } = elements;
 
             if (researchItem.isResearched) {
                 container.classList.add('completed-research');
@@ -90,11 +90,20 @@ function updateAllResearchButtons(researchData) {
                     autoLabel.style.display = unlocked ? '' : 'none';
                 }
                 autoCheckbox.style.display = unlocked ? '' : 'none';
+                if (autoPrioritySelect) {
+                    autoPrioritySelect.style.display = unlocked ? '' : 'none';
+                }
                 if (unlocked) {
                     autoCheckbox.checked = researchManager.isAutoResearchEnabled(
                         researchManager.currentAutoResearchPreset,
                         researchItem.id
                     );
+                    if (autoPrioritySelect) {
+                        autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(
+                            researchManager.currentAutoResearchPreset,
+                            researchItem.id
+                        )}`;
+                    }
                 }
             }
         });
@@ -305,6 +314,7 @@ function loadResearchCategory(category) {
 
         let autoCheckbox = null;
         let autoLabel = null;
+        let autoPrioritySelect = null;
         if (category !== 'advanced') {
             autoCheckbox = document.createElement('input');
             autoCheckbox.type = 'checkbox';
@@ -334,7 +344,39 @@ function loadResearchCategory(category) {
             autoLabel.textContent = 'Auto Research ';
             autoLabel.appendChild(autoCheckbox);
             autoLabel.style.display = unlocked ? '' : 'none';
-            researchContainer.appendChild(autoLabel);
+
+            autoPrioritySelect = document.createElement('select');
+            autoPrioritySelect.classList.add('research-auto-priority');
+            ['1', '2', '3', '4'].forEach((value) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = `P${value}`;
+                autoPrioritySelect.appendChild(option);
+            });
+            autoPrioritySelect.value = `${researchManager.getAutoResearchPriority(
+                researchManager.currentAutoResearchPreset,
+                research.id
+            )}`;
+            autoPrioritySelect.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+            autoPrioritySelect.addEventListener('change', () => {
+                const applied = researchManager.setAutoResearchPriority(
+                    researchManager.currentAutoResearchPreset,
+                    research.id,
+                    Number.parseInt(autoPrioritySelect.value, 10)
+                );
+                if (!applied) {
+                    autoPrioritySelect.value = '4';
+                }
+            });
+            autoPrioritySelect.style.display = unlocked ? '' : 'none';
+
+            const autoControls = document.createElement('div');
+            autoControls.classList.add('research-auto-controls');
+            autoControls.appendChild(autoLabel);
+            autoControls.appendChild(autoPrioritySelect);
+            researchContainer.appendChild(autoControls);
         }
 
         // Append button, cost, and description to the research container
@@ -352,6 +394,7 @@ function loadResearchCategory(category) {
             descEl: researchDescription,
             autoCheckbox,
             autoLabel,
+            autoPrioritySelect,
         });
     });
 }
