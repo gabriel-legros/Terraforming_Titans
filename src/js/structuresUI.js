@@ -647,7 +647,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   if (structure.autoBuildMaxOption) {
     const maxOption = document.createElement('option');
     maxOption.value = 'max';
-    maxOption.textContent = 'max';
+    maxOption.textContent = 'Max';
     autoBuildBasisSelect.appendChild(maxOption);
   }
   autoBuildBasisSelect.value = resolveAutoBuildBasisValue(structure, autoBuildBasisSelect);
