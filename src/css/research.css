@@ -29,16 +29,26 @@
 
 .research-auto-checkbox {
     cursor: pointer;
-    margin-left: 6px;
 }
 
 .research-auto-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+}
+
+.research-auto-controls {
     position: absolute;
     top: 10px;
     right: 10px;
     display: flex;
     align-items: center;
-    font-size: 14px;
+    gap: 6px;
+}
+
+.research-auto-priority {
+    height: 24px;
 }
 
 .research-button {
