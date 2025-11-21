@@ -151,16 +151,75 @@
 
   const ZONE_KEYS = ['tropical', 'temperate', 'polar'];
 
-  let tuneHazardousBiomassForWorldFn = typeof tuneHazardousBiomassForWorld === 'function'
-    ? tuneHazardousBiomassForWorld
-    : null;
-  if (!tuneHazardousBiomassForWorldFn && typeof module !== 'undefined' && module.exports) {
-    try {
-      const rwgModule = require('./rwg.js');
-      if (rwgModule && typeof rwgModule.tuneHazardousBiomassForWorld === 'function') {
-        tuneHazardousBiomassForWorldFn = rwgModule.tuneHazardousBiomassForWorld;
-      }
-    } catch (_) {}
+  function tuneHazardousBiomassForWorld(hazardOverride, context) {
+    if (!hazardOverride || !hazardOverride.hazards) {
+      return;
+    }
+
+    const hazardous = hazardOverride.hazards.hazardousBiomass;
+    if (!hazardous) {
+      return;
+    }
+
+    const safeContext = context || {};
+    const { meanTemperatureK, surfacePressureKPa, co2PressureKPa, isLiquidWorld } = safeContext;
+
+    if (Number.isFinite(meanTemperatureK)) {
+      const entry = hazardous.temperaturePreference || {};
+      const radius = Math.max(Math.abs(meanTemperatureK) * 0.1, 30);
+      const min = Math.max(0, meanTemperatureK - radius);
+      const max = Math.max(min, meanTemperatureK + radius);
+      const rangeWidth = Math.max(max - min, 1);
+      const severityScale = 0.4 / rangeWidth;
+      hazardous.temperaturePreference = {
+        ...entry,
+        min,
+        max,
+        unit: entry.unit || 'K',
+        severityBelow: severityScale,
+        severityHigh: severityScale
+      };
+    }
+
+    if (Number.isFinite(surfacePressureKPa)) {
+      const entry = hazardous.atmosphericPressure || {};
+      const radius = Math.max(surfacePressureKPa * 0.5, 10);
+      const min = Math.max(0, surfacePressureKPa - radius);
+      const max = Math.max(min, surfacePressureKPa + radius);
+      const rangeWidth = Math.max(max - min, 1);
+      const severityScale = 400 / rangeWidth;
+      hazardous.atmosphericPressure = {
+        ...entry,
+        min,
+        max,
+        unit: entry.unit || 'kPa',
+        severity: severityScale
+      };
+    }
+
+    if (Number.isFinite(co2PressureKPa)) {
+      const entry = hazardous.co2Pressure || {};
+      const radius = Math.max(co2PressureKPa * 0.5, 1);
+      const min = Math.max(0, co2PressureKPa - radius);
+      const max = Math.max(min, co2PressureKPa + radius);
+      const rangeWidth = Math.max(max - min, 1);
+      const severityScale = 400 / rangeWidth;
+      hazardous.co2Pressure = {
+        ...entry,
+        min,
+        max,
+        unit: entry.unit || 'kPa',
+        severity: severityScale
+      };
+    }
+
+    const preferenceEntry = hazardous.landPreference || {};
+    const severity = Number.isFinite(preferenceEntry.severity) ? preferenceEntry.severity : 0.1;
+    hazardous.landPreference = {
+      ...preferenceEntry,
+      value: isLiquidWorld ? 'Liquid' : 'Land',
+      severity
+    };
   }
 
   let HazardManagerCtor = typeof HazardManager === 'function'
@@ -177,14 +236,11 @@
     if (!override || !override.hazards || !override.hazards.hazardousBiomass) {
       return;
     }
-    if (!tuneHazardousBiomassForWorldFn) {
-      return;
-    }
     const context = buildHazardEquilibrationContext(override, terra);
     if (!context) {
       return;
     }
-    tuneHazardousBiomassForWorldFn({ hazards: override.hazards }, context);
+    tuneHazardousBiomassForWorld({ hazards: override.hazards }, context);
 
     const hazardous = override.hazards.hazardousBiomass;
     const hazardManagerInstance = HazardManagerCtor ? new HazardManagerCtor() : null;
@@ -292,10 +348,16 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { clamp01, buildHazardEquilibrationContext, applyPostEquilibrationHazardTuning };
+    module.exports = {
+      clamp01,
+      buildHazardEquilibrationContext,
+      applyPostEquilibrationHazardTuning,
+      tuneHazardousBiomassForWorld
+    };
   } else {
     globalThis.clamp01 = clamp01;
     globalThis.buildHazardEquilibrationContext = buildHazardEquilibrationContext;
     globalThis.applyPostEquilibrationHazardTuning = applyPostEquilibrationHazardTuning;
+    globalThis.tuneHazardousBiomassForWorld = tuneHazardousBiomassForWorld;
   }
 })();
