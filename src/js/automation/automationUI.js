@@ -369,6 +369,16 @@ function attachAutomationHandlers() {
 
 function renderAutomationSteps(automation, preset, container) {
   const projects = automation.getSpaceshipProjects();
+
+  const formatProjectOption = (option, project) => {
+    const label = project.displayName || project.name;
+    const disabled = project.isPermanentlyDisabled && project.isPermanentlyDisabled();
+    option.textContent = disabled ? `${label} (disabled)` : label;
+    if (disabled) {
+      option.style.color = 'red';
+    }
+  };
+
   for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
     const step = preset.steps[stepIndex];
     const isLastStep = stepIndex === preset.steps.length - 1;
@@ -487,7 +497,7 @@ function renderAutomationSteps(automation, preset, container) {
         const project = projects[projectIndex];
         const option = document.createElement('option');
         option.value = project.name;
-        option.textContent = project.displayName || project.name;
+        formatProjectOption(option, project);
         if (project.name === entry.projectId) {
           option.selected = true;
         }
@@ -574,7 +584,7 @@ function renderAutomationSteps(automation, preset, container) {
     availableProjects.forEach(project => {
       const option = document.createElement('option');
       option.value = project.name;
-      option.textContent = project.displayName || project.name;
+      formatProjectOption(option, project);
       addSelect.appendChild(option);
     });
     if (availableProjects.length === 0) {
