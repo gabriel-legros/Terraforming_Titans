@@ -377,9 +377,27 @@ function renderAutomationSteps(automation, preset, container) {
 
     const header = document.createElement('div');
     header.classList.add('automation-step-header');
+    const heading = document.createElement('div');
+    heading.classList.add('automation-step-heading');
     const title = document.createElement('span');
+    title.classList.add('automation-step-badge');
     title.textContent = `Step ${stepIndex + 1}`;
-    header.appendChild(title);
+    const subtitle = document.createElement('span');
+    subtitle.classList.add('automation-step-subtitle');
+    const usingAllRemaining = isLastStep && (step.limit === null || step.limit === undefined) && step.mode !== 'cappedMin';
+    const usingCapped = step.mode === 'cappedMin';
+    if (usingCapped) {
+      subtitle.textContent = 'Balance ships with per-route caps';
+    } else if (usingAllRemaining) {
+      subtitle.textContent = 'Use every remaining ship';
+    } else if (step.limit !== null && step.limit !== undefined) {
+      const limitText = Number(step.limit || 0).toLocaleString();
+      subtitle.textContent = `Assign up to ${limitText} ships`;
+    } else {
+      subtitle.textContent = 'Distribute ships by weight';
+    }
+    heading.append(title, subtitle);
+    header.appendChild(heading);
 
     const limitRow = document.createElement('div');
     limitRow.classList.add('automation-limit-row');
@@ -397,8 +415,6 @@ function renderAutomationSteps(automation, preset, container) {
     remainingOpt.textContent = 'All Remaining';
     remainingOpt.disabled = !isLastStep;
     limitMode.appendChild(remainingOpt);
-    const usingAllRemaining = isLastStep && (step.limit === null || step.limit === undefined) && step.mode !== 'cappedMin';
-    const usingCapped = step.mode === 'cappedMin';
     limitMode.value = usingAllRemaining ? 'all' : usingCapped ? 'capped' : 'fixed';
     const limitInput = document.createElement('input');
     limitInput.type = 'number';
@@ -440,7 +456,9 @@ function renderAutomationSteps(automation, preset, container) {
       remainingOpt.disabled = true;
     }
     limitRow.append(limitMode, limitInput);
-    header.append(limitRow);
+    const controlWrap = document.createElement('div');
+    controlWrap.classList.add('automation-step-controls');
+    controlWrap.append(limitRow);
 
     const removeStep = document.createElement('button');
     removeStep.textContent = '✕';
@@ -450,7 +468,8 @@ function renderAutomationSteps(automation, preset, container) {
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
-    header.append(removeStep);
+    controlWrap.append(removeStep);
+    header.append(controlWrap);
 
     stepCard.appendChild(header);
 
@@ -531,7 +550,7 @@ function renderAutomationSteps(automation, preset, container) {
           queueAutomationUIRefresh();
           updateAutomationUI();
         });
-        excludeWrapper.append(exclude, ' Release if disabled');
+        excludeWrapper.append(exclude, 'Release if disabled');
         row.appendChild(excludeWrapper);
       }
 

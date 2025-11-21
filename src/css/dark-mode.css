@@ -520,6 +520,122 @@
     border-color: #444;
 }
 
+.dark-mode .automation-card {
+    background: linear-gradient(180deg, #161b26 0%, #0f141d 100%);
+    border-color: #2d3a50;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+}
+
+.dark-mode .automation-card-header {
+    background: linear-gradient(120deg, #1c2534, #131b29);
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-description {
+    color: #c8d2e2;
+}
+
+.dark-mode .automation-body {
+    background: transparent;
+}
+
+.dark-mode .automation-preset-row {
+    background: #111827;
+    border-color: #24324a;
+    box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-mode .automation-preset-row select,
+.dark-mode .automation-preset-row input {
+    background: #0d1522;
+    border-color: #32435f;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-step {
+    background: linear-gradient(180deg, #121a28 0%, #0b111b 100%);
+    border-color: #2a3650;
+    border-left-color: #3f7bf7;
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.6);
+}
+
+.dark-mode .automation-step-header {
+    border-bottom-color: #1d293b;
+}
+
+.dark-mode .automation-step-badge {
+    background: #1f2d45;
+    color: #a8c6ff;
+    box-shadow: 0 1px 0 #0d1627 inset;
+}
+
+.dark-mode .automation-step-subtitle {
+    color: #acb6c6;
+}
+
+.dark-mode .automation-limit-row select,
+.dark-mode .automation-limit-row input {
+    background: #0f1725;
+    border-color: #30405a;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-limit-row input:disabled {
+    background: #131b2a;
+    color: #6e7a93;
+}
+
+.dark-mode .automation-entry {
+    background: #0e1421;
+    border-color: #202d42;
+}
+
+.dark-mode .automation-entry select,
+.dark-mode .automation-entry input {
+    background: #0d1522;
+    border-color: #30405a;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-entry-exclude {
+    color: #cbd4e2;
+}
+
+.dark-mode .automation-add-entry-row {
+    border-top-color: #273449;
+}
+
+.dark-mode .automation-add-entry-row button,
+.dark-mode .automation-add-step {
+    background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
+    border: 1px solid #3f7bf7;
+}
+
+.dark-mode .automation-add-entry-row button:disabled,
+.dark-mode .automation-add-step:disabled {
+    background: #1a2335;
+    border-color: #2c3a52;
+}
+
+.dark-mode .automation-preset-buttons button,
+.dark-mode .automation-step-header button,
+.dark-mode .automation-entry button {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-preset-buttons button:hover,
+.dark-mode .automation-step-header button:hover,
+.dark-mode .automation-entry button:hover,
+.dark-mode .automation-collapse:hover {
+    background: #24324a;
+}
+
 .dark-mode input[type="range"].pretty-slider::-webkit-slider-runnable-track {
     background: #4d4d4d;
 }

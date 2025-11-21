@@ -4,10 +4,10 @@
 
 .automation-card {
   border: 1px solid #c7ced8;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-top: 12px;
-  background: #f5f7fa;
-  box-shadow: 0 1px 0 #dfe4ec inset;
+  background: linear-gradient(180deg, #f9fbff 0%, #f2f5fa 100%);
+  box-shadow: 0 6px 18px rgba(38, 68, 134, 0.08);
 }
 
 .automation-card-header {
@@ -15,9 +15,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px 10px;
-  background: linear-gradient(#d9dfe6, #cfd6df);
-  border-radius: 6px 6px 0 0;
+  padding: 10px 12px;
+  background: linear-gradient(120deg, #e3e8f3, #d1d8e6);
+  border-radius: 8px 8px 0 0;
 }
 
 .automation-title-group {
@@ -55,13 +55,14 @@
 .automation-description {
   margin: 8px 10px 6px;
   color: #2f3a4d;
+  font-size: 13px;
 }
 
 .automation-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 10px 10px;
+  padding: 10px 12px 12px;
 }
 
 .automation-preset-row,
@@ -70,6 +71,22 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.automation-preset-row {
+  background: #fff;
+  border: 1px solid #dbe1ec;
+  border-radius: 6px;
+  padding: 10px;
+  box-shadow: 0 1px 0 #e6ebf3 inset;
+}
+
+.automation-preset-row select,
+.automation-preset-row input {
+  background: #fff;
+  border: 1px solid #cfd6e5;
+  border-radius: 6px;
+  padding: 6px 8px;
 }
 
 .automation-preset-buttons {
@@ -85,9 +102,11 @@
 
 .automation-step {
   border: 1px solid #dbe1ec;
-  border-radius: 6px;
-  padding: 10px;
-  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9fd 100%);
+  box-shadow: 0 10px 18px rgba(22, 42, 94, 0.08);
+  border-left: 4px solid #2a4db8;
 }
 
 .automation-step-header {
@@ -96,12 +115,56 @@
   align-items: center;
   flex-wrap: wrap;
   justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5eaf3;
+}
+
+.automation-step-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.automation-step-badge {
+  background: #e8edff;
+  color: #1f3fa3;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 0 #c7d4f9 inset;
+}
+
+.automation-step-subtitle {
+  color: #51617f;
+  font-size: 12px;
+}
+
+.automation-step-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .automation-limit-row {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.automation-limit-row select,
+.automation-limit-row input {
+  background: #f8f9fc;
+  border: 1px solid #cfd6e5;
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #1f2c44;
+}
+
+.automation-limit-row input:disabled {
+  background: #eef1f7;
+  color: #7b8496;
 }
 
 .automation-step-entries {
@@ -116,18 +179,35 @@
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 8px;
   align-items: center;
+  padding: 8px;
+  background: #f8f9fc;
+  border: 1px solid #e1e7f1;
+  border-radius: 6px;
 }
 
 .automation-weight {
   display: flex;
   gap: 4px;
   align-items: center;
+  color: #4c5872;
 }
 
 .automation-entry-exclude {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   align-items: center;
+  justify-content: flex-start;
+  white-space: nowrap;
+  min-width: max-content;
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+.automation-entry-exclude input[type='checkbox'] {
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
 }
 
 .automation-add-entry-row button,
@@ -146,6 +226,12 @@
   cursor: not-allowed;
 }
 
+.automation-add-entry-row {
+  justify-content: flex-start;
+  padding-top: 6px;
+  border-top: 1px dashed #d2d9e8;
+}
+
 .automation-preset-buttons button,
 .automation-step-header button,
 .automation-entry button {
@@ -154,6 +240,7 @@
   border-radius: 4px;
   padding: 4px 8px;
   cursor: pointer;
+  transition: background 0.12s ease, transform 0.08s ease;
 }
 
 .automation-preset-buttons button:hover,
@@ -161,4 +248,26 @@
 .automation-entry button:hover,
 .automation-collapse:hover {
   background: #e2e7f2;
+  transform: translateY(-1px);
+}
+
+.automation-entry select,
+.automation-entry input {
+  background: #fff;
+  border: 1px solid #cfd6e5;
+  border-radius: 4px;
+  padding: 6px 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.automation-entry input[type='number']::-webkit-outer-spin-button,
+.automation-entry input[type='number']::-webkit-inner-spin-button {
+  margin: 0;
+}
+
+.automation-add-step {
+  align-self: stretch;
+  font-weight: 700;
+  border-radius: 6px;
 }
