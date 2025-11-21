@@ -450,6 +450,7 @@ const projectParameters = {
     type: 'PlanetaryThrustersProject',
     name: 'Planetary Thrusters',
     category: 'mega',
+    requireStar: true,
     cost: {
       colony: {
         metal: 500_000_000,

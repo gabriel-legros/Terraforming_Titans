@@ -165,6 +165,11 @@ class EffectableEntity {
             this.setSolisTabAlert(effect.value);
           }
           break;
+        case 'triggerGoldenAsteroidEffect':
+          goldenAsteroid?.removeEffects?.();
+          goldenAsteroid?.addEffects?.();
+          goldenAsteroid?.startCountdown?.(effect.duration ?? 0);
+          break;
         case 'oneTimeStart':
           if (typeof CargoRocketProject !== 'undefined' && this instanceof CargoRocketProject) {
             this.applyOneTimeStart(effect);

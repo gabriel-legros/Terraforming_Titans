@@ -331,7 +331,20 @@ progressUmbra.chapters.push(
     objectives: [
     ],
     reward: [
-      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisShipAssignment', value: true }
+      { target: 'spaceManager', targetId: 'solisprime', type: 'enable' }
+    ]
+  },
+  {
+    id: 'chapter23.5',
+    type: 'journal',
+    chapter: 23,
+    activePlanet: 'umbra',
+    narrative: "Travel to Solis Prime to continue.",
+    prerequisites: ['chapter23.4'],
+    objectives: [
+     { type: 'currentPlanet', planetId: 'solisprime' }
+    ],
+    reward: [
     ]
   }
 );

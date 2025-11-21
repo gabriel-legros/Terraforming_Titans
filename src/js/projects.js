@@ -39,6 +39,7 @@ class Project extends EffectableEntity {
     this.unlocked = config.unlocked;
     this.category = config.category;
     this.treatAsBuilding = config.treatAsBuilding || false;
+    this.requireStar = config.requireStar === true;
 
 
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
@@ -637,7 +638,21 @@ class ProjectManager extends EffectableEntity {
     this.projectOrder = [];
   }
 
+  currentWorldHasStar() {
+    const params =
+      this.spaceManager?.currentPlanetParameters ||
+      spaceManager?.currentPlanetParameters ||
+      currentPlanetParameters;
+    if (!params) return false;
+    if (params.celestialParameters?.rogue) return false;
+    return Boolean(params.star);
+  }
+
   isProjectRelevantToCurrentPlanet(project) {
+    if (project?.requireStar && !this.currentWorldHasStar()) {
+      return false;
+    }
+
     const targetPlanet = project?.category === 'story' ? project.attributes?.planet : null;
     const globalContext = typeof globalThis !== 'undefined' ? globalThis : {};
     const manager = this.spaceManager || globalContext.spaceManager;
@@ -689,6 +704,9 @@ class ProjectManager extends EffectableEntity {
 
     for (const projectName in projectParameters) {
       const projectData = projectParameters[projectName];
+      if (projectData.requireStar && !this.currentWorldHasStar()) {
+        continue;
+      }
       const type = projectData.type || 'Project';
       const globalObj = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
       const Ctor = globalObj && globalObj[type] ? globalObj[type] : Project;
@@ -784,7 +802,9 @@ class ProjectManager extends EffectableEntity {
   }
 
   getProjectStatuses() {
-    return this.projectOrder.map(projectName => this.projects[projectName]);
+    return this.projectOrder
+      .map(projectName => this.projects[projectName])
+      .filter(project => project && this.isProjectRelevantToCurrentPlanet(project));
   }
 
   reorderProject(fromIndex, toIndex, category) {
