@@ -159,10 +159,6 @@
     border-bottom-color: #444;
 }
 
-.dark-mode #nanocolony-container .nanotech-stage-warning {
-    color: #f3c969;
-}
-
 .dark-mode #nanocolony-container .nanotech-slider-card .slider-title,
 .dark-mode #nanocolony-container .nanotech-slider-card .slider-values {
     color: #f0f0f0;
