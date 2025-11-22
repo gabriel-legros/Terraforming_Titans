@@ -461,6 +461,13 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     hex.galaxyCenterX = centerX;
     hex.galaxyCenterY = centerY;
 
+    const storyIcon = doc.createElement('span');
+    storyIcon.className = 'galaxy-hex__story is-hidden';
+    storyIcon.textContent = '\u{1F4D3}';
+    storyIcon.setAttribute('aria-hidden', 'true');
+    hex.appendChild(storyIcon);
+    hex.galaxyStoryIcon = storyIcon;
+
     const defense = doc.createElement('span');
     defense.className = 'galaxy-hex__defense';
     hex.appendChild(defense);
@@ -679,6 +686,33 @@ function isUhfFullControlSector(sector) {
     return Math.abs(uhfControl - totalControl) <= epsilon;
 }
 
+function getSectorStoryRequirementWorld(sector) {
+    if (!sector || typeof sector.getStoryRequirement !== 'function') {
+        return null;
+    }
+    const requirement = sector.getStoryRequirement();
+    const world = Number(requirement?.world);
+    if (!Number.isFinite(world) || world <= 0) {
+        return null;
+    }
+    return world;
+}
+
+function updateHexStoryRequirement(hex, sector) {
+    const storyIcon = hex?.galaxyStoryIcon;
+    if (!storyIcon) {
+        return;
+    }
+    const requiredWorld = getSectorStoryRequirementWorld(sector);
+    if (!requiredWorld || !sector || isUhfFullControlSector(sector)) {
+        storyIcon.classList.add('is-hidden');
+        storyIcon.removeAttribute('title');
+        return;
+    }
+    storyIcon.title = `Conquest of this sector is required to progress to World ${requiredWorld}.`;
+    storyIcon.classList.remove('is-hidden');
+}
+
 function hasNeighboringUhfStronghold(manager, q, r) {
     if (!manager) {
         return false;
@@ -823,6 +857,10 @@ function renderSelectedSectorDetails() {
         subtitle.textContent = 'Faction Control';
         container.appendChild(subtitle);
 
+        const requirementNotice = doc.createElement('p');
+        requirementNotice.className = 'galaxy-sector-panel__requirement is-hidden';
+        container.appendChild(requirementNotice);
+
         const list = doc.createElement('ul');
         list.className = 'galaxy-sector-panel__control-list';
         container.appendChild(list);
@@ -915,6 +953,7 @@ function renderSelectedSectorDetails() {
             lockOption,
             lockInput,
             subtitle,
+            requirementNotice,
             list,
             empty,
             reward: {
@@ -960,7 +999,19 @@ function renderSelectedSectorDetails() {
     const rewardWorlds = Array.isArray(rewardEntries)
         ? rewardEntries.reduce((total, entry) => total + (entry?.type === 'habitableWorld' ? Number(entry?.amount) || 0 : 0), 0)
         : 0;
-    const rewardWorldsForDefense = isUhfFullControlSector(sector) ? rewardWorlds : 0;
+    const requiredWorld = getSectorStoryRequirementWorld(sector);
+    const uhfHasFullControl = isUhfFullControlSector(sector);
+    const rewardWorldsForDefense = uhfHasFullControl ? rewardWorlds : 0;
+
+    if (details.requirementNotice) {
+        if (requiredWorld && !uhfHasFullControl) {
+            details.requirementNotice.textContent = `Conquest of this sector is required to progress to World ${requiredWorld}.`;
+            details.requirementNotice.classList.remove('is-hidden');
+        } else {
+            details.requirementNotice.textContent = '';
+            details.requirementNotice.classList.add('is-hidden');
+        }
+    }
 
     let baseDefense = 0;
     let fleetDefense = 0;
@@ -1365,6 +1416,10 @@ function clearHexControlStyles(hex) {
     if (hex.galaxyDefenseElement) {
         hex.galaxyDefenseElement.textContent = '';
     }
+    if (hex.galaxyStoryIcon) {
+        hex.galaxyStoryIcon.classList.add('is-hidden');
+        hex.galaxyStoryIcon.removeAttribute('title');
+    }
 }
 
 function formatDefenseInteger(value) {
@@ -1521,6 +1576,7 @@ function updateGalaxyHexControlColors(manager, cache) {
             return;
         }
         const sector = manager.getSector(q, r);
+        updateHexStoryRequirement(hex, sector);
         if (!sector) {
             clearHexControlStyles(hex);
             updateHexDefenseDisplay(hex, null, manager, uhfFaction);

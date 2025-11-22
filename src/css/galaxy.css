@@ -471,6 +471,19 @@
   background: var(--galaxy-hex-background-hover, linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92)));
 }
 
+.galaxy-hex__story {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 0.9rem;
+  filter: drop-shadow(0 0 4px rgba(6, 12, 22, 0.6));
+  pointer-events: none;
+}
+
+.galaxy-hex__story.is-hidden {
+  display: none;
+}
+
 .galaxy-hex:focus-visible {
   box-shadow: inset 0 0 0 1px var(--galaxy-hex-border, rgba(120, 200, 255, 0.75)), inset 0 0 18px rgba(12, 24, 40, 0.45), 0 0 14px rgba(140, 220, 255, 0.55);
 }
@@ -581,6 +594,13 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: #8fb6f9;
+}
+
+.galaxy-sector-panel__requirement {
+  margin: 4px 0 0;
+  color: #f1dcb2;
+  font-size: 0.85rem;
+  line-height: 1.3;
 }
 
 .galaxy-sector-panel__stat {

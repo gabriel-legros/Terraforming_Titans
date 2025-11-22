@@ -103,7 +103,10 @@ const overrides = {};
 
 function registerOverrides(coordinates, value) {
     coordinates.forEach((coordinate) => {
-        overrides[createSectorKey(coordinate.q, coordinate.r)] = { value };
+        const key = createSectorKey(coordinate.q, coordinate.r);
+        const override = overrides[key] || {};
+        override.value = value;
+        overrides[key] = override;
     });
 }
 
@@ -125,6 +128,21 @@ function registerRewards(coordinates, amount) {
                 amount: numericAmount
             }
         ];
+    });
+}
+
+function registerStoryRequirements(requirements) {
+    requirements.forEach(({ coordinates, world }) => {
+        const worldNumber = Number(world);
+        if (!Number.isFinite(worldNumber) || worldNumber <= 0 || !Array.isArray(coordinates)) {
+            return;
+        }
+        coordinates.forEach((coordinate) => {
+            const key = createSectorKey(coordinate.q, coordinate.r);
+            const override = overrides[key] || {};
+            override.storyRequirement = { world: worldNumber };
+            overrides[key] = override;
+        });
     });
 }
 
@@ -156,7 +174,18 @@ registerOverrides(R507_RADIUS_TWO_COORDINATES, R507_RADIUS_TWO_BASE_VALUE);
 registerOverrides(R507_SECTOR_COORDINATES, R507_SECTOR_BASE_VALUE);
 registerOverrides(STRATEGIC_SECTOR_COORDINATES, STRATEGIC_SECTOR_BASE_VALUE);
 registerOverrides(STRATEGIC_NEIGHBOR_COORDINATES, STRATEGIC_NEIGHBOR_BASE_VALUE);
-overrides['R5-07'] = { value: R507_SECTOR_BASE_VALUE };
+overrides['R5-07'] = { ...(overrides['R5-07'] || {}), value: R507_SECTOR_BASE_VALUE };
+
+registerStoryRequirements([
+    { coordinates: [{ q: 4, r: -5 }], world: 8 },
+    { coordinates: [{ q: 3, r: -5 }], world: 9 },
+    { coordinates: [{ q: 4, r: -4 }], world: 10 },
+    { coordinates: [{ q: 4, r: -2 }], world: 11 },
+    { coordinates: [{ q: 1, r: -5 }], world: 12 },
+    { coordinates: [{ q: 1, r: -1 }], world: 13 },
+    { coordinates: [{ q: 3, r: 2 }], world: 14 },
+    { coordinates: CORE_COORDINATES, world: 15 }
+]);
 
 registerRewards(CORE_COORDINATES, 10);
 registerRewards(FIRST_RING_COORDINATES, 5);

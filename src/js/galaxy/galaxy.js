@@ -256,6 +256,29 @@ function resolveSectorReward(sectorKey) {
     return resolveDefaultSectorReward();
 }
 
+function cloneStoryRequirement(requirement) {
+    const world = Number(requirement?.world);
+    if (!Number.isFinite(world) || world <= 0) {
+        return null;
+    }
+    return { world };
+}
+
+function resolveSectorStoryRequirement(sectorKey) {
+    if (!sectorKey) {
+        return null;
+    }
+    const overrides = galaxySectorParametersConfig.overrides;
+    if (!overrides) {
+        return null;
+    }
+    const override = overrides[sectorKey];
+    if (!override || !override.storyRequirement) {
+        return null;
+    }
+    return cloneStoryRequirement(override.storyRequirement);
+}
+
 
 const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
     militaryResearch: {
@@ -1069,12 +1092,14 @@ class GalaxyManager extends EffectableEntity {
             const overrideValue = resolveSectorOverrideValue(sectorKey);
             const sectorDefaultValue = overrideValue ?? defaultValue;
             const sectorReward = resolveSectorReward(sectorKey);
+            const storyRequirement = resolveSectorStoryRequirement(sectorKey);
             const sector = new GalaxySectorClass({
                 q,
                 r,
                 value: sectorDefaultValue,
                 defaultValue: sectorDefaultValue,
-                reward: sectorReward
+                reward: sectorReward,
+                storyRequirement
             });
             this.sectors.set(sector.key, sector);
         });
