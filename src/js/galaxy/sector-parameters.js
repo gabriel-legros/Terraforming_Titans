@@ -178,7 +178,7 @@ overrides['R5-07'] = { ...(overrides['R5-07'] || {}), value: R507_SECTOR_BASE_VA
 
 registerStoryRequirements([
     { coordinates: [{ q: 4, r: -5 }], world: 8 },
-    { coordinates: [{ q: 3, r: -5 }], world: 9 },
+    { coordinates: [{ q: 5, r: -5 }], world: 9 },
     { coordinates: [{ q: 4, r: -4 }], world: 10 },
     { coordinates: [{ q: 4, r: -2 }], world: 11 },
     { coordinates: [{ q: 1, r: -5 }], world: 12 },

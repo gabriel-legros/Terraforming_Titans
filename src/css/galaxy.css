@@ -473,8 +473,9 @@
 
 .galaxy-hex__story {
   position: absolute;
-  top: 6px;
-  left: 6px;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 0.9rem;
   filter: drop-shadow(0 0 4px rgba(6, 12, 22, 0.6));
   pointer-events: none;
