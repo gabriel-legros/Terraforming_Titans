@@ -340,13 +340,6 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   padding-bottom: 6px;
 }
 
-#nanocolony-container .nanotech-stage-warning {
-  margin-left: 8px;
-  color: #c77a16;
-  font-size: 0.9em;
-  display: none;
-}
-
 #nanocolony-container .nanotech-slider-grid {
   display: grid;
   gap: 12px;
