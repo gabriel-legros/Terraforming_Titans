@@ -155,7 +155,6 @@ class HazardManager {
     this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
 
     const activeTerraforming = typeof terraforming !== 'undefined' ? terraforming : null;
-    this.ensureCrusaderPresence(activeTerraforming);
     this.updateHazardousLandReservation(activeTerraforming);
 
     if (changed && this.enabled) {

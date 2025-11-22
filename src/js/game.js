@@ -202,13 +202,6 @@ function initializeGameState(options = {}) {
 
   playTimeSeconds = 0;
 
-  hazardManager = setHazardManager(new HazardManager());
-  const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
-    ? currentPlanetParameters.hazards
-    : {};
-  hazardManager.initialize(planetHazards);
-  hazardManager.updateUI();
-
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const dayDurationData = rotationPeriodToDuration(rotation);
   dayNightCycle = new DayNightCycle(dayDurationData.duration, dayDurationData.direction);
@@ -418,8 +411,14 @@ function initializeGameState(options = {}) {
   }
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
-    nanotechManager.updateUI();
   }
+
+  hazardManager = setHazardManager(new HazardManager());
+  const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
+    ? currentPlanetParameters.hazards
+    : {};
+  hazardManager.initialize(planetHazards);
+  hazardManager.ensureCrusaderPresence(terraforming);
 }
 
 function updateLogic(delta) {
