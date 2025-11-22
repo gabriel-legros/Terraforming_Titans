@@ -30,6 +30,12 @@ class NanotechManager extends EffectableEntity {
     this.maxEnergyAbsolute = 0;
     this.energyLimitMode = 'percent';
     this.uiCache = null; // cache of UI element references for fast updates
+    this.uiState = {
+      glassMax: 10,
+      componentsMax: 10,
+      stage1Warning: '',
+      stage2Warning: '',
+    };
   }
 
 
@@ -308,7 +314,7 @@ class NanotechManager extends EffectableEntity {
           <p class="nanotech-hint">The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</p>
           <div class="nanotech-stage">
             <div class="nanotech-stage-header">
-              <h4>Stage I</h4>
+              <h4>Stage I <span id="nanotech-stage1-warning" class="nanotech-stage-warning"></span></h4>
             </div>
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
@@ -354,7 +360,7 @@ class NanotechManager extends EffectableEntity {
                 <div class="slider-control">
                   <div class="slider-container">
                     <input type="range" id="nanotech-glass-slider" class="pretty-slider" min="0" max="10" step="1">
-                    <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+                    <div class="tick-marks" id="nanotech-glass-ticks">${Array(11).fill('<span></span>').join('')}</div>
                   </div>
                 </div>
                 <p class="slider-description">Diverts growth to fabricate glass.</p>
@@ -363,7 +369,7 @@ class NanotechManager extends EffectableEntity {
           </div>
           <div class="nanotech-stage" id="nanotech-stage-2">
             <div class="nanotech-stage-header">
-              <h4>Stage II</h4>
+              <h4>Stage II <span id="nanotech-stage2-warning" class="nanotech-stage-warning"></span></h4>
             </div>
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
@@ -409,7 +415,7 @@ class NanotechManager extends EffectableEntity {
                 <div class="slider-control">
                   <div class="slider-container">
                     <input type="range" id="nanotech-components-slider" class="pretty-slider" min="0" max="10" step="1">
-                    <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+                    <div class="tick-marks" id="nanotech-components-ticks">${Array(11).fill('<span></span>').join('')}</div>
                   </div>
                 </div>
                 <p class="slider-description">Diverts growth to fabricate components.</p>
@@ -483,6 +489,47 @@ class NanotechManager extends EffectableEntity {
     const max = this.getMaxNanobots();
     const C = this.uiCache || {};
     const stage2Active = this.isBooleanFlagSet('stage2_enabled');
+    const hasSand = currentPlanetParameters && currentPlanetParameters.specialAttributes
+      ? currentPlanetParameters.specialAttributes.hasSand !== false
+      : true;
+    const oreDeposits = currentPlanetParameters && currentPlanetParameters.resources
+      ? currentPlanetParameters.resources.underground?.ore?.maxDeposits || 0
+      : 0;
+    const hasOre = oreDeposits > 0;
+
+    const glassMax = hasSand ? 10 : this.siliconSlider;
+    if (this.glassSlider > glassMax) {
+      this.glassSlider = glassMax;
+    }
+    if (C.glSlider && glassMax !== this.uiState.glassMax) {
+      C.glSlider.max = glassMax;
+      this.updateTickMarks(C.glassTicks, glassMax);
+      this.uiState.glassMax = glassMax;
+    }
+
+    const componentsMax = hasOre ? 10 : this.metalSlider;
+    if (this.componentsSlider > componentsMax) {
+      this.componentsSlider = componentsMax;
+    }
+    if (C.componentsSlider && componentsMax !== this.uiState.componentsMax) {
+      C.componentsSlider.max = componentsMax;
+      this.updateTickMarks(C.componentsTicks, componentsMax);
+      this.uiState.componentsMax = componentsMax;
+    }
+
+    const stage1Warning = hasSand ? '' : '⚠️ No sand deposits; glass capped to silicon.';
+    if (C.stage1WarningEl && stage1Warning !== this.uiState.stage1Warning) {
+      C.stage1WarningEl.textContent = stage1Warning;
+      this.uiState.stage1Warning = stage1Warning;
+    }
+
+    const stage2Warning = stage2Active && !hasOre
+      ? '⚠️ No ore deposits; components capped to metal.'
+      : '';
+    if (C.stage2WarningEl && stage2Warning !== this.uiState.stage2Warning) {
+      C.stage2WarningEl.textContent = stage2Warning;
+      this.uiState.stage2Warning = stage2Warning;
+    }
     if (C.countEl) {
       C.countEl.textContent = formatNumber(this.nanobots, false, 2);
       C.countEl.style.color = this.nanobots >= max ? 'green' : '';
@@ -609,6 +656,8 @@ class NanotechManager extends EffectableEntity {
       metalSlider: document.getElementById('nanotech-metal-slider'),
       maintenance2Slider: document.getElementById('nanotech-maintenance2-slider'),
       componentsSlider: document.getElementById('nanotech-components-slider'),
+      glassTicks: document.getElementById('nanotech-glass-ticks'),
+      componentsTicks: document.getElementById('nanotech-components-ticks'),
       eLimit: document.getElementById('nanotech-energy-limit'),
       eMode: document.getElementById('nanotech-energy-limit-mode'),
       growthImpactEl: document.getElementById('nanotech-growth-impact'),
@@ -626,6 +675,8 @@ class NanotechManager extends EffectableEntity {
       metalRateEl: document.getElementById('nanotech-metal-rate'),
       componentsRateEl: document.getElementById('nanotech-components-rate'),
       stage2Container: document.getElementById('nanotech-stage-2'),
+      stage1WarningEl: document.getElementById('nanotech-stage1-warning'),
+      stage2WarningEl: document.getElementById('nanotech-stage2-warning'),
     };
   }
 
@@ -633,6 +684,13 @@ class NanotechManager extends EffectableEntity {
     if (!this.uiCache || this.uiCache.container !== container) {
       this.cacheUIRefs(container);
     }
+  }
+
+  updateTickMarks(ticksElement, max) {
+    if (!ticksElement) return;
+    const desiredCount = Math.max(0, Math.floor(max)) + 1;
+    if (ticksElement.children.length === desiredCount) return;
+    ticksElement.innerHTML = Array(desiredCount).fill('<span></span>').join('');
   }
 
   saveState() {
