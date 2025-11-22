@@ -308,7 +308,7 @@ class NanotechManager extends EffectableEntity {
           <p class="nanotech-hint">The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</p>
           <div class="nanotech-stage">
             <div class="nanotech-stage-header">
-              <h4>Stage I</h4>
+              <h4>Stage I <span id="nanotech-stage-1-warning" class="nanotech-stage-warning">⚠️</span></h4>
             </div>
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
@@ -363,7 +363,7 @@ class NanotechManager extends EffectableEntity {
           </div>
           <div class="nanotech-stage" id="nanotech-stage-2">
             <div class="nanotech-stage-header">
-              <h4>Stage II</h4>
+              <h4>Stage II <span id="nanotech-stage-2-warning" class="nanotech-stage-warning">⚠️</span></h4>
             </div>
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
@@ -483,6 +483,17 @@ class NanotechManager extends EffectableEntity {
     const max = this.getMaxNanobots();
     const C = this.uiCache || {};
     const stage2Active = this.isBooleanFlagSet('stage2_enabled');
+    const hasSand = currentPlanetParameters?.specialAttributes?.hasSand !== false;
+    const oreDeposits = currentPlanetParameters?.resources?.underground?.ore;
+    const hasOreDeposits = oreDeposits ? ((oreDeposits.maxDeposits ?? oreDeposits.initialValue ?? 0) > 0) : true;
+    const glassMax = hasSand ? 10 : this.siliconSlider;
+    const componentsMax = hasOreDeposits ? 10 : this.metalSlider;
+    if (!hasSand && this.glassSlider > glassMax) {
+      this.glassSlider = glassMax;
+    }
+    if (!hasOreDeposits && this.componentsSlider > componentsMax) {
+      this.componentsSlider = componentsMax;
+    }
     if (C.countEl) {
       C.countEl.textContent = formatNumber(this.nanobots, false, 2);
       C.countEl.style.color = this.nanobots >= max ? 'green' : '';
@@ -512,10 +523,16 @@ class NanotechManager extends EffectableEntity {
     }
     if (C.sSlider) C.sSlider.value = this.siliconSlider;
     if (C.mSlider) C.mSlider.value = this.maintenanceSlider;
-    if (C.glSlider) C.glSlider.value = this.glassSlider;
+    if (C.glSlider) {
+      C.glSlider.max = glassMax;
+      C.glSlider.value = this.glassSlider;
+    }
     if (C.metalSlider) C.metalSlider.value = this.metalSlider;
     if (C.maintenance2Slider) C.maintenance2Slider.value = this.maintenance2Slider;
-    if (C.componentsSlider) C.componentsSlider.value = this.componentsSlider;
+    if (C.componentsSlider) {
+      C.componentsSlider.max = componentsMax;
+      C.componentsSlider.value = this.componentsSlider;
+    }
     if (C.eMode) C.eMode.value = this.energyLimitMode;
     if (C.eLimit && document.activeElement !== C.eLimit) {
       if (this.energyLimitMode === 'absolute') {
@@ -594,6 +611,18 @@ class NanotechManager extends EffectableEntity {
     if (C.stage2Container) {
       C.stage2Container.style.display = stage2Active ? '' : 'none';
     }
+    if (C.stage1Warning) {
+      C.stage1Warning.textContent = hasSand
+        ? ''
+        : '⚠️ No sand deposits available; glass production is capped by silicon consumption.';
+      C.stage1Warning.style.display = hasSand ? 'none' : '';
+    }
+    if (C.stage2Warning) {
+      C.stage2Warning.textContent = hasOreDeposits
+        ? ''
+        : '⚠️ No ore deposits available; components fabrication is capped by metal consumption.';
+      C.stage2Warning.style.display = hasOreDeposits ? 'none' : '';
+    }
   }
 
   cacheUIRefs(container) {
@@ -626,6 +655,8 @@ class NanotechManager extends EffectableEntity {
       metalRateEl: document.getElementById('nanotech-metal-rate'),
       componentsRateEl: document.getElementById('nanotech-components-rate'),
       stage2Container: document.getElementById('nanotech-stage-2'),
+      stage1Warning: document.getElementById('nanotech-stage-1-warning'),
+      stage2Warning: document.getElementById('nanotech-stage-2-warning'),
     };
   }
 
