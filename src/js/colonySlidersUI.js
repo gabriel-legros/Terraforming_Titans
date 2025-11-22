@@ -514,7 +514,8 @@ function initializeColonySlidersUI() {
       sliderValue = colonySliderSettings.warpnetLevel;
     }
 
-    const label = sliderValue === 0 ? 'x1' : `x1e${sliderValue}`;
+    const energyMultiplier = sliderValue === 0 ? 1 : Math.pow(10, sliderValue);
+    const label = `x${formatNumber(energyMultiplier, true, 0)}`;
     const percent = sliderValue * 100;
 
     if (warpnetValue) {
@@ -526,8 +527,8 @@ function initializeColonySlidersUI() {
     if (warpnetInfo) {
       warpnetInfo.title = [
         'Warpnet funnels instant communication to coordinate research output.',
-        `Slider: ${label}.`,
-        `Global research boost: +${percent}%`,
+        `Left value multiplies colony energy upkeep: ${label}.`,
+        `Right value adds a global research boost: +${percent}%`,
         'Energy cost scales steeply with Warpnet intensity.'
       ].join('\n');
     }
