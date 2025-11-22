@@ -155,6 +155,7 @@ class HazardManager {
     this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
 
     const activeTerraforming = typeof terraforming !== 'undefined' ? terraforming : null;
+    this.ensureCrusaderPresence(activeTerraforming);
     this.updateHazardousLandReservation(activeTerraforming);
 
     if (changed && this.enabled) {
@@ -476,6 +477,42 @@ class HazardManager {
       landResource.reserved = Math.max(0, landResource.reserved - previous + reservedLand);
       landResource._hazardousBiomassReserved = reservedLand;
     }
+  }
+
+  ensureCrusaderPresence(terraforming) {
+    const crusaders = resources?.special?.crusaders;
+    if (!crusaders || !crusaders.unlocked) {
+      return;
+    }
+
+    if (!this.hasHazardousBiomass(terraforming)) {
+      return;
+    }
+
+    const currentValue = Number.isFinite(crusaders.value) ? crusaders.value : 0;
+    if (currentValue < 10) {
+      crusaders.value = 10;
+    }
+  }
+
+  hasHazardousBiomass(terraforming) {
+    if (terraforming && terraforming.zonalSurface) {
+      const zoneKeys = Array.isArray(zonesList) && zonesList.length
+        ? zonesList
+        : Object.keys(terraforming.zonalSurface);
+
+      for (let index = 0; index < zoneKeys.length; index += 1) {
+        const zone = zoneKeys[index];
+        const biomass = terraforming.zonalSurface[zone]?.hazardousBiomass;
+        if (Number.isFinite(biomass) && biomass > 0) {
+          return true;
+        }
+      }
+    }
+
+    const hazardousResource = resources?.surface?.hazardousBiomass;
+    const hazardousValue = Number.isFinite(hazardousResource?.value) ? hazardousResource.value : 0;
+    return hazardousValue > 0;
   }
 
   getHazardPenalties(key) {
