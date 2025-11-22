@@ -1,5 +1,5 @@
 class GalaxySector {
-    constructor({ q, r, control, value, defaultValue, reward, rewardAcquired } = {}) {
+    constructor({ q, r, control, value, defaultValue, reward, rewardAcquired, storyRequirement } = {}) {
         this.q = Number.isFinite(q) ? q : 0;
         this.r = Number.isFinite(r) ? r : 0;
         this.key = GalaxySector.createKey(this.q, this.r);
@@ -9,6 +9,7 @@ class GalaxySector {
         this.control = {};
         this.reward = this.#sanitizeReward(reward);
         this.rewardAcquired = rewardAcquired === true;
+        this.storyRequirement = GalaxySector.#sanitizeStoryRequirement(storyRequirement);
         if (control) {
             this.replaceControl(control);
         }
@@ -104,6 +105,10 @@ class GalaxySector {
             return [];
         }
         return GalaxySector.#cloneRewardEntries(this.reward);
+    }
+
+    getStoryRequirement() {
+        return GalaxySector.#sanitizeStoryRequirement(this.storyRequirement);
     }
 
     setRewardAcquired(acquired) {
@@ -271,6 +276,14 @@ class GalaxySector {
             resourceId,
             unit
         };
+    }
+
+    static #sanitizeStoryRequirement(requirement) {
+        const world = Number(requirement?.world);
+        if (!Number.isFinite(world) || world <= 0) {
+            return null;
+        }
+        return { world };
     }
 
     #sanitizeReward(rawReward) {
