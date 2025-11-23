@@ -397,7 +397,6 @@ function initializeGameState(options = {}) {
     ? currentPlanetParameters.hazards
     : {};
   hazardManager.initialize(planetHazards);
-  hazardManager.ensureCrusaderPresence(terraforming);
 
   // When keeping existing managers, reapplied story effects need to
   // target the newly created game objects for this planet.
@@ -419,6 +418,8 @@ function initializeGameState(options = {}) {
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
   }
+
+  hazardManager.ensureCrusaderPresence(terraforming);
 }
 
 function updateLogic(delta) {
