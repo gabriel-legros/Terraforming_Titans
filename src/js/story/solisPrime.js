@@ -100,6 +100,12 @@ progressSolisPrime.chapters.push(
         oneTimeFlag: true
       },
       {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'siliconMiningUnlocked',
+        value: true
+      },
+      {
         target: 'resource',
         resourceType: 'colony',
         targetId: 'silicon',
@@ -196,7 +202,14 @@ progressSolisPrime.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50000 }
     ],
-    reward: []
+    reward: [
+      {
+        target: 'solisManager',
+        type: 'booleanFlag',
+        flagId: 'solisShipAssignment',
+        value: true
+      }
+    ]
   },
   {
     id: 'solisPrime.2c',
@@ -207,7 +220,8 @@ progressSolisPrime.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100000 }
     ],
-    reward: []
+    reward: [
+    ]
   },
   {
     id: 'solisPrime.2d',
@@ -265,6 +279,14 @@ progressSolisPrime.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
     ],
     reward: [
+      {
+        target: 'resource',
+        resourceType: 'special',
+        targetId: 'alienArtifact',
+        type: 'instantResourceGain',
+        quantity: 100,
+        oneTimeFlag: true
+      }
     ]
   },
   {
@@ -315,7 +337,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.3f',
     type: 'journal',
     chapter: 26,
-    narrative: "Mary : 'You know what HOPE?  Artificial worlds are not very efficient.  The structural cost to keep it all together is not worth the alternative of just building orbital habitats.  However, in your case, you can't really manage billions of habitats.  Your model is made to manage a single world at a time.  So... if you want... you could build a big one of those.  You are better at managing large amount of resources than we are.'  System Message : Artificial Worlds Unlocked (coming soon)",
+    narrative: "Mary : 'You know what HOPE?  Artificial worlds are not very efficient.  The structural cost to keep it all together is not worth the opportunity cost of just building orbital habitats.  However, in your case, you can't really manage billions of habitats.  Your model was designed to manage a single world at a time.  So... if you want... you could build a big one of those.  You are better at managing large amount of resources than we are.'  System Message : Artificial Worlds Unlocked (Not implemented, coming soon in the next update)",
     prerequisites: ['solisPrime.3e'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
