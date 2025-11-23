@@ -4,6 +4,67 @@ var progressSolisPrime = { chapters: [], storyProjects: {} };
  *  SOLIS PRIME STORY ARC
  * -------------------------------------------------*/
 
+progressSolisPrime.storyProjects.solisprime_deep_drilling = {
+  type: 'Project',
+  name: 'Deep Core Drilling',
+  category: 'story',
+  chapter: 25,
+  cost: {
+    colony: {
+      components: 50_000_000,
+      electronics: 20_000_000,
+      research: 10_000_000,
+      energy: 250_000_000_000
+    }
+  },
+  duration: 600_000,
+  description: "Push reinforced drill strings through Solis Prime's crust to sample whatever sits beneath the gold shell.",
+  repeatable: true,
+  maxRepeatCount: 3,
+  unlocked: false,
+  attributes: {
+    planet: 'solisprime',
+    costDoubling: true,
+    storySteps: [
+      'Superalloy drill heads bite through glittering metallic strata while seismic monitors map a hollow sub-layer.',
+      'Pressurised drilling mud cools the bit as it grinds past ultradense inclusions; acoustic imaging reveals smooth, manufactured seams.',
+      'Core barrels return a slurry of gold over an abrupt void, confirming something artificial halts the bit.'
+    ]
+  }
+};
+
+progressSolisPrime.storyProjects.solisprime_antimatter_drilling = {
+  type: 'Project',
+  name: 'Antimatter Drilling',
+  category: 'story',
+  chapter: 26,
+  cost: {
+    colony: {
+      components: 150_000_000,
+      electronics: 60_000_000,
+      research: 25_000_000,
+      energy: 750_000_000_000
+    },
+    special: {
+      antimatter: 25_000
+    }
+  },
+  duration: 600_000,
+  description: "Lower controlled antimatter charges into the stalled borehole to eat through the artificial barrier sealing Solis Prime's core.",
+  repeatable: true,
+  maxRepeatCount: 3,
+  unlocked: false,
+  attributes: {
+    planet: 'solisprime',
+    costDoubling: true,
+    storySteps: [
+      'Shielded android couriers thread centimeter-scale antimatter capsules down the cooled shaft; containment fields stay nominal.',
+      'Timed annihilations carve a glassy tunnel through the barrier while shock sensors log symmetrical reinforcement ribs.',
+      'Residual radiation fades, revealing a manufactured cavity lined with alloy panels that reflect scanner pings cleanly.'
+    ]
+  }
+};
+
 progressSolisPrime.chapters.push(
   {
     id: 'solisPrime.1',
@@ -112,7 +173,7 @@ progressSolisPrime.chapters.push(
     narrative: "Mary : 'I have bad news for you Adrien.  The density of your world does not match the density of gold.  It's much lighter.  Meaning... your planet is not actually made of gold.' \nSolis : '... And?' \n Mary'Don't you want to know just how much gold you own?'  \nSolis : 'You are welcome to drill if it makes you feel better.'",
     prerequisites: ['solisPrime.1f'],
     objectives: [],
-    reward: []
+    reward: [      { target: 'project', targetId: 'solisprime_deep_drilling', type: 'enable' }]
   },
   {
     id: 'solisPrime.2a',
@@ -123,7 +184,8 @@ progressSolisPrime.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10000 }
     ],
-    reward: []
+    reward: [
+    ]
   },
   {
     id: 'solisPrime.2b',
@@ -176,7 +238,7 @@ progressSolisPrime.chapters.push(
     narrative: "Mary (half-drunk) : 'What a jerk!  I asked to split the bill, since it's the right thing to do.  But then the bill came, and he didn't pay anything... because it was HIS restaurant.  So I essentially paid HIM for dinner.  I'll never forgive him!'",
     prerequisites: ['solisPrime.2e'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5000000 }
+      { type: 'project', projectId: 'solisprime_deep_drilling', repeatCount: 3 }
     ],
     reward: []
   },
@@ -187,8 +249,11 @@ progressSolisPrime.chapters.push(
     title: 'Solis Prime: Ascension',
     narrative: "Drill worker : 'Ma'am.  We can't drill deeper.  We have hit some sort of very hard substance.'  \n Mary : 'Even with superalloy?'  \n Drill worker : 'Nothing works.' \n Evelyn : 'Well... as long as it's made of matter...  An android could carry some antimatter down there.'",
     prerequisites: ['solisPrime.2f'],
-    objectives: [],
-    reward: []
+    objectives: [
+    ],
+    reward: [
+            { target: 'project', targetId: 'solisprime_antimatter_drilling', type: 'enable' }
+    ]
   },
   {
     id: 'solisPrime.3a',
@@ -199,7 +264,8 @@ progressSolisPrime.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
     ],
-    reward: []
+    reward: [
+    ]
   },
   {
     id: 'solisPrime.3b',
@@ -230,7 +296,7 @@ progressSolisPrime.chapters.push(
     narrative: "Drill worker : 'The antimatter is ready to go ma'am.  Whenever you are ready?'",
     prerequisites: ['solisPrime.3c'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
+      { type: 'project', projectId: 'solisprime_antimatter_drilling', repeatCount: 3 },
     ],
     reward: []
   },
