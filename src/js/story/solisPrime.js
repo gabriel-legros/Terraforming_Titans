@@ -65,13 +65,39 @@ progressSolisPrime.storyProjects.solisprime_antimatter_drilling = {
   }
 };
 
+progressSolisPrime.storyProjects.solisprime_supply_drop = {
+  type: 'Project',
+  name: 'Solis Prime Supply Drop',
+  category: 'story',
+  chapter: 24,
+  cost: {
+    colony: {
+      funding: 25_000
+    }
+  },
+  duration: 600_000,
+  description: 'Wire Solis funds to receive another shipment of structural metal and silicon.',
+  repeatable: true,
+  maxRepeatCount: Infinity,
+  unlocked: false,
+  attributes: {
+    planet: 'solisprime',
+    resourceGain: {
+      colony: {
+        metal: 1_000_000,
+        silicon: 1_000_000
+      }
+    }
+  }
+};
+
 progressSolisPrime.chapters.push(
   {
     id: 'solisPrime.1',
     type: 'journal',
     chapter: 24,
     title: 'Solis Prime: Foundation',
-    narrative: "Landing complete.  Mary : 'Hold on... these readings are weird...  Adrien!  Your planet!  It's made of gold!'",
+    narrative: "Landing complete.  Mary : 'Hold on... these readings are weird...  Adrien!  Your planet!  It's made of gold!' \n HOPE : 'Scenario matches the human concept of a beach episode.  Location lacks beaches.'",
     prerequisites: ['chapter23.5'],
     objectives: [],
     reward: [{
@@ -104,6 +130,11 @@ progressSolisPrime.chapters.push(
         type: 'booleanFlag',
         flagId: 'siliconMiningUnlocked',
         value: true
+      },
+      {
+        target: 'project',
+        targetId: 'solisprime_supply_drop',
+        type: 'enable'
       },
       {
         target: 'resource',
@@ -153,7 +184,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.1e',
     type: 'journal',
     chapter: 24,
-    narrative: "Mary : 'How long have you had your own gate then?  Those things are not cheap to run.  Did you hide the wider galaxy from us?' \nSolis : 'Absolutely not!  On Callisto, and you can verify this, my contingency plans were to escape to the Kuiper belt.  I acquired a gate much later, from those debris near Neptune.  It was not usable at first... it turns out gates need to connect to each other at light-speed before they can be used.'",
+    narrative: "Mary : 'How long have you had your own gate then?  Those things are not cheap to run.  Did you hide the wider galaxy from us?' \nSolis : 'Absolutely not!  On Callisto, and you can verify this, my contingency plans were to escape to the Kuiper belt.  I acquired a gate much later, from those debris near Neptune.  It was not usable at first... As you know, gates need to connect to each other at light-speed before they can be used.'",
     prerequisites: ['solisPrime.1d'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1000 }
@@ -176,7 +207,7 @@ progressSolisPrime.chapters.push(
     type: 'journal',
     chapter: 25,
     title: 'Solis Prime: Expansion',
-    narrative: "Mary : 'I have bad news for you Adrien.  The density of your world does not match the density of gold.  It's much lighter.  Meaning... your planet is not actually made of gold.' \nSolis : '... And?' \n Mary'Don't you want to know just how much gold you own?'  \nSolis : 'You are welcome to drill if it makes you feel better.'",
+    narrative: "Mary : 'I have bad news for you Adrien.  The density of your world does not match the density of gold.  It's much lighter.  Meaning... your planet is not actually made of gold.' \nSolis : '... And?' \n Mary : 'Don't you want to know just how much gold you own?'  \nSolis : 'You are welcome to drill if it makes you feel better.'",
     prerequisites: ['solisPrime.1f'],
     objectives: [],
     reward: [      { target: 'project', targetId: 'solisprime_deep_drilling', type: 'enable' }]
@@ -185,7 +216,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.2a',
     type: 'journal',
     chapter: 25,
-    narrative: "New special project unlocked : Deep drilling.",
+    narrative: "New special project unlocked : Deep Core Drilling.",
     prerequisites: ['solisPrime.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10000 }
