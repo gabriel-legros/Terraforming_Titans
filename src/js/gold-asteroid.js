@@ -1,71 +1,82 @@
+const goldenEffectPrefix = 'goldenAsteroid';
 const goldenEffects = [
-    {
-        target: 'fundingModule',
-        type: 'productionMultiplier',
-        value : 5
-    },
-    {
-        target: 'building',
-        targetId: 'oreMine',
-        type: 'productionMultiplier',
-        value: 5
-    },
-    {
-        target: 'building',
-        targetId: 'componentFactory',
-        type: 'productionMultiplier',
-        value: 5
-    },
-    {
-        target: 'building',
-        targetId: 'electronicsFactory',
-        type: 'productionMultiplier',
-        value: 5
-    },
-    {
-      target: 'population',
-      type: 'growthMultiplier',
-      value: 5
+  {
+    effectId: `${goldenEffectPrefix}-fundingModuleMultiplier`,
+    target: 'fundingModule',
+    type: 'productionMultiplier',
+    value: 5
   },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'funding',
-        flagId: 'golden',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'metal',
-        flagId: 'golden',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'components',
-        flagId: 'golden',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'electronics',
-        flagId: 'golden',
-        value: true
-    },   
-    {
-      type: 'booleanFlag',
-      target: 'resource',
-      resourceType: 'colony',
-      targetId: 'colonists',
-      flagId: 'golden',
-      value: true
+  {
+    effectId: `${goldenEffectPrefix}-oreMineMultiplier`,
+    target: 'building',
+    targetId: 'oreMine',
+    type: 'productionMultiplier',
+    value: 5
+  },
+  {
+    effectId: `${goldenEffectPrefix}-componentFactoryMultiplier`,
+    target: 'building',
+    targetId: 'componentFactory',
+    type: 'productionMultiplier',
+    value: 5
+  },
+  {
+    effectId: `${goldenEffectPrefix}-electronicsFactoryMultiplier`,
+    target: 'building',
+    targetId: 'electronicsFactory',
+    type: 'productionMultiplier',
+    value: 5
+  },
+  {
+    effectId: `${goldenEffectPrefix}-populationGrowth`,
+    target: 'population',
+    type: 'growthMultiplier',
+    value: 5
+  },
+  {
+    effectId: `${goldenEffectPrefix}-fundingFlag`,
+    type: 'booleanFlag',
+    target: 'resource',
+    resourceType: 'colony',
+    targetId: 'funding',
+    flagId: 'golden',
+    value: true
+  },
+  {
+    effectId: `${goldenEffectPrefix}-metalFlag`,
+    type: 'booleanFlag',
+    target: 'resource',
+    resourceType: 'colony',
+    targetId: 'metal',
+    flagId: 'golden',
+    value: true
+  },
+  {
+    effectId: `${goldenEffectPrefix}-componentsFlag`,
+    type: 'booleanFlag',
+    target: 'resource',
+    resourceType: 'colony',
+    targetId: 'components',
+    flagId: 'golden',
+    value: true
+  },
+  {
+    effectId: `${goldenEffectPrefix}-electronicsFlag`,
+    type: 'booleanFlag',
+    target: 'resource',
+    resourceType: 'colony',
+    targetId: 'electronics',
+    flagId: 'golden',
+    value: true
+  },
+  {
+    effectId: `${goldenEffectPrefix}-colonistsFlag`,
+    type: 'booleanFlag',
+    target: 'resource',
+    resourceType: 'colony',
+    targetId: 'colonists',
+    flagId: 'golden',
+    value: true
   }
 ]
 
@@ -132,9 +143,13 @@ class GoldenAsteroid {
         }
     }
 
-    startCountdown(duration) {
-      this.countdownRemainingTime = duration;
-      if(!this.countdownElement){
+    startCountdown(duration, { extendExisting = true } = {}) {
+      if (this.countdownActive && extendExisting) {
+        this.countdownRemainingTime += duration;
+      } else {
+        this.countdownRemainingTime = duration;
+      }
+      if (!this.countdownElement) {
         this.countdownElement = document.createElement('div');
         this.countdownElement.className = 'gold-asteroid-countdown';
         document.getElementById('gold-asteroid-container').appendChild(this.countdownElement);
@@ -243,7 +258,7 @@ class GoldenAsteroid {
 
       if (this.countdownActive) {
         this.addEffects();
-        this.startCountdown(this.countdownRemainingTime);
+        this.startCountdown(this.countdownRemainingTime, { extendExisting: false });
       }
     }
   }

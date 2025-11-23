@@ -217,10 +217,11 @@ function loadGame(slotOrCustomString, recreate = true) {
             // Ensure procedural worlds carry a star definition on load.
             // Prefer RWG-provided star, else regenerate via RWG using the saved seed,
             // and only then fall back to a generic Sun-like star.
+            const cel = currentPlanetParameters.celestialParameters || {};
+            const isRogueWorld = cel.rogue === true;
             try {
-              if (!currentPlanetParameters.star) {
+              if (!isRogueWorld && !currentPlanetParameters.star) {
                 let star = worldOriginal.star || null;
-                const cel = currentPlanetParameters.celestialParameters || {};
                 const lum = (cel.starLuminosity != null ? cel.starLuminosity : 1);
                 if (!star) {
                   // Attempt regeneration using RWG with the current seed
@@ -256,16 +257,20 @@ function loadGame(slotOrCustomString, recreate = true) {
                   }
                 }
                 currentPlanetParameters.star = star;
-              } else {
+              } else if (!isRogueWorld) {
                 // Fill missing pieces if star exists but lacks fields
                 const star = currentPlanetParameters.star;
-                const cel = currentPlanetParameters.celestialParameters || {};
                 if (star.luminositySolar == null && cel.starLuminosity != null) {
                   star.luminositySolar = cel.starLuminosity;
                 }
                 if (!star.habitableZone && star.luminositySolar != null) {
                   const s = Math.sqrt(star.luminositySolar);
                   star.habitableZone = { inner: 0.95 * s, outer: 1.37 * s };
+                }
+              } else {
+                delete currentPlanetParameters.star;
+                if (!Number.isFinite(cel.starLuminosity)) {
+                  cel.starLuminosity = 0;
                 }
               }
             } catch (e) { /* non-fatal */ }

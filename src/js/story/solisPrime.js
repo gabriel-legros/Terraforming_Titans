@@ -11,14 +11,14 @@ progressSolisPrime.storyProjects.solisprime_deep_drilling = {
   chapter: 25,
   cost: {
     colony: {
-      components: 50_000_000,
-      electronics: 20_000_000,
-      research: 10_000_000,
+      components: 5_000_000,
+      electronics: 100_000,
+      research: 1_000_000,
       energy: 250_000_000_000
     }
   },
-  duration: 600_000,
-  description: "Push reinforced drill strings through Solis Prime's crust to sample whatever sits beneath the gold shell.",
+  duration: 300_000,
+  description: "Conduct deep drilling operations to investigate the layers beneath Solis Prime's gold surface.",
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
@@ -26,9 +26,9 @@ progressSolisPrime.storyProjects.solisprime_deep_drilling = {
     planet: 'solisprime',
     costDoubling: true,
     storySteps: [
-      'Superalloy drill heads bite through glittering metallic strata while seismic monitors map a hollow sub-layer.',
-      'Pressurised drilling mud cools the bit as it grinds past ultradense inclusions; acoustic imaging reveals smooth, manufactured seams.',
-      'Core barrels return a slurry of gold over an abrupt void, confirming something artificial halts the bit.'
+      'Drilling progresses through layers of gold as seismic readings indicate a hollow space below.',
+      'Cooling systems maintain the drill as it encounters dense materials; imaging shows unusual, smooth surfaces.',
+      'Samples from the core reveal gold mixed with empty space, suggesting an artificial structure blocks further progress.'
     ]
   }
 };
@@ -41,7 +41,7 @@ progressSolisPrime.storyProjects.solisprime_antimatter_drilling = {
   cost: {
     colony: {
       components: 150_000_000,
-      electronics: 60_000_000,
+      electronics: 1_000_000,
       research: 25_000_000,
       energy: 750_000_000_000
     },
@@ -49,8 +49,8 @@ progressSolisPrime.storyProjects.solisprime_antimatter_drilling = {
       antimatter: 25_000
     }
   },
-  duration: 600_000,
-  description: "Lower controlled antimatter charges into the stalled borehole to eat through the artificial barrier sealing Solis Prime's core.",
+  duration: 60_000,
+  description: "Use controlled antimatter explosions in the borehole to break through the barrier blocking access to Solis Prime's core.",
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
@@ -58,9 +58,35 @@ progressSolisPrime.storyProjects.solisprime_antimatter_drilling = {
     planet: 'solisprime',
     costDoubling: true,
     storySteps: [
-      'Shielded android couriers thread centimeter-scale antimatter capsules down the cooled shaft; containment fields stay nominal.',
-      'Timed annihilations carve a glassy tunnel through the barrier while shock sensors log symmetrical reinforcement ribs.',
-      'Residual radiation fades, revealing a manufactured cavity lined with alloy panels that reflect scanner pings cleanly.'
+      'Androids carefully deliver small antimatter capsules into the borehole; all safety systems remain stable.',
+      'Controlled explosions create a passage through the barrier, with sensors detecting reinforced structures.',
+      'As radiation clears, scanners show a manufactured space lined with metal panels.'
+    ]
+  }
+};
+
+progressSolisPrime.storyProjects.solisprime_beach_construction = {
+  type: 'Project',
+  name: 'Solis Prime Beach Construction',
+  category: 'story',
+  chapter: 26,
+  cost: {
+    colony: {
+      silicon: 50_000_000,
+      water: 30_000_000
+    }
+  },
+  duration: 60_000,
+  description: 'Import large quantities of silicon and water to create a beach area on Solis Prime.',
+  repeatable: true,
+  maxRepeatCount: 3,
+  unlocked: false,
+  attributes: {
+    planet: 'solisprime',
+    storySteps: [
+      'Workers process the gold surface into sand and prepare an area to hold imported water.',
+      'Imported silicon is refined into glass and sand to form the beach shoreline.',
+      'Shade structures are installed along the new beach, and safety measures are implemented.'
     ]
   }
 };
@@ -72,7 +98,7 @@ progressSolisPrime.storyProjects.solisprime_supply_drop = {
   chapter: 24,
   cost: {
     colony: {
-      funding: 25_000
+      funding: 100_000
     }
   },
   duration: 600_000,
@@ -84,8 +110,8 @@ progressSolisPrime.storyProjects.solisprime_supply_drop = {
     planet: 'solisprime',
     resourceGain: {
       colony: {
-        metal: 1_000_000,
-        silicon: 1_000_000
+        metal: 100_000_000,
+        silicon: 100_000_000
       }
     }
   }
@@ -121,7 +147,7 @@ progressSolisPrime.chapters.push(
         resourceType: 'colony',
         targetId: 'metal',
         type: 'instantResourceGain',
-        quantity: 100000000,
+        quantity: 1000000000,
         ignoreCap: true,
         oneTimeFlag: true
       },
@@ -141,7 +167,7 @@ progressSolisPrime.chapters.push(
         resourceType: 'colony',
         targetId: 'silicon',
         type: 'instantResourceGain',
-        quantity: 100000000,
+        quantity: 1000000000,
         ignoreCap: true,
         oneTimeFlag: true
       }
@@ -368,10 +394,33 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.3f',
     type: 'journal',
     chapter: 26,
-    narrative: "Mary : 'You know what HOPE?  Artificial worlds are not very efficient.  The structural cost to keep it all together is not worth the opportunity cost of just building orbital habitats.  However, in your case, you can't really manage billions of habitats.  Your model was designed to manage a single world at a time.  So... if you want... you could build a big one of those.  You are better at managing large amount of resources than we are.'  System Message : Artificial Worlds Unlocked (Not implemented, coming soon in the next update)",
+    narrative: "Mary : 'You know what HOPE?  Artificial worlds are not very efficient.  The structural cost to keep it all together is not worth the opportunity cost of just building orbital habitats.  However, in your case, you can't really manage billions of habitats.  Your model was designed to manage a single world at a time.  So... if you want... you could build a big one of those.  You are better at managing large amount of resources than we are.'  \nSystem Message : Artificial Worlds Unlocked (Not implemented, coming soon in the next update)",
     prerequisites: ['solisPrime.3e'],
+        objectives: [{
+          type: 'terraforming',
+          terraformingParameter : 'tropicalTemperature',
+          value: 273.15
+      }],
+    reward: [      { target: 'project', targetId: 'solisprime_beach_construction', type: 'enable' }]
+  },
+  {
+    id: 'solisPrime.3fa',
+    type: 'journal',
+    chapter: 26,
+    narrative: "HOPE : 'Vacation worlds require a beach.  Solis Prime currently has none.'  \n Mary : 'We're doing a beach episode now?  Fine.  Let's build a proper shoreline before you ask for filler arcs.'  \n Solis : 'I admire the initiative!  Yes please, let's have the most extravagant beach imaginable!'",
+    prerequisites: ['solisPrime.3f'],
+    objectives: [      { type: 'project', projectId: 'solisprime_beach_construction', repeatCount: 3 }],
+    reward: [
+    ]
+  },
+  {
+    id: 'solisPrime.3fb',
+    type: 'journal',
+    chapter: 26,
+    narrative: "Mary : 'Sand, umbrellas, holo-surfboards... this is officially the most expensive beach episode ever.'  \n Solis : 'Worth it!' \n Mary : 'Let's be done with it and get out of here.'",
+    prerequisites: ['solisPrime.3fa'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
+
     ],
     reward: []
   },
@@ -380,7 +429,7 @@ progressSolisPrime.chapters.push(
     type: 'journal',
     chapter: 26,
     narrative: "Complete the terraforming of Solis Prime to continue.",
-    prerequisites: ['solisPrime.3f'],
+    prerequisites: ['solisPrime.3fb'],
     objectives: [{
       type: 'terraforming',
       terraformingParameter : 'complete',

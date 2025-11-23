@@ -5,6 +5,7 @@
 const G  = 6.67430e-11;
 const SOLAR_MASS   = 1.989e30;
 const AU_IN_METERS = 1.496e11;
+const ROGUE_DISTANCE_AU = 10000;
 const FUSION_VE    = 1.0e5;               // 100 km s‑1
 const BASE_TP_RATIO = 2 / FUSION_VE;
 const ESCAPE_L1_FACTOR = 1.0;             // scale of Hill-radius target for escape
@@ -212,7 +213,10 @@ class PlanetaryThrustersProject extends Project{
         <div><span class="stat-label">Energy Spent:</span><span id="distSpent" class="stat-value">0</span></div>
         <div><span class="stat-label">Burn Time:</span><span id="distBurn" class="stat-value">—</span></div>
       </div>
-      <div class="invest-container left"><label><input id="distInvest" type="checkbox"> Invest</label></div>
+      <div class="invest-container left"><label><input id="distInvest" type="checkbox"> Invest</label>
+        <button id="rogueBtn" disabled style="margin-left:8px;">Go Rogue</button>
+        <span class="info-tooltip-icon" style="margin-left:6px;" title="Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet, removes the star, and shutters planetary thrusters.">&#9432;</span>
+      </div>
       <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
     </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
@@ -255,7 +259,7 @@ class PlanetaryThrustersProject extends Project{
       distTargetRow:distTargetEl.parentElement,
       distDv:distDvEl,distDvRow:distDvEl.parentElement,
       distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
-      distSpent:g('#distSpent',motCard),distBurn:g('#distBurn',motCard),
+      distSpent:g('#distSpent',motCard),distBurn:g('#distBurn',motCard),goRogueBtn:g('#rogueBtn',motCard),
       escRow:g('#escapeRow',motCard),escDv:g('#escDv',motCard),
       hillRow:g('#hillRow',motCard),hillVal:g('#hillVal',motCard),
       parentRow:g('#parentRow',motCard),parentName:g('#parentName',motCard),
@@ -290,6 +294,7 @@ class PlanetaryThrustersProject extends Project{
         this.activeMode='motion';
       }
     };
+    this.el.goRogueBtn.onclick = ()=>this.goRogue();
 
     const up=()=>this.updateUI();
     this.el.pPlus.onclick =()=>{this.adjustPower(+this.step);up();};
@@ -405,6 +410,39 @@ class PlanetaryThrustersProject extends Project{
     el.textContent = formatSeconds(energyRequired / watts);
   }
 
+  canGoRogue(){
+    const distance = terraforming?.celestialParameters?.distanceFromSun;
+    const alreadyRogue = terraforming?.celestialParameters?.rogue;
+    return this.isCompleted && Number.isFinite(distance) && distance >= ROGUE_DISTANCE_AU && !alreadyRogue;
+  }
+
+  goRogue(){
+    if(!this.canGoRogue()) return;
+    this.spinInvest = false;
+    this.motionInvest = false;
+    this.activeMode = null;
+    this.dVreq = 0;
+    this.dVdone = 0;
+    const celestialTargets = [
+      terraforming?.celestialParameters,
+      terraforming?.initialCelestialParameters,
+      currentPlanetParameters?.celestialParameters,
+      spaceManager?.currentPlanetParameters?.celestialParameters
+    ].filter(Boolean);
+    celestialTargets.forEach(cel => {
+      cel.rogue = true;
+      cel.starLuminosity = 0;
+    });
+    [currentPlanetParameters, spaceManager?.currentPlanetParameters]
+      .filter(Boolean)
+      .forEach(params => { delete params.star; });
+    setStarLuminosity?.(0);
+    terraforming?.updateLuminosity?.();
+    updateSpaceUI?.();
+    updateProjectUI?.(this.name);
+    this.updateUI();
+  }
+
 /* ---------- job preparation ------------------------------------------ */
   prepareJob(resetDV=false, resetEnergy=false){
     const p = terraforming.celestialParameters;
@@ -448,6 +486,7 @@ class PlanetaryThrustersProject extends Project{
     }
     if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
     if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
+    if(this.el.goRogueBtn) this.el.goRogueBtn.disabled = !this.canGoRogue();
     const p = terraforming.celestialParameters;
 
     // If the project state says we escaped, mirror that onto the planet on load
@@ -716,6 +755,11 @@ class PlanetaryThrustersProject extends Project{
       this.updateUI();
     }
     this.lastActiveTime = 0;
+  }
+
+  isVisible(){
+    if (terraforming?.celestialParameters?.rogue) return false;
+    return super.isVisible();
   }
 
   saveState(){

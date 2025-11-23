@@ -983,6 +983,9 @@ const umbraOverrides = {
 
 const solisPrimeOverrides = {
   name: 'Solis Prime',
+  travelWarning: {
+    message: 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover.',
+  },
   specialAttributes: {
     hasSand: false,
   },
@@ -1000,12 +1003,12 @@ const solisPrimeOverrides = {
     baseColor: '#d4af37',
   },
  "resources": {
-    land: { initialValue : 49_876_000_000 },
     underground: {
       ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
       geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
     },
     "surface": {
+      land: { initialValue : 49_876_000_000 },
       "ice": {
         "initialValue": 2905755111246688.5
       },

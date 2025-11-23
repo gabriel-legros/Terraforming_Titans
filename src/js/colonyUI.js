@@ -51,7 +51,7 @@ function createGrowthRateDisplay(){
   // Other multipliers line
   const otherLine = document.createElement('div');
   otherLine.classList.add('growth-rate-line');
-  otherLine.innerHTML = '<span>Other multipliers:</span> <span id="growth-other-value">100%</span>';
+  otherLine.innerHTML = '<span>Other multipliers:</span> <span id="growth-other-value">1x</span>';
   const otherInfo = document.createElement('span');
   otherInfo.classList.add('info-tooltip-icon');
   otherInfo.title = 'Multipliers from colony sliders, and other effects.';
@@ -92,7 +92,7 @@ function createGrowthRateDisplay(){
 }
 
 function getGrowthMultiplierBreakdown(){
-  const effects = (typeof populationModule !== 'undefined' && Array.isArray(populationModule.activeEffects)) ? populationModule.activeEffects : [];
+  const effects = Array.isArray(populationModule?.activeEffects) ? populationModule.activeEffects : [];
   const lines = [];
   effects.forEach(effect => {
     if(effect.type === 'growthMultiplier'){
@@ -103,16 +103,14 @@ function getGrowthMultiplierBreakdown(){
                  .replace(/([A-Z])/g, ' $1')
                  .replace(/_/g, ' ')
                  .replace(/(^\w|\s\w)/g, m => m.toUpperCase());
-      const pct = (mult - 1) * 100;
-      const formatted = `${pct >= 0 ? '+' : ''}${formatNumber(pct, false, 1)}%`;
-      lines.push(`${name}: ${formatted}`);
+      lines.push(`${name}: ${formatNumber(mult, false, 3)}x`);
     }
   });
   return lines;
 }
 
 function updateGrowthRateDisplay(){
-  if(typeof populationModule === 'undefined') return;
+  if(!populationModule) return;
   const growthEl = document.getElementById('growth-rate-value');
   const baseEl = document.getElementById('growth-base-value');
   const otherEl = document.getElementById('growth-other-value');
@@ -126,8 +124,8 @@ function updateGrowthRateDisplay(){
   const baseRate = populationModule.growthRate * 100;
   baseEl.textContent = `${baseRate >= 0 ? '+' : ''}${formatNumber(baseRate, false, 3)}%/s`;
 
-  const otherMult = populationModule.getEffectiveGrowthMultiplier() * 100;
-  otherEl.textContent = `${formatNumber(otherMult, false, 1)}%`;
+  const otherMult = populationModule.getEffectiveGrowthMultiplier();
+  otherEl.textContent = `${formatNumber(otherMult, false, 3)}x`;
 
   const otherInfo = otherEl.parentElement.querySelector('.info-tooltip-icon');
   if(otherInfo){

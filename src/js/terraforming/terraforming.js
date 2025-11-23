@@ -218,9 +218,12 @@ class Terraforming extends EffectableEntity{
         this.initialCelestialParameters.crossSectionArea = Math.PI * Math.pow(initRadiusMeters, 2);
     }
 
-    const starLuminosity = Number.isFinite(this.celestialParameters.starLuminosity)
-      ? this.celestialParameters.starLuminosity
-      : 1;
+    const isRogueWorld = this.celestialParameters.rogue === true;
+    const starLuminosity = isRogueWorld
+      ? 0
+      : (Number.isFinite(this.celestialParameters.starLuminosity)
+        ? this.celestialParameters.starLuminosity
+        : 1);
     this.celestialParameters.starLuminosity = starLuminosity;
     this.initialCelestialParameters.starLuminosity = starLuminosity;
     setStarLuminosity(starLuminosity);
@@ -1440,7 +1443,7 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateSolarFlux(distanceFromSun){
-      if (this.celestialParameters && this.celestialParameters.rogue) {
+      if (this.celestialParameters?.rogue || starLuminosityMultiplier <= 0) {
         return BACKGROUND_SOLAR_FLUX;
       }
       const validDistance = Number.isFinite(distanceFromSun) && distanceFromSun > 0
@@ -1450,6 +1453,9 @@ class Terraforming extends EffectableEntity{
         return BACKGROUND_SOLAR_FLUX;
       }
       const lum = SOLAR_LUMINOSITY_W * starLuminosityMultiplier;
+      if (!Number.isFinite(lum) || lum <= 0) {
+        return BACKGROUND_SOLAR_FLUX;
+      }
       return lum / (4*Math.PI * Math.pow(validDistance, 2)); // W/m²
     }
 
@@ -2163,7 +2169,5 @@ if (typeof module !== "undefined" && module.exports) {
   globalThis.buildAtmosphereContext = buildAtmosphereContext;
   globalThis.calculateApparentEquatorialGravity = (...args) => getApparentEquatorialGravity(...args);
 }
-
-
 
 

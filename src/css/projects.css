@@ -240,6 +240,7 @@
     font-size: 0.75em;
     padding: 4px 6px;
     line-height: 1.2;
+    min-width: 270px;
 }
 
 .import-progress-name {

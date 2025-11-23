@@ -96,4 +96,3 @@ progressData.chapters.push({
 if (typeof module !== 'undefined') {
   module.exports = progressData;
 }
-
