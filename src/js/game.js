@@ -392,6 +392,13 @@ function initializeGameState(options = {}) {
     updateGalaxyUI();
   }
 
+  hazardManager = setHazardManager(new HazardManager());
+  const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
+    ? currentPlanetParameters.hazards
+    : {};
+  hazardManager.initialize(planetHazards);
+  hazardManager.ensureCrusaderPresence(terraforming);
+
   // When keeping existing managers, reapplied story effects need to
   // target the newly created game objects for this planet.
   if (preserveManagers && storyManager && typeof storyManager.reapplyEffects === 'function') {
@@ -412,13 +419,6 @@ function initializeGameState(options = {}) {
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
   }
-
-  hazardManager = setHazardManager(new HazardManager());
-  const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
-    ? currentPlanetParameters.hazards
-    : {};
-  hazardManager.initialize(planetHazards);
-  hazardManager.ensureCrusaderPresence(terraforming);
 }
 
 function updateLogic(delta) {
