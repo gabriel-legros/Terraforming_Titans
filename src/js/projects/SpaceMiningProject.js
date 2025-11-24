@@ -7,17 +7,24 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disablePressureThreshold = 0;
     this.disableAboveOxygenPressure = false;
     this.disableOxygenPressureThreshold = 0;
+    this.disableAboveWaterCoverage = false;
+    this.waterCoverageThreshold = 0.2;
     this.hasOxygenPressureControl = false;
     this.pressureUnit = 'kPa';
     this.oxygenPressureUnit = 'kPa';
     const maxPressure = config.attributes?.maxPressure;
-    if (typeof maxPressure === 'number') {
+    if (Number.isFinite(maxPressure)) {
       this.disablePressureThreshold = maxPressure;
     }
     const maxOxygenPressure = config.attributes?.maxOxygenPressure;
-    if (typeof maxOxygenPressure === 'number') {
+    if (Number.isFinite(maxOxygenPressure)) {
       this.disableOxygenPressureThreshold = maxOxygenPressure;
       this.hasOxygenPressureControl = true;
+    }
+    const maxWaterCoverage = config.attributes?.maxWaterCoverage;
+    if (Number.isFinite(maxWaterCoverage)) {
+      this.waterCoverageThreshold = maxWaterCoverage;
+      this.disableAboveWaterCoverage = true;
     }
   }
 
@@ -50,6 +57,9 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   createGasPressureControl(gas, checkedProp, thresholdProp, key) {
+    if (!gas) {
+      return null;
+    }
     const control = document.createElement('div');
     control.classList.add('checkbox-container', `${key}-control`);
     control.id = `${this.name}-${key}-control`;
@@ -130,10 +140,77 @@ class SpaceMiningProject extends SpaceshipProject {
     return this.createGasPressureControl(gas, 'disableAbovePressure', 'disablePressureThreshold', 'pressure');
   }
 
+  createWaterCoverageControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'water-coverage-control');
+    control.id = `${this.name}-water-coverage-control`;
+    control.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.classList.add('water-coverage-checkbox');
+    checkbox.checked = this.disableAboveWaterCoverage;
+    checkbox.addEventListener('change', () => {
+      this.disableAboveWaterCoverage = checkbox.checked;
+    });
+    control.appendChild(checkbox);
+
+    const label = document.createElement('label');
+    label.textContent = 'Disable if water coverage above: ';
+    control.appendChild(label);
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = 'any';
+    input.min = '0';
+    input.max = '100';
+    input.classList.add('water-coverage-input');
+    input.value = this.waterCoverageThreshold * 100;
+    input.addEventListener('input', () => {
+      if (input.value === '') {
+        return;
+      }
+      const val = Number(input.value);
+      if (!Number.isFinite(val)) {
+        this.waterCoverageThreshold = 0;
+        return;
+      }
+      const clamped = Math.max(0, Math.min(val, 100));
+      this.waterCoverageThreshold = clamped / 100;
+      input.value = clamped;
+    });
+    input.addEventListener('blur', () => {
+      if (input.value === '') {
+        input.value = this.waterCoverageThreshold * 100;
+      }
+    });
+    control.appendChild(input);
+
+    const percent = document.createElement('span');
+    percent.classList.add('water-coverage-unit');
+    percent.textContent = '%';
+    control.appendChild(percent);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      waterCoverageControl: control,
+      waterCoverageCheckbox: checkbox,
+      waterCoverageInput: input,
+    };
+
+    return control;
+  }
+
   renderAutomationUI(container) {
     if (!projectElements[this.name]?.pressureControl) {
       const gas = this.getTargetAtmosphericResource();
-      container.appendChild(this.createGasPressureControl(gas, 'disableAbovePressure', 'disablePressureThreshold', 'pressure'));
+      const pressureControl = this.createGasPressureControl(gas, 'disableAbovePressure', 'disablePressureThreshold', 'pressure');
+      if (pressureControl) {
+        container.appendChild(pressureControl);
+      }
+    }
+    if (this.attributes.dynamicWaterImport && !projectElements[this.name]?.waterCoverageControl) {
+      container.appendChild(this.createWaterCoverageControl());
     }
     if (this.hasOxygenPressureControl && !projectElements[this.name]?.oxygenPressureControl) {
       container.appendChild(this.createGasPressureControl('oxygen', 'disableAboveOxygenPressure', 'disableOxygenPressureThreshold', 'oxygenPressure'));
@@ -162,6 +239,15 @@ class SpaceMiningProject extends SpaceshipProject {
         ? this.disablePressureThreshold * 1000
         : this.disablePressureThreshold;
     }
+    if (elements.waterCoverageControl) {
+      elements.waterCoverageControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+    }
+    if (elements.waterCoverageCheckbox) {
+      elements.waterCoverageCheckbox.checked = this.disableAboveWaterCoverage;
+    }
+    if (elements.waterCoverageInput && document.activeElement !== elements.waterCoverageInput) {
+      elements.waterCoverageInput.value = this.waterCoverageThreshold * 100;
+    }
     if (elements.oxygenPressureControl) {
       elements.oxygenPressureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
     }
@@ -189,8 +275,26 @@ class SpaceMiningProject extends SpaceshipProject {
     return null;
   }
 
+  waterCoverageLimitEnabled(hasMonitoring) {
+    const monitoringOn = hasMonitoring ?? this.isBooleanFlagSet('atmosphericMonitoring');
+    return monitoringOn && this.attributes.dynamicWaterImport && this.disableAboveWaterCoverage;
+  }
+
+  exceedsWaterCoverageLimit(hasMonitoring) {
+    if (!this.waterCoverageLimitEnabled(hasMonitoring)) {
+      return false;
+    }
+    const liquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
+    const iceCoverage = calculateAverageCoverage(terraforming, 'ice') || 0;
+    const totalCoverage = Math.min(1, liquidCoverage + iceCoverage);
+    return totalCoverage >= (this.waterCoverageThreshold - ATMOSPHERIC_MONITORING_TOLERANCE);
+  }
+
   shouldAutomationDisable() {
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
+      return true;
+    }
     if (hasMonitoring && this.disableAbovePressure) {
       const gas = this.getTargetAtmosphericResource();
       if (gas && typeof terraforming !== 'undefined' && resources.atmospheric && resources.atmospheric[gas]) {
@@ -224,6 +328,9 @@ class SpaceMiningProject extends SpaceshipProject {
   canStart() {
     if (!super.canStart()) return false;
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
+      return false;
+    }
     if (hasMonitoring && this.disableAbovePressure) {
       const gas = this.getTargetAtmosphericResource();
       if (gas && typeof terraforming !== 'undefined' && resources.atmospheric && resources.atmospheric[gas]) {
@@ -262,6 +369,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disablePressureThreshold: this.disablePressureThreshold,
       disableAboveOxygenPressure: this.disableAboveOxygenPressure,
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
+      disableAboveWaterCoverage: this.disableAboveWaterCoverage,
+      waterCoverageThreshold: this.waterCoverageThreshold,
       pressureUnit: this.pressureUnit,
       oxygenPressureUnit: this.oxygenPressureUnit,
     };
@@ -273,6 +382,10 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disablePressureThreshold = state.disablePressureThreshold || 0;
     this.disableAboveOxygenPressure = state.disableAboveOxygenPressure || false;
     this.disableOxygenPressureThreshold = state.disableOxygenPressureThreshold || 0;
+    this.disableAboveWaterCoverage = state.disableAboveWaterCoverage ?? this.disableAboveWaterCoverage;
+    if (Number.isFinite(state.waterCoverageThreshold)) {
+      this.waterCoverageThreshold = Math.max(0, Math.min(state.waterCoverageThreshold, 1));
+    }
     this.pressureUnit = state.pressureUnit || 'kPa';
     this.oxygenPressureUnit = state.oxygenPressureUnit || 'kPa';
   }
@@ -301,7 +414,11 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
+    const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (this.attributes.dynamicWaterImport && gain.surface) {
+      if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
+        return;
+      }
       const entry = gain.surface;
       const resource = Object.keys(entry)[0];
       const amount = entry[resource] * fraction * productivity;
@@ -326,7 +443,7 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       return;
     }
-    if (this.isBooleanFlagSet('atmosphericMonitoring') && this.disableAbovePressure && gain.atmospheric) {
+    if (hasMonitoring && this.disableAbovePressure && gain.atmospheric) {
       const gas = this.getTargetAtmosphericResource();
       const entry = gain.atmospheric;
       if (

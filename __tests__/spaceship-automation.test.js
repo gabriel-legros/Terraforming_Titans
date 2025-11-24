@@ -6,6 +6,8 @@ describe('SpaceshipAutomation assignments', () => {
   let projects;
 
   class StubProject {
+    static refreshAutoAssignDisplays() {}
+
     constructor(name) {
       this.name = name;
       this.displayName = name;
@@ -111,6 +113,7 @@ describe('SpaceshipAutomation assignments', () => {
     }];
     automation.activePresetId = 1;
     automation.toggleProjectDisabled('importCarbon', true);
+    projects.importCarbon.run = false;
 
     automation.applyAssignments();
 

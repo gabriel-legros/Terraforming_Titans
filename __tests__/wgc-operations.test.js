@@ -65,6 +65,7 @@ describe('WarpGateCommand operation queue', () => {
     Math.random = () => 0.1;
     expect(wgc.startOperation(0, 0)).toBe(true);
     const op = wgc.operations[0];
+    const segment = 1 / (op.baseEventsTotal + 1);
     Object.assign(op.eventQueue[0], {
       name: 'Social Science challenge',
       type: 'science',
@@ -91,6 +92,7 @@ describe('WarpGateCommand operation queue', () => {
     Math.random = () => 0.1;
     expect(wgc.startOperation(0, 0)).toBe(true);
     const op = wgc.operations[0];
+    const segment = 1 / (op.baseEventsTotal + 1);
     Object.assign(op.eventQueue[0], {
       name: 'Social Science challenge',
       type: 'science',
@@ -101,21 +103,21 @@ describe('WarpGateCommand operation queue', () => {
     Math.random = () => 0.99;
 
     wgc.update(30000);
-    expect(op.progress).toBeCloseTo(0.05, 3);
+    expect(op.progress).toBeCloseTo(segment * 0.5, 4);
 
     wgc.update(30000);
-    expect(op.progress).toBeCloseTo(0.1, 3);
+    expect(op.progress).toBeCloseTo(segment, 4);
     expect(op.baseEventsCompleted).toBe(1);
 
     wgc.update(30000);
-    expect(op.progress).toBeCloseTo(0.1, 3);
+    expect(op.progress).toBeCloseTo(segment, 4);
 
     wgc.update(30000);
-    expect(op.progress).toBeCloseTo(0.1, 3);
+    expect(op.progress).toBeCloseTo(segment * 1.5, 4);
     expect(op.eventQueue[1].isBase).toBe(false);
 
     wgc.update(30000);
-    expect(op.progress).toBeCloseTo(0.15, 2);
+    expect(op.progress).toBeCloseTo(segment * 1.75, 4);
   });
 
   test('level 100 shooting range converts failed combat with no reroll into success', () => {

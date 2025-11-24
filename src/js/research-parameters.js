@@ -988,6 +988,13 @@ const researchParameters = {
           },
           {
             target: 'project',
+            targetId: 'waterSpaceMining',
+            type: 'booleanFlag',
+            flagId: 'atmosphericMonitoring',
+            value: true
+          },
+          {
+            target: 'project',
             targetId: 'nitrogenSpaceMining',
             type: 'booleanFlag',
             flagId: 'atmosphericMonitoring',

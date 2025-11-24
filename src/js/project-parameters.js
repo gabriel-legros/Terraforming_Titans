@@ -275,6 +275,7 @@ const projectParameters = {
     attributes: {
       spaceMining : true,
       dynamicWaterImport: true,
+      maxWaterCoverage: 0.2,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {surface: {ice : 1000000}}
     }
