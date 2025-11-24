@@ -102,12 +102,13 @@ progressSolisPrime.storyProjects.solisprime_supply_drop = {
     }
   },
   duration: 600_000,
-  description: 'Wire Solis funds to receive another shipment of structural metal and silicon.',
+  description: 'Wire Solis funds to receive another shipment of structural metal and silicon.  Can ignore storage cap.',
   repeatable: true,
   maxRepeatCount: Infinity,
   unlocked: false,
   attributes: {
     planet: 'solisprime',
+    ignoreStorageCap: true,
     resourceGain: {
       colony: {
         metal: 100_000_000,

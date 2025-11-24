@@ -408,12 +408,13 @@ class Project extends EffectableEntity {
   applyResourceGain() {
     // Get the effective resource gain, considering all active effects
     const effectiveResourceGain = this.getEffectiveResourceGain();
+    const ignoreCap = !!this.attributes.ignoreStorageCap;
     
     // Apply the effective resource gain to the resources
     for (const resourceCategory in effectiveResourceGain) {
       for (const resource in effectiveResourceGain[resourceCategory]) {
         const amount = effectiveResourceGain[resourceCategory][resource];
-        resources[resourceCategory][resource].increase(amount);
+        resources[resourceCategory][resource].increase(amount, ignoreCap);
       }
     }
   }
