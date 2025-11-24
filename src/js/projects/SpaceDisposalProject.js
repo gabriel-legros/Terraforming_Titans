@@ -97,25 +97,27 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       mainButtons.classList.add('main-buttons');
       buttonsContainer.appendChild(mainButtons);
 
-      const zeroButton = createButton('0', () => {
-        this.setMassDriverActive(0);
+      const applyManualMassDriverChange = (change) => {
+        change();
+        disableAutoActive(this.getMassDriverStructure());
         this.updateUI();
+      };
+
+      const zeroButton = createButton('0', () => {
+        applyManualMassDriverChange(() => this.setMassDriverActive(0));
       }, mainButtons);
 
       const decreaseButton = createButton('', () => {
-        this.adjustMassDriverActive(-1);
-        this.updateUI();
+        applyManualMassDriverChange(() => this.adjustMassDriverActive(-1));
       }, mainButtons);
 
       const increaseButton = createButton('', () => {
-        this.adjustMassDriverActive(1);
-        this.updateUI();
+        applyManualMassDriverChange(() => this.adjustMassDriverActive(1));
       }, mainButtons);
 
       const maxButton = createButton('Max', () => {
         const structure = this.getMassDriverStructure();
-        this.setMassDriverActive(structure.count);
-        this.updateUI();
+        applyManualMassDriverChange(() => this.setMassDriverActive(structure.count));
       }, mainButtons);
 
       const multiplierContainer = document.createElement('div');
