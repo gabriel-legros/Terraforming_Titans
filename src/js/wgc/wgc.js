@@ -122,6 +122,7 @@ class WarpGateCommand extends EffectableEntity {
       progressTargetValue: 0,
       progressIntervalStart: 0,
       progressIntervalDuration: 0,
+      progressSegmentStart: 0,
       nextDifficultyModifier: 1,
       nextArtifactModifier: 1,
       facilityRerolls: {
@@ -308,20 +309,28 @@ class WarpGateCommand extends EffectableEntity {
       op.baseEventsCompleted = 0;
     }
     op.baseEventsCompleted = Math.min(op.baseEventsCompleted, op.baseEventsTotal);
-    const startFraction = op.baseEventsCompleted / op.baseEventsTotal;
+    if (!Number.isFinite(op.progressSegmentStart)) {
+      op.progressSegmentStart = op.timer;
+    }
+    const completed = op.baseEventsCompleted;
+    const segments = op.baseEventsTotal + 1;
+    const startFraction = completed / segments;
     op.progressStartValue = startFraction;
-    op.progressIntervalStart = op.timer;
+    let intervalStart = op.progressSegmentStart;
     let targetFraction = startFraction;
     let duration = 0;
     const nextBaseIndex = this.findNextBaseEventIndex(op);
-    if (op.active && op.baseEventsCompleted < op.baseEventsTotal && nextBaseIndex !== -1) {
-      const nextFraction = (op.baseEventsCompleted + 1) / op.baseEventsTotal;
-      if (nextBaseIndex === op.currentEventIndex) {
-        targetFraction = nextFraction;
-        duration = Math.max(op.nextEvent - op.timer, 0);
-      }
+    if (completed >= op.baseEventsTotal) {
+      intervalStart = op.progressSegmentStart;
+      targetFraction = (completed + 1) / segments;
+      duration = Math.max(Math.max(600, intervalStart) - intervalStart, 0);
+    } else if (op.active && nextBaseIndex === op.currentEventIndex) {
+      intervalStart = op.progressSegmentStart;
+      targetFraction = (completed + 1) / segments;
+      duration = Math.max(op.nextEvent - intervalStart, 0);
     }
     op.progressTargetValue = targetFraction;
+    op.progressIntervalStart = intervalStart;
     op.progressIntervalDuration = duration;
     if (!Number.isFinite(op.progress) || op.progress < startFraction) {
       op.progress = startFraction;
@@ -332,11 +341,12 @@ class WarpGateCommand extends EffectableEntity {
     if (!op || !op.active) return 0;
     const start = Number.isFinite(op.progressStartValue) ? op.progressStartValue : 0;
     const target = Number.isFinite(op.progressTargetValue) ? op.progressTargetValue : start;
-    if (!Number.isFinite(op.progressIntervalDuration) || op.progressIntervalDuration <= 0 || target <= start) {
-      return Math.min(1, Math.max(0, start));
+    const duration = op.progressIntervalDuration;
+    if (!Number.isFinite(duration) || duration <= 0) {
+      return Math.min(1, Math.max(0, Math.max(start, target)));
     }
     const elapsed = Math.max(0, op.timer - (op.progressIntervalStart || 0));
-    const t = Math.min(1, elapsed / op.progressIntervalDuration);
+    const t = Math.min(1, elapsed / duration);
     return Math.min(1, Math.max(0, start + (target - start) * t));
   }
 
@@ -735,11 +745,13 @@ class WarpGateCommand extends EffectableEntity {
       if (!Number.isFinite(op.baseEventsCompleted) || op.baseEventsCompleted < 0) op.baseEventsCompleted = 0;
 
       while (op.currentEventIndex < op.eventQueue.length && op.timer >= op.nextEvent) {
+        const eventTime = op.nextEvent;
         const event = op.eventQueue[op.currentEventIndex];
         const result = this.resolveEvent(idx, event);
         op.currentEventIndex += 1;
         if (event && event.isBase) {
           op.baseEventsCompleted += 1;
+          op.progressSegmentStart = eventTime;
         }
         if (!result.success && event && event.type === 'science' && event.specialty === 'Social Scientist') {
           const combatBase = baseOperationEvents.find(e => e.type === 'combat');
@@ -760,7 +772,8 @@ class WarpGateCommand extends EffectableEntity {
       if (readyToFinish) {
         this.finishOperation(idx);
         this.totalOperations += 1;
-        op.timer -= 600;
+        op.timer = Math.max(op.timer - 600, 0);
+        op.progressSegmentStart = op.timer;
         this.refreshOperationProgress(op, idx);
         op.number = this.teamNextOperationNumber[idx];
         this.teamNextOperationNumber[idx] += 1;
@@ -984,6 +997,7 @@ class WarpGateCommand extends EffectableEntity {
     op.progressTargetValue = 0;
     op.progressIntervalStart = 0;
     op.progressIntervalDuration = 0;
+    op.progressSegmentStart = op.timer;
     op.number = this.teamNextOperationNumber[teamIndex];
     this.teamNextOperationNumber[teamIndex] += 1;
     op.difficulty = diff;
@@ -1014,6 +1028,7 @@ class WarpGateCommand extends EffectableEntity {
       op.progressTargetValue = 0;
       op.progressIntervalStart = 0;
       op.progressIntervalDuration = 0;
+      op.progressSegmentStart = 0;
       op.nextDifficultyModifier = 1;
       op.nextArtifactModifier = 1;
       op.criticalSuccessCount = 0;
@@ -1076,6 +1091,7 @@ class WarpGateCommand extends EffectableEntity {
         progressTargetValue: Number.isFinite(op.progressTargetValue) ? op.progressTargetValue : 0,
         progressIntervalStart: Number.isFinite(op.progressIntervalStart) ? op.progressIntervalStart : 0,
         progressIntervalDuration: Number.isFinite(op.progressIntervalDuration) ? op.progressIntervalDuration : 0,
+        progressSegmentStart: Number.isFinite(op.progressSegmentStart) ? op.progressSegmentStart : (Number.isFinite(op.timer) ? op.timer : 0),
         nextDifficultyModifier: Number.isFinite(op.nextDifficultyModifier) ? op.nextDifficultyModifier : 1,
         nextArtifactModifier: Number.isFinite(op.nextArtifactModifier) ? op.nextArtifactModifier : 1,
         facilityRerolls: op.facilityRerolls ? {
@@ -1144,6 +1160,7 @@ class WarpGateCommand extends EffectableEntity {
         progressTargetValue: Number.isFinite(op.progressTargetValue) ? op.progressTargetValue : 0,
         progressIntervalStart: Number.isFinite(op.progressIntervalStart) ? op.progressIntervalStart : 0,
         progressIntervalDuration: Number.isFinite(op.progressIntervalDuration) ? op.progressIntervalDuration : 0,
+        progressSegmentStart: Number.isFinite(op.progressSegmentStart) ? op.progressSegmentStart : 0,
         nextDifficultyModifier: Number.isFinite(op.nextDifficultyModifier) && op.nextDifficultyModifier > 0 ? op.nextDifficultyModifier : 1,
         nextArtifactModifier: Number.isFinite(op.nextArtifactModifier) && op.nextArtifactModifier > 0 ? op.nextArtifactModifier : 1,
         facilityRerolls: {
@@ -1225,6 +1242,7 @@ class WarpGateCommand extends EffectableEntity {
         op.progressTargetValue = 0;
         op.progressIntervalStart = 0;
         op.progressIntervalDuration = 0;
+        op.progressSegmentStart = 0;
         op.baseEventsCompleted = 0;
         op.nextDifficultyModifier = 1;
         op.nextArtifactModifier = 1;

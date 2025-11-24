@@ -35,6 +35,9 @@ class SpaceshipAutomation {
     if (!preset.enabled) {
       preset.enabled = true;
     }
+    if (preset.enabled) {
+      this.disableAutoAssignForProjects();
+    }
   }
 
   togglePresetEnabled(id, enabled) {
@@ -43,6 +46,7 @@ class SpaceshipAutomation {
     preset.enabled = !!enabled;
     if (preset.enabled) {
       this.activePresetId = preset.id;
+      this.disableAutoAssignForProjects();
     }
   }
 
@@ -151,7 +155,7 @@ class SpaceshipAutomation {
     }
     if (Object.prototype.hasOwnProperty.call(updates, 'max')) {
       const max = Number(updates.max);
-      entry.max = Number.isFinite(max) && max >= 0 ? max : null;
+      entry.max = Number.isFinite(max) && max > 0 ? max : null;
     }
     if (Object.prototype.hasOwnProperty.call(updates, 'projectId')) {
       entry.projectId = updates.projectId;
@@ -181,6 +185,17 @@ class SpaceshipAutomation {
   isActive() {
     const preset = this.getActivePreset();
     return automationManager && automationManager.enabled && automationManager.hasFeature('automationShipAssignment') && preset && preset.enabled;
+  }
+
+  disableAutoAssignForProjects() {
+    const projects = this.getSpaceshipProjects();
+    for (let index = 0; index < projects.length; index += 1) {
+      const project = projects[index];
+      if (project.autoAssignSpaceships) {
+        project.autoAssignSpaceships = false;
+      }
+    }
+    SpaceshipProject.refreshAutoAssignDisplays();
   }
 
   getSpaceshipProjects() {
@@ -230,6 +245,9 @@ class SpaceshipAutomation {
 
   applyAssignments() {
     const preset = this.getActivePreset();
+    if (preset && preset.enabled) {
+      this.disableAutoAssignForProjects();
+    }
     if (!preset || preset.steps.length === 0) {
       this.unlockManualControls();
       return;
@@ -257,7 +275,8 @@ class SpaceshipAutomation {
     for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
       const step = preset.steps[stepIndex];
       if (remainingTotal <= 0) break;
-      const stepLimit = step.limit === null ? remainingTotal : Math.min(step.limit, remainingTotal);
+      const isCappedStep = step.mode === 'cappedMin';
+      const stepLimit = isCappedStep ? remainingTotal : (step.limit === null ? remainingTotal : Math.min(step.limit, remainingTotal));
       let stepRemaining = stepLimit;
       const entries = step.entries;
       if (entries.length === 0) continue;
@@ -299,32 +318,7 @@ class SpaceshipAutomation {
           break;
         }
 
-        const mode = step.mode || 'fill';
-        if (mode === 'cappedMin') {
-          const capFactor = weightedEntries.reduce((min, item) => {
-            const val = item.remainingCapacity / item.entry.weight;
-            return Math.min(min, val);
-          }, Infinity);
-          const stepFactor = stepRemaining / totalWeight;
-          const factor = Math.min(capFactor, stepFactor);
-          let allocatedInPass = 0;
-          for (let wIndex = 0; wIndex < weightedEntries.length; wIndex += 1) {
-            const item = weightedEntries[wIndex];
-            const share = Math.floor(item.entry.weight * factor);
-            if (share <= 0) continue;
-            const applied = Math.min(share, item.remainingCapacity);
-            if (applied > 0) {
-              desiredAssignments[item.project.name] = (desiredAssignments[item.project.name] || 0) + applied;
-              allocatedInPass += applied;
-            }
-          }
-          if (allocatedInPass <= 0) {
-            break;
-          }
-          remainingTotal = Math.max(0, remainingTotal - allocatedInPass);
-          stepRemaining = 0;
-          break;
-        } else {
+        const allocateFill = () => {
           let allocatedInPass = 0;
           for (let wIndex = 0; wIndex < weightedEntries.length; wIndex += 1) {
             const item = weightedEntries[wIndex];
@@ -353,6 +347,66 @@ class SpaceshipAutomation {
               }
             }
           }
+          return allocatedInPass;
+        };
+
+        const mode = step.mode || 'fill';
+        if (mode === 'cappedMin') {
+          const hasFiniteCap = weightedEntries.some(item => Number.isFinite(item.remainingCapacity));
+          if (!hasFiniteCap) {
+            if (stepRemaining <= 0) {
+              stepRemaining = remainingTotal;
+            }
+            const allocatedInPass = allocateFill();
+            if (allocatedInPass === 0) {
+              break;
+            }
+            stepRemaining = Math.max(0, stepRemaining - allocatedInPass);
+            remainingTotal = Math.max(0, remainingTotal - allocatedInPass);
+            continue;
+          }
+          const capFactor = weightedEntries.reduce((min, item) => {
+            const val = item.remainingCapacity / item.entry.weight;
+            return Math.min(min, val);
+          }, Infinity);
+          const stepFactor = stepRemaining / totalWeight;
+          const factor = Math.min(capFactor, stepFactor);
+          const allocations = [];
+          let allocatedInPass = 0;
+          for (let wIndex = 0; wIndex < weightedEntries.length; wIndex += 1) {
+            const item = weightedEntries[wIndex];
+            const share = Math.floor(item.entry.weight * factor);
+            const applied = Math.min(share, item.remainingCapacity);
+            if (applied > 0) {
+              desiredAssignments[item.project.name] = (desiredAssignments[item.project.name] || 0) + applied;
+              allocatedInPass += applied;
+            }
+            allocations.push({
+              item,
+              applied,
+              fractional: (item.entry.weight * factor) - share
+            });
+          }
+          let remainder = Math.max(0, stepRemaining - allocatedInPass);
+          if (remainder > 0) {
+            allocations.sort((a, b) => b.fractional - a.fractional);
+            for (let allocIndex = 0; allocIndex < allocations.length && remainder > 0; allocIndex += 1) {
+              const allocation = allocations[allocIndex];
+              if (allocation.applied >= allocation.item.remainingCapacity) continue;
+              desiredAssignments[allocation.item.project.name] = (desiredAssignments[allocation.item.project.name] || 0) + 1;
+              allocation.applied += 1;
+              allocatedInPass += 1;
+              remainder -= 1;
+            }
+          }
+          if (allocatedInPass <= 0) {
+            break;
+          }
+          remainingTotal = Math.max(0, remainingTotal - allocatedInPass);
+          stepRemaining = Math.max(0, stepRemaining - allocatedInPass);
+          break;
+        } else {
+          const allocatedInPass = allocateFill();
 
           if (allocatedInPass === 0) {
             break;
@@ -422,7 +476,7 @@ class SpaceshipAutomation {
         entries: Array.isArray(step.entries) ? step.entries.map(entry => ({
           projectId: entry.projectId,
           weight: entry.weight,
-          max: entry.max === null || entry.max === undefined ? null : entry.max
+          max: Number.isFinite(entry.max) && entry.max > 0 ? entry.max : null
         })) : []
       })) : []
     })) : [];

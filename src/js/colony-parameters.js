@@ -111,7 +111,8 @@ const colonyParameters = {
       requiresMaintenance: true,
       maintenanceFactor: 1, // Default maintenance factor
       unlocked: false,
-      requiresLand : 100000
+      requiresLand : 100000,
+      autoBuildMaxOption: true
     },
     t7_colony: {
       name: 'Ecumenopolis District',
@@ -127,6 +128,7 @@ const colonyParameters = {
       requiresMaintenance: true,
       maintenanceFactor: 1,
       unlocked: false,
-      requiresLand: 100000
+      requiresLand: 100000,
+      autoBuildMaxOption: true
     }
 };
