@@ -176,8 +176,8 @@
 
 .automation-entry {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 8px;
+  grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.8fr) minmax(240px, 1.6fr) auto 56px;
+  gap: 6px 8px;
   align-items: center;
   padding: 8px;
   background: #f8f9fc;
@@ -190,6 +190,27 @@
   gap: 4px;
   align-items: center;
   color: #4c5872;
+}
+
+.automation-weight input {
+  max-width: 90px;
+}
+
+.automation-max-wrapper {
+  display: grid;
+  grid-template-columns: 1fr minmax(80px, 100px);
+  gap: 6px;
+  align-items: center;
+}
+
+.automation-max-wrapper select {
+  min-width: 160px;
+  max-width: 210px;
+}
+
+.automation-max-wrapper input {
+  width: 100%;
+  max-width: 110px;
 }
 
 .automation-entry-exclude {
@@ -238,7 +259,7 @@
   border: 1px solid #c4cad7;
   background: #f1f4f9;
   border-radius: 4px;
-  padding: 4px 8px;
+  padding: 4px 10px;
   cursor: pointer;
   transition: background 0.12s ease, transform 0.08s ease;
 }

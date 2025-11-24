@@ -534,19 +534,45 @@ function renderAutomationSteps(automation, preset, container) {
       weightWrapper.append(weightLabel, weightInput);
       row.appendChild(weightWrapper);
 
+      const maxWrapper = document.createElement('div');
+      maxWrapper.classList.add('automation-max-wrapper');
+
+      const maxMode = document.createElement('select');
+      const absoluteOpt = document.createElement('option');
+      absoluteOpt.value = 'absolute';
+      absoluteOpt.textContent = 'Max';
+      const populationOpt = document.createElement('option');
+      populationOpt.value = 'population';
+      populationOpt.textContent = 'Max % Multiple of Pop';
+      const workersOpt = document.createElement('option');
+      workersOpt.value = 'workers';
+      workersOpt.textContent = 'Max % Multiple of Workers';
+      maxMode.append(absoluteOpt, populationOpt, workersOpt);
+      maxMode.value = entry.maxMode || 'absolute';
+
       const maxInput = document.createElement('input');
       maxInput.type = 'number';
       maxInput.min = '0';
-      maxInput.placeholder = 'No max';
+      maxInput.placeholder = maxMode.value === 'absolute' ? 'No max' : 'Percent';
       if (entry.max !== null && entry.max !== undefined) {
         maxInput.value = entry.max;
       }
+
+      maxMode.addEventListener('change', (event) => {
+        maxInput.placeholder = event.target.value === 'absolute' ? 'No max' : 'Percent';
+        automation.updateEntry(preset.id, step.id, entry.projectId, { maxMode: event.target.value });
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+
       maxInput.addEventListener('change', (event) => {
         automation.updateEntry(preset.id, step.id, entry.projectId, { max: event.target.value });
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
-      row.appendChild(maxInput);
+
+      maxWrapper.append(maxMode, maxInput);
+      row.appendChild(maxWrapper);
 
       const projectObject = projects.find(item => item.name === entry.projectId);
       if (projectObject && typeof projectObject.getAutomationDisableAllowed === 'function' ? projectObject.getAutomationDisableAllowed() : true) {
