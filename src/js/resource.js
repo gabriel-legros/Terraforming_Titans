@@ -103,7 +103,7 @@ class Resource extends EffectableEntity {
 
   increase(amount) {
     if(amount > 0){
-      this.value = Math.min(this.value + amount, this.cap);
+      this.value = Math.min(this.value + amount, Math.max(this.cap, this.value));
     }
   }
 
