@@ -984,7 +984,7 @@ const umbraOverrides = {
 const solisPrimeOverrides = {
   name: 'Solis Prime',
   travelWarning: {
-    message: 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover.',
+    message: 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover. \n The story will give you some initial resources, but if some mega projects are on auto start you may end up using them instantly.',
   },
   specialAttributes: {
     hasSand: false,

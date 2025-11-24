@@ -131,7 +131,26 @@ progressSolisPrime.chapters.push(
       type: 'triggerGoldenAsteroidEffect',
       duration: 36000000,
       oneTimeFlag: true
-    }]
+      },
+      {
+        target: 'resource',
+        resourceType: 'colony',
+        targetId: 'metal',
+        type: 'instantResourceGain',
+        quantity: 1000000000,
+        ignoreCap: true,
+        oneTimeFlag: true
+      },
+      {
+        target: 'resource',
+        resourceType: 'colony',
+        targetId: 'silicon',
+        type: 'instantResourceGain',
+        quantity: 1000000000,
+        ignoreCap: true,
+        oneTimeFlag: true
+      }
+  ]
   },
   {
     id: 'solisPrime.1a',
@@ -143,15 +162,6 @@ progressSolisPrime.chapters.push(
     ],
     reward: [
       {
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'metal',
-        type: 'instantResourceGain',
-        quantity: 1000000000,
-        ignoreCap: true,
-        oneTimeFlag: true
-      },
-      {
         target: 'researchManager',
         type: 'booleanFlag',
         flagId: 'siliconMiningUnlocked',
@@ -161,15 +171,6 @@ progressSolisPrime.chapters.push(
         target: 'project',
         targetId: 'solisprime_supply_drop',
         type: 'enable'
-      },
-      {
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'silicon',
-        type: 'instantResourceGain',
-        quantity: 1000000000,
-        ignoreCap: true,
-        oneTimeFlag: true
       }
     ]
   },
