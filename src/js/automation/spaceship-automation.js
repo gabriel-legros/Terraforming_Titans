@@ -286,7 +286,7 @@ class SpaceshipAutomation {
     const currentAssignments = {};
     for (let index = 0; index < projects.length; index += 1) {
       const project = projects[index];
-      const assigned = project.getActiveShipCount();
+      const assigned = project.getAutomationShipCount ? project.getAutomationShipCount() : project.getActiveShipCount();
       currentAssignments[project.name] = assigned;
       totalShips += assigned;
     }
@@ -448,7 +448,7 @@ class SpaceshipAutomation {
     // Then assign additional ships as needed.
     for (let index = 0; index < projects.length; index += 1) {
       const project = projects[index];
-      const current = project.getActiveShipCount();
+      const current = project.getAutomationShipCount ? project.getAutomationShipCount() : project.getActiveShipCount();
       const target = desiredAssignments[project.name] || 0;
       const projectCap = typeof project.getMaxAssignableShips === 'function'
         ? project.getMaxAssignableShips()

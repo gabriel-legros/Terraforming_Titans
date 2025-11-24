@@ -120,4 +120,46 @@ describe('SpaceshipAutomation assignments', () => {
     expect(projects.importCarbon.assigned).toBe(0);
     expect(resources.special.spaceships.value).toBe(15);
   });
+
+  test('ignores mass driver equivalents when computing ship availability', () => {
+    class DisposalProject extends StubProject {
+      constructor(name) {
+        super(name);
+        this.massDrivers = 3;
+      }
+
+      getAutomationShipCount() {
+        return this.assigned;
+      }
+
+      getActiveShipCount() {
+        return this.assigned + (this.massDrivers * 10);
+      }
+    }
+
+    resources.special.spaceships.value = 5;
+    const disposal = new DisposalProject('disposal');
+    projectManager.projects = { disposal };
+
+    automation.presets = [{
+      id: 1,
+      name: 'Test',
+      enabled: true,
+      steps: [
+        {
+          id: 101,
+          limit: null,
+          entries: [
+            { projectId: 'disposal', weight: 1, max: null }
+          ]
+        }
+      ]
+    }];
+    automation.activePresetId = 1;
+
+    automation.applyAssignments();
+
+    expect(disposal.assigned).toBe(5);
+    expect(resources.special.spaceships.value).toBe(0);
+  });
 });

@@ -16,6 +16,10 @@ class SpaceshipProject extends Project {
     return this.assignedSpaceships ?? 0;
   }
 
+  getAutomationShipCount() {
+    return this.getActiveShipCount();
+  }
+
   isContinuous() {
     return this.getActiveShipCount() > 100;
   }

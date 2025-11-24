@@ -223,6 +223,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return activeMassDrivers * this.massDriverShipEquivalency;
   }
 
+  getAutomationShipCount() {
+    return super.getActiveShipCount();
+  }
+
   getActiveShipCount() {
     return super.getActiveShipCount() + this.getMassDriverContribution();
   }
