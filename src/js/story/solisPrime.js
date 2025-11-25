@@ -234,7 +234,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.2',
     type: 'journal',
     chapter: 25,
-    title: 'Interlude 2 : Solis Prime: Expansion',
+    title: 'Interlude 2 : Solis Prime Expansion',
     narrative: "Mary : 'I have bad news for you Adrien.  The density of your world does not match the density of gold.  It's much lighter.  Meaning... your planet is not actually made of gold.' \nSolis : '... And?' \n Mary : 'Don't you want to know just how much gold you own?'  \nSolis : 'You are welcome to drill if it makes you feel better.'",
     prerequisites: ['solisPrime.1f'],
     objectives: [],

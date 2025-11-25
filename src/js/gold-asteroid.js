@@ -92,16 +92,33 @@ class GoldenAsteroid {
         this.nextSpawnTime = 0;
         this.generateNextSpawnTime();
         this.countdownElement = null;
+        this.countdownContainer = null;
+        this.gameContainer = null;
         this.countdownDuration = 30000; // 30 seconds in milliseconds
         this.countdownStartTime = 0;
         this.countdownActive = false; // New flag to track countdown state
+        this.cacheContainers();
         }
+
+    cacheContainers() {
+      if (!this.gameContainer || !this.gameContainer.isConnected) {
+        this.gameContainer = document.getElementById('game-container');
+      }
+      if (!this.countdownContainer || !this.countdownContainer.isConnected) {
+        this.countdownContainer = document.getElementById('gold-asteroid-container');
+      }
+    }
   
     spawn(duration) {
         if (!this.active) {
           this.active = true;
           this.duration = duration;
           this.spawnTime = Date.now();
+          this.cacheContainers();
+          if (!this.gameContainer) {
+            this.active = false;
+            return;
+          }
 
           this.element = document.createElement('img');
           this.element.className = 'golden-asteroid';
@@ -113,21 +130,19 @@ class GoldenAsteroid {
           this.element.addEventListener('touchstart', clickHandler);
           this.element.addEventListener('dragstart', clickHandler);
 
-          const gameContainer = document.getElementById('game-container');
-
         this.element.onload = () => {
             if (!this.element) return; // Element may have been removed before load
             const width = this.element.width;
             const height = this.element.height;
-            const containerWidth = gameContainer.clientWidth;
-            const containerHeight = Math.min(gameContainer.clientHeight, 800);
+            const containerWidth = this.gameContainer.clientWidth;
+            const containerHeight = Math.min(this.gameContainer.clientHeight, 800);
             const x = Math.random() * (containerWidth - width);
             const y = Math.random() * (containerHeight - height);
             this.element.style.left = `${x}px`;
             this.element.style.top = `${y}px`;
           };
 
-          gameContainer.appendChild(this.element);
+          this.gameContainer.appendChild(this.element);
     }
   }
 
@@ -149,10 +164,16 @@ class GoldenAsteroid {
       } else {
         this.countdownRemainingTime = duration;
       }
+      this.cacheContainers();
+      if (!this.countdownContainer) {
+        return;
+      }
       if (!this.countdownElement) {
         this.countdownElement = document.createElement('div');
         this.countdownElement.className = 'gold-asteroid-countdown';
-        document.getElementById('gold-asteroid-container').appendChild(this.countdownElement);
+        this.countdownContainer.appendChild(this.countdownElement);
+      } else if (this.countdownElement.parentElement !== this.countdownContainer) {
+        this.countdownContainer.appendChild(this.countdownElement);
       }
       this.countdownActive = true;
     }
@@ -163,6 +184,25 @@ class GoldenAsteroid {
         this.element.remove();
         this.element = null;
       }
+    }
+
+    removeCountdownDisplay() {
+      if (this.countdownElement && this.countdownElement.parentElement) {
+        this.countdownElement.remove();
+      }
+      if (this.countdownElement) {
+        this.countdownElement.textContent = '';
+      }
+    }
+
+    resetForTravel() {
+      this.removeEffects();
+      this.despawn();
+      this.countdownActive = false;
+      this.countdownRemainingTime = 0;
+      this.removeCountdownDisplay();
+      this.lastSpawnTime = 0;
+      this.generateNextSpawnTime();
     }
   
     update(delta) {
@@ -191,10 +231,7 @@ class GoldenAsteroid {
           } else {
             this.removeEffects();
             this.countdownActive = false;
-            if (this.countdownElement) {
-              this.countdownElement.remove();
-              this.countdownElement = null;
-            }
+            this.removeCountdownDisplay();
           }
         }
       }
@@ -231,18 +268,16 @@ class GoldenAsteroid {
       this.removeEffects();
 
       // Remove any leftover DOM elements from previous instances
-      const container = document.getElementById('gold-asteroid-container');
-      if (container) {
-        const staleCountdown = container.querySelector('.gold-asteroid-countdown');
-        if (staleCountdown) {
+      this.cacheContainers();
+      if (this.countdownContainer) {
+        const staleCountdown = this.countdownContainer.querySelector('.gold-asteroid-countdown');
+        if (staleCountdown && staleCountdown !== this.countdownElement) {
           staleCountdown.remove();
         }
       }
-      this.countdownElement = null;
 
-      const gameContainer = document.getElementById('game-container');
-      if (gameContainer) {
-        const staleAsteroid = gameContainer.querySelector('.golden-asteroid');
+      if (this.gameContainer) {
+        const staleAsteroid = this.gameContainer.querySelector('.golden-asteroid');
         if (staleAsteroid) {
           staleAsteroid.remove();
         }

@@ -141,7 +141,7 @@ function initializeDefaultGlobals(){
   }
 
   rwgManager = new RwgManager();
-}
+  }
 
 function initializeGameState(options = {}) {
   const preserveManagers = options.preserveManagers || false;
@@ -152,6 +152,7 @@ function initializeGameState(options = {}) {
   let savedProjectTravelState = null;
   let savedConstructionOffice = null;
   let savedAntimatter = null;
+  goldenAsteroid?.resetForTravel?.();
   if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
     savedProjectTravelState = projectManager.saveTravelState();
   }
