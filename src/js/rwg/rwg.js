@@ -215,6 +215,7 @@ globalThis.RWG_WORLD_TYPES = {
   "desiccated-desert": { displayName: "Desiccated Desert" },
   "super-earth": { displayName: "Super-Earth" },
   "venus-like": { displayName: "Venus-like" },
+  "rogue": { displayName: "Rogue" },
 };
 const RWG_WORLD_TYPES = globalThis.RWG_WORLD_TYPES;
 
@@ -227,6 +228,7 @@ const RWG_TYPE_BASE_COLORS = {
   "desiccated-desert": "#caa16a",
   "super-earth": "#4c6f4e",
   "venus-like": "#cdb675",
+  "rogue": "#193347",
 };
 
 const ORBIT_PRESET_TO_FLUX_KEY = {
@@ -236,6 +238,16 @@ const ORBIT_PRESET_TO_FLUX_KEY = {
   "hot": "hotFluxWm2",
   "cold": "coldFluxWm2",
   "very-cold": "veryColdFluxWm2",
+};
+
+const ROGUE_STAR_TEMPLATE = {
+  name: 'Rogue Space',
+  spectralType: '—',
+  luminositySolar: 0,
+  massSolar: 0,
+  radiusSolar: 0,
+  temperatureK: 0,
+  habitableZone: { inner: 0, outer: 0 }
 };
 
 function pickBaseColorForType(type) {
@@ -273,6 +285,10 @@ const DEFAULT_PARAMS = {
       }
     }
   },
+  rogue: {
+    backgroundFluxWm2: 8,
+    baseTeqK: 55
+  },
   classification: {
     typeAlbedo: {
       "venus-like": 0.75, "mars-like": 0.25, "cold-desert": 0.5,
@@ -280,6 +296,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": 0.08,
       "desiccated-desert": 0.38,
       "super-earth": 0.30,
+      "rogue": 0.40,
     },
     albedoGuess: { default: 0.3, beyondHZouter: 0.55 },
     thresholdsK: { venusMin: 330, marsLow: 200, marsHigh: 255 },
@@ -291,14 +308,16 @@ const DEFAULT_PARAMS = {
       "icy-moon": [0.25,0.7], "titan-like": [0.25,0.6], "cold-desert": [0.4,0.9],
       "carbon-planet": [0.7, 1.4],
       "desiccated-desert": [0.6, 1.2],
-      "super-earth": [1.2, 6]
+      "super-earth": [1.2, 6],
+      "rogue": [0.7, 1.3]
     },
     densityRel: {
       "venus-like": [0.95,1.1], "mars-like": [0.7,0.95],
       "icy-moon": [0.3,0.55], "titan-like": [0.35,0.6], "cold-desert": [0.8,1.0],
       "carbon-planet": [0.90, 1.20],
       "desiccated-desert": [0.80, 1.05],
-      "super-earth": [0.90, 1.30]
+      "super-earth": [0.90, 1.30],
+      "rogue": [0.85, 1.15]
     }
   },
   atmosphere: {
@@ -327,6 +346,15 @@ const DEFAULT_PARAMS = {
           oxygen: 0.001,
           atmosphericWater: 0.004
         }
+      },
+      "rogue": {
+        pressureBar: 0.8,
+        mix: {
+          inertGas: 0.78,
+          carbonDioxide: 0.12,
+          atmosphericMethane: 0.07,
+          atmosphericWater: 0.03
+        }
       }
     },
     pressureBands: {
@@ -335,6 +363,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": [0.5, 1.5],
       "desiccated-desert": [0.5, 2.0], 
       "super-earth": [0.7, 2.2],
+      "rogue": [0.6, 1.4],
     }
   },
   volatiles: {
@@ -342,11 +371,13 @@ const DEFAULT_PARAMS = {
       "venus-like": 1e12, "mars-like": 8e15, "cold-desert": 2e14, "icy-moon": 4e19, "titan-like": 1e16,
       "carbon-planet": 5e13,
       "desiccated-desert": 1e13, "super-earth": 2e15,
+      "rogue": 4e16,
     },
     CH4_total: {
       "titan-like": 3e14, "icy-moon": 0, "cold-desert": 0, "mars-like": 0, "venus-like": 0,
       "carbon-planet": 5e14,
       "desiccated-desert": 0, "super-earth": 0,
+      "rogue": 8e15,
     },
     referenceLandHa: 14_400_000_000
   },
@@ -358,6 +389,7 @@ const DEFAULT_PARAMS = {
       "icy-moon": 5.0, "titan-like": 3.0, "cold-desert": 2.0, "mars-like": 1.5, "venus-like": 0.1,
       "carbon-planet": 0.5,
       "desiccated-desert": 0.8, "super-earth": 0.2,
+      "rogue": 2.5,
     },
     titanLiquidBiasK: { tropical: 0.05, temperate: 0.25, polar: 0.7 },
     coldLiquidBiasK: { tropical: 0.1, temperate: 0.4, polar: 0.5 },
@@ -380,6 +412,7 @@ const DEFAULT_PARAMS = {
         "cold-desert": 0.80,
         "icy-moon": 0.60,
         "titan-like": 0.50,
+        "rogue": 1.10,
         default: 1.00
       },
       // Initial fraction of max (randomized around this)
@@ -416,6 +449,7 @@ const DEFAULT_PARAMS = {
         "venus-like": 0.80,
         "super-earth": 0.60,
         "carbon-planet": 0.35,
+        "rogue": 0.45,
 
         // These only get geothermal if tides push them over threshold
         "mars-like": 0.00,
@@ -440,6 +474,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": 0.15,
       "desiccated-desert": 0.10,
       "super-earth": 0.35,
+      "rogue": 0.20,
     },
     defaultChance: 0.12
   }
@@ -544,6 +579,12 @@ function starName(seed, params) {
   const s = params.naming.starSyllables; const pick = () => s[Math.floor(rng() * s.length)];
   const core = pick() + pick() + pick(); const num = Math.floor(rng() * 999) + 1;
   return core.charAt(0).toUpperCase() + core.slice(1) + "-" + num;
+}
+function makeRogueStar(seed) {
+  const base = { ...ROGUE_STAR_TEMPLATE };
+  const suffix = String(seed >>> 0);
+  base.name = `Rogue-${suffix.slice(-3).padStart(3, '0')}`;
+  return base;
 }
 function planetName(seed, params) {
   const rng = mulberry32(seed ^ 0xa5a5a5);
@@ -792,6 +833,11 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     const Teq = eqTempK(star.luminositySolar, aAU, typeAlb);
     classification = { type: forcedType, Teq, albedo: typeAlb };
   }
+  const isRogueWorld = classification.type === "rogue";
+  const rogueConfig = params.rogue || {};
+  if (isRogueWorld) {
+    classification.Teq = rogueConfig.baseTeqK ?? classification.Teq;
+  }
   let type = classification.type;
   const bulk = sampleBulk(rng, type, params);
   const landHa = surfaceAreaHa(bulk.radius_km);
@@ -840,7 +886,11 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const composition = {}; if (totalAtmoMass > 0) { if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass; if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass; if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass; if (compMass.hydrogen) composition.h2 = compMass.hydrogen / totalAtmoMass; if (compMass.sulfuricAcid) composition.h2so4 = compMass.sulfuricAcid / totalAtmoMass; }
   const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
   const surfacePressureKPa = Number.isFinite(surfacePressureBar) ? Math.max(0, surfacePressureBar * 100) : 0;
-  const SOLAR_FLUX_1AU = 1361; const flux = (SOLAR_FLUX_1AU * (star.luminositySolar || 1)) / (aAU * aAU);
+  const starLuminosity = Number.isFinite(star.luminositySolar) ? star.luminositySolar : 1;
+  const SOLAR_FLUX_1AU = 1361;
+  const safeAU = Number.isFinite(aAU) && aAU > 0 ? aAU : 1;
+  const solarFlux = (SOLAR_FLUX_1AU * starLuminosity) / (safeAU * safeAU);
+  const flux = isRogueWorld ? (rogueConfig.backgroundFluxWm2 ?? solarFlux) : solarFlux;
   const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, rotationPeriodH: rotation, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
   classification.Teq = temps.mean;
 
@@ -904,8 +954,8 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const baseCapScale = clamp(landHa / DEFAULT_PARAMS.volatiles.referenceLandHa, 0.3, 3);
   // Attach star to the overrides so deepMerge(defaultPlanetParameters, overrides)
   // replaces the default Sun with the RWG-generated star for this system.
-  const sLum = star.luminositySolar || 1;
-  const sScale = Math.sqrt(sLum);
+  const sLum = Number.isFinite(star.luminositySolar) ? star.luminositySolar : 1;
+  const sScale = Math.sqrt(Math.max(0, sLum));
   const starOverride = {
     name: star.name,
     spectralType: star.spectralType,
@@ -918,6 +968,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
 
   const baseColor = pickBaseColorForType(classification?.type || type);
   const sectorLabel = selectSectorLabel(seed) || DEFAULT_SECTOR_LABEL;
+  const distanceFromSun = isRogueWorld ? 0 : safeAU;
   const overrides = {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
@@ -929,7 +980,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,
-    celestialParameters: { distanceFromSun: aAU, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel },
+    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isRogueWorld },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },
@@ -995,7 +1046,7 @@ class RwgManager extends EffectableEntity {
     super({ description: "Random World Generator Manager" });
     this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
     this.lockedOrbits = new Set(["hot"]);
-    this.lockedTypes = new Set(["venus-like"]);
+    this.lockedTypes = new Set(["venus-like", "rogue"]);
     this.lockedFeatures = new Set(['hazards']);
     this.lockedHazards = new Set(['hazardousBiomass']);
   }
@@ -1016,7 +1067,7 @@ class RwgManager extends EffectableEntity {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
       : ["mars-like", "cold-desert", "titan-like", "venus-like",
-        "carbon-planet", "desiccated-desert", "super-earth"];
+        "carbon-planet", "desiccated-desert", "super-earth", "rogue"];
     return base.filter((t) => !this.lockedTypes.has(t));
   }
 
@@ -1056,7 +1107,7 @@ class RwgManager extends EffectableEntity {
     const { seedInt: S, baseSeed, ann: seedAnn } = parseSeedSpec(seed);
 
     // Star
-    const star = opts.star ?? generateStar(S ^ 0x1234, P);
+    let star = opts.star ?? generateStar(S ^ 0x1234, P);
 
     let forcedHazard = opts.hazard ?? seedAnn?.hazard;
     if (!forcedHazard || forcedHazard === 'auto') forcedHazard = 'none';
@@ -1123,21 +1174,29 @@ class RwgManager extends EffectableEntity {
       forcedType = candidates[Math.floor(rngType() * candidates.length)];
     }
 
-    const lockResult = resolveTypeOrbitLock({
-      forcedType,
-      seedBase: S,
-      star,
-      params: P,
-      currentPreset: usedPreset,
-      currentAU: aAU,
-      allowMoonRecalc: !moonSpecified,
-      moonRoll,
-      moonConfig
-    });
-    usedPreset = lockResult.preset;
-    aAU = lockResult.aAU;
-    if (lockResult.moonOverride.applied) {
-      isMoon = lockResult.moonOverride.value;
+    const isRogueType = forcedType === 'rogue';
+    if (isRogueType) {
+      isMoon = false;
+      usedPreset = 'rogue';
+      aAU = 1;
+      star = makeRogueStar(S);
+    } else {
+      const lockResult = resolveTypeOrbitLock({
+        forcedType,
+        seedBase: S,
+        star,
+        params: P,
+        currentPreset: usedPreset,
+        currentAU: aAU,
+        allowMoonRecalc: !moonSpecified,
+        moonRoll,
+        moonConfig
+      });
+      usedPreset = lockResult.preset;
+      aAU = lockResult.aAU;
+      if (lockResult.moonOverride.applied) {
+        isMoon = lockResult.moonOverride.value;
+      }
     }
 
     // Generate the rest using S directly

@@ -565,10 +565,12 @@ class EffectableEntity {
 
       // Check all active effects to see if any modify the cost for the given resource
       this.activeEffects.forEach((effect) => {
+        const matchesResource = effect.resourceId === resourceId ||
+          (Array.isArray(effect.resourceId) && effect.resourceId.includes(resourceId));
         if (
           effect.type === 'resourceCostMultiplier' &&
           effect.resourceCategory === resourceCategory &&
-          effect.resourceId === resourceId
+          matchesResource
         ) {
           // Apply the effect multiplier
           multiplier *= effect.value;

@@ -121,6 +121,61 @@ function refreshHazardSelect() {
   }
 }
 
+function refreshTypeSelect() {
+  if (!rwgTypeEl) return;
+  const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
+  const meta = globalThis.RWG_WORLD_TYPES || {};
+  const baseOrder = [
+    'mars-like',
+    'cold-desert',
+    'icy-moon',
+    'titan-like',
+    'carbon-planet',
+    'desiccated-desert',
+    'super-earth',
+    'venus-like',
+    'rogue'
+  ];
+  const types = [];
+  baseOrder.forEach((t) => { if (!types.includes(t) && meta[t]) types.push(t); });
+  Object.keys(meta).forEach((t) => { if (!types.includes(t)) types.push(t); });
+
+  const signature = JSON.stringify(types.map((t) => ({
+    t,
+    locked: mgr && typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(t) : false
+  })));
+  if (rwgTypeEl.dataset.lastTypeList === signature) return;
+
+  rwgTypeEl.dataset.lastTypeList = signature;
+  const previous = rwgTypeEl.value;
+  const frag = document.createDocumentFragment();
+  const autoOpt = document.createElement('option');
+  autoOpt.value = 'auto';
+  autoOpt.textContent = 'Type: Auto';
+  autoOpt.selected = true;
+  frag.appendChild(autoOpt);
+
+  types.forEach((t) => {
+    const info = meta[t] || {};
+    const opt = document.createElement('option');
+    opt.value = t;
+    const base = `Type: ${info.displayName || t}`;
+    opt.textContent = base;
+    opt.dataset.baseText = base;
+    const locked = mgr && typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(t) : false;
+    if (locked) {
+      opt.disabled = true;
+      opt.textContent = `${base} (Locked)`;
+    }
+    frag.appendChild(opt);
+  });
+
+  rwgTypeEl.innerHTML = '';
+  rwgTypeEl.appendChild(frag);
+  const canRestore = Array.from(rwgTypeEl.options).some((opt) => opt.value === previous);
+  rwgTypeEl.value = canRestore ? previous : 'auto';
+}
+
 function encodeSeedOptions(seed, opts = {}) {
   const t = opts.target ?? 'auto';
   const ty = opts.type ?? 'auto';
@@ -196,36 +251,8 @@ function initializeRandomWorldUI() {
   }
 
   if (rwgTypeEl) {
-    const typeOrder = [
-      'mars-like',
-      'cold-desert',
-      'icy-moon',
-      'titan-like',
-      'carbon-planet',
-      'desiccated-desert',
-      'super-earth',
-      'venus-like',
-    ];
-    const frag = document.createDocumentFragment();
-    const autoOpt = document.createElement('option');
-    autoOpt.value = 'auto';
-    autoOpt.textContent = 'Type: Auto';
-    autoOpt.selected = true;
-    frag.appendChild(autoOpt);
-    typeOrder.forEach(t => {
-      const info = (globalThis.RWG_WORLD_TYPES && globalThis.RWG_WORLD_TYPES[t]) || {};
-      const opt = document.createElement('option');
-      opt.value = t;
-      const base = `Type: ${info.displayName || t}`;
-      opt.textContent = base;
-      opt.dataset.baseText = base;
-      if (typeof rwgManager !== 'undefined' && typeof rwgManager.isTypeLocked === 'function' && rwgManager.isTypeLocked(t)) {
-        opt.disabled = true;
-        opt.textContent = `${base} (Locked)`;
-      }
-      frag.appendChild(opt);
-    });
-    rwgTypeEl.appendChild(frag);
+    rwgTypeEl.dataset.lastTypeList = '[]';
+    refreshTypeSelect();
   }
 
   const result = document.createElement('div');
@@ -328,6 +355,7 @@ function updateRandomWorldUI() {
   if (!mgr) return;
 
   refreshHazardSelect();
+  refreshTypeSelect();
 
   if (rwgOrbitEl) {
     Array.from(rwgOrbitEl.options).forEach(opt => {

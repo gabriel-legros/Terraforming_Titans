@@ -51,6 +51,36 @@ const RWG_EFFECTS = {
       },
     },
   ],    
+  "rogue": [
+    {
+      effectId: "rwg-rogue-space-mirror-cost",
+      target: "building",
+      targetId: "spaceMirror",
+      type: "resourceCostMultiplier",
+      resourceCategory: "colony",
+      resourceId: ["metal", "glass", "energy"],
+      factor: 0.2,
+      description: "Space Mirror construction cost divided by (1 + 20% each)",
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.2;
+        return 1 / (1 + f * count);
+      },
+    },
+    {
+      effectId: "rwg-rogue-lantern-cost",
+      target: "building",
+      targetId: "hyperionLantern",
+      type: "resourceCostMultiplier",
+      resourceCategory: "colony",
+      resourceId: ["metal", "glass", "electronics", "components"],
+      factor: 0.2,
+      description: "Hyperion Lantern construction cost divided by (1 + 20% each)",
+      computeValue(count, def) {
+        const f = typeof def.factor === "number" ? def.factor : 0.2;
+        return 1 / (1 + f * count);
+      },
+    }
+  ],
   "cold-desert": [
     {
       effectId: "rwg-desert-ore",

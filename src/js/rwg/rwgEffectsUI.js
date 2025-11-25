@@ -16,6 +16,8 @@ const RWG_PROJECT_NAMES = {
 const RWG_BUILDING_OUTPUT = {
   oreMine: 'Ore Mine',
   sandQuarry: 'Sand Harvester',
+  spaceMirror: 'Space Mirror',
+  hyperionLantern: 'Hyperion Lantern',
 };
 
 function hasRandomWorldHazard(status) {
@@ -129,15 +131,20 @@ function _computeRWGEffectsSummary() {
         descr = descr || `Population growth rate increased (+${fEach.toFixed(0)}% each)`;
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
       } else if (eff.type === 'globalWorkerReduction') {
-        const percent = raw * 100;
-        const decimals = percent >= 10 ? 0 : 1;
-        const eachPercent = (eff.factor ?? 0.01) * 100;
-        descr = descr || `Worker requirements reduced (+${eachPercent.toFixed(0)}% each)`;
-        display = percent > 0 ? `-${percent.toFixed(decimals)}%` : '0%';
+        const each = eff.factor ?? 0.01;
+        const divisor = 1 + each * effectiveCount;
+        descr = descr || 'Worker requirements divided by (1% each)';
+        display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
       } else if (eff.type === 'extraTerraformedWorlds') {
         // Super-Earth: counts as extra worlds; display +N not xN
         descr = descr || 'Counts as an extra world';
         display = `+${(raw ?? effectiveCount)}`;
+      } else if (eff.type === 'resourceCostMultiplier') {
+        const divisor = raw > 0 ? 1 / raw : 0;
+        const what = RWG_BUILDING_OUTPUT[eff.targetId] || (eff.targetId || 'Cost');
+        const perWorld = eff.factor ?? 0;
+        descr = descr || `${what} construction cost (/(1+${perWorld.toFixed(1)}xN))`;
+        display = divisor > 0 ? `/${divisor.toFixed(1)}` : '—';
       } else if (typeof raw === 'number') {
         display = `x${raw.toFixed(3)}`;
       }
