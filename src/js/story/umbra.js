@@ -322,12 +322,25 @@ progressUmbra.chapters.push(
     ]
   },
   {
+    id: 'chapter23.4a',
+    type: 'journal',
+    chapter: 23,
+    activePlanet: 'umbra',
+    narrative: "Acquire Full Control of sector R5-07 to continue.",
+    prerequisites: ['chapter23.3'],
+    objectives: [
+      { type: 'galaxySectorControl', sectorLabel: 'R5-07' }
+    ],
+    reward: [
+    ]
+  },
+  {
     id: 'chapter23.4',
     type: 'journal',
     chapter: 23,
     activePlanet: 'umbra',
     narrative: "Mary :  'Adrien, we see the patent you just submitted.  Antimatter torpedoes?  Don't think you can simply patent that and get away with it.  There is a war going on.' \n Solis : 'Mary, my friend.  I am more than willing to sell you the patent.' \n Mary : 'Why would I fall for it?  I can probably get a law passed to get it myself, regardless of your lobbying.' \n Solis : 'I'll include the cooperation of the R&D department that came up with it, and free unlimited torpedo refill for the duration of the war.'  \n Mary : '...  How much?'  \n Solis : 'Of course.  I would like H.O.P.E. to terraform a world I have... legally acquired.  Forwarding you the coordinates.'  \n Mary : 'A rogue planet?  How did you find this?   You know what... (thinking).  Fine.  You have a deal.'  \n Mary (To HOPE) : 'Honestly, this is away from the frontlines and you need a vacation.  Let's go terraform Solis' mystery little world.'",
-    prerequisites: ['chapter23.3'],
+    prerequisites: ['chapter23.4a'],
     objectives: [
     ],
     reward: [

@@ -36,6 +36,35 @@ function getWGCTeamLeaderName(index) {
     }
 }
 
+function getGalaxyManagerInstance() {
+    if (typeof galaxyManager !== 'undefined' && galaxyManager) {
+        return galaxyManager;
+    }
+    if (typeof window !== 'undefined' && window.galaxyManager) {
+        return window.galaxyManager;
+    }
+    return null;
+}
+
+function findGalaxySector(label) {
+    const manager = getGalaxyManagerInstance();
+    const normalized = typeof label === 'string' ? label.trim() : '';
+    if (!manager || !normalized || typeof manager.getSectors !== 'function') {
+        return null;
+    }
+    const sectors = manager.getSectors();
+    return Array.isArray(sectors)
+        ? sectors.find(sector => sector && (sector.key === normalized || sector.getDisplayName?.() === normalized)) || null
+        : null;
+}
+
+function getUhfFactionId() {
+    if (typeof UHF_FACTION_ID === 'string' && UHF_FACTION_ID) {
+        return UHF_FACTION_ID;
+    }
+    return 'uhf';
+}
+
 function getWGCTeamNaturalScientistName(index) {
     try {
         const team = warpGateCommand.teams[index] || [];
@@ -358,6 +387,21 @@ class StoryManager {
                    return solisManager.solisPoints >= (objective.points || 0);
                }
                return false;
+          case 'galaxySectorControl': {
+               const sectorLabel = objective.sectorLabel || objective.sectorKey || objective.sector || objective.label;
+               const sector = findGalaxySector(sectorLabel);
+               if (!sector) {
+                   return false;
+               }
+               const factionId = objective.factionId || getUhfFactionId();
+               const totalControl = sector.getTotalControlValue?.() || 0;
+               if (!(totalControl > 0)) {
+                   return false;
+               }
+               const factionControl = sector.getControlValue?.(factionId) || 0;
+               const epsilon = typeof FULL_CONTROL_EPSILON === 'number' ? FULL_CONTROL_EPSILON : 1e-6;
+               return Math.abs(factionControl - totalControl) <= epsilon;
+          }
           case 'condition': {
                const fn = globalThis[objective.conditionId];
                if (typeof fn === 'function') {
@@ -497,6 +541,19 @@ class StoryManager {
                const dispCurrent = Math.max(0, current);
                return `Complete an Operation of Difficulty ${format(target, true)} (Highest Completed: ${format(dispCurrent, true)})`;
          }
+          case 'galaxySectorControl': {
+               const sectorLabel = objective.sectorLabel || objective.sectorKey || objective.sector || objective.label || 'R5-07';
+               const sector = findGalaxySector(sectorLabel);
+               const name = sector?.getDisplayName?.() || sectorLabel;
+               const factionId = objective.factionId || getUhfFactionId();
+               const factionLabel = objective.factionLabel || (factionId === getUhfFactionId() ? 'UHF' : factionId.toUpperCase());
+               const totalControl = sector?.getTotalControlValue?.() || 0;
+               const control = totalControl > 0 ? sector.getControlValue?.(factionId) || 0 : 0;
+               const ratio = totalControl > 0 ? Math.min(1, control / totalControl) : 0;
+               const percent = format(ratio * 100, false, 1);
+               const status = ratio >= 1 ? 'Secure' : `${factionLabel} control ${percent}%`;
+               return `Conquer sector ${name} (${status})`;
+          }
           default:
                return '';
        }
