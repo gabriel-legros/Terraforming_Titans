@@ -190,7 +190,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.1c',
     type: 'journal',
     chapter: 24,
-    narrative: "Solis : 'The Galaxy is very large and there are some... individuals out there who know certain things.' \n Mary : 'You're making business with aliens.'  \nSolis 'Only the nice ones.'",
+    narrative: "Solis : 'The Galaxy is very large and there are some... individuals out there who know certain things.' \n Mary : 'You're making business with aliens.'  \nSolis : 'Only the nice ones.'",
     prerequisites: ['solisPrime.1b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }

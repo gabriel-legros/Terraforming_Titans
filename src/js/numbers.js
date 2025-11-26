@@ -59,6 +59,15 @@ function formatBigInteger(number) {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
+function formatShipCount(value) {
+  if (!Number.isFinite(value)) return '0';
+  const rounded = Math.round(value * 100) / 100;
+  return rounded.toLocaleString('en-US', {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0
+  });
+}
+
   function toDisplayTemperature(kelvin) {
     const useC = (typeof gameSettings !== 'undefined' && gameSettings.useCelsius);
     return useC ? kelvin - 273.15 : kelvin;
@@ -107,7 +116,7 @@ function formatDuration(seconds) {
   return `${Math.floor(seconds)}s`;
 }
 
-function formatBuildingCount(value) {
+  function formatBuildingCount(value) {
   if (Math.abs(value) > 1e6) {
     return formatNumber(value, false, 3);
   }
@@ -118,6 +127,7 @@ function formatBuildingCount(value) {
     module.exports = {
       formatNumber,
       formatBigInteger,
+      formatShipCount,
       formatBuildingCount,
       toDisplayTemperature,
       toDisplayTemperatureDelta,

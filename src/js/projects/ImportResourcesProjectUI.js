@@ -528,7 +528,7 @@ class ImportResourcesProjectUI {
     }
 
     if (maxShips != null) {
-      elements.assignedSpaceshipsDisplay.textContent = `${assignedText}/${formatBigInteger(maxShips)}`;
+      elements.assignedSpaceshipsDisplay.textContent = `${assignedText}/${formatShipCount(maxShips)}`;
     } else {
       elements.assignedSpaceshipsDisplay.textContent = assignedText;
     }
