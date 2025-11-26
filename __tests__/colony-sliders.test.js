@@ -51,6 +51,15 @@ describe('Warpnet slider energy scaling', () => {
       effectId: 'warpnetResearchBoost'
     }));
 
+    expect(addEffectMock).toHaveBeenCalledWith(expect.objectContaining({
+      target: 'building',
+      targetId: 'androidHousing',
+      resourceCategory: 'colony',
+      resourceTarget: 'energy',
+      value: energyMultiplier,
+      effectId: 'warpnetAndroidEnergy'
+    }));
+
     colonyIds.forEach(colonyId => {
       expect(addEffectMock).toHaveBeenCalledWith(expect.objectContaining({
         target: 'colony',

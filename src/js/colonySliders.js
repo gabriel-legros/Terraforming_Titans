@@ -255,6 +255,17 @@ class ColonySlidersManager extends EffectableEntity {
       sourceId: 'warpnet'
     });
 
+    addEffect({
+      target: 'building',
+      targetId: 'androidHousing',
+      type: 'resourceConsumptionMultiplier',
+      resourceCategory: 'colony',
+      resourceTarget: 'energy',
+      value: energyMultiplier,
+      effectId: 'warpnetAndroidEnergy',
+      sourceId: 'warpnet'
+    });
+
     colonyIds.forEach(colonyId => {
       addEffect({
         target: 'colony',

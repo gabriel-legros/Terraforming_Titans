@@ -527,7 +527,7 @@ function initializeColonySlidersUI() {
     if (warpnetInfo) {
       warpnetInfo.title = [
         'Warpnet funnels instant communication to coordinate research output.',
-        `Left value multiplies colony energy upkeep: ${label}.`,
+        `Left value multiplies colony and android housing energy upkeep: ${label}.`,
         `Right value adds a global research boost: +${percent}%`,
         'Energy cost scales steeply with Warpnet intensity.'
       ].join('\n');
