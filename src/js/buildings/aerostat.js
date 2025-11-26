@@ -129,30 +129,23 @@ class Aerostat extends BaseColony {
       pressure
     );
 
+    let warning = '';
     if (pressureBelow) {
       const minPressure = this.getMinimumOperationalPressure();
-      if (Number.isFinite(pressure)) {
-        summary += ` Current atmospheric pressure is ${formatNumber(
-          pressure,
-          false,
-          1
-        )} kPa, below the ${formatNumber(
-          minPressure,
-          false,
-          0
-        )} kPa minimum needed for aerostat buoyancy.`;
-      } else {
-        summary += ` Atmospheric pressure is below the ${formatNumber(
-          minPressure,
-          false,
-          0
-        )} kPa minimum needed for aerostat buoyancy.`;
-      }
+      warning = Number.isFinite(pressure)
+        ? `▲ Current atmospheric pressure is ${formatNumber(pressure, false, 1)} kPa, below the ${formatNumber(
+            minPressure,
+            false,
+            0
+          )} kPa minimum needed for aerostat buoyancy. ▲`
+        : `▲ Atmospheric pressure is below the ${formatNumber(minPressure, false, 0)} kPa minimum needed for aerostat buoyancy. ▲`;
+    } else if (liftBelow) {
+      warning =
+        '▲ Current lift is below the minimum operational requirement, preventing aerostat activation and construction. ▲';
     }
 
-    if (liftBelow) {
-      summary +=
-        ' Current lift is below the minimum operational requirement, preventing aerostat activation and construction.';
+    if (warning) {
+      summary += `\n${warning}`;
     }
 
     return summary;
@@ -221,13 +214,7 @@ class Aerostat extends BaseColony {
   }
 
   getCurrentSurfacePressure() {
-    const computePressure =
-      getTotalSurfacePressureKPaHelper || globalThis.getTotalSurfacePressureKPa;
-    if (!computePressure) {
-      return null;
-    }
-
-    const pressure = computePressure(globalThis.terraforming);
+    const pressure = getTotalSurfacePressureKPa (terraforming);
     if (!Number.isFinite(pressure) || pressure < 0) {
       return null;
     }
@@ -670,7 +657,7 @@ function attachAerostatBuoyancySection(container, structure) {
 
     const text = document.createElement('div');
     text.classList.add('colony-buoyancy-text');
-    text.textContent = summaryText;
+    text.innerHTML = (summaryText ?? '').replace(/\n/g, '<br>');
     body.appendChild(text);
 
     const liftRow = document.createElement('div');
@@ -795,7 +782,7 @@ function updateAerostatBuoyancySection(structure) {
 
   const summaryText =
     structure.getBuoyancySummary?.() ?? 'Buoyancy telemetry pending.';
-  ui.text.textContent = summaryText;
+  ui.text.innerHTML = (summaryText ?? '').replace(/\n/g, '<br>');
 
   const expanded = ui.expanded !== false;
   ui.container.classList.toggle('collapsed', !expanded);
@@ -805,6 +792,12 @@ function updateAerostatBuoyancySection(structure) {
   }
 
   const { lift, molecularWeight } = getAerostatLiftContext();
+  const pressure = structure.getCurrentSurfacePressure?.() ?? null;
+  const minPressure =
+    structure.getMinimumOperationalPressure?.() ??
+    AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
+  const liftAvailable =
+    Number.isFinite(pressure) && pressure < minPressure ? null : lift;
 
   const buildLimitRaw =
     structure.getBuildLimit?.() ?? structure._getBuildLimit?.() ?? null;
@@ -836,9 +829,13 @@ function updateAerostatBuoyancySection(structure) {
 
   if (ui.liftValue) {
     ui.liftValue.textContent =
-      lift === null
+      liftAvailable === null
         ? 'N/A'
-        : `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)} kg/m³`;
+        : `${liftAvailable >= 0 ? '+' : ''}${formatNumber(
+            liftAvailable,
+            false,
+            3
+          )} kg/m³`;
   }
 
   if (ui.liftInfo) {
@@ -851,9 +848,9 @@ function updateAerostatBuoyancySection(structure) {
         2
       )} g/mol.`;
     }
-    if (lift !== null) {
-      title += `\nCurrent lift: ${lift >= 0 ? '+' : ''}${formatNumber(
-        lift,
+    if (liftAvailable !== null) {
+      title += `\nCurrent lift: ${liftAvailable >= 0 ? '+' : ''}${formatNumber(
+        liftAvailable,
         false,
         3
       )} kg/m³.`;
@@ -863,9 +860,6 @@ function updateAerostatBuoyancySection(structure) {
       false,
       3
     )} kg/m³.`;
-    const minPressure =
-      structure.getMinimumOperationalPressure?.() ??
-      AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA;
     title += `\nAerostats require at least ${formatNumber(
       minPressure,
       false,

@@ -607,19 +607,21 @@ function getAerostatLiftAlert() {
   if (Number.isFinite(pressure) && pressure < minPressure) {
     severity = 'critical';
     const pressureText = formatNumber(pressure, false, 1);
-    message = `Active aerostats only have ${pressureText} kPa of surface pressure, below the ${formatNumber(
+    const pressureLine = `Active aerostats only have ${pressureText} kPa of surface pressure, below the ${formatNumber(
       minPressure,
       false,
       0
     )} kPa minimum needed to stay buoyant.`;
+    message = `▲ ${pressureLine} ▲`;
   } else if (Number.isFinite(lift) && lift < minLift) {
     severity = 'critical';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
-    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
+    const liftLine = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
       minLift,
       false,
       2
     )} kg/m³ minimum needed to stay aloft.`;
+    message = `▲ ${liftLine} ▲`;
   } else if (Number.isFinite(lift) && lift < warningLift) {
     severity = 'warning';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
