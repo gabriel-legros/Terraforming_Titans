@@ -523,9 +523,9 @@ const buildingsParameters = {
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
-    requiresMaintenance: false,
+    requiresMaintenance: true,
     requiresWorker: 0,
-    maintenanceFactor: 1,
+    maintenanceFactor: 0.1,
     unlocked: false,
     surfaceArea: 500,
     temperatureMaintenanceImmune: true
