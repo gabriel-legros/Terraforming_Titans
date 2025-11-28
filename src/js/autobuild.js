@@ -542,11 +542,11 @@ function autoUpgradeColonies(buildings) {
 function autoBuild(buildings, delta = 0) {
     resetAutoBuildPartialFlags(buildings);
     resetAutoBuildResourceShortages(typeof resources !== 'undefined' ? resources : null);
-    if (typeof constructionOfficeState !== 'undefined' && !constructionOfficeState.autobuilderActive) {
-        return;
+    const autobuilderPaused = typeof constructionOfficeState !== 'undefined' && !constructionOfficeState.autobuilderActive;
+    if (!autobuilderPaused) {
+        autobuildCostTracker.update(delta);
+        autoUpgradeColonies(buildings);
     }
-    autobuildCostTracker.update(delta);
-    autoUpgradeColonies(buildings);
     const population = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
     const buildableBuildings = [];
@@ -585,68 +585,76 @@ function autoBuild(buildings, delta = 0) {
         addCostToPrioritizedReserve(prioritizedReserve, totalCost);
     });
 
-    // Step 2: Sort buildable buildings by priority then current ratio (ascending)
-    buildableBuildings.sort((a, b) => {
-        if (a.building.autoBuildPriority && !b.building.autoBuildPriority) return -1;
-        if (!a.building.autoBuildPriority && b.building.autoBuildPriority) return 1;
-        return a.currentRatio - b.currentRatio;
-    });
+    if (!autobuilderPaused) {
+        // Step 2: Sort buildable buildings by priority then current ratio (ascending)
+        buildableBuildings.sort((a, b) => {
+            if (a.building.autoBuildPriority && !b.building.autoBuildPriority) return -1;
+            if (!a.building.autoBuildPriority && b.building.autoBuildPriority) return 1;
+            return a.currentRatio - b.currentRatio;
+        });
 
-    // Step 3: Efficiently allocate builds
-    buildableBuildings.forEach(({ building, requiredAmount, maxMode }) => {
-        let buildCount = 0;
-        const reserve = constructionOfficeState.strategicReserve;
-        const extraReserves = building.autoBuildPriority ? null : prioritizedReserve;
-        const desiredAmount = maxMode
-            ? resolveAutoBuildMaxCount(building, reserve, extraReserves)
-            : requiredAmount;
-        if (desiredAmount <= 0) {
-            return;
-        }
-        const canBuildFull = building.canAfford(desiredAmount, reserve, extraReserves);
-        if (!canBuildFull) {
-            building.autoBuildPartial = true;
-            markAutoBuildShortages(building, desiredAmount, reserve, extraReserves);
-        }
-        if (canBuildFull) {
-            buildCount = desiredAmount;
-        } else {
-            const fallback = maxMode
-                ? desiredAmount
-                : resolveAutoBuildMaxCount(building, reserve, extraReserves);
-
-            if (fallback > 0) {
-                buildCount = fallback;
+        // Step 3: Efficiently allocate builds
+        buildableBuildings.forEach(({ building, requiredAmount, maxMode }) => {
+            let buildCount = 0;
+            const reserve = constructionOfficeState.strategicReserve;
+            const extraReserves = building.autoBuildPriority ? null : prioritizedReserve;
+            const desiredAmount = maxMode
+                ? resolveAutoBuildMaxCount(building, reserve, extraReserves)
+                : requiredAmount;
+            if (desiredAmount <= 0) {
+                return;
             }
-        }
+            const canBuildFull = building.canAfford(desiredAmount, reserve, extraReserves);
+            if (!canBuildFull) {
+                building.autoBuildPartial = true;
+                markAutoBuildShortages(building, desiredAmount, reserve, extraReserves);
+            }
+            if (canBuildFull) {
+                buildCount = desiredAmount;
+            } else {
+                const fallback = maxMode
+                    ? desiredAmount
+                    : resolveAutoBuildMaxCount(building, reserve, extraReserves);
 
-        if (buildCount > 0) {
-            const baseCost = building.getEffectiveCost ? building.getEffectiveCost(buildCount) : {};
-            const cost = cloneCostObject(baseCost);
-            if (building.requiresDeposit) {
-                for (const dep in building.requiresDeposit.underground) {
-                    cost.underground = cost.underground || {};
-                    cost.underground[dep] = (cost.underground[dep] || 0) + building.requiresDeposit.underground[dep] * buildCount;
+                if (fallback > 0) {
+                    buildCount = fallback;
                 }
             }
-            if (building.requiresLand) {
-                cost.surface = cost.surface || {};
-                cost.surface.land = (cost.surface.land || 0) + building.requiresLand * buildCount;
+
+            if (maxMode && buildCount > 0 && buildCount < desiredAmount) {
+                building.autoBuildPartial = true;
+                const reservePercent = constructionOfficeState.strategicReserve;
+                markAutoBuildShortages(building, desiredAmount, reservePercent, extraReserves);
             }
 
-            let built = false;
-            if (typeof building.build === 'function') {
-                built = building.build(buildCount, false);
-            }
-            if (built) {
-                autobuildCostTracker.recordCost(building.displayName, cost);
-                if (building.autoBuildPriority) {
-                    subtractCostFromPrioritizedReserve(prioritizedReserve, baseCost);
+            if (buildCount > 0) {
+                const baseCost = building.getEffectiveCost ? building.getEffectiveCost(buildCount) : {};
+                const cost = cloneCostObject(baseCost);
+                if (building.requiresDeposit) {
+                    for (const dep in building.requiresDeposit.underground) {
+                        cost.underground = cost.underground || {};
+                        cost.underground[dep] = (cost.underground[dep] || 0) + building.requiresDeposit.underground[dep] * buildCount;
+                    }
+                }
+                if (building.requiresLand) {
+                    cost.surface = cost.surface || {};
+                    cost.surface.land = (cost.surface.land || 0) + building.requiresLand * buildCount;
+                }
+
+                let built = false;
+                if (typeof building.build === 'function') {
+                    built = building.build(buildCount, false);
+                }
+                if (built) {
+                    autobuildCostTracker.recordCost(building.displayName, cost);
+                    if (building.autoBuildPriority) {
+                        subtractCostFromPrioritizedReserve(prioritizedReserve, baseCost);
+                    }
                 }
             }
-        }
-        // Skip incremental building as it significantly impacts performance
-    });
+            // Skip incremental building as it significantly impacts performance
+        });
+    }
 
     // Step 4: Auto-set active counts after building
     buildingInfos.forEach(({ building, targetCount }) => {
