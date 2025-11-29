@@ -16,6 +16,7 @@ class ArtificialManager extends EffectableEntity {
         this.nextId = 1;
         this.activeProject = null;
         this.history = [];
+        this.travelHistory = [];
         this._tickTimer = 0;
     }
 
@@ -349,21 +350,26 @@ class ArtificialManager extends EffectableEntity {
 
     recordHistoryEntry(status) {
         if (!this.activeProject) return;
-        this.history.unshift({
+        const landHa = this.activeProject.areaHa || this.activeProject.landHa || this.calculateAreaHectares(this.activeProject.radiusEarth);
+        const entry = {
             id: this.activeProject.id,
             seed: this.activeProject.seed,
             name: this.activeProject.name,
             type: this.activeProject.type,
             core: this.activeProject.core,
             radiusEarth: this.activeProject.radiusEarth,
+            landHa,
             builtFrom: this.activeProject.builtFrom,
             constructedAt: this.activeProject.startedAt,
             completedAt: this.activeProject.completedAt || null,
             status,
             traveledAt: status === 'traveled' ? Date.now() : null,
             discardedAt: status === 'discarded' ? Date.now() : null
-        });
+        };
+        this.history.unshift(entry);
         this.history = this.history.slice(0, 50);
+        this.travelHistory.unshift(entry);
+        this.travelHistory = this.travelHistory.slice(0, 50);
     }
 
     travelToConstructedWorld() {
@@ -425,6 +431,76 @@ class ArtificialManager extends EffectableEntity {
         return 'Artificial systems online.';
     }
 
+    getHistoryEntries() {
+        const entries = [];
+        const statuses = spaceManager && spaceManager.artificialWorldStatuses ? spaceManager.artificialWorldStatuses : {};
+        const currentKey = spaceManager && spaceManager.currentArtificialKey ? String(spaceManager.currentArtificialKey) : null;
+
+        const pushEntry = (key, status, label) => {
+            if (!status) return;
+            const merged = status.original?.merged || status.original || null;
+            const radiusKm = merged?.celestialParameters?.radius;
+            const radiusEarth = radiusKm ? (radiusKm / EARTH_RADIUS_KM) : undefined;
+            const landHa = merged?.resources?.surface?.land?.initialValue
+                || merged?.resources?.surface?.land?.baseCap
+                || (radiusEarth ? this.calculateAreaHectares(radiusEarth) : undefined);
+            entries.push({
+                id: key,
+                seed: key,
+                name: status.name || merged?.name || `Artificial ${key}`,
+                type: merged?.classification?.type || 'shell',
+                core: merged?.classification?.core || 'unknown',
+                radiusEarth,
+                landHa,
+                builtFrom: status.original?.builtFrom || 'unknown',
+                constructedAt: status.original?.constructedAt || null,
+                completedAt: status.original?.completedAt || null,
+                status: label,
+                traveledAt: status.departedAt || status.arrivedAt || null,
+                discardedAt: null
+            });
+        };
+
+        if (this.activeProject) {
+            const proj = this.activeProject;
+            entries.push({
+                id: proj.id,
+                seed: proj.seed,
+                name: proj.name,
+                type: proj.type,
+                core: proj.core,
+                radiusEarth: proj.radiusEarth,
+                landHa: proj.areaHa || proj.landHa,
+                builtFrom: proj.builtFrom,
+                constructedAt: proj.startedAt,
+                completedAt: proj.completedAt || null,
+                status: proj.status || 'building',
+                traveledAt: proj.status === 'traveled' ? Date.now() : null,
+                discardedAt: null
+            });
+        }
+
+        if (currentKey) {
+            const liveStatus = statuses[currentKey] || {
+                name: currentPlanetParameters?.name || `Artificial ${currentKey}`,
+                terraformed: false,
+                original: {
+                    merged: currentPlanetParameters || null
+                },
+                visited: true
+            };
+            pushEntry(currentKey, liveStatus, liveStatus.terraformed ? 'terraformed' : 'current');
+        }
+
+        Object.entries(statuses).forEach(([key, status]) => {
+            if (!status || key === currentKey) return;
+            if (!status.terraformed) return;
+            pushEntry(key, status, 'terraformed');
+        });
+
+        return entries;
+    }
+
     saveState() {
         const project = this.activeProject ? { ...this.activeProject } : null;
         if (project && project.override) {
@@ -436,7 +512,8 @@ class ArtificialManager extends EffectableEntity {
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
             nextId: this.nextId,
             activeProject: project,
-            history: this.history
+            history: this.history,
+            travelHistory: this.travelHistory
         };
     }
 
@@ -465,6 +542,7 @@ class ArtificialManager extends EffectableEntity {
         }
         this.nextId = Math.max(state.nextId || this.nextId, (this.activeProject?.id || 0) + 1, 1);
         this.history = Array.isArray(state.history) ? state.history : [];
+        this.travelHistory = Array.isArray(state.travelHistory) ? state.travelHistory : [...this.history];
         this.updateUI(true);
     }
 

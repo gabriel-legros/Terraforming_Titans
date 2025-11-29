@@ -104,6 +104,8 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomSeed = null;
         this.currentRandomName = '';
         this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
+        this.currentArtificialKey = null;
+        this.artificialWorldStatuses = {};
         this.extraTerraformedWorlds = 0;
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
@@ -195,7 +197,7 @@ class SpaceManager extends EffectableEntity {
      * @returns {Object}
      */
     getAllPlanetStatuses() {
-        return { ...this.planetStatuses, ...this.randomWorldStatuses };
+        return { ...this.planetStatuses, ...this.randomWorldStatuses, ...this.artificialWorldStatuses };
     }
 
     getRwgSectorLock() {
@@ -271,6 +273,9 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             return !!this.randomWorldStatuses[String(this.currentRandomSeed)]?.orbitalRing;
         }
+        if (this.currentArtificialKey !== null) {
+            return !!this.artificialWorldStatuses[this.currentArtificialKey]?.orbitalRing;
+        }
         return !!this.planetStatuses[this.currentPlanetKey]?.orbitalRing;
     }
 
@@ -278,6 +283,12 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
             this.setRandomWorldHasOrbitalRing(seed, value);
+        } else if (this.currentArtificialKey !== null) {
+            const key = String(this.currentArtificialKey);
+            if (!this.artificialWorldStatuses[key]) {
+                this.artificialWorldStatuses[key] = { orbitalRing: false, terraformed: false, visited: true, name: key };
+            }
+            this.artificialWorldStatuses[key].orbitalRing = !!value;
         } else {
             this.setStoryWorldHasOrbitalRing(this.currentPlanetKey, value);
         }
@@ -441,6 +452,11 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             return (this.isSeedTerraformed(String(this.currentRandomSeed)) || hasRing) ? count : count + 1;
         }
+        if (this.currentArtificialKey !== null) {
+            const key = String(this.currentArtificialKey);
+            const terraformed = !!this.artificialWorldStatuses[key]?.terraformed;
+            return (terraformed || hasRing) ? count : count + 1;
+        }
         return (this.isPlanetTerraformed(this.currentPlanetKey) || hasRing) ? count : count + 1;
     }
 
@@ -461,6 +477,12 @@ class SpaceManager extends EffectableEntity {
             }
             return Math.max(count, 0);
         }
+        if (this.currentArtificialKey !== null) {
+            if (this.artificialWorldStatuses[String(this.currentArtificialKey)]?.terraformed) {
+                count--;
+            }
+            return Math.max(count, 0);
+        }
         if (this.isPlanetTerraformed(this.currentPlanetKey)) {
             count--;
             if (isCurrentSuperEarth) count--;
@@ -472,12 +494,19 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             return this.currentRandomName || `Seed ${this.currentRandomSeed}`;
         }
+        if (this.currentArtificialKey !== null) {
+            const status = this.artificialWorldStatuses[this.currentArtificialKey];
+            return status?.name || `Artificial ${this.currentArtificialKey}`;
+        }
         return this.allPlanetsData[this.currentPlanetKey]?.name || '';
     }
 
     getCurrentWorldOriginal() {
         if (this.currentRandomSeed !== null) {
             return this.randomWorldStatuses[this.currentRandomSeed]?.original || null;
+        }
+        if (this.currentArtificialKey !== null) {
+            return this.artificialWorldStatuses[this.currentArtificialKey]?.original || null;
         }
         const base = this.allPlanetsData[this.currentPlanetKey];
         if (!base) return null;
@@ -575,7 +604,7 @@ class SpaceManager extends EffectableEntity {
      * @returns {object | null} - The status object or null if planet not found.
      */
     getPlanetStatus(planetKey) {
-        return this.planetStatuses[planetKey] || this.randomWorldStatuses[planetKey] || null;
+        return this.planetStatuses[planetKey] || this.randomWorldStatuses[planetKey] || this.artificialWorldStatuses[planetKey] || null;
     }
 
     // --- Setters / Updates ---
@@ -601,6 +630,26 @@ class SpaceManager extends EffectableEntity {
             if (this.randomWorldStatuses[seed].terraformed !== isComplete) {
                 this.randomWorldStatuses[seed].terraformed = isComplete;
                 console.log(`SpaceManager: Terraformed status for seed ${seed} updated to ${isComplete}`);
+            }
+            return;
+        }
+        if (this.currentArtificialKey !== null) {
+            const key = String(this.currentArtificialKey);
+            if (!this.artificialWorldStatuses[key]) {
+                this.artificialWorldStatuses[key] = {
+                    name: this.currentRandomName || `Artificial ${key}`,
+                    terraformed: false,
+                    colonists: 0,
+                    original: this.getCurrentWorldOriginal(),
+                    visited: true,
+                    orbitalRing: false,
+                    departedAt: null,
+                    ecumenopolisPercent: 0
+                };
+            }
+            if (this.artificialWorldStatuses[key].terraformed !== isComplete) {
+                this.artificialWorldStatuses[key].terraformed = isComplete;
+                console.log(`SpaceManager: Terraformed status for artificial world ${key} updated to ${isComplete}`);
             }
             return;
         }
@@ -728,6 +777,27 @@ class SpaceManager extends EffectableEntity {
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
             if (!st.name) st.name = this.currentRandomName || `Seed ${seed}`;
+        } else if (this.currentArtificialKey !== null) {
+            const key = String(this.currentArtificialKey);
+            if (!this.artificialWorldStatuses[key]) {
+                this.artificialWorldStatuses[key] = {
+                    name: this.currentRandomName || `Artificial ${key}`,
+                    terraformed: false,
+                    colonists: 0,
+                    original: this.getCurrentWorldOriginal ? this.getCurrentWorldOriginal() : null,
+                    visited: true,
+                    orbitalRing: false,
+                    departedAt: null,
+                    ecumenopolisPercent: 0,
+                    artificial: true
+                };
+            }
+            const st = this.artificialWorldStatuses[key];
+            st.visited = true;
+            st.colonists = pop;
+            st.departedAt = now;
+            st.ecumenopolisPercent = ecoPercent;
+            if (!st.name) st.name = this.currentRandomName || `Artificial ${key}`;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
             const ps = this.planetStatuses[this.currentPlanetKey];
             ps.visited = true;
@@ -741,6 +811,9 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             const activeSeed = String(this.currentRandomSeed);
             return this.isSeedTerraformed(activeSeed);
+        }
+        if (this.currentArtificialKey !== null) {
+            return !!this.artificialWorldStatuses[String(this.currentArtificialKey)]?.terraformed;
         }
         return this.isPlanetTerraformed(this.currentPlanetKey);
     }
@@ -781,6 +854,7 @@ class SpaceManager extends EffectableEntity {
             return false;
         }
 
+        this.currentArtificialKey = null;
         const departingTerraformed = this._isCurrentWorldTerraformed();
         this.prepareForTravel();
         if (!this.changeCurrentPlanet(targetKey)) {
@@ -809,26 +883,31 @@ class SpaceManager extends EffectableEntity {
         }
         // Prefer canonical seedString from RWG result so it encodes target/type/orbit
         const s = String(res && typeof res.seedString === 'string' ? res.seedString : seed);
-        if (this.isSeedTerraformed(s)) {
-            console.warn(`SpaceManager: Seed ${s} already terraformed.`);
-            return false;
+        const isArtificial = !!(res?.artificial || res?.original?.artificial);
+        if (!isArtificial) {
+            if (this.isSeedTerraformed(s)) {
+                console.warn(`SpaceManager: Seed ${s} already terraformed.`);
+                return false;
+            }
         }
 
         const departingTerraformed = this._isCurrentWorldTerraformed();
 
-        const existing = this.randomWorldStatuses[s];
+        const existing = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const firstVisit = !existing?.visited;
         const destinationTerraformed = existing?.terraformed || false;
-        const artificialWorld = !!(res?.artificial || res?.original?.artificial || existing?.artificial);
+        const artificialWorld = isArtificial || existing?.artificial;
 
         const storageState = this.prepareForTravel();
         this.recordDepartureSnapshot();
 
-        this.currentRandomSeed = s;
+        this.currentRandomSeed = isArtificial ? null : s;
+        this.currentArtificialKey = isArtificial ? s : null;
         this.currentPlanetKey = s;
-        this.currentRandomName = res?.merged?.name || `Seed ${s}`;
+        this.currentRandomName = res?.merged?.name || (isArtificial ? `Artificial ${s}` : `Seed ${s}`);
         if (!existing) {
-            this.randomWorldStatuses[s] = {
+            const targetMap = isArtificial ? this.artificialWorldStatuses : this.randomWorldStatuses;
+            targetMap[s] = {
                 name: this.currentRandomName,
                 terraformed: false,
                 colonists: 0,
@@ -863,6 +942,8 @@ class SpaceManager extends EffectableEntity {
             planetStatuses: this.planetStatuses,
             currentRandomSeed: this.currentRandomSeed,
             currentRandomName: this.currentRandomName,
+            currentArtificialKey: this.currentArtificialKey,
+            artificialWorldStatuses: this.artificialWorldStatuses,
             randomWorldStatuses: this.randomWorldStatuses,
             randomTabEnabled: this.randomTabEnabled,
             rwgSectorLock: this.rwgSectorLock,
@@ -875,7 +956,9 @@ class SpaceManager extends EffectableEntity {
         this.currentPlanetKey = 'mars';
         this.currentRandomSeed = null;
         this.currentRandomName = '';
+        this.currentArtificialKey = null;
         this.randomWorldStatuses = {};
+        this.artificialWorldStatuses = {};
         this.randomTabEnabled = false;
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
@@ -891,6 +974,10 @@ class SpaceManager extends EffectableEntity {
             this.currentRandomSeed = savedData.currentRandomSeed;
             this.currentRandomName = savedData.currentRandomName || '';
             this.currentPlanetKey = String(savedData.currentRandomSeed);
+        } else if (savedData.currentArtificialKey) {
+            this.currentArtificialKey = savedData.currentArtificialKey;
+            this.currentRandomName = savedData.currentRandomName || '';
+            this.currentPlanetKey = String(savedData.currentArtificialKey);
         } else {
             let keyToLoad = 'mars';
             if (savedData.currentPlanetKey && this.allPlanetsData[savedData.currentPlanetKey]) {
@@ -935,6 +1022,10 @@ class SpaceManager extends EffectableEntity {
             console.log("SpaceManager: Loaded planet statuses from save data.");
         } else {
             console.log("SpaceManager: No planet statuses found in save data, keeping defaults.");
+        }
+
+        if (savedData.artificialWorldStatuses) {
+            this.artificialWorldStatuses = savedData.artificialWorldStatuses;
         }
 
         if (savedData.randomWorldStatuses) {

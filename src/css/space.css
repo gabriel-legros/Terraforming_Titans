@@ -326,6 +326,7 @@
 
 .artificial-name {
   width: 100%;
+  box-sizing: border-box;
 }
 
 .artificial-radius {
@@ -448,16 +449,52 @@
   cursor: not-allowed;
 }
 
-.artificial-stash-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 8px;
-  align-items: center;
+.artificial-stash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.artificial-stash-summary {
-  color: var(--space-fg-muted);
-  font-size: 13px;
+.artificial-stash-row {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--space-border-color);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.artificial-stash-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.artificial-stash-title {
+  color: var(--space-fg);
+}
+
+.artificial-stash-body {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.artificial-stash-stock {
+  flex: 1;
+  border: 1px solid var(--space-border-color);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--space-fg);
+  min-width: 0;
 }
 
 .artificial-stash-controls {
@@ -465,46 +502,63 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px dashed var(--space-border-color);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.artificial-stash-controls.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.artificial-stash-step {
-  font-weight: 700;
-  color: var(--space-fg);
-}
-
-.artificial-stash-step-buttons {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.artificial-stash-step-buttons button {
+  padding: 8px;
   border: 1px solid var(--space-border-color);
-  background: var(--space-card-bg);
-  color: var(--space-fg);
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-weight: 700;
-  cursor: pointer;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  flex: 0 0 auto;
 }
 
-.artificial-stash-step-buttons button:hover:not(:disabled) {
-  border-color: var(--space-accent);
-  color: var(--space-accent);
+.artificial-stash-controls button {
+  min-width: 64px;
 }
 
 .artificial-stash-recommend {
   font-size: 12px;
   color: var(--space-fg-muted);
+}
+
+.artificial-stash-btn {
+  border: 1px solid var(--space-border-color);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  color: var(--space-fg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.artificial-stash-btn:hover:not(:disabled) {
+  border-color: var(--space-accent);
+  color: var(--space-accent);
+}
+
+.artificial-stash-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.artificial-stash-unaffordable {
+  color: #ff9a9a;
+}
+
+.artificial-stash-add.artificial-stash-unaffordable {
+  border-color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.15);
+  color: #ffb2b2;
+}
+
+.artificial-stash-add.artificial-stash-unaffordable:disabled {
+  opacity: 1;
+}
+
+.artificial-stash-add.artificial-stash-unaffordable:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.artificial-stash-add {
+  min-width: 96px;
 }
 
 .artificial-progress-card {
@@ -564,7 +618,7 @@
 
 .artificial-history-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
@@ -573,9 +627,32 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
-.artificial-history-status {
-  text-align: right;
+.artificial-history-header-row {
   font-weight: 700;
+  color: var(--space-fg-muted);
+  background: transparent;
+  border: none;
+  padding: 0 0 6px 0;
+}
+
+.artificial-history-status {
+  text-align: center;
+  font-weight: 700;
+}
+
+.artificial-history-row span:nth-child(2),
+.artificial-history-header-row span:nth-child(2) {
+  text-align: center;
+}
+
+.artificial-history-row span:nth-child(3),
+.artificial-history-header-row span:nth-child(3) {
+  text-align: right;
+}
+
+.artificial-history-row span:nth-child(4),
+.artificial-history-header-row span:nth-child(4) {
+  text-align: right;
 }
 
 .artificial-history-traveled {

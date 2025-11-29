@@ -22,9 +22,6 @@ const artificialUICache = {
   discardBtn: null,
   progressFill: null,
   progressLabel: null,
-  stashMetal: null,
-  stashSilicon: null,
-  stashButton: null,
   stashSummary: null,
   stashRecommend: null,
   stashControls: {},
@@ -88,16 +85,39 @@ function buildHistoryRow(entry) {
   const name = document.createElement('span');
   name.textContent = entry.name;
   name.title = entry.seed || '';
+  const type = document.createElement('span');
+  const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
+  type.textContent = typeLabel;
+  const land = document.createElement('span');
+  const landValue = entry.landHa !== undefined ? entry.landHa : (entry.radiusEarth && artificialManager ? artificialManager.calculateAreaHectares(entry.radiusEarth) : undefined);
+  land.textContent = landValue !== undefined ? (formatNumber ? formatNumber(landValue, false, 2) : landValue) : '—';
   const status = document.createElement('span');
-  const statusLabel = entry.status ? entry.status.charAt(0).toUpperCase() + entry.status.slice(1) : '';
+  const statusKey = entry.status || '';
+  const statusLabelMap = {
+    building: 'Under construction',
+    completed: 'Ready for Terraforming',
+    current: 'Current',
+    terraformed: 'Terraformed'
+  };
+  const statusLabel = statusLabelMap[statusKey] || (statusKey ? statusKey.charAt(0).toUpperCase() + statusKey.slice(1) : '');
   status.textContent = statusLabel;
-  status.className = `artificial-history-status artificial-history-${entry.status}`;
-  const radius = document.createElement('span');
-  radius.textContent = `${entry.radiusEarth.toFixed(2)} Rₑ`;
+  status.className = `artificial-history-status artificial-history-${statusKey}`;
   row.appendChild(name);
-  row.appendChild(radius);
+  row.appendChild(type);
+  row.appendChild(land);
   row.appendChild(status);
   return row;
+}
+
+function buildHistoryHeader() {
+  const header = document.createElement('div');
+  header.className = 'artificial-history-row artificial-history-header-row';
+  ['Name', 'Type', 'Land', 'Status'].forEach((label) => {
+    const cell = document.createElement('span');
+    cell.textContent = label;
+    header.appendChild(cell);
+  });
+  return header;
 }
 
 function createProgressBar() {
@@ -118,19 +138,15 @@ function clampRadiusValue(value) {
   return Math.min(Math.max(value, bounds.min), bounds.max);
 }
 
-function adjustStashAmount(resource, delta) {
-  const target = resource === 'silicon' ? artificialUICache.stashSilicon : artificialUICache.stashMetal;
-  if (!target) return;
-  const current = parseFloat(target.value) || 0;
-  const next = Math.max(0, current + delta);
-  target.value = next;
+function getStashStep(resource) {
+  const next = Math.max(1, Math.floor(artificialStashMultipliers[resource] || 1));
+  artificialStashMultipliers[resource] = next;
+  return next;
 }
 
-function updateStashDeltaLabel(resource) {
-  const controls = artificialUICache.stashControls[resource];
-  if (!controls) return;
-  const fmt = formatNumber || ((n) => n);
-  controls.delta.textContent = `Δ ${fmt(artificialStashMultipliers[resource], false, 2)}`;
+function setStashStep(resource, value) {
+  const next = Math.max(1, Math.floor(value || 1));
+  artificialStashMultipliers[resource] = next;
 }
 
 function ensureArtificialLayout() {
@@ -332,78 +348,57 @@ function ensureArtificialLayout() {
   stashTitle.textContent = 'Starting stockpile';
   stash.appendChild(stashTitle);
 
-  const stashGrid = document.createElement('div');
-  stashGrid.className = 'artificial-stash-grid';
+  const stashList = document.createElement('div');
+  stashList.className = 'artificial-stash-list';
 
-  const createStashBlock = (resource, label) => {
-    const block = document.createElement('div');
-    block.className = 'artificial-stash-block';
+  const createStashRow = (resource, label) => {
+    const row = document.createElement('div');
+    row.className = 'artificial-stash-block artificial-stash-row';
 
-    const title = document.createElement('div');
+    const header = document.createElement('div');
+    header.className = 'artificial-stash-row-header';
+    const title = document.createElement('span');
     title.className = 'artificial-stash-title';
     title.textContent = label;
-    block.appendChild(title);
+    header.appendChild(title);
+    row.appendChild(header);
 
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.min = '0';
-    input.step = '1000';
-    input.placeholder = `${label} amount`;
-    block.appendChild(input);
+    const body = document.createElement('div');
+    body.className = 'artificial-stash-body';
+
+    const staged = document.createElement('div');
+    staged.className = 'artificial-stash-stock';
+    body.appendChild(staged);
 
     const controls = document.createElement('div');
     controls.className = 'artificial-stash-controls';
-
-    const delta = document.createElement('span');
-    delta.className = 'artificial-stash-step';
-    controls.appendChild(delta);
-
-    const btnWrap = document.createElement('div');
-    btnWrap.className = 'artificial-stash-step-buttons';
     const divBtn = document.createElement('button');
+    divBtn.className = 'artificial-stash-btn';
     divBtn.textContent = '/10';
     const mulBtn = document.createElement('button');
+    mulBtn.className = 'artificial-stash-btn';
     mulBtn.textContent = 'x10';
-    const minusBtn = document.createElement('button');
-    minusBtn.textContent = '-1';
-    const plusBtn = document.createElement('button');
-    plusBtn.textContent = '+1';
-    btnWrap.append(divBtn, mulBtn, minusBtn, plusBtn);
-    controls.appendChild(btnWrap);
-
-    block.appendChild(controls);
+    const addBtn = document.createElement('button');
+    addBtn.className = 'artificial-stash-btn artificial-stash-add';
+    controls.append(addBtn, mulBtn, divBtn);
+    body.appendChild(controls);
+    row.appendChild(body);
 
     artificialUICache.stashControls[resource] = {
-      input,
-      delta,
       divBtn,
       mulBtn,
-      minusBtn,
-      plusBtn
+      addBtn,
+      stock: staged
     };
 
-    return block;
+    return row;
   };
 
-  const metalBlock = createStashBlock('metal', 'Metal');
-  artificialUICache.stashMetal = metalBlock.querySelector('input');
-  const siliconBlock = createStashBlock('silicon', 'Silicon');
-  artificialUICache.stashSilicon = siliconBlock.querySelector('input');
+  stashList.appendChild(createStashRow('metal', 'Metal'));
+  stashList.appendChild(createStashRow('silicon', 'Silicon'));
 
-  stashGrid.appendChild(metalBlock);
-  stashGrid.appendChild(siliconBlock);
+  stash.appendChild(stashList);
 
-  const stashButton = document.createElement('button');
-  stashButton.className = 'artificial-secondary';
-  stashButton.textContent = 'Add to launch stash';
-  artificialUICache.stashButton = stashButton;
-  stash.appendChild(stashGrid);
-  stash.appendChild(stashButton);
-
-  const stashSummary = document.createElement('div');
-  stashSummary.className = 'artificial-stash-summary';
-  artificialUICache.stashSummary = stashSummary;
-  stash.appendChild(stashSummary);
   const stashRecommend = document.createElement('div');
   stashRecommend.className = 'artificial-stash-recommend';
   stashRecommend.textContent = 'Recommend staging at least 1.00B of each resource.';
@@ -523,51 +518,41 @@ function ensureArtificialLayout() {
   travelBtn.addEventListener('click', () => {
     artificialManager?.travelToConstructedWorld();
   });
-  stashButton.addEventListener('click', () => {
-    if (!artificialManager) return;
-    const metal = parseFloat(stashMetal.value) || 0;
-    const silicon = parseFloat(stashSilicon.value) || 0;
-    const success = artificialManager.addStockpile({ metal, silicon });
-    if (success) {
-      stashMetal.value = '';
-      stashSilicon.value = '';
-    }
-  });
   prev.addEventListener('click', () => {
     if (artificialHistoryPage > 0) {
       artificialHistoryPage -= 1;
-      renderHistory();
+      renderArtificialHistory();
     }
   });
   next.addEventListener('click', () => {
     artificialHistoryPage += 1;
-    renderHistory();
+    renderArtificialHistory();
   });
 
-  const setActiveStashField = (field) => {
-    artificialActiveStashField = field;
-  };
   const attachStashHandlers = (resource) => {
     const controls = artificialUICache.stashControls[resource];
     if (!controls) return;
     controls.divBtn.addEventListener('click', () => {
-      artificialStashMultipliers[resource] = Math.max(1, artificialStashMultipliers[resource] / 10);
-      updateStashDeltaLabel(resource);
+      setStashStep(resource, getStashStep(resource) / 10);
+      updateArtificialUI();
     });
     controls.mulBtn.addEventListener('click', () => {
-      artificialStashMultipliers[resource] *= 10;
-      updateStashDeltaLabel(resource);
+      setStashStep(resource, getStashStep(resource) * 10);
+      updateArtificialUI();
     });
-    controls.minusBtn.addEventListener('click', () => {
-      adjustStashAmount(resource, -artificialStashMultipliers[resource]);
-    });
-    controls.plusBtn.addEventListener('click', () => {
-      adjustStashAmount(resource, artificialStashMultipliers[resource]);
+    controls.addBtn.addEventListener('click', () => {
+      const manager = artificialManager;
+      if (!manager || !manager.activeProject) return;
+      const amount = getStashStep(resource);
+      const payload = resource === 'metal' ? { metal: amount } : { silicon: amount };
+      manager.addStockpile(payload);
     });
   };
 
   attachStashHandlers('metal');
   attachStashHandlers('silicon');
+
+  renderArtificialHistory();
 }
 
 function toggleArtificialTabVisibility(isEnabled) {
@@ -595,10 +580,10 @@ function getRadiusValue() {
   return clampRadiusValue(parseFloat(artificialUICache.radiusRange.value) || 1);
 }
 
-function renderHistory() {
+function renderArtificialHistory() {
   const manager = artificialManager;
   if (!manager || !artificialUICache.historyList || !artificialUICache.historyPage) return;
-  const entries = manager.history || [];
+  const entries = typeof manager.getHistoryEntries === 'function' ? manager.getHistoryEntries() : (manager.history || []);
   const pageSize = 6;
   const maxPage = Math.max(0, Math.ceil(entries.length / pageSize) - 1);
   artificialHistoryPage = Math.min(artificialHistoryPage, maxPage);
@@ -606,6 +591,7 @@ function renderHistory() {
   const slice = entries.slice(start, start + pageSize);
 
   artificialUICache.historyList.innerHTML = '';
+  artificialUICache.historyList.appendChild(buildHistoryHeader());
   slice.forEach((entry) => {
     artificialUICache.historyList.appendChild(buildHistoryRow(entry));
   });
@@ -650,27 +636,35 @@ function renderProgress(project) {
   label.textContent = 'Idle';
 }
 
-function renderStash(project) {
-  if (!artificialUICache.stashSummary) return;
-  const disabled = !project;
-  if (artificialUICache.stashMetal) artificialUICache.stashMetal.disabled = disabled;
-  if (artificialUICache.stashSilicon) artificialUICache.stashSilicon.disabled = disabled;
-  if (artificialUICache.stashButton) artificialUICache.stashButton.disabled = disabled;
-  if (artificialUICache.stashControls) {
-    Object.values(artificialUICache.stashControls).forEach((controls) => {
-      if (controls && controls.container) {
-        controls.container.classList.toggle('disabled', disabled);
-      }
-    });
-  }
-  if (!project) {
-    artificialUICache.stashSummary.textContent = 'Assign a project to seed its launch stores.';
-    return;
-  }
-  const metal = project.stockpile?.metal || project.initialDeposit?.metal || 0;
-  const silicon = project.stockpile?.silicon || project.initialDeposit?.silicon || 0;
+function renderStash(project, manager) {
+  const active = !!project;
+  const metal = project?.stockpile?.metal || project?.initialDeposit?.metal || 0;
+  const silicon = project?.stockpile?.silicon || project?.initialDeposit?.silicon || 0;
   const fmt = formatNumber || ((n) => n);
-  artificialUICache.stashSummary.textContent = `Staged: ${fmt(metal)} metal, ${fmt(silicon)} silicon`;
+
+  if (artificialUICache.stashRecommend) {
+    artificialUICache.stashRecommend.classList.toggle('hidden', !active);
+  }
+
+  Object.entries(artificialUICache.stashControls || {}).forEach(([resource, controls]) => {
+    if (!controls) return;
+    const staged = resource === 'metal' ? metal : silicon;
+    const step = getStashStep(resource);
+    const payload = resource === 'metal' ? { metal: step } : { silicon: step };
+    const canAfford = active && manager ? manager.canCoverCost(payload, manager.prioritizeSpaceStorage) : false;
+    if (controls.stock) {
+      controls.stock.textContent = active ? fmt(staged, false, 0) : '—';
+      controls.stock.classList.toggle('artificial-stash-unaffordable', active && !canAfford);
+    }
+    if (controls.addBtn) {
+      controls.addBtn.textContent = `+${fmt(step, false, 0)}`;
+      controls.addBtn.disabled = !active || !canAfford;
+      controls.addBtn.classList.toggle('artificial-stash-unaffordable', active && !canAfford);
+      controls.addBtn.title = active && !canAfford ? 'Insufficient resources' : 'Add to launch stash';
+    }
+    if (controls.divBtn) controls.divBtn.disabled = !active;
+    if (controls.mulBtn) controls.mulBtn.disabled = !active;
+  });
 }
 
 function renderCosts(project, radius, manager) {
@@ -770,19 +764,19 @@ function updateArtificialUI() {
   const preview = renderCosts(project, radius, manager);
   renderStartButton(project, manager, preview);
   renderProgress(project);
-  renderStash(project);
-  renderHistory();
-  updateStashDeltaLabel('metal');
-  updateStashDeltaLabel('silicon');
+  renderStash(project, manager);
+  renderArtificialHistory();
 }
 
 if (typeof window !== 'undefined') {
   window.updateArtificialUI = updateArtificialUI;
+  window.renderArtificialHistory = renderArtificialHistory;
 } else if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     cacheArtificialUIElements,
     ensureArtificialLayout,
     toggleArtificialTabVisibility,
     updateArtificialUI,
+    renderArtificialHistory,
   };
 }
