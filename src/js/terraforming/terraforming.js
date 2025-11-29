@@ -431,6 +431,18 @@ class Terraforming extends EffectableEntity{
     return (this.temperature.value >= this.temperature.targetMin && this.temperature.value <= this.temperature.targetMax)
   }
 
+  setTemperatureValuesToTrend() {
+    const zones = ['tropical', 'temperate', 'polar'];
+    const globalTrend = this.temperature.trendValue;
+    zones.forEach(zone => {
+      const trend = this.temperature.zones[zone].trendValue;
+      this.temperature.zones[zone].value = trend;
+      this.temperature.zones[zone].day = trend;
+      this.temperature.zones[zone].night = trend;
+    });
+    this.temperature.value = globalTrend;
+  }
+
   getAtmosphereStatus() {
       // Pressures are now calculated on the fly from global resources
 

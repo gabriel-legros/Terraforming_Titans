@@ -315,6 +315,9 @@
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
             const noisyStepMs = stepMs * (0.95 + Math.random() * 0.1);
             terra.updateResources(noisyStepMs);
+            if (stepIdx < 5) {
+              terra.setTemperatureValuesToTrend();
+            }
             totalSimulatedMs += noisyStepMs;
             if ((stepIdx + 1) % checkEvery === 0) {
               const snap = snapshotMetrics(terra);
