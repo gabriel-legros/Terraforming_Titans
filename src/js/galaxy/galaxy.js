@@ -350,7 +350,12 @@ class GalaxyManager extends EffectableEntity {
             isFactionFullControlSector: (sector, factionId) => this.#isFactionFullControlSector(sector, factionId),
             isSectorTargetingRestricted: (sector) => this.#isSectorTargetingRestricted(sector),
             updateSectorControl: (sector, mutator) => this.#updateSectorControl(sector, mutator),
-            getDefenseSummary: (sector, attackerId) => this.getSectorDefenseSummary(sector, attackerId),
+            getDefenseSummary: (sector, attackerId, targetFactionId) => this.getSectorDefenseSummary(
+                sector,
+                attackerId,
+                targetFactionId
+            ),
+            resolveTargetFaction: (sector, attackerId) => this.getOperationTargetFaction(sector, attackerId),
             onOperationSuccess: () => {
                 this.successfulOperations += 1;
             },
@@ -644,7 +649,7 @@ class GalaxyManager extends EffectableEntity {
         return this.operationManager.getOperationForSector(sectorKey, factionId);
     }
 
-    getSectorDefensePower(sectorKey, attackerId) {
+    getSectorDefensePower(sectorKey, attackerId, targetFactionId) {
         if (!sectorKey) {
             return 0;
         }
@@ -652,11 +657,12 @@ class GalaxyManager extends EffectableEntity {
         if (!sector) {
             return 0;
         }
-        const summary = this.getSectorDefenseSummary(sector, attackerId);
+        const resolvedTarget = targetFactionId || this.getOperationTargetFaction(sector, attackerId);
+        const summary = this.getSectorDefenseSummary(sector, attackerId, resolvedTarget);
         return summary.totalPower;
     }
 
-    getSectorDefenseSummary(sectorOrKey, originFactionId) {
+    getSectorDefenseSummary(sectorOrKey, originFactionId, targetFactionId) {
         const sector = this.#resolveSectorReference(sectorOrKey);
         if (!sector) {
             return {
@@ -666,7 +672,7 @@ class GalaxyManager extends EffectableEntity {
                 contributions: []
             };
         }
-        const contributions = this.#collectSectorDefenseEntries(sector, originFactionId);
+        const contributions = this.#collectSectorDefenseEntries(sector, originFactionId, targetFactionId);
         if (!contributions.length) {
             return {
                 basePower: 0,
@@ -812,11 +818,16 @@ class GalaxyManager extends EffectableEntity {
         return this.operationManager.setOperationAutoThreshold(value);
     }
 
-    getOperationSuccessChance({ sectorKey, factionId, assignedPower }) {
+    getOperationSuccessChance({ sectorKey, factionId, assignedPower, targetFactionId }) {
         if (!this.operationManager) {
             return 0;
         }
-        return this.operationManager.getOperationSuccessChance({ sectorKey, factionId, assignedPower });
+        return this.operationManager.getOperationSuccessChance({
+            sectorKey,
+            factionId,
+            assignedPower,
+            targetFactionId
+        });
     }
 
     getOperationLossEstimate({
@@ -825,7 +836,8 @@ class GalaxyManager extends EffectableEntity {
         assignedPower,
         reservedPower,
         offensePower,
-        defensePower
+        defensePower,
+        targetFactionId
     }) {
         if (!this.operationManager) {
             return null;
@@ -836,8 +848,40 @@ class GalaxyManager extends EffectableEntity {
             assignedPower,
             reservedPower,
             offensePower,
-            defensePower
+            defensePower,
+            targetFactionId
         });
+    }
+
+    getOperationTargetFaction(sectorOrKey, attackerId = galaxyUhfId) {
+        const sector = this.#resolveSectorReference(sectorOrKey);
+        if (!sector) {
+            return null;
+        }
+        const summary = this.getSectorDefenseSummary(sector, attackerId);
+        const contributions = summary?.contributions;
+        let targetId = null;
+        let targetPower = Infinity;
+        const evaluateTarget = (factionId) => {
+            if (!factionId || factionId === attackerId) {
+                return;
+            }
+            const defenderSummary = this.getSectorDefenseSummary(sector, attackerId, factionId);
+            const power = Number(defenderSummary.totalPower);
+            const totalPower = Number.isFinite(power) && power >= 0 ? power : 0;
+            if (totalPower < targetPower || (totalPower === targetPower && (!targetId || factionId.localeCompare(targetId) < 0))) {
+                targetId = factionId;
+                targetPower = totalPower;
+            }
+        };
+        if (Array.isArray(contributions) && contributions.length) {
+            contributions.forEach((entry) => evaluateTarget(entry?.factionId));
+        }
+        if (!targetId) {
+            const controlEntries = Object.keys(sector.control || {});
+            controlEntries.forEach((factionId) => evaluateTarget(factionId));
+        }
+        return targetId;
     }
 
     getReservedOperationPower(factionId) {
@@ -847,7 +891,7 @@ class GalaxyManager extends EffectableEntity {
         return this.operationManager.getReservedOperationPower(factionId);
     }
 
-    startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance }) {
+    startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance, targetFactionId }) {
         if (!this.operationManager) {
             return null;
         }
@@ -856,7 +900,8 @@ class GalaxyManager extends EffectableEntity {
             factionId,
             assignedPower,
             durationMs,
-            successChance
+            successChance,
+            targetFactionId
         });
         this.#updateIncomingAttackWarning();
         return operation;
@@ -1508,7 +1553,7 @@ class GalaxyManager extends EffectableEntity {
         return null;
     }
 
-    #collectSectorDefenseEntries(sector, originFactionId) {
+    #collectSectorDefenseEntries(sector, originFactionId, targetFactionId) {
         if (!sector) {
             return [];
         }
@@ -1527,6 +1572,9 @@ class GalaxyManager extends EffectableEntity {
         const contributions = [];
         controlEntries.forEach(([factionId, rawValue]) => {
             if (!factionId || (originFactionId && factionId === originFactionId)) {
+                return;
+            }
+            if (targetFactionId && factionId !== targetFactionId) {
                 return;
             }
             const faction = this.getFaction(factionId);

@@ -288,6 +288,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - UHF fleet defense now divides available border strength evenly instead of weighting distribution by threat levels.
 - Galaxy operations now feature an Auto launch toggle beside the Launch button that automatically deploys eligible missions, and operations last five minutes by default.
 - Galaxy operations panel now displays total mission duration and real-time remaining launch time to clarify commitments.
+- Galaxy operations now target a single defender: AI assaults only contest their chosen faction, while player strikes auto-select the weaker defender and display the correct target and defense in the Operations panel.
 - Mega Heat Sink completions now provide additional cooling power whenever zonal temperatures exceed their trend targets.
 - Added a Mega Heat Sink project summary card that reports completed heat sinks and their current cooling rate.
 - Mega Heat Sink projects now use worker batch capacity controls matching satellites and require 1 billion worker cap per heat sink.

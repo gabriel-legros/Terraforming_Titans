@@ -50,6 +50,7 @@ class GalaxyOperationManager {
         isSectorTargetingRestricted,
         updateSectorControl,
         getDefenseSummary,
+        resolveTargetFaction,
         onOperationSuccess,
         refreshUI,
         operations
@@ -66,6 +67,7 @@ class GalaxyOperationManager {
         this.isSectorTargetingRestricted = isSectorTargetingRestricted;
         this.updateSectorControl = updateSectorControl;
         this.getDefenseSummary = getDefenseSummary;
+        this.resolveTargetFaction = resolveTargetFaction;
         this.onOperationSuccess = onOperationSuccess;
         this.refreshUI = refreshUI;
         if (this.manager) {
@@ -254,7 +256,7 @@ class GalaxyOperationManager {
         return this.autoThreshold;
     }
 
-    getOperationSuccessChance({ sectorKey, factionId, assignedPower }) {
+    getOperationSuccessChance({ sectorKey, factionId, assignedPower, targetFactionId }) {
         if (!sectorKey) {
             return 0;
         }
@@ -266,7 +268,8 @@ class GalaxyOperationManager {
         if (!Number.isFinite(offensePower) || offensePower <= 0) {
             return 0;
         }
-        const defensePower = this.#computeDefensePower(sector, factionId);
+        const targetId = this.#resolveOperationTarget(sector, factionId, targetFactionId);
+        const defensePower = this.#computeDefensePower(sector, factionId, targetId);
         return this.#calculateSuccessChance(offensePower, defensePower);
     }
 
@@ -276,7 +279,8 @@ class GalaxyOperationManager {
         assignedPower,
         reservedPower,
         offensePower,
-        defensePower
+        defensePower,
+        targetFactionId
     }) {
         if (!sectorKey) {
             return null;
@@ -286,6 +290,7 @@ class GalaxyOperationManager {
             return null;
         }
         const attackerId = factionId || this.uhfFactionId;
+        const targetId = this.#resolveOperationTarget(sector, attackerId, targetFactionId);
         const assigned = Number(assignedPower);
         const baseAssigned = Number.isFinite(assigned) && assigned > 0 ? assigned : 0;
         const providedReserved = Number(reservedPower);
@@ -301,7 +306,7 @@ class GalaxyOperationManager {
         const providedDefense = Number(defensePower);
         const resolvedDefense = Number.isFinite(providedDefense) && providedDefense >= 0
             ? providedDefense
-            : this.#computeDefensePower(sector, attackerId);
+            : this.#computeDefensePower(sector, attackerId, targetId);
         const defense = Math.max(0, resolvedDefense);
         const successChance = this.#calculateSuccessChance(resolvedOffense, defense);
         const failureChance = Math.max(0, Math.min(1, 1 - successChance));
@@ -320,7 +325,8 @@ class GalaxyOperationManager {
             successChance,
             failureChance,
             successLoss,
-            failureLoss
+            failureLoss,
+            targetFactionId: targetId || null
         };
     }
 
@@ -343,7 +349,7 @@ class GalaxyOperationManager {
         return total;
     }
 
-    startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance }) {
+    startOperation({ sectorKey, factionId, assignedPower, durationMs, successChance, targetFactionId }) {
         if (!sectorKey || !Number.isFinite(assignedPower) || assignedPower <= 0) {
             return null;
         }
@@ -357,6 +363,13 @@ class GalaxyOperationManager {
         }
         const existing = this.operations.get(sectorKey);
         if (existing && existing.status === 'running') {
+            if (!existing.targetFactionId) {
+                existing.targetFactionId = this.#resolveOperationTarget(
+                    sector,
+                    existing.factionId || attackerId,
+                    targetFactionId
+                );
+            }
             if (!existing.originHex) {
                 existing.originHex = this.#selectOperationOrigin(sector, existing.factionId || attackerId);
             }
@@ -374,6 +387,7 @@ class GalaxyOperationManager {
         if (!hasStronghold && !hasPresence) {
             return null;
         }
+        const targetId = this.#resolveOperationTarget(sector, attackerId, targetFactionId);
         const faction = this.manager.getFaction(attackerId);
         if (!faction) {
             return null;
@@ -387,7 +401,7 @@ class GalaxyOperationManager {
         }
         const duration = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : resolveOperationDuration();
         const offensePower = Math.max(0, assignedPower);
-        const defensePower = this.#computeDefensePower(sector, attackerId);
+        const defensePower = this.#computeDefensePower(sector, attackerId, targetId);
         const sanitizedSuccess = Number.isFinite(successChance)
             ? Math.max(0, Math.min(1, successChance))
             : this.#calculateSuccessChance(offensePower, defensePower);
@@ -395,6 +409,7 @@ class GalaxyOperationManager {
         const operation = {
             sectorKey,
             factionId: attackerId,
+            targetFactionId: targetId || null,
             assignedPower: offensePower,
             reservedPower: offensePower,
             durationMs: duration,
@@ -419,12 +434,14 @@ class GalaxyOperationManager {
         }
         const sector = this.manager.sectors.get(operation.sectorKey);
         const attackerId = operation.factionId || this.uhfFactionId;
+        const targetFactionId = operation.targetFactionId || null;
         const estimate = this.getOperationLossEstimate({
             sectorKey: operation.sectorKey,
             factionId: attackerId,
             assignedPower: operation.assignedPower,
             reservedPower: operation.reservedPower,
-            offensePower: operation.offensePower
+            offensePower: operation.offensePower,
+            targetFactionId
         });
         const fallbackReserved = Number(operation.reservedPower);
         const baseReserved = Number.isFinite(fallbackReserved) && fallbackReserved > 0 ? fallbackReserved : 0;
@@ -442,7 +459,7 @@ class GalaxyOperationManager {
                 : Math.max(0, Math.min(operation.offensePower ?? baseReserved, baseReserved));
             defensePower = Number.isFinite(estimate.defensePower) && estimate.defensePower >= 0
                 ? estimate.defensePower
-                : this.#computeDefensePower(sector, attackerId);
+                : this.#computeDefensePower(sector, attackerId, targetFactionId);
             successChance = Number.isFinite(estimate.successChance)
                 ? Math.max(0, Math.min(1, estimate.successChance))
                 : this.#calculateSuccessChance(offensePower, defensePower);
@@ -452,7 +469,7 @@ class GalaxyOperationManager {
         } else {
             reservedPower = baseReserved;
             offensePower = Math.max(0, Math.min(operation.offensePower ?? reservedPower, reservedPower));
-            defensePower = this.#computeDefensePower(sector, attackerId);
+            defensePower = this.#computeDefensePower(sector, attackerId, targetFactionId);
             if (!Number.isFinite(defensePower) || defensePower < 0) {
                 defensePower = Math.max(0, operation.defensePower ?? 0);
             }
@@ -493,6 +510,7 @@ class GalaxyOperationManager {
         const defenderLosses = this.#applyDefenderLosses({
             sector,
             attackerId,
+            targetFactionId,
             offensePower,
             defensePower,
             attackSucceeded: isSuccessful
@@ -511,6 +529,7 @@ class GalaxyOperationManager {
         operation.failureChance = failureChance;
         operation.losses = losses;
         operation.defenderLosses = defenderLosses;
+        operation.targetFactionId = targetFactionId;
         operation.result = isSuccessful ? 'success' : 'failure';
         operation.status = 'completed';
     }
@@ -521,6 +540,7 @@ class GalaxyOperationManager {
             return;
         }
         const factionId = operation.factionId || this.uhfFactionId;
+        const targetFactionId = operation.targetFactionId || null;
         const currentControl = sector.getControlValue?.(factionId) ?? 0;
         const totalControl = sector.getTotalControlValue?.() ?? 0;
         const hasExistingControl = totalControl > 0;
@@ -540,7 +560,13 @@ class GalaxyOperationManager {
             return;
         }
         const entries = Object.entries(sector.control).filter(([defenderId, value]) => {
-            return defenderId !== factionId && Number(value) > 0;
+            if (defenderId === factionId) {
+                return false;
+            }
+            if (targetFactionId && defenderId !== targetFactionId) {
+                return false;
+            }
+            return Number(value) > 0;
         });
         if (!entries.length && hasExistingControl) {
             return;
@@ -638,6 +664,7 @@ class GalaxyOperationManager {
         return {
             sectorKey: operation.sectorKey,
             factionId: operation.factionId,
+            targetFactionId: operation.targetFactionId,
             assignedPower: operation.assignedPower,
             reservedPower: operation.reservedPower,
             durationMs: operation.durationMs,
@@ -670,13 +697,14 @@ class GalaxyOperationManager {
         const duration = Number.isFinite(state.durationMs) && state.durationMs > 0 ? state.durationMs : resolveOperationDuration();
         const elapsed = Number.isFinite(state.elapsedMs) && state.elapsedMs >= 0 ? Math.min(state.elapsedMs, duration) : 0;
         const attackerId = state.factionId || this.uhfFactionId;
+        const targetFactionId = this.#resolveOperationTarget(sector, attackerId, state.targetFactionId);
         const savedDefense = Number(state.defensePower);
         const savedOffense = Number(state.offensePower);
         const successChance = Math.max(0, Math.min(1, Number(state.successChance)));
         const failureChance = Math.max(0, Math.min(1, Number(state.failureChance)));
         const defensePower = Number.isFinite(savedDefense) && savedDefense >= 0
             ? savedDefense
-            : this.#computeDefensePower(sector, attackerId);
+            : this.#computeDefensePower(sector, attackerId, targetFactionId);
         const offensePower = Number.isFinite(savedOffense) && savedOffense > 0
             ? Math.min(savedOffense, reservedPower)
             : Math.min(assignedPower, reservedPower);
@@ -699,11 +727,27 @@ class GalaxyOperationManager {
             status: state.status === 'running' && elapsed < duration ? 'running' : 'completed',
             result: state.result,
             losses: Number.isFinite(Number(state.losses)) ? Number(state.losses) : undefined,
+            targetFactionId,
             originHex,
             defenderLosses: this.#restoreDefenderLosses(state.defenderLosses)
         };
 
         this.operations.set(operation.sectorKey, operation);
+    }
+
+    #resolveOperationTarget(sector, attackerId, targetFactionId) {
+        const provided = targetFactionId ? String(targetFactionId).trim() : '';
+        if (provided) {
+            return provided;
+        }
+        if (this.resolveTargetFaction) {
+            const resolved = this.resolveTargetFaction(sector, attackerId);
+            const normalized = resolved ? String(resolved).trim() : '';
+            if (normalized) {
+                return normalized;
+            }
+        }
+        return null;
     }
 
     #calculateSuccessChance(offensePower, defensePower) {
@@ -728,19 +772,19 @@ class GalaxyOperationManager {
         return Math.max(0, Math.min(1, ratio));
     }
 
-    #computeDefensePower(sector, attackerId) {
-        if (typeof this.getDefenseSummary === 'function') {
-            const summary = this.getDefenseSummary(sector, attackerId);
+    #computeDefensePower(sector, attackerId, targetFactionId) {
+        if (this.getDefenseSummary) {
+            const summary = this.getDefenseSummary(sector, attackerId, targetFactionId);
             return summary?.totalPower ?? 0;
         }
         return 0;
     }
 
-    #getDefenseContributions(sector, attackerId) {
-        if (typeof this.getDefenseSummary !== 'function') {
+    #getDefenseContributions(sector, attackerId, targetFactionId) {
+        if (!this.getDefenseSummary) {
             return [];
         }
-        const summary = this.getDefenseSummary(sector, attackerId);
+        const summary = this.getDefenseSummary(sector, attackerId, targetFactionId);
         if (!summary?.contributions?.length) {
             return [];
         }
@@ -750,7 +794,7 @@ class GalaxyOperationManager {
         }));
     }
 
-    #applyDefenderLosses({ sector, attackerId, offensePower, defensePower, attackSucceeded }) {
+    #applyDefenderLosses({ sector, attackerId, targetFactionId, offensePower, defensePower, attackSucceeded }) {
         if (!sector) {
             return [];
         }
@@ -762,7 +806,7 @@ class GalaxyOperationManager {
         if (!Number.isFinite(defense) || defense <= 0) {
             return [];
         }
-        const contributions = this.#getDefenseContributions(sector, attackerId);
+        const contributions = this.#getDefenseContributions(sector, attackerId, targetFactionId);
         if (!contributions.length) {
             return [];
         }
@@ -946,8 +990,9 @@ class GalaxyOperationManager {
             if (this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
                 return;
             }
+            const targetFactionId = this.#resolveOperationTarget(sector, this.uhfFactionId);
             const sectorDefense = this.manager.getSectorDefensePower
-                ? this.manager.getSectorDefensePower(sectorKey, this.uhfFactionId)
+                ? this.manager.getSectorDefensePower(sectorKey, this.uhfFactionId, targetFactionId)
                 : 0;
             const requiredPower = sectorDefense > 0 ? sectorDefense * threshold : 0;
             const normalizedPower = Math.round(requiredPower * 100) / 100;
@@ -961,7 +1006,8 @@ class GalaxyOperationManager {
             const successChance = this.getOperationSuccessChance({
                 sectorKey,
                 factionId: this.uhfFactionId,
-                assignedPower: normalizedPower
+                assignedPower: normalizedPower,
+                targetFactionId
             });
             if (!(successChance > 0)) {
                 return;
@@ -970,7 +1016,8 @@ class GalaxyOperationManager {
                 sectorKey,
                 factionId: this.uhfFactionId,
                 assignedPower: normalizedPower,
-                successChance
+                successChance,
+                targetFactionId
             });
             if (!operation) {
                 return;

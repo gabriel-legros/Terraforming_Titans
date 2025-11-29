@@ -139,14 +139,15 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (availablePower < operationPower) {
             return false;
         }
-        const targetKey = this.#pickAutoOperationTarget(manager);
-        if (!targetKey) {
+        const targetSelection = this.#pickAutoOperationTarget(manager);
+        if (!targetSelection || !targetSelection.sectorKey) {
             return false;
         }
         const operation = launcher.call(manager, {
-            sectorKey: targetKey,
+            sectorKey: targetSelection.sectorKey,
             factionId: this.id,
-            assignedPower: operationPower
+            assignedPower: operationPower,
+            targetFactionId: targetSelection.targetFactionId
         });
         if (!operation) {
             return false;
@@ -288,15 +289,19 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             true
         );
         if (contestedPick) {
-            return contestedPick;
+            return { sectorKey: contestedPick, targetFactionId };
         }
-        return this.#pickBestCachedSector(
+        const neighborPick = this.#pickBestCachedSector(
             this.getNeighborEnemySectorKeys(manager),
             candidateSet,
             targetFactionId,
             manager,
             false
         );
+        if (!neighborPick) {
+            return null;
+        }
+        return { sectorKey: neighborPick, targetFactionId };
     }
 
     #pickBestCachedSector(keys, candidateSet, targetFactionId, manager, requireOwnControl) {

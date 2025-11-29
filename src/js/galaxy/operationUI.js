@@ -310,7 +310,7 @@ const GalaxyOperationUI = (() => {
         return Math.max(0, Math.min(numeric, maxValue));
     }
 
-    function resolveOperationSuccessChance(manager, sectorKey, assignedPower, factionId) {
+    function resolveOperationSuccessChance(manager, sectorKey, assignedPower, factionId, targetFactionId) {
         if (!manager?.getOperationSuccessChance) {
             return 0;
         }
@@ -320,7 +320,8 @@ const GalaxyOperationUI = (() => {
         const chance = manager.getOperationSuccessChance({
             sectorKey,
             factionId: attackerId,
-            assignedPower
+            assignedPower,
+            targetFactionId
         });
         if (!Number.isFinite(chance)) {
             return 0;
@@ -454,11 +455,13 @@ const GalaxyOperationUI = (() => {
         if (!antimatterResource || antimatterValue < plannedCost) {
             return;
         }
+        const targetFactionId = manager.getOperationTargetFaction?.(sectorKey, uhfFactionId) || null;
         const operation = manager.startOperation({
             sectorKey,
             factionId: uhfFactionId,
             assignedPower: assignment,
-            durationMs: getDefaultOperationDurationMs()
+            durationMs: getDefaultOperationDurationMs(),
+            targetFactionId
         });
         if (!operation) {
             return;
@@ -520,6 +523,30 @@ const GalaxyOperationUI = (() => {
         powerInput.className = 'galaxy-operations-form__input';
         powerInput.value = formatOperationsInputValue(0);
         powerRow.appendChild(powerInput);
+
+        const targetRow = doc.createElement('div');
+        targetRow.className = 'galaxy-operations-form__row galaxy-operations-form__row--target';
+        form.appendChild(targetRow);
+
+        const targetLabel = doc.createElement('span');
+        targetLabel.className = 'galaxy-operations-form__target-label';
+        targetLabel.textContent = 'Target';
+        targetRow.appendChild(targetLabel);
+
+        const targetValue = doc.createElement('span');
+        targetValue.className = 'galaxy-operations-form__target-value';
+        targetValue.textContent = '—';
+        targetRow.appendChild(targetValue);
+
+        const targetDefenseLabel = doc.createElement('span');
+        targetDefenseLabel.className = 'galaxy-operations-form__target-defense-label';
+        targetDefenseLabel.textContent = 'Defense';
+        targetRow.appendChild(targetDefenseLabel);
+
+        const targetDefenseValue = doc.createElement('span');
+        targetDefenseValue.className = 'galaxy-operations-form__target-defense-value';
+        targetDefenseValue.textContent = '0';
+        targetRow.appendChild(targetDefenseValue);
 
         const buttonGroup = doc.createElement('div');
         buttonGroup.className = 'galaxy-operations-form__buttons';
@@ -688,6 +715,9 @@ const GalaxyOperationUI = (() => {
             operationsDurationLabel: durationLabel,
             operationsDurationValue: durationValue,
             operationsAvailable: powerAvailable,
+            operationsTargetRow: targetRow,
+            operationsTargetFaction: targetValue,
+            operationsTargetDefense: targetDefenseValue,
             operationsSummaryItems: summaryItems,
             operationsStatusMessage: statusMessage
         };
@@ -697,8 +727,47 @@ const GalaxyOperationUI = (() => {
         return cache;
     }
 
+    function ensureTargetCache(cache) {
+        if (!cache || (cache.operationsTargetRow && cache.operationsTargetFaction && cache.operationsTargetDefense)) {
+            return cache;
+        }
+        const form = cache.operationsForm;
+        if (!form) {
+            return cache;
+        }
+        const doc = form.ownerDocument || globalThis.document;
+        const targetRow = doc.createElement('div');
+        targetRow.className = 'galaxy-operations-form__row galaxy-operations-form__row--target';
+        const targetLabel = doc.createElement('span');
+        targetLabel.className = 'galaxy-operations-form__target-label';
+        targetLabel.textContent = 'Target';
+        targetRow.appendChild(targetLabel);
+        const targetValue = doc.createElement('span');
+        targetValue.className = 'galaxy-operations-form__target-value';
+        targetValue.textContent = '—';
+        targetRow.appendChild(targetValue);
+        const targetDefenseLabel = doc.createElement('span');
+        targetDefenseLabel.className = 'galaxy-operations-form__target-defense-label';
+        targetDefenseLabel.textContent = 'Defense';
+        targetRow.appendChild(targetDefenseLabel);
+        const targetDefenseValue = doc.createElement('span');
+        targetDefenseValue.className = 'galaxy-operations-form__target-defense-value';
+        targetDefenseValue.textContent = '0';
+        targetRow.appendChild(targetDefenseValue);
+        const powerRow = cache.operationsInput?.parentNode;
+        if (powerRow && powerRow.parentNode === form && powerRow.nextSibling) {
+            form.insertBefore(targetRow, powerRow.nextSibling);
+        } else {
+            form.insertBefore(targetRow, form.firstChild);
+        }
+        cache.operationsTargetRow = targetRow;
+        cache.operationsTargetFaction = targetValue;
+        cache.operationsTargetDefense = targetDefenseValue;
+        return cache;
+    }
+
     function updateOperationsPanel(managerOverride, cacheOverride) {
-        const cache = cacheOverride || getCache();
+        const cache = ensureTargetCache(cacheOverride || getCache());
         if (!cache) {
             return;
         }
@@ -719,6 +788,9 @@ const GalaxyOperationUI = (() => {
             operationsDurationLabel,
             operationsDurationValue,
             operationsAvailable,
+            operationsTargetRow,
+            operationsTargetFaction,
+            operationsTargetDefense,
             operationsSummaryItems,
             operationsStatusMessage
         } = cache;
@@ -791,6 +863,15 @@ const GalaxyOperationUI = (() => {
             if (operationsDurationValue) {
                 operationsDurationValue.textContent = '—';
             }
+            if (operationsTargetRow) {
+                operationsTargetRow.classList.add('is-hidden');
+            }
+            if (operationsTargetFaction) {
+                operationsTargetFaction.textContent = '—';
+            }
+            if (operationsTargetDefense) {
+                operationsTargetDefense.textContent = '0';
+            }
             disableAllControls();
             return;
         }
@@ -803,6 +884,15 @@ const GalaxyOperationUI = (() => {
             operationsStatusMessage.textContent = '';
             if (operationsDurationValue) {
                 operationsDurationValue.textContent = '—';
+            }
+            if (operationsTargetRow) {
+                operationsTargetRow.classList.add('is-hidden');
+            }
+            if (operationsTargetFaction) {
+                operationsTargetFaction.textContent = '—';
+            }
+            if (operationsTargetDefense) {
+                operationsTargetDefense.textContent = '0';
             }
             disableAllControls();
             return;
@@ -817,6 +907,15 @@ const GalaxyOperationUI = (() => {
             operationsStatusMessage.textContent = '';
             if (operationsDurationValue) {
                 operationsDurationValue.textContent = '—';
+            }
+            if (operationsTargetRow) {
+                operationsTargetRow.classList.add('is-hidden');
+            }
+            if (operationsTargetFaction) {
+                operationsTargetFaction.textContent = '—';
+            }
+            if (operationsTargetDefense) {
+                operationsTargetDefense.textContent = '0';
             }
             disableAllControls();
             return;
@@ -835,6 +934,15 @@ const GalaxyOperationUI = (() => {
             operationsStatusMessage.textContent = '';
             if (operationsDurationValue) {
                 operationsDurationValue.textContent = '—';
+            }
+            if (operationsTargetRow) {
+                operationsTargetRow.classList.add('is-hidden');
+            }
+            if (operationsTargetFaction) {
+                operationsTargetFaction.textContent = '—';
+            }
+            if (operationsTargetDefense) {
+                operationsTargetDefense.textContent = '0';
             }
             disableAllControls();
             return;
@@ -858,11 +966,27 @@ const GalaxyOperationUI = (() => {
             }
         }
 
+        const operationTargetId = operation?.targetFactionId || null;
+        const targetFactionId = operationTargetId
+            || manager.getOperationTargetFaction?.(selection.key, uhfFactionId)
+            || null;
+        const targetFaction = targetFactionId ? manager.getFaction(targetFactionId) : null;
+        const targetLabel = targetFaction ? (targetFaction.name || targetFaction.id) : 'No target';
+
         const sectorPower = manager.getSectorDefensePower
-            ? manager.getSectorDefensePower(selection.key, uhfFactionId)
+            ? manager.getSectorDefensePower(selection.key, uhfFactionId, targetFactionId)
             : 0;
         const autoThresholdValue = getAutoLaunchThreshold();
         const requiredThreshold = sectorPower > 0 ? sectorPower * autoThresholdValue : 0;
+        if (operationsTargetRow) {
+            operationsTargetRow.classList.remove('is-hidden');
+        }
+        if (operationsTargetFaction) {
+            operationsTargetFaction.textContent = targetLabel;
+        }
+        if (operationsTargetDefense) {
+            operationsTargetDefense.textContent = formatNumber(sectorPower, false, 2);
+        }
         if (!operationRunning && storedAutoEnabled && requiredThreshold > 0 && assignment < requiredThreshold && availablePower >= requiredThreshold) {
             const adjusted = clampAssignment(requiredThreshold, availablePower);
             const normalizedAdjustment = normalizeAssignment(adjusted);
@@ -881,11 +1005,12 @@ const GalaxyOperationUI = (() => {
             factionId: uhfFactionId,
             assignedPower: assignment,
             reservedPower: assignment,
-            offensePower: assignment
+            offensePower: assignment,
+            targetFactionId
         });
 
         const successChance = assignment > 0
-            ? resolveOperationSuccessChance(manager, selection.key, assignment, uhfFactionId)
+            ? resolveOperationSuccessChance(manager, selection.key, assignment, uhfFactionId, targetFactionId)
             : 0;
         const meetsAutoThreshold = requiredThreshold <= 0 ? assignment > 0 : assignment >= requiredThreshold;
 
