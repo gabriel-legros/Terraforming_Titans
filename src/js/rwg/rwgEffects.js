@@ -153,7 +153,10 @@ function applyRWGEffects() {
   const statuses = spaceManager.randomWorldStatuses || {};
   for (const seed in statuses) {
     const st = statuses[seed];
-    const type = st?.original?.archetype || st?.original?.override?.classification?.archetype;
+    const type = st?.original?.classification?.archetype ||
+      st?.original?.merged?.classification?.archetype ||
+      st?.original?.override?.classification?.archetype ||
+      st?.original?.archetype;
     if (st?.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
       if (hasRandomWorldHazard(st)) hazardBonuses[type] = (hazardBonuses[type] || 0) + 1;
@@ -166,6 +169,22 @@ function applyRWGEffects() {
     const effectiveCount = baseCount + bonus;
     for (const eff of effects) {
       const value = typeof eff.computeValue === "function" ? eff.computeValue(effectiveCount, eff) : eff.value;
+      if (eff.type === "resourceCostMultiplier" && Array.isArray(eff.resourceId)) {
+        for (const resourceId of eff.resourceId) {
+          addEffect({
+            effectId: `${eff.effectId}-${resourceId}`,
+            sourceId: `rwg-${type}`,
+            type: eff.type,
+            target: eff.target,
+            targetId: eff.targetId,
+            resourceCategory: eff.resourceCategory,
+            resourceId,
+            value,
+          });
+        }
+        continue;
+      }
+
       addEffect({
         effectId: eff.effectId,
         sourceId: `rwg-${type}`,
