@@ -206,7 +206,7 @@ class ArtificialManager extends EffectableEntity {
             cost,
             sector,
             star,
-            initialDeposit: { metal: 0, silicon: 0 },
+            stockpile: { metal: 0, silicon: 0 },
             builtFrom: spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : 'unknown',
             worldDivisor: worldCount
         };
@@ -232,7 +232,7 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
-    addInitialDeposit(payload, prioritizeStorage = this.prioritizeSpaceStorage) {
+    addStockpile(payload, prioritizeStorage = this.prioritizeSpaceStorage) {
         if (!this.activeProject) return false;
         const amounts = {
             metal: Math.max(payload?.metal || 0, 0),
@@ -241,11 +241,28 @@ class ArtificialManager extends EffectableEntity {
         if (!amounts.metal && !amounts.silicon) return false;
         const deduction = this.pullResources(amounts, prioritizeStorage);
         if (!deduction) return false;
-        this.activeProject.initialDeposit.metal += amounts.metal;
-        this.activeProject.initialDeposit.silicon += amounts.silicon;
+        this.activeProject.stockpile.metal += amounts.metal;
+        this.activeProject.stockpile.silicon += amounts.silicon;
         this.activeProject.override = null;
         this.updateUI(true);
         return true;
+    }
+
+    addInitialDeposit(payload, prioritizeStorage = this.prioritizeSpaceStorage) {
+        return this.addStockpile(payload, prioritizeStorage);
+    }
+
+    resetInitialResources(resources) {
+        Object.keys(resources || {}).forEach((categoryKey) => {
+            const category = resources[categoryKey];
+            Object.keys(category || {}).forEach((resourceKey) => {
+                const entry = category[resourceKey];
+                if (!entry || resourceKey === 'metal' || resourceKey === 'silicon') return;
+                if (entry.initialValue !== undefined) {
+                    category[resourceKey] = { ...entry, initialValue: 0 };
+                }
+            });
+        });
     }
 
     buildOverride(project) {
@@ -256,10 +273,11 @@ class ArtificialManager extends EffectableEntity {
         const star = project.star ? JSON.parse(JSON.stringify(project.star)) : (currentPlanetParameters && currentPlanetParameters.star)
             ? JSON.parse(JSON.stringify(currentPlanetParameters.star))
             : null;
-        const depositMetal = project.initialDeposit?.metal || 0;
-        const depositSilicon = project.initialDeposit?.silicon || 0;
+        const stockpileMetal = project.stockpile?.metal || project.initialDeposit?.metal || 0;
+        const stockpileSilicon = project.stockpile?.silicon || project.initialDeposit?.silicon || 0;
 
         const base = JSON.parse(JSON.stringify(defaultPlanetParameters || {}));
+        this.resetInitialResources(base.resources);
         base.name = project.name;
         base.classification = {
             archetype: 'artificial',
@@ -293,16 +311,16 @@ class ArtificialManager extends EffectableEntity {
         base.resources.surface.liquidCO2 = { ...(base.resources.surface.liquidCO2 || {}), initialValue: 0 };
         base.resources.surface.liquidMethane = { ...(base.resources.surface.liquidMethane || {}), initialValue: 0 };
         base.resources.surface.hydrocarbonIce = { ...(base.resources.surface.hydrocarbonIce || {}), initialValue: 0 };
-        const metalCap = Math.max(base.resources.colony.metal?.baseCap || 0, depositMetal);
-        const siliconCap = Math.max(base.resources.colony.silicon?.baseCap || 0, depositSilicon);
+        const metalCap = Math.max(base.resources.colony.metal?.baseCap || 0, stockpileMetal);
+        const siliconCap = Math.max(base.resources.colony.silicon?.baseCap || 0, stockpileSilicon);
         base.resources.colony.metal = {
             ...(base.resources.colony.metal || {}),
-            initialValue: depositMetal,
+            initialValue: stockpileMetal,
             baseCap: metalCap
         };
         base.resources.colony.silicon = {
             ...(base.resources.colony.silicon || {}),
-            initialValue: depositSilicon,
+            initialValue: stockpileSilicon,
             baseCap: siliconCap
         };
         base.zonalWater = {
@@ -350,7 +368,8 @@ class ArtificialManager extends EffectableEntity {
 
     travelToConstructedWorld() {
         if (!this.activeProject || this.activeProject.status !== 'completed') return false;
-        const override = this.activeProject.override || this.buildOverride(this.activeProject);
+        const override = this.buildOverride(this.activeProject);
+        this.activeProject.override = override;
         const res = {
             merged: override,
             seedString: this.activeProject.seed,
@@ -385,7 +404,7 @@ class ArtificialManager extends EffectableEntity {
         if (next === 0) {
             this.activeProject.status = 'completed';
             this.activeProject.completedAt = Date.now();
-            this.activeProject.override = this.buildOverride(this.activeProject);
+            this.activeProject.override = null;
         }
         if (triggerUpdate) {
             this.updateUI(true);
@@ -431,6 +450,15 @@ class ArtificialManager extends EffectableEntity {
         this.activeProject = state.activeProject || null;
         if (this.activeProject) {
             this.activeProject.override = null;
+            if (!this.activeProject.stockpile) {
+                const legacyDeposit = this.activeProject.initialDeposit || {};
+                const metal = legacyDeposit.metal || 0;
+                const silicon = legacyDeposit.silicon || 0;
+                this.activeProject.stockpile = { metal, silicon };
+            }
+            if (this.activeProject.initialDeposit) {
+                delete this.activeProject.initialDeposit;
+            }
             if (!this.activeProject.worldDivisor) {
                 this.activeProject.worldDivisor = 1;
             }

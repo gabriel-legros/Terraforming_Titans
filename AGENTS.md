@@ -321,3 +321,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added Solis Prime as a rogue story planet that relies on background radiation for luminosity.
 - Galaxy map sectors that block story progress now show a journal icon until conquered and explain the required world milestone in the sector details.
 - Added an Artificial space subtab managed by a new ArtificialManager and UI that only appears when the manager is enabled.
+- Built a shellworld construction flow with radius-scaled costs, space-storage payments, launch stashes, travel/discard controls, and a persistent construction history.
+- Refined artificial world drafting with RWG-inspired UI, terraformed-world build speed scaling, world naming, larger Super Earth shells, and stash steppers recommending 1B+ starting resources.

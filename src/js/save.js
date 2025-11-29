@@ -142,6 +142,7 @@ function getGameState() {
     automationManager: automationManager && automationManager.saveState ? automationManager.saveState() : undefined,
     solisManager: (typeof solisManager !== 'undefined' && typeof solisManager.saveState === 'function') ? solisManager.saveState() : undefined,
     warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
+    artificialManager: (typeof artificialManager !== 'undefined' && typeof artificialManager.saveState === 'function') ? artificialManager.saveState() : undefined,
     lifeDesigner: (typeof lifeDesigner !== 'undefined' && typeof lifeDesigner.saveState === 'function') ? lifeDesigner.saveState() : undefined,
     milestonesManager: (typeof milestonesManager !== 'undefined' && typeof milestonesManager.saveState === 'function') ? milestonesManager.saveState() : undefined,
     skills: (typeof skillManager !== 'undefined' && typeof skillManager.saveState === 'function') ? skillManager.saveState() : undefined,
@@ -476,6 +477,10 @@ function loadGame(slotOrCustomString, recreate = true) {
     if (gameState.automationManager && automationManager && automationManager.loadState) {
       automationManager.loadState(gameState.automationManager);
       updateAutomationVisibility?.();
+    }
+
+    if (gameState.artificialManager && artificialManager && artificialManager.loadState) {
+      artificialManager.loadState(gameState.artificialManager);
     }
     
     if (gameState.hazardManager && typeof hazardManager !== 'undefined' && typeof hazardManager.load === 'function') {

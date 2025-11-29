@@ -819,6 +819,7 @@ class SpaceManager extends EffectableEntity {
         const existing = this.randomWorldStatuses[s];
         const firstVisit = !existing?.visited;
         const destinationTerraformed = existing?.terraformed || false;
+        const artificialWorld = !!(res?.artificial || res?.original?.artificial || existing?.artificial);
 
         const storageState = this.prepareForTravel();
         this.recordDepartureSnapshot();
@@ -835,11 +836,16 @@ class SpaceManager extends EffectableEntity {
                 visited: true,
                 orbitalRing: false,
                 departedAt: null,
-                ecumenopolisPercent: 0
+                ecumenopolisPercent: 0,
+                artificial: artificialWorld
             };
         } else {
             existing.original = existing.original || res;
+            existing.artificial = existing.artificial || artificialWorld;
             existing.visited = true;
+            if (!existing.name) {
+                existing.name = this.currentRandomName;
+            }
         }
 
         this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);

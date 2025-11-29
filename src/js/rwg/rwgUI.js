@@ -674,7 +674,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
   // Star summary + parent body if any
-  const star = res.star;
+  const star = res.merged?.star || res.star;
   const toDisplayTemp = typeof toDisplayTemperature === 'function' ? toDisplayTemperature : (v => v);
   const tempUnit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
   const starPanel = `
@@ -868,7 +868,7 @@ function renderHistory() {
   if (!sm || !historyListEl) return;
   const currentSeed = String(sm.currentRandomSeed ?? '');
   const entries = Object.entries(sm.randomWorldStatuses || {})
-    .filter(([, st]) => st?.visited)
+    .filter(([, st]) => st?.visited && !st?.artificial)
     .map(([seed, st]) => ({
       name: st.name || `Seed ${seed}`,
       // Prefer top-level archetype from RWG result; fall back to any embedded classification
