@@ -633,6 +633,7 @@ function addOrRemoveEffect(effect, action) {
     'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
     'galaxyManager': typeof galaxyManager !== 'undefined' ? galaxyManager : undefined,
+    'artificialManager': typeof artificialManager !== 'undefined' ? artificialManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined
   };
 

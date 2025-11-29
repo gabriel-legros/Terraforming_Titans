@@ -38,6 +38,7 @@ let researchManager;
 let fundingModule;
 let spaceManager;
 let automationManager;
+let artificialManager;
 
 let gameSettings = {
   useCelsius: false,
@@ -77,5 +78,11 @@ let gameSpeed = 1;
 Object.defineProperty(globalThis, 'galaxyManager', {
   get: () => galaxyManager,
   set: (value) => { galaxyManager = value; },
+  configurable: true,
+});
+
+Object.defineProperty(globalThis, 'artificialManager', {
+  get: () => artificialManager,
+  set: (value) => { artificialManager = value; },
   configurable: true,
 });

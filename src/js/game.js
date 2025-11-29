@@ -134,6 +134,7 @@ function initializeDefaultGlobals(){
   spaceManager = new SpaceManager(planetParameters);
   globalThis.spaceManager = spaceManager;
   galaxyManager = new GalaxyManager();
+  artificialManager = setArtificialManager(new ArtificialManager());
   initializeHopeUI();
   initializeSpaceUI(spaceManager);
   if (typeof galaxyManager.initialize === 'function') {
@@ -344,6 +345,11 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !warpGateCommand) {
     warpGateCommand = new WarpGateCommand();
   }
+  if (!preserveManagers || !artificialManager) {
+    artificialManager = setArtificialManager(new ArtificialManager());
+  } else if (artificialManager && typeof artificialManager.updateUI === 'function') {
+    artificialManager.updateUI({ force: true });
+  }
 
   milestonesManager = new MilestonesManager();
   if (!preserveManagers || !galaxyManager) {
@@ -461,6 +467,9 @@ function updateLogic(delta) {
   }
   if (warpGateCommand) {
     warpGateCommand.update(delta);
+  }
+  if (artificialManager) {
+    artificialManager.update(delta);
   }
 
   lifeDesigner.update(delta);

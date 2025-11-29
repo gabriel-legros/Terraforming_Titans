@@ -179,6 +179,8 @@
     <script src="src/js/autobuild.js"></script>
     <script src="src/js/gold-asteroid.js"></script>
     <script src="src/js/space.js"></script>
+    <script src="src/js/space/artificial.js"></script>
+    <script src="src/js/space/artificialUI.js"></script>
     <script src="src/js/spaceUI.js"></script>
     <script src="src/js/galaxy/galaxyConstants.js"></script>
     <script src="src/js/galaxy/sector.js"></script>
@@ -450,11 +452,12 @@
     <!-- *** NEW SPACE TAB CONTENT *** -->
     <div id="space" class="tab-content">
         <div class="container space-container"> <!-- Add specific class if needed -->
-            <div class="space-subtabs">
-                <div class="space-subtab active" data-subtab="space-story">Story</div>
-                <div class="space-subtab hidden" data-subtab="space-random">Random</div>
-                <div class="space-subtab hidden" data-subtab="space-galaxy">Galaxy</div>
-            </div>
+                <div class="space-subtabs">
+                    <div class="space-subtab active" data-subtab="space-story">Story</div>
+                    <div class="space-subtab hidden" data-subtab="space-random">Random</div>
+                    <div class="space-subtab hidden" data-subtab="space-artificial">Artificial</div>
+                    <div class="space-subtab hidden" data-subtab="space-galaxy">Galaxy</div>
+                </div>
             <div class="space-subtab-content-wrapper">
                 <div id="space-story" class="space-subtab-content active">
                     <div class="space-story-layout">
@@ -509,6 +512,9 @@
                 </div>
                 <div id="space-random" class="space-subtab-content hidden">
                     <!-- Random events will appear here -->
+                </div>
+                <div id="space-artificial" class="space-subtab-content hidden">
+                    <!-- Artificial manager UI -->
                 </div>
                 <div id="space-galaxy" class="space-subtab-content hidden">
                     <!-- Galaxy overview placeholder -->

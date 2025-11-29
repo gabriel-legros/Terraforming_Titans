@@ -320,3 +320,4 @@ The planet visualiser has been modularised into files covering core setup, light
 ## Feature updates
 - Added Solis Prime as a rogue story planet that relies on background radiation for luminosity.
 - Galaxy map sectors that block story progress now show a journal icon until conquered and explain the required world milestone in the sector details.
+- Added an Artificial space subtab managed by a new ArtificialManager and UI that only appears when the manager is enabled.
