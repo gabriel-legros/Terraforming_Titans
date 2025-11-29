@@ -318,6 +318,9 @@ function initializeSpaceUI(spaceManager) {
     initializeSpaceTabs();
     hideSpaceRandomTab();
     cacheGalaxyTabElements();
+    if (typeof updateArtificialUI === 'function') {
+        updateArtificialUI({ force: true });
+    }
     cacheSpaceTabWarningElements(document);
     setSpaceIncomingAttackWarning(false);
     if (typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled) {
@@ -416,6 +419,9 @@ function initializeSpaceUI(spaceManager) {
 
 function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
+    if (typeof updateArtificialUI === 'function') {
+        updateArtificialUI();
+    }
     updateSpaceRandomVisibility();
     updateCurrentWorldUI();
     updateSpaceStatsUI();
