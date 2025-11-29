@@ -203,6 +203,9 @@ class SpaceshipAutomation {
   }
 
   computeEntryMax(entry, project) {
+    if (!this.isProjectEnabled(project)) {
+      return 0;
+    }
     const projectCap = typeof project.getMaxAssignableShips === 'function'
       ? project.getMaxAssignableShips()
       : Infinity;
@@ -217,6 +220,25 @@ class SpaceshipAutomation {
     }
     const boundedMax = Number.isFinite(baseMax) && baseMax > 0 ? baseMax : Infinity;
     return Math.min(projectCap, boundedMax);
+  }
+
+  isProjectEnabled(project) {
+    if (!project) {
+      return false;
+    }
+    if (project.enabled === false) {
+      return false;
+    }
+    if (project.unlocked === false) {
+      return false;
+    }
+    if (project.isPermanentlyDisabled?.()) {
+      return false;
+    }
+    if (project.isVisible?.() === false) {
+      return false;
+    }
+    return true;
   }
 
   getSpaceshipProjects() {
