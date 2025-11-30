@@ -10,7 +10,7 @@ const SHELL_RADIUS_MAX = 8;
 class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
-        this.enabled = true;
+        this.enabled = false;
         this.constructionHoursPer50B = 5;
         this.prioritizeSpaceStorage = true;
         this.nextId = 1;
