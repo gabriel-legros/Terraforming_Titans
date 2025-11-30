@@ -20,6 +20,7 @@ const ROGUE_STAR = {
 };
 
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
+const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
 
 function normalizeSectorLabel(value) {
     const text = value == null ? '' : String(value).trim();
@@ -77,6 +78,12 @@ function hasSuperEarthArchetype(...sources) {
         }
     }
     return false;
+}
+
+function getLandFromParams(source) {
+    return source?.resources?.surface?.land?.initialValue
+        || source?.resources?.surface?.land?.baseCap
+        || 0;
 }
 
 var getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction || function () { return 0; };
@@ -423,6 +430,27 @@ class SpaceManager extends EffectableEntity {
             .filter(status => status.terraformed).length;
     }
 
+    _deriveArtificialTerraformValue(status) {
+        if (!status) return 1;
+        if (Number.isFinite(status.terraformedValue) && status.terraformedValue > 0) {
+            return Math.max(1, Math.floor(status.terraformedValue));
+        }
+        const landSources = [
+            status.landHa,
+            getLandFromParams(status.original?.merged),
+            getLandFromParams(status.original?.override),
+            getLandFromParams(status.original),
+            status.original?.merged?.resources?.surface?.land?.value
+        ];
+        const land = landSources.find((val) => Number.isFinite(val) && val > 0) || 0;
+        const derived = Math.max(1, Math.floor(land / ARTIFICIAL_TERRAFORM_DIVISOR));
+        return derived;
+    }
+
+    _getCurrentWorldLandHa() {
+        return getLandFromParams(currentPlanetParameters);
+    }
+
     /**
      * Counts how many planets have been fully terraformed and adds orbital rings.
      * @returns {number}
@@ -437,7 +465,12 @@ class SpaceManager extends EffectableEntity {
             ? galaxyManager.getControlledSectorWorldCount()
             : 0;
         const sectorBonus = Number.isFinite(sectorWorlds) ? Math.max(0, sectorWorlds) : 0;
-        return base + rings + extra + sectorBonus;
+        const artificialBonus = Object.values(this.artificialWorldStatuses || {}).reduce((acc, status) => {
+            if (!status?.terraformed) return acc;
+            const value = this._deriveArtificialTerraformValue(status);
+            return acc + Math.max(0, value - 1);
+        }, 0);
+        return base + rings + extra + sectorBonus + artificialBonus;
     }
 
     /**
@@ -644,8 +677,18 @@ class SpaceManager extends EffectableEntity {
                     visited: true,
                     orbitalRing: false,
                     departedAt: null,
-                    ecumenopolisPercent: 0
+                    ecumenopolisPercent: 0,
+                    terraformedValue: this._deriveArtificialTerraformValue({
+                        landHa: this._getCurrentWorldLandHa(),
+                        original: this.getCurrentWorldOriginal()
+                    })
                 };
+            } else if (!this.artificialWorldStatuses[key].terraformedValue) {
+                this.artificialWorldStatuses[key].terraformedValue = this._deriveArtificialTerraformValue({
+                    landHa: this._getCurrentWorldLandHa(),
+                    original: this.getCurrentWorldOriginal(),
+                    terraformedValue: this.artificialWorldStatuses[key].terraformedValue
+                });
             }
             if (this.artificialWorldStatuses[key].terraformed !== isComplete) {
                 this.artificialWorldStatuses[key].terraformed = isComplete;
@@ -789,7 +832,11 @@ class SpaceManager extends EffectableEntity {
                     orbitalRing: false,
                     departedAt: null,
                     ecumenopolisPercent: 0,
-                    artificial: true
+                    artificial: true,
+                    terraformedValue: this._deriveArtificialTerraformValue({
+                        landHa: this._getCurrentWorldLandHa(),
+                        original: this.getCurrentWorldOriginal()
+                    })
                 };
             }
             const st = this.artificialWorldStatuses[key];
@@ -797,6 +844,13 @@ class SpaceManager extends EffectableEntity {
             st.colonists = pop;
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
+            if (!st.terraformedValue) {
+                st.terraformedValue = this._deriveArtificialTerraformValue({
+                    landHa: this._getCurrentWorldLandHa(),
+                    original: this.getCurrentWorldOriginal(),
+                    terraformedValue: st.terraformedValue
+                });
+            }
             if (!st.name) st.name = this.currentRandomName || `Artificial ${key}`;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
             const ps = this.planetStatuses[this.currentPlanetKey];
@@ -905,6 +959,13 @@ class SpaceManager extends EffectableEntity {
         this.currentArtificialKey = isArtificial ? s : null;
         this.currentPlanetKey = s;
         this.currentRandomName = res?.merged?.name || (isArtificial ? `Artificial ${s}` : `Seed ${s}`);
+        const terraformedValue = isArtificial
+            ? this._deriveArtificialTerraformValue({
+                terraformedValue: res?.terraformedValue,
+                landHa: getLandFromParams(res?.merged),
+                original: res
+            })
+            : 1;
         if (!existing) {
             const targetMap = isArtificial ? this.artificialWorldStatuses : this.randomWorldStatuses;
             targetMap[s] = {
@@ -916,12 +977,16 @@ class SpaceManager extends EffectableEntity {
                 orbitalRing: false,
                 departedAt: null,
                 ecumenopolisPercent: 0,
-                artificial: artificialWorld
+                artificial: artificialWorld,
+                terraformedValue
             };
         } else {
             existing.original = existing.original || res;
             existing.artificial = existing.artificial || artificialWorld;
             existing.visited = true;
+            if (isArtificial && !existing.terraformedValue) {
+                existing.terraformedValue = terraformedValue;
+            }
             if (!existing.name) {
                 existing.name = this.currentRandomName;
             }

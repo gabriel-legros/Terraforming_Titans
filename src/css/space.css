@@ -413,6 +413,46 @@
   color: var(--space-fg);
 }
 
+.artificial-gains {
+  margin-top: 4px;
+  border-top: 1px dashed var(--space-border-color);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.artificial-gains h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--space-fg);
+}
+
+.artificial-gains-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--space-fg-muted);
+  font-size: 13px;
+}
+
+.artificial-gain-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.artificial-gain-row span:first-child {
+  font-weight: 700;
+  color: var(--space-fg);
+}
+
+.artificial-gain-value {
+  color: var(--space-fg-muted);
+}
+
 .artificial-priority {
   display: flex;
   align-items: center;

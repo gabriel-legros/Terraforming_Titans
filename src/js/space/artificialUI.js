@@ -16,6 +16,8 @@ const artificialUICache = {
   starContext: null,
   durationValue: null,
   durationTooltip: null,
+  gainEffective: null,
+  gainDistinct: null,
   priority: null,
   startBtn: null,
   cancelBtn: null,
@@ -396,6 +398,38 @@ function ensureArtificialLayout() {
   startBtn.textContent = 'Start Shellworld';
   artificialUICache.startBtn = startBtn;
   costs.appendChild(startBtn);
+
+  const gains = document.createElement('div');
+  gains.className = 'artificial-gains';
+  const gainsTitle = document.createElement('h3');
+  gainsTitle.textContent = 'Gains when Terraformed';
+  gains.appendChild(gainsTitle);
+  const gainsList = document.createElement('div');
+  gainsList.className = 'artificial-gains-list';
+  const distinctRow = document.createElement('div');
+  distinctRow.className = 'artificial-gain-row';
+  const distinctLabel = document.createElement('span');
+  distinctLabel.textContent = 'Distinct worlds:';
+  const distinctValue = document.createElement('span');
+  distinctValue.className = 'artificial-gain-value';
+  artificialUICache.gainDistinct = distinctValue;
+  distinctRow.appendChild(distinctLabel);
+  distinctRow.appendChild(distinctValue);
+  const effectiveRow = document.createElement('div');
+  effectiveRow.className = 'artificial-gain-row';
+  const effectiveLabel = document.createElement('span');
+  effectiveLabel.textContent = 'Counts as:';
+  const effectiveValue = document.createElement('span');
+  effectiveValue.className = 'artificial-gain-value';
+  effectiveValue.title = 'Effective terraformed worlds contributed by this construct.';
+  artificialUICache.gainEffective = effectiveValue;
+  effectiveRow.appendChild(effectiveLabel);
+  effectiveRow.appendChild(effectiveValue);
+  gainsList.appendChild(distinctRow);
+  gainsList.appendChild(effectiveRow);
+  gains.appendChild(gainsList);
+
+  costs.appendChild(gains);
 
   grid.appendChild(costs);
 
@@ -854,6 +888,21 @@ function renderCosts(project, radius, manager) {
   return { cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount };
 }
 
+function renderGains(project, radius, manager) {
+  const r = project ? project.radiusEarth : radius;
+  const effective = project?.terraformedValue || manager.calculateTerraformWorldValue(r);
+  const distinct = 1;
+  if (artificialUICache.gainDistinct) {
+    const label = distinct === 1 ? '1 distinct world' : `${distinct} distinct worlds`;
+    artificialUICache.gainDistinct.textContent = label;
+  }
+  if (artificialUICache.gainEffective) {
+    const label = effective === 1 ? '1 terraformed world' : `${effective} terraformed worlds`;
+    artificialUICache.gainEffective.textContent = label;
+    artificialUICache.gainEffective.title = `Land contributes ${label} (1 per 50B ha, minimum 1).`;
+  }
+}
+
 function renderStartButton(project, manager, preview) {
   if (!artificialUICache.startBtn) return;
   const btn = artificialUICache.startBtn;
@@ -951,6 +1000,7 @@ function updateArtificialUI() {
 
   const radius = project ? project.radiusEarth : getRadiusValue();
   const preview = renderCosts(project, radius, manager);
+  renderGains(project, radius, manager);
   renderStartButton(project, manager, preview);
   renderProgress(project);
   renderStash(project, manager);

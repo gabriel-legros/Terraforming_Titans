@@ -8,8 +8,8 @@ const ARTIFICIAL_TYPES = [
 ];
 const ARTIFICIAL_CORES = [
     { value: 'super-earth', label: 'Super Earth', disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
-    { value: 'ice-giant', label: 'Ice giant', disabled: true, disabledSource : "World 9", minRadiusEarth: 3.2, maxRadiusEarth: 4.5, allowStar: true, minFlux: 50, maxFlux: 500 },
-    { value: 'gas-giant', label: 'Gas giant', disabled: true, disabledSource : "World 10", minRadiusEarth: 4.5, maxRadiusEarth: 70, allowStar: true, minFlux: 50, maxFlux: 800 },
+    { value: 'ice-giant', label: 'Ice giant', disabled: false, minRadiusEarth: 3.2, maxRadiusEarth: 4.5, allowStar: true, minFlux: 50, maxFlux: 500 },
+    { value: 'gas-giant', label: 'Gas giant', disabled: true, disabledSource : "World 9", minRadiusEarth: 4.5, maxRadiusEarth: 70, allowStar: true, minFlux: 50, maxFlux: 800 },
     { value: 'brown-dwarf', label: 'Brown Dwarf', disabled: true, disabledSource : "World 11", minRadiusEarth: 70, maxRadiusEarth: 140, allowStar: false},
     { value: 'white-dwarf', label: 'White Dwarf', disabled: true, disabledSource : "World 12", minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
     { value: 'neutron-star', label: 'Neutron Star', disabled: true, disabledSource : "World 13", minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
@@ -32,6 +32,7 @@ const BASE_SHELL_COST = (() => {
         metal: superalloyBase * 10
     };
 })();
+const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
 class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
@@ -91,6 +92,11 @@ class ArtificialManager extends EffectableEntity {
             superalloys: BASE_SHELL_COST.superalloys * factor,
             metal: BASE_SHELL_COST.metal * factor
         };
+    }
+
+    calculateTerraformWorldValue(radiusEarth) {
+        const land = this.calculateAreaHectares(radiusEarth);
+        return Math.max(1, Math.floor((land || 0) / TERRAFORM_WORLD_DIVISOR));
     }
 
     calculateDurationMs(radiusEarth) {
@@ -212,6 +218,7 @@ class ArtificialManager extends EffectableEntity {
         if (!deduction) return false;
 
         const areaHa = this.calculateAreaHectares(radiusEarth);
+        const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
         const { durationMs, worldCount } = this.getDurationContext(radiusEarth);
         const now = Date.now();
         const sector = (spaceManager && spaceManager.getCurrentWorldOriginal)
@@ -246,6 +253,7 @@ class ArtificialManager extends EffectableEntity {
             startedAt: now,
             completedAt: null,
             cost,
+            terraformedValue,
             sector,
             star,
             stockpile: { metal: 0, silicon: 0 },
@@ -626,6 +634,9 @@ class ArtificialManager extends EffectableEntity {
             }
             if (!this.activeProject.worldDivisor) {
                 this.activeProject.worldDivisor = 1;
+            }
+            if (!this.activeProject.terraformedValue) {
+                this.activeProject.terraformedValue = this.calculateTerraformWorldValue(this.activeProject.radiusEarth);
             }
             if (this.activeProject.hasStar === undefined) {
                 this.activeProject.hasStar = true;
