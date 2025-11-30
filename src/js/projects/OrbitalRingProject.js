@@ -25,7 +25,9 @@ class OrbitalRingProject extends TerraformingDurationProject {
     ) {
       return true;
     }
-    return this.ringCount < spaceManager.getUnmodifiedTerraformedWorldCount();
+    return this.ringCount < spaceManager.getUnmodifiedTerraformedWorldCount({
+      countArtificial: false
+    });
   }
 
   complete() {

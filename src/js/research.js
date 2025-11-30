@@ -359,6 +359,13 @@ class Research {
       return (geo?.maxDeposits || 0) > 0;
     }
 
+    isArtificialWorld() {
+      if (spaceManager && spaceManager.currentArtificialKey !== null) {
+        return true;
+      }
+      return currentPlanetParameters?.classification?.archetype === 'artificial';
+    }
+
     isResearchDisplayable(research) {
       if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
         return false;
@@ -375,6 +382,9 @@ class Research {
         return false;
       }
       if (research.requiresGeothermal && !this.planetHasGeothermalDeposits()) {
+        return false;
+      }
+      if (research.artificialAllowed === false && this.isArtificialWorld()) {
         return false;
       }
       if (research.requiredFlags && !research.requiredFlags.every(f => this.isBooleanFlagSet(f))) {

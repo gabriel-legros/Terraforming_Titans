@@ -281,7 +281,11 @@ class SpaceManager extends EffectableEntity {
             return !!this.randomWorldStatuses[String(this.currentRandomSeed)]?.orbitalRing;
         }
         if (this.currentArtificialKey !== null) {
-            return !!this.artificialWorldStatuses[this.currentArtificialKey]?.orbitalRing;
+            const key = String(this.currentArtificialKey);
+            if (this.artificialWorldStatuses[key]?.orbitalRing) {
+                this.artificialWorldStatuses[key].orbitalRing = false;
+            }
+            return false;
         }
         return !!this.planetStatuses[this.currentPlanetKey]?.orbitalRing;
     }
@@ -292,10 +296,9 @@ class SpaceManager extends EffectableEntity {
             this.setRandomWorldHasOrbitalRing(seed, value);
         } else if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
-            if (!this.artificialWorldStatuses[key]) {
-                this.artificialWorldStatuses[key] = { orbitalRing: false, terraformed: false, visited: true, name: key };
+            if (this.artificialWorldStatuses[key]) {
+                this.artificialWorldStatuses[key].orbitalRing = false;
             }
-            this.artificialWorldStatuses[key].orbitalRing = !!value;
         } else {
             this.setStoryWorldHasOrbitalRing(this.currentPlanetKey, value);
         }
@@ -423,11 +426,41 @@ class SpaceManager extends EffectableEntity {
 
     /**
      * Returns the count of fully terraformed worlds without orbital ring bonuses.
+     * @param {Object} options
+     * @param {boolean} options.countStory
+     * @param {boolean} options.countRandom
+     * @param {boolean} options.countArtificial
      * @returns {number}
      */
-    getUnmodifiedTerraformedWorldCount() {
-        return Object.values(this.getAllPlanetStatuses())
-            .filter(status => status.terraformed).length;
+    getUnmodifiedTerraformedWorldCount(options = {}) {
+        const {
+            countStory = true,
+            countRandom = true,
+            countArtificial = true
+        } = options;
+        let total = 0;
+        if (countStory) {
+            Object.values(this.planetStatuses).forEach((status) => {
+                if (status?.terraformed) {
+                    total += 1;
+                }
+            });
+        }
+        if (countRandom) {
+            Object.values(this.randomWorldStatuses).forEach((status) => {
+                if (status?.terraformed) {
+                    total += 1;
+                }
+            });
+        }
+        if (countArtificial) {
+            Object.values(this.artificialWorldStatuses).forEach((status) => {
+                if (status?.terraformed) {
+                    total += 1;
+                }
+            });
+        }
+        return total;
     }
 
     _deriveArtificialTerraformValue(status) {
@@ -1091,6 +1124,11 @@ class SpaceManager extends EffectableEntity {
 
         if (savedData.artificialWorldStatuses) {
             this.artificialWorldStatuses = savedData.artificialWorldStatuses;
+            Object.keys(this.artificialWorldStatuses).forEach((key) => {
+                if (this.artificialWorldStatuses[key]?.orbitalRing) {
+                    this.artificialWorldStatuses[key].orbitalRing = false;
+                }
+            });
         }
 
         if (savedData.randomWorldStatuses) {

@@ -364,6 +364,7 @@ const researchParameters = {
         description: 'Unlock a repeatable special project to increase ore output from mining.',
         cost: { research: 100000 },
         prerequisites: [],
+        artificialAllowed: false,
         effects: [
           {
             target: 'project',
@@ -420,6 +421,7 @@ const researchParameters = {
         description: 'Unlocks a repeatable android project to expand usable land via subterranean construction.',
         cost: { research: 2000000 },
         prerequisites: ['android_factory'],
+        artificialAllowed: false,
         requiredFlags: ['undergroundHabitatsResearchUnlocked'],
         effects: [
           {

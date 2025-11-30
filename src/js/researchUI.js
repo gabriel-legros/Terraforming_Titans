@@ -272,11 +272,21 @@ function loadResearchCategory(category) {
         return (geo?.maxDeposits || 0) > 0;
     };
 
+    const planetIsArtificial = () => {
+        if (researchManager.isArtificialWorld) {
+            return researchManager.isArtificialWorld();
+        }
+        return currentPlanetParameters?.classification?.archetype === 'artificial';
+    };
+
     researches.forEach((research) => {
         if (research.requiresMethane && !planetHasMethane()) {
             return;
         }
         if (research.requiresGeothermal && !planetHasGeothermal()) {
+            return;
+        }
+        if (research.artificialAllowed === false && planetIsArtificial()) {
             return;
         }
         if (research.requiredFlags && !research.requiredFlags.every(f => researchManager.isBooleanFlagSet(f))) {
