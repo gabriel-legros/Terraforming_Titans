@@ -43,6 +43,7 @@ const artificialStashMultipliers = {
   metal: 1_000_000_000,
   silicon: 1_000_000_000
 };
+let artificialRadiusEditing = false;
 
 function cacheArtificialUIElements() {
   const doc = typeof document !== 'undefined' ? document : null;
@@ -146,17 +147,37 @@ function clampRadiusValue(value) {
   return Math.min(Math.max(value, bounds.min), bounds.max);
 }
 
+function isRadiusFieldActive() {
+  if (typeof document === 'undefined') return false;
+  return document.activeElement === artificialUICache.radiusInput
+    || document.activeElement === artificialUICache.radiusRange;
+}
+
+function setRadiusFields(value, force = false) {
+  const next = clampRadiusValue(value);
+  if (artificialUICache.radiusRange && (force || (!isRadiusFieldActive() && !artificialRadiusEditing))) {
+    artificialUICache.radiusRange.value = next;
+  }
+  if (artificialUICache.radiusInput && (force || (!artificialRadiusEditing && document.activeElement !== artificialUICache.radiusInput))) {
+    artificialUICache.radiusInput.value = next;
+  }
+}
+
 function applyRadiusBounds() {
   const bounds = getRadiusBounds();
   if (artificialUICache.radiusRange) {
     artificialUICache.radiusRange.min = bounds.min;
     artificialUICache.radiusRange.max = bounds.max;
-    artificialUICache.radiusRange.value = clampRadiusValue(parseFloat(artificialUICache.radiusRange.value) || bounds.min);
+    if (!isRadiusFieldActive() && !artificialRadiusEditing) {
+      artificialUICache.radiusRange.value = clampRadiusValue(parseFloat(artificialUICache.radiusRange.value) || bounds.min);
+    }
   }
   if (artificialUICache.radiusInput) {
     artificialUICache.radiusInput.min = bounds.min;
     artificialUICache.radiusInput.max = bounds.max;
-    artificialUICache.radiusInput.value = clampRadiusValue(parseFloat(artificialUICache.radiusInput.value) || bounds.min);
+    if (!artificialRadiusEditing && document.activeElement !== artificialUICache.radiusInput) {
+      artificialUICache.radiusInput.value = clampRadiusValue(parseFloat(artificialUICache.radiusInput.value) || bounds.min);
+    }
   }
 }
 
@@ -314,21 +335,25 @@ function ensureArtificialLayout() {
   radiusLabel.appendChild(radiusTop);
   artificialUICache.radiusLabel = radiusValue;
 
+  const radiusControls = document.createElement('div');
+  radiusControls.className = 'artificial-radius-controls';
+
   const radiusRange = document.createElement('input');
   radiusRange.type = 'range';
-  radiusRange.step = '0.1';
+  radiusRange.step = '0.01';
   radiusRange.value = '2';
   radiusRange.className = 'artificial-radius-range';
   artificialUICache.radiusRange = radiusRange;
-  radiusLabel.appendChild(radiusRange);
+  radiusControls.appendChild(radiusRange);
 
   const radiusInput = document.createElement('input');
   radiusInput.type = 'number';
-  radiusInput.step = '0.1';
+  radiusInput.step = '0.01';
   radiusInput.value = '2';
   radiusInput.className = 'artificial-radius-input';
   artificialUICache.radiusInput = radiusInput;
-  radiusLabel.appendChild(radiusInput);
+  radiusControls.appendChild(radiusInput);
+  radiusLabel.appendChild(radiusControls);
 
   const surfaceBox = document.createElement('div');
   surfaceBox.className = 'artificial-surface-box';
@@ -618,10 +643,19 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   radiusInput.addEventListener('input', () => {
-    const value = parseFloat(radiusInput.value) || 0;
-    const clamped = clampRadiusValue(value);
-    radiusInput.value = clamped;
-    radiusRange.value = clamped;
+    if (artificialUICache.radiusRange) {
+      const value = parseFloat(radiusInput.value) || 0;
+      const clamped = clampRadiusValue(value);
+      artificialUICache.radiusRange.value = clamped;
+    }
+  });
+  radiusInput.addEventListener('focus', () => {
+    artificialRadiusEditing = true;
+  });
+  radiusInput.addEventListener('blur', () => {
+    artificialRadiusEditing = false;
+    const value = clampRadiusValue(parseFloat(radiusInput.value) || 0);
+    setRadiusFields(value, true);
     updateArtificialUI();
   });
   priorityCheckbox.addEventListener('change', () => {
@@ -719,6 +753,9 @@ function toggleArtificialTabVisibility(isEnabled) {
 
 function getRadiusValue() {
   if (!artificialUICache.radiusRange) return 1;
+  if (artificialRadiusEditing || document.activeElement === artificialUICache.radiusInput) {
+    return clampRadiusValue(parseFloat(artificialUICache.radiusInput.value) || 1);
+  }
   return clampRadiusValue(parseFloat(artificialUICache.radiusRange.value) || 1);
 }
 
@@ -986,16 +1023,16 @@ function updateArtificialUI() {
     artificialUICache.radiusInput.disabled = false;
     artificialUICache.core.disabled = false;
     artificialUICache.type.disabled = false;
-    const clamped = getRadiusValue();
-    artificialUICache.radiusRange.value = clamped;
-    artificialUICache.radiusInput.value = clamped;
+    if (!artificialRadiusEditing) {
+      const clamped = getRadiusValue();
+      setRadiusFields(clamped);
+    }
   } else {
     artificialUICache.radiusRange.disabled = true;
     artificialUICache.radiusInput.disabled = true;
     artificialUICache.core.disabled = true;
     artificialUICache.type.disabled = true;
-    artificialUICache.radiusRange.value = project.radiusEarth;
-    artificialUICache.radiusInput.value = project.radiusEarth;
+    setRadiusFields(project.radiusEarth, true);
   }
 
   const radius = project ? project.radiusEarth : getRadiusValue();
