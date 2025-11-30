@@ -100,9 +100,10 @@ function getGrowthMultiplierBreakdown(){
       if(mult === 1) return;
       let name = effect.name || effect.sourceId || effect.effectId || 'Unknown';
       name = name.toString()
-                 .replace(/([A-Z])/g, ' $1')
+                 .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
                  .replace(/_/g, ' ')
-                 .replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+                 .replace(/(^\w|\s\w)/g, m => m.toUpperCase())
+                 .trim();
       lines.push(`${name}: ${formatNumber(mult, false, 3)}x`);
     }
   });
