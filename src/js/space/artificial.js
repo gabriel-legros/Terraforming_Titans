@@ -1,12 +1,37 @@
 const EARTH_RADIUS_KM = 6_371;
 const EARTH_AREA_HA = Math.round(4 * Math.PI * (EARTH_RADIUS_KM * 1000) * (EARTH_RADIUS_KM * 1000) / 10_000);
-const BASE_SHELL_COST = {
-    superalloys: EARTH_AREA_HA,
-    metal: EARTH_AREA_HA * 10
+const DEFAULT_RADIUS_BOUNDS = { min: 2, max: 8 };
+const ARTIFICIAL_TYPES = [
+    { value: 'shell', label: 'Shellworld', disabled: false },
+    { value: 'ring', label: 'Ringworld (coming soon)', disabled: true },
+    { value: 'disk', label: 'Artificial disk (coming not so soon)', disabled: true }
+];
+const ARTIFICIAL_CORES = [
+    { value: 'super-earth', label: 'Super Earth', disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
+    { value: 'ice-giant', label: 'Ice giant', disabled: true, disabledSource : "World 9", minRadiusEarth: 3.2, maxRadiusEarth: 4.5, allowStar: true, minFlux: 50, maxFlux: 500 },
+    { value: 'gas-giant', label: 'Gas giant', disabled: true, disabledSource : "World 10", minRadiusEarth: 4.5, maxRadiusEarth: 70, allowStar: true, minFlux: 50, maxFlux: 800 },
+    { value: 'brown-dwarf', label: 'Brown Dwarf', disabled: true, disabledSource : "World 11", minRadiusEarth: 70, maxRadiusEarth: 140, allowStar: false},
+    { value: 'white-dwarf', label: 'White Dwarf', disabled: true, disabledSource : "World 12", minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
+    { value: 'neutron-star', label: 'Neutron Star', disabled: true, disabledSource : "World 13", minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
+    { value: 'stellar-bh', label: 'Stellar Black Hole', disabled: true, disabledSource : "World 14", minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
+    { value: 'smbh', label: 'Supermassive Black Hole', disabled: true, disabledSource : "World 14 & Galactic Conquest", minRadiusEarth: 500000, maxRadiusEarth: 500000, allowStar: false}
+];
+const ARTIFICIAL_STAR_CONTEXTS = [
+    { value: 'with-star', label: 'Star in system', hasStar: true, disabled: false },
+    { value: 'starless', label: 'Starless deep space', hasStar: false, disabled: false }
+];
+const SHELL_COST_CALIBRATION = {
+    landHa: 50_000_000_000,
+    superalloys: 10_000_000_000_000
 };
-const SHELL_RADIUS_MIN = 2;
-const SHELL_RADIUS_MAX = 8;
-
+const BASE_SHELL_COST = (() => {
+    const radiusAtCalibration = Math.sqrt(SHELL_COST_CALIBRATION.landHa / EARTH_AREA_HA);
+    const superalloyBase = SHELL_COST_CALIBRATION.superalloys / (radiusAtCalibration ** 3);
+    return {
+        superalloys: superalloyBase,
+        metal: superalloyBase * 10
+    };
+})();
 class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
@@ -61,7 +86,7 @@ class ArtificialManager extends EffectableEntity {
 
     calculateCost(radiusEarth) {
         const size = Math.max(radiusEarth || 0, 0);
-        const factor = size ** 3;
+        const factor = size ** 3/2;
         return {
             superalloys: BASE_SHELL_COST.superalloys * factor,
             metal: BASE_SHELL_COST.metal * factor
@@ -166,9 +191,18 @@ class ArtificialManager extends EffectableEntity {
 
     startShellConstruction(options) {
         if (!this.enabled || this.activeProject) return false;
-        const requestedRadius = options?.radiusEarth || SHELL_RADIUS_MIN;
-        const radiusEarth = Math.min(Math.max(requestedRadius, SHELL_RADIUS_MIN), SHELL_RADIUS_MAX);
         const core = options?.core || 'super-earth';
+        const coreConfig = getArtificialCoreConfig(core);
+        const bounds = getArtificialCoreBounds(core);
+        const starContext = options?.starContext || ARTIFICIAL_STAR_CONTEXTS[0].value;
+        const starOption = ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.value === starContext) || ARTIFICIAL_STAR_CONTEXTS[0];
+        const allowStar = coreConfig.allowStar !== false;
+        const hasStar = allowStar && starOption.hasStar !== false;
+        const effectiveStarContext = allowStar
+            ? starOption.value
+            : (ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.hasStar === false)?.value || starOption.value);
+        const requestedRadius = options?.radiusEarth || bounds.min;
+        const radiusEarth = Math.min(Math.max(requestedRadius, bounds.min), bounds.max);
         const chosenName = (options?.name && String(options.name).trim()) || `Shellworld ${this.nextId}`;
         const cost = this.calculateCost(radiusEarth);
         if (!this.canCoverCost(cost, this.prioritizeSpaceStorage)) {
@@ -183,12 +217,14 @@ class ArtificialManager extends EffectableEntity {
         const sector = (spaceManager && spaceManager.getCurrentWorldOriginal)
             ? spaceManager.getCurrentWorldOriginal()?.merged?.celestialParameters?.sector || null
             : null;
-        const starSource = (spaceManager && spaceManager.getCurrentWorldOriginal)
+        const starSource = hasStar && spaceManager && spaceManager.getCurrentWorldOriginal
             ? spaceManager.getCurrentWorldOriginal()
             : null;
-        const star = starSource && starSource.star ? JSON.parse(JSON.stringify(starSource.star)) : (currentPlanetParameters && currentPlanetParameters.star)
-            ? JSON.parse(JSON.stringify(currentPlanetParameters.star))
-            : null;
+        const star = hasStar && starSource && starSource.star
+            ? JSON.parse(JSON.stringify(starSource.star))
+            : hasStar && currentPlanetParameters && currentPlanetParameters.star
+                ? JSON.parse(JSON.stringify(currentPlanetParameters.star))
+                : null;
 
         this.activeProject = {
             id: this.nextId,
@@ -196,6 +232,11 @@ class ArtificialManager extends EffectableEntity {
             name: chosenName,
             type: 'shell',
             core,
+            starContext: effectiveStarContext,
+            hasStar,
+            allowStar,
+            minFlux: coreConfig.minFlux,
+            maxFlux: coreConfig.maxFlux,
             radiusEarth,
             areaHa,
             landHa: areaHa,
@@ -223,6 +264,14 @@ class ArtificialManager extends EffectableEntity {
         this.activeProject = null;
         this.updateUI(true);
         return true;
+    }
+
+    isCurrentWorldArtificial() {
+        if (spaceManager && spaceManager.currentArtificialKey !== null) {
+            return true;
+        }
+        const archetype = currentPlanetParameters?.classification?.archetype;
+        return archetype === 'artificial';
     }
 
     discardConstructedWorld() {
@@ -267,6 +316,24 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
+    canUseSolisBailout() {
+        if (!this.activeProject) return false;
+        if (!this.isCurrentWorldArtificial()) return false;
+        const artifacts = resources?.special?.alienArtifact;
+        return artifacts && artifacts.value >= 10;
+    }
+
+    claimSolisBailout() {
+        if (!this.canUseSolisBailout()) return false;
+        const artifacts = resources?.special?.alienArtifact;
+        artifacts.decrease(10);
+        this.activeProject.stockpile.metal += 100_000_000;
+        this.activeProject.stockpile.silicon += 100_000_000;
+        this.activeProject.override = null;
+        this.updateUI(true);
+        return true;
+    }
+
     addInitialDeposit(payload, prioritizeStorage = this.prioritizeSpaceStorage) {
         return this.addStockpile(payload, prioritizeStorage);
     }
@@ -289,9 +356,12 @@ class ArtificialManager extends EffectableEntity {
         const radiusKm = project.radiusEarth * EARTH_RADIUS_KM;
         const gravity = 9.81;
         const sector = project.sector || currentPlanetParameters?.celestialParameters?.sector || 'R5-07';
-        const star = project.star ? JSON.parse(JSON.stringify(project.star)) : (currentPlanetParameters && currentPlanetParameters.star)
-            ? JSON.parse(JSON.stringify(currentPlanetParameters.star))
-            : null;
+        const allowStar = project.hasStar !== false && project.allowStar !== false;
+        const star = project.star
+            ? JSON.parse(JSON.stringify(project.star))
+            : allowStar && currentPlanetParameters && currentPlanetParameters.star
+                ? JSON.parse(JSON.stringify(currentPlanetParameters.star))
+                : null;
         const stockpileMetal = project.stockpile?.metal || project.initialDeposit?.metal || 0;
         const stockpileSilicon = project.stockpile?.silicon || project.initialDeposit?.silicon || 0;
 
@@ -309,7 +379,7 @@ class ArtificialManager extends EffectableEntity {
             gravity,
             radius: radiusKm,
             rotationPeriod: 24,
-            starLuminosity: currentPlanetParameters?.celestialParameters?.starLuminosity || 1,
+            starLuminosity: allowStar ? (currentPlanetParameters?.celestialParameters?.starLuminosity || 1) : 0,
             sector
         };
         if (star) {
@@ -557,6 +627,21 @@ class ArtificialManager extends EffectableEntity {
             if (!this.activeProject.worldDivisor) {
                 this.activeProject.worldDivisor = 1;
             }
+            if (this.activeProject.hasStar === undefined) {
+                this.activeProject.hasStar = true;
+            }
+            if (!this.activeProject.starContext) {
+                this.activeProject.starContext = ARTIFICIAL_STAR_CONTEXTS[0].value;
+            }
+            if (this.activeProject.allowStar === undefined) {
+                const cfg = getArtificialCoreConfig(this.activeProject.core);
+                this.activeProject.allowStar = cfg.allowStar !== false;
+            }
+            if (this.activeProject.minFlux === undefined || this.activeProject.maxFlux === undefined) {
+                const cfg = getArtificialCoreConfig(this.activeProject.core);
+                this.activeProject.minFlux = cfg.minFlux;
+                this.activeProject.maxFlux = cfg.maxFlux;
+            }
         }
         this.nextId = Math.max(state.nextId || this.nextId, (this.activeProject?.id || 0) + 1, 1);
         this.history = Array.isArray(state.history) ? state.history : [];
@@ -569,6 +654,33 @@ class ArtificialManager extends EffectableEntity {
             updateArtificialUI({ force });
         }
     }
+}
+
+function getArtificialTypes() {
+    return ARTIFICIAL_TYPES;
+}
+
+function getArtificialCores() {
+    return ARTIFICIAL_CORES;
+}
+
+function getArtificialCoreConfig(coreValue) {
+    const fallback = ARTIFICIAL_CORES[0];
+    return ARTIFICIAL_CORES.find((entry) => entry.value === coreValue) || fallback;
+}
+
+function getArtificialStarContexts() {
+    return ARTIFICIAL_STAR_CONTEXTS;
+}
+
+function getArtificialCoreBounds(coreValue) {
+    const core = getArtificialCoreConfig(coreValue);
+    const min = core?.minRadiusEarth || DEFAULT_RADIUS_BOUNDS.min;
+    const max = core?.maxRadiusEarth || DEFAULT_RADIUS_BOUNDS.max;
+    return {
+        min: Math.min(Math.max(min, DEFAULT_RADIUS_BOUNDS.min), Math.max(max, DEFAULT_RADIUS_BOUNDS.min)),
+        max: Math.max(min, max)
+    };
 }
 
 function setArtificialManager(instance) {
@@ -586,6 +698,19 @@ function setArtificialManager(instance) {
 if (typeof window !== 'undefined') {
     window.ArtificialManager = ArtificialManager;
     window.setArtificialManager = setArtificialManager;
+    window.getArtificialTypes = getArtificialTypes;
+    window.getArtificialCores = getArtificialCores;
+    window.getArtificialStarContexts = getArtificialStarContexts;
+    window.getArtificialCoreBounds = getArtificialCoreBounds;
+    window.getArtificialCoreConfig = getArtificialCoreConfig;
 } else if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ArtificialManager, setArtificialManager };
+    module.exports = {
+        ArtificialManager,
+        setArtificialManager,
+        getArtificialTypes,
+        getArtificialCores,
+        getArtificialStarContexts,
+        getArtificialCoreBounds,
+        getArtificialCoreConfig
+    };
 }

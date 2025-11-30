@@ -13,6 +13,7 @@ const artificialUICache = {
   nameInput: null,
   costMetal: null,
   costSuperalloy: null,
+  starContext: null,
   durationValue: null,
   durationTooltip: null,
   priority: null,
@@ -30,7 +31,9 @@ const artificialUICache = {
   historyPrev: null,
   historyNext: null,
   storyButton: null,
-  storyContent: null
+  storyContent: null,
+  bailoutBtn: null,
+  bailoutStock: null
 };
 
 let artificialHistoryPage = 0;
@@ -58,10 +61,10 @@ function cacheArtificialUIElements() {
   return artificialUICache;
 }
 
-function buildOption(value, label, disabled = false) {
+function buildOption(value, label, disabled = false, disabledSource) {
   const opt = document.createElement('option');
   opt.value = value;
-  opt.textContent = label;
+  opt.textContent = disabled && disabledSource ? `${label} (Locked by ${disabledSource})` : label;
   opt.disabled = disabled;
   return opt;
 }
@@ -130,12 +133,52 @@ function createProgressBar() {
 }
 
 function getRadiusBounds() {
+  if (typeof getArtificialCoreBounds === 'function' && artificialUICache.core) {
+    return getArtificialCoreBounds(artificialUICache.core.value);
+  }
   return { min: 2, max: 8 };
 }
 
 function clampRadiusValue(value) {
   const bounds = getRadiusBounds();
   return Math.min(Math.max(value, bounds.min), bounds.max);
+}
+
+function applyRadiusBounds() {
+  const bounds = getRadiusBounds();
+  if (artificialUICache.radiusRange) {
+    artificialUICache.radiusRange.min = bounds.min;
+    artificialUICache.radiusRange.max = bounds.max;
+    artificialUICache.radiusRange.value = clampRadiusValue(parseFloat(artificialUICache.radiusRange.value) || bounds.min);
+  }
+  if (artificialUICache.radiusInput) {
+    artificialUICache.radiusInput.min = bounds.min;
+    artificialUICache.radiusInput.max = bounds.max;
+    artificialUICache.radiusInput.value = clampRadiusValue(parseFloat(artificialUICache.radiusInput.value) || bounds.min);
+  }
+}
+
+function applyStarContextBounds() {
+  if (!artificialUICache.starContext) return;
+  const coreValue = artificialUICache.core ? artificialUICache.core.value : null;
+  const coreConfig = typeof getArtificialCoreConfig === 'function' ? getArtificialCoreConfig(coreValue) : null;
+  const allowStar = coreConfig ? coreConfig.allowStar !== false : true;
+  const starOptions = getArtificialStarContexts();
+  let starlessValue = artificialUICache.starContext.value;
+  starOptions.forEach((option) => {
+    if (option.hasStar === false) {
+      starlessValue = option.value;
+    }
+  });
+  for (let i = 0; i < artificialUICache.starContext.options.length; i += 1) {
+    const opt = artificialUICache.starContext.options[i];
+    const cfg = starOptions.find((entry) => entry.value === opt.value) || {};
+    const isStarred = cfg.hasStar !== false;
+    opt.disabled = cfg.disabled || (isStarred && !allowStar);
+  }
+  if (!allowStar) {
+    artificialUICache.starContext.value = starlessValue;
+  }
 }
 
 function getStashStep(resource) {
@@ -203,10 +246,12 @@ function ensureArtificialLayout() {
   typeLabel.textContent = 'Framework';
   const typeSelect = document.createElement('select');
   typeSelect.className = 'artificial-select';
-  typeSelect.appendChild(buildOption('shell', 'Shellworld'));
-  typeSelect.appendChild(buildOption('ring', 'Ringworld (coming soon)', true));
-  typeSelect.appendChild(buildOption('disk', 'Artificial disk (coming soon)', true));
-  typeSelect.value = 'shell';
+  const typeOptions = getArtificialTypes();
+  typeOptions.forEach((option) => {
+    typeSelect.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
+  });
+  const defaultType = typeOptions.find((entry) => !entry.disabled) || typeOptions[0];
+  typeSelect.value = defaultType ? defaultType.value : '';
   typeLabel.appendChild(typeSelect);
   blueprint.appendChild(typeLabel);
   artificialUICache.type = typeSelect;
@@ -216,15 +261,31 @@ function ensureArtificialLayout() {
   coreLabel.textContent = 'Core';
   const coreSelect = document.createElement('select');
   coreSelect.className = 'artificial-select';
-  coreSelect.appendChild(buildOption('super-earth', 'Super Earth core'));
-  coreSelect.appendChild(buildOption('ice-giant', 'Ice giant lattice (Locked)', true));
-  coreSelect.appendChild(buildOption('brown-dwarf', 'Brown dwarf anchor (Locked)', true));
-  coreSelect.appendChild(buildOption('neutron-star', 'Neutron star beehive (Locked)', true));
-  coreSelect.appendChild(buildOption('micro-singularity', 'Micro black hole lattice (Locked)', true));
-  coreSelect.appendChild(buildOption('smbh', 'Supermassive black hole vault (Locked)', true));
+  const coreOptions = getArtificialCores();
+  coreOptions.forEach((option) => {
+    coreSelect.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
+  });
+  const defaultCore = coreOptions.find((entry) => !entry.disabled) || coreOptions[0];
+  coreSelect.value = defaultCore ? defaultCore.value : '';
   coreLabel.appendChild(coreSelect);
   blueprint.appendChild(coreLabel);
   artificialUICache.core = coreSelect;
+
+  const starLabel = document.createElement('label');
+  starLabel.className = 'artificial-field';
+  starLabel.textContent = 'Stellar context';
+  const starSelect = document.createElement('select');
+  starSelect.className = 'artificial-select';
+  const starOptions = getArtificialStarContexts();
+  starOptions.forEach((option) => {
+    starSelect.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
+  });
+  const defaultStar = starOptions.find((entry) => !entry.disabled) || starOptions[0];
+  starSelect.value = defaultStar ? defaultStar.value : '';
+  starLabel.appendChild(starSelect);
+  blueprint.appendChild(starLabel);
+  artificialUICache.starContext = starSelect;
+  applyStarContextBounds();
 
   const gravityRow = document.createElement('div');
   gravityRow.className = 'artificial-gravity-row';
@@ -253,8 +314,6 @@ function ensureArtificialLayout() {
 
   const radiusRange = document.createElement('input');
   radiusRange.type = 'range';
-  radiusRange.min = '2';
-  radiusRange.max = '8';
   radiusRange.step = '0.1';
   radiusRange.value = '2';
   radiusRange.className = 'artificial-radius-range';
@@ -263,8 +322,6 @@ function ensureArtificialLayout() {
 
   const radiusInput = document.createElement('input');
   radiusInput.type = 'number';
-  radiusInput.min = '2';
-  radiusInput.max = '8';
   radiusInput.step = '0.1';
   radiusInput.value = '2';
   radiusInput.className = 'artificial-radius-input';
@@ -284,6 +341,7 @@ function ensureArtificialLayout() {
   radiusLabel.appendChild(surfaceBox);
 
   blueprint.appendChild(radiusLabel);
+  applyRadiusBounds();
 
   grid.appendChild(blueprint);
 
@@ -404,6 +462,39 @@ function ensureArtificialLayout() {
 
   stash.appendChild(stashList);
 
+  const bailoutRow = document.createElement('div');
+  bailoutRow.className = 'artificial-stash-block artificial-stash-row artificial-bailout-row';
+  const bailoutHeader = document.createElement('div');
+  bailoutHeader.className = 'artificial-stash-row-header';
+  const bailoutTitle = document.createElement('span');
+  bailoutTitle.className = 'artificial-stash-title';
+  bailoutTitle.textContent = 'Solis Bailout';
+  const bailoutInfo = document.createElement('span');
+  bailoutInfo.className = 'info-tooltip-icon';
+  bailoutInfo.innerHTML = '&#9432;';
+  bailoutInfo.title = 'Spend 10 alien artifacts to receive 100M metal and 100M silicon for this world. Bypasses the stash cap. Only available on artificial worlds.';
+  bailoutHeader.append(bailoutTitle, bailoutInfo);
+  bailoutRow.appendChild(bailoutHeader);
+
+  const bailoutBody = document.createElement('div');
+  bailoutBody.className = 'artificial-stash-body';
+  const bailoutStock = document.createElement('div');
+  bailoutStock.className = 'artificial-stash-stock';
+  bailoutStock.textContent = 'Cost: 10 artifacts';
+  const bailoutControls = document.createElement('div');
+  bailoutControls.className = 'artificial-stash-controls';
+  const bailoutBtn = document.createElement('button');
+  bailoutBtn.className = 'artificial-stash-btn artificial-stash-add';
+  bailoutBtn.textContent = '+100M metal & silicon';
+  bailoutControls.appendChild(bailoutBtn);
+  bailoutBody.append(bailoutStock, bailoutControls);
+  bailoutRow.appendChild(bailoutBody);
+
+  artificialUICache.bailoutBtn = bailoutBtn;
+  artificialUICache.bailoutStock = bailoutStock;
+
+  stashList.appendChild(bailoutRow);
+
   const stashRecommend = document.createElement('div');
   stashRecommend.className = 'artificial-stash-recommend';
   stashRecommend.textContent = 'Recommend staging at least 1.00B of each resource.';
@@ -509,10 +600,16 @@ function ensureArtificialLayout() {
     if (!artificialManager) return;
     if (artificialUICache.type.value !== 'shell') return;
     artificialManager.startShellConstruction({
-      radiusEarth: parseFloat(radiusRange.value) || 1,
+      radiusEarth: clampRadiusValue(parseFloat(radiusRange.value) || 1),
       core: artificialUICache.core.value,
+      starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
       name: artificialUICache.nameInput ? artificialUICache.nameInput.value : ''
     });
+  });
+  coreSelect.addEventListener('change', () => {
+    applyRadiusBounds();
+    applyStarContextBounds();
+    updateArtificialUI();
   });
   cancelBtn.addEventListener('click', () => {
     artificialManager?.cancelConstruction();
@@ -556,6 +653,12 @@ function ensureArtificialLayout() {
 
   attachStashHandlers('metal');
   attachStashHandlers('silicon');
+
+  if (artificialUICache.bailoutBtn) {
+    artificialUICache.bailoutBtn.addEventListener('click', () => {
+      artificialManager?.claimSolisBailout();
+    });
+  }
 
   renderArtificialHistory();
 }
@@ -672,7 +775,7 @@ function renderStash(project, manager) {
       controls.capInfo.title = capTitle;
     }
     if (controls.stock) {
-      controls.stock.textContent = active ? fmt(staged, false, 0) : '—';
+      controls.stock.textContent = active ? fmt(staged, false, 2) : '—';
       controls.stock.title = active ? `Cap: ${capLabel}` : '';
       controls.stock.classList.toggle('artificial-stash-unaffordable', active && (cappedOut || !canAfford));
     }
@@ -695,6 +798,32 @@ function renderStash(project, manager) {
   });
 }
 
+function renderBailout(project, manager) {
+  const btn = artificialUICache.bailoutBtn;
+  const stock = artificialUICache.bailoutStock;
+  if (!btn || !stock) return;
+  const artifacts = resources?.special?.alienArtifact;
+  const available = artifacts ? artifacts.value : 0;
+  const fmt = formatNumber || ((n) => n);
+  stock.textContent = 'Cost: 10 artifacts';
+  const active = !!project;
+  const onArtificial = manager ? manager.isCurrentWorldArtificial() : false;
+  const canAfford = artifacts && available >= 10;
+  const allowed = active && onArtificial && canAfford;
+  btn.disabled = !allowed;
+  btn.classList.toggle('artificial-stash-unaffordable', !allowed);
+  btn.title = '';
+  if (!allowed) {
+    if (!active) {
+      btn.title = 'Start shellworld construction to enable bailout.';
+    } else if (!onArtificial) {
+      btn.title = 'Available only on an artificial world.';
+    } else if (!canAfford) {
+      btn.title = 'Need 10 alien artifacts.';
+    }
+  }
+}
+
 function renderCosts(project, radius, manager) {
   const r = project ? project.radiusEarth : radius;
   const area = project ? project.areaHa : manager.calculateAreaHectares(r);
@@ -708,7 +837,7 @@ function renderCosts(project, radius, manager) {
     artificialUICache.radiusLabel.textContent = `${r.toFixed(2)} Rₑ`;
   }
   if (artificialUICache.areaLabel) {
-    artificialUICache.areaLabel.textContent = `${fmt(area, false, 2)} ha plated`;
+    artificialUICache.areaLabel.textContent = `${fmt(area, false, 2)} land`;
   }
   if (artificialUICache.costMetal) {
     artificialUICache.costMetal.textContent = `${fmt(cost.metal, false, 2)}`;
@@ -716,11 +845,11 @@ function renderCosts(project, radius, manager) {
   if (artificialUICache.costSuperalloy) {
     artificialUICache.costSuperalloy.textContent = `${fmt(cost.superalloys, false, 2)}`;
   }
-  if (artificialUICache.duration) {
+  if (artificialUICache.durationValue) {
     artificialUICache.durationValue.textContent = formatDuration(durationContext.durationMs / 1000);
-    if (artificialUICache.durationTooltip) {
-      artificialUICache.durationTooltip.title = `Construction time divides by terraformed worlds (currently ${durationContext.worldCount}).`;
-    }
+  }
+  if (artificialUICache.durationTooltip) {
+    artificialUICache.durationTooltip.title = `Construction time divides by terraformed worlds (currently ${durationContext.worldCount}).`;
   }
   return { cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount };
 }
@@ -767,6 +896,38 @@ function updateArtificialUI() {
       }
     }
   }
+  if (artificialUICache.type) {
+    const options = getArtificialTypes();
+    const fallback = options.find((entry) => !entry.disabled) || options[0];
+    if (project && project.type) {
+      artificialUICache.type.value = project.type;
+    } else if (!artificialUICache.type.value && fallback) {
+      artificialUICache.type.value = fallback.value;
+    }
+    artificialUICache.type.disabled = !!project;
+  }
+  if (artificialUICache.core) {
+    const options = getArtificialCores();
+    const fallback = options.find((entry) => !entry.disabled) || options[0];
+    if (project && project.core) {
+      artificialUICache.core.value = project.core;
+    } else if (!artificialUICache.core.value && fallback) {
+      artificialUICache.core.value = fallback.value;
+    }
+    artificialUICache.core.disabled = !!project;
+  }
+  if (artificialUICache.starContext) {
+    const options = getArtificialStarContexts();
+    const fallback = options.find((entry) => !entry.disabled) || options[0];
+    if (project && project.starContext) {
+      artificialUICache.starContext.value = project.starContext;
+    } else if (!artificialUICache.starContext.value && fallback) {
+      artificialUICache.starContext.value = fallback.value;
+    }
+    artificialUICache.starContext.disabled = !!project;
+  }
+  applyStarContextBounds();
+  applyRadiusBounds();
   if (artificialUICache.priority) {
     artificialUICache.priority.checked = manager.prioritizeSpaceStorage;
   }
@@ -793,6 +954,7 @@ function updateArtificialUI() {
   renderStartButton(project, manager, preview);
   renderProgress(project);
   renderStash(project, manager);
+  renderBailout(project, manager);
   renderArtificialHistory();
 }
 

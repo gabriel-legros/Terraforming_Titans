@@ -186,6 +186,7 @@ The planet visualiser has been modularised into files covering core setup, light
 ## Updates
 - Added Umbra story planet orbiting Nyx-13 with new post-Venus chapters and progression rewards.
 - Artificial shellworld stockpiles now cap metal and silicon at 1 unit per hectare and surface the limit via tooltip.
+- Added a Solis Bailout option on artificial shellworlds that trades 10 alien artifacts for 100M metal and silicon, bypassing stash caps.
 - Refined the Nanocolony card with summary tiles and slider panels so growth, limits, and slider effects are easier to read without changing the neutral palette.
 - Warp Gate Command edit member dialog now includes a Respec button that refunds all allocated skill points for rapid reassignment.
 - Warp Gate Command skill editor gained an Auto assignment column that distributes points each tick according to player-provided ratios, updates live while the dialog is open, and ignores zero entries.
