@@ -285,8 +285,7 @@ class SpaceMiningProject extends SpaceshipProject {
       return false;
     }
     const liquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
-    const iceCoverage = calculateAverageCoverage(terraforming, 'ice') || 0;
-    const totalCoverage = Math.min(1, liquidCoverage + iceCoverage);
+    const totalCoverage = Math.min(1, liquidCoverage);
     return totalCoverage >= (this.waterCoverageThreshold - ATMOSPHERIC_MONITORING_TOLERANCE);
   }
 
