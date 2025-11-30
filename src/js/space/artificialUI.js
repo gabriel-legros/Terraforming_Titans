@@ -360,7 +360,11 @@ function ensureArtificialLayout() {
     const title = document.createElement('span');
     title.className = 'artificial-stash-title';
     title.textContent = label;
+    const capInfo = document.createElement('span');
+    capInfo.className = 'info-tooltip-icon';
+    capInfo.innerHTML = '&#9432;';
     header.appendChild(title);
+    header.appendChild(capInfo);
     row.appendChild(header);
 
     const body = document.createElement('div');
@@ -388,7 +392,8 @@ function ensureArtificialLayout() {
       divBtn,
       mulBtn,
       addBtn,
-      stock: staged
+      stock: staged,
+      capInfo
     };
 
     return row;
@@ -641,6 +646,12 @@ function renderStash(project, manager) {
   const metal = project?.stockpile?.metal || project?.initialDeposit?.metal || 0;
   const silicon = project?.stockpile?.silicon || project?.initialDeposit?.silicon || 0;
   const fmt = formatNumber || ((n) => n);
+  const cap = manager.getStockpileCap(project);
+  const capLabel = cap ? fmt(cap, false, 2) : '0';
+  const landLabel = fmt(cap, false, 2);
+  const capTitle = cap
+    ? `Stockpiles cap at ${capLabel} based on 1 unit per hectare (${landLabel} ha).`
+    : 'Start construction to stage resources.';
 
   if (artificialUICache.stashRecommend) {
     artificialUICache.stashRecommend.classList.toggle('hidden', !active);
@@ -649,18 +660,35 @@ function renderStash(project, manager) {
   Object.entries(artificialUICache.stashControls || {}).forEach(([resource, controls]) => {
     if (!controls) return;
     const staged = resource === 'metal' ? metal : silicon;
+    const remaining = Math.max(0, cap - staged);
     const step = getStashStep(resource);
-    const payload = resource === 'metal' ? { metal: step } : { silicon: step };
-    const canAfford = active && manager ? manager.canCoverCost(payload, manager.prioritizeSpaceStorage) : false;
+    const planned = active ? Math.min(step, remaining) : step;
+    const payload = resource === 'metal' ? { metal: planned } : { silicon: planned };
+    const canAfford = active && planned > 0 && manager
+      ? manager.canCoverCost(payload, manager.prioritizeSpaceStorage)
+      : false;
+    const cappedOut = active && remaining === 0;
+    if (controls.capInfo) {
+      controls.capInfo.title = capTitle;
+    }
     if (controls.stock) {
       controls.stock.textContent = active ? fmt(staged, false, 0) : '—';
-      controls.stock.classList.toggle('artificial-stash-unaffordable', active && !canAfford);
+      controls.stock.title = active ? `Cap: ${capLabel}` : '';
+      controls.stock.classList.toggle('artificial-stash-unaffordable', active && (cappedOut || !canAfford));
     }
     if (controls.addBtn) {
-      controls.addBtn.textContent = `+${fmt(step, false, 0)}`;
-      controls.addBtn.disabled = !active || !canAfford;
-      controls.addBtn.classList.toggle('artificial-stash-unaffordable', active && !canAfford);
-      controls.addBtn.title = active && !canAfford ? 'Insufficient resources' : 'Add to launch stash';
+      controls.addBtn.textContent = `+${fmt(planned, false, 0)}`;
+      controls.addBtn.disabled = !active || !canAfford || cappedOut || planned <= 0;
+      controls.addBtn.classList.toggle('artificial-stash-unaffordable', active && (!canAfford || cappedOut));
+      if (!active) {
+        controls.addBtn.title = 'Begin construction to stage resources';
+      } else if (cappedOut) {
+        controls.addBtn.title = `Stockpile full (cap ${capLabel})`;
+      } else if (!canAfford) {
+        controls.addBtn.title = 'Insufficient resources';
+      } else {
+        controls.addBtn.title = 'Add to launch stash';
+      }
     }
     if (controls.divBtn) controls.divBtn.disabled = !active;
     if (controls.mulBtn) controls.mulBtn.disabled = !active;

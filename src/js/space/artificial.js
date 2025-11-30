@@ -233,6 +233,12 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
+    getStockpileCap(project = this.activeProject) {
+        if (!project) return 0;
+        const landHa = project.landHa || project.areaHa || this.calculateAreaHectares(project.radiusEarth);
+        return Math.max(0, landHa || 0);
+    }
+
     addStockpile(payload, prioritizeStorage = this.prioritizeSpaceStorage) {
         if (!this.activeProject) return false;
         const amounts = {
@@ -240,10 +246,22 @@ class ArtificialManager extends EffectableEntity {
             silicon: Math.max(payload?.silicon || 0, 0)
         };
         if (!amounts.metal && !amounts.silicon) return false;
-        const deduction = this.pullResources(amounts, prioritizeStorage);
+        const cap = this.getStockpileCap(this.activeProject);
+        const remainingMetal = Math.max(0, cap - this.activeProject.stockpile.metal);
+        const remainingSilicon = Math.max(0, cap - this.activeProject.stockpile.silicon);
+        const request = {};
+        if (remainingMetal > 0 && amounts.metal > 0) {
+            request.metal = Math.min(amounts.metal, remainingMetal);
+        }
+        if (remainingSilicon > 0 && amounts.silicon > 0) {
+            request.silicon = Math.min(amounts.silicon, remainingSilicon);
+        }
+        if (!request.metal && !request.silicon) return false;
+
+        const deduction = this.pullResources(request, prioritizeStorage);
         if (!deduction) return false;
-        this.activeProject.stockpile.metal += amounts.metal;
-        this.activeProject.stockpile.silicon += amounts.silicon;
+        this.activeProject.stockpile.metal += request.metal || 0;
+        this.activeProject.stockpile.silicon += request.silicon || 0;
         this.activeProject.override = null;
         this.updateUI(true);
         return true;
