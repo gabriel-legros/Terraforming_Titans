@@ -439,6 +439,7 @@ progressSolisPrime.chapters.push(
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'solisprime', value: true },
       { target: 'rwgManager', type: 'unlockType', targetId: 'rogue' },
+      { target: 'artificialManager', type : 'enable', value: true}
     ]
   },
   {
