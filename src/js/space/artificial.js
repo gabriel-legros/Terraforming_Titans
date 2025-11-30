@@ -3,7 +3,7 @@ const EARTH_AREA_HA = Math.round(4 * Math.PI * (EARTH_RADIUS_KM * 1000) * (EARTH
 const DEFAULT_RADIUS_BOUNDS = { min: 2, max: 8 };
 const ARTIFICIAL_TYPES = [
     { value: 'shell', label: 'Shellworld', disabled: false },
-    { value: 'ring', label: 'Ringworld (coming soon)', disabled: true },
+    { value: 'ring', label: 'Ringworld (Locked by World 10)', disabled: true },
     { value: 'disk', label: 'Artificial disk (coming not so soon)', disabled: true }
 ];
 const ARTIFICIAL_CORES = [
@@ -20,6 +20,28 @@ const ARTIFICIAL_STAR_CONTEXTS = [
     { value: 'with-star', label: 'Star in system', hasStar: true, disabled: false },
     { value: 'starless', label: 'Starless deep space', hasStar: false, disabled: false }
 ];
+const SOLAR_CONSTANT_WM2 = 1361;
+const ARTIFICIAL_STAR_SYLLABLES = [
+    'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'
+];
+const ARTIFICIAL_STAR_SPECTRAL_WEIGHTS = [
+    { v: 'M', w: 76 },
+    { v: 'K', w: 12 },
+    { v: 'G', w: 7.6 },
+    { v: 'F', w: 3.0 },
+    { v: 'A', w: 1.2 },
+    { v: 'B', w: 0.2 },
+    { v: 'O', w: 0.02 }
+];
+const ARTIFICIAL_STAR_MASS_RANGES = {
+    O: [16, 60],
+    B: [2.1, 16],
+    A: [1.4, 2.1],
+    F: [1.1, 1.4],
+    G: [0.9, 1.1],
+    K: [0.6, 0.9],
+    M: [0.08, 0.6]
+};
 const SHELL_COST_CALIBRATION = {
     landHa: 50_000_000_000,
     superalloys: 10_000_000_000_000
@@ -32,6 +54,118 @@ const BASE_SHELL_COST = (() => {
         metal: superalloyBase * 10
     };
 })();
+
+function mulberry32(seed) {
+    let t = seed >>> 0;
+    return function rng() {
+        t += 0x6d2b79f5;
+        let x = Math.imul(t ^ (t >>> 15), 1 | t);
+        x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function pickWeighted(rng, items) {
+    let total = 0;
+    items.forEach((item) => { total += item.w; });
+    let roll = rng() * total;
+    for (let i = 0; i < items.length; i += 1) {
+        roll -= items[i].w;
+        if (roll <= 0) return items[i].v;
+    }
+    return items[items.length - 1].v;
+}
+
+function luminosityFromMassSolar(mass) {
+    return Math.max(0.0005, Math.min(100000, Math.pow(mass, 3.5)));
+}
+
+function radiusFromMassSolar(mass) {
+    return Math.pow(mass, 0.8);
+}
+
+function calculateStarTemperatureK(luminosity, radius) {
+    const scale = radius * radius || 1;
+    const normalizedLuminosity = luminosity > 0 ? luminosity : 0;
+    return Math.round(5772 * Math.pow(normalizedLuminosity / scale, 0.25));
+}
+
+function buildHabitableZone(luminosity) {
+    const scale = Math.sqrt(Math.max(luminosity || 0, 0));
+    return { inner: 0.95 * scale, outer: 1.37 * scale };
+}
+
+function buildRogueStar(seed) {
+    const suffix = String(seed >>> 0);
+    return {
+        name: `Rogue-${suffix.slice(-3).padStart(3, '0')}`,
+        spectralType: '-',
+        luminositySolar: 0,
+        massSolar: 0,
+        radiusSolar: 0,
+        temperatureK: 0,
+        habitableZone: { inner: 0, outer: 0 }
+    };
+}
+
+function generateArtificialStar(seed) {
+    const rng = mulberry32(seed);
+    const spectralType = pickWeighted(rng, ARTIFICIAL_STAR_SPECTRAL_WEIGHTS);
+    const range = ARTIFICIAL_STAR_MASS_RANGES[spectralType] || ARTIFICIAL_STAR_MASS_RANGES.M;
+    const mass = range[0] + (range[1] - range[0]) * rng();
+    const luminosity = luminosityFromMassSolar(mass);
+    const radius = radiusFromMassSolar(mass);
+    const buildSegment = () => {
+        const index = Math.floor(rng() * ARTIFICIAL_STAR_SYLLABLES.length);
+        return ARTIFICIAL_STAR_SYLLABLES[index] || 'sol';
+    };
+    const core = `${buildSegment()}${buildSegment()}${buildSegment()}`;
+    return {
+        name: `${core.charAt(0).toUpperCase()}${core.slice(1)}-${String((seed >>> 0) % 1000).padStart(3, '0')}`,
+        spectralType,
+        luminositySolar: luminosity,
+        massSolar: mass,
+        radiusSolar: radius,
+        temperatureK: calculateStarTemperatureK(luminosity, radius),
+        habitableZone: buildHabitableZone(luminosity)
+    };
+}
+
+function pickFluxWithinRange(seed, minFlux, maxFlux) {
+    const low = Number.isFinite(minFlux) ? minFlux : 0;
+    const high = Number.isFinite(maxFlux) ? maxFlux : low;
+    const rng = mulberry32((seed ^ 0xf00d) >>> 0);
+    const span = Math.max(high - low, 0);
+    const flux = low + rng() * span;
+    return flux > 0 ? flux : low;
+}
+
+function calculateOrbitFromFlux(luminosity, fluxWm2) {
+    const safeLuminosity = luminosity || 1;
+    const safeFlux = fluxWm2 > 0 ? fluxWm2 : 1;
+    return Math.sqrt((safeLuminosity * SOLAR_CONSTANT_WM2) / safeFlux);
+}
+
+function buildArtificialStarContext({ seed, hasStar, minFlux, maxFlux }) {
+    if (!hasStar) {
+        return {
+            star: buildRogueStar(seed),
+            fluxWm2: 0,
+            distanceFromStarAU: 0,
+            isRogue: true
+        };
+    }
+    const fluxWm2 = pickFluxWithinRange(seed, minFlux, maxFlux);
+    const starSeed = (seed ^ 0x9e3779b9) >>> 0;
+    const star = generateArtificialStar(starSeed);
+    const distanceFromStarAU = calculateOrbitFromFlux(star.luminositySolar, fluxWm2);
+    return {
+        star,
+        fluxWm2,
+        distanceFromStarAU,
+        isRogue: false
+    };
+}
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
 class ArtificialManager extends EffectableEntity {
     constructor() {
@@ -224,14 +358,14 @@ class ArtificialManager extends EffectableEntity {
         const sector = (spaceManager && spaceManager.getCurrentWorldOriginal)
             ? spaceManager.getCurrentWorldOriginal()?.merged?.celestialParameters?.sector || null
             : null;
-        const starSource = hasStar && spaceManager && spaceManager.getCurrentWorldOriginal
-            ? spaceManager.getCurrentWorldOriginal()
-            : null;
-        const star = hasStar && starSource && starSource.star
-            ? JSON.parse(JSON.stringify(starSource.star))
-            : hasStar && currentPlanetParameters && currentPlanetParameters.star
-                ? JSON.parse(JSON.stringify(currentPlanetParameters.star))
-                : null;
+        const generationSeed = (this.nextId * 0x9e3779b9) >>> 0;
+        const starContextDetails = buildArtificialStarContext({
+            seed: generationSeed,
+            hasStar,
+            minFlux: coreConfig.minFlux,
+            maxFlux: coreConfig.maxFlux
+        });
+        const star = starContextDetails.star;
 
         this.activeProject = {
             id: this.nextId,
@@ -254,6 +388,9 @@ class ArtificialManager extends EffectableEntity {
             completedAt: null,
             cost,
             terraformedValue,
+            distanceFromStarAU: starContextDetails.distanceFromStarAU,
+            targetFluxWm2: starContextDetails.fluxWm2,
+            isRogue: starContextDetails.isRogue,
             sector,
             star,
             stockpile: { metal: 0, silicon: 0 },
@@ -365,13 +502,12 @@ class ArtificialManager extends EffectableEntity {
         const gravity = 9.81;
         const sector = project.sector || currentPlanetParameters?.celestialParameters?.sector || 'R5-07';
         const allowStar = project.hasStar !== false && project.allowStar !== false;
-        const star = project.star
-            ? JSON.parse(JSON.stringify(project.star))
-            : allowStar && currentPlanetParameters && currentPlanetParameters.star
-                ? JSON.parse(JSON.stringify(currentPlanetParameters.star))
-                : null;
+        const star = project.star ? JSON.parse(JSON.stringify(project.star)) : null;
         const stockpileMetal = project.stockpile?.metal || project.initialDeposit?.metal || 0;
         const stockpileSilicon = project.stockpile?.silicon || project.initialDeposit?.silicon || 0;
+        const isRogue = project.isRogue === true || !allowStar;
+        const distanceFromStarAU = isRogue ? 0 : (project.distanceFromStarAU || 1);
+        const starLuminosity = star ? star.luminositySolar : 0;
 
         const base = JSON.parse(JSON.stringify(defaultPlanetParameters || {}));
         this.resetInitialResources(base.resources);
@@ -387,8 +523,11 @@ class ArtificialManager extends EffectableEntity {
             gravity,
             radius: radiusKm,
             rotationPeriod: 24,
-            starLuminosity: allowStar ? (currentPlanetParameters?.celestialParameters?.starLuminosity || 1) : 0,
-            sector
+            starLuminosity: isRogue ? 0 : starLuminosity,
+            sector,
+            distanceFromSun: distanceFromStarAU,
+            rogue: isRogue,
+            targetFluxWm2: project.targetFluxWm2
         };
         if (star) {
             base.star = star;
@@ -652,6 +791,34 @@ class ArtificialManager extends EffectableEntity {
                 const cfg = getArtificialCoreConfig(this.activeProject.core);
                 this.activeProject.minFlux = cfg.minFlux;
                 this.activeProject.maxFlux = cfg.maxFlux;
+            }
+            if (this.activeProject.isRogue === undefined) {
+                this.activeProject.isRogue = this.activeProject.hasStar === false || this.activeProject.allowStar === false;
+            }
+            if (!this.activeProject.star) {
+                const seed = (this.activeProject.id || this.nextId || 1) * 0x9e3779b9;
+                const context = buildArtificialStarContext({
+                    seed,
+                    hasStar: !this.activeProject.isRogue,
+                    minFlux: this.activeProject.minFlux,
+                    maxFlux: this.activeProject.maxFlux
+                });
+                this.activeProject.star = context.star;
+                this.activeProject.distanceFromStarAU = context.distanceFromStarAU;
+                this.activeProject.targetFluxWm2 = context.fluxWm2;
+                this.activeProject.isRogue = context.isRogue;
+            }
+            if (!this.activeProject.distanceFromStarAU && this.activeProject.star && !this.activeProject.isRogue) {
+                const flux = this.activeProject.targetFluxWm2 || this.activeProject.minFlux || SOLAR_CONSTANT_WM2;
+                this.activeProject.distanceFromStarAU = calculateOrbitFromFlux(this.activeProject.star.luminositySolar, flux);
+            }
+            if (this.activeProject.targetFluxWm2 === undefined) {
+                if (this.activeProject.isRogue) {
+                    this.activeProject.targetFluxWm2 = 0;
+                } else if (this.activeProject.star) {
+                    const dist = this.activeProject.distanceFromStarAU || 1;
+                    this.activeProject.targetFluxWm2 = (SOLAR_CONSTANT_WM2 * this.activeProject.star.luminositySolar) / (dist * dist);
+                }
             }
         }
         this.nextId = Math.max(state.nextId || this.nextId, (this.activeProject?.id || 0) + 1, 1);
