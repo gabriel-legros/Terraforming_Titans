@@ -519,7 +519,6 @@ class ArtificialManager extends EffectableEntity {
 
     loadState(state) {
         if (!state) return;
-        this.enabled = state.enabled !== false;
         this.constructionHoursPer50B = Number.isFinite(state.constructionHoursPer50B)
             ? state.constructionHoursPer50B
             : this.constructionHoursPer50B;
