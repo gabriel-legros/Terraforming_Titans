@@ -10,6 +10,22 @@ class SpaceshipAutomation {
     this.ensureDefaultPreset();
   }
 
+  sanitizeShipCount(value) {
+    if (!Number.isFinite(value)) return 0;
+    return Math.max(0, Math.floor(value));
+  }
+
+  normalizeProjectAssignment(project) {
+    const current = project.getAutomationShipCount ? project.getAutomationShipCount() : project.getActiveShipCount();
+    const sanitized = this.sanitizeShipCount(current);
+    if (sanitized !== current) {
+      const wasContinuous = project.isContinuous();
+      project.applySpaceshipDelta(sanitized - current);
+      project.finalizeAssignmentChange(wasContinuous);
+    }
+    return sanitized;
+  }
+
   ensureDefaultPreset() {
     if (this.presets.length > 0) {
       return;
@@ -108,7 +124,7 @@ class SpaceshipAutomation {
       step.limit = isLast ? null : 0;
       return;
     }
-    const parsed = Number(value);
+    const parsed = Math.floor(Number(value));
     if (Number.isFinite(parsed) && parsed >= 0) {
       step.limit = parsed;
     } else {
@@ -206,9 +222,10 @@ class SpaceshipAutomation {
     if (!this.isProjectEnabled(project)) {
       return 0;
     }
-    const projectCap = typeof project.getMaxAssignableShips === 'function'
+    const projectCapValue = typeof project.getMaxAssignableShips === 'function'
       ? project.getMaxAssignableShips()
       : Infinity;
+    const projectCap = Number.isFinite(projectCapValue) ? this.sanitizeShipCount(projectCapValue) : Infinity;
     const mode = entry.maxMode || 'absolute';
     let baseMax = entry.max;
     if (mode === 'population') {
@@ -219,7 +236,10 @@ class SpaceshipAutomation {
       baseMax = workers * (entry.max || 0) / 100;
     }
     const boundedMax = Number.isFinite(baseMax) && baseMax > 0 ? baseMax : Infinity;
-    return Math.min(projectCap, boundedMax);
+    if (!Number.isFinite(boundedMax)) {
+      return projectCap;
+    }
+    return Math.min(projectCap, Math.max(0, Math.floor(boundedMax)));
   }
 
   isProjectEnabled(project) {
@@ -304,11 +324,11 @@ class SpaceshipAutomation {
 
     this.updateManualControls(true);
 
-    let totalShips = Math.floor(resources.special.spaceships?.value || 0);
+    let totalShips = this.sanitizeShipCount(resources.special.spaceships?.value || 0);
     const currentAssignments = {};
     for (let index = 0; index < projects.length; index += 1) {
       const project = projects[index];
-      const assigned = project.getAutomationShipCount ? project.getAutomationShipCount() : project.getActiveShipCount();
+      const assigned = this.normalizeProjectAssignment(project);
       currentAssignments[project.name] = assigned;
       totalShips += assigned;
     }
@@ -319,7 +339,8 @@ class SpaceshipAutomation {
       const step = preset.steps[stepIndex];
       if (remainingTotal <= 0) break;
       const isCappedStep = step.mode === 'cappedMin';
-      const stepLimit = isCappedStep ? remainingTotal : (step.limit === null ? remainingTotal : Math.min(step.limit, remainingTotal));
+      const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
+      const stepLimit = isCappedStep ? remainingTotal : (limitValue === null ? remainingTotal : Math.min(limitValue, remainingTotal));
       let stepRemaining = stepLimit;
       const entries = step.entries;
       if (entries.length === 0) continue;
@@ -330,20 +351,21 @@ class SpaceshipAutomation {
           const entry = entries[entryIndex];
           const project = projects.find(item => item.name === entry.projectId);
           if (!project) continue;
-        const releaseOnDisable = this.disabledProjects.has(entry.projectId);
-        const automationAllowed = typeof project.shouldAutomationDisable === 'function' ? !project.shouldAutomationDisable() : true;
-        const manuallyDisabled = project.autoStart === false || project.run === false;
-        if (releaseOnDisable && (!automationAllowed || manuallyDisabled)) {
-          desiredAssignments[project.name] = 0;
-          continue;
-        }
-        const currentTarget = desiredAssignments[entry.projectId] || 0;
-        const maxForEntry = this.computeEntryMax(entry, project);
-        const remainingCapacity = Math.max(0, maxForEntry - currentTarget);
-        if (entry.weight > 0 && remainingCapacity > 0) {
-          weightedEntries.push({
-            project,
-            entry,
+          const releaseOnDisable = this.disabledProjects.has(entry.projectId);
+          const automationAllowed = typeof project.shouldAutomationDisable === 'function' ? !project.shouldAutomationDisable() : true;
+          const manuallyDisabled = project.autoStart === false || project.run === false;
+          if (releaseOnDisable && (!automationAllowed || manuallyDisabled)) {
+            desiredAssignments[project.name] = 0;
+            continue;
+          }
+          const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
+          desiredAssignments[entry.projectId] = currentTarget;
+          const maxForEntry = this.computeEntryMax(entry, project);
+          const remainingCapacity = Math.max(0, maxForEntry - currentTarget);
+          if (entry.weight > 0 && remainingCapacity > 0) {
+            weightedEntries.push({
+              project,
+              entry,
               remainingCapacity
             });
           }
@@ -458,8 +480,8 @@ class SpaceshipAutomation {
     // First release surplus ships so they become available for other assignments.
     for (let index = 0; index < projects.length; index += 1) {
       const project = projects[index];
-      const current = currentAssignments[project.name] || 0;
-      const target = desiredAssignments[project.name] || 0;
+      const current = this.sanitizeShipCount(currentAssignments[project.name]);
+      const target = this.sanitizeShipCount(desiredAssignments[project.name]);
       const delta = target - current;
       if (delta < 0) {
         const wasContinuous = project.isContinuous();
@@ -470,11 +492,12 @@ class SpaceshipAutomation {
     // Then assign additional ships as needed.
     for (let index = 0; index < projects.length; index += 1) {
       const project = projects[index];
-      const current = project.getAutomationShipCount ? project.getAutomationShipCount() : project.getActiveShipCount();
-      const target = desiredAssignments[project.name] || 0;
-      const projectCap = typeof project.getMaxAssignableShips === 'function'
+      const current = this.sanitizeShipCount(project.getAutomationShipCount ? project.getAutomationShipCount() : project.getActiveShipCount());
+      const target = this.sanitizeShipCount(desiredAssignments[project.name]);
+      const rawCap = typeof project.getMaxAssignableShips === 'function'
         ? project.getMaxAssignableShips()
         : Infinity;
+      const projectCap = Number.isFinite(rawCap) ? this.sanitizeShipCount(rawCap) : Infinity;
       const boundedTarget = Math.min(target, projectCap);
       const delta = boundedTarget - current;
       if (delta > 0) {
@@ -506,17 +529,24 @@ class SpaceshipAutomation {
       id: preset.id,
       name: preset.name || 'Preset',
       enabled: !!preset.enabled,
-      steps: Array.isArray(preset.steps) ? preset.steps.map(step => ({
-        id: step.id,
-        limit: step.limit === null || step.limit === undefined ? null : step.limit,
-        mode: step.mode || 'fill',
-        entries: Array.isArray(step.entries) ? step.entries.map(entry => ({
-          projectId: entry.projectId,
-          weight: entry.weight,
-          max: Number.isFinite(entry.max) && entry.max > 0 ? entry.max : null,
-          maxMode: entry.maxMode || 'absolute'
-        })) : []
-      })) : []
+      steps: Array.isArray(preset.steps) ? preset.steps.map(step => {
+        const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(Number(step.limit));
+        return {
+          id: step.id,
+          limit: limitValue,
+          mode: step.mode || 'fill',
+          entries: Array.isArray(step.entries) ? step.entries.map(entry => {
+            const weight = Number(entry.weight);
+            const max = Number(entry.max);
+            return {
+              projectId: entry.projectId,
+              weight: Number.isFinite(weight) && weight > 0 ? weight : 0,
+              max: Number.isFinite(max) && max > 0 ? max : null,
+              maxMode: entry.maxMode || 'absolute'
+            };
+          }) : []
+        };
+      }) : []
     })) : [];
     this.activePresetId = data.activePresetId || null;
     this.disabledProjects = new Set(Array.isArray(data.disabledProjects) ? data.disabledProjects : []);
