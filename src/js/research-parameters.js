@@ -1784,7 +1784,7 @@ const researchParameters = {
       {
         id: 'ship_smelting',
         name: 'Ship smelting',
-        description: 'Ships can now smelt asteroids directly, allowing them to carry more metal and silicon.',
+        description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silicon.',
         cost: { advancedResearch: 200000 },
         prerequisites: [],
         effects: [

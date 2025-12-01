@@ -195,12 +195,14 @@ function loadGame(slotOrCustomString, recreate = true) {
         spaceManager.loadState(savedSpace);
         const worldOriginal = typeof spaceManager.getCurrentWorldOriginal === 'function'
           ? spaceManager.getCurrentWorldOriginal() : null;
-        if (spaceManager.getCurrentRandomSeed && spaceManager.getCurrentRandomSeed() !== null) {
-          if (worldOriginal) {
+        const currentSeed = spaceManager.getCurrentRandomSeed ? spaceManager.getCurrentRandomSeed() : null;
+        const artificialKey = spaceManager.currentArtificialKey;
+        if (currentSeed !== null || artificialKey !== null) {
+          if (worldOriginal && worldOriginal.merged) {
             const existingResources = currentPlanetParameters.resources;
             currentPlanetParameters = worldOriginal.merged;
 
-            const newResources = currentPlanetParameters.resources;
+            const newResources = currentPlanetParameters.resources || (currentPlanetParameters.resources = {});
             if (existingResources) {
               for (const category in existingResources) {
                 if (!newResources[category]) {
