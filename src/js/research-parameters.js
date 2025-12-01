@@ -22,6 +22,7 @@ const researchParameters = {
         cost: { research: 1000 },
         prerequisites: [],
         requiresGeothermal: true,
+        artificialAllowed: false,
         effects: [
           {
             target: 'building',
@@ -269,6 +270,7 @@ const researchParameters = {
         name: 'Efficient Ore Processing',
         description: 'Doubles ore output from mines.',
         cost: { research: 200 },
+        artificialAllowed: false,
         prerequisites: [],
         effects: [
           {
@@ -405,6 +407,7 @@ const researchParameters = {
         description: 'Allows assigning androids to the Deeper mining project for massive speed boosts.',
         cost: { research: 2000000 },
         prerequisites: ['deep_mine','android_factory'],
+        artificialAllowed: false,
         effects: [
           {
             target: 'project',
@@ -485,6 +488,7 @@ const researchParameters = {
         description: 'Doubles metal output.',
         cost: { research: 10000000 },
         prerequisites: [],
+        artificialAllowed: false,
         effects: [
           {
             target: 'building',

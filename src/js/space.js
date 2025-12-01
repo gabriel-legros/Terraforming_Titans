@@ -162,6 +162,7 @@ class SpaceManager extends EffectableEntity {
 
     isRandomTravelLocked() {
         if (this.currentRandomSeed !== null) return false;
+        if (this.currentArtificialKey !== null) return false;
         return !this.planetStatuses[this.currentPlanetKey]?.rwgLock;
     }
 
