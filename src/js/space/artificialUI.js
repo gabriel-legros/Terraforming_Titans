@@ -18,6 +18,7 @@ const artificialUICache = {
   durationTooltip: null,
   gainEffective: null,
   gainDistinct: null,
+  sector: null,
   priority: null,
   startBtn: null,
   cancelBtn: null,
@@ -453,6 +454,17 @@ function ensureArtificialLayout() {
   gainsList.appendChild(distinctRow);
   gainsList.appendChild(effectiveRow);
   gains.appendChild(gainsList);
+
+  // Sector selection
+  const sectorLabel = document.createElement('label');
+  sectorLabel.className = 'artificial-field';
+  sectorLabel.textContent = 'Sector';
+  const sectorSelect = document.createElement('select');
+  sectorSelect.className = 'artificial-select';
+  // Populate with options later in updateArtificialUI
+  sectorLabel.appendChild(sectorSelect);
+  artificialUICache.sector = sectorSelect;
+  gains.appendChild(sectorLabel);
 
   costs.appendChild(gains);
 
@@ -963,6 +975,41 @@ function updateArtificialUI() {
   ensureArtificialLayout();
   const project = manager.activeProject || null;
 
+  // Populate sector selector
+  if (artificialUICache.sector) {
+    const galaxyManager = globalThis?.galaxyManager;
+    const sectors = Array.isArray(galaxyManager?.getSectors?.())
+      ? galaxyManager.getSectors().filter(sector => {
+          const controlValue = sector.getControlValue ? sector.getControlValue('uhf') : 0;
+          return controlValue > 0;
+        })
+      : [];
+    const sectorSig = JSON.stringify(sectors.map(s => ({ name: s.getDisplayName ? s.getDisplayName() : `${s.q},${s.r}`, q: s.q, r: s.r })));
+    if (artificialUICache.sector.dataset.lastSectorList !== sectorSig) {
+      const frag = document.createDocumentFragment();
+      const autoOpt = document.createElement('option');
+      autoOpt.value = 'auto';
+      autoOpt.textContent = 'Sector: Auto';
+      frag.appendChild(autoOpt);
+      sectors.forEach(sector => {
+        const opt = document.createElement('option');
+        opt.value = sector.getDisplayName ? sector.getDisplayName() : `${sector.q},${sector.r}`;
+        opt.textContent = `Sector: ${sector.getDisplayName ? sector.getDisplayName() : `(${sector.q},${sector.r})`}`;
+        frag.appendChild(opt);
+      });
+      artificialUICache.sector.innerHTML = '';
+      artificialUICache.sector.appendChild(frag);
+      artificialUICache.sector.dataset.lastSectorList = sectorSig;
+    }
+    // Set default or project value
+    if (project && project.sector) {
+      artificialUICache.sector.value = project.sector;
+    } else if (!artificialUICache.sector.value) {
+      artificialUICache.sector.value = 'auto';
+    }
+    artificialUICache.sector.disabled = !!project;
+  }
+
   if (artificialUICache.status) {
     artificialUICache.status.textContent = manager.getStatusText();
   }
@@ -1023,6 +1070,7 @@ function updateArtificialUI() {
     artificialUICache.radiusInput.disabled = false;
     artificialUICache.core.disabled = false;
     artificialUICache.type.disabled = false;
+    artificialUICache.sector.disabled = false;
     if (!artificialRadiusEditing) {
       const clamped = getRadiusValue();
       setRadiusFields(clamped);
@@ -1032,6 +1080,7 @@ function updateArtificialUI() {
     artificialUICache.radiusInput.disabled = true;
     artificialUICache.core.disabled = true;
     artificialUICache.type.disabled = true;
+    artificialUICache.sector.disabled = true;
     setRadiusFields(project.radiusEarth, true);
   }
 

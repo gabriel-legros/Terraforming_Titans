@@ -330,77 +330,80 @@ class ArtificialManager extends EffectableEntity {
     }
 
     startShellConstruction(options) {
-        if (!this.enabled || this.activeProject) return false;
-        const core = options?.core || 'super-earth';
-        const coreConfig = getArtificialCoreConfig(core);
-        const bounds = getArtificialCoreBounds(core);
-        const starContext = options?.starContext || ARTIFICIAL_STAR_CONTEXTS[0].value;
-        const starOption = ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.value === starContext) || ARTIFICIAL_STAR_CONTEXTS[0];
-        const allowStar = coreConfig.allowStar !== false;
-        const hasStar = allowStar && starOption.hasStar !== false;
-        const effectiveStarContext = allowStar
-            ? starOption.value
-            : (ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.hasStar === false)?.value || starOption.value);
-        const requestedRadius = options?.radiusEarth || bounds.min;
-        const radiusEarth = Math.min(Math.max(requestedRadius, bounds.min), bounds.max);
-        const chosenName = (options?.name && String(options.name).trim()) || `Shellworld ${this.nextId}`;
-        const cost = this.calculateCost(radiusEarth);
-        if (!this.canCoverCost(cost, this.prioritizeSpaceStorage)) {
-            return false;
-        }
-        const deduction = this.pullResources(cost, this.prioritizeSpaceStorage);
-        if (!deduction) return false;
+      if (!this.enabled || this.activeProject) return false;
+      const core = options?.core || 'super-earth';
+      const coreConfig = getArtificialCoreConfig(core);
+      const bounds = getArtificialCoreBounds(core);
+      const starContext = options?.starContext || ARTIFICIAL_STAR_CONTEXTS[0].value;
+      const starOption = ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.value === starContext) || ARTIFICIAL_STAR_CONTEXTS[0];
+      const allowStar = coreConfig.allowStar !== false;
+      const hasStar = allowStar && starOption.hasStar !== false;
+      const effectiveStarContext = allowStar
+        ? starOption.value
+        : (ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.hasStar === false)?.value || starOption.value);
+      const requestedRadius = options?.radiusEarth || bounds.min;
+      const radiusEarth = Math.min(Math.max(requestedRadius, bounds.min), bounds.max);
+      const chosenName = (options?.name && String(options.name).trim()) || `Shellworld ${this.nextId}`;
+      const cost = this.calculateCost(radiusEarth);
+      if (!this.canCoverCost(cost, this.prioritizeSpaceStorage)) {
+        return false;
+      }
+      const deduction = this.pullResources(cost, this.prioritizeSpaceStorage);
+      if (!deduction) return false;
 
-        const areaHa = this.calculateAreaHectares(radiusEarth);
-        const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
-        const { durationMs, worldCount } = this.getDurationContext(radiusEarth);
-        const now = Date.now();
-        const sector = (spaceManager && spaceManager.getCurrentWorldOriginal)
-            ? spaceManager.getCurrentWorldOriginal()?.merged?.celestialParameters?.sector || null
-            : null;
-        const generationSeed = (this.nextId * 0x9e3779b9) >>> 0;
-        const starContextDetails = buildArtificialStarContext({
-            seed: generationSeed,
-            hasStar,
-            minFlux: coreConfig.minFlux,
-            maxFlux: coreConfig.maxFlux
-        });
-        const star = starContextDetails.star;
+      const areaHa = this.calculateAreaHectares(radiusEarth);
+      const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
+      const { durationMs, worldCount } = this.getDurationContext(radiusEarth);
+      const now = Date.now();
+      let sector = options?.sector || 'auto';
+      if (sector === 'auto') {
+        sector = (spaceManager && spaceManager.getCurrentWorldOriginal)
+          ? spaceManager.getCurrentWorldOriginal()?.merged?.celestialParameters?.sector || null
+          : null;
+      }
+      const generationSeed = (this.nextId * 0x9e3779b9) >>> 0;
+      const starContextDetails = buildArtificialStarContext({
+        seed: generationSeed,
+        hasStar,
+        minFlux: coreConfig.minFlux,
+        maxFlux: coreConfig.maxFlux
+      });
+      const star = starContextDetails.star;
 
-        this.activeProject = {
-            id: this.nextId,
-            seed: this.createSeed(),
-            name: chosenName,
-            type: 'shell',
-            core,
-            starContext: effectiveStarContext,
-            hasStar,
-            allowStar,
-            minFlux: coreConfig.minFlux,
-            maxFlux: coreConfig.maxFlux,
-            radiusEarth,
-            areaHa,
-            landHa: areaHa,
-            durationMs,
-            remainingMs: durationMs,
-            status: 'building',
-            startedAt: now,
-            completedAt: null,
-            cost,
-            terraformedValue,
-            distanceFromStarAU: starContextDetails.distanceFromStarAU,
-            targetFluxWm2: starContextDetails.fluxWm2,
-            isRogue: starContextDetails.isRogue,
-            sector,
-            star,
-            stockpile: { metal: 0, silicon: 0 },
-            builtFrom: spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : 'unknown',
-            worldDivisor: worldCount
-        };
+      this.activeProject = {
+        id: this.nextId,
+        seed: this.createSeed(),
+        name: chosenName,
+        type: 'shell',
+        core,
+        starContext: effectiveStarContext,
+        hasStar,
+        allowStar,
+        minFlux: coreConfig.minFlux,
+        maxFlux: coreConfig.maxFlux,
+        radiusEarth,
+        areaHa,
+        landHa: areaHa,
+        durationMs,
+        remainingMs: durationMs,
+        status: 'building',
+        startedAt: now,
+        completedAt: null,
+        cost,
+        terraformedValue,
+        distanceFromStarAU: starContextDetails.distanceFromStarAU,
+        targetFluxWm2: starContextDetails.fluxWm2,
+        isRogue: starContextDetails.isRogue,
+        sector,
+        star,
+        stockpile: { metal: 0, silicon: 0 },
+        builtFrom: spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : 'unknown',
+        worldDivisor: worldCount
+      };
 
-        this.nextId += 1;
-        this.updateUI(true);
-        return true;
+      this.nextId += 1;
+      this.updateUI(true);
+      return true;
     }
 
     cancelConstruction() {
