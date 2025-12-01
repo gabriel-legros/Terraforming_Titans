@@ -683,7 +683,8 @@ function ensureArtificialLayout() {
       radiusEarth: clampRadiusValue(parseFloat(radiusRange.value) || 1),
       core: artificialUICache.core.value,
       starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
-      name: artificialUICache.nameInput ? artificialUICache.nameInput.value : ''
+      name: artificialUICache.nameInput ? artificialUICache.nameInput.value : '',
+      sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
     });
   });
   coreSelect.addEventListener('change', () => {

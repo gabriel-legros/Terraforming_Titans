@@ -538,6 +538,19 @@ class ArtificialManager extends EffectableEntity {
         base.resources = base.resources || {};
         base.resources.surface = base.resources.surface || {};
         base.resources.colony = base.resources.colony || {};
+        base.resources.underground = base.resources.underground || {};
+        base.resources.underground.ore = {
+            ...(base.resources.underground.ore || {}),
+            initialValue: 0,
+            maxDeposits: 0,
+            areaTotal: 0
+        };
+        base.resources.underground.geothermal = {
+            ...(base.resources.underground.geothermal || {}),
+            initialValue: 0,
+            maxDeposits: 0,
+            areaTotal: 0
+        };
         base.resources.surface.land = {
             ...(base.resources.surface.land || {}),
             initialValue: project.landHa,
