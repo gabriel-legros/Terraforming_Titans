@@ -150,22 +150,39 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       return totals;
     }
 
+    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     const duration = this.collectorDuration;
-    const rate = 1000 / duration;
+    const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
+    const fraction = deltaTime / duration;
     
     for (const category in this.collectorCost) {
       if (!totals.cost[category]) totals.cost[category] = {};
       for (const resource in this.collectorCost[category]) {
-        const rateValue = this.collectorCost[category][resource] * rate * (applyRates ? productivity : 1);
+        const baseCost = this.collectorCost[category][resource];
+        const tickAmount = baseCost * fraction * (applyRates ? productivity : 1);
         if (applyRates && resources[category]?.[resource]) {
-          resources[category][resource].modifyRate(
-            -rateValue,
-            'Dyson Swarm Collectors',
-            'project'
-          );
+          const colonyAvailable = resources[category][resource].value;
+          let colonyPortion = tickAmount;
+          if (storageProj) {
+            const key = resource === 'water' ? 'liquidWater' : resource;
+            if (storageProj.prioritizeMegaProjects) {
+              const storageAvailable = storageProj.getAvailableStoredResource(key);
+              colonyPortion = Math.max(tickAmount - storageAvailable, 0);
+            } else {
+              colonyPortion = Math.min(colonyAvailable, tickAmount);
+            }
+          }
+          const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
+          if (colonyRate > 0) {
+            resources[category][resource].modifyRate(
+              -colonyRate,
+              'Dyson Swarm Collectors',
+              'project'
+            );
+          }
         }
         totals.cost[category][resource] =
-          (totals.cost[category][resource] || 0) + this.collectorCost[category][resource] * (deltaTime / duration);
+          (totals.cost[category][resource] || 0) + baseCost * fraction;
       }
     }
     return totals;

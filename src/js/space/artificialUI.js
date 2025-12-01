@@ -543,7 +543,7 @@ function ensureArtificialLayout() {
   const bailoutInfo = document.createElement('span');
   bailoutInfo.className = 'info-tooltip-icon';
   bailoutInfo.innerHTML = '&#9432;';
-  bailoutInfo.title = 'Spend 10 alien artifacts to receive 100M metal and 100M silicon for this world. Bypasses the stash cap. Only available on artificial worlds.';
+  bailoutInfo.title = 'Spend 10 alien artifacts to receive 100M metal and 100M silicon for this world. Bypasses storage cap. Only available on artificial worlds.';
   bailoutHeader.append(bailoutTitle, bailoutInfo);
   bailoutRow.appendChild(bailoutHeader);
 
