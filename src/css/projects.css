@@ -707,6 +707,13 @@
     align-items: start;
 }
 
+.android-assignment-container {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-rows: auto;
+    grid-template-areas: "ships-info controls speed";
+    align-items: stretch;
+}
+
 .assigned-and-available-container {
     grid-area: ships-info;
     display: flex;
@@ -714,9 +721,69 @@
     gap: 5px;
 }
 
+.android-assigned-and-available {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.android-assigned-and-available .assigned-ships-container,
+.android-assigned-and-available .available-ships-container {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
 .assigned-ships-container, .available-ships-container {
     font-weight: bold;
     font-size: 0.9em;
+}
+
+.android-speed-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9em;
+    color: #495057;
+}
+
+.android-speed-value {
+    font-weight: bold;
+}
+
+.android-speed-container {
+    grid-area: speed;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.android-assignment-container .buttons-container {
+    grid-area: controls;
+}
+
+.android-subheading {
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #495057;
+}
+
+.android-assignment-headers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #495057;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+}
+
+.android-assignment-section .section-title {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 4px;
 }
 
 .buttons-container {
@@ -724,6 +791,10 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+}
+
+.android-column-heading {
+    margin-bottom: 2px;
 }
 
 .buttons-container .main-buttons, .buttons-container .multiplier-container {

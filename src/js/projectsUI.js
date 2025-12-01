@@ -794,15 +794,7 @@ function updateProjectUI(projectName) {
       elements.progressButton.style.display = 'block';
 
       // Update the duration in the progress bar display
-      const spaceshipCtor = globalThis.SpaceshipProject;
-      const cargoCtor = globalThis.CargoRocketProject;
-      const galacticCtor = globalThis.GalacticMarketProject;
-      const isContinuousProject =
-        project.isContinuous() && (
-          (spaceshipCtor && project instanceof spaceshipCtor) ||
-          (cargoCtor && project instanceof cargoCtor) ||
-          (galacticCtor && project instanceof galacticCtor)
-        );
+      const isContinuousProject = project.isContinuous();
       if (isContinuousProject) {
         if (project.autoStart && project.isActive && !project.isPaused) {
           if (isImportProject && importUI) {

@@ -4,10 +4,39 @@ class AndroidProject extends Project {
     this.assignedAndroids = 0;
     this.autoAssignAndroids = false;
     this.assignmentMultiplier = 1;
+    this.continuousThreshold = config.continuousThreshold || 1000; // Duration threshold in ms below which project becomes continuous
+    this.shortfallLastTick = false;
+  }
+
+  isContinuous() {
+    const baseDuration = this.getEffectiveDuration();
+    return baseDuration < this.continuousThreshold && this.assignedAndroids > 0;
   }
 
   adjustActiveDuration() {
-    if (this.isActive) {
+    const wasContinuous = this.remainingTime === Infinity;
+    const nowContinuous = this.isContinuous();
+    
+    if (this.isActive && wasContinuous !== nowContinuous) {
+      if (nowContinuous) {
+        this.startingDuration = Infinity;
+        this.remainingTime = Infinity;
+      } else {
+        // Transitioning from continuous to discrete mode
+        // If we can start (have androids assigned), restart in discrete mode
+        // Otherwise, just stop the project
+        this.isActive = false;
+        this.isCompleted = false;
+        this.isPaused = false;
+        
+        if (this.canStart()) {
+          const duration = this.getEffectiveDuration();
+          this.startingDuration = duration;
+          this.remainingTime = duration;
+          this.start(resources);
+        }
+      }
+    } else if (this.isActive) {
       const newDuration = this.getEffectiveDuration();
       const progressRatio = (this.startingDuration - this.remainingTime) / this.startingDuration;
       this.startingDuration = newDuration;
@@ -48,26 +77,150 @@ class AndroidProject extends Project {
   }
 
   canStart() {
-    if (this.isBooleanFlagSet('androidAssist') && this.assignedAndroids === 0) {
-      return false;
+    if (this.isContinuous()) {
+      const cost = this.getScaledCost();
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          if (resources[category][resource].value < cost[category][resource]) {
+            return false;
+          }
+        }
+      }
+      return this.unlocked && !this.isPermanentlyDisabled() && !this.isActive;
     }
     return super.canStart();
   }
 
+  start(resources) {
+    const started = super.start(resources);
+    if (!started) return false;
+
+    if (this.isContinuous()) {
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+    }
+
+    return true;
+  }
+
+  update(deltaTime) {
+    if (this.isPermanentlyDisabled()) {
+      this.isActive = false;
+      this.isPaused = false;
+      return;
+    }
+    if (!this.isActive || this.isCompleted || this.isPaused) return;
+
+    if (this.isContinuous()) {
+      // Continuous mode is handled by applyCostAndGain
+      return;
+    }
+
+    super.update(deltaTime);
+  }
+
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    const totals = { cost: {}, gain: {} };
+    if (!this.isActive) return totals;
+
+    if (this.isContinuous()) {
+      const duration = this.getEffectiveDuration();
+      const rate = 1000 / duration;
+      const cost = this.getScaledCost();
+      
+      for (const category in cost) {
+        if (!totals.cost[category]) totals.cost[category] = {};
+        for (const resource in cost[category]) {
+          const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
+          if (applyRates && resources[category]?.[resource]) {
+            resources[category][resource].modifyRate(
+              -rateValue,
+              this.displayName,
+              'project'
+            );
+          }
+          totals.cost[category][resource] =
+            (totals.cost[category][resource] || 0) + cost[category][resource] * (deltaTime / duration);
+        }
+      }
+      return totals;
+    }
+
+    return super.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if (!this.isContinuous() || !this.isActive) return;
+    if (!this.canContinue()) {
+      this.isActive = false;
+      return;
+    }
+
+    this.shortfallLastTick = false;
+    const duration = this.getEffectiveDuration();
+    const fraction = deltaTime / duration;
+    const cost = this.getScaledCost();
+
+    let shortfall = false;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const amount = cost[category][resource] * fraction * productivity;
+        const available = resources[category]?.[resource]?.value || 0;
+        if (available < amount) {
+          shortfall = true;
+        }
+        if (accumulatedChanges) {
+          if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
+          if (accumulatedChanges[category][resource] === undefined) {
+            accumulatedChanges[category][resource] = 0;
+          }
+          accumulatedChanges[category][resource] -= amount;
+        } else {
+          const res = resources[category]?.[resource];
+          if (res && typeof res.decrease === 'function') {
+            res.decrease(amount);
+          }
+        }
+      }
+    }
+
+    // Apply progress proportionally - subclasses can override this
+    this.applyContinuousProgress(fraction, productivity);
+
+    this.shortfallLastTick = shortfall;
+  }
+
+  // Override in subclasses to define what happens when continuous progress is made
+  applyContinuousProgress(fraction, productivity) {
+    // Default: increment repeat count fractionally (for projects that use repeatCount)
+    // Subclasses like DeeperMiningProject override this to increment averageDepth instead
+  }
+
+  // Override in subclasses to check if the project can continue (e.g., max depth reached)
+  canContinue() {
+    return true;
+  }
+
   createAndroidAssignmentUI(container) {
     const sectionContainer = document.createElement('div');
-    sectionContainer.classList.add('project-section-container');
+    sectionContainer.classList.add('project-section-container', 'android-assignment-section');
 
-    const title = document.createElement('h4');
-    title.classList.add('section-title');
-    title.textContent = 'Androids';
-    sectionContainer.appendChild(title);
+    const headerRow = document.createElement('div');
+    headerRow.classList.add('android-assignment-headers');
+    const androidHeader = document.createElement('div');
+    androidHeader.textContent = 'Androids';
+    const controlsHeader = document.createElement('div');
+    controlsHeader.textContent = 'Controls';
+    const speedHeader = document.createElement('div');
+    speedHeader.textContent = this.getAndroidSpeedLabelText();
+    headerRow.append(androidHeader, controlsHeader, speedHeader);
+    sectionContainer.appendChild(headerRow);
 
     const assignmentContainer = document.createElement('div');
-    assignmentContainer.classList.add('spaceship-assignment-container');
+    assignmentContainer.classList.add('spaceship-assignment-container', 'android-assignment-container');
 
     const assignedAndAvailableContainer = document.createElement('div');
-    assignedAndAvailableContainer.classList.add('assigned-and-available-container');
+    assignedAndAvailableContainer.classList.add('assigned-and-available-container', 'android-assigned-and-available');
 
     const assignedContainer = document.createElement('div');
     assignedContainer.classList.add('assigned-ships-container');
@@ -88,7 +241,7 @@ class AndroidProject extends Project {
     assignedAndAvailableContainer.append(assignedContainer, availableContainer);
 
     const buttonsContainer = document.createElement('div');
-    buttonsContainer.classList.add('buttons-container');
+    buttonsContainer.classList.add('buttons-container', 'android-controls-container');
 
     const createButton = (text, onClick, parent = buttonsContainer) => {
       const button = document.createElement('button');
@@ -125,12 +278,18 @@ class AndroidProject extends Project {
       plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
     }, multiplierContainer);
 
-    const speedDisplay = document.createElement('div');
+    const speedContainer = document.createElement('div');
+    speedContainer.classList.add('android-speed-container');
+    const speedRow = document.createElement('div');
+    speedRow.classList.add('android-speed-row');
+    const speedDisplay = document.createElement('span');
     speedDisplay.id = `${this.name}-android-speed`;
-    speedDisplay.title = '1 + sqrt(androids assigned / ore mines built)';
-    multiplierContainer.appendChild(speedDisplay);
+    speedDisplay.classList.add('android-speed-value');
+    speedDisplay.title = this.getAndroidSpeedTooltip();
+    speedRow.append(speedDisplay);
+    speedContainer.append(speedRow);
 
-    assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer);
+    assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer, speedContainer);
     sectionContainer.appendChild(assignmentContainer);
     sectionContainer.id = `${this.name}-android-assignment`;
     sectionContainer.style.display = this.isBooleanFlagSet('androidAssist') ? 'block' : 'none';
@@ -163,8 +322,8 @@ class AndroidProject extends Project {
       elements.availableAndroidsDisplay.textContent = formatBigInteger(avail);
     }
     if (elements.androidSpeedDisplay) {
-      const mult = this.getAndroidSpeedMultiplier();
-      elements.androidSpeedDisplay.textContent = `Speed x${formatNumber(mult, true)}`;
+      elements.androidSpeedDisplay.title = this.getAndroidSpeedTooltip();
+      elements.androidSpeedDisplay.textContent = this.getAndroidSpeedDisplayText();
     }
   }
 
@@ -188,6 +347,19 @@ class AndroidProject extends Project {
     super.loadState(state);
     this.assignedAndroids = state.assignedAndroids || 0;
     this.autoAssignAndroids = state.autoAssignAndroids || 0;
+  }
+
+  getAndroidSpeedDisplayText() {
+    const mult = this.getAndroidSpeedMultiplier();
+    return `x${formatNumber(mult, true)}`;
+  }
+
+  getAndroidSpeedTooltip() {
+    return '1 + sqrt(androids assigned / ore mines built)';
+  }
+
+  getAndroidSpeedLabelText() {
+    return 'Speed boost';
   }
 }
 

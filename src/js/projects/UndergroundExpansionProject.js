@@ -1,4 +1,10 @@
 class UndergroundExpansionProject extends AndroidProject {
+  constructor(config, name) {
+    super(config, name);
+    // Track fractional progress for continuous mode
+    this.fractionalRepeatCount = 0;
+  }
+
   getScaledCost() {
     const cost = super.getScaledCost();
     const land = (terraforming.initialLand) || 0;
@@ -19,7 +25,33 @@ class UndergroundExpansionProject extends AndroidProject {
     if (this.repeatCount >= this.maxRepeatCount) {
       return false;
     }
-    return Project.prototype.canStart.call(this);
+    return super.canStart();
+  }
+
+  canContinue() {
+    return this.repeatCount < this.maxRepeatCount;
+  }
+
+  applyContinuousProgress(fraction, productivity) {
+    const progress = fraction * productivity;
+    this.fractionalRepeatCount += progress;
+    
+    // When we accumulate a full repeat, trigger completion
+    while (this.fractionalRepeatCount >= 1 && this.repeatCount < this.maxRepeatCount) {
+      this.fractionalRepeatCount -= 1;
+      this.repeatCount++;
+      if (this.attributes?.completionEffect) {
+        this.attributes.completionEffect.forEach((effect) => {
+          addEffect({ ...effect, sourceId: this });
+        });
+      }
+    }
+
+    if (this.repeatCount >= this.maxRepeatCount) {
+      this.isActive = false;
+      this.isCompleted = true;
+      this.fractionalRepeatCount = 0;
+    }
   }
 
   getAndroidSpeedMultiplier() {
@@ -27,12 +59,8 @@ class UndergroundExpansionProject extends AndroidProject {
     return 1 + Math.sqrt((10000*this.assignedAndroids || 0) / initialLand);
   }
 
-  renderUI(container) {
-    super.renderUI(container);
-    const elements = projectElements[this.name];
-    if (elements?.androidSpeedDisplay) {
-      elements.androidSpeedDisplay.title = '1 + sqrt(10000*androids assigned / initial land)';
-    }
+  getAndroidSpeedTooltip() {
+    return '1 + sqrt(10000*androids assigned / initial land)';
   }
 
   updateUI() {
@@ -48,6 +76,18 @@ class UndergroundExpansionProject extends AndroidProject {
 
   complete() {
     super.complete();
+  }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      fractionalRepeatCount: this.fractionalRepeatCount,
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.fractionalRepeatCount = state.fractionalRepeatCount || 0;
   }
 }
 

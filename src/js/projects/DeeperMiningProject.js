@@ -35,7 +35,27 @@ class DeeperMiningProject extends AndroidProject {
     if (this.averageDepth >= this.maxDepth) {
       return false;
     }
-    return Project.prototype.canStart.call(this);
+    return super.canStart();
+  }
+
+  canContinue() {
+    return this.averageDepth < this.maxDepth;
+  }
+
+  applyContinuousProgress(fraction, productivity) {
+    const depthGain = fraction * productivity;
+    const newDepth = Math.min(this.averageDepth + depthGain, this.maxDepth);
+    if (newDepth !== this.averageDepth) {
+      this.averageDepth = newDepth;
+      if (this.attributes?.completionEffect) {
+        this.applyCompletionEffect();
+      }
+    }
+
+    if (this.averageDepth >= this.maxDepth) {
+      this.isActive = false;
+      this.isCompleted = true;
+    }
   }
 
   getScaledCost() {
@@ -56,13 +76,8 @@ class DeeperMiningProject extends AndroidProject {
     return cost;
   }
 
-  updateUI() {
-    super.updateUI();
-    const elements = projectElements[this.name];
-    if (elements?.androidSpeedDisplay) {
-      const mult = this.getAndroidSpeedMultiplier();
-      elements.androidSpeedDisplay.textContent = `Deepening speed boost x${formatNumber(mult, true)}`;
-    }
+  getAndroidSpeedLabelText() {
+    return 'Deepening speed boost';
   }
 
   renderUI(container) {
@@ -125,6 +140,7 @@ class DeeperMiningProject extends AndroidProject {
       }
     }
   }
+
 
   saveState() {
     return {

@@ -102,7 +102,17 @@ function updateDysonSwarmUI(project) {
   if (els.totalPowerDisplay) {
     els.totalPowerDisplay.parentElement.style.display = (project.unlocked && project.isCompleted) ? '' : 'none';
   }
-  if (project.collectorProgress > 0) {
+  // Check if in continuous mode
+  if (project.isCollectorContinuous()) {
+    if (project.autoDeployCollectors && (project.isCompleted || project.collectors > 0)) {
+      els.startButton.textContent = 'Continuous';
+      els.startButton.style.background = '#4caf50';
+    } else {
+      els.startButton.textContent = 'Stopped';
+      els.startButton.style.background = '#f44336';
+    }
+    els.startButton.disabled = true;
+  } else if (project.collectorProgress > 0) {
     const pct = ((project.collectorDuration - project.collectorProgress) / project.collectorDuration) * 100;
     const secs = Math.max(0, project.collectorProgress / 1000).toFixed(2);
     els.startButton.textContent = `Deploying (${secs}s)`;
