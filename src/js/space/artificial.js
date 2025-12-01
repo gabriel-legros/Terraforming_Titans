@@ -466,7 +466,6 @@ class ArtificialManager extends EffectableEntity {
     }
 
     canUseSolisBailout() {
-        if (!this.activeProject) return false;
         if (!this.isCurrentWorldArtificial()) return false;
         const artifacts = resources?.special?.alienArtifact;
         return artifacts && artifacts.value >= 10;
@@ -476,9 +475,15 @@ class ArtificialManager extends EffectableEntity {
         if (!this.canUseSolisBailout()) return false;
         const artifacts = resources?.special?.alienArtifact;
         artifacts.decrease(10);
-        this.activeProject.stockpile.metal += 100_000_000;
-        this.activeProject.stockpile.silicon += 100_000_000;
-        this.activeProject.override = null;
+        const payout = 100_000_000;
+        if (this.activeProject) {
+            this.activeProject.stockpile.metal += payout;
+            this.activeProject.stockpile.silicon += payout;
+            this.activeProject.override = null;
+        } else {
+            resources?.colony?.metal?.increase?.(payout, true);
+            resources?.colony?.silicon?.increase?.(payout, true);
+        }
         this.updateUI(true);
         return true;
     }

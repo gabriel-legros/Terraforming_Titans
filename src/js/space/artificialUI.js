@@ -890,17 +890,14 @@ function renderBailout(project, manager) {
   const available = artifacts ? artifacts.value : 0;
   const fmt = formatNumber || ((n) => n);
   stock.textContent = 'Cost: 10 artifacts';
-  const active = !!project;
   const onArtificial = manager ? manager.isCurrentWorldArtificial() : false;
   const canAfford = artifacts && available >= 10;
-  const allowed = active && onArtificial && canAfford;
+  const allowed = onArtificial && canAfford;
   btn.disabled = !allowed;
   btn.classList.toggle('artificial-stash-unaffordable', !allowed);
   btn.title = '';
   if (!allowed) {
-    if (!active) {
-      btn.title = 'Start shellworld construction to enable bailout.';
-    } else if (!onArtificial) {
+    if (!onArtificial) {
       btn.title = 'Available only on an artificial world.';
     } else if (!canAfford) {
       btn.title = 'Need 10 alien artifacts.';
