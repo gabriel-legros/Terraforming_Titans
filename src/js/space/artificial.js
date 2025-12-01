@@ -222,7 +222,7 @@ class ArtificialManager extends EffectableEntity {
 
     calculateCost(radiusEarth) {
         const size = Math.max(radiusEarth || 0, 0);
-        const factor = size ** 3/2;
+        const factor = size ** 3;
         return {
             superalloys: BASE_SHELL_COST.superalloys * factor,
             metal: BASE_SHELL_COST.metal * factor
