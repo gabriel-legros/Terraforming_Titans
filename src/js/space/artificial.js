@@ -51,7 +51,7 @@ const BASE_SHELL_COST = (() => {
     const superalloyBase = SHELL_COST_CALIBRATION.superalloys / (radiusAtCalibration ** 3);
     return {
         superalloys: superalloyBase,
-        metal: superalloyBase * 10
+        metal: superalloyBase * 100
     };
 })();
 
