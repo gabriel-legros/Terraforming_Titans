@@ -142,6 +142,7 @@ function initializeDefaultGlobals(){
   }
 
   rwgManager = new RwgManager();
+  patienceManager = new PatienceManager();
   }
 
 function initializeGameState(options = {}) {
@@ -345,6 +346,9 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !warpGateCommand) {
     warpGateCommand = new WarpGateCommand();
   }
+  if (!preserveManagers || !patienceManager) {
+    patienceManager = new PatienceManager();
+  }
   if (!preserveManagers || !artificialManager) {
     artificialManager = setArtificialManager(new ArtificialManager());
   } else if (artificialManager && typeof artificialManager.updateUI === 'function') {
@@ -421,6 +425,9 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && warpGateCommand && typeof warpGateCommand.reapplyEffects === 'function') {
     warpGateCommand.reapplyEffects();
+  }
+  if (preserveManagers && patienceManager && typeof patienceManager.reapplyEffects === 'function') {
+    patienceManager.reapplyEffects();
   }
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();

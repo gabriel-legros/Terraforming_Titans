@@ -1816,6 +1816,10 @@ function updateLifeBox() {
       if (typeof updateCompleteTerraformingButton === 'function') {
         updateCompleteTerraformingButton();
       }
+      // Award patience hours when terraforming is completed
+      if (typeof patienceManager !== 'undefined' && patienceManager && patienceManager.enabled) {
+        patienceManager.onTerraformingComplete();
+      }
       button.textContent = 'ERROR : MTC not responding';
     };
 }

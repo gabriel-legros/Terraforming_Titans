@@ -634,7 +634,8 @@ function addOrRemoveEffect(effect, action) {
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
     'galaxyManager': typeof galaxyManager !== 'undefined' ? galaxyManager : undefined,
     'artificialManager': typeof artificialManager !== 'undefined' ? artificialManager : undefined,
-    'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined
+    'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
+    'patienceManager': typeof patienceManager !== 'undefined' ? patienceManager : undefined
   };
 
   if (effect.target in targetHandlers &&

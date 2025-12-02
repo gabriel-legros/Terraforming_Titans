@@ -70,6 +70,7 @@ let globalEffects = new EffectableEntity({description : 'Manages global effects'
 let skillManager;
 let solisManager;
 let warpGateCommand;
+let patienceManager;
 let galaxyManager;
 let playTimeSeconds = 0;
 let totalPlayTimeSeconds = 0;

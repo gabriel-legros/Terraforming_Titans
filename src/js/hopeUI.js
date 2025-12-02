@@ -58,6 +58,9 @@ function initializeHopeUI() {
     if (typeof initializeWGCUI === 'function') {
         initializeWGCUI();
     }
+    if (typeof PatienceUI !== 'undefined' && PatienceUI && typeof PatienceUI.initialize === 'function') {
+        PatienceUI.initialize();
+    }
 }
 
 function updateHopeAlert() {
@@ -98,6 +101,9 @@ function updateHopeUI() {
     }
     if (typeof updateWGCUI === 'function') {
         updateWGCUI();
+    }
+    if (typeof updatePatienceUI === 'function') {
+        updatePatienceUI();
     }
     updateAutomationUI();
     updateHopeAlert();
