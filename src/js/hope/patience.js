@@ -75,7 +75,7 @@ class PatienceManager extends EffectableEntity {
      */
     onTerraformingComplete() {
         if (this.enabled) {
-            this.addPatience(2);
+            this.addPatience(3);
         }
     }
 
@@ -96,7 +96,7 @@ class PatienceManager extends EffectableEntity {
         
         const today = this.getCurrentUTCDateString();
         if (this.lastDailyClaimDate !== today) {
-            this.addPatience(2);
+            this.addPatience(3);
             this.lastDailyClaimDate = today;
         }
     }

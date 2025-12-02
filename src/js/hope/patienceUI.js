@@ -14,6 +14,8 @@ const PatienceUI = {
     spendButtonEl: null,
     spendPreviewEl: null,
     meterFillEl: null,
+    gainValueEl: null,
+    gainMetaEl: null,
 
     /**
      * Initialize the patience UI
@@ -89,6 +91,26 @@ const PatienceUI = {
         maxLine.innerHTML = 'Capacity <span id="patience-max-value">12</span> hours';
         currentCard.appendChild(maxLine);
         statsRow.appendChild(currentCard);
+
+        const gainCard = document.createElement('div');
+        gainCard.className = 'patience-card';
+
+        const gainLabel = document.createElement('div');
+        gainLabel.className = 'patience-card-label';
+        gainLabel.textContent = 'Patience gain';
+        gainCard.appendChild(gainLabel);
+
+        const gainValue = document.createElement('div');
+        gainValue.className = 'patience-card-value';
+        gainValue.textContent = '+3';
+        gainCard.appendChild(gainValue);
+
+        const gainMeta = document.createElement('div');
+        gainMeta.className = 'patience-card-meta';
+        gainMeta.textContent = 'Daily UTC bonus';
+        gainCard.appendChild(gainMeta);
+
+        statsRow.appendChild(gainCard);
 
         const timerCard = document.createElement('div');
         timerCard.className = 'patience-card';
@@ -169,6 +191,8 @@ const PatienceUI = {
         this.spendButtonEl = spendButton;
         this.spendPreviewEl = spendPreview;
         this.meterFillEl = meterFill;
+        this.gainValueEl = gainValue;
+        this.gainMetaEl = gainMeta;
         this.updateSpendPreview();
     },
 
@@ -271,6 +295,14 @@ const PatienceUI = {
         if (this.timerValueEl) {
             const msRemaining = patienceManager.getMillisecondsUntilNextDaily();
             this.timerValueEl.textContent = this.formatTimeRemaining(msRemaining);
+        }
+
+        if (this.gainValueEl) {
+            this.gainValueEl.textContent = '+3';
+        }
+
+        if (this.gainMetaEl) {
+            this.gainMetaEl.textContent = 'Gained daily or when terraforming a world';
         }
 
         // Update spend button state
