@@ -1000,6 +1000,9 @@ class ProjectManager extends EffectableEntity {
       const project = this.projects[name];
       const state = {};
       const resetAuto = project.autoStartUncheckOnTravel === true;
+      if (typeof project.prepareTravelState === 'function') {
+        project.prepareTravelState();
+      }
       if (preserveAuto) {
         state.autoStart = resetAuto ? false : project.autoStart;
       }

@@ -30,6 +30,90 @@ function createDefaultMirrorOversightSettings() {
   };
 }
 
+function applyMirrorOversightSettings(settings, saved = {}) {
+  const savedDistribution = saved.distribution || {};
+  ['tropical', 'temperate', 'polar', 'focus', 'unassigned'].forEach(zone => {
+    const v = Number(savedDistribution[zone]);
+    settings.distribution[zone] = Number.isFinite(v) ? v : settings.distribution[zone];
+  });
+  settings.applyToLantern = !!saved.applyToLantern;
+  settings.useFinerControls = !!saved.useFinerControls;
+
+  const normalizeStep = (value) => {
+    const num = Number(value);
+    if (!Number.isFinite(num) || num <= 0) return 1;
+    return Math.max(1, Math.floor(num));
+  };
+  const stepSource = saved.assignmentStep;
+  settings.assignmentStep.mirrors = normalizeStep(stepSource?.mirrors ?? stepSource ?? settings.assignmentStep.mirrors);
+  settings.assignmentStep.lanterns = normalizeStep(stepSource?.lanterns ?? stepSource ?? settings.assignmentStep.lanterns);
+  settings.advancedOversight = !!saved.advancedOversight;
+
+  const multiplier = Number(saved.waterMultiplier);
+  settings.waterMultiplier = multiplier > 0 ? multiplier : 1000;
+
+  const savedTargets = saved.targets || {};
+  ['tropical', 'temperate', 'polar', 'water'].forEach(key => {
+    const v = Number(savedTargets[key]);
+    settings.targets[key] = Number.isFinite(v) ? v : settings.targets[key];
+  });
+
+  const savedTempMode = saved.tempMode || {};
+  ['tropical', 'temperate', 'polar'].forEach(zone => {
+    const mode = savedTempMode[zone];
+    settings.tempMode[zone] = mode === 'day' || mode === 'night' ? mode : 'average';
+  });
+
+  const savedPriority = saved.priority || {};
+  ['tropical', 'temperate', 'polar', 'focus'].forEach(zone => {
+    const val = parseInt(savedPriority[zone], 10);
+    settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
+  });
+
+  const savedAuto = saved.autoAssign || {};
+  ['tropical', 'temperate', 'polar', 'focus', 'any'].forEach(zone => {
+    settings.autoAssign[zone] = !!savedAuto[zone];
+  });
+
+  const savedAssignments = saved.assignments || {};
+  const savedMirrors = savedAssignments.mirrors || {};
+  const savedLanterns = savedAssignments.lanterns || {};
+  ['tropical', 'temperate', 'polar', 'focus', 'unassigned', 'any'].forEach(zone => {
+    const mv = Number(savedMirrors[zone]);
+    const lv = Number(savedLanterns[zone]);
+    settings.assignments.mirrors[zone] = Number.isFinite(mv) ? mv : settings.assignments.mirrors[zone];
+    settings.assignments.lanterns[zone] = Number.isFinite(lv) ? lv : settings.assignments.lanterns[zone];
+  });
+  const savedReversal = savedAssignments.reversalMode || {};
+  ['tropical', 'temperate', 'polar', 'focus', 'any'].forEach(zone => {
+    settings.assignments.reversalMode[zone] = !!savedReversal[zone];
+  });
+
+  return settings;
+}
+
+function applyMirrorOversightTravelSettings(settings, saved = {}) {
+  const savedTargets = saved.targets || {};
+  ['tropical', 'temperate', 'polar', 'water'].forEach(key => {
+    const v = Number(savedTargets[key]);
+    settings.targets[key] = Number.isFinite(v) ? v : settings.targets[key];
+  });
+
+  const savedTempMode = saved.tempMode || {};
+  ['tropical', 'temperate', 'polar'].forEach(zone => {
+    const mode = savedTempMode[zone];
+    settings.tempMode[zone] = mode === 'day' || mode === 'night' ? mode : 'average';
+  });
+
+  const savedPriority = saved.priority || {};
+  ['tropical', 'temperate', 'polar', 'focus'].forEach(zone => {
+    const val = parseInt(savedPriority[zone], 10);
+    settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
+  });
+
+  return settings;
+}
+
 var mirrorOversightSettings = null;
 
 function formatResourceLabel(resource) {
@@ -1717,86 +1801,33 @@ class SpaceMirrorFacilityProject extends Project {
     super.loadState(state);
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
-    const saved = state?.mirrorOversightSettings || {};
+    applyMirrorOversightSettings(this.mirrorOversightSettings, state?.mirrorOversightSettings);
+
+    if (typeof updateMirrorOversightUI === 'function') {
+      updateMirrorOversightUI();
+    }
+  }
+
+  prepareTravelState() {
+    sanitizeMirrorDistribution();
+  }
+
+  saveTravelState() {
+    this.prepareTravelState();
     const settings = this.mirrorOversightSettings;
+    return {
+      mirrorOversightSettings: {
+        targets: { ...settings.targets },
+        tempMode: { ...settings.tempMode },
+        priority: { ...settings.priority },
+      },
+    };
+  }
 
-    if (saved.distribution) {
-      Object.assign(settings.distribution, saved.distribution);
-      ['tropical','temperate','polar','focus','unassigned'].forEach(z => {
-        const v = Number(settings.distribution[z]);
-        settings.distribution[z] = isNaN(v) ? 0 : v;
-      });
-    }
-
-    settings.applyToLantern = !!saved.applyToLantern;
-    settings.useFinerControls = !!saved.useFinerControls;
-    if (typeof saved.assignmentStep === 'object') {
-      settings.assignmentStep.mirrors = Math.max(1, Math.floor(saved.assignmentStep.mirrors)) || 1;
-      settings.assignmentStep.lanterns = Math.max(1, Math.floor(saved.assignmentStep.lanterns)) || 1;
-    } else {
-      const val = typeof saved.assignmentStep === 'number' && saved.assignmentStep > 0 ? saved.assignmentStep : 1;
-      settings.assignmentStep.mirrors = val;
-      settings.assignmentStep.lanterns = val;
-    }
-    settings.advancedOversight = !!saved.advancedOversight;
-    settings.waterMultiplier = typeof saved.waterMultiplier === 'number' && saved.waterMultiplier > 0
-      ? saved.waterMultiplier
-      : 1000;
-
-    if (saved.targets) {
-      Object.assign(settings.targets, saved.targets);
-      ['tropical','temperate','polar','water'].forEach(k => {
-        const v = Number(settings.targets[k]);
-        settings.targets[k] = isNaN(v) ? 0 : v;
-      });
-    }
-
-    if (saved.tempMode) {
-      Object.assign(settings.tempMode, saved.tempMode);
-      ['tropical','temperate','polar'].forEach(z => {
-        const val = settings.tempMode[z];
-        settings.tempMode[z] = (val === 'day' || val === 'night') ? val : 'average';
-      });
-    }
-
-    if (saved.priority) {
-      Object.assign(settings.priority, saved.priority);
-      ['tropical','temperate','polar','focus'].forEach(z => {
-        const val = parseInt(settings.priority[z], 10);
-        settings.priority[z] = val >= 1 && val <= 5 ? val : 1;
-      });
-    }
-
-    if (saved.autoAssign) {
-      Object.assign(settings.autoAssign, saved.autoAssign);
-      ['tropical','temperate','polar','focus','any'].forEach(z => {
-        settings.autoAssign[z] = !!settings.autoAssign[z];
-      });
-    }
-
-    if (saved.assignments) {
-      const sa = saved.assignments;
-      if (sa.mirrors) {
-        Object.assign(settings.assignments.mirrors, sa.mirrors);
-        ['tropical','temperate','polar','focus','unassigned','any'].forEach(z => {
-          const v = Number(settings.assignments.mirrors[z]);
-          settings.assignments.mirrors[z] = isNaN(v) ? 0 : v;
-        });
-      }
-      if (sa.lanterns) {
-        Object.assign(settings.assignments.lanterns, sa.lanterns);
-        ['tropical','temperate','polar','focus','unassigned','any'].forEach(z => {
-          const v = Number(settings.assignments.lanterns[z]);
-          settings.assignments.lanterns[z] = isNaN(v) ? 0 : v;
-        });
-      }
-      if (sa.reversalMode) {
-        Object.assign(settings.assignments.reversalMode, sa.reversalMode);
-        ['tropical','temperate','polar','focus','any'].forEach(z => {
-          settings.assignments.reversalMode[z] = !!settings.assignments.reversalMode[z];
-        });
-      }
-    }
+  loadTravelState(state = {}) {
+    this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
+    mirrorOversightSettings = this.mirrorOversightSettings;
+    applyMirrorOversightTravelSettings(this.mirrorOversightSettings, state.mirrorOversightSettings || state);
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();

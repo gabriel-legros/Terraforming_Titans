@@ -52,6 +52,7 @@ describe('Dyson Swarm travel reset UI', () => {
     autoDeployCollectors: false,
     unlocked: true,
     autoStartUncheckOnTravel: true,
+    isCollectorContinuous: () => false,
     canStartCollector: () => true,
     startCollector: jest.fn(),
   });
@@ -79,4 +80,3 @@ describe('Dyson Swarm travel reset UI', () => {
     expect(elements.autoStartTravelResetCheckbox.checked).toBe(false);
   });
 });
-
