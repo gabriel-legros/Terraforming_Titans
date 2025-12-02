@@ -13,6 +13,7 @@ const PatienceUI = {
     spendInputEl: null,
     spendButtonEl: null,
     spendPreviewEl: null,
+    meterFillEl: null,
 
     /**
      * Initialize the patience UI
@@ -41,69 +42,134 @@ const PatienceUI = {
         this.container.innerHTML = '';
 
         // Create patience container
-        const patienceContainer = document.createElement('div');
-        patienceContainer.className = 'patience-container';
+        const shell = document.createElement('div');
+        shell.className = 'patience-shell';
 
-        // Header
-        const header = document.createElement('h2');
-        header.textContent = 'Patience';
-        patienceContainer.appendChild(header);
+        const header = document.createElement('div');
+        header.className = 'patience-header';
 
-        // Display section
-        const displayDiv = document.createElement('div');
-        displayDiv.className = 'patience-display';
+        const titleRow = document.createElement('div');
+        titleRow.className = 'patience-title-row';
 
-        // Current patience
-        const currentDiv = document.createElement('div');
-        currentDiv.className = 'patience-current';
-        currentDiv.innerHTML = '<span>Current Patience:</span> <span id="patience-current-value">0</span> / <span id="patience-max-value">12</span> hours';
-        displayDiv.appendChild(currentDiv);
+        const title = document.createElement('h2');
+        title.textContent = 'Patience';
+        titleRow.appendChild(title);
 
-        // Timer
-        const timerDiv = document.createElement('div');
-        timerDiv.className = 'patience-timer';
-        timerDiv.innerHTML = '<span>Next daily patience in:</span> <span id="patience-timer-value">--:--</span>';
-        displayDiv.appendChild(timerDiv);
+        const tooltip = document.createElement('span');
+        tooltip.className = 'info-tooltip-icon';
+        tooltip.title = 'Daily patience trickles in automatically and can be cashed in for superalloy production time.';
+        titleRow.appendChild(tooltip);
+        header.appendChild(titleRow);
 
-        patienceContainer.appendChild(displayDiv);
+        const subtitle = document.createElement('p');
+        subtitle.className = 'patience-subtitle';
+        subtitle.textContent = 'HOPE gains patience over time and from terraforming worlds.';
+        header.appendChild(subtitle);
+        shell.appendChild(header);
 
-        // Spend section
-        const spendDiv = document.createElement('div');
-        spendDiv.className = 'patience-spend';
+        const statsRow = document.createElement('div');
+        statsRow.className = 'patience-stats';
 
-        const label = document.createElement('label');
-        label.textContent = 'Spend patience for superalloys: ';
-        spendDiv.appendChild(label);
+        const currentCard = document.createElement('div');
+        currentCard.className = 'patience-card';
 
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.id = 'patience-spend-input';
-        input.min = '1';
-        input.max = '12';
-        input.step = '1';
-        input.value = '1';
-        spendDiv.appendChild(input);
+        const currentLabel = document.createElement('div');
+        currentLabel.className = 'patience-card-label';
+        currentLabel.textContent = 'Available Patience';
+        currentCard.appendChild(currentLabel);
 
-        const button = document.createElement('button');
-        button.id = 'patience-spend-button';
-        button.textContent = 'Spend Patience';
-        spendDiv.appendChild(button);
+        const currentValue = document.createElement('div');
+        currentValue.id = 'patience-current-value';
+        currentValue.className = 'patience-card-value';
+        currentValue.textContent = '0.0';
+        currentCard.appendChild(currentValue);
 
-        const preview = document.createElement('span');
-        preview.id = 'patience-spend-preview';
-        spendDiv.appendChild(preview);
+        const maxLine = document.createElement('div');
+        maxLine.className = 'patience-card-meta';
+        maxLine.innerHTML = 'Capacity <span id="patience-max-value">12</span> hours';
+        currentCard.appendChild(maxLine);
+        statsRow.appendChild(currentCard);
 
-        patienceContainer.appendChild(spendDiv);
+        const timerCard = document.createElement('div');
+        timerCard.className = 'patience-card';
 
-        this.container.appendChild(patienceContainer);
+        const timerLabel = document.createElement('div');
+        timerLabel.className = 'patience-card-label';
+        timerLabel.textContent = 'Next daily gain';
+        timerCard.appendChild(timerLabel);
+
+        const timerValue = document.createElement('div');
+        timerValue.id = 'patience-timer-value';
+        timerValue.className = 'patience-card-value';
+        timerValue.textContent = '--:--';
+        timerCard.appendChild(timerValue);
+
+        const timerMeta = document.createElement('div');
+        timerMeta.className = 'patience-card-meta';
+        timerMeta.textContent = 'UTC midnight refresh';
+        timerCard.appendChild(timerMeta);
+        statsRow.appendChild(timerCard);
+
+        shell.appendChild(statsRow);
+
+        const meter = document.createElement('div');
+        meter.className = 'patience-meter';
+        const meterFill = document.createElement('div');
+        meterFill.className = 'patience-meter-fill';
+        meterFill.style.width = '0%';
+        meter.appendChild(meterFill);
+
+        const meterText = document.createElement('div');
+        meterText.className = 'patience-meter-text';
+        meterText.textContent = 'Patience reserve';
+        meter.appendChild(meterText);
+        shell.appendChild(meter);
+
+        const spendCard = document.createElement('div');
+        spendCard.className = 'patience-spend-card';
+
+        const spendHeader = document.createElement('div');
+        spendHeader.className = 'patience-card-label';
+        spendHeader.textContent = 'Convert patience into superalloys, proportional to production.';
+        spendCard.appendChild(spendHeader);
+
+        const spendRow = document.createElement('div');
+        spendRow.className = 'patience-input-row';
+
+        const spendInput = document.createElement('input');
+        spendInput.type = 'number';
+        spendInput.id = 'patience-spend-input';
+        spendInput.min = '1';
+        spendInput.max = '12';
+        spendInput.step = '1';
+        spendInput.value = '1';
+        spendRow.appendChild(spendInput);
+
+        const spendButton = document.createElement('button');
+        spendButton.id = 'patience-spend-button';
+        spendButton.textContent = 'Spend';
+        spendRow.appendChild(spendButton);
+
+        spendCard.appendChild(spendRow);
+
+        const spendPreview = document.createElement('div');
+        spendPreview.id = 'patience-spend-preview';
+        spendPreview.className = 'patience-preview';
+        spendCard.appendChild(spendPreview);
+
+        shell.appendChild(spendCard);
+
+        this.container.appendChild(shell);
 
         // Cache the newly created elements
-        this.currentValueEl = document.getElementById('patience-current-value');
-        this.maxValueEl = document.getElementById('patience-max-value');
-        this.timerValueEl = document.getElementById('patience-timer-value');
-        this.spendInputEl = document.getElementById('patience-spend-input');
-        this.spendButtonEl = document.getElementById('patience-spend-button');
-        this.spendPreviewEl = document.getElementById('patience-spend-preview');
+        this.currentValueEl = currentValue;
+        this.maxValueEl = maxLine.querySelector('#patience-max-value');
+        this.timerValueEl = timerValue;
+        this.spendInputEl = spendInput;
+        this.spendButtonEl = spendButton;
+        this.spendPreviewEl = spendPreview;
+        this.meterFillEl = meterFill;
+        this.updateSpendPreview();
     },
 
     /**
@@ -183,10 +249,11 @@ const PatienceUI = {
      * @returns {string}
      */
     formatTimeRemaining(ms) {
-        const totalMinutes = Math.floor(ms / 60000);
+        const totalMinutes = Math.max(0, Math.floor(ms / 60000));
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        const seconds = Math.max(0, Math.floor((ms % 60000) / 1000));
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     },
 
     /**
@@ -200,7 +267,7 @@ const PatienceUI = {
         if (this.maxValueEl) {
             this.maxValueEl.textContent = patienceManager.maxHours;
         }
-        
+
         if (this.timerValueEl) {
             const msRemaining = patienceManager.getMillisecondsUntilNextDaily();
             this.timerValueEl.textContent = this.formatTimeRemaining(msRemaining);
@@ -213,6 +280,12 @@ const PatienceUI = {
             const productionRate = superalloyResource?.productionRate || 0;
             const canSpend = hours > 0 && hours <= patienceManager.currentHours && productionRate > 0;
             this.spendButtonEl.disabled = !canSpend;
+        }
+
+        if (this.meterFillEl) {
+            const maxHours = patienceManager.maxHours || 1;
+            const ratio = Math.min(1, Math.max(0, patienceManager.currentHours / maxHours));
+            this.meterFillEl.style.width = `${ratio * 100}%`;
         }
 
         // Update preview on each render
