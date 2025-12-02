@@ -16,9 +16,17 @@ class AndroidProject extends Project {
   adjustActiveDuration() {
     const wasContinuous = this.remainingTime === Infinity;
     const nowContinuous = this.isContinuous();
-    
+    const hasProgress = this.isActive
+      && Number.isFinite(this.startingDuration)
+      && Number.isFinite(this.remainingTime)
+      && this.startingDuration > 0;
+    const progressRatio = hasProgress
+      ? (this.startingDuration - this.remainingTime) / this.startingDuration
+      : 0;
+
     if (this.isActive && wasContinuous !== nowContinuous) {
       if (nowContinuous) {
+        this.onEnterContinuousMode?.(progressRatio);
         this.startingDuration = Infinity;
         this.remainingTime = Infinity;
       } else {
@@ -38,7 +46,6 @@ class AndroidProject extends Project {
       }
     } else if (this.isActive) {
       const newDuration = this.getEffectiveDuration();
-      const progressRatio = (this.startingDuration - this.remainingTime) / this.startingDuration;
       this.startingDuration = newDuration;
       this.remainingTime = newDuration * (1 - progressRatio);
     }
