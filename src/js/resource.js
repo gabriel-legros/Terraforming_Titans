@@ -455,14 +455,6 @@ function reconcileLandResourceValue() {
         ? undergroundProject.maxRepeatCount
         : Infinity;
       let completions = Math.max(0, undergroundProject.repeatCount || 0);
-      if (undergroundProject.isActive && undergroundProject.startingDuration) {
-        const duration = undergroundProject.startingDuration;
-        if (duration > 0) {
-          const remaining = Math.max(0, undergroundProject.remainingTime ?? duration);
-          const ratio = Math.max(0, Math.min(1, remaining / duration));
-          completions += 1 - ratio;
-        }
-      }
       if (Number.isFinite(maxRepeats)) {
         completions = Math.min(completions, maxRepeats);
       }
