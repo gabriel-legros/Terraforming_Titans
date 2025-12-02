@@ -47,6 +47,7 @@ const SHELL_COST_CALIBRATION = {
     landHa: 50_000_000_000,
     superalloys: 10_000_000_000_000
 };
+const MAX_SHELL_DURATION_MS = 5 * 3_600_000;
 const BASE_SHELL_COST = (() => {
     const radiusAtCalibration = Math.sqrt(SHELL_COST_CALIBRATION.landHa / EARTH_AREA_HA);
     const superalloyBase = SHELL_COST_CALIBRATION.superalloys / (radiusAtCalibration ** 3);
@@ -249,6 +250,10 @@ class ArtificialManager extends EffectableEntity {
         return { durationMs: base / worlds, worldCount: worlds };
     }
 
+    exceedsDurationLimit(durationMs) {
+        return Math.max(durationMs || 0, 0) > MAX_SHELL_DURATION_MS;
+    }
+
     setPrioritizeSpaceStorage(value) {
         this.prioritizeSpaceStorage = !!value;
     }
@@ -344,8 +349,12 @@ class ArtificialManager extends EffectableEntity {
         : (ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.hasStar === false)?.value || starOption.value);
       const requestedRadius = options?.radiusEarth || bounds.min;
       const radiusEarth = Math.min(Math.max(requestedRadius, bounds.min), bounds.max);
-      const chosenName = (options?.name && String(options.name).trim()) || `Shellworld ${this.nextId}`;
+      const chosenName = (options?.name && String(options.name).trim()) || `Artificial World ${this.nextId}`;
       const cost = this.calculateCost(radiusEarth);
+      const durationContext = this.getDurationContext(radiusEarth);
+      if (this.exceedsDurationLimit(durationContext.durationMs)) {
+        return false;
+      }
       if (!this.canCoverCost(cost, this.prioritizeSpaceStorage)) {
         return false;
       }
@@ -354,7 +363,10 @@ class ArtificialManager extends EffectableEntity {
 
       const areaHa = this.calculateAreaHectares(radiusEarth);
       const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
-      const { durationMs, worldCount } = this.getDurationContext(radiusEarth);
+      const { durationMs, worldCount } = durationContext;
+      if (this.exceedsDurationLimit(durationMs)) {
+        return false;
+      }
       const now = Date.now();
       let sector = options?.sector || 'auto';
       if (sector === 'auto') {
@@ -678,7 +690,7 @@ class ArtificialManager extends EffectableEntity {
 
     getStatusText() {
         if (!this.enabled) return 'Artificial systems standby.';
-        if (!this.activeProject) return 'No active megastructure. Ready to draft a shellworld.';
+        if (!this.activeProject) return 'No active megastructure. Ready to draft an artificial world.';
         if (this.activeProject.status === 'building') {
             const pct = Math.max(0, Math.min(100, 100 - (this.activeProject.remainingMs / this.activeProject.durationMs) * 100));
             return `${this.activeProject.name} under construction (${pct.toFixed(1)}%).`;

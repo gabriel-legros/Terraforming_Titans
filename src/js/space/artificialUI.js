@@ -260,7 +260,7 @@ function ensureArtificialLayout() {
   nameLabel.textContent = 'World name';
   const nameInput = document.createElement('input');
   nameInput.className = 'artificial-name';
-  nameInput.placeholder = 'Shellworld';
+  nameInput.placeholder = 'Artificial world';
   nameLabel.appendChild(nameInput);
   blueprint.appendChild(nameLabel);
   artificialUICache.nameInput = nameInput;
@@ -421,7 +421,7 @@ function ensureArtificialLayout() {
 
   const startBtn = document.createElement('button');
   startBtn.className = 'artificial-primary';
-  startBtn.textContent = 'Start Shellworld';
+  startBtn.textContent = 'Start Artificial World';
   artificialUICache.startBtn = startBtn;
   costs.appendChild(startBtn);
 
@@ -600,7 +600,7 @@ function ensureArtificialLayout() {
   actions.appendChild(cancelBtn);
   const travelBtn = document.createElement('button');
   travelBtn.className = 'artificial-primary';
-  travelBtn.textContent = 'Travel to Shellworld';
+  travelBtn.textContent = 'Travel to Constructed World';
   artificialUICache.travelBtn = travelBtn;
   actions.appendChild(travelBtn);
   const discardBtn = document.createElement('button');
@@ -930,9 +930,10 @@ function renderCosts(project, radius, manager) {
     artificialUICache.durationValue.textContent = formatDuration(durationContext.durationMs / 1000);
   }
   if (artificialUICache.durationTooltip) {
-    artificialUICache.durationTooltip.title = `Construction time is divided by terraformed worlds (currently ${durationContext.worldCount}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.`;
+    artificialUICache.durationTooltip.title = `Construction time is divided by terraformed worlds (currently ${durationContext.worldCount}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.`;
   }
-  return { cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount };
+  const exceedsLimit = manager.exceedsDurationLimit(durationContext.durationMs);
+  return { cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount, exceedsLimit };
 }
 
 function renderGains(project, radius, manager) {
@@ -956,12 +957,20 @@ function renderStartButton(project, manager, preview) {
   if (project) {
     btn.disabled = true;
     btn.textContent = 'Construction locked';
+    btn.title = '';
     return;
   }
   const { cost } = preview;
   const canAfford = manager.canCoverCost(cost, manager.prioritizeSpaceStorage);
-  btn.disabled = !canAfford || artificialUICache.type.value !== 'shell';
-  btn.textContent = canAfford ? 'Start Shellworld' : 'Insufficient materials';
+  const durationBlocked = preview.exceedsLimit;
+  btn.disabled = durationBlocked || !canAfford || artificialUICache.type.value !== 'shell';
+  if (durationBlocked) {
+    btn.textContent = 'Exceeds 5-hour limit';
+    btn.title = 'Reduce size or gain more terraformed worlds to shorten construction below 5 hours.';
+  } else {
+    btn.textContent = canAfford ? 'Start Artificial World' : 'Insufficient materials';
+    btn.title = '';
+  }
 }
 
 function updateArtificialUI() {
@@ -1023,7 +1032,7 @@ function updateArtificialUI() {
     } else {
       artificialUICache.nameInput.disabled = false;
       if (!artificialUICache.nameInput.value) {
-        artificialUICache.nameInput.placeholder = `Shellworld ${manager.nextId}`;
+        artificialUICache.nameInput.placeholder = `Artificial World ${manager.nextId}`;
       }
     }
   }

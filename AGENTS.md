@@ -143,6 +143,13 @@ The Random World Effects card can collapse to hide the bonus table when players 
 
 When adding new generation to the Random World Generator, place the new generation at the end.  This is to ensure older seeds are still compatible.
 
+## Artificial worlds
+- ArtificialManager powers the Space > Artificial subtab, letting players pick shell/ring/disk archetypes (future-ready), core type, star context, and radius within per-core bounds; it seeds a star/flux when allowed.
+- Shellworld costs scale with radius³ from a 50B ha calibration and can pull payments from space storage first; launch stashes for metal/silicon cap at land area (1 per ha) and support Solis Bailout injections.
+- Build time scales with terraformed world count, hard-blocks any project that would exceed five hours, and the duration tooltip explains the limit.
+- Completed builds can be traveled to or discarded; construction history, progress bar, and sector auto-fill persist across sessions with terraformed-world value based on land/50B (min 1).
+- Default labels and placeholders use the neutral “artificial world” terminology rather than “shellworld” to cover current and future constructs.
+
 # Story and System Utilities
 Story delivery gained a `system-pop-up` event type for immediate alerts, and Save & Settings now includes a Statistics panel that tracks total playtime across every planet. Designers can accelerate local testing with the `setGameSpeed` console command while Vega‑2 travel triggers a confirmation warning before the trip begins. Story projects are locked to their intended worlds and journal reconstruction fills in `$WGC_TEAM_LEADER$` placeholders when loading saves so narrative logs stay accurate.
 
@@ -326,3 +333,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added an Artificial space subtab managed by a new ArtificialManager and UI that only appears when the manager is enabled.
 - Built a shellworld construction flow with radius-scaled costs, space-storage payments, launch stashes, travel/discard controls, and a persistent construction history.
 - Refined artificial world drafting with RWG-inspired UI, terraformed-world build speed scaling, world naming, larger Super Earth shells, and stash steppers recommending 1B+ starting resources.
+- Artificial world construction now blocks any job that would exceed five hours, and the duration tooltip warns that Humanity will not attempt projects longer than that. UI copy defaults to the broader “artificial world” terminology instead of “shellworld.”
