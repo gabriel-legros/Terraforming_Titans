@@ -1537,7 +1537,7 @@ class Terraforming extends EffectableEntity{
       const pressureKPa = this.calculateTotalPressure();
       const pressureAtm = pressureKPa / KPA_PER_ATM;
       const multiplier = Math.sqrt(pressureAtm);
-      return Math.max(1, multiplier);
+      return multiplier > 1.5 ? multiplier : 1;
     }
 
     calculateColonyEnergyPenalty() {
