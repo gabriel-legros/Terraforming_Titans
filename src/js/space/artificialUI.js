@@ -957,7 +957,7 @@ function renderCosts(project, radius, manager) {
     artificialUICache.durationValue.textContent = formatDuration(durationContext.durationMs / 1000);
   }
   if (artificialUICache.durationTooltip) {
-    artificialUICache.durationTooltip.title = `Construction time is divided by terraformed worlds (currently ${durationContext.worldCount}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.`;
+    artificialUICache.durationTooltip.title = `Construction time is divided by terraformed worlds (currently ${fmt(durationContext.worldCount, false, 2)}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.`;
   }
   const exceedsLimit = manager.exceedsDurationLimit(durationContext.durationMs);
   return { cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount, exceedsLimit };
