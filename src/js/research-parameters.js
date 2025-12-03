@@ -1817,6 +1817,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'oneill_cylinders',
+        name: "O'Neill Cylinders",
+        description: 'Worlds producing worlds producing worlds...',
+        cost: { advancedResearch: 1000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'spaceManager',
+            type: 'booleanFlag',
+            flagId: 'oneillCylinders',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'self_replicating_ships_concept',
         name: 'Self Replicating Ships',
         description: 'Opens research into autonomous self-building spacecraft.',

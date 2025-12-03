@@ -24,6 +24,10 @@ let spaceStatUniqueValueEl = null;
 let spaceStatEffectiveValueEl = null;
 let spaceStatUniqueTooltipEl = null;
 let spaceStatEffectiveTooltipEl = null;
+let spaceStatOneillCardEl = null;
+let spaceStatOneillValueEl = null;
+let spaceStatOneillTooltipEl = null;
+let spaceStatOneillRateEl = null;
 
 const galaxyTabElements = { button: null, content: null };
 const spaceTabAlertElements = { button: null, warning: null };
@@ -342,6 +346,18 @@ function initializeSpaceUI(spaceManager) {
     spaceStatEffectiveValueEl = document.getElementById('space-stat-effective-value');
     spaceStatUniqueTooltipEl = document.getElementById('space-stat-unique-tooltip');
     spaceStatEffectiveTooltipEl = document.getElementById('space-stat-effective-tooltip');
+    spaceStatOneillCardEl = document.getElementById('space-stat-oneill-card');
+    spaceStatOneillValueEl = document.getElementById('space-stat-oneill-value');
+    spaceStatOneillTooltipEl = document.getElementById('space-stat-oneill-tooltip');
+    spaceStatOneillRateEl = document.getElementById('space-stat-oneill-rate');
+    if (typeof setOneillStatsElements === 'function') {
+        setOneillStatsElements({
+            card: spaceStatOneillCardEl,
+            value: spaceStatOneillValueEl,
+            rate: spaceStatOneillRateEl,
+            tooltip: spaceStatOneillTooltipEl
+        });
+    }
 
     if (!optionsContainer) {
         console.error("Space UI critical element '#planet-selection-options' not found.");
@@ -483,7 +499,11 @@ function updateSpaceStatsUI() {
     const uniqueCount = _spaceManagerInstance.getUnmodifiedTerraformedWorldCount();
     const effectiveCount = _spaceManagerInstance.getTerraformedPlanetCount();
     spaceStatUniqueValueEl.textContent = uniqueCount;
-    spaceStatEffectiveValueEl.textContent = effectiveCount;
+    let effectiveDisplay = effectiveCount;
+    if (Number.isFinite(effectiveCount) && !Number.isInteger(effectiveCount)) {
+        effectiveDisplay = effectiveCount.toFixed(2);
+    }
+    spaceStatEffectiveValueEl.textContent = effectiveDisplay;
     const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
     if (spaceStatUniqueTooltipEl) {
         const uniqueBase = 'Counts every distinct story world and saved random seed you have fully terraformed. Ignores all other bonuses.';
@@ -493,6 +513,12 @@ function updateSpaceStatsUI() {
         const effectiveBase = 'Includes worlds from other sources. This value influence advanced research, Solis rewards, mega structure expansion speed, and export caps.';
         const effectiveGalaxy = galaxyUnlocked ? ' With galaxy unlocked, this value also determines fleet capacity.' : '';
         spaceStatEffectiveTooltipEl.title = `${effectiveBase}${effectiveGalaxy}`;
+    }
+    if (typeof updateOneillCylinderStatsUI === 'function') {
+        updateOneillCylinderStatsUI({
+            space: _spaceManagerInstance,
+            galaxy: typeof galaxyManager !== 'undefined' ? galaxyManager : null
+        });
     }
 }
 

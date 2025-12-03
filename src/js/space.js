@@ -116,6 +116,7 @@ class SpaceManager extends EffectableEntity {
         this.extraTerraformedWorlds = 0;
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
+        this.oneillCylinders = 0;
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -485,6 +486,34 @@ class SpaceManager extends EffectableEntity {
         return getLandFromParams(currentPlanetParameters);
     }
 
+    getOneillCylinderCount() {
+        const value = Number(this.oneillCylinders);
+        if (!Number.isFinite(value) || value <= 0) {
+            return 0;
+        }
+        return value;
+    }
+
+    setOneillCylinderCount(value, capacity) {
+        const numeric = Number(value);
+        const sanitized = Number.isFinite(numeric) ? numeric : 0;
+        const cap = Number(capacity);
+        const hasCap = Number.isFinite(cap) && cap >= 0;
+        let next = sanitized;
+        if (hasCap) {
+            if (cap <= 0) {
+                next = 0;
+            } else if (next > cap) {
+                next = cap;
+            }
+        }
+        if (next < 0) {
+            next = 0;
+        }
+        this.oneillCylinders = next;
+        return this.oneillCylinders;
+    }
+
     /**
      * Counts how many planets have been fully terraformed and adds orbital rings.
      * @returns {number}
@@ -504,7 +533,8 @@ class SpaceManager extends EffectableEntity {
             const value = this._deriveArtificialTerraformValue(status);
             return acc + Math.max(0, value - 1);
         }, 0);
-        return base + rings + extra + sectorBonus + artificialBonus;
+        const cylinders = this.getOneillCylinderCount();
+        return base + rings + extra + sectorBonus + artificialBonus + cylinders;
     }
 
     /**
@@ -1046,7 +1076,8 @@ class SpaceManager extends EffectableEntity {
             randomWorldStatuses: this.randomWorldStatuses,
             randomTabEnabled: this.randomTabEnabled,
             rwgSectorLock: this.rwgSectorLock,
-            rwgSectorLockManual: this.rwgSectorLockManual
+            rwgSectorLockManual: this.rwgSectorLockManual,
+            oneillCylinders: this.getOneillCylinderCount()
         };
     }
 
@@ -1061,11 +1092,17 @@ class SpaceManager extends EffectableEntity {
         this.randomTabEnabled = false;
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
+        this.oneillCylinders = 0;
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
         if (!savedData) {
              console.log("SpaceManager: No save data provided, using defaults.");
              return; // Keep defaults initialized above
+        }
+
+        const savedOneill = Number(savedData.oneillCylinders);
+        if (Number.isFinite(savedOneill) && savedOneill > 0) {
+            this.setOneillCylinderCount(savedOneill);
         }
 
         // Load current location

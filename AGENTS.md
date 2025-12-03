@@ -220,6 +220,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Random World Generator honours per-archetype orbit lock lists, keeping Venus-like worlds in the hot band while preserving their sulfuric haze and parched atmosphere.
 - Space Story subtab now mirrors the Random World Generator styling with card-based world summaries, highlighted travel states, and an inline warning pill for unfinished terraforming.
 - Added a Space Story statistics panel that shows unique versus effective terraformed worlds with detailed tooltips explaining their calculations and gameplay effects.
+- Introduced an O'Neill Cylinders advanced research that grows orbital habitats from effective worlds, adds their total to effective terraformed worlds, and reveals a dedicated stat column in the Space tab when unlocked.
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
 - Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.

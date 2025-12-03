@@ -726,6 +726,9 @@
   flex-direction: column;
   gap: 10px;
 }
+.space-stat-card.hidden {
+  display: none;
+}
 
 .space-stat-label {
   display: flex;
@@ -741,4 +744,14 @@
   font-size: 32px;
   font-weight: 700;
   color: var(--space-fg);
+}
+.space-stat-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.space-stat-subvalue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--space-fg-muted);
 }

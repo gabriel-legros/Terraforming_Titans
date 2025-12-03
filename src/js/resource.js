@@ -675,6 +675,13 @@ function produceResources(deltaTime, buildings) {
     updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedChanges);
   }
 
+  if (typeof updateOneillCylinders === 'function') {
+    updateOneillCylinders(deltaTime, {
+      space: spaceManager,
+      galaxy: typeof galaxyManager !== 'undefined' ? galaxyManager : null
+    });
+  }
+
   if (produceAntimatterHelper) {
     produceAntimatterHelper(deltaTime, resources, accumulatedChanges);
   }
