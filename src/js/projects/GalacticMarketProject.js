@@ -345,8 +345,9 @@ class GalacticMarketProject extends Project {
     const multiplier = GalacticMarketProject.SELL_MULTIPLIERS[resourceId];
     if (!multiplier) return 0;
     const count = spaceManager?.getTerraformedPlanetCountExcludingCurrent?.();
-    const worlds = typeof count === 'number' ? Math.max(count, 1) : 1;
-    return multiplier * worlds;
+    const worlds = Math.max(Number(count) || 0, 1);
+    const flooredWorlds = Math.floor(worlds * 100) / 100;
+    return multiplier * flooredWorlds;
   }
 
   updateUI() {
