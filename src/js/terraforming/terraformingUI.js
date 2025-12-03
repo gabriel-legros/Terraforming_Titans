@@ -100,8 +100,24 @@ const terraformingUICache = {
   water: {},
   life: {},
   magnetosphere: {},
-  luminosity: {}
+  luminosity: {},
+  summary: {}
 };
+
+function setTooltipText(node, text, cache, key) {
+  if (!node) return;
+  const currentCache = cache || null;
+  if (currentCache && currentCache[key] === text) {
+    return;
+  }
+  node.textContent = text;
+  if (node.style && node.style.whiteSpace !== 'pre-line') {
+    node.style.whiteSpace = 'pre-line';
+  }
+  if (currentCache) {
+    currentCache[key] = text;
+  }
+}
 
 const TEMPERATURE_INFOGRAPHIC_PATH = 'assets/images/infographic.jpg';
 
@@ -203,6 +219,10 @@ function getTemperatureMaintenanceImmuneTooltip() {
 
 function resetTerraformingUI() {
   temperatureInfographicOverlay?.classList.remove('is-visible');
+  const summaryContent = terraformingTabElements.summaryContent || document.getElementById('summary-terraforming');
+  if (summaryContent) {
+    summaryContent.textContent = '';
+  }
   terraformingSummaryInitialized = false;
   terraformingTabsInitialized = false;
   terraformingTabElements.subtabs = [];
@@ -235,9 +255,7 @@ function initializeTerraformingTabs() {
   if (!terraformingSubtabManager && typeof SubtabManager === 'function') {
     terraformingSubtabManager = new SubtabManager('.terraforming-subtab', '.terraforming-subtab-content');
     terraformingSubtabManager.onActivate(id => {
-      if (id === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
-        markMilestonesViewed();
-      }
+      handleTerraformingSubtabActivated(id, 0);
     });
   }
 
@@ -246,17 +264,19 @@ function initializeTerraformingTabs() {
   }
 
   // Set up event listeners for terraforming sub-tabs
-  terraformingTabElements.subtabs.forEach((subtab) => {
-    if (!subtab) {
-      return;
-    }
-    subtab.addEventListener('click', () => {
-      const subtabContentId = subtab?.dataset?.subtab;
-      if (subtabContentId) {
-        activateTerraformingSubtab(subtabContentId);
+  if (!terraformingSubtabManager) {
+    terraformingTabElements.subtabs.forEach((subtab) => {
+      if (!subtab) {
+        return;
       }
+      subtab.addEventListener('click', () => {
+        const subtabContentId = subtab?.dataset?.subtab;
+        if (subtabContentId) {
+          activateTerraformingSubtab(subtabContentId);
+        }
+      });
     });
-  });
+  }
 
   // Activate the default subtab
   activateTerraformingSubtab('world-terraforming');
@@ -280,23 +300,20 @@ function activateTerraformingSubtab(subtabId) {
     return;
   }
 
-  const shouldMarkMilestones = subtabId === 'milestone-terraforming';
-
   if (terraformingSubtabManager && typeof terraformingSubtabManager.activate === 'function') {
     terraformingSubtabManager.activate(subtabId);
-  } else {
-    terraformingTabElements.subtabs.forEach((t) => t?.classList.remove('active'));
-    terraformingTabElements.contents.forEach((c) => c?.classList.remove('active'));
-
-    tab.classList.add('active');
-    if (content) {
-      content.classList.add('active');
-    }
-
-    if (shouldMarkMilestones && typeof markMilestonesViewed === 'function') {
-      markMilestonesViewed();
-    }
+    return;
   }
+
+  terraformingTabElements.subtabs.forEach((t) => t?.classList.remove('active'));
+  terraformingTabElements.contents.forEach((c) => c?.classList.remove('active'));
+
+  tab.classList.add('active');
+  if (content) {
+    content.classList.add('active');
+  }
+
+  handleTerraformingSubtabActivated(subtabId, 0);
 }
 
 function isTerraformingWorldSubtabActive() {
@@ -317,6 +334,69 @@ function isTerraformingWorldSubtabActive() {
     return false;
   }
   return true;
+}
+
+function getActiveTerraformingSubtabId() {
+  const getActiveId = terraformingSubtabManager && terraformingSubtabManager.getActiveId;
+  if (getActiveId) {
+    const activeId = getActiveId.call(terraformingSubtabManager);
+    if (activeId) {
+      return activeId;
+    }
+  }
+
+  cacheTerraformingTabElements();
+  const activeContent = terraformingTabElements.contents.find(
+    (content) => content && content.classList && content.classList.contains('active')
+  );
+  if (activeContent && activeContent.id) {
+    return activeContent.id;
+  }
+
+  return 'world-terraforming';
+}
+
+function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
+  switch (subtabId) {
+    case 'summary-terraforming':
+      updatePlayTimeDisplay();
+      updateTemperatureBox();
+      updateAtmosphereBox();
+      updateWaterBox();
+      updateLuminosityBox();
+      updateLifeBox();
+      updateMagnetosphereBox();
+      updateCompleteTerraformingButton();
+      break;
+    case 'life-terraforming':
+      updateLifeUI();
+      break;
+    case 'hazard-terraforming':
+      if (hazardManager && hazardManager.updateUI) {
+        hazardManager.updateUI();
+      }
+      break;
+    case 'world-terraforming': {
+      const viz = typeof window !== 'undefined' ? window.planetVisualizer : null;
+      if (terraformingWorldInitialized && isTerraformingWorldSubtabActive() && viz && viz.animate) {
+        viz.animate(deltaSeconds);
+      }
+      break;
+    }
+    case 'milestone-terraforming':
+    default:
+      break;
+  }
+}
+
+function handleTerraformingSubtabActivated(subtabId, deltaSeconds) {
+  if (!subtabId) {
+    return;
+  }
+  if (subtabId === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
+    markMilestonesViewed();
+  }
+  updateTerraformingSubtabUI(subtabId, deltaSeconds);
 }
 
 function setTerraformingSummaryVisibility(unlocked) {
@@ -440,69 +520,60 @@ function createTerraformingWorldUI() {
 }
 
 function createTerraformingSummaryUI() {
-    if (terraformingSummaryInitialized) {
-      return;
-    }
-
-    const terraformingContainer = document.getElementById('summary-terraforming');
-
-
-
-    // Create the first row of boxes
-    const row1 = document.createElement('div');
-    row1.classList.add('terraforming-row');
-
-    // Create the second row of boxes
-    const row2 = document.createElement('div');
-    row2.classList.add('terraforming-row');
-
-    // Create and append the boxes for each terraforming aspect
-    createTemperatureBox(row1);
-    createAtmosphereBox(row1);
-    createWaterBox(row1);
-    createLuminosityBox(row2);
-    createLifeBox(row2);
-    createMagnetosphereBox(row2);
-
-    // Append the rows to the terraforming container
-    terraformingContainer.appendChild(row1);
-    terraformingContainer.appendChild(row2);
-
-    // Add the "Complete Terraforming" button below the rows
-    createCompleteTerraformingButton(terraformingContainer);
-
-    terraformingSummaryInitialized = true;
+  if (terraformingSummaryInitialized) {
+    return;
   }
+
+  cacheTerraformingTabElements();
+  const terraformingContainer = terraformingTabElements.summaryContent || document.getElementById('summary-terraforming');
+  if (!terraformingContainer) {
+    return;
+  }
+
+  terraformingContainer.textContent = '';
+  const summaryCache = terraformingUICache.summary;
+  summaryCache.container = terraformingContainer;
+
+  const playTimeDisplay = document.createElement('div');
+  playTimeDisplay.id = 'play-time-display';
+  playTimeDisplay.textContent = '0 days';
+  terraformingContainer.appendChild(playTimeDisplay);
+  summaryCache.playTimeDisplay = playTimeDisplay;
+
+  // Create the first row of boxes
+  const row1 = document.createElement('div');
+  row1.classList.add('terraforming-row');
+
+  // Create the second row of boxes
+  const row2 = document.createElement('div');
+  row2.classList.add('terraforming-row');
+
+  // Create and append the boxes for each terraforming aspect
+  createTemperatureBox(row1);
+  createAtmosphereBox(row1);
+  createWaterBox(row1);
+  createLuminosityBox(row2);
+  createLifeBox(row2);
+  createMagnetosphereBox(row2);
+
+  // Append the rows to the terraforming container
+  terraformingContainer.appendChild(row1);
+  terraformingContainer.appendChild(row2);
+
+  // Add the "Complete Terraforming" button below the rows
+  createCompleteTerraformingButton(terraformingContainer);
+
+  terraformingSummaryInitialized = true;
+}
 
 // Function to update the terraforming UI elements
 function updateTerraformingUI(deltaSeconds) {
-    updatePlayTimeDisplay();
-    updateTemperatureBox();
-    updateAtmosphereBox();
-    updateWaterBox();
-    updateLuminosityBox();
-    updateLifeBox();
-    updateMagnetosphereBox();
-    updateLifeUI();
-
-    // Update the button state
-    updateCompleteTerraformingButton();
-
-    if (isTerraformingWorldSubtabActive()) {
-      planetVisualizer.animate(deltaSeconds);
-    }
-
-    if (
-      typeof hazardManager !== 'undefined' &&
-      hazardManager &&
-      typeof hazardManager.updateUI === 'function'
-    ) {
-      hazardManager.updateUI();
-    }
-  }
+  updateTerraformingSubtabUI(getActiveTerraformingSubtabId(), deltaSeconds);
+}
 
   function updatePlayTimeDisplay() {
-    const el = document.getElementById('play-time-display');
+    const summaryCache = terraformingUICache.summary;
+    const el = summaryCache ? summaryCache.playTimeDisplay : null;
     if (!el) return;
     el.textContent = `Time since awakening : ${formatPlayTime(playTimeSeconds)}`;
   }
@@ -798,7 +869,10 @@ function createTemperatureBox(row) {
       opticalDepthTooltip: atmosphereBox.querySelector('#optical-depth-tooltip'),
       windMultiplier: atmosphereBox.querySelector('#wind-turbine-multiplier'),
       pressurePenalty: atmosphereBox.querySelector('#pressure-cost-penalty'),
-      gases: gasElements
+      gases: gasElements,
+      tooltipCache: {
+        opticalDepth: ''
+      }
     };
     const els = terraformingUICache.atmosphere;
     if (typeof addTooltipHover === 'function') {
@@ -835,9 +909,7 @@ function createTemperatureBox(row) {
             : gas.toUpperCase();
           return `${displayName}: ${val.toFixed(3)}`;
         });
-      if (els.opticalDepthTooltip) {
-        els.opticalDepthTooltip.innerHTML = lines.join('<br>');
-      }
+      setTooltipText(els.opticalDepthTooltip, lines.join('\n'), els.tooltipCache, 'opticalDepth');
     }
 
     if (els.windMultiplier) {
@@ -1445,7 +1517,13 @@ function updateLifeBox() {
       solarFluxTooltip: luminosityBox.querySelector('#solar-flux-tooltip'),
       mainTooltip: luminosityBox.querySelector('#luminosity-tooltip'),
       solarPanelMultiplier: luminosityBox.querySelector('#solar-panel-multiplier'),
-      target: luminosityBox.querySelector('.terraforming-target')
+      target: luminosityBox.querySelector('.terraforming-target'),
+      tooltips: {
+        ground: '',
+        surface: '',
+        actual: '',
+        solarFlux: ''
+      }
     };
     const els = terraformingUICache.luminosity;
     if (typeof addTooltipHover === 'function') {
@@ -1502,7 +1580,7 @@ function updateLifeBox() {
       if (shareWhite > 0) {
         lines.push(`White dust coverage: ${(shareWhite * 100).toFixed(1)}%`);
       }
-      els.groundAlbedoTooltip.innerHTML = lines.join('<br>');
+      setTooltipText(els.groundAlbedoTooltip, lines.join('\n'), els.tooltips, 'ground');
     }
 
     if (els.surfaceAlbedo) {
@@ -1559,86 +1637,7 @@ function updateLifeBox() {
         lines.push(...zoneAlbLines);
       }
 
-      els.surfaceAlbedoTooltip.innerHTML = lines.join('<br>');
-    }
-
-    if (els.actualAlbedoTooltip) {
-      try {
-        const surfAlb = terraforming.luminosity.surfaceAlbedo;
-        const pressureBar = (typeof terraforming.calculateTotalPressure === 'function') ? (terraforming.calculateTotalPressure() / 100) : 0;
-        const gSurface = terraforming.celestialParameters.gravity || 9.81;
-        const compInfo = (typeof terraforming.calculateAtmosphericComposition === 'function') ? terraforming.calculateAtmosphericComposition() : { composition: {} };
-        const composition = compInfo.composition || {};
-        // Build shortwave aerosol columns (kg/m^2)
-        const aerosolsSW = {};
-        const radius_km = terraforming.celestialParameters.radius || 0;
-        const area_m2 = 4 * Math.PI * Math.pow(radius_km * 1000, 2);
-        if (terraforming.resources && terraforming.resources.atmospheric && terraforming.resources.atmospheric.calciteAerosol) {
-          const mass_ton = terraforming.resources.atmospheric.calciteAerosol.value || 0;
-          const column = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
-          aerosolsSW.calcite = column;
-        }
-
-        const result = calculateActualAlbedoPhysics(surfAlb, pressureBar, composition, gSurface, aerosolsSW) || {};
-        const comps = result.components || {};
-        const diags = result.diagnostics || {};
-        const maxCap = result.maxCap;
-        const softCapThreshold = result.softCapThreshold;
-
-        const A_surf = typeof comps.A_surf === 'number' ? comps.A_surf : surfAlb;
-        const dHaze = typeof comps.dA_ch4 === 'number' ? comps.dA_ch4 : 0;
-        const dCalc = typeof comps.dA_calcite === 'number' ? comps.dA_calcite : 0;
-        const dCloud = typeof comps.dA_cloud === 'number' ? comps.dA_cloud : 0;
-        const A_act = terraforming.luminosity.actualAlbedo;
-        const cappedNote = (typeof maxCap === 'number' && A_act >= (maxCap - 1e-6)) ? `\n(Capped at ${maxCap.toFixed(3)})` : '';
-        const softCapNote = (typeof softCapThreshold === 'number') ? `\n(Soft cap reduces additions above ${softCapThreshold.toFixed(3)})` : '';
-
-        const tauH = diags.tau_ch4_sw ?? 0;
-        const tauC = diags.tau_calcite_sw ?? 0;
-
-        const notes = [];
-        if (cappedNote) notes.push(cappedNote.slice(1));
-        if (softCapNote) notes.push(softCapNote.slice(1));
-
-        const parts = [];
-        parts.push('Actual albedo = Surface + Haze + Calcite + Clouds', '');
-        parts.push(`Surface (base): ${A_surf.toFixed(3)}`);
-        parts.push(`Haze (CH4): +${dHaze.toFixed(3)}`);
-        parts.push(`Calcite aerosol: +${dCalc.toFixed(3)}`);
-        parts.push(`Clouds: +${dCloud.toFixed(3)}`);
-        if (notes.length > 0) {
-          parts.push('', ...notes);
-        }
-
-        const zoneLines = [];
-        for (const z of ZONES) {
-          try {
-            const zSurf = (typeof terraforming.calculateZonalSurfaceAlbedo === 'function')
-              ? terraforming.calculateZonalSurfaceAlbedo(z)
-              : surfAlb;
-            const zRes = calculateActualAlbedoPhysics(zSurf, pressureBar, composition, gSurface, aerosolsSW) || {};
-            const zAlb = typeof zRes.albedo === 'number' ? zRes.albedo : (zSurf + dHaze + dCalc + dCloud);
-            const name = z.charAt(0).toUpperCase() + z.slice(1);
-            zoneLines.push(`${name}: ${zAlb.toFixed(3)}`);
-          } catch (err) {
-            // Skip zone if calculation fails
-          }
-        }
-        if (zoneLines.length > 0) {
-          parts.push('', 'By zone:', ...zoneLines);
-        }
-
-        const diag = [];
-        if (Math.abs(tauH) > 0) diag.push(`  CH4 haze τ: ${tauH.toFixed(3)}`);
-        if (Math.abs(tauC) > 0) diag.push(`  Calcite τ: ${tauC.toFixed(3)}`);
-        if (diag.length > 0) {
-          parts.push('', 'Shortwave optical depths (diagnostic)', ...diag);
-        }
-        els.actualAlbedoTooltip.innerHTML = parts.join('<br>');
-      } catch (e) {
-        // Fallback text if something goes wrong
-        els.actualAlbedoTooltip.innerHTML = 'Actual albedo includes surface reflectivity plus additive brightening from haze, calcite aerosols, and clouds.';
-      }
+      setTooltipText(els.surfaceAlbedoTooltip, lines.join('\n'), els.tooltips, 'surface');
     }
 
     if (els.actualAlbedo) {
@@ -1682,7 +1681,7 @@ function updateLifeBox() {
         'Modified solar flux is 4× the average across all zones.',
         'Reduced by Cloud & Haze penalty.'
       ];
-      els.solarFluxTooltip.innerHTML = lines.join('<br>');
+      setTooltipText(els.solarFluxTooltip, lines.join('\n'), els.tooltips, 'solarFlux');
     }
 
     if (els.mainTooltip) {
@@ -1779,7 +1778,7 @@ function updateLifeBox() {
         parts.push('', 'Shortwave optical depths (diagnostic)');
         parts.push(...diag);
       }
-      node.innerHTML = parts.join('<br>');
+      setTooltipText(node, parts.join('\n'), els.tooltips, 'actual');
     } catch (e) {
       // Leave existing tooltip untouched on failure
     }
@@ -1803,6 +1802,9 @@ function updateLifeBox() {
   button.disabled = true; // Initially disabled
 
     container.appendChild(button);
+    if (terraformingUICache.summary) {
+      terraformingUICache.summary.completeButton = button;
+    }
 
     // Add an event listener for the button
     button.onclick = () => {
@@ -1826,8 +1828,8 @@ function updateLifeBox() {
 
   // Function to update the button state
   function updateCompleteTerraformingButton() {
-    const doc = typeof document !== 'undefined' ? document : null;
-    const button = doc ? doc.getElementById('complete-terraforming-button') : null;
+    const summaryCache = terraformingUICache.summary;
+    const button = summaryCache ? summaryCache.completeButton : null;
 
     if (!button) return;
 
