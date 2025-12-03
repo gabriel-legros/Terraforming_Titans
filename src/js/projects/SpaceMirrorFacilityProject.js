@@ -17,6 +17,7 @@ function createDefaultMirrorOversightSettings() {
     useFinerControls: false,
     assignmentStep: { mirrors: 1, lanterns: 1 },
     advancedOversight: false,
+    allowAvailableToHeat: true,
     targets: { tropical: 0, temperate: 0, polar: 0, water: 0 },
     waterMultiplier: 1000,
     tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
@@ -48,6 +49,7 @@ function applyMirrorOversightSettings(settings, saved = {}) {
   settings.assignmentStep.mirrors = normalizeStep(stepSource?.mirrors ?? stepSource ?? settings.assignmentStep.mirrors);
   settings.assignmentStep.lanterns = normalizeStep(stepSource?.lanterns ?? stepSource ?? settings.assignmentStep.lanterns);
   settings.advancedOversight = !!saved.advancedOversight;
+  settings.allowAvailableToHeat = saved.allowAvailableToHeat !== false;
 
   const multiplier = Number(saved.waterMultiplier);
   settings.waterMultiplier = multiplier > 0 ? multiplier : 1000;
@@ -110,6 +112,8 @@ function applyMirrorOversightTravelSettings(settings, saved = {}) {
     const val = parseInt(savedPriority[zone], 10);
     settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
   });
+
+  settings.allowAvailableToHeat = saved.allowAvailableToHeat !== false;
 
   return settings;
 }
@@ -296,6 +300,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.useFinerControls = false;
   mirrorOversightSettings.assignmentStep = { mirrors: 1, lanterns: 1 };
   mirrorOversightSettings.advancedOversight = false;
+  mirrorOversightSettings.allowAvailableToHeat = true;
   mirrorOversightSettings.targets = { tropical: 0, temperate: 0, polar: 0, water: 0 };
   mirrorOversightSettings.waterMultiplier = 1000;
   mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
@@ -644,6 +649,9 @@ function initializeMirrorOversightUI(container) {
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">Advanced Oversight</label>
     <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.">&#9432;</span>
+    <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
+    <label for="mirror-allow-available-heat">Allow available to heat</label>
+    <span class="info-tooltip-icon" title="When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. Turn it off to keep unused capacity idle.">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
@@ -721,6 +729,13 @@ function initializeMirrorOversightUI(container) {
     advCheckboxInit.checked = !!mirrorOversightSettings.advancedOversight;
     advCheckboxInit.addEventListener('change', () => {
       toggleAdvancedOversight(advCheckboxInit.checked);
+    });
+  }
+  const allowHeatCheckbox = div.querySelector('#mirror-allow-available-heat');
+  if (allowHeatCheckbox) {
+    allowHeatCheckbox.checked = mirrorOversightSettings.allowAvailableToHeat !== false;
+    allowHeatCheckbox.addEventListener('change', () => {
+      mirrorOversightSettings.allowAvailableToHeat = allowHeatCheckbox.checked;
     });
   }
   const advInputs = {
@@ -1017,6 +1032,7 @@ function rebuildMirrorOversightCache() {
     sliderReverseBoxes: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reversal-checkbox')),
     sliderReverseLabels: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reverse-label')),
     lanternStepControls: document.querySelector('.lantern-step-controls') || null,
+    allowHeatCheckbox: document.getElementById('mirror-allow-available-heat') || null,
   };
 }
 
@@ -1124,6 +1140,9 @@ function updateMirrorOversightUI() {
   const advCheckbox = document.getElementById('mirror-advanced-oversight');
   if (advDiv) advDiv.style.display = advancedUnlocked ? 'flex' : 'none';
   if (advCheckbox) advCheckbox.checked = !!mirrorOversightSettings.advancedOversight;
+  if (mirrorOversightCache?.allowHeatCheckbox) {
+    mirrorOversightCache.allowHeatCheckbox.checked = mirrorOversightSettings.allowAvailableToHeat !== false;
+  }
   const advControls = document.getElementById('advanced-oversight-controls');
   // Show temperature targets in current unit and hide water row without focusing
   const toDisp = (typeof toDisplayTemperature === 'function') ? toDisplayTemperature : (v => v);
@@ -1820,6 +1839,7 @@ class SpaceMirrorFacilityProject extends Project {
         targets: { ...settings.targets },
         tempMode: { ...settings.tempMode },
         priority: { ...settings.priority },
+        allowAvailableToHeat: settings.allowAvailableToHeat,
       },
     };
   }

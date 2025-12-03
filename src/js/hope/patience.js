@@ -48,26 +48,83 @@ class PatienceManager extends EffectableEntity {
             return false;
         }
 
-        // Get superalloy production rate (per second)
-        const superalloyResource = resources?.colony?.superalloys;
-        if (!superalloyResource) {
+        const { superalloyGain, advancedResearchGain, oneillGain, oneillCapacity } = this.calculateSpendGains(hours);
+        const noGains = superalloyGain <= 0 && advancedResearchGain <= 0 && oneillGain <= 0;
+        if (noGains) {
             return false;
         }
 
-        const productionRate = superalloyResource.productionRate || 0;
-        if (productionRate <= 0) {
-            return false;
-        }
-
-        // Calculate superalloy gain: production rate * hours in seconds
-        const secondsOfPatience = hours * 3600;
-        const superalloyGain = productionRate * secondsOfPatience;
-
-        // Deduct patience and add superalloy
         this.currentHours -= hours;
-        superalloyResource.increase(superalloyGain, false);
+
+        if (superalloyGain > 0) {
+            resources.colony.superalloys.increase(superalloyGain, false);
+        }
+
+        if (advancedResearchGain > 0 && resources.colony.advancedResearch?.unlocked) {
+            resources.colony.advancedResearch.increase(advancedResearchGain, false);
+        }
+
+        if (oneillGain > 0 && spaceManager?.setOneillCylinderCount) {
+            const currentCount = spaceManager.getOneillCylinderCount?.() || 0;
+            const capacity = oneillCapacity ?? 0;
+            const next = currentCount + oneillGain;
+            spaceManager.setOneillCylinderCount(next, capacity);
+            updateOneillCylinderStatsUI({
+                space: spaceManager,
+                galaxy: galaxyManager
+            });
+        }
 
         return true;
+    }
+
+    calculateSpendGains(hours) {
+        if (!this.enabled || hours <= 0) {
+            return {
+                superalloyGain: 0,
+                advancedResearchGain: 0,
+                oneillGain: 0,
+                oneillCapacity: 0
+            };
+        }
+
+        const seconds = hours * 3600;
+        const colonyResources = resources?.colony;
+
+        const superalloyResource = colonyResources?.superalloys;
+        const superalloyRate = superalloyResource?.productionRate || 0;
+        const superalloyGain = superalloyRate > 0 ? superalloyRate * seconds : 0;
+
+        const advancedResearchResource = colonyResources?.advancedResearch;
+        const advancedResearchRate = advancedResearchResource?.unlocked ? (advancedResearchResource.productionRate || 0) : 0;
+        const advancedResearchGain = advancedResearchRate > 0 ? advancedResearchRate * seconds : 0;
+
+        const unlockedOneill = spaceManager?.isBooleanFlagSet?.('oneillCylinders');
+        const oneillCapacity = unlockedOneill ? getOneillCylinderCapacity(galaxyManager) : 0;
+        const currentOneill = spaceManager?.getOneillCylinderCount?.() || 0;
+        const effectiveWorlds = spaceManager?.getTerraformedPlanetCount?.() || 0;
+        const hasCapacity = oneillCapacity > 0 && unlockedOneill && effectiveWorlds > 0;
+
+        let oneillGain = 0;
+        if (hasCapacity) {
+            const baseRate = effectiveWorlds / (100 * 3600);
+            const remainingFraction = 1 - (currentOneill / oneillCapacity);
+            const perSecond = baseRate * (remainingFraction > 0 ? remainingFraction : 0);
+            oneillGain = perSecond > 0 ? perSecond * seconds : 0;
+            const availableRoom = oneillCapacity - currentOneill;
+            if (oneillGain > availableRoom) {
+                oneillGain = availableRoom;
+            } else if (oneillGain < 0) {
+                oneillGain = 0;
+            }
+        }
+
+        return {
+            superalloyGain,
+            advancedResearchGain,
+            oneillGain,
+            oneillCapacity
+        };
     }
 
     /**
@@ -155,9 +212,15 @@ class PatienceManager extends EffectableEntity {
     }
 }
 
-if (typeof globalThis !== 'undefined') {
-    globalThis.PatienceManager = PatienceManager;
+try {
+    window.PatienceManager = PatienceManager;
+} catch (error) {
+    // Ignore if window is unavailable (e.g., during tests)
 }
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = PatienceManager;
+try {
+    if (module && module.exports) {
+        module.exports = PatienceManager;
+    }
+} catch (error) {
+    // Ignore when module is unavailable
 }

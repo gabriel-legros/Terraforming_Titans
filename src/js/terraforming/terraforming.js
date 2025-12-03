@@ -891,6 +891,35 @@ class Terraforming extends EffectableEntity{
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
     const megaHeatSinkCount =
         projectManager?.projects?.megaHeatSink?.repeatCount ?? 0;
+    const allowAvailableHeating =
+        !!(mirrorOversightSettings?.advancedOversight) &&
+        mirrorOversightSettings.allowAvailableToHeat !== false;
+    let availableAdvancedHeatingPower = 0;
+    if (allowAvailableHeating) {
+      const mirrorEffect = this.calculateMirrorEffect();
+      const mirrorPowerPer = mirrorEffect?.interceptedPower || 0;
+      const totalMirrors = Math.max(0, buildings?.spaceMirror?.active || 0);
+      const lantern = buildings?.hyperionLantern;
+      const lanternProductivity = Number.isFinite(lantern?.productivity) ? lantern.productivity : 1;
+      const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternProductivity : 0;
+      const assignM = mirrorOversightSettings.assignments?.mirrors || {};
+      const assignL = mirrorOversightSettings.assignments?.lanterns || {};
+      const assignedMirrors =
+        (assignM.tropical || 0) +
+        (assignM.temperate || 0) +
+        (assignM.polar || 0) +
+        (assignM.focus || 0);
+      const assignedLanterns = mirrorOversightSettings.applyToLantern
+        ? (assignL.tropical || 0) + (assignL.temperate || 0) + (assignL.polar || 0) + (assignL.focus || 0)
+        : 0;
+      const availableMirrors = Math.max(0, totalMirrors - assignedMirrors);
+      const availableLanterns = mirrorOversightSettings.applyToLantern
+        ? Math.max(0, (lantern?.active || 0) - assignedLanterns)
+        : 0;
+      availableAdvancedHeatingPower =
+        (availableMirrors * mirrorPowerPer) +
+        (availableLanterns * lanternPowerPer);
+    }
 
     let weightedTemp = 0;
     let weightedTrendTemp = 0;
@@ -1061,6 +1090,13 @@ class Terraforming extends EffectableEntity{
                 const zoneCoolingPower = megaHeatSinkCount * MEGA_HEAT_SINK_POWER_W * pct;
                 const coolingFlux = zoneCoolingPower / zoneArea;
                 combinedFlux -= coolingFlux;
+              }
+            }
+            if (desiredDelta > 0 && availableAdvancedHeatingPower > 0) {
+              const zoneArea = z[zone].area || 0;
+              if (zoneArea > 0) {
+                const heatingFlux = (availableAdvancedHeatingPower * pct) / zoneArea;
+                combinedFlux += heatingFlux;
               }
             }
 
@@ -2181,5 +2217,3 @@ if (typeof module !== "undefined" && module.exports) {
   globalThis.buildAtmosphereContext = buildAtmosphereContext;
   globalThis.calculateApparentEquatorialGravity = (...args) => getApparentEquatorialGravity(...args);
 }
-
-

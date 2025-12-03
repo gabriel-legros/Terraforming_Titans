@@ -59,7 +59,7 @@ const PatienceUI = {
 
         const tooltip = document.createElement('span');
         tooltip.className = 'info-tooltip-icon';
-        tooltip.title = 'Daily patience trickles in automatically and can be cashed in for superalloy production time.';
+        tooltip.title = 'Daily patience trickles in automatically and can be cashed in for superalloy production time, advanced research, and O\'Neill cylinder growth.';
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
@@ -152,7 +152,7 @@ const PatienceUI = {
 
         const spendHeader = document.createElement('div');
         spendHeader.className = 'patience-card-label';
-        spendHeader.textContent = 'Convert patience into superalloys, proportional to production.';
+        spendHeader.textContent = 'Convert patience into superalloys, advanced research, and O\'Neill cylinders based on current production.';
         spendCard.appendChild(spendHeader);
 
         const spendRow = document.createElement('div');
@@ -225,20 +225,28 @@ const PatienceUI = {
      * Update the spend preview text
      */
     updateSpendPreview() {
-        if (!this.spendPreviewEl || !this.spendInputEl) return;
+        if (!this.spendPreviewEl || !this.spendInputEl || !patienceManager) return;
         
         const hours = parseFloat(this.spendInputEl.value) || 0;
-        const superalloyResource = resources?.colony?.superalloys;
-        const productionRate = superalloyResource?.productionRate || 0;
-        
-        if (productionRate <= 0 || hours <= 0) {
-            this.spendPreviewEl.textContent = 'No superalloy production';
+        const { superalloyGain, advancedResearchGain, oneillGain } = patienceManager.calculateSpendGains(hours);
+        const gains = [];
+
+        if (superalloyGain > 0) {
+            gains.push(`${formatNumber(superalloyGain, true)} superalloys`);
+        }
+        if (advancedResearchGain > 0) {
+            gains.push(`${formatNumber(advancedResearchGain, true)} advanced research`);
+        }
+        if (oneillGain > 0) {
+            gains.push(`${oneillGain.toFixed(2)} O'Neill cylinders`);
+        }
+
+        if (gains.length === 0) {
+            this.spendPreviewEl.textContent = 'No gains available';
             return;
         }
-        
-        const secondsOfPatience = hours * 3600;
-        const superalloyGain = productionRate * secondsOfPatience;
-        this.spendPreviewEl.textContent = `Gain: ${formatNumber(superalloyGain, true)} superalloys`;
+
+        this.spendPreviewEl.textContent = `Gain: ${gains.join(', ')}`;
     },
 
     /**
@@ -308,9 +316,12 @@ const PatienceUI = {
         // Update spend button state
         if (this.spendButtonEl && this.spendInputEl) {
             const hours = parseFloat(this.spendInputEl.value) || 0;
-            const superalloyResource = resources?.colony?.superalloys;
-            const productionRate = superalloyResource?.productionRate || 0;
-            const canSpend = hours > 0 && hours <= patienceManager.currentHours && productionRate > 0;
+            const gains = patienceManager.calculateSpendGains(hours);
+            const canSpend = hours > 0 && hours <= patienceManager.currentHours && (
+                gains.superalloyGain > 0 ||
+                gains.advancedResearchGain > 0 ||
+                gains.oneillGain > 0
+            );
             this.spendButtonEl.disabled = !canSpend;
         }
 
