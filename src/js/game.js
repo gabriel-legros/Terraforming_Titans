@@ -496,10 +496,11 @@ function updateLogic(delta) {
 
 }
 
-function updateRender(force = false) {
+function updateRender(force = false, options = {}) {
   const deltaMs = (typeof updateRender.lastDelta === 'number') ? updateRender.lastDelta : 0;
   const deltaSeconds = Math.max(0, Math.min(0.1, deltaMs / 1000));
   updateRender.lastDelta = 0;
+  const forceAllSubtabs = options.forceAllSubtabs === true;
 
   // Always-on UI pieces
   updateDayNightDisplay();           // Day/night display is global
@@ -540,7 +541,7 @@ function updateRender(force = false) {
     }
 
     if (isActive('terraforming')) {
-      updateTerraformingUI(deltaSeconds);
+      updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
       // Ensure the visualizer resizes once the tab becomes visible
       if (typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
         window.planetVisualizer.onResize();
@@ -588,7 +589,7 @@ function updateRender(force = false) {
 
     if (isActive('space') && typeof updateSpaceUI === 'function') {
       updateSpaceUI();
-      if (typeof updateGalaxyUI === 'function') updateGalaxyUI();
+      if (typeof updateGalaxyUI === 'function') updateGalaxyUI({ force: force || forceAllSubtabs });
       if (typeof updateRWGEffectsUI === 'function') updateRWGEffectsUI();
     }
 
@@ -607,11 +608,11 @@ function updateRender(force = false) {
     updateColonySlidersUI();
     renderProjects();
     updateResearchUI();
-    updateTerraformingUI(deltaSeconds);
+    updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
     updateStatisticsDisplay();
     updateHopeUI();
     if (typeof updateSpaceUI === 'function') updateSpaceUI();
-    if (typeof updateGalaxyUI === 'function') updateGalaxyUI();
+    if (typeof updateGalaxyUI === 'function') updateGalaxyUI({ force: force || forceAllSubtabs });
   }
 
   // Milestones often affect multiple views; keep updated
@@ -636,5 +637,6 @@ function startNewGame() {
   if (typeof openTerraformingWorldTab === 'function') {
     openTerraformingWorldTab();
   }
+  updateRender(true, { forceAllSubtabs: true });
 }
 

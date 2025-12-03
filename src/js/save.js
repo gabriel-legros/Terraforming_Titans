@@ -608,7 +608,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     }
 
     if (typeof updateRender === 'function') {
-      updateRender(true);
+      updateRender(true, { forceAllSubtabs: true });
     }
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');

@@ -53,6 +53,14 @@ const terraformingTabElements = {
   milestonesContent: null,
 };
 
+const TERRAFORMING_SUBTAB_IDS = [
+  'summary-terraforming',
+  'world-terraforming',
+  'life-terraforming',
+  'hazard-terraforming',
+  'milestone-terraforming',
+];
+
 function cacheTerraformingTabElements() {
   if (terraformingTabElements.subtabs.length > 0) {
     return terraformingTabElements;
@@ -567,7 +575,15 @@ function createTerraformingSummaryUI() {
 }
 
 // Function to update the terraforming UI elements
-function updateTerraformingUI(deltaSeconds) {
+function updateTerraformingUI(deltaSeconds, options = {}) {
+  if (options.forceAllSubtabs) {
+    const ids = typeof document === 'undefined'
+      ? TERRAFORMING_SUBTAB_IDS
+      : (cacheTerraformingTabElements(), Object.keys(terraformingTabElements.contentMap));
+    const subtabIds = ids.length ? ids : TERRAFORMING_SUBTAB_IDS;
+    subtabIds.forEach(id => updateTerraformingSubtabUI(id, deltaSeconds));
+    return;
+  }
   updateTerraformingSubtabUI(getActiveTerraformingSubtabId(), deltaSeconds);
 }
 
