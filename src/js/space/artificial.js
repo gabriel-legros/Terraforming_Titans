@@ -235,6 +235,18 @@ class ArtificialManager extends EffectableEntity {
         return Math.max(1, Math.floor((land || 0) / TERRAFORM_WORLD_DIVISOR));
     }
 
+    deriveTerraformWorldValue(entry) {
+        if (!entry) return undefined;
+        if (entry.terraformedValue !== undefined) return entry.terraformedValue;
+        if (entry.radiusEarth !== undefined) {
+            return this.calculateTerraformWorldValue(entry.radiusEarth);
+        }
+        if (entry.landHa !== undefined) {
+            return Math.max(1, Math.floor((entry.landHa || 0) / TERRAFORM_WORLD_DIVISOR));
+        }
+        return undefined;
+    }
+
     calculateDurationMs(radiusEarth) {
         const hectares = this.calculateAreaHectares(radiusEarth);
         const batches = hectares / 50_000_000_000;
@@ -629,6 +641,7 @@ class ArtificialManager extends EffectableEntity {
             core: this.activeProject.core,
             radiusEarth: this.activeProject.radiusEarth,
             landHa,
+            terraformedValue: this.deriveTerraformWorldValue(this.activeProject),
             builtFrom: this.activeProject.builtFrom,
             constructedAt: this.activeProject.startedAt,
             completedAt: this.activeProject.completedAt || null,
@@ -714,6 +727,11 @@ class ArtificialManager extends EffectableEntity {
             const landHa = merged?.resources?.surface?.land?.initialValue
                 || merged?.resources?.surface?.land?.baseCap
                 || (radiusEarth ? this.calculateAreaHectares(radiusEarth) : undefined);
+            const terraformedValue = this.deriveTerraformWorldValue({
+                terraformedValue: status.terraformedValue,
+                radiusEarth,
+                landHa
+            });
             entries.push({
                 id: key,
                 seed: key,
@@ -722,6 +740,7 @@ class ArtificialManager extends EffectableEntity {
                 core: merged?.classification?.core || 'unknown',
                 radiusEarth,
                 landHa,
+                terraformedValue,
                 builtFrom: status.original?.builtFrom || 'unknown',
                 constructedAt: status.original?.constructedAt || null,
                 completedAt: status.original?.completedAt || null,
@@ -733,6 +752,7 @@ class ArtificialManager extends EffectableEntity {
 
         if (this.activeProject) {
             const proj = this.activeProject;
+            const terraformedValue = this.deriveTerraformWorldValue(proj);
             entries.push({
                 id: proj.id,
                 seed: proj.seed,
@@ -741,6 +761,7 @@ class ArtificialManager extends EffectableEntity {
                 core: proj.core,
                 radiusEarth: proj.radiusEarth,
                 landHa: proj.areaHa || proj.landHa,
+                terraformedValue,
                 builtFrom: proj.builtFrom,
                 constructedAt: proj.startedAt,
                 completedAt: proj.completedAt || null,
@@ -856,8 +877,18 @@ class ArtificialManager extends EffectableEntity {
             }
         }
         this.nextId = Math.max(state.nextId || this.nextId, (this.activeProject?.id || 0) + 1, 1);
-        this.history = Array.isArray(state.history) ? state.history : [];
-        this.travelHistory = Array.isArray(state.travelHistory) ? state.travelHistory : [...this.history];
+        this.history = Array.isArray(state.history)
+            ? state.history.map((entry) => ({
+                ...entry,
+                terraformedValue: this.deriveTerraformWorldValue(entry)
+            }))
+            : [];
+        this.travelHistory = Array.isArray(state.travelHistory)
+            ? state.travelHistory.map((entry) => ({
+                ...entry,
+                terraformedValue: this.deriveTerraformWorldValue(entry)
+            }))
+            : [...this.history];
         this.updateUI(true);
     }
 

@@ -473,15 +473,18 @@ class Research {
         }
       }
 
-    // Instantly mark a research as completed without cost or prerequisite checks
+    // Instantly mark a research as completed without cost or prerequisite checks,
+    // but still respect planet and flag requirements.
     completeResearchInstant(id) {
         const research = this.getResearchById(id);
-        if (research && !research.isResearched) {
-          research.isResearched = true;
-          this.applyResearchEffects(research);
-          if (research.category === 'advanced') {
-            this.checkResearchUnlocks();
-          }
+        if (!research || research.isResearched || !this.isResearchDisplayable(research)) {
+          return;
+        }
+
+        research.isResearched = true;
+        this.applyResearchEffects(research);
+        if (research.category === 'advanced') {
+          this.checkResearchUnlocks();
         }
       }
 

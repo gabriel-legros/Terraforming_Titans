@@ -21,9 +21,8 @@ const artificialUICache = {
   sector: null,
   priority: null,
   startBtn: null,
-  cancelBtn: null,
   travelBtn: null,
-  discardBtn: null,
+  stopBtn: null,
   progressFill: null,
   progressLabel: null,
   stashSummary: null,
@@ -45,6 +44,7 @@ const artificialStashMultipliers = {
   silicon: 1_000_000_000
 };
 let artificialRadiusEditing = false;
+let artificialHistorySig = '';
 
 function cacheArtificialUIElements() {
   const doc = typeof document !== 'undefined' ? document : null;
@@ -98,6 +98,12 @@ function buildHistoryRow(entry) {
   const land = document.createElement('span');
   const landValue = entry.landHa !== undefined ? entry.landHa : (entry.radiusEarth && artificialManager ? artificialManager.calculateAreaHectares(entry.radiusEarth) : undefined);
   land.textContent = landValue !== undefined ? (formatNumber ? formatNumber(landValue, false, 2) : landValue) : '—';
+  const effective = document.createElement('span');
+  const effectiveValue = entry.terraformedValue !== undefined
+    ? entry.terraformedValue
+    : (landValue !== undefined ? Math.max(1, Math.floor((landValue || 0) / 50_000_000_000)) : undefined);
+  effective.textContent = effectiveValue !== undefined ? (formatNumber ? formatNumber(effectiveValue, false, 0) : effectiveValue) : '—';
+  effective.title = 'Counts toward terraformed worlds (1 per 50B ha, minimum 1).';
   const status = document.createElement('span');
   const statusKey = entry.status || '';
   const statusLabelMap = {
@@ -112,6 +118,7 @@ function buildHistoryRow(entry) {
   row.appendChild(name);
   row.appendChild(type);
   row.appendChild(land);
+  row.appendChild(effective);
   row.appendChild(status);
   return row;
 }
@@ -119,7 +126,7 @@ function buildHistoryRow(entry) {
 function buildHistoryHeader() {
   const header = document.createElement('div');
   header.className = 'artificial-history-row artificial-history-header-row';
-  ['Name', 'Type', 'Land', 'Status'].forEach((label) => {
+  ['Name', 'Type', 'Land', 'Value', 'Status'].forEach((label) => {
     const cell = document.createElement('span');
     cell.textContent = label;
     header.appendChild(cell);
@@ -593,21 +600,16 @@ function ensureArtificialLayout() {
 
   const actions = document.createElement('div');
   actions.className = 'artificial-actions';
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'artificial-secondary';
-  cancelBtn.textContent = 'Cancel Construction';
-  artificialUICache.cancelBtn = cancelBtn;
-  actions.appendChild(cancelBtn);
+  const stopBtn = document.createElement('button');
+  stopBtn.className = 'artificial-secondary';
+  stopBtn.textContent = 'Cancel Construction';
+  artificialUICache.stopBtn = stopBtn;
+  actions.appendChild(stopBtn);
   const travelBtn = document.createElement('button');
   travelBtn.className = 'artificial-primary';
   travelBtn.textContent = 'Travel to Constructed World';
   artificialUICache.travelBtn = travelBtn;
   actions.appendChild(travelBtn);
-  const discardBtn = document.createElement('button');
-  discardBtn.className = 'artificial-secondary';
-  discardBtn.textContent = 'Discard World';
-  artificialUICache.discardBtn = discardBtn;
-  actions.appendChild(discardBtn);
   progressPanel.appendChild(actions);
 
   card.appendChild(progressPanel);
@@ -692,11 +694,16 @@ function ensureArtificialLayout() {
     applyStarContextBounds();
     updateArtificialUI();
   });
-  cancelBtn.addEventListener('click', () => {
-    artificialManager?.cancelConstruction();
-  });
-  discardBtn.addEventListener('click', () => {
-    artificialManager?.discardConstructedWorld();
+  stopBtn.addEventListener('click', () => {
+    const manager = artificialManager;
+    if (!manager || !manager.activeProject) return;
+    if (manager.activeProject.status === 'building') {
+      manager.cancelConstruction();
+      return;
+    }
+    if (manager.activeProject.status === 'completed') {
+      manager.discardConstructedWorld();
+    }
   });
   travelBtn.addEventListener('click', () => {
     artificialManager?.travelToConstructedWorld();
@@ -741,7 +748,7 @@ function ensureArtificialLayout() {
     });
   }
 
-  renderArtificialHistory();
+  renderArtificialHistory(true);
 }
 
 function toggleArtificialTabVisibility(isEnabled) {
@@ -772,7 +779,7 @@ function getRadiusValue() {
   return clampRadiusValue(parseFloat(artificialUICache.radiusRange.value) || 1);
 }
 
-function renderArtificialHistory() {
+function renderArtificialHistory(force = false) {
   const manager = artificialManager;
   if (!manager || !artificialUICache.historyList || !artificialUICache.historyPage) return;
   const entries = typeof manager.getHistoryEntries === 'function' ? manager.getHistoryEntries() : (manager.history || []);
@@ -781,6 +788,20 @@ function renderArtificialHistory() {
   artificialHistoryPage = Math.min(artificialHistoryPage, maxPage);
   const start = artificialHistoryPage * pageSize;
   const slice = entries.slice(start, start + pageSize);
+  const sig = JSON.stringify({
+    page: artificialHistoryPage,
+    total: entries.length,
+    items: slice.map((entry) => [
+      entry.id,
+      entry.name,
+      entry.type,
+      entry.landHa,
+      entry.terraformedValue,
+      entry.status
+    ])
+  });
+  if (!force && sig === artificialHistorySig) return;
+  artificialHistorySig = sig;
 
   artificialUICache.historyList.innerHTML = '';
   artificialUICache.historyList.appendChild(buildHistoryHeader());
@@ -801,9 +822,10 @@ function renderProgress(project) {
   if (!project) {
     artificialUICache.progressFill.style.width = '0%';
     artificialUICache.progressLabel.textContent = 'No active project';
-    artificialUICache.cancelBtn.disabled = true;
+    artificialUICache.stopBtn.disabled = true;
+    artificialUICache.stopBtn.textContent = 'Cancel Construction';
+    artificialUICache.stopBtn.title = '';
     artificialUICache.travelBtn.disabled = true;
-    artificialUICache.discardBtn.disabled = true;
     return;
   }
   const label = artificialUICache.progressLabel;
@@ -812,20 +834,25 @@ function renderProgress(project) {
     artificialUICache.progressFill.style.width = `${pct}%`;
     const remaining = formatDuration(project.remainingMs / 1000);
     label.textContent = `${project.name} — ${remaining} remaining`;
-    artificialUICache.cancelBtn.disabled = false;
+    artificialUICache.stopBtn.disabled = false;
+    artificialUICache.stopBtn.textContent = 'Cancel Construction';
+    artificialUICache.stopBtn.title = 'Cancel the active build';
     artificialUICache.travelBtn.disabled = true;
-    artificialUICache.discardBtn.disabled = true;
     return;
   }
   if (project.status === 'completed') {
     artificialUICache.progressFill.style.width = '100%';
     label.textContent = `${project.name} complete. Ready to travel.`;
-    artificialUICache.cancelBtn.disabled = true;
+    artificialUICache.stopBtn.disabled = false;
+    artificialUICache.stopBtn.textContent = 'Discard World';
+    artificialUICache.stopBtn.title = 'Discard this completed world';
     artificialUICache.travelBtn.disabled = false;
-    artificialUICache.discardBtn.disabled = false;
     return;
   }
   label.textContent = 'Idle';
+  artificialUICache.stopBtn.disabled = true;
+  artificialUICache.stopBtn.textContent = 'Cancel Construction';
+  artificialUICache.stopBtn.title = '';
 }
 
 function renderStash(project, manager) {
@@ -973,7 +1000,8 @@ function renderStartButton(project, manager, preview) {
   }
 }
 
-function updateArtificialUI() {
+function updateArtificialUI(options = {}) {
+  const force = !!options.force;
   const manager = artificialManager;
   const enabled = !!(manager && manager.enabled);
   toggleArtificialTabVisibility(enabled);
@@ -1098,7 +1126,7 @@ function updateArtificialUI() {
   renderProgress(project);
   renderStash(project, manager);
   renderBailout(project, manager);
-  renderArtificialHistory();
+  renderArtificialHistory(force);
 }
 
 if (typeof window !== 'undefined') {
