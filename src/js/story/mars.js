@@ -12,13 +12,6 @@ var progressMars = {
         },
         objectives: [],
         reward: [
-            {
-                target: 'project',
-                targetId: 'cargo_rocket',
-                type: 'oneTimeStart',
-                oneTimeFlag: true,
-                pendingResourceGains: [{ category: 'colony', resource: 'metal', quantity: 1000 }, {category: 'colony', resource: 'food', quantity : 500}, { category: 'colony', resource: 'components', quantity: 200 }, {category: 'colony',  resource: 'electronics', quantity: 100 }]
-            }
         ],
         rewardDelay: 500  // Delay between rewards in milliseconds
       },
@@ -98,21 +91,36 @@ var progressMars = {
             target: 'tab',
             targetId: 'special-projects-tab',
             type: 'enable'
-          },
-          {
-            target: 'tab',
-            targetId: 'special-projects',
-            type: 'activateTab',
-            onLoad : false
           }
         ]
+      },
+      {
+        id: "chapter1.2a",
+        type: "journal",
+        chapter: 0,
+        narrative: "",
+        prerequisites: ["chapter1.2"],
+        objectives: [
+          {
+            type: 'activeTab',
+            tabId: 'special-projects',
+            description: 'Open the Special Projects tab'
+          }
+        ],
+        reward: [            {
+                target: 'project',
+                targetId: 'cargo_rocket',
+                type: 'oneTimeStart',
+                oneTimeFlag: true,
+                pendingResourceGains: [{ category: 'colony', resource: 'metal', quantity: 1000 }, {category: 'colony', resource: 'food', quantity : 500}, { category: 'colony', resource: 'components', quantity: 200 }, {category: 'colony',  resource: 'electronics', quantity: 100 }]
+            }]
       },
       {
         id: "chapter1.3",
         type: "journal",
         chapter: 0,
         narrative: "Awaiting resource payload from Earth...",
-        prerequisites: ["chapter1.2"],
+        prerequisites: ["chapter1.2a"],
         objectives: [{
             type: 'collection',
             resourceType: 'colony',
@@ -198,38 +206,8 @@ var progressMars = {
         id: "chapter1.8",
         type: "journal",
         chapter: 0,
-        narrative: "Processing blueprint: battery.btb...",
-        prerequisites: ["chapter1.7"],
-        objectives: [
-        ],
-        reward: [{
-            target: 'building',
-            targetId: 'battery',
-            type: 'enable'
-        }
-        ]
-      },
-      {
-        id: "chapter1.9",
-        type: "journal",
-        chapter: 0,
-        narrative: "Processing blueprint: storageDepot.btb...",
-        prerequisites: ["chapter1.8"],
-        objectives: [
-        ],
-        reward: [{
-            target: 'building',
-            targetId: 'storageDepot',
-            type: 'enable'
-        }
-        ]
-      },
-      {
-        id: "chapter1.11",
-        type: "journal",
-        chapter: 0,
         narrative: "Objective: Construct an Ore Mine to initiate mineral extraction.",
-        prerequisites: ["chapter1.9"],
+        prerequisites: ["chapter1.7"],
         objectives: [{
             type: 'building',
             buildingName: 'oreMine',
@@ -240,11 +218,11 @@ var progressMars = {
         ]
       },
       {
-        id: "chapter1.12",
+        id: "chapter1.9",
         type: "journal",
         chapter: 0,
         narrative: "Power requirement detected for Ore Mine. Objective: Construct three Wind Turbines.",
-        prerequisites: ["chapter1.11"],
+        prerequisites: ["chapter1.8"],
         objectives: [{
             type: 'building',
             buildingName: 'windTurbine',
@@ -255,14 +233,44 @@ var progressMars = {
         ]
       },
       {
-        id: "chapter1.13",
+        id: "chapter1.10",
         type: "journal",
         chapter: 0,
         narrative: "Initial infrastructure established. New blueprints available for download.",
-        prerequisites: ["chapter1.12"],
+        prerequisites: ["chapter1.9"],
         objectives: [
         ],
         reward: [
+        ]
+      },
+      {
+        id: "chapter1.11",
+        type: "journal",
+        chapter: 0,
+        narrative: "Processing blueprint: battery.btb...",
+        prerequisites: ["chapter1.10"],
+        objectives: [
+        ],
+        reward: [{
+            target: 'building',
+            targetId: 'battery',
+            type: 'enable'
+        }
+        ]
+      },
+      {
+        id: "chapter1.12",
+        type: "journal",
+        chapter: 0,
+        narrative: "Processing blueprint: storageDepot.btb...",
+        prerequisites: ["chapter1.11"],
+        objectives: [
+        ],
+        reward: [{
+            target: 'building',
+            targetId: 'storageDepot',
+            type: 'enable'
+        }
         ]
       },
       {
@@ -270,7 +278,7 @@ var progressMars = {
         type: "journal",
         chapter: 0,
         narrative: "Processing blueprint: sandQuarry.btb...",
-        prerequisites: ["chapter1.13"],
+        prerequisites: ["chapter1.12"],
         objectives: [
         ],
         reward: [{

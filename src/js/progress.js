@@ -98,6 +98,20 @@ function compareValues(current, target, comparison = 'gte') {
     }
 }
 
+const cachedTabElements = {};
+
+function getTabContent(tabId) {
+    if (!cachedTabElements[tabId]) {
+        cachedTabElements[tabId] = document.getElementById(tabId);
+    }
+    return cachedTabElements[tabId];
+}
+
+function isTabActive(tabId) {
+    const tabContent = getTabContent(tabId);
+    return !!(tabContent && tabContent.classList.contains('active'));
+}
+
 class StoryManager {
     constructor(progressData) {
         this.progressData = progressData;
@@ -422,6 +436,13 @@ class StoryManager {
                }
                return false;
           }
+          case 'activeTab': {
+               const tabId = objective.tabId || objective.targetId;
+               if (!tabId) {
+                   return false;
+               }
+               return isTabActive(tabId);
+          }
           default:
                console.error(`Unknown objective type: ${objective.type}`);
                return false;
@@ -540,6 +561,9 @@ class StoryManager {
                const target = objective.difficulty || 0;
                const dispCurrent = Math.max(0, current);
                return `Complete an Operation of Difficulty ${format(target, true)} (Highest Completed: ${format(dispCurrent, true)})`;
+         }
+         case 'activeTab': {
+                return objective.description || 'Open the requested tab';
          }
           case 'galaxySectorControl': {
                const sectorLabel = objective.sectorLabel || objective.sectorKey || objective.sector || objective.label || 'R5-07';
