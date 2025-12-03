@@ -361,7 +361,7 @@ class ArtificialManager extends EffectableEntity {
         : (ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.hasStar === false)?.value || starOption.value);
       const requestedRadius = options?.radiusEarth || bounds.min;
       const radiusEarth = Math.min(Math.max(requestedRadius, bounds.min), bounds.max);
-      const chosenName = (options?.name && String(options.name).trim()) || `Artificial World ${this.nextId}`;
+      const chosenName = (options?.name && String(options.name).trim()) || 'Artificial World';
       const cost = this.calculateCost(radiusEarth);
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) {
@@ -746,6 +746,7 @@ class ArtificialManager extends EffectableEntity {
                 completedAt: status.original?.completedAt || null,
                 status: label,
                 traveledAt: status.departedAt || status.arrivedAt || null,
+                departedAt: status.departedAt || null,
                 discardedAt: null
             });
         };
@@ -767,6 +768,7 @@ class ArtificialManager extends EffectableEntity {
                 completedAt: proj.completedAt || null,
                 status: proj.status || 'building',
                 traveledAt: proj.status === 'traveled' ? Date.now() : null,
+                departedAt: null,
                 discardedAt: null
             });
         }
@@ -787,6 +789,15 @@ class ArtificialManager extends EffectableEntity {
             if (!status || key === currentKey) return;
             if (!status.terraformed) return;
             pushEntry(key, status, 'terraformed');
+        });
+
+        entries.sort((a, b) => {
+            const aDeparture = a.departedAt || null;
+            const bDeparture = b.departedAt || null;
+            if (aDeparture === null && bDeparture === null) return 0;
+            if (aDeparture === null) return -1;
+            if (bDeparture === null) return 1;
+            return bDeparture - aDeparture;
         });
 
         return entries;
