@@ -8,9 +8,9 @@ const RWG_EFFECTS = {
       target: "project",
       targetId: "nitrogenSpaceMining",
       type: "projectDurationMultiplier",
-      factor: 0.1,
+      factor: 0.2,
       computeValue(count, def) {
-        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
       },
     },
@@ -21,9 +21,9 @@ const RWG_EFFECTS = {
       target: "project",
       targetId: "carbonSpaceMining",
       type: "projectDurationMultiplier",
-      factor: 0.1,
+      factor: 0.2,
       computeValue(count, def) {
-        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
       },
     },
@@ -34,9 +34,9 @@ const RWG_EFFECTS = {
       target: "project",
       targetId: "waterSpaceMining",
       type: "projectDurationMultiplier",
-      factor: 0.1,
+      factor: 0.2,
       computeValue(count, def) {
-        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        const f = def?.factor ?? 0.2;
         return 1 / (1 + f * count);
       },
     },
@@ -46,38 +46,23 @@ const RWG_EFFECTS = {
       effectId: "rwg-super-earth-bonus",
       target: "spaceManager",
       type: "extraTerraformedWorlds",
+      description: "Counts as two extra worlds each",
       computeValue(count) {
-        return count;
+        return count * 2;
       },
     },
   ],    
   "rogue": [
     {
-      effectId: "rwg-rogue-space-mirror-cost",
-      target: "building",
-      targetId: "spaceMirror",
-      type: "resourceCostMultiplier",
-      resourceCategory: "colony",
-      resourceId: ["metal", "glass", "energy"],
-      factor: 0.2,
-      description: "Space Mirror construction cost divided by (1 + 20% each)",
+      effectId: "rwg-rogue-maintenance",
+      target: "global",
+      type: "globalMaintenanceReduction",
+      factor: 0.02,
+      description: "Maintenance divided by (1 + 2% each)",
       computeValue(count, def) {
-        const f = typeof def.factor === "number" ? def.factor : 0.2;
-        return 1 / (1 + f * count);
-      },
-    },
-    {
-      effectId: "rwg-rogue-lantern-cost",
-      target: "building",
-      targetId: "hyperionLantern",
-      type: "resourceCostMultiplier",
-      resourceCategory: "colony",
-      resourceId: ["metal", "glass", "electronics", "components"],
-      factor: 0.2,
-      description: "Hyperion Lantern construction cost divided by (1 + 20% each)",
-      computeValue(count, def) {
-        const f = typeof def.factor === "number" ? def.factor : 0.2;
-        return 1 / (1 + f * count);
+        const f = def?.factor ?? 0.02;
+        const divisor = 1 + f * count;
+        return 1 - 1 / divisor;
       },
     }
   ],
@@ -87,9 +72,9 @@ const RWG_EFFECTS = {
       target: "building",
       targetId: "oreMine",
       type: "productionMultiplier",
-      factor: 0.1,
+      factor: 0.2,
       computeValue(count, def) {
-        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        const f = def?.factor ?? 0.2;
         return 1 + f * count;
       },
     },
@@ -100,9 +85,9 @@ const RWG_EFFECTS = {
       target: "building",
       targetId: "sandQuarry",
       type: "productionMultiplier",
-      factor: 0.1,
+      factor: 0.2,
       computeValue(count, def) {
-        const f = typeof def.factor === "number" ? def.factor : 0.1;
+        const f = def?.factor ?? 0.2;
         return 1 + f * count;
       }
     }],
@@ -111,8 +96,10 @@ const RWG_EFFECTS = {
       effectId: "rwg-venus-workers",
       target: "global",
       type: "globalWorkerReduction",
-      computeValue(count) {
-        const divisor = 1 + 0.01 * count;
+      factor: 0.02,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.02;
+        const divisor = 1 + f * count;
         return 1 - 1 / divisor;
       },
     },
@@ -122,9 +109,9 @@ const RWG_EFFECTS = {
       effectId: "rwg-mars-pop",
       target: "population",
       type: "globalPopulationGrowth",
-      factor: 0.01,
+      factor: 0.02,
       computeValue(count, def) {
-        const f = typeof def.factor === "number" ? def.factor : 0.01;
+        const f = def?.factor ?? 0.02;
         return f * count;
       },
     },

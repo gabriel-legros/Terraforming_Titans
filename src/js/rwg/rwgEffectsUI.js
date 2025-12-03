@@ -114,12 +114,12 @@ function _computeRWGEffectsSummary() {
       if (eff.type === 'productionMultiplier') {
         const percent = (raw - 1) * 100;
         const what = RWG_BUILDING_OUTPUT[eff.targetId] || 'Production';
-        const fEach = (typeof eff.factor === 'number' ? eff.factor : 0.1) * 100;
+        const fEach = (eff.factor ?? 0.2) * 100;
         descr = descr || `${what} production increased (+${fEach.toFixed(0)}% each)`;
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
       } else if (eff.type === 'projectDurationMultiplier') {
         // Show as divided by (1 + factor * count)
-        const f = typeof eff.factor === 'number' ? eff.factor : 0.1;
+        const f = eff.factor ?? 0.2;
         const divisor = 1 + f * effectiveCount;
         const name = RWG_PROJECT_NAMES[eff.targetId] || eff.targetId || 'Project';
         const fEach = (f * 100).toFixed(0);
@@ -127,18 +127,25 @@ function _computeRWGEffectsSummary() {
         display = `/${divisor.toFixed(1)}`;
       } else if (eff.type === 'globalPopulationGrowth') {
         const percent = raw * 100;
-        const fEach = (eff.factor ?? 0.01) * 100;
+        const fEach = (eff.factor ?? 0.02) * 100;
         descr = descr || `Population growth rate increased (+${fEach.toFixed(0)}% each)`;
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
       } else if (eff.type === 'globalWorkerReduction') {
-        const each = eff.factor ?? 0.01;
+        const each = eff.factor ?? 0.02;
         const divisor = 1 + each * effectiveCount;
-        descr = descr || 'Worker requirements divided by (1% each)';
+        const eachPct = (each * 100).toFixed(0);
+        descr = descr || `Worker requirements divided by (1+${eachPct}% each)`;
         display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
       } else if (eff.type === 'extraTerraformedWorlds') {
         // Super-Earth: counts as extra worlds; display +N not xN
         descr = descr || 'Counts as an extra world';
         display = `+${(raw ?? effectiveCount)}`;
+      } else if (eff.type === 'globalMaintenanceReduction') {
+        const each = eff.factor ?? 0.02;
+        const divisor = 1 + each * effectiveCount;
+        const eachPct = (each * 100).toFixed(0);
+        descr = descr || `Maintenance divided by (${eachPct}% each)`;
+        display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
       } else if (eff.type === 'resourceCostMultiplier') {
         const divisor = raw > 0 ? 1 / raw : 0;
         const what = RWG_BUILDING_OUTPUT[eff.targetId] || (eff.targetId || 'Cost');

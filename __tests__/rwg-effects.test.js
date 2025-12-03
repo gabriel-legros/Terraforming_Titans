@@ -21,35 +21,52 @@ describe('applyRWGEffects', () => {
     delete global.spaceManager;
   });
 
-  test('applies rogue planet cost reductions to mirrors and lanterns', () => {
+  test('applies rogue planet maintenance reduction', () => {
     applyRWGEffects();
 
     const rogueEffects = addEffectSpy.mock.calls
       .map(([effect]) => effect)
       .filter((effect) => effect && effect.sourceId === 'rwg-rogue');
 
-    expect(rogueEffects).toHaveLength(7);
+    expect(rogueEffects).toHaveLength(1);
+    expect(rogueEffects[0]).toEqual(expect.objectContaining({
+      effectId: 'rwg-rogue-maintenance',
+      target: 'global',
+      type: 'globalMaintenanceReduction',
+      value: 1 - 1 / 1.02,
+    }));
+  });
 
-    ['metal', 'glass', 'energy'].forEach((resource) => {
-      expect(addEffectSpy).toHaveBeenCalledWith(expect.objectContaining({
-        effectId: `rwg-rogue-space-mirror-cost-${resource}`,
-        target: 'building',
-        targetId: 'spaceMirror',
-        resourceCategory: 'colony',
-        resourceId: resource,
-        value: 1 / 1.2,
-      }));
-    });
+  test('doubles other archetype bonuses', () => {
+    spaceManager.randomWorldStatuses = {
+      titan: {
+        terraformed: true,
+        original: { classification: { archetype: 'titan-like' } }
+      },
+      mars: {
+        terraformed: true,
+        original: { classification: { archetype: 'mars-like' } }
+      },
+      superEarth: {
+        terraformed: true,
+        original: { classification: { archetype: 'super-earth' } }
+      }
+    };
 
-    ['metal', 'glass', 'electronics', 'components'].forEach((resource) => {
-      expect(addEffectSpy).toHaveBeenCalledWith(expect.objectContaining({
-        effectId: `rwg-rogue-lantern-cost-${resource}`,
-        target: 'building',
-        targetId: 'hyperionLantern',
-        resourceCategory: 'colony',
-        resourceId: resource,
-        value: 1 / 1.2,
-      }));
-    });
+    applyRWGEffects();
+
+    const effectFor = (id) => addEffectSpy.mock.calls
+      .map(([effect]) => effect)
+      .find((effect) => effect && effect.effectId === id);
+
+    expect(effectFor('rwg-titan-nitrogen')).toEqual(expect.objectContaining({
+      value: 1 / 1.2,
+    }));
+    expect(effectFor('rwg-mars-pop')).toEqual(expect.objectContaining({
+      value: 0.02,
+    }));
+    expect(effectFor('rwg-super-earth-bonus')).toEqual(expect.objectContaining({
+      value: 2,
+    }));
   });
 });

@@ -326,7 +326,9 @@ The planet visualiser has been modularised into files covering core setup, light
 - Lifters gained a Dyson-style control card with a Run toggle, gas giant hydrogen harvesting, atmosphere stripping, per-lifter capacity readouts, and explicit use of unused Dyson Swarm energy.
 - Lifters now provide an automation toggle to permit colony energy usage when Dyson overflow energy cannot sustain operations.
 - Random worlds that include hazards now grant double RWG effects when terraformed, and the RWG UI displays the hazard bonus as an added count.
+- Random world archetype bonuses have been doubled across the board, and rogue worlds now reduce global maintenance by 2% each.
 - Added a Warpnet advanced research that unlocks a permanent colony slider for global research boosts.
+ - Rogue random world maintenance bonus now divides maintenance by (1 + 2% per rogue) instead of a flat subtraction.
 
 ## Feature updates
 - Added Solis Prime as a rogue story planet that relies on background radiation for luminosity.
