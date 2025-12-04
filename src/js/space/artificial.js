@@ -45,7 +45,7 @@ const ARTIFICIAL_STAR_MASS_RANGES = {
 };
 const SHELL_COST_CALIBRATION = {
     landHa: 50_000_000_000,
-    superalloys: 10_000_000_000_000
+    superalloys: 20_000_000_000_000
 };
 const MAX_SHELL_DURATION_MS = 5 * 3_600_000;
 const BASE_SHELL_COST = (() => {
