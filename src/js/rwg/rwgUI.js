@@ -674,7 +674,14 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
   // Star summary + parent body if any
-  const star = res.merged?.star || res.star;
+  const starSource = res.merged?.star || res.star || {};
+  const star = {
+    name: starSource.name || 'Unknown Star',
+    spectralType: starSource.spectralType || '—',
+    luminositySolar: Number(starSource.luminositySolar ?? 1),
+    massSolar: Number(starSource.massSolar ?? 1),
+    temperatureK: Number(starSource.temperatureK ?? 0)
+  };
   const toDisplayTemp = typeof toDisplayTemperature === 'function' ? toDisplayTemperature : (v => v);
   const tempUnit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
   const starPanel = `
