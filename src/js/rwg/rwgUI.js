@@ -674,7 +674,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
   // Star summary + parent body if any
-  const starSource = res.merged?.star || res.star || {};
+  const starSource = res.merged?.star || res.original?.star || {};
   const star = {
     name: starSource.name || 'Unknown Star',
     spectralType: starSource.spectralType || '—',
