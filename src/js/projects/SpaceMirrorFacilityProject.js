@@ -651,7 +651,7 @@ function initializeMirrorOversightUI(container) {
     <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.">&#9432;</span>
     <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
     <label for="mirror-allow-available-heat">Allow available to heat</label>
-    <span class="info-tooltip-icon" title="When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. Turn it off to keep unused capacity idle.">&#9432;</span>
+    <span class="info-tooltip-icon" title="When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
