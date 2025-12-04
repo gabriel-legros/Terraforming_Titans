@@ -60,7 +60,9 @@ function refreshAutoBuildTarget(structure) {
     : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
 
   if (els.autoBuildTarget) {
-    const targetText = autoBuildUsesMax ? 'Target : Max' : `Target : ${formatBigInteger(targetCount)}`;
+    const targetText = autoBuildUsesMax
+      ? 'Target : Max'
+      : `Target : ${gameSettings.formatAutoBuildTargets ? formatNumber(targetCount, true) : formatBigInteger(targetCount)}`;
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
     }
@@ -92,6 +94,10 @@ function refreshAutoBuildTarget(structure) {
       btn.disabled = shouldDisableButtons;
     }
   });
+}
+
+function refreshAllAutoBuildTargets() {
+  Object.values(structures || {}).forEach(refreshAutoBuildTarget);
 }
 
 function applyAutoBuildDelta(structure, input, delta) {

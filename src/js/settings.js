@@ -71,6 +71,15 @@ function addSettingsListeners() {
     });
   }
 
+  const formatAutoBuildTargetsToggle = document.getElementById('format-autobuild-targets-toggle');
+  if (formatAutoBuildTargetsToggle) {
+    formatAutoBuildTargetsToggle.checked = gameSettings.formatAutoBuildTargets;
+    formatAutoBuildTargetsToggle.addEventListener('change', () => {
+      gameSettings.formatAutoBuildTargets = formatAutoBuildTargetsToggle.checked;
+      refreshAllAutoBuildTargets();
+    });
+  }
+
   const pauseButton = document.getElementById("pause-button");
   if (pauseButton) {
     pauseButton.addEventListener("click", togglePause);

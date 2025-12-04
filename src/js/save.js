@@ -562,6 +562,11 @@ function loadGame(slotOrCustomString, recreate = true) {
       if(autobuildSetActiveToggle){
         autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       }
+      const formatAutoBuildTargetsToggle = document.getElementById('format-autobuild-targets-toggle');
+      if(formatAutoBuildTargetsToggle){
+        formatAutoBuildTargetsToggle.checked = gameSettings.formatAutoBuildTargets;
+      }
+      refreshAllAutoBuildTargets();
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {
