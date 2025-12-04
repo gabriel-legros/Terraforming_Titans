@@ -398,7 +398,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.3f',
     type: 'journal',
     chapter: 26,
-    narrative: "Mary : 'You know what HOPE?  Artificial worlds are not very efficient.  The structural cost to keep it all together is not worth the opportunity cost of just building orbital habitats.  However, in your case, you can't really manage billions of habitats.  Your model was designed to manage a single world at a time.  So... if you want... you could build a big one of those.  You are better at managing large amount of resources than we are.'  \nSystem Message : Artificial Worlds Unlocked (Not implemented, coming soon in the next update)",
+    narrative: "Mary : 'You know what HOPE?  Artificial worlds are not very efficient.  The structural cost to keep it all together is not worth the opportunity cost of just building orbital habitats.  However, in your case, you can't really manage billions of habitats.  Your model was designed to manage a single world at a time.  So... if you want... you could build a big one of those.  You are better at managing large amount of resources than we are.'  \nSystem Message : Artificial Worlds Unlocked",
     prerequisites: ['solisPrime.3e'],
         objectives: [{
           type: 'terraforming',
