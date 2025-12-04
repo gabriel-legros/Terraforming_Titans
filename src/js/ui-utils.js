@@ -28,10 +28,11 @@ function activateSubtab(subtabClass, contentClass, subtabId, unhide = false) {
   }
 }
 
-function addTooltipHover(anchor, tooltip) {
+function addTooltipHover(anchor, tooltip, options = {}) {
   if (!anchor) return;
   const tooltipEl = tooltip || anchor.querySelector && anchor.querySelector('.resource-tooltip');
   if (!tooltipEl) return;
+  const dynamicPlacement = options.dynamicPlacement || tooltipEl.classList.contains('dynamic-tooltip');
 
   let pointerActive = false;
 
@@ -55,16 +56,23 @@ function addTooltipHover(anchor, tooltip) {
 
   const showTooltip = () => {
     tooltipEl._isActive = true;
-    const isResource = !!tooltipEl._columnsInfo || !!tooltipEl.closest('.resource-item');
+    const isResource = dynamicPlacement || !!tooltipEl._columnsInfo || !!tooltipEl.closest('.resource-item');
+    const hasColumns = typeof setResourceTooltipColumns === 'function' && (!!tooltipEl._columnsInfo || !!tooltipEl.closest('.resource-item'));
     tooltipEl.classList.remove('above', 'three-column');
+    if (dynamicPlacement) tooltipEl.style.zIndex = '4000';
 
     if (isResource) {
-      if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltipEl, 1);
+      if (hasColumns) setResourceTooltipColumns(tooltipEl, 1);
 
       // Show invisibly to measure
       const prevDisplay = tooltipEl.style.display;
-      tooltipEl.style.display = 'block';
+      if (dynamicPlacement) {
+        tooltipEl.style.display = 'block';
+      } else {
+        tooltipEl.style.display = 'block';
+      }
       tooltipEl.style.visibility = 'hidden';
+      if (dynamicPlacement) tooltipEl.style.position = 'fixed';
 
       const aRect = anchor.getBoundingClientRect();
       const centerHorizontally = () => {
@@ -82,6 +90,18 @@ function addTooltipHover(anchor, tooltip) {
           tooltipEl.style.transform = 'none';
         }
       };
+      const clampVertically = () => {
+        if (!dynamicPlacement) return;
+        const margin = 4;
+        const rect = tooltipEl.getBoundingClientRect();
+        const available = Math.max(window.innerHeight - margin * 2, 0);
+        if (rect.height > available) {
+          tooltipEl.style.maxHeight = `${available}px`;
+          tooltipEl.style.overflowY = 'auto';
+        }
+        const clampedTop = Math.max(margin, Math.min(rect.top, window.innerHeight - margin - rect.height));
+        tooltipEl.style.top = `${clampedTop}px`;
+      };
       const place = (mode) => {
         centerHorizontally();
         if (mode === 'below') {
@@ -93,6 +113,7 @@ function addTooltipHover(anchor, tooltip) {
           tooltipEl.style.top = `${aRect.top - tRect.height - 4}px`;
         }
         clampHorizontally();
+        clampVertically();
       };
       // below -> above
       place('below');
@@ -105,7 +126,7 @@ function addTooltipHover(anchor, tooltip) {
       }
       // three-column fallback
       if (!placed) {
-        if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltipEl, 3);
+        if (hasColumns && typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltipEl, 3);
         tooltipEl.classList.add('three-column');
         tooltipEl.style.display = 'flex';
         place('below');
@@ -114,7 +135,7 @@ function addTooltipHover(anchor, tooltip) {
         if (!placed) place('above');
       }
       tooltipEl.style.visibility = 'visible';
-      tooltipEl.style.display = prevDisplay || '';
+      tooltipEl.style.display = dynamicPlacement ? 'block' : (prevDisplay || '');
     } else {
       // Use CSS positioning; just choose above if no space below
       const prevDisplay = tooltipEl.style.display;
@@ -135,7 +156,8 @@ function addTooltipHover(anchor, tooltip) {
     tooltipEl.style.top = '';
     tooltipEl.style.left = '';
     tooltipEl.style.transform = '';
-    tooltipEl.style.display = '';
+    tooltipEl.style.position = '';
+    tooltipEl.style.display = dynamicPlacement ? 'none' : '';
     tooltipEl.style.visibility = '';
   };
 

@@ -74,6 +74,21 @@
   pointer-events: none;
 }
 
+.info-tooltip-icon .resource-tooltip.dynamic-tooltip {
+  position: fixed;
+  max-width: min(420px, calc(100vw - 16px));
+  width: auto;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.dark-mode .info-tooltip-icon .resource-tooltip.dynamic-tooltip {
+  background-color: rgba(255, 255, 255, 0.92);
+  color: #121212;
+}
+
 .info-tooltip-icon:hover .resource-tooltip,
 .info-tooltip-icon.tooltip-active .resource-tooltip,
 .info-tooltip-icon:focus-within .resource-tooltip {

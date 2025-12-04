@@ -127,6 +127,18 @@ function setTooltipText(node, text, cache, key) {
   }
 }
 
+function attachDynamicInfoTooltip(iconElement, text) {
+  if (!iconElement) return null;
+  const tooltip = document.createElement('span');
+  tooltip.classList.add('resource-tooltip', 'dynamic-tooltip');
+  setTooltipText(tooltip, text);
+  iconElement.title = '';
+  if (!iconElement.innerHTML) iconElement.innerHTML = '&#9432;';
+  if (!tooltip.parentNode) iconElement.appendChild(tooltip);
+  if (typeof addTooltipHover === 'function') addTooltipHover(iconElement, tooltip, { dynamicPlacement: true });
+  return tooltip;
+}
+
 const TEMPERATURE_INFOGRAPHIC_PATH = 'assets/images/infographic.jpg';
 
 let temperatureInfographicOverlay = null;
@@ -602,7 +614,7 @@ function createTemperatureBox(row) {
     temperatureBox.id = 'temperature-box';
     const tempInfo = document.createElement('span');
     tempInfo.classList.add('info-tooltip-icon');
-    tempInfo.title = [
+    const tempTooltipText = [
       "Temperature is a critical factor for terraforming. It's determined by a complex interplay of factors:",
       "",
       "- Key Equations: The model uses the Stefan-Boltzmann law to calculate the effective temperature from solar flux and albedo. The greenhouse effect is then added based on the atmosphere's optical depth, and the day-night temperature variation is calculated based on the planet's heat capacity and rotation speed.",
@@ -619,7 +631,7 @@ function createTemperatureBox(row) {
       "- Life: Each species has specific temperature ranges for survival and growth.",
       "- Colonist Comfort: Extreme temperatures increase energy consumption for life support."
     ].join('\n');
-    tempInfo.innerHTML = '&#9432;';
+    const tempInfoTooltip = attachDynamicInfoTooltip(tempInfo, tempTooltipText);
     const tempInfographicButton = document.createElement('button');
     tempInfographicButton.type = 'button';
     tempInfographicButton.classList.add('terraforming-infographic-button');
@@ -710,6 +722,8 @@ function createTemperatureBox(row) {
 
     row.appendChild(temperatureBox);
     terraformingUICache.temperature = {
+      info: tempInfo,
+      infoTooltip: tempInfoTooltip,
       box: temperatureBox,
       tempUnits: temperatureBox.querySelectorAll('.temp-unit'),
       target: temperatureBox.querySelector('#temperature-target'),
@@ -803,7 +817,7 @@ function createTemperatureBox(row) {
     atmosphereBox.id = 'atmosphere-box';
     const atmInfo = document.createElement('span');
     atmInfo.classList.add('info-tooltip-icon');
-    atmInfo.title = [
+    const atmTooltipText = [
       "The atmosphere is the gaseous envelope of the planet, critical for life and climate.",
       "",
       "- Composition: The mix of gases (Nitrogen, Oxygen, CO2, etc.) determines its properties. Each gas has a partial pressure, and the sum is the total atmospheric pressure.",
@@ -815,7 +829,7 @@ function createTemperatureBox(row) {
       "- Cloud Feedback: Thick clouds raise albedo, reflecting sunlight and lowering temperatures while returning vapor to surface stores through rain, snow, or acid drizzle.",
       "- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases."
     ].join('\n');
-    atmInfo.innerHTML = '&#9432;';
+    const atmTooltip = attachDynamicInfoTooltip(atmInfo, atmTooltipText);
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
@@ -878,6 +892,8 @@ function createTemperatureBox(row) {
       };
     }
     terraformingUICache.atmosphere = {
+      info: atmInfo,
+      infoTooltip: atmTooltip,
       box: atmosphereBox,
       current: atmosphereBox.querySelector('#atmosphere-current'),
       opticalDepth: atmosphereBox.querySelector('#optical-depth'),
@@ -996,8 +1012,8 @@ function createWaterBox(row) {
     waterBox.id = 'water-box';
     const waterInfo = document.createElement('span');
     waterInfo.classList.add('info-tooltip-icon');
-    waterInfo.title = 'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:\n\n- Evaporation & Sublimation: Calculated using a modified Penman equation, which considers solar flux, temperature, and atmospheric pressure to determine the rate at which water becomes vapor.\n- Precipitation: Occurs when atmospheric water vapor exceeds the saturation point, calculated by the Buck Equation. The excess moisture falls as rain or snow depending on the temperature.\n- Melting & Freezing: These rates are determined by a linear relationship to how far the temperature is above or below the freezing point.\n- Surface Flow: A realistic fluid dynamics model where flow is proportional to the square root of the level difference between zones, adjusted for elevation and viscosity. Ice can also melt and flow from colder to warmer zones.\n- Impact: The resulting water and ice coverage affects planetary albedo, temperature, and the potential for life.';
-    waterInfo.innerHTML = '&#9432;';
+    const waterTooltipText = 'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:\n\n- Evaporation & Sublimation: Calculated using a modified Penman equation, which considers solar flux, temperature, and atmospheric pressure to determine the rate at which water becomes vapor.\n- Precipitation: Occurs when atmospheric water vapor exceeds the saturation point, calculated by the Buck Equation. The excess moisture falls as rain or snow depending on the temperature.\n- Melting & Freezing: These rates are determined by a linear relationship to how far the temperature is above or below the freezing point.\n- Surface Flow: A realistic fluid dynamics model where flow is proportional to the square root of the level difference between zones, adjusted for elevation and viscosity. Ice can also melt and flow from colder to warmer zones.\n- Impact: The resulting water and ice coverage affects planetary albedo, temperature, and the potential for life.';
+    const waterTooltip = attachDynamicInfoTooltip(waterInfo, waterTooltipText);
     // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
       <h3>Water</h3>
@@ -1059,6 +1075,8 @@ function createWaterBox(row) {
 
     row.appendChild(waterBox);
     terraformingUICache.water = {
+      info: waterInfo,
+      infoTooltip: waterTooltip,
       box: waterBox,
       waterCurrent: waterBox.querySelector('#water-current'),
       iceCurrent: waterBox.querySelector('#ice-current'),
@@ -1140,8 +1158,8 @@ function createWaterBox(row) {
     const tropPct = (getZonePercentage('tropical') * 100).toFixed(1);
     const tempPct = (getZonePercentage('temperate') * 100).toFixed(1);
     const polPct  = (getZonePercentage('polar') * 100).toFixed(1);
-    lifeInfo.title = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.\n\nSurface distribution:\n- Tropical: ' + tropPct + '%\n- Temperate: ' + tempPct + '%\n- Polar: ' + polPct + '%';
-    lifeInfo.innerHTML = '&#9432;';
+    const lifeTooltipText = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.\n\nSurface distribution:\n- Tropical: ' + tropPct + '%\n- Temperate: ' + tempPct + '%\n- Polar: ' + polPct + '%';
+    const lifeTooltip = attachDynamicInfoTooltip(lifeInfo, lifeTooltipText);
     // Use static text/placeholders, values will be filled by updateLifeBox
     lifeBox.innerHTML = `
       <h3>Life</h3> <!-- Static name -->
@@ -1175,6 +1193,8 @@ function createWaterBox(row) {
 
     row.appendChild(lifeBox);
     terraformingUICache.life = {
+      info: lifeInfo,
+      infoTooltip: lifeTooltip,
       box: lifeBox,
       target: targetSpan,
       coverageOverall: lifeBox.querySelector('#life-coverage-overall'),
@@ -1268,8 +1288,19 @@ function updateLifeBox() {
     magnetosphereBox.id = 'magnetosphere-box';
     const magInfo = document.createElement('span');
     magInfo.classList.add('info-tooltip-icon');
-    magInfo.title = 'The magnetosphere is a planet\'s magnetic shield against harmful solar wind and cosmic radiation.\n\n Radiation calculation:\n- Galactic cosmic rays: deep-space particles (~1.3 mSv/day on an airless world).\n- Parent belts: trapped radiation from the host planet, falling off with distance.\n- Solar energetic particles: averaged daily storm dose (usually 0).\n\nEach component is exponentially reduced by atmospheric column mass (D = D0 * e^(-column/L)). Orbital radiation uses no atmosphere, while surface radiation uses the current column mass.\n\nProtection: A strong magnetosphere prevents the solar wind from stripping away the planet\'s atmosphere over time and shields surface life from damaging radiation, making it a key terraforming objective.';
-    magInfo.innerHTML = '&#9432;';
+    const magTooltipText = [
+      "The magnetosphere is a planet's magnetic shield against harmful solar wind and cosmic radiation.",
+      "",
+      "Radiation calculation:",
+      "- Galactic cosmic rays: deep-space particles (~1.3 mSv/day on an airless world).",
+      "- Parent belts: trapped radiation from the host planet, falling off with distance.",
+      "- Solar energetic particles: averaged daily storm dose (usually 0).",
+      "",
+      "Each component is exponentially reduced by atmospheric column mass (D = D0 * e^(-column/L)). Orbital radiation uses no atmosphere, while surface radiation uses the current column mass.",
+      "",
+      "Protection: A strong magnetosphere prevents the solar wind from stripping away the planet's atmosphere over time and shields surface life from damaging radiation, making it a key terraforming objective."
+    ].join('\n');
+    const magTooltip = attachDynamicInfoTooltip(magInfo, magTooltipText);
 
     const protectedText = 'The planet is sufficiently protected, providing a 50% boost to life growth';
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
@@ -1323,6 +1354,8 @@ function updateLifeBox() {
 
     row.appendChild(magnetosphereBox);
     terraformingUICache.magnetosphere = {
+      info: magInfo,
+      infoTooltip: magTooltip,
       box: magnetosphereBox,
       status: magnetosphereBox.querySelector('#magnetosphere-status'),
       surfaceRadiation: magnetosphereBox.querySelector('#surface-radiation'),
@@ -1444,10 +1477,10 @@ function updateLifeBox() {
     ];
   }
 
-  function setLuminosityTooltip(el) {
+  function getLuminosityTooltipText() {
     const table = buildAlbedoTable();
     const albLines = table.map(row => row.join(' | ')).join('\n');
-    el.title = 'Luminosity measures the total solar energy (flux) reaching the planet\'s surface, which is the primary driver of its climate.\n\n- Solar Flux: The base energy is determined by the star\'s output and the planet\'s distance from it. This can be augmented by building orbital structures like Space Mirrors.\n- Albedo: The planet\'s reflectivity. A portion of the incoming flux is reflected back into space. This is determined by the mix of surface types (rock, ocean, ice, biomass) and cloud cover. A lower albedo means more energy is absorbed.  The albedo of the ground is calculated first, and uses a mix of the planet base albedo and black dust.  Surface albedo is then calculated by adding the coverage from various surface resources. \n- Impact: The final modified solar flux directly determines the planet\'s temperature, the efficiency of solar panels, and the growth rate of photosynthetic life.\n- Minimum Flux: Flux by zone cannot go below 6 \u00B5W/m\u00B2.\n\n' +
+    return 'Luminosity measures the total solar energy (flux) reaching the planet\'s surface, which is the primary driver of its climate.\n\n- Solar Flux: The base energy is determined by the star\'s output and the planet\'s distance from it. This can be augmented by building orbital structures like Space Mirrors.\n- Albedo: The planet\'s reflectivity. A portion of the incoming flux is reflected back into space. This is determined by the mix of surface types (rock, ocean, ice, biomass) and cloud cover. A lower albedo means more energy is absorbed.  The albedo of the ground is calculated first, and uses a mix of the planet base albedo and black dust.  Surface albedo is then calculated by adding the coverage from various surface resources. \n- Impact: The final modified solar flux directly determines the planet\'s temperature, the efficiency of solar panels, and the growth rate of photosynthetic life.\n- Minimum Flux: Flux by zone cannot go below 6 \u00B5W/m\u00B2.\n\n' +
       'Albedo values:\n' + albLines;
   }
 
@@ -1459,8 +1492,12 @@ function updateLifeBox() {
     const lumInfo = document.createElement('span');
     lumInfo.classList.add('info-tooltip-icon');
     lumInfo.id = 'luminosity-tooltip';
-    setLuminosityTooltip(lumInfo);
-    lumInfo.innerHTML = '&#9432;';
+    const lumTooltipText = getLuminosityTooltipText();
+    const lumTooltip = attachDynamicInfoTooltip(lumInfo, lumTooltipText);
+    const cloudHazeInfo = document.createElement('span');
+    cloudHazeInfo.classList.add('info-tooltip-icon');
+    cloudHazeInfo.id = 'cloud-haze-info';
+    const cloudHazeTooltip = attachDynamicInfoTooltip(cloudHazeInfo, CLOUD_AND_HAZE_TOOLTIP_TEXT);
     luminosityBox.innerHTML = `
       <h3>${terraforming.luminosity.name}</h3>
       <table>
@@ -1483,7 +1520,7 @@ function updateLifeBox() {
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>Cloud &amp; Haze<span class="info-tooltip-icon" title="${CLOUD_AND_HAZE_TOOLTIP_TEXT}">&#9432;</span></td>
+            <td>Cloud &amp; Haze<span id="cloud-haze-info-placeholder"></span></td>
             <td><span id="cloud-haze-penalty">${terraforming.luminosity.cloudHazePenalty.toFixed(3)}</span></td>
             <td></td>
           </tr>
@@ -1505,6 +1542,10 @@ function updateLifeBox() {
     if (luminosityHeading) {
       luminosityHeading.appendChild(lumInfo);
     }
+    const cloudHazePlaceholder = luminosityBox.querySelector('#cloud-haze-info-placeholder');
+    if (cloudHazePlaceholder && cloudHazePlaceholder.parentNode) {
+      cloudHazePlaceholder.replaceWith(cloudHazeInfo);
+    }
     row.appendChild(luminosityBox);
 
     const targetSpan = document.createElement('span');
@@ -1513,6 +1554,8 @@ function updateLifeBox() {
     targetSpan.classList.add('terraforming-target')
     luminosityBox.appendChild(targetSpan);
     terraformingUICache.luminosity = {
+      info: lumInfo,
+      infoTooltip: lumTooltip,
       box: luminosityBox,
       groundAlbedo: luminosityBox.querySelector('#ground-albedo'),
       groundAlbedoDelta: luminosityBox.querySelector('#ground-albedo-delta'),
@@ -1526,19 +1569,22 @@ function updateLifeBox() {
       actualAlbedoDelta: luminosityBox.querySelector('#actual-albedo-delta'),
       actualAlbedoInfo: luminosityBox.querySelector('#actual-albedo-info'),
       actualAlbedoTooltip: luminosityBox.querySelector('#actual-albedo-tooltip'),
+      cloudHazeInfo,
+      cloudHazeTooltip,
       cloudHazePenalty: luminosityBox.querySelector('#cloud-haze-penalty'),
       modifiedSolarFlux: luminosityBox.querySelector('#modified-solar-flux'),
       solarFluxDelta: luminosityBox.querySelector('#solar-flux-delta'),
       solarFluxInfo: luminosityBox.querySelector('#solar-flux-info'),
       solarFluxTooltip: luminosityBox.querySelector('#solar-flux-tooltip'),
-      mainTooltip: luminosityBox.querySelector('#luminosity-tooltip'),
+      mainTooltip: lumTooltip,
       solarPanelMultiplier: luminosityBox.querySelector('#solar-panel-multiplier'),
       target: luminosityBox.querySelector('.terraforming-target'),
       tooltips: {
         ground: '',
         surface: '',
         actual: '',
-        solarFlux: ''
+        solarFlux: '',
+        main: ''
       }
     };
     const els = terraformingUICache.luminosity;
@@ -1701,7 +1747,7 @@ function updateLifeBox() {
     }
 
     if (els.mainTooltip) {
-      setLuminosityTooltip(els.mainTooltip);
+      setTooltipText(els.mainTooltip, getLuminosityTooltipText(), els.tooltips, 'main');
     }
 
     if (els.solarPanelMultiplier) {
