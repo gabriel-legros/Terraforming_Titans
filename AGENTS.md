@@ -4,6 +4,7 @@
 - The game needs to be able to run from a browser-like environment.
 - Place story projects in **progress-data.js** near the chapter where they unlock.
 - Tooltips should use a `<span class="info-tooltip-icon">&#9432;</span>` element with a descriptive `title`.
+- For long, browser-safe tooltips, create the info icon span and call `attachDynamicInfoTooltip(icon, text)` from `src/js/ui-utils.js` so the helper builds the child `.resource-tooltip.dynamic-tooltip` and wires `addTooltipHover` for viewport-aware placement.
 - Keep the Warp Gate Command Teams tooltip updated whenever special rules change.
 - Do not use typeof checks, or ifs to verify if a variable or object is not null, or checks for whether or not a constant is a number.  These are very frustrating to read and only make the code worse.
 - All UI elements should be cached and reused instead of using querySelector.

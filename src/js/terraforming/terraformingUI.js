@@ -112,33 +112,6 @@ const terraformingUICache = {
   summary: {}
 };
 
-function setTooltipText(node, text, cache, key) {
-  if (!node) return;
-  const currentCache = cache || null;
-  if (currentCache && currentCache[key] === text) {
-    return;
-  }
-  node.textContent = text;
-  if (node.style && node.style.whiteSpace !== 'pre-line') {
-    node.style.whiteSpace = 'pre-line';
-  }
-  if (currentCache) {
-    currentCache[key] = text;
-  }
-}
-
-function attachDynamicInfoTooltip(iconElement, text) {
-  if (!iconElement) return null;
-  const tooltip = document.createElement('span');
-  tooltip.classList.add('resource-tooltip', 'dynamic-tooltip');
-  setTooltipText(tooltip, text);
-  iconElement.title = '';
-  if (!iconElement.innerHTML) iconElement.innerHTML = '&#9432;';
-  if (!tooltip.parentNode) iconElement.appendChild(tooltip);
-  if (typeof addTooltipHover === 'function') addTooltipHover(iconElement, tooltip, { dynamicPlacement: true });
-  return tooltip;
-}
-
 const TEMPERATURE_INFOGRAPHIC_PATH = 'assets/images/infographic.jpg';
 
 let temperatureInfographicOverlay = null;
