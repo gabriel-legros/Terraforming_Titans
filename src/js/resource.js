@@ -375,6 +375,17 @@ function checkDepositAvailability(depositType, requiredAmount) {
 }
 
 function createResources(resourcesData) {
+  const landInitial = resourcesData?.surface?.land?.initialValue;
+  if (Number.isFinite(landInitial) && resourcesData?.special) {
+    const dustCap = landInitial * 10000;
+    if (resourcesData.special.albedoUpgrades) {
+      resourcesData.special.albedoUpgrades.baseCap = dustCap;
+    }
+    if (resourcesData.special.whiteDust) {
+      resourcesData.special.whiteDust.baseCap = dustCap;
+    }
+  }
+
   const resources = {};
   for (const category in resourcesData) {
     resources[category] = {};

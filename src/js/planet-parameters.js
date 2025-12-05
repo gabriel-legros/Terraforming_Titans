@@ -80,8 +80,9 @@ const defaultPlanetParameters = {
       calciteAerosol: { name: 'Calcite Aerosol', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
     },
     special: {
-      albedoUpgrades: {name : 'Black Dust', hasCap: true, baseCap: 144800000000000,initialValue: 0, unlocked: false, hideWhenSmall: true}, // Default (Mars)
-      whiteDust: { name: 'White Dust', hasCap: true, baseCap: 144800000000000, initialValue: 0, unlocked: false, hideWhenSmall: true },
+      // Dust caps derive from land area during resource creation
+      albedoUpgrades: {name : 'Black Dust', hasCap: true, initialValue: 0, unlocked: false, hideWhenSmall: true}, // Default (Mars)
+      whiteDust: { name: 'White Dust', hasCap: true, initialValue: 0, unlocked: false, hideWhenSmall: true },
       spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},
       alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false },
       crusaders: { name: 'Crusaders', hasCap: false, initialValue: 0, unlocked: false },
@@ -263,10 +264,6 @@ const titanOverrides = {
       "atmosphericMethane": {
         "initialValue": 430148695769603.3
       },
-    },
-    special: {
-      albedoUpgrades: { baseCap: 83000000000000 }, // Override base capacity
-      whiteDust: { baseCap: 83000000000000 }
     }
   },
   "zonalWater": {
@@ -401,12 +398,6 @@ const callistoOverrides = {
       atmosphericMethane:{ initialValue: 0 }
     },
 
-    /* ---------- SPECIAL ---------- */
-    special: {
-      /* baseCap = land (ha) × 10 000 — same scaling used for Mars/Titan */
-      albedoUpgrades: { baseCap: 73000000000000 },
-      whiteDust: { baseCap: 73000000000000 }
-    }
   },
 
   /* ---------- PER‑LATITUDE WATER PARTITION ---------- */
@@ -534,13 +525,6 @@ const ganymedeOverrides = {
       "atmosphericMethane": {
         "initialValue": 0
       }
-    },
-
-    /* SPECIAL */
-    special: {
-      /* baseCap = land (ha) × 10 000 — same scaling as other bodies */
-      albedoUpgrades: { baseCap: 87200000000000 },
-      whiteDust: { baseCap: 87200000000000 }
     }
   },
 
@@ -660,11 +644,6 @@ const vega2Overrides = {
       atmosphericWater: { initialValue: 0 },
       atmosphericMethane: { initialValue: 0 },
       greenhouseGas: { initialValue: 0 }
-    },
-    special: {
-      // Base capacity scales with land (ha) * 10,000
-      albedoUpgrades: { baseCap: 320_000_000_000_000 },
-      whiteDust: { baseCap: 320_000_000_000_000 }
     }
   },
 
@@ -757,11 +736,6 @@ const venusOverrides = {
       "sulfuricAcid": {
         "initialValue": 45496476928636.34
       }
-    },
-    special: {
-      // Caps scale with land * 10,000 and match between black and white dust
-      albedoUpgrades: { baseCap: 460_000_000_000_000 },
-      whiteDust: { baseCap: 460_000_000_000_000 }
     }
   },
 

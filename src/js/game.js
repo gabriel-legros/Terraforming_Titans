@@ -282,7 +282,7 @@ function initializeGameState(options = {}) {
     researchManager.getResearchById('companion_satellite')?.isResearched &&
     spaceManager?.getTerraformedPlanetCount
   ) {
-    const count = spaceManager.getTerraformedPlanetCount();
+    const count = Math.floor(spaceManager.getTerraformedPlanetCount());
     const proj = projectManager.projects.satellite;
     proj.repeatCount = Math.min(count, proj.maxRepeatCount);
     proj.update?.(0);
