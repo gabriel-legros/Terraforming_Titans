@@ -521,6 +521,10 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
+      const autosaveToggle = document.getElementById('disable-autosave-toggle');
+      if (autosaveToggle) {
+        autosaveToggle.checked = gameSettings.disableAutosave;
+      }
       const toggle = document.getElementById('celsius-toggle');
       if(toggle){
         toggle.checked = gameSettings.useCelsius;
@@ -567,6 +571,7 @@ function loadGame(slotOrCustomString, recreate = true) {
         formatAutoBuildTargetsToggle.checked = gameSettings.formatAutoBuildTargets;
       }
       refreshAllAutoBuildTargets();
+      updateAutosaveText();
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {
@@ -623,26 +628,35 @@ function loadGame(slotOrCustomString, recreate = true) {
   }
 }
 
+function setSaveSlotStatus(slot, text) {
+  const slotCell = document.getElementById(`${slot}-date`);
+  if (slotCell) {
+    slotCell.textContent = text;
+  }
+}
+
 function saveGameToSlot(slot) {
   const gameState = getGameState();
-
-  // Store game state in localStorage
+  const genericFailure = 'SAVE FAILED: Game needs cookies/local storage permission.';
+  let saveFailedReason = '';
   try {
     localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
     console.log(`Game saved successfully to slot ${slot}.`);
   } catch (e) {
+    saveFailedReason = e?.message || 'Unknown error';
     console.warn(`Unable to access localStorage for slot ${slot}:`, e);
-    return;
+    setSaveSlotStatus(slot, genericFailure);
+    if (slot === 'autosave') {
+      updateAutosaveText(genericFailure);
+    }
+    return { success: false, error: saveFailedReason };
   }
 
   // Get the current date and time
   const saveDate = new Date();
-
-  // Format the save date using the formatDate function
   const formattedSaveDate = formatDate(saveDate);
 
-  // Update the save date for the slot
-  document.getElementById(`${slot}-date`).textContent = formattedSaveDate;
+  setSaveSlotStatus(slot, formattedSaveDate);
 
   // Save the save slot dates as UNIX timestamps
   saveSaveSlotDates(slot, saveDate);
@@ -651,6 +665,8 @@ function saveGameToSlot(slot) {
     const row = document.getElementById('pretravel-row');
     if (row) row.classList.remove('hidden');
   }
+
+  return { success: true };
 }
 
 function saveGameToFile() {
@@ -673,6 +689,19 @@ function saveGameToFile() {
   URL.revokeObjectURL(url);
 }
 
+function saveGameToClipboard() {
+  const saveData = JSON.stringify(getGameState());
+  const clipboard = navigator?.clipboard;
+  if (!clipboard || !clipboard.writeText) {
+    console.warn('Clipboard write unavailable.');
+    return;
+  }
+  clipboard.writeText(saveData).then(
+    () => console.log('Game saved to clipboard.'),
+    (e) => console.warn('Unable to copy save to clipboard:', e)
+  );
+}
+
 // Load game state from a file
 function loadGameFromFile(event) {
   const file = event.target.files[0];
@@ -683,6 +712,13 @@ function loadGameFromFile(event) {
       loadGame(saveData);
     };
     reader.readAsText(file);
+  }
+}
+
+function loadGameFromString() {
+  const text = window.prompt('Paste save data to load:');
+  if (text) {
+    loadGame(text);
   }
 }
 
@@ -796,7 +832,13 @@ function addSaveSlotListeners() {
 function loadMostRecentSave() {
   loadSaveSlotDates();
 
-  const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+  let saveSlotDates = {};
+  try {
+    saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
+  } catch (e) {
+    console.warn('Unable to access localStorage for most recent save:', e);
+    return false;
+  }
   let mostRecentSlot = null;
   let mostRecentTimestamp = null;
 
@@ -822,18 +864,37 @@ let autosaveInterval = 180; // Autosave interval in seconds
 let autosaveTimer = autosaveInterval;
 
 function autosave(delta) {
+  if (gameSettings && gameSettings.disableAutosave) {
+    autosaveTimer = autosaveInterval;
+    updateAutosaveText();
+    return;
+  }
+
   autosaveTimer -= delta / 1000; // Convert delta from milliseconds to seconds
 
   if (autosaveTimer <= 0) {
-    saveGameToSlot('autosave');
+    const saveResult = saveGameToSlot('autosave');
     autosaveTimer = autosaveInterval; // Reset the autosave timer
+    if (saveResult && saveResult.error) {
+      updateAutosaveText('SAVE FAILED: Game needs cookies/local storage permission.');
+      return;
+    }
   }
 
   updateAutosaveText();
 }
 
-function updateAutosaveText() {
+function updateAutosaveText(overrideText) {
   const autosaveText = document.getElementById('autosave-text');
+  if (!autosaveText) return;
+  if (overrideText) {
+    autosaveText.textContent = overrideText;
+    return;
+  }
+  if (gameSettings && gameSettings.disableAutosave) {
+    autosaveText.textContent = 'Autosave disabled';
+    return;
+  }
   const minutes = Math.floor(autosaveTimer / 60);
   const seconds = Math.floor(autosaveTimer % 60);
   autosaveText.textContent = `Next autosave in ${minutes}m ${seconds}s`;
@@ -869,6 +930,15 @@ function addSaveLoadListeners() {
     document.getElementById('load-from-file-input').click();
   });
 
+  const saveClipboardButton = document.getElementById('save-to-clipboard-button');
+  if (saveClipboardButton) {
+    saveClipboardButton.addEventListener('click', saveGameToClipboard);
+  }
+  const loadStringButton = document.getElementById('load-from-string-button');
+  if (loadStringButton) {
+    loadStringButton.addEventListener('click', loadGameFromString);
+  }
+
   // Event listener for the actual file input change
   document.getElementById('load-from-file-input').addEventListener('change', loadGameFromFile);
 }
@@ -883,5 +953,5 @@ if (typeof document !== 'undefined' && document.addEventListener) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getGameState, loadGame, recalculateLandUsage };
+  module.exports = { getGameState, loadGame, recalculateLandUsage, saveGameToClipboard, loadGameFromString };
 }

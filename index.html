@@ -709,6 +709,8 @@
                           <button id="save-to-file-button">Save to File</button>
                           <input type="file" id="load-from-file-input" accept=".json" style="display: none;">
                           <button id="load-from-file-button">Load from File</button>
+                          <button id="save-to-clipboard-button">Save to Clipboard</button>
+                          <button id="load-from-string-button">Load from string</button>
                         </td>
                       </tr>
                         <tr>
@@ -721,6 +723,9 @@
           </div>
           <h2>Settings</h2>
           <div class="settings-grid">
+            <label class="settings-option">
+              <input type="checkbox" id="disable-autosave-toggle"> Disable autosave
+            </label>
             <label class="settings-option">
               <input type="checkbox" id="celsius-toggle"> Display temperature in Celsius
             </label>

@@ -192,6 +192,7 @@ function initializeGameState(options = {}) {
   }
 
   if (!preserveManagers) {
+    gameSettings.disableAutosave = false;
     gameSettings.useCelsius = false;
     gameSettings.disableDayNightCycle = false;
     const dayNightToggle = typeof document !== 'undefined' ? document.getElementById('day-night-toggle') : null;

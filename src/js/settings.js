@@ -1,6 +1,15 @@
 // Settings management functions
 
 function addSettingsListeners() {
+  const disableAutosaveToggle = document.getElementById('disable-autosave-toggle');
+  if (disableAutosaveToggle) {
+    disableAutosaveToggle.checked = gameSettings.disableAutosave;
+    disableAutosaveToggle.addEventListener('change', () => {
+      gameSettings.disableAutosave = disableAutosaveToggle.checked;
+      updateAutosaveText();
+    });
+  }
+
   const celsiusToggle = document.getElementById('celsius-toggle');
   if (celsiusToggle) {
     celsiusToggle.checked = gameSettings.useCelsius;

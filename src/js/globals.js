@@ -41,6 +41,7 @@ let automationManager;
 let artificialManager;
 
 let gameSettings = {
+  disableAutosave: false,
   useCelsius: false,
   darkMode: false,
   hideCompletedResearch: false,
