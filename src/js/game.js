@@ -494,6 +494,8 @@ function updateLogic(delta) {
 
   recalculateTotalRates();
 
+
+  patienceManager.update();
 }
 
 function updateRender(force = false, options = {}) {
