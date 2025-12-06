@@ -504,7 +504,7 @@ function updateRender(force = false, options = {}) {
 
   // Always-on UI pieces
   updateDayNightDisplay();           // Day/night display is global
-  updateResourceDisplay(resources);  // Resources are global
+  updateResourceDisplay(resources, deltaSeconds);  // Resources are global
   updateWarnings();                  // Global warnings
   // Always keep alert badges in sync regardless of active tab
   if (typeof updateBuildingAlert === 'function') updateBuildingAlert();

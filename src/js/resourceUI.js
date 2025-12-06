@@ -757,7 +757,14 @@ function unlockResource(resource) {
   }
 }
 
-function updateResourceDisplay(resources) {
+function updateResourceDisplay(resources, deltaSeconds) {
+  const now = Date.now();
+  const last = updateResourceDisplay.lastTimestamp;
+  const elapsedSeconds = Number.isFinite(deltaSeconds) ? deltaSeconds : last ? (now - last) / 1000 : 0;
+  const frameDelta = Math.max(0, Math.min(1, elapsedSeconds));
+  updateResourceDisplay.lastTimestamp = now;
+  const smallValueTimers = resourceUICache.smallValueTimers || (resourceUICache.smallValueTimers = {});
+
   for (const category in resources) {
     const cat = resourceUICache.categories[category] || cacheResourceCategory(category);
     const container = cat ? cat.container : null;
@@ -772,7 +779,21 @@ function updateResourceDisplay(resources) {
       const resourceNameElement = entry ? entry.nameEl : null;
       const autobuildWarningEl = entry ? entry.autobuildWarningEl : null;
 
-      const showResource = resourceObj.unlocked && (!resourceObj.hideWhenSmall || resourceObj.value >= 1e-4);
+      let timer = smallValueTimers[resourceName] || 0;
+      let showResource = resourceObj.unlocked;
+
+      if (showResource) {
+        if (resourceObj.hideWhenSmall && resourceObj.value < 1e-4) {
+          timer = Math.min(1, timer + frameDelta);
+          showResource = timer < 1;
+        } else {
+          timer = 0;
+        }
+      } else {
+        timer = 0;
+      }
+
+      smallValueTimers[resourceName] = timer;
 
       if (showResource) {
         hasUnlockedResources = true;
@@ -848,7 +869,7 @@ function updateResourceDisplay(resources) {
           }
         }
 
-        updateResourceRateDisplay(resourceObj);
+        updateResourceRateDisplay(resourceObj, frameDelta);
       } else if (category === 'underground' || resourceObj.name === 'land') {
         // Update underground resources
         const availableElement = entry ? entry.availableEl : null;
@@ -888,7 +909,7 @@ function updateResourceDisplay(resources) {
           scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
         if (resourceObj.name === 'land') {
-          updateResourceRateDisplay(resourceObj);
+          updateResourceRateDisplay(resourceObj, frameDelta);
         }
       } else {
         // Update other resources
@@ -902,7 +923,7 @@ function updateResourceDisplay(resources) {
           capElement.textContent = formatNumber(resourceObj.cap);
         }
       
-        updateResourceRateDisplay(resourceObj);
+        updateResourceRateDisplay(resourceObj, frameDelta);
       }
     }
 
@@ -917,7 +938,7 @@ function updateResourceDisplay(resources) {
   }
 }
 
-function updateResourceRateDisplay(resource){
+function updateResourceRateDisplay(resource, frameDelta = 0){
   const entry = resourceUICache.resources[resource.name] || cacheSingleResource(resource.category, resource.name);
   const ppsElement = entry ? entry.ppsEl : document.getElementById(`${resource.name}-pps-resources-container`);
   if (resource.hideRate) {
@@ -925,6 +946,7 @@ function updateResourceRateDisplay(resource){
       ppsElement.remove();
     }
   } else if (ppsElement) {
+    const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
     const netRate = resource.productionRate - resource.consumptionRate;
 
     // Record net rate history
@@ -938,7 +960,7 @@ function updateResourceRateDisplay(resource){
       }
     }
 
-    let showUnstable = false;
+    let baseUnstable = false;
     const history = resource.rateHistory || [];
     if (history.length >= 10) {
       // Count sign changes
@@ -951,11 +973,20 @@ function updateResourceRateDisplay(resource){
         }
       }
       if (signChanges > 1) {
-        showUnstable = true;
+        baseUnstable = true;
       }
     }
 
-    if (showUnstable) {
+    const unstableTimers = resourceUICache.unstableTimers || (resourceUICache.unstableTimers = {});
+    let timer = unstableTimers[resource.name] || 0;
+    if (baseUnstable) {
+      timer = 0.5;
+    } else if (timer > 0) {
+      timer = Math.max(0, timer - elapsed);
+    }
+    unstableTimers[resource.name] = timer;
+
+    if (baseUnstable || timer > 0) {
       ppsElement.textContent = 'Unstable';
       ppsElement.style.color = '';
     } else {
@@ -1286,6 +1317,8 @@ function capitalizeFirstLetter(string) {
 const resourceUICache = {
   categories: {}, // { [category]: { container, header } }
   resources: {},  // { [resourceName]: { container, nameEl, autobuildWarningEl, warningEl, valueEl, capEl, ppsEl, availableEl, totalEl, scanEl, tooltip: {...} } }
+  smallValueTimers: {},
+  unstableTimers: {},
 };
 
 function cacheResourceCategory(category) {
@@ -1340,4 +1373,7 @@ function cacheResourceElements(resources) {
 function invalidateResourceUICache() {
   resourceUICache.categories = {};
   resourceUICache.resources = {};
+  resourceUICache.smallValueTimers = {};
+  resourceUICache.unstableTimers = {};
+  updateResourceDisplay.lastTimestamp = undefined;
 }
