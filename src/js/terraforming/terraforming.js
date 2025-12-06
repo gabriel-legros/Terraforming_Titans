@@ -608,7 +608,7 @@ class Terraforming extends EffectableEntity{
 
       this.luminosity.initialSolarFlux = this.luminosity.modifiedSolarFlux;
 
-      if (hasZonalTemperatureDefaults) {
+      if (hasZonalTemperatureDefaults && (!planetParameters.classification || !planetParameters.classification?.archetype == 'artificial')) {
           let weightedTemperature = 0;
           zones.forEach(zone => {
               const zoneDefaults = zonalTemperatureDefaults[zone] || {};
@@ -627,6 +627,9 @@ class Terraforming extends EffectableEntity{
           this.temperature.value = weightedTemperature;
           this.temperature.equilibriumTemperature = weightedTemperature;
       } else {
+          this.temperature.zones.tropical.value = this.temperature.zones.tropical.trendValue;
+          this.temperature.zones.temperate.value = this.temperature.zones.temperate.trendValue;
+          this.temperature.zones.polar.value = this.temperature.zones.polar.trendValue;
           this.temperature.zones.tropical.initial = this.temperature.zones.tropical.value;
           this.temperature.zones.temperate.initial = this.temperature.zones.temperate.value;
           this.temperature.zones.polar.initial = this.temperature.zones.polar.value;
