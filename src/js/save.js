@@ -2,6 +2,7 @@ globalGameIsLoadingFromSave = false;
 
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
+let statisticsElements = null;
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -36,6 +37,19 @@ function hideLoadingOverlay() {
   loadingOverlayIsVisible = false;
   cacheLoadingOverlayElement();
   applyLoadingOverlayVisibility();
+}
+
+function cacheStatisticsElements() {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  if (statisticsElements && statisticsElements.totalPlaytime) {
+    return statisticsElements;
+  }
+  statisticsElements = {
+    totalPlaytime: document.getElementById('total-playtime-display'),
+  };
+  return statisticsElements;
 }
 
 function recalculateLandUsage() {
@@ -154,7 +168,9 @@ function getGameState() {
     colonySliderSettings: (typeof colonySliderSettings !== 'undefined' && typeof colonySliderSettings.saveState === 'function') ? colonySliderSettings.saveState() : undefined,
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
     playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined,
-    totalPlayTimeSeconds: typeof totalPlayTimeSeconds !== 'undefined' ? totalPlayTimeSeconds : undefined
+    totalPlayTimeSeconds: typeof totalPlayTimeSeconds !== 'undefined' ? totalPlayTimeSeconds : undefined,
+    realPlayTimeSeconds: typeof realPlayTimeSeconds !== 'undefined' ? realPlayTimeSeconds : undefined,
+    totalRealPlayTimeSeconds: typeof totalRealPlayTimeSeconds !== 'undefined' ? totalRealPlayTimeSeconds : undefined
   };
 }
 
@@ -601,6 +617,18 @@ function loadGame(slotOrCustomString, recreate = true) {
         totalPlayTimeSeconds = gameState.totalPlayTimeSeconds;
       }
 
+      if(gameState.realPlayTimeSeconds !== undefined){
+        realPlayTimeSeconds = gameState.realPlayTimeSeconds;
+      } else if (gameState.playTimeSeconds !== undefined) {
+        realPlayTimeSeconds = gameState.playTimeSeconds;
+      }
+
+      if(gameState.totalRealPlayTimeSeconds !== undefined){
+        totalRealPlayTimeSeconds = gameState.totalRealPlayTimeSeconds;
+      } else if (gameState.totalPlayTimeSeconds !== undefined) {
+        totalRealPlayTimeSeconds = gameState.totalPlayTimeSeconds;
+      }
+
       if (typeof openTerraformingWorldTab === 'function') {
         openTerraformingWorldTab();
       } else if (tabManager && typeof tabManager.activateTab === 'function') {
@@ -901,9 +929,12 @@ function updateAutosaveText(overrideText) {
 }
 
 function updateStatisticsDisplay() {
-  const el = document.getElementById('total-playtime-display');
+  const cached = cacheStatisticsElements();
+  const el = cached ? cached.totalPlaytime : null;
   if (!el) return;
-  el.textContent = formatPlayTime(totalPlayTimeSeconds);
+  const gameTime = formatPlayTime(totalPlayTimeSeconds);
+  const realTime = formatDuration(totalRealPlayTimeSeconds);
+  el.textContent = `${gameTime} (${realTime} real time)`;
 }
 
 // Add save and load related listeners

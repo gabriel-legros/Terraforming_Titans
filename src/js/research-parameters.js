@@ -266,7 +266,7 @@ const researchParameters = {
       {
         id: 'ai_reactor_overclocking',
         name: 'AI Reactor Overclocking',
-        description: 'HOPE will tune superalloy fusion reactors to unleash their potential.',
+        description: 'HOPE will tune superalloy fusion reactors to unleash their potential, providing a 1.25x multiplier.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         requiredFlags: ['repeatableAiResearchUnlocked'],
@@ -691,7 +691,7 @@ const researchParameters = {
       {
         id: 'ai_industrial_coordination',
         name: 'AI Industrial Coordination',
-        description: 'HOPE will integrate itself further into each factory, reducing worker requirements.',
+        description: 'HOPE will integrate itself further into each factory, reducing worker requirements by 0.9x.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         requiredFlags: ['repeatableAiResearchUnlocked'],
@@ -1063,7 +1063,7 @@ const researchParameters = {
       {
         id: 'ai_ecumenopolis_expansion',
         name: 'AI Ecumenopolis Expansion',
-        description: 'HOPE will optimize architecture, transit and utilities, enabling more space for more people and androids.',
+        description: 'HOPE will optimize architecture, transit and utilities, enabling more space for 1.1x more people and androids.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         requiredFlags: ['repeatableAiResearchUnlocked'],

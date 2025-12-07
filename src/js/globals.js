@@ -76,6 +76,8 @@ let patienceManager;
 let galaxyManager;
 let playTimeSeconds = 0;
 let totalPlayTimeSeconds = 0;
+let realPlayTimeSeconds = 0;
+let totalRealPlayTimeSeconds = 0;
 let gameSpeed = 1;
 
 Object.defineProperty(globalThis, 'galaxyManager', {

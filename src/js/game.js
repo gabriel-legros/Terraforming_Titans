@@ -209,6 +209,7 @@ function initializeGameState(options = {}) {
   globalEffects = new EffectableEntity({description : 'Manages global effects'});
 
   playTimeSeconds = 0;
+  realPlayTimeSeconds = 0;
 
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const dayDurationData = rotationPeriodToDuration(rotation);
@@ -632,6 +633,9 @@ function updateRender(force = false, options = {}) {
 function update(time, delta) {
   const speed = (typeof gameSpeed !== 'undefined') ? gameSpeed : 1;
   const scaledDelta = delta * speed;
+  const realIncrement = delta / 1000;
+  realPlayTimeSeconds += realIncrement;
+  totalRealPlayTimeSeconds += realIncrement;
   updateLogic(scaledDelta);   // Update game state
   updateRender.lastDelta = scaledDelta;
   updateRender();             // Render updated game state
@@ -643,6 +647,7 @@ function startNewGame() {
   defaultPlanet = 'mars';
   currentPlanetParameters = planetParameters.mars;
   totalPlayTimeSeconds = 0;
+  totalRealPlayTimeSeconds = 0;
   initializeGameState();
   if (typeof openTerraformingWorldTab === 'function') {
     openTerraformingWorldTab();
