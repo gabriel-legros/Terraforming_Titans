@@ -1919,6 +1919,30 @@ const researchParameters = {
         ]
       },
       {
+        id: 'high_gravity_adaptation',
+        name: 'High-gravity adaptation',
+        description: 'Placeholder for future high-gravity adaptation benefits.',
+        cost: { advancedResearch: 3_000_000 },
+        prerequisites: [],
+        effects: []
+      },
+      {
+        id: 'biostorage',
+        name: 'Biostorage',
+        description: 'Placeholder for future biological storage upgrades.',
+        cost: { advancedResearch: 4_000_000 },
+        prerequisites: [],
+        effects: []
+      },
+      {
+        id: 'dyson_sphere',
+        name: 'Dyson Sphere',
+        description: 'Placeholder for future Dyson Sphere development.',
+        cost: { advancedResearch: 5_000_000 },
+        prerequisites: [],
+        effects: []
+      },
+      {
         id: 'self_replicating_ships_concept',
         name: 'Self Replicating Ships',
         description: 'Opens research into autonomous self-building spacecraft.',
