@@ -628,24 +628,26 @@ function autoBuild(buildings, delta = 0) {
             }
 
             if (buildCount > 0) {
-                const baseCost = building.getEffectiveCost ? building.getEffectiveCost(buildCount) : {};
-                const cost = cloneCostObject(baseCost);
-                if (building.requiresDeposit) {
-                    for (const dep in building.requiresDeposit.underground) {
-                        cost.underground = cost.underground || {};
-                        cost.underground[dep] = (cost.underground[dep] || 0) + building.requiresDeposit.underground[dep] * buildCount;
-                    }
-                }
-                if (building.requiresLand) {
-                    cost.surface = cost.surface || {};
-                    cost.surface.land = (cost.surface.land || 0) + building.requiresLand * buildCount;
-                }
-
+                const previousCount = building.count;
                 let built = false;
                 if (typeof building.build === 'function') {
                     built = building.build(buildCount, false);
                 }
-                if (built) {
+                const actualBuilt = built ? Math.max(0, building.count - previousCount) : 0;
+                if (built && actualBuilt > 0) {
+                    const baseCost = building.getEffectiveCost ? building.getEffectiveCost(actualBuilt) : {};
+                    const cost = cloneCostObject(baseCost);
+                    if (building.requiresDeposit) {
+                        for (const dep in building.requiresDeposit.underground) {
+                            cost.underground = cost.underground || {};
+                            cost.underground[dep] = (cost.underground[dep] || 0) + building.requiresDeposit.underground[dep] * actualBuilt;
+                        }
+                    }
+                    if (building.requiresLand) {
+                        cost.surface = cost.surface || {};
+                        cost.surface.land = (cost.surface.land || 0) + building.requiresLand * actualBuilt;
+                    }
+
                     autobuildCostTracker.recordCost(building.displayName, cost);
                     if (building.autoBuildPriority) {
                         subtractCostFromPrioritizedReserve(prioritizedReserve, baseCost);
