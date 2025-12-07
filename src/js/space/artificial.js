@@ -170,7 +170,7 @@ function buildArtificialStarContext({ seed, hasStar, minFlux, maxFlux }) {
     };
 }
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
-const ARTIFICIAL_FLEET_CAPACITY_WORLD_VALUE = 2;
+const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 5;
 class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
@@ -237,8 +237,11 @@ class ArtificialManager extends EffectableEntity {
         return Math.max(1, Math.floor((land || 0) / TERRAFORM_WORLD_DIVISOR));
     }
 
-    calculateFleetCapacityWorldValue() {
-        return ARTIFICIAL_FLEET_CAPACITY_WORLD_VALUE;
+    calculateFleetCapacityWorldValue(radiusEarth, terraformedValue) {
+        const worldValue = Number.isFinite(terraformedValue) && terraformedValue > 0
+            ? terraformedValue
+            : this.calculateTerraformWorldValue(radiusEarth);
+        return Math.min(ARTIFICIAL_FLEET_CAPACITY_WORLDS, worldValue);
     }
 
     deriveTerraformWorldValue(entry) {
@@ -254,10 +257,14 @@ class ArtificialManager extends EffectableEntity {
     }
 
     deriveFleetCapacityWorldValue(entry) {
-        if (entry && Number.isFinite(entry.fleetCapacityValue) && entry.fleetCapacityValue > 0) {
-            return entry.fleetCapacityValue;
+        if (!entry) {
+            return this.calculateFleetCapacityWorldValue();
         }
-        return this.calculateFleetCapacityWorldValue();
+        const terraformedValue = this.deriveTerraformWorldValue(entry);
+        const baseValue = Number.isFinite(terraformedValue) && terraformedValue > 0
+            ? terraformedValue
+            : (Number.isFinite(entry.fleetCapacityValue) && entry.fleetCapacityValue > 0 ? entry.fleetCapacityValue : undefined);
+        return this.calculateFleetCapacityWorldValue(entry.radiusEarth, baseValue);
     }
 
     calculateDurationMs(radiusEarth) {
@@ -387,7 +394,7 @@ class ArtificialManager extends EffectableEntity {
       if (!deduction) return false;
 
       const areaHa = this.calculateAreaHectares(radiusEarth);
-      const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
+        const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
       const { durationMs, worldCount } = durationContext;
       if (this.exceedsDurationLimit(durationMs)) {
         return false;
@@ -409,35 +416,35 @@ class ArtificialManager extends EffectableEntity {
       const star = starContextDetails.star;
 
       this.activeProject = {
-        id: this.nextId,
-        seed: this.createSeed(),
-        name: chosenName,
-        type: 'shell',
-        core,
-        starContext: effectiveStarContext,
-        hasStar,
-        allowStar,
-        minFlux: coreConfig.minFlux,
-        maxFlux: coreConfig.maxFlux,
-        radiusEarth,
-        areaHa,
-        landHa: areaHa,
-        durationMs,
-        remainingMs: durationMs,
-        status: 'building',
-        startedAt: now,
-        completedAt: null,
-        cost,
-        terraformedValue,
-        fleetCapacityValue: this.calculateFleetCapacityWorldValue(),
-        distanceFromStarAU: starContextDetails.distanceFromStarAU,
-        targetFluxWm2: starContextDetails.fluxWm2,
-        isRogue: starContextDetails.isRogue,
-        sector,
-        star,
-        stockpile: { metal: 0, silicon: 0 },
-        builtFrom: spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : 'unknown',
-        worldDivisor: worldCount
+          id: this.nextId,
+          seed: this.createSeed(),
+          name: chosenName,
+          type: 'shell',
+          core,
+          starContext: effectiveStarContext,
+          hasStar,
+          allowStar,
+          minFlux: coreConfig.minFlux,
+          maxFlux: coreConfig.maxFlux,
+          radiusEarth,
+          areaHa,
+          landHa: areaHa,
+          durationMs,
+          remainingMs: durationMs,
+          status: 'building',
+          startedAt: now,
+          completedAt: null,
+          cost,
+          terraformedValue,
+          fleetCapacityValue: this.calculateFleetCapacityWorldValue(radiusEarth, terraformedValue),
+          distanceFromStarAU: starContextDetails.distanceFromStarAU,
+          targetFluxWm2: starContextDetails.fluxWm2,
+          isRogue: starContextDetails.isRogue,
+          sector,
+          star,
+          stockpile: { metal: 0, silicon: 0 },
+          builtFrom: spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : 'unknown',
+          worldDivisor: worldCount
       };
 
       this.nextId += 1;
@@ -854,9 +861,13 @@ class ArtificialManager extends EffectableEntity {
             if (!this.activeProject.terraformedValue) {
                 this.activeProject.terraformedValue = this.calculateTerraformWorldValue(this.activeProject.radiusEarth);
             }
-            if (!Number.isFinite(this.activeProject.fleetCapacityValue) || this.activeProject.fleetCapacityValue <= 0) {
-                this.activeProject.fleetCapacityValue = this.calculateFleetCapacityWorldValue();
-            }
+            const terraformedValue = this.deriveTerraformWorldValue(this.activeProject);
+            this.activeProject.fleetCapacityValue = this.calculateFleetCapacityWorldValue(
+                this.activeProject.radiusEarth,
+                Number.isFinite(this.activeProject.fleetCapacityValue) && this.activeProject.fleetCapacityValue > 0
+                    ? this.activeProject.fleetCapacityValue
+                    : terraformedValue
+            );
             if (this.activeProject.hasStar === undefined) {
                 this.activeProject.hasStar = true;
             }
@@ -971,6 +982,7 @@ if (typeof window !== 'undefined') {
     window.getArtificialStarContexts = getArtificialStarContexts;
     window.getArtificialCoreBounds = getArtificialCoreBounds;
     window.getArtificialCoreConfig = getArtificialCoreConfig;
+    window.ARTIFICIAL_FLEET_CAPACITY_WORLDS = ARTIFICIAL_FLEET_CAPACITY_WORLDS;
 } else if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         ArtificialManager,
@@ -979,6 +991,7 @@ if (typeof window !== 'undefined') {
         getArtificialCores,
         getArtificialStarContexts,
         getArtificialCoreBounds,
-        getArtificialCoreConfig
+        getArtificialCoreConfig,
+        ARTIFICIAL_FLEET_CAPACITY_WORLDS
     };
 }

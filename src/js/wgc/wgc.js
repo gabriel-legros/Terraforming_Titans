@@ -472,7 +472,7 @@ class WarpGateCommand extends EffectableEntity {
         roller = member;
         const leader = team[0];
         baseSkill = applyMult(member[event.skill], event.skill);
-        leaderBonus = leader ? Math.floor(applyMult(leader[event.skill], event.skill) / 2) : 0;
+        leaderBonus = leader ? applyMult(leader[event.skill], event.skill) / 2 : 0;
         skillTotal = baseSkill + leaderBonus;
         diceCount = 1;
         dc = Math.max(0, (10 + 1.5*difficulty) * stanceDifficultyModifier);
@@ -499,7 +499,7 @@ class WarpGateCommand extends EffectableEntity {
         } else {
           baseSkill = applyMult(m.wit, 'wit');
         }
-        leaderBonus = leader ? Math.floor(applyMult(leader.wit, 'wit') / 2) : 0;
+        leaderBonus = leader ? applyMult(leader.wit, 'wit') / 2 : 0;
         skillTotal = baseSkill + leaderBonus;
         roller = m;
         diceCount = 1;

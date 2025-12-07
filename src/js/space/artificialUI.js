@@ -998,7 +998,9 @@ function renderGains(project, radius, manager) {
   const r = project ? project.radiusEarth : radius;
   const effective = project?.terraformedValue || manager.calculateTerraformWorldValue(r);
   const defense = effective;
-  const fleet = manager.calculateFleetCapacityWorldValue ? manager.calculateFleetCapacityWorldValue(r) : 2;
+  const fleet = manager.calculateFleetCapacityWorldValue
+    ? manager.calculateFleetCapacityWorldValue(r, effective)
+    : 2;
   const distinct = 1;
   if (artificialUICache.gainDistinct) {
     const label = distinct === 1 ? '1 distinct world' : `${distinct} distinct worlds`;

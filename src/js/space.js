@@ -21,7 +21,6 @@ const ROGUE_STAR = {
 
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
-const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 2;
 
 function normalizeSectorLabel(value) {
     const text = value == null ? '' : String(value).trim();
@@ -498,14 +497,18 @@ class SpaceManager extends EffectableEntity {
     }
 
     _deriveArtificialFleetCapacityValue(status) {
-        if (!status) {
-            return ARTIFICIAL_FLEET_CAPACITY_WORLDS;
+        const maxFleetValue = Number.isFinite(ARTIFICIAL_FLEET_CAPACITY_WORLDS) && ARTIFICIAL_FLEET_CAPACITY_WORLDS > 0
+            ? ARTIFICIAL_FLEET_CAPACITY_WORLDS
+            : 5;
+        const terraformedValue = this._deriveArtificialTerraformValue(status);
+        if (Number.isFinite(terraformedValue) && terraformedValue > 0) {
+            return Math.min(maxFleetValue, terraformedValue);
         }
-        const stored = status.fleetCapacityValue;
+        const stored = Number(status?.fleetCapacityValue);
         if (Number.isFinite(stored) && stored > 0) {
-            return stored;
+            return Math.min(maxFleetValue, stored);
         }
-        return ARTIFICIAL_FLEET_CAPACITY_WORLDS;
+        return maxFleetValue;
     }
 
     _getCurrentWorldLandHa() {
@@ -783,6 +786,10 @@ class SpaceManager extends EffectableEntity {
         if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
             if (!this.artificialWorldStatuses[key]) {
+                const terraformedValue = this._deriveArtificialTerraformValue({
+                    landHa: this._getCurrentWorldLandHa(),
+                    original: this.getCurrentWorldOriginal()
+                });
                 this.artificialWorldStatuses[key] = {
                     name: this.currentRandomName || `Artificial ${key}`,
                     terraformed: false,
@@ -792,11 +799,8 @@ class SpaceManager extends EffectableEntity {
                     orbitalRing: false,
                     departedAt: null,
                     ecumenopolisPercent: 0,
-                    terraformedValue: this._deriveArtificialTerraformValue({
-                        landHa: this._getCurrentWorldLandHa(),
-                        original: this.getCurrentWorldOriginal()
-                    }),
-                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue()
+                    terraformedValue,
+                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue })
                 };
             } else if (!this.artificialWorldStatuses[key].terraformedValue) {
                 this.artificialWorldStatuses[key].terraformedValue = this._deriveArtificialTerraformValue({
@@ -941,6 +945,10 @@ class SpaceManager extends EffectableEntity {
         } else if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
             if (!this.artificialWorldStatuses[key]) {
+                const terraformedValue = this._deriveArtificialTerraformValue({
+                    landHa: this._getCurrentWorldLandHa(),
+                    original: this.getCurrentWorldOriginal()
+                });
                 this.artificialWorldStatuses[key] = {
                     name: this.currentRandomName || `Artificial ${key}`,
                     terraformed: false,
@@ -951,11 +959,8 @@ class SpaceManager extends EffectableEntity {
                     departedAt: null,
                     ecumenopolisPercent: 0,
                     artificial: true,
-                    terraformedValue: this._deriveArtificialTerraformValue({
-                        landHa: this._getCurrentWorldLandHa(),
-                        original: this.getCurrentWorldOriginal()
-                    }),
-                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue()
+                    terraformedValue,
+                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue })
                 };
             }
             const st = this.artificialWorldStatuses[key];
