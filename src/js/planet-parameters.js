@@ -252,18 +252,28 @@ const titanOverrides = {
       ore: { initialValue: 3, maxDeposits: 8300, areaTotal: 83000 },
       geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
     },
-    atmospheric: {
-      inertGas: { initialValue: 9e15 }, // Override name and value
-      oxygen: { initialValue: 1e9 },
+ "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 25550.287796755383
+        "initialValue": 25587.512704087836
       },
       "atmosphericWater": {
-        "initialValue": 2.022364940602119e-12
+        "initialValue": 8.74505279449671e-9
       },
       "atmosphericMethane": {
-        "initialValue": 430148695769603.3
+        "initialValue": 438594187899312.1
       },
+      "oxygen": {
+        "initialValue": 1000000000
+      },
+      "inertGas": {
+        "initialValue": 9000000000000000
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
     }
   },
   "zonalWater": {
@@ -285,61 +295,61 @@ const titanOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "biomass": 0
+      "biomass": 0,
+      "hazardousBiomass": 0
     },
     "temperate": {
-      "biomass": 0
+      "biomass": 0,
+      "hazardousBiomass": 0
     },
     "polar": {
-      "biomass": 0
+      "biomass": 0,
+      "hazardousBiomass": 0
     }
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 1044167465202.7002,
+      "liquid": 504551568536.48663,
       "ice": 0
     },
     "temperate": {
-      "liquid": 1366203373559.9941,
+      "liquid": 661143573140.4205,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 10960653007419.424
+      "ice": 3759836574805.6396
     }
   },
   "zonalCO2": {
     "tropical": {
       "liquid": 0,
-      "ice": 205.47679346160334
+      "ice": 199.99276208312517
     },
     "temperate": {
       "liquid": 0,
-      "ice": 319.91799357123915
+      "ice": 317.429961100031
     },
     "polar": {
       "liquid": 0,
-      "ice": 73924.31741986355
+      "ice": 73895.06457637873
     }
   },
   "zonalTemperatures": {
     "tropical": {
-      "initial": 94,
-      "value": 96.80908862695146,
-      "day": 97.15084838927193,
-      "night": 96.467328864631
+      "value": 94.76248043428207,
+      "day": 95.10326191546818,
+      "night": 94.42169895309596
     },
     "temperate": {
-      "initial": 91,
-      "value": 91.32188533895379,
-      "day": 91.60608506063775,
-      "night": 91.03768561726983
+      "value": 91.39450737046133,
+      "day": 91.67789357534558,
+      "night": 91.11112116557707
     },
     "polar": {
-      "initial": 88,
-      "value": 75.36018728154527,
-      "day": 75.46348725779306,
-      "night": 75.25688730529747
+      "value": 84.26536168791816,
+      "day": 84.36626128364675,
+      "night": 84.16446209218957
     }
   },
   celestialParameters : { // Override all celestial parameters
