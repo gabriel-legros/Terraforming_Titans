@@ -19,6 +19,7 @@ describe('PatienceManager spending', () => {
   let superalloys;
   let advancedResearch;
   let oneillCount;
+  let wgcUpdates;
 
   beforeEach(() => {
     superalloys = {
@@ -39,6 +40,7 @@ describe('PatienceManager spending', () => {
     };
 
     oneillCount = 10;
+    wgcUpdates = [];
 
     global.resources = {
       colony: {
@@ -54,6 +56,12 @@ describe('PatienceManager spending', () => {
       setOneillCylinderCount: (value) => {
         oneillCount = value;
         return oneillCount;
+      },
+    };
+    global.warpGateCommand = {
+      enabled: true,
+      update: (deltaMs) => {
+        wgcUpdates.push(deltaMs);
       },
     };
 
@@ -73,6 +81,7 @@ describe('PatienceManager spending', () => {
     delete global.galaxyManager;
     delete global.getOneillCylinderCapacity;
     delete global.updateOneillCylinderStatsUI;
+    delete global.warpGateCommand;
   });
 
   test('spending patience rewards superalloys, advanced research, and O\'Neill cylinders', () => {
@@ -83,5 +92,7 @@ describe('PatienceManager spending', () => {
     expect(superalloys.value).toBeCloseTo(14400);
     expect(advancedResearch.value).toBeCloseTo(7200);
     expect(oneillCount).toBeCloseTo(10.18, 2);
+    expect(wgcUpdates.length).toBe(120);
+    expect(wgcUpdates.every(ms => ms === 60000)).toBe(true);
   });
 });

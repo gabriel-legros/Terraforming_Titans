@@ -75,6 +75,7 @@ class PatienceManager extends EffectableEntity {
             });
         }
 
+        this.advanceWarpGateCommand(hours * 3600);
         return true;
     }
 
@@ -125,6 +126,18 @@ class PatienceManager extends EffectableEntity {
             oneillGain,
             oneillCapacity
         };
+    }
+
+    advanceWarpGateCommand(seconds) {
+        if (seconds <= 0 || !warpGateCommand || !warpGateCommand.enabled) return;
+
+        let remaining = seconds;
+        const interval = 60;
+        while (remaining > 0) {
+            const slice = remaining > interval ? interval : remaining;
+            warpGateCommand.update(slice * 1000);
+            remaining -= slice;
+        }
     }
 
     /**

@@ -341,4 +341,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Refined artificial world drafting with RWG-inspired UI, terraformed-world build speed scaling, world naming, larger Super Earth shells, and stash steppers recommending 1B+ starting resources.
 - Artificial world construction now blocks any job that would exceed five hours, and the duration tooltip warns that Humanity will not attempt projects longer than that. UI copy defaults to the broader “artificial world” terminology instead of “shellworld.”
 - Patience spending now also grants advanced research and O'Neill cylinder progress alongside superalloys.
+- Spending patience also fast-forwards Warp Gate Command operations by the same duration in 60-second increments, and the patience preview notes the pending WGC advance.
 - Added a Repeatable AI Researches advanced unlock with stacking repeatable energy, industry, and colonization boosts that escalate research costs tenfold per purchase.

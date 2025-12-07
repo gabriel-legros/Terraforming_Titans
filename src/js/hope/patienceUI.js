@@ -230,6 +230,7 @@ const PatienceUI = {
         const hours = parseFloat(this.spendInputEl.value) || 0;
         const { superalloyGain, advancedResearchGain, oneillGain } = patienceManager.calculateSpendGains(hours);
         const gains = [];
+        const wgcAdvance = this.getWgcAdvancePreview(hours);
 
         if (superalloyGain > 0) {
             gains.push(`${formatNumber(superalloyGain, true)} superalloys`);
@@ -241,12 +242,19 @@ const PatienceUI = {
             gains.push(`${oneillGain.toFixed(2)} O'Neill cylinders`);
         }
 
-        if (gains.length === 0) {
+        if (gains.length === 0 && !wgcAdvance) {
             this.spendPreviewEl.textContent = 'No gains available';
             return;
         }
 
-        this.spendPreviewEl.textContent = `Gain: ${gains.join(', ')}`;
+        const segments = [];
+        if (gains.length > 0) {
+            segments.push(`Gain: ${gains.join(', ')}`);
+        }
+        if (wgcAdvance) {
+            segments.push(wgcAdvance);
+        }
+        this.spendPreviewEl.textContent = segments.join('. ');
     },
 
     /**
@@ -334,6 +342,16 @@ const PatienceUI = {
         // Update preview on each render
         this.updateSpendPreview();
     }
+};
+
+/**
+ * Build the Warp Gate Command fast-forward preview text
+ */
+PatienceUI.getWgcAdvancePreview = function(hours) {
+    if (!warpGateCommand || !warpGateCommand.enabled || hours <= 0) return '';
+    
+    const ms = hours * 3600 * 1000;
+    return `WGC operations will advance`;
 };
 
 /**
