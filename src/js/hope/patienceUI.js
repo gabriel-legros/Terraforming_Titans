@@ -351,7 +351,7 @@ PatienceUI.getWgcAdvancePreview = function(hours) {
     if (!warpGateCommand || !warpGateCommand.enabled || hours <= 0) return '';
     
     const ms = hours * 3600 * 1000;
-    return `WGC operations will advance`;
+    return `WGC operations will advance.`;
 };
 
 /**
