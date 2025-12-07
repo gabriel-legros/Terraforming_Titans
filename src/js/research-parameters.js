@@ -1061,39 +1061,6 @@ const researchParameters = {
         ],
       },
       {
-        id: 'ai_metropolis_expansion',
-        name: 'AI Metropolis Expansion',
-        description: 'HOPE will reconfigure arcology districts to fit 10% more people and scale their output and upkeep accordingly.',
-        cost: { research: 5_000_000_000_000 },
-        prerequisites: [],
-        requiredFlags: ['repeatableAiResearchUnlocked'],
-        repeatable: true,
-        repeatableCostMultiplier: 10,
-        effects: [
-          {
-            target: 'colony',
-            targetId: 't6_colony',
-            type: 'storageMultiplier',
-            value: 1.1,
-            repeatableMultiplier: 1.1
-          },
-          {
-            target: 'colony',
-            targetId: 't6_colony',
-            type: 'productionMultiplier',
-            value: 1.1,
-            repeatableMultiplier: 1.1
-          },
-          {
-            target: 'colony',
-            targetId: 't6_colony',
-            type: 'consumptionMultiplier',
-            value: 1.1,
-            repeatableMultiplier: 1.1
-          }
-        ],
-      },
-      {
         id: 'ai_ecumenopolis_expansion',
         name: 'AI Ecumenopolis Expansion',
         description: 'HOPE will optimize architecture, transit and utilities, enabling more space for 1.1x more people and androids.',
@@ -1107,6 +1074,20 @@ const researchParameters = {
             target: 'colony',
             targetId: 't7_colony',
             type: 'storageMultiplier',
+            value: 1.1,
+            repeatableMultiplier: 1.1
+          },
+          {
+            target: 'colony',
+            targetId: 't7_colony',
+            type: 'productionMultiplier',
+            value: 1.1,
+            repeatableMultiplier: 1.1
+          },
+          {
+            target: 'colony',
+            targetId: 't7_colony',
+            type: 'consumptionMultiplier',
             value: 1.1,
             repeatableMultiplier: 1.1
           }
