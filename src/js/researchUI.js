@@ -61,7 +61,8 @@ function updateAllResearchButtons(researchData) {
             if (!elements) return;
             const { button, costEl, descEl, container, autoCheckbox, autoLabel, autoPrioritySelect } = elements;
 
-            if (researchItem.isResearched) {
+            const markCompleted = researchItem.isResearched && !researchItem.repeatable;
+            if (markCompleted) {
                 container.classList.add('completed-research');
                 container.classList.toggle('hidden', completedResearchHidden);
             } else {
@@ -111,10 +112,14 @@ function updateAllResearchButtons(researchData) {
 }
 
 function updateResearchButtonText(button, researchItem, visible) {
-    let buttonText = visible ? `${researchItem.name}` : '???';
+    const repeatCount = researchItem.repeatable
+        ? Math.max(1, researchItem.timesResearched || 0)
+        : 0;
+    const levelText = repeatCount ? ` (${repeatCount})` : '';
+    let buttonText = visible ? `${researchItem.name}${levelText}` : '???';
 
     // Check if the research is already done
-    if (researchItem.isResearched) {
+    if (researchItem.isResearched && !researchItem.repeatable) {
         buttonText += ' - Researched';
         button.disabled = true; // Disable the button if the research is already done
         button.style.color = 'grey'; // Set the text color to grey when research is completed
@@ -424,7 +429,7 @@ function updateCompletedResearchVisibility() {
         cachedToggleButtons = Array.from(document.querySelectorAll('.toggle-completed-button'));
     }
     const allResearches = Object.values(researchManager.researches).flat();
-    const completedResearch = allResearches.filter((research) => research.isResearched);
+    const completedResearch = allResearches.filter((research) => research.isResearched && !research.repeatable);
 
     cachedToggleButtons.forEach((toggleButton) => {
         if (completedResearch.length === 0) {

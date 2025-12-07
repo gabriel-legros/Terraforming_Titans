@@ -263,6 +263,25 @@ const researchParameters = {
           }
         ]
       },
+      {
+        id: 'ai_reactor_overclocking',
+        name: 'AI Reactor Overclocking',
+        description: 'HOPE will tune superalloy fusion reactors to unleash their potential.',
+        cost: { research: 5_000_000_000_000 },
+        prerequisites: [],
+        requiredFlags: ['repeatableAiResearchUnlocked'],
+        repeatable: true,
+        repeatableCostMultiplier: 10,
+        effects: [
+          {
+            target: 'building',
+            targetId: 'superalloyFusionReactor',
+            type: 'productionMultiplier',
+            value: 1.25,
+            repeatableMultiplier: 1.25
+          }
+        ]
+      },
     ],
     industry: [
       {
@@ -669,6 +688,24 @@ const researchParameters = {
           { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
         ]
       },
+      {
+        id: 'ai_industrial_coordination',
+        name: 'AI Industrial Coordination',
+        description: 'HOPE will integrate itself further into each factory, reducing worker requirements.',
+        cost: { research: 5_000_000_000_000 },
+        prerequisites: [],
+        requiredFlags: ['repeatableAiResearchUnlocked'],
+        repeatable: true,
+        repeatableCostMultiplier: 10,
+        effects: [
+          {
+            target: 'global',
+            type: 'globalWorkerReduction',
+            value: 0.1,
+            repeatableMultiplier: 0.9
+          }
+        ]
+      },
     ],
     colonization: [
       {
@@ -1020,6 +1057,25 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'atmosphericMonitoring',
             value: true
+          }
+        ],
+      },
+      {
+        id: 'ai_ecumenopolis_expansion',
+        name: 'AI Ecumenopolis Expansion',
+        description: 'HOPE will optimize architecture, transit and utilities, enabling more space for more people and androids.',
+        cost: { research: 5_000_000_000_000 },
+        prerequisites: [],
+        requiredFlags: ['repeatableAiResearchUnlocked'],
+        repeatable: true,
+        repeatableCostMultiplier: 10,
+        effects: [
+          {
+            target: 'colony',
+            targetId: 't7_colony',
+            type: 'storageMultiplier',
+            value: 1.1,
+            repeatableMultiplier: 1.1
           }
         ],
       },
@@ -1731,6 +1787,21 @@ const researchParameters = {
             target: 'lifeManager',
             type: 'booleanFlag',
             flagId: 'nextGenBioEngineering',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'repeatable_ai_research',
+        name: 'Repeatable AI Researches',
+        description: 'Authorizes repeatable research programs focused on enhancing production with the help of HOPE.',
+        cost: { advancedResearch: 2_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'repeatableAiResearchUnlocked',
             value: true
           }
         ]

@@ -6,10 +6,20 @@ class Research {
       this.id = id;
       this.name = name;
       this.description = description;
-      this.cost = cost;
+      const normalizedCost = cost || {};
+      this.baseCost = { ...normalizedCost };
+      this.cost = { ...normalizedCost };
       this.prerequisites = prerequisites;
-      this.effects = effects;
+      this.effects = (effects || []).map(effect => ({
+        ...effect,
+        baseValue: Number.isFinite(effect.baseValue) ? effect.baseValue : effect.value
+      }));
       Object.assign(this, extra);
+      this.repeatable = !!extra.repeatable;
+      this.repeatableCostMultiplier = Number.isFinite(extra.repeatableCostMultiplier)
+        ? extra.repeatableCostMultiplier
+        : 1;
+      this.timesResearched = 0;
       this.isResearched = false;
       this.alertedWhenUnlocked = extra.alertedWhenUnlocked || false;
     }
@@ -46,6 +56,50 @@ class Research {
       this.sortAllResearches();
       this.orderDirty = false;
       this.createAutoResearchPreset();
+    }
+
+    getRepeatCount(research) {
+      if (!research) {
+        return 0;
+      }
+      if (research.repeatable) {
+        return Math.max(0, research.timesResearched);
+      }
+      return research.isResearched ? 1 : 0;
+    }
+
+    calculateRepeatableEffectValue(research, effect) {
+      if (!research.repeatable) {
+        return effect.value;
+      }
+      if (research.timesResearched <= 0) {
+        return null;
+      }
+
+      const baseMultiplier = Number.isFinite(effect.repeatableMultiplier)
+        ? effect.repeatableMultiplier
+        : Number.isFinite(effect.baseValue) ? effect.baseValue : effect.value;
+
+      if (!Number.isFinite(baseMultiplier)) {
+        return effect.value;
+      }
+
+      const totalMultiplier = baseMultiplier ** research.timesResearched;
+      if (effect.type === 'globalWorkerReduction') {
+        return 1 - totalMultiplier;
+      }
+      return totalMultiplier;
+    }
+
+    updateRepeatableResearchCost(research) {
+      if (!research.repeatable) {
+        research.cost = { ...research.baseCost };
+        return;
+      }
+
+      const multiplier = (research.repeatableCostMultiplier || 1) ** Math.max(research.timesResearched, 0);
+      research.cost = scaleResearchCost(research.baseCost, multiplier);
+      this.orderDirty = true;
     }
 
     createAutoResearchPreset() {
@@ -174,7 +228,7 @@ class Research {
         const list = this.researches[category];
         for (let i = 0; i < list.length; i += 1) {
           const research = list[i];
-          if (research.isResearched) {
+          if (research.isResearched && !research.repeatable) {
             continue;
           }
           const entry = this.normalizeAutoResearchEntry(preset[research.id]);
@@ -256,6 +310,7 @@ class Research {
         researchState[category] = this.researches[category].map((research) => ({
           id: research.id,
           isResearched: research.isResearched,
+          timesResearched: research.timesResearched,
           alertedWhenUnlocked: research.alertedWhenUnlocked,
         }));
       }
@@ -287,9 +342,14 @@ class Research {
         savedResearches.forEach((savedResearch) => {
           const research = this.getResearchById(savedResearch.id);
           if (research) {
-            research.isResearched = savedResearch.isResearched;
+            const savedTimes = Number.isFinite(savedResearch.timesResearched)
+              ? savedResearch.timesResearched
+              : (savedResearch.isResearched ? 1 : 0);
+            research.timesResearched = savedTimes;
+            research.isResearched = savedResearch.isResearched || savedTimes > 0;
             research.alertedWhenUnlocked = savedResearch.alertedWhenUnlocked || false;
-            if (research.isResearched) {
+            this.updateRepeatableResearchCost(research);
+            if (research.isResearched && this.getRepeatCount(research) > 0) {
               this.applyResearchEffects(research); // Reapply effects if research is completed
             }
           }
@@ -402,7 +462,7 @@ class Research {
       }
       const researches = this.getResearchesByCategory(category);
       const visible = new Set();
-      const unresearched = researches.filter(r => !r.isResearched && this.isResearchDisplayable(r));
+      const unresearched = researches.filter(r => (!r.isResearched || (r.repeatable && r.timesResearched === 0)) && this.isResearchDisplayable(r));
       unresearched.slice(0, limit).forEach(r => visible.add(r.id));
       researches.forEach(r => {
         if (r.isResearched && this.isResearchDisplayable(r)) visible.add(r.id);
@@ -456,15 +516,19 @@ class Research {
     completeResearch(id) {
         const research = this.getResearchById(id);
         if (research && this.isResearchAvailable(id) && canAffordResearch(research)) {
-          research.isResearched = true;
           if (research.cost.research) {
             resources.colony.research.value -= research.cost.research;
           }
           if (research.cost.advancedResearch) {
             resources.colony.advancedResearch.value -= research.cost.advancedResearch;
           }
+
+          research.isResearched = true;
+          research.timesResearched = (research.timesResearched || 0) + 1;
+
           console.log(`Research "${research.name}" has been completed.`);
           this.applyResearchEffects(research); // Apply the effects of the research
+          this.updateRepeatableResearchCost(research);
           if (research.category === 'advanced') {
             this.checkResearchUnlocks();
           }
@@ -477,11 +541,13 @@ class Research {
     // but still respect planet and flag requirements.
     completeResearchInstant(id) {
         const research = this.getResearchById(id);
-        if (!research || research.isResearched || !this.isResearchDisplayable(research)) {
+        if (!research || (research.isResearched && !research.repeatable) || !this.isResearchDisplayable(research)) {
           return;
         }
 
         research.isResearched = true;
+        research.timesResearched = Math.max(research.timesResearched || 0, 1);
+        this.updateRepeatableResearchCost(research);
         this.applyResearchEffects(research);
         if (research.category === 'advanced') {
           this.checkResearchUnlocks();
@@ -494,7 +560,7 @@ class Research {
     reapplyEffects() {
       for (const category in this.researches) {
       this.researches[category].forEach((research) => {
-        if (research.isResearched) {
+        if (research.isResearched && (!research.repeatable || research.timesResearched > 0)) {
           this.applyResearchEffects(research);
         }
       });
@@ -512,21 +578,26 @@ class Research {
     const requiredFlags = this.normalizeRequiredResearchFlags(effect);
     const effectId = effect.effectId || `${research.id}_${index}`;
     const sourceId = research.id;
+    const effectiveEffect = { ...effect, sourceId, effectId };
+    const repeatableValue = this.calculateRepeatableEffectValue(research, effect);
+
+    if (repeatableValue === null) {
+      return;
+    }
+    if (typeof repeatableValue !== 'undefined') {
+      effectiveEffect.value = repeatableValue;
+    }
 
     if (requiredFlags.length > 0 && !requiredFlags.every(flagId => this.isBooleanFlagSet(flagId))) {
-      this.queueConditionalResearchEffect(effectId, sourceId, effect, requiredFlags);
+      this.queueConditionalResearchEffect(effectId, sourceId, effectiveEffect, requiredFlags);
       return;
     }
 
     this.pendingConditionalEffects.delete(effectId);
-    addEffect({ ...effect, sourceId, effectId });
+    addEffect(effectiveEffect);
   }
 
   queueConditionalResearchEffect(effectId, sourceId, effect, requiredFlags) {
-    if (this.pendingConditionalEffects.has(effectId)) {
-      return;
-    }
-
     this.pendingConditionalEffects.set(effectId, {
       sourceId,
       effect: { ...effect, effectId },
@@ -583,6 +654,8 @@ class Research {
           this.removeResearchEffects(research);
           research.isResearched = false;
         }
+        research.timesResearched = 0;
+        this.updateRepeatableResearchCost(research);
       });
     }
     this.sortAllResearches();
@@ -590,6 +663,17 @@ class Research {
 }
 
   // Helper Functions
+  function scaleResearchCost(baseCost, multiplier) {
+    const scaled = {};
+    if (!baseCost) {
+      return scaled;
+    }
+    for (const key in baseCost) {
+      scaled[key] = (baseCost[key] || 0) * multiplier;
+    }
+    return scaled;
+  }
+
   function canAffordResearch(researchItem) {
     if (researchItem.cost.research && resources.colony.research.value < researchItem.cost.research) {
       return false;

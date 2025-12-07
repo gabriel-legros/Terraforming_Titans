@@ -477,7 +477,7 @@ function ensureArtificialLayout() {
   const fleetInfo = document.createElement('span');
   fleetInfo.className = 'info-tooltip-icon';
   fleetInfo.innerHTML = '&#9432;';
-  fleetInfo.title = 'Artificial worlds cannot use their full power for direct military purposes.  If they did, they would become a critical military target for alien superweapons, which they cannot dodge.';
+  fleetInfo.title = 'Artificial worlds cannot use their full power for direct military purposes.  If they did, they would become a critical military target for alien superweapons, which they cannot dodge.  This number will increase rectroactively if galactic superweapons are shut down.';
   const fleetValue = document.createElement('span');
   fleetValue.className = 'artificial-gain-value';
   artificialUICache.gainFleet = fleetValue;
