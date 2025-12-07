@@ -45,8 +45,9 @@ const ARTIFICIAL_STAR_MASS_RANGES = {
 };
 const SHELL_COST_CALIBRATION = {
     landHa: 50_000_000_000,
-    superalloys: 20_000_000_000_000
+    superalloys: 25_000_000_000_000
 };
+const CONSTRUCTION_HOURS_PER_50B = 10;
 const MAX_SHELL_DURATION_MS = 5 * 3_600_000;
 const BASE_SHELL_COST = (() => {
     const radiusAtCalibration = Math.sqrt(SHELL_COST_CALIBRATION.landHa / EARTH_AREA_HA);
@@ -174,7 +175,7 @@ class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
         this.enabled = false;
-        this.constructionHoursPer50B = 5;
+        this.constructionHoursPer50B = CONSTRUCTION_HOURS_PER_50B;
         this.prioritizeSpaceStorage = true;
         this.nextId = 1;
         this.activeProject = null;
@@ -824,7 +825,6 @@ class ArtificialManager extends EffectableEntity {
         }
         return {
             enabled: this.enabled,
-            constructionHoursPer50B: this.constructionHoursPer50B,
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
             nextId: this.nextId,
             activeProject: project,
@@ -835,9 +835,6 @@ class ArtificialManager extends EffectableEntity {
 
     loadState(state) {
         if (!state) return;
-        this.constructionHoursPer50B = Number.isFinite(state.constructionHoursPer50B)
-            ? state.constructionHoursPer50B
-            : this.constructionHoursPer50B;
         this.prioritizeSpaceStorage = !!state.prioritizeSpaceStorage;
         this.activeProject = state.activeProject || null;
         if (this.activeProject) {
