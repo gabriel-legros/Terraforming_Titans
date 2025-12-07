@@ -4,7 +4,7 @@ const lifeShopCategories = [
   { name: 'androids', description: 'Deploy androids to assist biologists.' },
   { name: 'components', description: 'Construct advanced biological tools.' },
   { name: 'electronics', description: 'Simulate biology with cutting-edge supercomputers.' },
-  { name: 'advancedResearch', label: 'advanced research', description: 'Push our knowledge even further (scales quadratically).', requiresFlag: 'nextGenBioEngineering' }
+  { name: 'advancedResearch', label: 'advanced research', description: 'Push our knowledge even further.', tooltip: 'Scales quadratically and persists when travelling.', requiresFlag: 'nextGenBioEngineering' }
 ];
 
 const lifeShopCategoryLookup = Object.fromEntries(
@@ -550,8 +550,16 @@ function initializeLifeTerraformingDesignerUI() {
       
         // Add description
         const description = document.createElement('p');
-        description.textContent = category.description;
         description.classList.add('shop-category-description');
+        description.textContent = category.description;
+        if (category.tooltip) {
+          description.appendChild(document.createTextNode(' '));
+          const infoIcon = document.createElement('span');
+          infoIcon.classList.add('info-tooltip-icon');
+          infoIcon.innerHTML = '&#9432;';
+          infoIcon.title = category.tooltip;
+          description.appendChild(infoIcon);
+        }
         categoryContainer.appendChild(description);
       
         // Add separator line if not the last category
