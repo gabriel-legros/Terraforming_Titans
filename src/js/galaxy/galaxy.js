@@ -907,6 +907,13 @@ class GalaxyManager extends EffectableEntity {
         return operation;
     }
 
+    getFleetCapacityWorldCount() {
+        if (spaceManager?.getFleetCapacityWorldCount) {
+            return spaceManager.getFleetCapacityWorldCount();
+        }
+        return spaceManager?.getTerraformedPlanetCount?.() ?? 0;
+    }
+
     getTerraformedWorldCount() {
         return spaceManager?.getTerraformedPlanetCount?.() ?? 0;
     }

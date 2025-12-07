@@ -175,12 +175,12 @@ class GalaxyFaction {
     updateFleetCapacity(manager) {
         let capacity = 0;
         if (this.id === UHF_FACTION_ID) {
-            const terraformedWorlds = manager?.getTerraformedWorldCount?.() ?? 0;
-            if (Number.isFinite(terraformedWorlds) && terraformedWorlds > 0) {
+            const fleetWorlds = manager?.getFleetCapacityWorldCount?.() ?? manager?.getTerraformedWorldCount?.() ?? 0;
+            if (Number.isFinite(fleetWorlds) && fleetWorlds > 0) {
                 const fleetPerWorld = typeof UHF_FLEET_PER_WORLD === 'number' && UHF_FLEET_PER_WORLD > 0
                     ? UHF_FLEET_PER_WORLD
                     : getDefaultSectorValue();
-                const baseCapacity = terraformedWorlds * fleetPerWorld;
+                const baseCapacity = fleetWorlds * fleetPerWorld;
                 if (baseCapacity > 0) {
                     const multiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
                     const sanitizedMultiplier = multiplier > 0 ? multiplier : 1;

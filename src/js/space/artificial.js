@@ -169,6 +169,7 @@ function buildArtificialStarContext({ seed, hasStar, minFlux, maxFlux }) {
     };
 }
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
+const ARTIFICIAL_FLEET_CAPACITY_WORLD_VALUE = 2;
 class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
@@ -235,6 +236,10 @@ class ArtificialManager extends EffectableEntity {
         return Math.max(1, Math.floor((land || 0) / TERRAFORM_WORLD_DIVISOR));
     }
 
+    calculateFleetCapacityWorldValue() {
+        return ARTIFICIAL_FLEET_CAPACITY_WORLD_VALUE;
+    }
+
     deriveTerraformWorldValue(entry) {
         if (!entry) return undefined;
         if (entry.terraformedValue !== undefined) return entry.terraformedValue;
@@ -245,6 +250,13 @@ class ArtificialManager extends EffectableEntity {
             return Math.max(1, Math.floor((entry.landHa || 0) / TERRAFORM_WORLD_DIVISOR));
         }
         return undefined;
+    }
+
+    deriveFleetCapacityWorldValue(entry) {
+        if (entry && Number.isFinite(entry.fleetCapacityValue) && entry.fleetCapacityValue > 0) {
+            return entry.fleetCapacityValue;
+        }
+        return this.calculateFleetCapacityWorldValue();
     }
 
     calculateDurationMs(radiusEarth) {
@@ -416,6 +428,7 @@ class ArtificialManager extends EffectableEntity {
         completedAt: null,
         cost,
         terraformedValue,
+        fleetCapacityValue: this.calculateFleetCapacityWorldValue(),
         distanceFromStarAU: starContextDetails.distanceFromStarAU,
         targetFluxWm2: starContextDetails.fluxWm2,
         isRogue: starContextDetails.isRogue,
@@ -642,6 +655,7 @@ class ArtificialManager extends EffectableEntity {
             radiusEarth: this.activeProject.radiusEarth,
             landHa,
             terraformedValue: this.deriveTerraformWorldValue(this.activeProject),
+            fleetCapacityValue: this.deriveFleetCapacityWorldValue(this.activeProject),
             builtFrom: this.activeProject.builtFrom,
             constructedAt: this.activeProject.startedAt,
             completedAt: this.activeProject.completedAt || null,
@@ -842,6 +856,9 @@ class ArtificialManager extends EffectableEntity {
             }
             if (!this.activeProject.terraformedValue) {
                 this.activeProject.terraformedValue = this.calculateTerraformWorldValue(this.activeProject.radiusEarth);
+            }
+            if (!Number.isFinite(this.activeProject.fleetCapacityValue) || this.activeProject.fleetCapacityValue <= 0) {
+                this.activeProject.fleetCapacityValue = this.calculateFleetCapacityWorldValue();
             }
             if (this.activeProject.hasStar === undefined) {
                 this.activeProject.hasStar = true;

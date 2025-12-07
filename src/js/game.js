@@ -154,6 +154,7 @@ function initializeGameState(options = {}) {
   let savedProjectTravelState = null;
   let savedConstructionOffice = null;
   let savedAntimatter = null;
+  let savedLifeDesignerTravelState = null;
   goldenAsteroid?.resetForTravel?.();
   if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
     savedProjectTravelState = projectManager.saveTravelState();
@@ -182,6 +183,9 @@ function initializeGameState(options = {}) {
       unlocked: resources.special.antimatter.unlocked,
       enabled: resources.special.antimatter.enabled,
     };
+  }
+  if (preserveManagers && lifeDesigner?.prepareTravelState) {
+    savedLifeDesignerTravelState = lifeDesigner.prepareTravelState();
   }
   tabManager = new TabManager({
     description: 'Manages game tabs and unlocks them based on effects.',
@@ -266,6 +270,9 @@ function initializeGameState(options = {}) {
   }
 
   lifeDesigner = new LifeDesigner();
+  if (preserveManagers && savedLifeDesignerTravelState && lifeDesigner.restoreTravelState) {
+    lifeDesigner.restoreTravelState(savedLifeDesignerTravelState);
+  }
   lifeManager = new LifeManager();
 
   if (!preserveManagers || !researchManager) {

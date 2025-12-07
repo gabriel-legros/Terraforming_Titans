@@ -1721,6 +1721,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'next_gen_bioengineering',
+        name: 'Next-generation bio-engineering',
+        description: 'Enables the use of advanced research to permanently increase life design potential',
+        cost: { advancedResearch: 1500000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'nextGenBioEngineering',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'galactic_market',
         name: 'Galactic Market Concordat',
         description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',

@@ -21,6 +21,7 @@ const ROGUE_STAR = {
 
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
+const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 2;
 
 function normalizeSectorLabel(value) {
     const text = value == null ? '' : String(value).trim();
@@ -275,6 +276,20 @@ class SpaceManager extends EffectableEntity {
             }
         });
 
+        Object.values(this.artificialWorldStatuses).forEach((status) => {
+            if (!status || !status.terraformed) {
+                return;
+            }
+            const sector = resolveSectorFromSources(status, status.original);
+            if (sector !== target) {
+                return;
+            }
+            const value = this._deriveArtificialTerraformValue(status);
+            if (value > 0) {
+                total += value;
+            }
+        });
+
         return total;
     }
 
@@ -482,6 +497,17 @@ class SpaceManager extends EffectableEntity {
         return derived;
     }
 
+    _deriveArtificialFleetCapacityValue(status) {
+        if (!status) {
+            return ARTIFICIAL_FLEET_CAPACITY_WORLDS;
+        }
+        const stored = status.fleetCapacityValue;
+        if (Number.isFinite(stored) && stored > 0) {
+            return stored;
+        }
+        return ARTIFICIAL_FLEET_CAPACITY_WORLDS;
+    }
+
     _getCurrentWorldLandHa() {
         return getLandFromParams(currentPlanetParameters);
     }
@@ -535,6 +561,30 @@ class SpaceManager extends EffectableEntity {
         }, 0);
         const cylinders = this.getOneillCylinderCount();
         return base + rings + extra + sectorBonus + artificialBonus + cylinders;
+    }
+
+    getArtificialFleetCapacityWorlds() {
+        let total = 0;
+        Object.values(this.artificialWorldStatuses).forEach((status) => {
+            if (!status || !status.terraformed) {
+                return;
+            }
+            const value = this._deriveArtificialFleetCapacityValue(status);
+            if (value > 0) {
+                total += value;
+            }
+        });
+        return total;
+    }
+
+    getFleetCapacityWorldCount() {
+        const base = this.getUnmodifiedTerraformedWorldCount({ countArtificial: false });
+        const artificial = this.getArtificialFleetCapacityWorlds();
+        const rings = projectManager?.projects?.orbitalRing?.ringCount || 0;
+        const extra = Number.isFinite(this.extraTerraformedWorlds) && this.extraTerraformedWorlds > 0 ? this.extraTerraformedWorlds : 0;
+        const sectorBonus = galaxyManager?.getControlledSectorWorldCount ? galaxyManager.getControlledSectorWorldCount() : 0;
+        const total = base + artificial + rings + extra + sectorBonus;
+        return total > 0 ? total : 0;
     }
 
     /**
@@ -745,7 +795,8 @@ class SpaceManager extends EffectableEntity {
                     terraformedValue: this._deriveArtificialTerraformValue({
                         landHa: this._getCurrentWorldLandHa(),
                         original: this.getCurrentWorldOriginal()
-                    })
+                    }),
+                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue()
                 };
             } else if (!this.artificialWorldStatuses[key].terraformedValue) {
                 this.artificialWorldStatuses[key].terraformedValue = this._deriveArtificialTerraformValue({
@@ -753,6 +804,9 @@ class SpaceManager extends EffectableEntity {
                     original: this.getCurrentWorldOriginal(),
                     terraformedValue: this.artificialWorldStatuses[key].terraformedValue
                 });
+            }
+            if (!Number.isFinite(this.artificialWorldStatuses[key].fleetCapacityValue) || this.artificialWorldStatuses[key].fleetCapacityValue <= 0) {
+                this.artificialWorldStatuses[key].fleetCapacityValue = this._deriveArtificialFleetCapacityValue(this.artificialWorldStatuses[key]);
             }
             if (this.artificialWorldStatuses[key].terraformed !== isComplete) {
                 this.artificialWorldStatuses[key].terraformed = isComplete;
@@ -900,7 +954,8 @@ class SpaceManager extends EffectableEntity {
                     terraformedValue: this._deriveArtificialTerraformValue({
                         landHa: this._getCurrentWorldLandHa(),
                         original: this.getCurrentWorldOriginal()
-                    })
+                    }),
+                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue()
                 };
             }
             const st = this.artificialWorldStatuses[key];
@@ -914,6 +969,9 @@ class SpaceManager extends EffectableEntity {
                     original: this.getCurrentWorldOriginal(),
                     terraformedValue: st.terraformedValue
                 });
+            }
+            if (!Number.isFinite(st.fleetCapacityValue) || st.fleetCapacityValue <= 0) {
+                st.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(st);
             }
             if (!st.name) st.name = this.currentRandomName || `Artificial ${key}`;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
@@ -1163,8 +1221,18 @@ class SpaceManager extends EffectableEntity {
         if (savedData.artificialWorldStatuses) {
             this.artificialWorldStatuses = savedData.artificialWorldStatuses;
             Object.keys(this.artificialWorldStatuses).forEach((key) => {
-                if (this.artificialWorldStatuses[key]?.orbitalRing) {
-                    this.artificialWorldStatuses[key].orbitalRing = false;
+                const entry = this.artificialWorldStatuses[key];
+                if (!entry) {
+                    return;
+                }
+                if (entry.orbitalRing) {
+                    entry.orbitalRing = false;
+                }
+                if (!Number.isFinite(entry.terraformedValue) && entry.terraformed) {
+                    entry.terraformedValue = this._deriveArtificialTerraformValue(entry);
+                }
+                if (!Number.isFinite(entry.fleetCapacityValue) || entry.fleetCapacityValue <= 0) {
+                    entry.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(entry);
                 }
             });
         }

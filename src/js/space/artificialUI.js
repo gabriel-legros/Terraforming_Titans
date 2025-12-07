@@ -18,6 +18,9 @@ const artificialUICache = {
   durationTooltip: null,
   gainEffective: null,
   gainDistinct: null,
+  gainFleet: null,
+  gainDefense: null,
+  gainFleetTooltip: null,
   sector: null,
   priority: null,
   startBtn: null,
@@ -458,8 +461,36 @@ function ensureArtificialLayout() {
   artificialUICache.gainEffective = effectiveValue;
   effectiveRow.appendChild(effectiveLabel);
   effectiveRow.appendChild(effectiveValue);
+  const defenseRow = document.createElement('div');
+  defenseRow.className = 'artificial-gain-row';
+  const defenseLabel = document.createElement('span');
+  defenseLabel.textContent = 'Worlds for sector defense:';
+  const defenseValue = document.createElement('span');
+  defenseValue.className = 'artificial-gain-value';
+  artificialUICache.gainDefense = defenseValue;
+  defenseRow.appendChild(defenseLabel);
+  defenseRow.appendChild(defenseValue);
+  const fleetRow = document.createElement('div');
+  fleetRow.className = 'artificial-gain-row';
+  const fleetLabel = document.createElement('span');
+  fleetLabel.textContent = 'Worlds for fleet capacity:';
+  const fleetInfo = document.createElement('span');
+  fleetInfo.className = 'info-tooltip-icon';
+  fleetInfo.innerHTML = '&#9432;';
+  fleetInfo.title = 'Artificial worlds cannot use their full power for direct military purposes.  If they did, they would become a critical military target for alien superweapons, which they cannot dodge.';
+  const fleetValue = document.createElement('span');
+  fleetValue.className = 'artificial-gain-value';
+  artificialUICache.gainFleet = fleetValue;
+  artificialUICache.gainFleetTooltip = fleetInfo;
+  fleetRow.appendChild(fleetLabel);
+  fleetRow.appendChild(fleetValue);
+  fleetInfo.style.color = '#63a6ff';
+  fleetInfo.style.marginLeft = '6px';
+  fleetRow.appendChild(fleetInfo);
   gainsList.appendChild(distinctRow);
   gainsList.appendChild(effectiveRow);
+  gainsList.appendChild(defenseRow);
+  gainsList.appendChild(fleetRow);
   gains.appendChild(gainsList);
 
   // Sector selection
@@ -966,6 +997,8 @@ function renderCosts(project, radius, manager) {
 function renderGains(project, radius, manager) {
   const r = project ? project.radiusEarth : radius;
   const effective = project?.terraformedValue || manager.calculateTerraformWorldValue(r);
+  const defense = effective;
+  const fleet = manager.calculateFleetCapacityWorldValue ? manager.calculateFleetCapacityWorldValue(r) : 2;
   const distinct = 1;
   if (artificialUICache.gainDistinct) {
     const label = distinct === 1 ? '1 distinct world' : `${distinct} distinct worlds`;
@@ -975,6 +1008,14 @@ function renderGains(project, radius, manager) {
     const label = effective === 1 ? '1 terraformed world' : `${effective} terraformed worlds`;
     artificialUICache.gainEffective.textContent = label;
     artificialUICache.gainEffective.title = `Land contributes ${label} (1 per 50B ha, minimum 1).`;
+  }
+  if (artificialUICache.gainDefense) {
+    const label = defense === 1 ? '1 world' : `${defense} worlds`;
+    artificialUICache.gainDefense.textContent = label;
+  }
+  if (artificialUICache.gainFleet) {
+    const label = fleet === 1 ? '1 world' : `${fleet} worlds`;
+    artificialUICache.gainFleet.textContent = label;
   }
 }
 

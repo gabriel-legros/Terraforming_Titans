@@ -3,8 +3,13 @@ const lifeShopCategories = [
   { name: 'funding', description: 'Bribe external scientists for help.' },
   { name: 'androids', description: 'Deploy androids to assist biologists.' },
   { name: 'components', description: 'Construct advanced biological tools.' },
-  { name: 'electronics', description: 'Simulate biology with cutting-edge supercomputers.' }
+  { name: 'electronics', description: 'Simulate biology with cutting-edge supercomputers.' },
+  { name: 'advancedResearch', label: 'advanced research', description: 'Push our knowledge even further (scales quadratically).', requiresFlag: 'nextGenBioEngineering' }
 ];
+
+const lifeShopCategoryLookup = Object.fromEntries(
+  lifeShopCategories.map(category => [category.name, category])
+);
 
 // Growth rate increase for photosynthesis efficiency per point
 const PHOTOSYNTHESIS_RATE_PER_POINT = 0.00008;
@@ -36,9 +41,26 @@ function getLifeManagerSafe() {
   }
 }
 
-function isBioworkforceUnlocked() {
+function isLifeFlagActive(flagId) {
+  if (!flagId) {
+    return false;
+  }
   const manager = getLifeManagerSafe();
-  return manager?.isBooleanFlagSet?.('bioworkforce') ?? false;
+  return manager?.isBooleanFlagSet?.(flagId) ?? false;
+}
+
+function isBioworkforceUnlocked() {
+  return isLifeFlagActive('bioworkforce');
+}
+
+function isLifeShopCategoryUnlocked(category) {
+  if (!category) {
+    return false;
+  }
+  if (!category.requiresFlag) {
+    return true;
+  }
+  return isLifeFlagActive(category.requiresFlag);
 }
 
 function getConvertedDisplay(attributeName, attribute) {
@@ -68,6 +90,7 @@ const lifeUICache = {
   modifyButtons: [],
   tempUnits: [],
   pointShopButtons: [],
+  pointShopContainers: {},
   pointShopQuantityDisplay: null,
   pointShopDecreaseButton: null,
   pointShopIncreaseButton: null,
@@ -139,9 +162,20 @@ document.addEventListener('lifeStatusTableRebuilt', invalidateLifeStatusTableCac
 // Cache helpers for other high-frequency UI updates
 function cacheLifePointShopButtons() {
   const container = document.getElementById('life-point-shop');
-  lifeUICache.pointShopButtons = container
-    ? Array.from(container.querySelectorAll('.life-point-shop-btn'))
-    : [];
+  if (!container) {
+    lifeUICache.pointShopButtons = [];
+    lifeUICache.pointShopContainers = {};
+    return;
+  }
+  lifeUICache.pointShopButtons = Array.from(container.querySelectorAll('.life-point-shop-btn'));
+  lifeUICache.pointShopContainers = {};
+  lifeUICache.pointShopButtons.forEach(button => {
+    const category = button.dataset.category;
+    const parent = button.closest('.shop-category-container');
+    if (category && parent) {
+      lifeUICache.pointShopContainers[category] = parent;
+    }
+  });
 }
 
 function cacheLifeTentativeCells() {
@@ -180,6 +214,7 @@ function invalidateLifeUICache() {
   lifeUICache.modifyButtons = [];
   lifeUICache.tempUnits = [];
   lifeUICache.pointShopButtons = [];
+  lifeUICache.pointShopContainers = {};
   lifeUICache.pointShopQuantityDisplay = null;
   lifeUICache.pointShopDecreaseButton = null;
   lifeUICache.pointShopIncreaseButton = null;
@@ -496,11 +531,19 @@ function initializeLifeTerraformingDesignerUI() {
       lifeShopCategories.forEach((category, index) => {
         const categoryContainer = document.createElement('div');
         categoryContainer.classList.add('shop-category-container');
+        categoryContainer.dataset.category = category.name;
+        if (category.requiresFlag) {
+          categoryContainer.dataset.requiresFlag = category.requiresFlag;
+        }
+        if (!isLifeShopCategoryUnlocked(category) && category.requiresFlag) {
+          categoryContainer.style.display = 'none';
+        }
 
         // Add button
         const button = document.createElement('button');
         const quantity = lifePointPurchaseQuantity;
-        button.textContent = `Buy ${quantity} with ${category.name}`;
+        const label = category.label || category.name;
+        button.textContent = `Buy ${quantity} with ${label}`;
         button.dataset.category = category.name;
         button.classList.add('life-point-shop-btn');
         categoryContainer.appendChild(button);
@@ -525,6 +568,10 @@ function initializeLifeTerraformingDesignerUI() {
           // Actual listener logic moved inside here
           if (event.target.classList.contains('life-point-shop-btn')) {
               const category = event.target.dataset.category;
+              const categoryConfig = lifeShopCategoryLookup[category];
+              if (!isLifeShopCategoryUnlocked(categoryConfig)) {
+                  return;
+              }
               const quantity = lifePointPurchaseQuantity;
               if (lifeDesigner.canAfford(category, quantity)) {
                   lifeDesigner.buyPoint(category, quantity);
@@ -663,11 +710,23 @@ function updateLifeUI() {
 
     // Update point shop button colors and costs (cached)
     const pointShopButtons = lifeUICache.pointShopButtons;
+    const quantity = lifePointPurchaseQuantity;
     pointShopButtons.forEach(button => {
       const category = button.dataset.category;
-      const quantity = lifePointPurchaseQuantity;
+      const categoryConfig = lifeShopCategoryLookup[category];
+      const unlocked = isLifeShopCategoryUnlocked(categoryConfig);
+      const container = lifeUICache.pointShopContainers[category];
+      if (container) {
+        container.style.display = unlocked ? '' : 'none';
+      }
+      if (!unlocked) {
+        button.disabled = true;
+        button.style.backgroundColor = '';
+        return;
+      }
       const totalCost = lifeDesigner.getTotalPointCost(category, quantity);
-      button.textContent = `Buy ${quantity} with ${formatNumber(totalCost, true)} ${category}`;
+      const label = (categoryConfig && categoryConfig.label) || category;
+      button.textContent = `Buy ${quantity} with ${formatNumber(totalCost, true)} ${label}`;
       const affordable = lifeDesigner.canAfford(category, quantity);
       button.disabled = !affordable;
       button.style.backgroundColor = affordable ? '' : 'red';

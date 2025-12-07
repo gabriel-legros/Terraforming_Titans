@@ -1920,6 +1920,90 @@ function createInfoTooltip(doc, title) {
     return tooltip;
 }
 
+function createResourceStyleTooltip(doc) {
+    const icon = doc.createElement('span');
+    icon.className = 'info-tooltip-icon';
+    icon.innerHTML = '&#9432;';
+    icon.title = 'Fleet capacity breakdown';
+    const tooltip = doc.createElement('span');
+    tooltip.className = 'resource-tooltip';
+    icon.appendChild(tooltip);
+    return { icon, tooltip };
+}
+
+function updateFleetCapacityTooltip(manager, cache) {
+    const tooltip = cache?.logisticsCapacityTooltip;
+    const anchor = cache?.logisticsCapacityTooltipAnchor;
+    if (!tooltip || !anchor) {
+        return;
+    }
+    const doc = anchor.ownerDocument || (typeof document !== 'undefined' ? document : null);
+    if (!doc) {
+        return;
+    }
+    const format = typeof formatNumber === 'function'
+        ? (value) => formatNumber(value, false, 2)
+        : (value) => value;
+    const space = typeof spaceManager !== 'undefined' ? spaceManager : null;
+    const baseWorlds = space?.getUnmodifiedTerraformedWorldCount
+        ? space.getUnmodifiedTerraformedWorldCount({ countArtificial: false })
+        : 0;
+    const ringWorlds = projectManager?.projects?.orbitalRing?.ringCount || 0;
+    const sectorWorlds = manager?.getControlledSectorWorldCount ? manager.getControlledSectorWorldCount() : 0;
+    const artificialWorlds = space?.getArtificialFleetCapacityWorlds ? space.getArtificialFleetCapacityWorlds() : 0;
+    const bonusWorlds = Number.isFinite(space?.extraTerraformedWorlds) && space.extraTerraformedWorlds > 0
+        ? space.extraTerraformedWorlds
+        : 0;
+    const totalWorlds = baseWorlds + ringWorlds + sectorWorlds + artificialWorlds + bonusWorlds;
+
+    tooltip.innerHTML = '';
+    const header = doc.createElement('div');
+    header.className = 'resource-tooltip-header';
+    header.textContent = 'Fleet capacity sources';
+    tooltip.appendChild(header);
+
+    const summary = doc.createElement('div');
+    summary.className = 'resource-tooltip-row';
+    summary.textContent = 'Capacity = 100 per world after multipliers.';
+    tooltip.appendChild(summary);
+
+    const addRow = (label, value) => {
+        if (!(value > 0)) {
+            return;
+        }
+        const row = doc.createElement('div');
+        row.className = 'resource-tooltip-row';
+        const left = doc.createElement('span');
+        left.textContent = label;
+        const right = doc.createElement('span');
+        right.textContent = ` ${format(value)}`;
+        row.appendChild(left);
+        row.appendChild(right);
+        tooltip.appendChild(row);
+    };
+
+    addRow('Terraformed worlds', baseWorlds);
+    addRow('Orbital rings', ringWorlds);
+    addRow('Conquered sector rewards', sectorWorlds);
+    addRow('Artificial worlds', artificialWorlds);
+    addRow('Other bonuses', bonusWorlds);
+
+    const totalRow = doc.createElement('div');
+    totalRow.className = 'resource-tooltip-row';
+    const totalLabel = doc.createElement('span');
+    totalLabel.textContent = 'Total worlds for fleet capacity';
+    const totalValue = doc.createElement('span');
+    totalValue.textContent = ` ${format(totalWorlds)}`;
+    totalRow.appendChild(totalLabel);
+    totalRow.appendChild(totalValue);
+    tooltip.appendChild(totalRow);
+
+    if (typeof addTooltipHover === 'function' && !anchor._fleetCapacityTooltipBound) {
+        addTooltipHover(anchor, tooltip);
+        anchor._fleetCapacityTooltipBound = true;
+    }
+}
+
 function createGalaxySection(doc, title, description) {
     const section = doc.createElement('section');
     section.className = 'galaxy-section';
@@ -2235,10 +2319,8 @@ function cacheGalaxyElements() {
     const logisticsCapacityLabel = doc.createElement('span');
     logisticsCapacityLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
     logisticsCapacityLabel.textContent = 'Fleet Capacity';
-    logisticsCapacityLabel.appendChild(createInfoTooltip(
-        doc,
-        'This is the maximum fleet power the UHF can support.   It is determined by 100 times the number of terraformed worlds, and further multiplied by upgrades.'
-    ));
+    const capacityTooltip = createResourceStyleTooltip(doc);
+    logisticsCapacityLabel.appendChild(capacityTooltip.icon);
     const logisticsCapacityValue = doc.createElement('span');
     logisticsCapacityValue.className = 'galaxy-logistics-stat__value';
     logisticsCapacityValue.textContent = '0';
@@ -2432,6 +2514,8 @@ function cacheGalaxyElements() {
         logisticsStats,
         logisticsPowerValue,
         logisticsCapacityValue,
+        logisticsCapacityTooltip: capacityTooltip.tooltip,
+        logisticsCapacityTooltipAnchor: capacityTooltip.icon,
         logisticsStoryMultiplierValue: storyMultiplierValue,
         logisticsThreatValue: threatValue,
         logisticsOperationsValue: operationsValue,
@@ -2742,6 +2826,7 @@ function updateLogisticsDisplay(manager, cache) {
     const capacity = Number.isFinite(faction?.fleetCapacity) ? faction.fleetCapacity : 0;
     powerNode.textContent = formatFleetValue(power);
     capacityNode.textContent = formatFleetValue(capacity);
+    updateFleetCapacityTooltip(manager, cache);
     if (storyNode) {
         const storyMultiplier = manager?.getEffectFleetCapacityMultiplier?.() ?? 1;
         storyNode.textContent = `${formatFleetMultiplier(storyMultiplier)}x`;

@@ -417,19 +417,25 @@ class LifeDesigner extends EffectableEntity {
 
     this.basePointCost = 100;
     this.pointCostMultiplier = 2;
+    this.advancedResearchBaseCost = 100000;
 
-    this.purchaseCounts = {
-      research: 0,
-      funding: 0,
-      androids: 0,
-      components: 0,
-      electronics: 0
-    };
+    this.purchaseCounts = this.createEmptyPurchaseCounts();
 
     this.biodomePoints = 0;
     this.biodomePointRate = 0;
 
     this.enabled = false;
+  }
+
+  createEmptyPurchaseCounts() {
+    return {
+      research: 0,
+      funding: 0,
+      androids: 0,
+      components: 0,
+      electronics: 0,
+      advancedResearch: 0
+    };
   }
 
   replaceEffect(effect) {
@@ -548,33 +554,65 @@ class LifeDesigner extends EffectableEntity {
     }
   }
 
+  getPurchaseCount(category) {
+    return this.purchaseCounts[category] || 0;
+  }
+
+  getAdvancedResearchPointCost(purchaseIndex) {
+    const index = purchaseIndex + 1;
+    return this.advancedResearchBaseCost * index * index;
+  }
+
+  getAdvancedResearchTotalCost(quantity = 1) {
+    const normalizedQuantity = Math.max(0, Math.floor(quantity));
+    if (normalizedQuantity === 0) {
+      return 0;
+    }
+    const start = this.getPurchaseCount('advancedResearch');
+    const end = start + normalizedQuantity;
+    const squareSum = (value) => value * (value + 1) * (2 * value + 1) / 6;
+    const purchases = squareSum(end) - squareSum(start);
+    return this.advancedResearchBaseCost * purchases;
+  }
+
   getPointCost(category){
-    return this.basePointCost * Math.pow(this.pointCostMultiplier, this.purchaseCounts[category]);
+    if (category === 'advancedResearch') {
+      return this.getAdvancedResearchPointCost(this.getPurchaseCount(category));
+    }
+    return this.basePointCost * Math.pow(this.pointCostMultiplier, this.getPurchaseCount(category));
   }
 
   getTotalPointCost(category, quantity = 1) {
+    if (category === 'advancedResearch') {
+      return this.getAdvancedResearchTotalCost(quantity);
+    }
+    const normalizedQuantity = Math.max(1, Math.floor(quantity));
     const firstCost = this.getPointCost(category);
-    if (quantity === 1) {
+    if (normalizedQuantity === 1) {
       return firstCost;
     }
     const multiplier = this.pointCostMultiplier;
     if (multiplier === 1) {
-      return firstCost * quantity;
+      return firstCost * normalizedQuantity;
     }
-    const ratioIncrease = Math.pow(multiplier, quantity) - 1;
+    const ratioIncrease = Math.pow(multiplier, normalizedQuantity) - 1;
     return firstCost * (ratioIncrease / (multiplier - 1));
   }
 
   canAfford(category, quantity = 1) {
+    if (category === 'advancedResearch' && !(lifeManager?.isBooleanFlagSet?.('nextGenBioEngineering'))) {
+      return false;
+    }
     const totalCost = this.getTotalPointCost(category, quantity);
-    return resources.colony[category].value >= totalCost;
+    const resource = resources.colony[category];
+    return resource && resource.value >= totalCost;
   }
 
   buyPoint(category, quantity = 1) {
     if (this.canAfford(category, quantity)) {
       const totalCost = this.getTotalPointCost(category, quantity);
       resources.colony[category].decrease(totalCost);
-      this.purchaseCounts[category] += quantity;
+      this.purchaseCounts[category] = this.getPurchaseCount(category) + quantity;
     }
   }
 
@@ -613,8 +651,24 @@ class LifeDesigner extends EffectableEntity {
     this.remainingTime = data.remainingTime;
     this.totalTime = data.totalTime;
     this.elapsedTime = data.elapsedTime;
-    this.purchaseCounts = { ...data.purchaseCounts };
+    this.purchaseCounts = {
+      ...this.createEmptyPurchaseCounts(),
+      ...(data.purchaseCounts || {})
+    };
     this.biodomePoints = data.biodomePoints || 0;
+  }
+
+  prepareTravelState() {
+    return {
+      advancedResearchPurchases: this.getPurchaseCount('advancedResearch')
+    };
+  }
+
+  restoreTravelState(travelState = {}) {
+    const restored = Number.isFinite(travelState.advancedResearchPurchases)
+      ? travelState.advancedResearchPurchases
+      : 0;
+    this.purchaseCounts.advancedResearch = Math.max(0, restored);
   }
 }
 
