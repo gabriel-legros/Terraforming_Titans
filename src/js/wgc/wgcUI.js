@@ -235,7 +235,7 @@ function generateWGCTeamCards() {
           <div class="team-controls">
             <div class="team-controls-left">
               <div class="team-stance">
-                <label>Hazardous Biomass <span class="info-tooltip-icon" title="Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures still add 60 seconds.">&#9432;</span></label>
+                <label>Hazardous Biomass <span class="info-tooltip-icon" title="Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures add 60 seconds to next step.">&#9432;</span></label>
                 <select class="hbi-select" data-team="${tIdx}">
                   <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
                   <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
