@@ -151,7 +151,7 @@ function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
   }
   if (tooltip) {
     const capacityText = formatCapacity(capacity);
-    tooltip.title = `Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their ${capacityText} capacity (1000 per fully controlled sector).\nO'Neill cylinders are too small and too decentralized to properly organize into the UHF military hence they do not count towards fleet capacity.`;
+    tooltip.title = `Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their ${capacityText} capacity (1000 per fully controlled sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.`;
   }
 }
 
