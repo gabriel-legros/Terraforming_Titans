@@ -48,8 +48,14 @@ class PatienceManager extends EffectableEntity {
             return false;
         }
 
-        const { superalloyGain, advancedResearchGain, oneillGain, oneillCapacity } = this.calculateSpendGains(hours);
-        const noGains = superalloyGain <= 0 && advancedResearchGain <= 0 && oneillGain <= 0;
+        const {
+            superalloyGain,
+            superconductorGain,
+            advancedResearchGain,
+            oneillGain,
+            oneillCapacity
+        } = this.calculateSpendGains(hours);
+        const noGains = superalloyGain <= 0 && superconductorGain <= 0 && advancedResearchGain <= 0 && oneillGain <= 0;
         if (noGains) {
             return false;
         }
@@ -58,6 +64,10 @@ class PatienceManager extends EffectableEntity {
 
         if (superalloyGain > 0) {
             resources.colony.superalloys.increase(superalloyGain, false);
+        }
+
+        if (superconductorGain > 0) {
+            resources.colony.superconductors.increase(superconductorGain, false);
         }
 
         if (advancedResearchGain > 0 && resources.colony.advancedResearch?.unlocked) {
@@ -96,6 +106,10 @@ class PatienceManager extends EffectableEntity {
         const superalloyRate = superalloyResource?.productionRate || 0;
         const superalloyGain = superalloyRate > 0 ? superalloyRate * seconds : 0;
 
+        const superconductorResource = colonyResources?.superconductors;
+        const superconductorRate = superconductorResource?.unlocked === false ? 0 : (superconductorResource?.productionRate || 0);
+        const superconductorGain = superconductorRate > 0 ? superconductorRate * seconds : 0;
+
         const advancedResearchResource = colonyResources?.advancedResearch;
         const advancedResearchRate = advancedResearchResource?.unlocked ? (advancedResearchResource.productionRate || 0) : 0;
         const advancedResearchGain = advancedResearchRate > 0 ? advancedResearchRate * seconds : 0;
@@ -122,6 +136,7 @@ class PatienceManager extends EffectableEntity {
 
         return {
             superalloyGain,
+            superconductorGain,
             advancedResearchGain,
             oneillGain,
             oneillCapacity

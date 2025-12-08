@@ -17,6 +17,7 @@ const PatienceManager = require('../src/js/hope/patience.js');
 describe('PatienceManager spending', () => {
   let patienceManager;
   let superalloys;
+  let superconductors;
   let advancedResearch;
   let oneillCount;
   let wgcUpdates;
@@ -24,6 +25,15 @@ describe('PatienceManager spending', () => {
   beforeEach(() => {
     superalloys = {
       productionRate: 2,
+      value: 0,
+      increase(amount) {
+        this.value += amount;
+      },
+    };
+
+    superconductors = {
+      productionRate: 0.5,
+      unlocked: true,
       value: 0,
       increase(amount) {
         this.value += amount;
@@ -45,6 +55,7 @@ describe('PatienceManager spending', () => {
     global.resources = {
       colony: {
         superalloys,
+        superconductors,
         advancedResearch,
       },
     };
@@ -84,12 +95,13 @@ describe('PatienceManager spending', () => {
     delete global.warpGateCommand;
   });
 
-  test('spending patience rewards superalloys, advanced research, and O\'Neill cylinders', () => {
+  test('spending patience rewards superalloys, superconductors, advanced research, and O\'Neill cylinders', () => {
     const success = patienceManager.spendPatience(2);
 
     expect(success).toBe(true);
     expect(patienceManager.currentHours).toBe(8);
     expect(superalloys.value).toBeCloseTo(14400);
+    expect(superconductors.value).toBeCloseTo(3600);
     expect(advancedResearch.value).toBeCloseTo(7200);
     expect(oneillCount).toBeCloseTo(10.18, 2);
     expect(wgcUpdates.length).toBe(120);

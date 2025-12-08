@@ -516,13 +516,16 @@ function updateCostDisplay(project) {
   if (elements && elements.costItems) {
     const cost = project.getScaledCost();
     let hasItem = false;
+    const storageProj = project.attributes?.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
     for (const key in elements.costItems) {
       const [category, resource] = key.split('.');
       const item = elements.costItems[key];
       const requiredAmount = cost[category]?.[resource];
       if (requiredAmount > 0) {
         hasItem = true;
-        const availableAmount = resources[category]?.[resource]?.value || 0;
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const storageAmount = storageProj ? storageProj.getAvailableStoredResource(storageKey) : 0;
+        const availableAmount = (resources[category]?.[resource]?.value || 0) + storageAmount;
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
         item.textContent = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;

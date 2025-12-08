@@ -59,7 +59,7 @@ const PatienceUI = {
 
         const tooltip = document.createElement('span');
         tooltip.className = 'info-tooltip-icon';
-        tooltip.title = 'Daily patience trickles in automatically and can be cashed in for superalloy production time, advanced research, and O\'Neill cylinder growth.';
+        tooltip.title = 'Daily patience trickles in automatically and can be cashed in for superalloy and superconductor production time, advanced research, and O\'Neill cylinder growth.';
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
@@ -152,7 +152,7 @@ const PatienceUI = {
 
         const spendHeader = document.createElement('div');
         spendHeader.className = 'patience-card-label';
-        spendHeader.textContent = 'Convert patience into superalloys, advanced research, and O\'Neill cylinders based on current production.';
+        spendHeader.textContent = 'Convert patience into superalloys, superconductors, advanced research, and O\'Neill cylinders based on current production.';
         spendCard.appendChild(spendHeader);
 
         const spendRow = document.createElement('div');
@@ -228,12 +228,15 @@ const PatienceUI = {
         if (!this.spendPreviewEl || !this.spendInputEl || !patienceManager) return;
         
         const hours = parseFloat(this.spendInputEl.value) || 0;
-        const { superalloyGain, advancedResearchGain, oneillGain } = patienceManager.calculateSpendGains(hours);
+        const { superalloyGain, superconductorGain, advancedResearchGain, oneillGain } = patienceManager.calculateSpendGains(hours);
         const gains = [];
         const wgcAdvance = this.getWgcAdvancePreview(hours);
 
         if (superalloyGain > 0) {
             gains.push(`${formatNumber(superalloyGain, true)} superalloys`);
+        }
+        if (superconductorGain > 0) {
+            gains.push(`${formatNumber(superconductorGain, true)} superconductors`);
         }
         if (advancedResearchGain > 0) {
             gains.push(`${formatNumber(advancedResearchGain, true)} advanced research`);
@@ -327,6 +330,7 @@ const PatienceUI = {
             const gains = patienceManager.calculateSpendGains(hours);
             const canSpend = hours > 0 && hours <= patienceManager.currentHours && (
                 gains.superalloyGain > 0 ||
+                gains.superconductorGain > 0 ||
                 gains.advancedResearchGain > 0 ||
                 gains.oneillGain > 0
             );

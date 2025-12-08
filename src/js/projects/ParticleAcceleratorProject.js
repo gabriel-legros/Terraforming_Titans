@@ -4,6 +4,7 @@ const MATERIAL_COST_PER_METER = 100;
 const HALF_MATERIAL_SPLIT = 0.5;
 const STEP_MULTIPLIER = 10;
 const MINIMUM_STEP_METERS = 1;
+const MATERIAL_COST_PER_RADIUS = TWO_PI * MATERIAL_COST_PER_METER * HALF_MATERIAL_SPLIT;
 
 class ParticleAcceleratorProject extends Project {
   constructor(config, name) {
@@ -83,6 +84,8 @@ class ParticleAcceleratorProject extends Project {
     const divButton = createButton('/10', () => this.scaleStepMeters(1 / STEP_MULTIPLIER), multiplierRow);
     const mulButton = createButton('x10', () => this.scaleStepMeters(STEP_MULTIPLIER), multiplierRow);
 
+    const maxButton = createButton('Max', () => this.setMaxAffordableRadius(), multiplierRow);
+
     const controlsWrapper = document.createElement('div');
     controlsWrapper.classList.add('project-radius-controls');
     controlsWrapper.append(buttonRow, multiplierRow);
@@ -109,7 +112,7 @@ class ParticleAcceleratorProject extends Project {
       researchBoostValue,
       minusButton,
       plusButton,
-      buttons: [zeroButton, minusButton, plusButton, divButton, mulButton],
+      buttons: [zeroButton, minusButton, plusButton, divButton, mulButton, maxButton],
       notice
     };
 
@@ -162,7 +165,7 @@ class ParticleAcceleratorProject extends Project {
     const target = value > minimum ? value : minimum;
     this.selectedRadiusMeters = target;
     this.updateUI();
-    globalThis?.updateProjectUI?.(this.name);
+    this.refreshProjectUI();
   }
 
   adjustRadiusBySteps(stepCount) {
@@ -236,6 +239,54 @@ class ParticleAcceleratorProject extends Project {
     return { colony };
   }
 
+  setMaxAffordableRadius() {
+    if (this.isActive) {
+      return;
+    }
+    this.setRadiusMeters(this.calculateMaxAffordableRadius());
+  }
+
+  calculateMaxAffordableRadius() {
+    const storage = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+    const availableSuperalloys = this.getAvailableMaterialAmount('superalloys', storage);
+    const availableSuperconductors = this.getAvailableMaterialAmount('superconductors', storage);
+    const superalloyMultiplier = this.getEffectiveCostMultiplier('colony', 'superalloys');
+    const superconductorMultiplier = this.getEffectiveCostMultiplier('colony', 'superconductors');
+    const maxFromSuperalloys = availableSuperalloys / (MATERIAL_COST_PER_RADIUS * superalloyMultiplier);
+    const maxFromSuperconductors = availableSuperconductors / (MATERIAL_COST_PER_RADIUS * superconductorMultiplier);
+    const affordableRadius = Math.min(maxFromSuperalloys, maxFromSuperconductors);
+    const normalizedRadius = Number.isFinite(affordableRadius) && affordableRadius > 0 ? affordableRadius : 0;
+    return Math.max(this.minimumRadiusMeters, this.alignRadiusToStep(normalizedRadius));
+  }
+
+  getAvailableMaterialAmount(resourceKey, storage) {
+    const colonyAmount = resources?.colony?.[resourceKey]?.value ?? 0;
+    if (!storage) {
+      return colonyAmount;
+    }
+    return colonyAmount + storage.getAvailableStoredResource(resourceKey);
+  }
+
+  alignRadiusToStep(radius) {
+    if (radius <= 0) {
+      return this.minimumRadiusMeters;
+    }
+    const step = this.radiusStepMeters > 0 ? this.radiusStepMeters : MINIMUM_STEP_METERS;
+    const steps = Math.floor(radius / step);
+    if (steps > 0) {
+      return steps * step;
+    }
+    return Math.max(this.minimumRadiusMeters, radius);
+  }
+
+  refreshProjectUI() {
+    try {
+      updateProjectUI(this.name);
+    } catch (err) {
+      // UI is not available outside the browser
+    }
+  }
+
   canStart(resources) {
     if (!super.canStart(resources)) {
       return false;
@@ -251,7 +302,7 @@ class ParticleAcceleratorProject extends Project {
     }
     this.applyResearchBoostEffect();
     this.updateUI();
-    globalThis?.updateProjectUI?.(this.name);
+    this.refreshProjectUI();
   }
 
   getCompletedCount() {
@@ -362,19 +413,14 @@ class ParticleAcceleratorProject extends Project {
   }
 }
 
-const scope = globalThis;
-if (scope) {
-  scope.ParticleAcceleratorProject = ParticleAcceleratorProject;
+try {
+  window.ParticleAcceleratorProject = ParticleAcceleratorProject;
+} catch (err) {
+  // window is not available
 }
 
-const commonJsModule = (() => {
-  try {
-    return module;
-  } catch (error) {
-    return null;
-  }
-})();
-
-if (commonJsModule?.exports) {
-  commonJsModule.exports = ParticleAcceleratorProject;
+try {
+  module.exports = ParticleAcceleratorProject;
+} catch (err) {
+  // module is not available
 }
