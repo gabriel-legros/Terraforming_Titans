@@ -84,7 +84,7 @@ class ParticleAcceleratorProject extends Project {
     const divButton = createButton('/10', () => this.scaleStepMeters(1 / STEP_MULTIPLIER), multiplierRow);
     const mulButton = createButton('x10', () => this.scaleStepMeters(STEP_MULTIPLIER), multiplierRow);
 
-    const maxButton = createButton('Max', () => this.setMaxAffordableRadius(), multiplierRow);
+    const maxButton = createButton('Auto', () => this.setMaxAffordableRadius(), multiplierRow);
 
     const controlsWrapper = document.createElement('div');
     controlsWrapper.classList.add('project-radius-controls');
