@@ -402,7 +402,7 @@ function initializeColonySlidersUI() {
     }
 
     const adaptationMitigation = populationModule?.isBooleanFlagSet?.('highGravityAdaptation') ? 50 : 0;
-    const sliderMitigation = Math.min(50, sliderValue * componentsCoverage * 50);
+    const sliderMitigation = Math.min(50, sliderValue * componentsCoverage * 25);
     const mitigationPercent = Math.min(100, adaptationMitigation + sliderMitigation);
     const mitigationText = mitigationPercent.toFixed(1).replace(/\.0$/, '');
     const sliderText = sliderValue.toFixed(1);
