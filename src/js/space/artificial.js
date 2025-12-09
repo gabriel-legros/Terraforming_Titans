@@ -745,8 +745,10 @@ class ArtificialManager extends EffectableEntity {
             if (!status) return;
             const merged = status.original?.merged || status.original || null;
             const radiusKm = merged?.celestialParameters?.radius;
-            const radiusEarth = radiusKm ? (radiusKm / EARTH_RADIUS_KM) : undefined;
-            const landHa = merged?.resources?.surface?.land?.initialValue
+            const radiusEarth = radiusKm ? (radiusKm / EARTH_RADIUS_KM) : status.radiusEarth;
+            const landHa = status.cachedLandHa
+                || status.landHa
+                || merged?.resources?.surface?.land?.initialValue
                 || merged?.resources?.surface?.land?.baseCap
                 || (radiusEarth ? this.calculateAreaHectares(radiusEarth) : undefined);
             const terraformedValue = this.deriveTerraformWorldValue({

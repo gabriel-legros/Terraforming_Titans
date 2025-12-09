@@ -1143,13 +1143,37 @@ class SpaceManager extends EffectableEntity {
                 || status.merged?.classification?.archetype
                 || null;
         };
+        const pickLandHa = (status) => {
+            if (!status) return null;
+            const sources = [
+                status.cachedLandHa,
+                status.landHa,
+                status.original?.landHa,
+                getLandFromParams(status.original?.merged),
+                getLandFromParams(status.original?.override),
+                getLandFromParams(status.original),
+                getLandFromParams(status.merged),
+                getLandFromParams(status.override)
+            ];
+            for (let index = 0; index < sources.length; index += 1) {
+                const value = sources[index];
+                if (Number.isFinite(value) && value > 0) {
+                    return value;
+                }
+            }
+            return null;
+        };
         const pruneStatuses = (statuses, activeKey) => Object.fromEntries(
             Object.entries(statuses).map(([key, status]) => {
                 if (!status || key === activeKey) return [key, status];
                 const cachedArchetype = pickArchetype(status);
+                const cachedLandHa = pickLandHa(status);
                 const copy = { ...status };
                 if (cachedArchetype && !copy.cachedArchetype) {
                     copy.cachedArchetype = cachedArchetype;
+                }
+                if (Number.isFinite(cachedLandHa) && !copy.cachedLandHa) {
+                    copy.cachedLandHa = cachedLandHa;
                 }
                 delete copy.override;
                 delete copy.merged;
