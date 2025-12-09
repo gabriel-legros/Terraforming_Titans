@@ -879,7 +879,10 @@ function renderHistory() {
     .map(([seed, st]) => ({
       name: st.name || `Seed ${seed}`,
       // Prefer top-level archetype from RWG result; fall back to any embedded classification
-      type: (st.original?.archetype
+      type: (st.cachedArchetype
+            || st.archetype
+            || st.classification?.archetype
+            || st.original?.archetype
             || st.original?.classification?.archetype
             || st.original?.merged?.classification?.archetype
            ) || '—',

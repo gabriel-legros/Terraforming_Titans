@@ -1129,14 +1129,43 @@ class SpaceManager extends EffectableEntity {
 
     // --- Save/Load ---
     saveState() {
+        const activeRandomKey = this.currentRandomSeed === null ? null : String(this.currentRandomSeed);
+        const activeArtificialKey = this.currentArtificialKey === null ? null : String(this.currentArtificialKey);
+        const pickArchetype = (status) => {
+            if (!status) return null;
+            return status.cachedArchetype
+                || status.archetype
+                || status.classification?.archetype
+                || status.original?.archetype
+                || status.original?.classification?.archetype
+                || status.original?.merged?.classification?.archetype
+                || status.override?.classification?.archetype
+                || status.merged?.classification?.archetype
+                || null;
+        };
+        const pruneStatuses = (statuses, activeKey) => Object.fromEntries(
+            Object.entries(statuses).map(([key, status]) => {
+                if (!status || key === activeKey) return [key, status];
+                const cachedArchetype = pickArchetype(status);
+                const copy = { ...status };
+                if (cachedArchetype && !copy.cachedArchetype) {
+                    copy.cachedArchetype = cachedArchetype;
+                }
+                delete copy.override;
+                delete copy.merged;
+                delete copy.original;
+                return [key, copy];
+            })
+        );
+
         return {
             currentPlanetKey: this.currentPlanetKey,
             planetStatuses: this.planetStatuses,
             currentRandomSeed: this.currentRandomSeed,
             currentRandomName: this.currentRandomName,
             currentArtificialKey: this.currentArtificialKey,
-            artificialWorldStatuses: this.artificialWorldStatuses,
-            randomWorldStatuses: this.randomWorldStatuses,
+            artificialWorldStatuses: pruneStatuses(this.artificialWorldStatuses, activeArtificialKey),
+            randomWorldStatuses: pruneStatuses(this.randomWorldStatuses, activeRandomKey),
             randomTabEnabled: this.randomTabEnabled,
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
