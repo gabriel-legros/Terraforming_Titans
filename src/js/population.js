@@ -156,9 +156,11 @@ class PopulationModule extends EffectableEntity {
       const gravityExcess = Math.max(0, gravityValue - 20);
       const gravityRatePerSecond = gravityExcess === 0 ? 0 : (0.0001 * gravityExcess);
       const mechanicalAssistance = colonySliderSettings?.mechanicalAssistance ?? 0;
-      const mitigation = Math.min(0.5, mechanicalAssistance * componentsCoverage * 0.5);
-      this.gravityMitigation = mitigation;
-      this.gravityDecayRate = gravityRatePerSecond * (1 - mitigation);
+      const adaptationMitigation = this.isBooleanFlagSet?.('highGravityAdaptation') ? 0.5 : 0;
+      const sliderMitigation = Math.min(0.5, mechanicalAssistance * componentsCoverage * 0.5);
+      const totalMitigation = Math.min(1, adaptationMitigation + sliderMitigation);
+      this.gravityMitigation = totalMitigation;
+      this.gravityDecayRate = gravityRatePerSecond * (1 - totalMitigation);
       const gravityDecayPerSecond = this.gravityDecayRate * currentPopulation;
 
       let overpopulationDecayPerSecond = 0;

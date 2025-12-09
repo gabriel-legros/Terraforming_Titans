@@ -103,8 +103,13 @@ class ColonySlidersManager extends EffectableEntity {
       const effectSpan = document.getElementById('mechanical-assistance-slider-effect');
       if (valueSpan && effectSpan) {
         valueSpan.textContent = `${value.toFixed(1)}x`;
-        const mitigation = Math.round(value * 25);
-        effectSpan.textContent = `Mitigation: -${mitigation}%`;
+        const coverage = populationModule?.componentsCoverage ?? 1;
+        const clampedCoverage = Math.max(0, Math.min(1, coverage));
+        const adaptationMitigation = populationModule?.isBooleanFlagSet?.('highGravityAdaptation') ? 50 : 0;
+        const sliderMitigation = Math.min(50, value * clampedCoverage * 50);
+        const totalMitigation = Math.min(100, adaptationMitigation + sliderMitigation);
+        const mitigationText = totalMitigation.toFixed(1).replace(/\.0$/, '');
+        effectSpan.textContent = `Gravity decay reduction: -${mitigationText}%`;
       }
     }
   }

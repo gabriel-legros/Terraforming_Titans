@@ -198,7 +198,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Refined the Nanocolony card with summary tiles and slider panels so growth, limits, and slider effects are easier to read without changing the neutral palette.
 - Warp Gate Command edit member dialog now includes a Respec button that refunds all allocated skill points for rapid reassignment.
 - Warp Gate Command skill editor gained an Auto assignment column that distributes points each tick according to player-provided ratios, updates live while the dialog is open, and ignores zero entries.
-- Added placeholder advanced researches for High-gravity adaptation, Biostorage, and Dyson Sphere at 3M/4M/5M advanced research points.
+- High-gravity adaptation advanced research now automatically halves high-gravity happiness and population penalties, stacking with Mechanical Assistance to remove them entirely; Biostorage and Dyson Sphere remain placeholders at 4M/5M advanced research points.
 - Warp Gate Command recruitment dialog now auto-rolls names for new members and adds a Roll button beside the name inputs, drawing from 100-name first/last pools.
 - Warp Gate Command operations now assign solo athletics events to the most athletic member and adjust failure damage for power and wit challenges.
 - Team athletics operations now ease the next challenge after a success or delay it after a failure, while team wits outcomes modify the next artifact payout.

@@ -324,7 +324,10 @@ class Colony extends Building {
     let gravityPenalty = gravity > 10 ? Math.min((gravity - 10) * 0.05, 1) : 0;
       const mechAssist = colonySliderSettings?.mechanicalAssistance || 0;
       const compNeed = this.filledNeeds.components || 0;
-      const mitigationFactor = 1 - mechAssist * compNeed * 0.25;
+      const adaptationMitigation = populationModule?.isBooleanFlagSet?.('highGravityAdaptation') ? 0.5 : 0;
+      const sliderMitigation = mechAssist * compNeed * 0.25;
+      const totalMitigation = Math.min(1, adaptationMitigation + sliderMitigation);
+      const mitigationFactor = Math.max(0, 1 - totalMitigation);
       gravityPenalty *= mitigationFactor;
 
     // Calculate the target happiness after gravity penalty

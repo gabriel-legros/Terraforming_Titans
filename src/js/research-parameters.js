@@ -1935,10 +1935,17 @@ const researchParameters = {
       {
         id: 'high_gravity_adaptation',
         name: 'High-gravity adaptation',
-        description: 'Placeholder for future high-gravity adaptation benefits.',
+        description: 'Complete a project initially started by PANDORA to acclimate to heavy worlds, automatically negating half of the happiness and population penalties from high gravity.  Stacks with Mechanical Assistance to cancel the rest.',
         cost: { advancedResearch: 3_000_000 },
         prerequisites: [],
-        effects: []
+        effects: [
+          {
+            target: 'population',
+            type: 'booleanFlag',
+            flagId: 'highGravityAdaptation',
+            value: true
+          }
+        ]
       },
       {
         id: 'biostorage',

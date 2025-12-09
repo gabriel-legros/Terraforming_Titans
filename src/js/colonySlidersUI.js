@@ -323,7 +323,7 @@ function initializeColonySlidersUI() {
   mechLabel.textContent = 'Mechanical Assistance ';
   const mechInfo = document.createElement('span');
   mechInfo.classList.add('info-tooltip-icon');
-  mechInfo.title = 'Mechanical Assistance mitigates up to 50% of high-gravity decay.';
+  mechInfo.title = 'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.';
   mechInfo.innerHTML = '&#9432;';
   mechLabel.appendChild(mechInfo);
   mechanicalAssistanceRow.appendChild(mechLabel);
@@ -401,7 +401,9 @@ function initializeColonySlidersUI() {
       componentsCoverage = 1;
     }
 
-    const mitigationPercent = Math.min(50, sliderValue * componentsCoverage * 50);
+    const adaptationMitigation = populationModule?.isBooleanFlagSet?.('highGravityAdaptation') ? 50 : 0;
+    const sliderMitigation = Math.min(50, sliderValue * componentsCoverage * 50);
+    const mitigationPercent = Math.min(100, adaptationMitigation + sliderMitigation);
     const mitigationText = mitigationPercent.toFixed(1).replace(/\.0$/, '');
     const sliderText = sliderValue.toFixed(1);
 
@@ -424,15 +426,17 @@ function initializeColonySlidersUI() {
     const aboveTwenty = Math.max(0, gravity - 20);
     const coveragePercent = (Math.round(componentsCoverage * 1000) / 10).toFixed(1).replace(/\.0$/, '');
     const effectiveMitigation = (Math.round(mitigationPercent * 10) / 10).toFixed(1).replace(/\.0$/, '');
-    const remaining = (Math.round(Math.max(0, 50 - mitigationPercent) * 10) / 10).toFixed(1).replace(/\.0$/, '');
+    const remaining = (Math.round(Math.max(0, 100 - mitigationPercent) * 10) / 10).toFixed(1).replace(/\.0$/, '');
+    const adaptationStatus = adaptationMitigation > 0 ? 'Active (+50% base mitigation).' : 'Locked.';
 
     if (mechanicalAssistanceInfo) {
       mechanicalAssistanceInfo.title = [
-        'Mechanical Assistance mitigates up to 50% of high-gravity decay.',
+        'Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.',
         `Slider: ${sliderText}x.`,
         `Components coverage: ${coveragePercent}%.`,
         `Current gravity: ${gravity.toFixed(2)} m/s² (${aboveTwenty.toFixed(2)} above 20).`,
         `Effective mitigation: ${effectiveMitigation}% of gravity decay.`,
+        `High-gravity adaptation: ${adaptationStatus}`,
         `Remaining decay: ${remaining}% of the original high-gravity loss per day when gravity exceeds 20 m/s².`
       ].join('\n');
     }
