@@ -241,12 +241,6 @@ const titanOverrides = {
   resources: {
     surface: {
       land: { initialValue : 8_300_000_000 },
-      "liquidMethane": {
-        "unlocked": true
-      },
-      "hydrocarbonIce": {
-        "unlocked": true
-      }
     },
     underground: {
       ore: { initialValue: 3, maxDeposits: 8300, areaTotal: 83000 },

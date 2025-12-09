@@ -729,9 +729,9 @@ function buildVolatiles(archetype, Teq, landHa, rng, params) {
     land: { initialValue: landHa, hasCap: true, unlocked: false },
     ice: { initialValue: 0, unlocked: false, unit: "ton" },
     liquidWater: { initialValue: 0, unlocked: false, unit: "ton" },
-    dryIce: { initialValue: 0, unlocked: false, unit: "ton", hideWhenSmall: true },
-    liquidMethane: { initialValue: 0, unlocked: false, unit: "ton", hideWhenSmall: true },
-    hydrocarbonIce: { initialValue: 0, unlocked: false, unit: "ton", hideWhenSmall: true },
+    dryIce: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
+    liquidMethane: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
+    hydrocarbonIce: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
     scrapMetal: { initialValue: 0, unlocked: false, unit: "ton" },
     biomass: { initialValue: 0, hasCap: false, unlocked: false, unit: "ton" },
   };
