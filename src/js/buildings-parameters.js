@@ -595,7 +595,7 @@ const buildingsParameters = {
   boschReactor: {
     name: 'Chemical Reactor',
     category: 'terraforming',
-    description: 'Configurable reactors that combine imported hydrogen with atmospheric feedstocks to synthesize vital compounds.',
+    description: 'Configurable reactors that combine imported hydrogen with atmospheric resources to synthesize vital compounds.',
     cost: { colony: { metal: 100, glass : 10, components: 2, electronics: 1 } },
     consumption: {
       colony: { energy: 100_000 }
