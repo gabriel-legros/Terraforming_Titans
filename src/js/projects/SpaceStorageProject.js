@@ -4,6 +4,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.baseDuration = config.duration;
     this.shipBaseDuration = 100_000;
     this.capacityPerCompletion = 100_000_000_000;
+    this.expansionProgress = 0;
     this.usedStorage = 0;
     this.selectedResources = [];
     this.resourceUsage = {};
@@ -30,12 +31,20 @@ class SpaceStorageProject extends SpaceshipProject {
     return baseDuration / count;
   }
 
+  getTotalExpansions() {
+    return this.repeatCount + this.expansionProgress;
+  }
+
   get maxStorage() {
-    return this.repeatCount * this.capacityPerCompletion;
+    return this.getTotalExpansions() * this.capacityPerCompletion;
+  }
+
+  isExpansionContinuous() {
+    return this.getEffectiveDuration() < 1000;
   }
 
   isContinuous() {
-    return false;
+    return this.isExpansionContinuous();
   }
 
   isShipOperationContinuous() {
@@ -75,6 +84,24 @@ class SpaceStorageProject extends SpaceshipProject {
   getShipOperationDuration() {
     const base = this.calculateSpaceshipAdjustedDuration();
     return this.applyDurationEffects(base);
+  }
+
+  start(resources) {
+    this.shortfallLastTick = false;
+    if (this.isExpansionContinuous()) {
+      if (!this.canStart()) {
+        return false;
+      }
+      this.expansionProgress = 0;
+      this.isActive = true;
+      this.isPaused = false;
+      this.isCompleted = false;
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+      return true;
+    }
+    this.expansionProgress = 0;
+    return Project.prototype.start.call(this, resources);
   }
 
   toggleResourceSelection(category, resource, isSelected) {
@@ -259,6 +286,130 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if (!this.isContinuous() || !this.isActive) return;
+
+    const duration = this.getEffectiveDuration();
+    if (!duration || duration === Infinity) {
+      this.isActive = false;
+      return;
+    }
+
+    const limit = Number.isFinite(this.maxRepeatCount) ? this.maxRepeatCount : Infinity;
+    const completedExpansions = this.repeatCount + this.expansionProgress;
+    if (completedExpansions >= limit) {
+      this.isActive = false;
+      this.isCompleted = true;
+      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+      return;
+    }
+
+    if (Number.isFinite(this.startingDuration) && Number.isFinite(this.remainingTime) && this.startingDuration > 0) {
+      const carried = (this.startingDuration - this.remainingTime) / this.startingDuration;
+      if (carried > 0) {
+        this.expansionProgress += Math.min(carried, Math.max(0, limit - (this.repeatCount + this.expansionProgress)));
+      }
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+    }
+
+    const remainingRepeats = limit === Infinity
+      ? Infinity
+      : Math.max(0, limit - (this.repeatCount + this.expansionProgress));
+    if (remainingRepeats === 0) {
+      this.isActive = false;
+      this.isCompleted = true;
+      this.expansionProgress = 0;
+      return;
+    }
+
+    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    if (progress <= 0) {
+      return;
+    }
+
+    const cost = this.getScaledCost();
+    const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+    let shortfall = false;
+
+    const applyColonyChange = (category, resource, amount) => {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
+        if (accumulatedChanges[category][resource] === undefined) {
+          accumulatedChanges[category][resource] = 0;
+        }
+        accumulatedChanges[category][resource] -= amount;
+      } else {
+        resources[category][resource].decrease(amount);
+      }
+    };
+
+    const spendFromStorage = (key, amount) => {
+      if (!storageProj || amount <= 0) return 0;
+      const availableFromStorage = storageProj.getAvailableStoredResource(key);
+      const spend = Math.min(amount, availableFromStorage);
+      if (spend > 0) {
+        storageProj.resourceUsage[key] = (storageProj.resourceUsage[key] || 0) - spend;
+        if (storageProj.resourceUsage[key] <= 0) {
+          delete storageProj.resourceUsage[key];
+        }
+        storageProj.usedStorage = Math.max(0, storageProj.usedStorage - spend);
+      }
+      return spend;
+    };
+
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const amount = cost[category][resource] * progress;
+        const res = resources[category][resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const availableFromStorage = storageProj ? storageProj.getAvailableStoredResource(storageKey) : 0;
+        const availableTotal = res.value + availableFromStorage;
+        if (availableTotal < amount) {
+          shortfall = true;
+        }
+
+        let remaining = amount;
+        if (storageProj) {
+          if (storageProj.prioritizeMegaProjects) {
+            const fromStorage = spendFromStorage(storageKey, remaining);
+            remaining -= fromStorage;
+            if (remaining > 0) {
+              applyColonyChange(category, resource, remaining);
+            }
+          } else {
+            const fromColony = Math.min(remaining, res.value);
+            if (fromColony > 0) {
+              applyColonyChange(category, resource, fromColony);
+              remaining -= fromColony;
+            }
+            if (remaining > 0) {
+              spendFromStorage(storageKey, remaining);
+            }
+          }
+        } else {
+          applyColonyChange(category, resource, remaining);
+        }
+      }
+    }
+
+    const totalProgress = this.expansionProgress + progress;
+    const completed = Math.floor(totalProgress);
+    this.expansionProgress = totalProgress - completed;
+
+    if (completed > 0) {
+      this.repeatCount += completed;
+    }
+
+    if (Number.isFinite(limit) && this.repeatCount + this.expansionProgress >= limit) {
+      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+      this.isActive = false;
+      this.isCompleted = true;
+    }
+
+    this.shortfallLastTick = shortfall;
+  }
+
   applyContinuousShipOperation(deltaTime) {
     const fraction = deltaTime / this.getShipOperationDuration();
     const capacity = this.calculateTransferAmount() * fraction;
@@ -416,11 +567,55 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   updateCostAndGains(elements) {
-    super.updateCostAndGains(elements);
-    if (elements.totalCostElement && this.isShipOperationContinuous()) {
-      const perSecondCost = this.calculateSpaceshipTotalCost(true);
-      elements.totalCostElement.innerHTML = formatTotalCostDisplay(perSecondCost, this, true);
+    if (!elements) return;
+    if (elements.costPerShipElement && this.attributes.costPerShip) {
+      const costPerShip = this.calculateSpaceshipCost();
+      const costPerShipText = Object.entries(costPerShip)
+        .flatMap(([category, resourcesList]) =>
+          Object.entries(resourcesList)
+            .filter(([, adjustedCost]) => adjustedCost > 0)
+            .map(([resource, adjustedCost]) => {
+              const resourceDisplayName = resources[category][resource].displayName ||
+                resource.charAt(0).toUpperCase() + resource.slice(1);
+              return `${resourceDisplayName}: ${formatNumber(adjustedCost, true)}`;
+            })
+        )
+        .join(', ');
+      elements.costPerShipElement.textContent = `Cost per Shipment: ${costPerShipText}`;
     }
+
+    if (elements.totalCostElement && this.assignedSpaceships != null) {
+      const perSecond = this.isShipOperationContinuous();
+      const totalCost = this.calculateSpaceshipTotalCost(perSecond);
+      elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, null, perSecond);
+    }
+
+    if (elements.resourceGainPerShipElement && this.attributes.resourceGainPerShip) {
+      const gainPerShip = this.calculateSpaceshipGainPerShip();
+      const gainPerShipText = Object.entries(gainPerShip)
+        .flatMap(([category, resourcesList]) =>
+          Object.entries(resourcesList)
+            .filter(([, amount]) => amount > 0)
+            .map(([resource, amount]) => {
+              const resourceDisplayName = resources[category][resource].displayName ||
+                resource.charAt(0).toUpperCase() + resource.slice(1);
+              return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
+            })
+        ).join(', ');
+      elements.resourceGainPerShipElement.textContent = `Gain per Shipment: ${gainPerShipText}`;
+    }
+
+    if (elements.totalGainElement && this.assignedSpaceships != null) {
+      const perSecond = this.isShipOperationContinuous();
+      const totalGain = this.calculateSpaceshipTotalResourceGain(perSecond);
+      if (Object.keys(totalGain).length > 0) {
+        elements.totalGainElement.textContent = formatTotalResourceGainDisplay(totalGain, perSecond);
+        elements.totalGainElement.style.display = 'block';
+      } else {
+        elements.totalGainElement.style.display = 'none';
+      }
+    }
+
     if (elements.transferRateElement) {
       const amount = this.calculateTransferAmount();
       const seconds = this.getShipOperationDuration() / 1000;
@@ -475,6 +670,7 @@ class SpaceStorageProject extends SpaceshipProject {
   saveState() {
     return {
       ...super.saveState(),
+      expansionProgress: this.expansionProgress,
       usedStorage: this.usedStorage,
       selectedResources: this.selectedResources,
       resourceUsage: this.resourceUsage,
@@ -495,6 +691,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   loadState(state) {
     super.loadState(state);
+    this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
     this.selectedResources = state.selectedResources || [];
     this.resourceUsage = state.resourceUsage || {};
@@ -514,6 +711,7 @@ class SpaceStorageProject extends SpaceshipProject {
   saveTravelState() {
     return {
       repeatCount: this.repeatCount,
+      expansionProgress: this.expansionProgress,
       usedStorage: this.usedStorage,
       resourceUsage: this.resourceUsage,
       prioritizeMegaProjects: this.prioritizeMegaProjects,
@@ -523,6 +721,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   loadTravelState(state = {}) {
     this.repeatCount = state.repeatCount || 0;
+    this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
     this.resourceUsage = state.resourceUsage || {};
     this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
