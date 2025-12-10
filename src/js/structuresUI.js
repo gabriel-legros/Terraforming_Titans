@@ -449,6 +449,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   hideButton.addEventListener('click', function () {
     structure.isHidden = true;
     updateUnhideButtons();
+    if (isColony) {
+      updateColonyDisplay(colonies);
+    } else {
+      updateBuildingDisplay(buildings);
+    }
   });
   hideButton.disabled = structure.active > 0;
   leftContainer.appendChild(hideButton);

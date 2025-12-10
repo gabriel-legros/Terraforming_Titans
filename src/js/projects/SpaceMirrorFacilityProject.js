@@ -450,8 +450,7 @@ function sanitizeMirrorDistribution() {
 
 function updateAssignmentDisplays() {
   const types = ['mirrors', 'lanterns'];
-  const zones = ['tropical', 'temperate', 'polar', 'focus'];
-  if (!mirrorOversightSettings.advancedOversight) zones.push('any');
+  const zones = ['tropical', 'temperate', 'polar', 'focus', 'any'];
   types.forEach(type => {
     zones.forEach(zone => {
       const el = document.getElementById(`${type}-assign-${zone}`);

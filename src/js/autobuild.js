@@ -522,7 +522,7 @@ function getAffordableUpgradeCount(colony, maxCount) {
 function autoUpgradeColonies(buildings) {
     for (const key in buildings) {
         const structure = buildings[key];
-        if (!structure || !structure.autoUpgradeEnabled) continue;
+        if (!structure || structure.isHidden || !structure.autoUpgradeEnabled) continue;
         if (!structure.getNextTierName || !structure.canAffordUpgrade || !structure.upgrade) continue;
         const nextName = structure.getNextTierName();
         if (!nextName) continue;
@@ -555,6 +555,7 @@ function autoBuild(buildings, delta = 0) {
     // Step 1: Calculate ratios and populate buildableBuildings with required info
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
+        if (!building || building.isHidden) continue;
         if (building.autoBuildEnabled || building.autoActiveEnabled) {
             const usesMaxBasis = building.autoBuildBasis === 'max';
             const base = usesMaxBasis ? 0 : resolveAutoBuildBase(building, population, workerCap, buildings);
