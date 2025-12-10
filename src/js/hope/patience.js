@@ -89,6 +89,12 @@ class PatienceManager extends EffectableEntity {
         return true;
     }
 
+    getBuildingProductionRate(resource, allowedSources) {
+        const buildingRates = resource?.productionRateByType?.building || {};
+        const sources = (allowedSources && allowedSources.length) ? allowedSources : Object.keys(buildingRates);
+        return sources.reduce((total, key) => total + (buildingRates[key] || 0), 0);
+    }
+
     calculateSpendGains(hours) {
         if (!this.enabled || hours <= 0) {
             return {
@@ -102,12 +108,16 @@ class PatienceManager extends EffectableEntity {
         const seconds = hours * 3600;
         const colonyResources = resources?.colony;
 
+        const superalloySource = buildings?.superalloyFoundry?.displayName || 'Superalloy Foundry';
         const superalloyResource = colonyResources?.superalloys;
-        const superalloyRate = superalloyResource?.productionRate || 0;
+        const superalloyRate = this.getBuildingProductionRate(superalloyResource, [superalloySource]);
         const superalloyGain = superalloyRate > 0 ? superalloyRate * seconds : 0;
 
+        const superconductorSource = buildings?.superconductorFactory?.displayName || 'Superconductor Factory';
         const superconductorResource = colonyResources?.superconductors;
-        const superconductorRate = superconductorResource?.unlocked === false ? 0 : (superconductorResource?.productionRate || 0);
+        const superconductorRate = superconductorResource?.unlocked === false
+            ? 0
+            : this.getBuildingProductionRate(superconductorResource, [superconductorSource]);
         const superconductorGain = superconductorRate > 0 ? superconductorRate * seconds : 0;
 
         const advancedResearchResource = colonyResources?.advancedResearch;
