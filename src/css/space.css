@@ -608,6 +608,15 @@
   filter: brightness(1.05);
 }
 
+.artificial-stash-capped {
+  color: #6fdf94;
+}
+
+.artificial-stash-add.artificial-stash-capped {
+  border-color: #6fdf94;
+  background: rgba(111, 223, 148, 0.12);
+}
+
 .artificial-stash-add {
   min-width: 96px;
 }

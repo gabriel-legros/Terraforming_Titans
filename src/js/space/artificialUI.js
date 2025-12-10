@@ -958,12 +958,14 @@ function renderStash(project, manager) {
     if (controls.stock) {
       controls.stock.textContent = active ? fmt(staged, false, 2) : '—';
       controls.stock.title = active ? `Cap: ${capLabel}` : '';
-      controls.stock.classList.toggle('artificial-stash-unaffordable', active && (cappedOut || !canAfford));
+      controls.stock.classList.toggle('artificial-stash-unaffordable', active && !cappedOut && !canAfford);
+      controls.stock.classList.toggle('artificial-stash-capped', active && cappedOut);
     }
     if (controls.addBtn) {
       controls.addBtn.textContent = `+${fmt(planned, false, 0)}`;
       controls.addBtn.disabled = !active || !canAfford || cappedOut || planned <= 0;
-      controls.addBtn.classList.toggle('artificial-stash-unaffordable', active && (!canAfford || cappedOut));
+      controls.addBtn.classList.toggle('artificial-stash-unaffordable', active && !cappedOut && !canAfford);
+      controls.addBtn.classList.toggle('artificial-stash-capped', active && cappedOut);
       if (!active) {
         controls.addBtn.title = 'Begin construction to stage resources';
       } else if (cappedOut) {
