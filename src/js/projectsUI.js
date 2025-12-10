@@ -123,6 +123,7 @@ function renderProjects() {
   updateEmptyProjectMessages();
   updateStoryProjectsVisibility();
   updateMegaProjectsVisibility();
+  updateGigaProjectsVisibility();
 }
 
 function initializeProjectsUI() {
@@ -144,6 +145,7 @@ function initializeProjectsUI() {
   cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
   updateStoryProjectsVisibility();
   updateMegaProjectsVisibility();
+  updateGigaProjectsVisibility();
 }
 
 function createProjectItem(project) {
@@ -788,6 +790,9 @@ function updateProjectUI(projectName) {
     if (elements.autoStartCheckboxContainer) {
       elements.autoStartCheckboxContainer.style.display = 'none';
     }
+    if (elements.automationSettingsContainer) {
+      elements.automationSettingsContainer.style.display = 'none';
+    }
   } else {
     // If the project can still be repeated or started, show the relevant UI elements
     if (elements.costElement) {
@@ -919,16 +924,23 @@ function updateProjectUI(projectName) {
     let hasVisibleAutomationItems = false;
 
     if (automationSettingsContainer) {
-      // Use cached item list when available; otherwise fall back to live children
-      const items = elements.cachedAutomationItems && elements.cachedAutomationItems.length
-        ? elements.cachedAutomationItems
-        : Array.from(automationSettingsContainer.children || []);
-      for (const child of items) {
-        if (child && (child.nodeType === 1 || child instanceof Element) &&
-            typeof getComputedStyle === 'function' &&
-            getComputedStyle(child).display !== 'none') {
-          hasVisibleAutomationItems = true;
-          break;
+      const containerDisplay = typeof getComputedStyle === 'function'
+        ? getComputedStyle(automationSettingsContainer).display
+        : automationSettingsContainer.style?.display;
+      if (containerDisplay === 'none') {
+        hasVisibleAutomationItems = false;
+      } else {
+        // Use cached item list when available; otherwise fall back to live children
+        const items = elements.cachedAutomationItems && elements.cachedAutomationItems.length
+          ? elements.cachedAutomationItems
+          : Array.from(automationSettingsContainer.children || []);
+        for (const child of items) {
+          if (child && (child.nodeType === 1 || child instanceof Element) &&
+              typeof getComputedStyle === 'function' &&
+              getComputedStyle(child).display !== 'none') {
+            hasVisibleAutomationItems = true;
+            break;
+          }
         }
       }
       if (automationSettingsContainer.style) {
@@ -1066,6 +1078,40 @@ function updateEmptyProjectMessages() {
   });
 }
 
+function updateCategoryProjectsVisibility(category, subtabId) {
+  let visible = false;
+  if (typeof projectManager !== 'undefined' && projectManager.projects) {
+    visible = Object.values(projectManager.projects).some(p => {
+      const planetOk = !p.attributes.planet ||
+        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
+         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
+      return (
+        p.category === category &&
+        planetOk &&
+        !(p.isPermanentlyDisabled?.()) &&
+        (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
+      );
+    });
+  }
+  if (projectsSubtabManager) {
+    if (visible) {
+      projectsSubtabManager.show(subtabId);
+    } else {
+      projectsSubtabManager.hide(subtabId);
+    }
+  } else {
+    const tab = document.querySelector(`.projects-subtab[data-subtab="${subtabId}"]`);
+    const content = document.getElementById(subtabId);
+    if (!tab || !content) return;
+    if (visible) {
+      tab.classList.remove('hidden');
+      content.classList.remove('hidden');
+    } else {
+      tab.classList.add('hidden');
+      content.classList.add('hidden');
+    }
+  }
+}
 
 function updateStoryProjectsVisibility() {
   let visible = false;
@@ -1103,38 +1149,11 @@ function updateStoryProjectsVisibility() {
 }
 
 function updateMegaProjectsVisibility() {
-  let visible = false;
-  if (typeof projectManager !== 'undefined' && projectManager.projects) {
-    visible = Object.values(projectManager.projects).some(p => {
-      const planetOk = !p.attributes.planet ||
-        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
-         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
-      return (
-        p.category === 'mega' &&
-        planetOk &&
-        !(p.isPermanentlyDisabled?.()) &&
-        (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
-      );
-    });
-  }
-  if (projectsSubtabManager) {
-    if (visible) {
-      projectsSubtabManager.show('mega-projects');
-    } else {
-      projectsSubtabManager.hide('mega-projects');
-    }
-  } else {
-    const tab = document.querySelector('.projects-subtab[data-subtab="mega-projects"]');
-    const content = document.getElementById('mega-projects');
-    if (!tab || !content) return;
-    if (visible) {
-      tab.classList.remove('hidden');
-      content.classList.remove('hidden');
-    } else {
-      tab.classList.add('hidden');
-      content.classList.add('hidden');
-    }
-  }
+  updateCategoryProjectsVisibility('mega', 'mega-projects');
+}
+
+function updateGigaProjectsVisibility() {
+  updateCategoryProjectsVisibility('giga', 'giga-projects');
 }
 
 function activateProjectSubtab(subtabId) {
@@ -1154,6 +1173,7 @@ const projectSubtabAlerts = {
   'resources-projects': false,
   'infrastructure-projects': false,
   'mega-projects': false,
+  'giga-projects': false,
   'story-projects': false,
 };
 

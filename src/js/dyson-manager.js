@@ -3,8 +3,20 @@ class DysonManager {
     return projectManager?.projects?.dysonSwarmReceiver || null;
   }
 
-  getCollectorCount() {
+  getSphereProject() {
+    return projectManager?.projects?.dysonSphere || null;
+  }
+
+  getSwarmCollectorCount() {
     return this.getSwarmProject()?.collectors || 0;
+  }
+
+  getSphereCollectorCount() {
+    return this.getSphereProject()?.collectors || 0;
+  }
+
+  getCollectorCount() {
+    return this.getSwarmCollectorCount() + this.getSphereCollectorCount();
   }
 
   getEnergyPerCollector() {
@@ -12,9 +24,23 @@ class DysonManager {
   }
 
   getSwarmEnergyPerSecond() {
-    const collectors = this.getCollectorCount();
+    const collectors = this.getSwarmCollectorCount();
     const perCollector = this.getEnergyPerCollector();
     return Math.max(collectors * perCollector, 0);
+  }
+
+  getSphereEnergyPerCollector() {
+    return this.getSphereProject()?.energyPerCollector || 0;
+  }
+
+  getSphereEnergyPerSecond() {
+    const collectors = this.getSphereCollectorCount();
+    const perCollector = this.getSphereEnergyPerCollector();
+    return Math.max(collectors * perCollector, 0);
+  }
+
+  getTotalCollectorEnergyPerSecond() {
+    return this.getSwarmEnergyPerSecond() + this.getSphereEnergyPerSecond();
   }
 
   getReceiverBuilding() {
@@ -30,9 +56,8 @@ class DysonManager {
   }
 
   getOverflowEnergyPerSecond() {
-    const swarmEnergy = this.getSwarmEnergyPerSecond();
     const receiverUsage = this.getReceiverEnergyPerSecond();
-    return Math.max(swarmEnergy - receiverUsage, 0);
+    return Math.max(this.getTotalCollectorEnergyPerSecond() - receiverUsage, 0);
   }
 }
 

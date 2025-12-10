@@ -63,7 +63,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
     });
     const label = document.createElement('label');
     label.htmlFor = checkbox.id;
-    label.textContent = 'Prioritize space resources for mega projects';
+    label.textContent = 'Prioritize space resources for mega/giga projects';
     container.append(checkbox, label);
     projectElements[this.name] = {
       ...projectElements[this.name],

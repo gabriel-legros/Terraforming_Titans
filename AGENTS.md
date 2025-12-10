@@ -193,6 +193,7 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Updates
 - Added Umbra story planet orbiting Nyx-13 with new post-Venus chapters and progression rewards.
+- Added a Dyson Sphere giga project with a persistent frame, 100x faster collector deployment, and a Giga subtab alongside mega projects.
 - Artificial shellworld stockpiles now cap metal and silicon at 1 unit per hectare and surface the limit via tooltip.
 - Added a Solis Bailout option on artificial shellworlds that trades 10 alien artifacts for 100M metal and silicon, bypassing stash caps.
 - Traveling to an artificial world now warns if you depart without staging metal or silicon in the stockpile.

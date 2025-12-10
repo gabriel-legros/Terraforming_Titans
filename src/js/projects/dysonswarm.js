@@ -318,7 +318,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
   }
 
   saveTravelState() {
-    const state = { collectors: this.collectors };
+    const state = { ...super.saveTravelState(), collectors: this.collectors };
     if (typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart) {
       state.autoDeployCollectors = this.autoDeployCollectors;
     }
@@ -326,6 +326,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
   }
 
   loadTravelState(state = {}) {
+    super.loadTravelState(state);
     this.collectors = state.collectors || 0;
     if (
       typeof gameSettings !== 'undefined' &&

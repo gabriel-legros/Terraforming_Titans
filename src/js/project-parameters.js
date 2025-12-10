@@ -482,6 +482,22 @@ const projectParameters = {
     unlocked: false,
     attributes: { canUseSpaceStorage: true, completedWhenUnlocked: true }
   },
+  dysonSphere: {
+    type: 'DysonSphereProject',
+    name: 'Dyson Sphere',
+    category: 'giga',
+    requireStar: true,
+    cost: {
+      colony: {
+        superalloys: 1_000_000_000_000_000_000,
+      }
+    },
+    duration: 18000000,
+    description: 'Assemble a Dyson Sphere frame, enabling 100x faster collectors expansion.  Disables Dyson Swarm on completion, transferring all collectors.',
+    repeatable: false,
+    unlocked: false,
+    attributes: { canUseSpaceStorage: true, preserveProgressOnTravel: true }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: 'Orbital Ring',

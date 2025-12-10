@@ -1,5 +1,7 @@
+const MAX_BUILD_COUNT = 1e32;
+
 function multiplyByTen(count) {
-  return Math.min(1e15, count * 10);
+  return Math.min(MAX_BUILD_COUNT, count * 10);
 }
 
 function divideByTen(count) {
@@ -10,5 +12,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     multiplyByTen,
     divideByTen,
+    MAX_BUILD_COUNT,
   };
 }

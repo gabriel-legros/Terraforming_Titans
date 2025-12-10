@@ -1960,10 +1960,12 @@ const researchParameters = {
       {
         id: 'dyson_sphere',
         name: 'Dyson Sphere',
-        description: 'Placeholder for future Dyson Sphere development.',
+        description: 'Unlocks construction of a Dyson Sphere frame and faster collector deployment.',
         cost: { advancedResearch: 5_000_000 },
         prerequisites: [],
-        effects: []
+        effects: [
+          { target: 'project', targetId: 'dysonSphere', type: 'enable' }
+        ]
       },
       {
         id: 'self_replicating_ships_concept',

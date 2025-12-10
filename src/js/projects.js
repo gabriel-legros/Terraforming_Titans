@@ -581,6 +581,18 @@ class Project extends EffectableEntity {
     return state;
   }
 
+  saveTravelState() {
+    const state = {};
+    if (this.attributes?.preserveProgressOnTravel) {
+      state.remainingTime = this.remainingTime;
+      state.startingDuration = this.startingDuration;
+      state.isActive = this.isActive;
+      state.isCompleted = this.isCompleted;
+      state.repeatCount = this.repeatCount;
+    }
+    return state;
+  }
+
   loadState(state) {
     this.isActive = state.isActive;
     this.isPaused = state.isPaused || false;
@@ -608,6 +620,27 @@ class Project extends EffectableEntity {
     }
     if (this.attributes.completionEffect && (this.isCompleted || this.repeatCount > 0)) {
       this.applyCompletionEffect();
+    }
+  }
+
+  loadTravelState(state = {}) {
+    if (!this.attributes?.preserveProgressOnTravel) {
+      return;
+    }
+    if (typeof state.remainingTime === 'number') {
+      this.remainingTime = state.remainingTime;
+    }
+    if (typeof state.startingDuration === 'number') {
+      this.startingDuration = state.startingDuration;
+    }
+    if (state.isActive === true) {
+      this.isActive = true;
+    }
+    if (state.isCompleted) {
+      this.isCompleted = true;
+    }
+    if (typeof state.repeatCount === 'number') {
+      this.repeatCount = state.repeatCount;
     }
   }
 

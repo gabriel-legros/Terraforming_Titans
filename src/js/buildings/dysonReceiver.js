@@ -1,14 +1,33 @@
 class DysonReceiver extends Building {
+  getCollectorTotals() {
+    const swarm = projectManager?.projects?.dysonSwarmReceiver;
+    const sphere = projectManager?.projects?.dysonSphere;
+    const swarmCollectors = swarm?.collectors || 0;
+    const sphereCollectors = sphere?.isCompleted ? (sphere.collectors || 0) : 0;
+    const swarmEnergy = swarmCollectors * (swarm?.energyPerCollector || 0);
+    const sphereEnergy = sphereCollectors * (sphere?.energyPerCollector || 0);
+    return {
+      swarmCollectors,
+      sphereCollectors,
+      totalCollectors: swarmCollectors + sphereCollectors,
+      totalEnergy: swarmEnergy + sphereEnergy,
+    };
+  }
+
   getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
     const base = super.getAutoBuildMaxCount(reservePercent, additionalReserves);
-    const project = projectManager?.projects?.dysonSwarmReceiver;
     const perBuilding = this.production?.colony?.energy || 0;
 
-    if (!project || !project.isCompleted || perBuilding <= 0) {
+    if (perBuilding <= 0) {
       return 0;
     }
 
-    const totalEnergy = (project.collectors || 0) * (project.energyPerCollector || 0);
+    const { totalEnergy } = this.getCollectorTotals();
+
+    if (totalEnergy <= 0) {
+      return 0;
+    }
+
     const cap = Math.floor(totalEnergy / perBuilding);
     if (cap <= 0) {
       return 0;
@@ -19,13 +38,8 @@ class DysonReceiver extends Building {
   }
 
   build(buildCount = 1, activate = true) {
-    const project = projectManager?.projects?.dysonSwarmReceiver;
-    if (!project) {
-      return super.build(buildCount, activate);
-    }
-
     const perBuilding = this.production?.colony?.energy || 0;
-    const totalEnergy = (project.collectors || 0) * (project.energyPerCollector || 0);
+    const { totalEnergy } = this.getCollectorTotals();
 
     if (perBuilding <= 0) {
       return super.build(buildCount, activate);
@@ -75,26 +89,27 @@ class DysonReceiver extends Building {
     const tooltip = this._ensureTooltip(cache);
     if (!tooltip) return;
 
-    const project = projectManager?.projects?.dysonSwarmReceiver;
-    if (!project || !project.isCompleted) {
-      tooltip.title = 'Complete the Dyson Swarm Receiver project to unlock receivers.';
-      return;
-    }
-
-    const collectors = project.collectors || 0;
     const perBuilding = this.production?.colony?.energy || 0;
-    const energyPerCollector = project.energyPerCollector || 0;
-    const totalEnergy = collectors * energyPerCollector;
+    const totals = this.getCollectorTotals();
+    const totalEnergy = totals.totalEnergy;
     const cap = perBuilding > 0 ? Math.floor(totalEnergy / perBuilding) : 0;
 
-    if (collectors <= 0 || cap <= 0) {
-      tooltip.title = 'Build Dyson Swarm collectors to increase receiver capacity.';
+    if (totals.totalCollectors <= 0 || cap <= 0) {
+      tooltip.title = 'Build Dyson Swarm or Dyson Sphere collectors to increase receiver capacity.';
       return;
     }
 
-    const formattedCollectors = formatNumber(collectors, false, 2);
+    const formattedCollectors = formatNumber(totals.totalCollectors, false, 2);
     const formattedCap = formatNumber(cap, false, 2);
-    const title = `Dyson receivers constructions are capped by swarm collectors, and you cannot build more than this cap. ${formattedCollectors} collectors allow ${formattedCap} receivers.`;
+    const parts = [];
+    if (totals.swarmCollectors > 0) {
+      parts.push(`${formatNumber(totals.swarmCollectors, false, 2)} swarm`);
+    }
+    if (totals.sphereCollectors > 0) {
+      parts.push(`${formatNumber(totals.sphereCollectors, false, 2)} sphere`);
+    }
+    const breakdown = parts.length ? ` (${parts.join(' + ')})` : '';
+    const title = `Dyson receivers constructions are capped by swarm and sphere collectors, and you cannot build more than this cap. ${formattedCollectors}${breakdown} collectors allow ${formattedCap} receivers.`;
     if (tooltip.title !== title) {
       tooltip.title = title;
     }
@@ -117,15 +132,14 @@ class DysonReceiver extends Building {
       this.productivity = 0;
       return;
     }
-    const project = projectManager?.projects?.dysonSwarmReceiver;
     const perBuilding = this.production?.colony?.energy || 0;
-    if (!project || !project.isCompleted || project.collectors <= 0 || perBuilding <= 0) {
+    const totals = this.getCollectorTotals();
+    if (totals.totalEnergy <= 0 || perBuilding <= 0) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       return;
     }
-    const totalEnergy = project.collectors * project.energyPerCollector;
-    const maxProductivity = totalEnergy / (perBuilding * this.active);
+    const maxProductivity = totals.totalEnergy / (perBuilding * this.active);
     this.productivity = Math.min(targetProductivity, maxProductivity);
   }
 }
@@ -133,6 +147,11 @@ class DysonReceiver extends Building {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { DysonReceiver, dysonReceiver: DysonReceiver };
 } else {
-  globalThis.DysonReceiver = DysonReceiver;
-  globalThis.dysonReceiver = DysonReceiver;
+  if (typeof window !== 'undefined') {
+    window.DysonReceiver = DysonReceiver;
+    window.dysonReceiver = DysonReceiver;
+  } else if (typeof global !== 'undefined') {
+    global.DysonReceiver = DysonReceiver;
+    global.dysonReceiver = DysonReceiver;
+  }
 }
