@@ -895,7 +895,7 @@ function renderStash(project, manager) {
   const capLabel = cap ? fmt(cap, false, 2) : '0';
   const landLabel = fmt(cap, false, 2);
   const capTitle = cap
-    ? `Stockpiles cap at ${capLabel} based on 1 unit per hectare (${landLabel} ha).`
+    ? `Stockpiles cap at ${capLabel} based on 1 ton per hectare (${landLabel} ha).`
     : 'Start construction to stage resources.';
 
   if (artificialUICache.stashRecommend) {
