@@ -550,7 +550,7 @@
 
 .artificial-stash-controls {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
   gap: 8px;
   padding: 8px;
   border: 1px solid var(--space-border-color);
