@@ -1163,17 +1163,63 @@ class SpaceManager extends EffectableEntity {
             }
             return null;
         };
+        const pickHazards = (status) => {
+            if (!status) return null;
+            const hazardKeys = new Set(status.cachedHazards?.keys || []);
+            const hazardValue = status.hazard || status.original?.hazard;
+            if (hazardValue && hazardValue !== 'none') {
+                if (Array.isArray(hazardValue)) {
+                    hazardValue.forEach((entry) => {
+                        if (entry !== 'none') hazardKeys.add(String(entry));
+                    });
+                } else if (hazardValue.constructor === Object) {
+                    Object.keys(hazardValue).forEach((key) => hazardKeys.add(key));
+                } else {
+                    hazardKeys.add(String(hazardValue));
+                }
+            }
+            const hazardSources = [
+                status.override?.hazards,
+                status.merged?.hazards,
+                status.original?.override?.hazards,
+                status.original?.merged?.hazards,
+                status.original?.hazards
+            ];
+            hazardSources.forEach((src) => {
+                Object.keys(src || {}).forEach((key) => hazardKeys.add(key));
+            });
+            const selectedHazard = status.cachedHazards?.selected
+                || status.override?.rwgMeta?.selectedHazard
+                || status.merged?.rwgMeta?.selectedHazard
+                || status.original?.override?.rwgMeta?.selectedHazard
+                || status.original?.merged?.rwgMeta?.selectedHazard
+                || status.original?.hazard
+                || status.hazard
+                || null;
+            if (selectedHazard && selectedHazard !== 'none') {
+                hazardKeys.add(selectedHazard);
+            }
+            if (!hazardKeys.size) return null;
+            return { selected: selectedHazard && selectedHazard !== 'none' ? selectedHazard : null, keys: Array.from(hazardKeys) };
+        };
         const pruneStatuses = (statuses, activeKey) => Object.fromEntries(
             Object.entries(statuses).map(([key, status]) => {
                 if (!status || key === activeKey) return [key, status];
                 const cachedArchetype = pickArchetype(status);
                 const cachedLandHa = pickLandHa(status);
+                const cachedHazards = pickHazards(status);
                 const copy = { ...status };
                 if (cachedArchetype && !copy.cachedArchetype) {
                     copy.cachedArchetype = cachedArchetype;
                 }
+                if (cachedArchetype && !copy.archetype) {
+                    copy.archetype = cachedArchetype;
+                }
                 if (Number.isFinite(cachedLandHa) && !copy.cachedLandHa) {
                     copy.cachedLandHa = cachedLandHa;
+                }
+                if (cachedHazards && !copy.cachedHazards) {
+                    copy.cachedHazards = cachedHazards;
                 }
                 delete copy.override;
                 delete copy.merged;

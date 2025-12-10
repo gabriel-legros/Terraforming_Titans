@@ -118,32 +118,43 @@ const RWG_EFFECTS = {
   ],
 };
 
+function getRandomWorldType(status) {
+  if (!status) return null;
+  return status.cachedArchetype
+    || status.archetype
+    || status.classification?.archetype
+    || status.original?.archetype
+    || status.original?.classification?.archetype
+    || status.original?.merged?.classification?.archetype
+    || status.original?.override?.classification?.archetype
+    || null;
+}
+
 function hasRandomWorldHazard(status) {
-  const original = status && status.original;
-  if (!original) return false;
-  const hazard = original.hazard;
-  if (hazard && hazard !== 'none') {
-    if ((hazard.length && hazard.length > 0) || Object.keys(hazard).length) return true;
-  }
-  const override = original.override || original.merged || null;
-  if (override && override.rwgMeta && override.rwgMeta.selectedHazard && override.rwgMeta.selectedHazard !== 'none') return true;
-  const hazards = (override && override.hazards) || original.hazards || null;
-  if (hazards && Object.keys(hazards).length) return true;
-  return false;
+  if (!status) return false;
+  const summary = status.cachedHazards;
+  if (summary && summary.keys && summary.keys.length) return true;
+  const hazardValue = status.hazard ?? status.original?.hazard;
+  if (hazardValue && hazardValue !== 'none') return true;
+  const override = status.override
+    || status.merged
+    || status.original?.override
+    || status.original?.merged
+    || null;
+  if (override?.rwgMeta?.selectedHazard && override.rwgMeta.selectedHazard !== 'none') return true;
+  const hazards = override?.hazards || status.original?.hazards || null;
+  return hazards ? Object.keys(hazards).length > 0 : false;
 }
 
 function applyRWGEffects() {
-  if (typeof spaceManager === "undefined" || typeof addEffect !== "function") return;
+  if (!spaceManager || !(addEffect instanceof Function)) return;
 
   const counts = {};
   const hazardBonuses = {};
   const statuses = spaceManager.randomWorldStatuses || {};
   for (const seed in statuses) {
     const st = statuses[seed];
-    const type = st?.original?.classification?.archetype ||
-      st?.original?.merged?.classification?.archetype ||
-      st?.original?.override?.classification?.archetype ||
-      st?.original?.archetype;
+    const type = getRandomWorldType(st);
     if (st?.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
       if (hasRandomWorldHazard(st)) hazardBonuses[type] = (hazardBonuses[type] || 0) + 1;
@@ -155,7 +166,7 @@ function applyRWGEffects() {
     const bonus = hazardBonuses[type] || 0;
     const effectiveCount = baseCount + bonus;
     for (const eff of effects) {
-      const value = typeof eff.computeValue === "function" ? eff.computeValue(effectiveCount, eff) : eff.value;
+      const value = eff.computeValue instanceof Function ? eff.computeValue(effectiveCount, eff) : eff.value;
       if (eff.type === "resourceCostMultiplier" && Array.isArray(eff.resourceId)) {
         for (const resourceId of eff.resourceId) {
           addEffect({

@@ -20,18 +20,32 @@ const RWG_BUILDING_OUTPUT = {
   hyperionLantern: 'Hyperion Lantern',
 };
 
+function getRandomWorldType(status) {
+  if (!status) return null;
+  return status.cachedArchetype
+    || status.archetype
+    || status.classification?.archetype
+    || status.original?.archetype
+    || status.original?.classification?.archetype
+    || status.original?.merged?.classification?.archetype
+    || status.original?.override?.classification?.archetype
+    || null;
+}
+
 function hasRandomWorldHazard(status) {
-  const original = status && status.original;
-  if (!original) return false;
-  const hazard = original.hazard;
-  if (hazard && hazard !== 'none') {
-    if ((hazard.length && hazard.length > 0) || Object.keys(hazard).length) return true;
-  }
-  const override = original.override || original.merged || null;
-  if (override && override.rwgMeta && override.rwgMeta.selectedHazard && override.rwgMeta.selectedHazard !== 'none') return true;
-  const hazards = (override && override.hazards) || original.hazards || null;
-  if (hazards && Object.keys(hazards).length) return true;
-  return false;
+  if (!status) return false;
+  const summary = status.cachedHazards;
+  if (summary && summary.keys && summary.keys.length) return true;
+  const hazardValue = status.hazard ?? status.original?.hazard;
+  if (hazardValue && hazardValue !== 'none') return true;
+  const override = status.override
+    || status.merged
+    || status.original?.override
+    || status.original?.merged
+    || null;
+  if (override?.rwgMeta?.selectedHazard && override.rwgMeta.selectedHazard !== 'none') return true;
+  const hazards = override?.hazards || status.original?.hazards || null;
+  return hazards ? Object.keys(hazards).length > 0 : false;
 }
 
 function _titleCaseArchetype(t) {
@@ -93,8 +107,7 @@ function _computeRWGEffectsSummary() {
   const statuses = sm.randomWorldStatuses || {};
   for (const k in statuses) {
     const st = statuses[k];
-    const cls = st && st.original && st.original.override && st.original.override.classification;
-    const type = (typeof cls === 'string') ? cls : (cls && cls.archetype);
+    const type = getRandomWorldType(st);
     if (st && st.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
       if (hasRandomWorldHazard(st)) hazardBonuses[type] = (hazardBonuses[type] || 0) + 1;
