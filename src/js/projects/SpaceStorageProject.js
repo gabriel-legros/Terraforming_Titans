@@ -39,6 +39,64 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.getTotalExpansions() * this.capacityPerCompletion;
   }
 
+  getBiomassZones() {
+    const zones = ['tropical', 'temperate', 'polar'];
+    const entries = zones.map(zone => ({
+      zone,
+      amount: (terraforming?.zonalSurface?.[zone]?.biomass) || 0,
+      percentage: (typeof getZonePercentage === 'function' ? getZonePercentage(zone) : 0) || 0
+    }));
+    const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
+    return { entries, total };
+  }
+
+  removeBiomassFromZones(amount) {
+    if (!terraforming || amount <= 0) return 0;
+    const { entries, total } = this.getBiomassZones();
+    if (total <= 0) return 0;
+    const requested = Math.min(amount, total);
+    entries.forEach(entry => {
+      if (entry.amount <= 0) return;
+      const take = requested * (entry.amount / total);
+      const zoneData = terraforming.zonalSurface?.[entry.zone];
+      if (zoneData) {
+        zoneData.biomass = Math.max(0, zoneData.biomass - take);
+      }
+    });
+    terraforming.synchronizeGlobalResources();
+    return requested;
+  }
+
+  addBiomassToZones(amount) {
+    if (!terraforming || amount <= 0) return 0;
+    const zones = ['tropical', 'temperate', 'polar'];
+    const design = lifeDesigner?.currentDesign;
+    let growZones = [];
+    let surviveZones = [];
+    if (design && typeof design.getGrowableZones === 'function' && typeof design.temperatureSurvivalCheck === 'function') {
+      const growable = design.getGrowableZones() || [];
+      const survival = design.temperatureSurvivalCheck() || {};
+      growZones = growable.filter(zone => survival?.[zone]?.pass);
+      surviveZones = Object.keys(survival || {}).filter(zone =>
+        zone !== 'global' && survival[zone]?.pass && !growZones.includes(zone));
+    } else if (terraforming.biomassDyingZones) {
+      growZones = Object.keys(terraforming.biomassDyingZones).filter(zone => !terraforming.biomassDyingZones[zone]);
+    }
+    const targets = growZones.length ? growZones : (surviveZones.length ? surviveZones : zones);
+    const totalPercent = targets.reduce((sum, zone) => sum + ((typeof getZonePercentage === 'function' ? getZonePercentage(zone) : 0) || 0), 0) || targets.length;
+
+    targets.forEach(zone => {
+      const percent = (typeof getZonePercentage === 'function' ? getZonePercentage(zone) : 1) || 1;
+      const add = amount * (percent / totalPercent);
+      const zoneData = terraforming.zonalSurface?.[zone];
+      if (zoneData) {
+        zoneData.biomass = (zoneData.biomass || 0) + add;
+      }
+    });
+    terraforming.synchronizeGlobalResources();
+    return amount;
+  }
+
   isExpansionContinuous() {
     return this.getEffectiveDuration() < 1000;
   }
@@ -133,7 +191,7 @@ class SpaceStorageProject extends SpaceshipProject {
             : { category: 'colony', resource: 'water' })
           : { category, resource };
         const targetRes = resources[target.category][target.resource];
-        const destFree = targetRes.cap - targetRes.value;
+        const destFree = targetRes && Number.isFinite(targetRes.cap) ? Math.max(0, targetRes.cap - targetRes.value) : Infinity;
         return { category: target.category, resource: target.resource, stored, destFree, key: resource };
       }).filter(r => r.stored > 0 && r.destFree > 0);
       let valid = all;
@@ -175,6 +233,10 @@ class SpaceStorageProject extends SpaceshipProject {
       let remaining = Math.min(capacity, freeSpace);
       const all = this.selectedResources.map(({ category, resource }) => {
         const src = resources[category] && resources[category][resource];
+        if (resource === 'biomass') {
+          const available = resources.surface.biomass?.value || 0;
+          return { category, resource, available, src: resources.surface.biomass };
+        }
         const available = resource === 'liquidWater'
           ? resources.surface.liquidWater.value
           : (src ? src.value : 0);
@@ -199,10 +261,18 @@ class SpaceStorageProject extends SpaceshipProject {
       all.forEach(r => {
         const amount = r.assigned || 0;
         if (amount > 0) {
-          total += amount;
-          transfers.push({ mode: 'store', category: r.category, resource: r.resource, amount });
-          if (!simulate) {
-            r.src.decrease(amount);
+          if (r.resource === 'biomass') {
+            const removed = simulate ? amount : this.removeBiomassFromZones(amount);
+            if (removed > 0) {
+              total += removed;
+              transfers.push({ mode: 'store', category: r.category, resource: r.resource, amount: removed });
+            }
+          } else {
+            total += amount;
+            transfers.push({ mode: 'store', category: r.category, resource: r.resource, amount });
+            if (!simulate) {
+              r.src.decrease(amount);
+            }
           }
         }
       });
@@ -453,15 +523,29 @@ class SpaceStorageProject extends SpaceshipProject {
           delete this.resourceUsage[t.storageKey];
         }
         this.usedStorage = Math.max(0, this.usedStorage - t.amount);
-        const res = resources[t.category][t.resource];
-        res.increase(t.amount);
-        res.modifyRate(rate, 'Space storage transfer', 'project');
+        if (t.resource === 'biomass') {
+          this.addBiomassToZones(t.amount);
+          resources.surface.biomass?.modifyRate(rate, 'Space storage transfer', 'project');
+        } else {
+          const res = resources[t.category][t.resource];
+          res.increase(t.amount);
+          res.modifyRate(rate, 'Space storage transfer', 'project');
+        }
       } else if (t.mode === 'store') {
-        const res = resources[t.category][t.resource];
-        res.decrease(t.amount);
-        res.modifyRate(-rate, 'Space storage transfer', 'project');
-        this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;
-        this.usedStorage += t.amount;
+        if (t.resource === 'biomass') {
+          const removed = this.removeBiomassFromZones(t.amount);
+          if (removed > 0) {
+            resources.surface.biomass?.modifyRate(-removed / (deltaTime / 1000), 'Space storage transfer', 'project');
+            this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + removed;
+            this.usedStorage += removed;
+          }
+        } else {
+          const res = resources[t.category][t.resource];
+          res.decrease(t.amount);
+          res.modifyRate(-rate, 'Space storage transfer', 'project');
+          this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;
+          this.usedStorage += t.amount;
+        }
       }
     });
 
@@ -473,11 +557,19 @@ class SpaceStorageProject extends SpaceshipProject {
     const durationSeconds = this.shipOperationStartingDuration / 1000;
     this.pendingTransfers.forEach(t => {
       if (t.mode === 'withdraw') {
-        const res = resources[t.category][t.resource];
-        res.increase(t.amount);
-        if (!this.shipOperationAutoStart && durationSeconds > 0) {
-          const rate = t.amount / durationSeconds;
-          res.modifyRate(rate, 'Space storage transfer', 'project');
+        if (t.resource === 'biomass') {
+          this.addBiomassToZones(t.amount);
+          if (!this.shipOperationAutoStart && durationSeconds > 0) {
+            const rate = t.amount / durationSeconds;
+            resources.surface.biomass?.modifyRate(rate, 'Space storage transfer', 'project');
+          }
+        } else {
+          const res = resources[t.category][t.resource];
+          res.increase(t.amount);
+          if (!this.shipOperationAutoStart && durationSeconds > 0) {
+            const rate = t.amount / durationSeconds;
+            res.modifyRate(rate, 'Space storage transfer', 'project');
+          }
         }
       } else if (t.mode === 'store') {
         this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;

@@ -1950,10 +1950,12 @@ const researchParameters = {
       {
         id: 'biostorage',
         name: 'Biostorage',
-        description: 'Placeholder for future biological storage upgrades.',
+        description: 'Allows safe storage of biomass in space storage.  Hazardous Biomass should be stored at the nearest incinerator.',
         cost: { advancedResearch: 4_000_000 },
         prerequisites: [],
-        effects: []
+        effects: [
+          { target: 'project', targetId: 'spaceStorage', type: 'booleanFlag', flagId: 'biostorage', value: true }
+        ]
       },
       {
         id: 'dyson_sphere',

@@ -21,7 +21,8 @@ const storageResourceOptions = [
   { label: 'Hydrogen', category: 'atmospheric', resource: 'hydrogen' },
   { label: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
   { label: 'Water', category: 'surface', resource: 'liquidWater' },
-  { label: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' }
+  { label: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },
+  { label: 'Biomass', category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' }
 ];
 
 if (typeof SpaceStorageProject !== 'undefined') {
@@ -217,6 +218,14 @@ function renderSpaceStorageUI(project, container) {
     const textSpan = document.createElement('span');
     textSpan.textContent = opt.label;
 
+    let biomassInfo;
+    if (opt.resource === 'biomass') {
+      biomassInfo = document.createElement('span');
+      biomassInfo.classList.add('info-tooltip-icon');
+      biomassInfo.innerHTML = '&#9432;';
+      biomassInfo.title = 'Storing biomass removes it from all zones proportionally to their current biomass. Withdrawing places biomass into zones that can grow it first, then zones where it can survive, then anywhere, weighted by zone percentage.';
+    }
+
     const fullIcon = document.createElement('span');
     fullIcon.classList.add('storage-full-icon');
     fullIcon.innerHTML = '&#9888;&#xFE0E;';
@@ -249,15 +258,20 @@ function renderSpaceStorageUI(project, container) {
       textSpan.append(' ', waterSelect);
     }
 
-    label.append(textSpan, fullIcon);
+    if (biomassInfo) {
+      label.append(textSpan, biomassInfo, fullIcon);
+    } else {
+      label.append(textSpan, fullIcon);
+    }
     resourceItem.append(checkbox, label, usage);
     resourceGrid.appendChild(resourceItem);
 
-    if (opt.requiresFlag) {
-      const hasFlag = typeof researchManager === 'undefined'
+    if (opt.requiresFlag || opt.requiresProjectFlag) {
+      const hasResearchFlag = !opt.requiresFlag || (typeof researchManager === 'undefined'
         || (typeof researchManager.isBooleanFlagSet === 'function'
-          && researchManager.isBooleanFlagSet(opt.requiresFlag));
-      resourceItem.style.display = hasFlag ? '' : 'none';
+          && researchManager.isBooleanFlagSet(opt.requiresFlag)));
+      const hasProjectFlag = !opt.requiresProjectFlag || project.isBooleanFlagSet(opt.requiresProjectFlag);
+      resourceItem.style.display = hasResearchFlag && hasProjectFlag ? '' : 'none';
     }
 
     projectElements[project.name] = {
@@ -416,12 +430,14 @@ function updateSpaceStorageUI(project) {
   if (els.resourceItems) {
     storageResourceOptions.forEach(opt => {
       const item = els.resourceItems[opt.resource];
-      if (item && opt.requiresFlag) {
-        const hasFlag = typeof researchManager === 'undefined'
+      if (item && (opt.requiresFlag || opt.requiresProjectFlag)) {
+        const hasResearchFlag = !opt.requiresFlag || (typeof researchManager === 'undefined'
           || (typeof researchManager.isBooleanFlagSet === 'function'
-            && researchManager.isBooleanFlagSet(opt.requiresFlag));
-        item.style.display = hasFlag ? '' : 'none';
-        if (!hasFlag) {
+            && researchManager.isBooleanFlagSet(opt.requiresFlag)));
+        const hasProjectFlag = !opt.requiresProjectFlag || project.isBooleanFlagSet(opt.requiresProjectFlag);
+        const visible = hasResearchFlag && hasProjectFlag;
+        item.style.display = visible ? '' : 'none';
+        if (!visible) {
           project.toggleResourceSelection(opt.category, opt.resource, false);
         }
       }
