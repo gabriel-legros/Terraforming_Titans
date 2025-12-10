@@ -529,12 +529,13 @@
 
 .artificial-stash-body {
   display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
-  gap: 10px;
+  gap: 12px;
 }
 
 .artificial-stash-stock {
-  flex: 1;
+  flex: 1 1 200px;
   border: 1px solid var(--space-border-color);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
@@ -548,19 +549,19 @@
 }
 
 .artificial-stash-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
   padding: 8px;
   border: 1px solid var(--space-border-color);
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-  flex: 0 0 auto;
+  flex: 1 1 280px;
+  min-width: 240px;
 }
 
 .artificial-stash-controls button {
-  min-width: 64px;
+  min-width: 0;
 }
 
 .artificial-stash-recommend {

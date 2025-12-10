@@ -226,6 +226,23 @@ function setStashStep(resource, value) {
   artificialStashMultipliers[resource] = next;
 }
 
+function getMaxStashAmount(resource, project, manager) {
+  if (!project || !manager) return 0;
+  const staged = resource === 'metal'
+    ? (project.stockpile?.metal || project.initialDeposit?.metal || 0)
+    : (project.stockpile?.silicon || project.initialDeposit?.silicon || 0);
+  const remaining = Math.max(0, manager.getStockpileCap(project) - staged);
+  if (!remaining) return 0;
+  const colonyRes = resources && resources.colony ? resources.colony[resource] : null;
+  const colonyAvailable = colonyRes ? colonyRes.value : 0;
+  const storageProj = projectManager && projectManager.projects ? projectManager.projects.spaceStorage : null;
+  const storageAvailable = storageProj && storageProj.getAvailableStoredResource
+    ? storageProj.getAvailableStoredResource(resource)
+    : 0;
+  const total = manager.prioritizeSpaceStorage ? storageAvailable + colonyAvailable : colonyAvailable + storageAvailable;
+  return Math.min(remaining, total);
+}
+
 function ensureArtificialLayout() {
   const { content } = cacheArtificialUIElements();
   if (!content || content.dataset.rendered === 'true') return;
@@ -552,6 +569,10 @@ function ensureArtificialLayout() {
     const addBtn = document.createElement('button');
     addBtn.className = 'artificial-stash-btn artificial-stash-add';
     controls.append(addBtn, mulBtn, divBtn);
+    const maxBtn = document.createElement('button');
+    maxBtn.className = 'artificial-stash-btn artificial-stash-max';
+    maxBtn.textContent = '+Max';
+    controls.insertBefore(maxBtn, mulBtn);
     body.appendChild(controls);
     row.appendChild(body);
 
@@ -559,6 +580,7 @@ function ensureArtificialLayout() {
       divBtn,
       mulBtn,
       addBtn,
+      maxBtn,
       stock: staged,
       capInfo
     };
@@ -774,6 +796,16 @@ function ensureArtificialLayout() {
       const payload = resource === 'metal' ? { metal: amount } : { silicon: amount };
       manager.addStockpile(payload);
     });
+    if (controls.maxBtn) {
+      controls.maxBtn.addEventListener('click', () => {
+        const manager = artificialManager;
+        if (!manager || !manager.activeProject) return;
+        const amount = getMaxStashAmount(resource, manager.activeProject, manager);
+        if (!amount) return;
+        const payload = resource === 'metal' ? { metal: amount } : { silicon: amount };
+        manager.addStockpile(payload);
+      });
+    }
   };
 
   attachStashHandlers('metal');
@@ -918,6 +950,7 @@ function renderStash(project, manager) {
     const canAfford = active && planned > 0 && manager
       ? manager.canCoverCost(payload, manager.prioritizeSpaceStorage)
       : false;
+    const maxAmount = active ? getMaxStashAmount(resource, project, manager) : 0;
     const cappedOut = active && remaining === 0;
     if (controls.capInfo) {
       controls.capInfo.title = capTitle;
@@ -943,6 +976,21 @@ function renderStash(project, manager) {
     }
     if (controls.divBtn) controls.divBtn.disabled = !active;
     if (controls.mulBtn) controls.mulBtn.disabled = !active;
+    if (controls.maxBtn) {
+      const disabled = !active || maxAmount <= 0;
+      controls.maxBtn.textContent = maxAmount > 0 ? `+${fmt(maxAmount, false, 0)}` : '+Max';
+      controls.maxBtn.disabled = disabled;
+      controls.maxBtn.classList.toggle('artificial-stash-unaffordable', disabled);
+      if (!active) {
+        controls.maxBtn.title = 'Begin construction to stage resources';
+      } else if (maxAmount <= 0 && cappedOut) {
+        controls.maxBtn.title = `Stockpile full (cap ${capLabel})`;
+      } else if (maxAmount <= 0) {
+        controls.maxBtn.title = 'Insufficient resources';
+      } else {
+        controls.maxBtn.title = `Fill stash (+${fmt(maxAmount, false, 0)})`;
+      }
+    }
   });
 }
 
