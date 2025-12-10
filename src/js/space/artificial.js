@@ -677,6 +677,20 @@ class ArtificialManager extends EffectableEntity {
         this.travelHistory = this.travelHistory.slice(0, 50);
     }
 
+    getTravelWarning() {
+        if (!this.activeProject || this.activeProject.status !== 'completed') return null;
+        const stockpile = this.activeProject.stockpile || {};
+        const metal = stockpile.metal || this.activeProject.initialDeposit?.metal || 0;
+        const silicon = stockpile.silicon || this.activeProject.initialDeposit?.silicon || 0;
+        if (metal > 0 && silicon > 0) return null;
+        const missing = [];
+        if (!metal) missing.push('metal');
+        if (!silicon) missing.push('silicon');
+        return {
+            message: `No ${missing.join(' and ')} staged for this artificial world. Travel anyway?`
+        };
+    }
+
     travelToConstructedWorld() {
         if (!this.activeProject || this.activeProject.status !== 'completed') return false;
         const override = this.buildOverride(this.activeProject);

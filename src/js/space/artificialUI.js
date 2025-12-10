@@ -737,7 +737,13 @@ function ensureArtificialLayout() {
     }
   });
   travelBtn.addEventListener('click', () => {
-    artificialManager?.travelToConstructedWorld();
+    if (!artificialManager) return;
+    const warning = artificialManager.getTravelWarning?.();
+    if (warning) {
+      showTravelWarningPopup(warning, () => artificialManager.travelToConstructedWorld());
+      return;
+    }
+    artificialManager.travelToConstructedWorld();
   });
   prev.addEventListener('click', () => {
     if (artificialHistoryPage > 0) {
