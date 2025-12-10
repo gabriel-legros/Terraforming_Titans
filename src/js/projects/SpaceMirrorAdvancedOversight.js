@@ -17,7 +17,7 @@ class SpaceMirrorAdvancedOversight {
       const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
 
       // Probe sizing for derivative estimates (NO per-mirror loops; single physics call per probe)
-      const MIRROR_PROBE_MIN = 100;      // Minimum mirrors per probe (useful scale for "billions")
+      const MIRROR_PROBE_BASE = 100;      // Minimum mirrors per probe (useful scale for "billions")
       const LANTERN_PROBE_MIN = 1;      // Min lanterns per probe
       const SAFETY_FRACTION = 1;        // Take only 50% of the "unitsNeeded" to reduce overshoot risk
 
@@ -95,6 +95,9 @@ class SpaceMirrorAdvancedOversight {
       const lanternPowerPer = lantern
         ? (lantern.powerPerBuilding || 0) * (typeof lantern.productivity === 'number' ? lantern.productivity : 1)
         : 0;
+      const MIRROR_PROBE_MIN = (mirrorPowerPer > 0 && mirrorPowerPer < 1)
+        ? Math.floor(MIRROR_PROBE_BASE / mirrorPowerPer)
+        : MIRROR_PROBE_BASE;
 
       // ---------------- Warm start ----------------
       // If we have a saved lastSolution, restore it (clamped to current availability).
@@ -657,4 +660,3 @@ if (typeof module !== 'undefined' && module.exports) {
     SpaceMirrorAdvancedOversight,
   };
 }
-
