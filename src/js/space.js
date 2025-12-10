@@ -1257,6 +1257,31 @@ class SpaceManager extends EffectableEntity {
         this.oneillCylinders = 0;
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
+        const hazardFromSeed = (seed) => {
+            if (seed == null) return null;
+            const segments = String(seed).split('|');
+            const freeform = [];
+            for (let i = 1; i < segments.length; i += 1) {
+                const seg = (segments[i] || '').trim();
+                if (!seg) continue;
+                if (seg.includes('=')) {
+                    const [k, v] = seg.split('=');
+                    const key = (k || '').trim().toLowerCase();
+                    if ((key === 'hazard' || key === 'haz' || key === 'feature') && (v || '').trim()) {
+                        const value = (v || '').trim();
+                        if (value && value !== 'none') return value;
+                    }
+                } else {
+                    freeform.push(seg);
+                }
+            }
+            if (freeform.length >= 4) {
+                const value = freeform[3];
+                if (value && value !== 'none') return value;
+            }
+            return null;
+        };
+
         if (!savedData) {
              console.log("SpaceManager: No save data provided, using defaults.");
              return; // Keep defaults initialized above
@@ -1357,6 +1382,26 @@ class SpaceManager extends EffectableEntity {
                     }
                 });
             }
+            Object.keys(this.randomWorldStatuses).forEach((seed) => {
+                const hazard = hazardFromSeed(seed);
+                if (hazard !== 'hazardousBiomass') {
+                    return;
+                }
+                const status = this.randomWorldStatuses[seed];
+                if (!status) return;
+                const existingKeys = new Set(status.cachedHazards?.keys || []);
+                existingKeys.add('hazardousBiomass');
+                const selected = status.cachedHazards?.selected
+                    || status.hazard
+                    || null;
+                status.cachedHazards = {
+                    selected: selected && selected !== 'none' ? selected : 'hazardousBiomass',
+                    keys: Array.from(existingKeys)
+                };
+                if (!status.hazard || status.hazard === 'none') {
+                    status.hazard = 'hazardousBiomass';
+                }
+            });
         }
 
         if (savedData && Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLock')) {
