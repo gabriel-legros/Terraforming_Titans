@@ -69,6 +69,37 @@
   margin: 0;
 }
 
+.wgc-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wgc-copy-team-stats {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background-color: var(--wgc-border-color);
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.5 3H14a3 3 0 0 0-4 0H8.5A2.5 2.5 0 0 0 6 5.5v13A2.5 2.5 0 0 0 8.5 21h7a2.5 2.5 0 0 0 2.5-2.5v-13A2.5 2.5 0 0 0 15.5 3Zm1.5 13.5A1.5 1.5 0 0 1 15.5 18h-7A1.5 1.5 0 0 1 7 16.5v-11A1.5 1.5 0 0 1 8.5 4h1.59a1 1 0 0 0 .7-.29l.21-.21h1.9l.21.21a1 1 0 0 0 .7.29h1.59A1.5 1.5 0 0 1 17 5.5Zm-8-5.5h6v1h-6Zm0 3h6v1h-6Zm0 3h4v1h-4Z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+.wgc-copy-team-stats:hover:not(:disabled) {
+  background-color: var(--wgc-border-color);
+}
+
+.wgc-copy-team-stats:focus-visible {
+  outline: 1px dashed var(--wgc-border-color);
+  outline-offset: 2px;
+}
+
 /* Team Card */
 .wgc-team-card {
   background-color: var(--wgc-bg-dark);

@@ -2,6 +2,7 @@ let wgcTabVisible = false;
 let wgcUIInitialized = false;
 let wgcStoryToggleButton = null;
 let wgcStoryToggleLabel = null;
+let wgcCopyStatsButton = null;
 const wgcPendingLogScroll = new Set();
 
 function queueWGCRender(callback) {
@@ -23,6 +24,56 @@ function scrollWGCLogToBottom(target) {
   queueWGCRender(() => {
     target.scrollTop = target.scrollHeight;
   });
+}
+
+function getWGCManager() {
+  if (typeof warpGateCommand !== 'undefined') return warpGateCommand;
+  if (typeof window !== 'undefined' && window && window.warpGateCommand) return window.warpGateCommand;
+  return null;
+}
+
+function buildWGCTeamStatsForClipboard(manager) {
+  const names = Array.isArray(manager.teamNames) ? manager.teamNames : teamNames;
+  const roster = Array.isArray(manager.teams) ? manager.teams : [];
+  return names.map((name, idx) => {
+    const members = Array.isArray(roster[idx]) ? roster[idx] : [];
+    const mappedMembers = members.filter(Boolean).map(member => ({
+      name: member.lastName ? `${member.firstName} ${member.lastName}` : member.firstName,
+      role: member.classType,
+      level: member.level,
+      health: member.health,
+      maxHealth: member.maxHealth,
+      stats: {
+        power: member.power,
+        athletics: member.athletics,
+        wit: member.wit
+      }
+    }));
+    return { team: name, members: mappedMembers };
+  });
+}
+
+function copyWGCTeamStatsToClipboard() {
+  const manager = getWGCManager();
+  if (!manager) return;
+  const payload = {
+    teams: buildWGCTeamStatsForClipboard(manager)
+  };
+  const serialized = JSON.stringify(payload, null, 2);
+  const clipboard = typeof navigator !== 'undefined' && navigator && navigator.clipboard ? navigator.clipboard : null;
+  if (clipboard && typeof clipboard.writeText === 'function') {
+    clipboard.writeText(serialized);
+    return;
+  }
+  const helper = document.createElement('textarea');
+  helper.value = serialized;
+  helper.setAttribute('readonly', '');
+  helper.style.position = 'absolute';
+  helper.style.left = '-9999px';
+  document.body.appendChild(helper);
+  helper.select();
+  document.execCommand('copy');
+  helper.remove();
 }
 
 function updateWGCStoryToggleButton() {
@@ -865,7 +916,10 @@ function generateWGCLayout() {
         <div class="wgc-left">
           <div class="wgc-card" id="wgc-teams-section">
             <div class="wgc-card-header">
-              <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
+              <div class="wgc-card-title">
+                <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
+                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" title="Copy Team Stats to Clipboard" aria-label="Copy Team Stats to Clipboard"></span>
+              </div>
               <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
                 <span class="wgc-story-toggle__track" aria-hidden="true">
                   <span class="wgc-story-toggle__thumb"></span>
@@ -904,6 +958,19 @@ function initializeWGCUI() {
   const container = document.getElementById('wgc-hope');
   if (container) {
     container.innerHTML = generateWGCLayout();
+    wgcCopyStatsButton = container.querySelector('#wgc-copy-team-stats');
+    if (wgcCopyStatsButton) {
+      const triggerCopy = () => {
+        copyWGCTeamStatsToClipboard();
+      };
+      wgcCopyStatsButton.addEventListener('click', triggerCopy);
+      wgcCopyStatsButton.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          triggerCopy();
+        }
+      });
+    }
     wgcStoryToggleButton = container.querySelector('#wgc-story-toggle');
     if (wgcStoryToggleButton) {
       wgcStoryToggleLabel = wgcStoryToggleButton.querySelector('.wgc-story-toggle__label');
