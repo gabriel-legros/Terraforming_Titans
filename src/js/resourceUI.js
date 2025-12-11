@@ -635,6 +635,13 @@ function getAerostatLiftAlert() {
   return { severity, message, lift, active };
 }
 
+function getBiomassWarningMessage(zones) {
+  const dyingZones = ['tropical', 'temperate', 'polar'].filter(zone => zones[zone]);
+  if (dyingZones.length === 0) return '';
+  const zoneText = dyingZones.map(zone => capitalizeFirstLetter(zone)).join(', ');
+  return `Biomass is dying in the ${zoneText} zone${dyingZones.length > 1 ? 's' : ''}.`;
+}
+
 function createResourceElement(category, resourceObj, resourceName) {
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
@@ -832,9 +839,10 @@ function updateResourceDisplay(resources, deltaSeconds) {
 
       if (resourceName === 'biomass' && entry.warningEl) {
         const zones = terraforming?.biomassDyingZones || {};
-        const count = ['tropical', 'temperate', 'polar'].reduce((n, z) => n + (zones[z] ? 1 : 0), 0);
-        const text = '!'.repeat(count);
-        if (entry.warningEl.textContent !== text) entry.warningEl.textContent = text;
+        const warningMessage = getBiomassWarningMessage(zones);
+        const icon = warningMessage ? '⚠' : '';
+        if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
+        if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
       }
 
       if (resourceName === 'androids' && entry.warningEl) {
@@ -845,9 +853,10 @@ function updateResourceDisplay(resources, deltaSeconds) {
           land &&
           land.value > 0 &&
           land.reserved / land.value < 0.99;
-        const text = warn ? '!' : '';
-        if (entry.warningEl.textContent !== text) entry.warningEl.textContent = text;
-        if (!warn && entry.warningEl.style.color) entry.warningEl.style.color = '';
+        const warningMessage = warn ? 'Android production has reached its current cap.' : '';
+        const icon = warn ? '⚠' : '';
+        if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
+        if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
       }
 
       if (resourceName === 'colonists') {
@@ -1144,13 +1153,10 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       warningMessages.push(hydrogenMessage);
     }
 
-    if (resource.name === 'biomass' && typeof terraforming !== 'undefined') {
-      const zones = terraforming.biomassDyingZones || {};
-      const dyingZones = ['tropical', 'temperate', 'polar'].filter(zone => zones[zone]);
-      if (dyingZones.length > 0) {
-        const zoneText = dyingZones.map(zone => capitalizeFirstLetter(zone)).join(', ');
-        warningMessages.push(`Biomass is dying in the ${zoneText} zone${dyingZones.length > 1 ? 's' : ''}.`);
-      }
+    if (resource.name === 'biomass') {
+      const zones = terraforming?.biomassDyingZones || {};
+      const biomassWarning = getBiomassWarningMessage(zones);
+      if (biomassWarning) warningMessages.push(biomassWarning);
     }
 
     if (resource.name === 'colonists') {

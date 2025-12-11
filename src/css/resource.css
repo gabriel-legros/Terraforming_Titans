@@ -74,8 +74,11 @@
   }
 
   .resource-warning {
-    color: red;
+    color: #c62828;
     margin-left: 2px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
   }
 
   .resource-autobuild-warning {
@@ -83,6 +86,10 @@
     margin-left: 4px;
     font-weight: bold;
     display: none;
+  }
+
+  .dark-mode .resource-warning {
+    color: #ff4f4f;
   }
 
   .resource-tooltip-warning {
@@ -112,11 +119,11 @@
   pointer-events: none;
 }
 
-.resource-divider-bottom::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
+  .resource-divider-bottom::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
   bottom: calc(-1 * var(--divider-margin-bottom) / 2);
   border-top: 1px solid #ccc;
   pointer-events: none;
