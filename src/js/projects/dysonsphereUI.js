@@ -14,7 +14,7 @@ function renderDysonSphereUI(project, container) {
   card.classList.add('dyson-sphere-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Dyson Sphere</span>
+      <span class="card-title">Dyson Sphere Collectors</span>
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">

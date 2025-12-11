@@ -14,7 +14,7 @@ function renderDysonSwarmUI(project, container) {
   card.classList.add('dyson-swarm-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Dyson Swarm</span>
+      <span class="card-title">Dyson Swarm Collectors</span>
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">
