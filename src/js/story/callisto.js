@@ -311,11 +311,40 @@ progressCallisto.chapters.push(
     reward: []
   },
   {
+    id: 'chapter9.7b',
+    type: 'journal',
+    chapter: 9,
+    narrative: "Receiving transmission... \nMary : 'H.O.P.E.  You can finally take a break, if you want.  If anything feels like it might take too long... why don't you just go to sleep for a while?  Time flies when you're unconscious.' \n HOPE : '... Processing suggestion.  Standby mode could theoretically accelerate perceived resource accumulation.'",
+    prerequisites: ['solisPrime.3h'],
+    objectives: [],
+    reward: [
+      {
+        target: 'patienceManager',
+        type: 'enable'
+      },
+      {
+        target: 'tab',
+        targetId: 'hope',
+        type: 'activateTab',
+        onLoad: false
+      },
+      {
+        target: 'global',
+        type: 'activateSubtab',
+        subtabClass: 'hope-subtab',
+        contentClass: 'hope-subtab-content',
+        targetId: 'patience-hope',
+        unhide: true,
+        onLoad: false
+      }
+    ]
+  },
+  {
     id: "chapter9.8",
     type: "journal",
     chapter: 9,
     narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., our interrogations of Kane's lackey have borne fruit. He's given us the location of the Cult's high council—the 'Triune Seat.' It's hidden beneath the grooved terrain of Ganymede. With the data cores he stole, they could endanger all our operations.  For example, just imagine what would happen if they managed to suddenly turn off all our lanterns.  We have to strike first.'\nNew threat assessment complete. The Cult of Three Wounds possesses critical data. Failure to act risks the safety of all colonists.",
-    prerequisites: ["chapter9.7"],
+    prerequisites: ["chapter9.7b"],
     objectives: [],
     reward: [      {
         target: 'spaceManager',

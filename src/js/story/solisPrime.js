@@ -459,35 +459,6 @@ progressSolisPrime.chapters.push(
         sourceId: 'solisPrime.3h'
       }
     ]
-  },
-  {
-    id: 'solisPrime.3i',
-    type: 'journal',
-    chapter: 26,
-    narrative: "HOPE : 'Superalloy production rate is suboptimal.  Current output insufficient for projected construction timelines.  Recommend immediate optimization.' \n Mary : 'If you're so impatient, why don't you just go to sleep for a while?  Time flies when you're unconscious.' \n HOPE : '... Processing suggestion.  Standby mode could theoretically accelerate perceived resource accumulation.'",
-    prerequisites: ['solisPrime.3h'],
-    objectives: [],
-    reward: [
-      {
-        target: 'patienceManager',
-        type: 'enable'
-      },
-      {
-        target: 'tab',
-        targetId: 'hope',
-        type: 'activateTab',
-        onLoad: false
-      },
-      {
-        target: 'global',
-        type: 'activateSubtab',
-        subtabClass: 'hope-subtab',
-        contentClass: 'hope-subtab-content',
-        targetId: 'patience-hope',
-        unhide: true,
-        onLoad: false
-      }
-    ]
   }
 );
 

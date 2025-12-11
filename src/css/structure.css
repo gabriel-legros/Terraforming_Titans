@@ -138,7 +138,7 @@
 }
 
 .auto-build-input {
-    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .auto-build-input::-webkit-outer-spin-button,
