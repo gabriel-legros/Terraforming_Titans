@@ -118,6 +118,14 @@ function applyMirrorOversightTravelSettings(settings, saved = {}) {
   return settings;
 }
 
+function getFacilityResourceFactor(building) {
+  const base = Number.isFinite(building?._baseProductivity)
+    ? building._baseProductivity
+    : building?.productivity;
+  if (!Number.isFinite(base)) return 1;
+  return Math.max(0, Math.min(1, base));
+}
+
 var mirrorOversightSettings = null;
 
 function formatResourceLabel(resource) {
@@ -1326,20 +1334,21 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       distributeAutoAssignments('lanterns');
       const assignM = mirrorOversightSettings.assignments?.mirrors || {};
       const assignL = mirrorOversightSettings.assignments?.lanterns || {};
-      const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower;
-      const lantern = typeof buildings !== 'undefined' ? buildings.hyperionLantern : null;
-      const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * (typeof lantern.productivity === 'number' ? lantern.productivity : 1) : 0;
+      const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
+      const lantern = buildings?.hyperionLantern;
+      const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
       focusPower = mirrorPowerPer * (assignM.focus || 0) + lanternPowerPer * (assignL.focus || 0);
     } else {
       const dist = mirrorOversightSettings?.distribution || {};
       const focusPerc = dist.focus || 0;
       if (focusPerc > 0) {
-        const mirrorPowerTotal = terraforming.calculateMirrorEffect().interceptedPower * (buildings['spaceMirror']?.active || 0);
-        let lanternPowerTotal = 0;
-        if (mirrorOversightSettings.applyToLantern) {
-          const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
-          lanternPowerTotal = terraforming.calculateLanternFlux() * area;
-        }
+        const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
+        const mirrorPowerTotal = mirrorPowerPer * (buildings['spaceMirror']?.active || 0);
+        const lantern = buildings?.hyperionLantern;
+        const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
+        const lanternPowerTotal = mirrorOversightSettings.applyToLantern
+          ? lanternPowerPer * (lantern?.active || 0)
+          : 0;
         focusPower = (mirrorPowerTotal + lanternPowerTotal) * focusPerc;
       }
     }
@@ -1388,9 +1397,9 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
   const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
   const baseSolar = terraforming.luminosity.solarFlux; // W/m^²
 
-  const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower;
-  const lantern = typeof buildings !== 'undefined' ? buildings.hyperionLantern : null;
-  const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * (typeof lantern.productivity === 'number' ? lantern.productivity : 1) : 0;
+  const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
+  const lantern = buildings?.hyperionLantern;
+  const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
   const totalMirrorPower = mirrorPowerPer * (buildings?.spaceMirror?.active || 0);
   const totalLanternPower = lanternPowerPer * (lantern?.active || 0);
 
@@ -1714,12 +1723,17 @@ class SpaceMirrorFacilityProject extends Project {
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements || !elements.mirrorDetails) return;
-    const numMirrors = buildings['spaceMirror'].active;
+    const mirrorBuilding = buildings['spaceMirror'];
+    const numMirrors = mirrorBuilding.active;
     const mirrorEffect = terraforming.calculateMirrorEffect();
-    const powerPerMirror = mirrorEffect.interceptedPower;
-    const powerPerMirrorArea = mirrorEffect.powerPerUnitArea;
-    const totalPower = powerPerMirror * numMirrors;
-    const totalPowerArea = powerPerMirrorArea * numMirrors;
+    const mirrorResourceFactor = getFacilityResourceFactor(mirrorBuilding);
+    const mirrorAssignmentShare = mirrorBuilding._allowFullProductivity
+      ? 1
+      : (Number.isFinite(mirrorBuilding._assignmentShare) ? mirrorBuilding._assignmentShare : 1);
+    const powerPerMirror = mirrorEffect.interceptedPower * mirrorResourceFactor;
+    const powerPerMirrorArea = mirrorEffect.powerPerUnitArea * mirrorResourceFactor;
+    const totalPower = powerPerMirror * numMirrors * mirrorAssignmentShare;
+    const totalPowerArea = powerPerMirrorArea * numMirrors * mirrorAssignmentShare;
     // Ensure unit text uses ASCII-safe format
     if (elements.mirrorDetails.powerPerMirrorArea) {
       elements.mirrorDetails.powerPerMirrorArea.textContent = `${formatNumber(powerPerMirrorArea, false, 2)} W/m²`;
@@ -1765,12 +1779,15 @@ class SpaceMirrorFacilityProject extends Project {
       }
       if (showLantern) {
         const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
-        const productivity = typeof lantern.productivity === 'number' ? lantern.productivity : 1;
         const numLanterns = lantern.active || 0;
-        const powerPerLantern = lantern.powerPerBuilding || 0;
+        const lanternResourceFactor = getFacilityResourceFactor(lantern);
+        const lanternAssignmentShare = lantern._allowFullProductivity
+          ? 1
+          : (Number.isFinite(lantern._assignmentShare) ? lantern._assignmentShare : 1);
+        const powerPerLantern = (lantern.powerPerBuilding || 0) * lanternResourceFactor;
         const powerPerLanternArea = area > 0 ? powerPerLantern / area : 0;
-        const totalLanternPower = powerPerLantern * numLanterns * productivity;
-        const totalLanternArea = powerPerLanternArea * numLanterns * productivity;
+        const totalLanternPower = powerPerLantern * numLanterns * lanternAssignmentShare;
+        const totalLanternArea = powerPerLanternArea * numLanterns * lanternAssignmentShare;
         // Ensure unit text uses ASCII-safe format
         if (elements.lanternDetails.powerPerLanternArea) {
           elements.lanternDetails.powerPerLanternArea.textContent = `${formatNumber(powerPerLanternArea, false, 2)} W/²`;

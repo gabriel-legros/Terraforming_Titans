@@ -92,8 +92,11 @@ class SpaceMirrorAdvancedOversight {
 
       const mirrorPowerPer = terraforming.calculateMirrorEffect?.().interceptedPower || 0;
       const lantern = typeof buildings !== 'undefined' ? buildings.hyperionLantern : null;
+      const lanternResourceFactor = Number.isFinite(lantern?._baseProductivity)
+        ? lantern._baseProductivity
+        : (Number.isFinite(lantern?.productivity) ? lantern.productivity : 1);
       const lanternPowerPer = lantern
-        ? (lantern.powerPerBuilding || 0) * (typeof lantern.productivity === 'number' ? lantern.productivity : 1)
+        ? (lantern.powerPerBuilding || 0) * lanternResourceFactor
         : 0;
       const MIRROR_PROBE_MIN = (mirrorPowerPer > 0 && mirrorPowerPer < 100)
         ? Math.floor(100*MIRROR_PROBE_BASE / mirrorPowerPer)

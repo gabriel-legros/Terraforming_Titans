@@ -903,8 +903,10 @@ class Terraforming extends EffectableEntity{
       const mirrorPowerPer = mirrorEffect?.interceptedPower || 0;
       const totalMirrors = Math.max(0, buildings?.spaceMirror?.active || 0);
       const lantern = buildings?.hyperionLantern;
-      const lanternProductivity = Number.isFinite(lantern?.productivity) ? lantern.productivity : 1;
-      const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternProductivity : 0;
+      const lanternBaseProductivity = Number.isFinite(lantern?._baseProductivity)
+        ? lantern._baseProductivity
+        : (Number.isFinite(lantern?.productivity) ? lantern.productivity : 1);
+      const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternBaseProductivity : 0;
       const assignM = mirrorOversightSettings.assignments?.mirrors || {};
       const assignL = mirrorOversightSettings.assignments?.lanterns || {};
       const assignedMirrors =
@@ -1516,6 +1518,7 @@ class Terraforming extends EffectableEntity{
       const mirrorFlux = mirrorEffect.powerPerUnitArea;
       const lanternFlux = this.calculateLanternFlux();
       const mirrors = (typeof buildings !== 'undefined' && buildings['spaceMirror']) ? buildings['spaceMirror'].active : 0;
+      const mirrorProductivity = Number.isFinite(buildings?.spaceMirror?.productivity) ? buildings.spaceMirror.productivity : 1;
       let reverseFactor = 1;
       if (typeof mirrorOversightSettings !== 'undefined') {
         const dist = mirrorOversightSettings.distribution || {};
@@ -1529,7 +1532,7 @@ class Terraforming extends EffectableEntity{
           (rev.any ? anyPerc : 0);
         reverseFactor = 1 - 2 * reversedPerc;
       }
-      const mirrorContribution = mirrorFlux * mirrors * reverseFactor;
+      const mirrorContribution = mirrorFlux * mirrors * reverseFactor * mirrorProductivity;
       const total = baseFlux + mirrorContribution + lanternFlux;
 
       return Math.max(total, BACKGROUND_SOLAR_FLUX);
@@ -1538,8 +1541,13 @@ class Terraforming extends EffectableEntity{
     calculateLanternFlux(){
       const lantern = (typeof buildings !== 'undefined') ? buildings['hyperionLantern'] : null;
       if(lantern && lantern.active > 0){
-        const productivity = typeof lantern.productivity === 'number' ? lantern.productivity : 1;
-        const power = (lantern.powerPerBuilding || 0) * lantern.active * productivity;
+        const resourceFactor = Number.isFinite(lantern._baseProductivity)
+          ? lantern._baseProductivity
+          : (Number.isFinite(lantern.productivity) ? lantern.productivity : 1);
+        const assignmentFactor = lantern._allowFullProductivity
+          ? 1
+          : (Number.isFinite(lantern._assignmentShare) ? lantern._assignmentShare : 1);
+        const power = (lantern.powerPerBuilding || 0) * lantern.active * resourceFactor * assignmentFactor;
         const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
         return power / area;
       }

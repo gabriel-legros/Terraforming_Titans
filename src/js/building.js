@@ -988,7 +988,9 @@ const constructors = {
   windTurbine: 'windTurbine',
   boschReactor: 'MultiRecipesBuilding',
   waterTank: 'WaterTank',
-  antimatterBattery: 'AntimatterBattery'
+  antimatterBattery: 'AntimatterBattery',
+  spaceMirror: 'SpaceMirror',
+  hyperionLantern: 'HyperionLantern'
 };
 
 function loadConstructor(name) {
