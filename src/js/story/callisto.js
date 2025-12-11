@@ -315,7 +315,7 @@ progressCallisto.chapters.push(
     type: 'journal',
     chapter: 9,
     narrative: "Receiving transmission... \nMary : 'H.O.P.E.  You can finally take a break, if you want.  If anything feels like it might take too long... why don't you just go to sleep for a while?  Time flies when you're unconscious.' \n HOPE : '... Processing suggestion.  Standby mode could theoretically accelerate perceived resource accumulation.'",
-    prerequisites: ['solisPrime.3h'],
+    prerequisites: ['chapter9.7'],
     objectives: [],
     reward: [
       {
