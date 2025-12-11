@@ -349,3 +349,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Patience spending now also grants advanced research and O'Neill cylinder progress alongside superalloys.
 - Spending patience also fast-forwards Warp Gate Command operations by the same duration in 60-second increments, and the patience preview notes the pending WGC advance.
 - Added a Repeatable AI Researches advanced unlock with stacking repeatable energy, industry, and colonization boosts that escalate research costs tenfold per purchase.
+- Spaceship automation includes an “Unassigned Ships” target so presets can reserve a portion of the fleet for replication while keeping routes staffed.

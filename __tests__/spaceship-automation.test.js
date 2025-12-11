@@ -121,6 +121,31 @@ describe('SpaceshipAutomation assignments', () => {
     expect(resources.special.spaceships.value).toBe(15);
   });
 
+  test('can target unassigned ships through automation', () => {
+    resources.special.spaceships.value = 20;
+    automation.presets = [{
+      id: 1,
+      name: 'Reserve',
+      enabled: true,
+      steps: [
+        {
+          id: 201,
+          limit: null,
+          entries: [
+            { projectId: 'unassignedShips', weight: 1, max: 5 },
+            { projectId: 'importMetal', weight: 1, max: null }
+          ]
+        }
+      ]
+    }];
+    automation.activePresetId = 1;
+
+    automation.applyAssignments();
+
+    expect(projects.importMetal.assigned).toBe(15);
+    expect(resources.special.spaceships.value).toBe(5);
+  });
+
   test('ignores mass driver equivalents when computing ship availability', () => {
     class DisposalProject extends StubProject {
       constructor(name) {

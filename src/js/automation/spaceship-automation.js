@@ -266,6 +266,23 @@ class SpaceshipAutomation {
     return Object.values(projectManager.projects).filter(project => project instanceof SpaceshipProject);
   }
 
+  getUnassignedTarget() {
+    return {
+      name: 'unassignedShips',
+      displayName: 'Unassigned Ships',
+      enabled: true,
+      unlocked: true,
+      isVisible: () => true,
+      getAutomationDisableAllowed: () => false
+    };
+  }
+
+  getAutomationTargets() {
+    const projects = this.getSpaceshipProjects();
+    projects.push(this.getUnassignedTarget());
+    return projects;
+  }
+
   unlockManualControls() {
     if (!this.lockedAssignments) return;
     this.updateManualControls(false);
@@ -317,7 +334,8 @@ class SpaceshipAutomation {
     }
 
     const projects = this.getSpaceshipProjects();
-    if (projects.length === 0) {
+    const targets = this.getAutomationTargets();
+    if (targets.length === 0) {
       this.unlockManualControls();
       return;
     }
@@ -349,7 +367,7 @@ class SpaceshipAutomation {
         const weightedEntries = [];
         for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
           const entry = entries[entryIndex];
-          const project = projects.find(item => item.name === entry.projectId);
+          const project = targets.find(item => item.name === entry.projectId);
           if (!project) continue;
           const releaseOnDisable = this.disabledProjects.has(entry.projectId);
           const automationAllowed = typeof project.shouldAutomationDisable === 'function' ? !project.shouldAutomationDisable() : true;

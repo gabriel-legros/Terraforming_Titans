@@ -368,7 +368,7 @@ function attachAutomationHandlers() {
 }
 
 function renderAutomationSteps(automation, preset, container) {
-  const projects = automation.getSpaceshipProjects();
+  const projects = automation.getAutomationTargets();
 
   const formatProjectOption = (option, project) => {
     const label = project.displayName || project.name;
@@ -575,20 +575,24 @@ function renderAutomationSteps(automation, preset, container) {
       row.appendChild(maxWrapper);
 
       const projectObject = projects.find(item => item.name === entry.projectId);
-      if (projectObject && typeof projectObject.getAutomationDisableAllowed === 'function' ? projectObject.getAutomationDisableAllowed() : true) {
-        const excludeWrapper = document.createElement('label');
-        excludeWrapper.classList.add('automation-entry-exclude');
-        const exclude = document.createElement('input');
-        exclude.type = 'checkbox';
-        exclude.checked = automation.disabledProjects.has(entry.projectId);
+      const excludeWrapper = document.createElement('label');
+      excludeWrapper.classList.add('automation-entry-exclude');
+      const allowDisable = projectObject && (projectObject.getAutomationDisableAllowed ? projectObject.getAutomationDisableAllowed() : true);
+      const exclude = document.createElement('input');
+      exclude.type = 'checkbox';
+      exclude.checked = automation.disabledProjects.has(entry.projectId);
+      excludeWrapper.append(exclude, 'Release if disabled');
+      if (allowDisable) {
         exclude.addEventListener('change', (event) => {
           automation.toggleProjectDisabled(entry.projectId, event.target.checked);
           queueAutomationUIRefresh();
           updateAutomationUI();
         });
-        excludeWrapper.append(exclude, 'Release if disabled');
-        row.appendChild(excludeWrapper);
+      } else {
+        exclude.disabled = true;
+        excludeWrapper.style.visibility = 'hidden';
       }
+      row.appendChild(excludeWrapper);
 
       const remove = document.createElement('button');
       remove.textContent = '✕';
