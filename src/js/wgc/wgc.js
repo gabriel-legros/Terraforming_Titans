@@ -131,7 +131,8 @@ class WarpGateCommand extends EffectableEntity {
         library: 0
       },
       criticalSuccessCount: 0,
-      criticalSuccessWeight: 0
+      criticalSuccessWeight: 0,
+      baseEventResults: []
     }));
     this.teamOperationCounts = Array(4).fill(0);
     this.teamNextOperationNumber = Array(4).fill(1);
@@ -298,6 +299,27 @@ class WarpGateCommand extends EffectableEntity {
       if (evt && evt.isBase) return i;
     }
     return -1;
+  }
+
+  ensureBaseEventResults(op) {
+    const total = Math.max(1, Number.isFinite(op.baseEventsTotal) && op.baseEventsTotal > 0 ? op.baseEventsTotal : 10);
+    if (!Array.isArray(op.baseEventResults)) {
+      op.baseEventResults = Array.from({ length: total }, () => 'pending');
+      return op.baseEventResults;
+    }
+    if (op.baseEventResults.length !== total) {
+      op.baseEventResults = Array.from({ length: total }, (_, idx) => op.baseEventResults[idx] || 'pending');
+      return op.baseEventResults;
+    }
+    for (let i = 0; i < op.baseEventResults.length; i += 1) {
+      if (!op.baseEventResults[i]) op.baseEventResults[i] = 'pending';
+    }
+    return op.baseEventResults;
+  }
+
+  resetBaseEventResults(op) {
+    const total = Math.max(1, Number.isFinite(op.baseEventsTotal) && op.baseEventsTotal > 0 ? op.baseEventsTotal : 10);
+    op.baseEventResults = Array.from({ length: total }, () => 'pending');
   }
 
   refreshOperationProgress(op, teamIndex) {
@@ -750,6 +772,11 @@ class WarpGateCommand extends EffectableEntity {
         const result = this.resolveEvent(idx, event);
         op.currentEventIndex += 1;
         if (event && event.isBase) {
+          const results = this.ensureBaseEventResults(op);
+          const slot = Math.min(op.baseEventsCompleted, results.length - 1);
+          if (slot >= 0 && slot < results.length) {
+            results[slot] = result.success ? 'success' : 'failure';
+          }
           op.baseEventsCompleted += 1;
           op.progressSegmentStart = eventTime;
         }
@@ -872,6 +899,7 @@ class WarpGateCommand extends EffectableEntity {
     op.nextEvent = 60;
     op.baseEventsTotal = 10;
     op.baseEventsCompleted = 0;
+    this.resetBaseEventResults(op);
     op.progressStartValue = 0;
     op.progressTargetValue = 0;
     op.progressIntervalStart = 0;
@@ -993,6 +1021,7 @@ class WarpGateCommand extends EffectableEntity {
     op.currentEventIndex = 0;
     op.baseEventsTotal = 10;
     op.baseEventsCompleted = 0;
+    this.resetBaseEventResults(op);
     op.progressStartValue = 0;
     op.progressTargetValue = 0;
     op.progressIntervalStart = 0;
@@ -1024,6 +1053,7 @@ class WarpGateCommand extends EffectableEntity {
       op.eventQueue = [];
       op.currentEventIndex = 0;
       op.baseEventsCompleted = 0;
+      this.resetBaseEventResults(op);
       op.progressStartValue = 0;
       op.progressTargetValue = 0;
       op.progressIntervalStart = 0;
@@ -1087,6 +1117,7 @@ class WarpGateCommand extends EffectableEntity {
         currentEventIndex: Number.isFinite(op.currentEventIndex) ? op.currentEventIndex : 0,
         baseEventsTotal: Number.isFinite(op.baseEventsTotal) ? op.baseEventsTotal : 10,
         baseEventsCompleted: Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted : 0,
+        baseEventResults: Array.isArray(op.baseEventResults) ? op.baseEventResults.slice() : [],
         progressStartValue: Number.isFinite(op.progressStartValue) ? op.progressStartValue : 0,
         progressTargetValue: Number.isFinite(op.progressTargetValue) ? op.progressTargetValue : 0,
         progressIntervalStart: Number.isFinite(op.progressIntervalStart) ? op.progressIntervalStart : 0,
@@ -1156,6 +1187,7 @@ class WarpGateCommand extends EffectableEntity {
         currentEventIndex: Number.isFinite(op.currentEventIndex) ? op.currentEventIndex : 0,
         baseEventsTotal: Number.isFinite(op.baseEventsTotal) ? op.baseEventsTotal : 10,
         baseEventsCompleted: Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted : 0,
+        baseEventResults: Array.isArray(op.baseEventResults) ? op.baseEventResults.slice() : [],
         progressStartValue: Number.isFinite(op.progressStartValue) ? op.progressStartValue : 0,
         progressTargetValue: Number.isFinite(op.progressTargetValue) ? op.progressTargetValue : 0,
         progressIntervalStart: Number.isFinite(op.progressIntervalStart) ? op.progressIntervalStart : 0,
@@ -1222,6 +1254,7 @@ class WarpGateCommand extends EffectableEntity {
       if (!Number.isFinite(op.baseEventsCompleted) || op.baseEventsCompleted < 0) {
         op.baseEventsCompleted = 0;
       }
+      this.ensureBaseEventResults(op);
       if (op.active) {
         if (!Array.isArray(op.eventQueue) || op.eventQueue.length === 0) {
           op.eventQueue = this.generateOperationEvents(op, i);
@@ -1247,6 +1280,7 @@ class WarpGateCommand extends EffectableEntity {
         op.nextDifficultyModifier = 1;
         op.nextArtifactModifier = 1;
         op.criticalXpMultiplier = 1;
+        this.resetBaseEventResults(op);
       }
     });
   }

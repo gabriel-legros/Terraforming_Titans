@@ -1,11 +1,10 @@
-const { applyRWGEffects } = require('../src/js/rwg/rwgEffects.js');
-
 describe('applyRWGEffects', () => {
-  let addEffectSpy;
+  let applyRWGEffects;
+  let effects;
 
   beforeEach(() => {
-    addEffectSpy = jest.fn();
-    global.addEffect = addEffectSpy;
+    effects = [];
+    global.addEffect = (effect) => effects.push(effect);
     global.spaceManager = {
       randomWorldStatuses: {
         '12345': {
@@ -14,6 +13,9 @@ describe('applyRWGEffects', () => {
         }
       }
     };
+    jest.isolateModules(() => {
+      ({ applyRWGEffects } = require('../src/js/rwg/rwgEffects.js'));
+    });
   });
 
   afterEach(() => {
@@ -24,9 +26,7 @@ describe('applyRWGEffects', () => {
   test('applies rogue planet maintenance reduction', () => {
     applyRWGEffects();
 
-    const rogueEffects = addEffectSpy.mock.calls
-      .map(([effect]) => effect)
-      .filter((effect) => effect && effect.sourceId === 'rwg-rogue');
+    const rogueEffects = effects.filter((effect) => effect && effect.sourceId === 'rwg-rogue');
 
     expect(rogueEffects).toHaveLength(1);
     expect(rogueEffects[0]).toEqual(expect.objectContaining({
@@ -55,9 +55,7 @@ describe('applyRWGEffects', () => {
 
     applyRWGEffects();
 
-    const effectFor = (id) => addEffectSpy.mock.calls
-      .map(([effect]) => effect)
-      .find((effect) => effect && effect.effectId === id);
+    const effectFor = (id) => effects.find((effect) => effect && effect.effectId === id);
 
     expect(effectFor('rwg-titan-nitrogen')).toEqual(expect.objectContaining({
       value: 1 / 1.2,

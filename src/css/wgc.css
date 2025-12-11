@@ -677,18 +677,51 @@
   width: 100%;
   background-color: var(--wgc-bg-dark);
   border-radius: 4px;
-  height: 8px;
+  height: 14px;
   margin-top: 8px;
-  overflow: hidden;
   border: 1px solid var(--wgc-bg-light);
+  padding: 2px 3px;
+  box-sizing: border-box;
 }
 
-.operation-progress-bar {
+.operation-progress-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 3px;
   height: 100%;
-  background-color: var(--wgc-border-color);
+}
+
+.operation-progress-segment {
+  position: relative;
+  background-color: var(--wgc-bg-medium);
+  border: 1px solid var(--wgc-bg-light);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.operation-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
   width: 0%;
-  transition: width 0.5s linear;
+  background-color: var(--wgc-border-color);
   box-shadow: var(--wgc-accent-glow);
+  transition: width 0.25s linear, background-color 0.25s linear;
+}
+
+.operation-progress-segment.is-active .operation-progress-fill {
+  background-color: var(--wgc-border-color);
+}
+
+.operation-progress-segment.is-success .operation-progress-fill {
+  background-color: var(--wgc-green);
+  width: 100%;
+}
+
+.operation-progress-segment.is-failure .operation-progress-fill {
+  background-color: var(--wgc-red);
+  width: 100%;
 }
 
 .operation-summary {

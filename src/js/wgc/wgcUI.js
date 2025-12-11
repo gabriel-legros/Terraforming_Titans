@@ -274,8 +274,8 @@ function generateWGCTeamCards() {
       `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>${teamUnlocks[tIdx]} Operations Completed</div>`;
     const stanceVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
     const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
-    const progressValue = Math.max(0, Math.min(1, op.progress || 0));
-    const progressPercent = (progressValue * 100).toFixed(2);
+    const segmentCount = Math.max(1, op.baseEventsTotal || 10);
+    const segmentMarkup = Array.from({ length: segmentCount }, () => '<div class="operation-progress-segment"><div class="operation-progress-fill"></div></div>').join('');
     return `
       <div class="wgc-team-card" data-team="${tIdx}">
         <div class="wgc-team-body">
@@ -318,7 +318,7 @@ function generateWGCTeamCards() {
           </div>
         </div>
         <div class="operation-progress${op.active ? '' : ' hidden'}">
-          <div class="operation-progress-bar" style="width: ${progressPercent}%"></div>
+          <div class="operation-progress-track">${segmentMarkup}</div>
         </div>
         <div class="operation-summary${op.active ? '' : ' hidden'}">${op.summary || ''}</div>
         <div class="team-log hidden"><div class="team-log-content"></div></div>
@@ -354,7 +354,8 @@ function invalidateWGCTeamCache() {
       stanceSelect: card.querySelector('.hbi-select'),
       artSelect: card.querySelector('.artifact-select'),
       progressContainer: card.querySelector('.operation-progress'),
-      progressBar: card.querySelector('.operation-progress-bar'),
+      progressSegments: Array.from(card.querySelectorAll('.operation-progress-segment')),
+      progressFills: Array.from(card.querySelectorAll('.operation-progress-fill')),
       summaryEl: card.querySelector('.operation-summary'),
       logContainer,
       logEl: logContent,
@@ -1099,6 +1100,55 @@ function initializeWGCUI() {
 
 // (Removed alternate cache; we rely on teamElements below.)
 
+function updateOperationProgressSegments(op, refs) {
+  const container = refs.progressContainer;
+  const segments = refs.progressSegments || [];
+  const fills = refs.progressFills || [];
+  if (!container) return;
+  if (!op.active) {
+    container.classList.add('hidden');
+    segments.forEach((segment, idx) => {
+      segment.classList.remove('is-active', 'is-success', 'is-failure');
+      const fill = fills[idx];
+      if (fill) fill.style.width = '0%';
+    });
+    if (refs.summaryEl) {
+      refs.summaryEl.classList.add('hidden');
+      refs.summaryEl.textContent = '';
+    }
+    return;
+  }
+  container.classList.remove('hidden');
+  const total = segments.length || Math.max(1, op.baseEventsTotal || 10);
+  const results = Array.isArray(op.baseEventResults) ? op.baseEventResults : [];
+  const completed = Math.min(op.baseEventsCompleted || 0, total);
+  const activeIndex = completed < total ? completed : -1;
+  const duration = Math.max(op.nextEvent - op.progressSegmentStart, 0.001);
+  const elapsed = Math.max(op.timer - op.progressSegmentStart, 0);
+  const activeProgress = Math.min(1, elapsed / duration);
+  segments.forEach((segment, idx) => {
+    const fill = fills[idx];
+    segment.classList.remove('is-active', 'is-success', 'is-failure');
+    let width = 0;
+    const status = results[idx];
+    if (status === 'success') {
+      segment.classList.add('is-success');
+      width = 100;
+    } else if (status === 'failure') {
+      segment.classList.add('is-failure');
+      width = 100;
+    } else if (idx === activeIndex) {
+      segment.classList.add('is-active');
+      width = activeProgress * 100;
+    }
+    if (fill) fill.style.width = `${Math.max(0, Math.min(100, width))}%`;
+  });
+  if (refs.summaryEl) {
+    refs.summaryEl.classList.remove('hidden');
+    refs.summaryEl.textContent = op.summary || '';
+  }
+}
+
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   updateWGCStoryToggleButton();
@@ -1176,7 +1226,8 @@ function updateWGCUI() {
       stanceSelect,
       artSelect,
       progressContainer,
-      progressBar,
+      progressSegments,
+      progressFills,
       summaryEl,
       logContainer,
       logEl,
@@ -1207,24 +1258,7 @@ function updateWGCUI() {
         ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
       artSelect.value = val;
     }
-    if (progressContainer && progressBar) {
-      if (op.active) {
-        progressContainer.classList.remove('hidden');
-        const percent = Math.max(0, Math.min(100, (op.progress || 0) * 100));
-        progressBar.style.width = `${percent.toFixed(2)}%`;
-        if (summaryEl) {
-          summaryEl.classList.remove('hidden');
-          summaryEl.textContent = op.summary || '';
-        }
-      } else {
-        progressContainer.classList.add('hidden');
-        progressBar.style.width = '0%';
-        if (summaryEl) {
-          summaryEl.classList.add('hidden');
-          summaryEl.textContent = '';
-        }
-      }
-    }
+    updateOperationProgressSegments(op, refs);
     if (logEl) {
       const logEntries = warpGateCommand.logs[tIdx] || [];
       const hideStory = typeof warpGateCommand !== 'undefined' && warpGateCommand.hideStoryLogs;

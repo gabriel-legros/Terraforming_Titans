@@ -30,6 +30,7 @@ describe('PatienceManager spending', () => {
         this.value += amount;
       },
     };
+    superalloys.productionRateByType = { building: { 'Superalloy Foundry': superalloys.productionRate } };
 
     superconductors = {
       productionRate: 0.5,
@@ -39,6 +40,7 @@ describe('PatienceManager spending', () => {
         this.value += amount;
       },
     };
+    superconductors.productionRateByType = { building: { 'Superconductor Factory': superconductors.productionRate } };
 
     advancedResearch = {
       productionRate: 1,
@@ -59,6 +61,7 @@ describe('PatienceManager spending', () => {
         advancedResearch,
       },
     };
+    global.buildings = {};
 
     global.spaceManager = {
       isBooleanFlagSet: (flag) => flag === 'oneillCylinders',
@@ -93,6 +96,7 @@ describe('PatienceManager spending', () => {
     delete global.getOneillCylinderCapacity;
     delete global.updateOneillCylinderStatsUI;
     delete global.warpGateCommand;
+    delete global.buildings;
   });
 
   test('spending patience rewards superalloys, superconductors, advanced research, and O\'Neill cylinders', () => {
