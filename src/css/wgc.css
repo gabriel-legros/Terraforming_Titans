@@ -18,6 +18,20 @@
   color: var(--wgc-text-light);
 }
 
+.wgc-container .info-tooltip-icon .resource-tooltip {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+.wgc-info-tooltip {
+  font-family: Arial, sans-serif !important;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .wgc-container h3 {
   color: var(--wgc-border-color);
   text-transform: uppercase;

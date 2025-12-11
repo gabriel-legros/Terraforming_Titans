@@ -961,7 +961,10 @@ function initializeWGCUI() {
   if (container) {
     container.innerHTML = generateWGCLayout();
     wgcTeamRulesInfoIcon = container.querySelector('#wgc-team-rules-info');
-    attachDynamicInfoTooltip(wgcTeamRulesInfoIcon, teamRulesTooltip);
+    const teamTooltip = attachDynamicInfoTooltip(wgcTeamRulesInfoIcon, teamRulesTooltip);
+    if (teamTooltip) {
+      teamTooltip.classList.add('wgc-info-tooltip');
+    }
     wgcCopyStatsButton = container.querySelector('#wgc-copy-team-stats');
     if (wgcCopyStatsButton) {
       const triggerCopy = () => {
