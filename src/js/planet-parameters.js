@@ -248,13 +248,13 @@ const titanOverrides = {
     },
  "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 25587.512704087836
+        "initialValue": 25588.944823689315
       },
       "atmosphericWater": {
-        "initialValue": 8.74505279449671e-9
+        "initialValue": 8.745052797330819e-9
       },
       "atmosphericMethane": {
-        "initialValue": 438594187899312.1
+        "initialValue": 438594187653256.8
       },
       "oxygen": {
         "initialValue": 1000000000
@@ -303,47 +303,47 @@ const titanOverrides = {
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 504551568536.48663,
+      "liquid": 504551161503.3524,
       "ice": 0
     },
     "temperate": {
-      "liquid": 661143573140.4205,
+      "liquid": 661144196423.3123,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 3759836574805.6396
+      "ice": 3759836604007.875
     }
   },
   "zonalCO2": {
     "tropical": {
       "liquid": 0,
-      "ice": 199.99276208312517
+      "ice": 199.79036001955185
     },
     "temperate": {
       "liquid": 0,
-      "ice": 317.429961100031
+      "ice": 317.33644680918525
     },
     "polar": {
       "liquid": 0,
-      "ice": 73895.06457637873
+      "ice": 73893.92837326942
     }
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 94.76248043428207,
-      "day": 95.10326191546818,
-      "night": 94.42169895309596
+      "value": 94.76248043315107,
+      "day": 95.10326191435306,
+      "night": 94.42169895194908
     },
     "temperate": {
-      "value": 91.39450737046133,
-      "day": 91.67789357534558,
-      "night": 91.11112116557707
+      "value": 91.394507369679,
+      "day": 91.67789357457653,
+      "night": 91.11112116478148
     },
     "polar": {
-      "value": 84.26536168791816,
-      "day": 84.36626128364675,
-      "night": 84.16446209218957
+      "value": 84.2653616883225,
+      "day": 84.36626128407312,
+      "night": 84.16446209257188
     }
   },
   celestialParameters : { // Override all celestial parameters
