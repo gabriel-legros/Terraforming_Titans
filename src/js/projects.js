@@ -1,5 +1,13 @@
 // projects.js
 
+const IMPORT_RESOURCE_PROJECT_NAMES = [
+  'oreSpaceMining',
+  'siliconSpaceMining',
+  'carbonSpaceMining',
+  'waterSpaceMining',
+  'nitrogenSpaceMining',
+  'hydrogenSpaceMining',
+];
 
 class Project extends EffectableEntity {
   constructor(config, name) {
@@ -764,6 +772,7 @@ class ProjectManager extends EffectableEntity {
     }
 
     this.projectOrder = storyProjects.reverse().concat(otherProjects);
+    this.normalizeImportProjectOrder();
   }
 
   startProject(projectName) {
@@ -841,25 +850,83 @@ class ProjectManager extends EffectableEntity {
       .filter(project => project && this.isProjectRelevantToCurrentPlanet(project));
   }
 
+  getImportProjectNames() {
+    return IMPORT_RESOURCE_PROJECT_NAMES.slice();
+  }
+
+  normalizeImportProjectOrder(order = this.projectOrder) {
+    if (!Array.isArray(order) || order.length === 0) {
+      return order;
+    }
+
+    const importSet = new Set(IMPORT_RESOURCE_PROJECT_NAMES);
+    let firstIndex = -1;
+    const orderedImports = [];
+
+    order.forEach((name, index) => {
+      if (!importSet.has(name)) {
+        return;
+      }
+      if (firstIndex === -1) {
+        firstIndex = index;
+      }
+      if (!orderedImports.includes(name)) {
+        orderedImports.push(name);
+      }
+    });
+
+    if (firstIndex === -1) {
+      return order;
+    }
+
+    const withoutImports = order.filter(name => !importSet.has(name));
+    const insertIndex = firstIndex > withoutImports.length ? withoutImports.length : firstIndex;
+    const merged = withoutImports
+      .slice(0, insertIndex)
+      .concat(orderedImports)
+      .concat(withoutImports.slice(insertIndex));
+
+    if (order === this.projectOrder) {
+      this.projectOrder = merged;
+    }
+
+    return merged;
+  }
+
+  reorderCategoryProjects(category, orderedNames) {
+    const categoryKey = category || 'general';
+    const targetNames = Array.isArray(orderedNames) ? orderedNames : [];
+    const newOrder = [];
+    let inserted = false;
+
+    for (const name of this.projectOrder) {
+      const project = this.projects[name];
+      const projectCategory = project && project.category ? project.category : 'general';
+      if (projectCategory !== categoryKey) {
+        newOrder.push(name);
+        continue;
+      }
+      if (!inserted) {
+        newOrder.push(...targetNames);
+        inserted = true;
+      }
+    }
+
+    this.projectOrder = newOrder;
+    this.normalizeImportProjectOrder();
+  }
+
   reorderProject(fromIndex, toIndex, category) {
     const categoryProjects = this.projectOrder.filter(name => (this.projects[name].category || 'general') === category);
 
     const [movedProject] = categoryProjects.splice(fromIndex, 1);
     categoryProjects.splice(toIndex, 0, movedProject);
 
-    const newOrder = [];
-    let categoryProjectsAdded = false;
-    for (const projectName of this.projectOrder) {
-        if ((this.projects[projectName].category || 'general') === category) {
-            if (!categoryProjectsAdded) {
-                newOrder.push(...categoryProjects);
-                categoryProjectsAdded = true;
-            }
-        } else {
-            newOrder.push(projectName);
-        }
+    if (!movedProject) {
+      return;
     }
-    this.projectOrder = newOrder;
+
+    this.reorderCategoryProjects(category, categoryProjects);
   }
 
   estimateProjects(deltaTime = 1000) {
@@ -963,6 +1030,7 @@ class ProjectManager extends EffectableEntity {
 
   // Save the state of all projects
   saveState() {
+    this.normalizeImportProjectOrder();
     const projectState = {};
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
@@ -990,6 +1058,7 @@ class ProjectManager extends EffectableEntity {
         this.projectOrder.push(name);
       }
     });
+    this.normalizeImportProjectOrder();
 
     for (const projectName in projectState) {
       const savedProject = projectState[projectName];
@@ -1027,6 +1096,7 @@ class ProjectManager extends EffectableEntity {
   }
 
   saveTravelState() {
+    this.normalizeImportProjectOrder();
     const travelState = { _order: this.projectOrder.slice() };
     const preserveAuto = typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart;
     for (const name in this.projects) {
@@ -1066,6 +1136,7 @@ class ProjectManager extends EffectableEntity {
         }
       });
     }
+    this.normalizeImportProjectOrder();
     for (const name in travelState) {
       const project = this.projects[name];
       if (!project) continue;

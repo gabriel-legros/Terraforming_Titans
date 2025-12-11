@@ -339,6 +339,7 @@ The planet visualiser has been modularised into files covering core setup, light
  - Rogue random world maintenance bonus now divides maintenance by (1 + 2% per rogue) instead of a flat subtraction.
 
 ## Feature updates
+- Special project ordering now treats all import resource missions as one card, ignores hidden projects when showing arrows, and saves the grouped order across travel and saves.
 - Added Solis Prime as a rogue story planet that relies on background radiation for luminosity.
 - Galaxy map sectors that block story progress now show a journal icon until conquered and explain the required world milestone in the sector details.
 - Added an Artificial space subtab managed by a new ArtificialManager and UI that only appears when the manager is enabled.

@@ -467,63 +467,160 @@ function getOrCreateCategoryContainer(category) {
   return fallback;
 }
 
-function moveProject(projectName, direction, shiftKey = false) {
+function isProjectVisibleForOrder(project) {
+  if (!project || !projectManager.isProjectRelevantToCurrentPlanet(project)) return false;
+  if (project.isPermanentlyDisabled && project.isPermanentlyDisabled()) return false;
+  const visibilityCheck = project.isVisible;
+  const resolvedVisibility = visibilityCheck && visibilityCheck.call
+    ? visibilityCheck.call(project)
+    : visibilityCheck;
+  const unlocked = resolvedVisibility === undefined ? project.unlocked : resolvedVisibility;
+  return !!unlocked;
+}
+
+function getImportProjectNames() {
+  const importUI = getImportResourcesUI();
+  if (importUI && importUI.getProjectNames) {
+    return importUI.getProjectNames();
+  }
+  if (projectManager && projectManager.getImportProjectNames) {
+    return projectManager.getImportProjectNames();
+  }
+  return [];
+}
+
+function getCategoryEntries(category) {
+  const entries = [];
+  const importNames = getImportProjectNames();
+  const importSet = new Set(importNames);
+  const categoryKey = category || 'general';
+  let importEntry = null;
+
+  projectManager.projectOrder.forEach((projectName) => {
     const project = projectManager.projects[projectName];
-    const category = project.category || 'general';
-  const categoryProjects = projectManager
-    .getProjectStatuses()
-    .filter(p => (p.category || 'general') === category);
-  const visibleIndexes = [];
-  categoryProjects.forEach((p, idx) => {
-    if (!(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)) {
-      visibleIndexes.push(idx);
-    }
-  });
-    const fromIndexFull = categoryProjects.findIndex(p => p.name === projectName);
-    const fromVisiblePos = visibleIndexes.indexOf(fromIndexFull);
-
-    if (fromVisiblePos === -1) return;
-
-    let targetVisiblePos = fromVisiblePos;
-    if (shiftKey) {
-      targetVisiblePos = direction === 'up' ? 0 : visibleIndexes.length - 1;
-    } else {
-      targetVisiblePos = direction === 'up' ? fromVisiblePos - 1 : fromVisiblePos + 1;
-    }
-
-    if (
-      targetVisiblePos < 0 ||
-      targetVisiblePos >= visibleIndexes.length ||
-      targetVisiblePos === fromVisiblePos
-    ) {
+    if (!project) return;
+    const projectCategory = project.category || 'general';
+    if (projectCategory !== categoryKey) return;
+    const visible = isProjectVisibleForOrder(project);
+    if (importSet.has(projectName)) {
+      if (!importEntry) {
+        importEntry = { type: 'import', names: [], project, visible: false };
+        entries.push(importEntry);
+      }
+      if (!importEntry.names.includes(projectName)) {
+        importEntry.names.push(projectName);
+      }
+      importEntry.visible = importEntry.visible || visible;
       return;
     }
+    entries.push({ type: 'project', name: projectName, project, visible });
+  });
 
-    const toIndexFull = visibleIndexes[targetVisiblePos];
-    projectManager.reorderProject(fromIndexFull, toIndexFull, category);
+  return entries;
+}
 
-    // Manually reorder the DOM to avoid full re-render
-    const container = projectElements[projectName].projectItem.parentElement;
-    const projectElement = projectElements[projectName].projectItem;
+function expandCategoryEntries(entries) {
+  const orderedNames = [];
+  const importNames = getImportProjectNames();
 
-    if (toIndexFull === 0) {
-        // Insert before first card (avoid querySelector)
-        const firstCard = container.firstElementChild;
-        container.insertBefore(projectElement, firstCard);
-    } else if (toIndexFull === categoryProjects.length - 1) {
-        container.appendChild(projectElement);
-    } else {
-        const sibling = projectElements[categoryProjects[toIndexFull].name].projectItem;
-        if (direction === 'up') {
-            container.insertBefore(projectElement, sibling);
-        } else {
-            container.insertBefore(projectElement, sibling.nextElementSibling);
+  entries.forEach((entry) => {
+    if (entry.type === 'import') {
+      const names = entry.names.length ? entry.names.slice() : [];
+      importNames.forEach((name) => {
+        if (!names.includes(name)) {
+          names.push(name);
         }
+      });
+      orderedNames.push(...names);
+      return;
     }
+    orderedNames.push(entry.name);
+  });
 
-    // After reordering, update all project UIs to reflect new arrow states
-    const projectsToUpdate = projectManager.getProjectStatuses();
-    projectsToUpdate.forEach(p => updateProjectUI(p.name));
+  return orderedNames;
+}
+
+function getEntryElements(entry) {
+  if (entry.type === 'import') {
+    const importUI = getImportResourcesUI();
+    const headerName = importUI ? importUI.getHeaderProjectName() : null;
+    return headerName ? projectElements[headerName] : null;
+  }
+  return projectElements[entry.name];
+}
+
+function syncCategoryDomOrder(category, entries) {
+  const container = getOrCreateCategoryContainer(category || 'general');
+  const seen = new Set();
+
+  entries.forEach((entry) => {
+    const elements = getEntryElements(entry);
+    const card = elements ? elements.projectItem : null;
+    if (!card || seen.has(card)) {
+      return;
+    }
+    seen.add(card);
+    container.appendChild(card);
+  });
+}
+
+function updateCategoryReorderButtons(category, entries) {
+  const list = entries || getCategoryEntries(category);
+  const visibleEntries = list.filter(entry => entry.visible);
+  const indexMap = new Map();
+  visibleEntries.forEach((entry, idx) => indexMap.set(entry, idx));
+  const lastVisible = visibleEntries.length - 1;
+
+  list.forEach((entry) => {
+    const elements = getEntryElements(entry);
+    if (!elements) {
+      return;
+    }
+    const position = indexMap.has(entry) ? indexMap.get(entry) : -1;
+    if (elements.upButton) {
+      elements.upButton.classList.toggle('disabled', position <= 0);
+    }
+    if (elements.downButton) {
+      elements.downButton.classList.toggle('disabled', position === -1 || position >= lastVisible);
+    }
+  });
+}
+
+function moveProject(projectName, direction, shiftKey = false) {
+  const project = projectManager.projects[projectName];
+  if (!project) return;
+  const category = project.category || 'general';
+  const entries = getCategoryEntries(category);
+  const entry = entries.find(item =>
+    item.type === 'import' ? item.names.includes(projectName) : item.name === projectName
+  );
+  if (!entry) return;
+
+  const visibleEntries = entries.filter(item => item.visible);
+  const fromVisibleIndex = visibleEntries.indexOf(entry);
+  if (fromVisibleIndex === -1) return;
+
+  const targetVisibleIndex = shiftKey
+    ? (direction === 'up' ? 0 : visibleEntries.length - 1)
+    : fromVisibleIndex + (direction === 'up' ? -1 : 1);
+
+  if (targetVisibleIndex < 0 || targetVisibleIndex >= visibleEntries.length || targetVisibleIndex === fromVisibleIndex) {
+    return;
+  }
+
+  const targetEntry = visibleEntries[targetVisibleIndex];
+  const fromIndex = entries.indexOf(entry);
+  entries.splice(fromIndex, 1);
+  const toIndex = entries.indexOf(targetEntry) + (direction === 'up' ? 0 : 1);
+  entries.splice(toIndex, 0, entry);
+
+  const orderedNames = expandCategoryEntries(entries);
+  projectManager.reorderCategoryProjects(category, orderedNames);
+  syncCategoryDomOrder(category, entries);
+  updateCategoryReorderButtons(category, entries);
+
+  const projectsToUpdate = projectManager.getProjectStatuses();
+  projectsToUpdate.forEach(p => updateProjectUI(p.name));
 }
 
 function getUpdatedResourceGain(project) {
@@ -984,25 +1081,7 @@ function updateProjectUI(projectName) {
     }
   }
 
-  // Disable/enable reorder buttons
-  const shouldUpdateOrderButtons = !isImportProject || (importUI && projectName === importUI.getHeaderProjectName());
-  if (shouldUpdateOrderButtons) {
-    const category = project.category || 'general';
-    const categoryProjectsAll = projectManager
-      .getProjectStatuses()
-      .filter(p => (p.category || 'general') === category);
-    const categoryProjects = categoryProjectsAll.filter(p =>
-      !(p.isPermanentlyDisabled?.()) && (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
-    );
-    const currentIndex = categoryProjects.findIndex(p => p.name === projectName);
-
-    if (elements.upButton) {
-      elements.upButton.classList.toggle('disabled', currentIndex <= 0);
-    }
-    if (elements.downButton) {
-      elements.downButton.classList.toggle('disabled', currentIndex === -1 || currentIndex === categoryProjects.length - 1);
-    }
-  }
+  updateCategoryReorderButtons(project.category || 'general');
 
   if (!project.unlocked && project.name === 'dysonSwarmReceiver' && project.collectors > 0) {
     if (elements.progressButton) elements.progressButton.style.display = 'none';

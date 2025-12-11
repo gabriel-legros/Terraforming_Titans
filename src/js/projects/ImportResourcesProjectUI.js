@@ -60,6 +60,10 @@ class ImportResourcesProjectUI {
     return this.headerProjectName;
   }
 
+  getProjectNames() {
+    return this.projectNames.slice();
+  }
+
   getRow(projectName) {
     return this.rows[projectName];
   }
