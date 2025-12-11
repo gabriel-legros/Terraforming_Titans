@@ -161,21 +161,54 @@ class SolisManager extends EffectableEntity {
   }
 
   multiplyReward() {
-    this.rewardMultiplier += 1;
-    if (this.currentQuest) {
-      this.currentQuest.quantity *= 10;
-    }
+    const baseQuantity = this.getBaseQuestQuantity();
+    this.applyMultiplier(this.rewardMultiplier + 1, baseQuantity);
   }
 
   divideReward() {
-    if (this.rewardMultiplier > 1) {
-      this.rewardMultiplier -= 1;
-      if (this.currentQuest) {
-        this.currentQuest.quantity = Math.ceil(this.currentQuest.quantity / 10);
-      }
-    } else {
-      this.rewardMultiplier = 1;
+    const baseQuantity = this.getBaseQuestQuantity();
+    const nextMultiplier = Math.max(1, this.rewardMultiplier - 1);
+    this.applyMultiplier(nextMultiplier, baseQuantity);
+  }
+
+  getBaseQuestQuantity() {
+    if (!this.currentQuest) return 0;
+    const factor = Math.pow(10, Math.max(0, this.rewardMultiplier - 1));
+    return Math.ceil(this.currentQuest.quantity / factor);
+  }
+
+  applyMultiplier(multiplier, baseQuantity) {
+    const qty = Math.max(0, baseQuantity);
+    this.rewardMultiplier = Math.max(1, Math.floor(multiplier));
+    if (this.currentQuest && qty > 0) {
+      this.currentQuest.quantity = qty * Math.pow(10, this.rewardMultiplier - 1);
     }
+  }
+
+  setMinimumRewardMultiplier() {
+    const baseQuantity = this.getBaseQuestQuantity();
+    this.applyMultiplier(1, baseQuantity);
+  }
+
+  setMaximumAffordableRewardMultiplier() {
+    const quest = this.currentQuest;
+    if (!quest) {
+      this.applyMultiplier(1, 0);
+      return;
+    }
+    const baseQuantity = this.getBaseQuestQuantity();
+    const available = resources?.colony?.[quest.resource]?.value ?? 0;
+    if (baseQuantity <= 0 || available <= 0) {
+      this.applyMultiplier(1, baseQuantity);
+      return;
+    }
+    let multiplier = 1;
+    let required = baseQuantity;
+    while (required * 10 <= available) {
+      multiplier += 1;
+      required *= 10;
+    }
+    this.applyMultiplier(multiplier, baseQuantity);
   }
 
   setSolisTabAlert(value) {

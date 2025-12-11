@@ -131,8 +131,10 @@ function initializeSolisUI() {
   hideSolisTab();
   const refreshBtn = document.getElementById('solis-refresh-button');
   const completeBtn = document.getElementById('solis-complete-button');
+  const minBtn = document.getElementById('solis-min-button');
   const multBtn = document.getElementById('solis-multiply-button');
   const divBtn = document.getElementById('solis-divide-button');
+  const maxBtn = document.getElementById('solis-max-button');
   const silenceToggle = document.getElementById('solis-silence-toggle');
 
   if (refreshBtn) {
@@ -157,6 +159,18 @@ function initializeSolisUI() {
   if (divBtn) {
     divBtn.addEventListener('click', () => {
       solisManager.divideReward();
+      updateSolisUI();
+    });
+  }
+  if (minBtn) {
+    minBtn.addEventListener('click', () => {
+      solisManager.setMinimumRewardMultiplier();
+      updateSolisUI();
+    });
+  }
+  if (maxBtn) {
+    maxBtn.addEventListener('click', () => {
+      solisManager.setMaximumAffordableRewardMultiplier();
       updateSolisUI();
     });
   }
@@ -309,6 +323,8 @@ function initializeSolisUI() {
   // New: Set initial button text
   if (multBtn) multBtn.textContent = '+';
   if (divBtn) divBtn.textContent = '-';
+  if (minBtn) minBtn.textContent = 'Min';
+  if (maxBtn) maxBtn.textContent = 'Max';
 
   solisUIInitialized = true;
 }
