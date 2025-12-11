@@ -486,7 +486,6 @@ const projectParameters = {
     type: 'DysonSphereProject',
     name: 'Dyson Sphere',
     category: 'giga',
-    requireStar: true,
     cost: {
       colony: {
         superalloys: 1_000_000_000_000_000_000,
