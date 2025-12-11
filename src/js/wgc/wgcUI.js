@@ -3,6 +3,7 @@ let wgcUIInitialized = false;
 let wgcStoryToggleButton = null;
 let wgcStoryToggleLabel = null;
 let wgcCopyStatsButton = null;
+let wgcTeamRulesInfoIcon = null;
 const wgcPendingLogScroll = new Set();
 
 function queueWGCRender(callback) {
@@ -918,7 +919,7 @@ function generateWGCLayout() {
           <div class="wgc-card" id="wgc-teams-section">
             <div class="wgc-card-header">
               <div class="wgc-card-title">
-                <h3>Teams <span class="info-tooltip-icon" title="${teamRulesTooltip}">&#9432;</span></h3>
+                <h3>Teams <span id="wgc-team-rules-info" class="info-tooltip-icon">&#9432;</span></h3>
                 <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" title="Copy Team Stats to Clipboard" aria-label="Copy Team Stats to Clipboard"></span>
               </div>
               <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
@@ -959,6 +960,8 @@ function initializeWGCUI() {
   const container = document.getElementById('wgc-hope');
   if (container) {
     container.innerHTML = generateWGCLayout();
+    wgcTeamRulesInfoIcon = container.querySelector('#wgc-team-rules-info');
+    attachDynamicInfoTooltip(wgcTeamRulesInfoIcon, teamRulesTooltip);
     wgcCopyStatsButton = container.querySelector('#wgc-copy-team-stats');
     if (wgcCopyStatsButton) {
       const triggerCopy = () => {
