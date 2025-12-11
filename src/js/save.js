@@ -164,6 +164,8 @@ function getGameState() {
     spaceManager: (typeof spaceManager !== 'undefined' && typeof spaceManager.saveState === 'function') ? spaceManager.saveState() : undefined,
     galaxyManager: (typeof galaxyManager !== 'undefined' && typeof galaxyManager.saveState === 'function') ? galaxyManager.saveState() : undefined,
     selectedBuildCounts: typeof selectedBuildCounts !== 'undefined' ? selectedBuildCounts : undefined,
+    projectDisplayState: typeof projectDisplayState !== 'undefined' ? projectDisplayState : undefined,
+    structureDisplayState: typeof structureDisplayState !== 'undefined' ? structureDisplayState : undefined,
     settings: typeof gameSettings !== 'undefined' ? gameSettings : undefined,
     colonySliderSettings: (typeof colonySliderSettings !== 'undefined' && typeof colonySliderSettings.saveState === 'function') ? colonySliderSettings.saveState() : undefined,
     constructionOffice: typeof saveConstructionOfficeState === 'function' ? saveConstructionOfficeState() : undefined,
@@ -205,6 +207,15 @@ function loadGame(slotOrCustomString, recreate = true) {
 
   try {
     const gameState = JSON.parse(savedState);
+    resetStructureDisplayState();
+    resetProjectDisplayState();
+    if (gameState.structureDisplayState) {
+      structureDisplayState.collapsed = { ...(gameState.structureDisplayState.collapsed || {}) };
+      structureDisplayState.hidden = { ...(gameState.structureDisplayState.hidden || {}) };
+    }
+    if (gameState.projectDisplayState) {
+      projectDisplayState.collapsed = { ...(gameState.projectDisplayState.collapsed || {}) };
+    }
 
       // Load space state first so planet parameters are correct
       const savedSpace = gameState.spaceManager || gameState.spaceState;
@@ -374,6 +385,7 @@ function loadGame(slotOrCustomString, recreate = true) {
           }
         }
       }
+      applyStructureDisplayPreferences(buildings);
       createBuildingButtons(buildings);
       if (typeof initializeBuildingAlerts === 'function') {
         initializeBuildingAlerts();
@@ -403,6 +415,7 @@ function loadGame(slotOrCustomString, recreate = true) {
             }
           }
         }
+      applyStructureDisplayPreferences(colonies);
       createColonyButtons(colonies);
       recalculateLandUsage();
 

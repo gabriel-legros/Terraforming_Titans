@@ -72,7 +72,8 @@ if (!rwgGravityHelpers.createGravityWarning) {
     const happinessText = fmt(rwgGravityHelpers.roundTo(happinessPenalty, 2), false, 2);
     const costText = fmt(rwgGravityHelpers.roundTo(costIncrease, 2), false, 2);
     const penaltyLine = `This world imposes a ${happinessText}% happiness penalty and adds ${costText}% to all building and colony costs.`;
-    return `<span class="info-tooltip-icon" title="${happinessLine} ${costLine} ${penaltyLine}">⚠</span>`;
+    const severityClass = gravity >= 20 ? 'rwg-gravity-warning-high' : 'rwg-gravity-warning-medium';
+    return `<span class="info-tooltip-icon rwg-gravity-warning ${severityClass}" title="${happinessLine} ${costLine} ${penaltyLine}">⚠</span>`;
   };
 }
 

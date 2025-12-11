@@ -1027,7 +1027,7 @@ class ProjectManager extends EffectableEntity {
   }
 
   saveTravelState() {
-    const travelState = {};
+    const travelState = { _order: this.projectOrder.slice() };
     const preserveAuto = typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart;
     for (const name in this.projects) {
       const project = this.projects[name];
@@ -1057,6 +1057,15 @@ class ProjectManager extends EffectableEntity {
 
   loadTravelState(travelState = {}) {
     const preserveAuto = typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart;
+    if (Array.isArray(travelState._order)) {
+      this.projectOrder = travelState._order.slice();
+      this.projectOrder = this.projectOrder.filter(projectName => this.projects.hasOwnProperty(projectName));
+      Object.keys(this.projects).forEach(name => {
+        if (!this.projectOrder.includes(name)) {
+          this.projectOrder.push(name);
+        }
+      });
+    }
     for (const name in travelState) {
       const project = this.projects[name];
       if (!project) continue;

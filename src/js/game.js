@@ -49,6 +49,9 @@ function initializeDefaultGlobals(){
     description: 'Manages game tabs and unlocks them based on effects.',
   }, tabParameters);
 
+  resetStructureDisplayState();
+  resetProjectDisplayState();
+
   // Set up the game scene, objects, and initial state
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const { duration: dayDuration, direction: rotationDirection } = rotationPeriodToDuration(rotation);
@@ -155,6 +158,10 @@ function initializeGameState(options = {}) {
   let savedConstructionOffice = null;
   let savedAntimatter = null;
   let savedLifeDesignerTravelState = null;
+  if (!preserveManagers && !globalGameIsLoadingFromSave) {
+    resetStructureDisplayState();
+    resetProjectDisplayState();
+  }
   goldenAsteroid?.resetForTravel?.();
   if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
     savedProjectTravelState = projectManager.saveTravelState();
@@ -266,6 +273,7 @@ function initializeGameState(options = {}) {
   if (preserveManagers && typeof restoreAutoBuildSettings === 'function') {
     restoreAutoBuildSettings(structures);
   }
+  applyStructureDisplayPreferences(structures);
   if (savedConstructionOffice && typeof restoreConstructionOfficeSettings === 'function') {
     restoreConstructionOfficeSettings(savedConstructionOffice);
   }

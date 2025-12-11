@@ -16,6 +16,22 @@ const projectsUICache = {
 
 let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
 let projectsSubtabManager = null;
+const projectDisplayState = {
+  collapsed: {}
+};
+
+function resetProjectDisplayState() {
+  projectDisplayState.collapsed = {};
+}
+
+function updateProjectCollapsePreference(name, collapsed) {
+  if (!name) return;
+  if (collapsed) {
+    projectDisplayState.collapsed[name] = true;
+    return;
+  }
+  delete projectDisplayState.collapsed[name];
+}
 
 const existingImportResourcesProjectUI =
   typeof ImportResourcesProjectUI !== 'undefined'
@@ -158,6 +174,9 @@ function createProjectItem(project) {
   const projectCard = document.createElement('div');
   projectCard.classList.add('project-card');
   projectCard.dataset.projectName = project.name;
+  if (projectDisplayState.collapsed[project.name]) {
+    projectCard.classList.add('collapsed');
+  }
 
   // Card Header
   const cardHeader = document.createElement('div');
@@ -169,7 +188,7 @@ function createProjectItem(project) {
 
   const arrow = document.createElement('span');
   arrow.classList.add('collapse-arrow');
-  arrow.innerHTML = '&#9660;';
+  arrow.innerHTML = projectCard.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
   cardHeader.appendChild(arrow);
   cardHeader.appendChild(nameElement);
 
@@ -1268,4 +1287,5 @@ function toggleProjectCollapse(projectCard) {
   if (arrow) {
     arrow.innerHTML = projectCard.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
   }
+  updateProjectCollapsePreference(name, projectCard.classList.contains('collapsed'));
 }

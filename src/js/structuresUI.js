@@ -3,6 +3,11 @@
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+const structureDisplayState = {
+  collapsed: {},
+  hidden: {}
+};
+
 // Cache combined building rows for each container
 const buildingContainerIds = [
   'resource-buildings-buttons',
@@ -16,6 +21,40 @@ const combinedBuildingRowCache = {};
 // Cache per-structure frequently accessed elements
 const structureUIElements = {};
 let structureUICacheInvalidated = true;
+
+function resetStructureDisplayState() {
+  structureDisplayState.collapsed = {};
+  structureDisplayState.hidden = {};
+}
+
+function updateStructureHiddenPreference(name, hidden) {
+  if (hidden) {
+    structureDisplayState.hidden[name] = true;
+    return;
+  }
+  delete structureDisplayState.hidden[name];
+}
+
+function updateStructureCollapsePreference(name, collapsed) {
+  if (collapsed) {
+    structureDisplayState.collapsed[name] = true;
+    return;
+  }
+  delete structureDisplayState.collapsed[name];
+}
+
+function applyStructureDisplayPreferences(structureCollection) {
+  for (const name in structureCollection) {
+    const structure = structureCollection[name];
+    if (!structure) continue;
+    if (structure.isHidden || structureDisplayState.hidden[name]) {
+      structure.isHidden = true;
+      updateStructureHiddenPreference(name, true);
+    } else {
+      updateStructureHiddenPreference(name, false);
+    }
+  }
+}
 
 const AUTO_BUILD_DEFAULT_STEP = 0.01;
 const AUTO_BUILD_MIN_STEP = 0.000001;
@@ -229,6 +268,7 @@ function applyCollapseState(structureName) {
   const els = structureUIElements[structureName];
   if (!els) return;
   const collapsed = !!els.collapsed;
+  updateStructureCollapsePreference(structureName, collapsed);
   if (els.costElement) els.costElement.style.display = collapsed ? 'none' : '';
   if (els.productionDetails) els.productionDetails.style.display = collapsed ? 'none' : '';
   if (els.descriptionElement) els.descriptionElement.style.display = collapsed ? 'none' : '';
@@ -356,7 +396,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   cached.row = structureRow;
   cached.buildButton = button;
   cached.buttonContainer = buttonContainer;
-  cached.collapsed = false;
+  cached.collapsed = !!structureDisplayState.collapsed[structure.name];
   cached.collapseArrow = collapseArrow;
 
   let selectedBuildCount = 1;
@@ -448,6 +488,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   hideButton.textContent = 'Hide';
   hideButton.addEventListener('click', function () {
     structure.isHidden = true;
+    updateStructureHiddenPreference(structure.name, true);
     updateUnhideButtons();
     if (isColony) {
       updateColonyDisplay(colonies);
@@ -1651,7 +1692,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) {
       btn.addEventListener('click', () => {
         Object.values(buildings).forEach(b => {
-          if (b.category === cat) b.isHidden = false;
+          if (b.category === cat) {
+            b.isHidden = false;
+            updateStructureHiddenPreference(b.name, false);
+          }
         });
         updateBuildingDisplay(buildings);
       });

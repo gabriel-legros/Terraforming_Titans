@@ -1,6 +1,7 @@
 .combined-building-row {
     border-bottom: 1px solid #ccc; /* Adds a horizontal line */
     white-space: normal; /* Allows text to wrap onto the next line */
+    padding-bottom: 3px; /* Tiny gap above the separator line */
   }
 
 .button-container {
