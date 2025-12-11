@@ -1960,7 +1960,7 @@ const researchParameters = {
       {
         id: 'dyson_sphere',
         name: 'Dyson Sphere',
-        description: 'Unlocks construction of a Dyson Sphere frame and faster collector deployment.',
+        description: 'Unlocks construction of a Dyson Sphere frame for faster collector deployment.  Very expensive.',
         cost: { advancedResearch: 5_000_000 },
         prerequisites: [],
         effects: [
