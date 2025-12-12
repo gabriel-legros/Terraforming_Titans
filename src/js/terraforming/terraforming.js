@@ -20,6 +20,8 @@ const KPA_PER_ATM = 101.325;
 let calculateApparentEquatorialGravityHelper;
 let calculateGravityCostPenaltyHelper;
 let createNoGravityPenaltyHelper;
+let cloudPropsOnlyHelper;
+let calculateCloudAlbedoContributionsHelper;
 
 if (typeof module !== 'undefined' && module.exports) {
   ({
@@ -54,7 +56,7 @@ const AUTO_SLAB_ATMOS_CP = 850;
 const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
 
 const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
-const EQUILIBRIUM_METHANE_PARAMETER = 0.000015;
+const EQUILIBRIUM_METHANE_PARAMETER = 0.0001;
 const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
 
 // Load utility functions when running under Node for tests
@@ -96,6 +98,12 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.cloudFraction === 'undefined') {
         globalThis.cloudFraction = physics.cloudFraction;
     }
+    if (typeof globalThis.cloudPropsOnly === 'undefined') {
+        globalThis.cloudPropsOnly = physics.cloudPropsOnly;
+    }
+    if (typeof globalThis.calculateCloudAlbedoContributions === 'undefined') {
+        globalThis.calculateCloudAlbedoContributions = physics.calculateCloudAlbedoContributions;
+    }
     if (typeof globalThis.calculateActualAlbedoPhysics === 'undefined') {
         globalThis.calculateActualAlbedoPhysics = physics.calculateActualAlbedoPhysics;
     }
@@ -114,6 +122,8 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof globalThis.effectiveTemp === 'undefined') {
     globalThis.effectiveTemp = physics.effectiveTemp;
     }
+    cloudPropsOnlyHelper = physics.cloudPropsOnly;
+    calculateCloudAlbedoContributionsHelper = physics.calculateCloudAlbedoContributions;
 
     const atmosphericChem = require('./atmospheric-chemistry.js');
     runAtmosphericChemistry = atmosphericChem.runAtmosphericChemistry;
@@ -143,6 +153,12 @@ if (typeof module !== 'undefined' && module.exports) {
       globalThis.isBuildingEligibleForFactoryMitigation;
     getAerostatMaintenanceMitigationHelper =
       globalThis.getAerostatMaintenanceMitigation;
+}
+if (!cloudPropsOnlyHelper && typeof globalThis.cloudPropsOnly === 'function') {
+    cloudPropsOnlyHelper = globalThis.cloudPropsOnly;
+}
+if (!calculateCloudAlbedoContributionsHelper && typeof calculateCloudAlbedoContributions === 'function') {
+    calculateCloudAlbedoContributionsHelper = calculateCloudAlbedoContributions;
 }
 
 var getEcumenopolisLandFraction;
@@ -370,6 +386,7 @@ class Terraforming extends EffectableEntity{
       modifiedSolarFlux: 0,
       modifiedSolarFluxUnpenalized: 0,
       cloudHazePenalty: 0,
+      cloudHazeRaw: 0,
       surfaceTemperature: 0,
       zonalFluxes : {}
     };
@@ -719,6 +736,9 @@ class Terraforming extends EffectableEntity{
       this.luminosity.cloudFraction = albRes.cloudFraction;
       this.luminosity.hazeFraction = albRes.hazeFraction;
       this.luminosity.cloudHazePenalty = albRes.penalty;
+      this.luminosity.cloudHazeRaw = Number.isFinite(albRes.cloudHazeRaw)
+        ? albRes.cloudHazeRaw
+        : albRes.penalty;
       this.luminosity.albedo = this.luminosity.surfaceAlbedo;
       this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
     }
@@ -1243,10 +1263,20 @@ class Terraforming extends EffectableEntity{
         const comps = result.components || {};
         const base = Number.isFinite(comps.A_surf) ? comps.A_surf : surf;
         const actual = Number.isFinite(result.albedo) ? result.albedo : base;
-        const penalty = actual - base;
+        const layerReflectivity = Number.isFinite(result.layerReflectivity)
+          ? result.layerReflectivity
+          : (Number.isFinite(result?.diagnostics?.layerReflectivity) ? result.diagnostics.layerReflectivity : 0);
+        const rawCloudHaze = Math.max(0, Math.min(1, layerReflectivity));
+        const penalty = rawCloudHaze;
         const cloudFraction = Number.isFinite(result.cfCloud) ? result.cfCloud : 0;
         const hazeFraction = Number.isFinite(result.cfHaze) ? result.cfHaze : 0;
-        return { albedo: actual, penalty, cloudFraction, hazeFraction };
+        return {
+            albedo: actual,
+            penalty,
+            cloudHazeRaw: rawCloudHaze,
+            cloudFraction,
+            hazeFraction
+        };
     }
 
     _updateZonalCoverageCache() {

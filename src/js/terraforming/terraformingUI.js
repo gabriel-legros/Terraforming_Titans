@@ -170,7 +170,7 @@ function hideTemperatureInfographicOverlay() {
 }
 
 const CLOUD_AND_HAZE_TOOLTIP_TEXT = [
-  "Sum of albedo increases from haze, calcite aerosols, and clouds. This value also penalizes solar panel and life growth.",
+  "Layered cloud, haze, and calcite brightness applied to the remaining surface headroom. This value also penalizes solar panel and life growth and is capped by the total albedo.",
   "",
   "Cloud coverage compares each condensable gas to a saturation mixing ratio. When vapor is plentiful, it condenses into cloud decks that scale with atmospheric pressure and cap at each species' coverage limit.",
   "Each deck has its own brightness. Coverage blends those brightness values together and only brightens surfaces that are still darker than the deck, so clouds taper off once the surface reflects as much light as the clouds do.",
@@ -1688,7 +1688,10 @@ function updateLifeBox() {
     }
 
     if (els.cloudHazePenalty) {
-      els.cloudHazePenalty.textContent = terraforming.luminosity.cloudHazePenalty.toFixed(3);
+      const raw = Number.isFinite(terraforming.luminosity.cloudHazeRaw)
+        ? terraforming.luminosity.cloudHazeRaw
+        : terraforming.luminosity.cloudHazePenalty;
+      els.cloudHazePenalty.textContent = raw.toFixed(3);
     }
 
     if (els.modifiedSolarFlux) {
@@ -1777,12 +1780,14 @@ function updateLifeBox() {
       if (softCapNote) notes.push(softCapNote.slice(1));
 
       const parts = [];
-      parts.push('Actual albedo = Surface + Haze + Calcite + Clouds');
+      parts.push('Actual albedo applies each layer to the remaining headroom: Surface → Clouds → Haze → Calcite');
       parts.push('');
       parts.push(`Surface (base): ${A_surf.toFixed(3)}`);
-      if (Math.abs(dHaze) >= eps) parts.push(`Haze (CH4): +${dHaze.toFixed(3)}`);
-      if (Math.abs(dCalc) >= eps) parts.push(`Calcite aerosol: +${dCalc.toFixed(3)}`);
-      if (Math.abs(dCloud) >= eps) parts.push(`Clouds: +${dCloud.toFixed(3)}`);
+      if (Math.abs(dCloud) >= eps) parts.push(`Clouds: ${(1 - A_surf) <= 0 ? '+0.000' : `+${dCloud.toFixed(3)}`}`);
+      const afterClouds = A_surf + dCloud;
+      if (Math.abs(dHaze) >= eps) parts.push(`Haze (CH4): ${(1 - afterClouds) <= 0 ? '+0.000' : `+${dHaze.toFixed(3)}`}`);
+      const afterHaze = afterClouds + dHaze;
+      if (Math.abs(dCalc) >= eps) parts.push(`Calcite aerosol: ${(1 - afterHaze) <= 0 ? '+0.000' : `+${dCalc.toFixed(3)}`}`);
       if (notes.length > 0) {
         parts.push('', ...notes);
       }
@@ -1794,7 +1799,7 @@ function updateLifeBox() {
             ? terraforming.calculateZonalSurfaceAlbedo(z)
             : surfAlb;
           const zRes = calculateActualAlbedoPhysics(zSurf, pressureBar, composition, gSurface, aerosolsSW) || {};
-          const zAlb = typeof zRes.albedo === 'number' ? zRes.albedo : (zSurf + dHaze + dCalc + dCloud);
+          const zAlb = typeof zRes.albedo === 'number' ? zRes.albedo : (A_act);
           const name = z.charAt(0).toUpperCase() + z.slice(1);
           zoneLines.push(`${name}: ${zAlb.toFixed(3)}`);
         } catch (err) {

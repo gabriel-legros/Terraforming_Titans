@@ -19,7 +19,7 @@ const ALBEDO_SOFTCAP_THRESHOLD = 0.8;
 // Higher K => stronger diminishing returns near the cap
 const ALBEDO_SOFTCAP_K = 2.0;
 const A_HAZE_CH4_MAX  = 0.25; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
-const K_CH4_ALB       = 3;     // how quickly CH4 haze brightening saturates
+const K_CH4_ALB       = 0.2;     // how quickly CH4 haze brightening saturates
 
 const A_CALCITE_HEADROOM_MAX = 0.3; // calcite can add up to +0.3 in the limit
 const K_CALCITE_ALB  = 1.0;          // saturates near τ_eff ≈ 1
@@ -102,7 +102,7 @@ const SAT_EXP = { ch4: 1.0};    // exponent n_i
 const CLOUD_SPEC = {
   h2o  : { refMix: 0.01, cfMax: 0.50, pScale: 0.8, aBase: 0.60, aVar: 0.18 },
   ch4  : { refMix: 0.02, cfMax: 0.10, pScale: 2.0, aBase: 0.60, aVar: 0.10 },
-  h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 5.0, aBase: 0.75, aVar: 0.05 }
+  h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 5.0, aBase: 0.715, aVar: 0.05 }
 };
 
 const DEFAULT_SURFACE_ALBEDO = {
@@ -200,6 +200,70 @@ function cloudPropsOnly(pBar, comp = {}) {
   return { cfCloud, aCloud };
 }
 
+// Calculate raw albedo contributions from clouds, haze, and calcite (no surface headroom caps)
+function calculateCloudAlbedoContributions({
+  pressureBar = 0,
+  composition = {},
+  gSurface = 9.81,
+  aerosolsSW = {}
+} = {}) {
+  const pBar = Math.max(0, pressureBar);
+  const comp = composition || {};
+  const aerosols = aerosolsSW || {};
+
+  // Haze (photochemical methane)
+  const mcolT = pBar * 1e5 / Math.max(gSurface, 1e-9);
+  const x_ch4 = comp.ch4 || 0;
+  const mu_ch4 = x_ch4 * mcolT;
+  const tau_ch4 = 1 - Math.exp(-K_CH4_SW * (mu_ch4 / MU_CH4_SAT));
+  const hazeFactor = 1 - Math.exp(-K_CH4_ALB * Math.max(0, tau_ch4));
+  const hazeRaw = Math.max(0, Math.min(1, A_HAZE_CH4_MAX * hazeFactor));
+
+  // Calcite aerosol
+  const M_calcite = aerosols.calcite || 0;
+  const tau_calcite = EPS_EXT_CALCITE * M_calcite;
+  const tau_calcite_eff = tauEff(tau_calcite, OPTICS.calcite);
+  const calciteFactor = 1 - Math.exp(-K_CALCITE_ALB * tau_calcite_eff);
+  const calciteRaw = Math.max(0, Math.min(1, A_CALCITE_HEADROOM_MAX * calciteFactor));
+
+  // Clouds by gas
+  const cloudByGas = {};
+  let cfTot = 0;
+  let aCloudWeighted = 0;
+  for (const gas in CLOUD_SPEC) {
+    const spec = CLOUD_SPEC[gas];
+    const mix = comp[gas] || 0;
+    if (mix <= 0) continue;
+
+    const availability = Math.min(1, mix / spec.refMix);
+    const cf = spec.cfMax * (1 - Math.exp(-pBar / spec.pScale)) * availability;
+    const aGas = spec.aBase + spec.aVar * Math.tanh(pBar / (2 * spec.pScale));
+    const contribution = cf * aGas;
+    if (contribution > 0) {
+      cloudByGas[gas] = contribution;
+    }
+    cfTot += cf;
+    aCloudWeighted += cf * aGas;
+  }
+  const cloudTotal = Math.max(0, Math.min(1, Object.values(cloudByGas).reduce((sum, v) => sum + v, 0)));
+  const cfCloud = Math.min(0.99, cfTot);
+  const aCloud = cfTot > 0 ? aCloudWeighted / cfTot : 0;
+  const layerReflectivity = 1 - (1 - hazeRaw) * (1 - calciteRaw) * (1 - cloudTotal);
+
+  return {
+    cloudTotal,
+    cloudByGas,
+    hazeRaw,
+    calciteRaw,
+    cfCloud,
+    aCloud,
+    layerReflectivity,
+    totalRaw: cloudTotal + hazeRaw + calciteRaw,
+    tau_ch4_sw: tau_ch4,
+    tau_calcite_sw: tau_calcite
+  };
+}
+
 function oceanHeatCapacity(fOcean, options) {
   const coverage = Math.max(0, Math.min(1, fOcean));
   if (!(coverage > 0)) return 0;
@@ -272,36 +336,34 @@ function cloudFraction(pBar) {
 // ===== Additive albedo builder ======================================
 function albedoAdditive({
   surfaceAlbedo, pressureBar, composition = {}, gSurface = 9.81,
-  aerosolsSW = {} // e.g., { calcite: columnMass_kg_per_m2 }
+  aerosolsSW = {}, // e.g., { calcite: columnMass_kg_per_m2 }
+  contribs: contribsOverride = null
 }) {
-  // Shortwave AODs:
-  const { contributions: sw } = opticalDepthSW(composition, pressureBar, gSurface, aerosolsSW);
-  const tau_ch4_sw     = sw.ch4_haze || 0;
-  const tau_calcite_sw = sw.calcite  || 0;
-
-  // Start from clear sky
   const A_surf = surfaceAlbedo;
+  const contribs = contribsOverride || calculateCloudAlbedoContributions({
+    pressureBar,
+    composition,
+    gSurface,
+    aerosolsSW
+  });
 
-  // --- CH4 photochemical haze (additive delta) ---
-  const headroom_ch4 = Math.max(0, A_HAZE_CH4_MAX - A_surf);
-  const F_ch4        = 1 - Math.exp(-K_CH4_ALB * Math.max(0, tau_ch4_sw));
-  const dA_ch4       = headroom_ch4 * F_ch4;
-  let   A_base       = A_surf + dA_ch4;
+  let A_working = A_surf;
 
-  // --- Calcite aerosol (optional) ---
-  const tau_calcite_eff = tauEff(tau_calcite_sw, OPTICS.calcite);
-  const F_calcite       = 1 - Math.exp(-K_CALCITE_ALB * tau_calcite_eff);
-  const headroom_calc   = Math.min(A_CALCITE_HEADROOM_MAX, 1 - A_base);
-  const dA_calcite      = headroom_calc * F_calcite;
-  A_base += dA_calcite;
+  // Sequential layering: each contribution brightens the remaining fraction
+  const cloudLayer = Math.max(0, Math.min(1, contribs.cloudTotal));
+  const dA_cloud = (1 - A_working) * cloudLayer;
+  A_working += dA_cloud;
 
-  // --- Clouds last (brighten what’s left, never dim) ---
-  const { cfCloud, aCloud } = cloudPropsOnly(pressureBar, composition);
-  const dA_cloud = cfCloud * Math.max(0, aCloud - A_base);
-  A_base += dA_cloud;
+  const hazeLayer = Math.max(0, Math.min(1, contribs.hazeRaw));
+  const dA_ch4 = (1 - A_working) * hazeLayer;
+  A_working += dA_ch4;
+
+  const calciteLayer = Math.max(0, Math.min(1, contribs.calciteRaw));
+  const dA_calcite = (1 - A_working) * calciteLayer;
+  A_working += dA_calcite;
 
   // Apply soft cap above threshold to create an asymptotic approach to MAX_BOND_ALBEDO
-  let A_final = A_base;
+  let A_final = A_working;
   if (A_final > ALBEDO_SOFTCAP_THRESHOLD) {
     const span = Math.max(1e-9, (MAX_BOND_ALBEDO - ALBEDO_SOFTCAP_THRESHOLD));
     const over = (A_final - ALBEDO_SOFTCAP_THRESHOLD) / span;
@@ -314,27 +376,41 @@ function albedoAdditive({
   return {
     albedo: A_final,
     components: { A_surf, dA_ch4, dA_calcite, dA_cloud },
-    diagnostics: { tau_ch4_sw, tau_calcite_sw }
+    diagnostics: {
+      tau_ch4_sw: contribs.tau_ch4_sw,
+      tau_calcite_sw: contribs.tau_calcite_sw,
+      layerReflectivity: contribs.layerReflectivity
+    }
   };
 }
 
 // ===== Updated: Calculate actual (Bond) albedo =======================
 // Signature unchanged to preserve game-wide calls
 function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = {}, gSurface, aerosolsSW = {}) {
-  // Build albedo via additive scheme (optionally with aerosols like calcite)
-  const { albedo: A, diagnostics, components } = albedoAdditive({
-    surfaceAlbedo,
+  const contribs = calculateCloudAlbedoContributions({
     pressureBar,
     composition,
     gSurface,
     aerosolsSW
   });
 
-  // Back-compat diagnostics
-  const { cfCloud } = cloudPropsOnly(pressureBar, composition);
-  const cfHaze = hazeCoverageFromTau(diagnostics.tau_ch4_sw || 0);
+  // Build albedo via layered scheme (optionally with aerosols like calcite)
+  const { albedo: A, diagnostics, components } = albedoAdditive({
+    surfaceAlbedo,
+    pressureBar,
+    composition,
+    gSurface,
+    aerosolsSW,
+    contribs
+  });
 
-  return { albedo: A, cfCloud, cfHaze, components, diagnostics, maxCap: MAX_BOND_ALBEDO, softCapThreshold: ALBEDO_SOFTCAP_THRESHOLD };
+  // Back-compat diagnostics
+  const cfCloud = Number.isFinite(contribs.cfCloud) ? contribs.cfCloud : (cloudPropsOnly(pressureBar, composition).cfCloud || 0);
+  const cfHaze = hazeCoverageFromTau(diagnostics.tau_ch4_sw || contribs.tau_ch4_sw || 0);
+
+  const layerReflectivity = Math.max(0, Math.min(1, contribs.layerReflectivity || diagnostics.layerReflectivity || 0));
+
+  return { albedo: A, cfCloud, cfHaze, layerReflectivity, components, diagnostics, maxCap: MAX_BOND_ALBEDO, softCapThreshold: ALBEDO_SOFTCAP_THRESHOLD };
 }
 
 
@@ -425,6 +501,7 @@ if (typeof module !== 'undefined' && module.exports) {
     diurnalAmplitude,
     dayNightTemperaturesModel,
     calculateActualAlbedoPhysics, // updated
+    calculateCloudAlbedoContributions,
     DEFAULT_SURFACE_ALBEDO,
     albedoAdditive,      // exported for testing & future tuning
     cloudPropsOnly       // exported to avoid breaking callers that need cloud stats
