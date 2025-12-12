@@ -22,9 +22,6 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
       swarm.isActive = false;
       swarm.isPaused = false;
     }
-    if (typeof updateProjectUI === 'function') {
-      updateProjectUI('dysonSwarmReceiver');
-    }
   }
 
   complete() {

@@ -1954,7 +1954,13 @@ const researchParameters = {
         cost: { advancedResearch: 4_000_000 },
         prerequisites: [],
         effects: [
-          { target: 'project', targetId: 'spaceStorage', type: 'booleanFlag', flagId: 'biostorage', value: true }
+          { target: 'project', targetId: 'spaceStorage', type: 'booleanFlag', flagId: 'biostorage', value: true },
+          {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId : 'biomass',
+            type: 'enable'
+          },
         ]
       },
       {
