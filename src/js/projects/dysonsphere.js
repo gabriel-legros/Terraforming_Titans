@@ -28,11 +28,8 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
   }
 
   complete() {
-    const alreadyCompleted = this.isCompleted;
     super.complete();
-    if (!alreadyCompleted) {
-      this.absorbSwarmCollectors();
-    }
+    this.absorbSwarmCollectors();
   }
 
   isVisible() {
