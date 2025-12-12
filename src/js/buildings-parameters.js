@@ -127,7 +127,7 @@ const buildingsParameters = {
   componentFactory: {
     name: 'Component Factory',
     category: 'production',
-    description: 'Turns metals into valuable machine components. Requires human workers.',
+    description: 'Turns metals into valuable machine components. Requires workers.',
     cost: { colony: { metal: 1000, components: 100, electronics: 50} },
     consumption: { colony: { energy: 25000000, metal: 5} },
     production: { colony: { components: 1 } },
@@ -142,7 +142,7 @@ const buildingsParameters = {
   electronicsFactory: {
     name: 'Electronics Factory',
     category: 'production',
-    description: 'Turns metals and silicon into electronics.  Requires human workers.',
+    description: 'Turns metals and silicon into electronics.  Requires workers.',
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 50_000_000, metal: 1, silicon: 4} },
     production: { colony: { electronics: 1 } },
@@ -157,7 +157,7 @@ const buildingsParameters = {
   superconductorFactory: {
     name: 'Superconductor Factory',
     category: 'production',
-    description: 'Produces superconductors from metal.  Requires human workers.',
+    description: 'Produces superconductors from metal.  Requires workers.',
     cost: { colony: { metal: 1000, glass : 1000, components: 1000, electronics: 500} },
     consumption: { colony: { energy: 100_000_00, metal: 5} },
     production: { colony: { superconductors: 1 } },
