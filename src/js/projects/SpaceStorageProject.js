@@ -1,3 +1,8 @@
+const SPACE_STORAGE_RESOURCE_REQUIREMENTS = {
+  superalloys: { requiresFlag: 'superalloyResearchUnlocked' },
+  biomass: { requiresProjectFlag: 'biostorage' },
+};
+
 class SpaceStorageProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
@@ -175,15 +180,33 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
-  calculateTransferPlan(simulate = false, capacityOverride = null) {
+  isResourceUnlocked(resourceKey, requiresFlag = null, requiresProjectFlag = null) {
+    const requirement = SPACE_STORAGE_RESOURCE_REQUIREMENTS[resourceKey];
+    const researchFlag = requiresFlag || requirement?.requiresFlag;
+    const projectFlag = requiresProjectFlag || requirement?.requiresProjectFlag;
+    const hasResearchFlag = !researchFlag || researchManager?.isBooleanFlagSet?.(researchFlag);
+    const hasProjectFlag = !projectFlag || this.isBooleanFlagSet?.(projectFlag);
+    return Boolean(hasResearchFlag && hasProjectFlag);
+  }
+
+  getUnlockedSelectedResources() {
+    if (!Array.isArray(this.selectedResources) || this.selectedResources.length === 0) {
+      return [];
+    }
+    return this.selectedResources.filter(r => this.isResourceUnlocked(r.resource));
+  }
+
+  calculateTransferPlan(simulate = false, capacityOverride = null, selections = null) {
     const transfers = [];
     let total = 0;
+    const selected = selections ?? this.getUnlockedSelectedResources();
+    if (selected.length === 0) return { transfers, total };
     const capacity = capacityOverride != null ? capacityOverride : this.calculateTransferAmount();
     if (capacity <= 0) return { transfers, total };
 
     if (this.shipWithdrawMode) {
       let remaining = capacity;
-      const all = this.selectedResources.map(({ category, resource }) => {
+      const all = selected.map(({ category, resource }) => {
         const stored = this.resourceUsage[resource] || 0;
         const target = resource === 'liquidWater'
           ? (this.waterWithdrawTarget === 'surface'
@@ -231,7 +254,7 @@ class SpaceStorageProject extends SpaceshipProject {
     } else {
       const freeSpace = this.maxStorage - this.usedStorage;
       let remaining = Math.min(capacity, freeSpace);
-      const all = this.selectedResources.map(({ category, resource }) => {
+      const all = selected.map(({ category, resource }) => {
         const src = resources[category] && resources[category][resource];
         if (resource === 'biomass') {
           const available = resources.surface.biomass?.value || 0;
@@ -298,8 +321,9 @@ class SpaceStorageProject extends SpaceshipProject {
   canStartShipOperation() {
     if (this.shipOperationIsActive) return false;
     if (this.assignedSpaceships <= 0) return false;
-    if (this.selectedResources.length === 0) return false;
-    const transferPlan = this.calculateTransferPlan(true);
+    const activeSelections = this.getUnlockedSelectedResources();
+    if (activeSelections.length === 0) return false;
+    const transferPlan = this.calculateTransferPlan(true, null, activeSelections);
     if (transferPlan.total <= 0) return false;
     const totalCost = this.calculateSpaceshipTotalCost();
     for (const category in totalCost) {

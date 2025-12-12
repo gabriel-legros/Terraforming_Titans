@@ -271,7 +271,9 @@ function renderSpaceStorageUI(project, container) {
         || (typeof researchManager.isBooleanFlagSet === 'function'
           && researchManager.isBooleanFlagSet(opt.requiresFlag)));
       const hasProjectFlag = !opt.requiresProjectFlag || project.isBooleanFlagSet(opt.requiresProjectFlag);
-      resourceItem.style.display = hasResearchFlag && hasProjectFlag ? '' : 'none';
+      const visible = project.isResourceUnlocked?.(opt.resource, opt.requiresFlag, opt.requiresProjectFlag)
+        ?? (hasResearchFlag && hasProjectFlag);
+      resourceItem.style.display = visible ? '' : 'none';
     }
 
     projectElements[project.name] = {
@@ -435,11 +437,9 @@ function updateSpaceStorageUI(project) {
           || (typeof researchManager.isBooleanFlagSet === 'function'
             && researchManager.isBooleanFlagSet(opt.requiresFlag)));
         const hasProjectFlag = !opt.requiresProjectFlag || project.isBooleanFlagSet(opt.requiresProjectFlag);
-        const visible = hasResearchFlag && hasProjectFlag;
+        const visible = project.isResourceUnlocked?.(opt.resource, opt.requiresFlag, opt.requiresProjectFlag)
+          ?? (hasResearchFlag && hasProjectFlag);
         item.style.display = visible ? '' : 'none';
-        if (!visible) {
-          project.toggleResourceSelection(opt.category, opt.resource, false);
-        }
       }
     });
   }
