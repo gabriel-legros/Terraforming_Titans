@@ -97,6 +97,13 @@ function addSettingsListeners() {
     });
   }
 
+  const startBackgroundSilenceButton = document.getElementById('start-background-silence-button');
+  if (startBackgroundSilenceButton) {
+    startBackgroundSilenceButton.addEventListener('click', () => {
+      startBackgroundSilence();
+    });
+  }
+
   const pauseButton = document.getElementById("pause-button");
   if (pauseButton) {
     pauseButton.addEventListener("click", togglePause);
