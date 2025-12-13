@@ -591,6 +591,10 @@ function loadGame(slotOrCustomString, recreate = true) {
       if(preserveAutoStartToggle){
         preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       }
+      const keepHiddenStructuresToggle = document.getElementById('keep-hidden-structures-toggle');
+      if (keepHiddenStructuresToggle) {
+        keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
+      }
       const autobuildSetActiveToggle = document.getElementById('autobuild-set-active-toggle');
       if(autobuildSetActiveToggle){
         autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;

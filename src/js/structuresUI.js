@@ -8,6 +8,15 @@ const structureDisplayState = {
   hidden: {}
 };
 
+function biodomeHasActiveLifeDesign() {
+  try {
+    const design = lifeDesigner.currentDesign;
+    return !!(design && design.canSurviveAnywhere && design.canSurviveAnywhere());
+  } catch (error) {
+    return false;
+  }
+}
+
 // Cache combined building rows for each container
 const buildingContainerIds = [
   'resource-buildings-buttons',
@@ -585,6 +594,17 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     productivityValue.id = `${structure.name}-productivity`;
     productivityValue.textContent = `${Math.round(structure.productivity * 100)}%`;
     productivityContainer.appendChild(productivityValue);
+
+    if (structure.name === 'biodome') {
+      const warning = document.createElement('span');
+      warning.id = `${structure.name}-life-warning`;
+      warning.classList.add('biodome-life-warning');
+      warning.textContent = '⚠ Requires Active Life Design ⚠';
+      warning.style.display = 'none';
+      productivityContainer.appendChild(warning);
+      structureUIElements[structure.name] = structureUIElements[structure.name] || {};
+      structureUIElements[structure.name].lifeWarning = warning;
+    }
 
     if (structure.dayNightActivity && !(typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle)) {
       const dayNightIcon = document.createElement('span');
@@ -1342,6 +1362,13 @@ function updateDecreaseButtonText(button, buildCount) {
           productivityElement.style.color = 'red';
         } else {
           productivityElement.style.color = 'inherit';
+        }
+      }
+
+      if (structureName === 'biodome') {
+        const warning = (structureUIElements[structureName] || {}).lifeWarning || document.getElementById(`${structureName}-life-warning`);
+        if (warning) {
+          warning.style.display = biodomeHasActiveLifeDesign() ? 'none' : 'inline-flex';
         }
       }
 

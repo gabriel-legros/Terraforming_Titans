@@ -161,6 +161,8 @@ function initializeGameState(options = {}) {
   if (!preserveManagers && !globalGameIsLoadingFromSave) {
     resetStructureDisplayState();
     resetProjectDisplayState();
+  } else if (preserveManagers && !globalGameIsLoadingFromSave && !gameSettings.keepHiddenStructuresOnTravel) {
+    structureDisplayState.hidden = {};
   }
   goldenAsteroid?.resetForTravel?.();
   if (preserveManagers && typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {

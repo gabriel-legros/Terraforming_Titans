@@ -690,13 +690,31 @@ function updateLifeUI() {
             applyBtn.textContent = `Deploying: ${timeRemaining}s (${progressPercent.toFixed(0)}%)`;
             applyBtn.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
             applyBtn.disabled = true; // Disable button during deployment
+            applyBtn.classList.remove('life-apply-blocked');
+            applyBtn.title = '';
         } else {
             showTentativeDesignCells();
-            applyBtn.textContent = `Deploy: Duration ${(lifeDesigner.getTentativeDuration() / 1000).toFixed(2)} seconds`;
             applyProgressBar.style.width = '0%';
             const survivable = lifeDesigner.tentativeDesign && lifeDesigner.tentativeDesign.canSurviveAnywhere();
+            const survivalReason = survivable ? '' : lifeDesigner.tentativeDesign.getPrimarySurvivalFailureReason();
+            if (survivable) {
+              applyBtn.textContent = `Deploy: Duration ${(lifeDesigner.getTentativeDuration() / 1000).toFixed(2)} seconds`;
+              applyBtn.classList.remove('life-apply-blocked');
+              applyBtn.title = '';
+            } else {
+              const reasonText = survivalReason || 'Life cannot survive anywhere';
+              applyBtn.textContent = '';
+              const titleLine = document.createElement('span');
+              titleLine.className = 'life-apply-title';
+              titleLine.textContent = 'Cannot deploy';
+              const reasonLine = document.createElement('span');
+              reasonLine.className = 'life-apply-reason';
+              reasonLine.textContent = reasonText;
+              applyBtn.append(titleLine, reasonLine);
+              applyBtn.classList.add('life-apply-blocked');
+              applyBtn.title = reasonText;
+            }
             applyBtn.disabled = !survivable; // Disable if design cannot survive
-            applyBtn.title = survivable ? '' : 'Life cannot survive anywhere';
             applyBtn.style.background = ''; // Reset background
             revertBtn.disabled = false;
             createBtn.disabled = false;
@@ -712,6 +730,7 @@ function updateLifeUI() {
       applyProgressContainer.style.display = 'none';
       applyBtn.style.display = 'none';
       applyBtn.disabled = true;
+      applyBtn.classList.remove('life-apply-blocked');
       revertBtn.style.display = 'none';
       hideTentativeDesignCells();
     }

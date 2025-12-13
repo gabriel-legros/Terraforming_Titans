@@ -322,6 +322,27 @@ class LifeDesign {
       return tempResults.global.pass;
   }
 
+  getPrimarySurvivalFailureReason() {
+      const tempResults = this.temperatureSurvivalCheck();
+      if (tempResults.global.pass) {
+          return null;
+      }
+
+      const failingZone = ['tropical', 'temperate', 'polar'].find(
+          zoneName => tempResults[zoneName] && !tempResults[zoneName].pass
+      );
+
+      if (failingZone) {
+          const zoneLabel = `${failingZone[0].toUpperCase()}${failingZone.slice(1)}`;
+          if (tempResults[failingZone].reason) {
+              return `${zoneLabel}: ${tempResults[failingZone].reason}`;
+          }
+          return `${zoneLabel}: Unsurvivable conditions`;
+      }
+
+      return tempResults.global.reason || 'Life cannot survive anywhere';
+  }
+
   // Returns an array of zone names where the lifeform can actively grow (meets temp & moisture reqs)
   getGrowableZones() {
       const survivalTempResults = this.temperatureSurvivalCheck();
@@ -910,4 +931,14 @@ class LifeManager extends EffectableEntity {
   }
 
 
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    LifeDesign,
+    LifeDesigner
+  };
+} else if (typeof window !== 'undefined') {
+  window.LifeDesign = LifeDesign;
+  window.LifeDesigner = LifeDesigner;
 }

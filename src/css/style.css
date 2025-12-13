@@ -409,6 +409,15 @@ body.journal-collapsed .tab-content {
     margin-left: 4px;
 }
 
+.biodome-life-warning {
+    color: #e53935;
+    font-weight: 600;
+    margin-left: 8px;
+    white-space: nowrap;
+    align-items: center;
+    gap: 4px;
+}
+
 .space-tab-warning {
     color: #ff5252;
     font-weight: bold;

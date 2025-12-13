@@ -72,6 +72,14 @@ function addSettingsListeners() {
     });
   }
 
+  const keepHiddenStructuresToggle = document.getElementById('keep-hidden-structures-toggle');
+  if (keepHiddenStructuresToggle) {
+    keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
+    keepHiddenStructuresToggle.addEventListener('change', () => {
+      gameSettings.keepHiddenStructuresOnTravel = keepHiddenStructuresToggle.checked;
+    });
+  }
+
   const autobuildSetActiveToggle = document.getElementById('autobuild-set-active-toggle');
   if (autobuildSetActiveToggle) {
     autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;

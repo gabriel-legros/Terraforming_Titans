@@ -53,6 +53,7 @@ let gameSettings = {
   autobuildAlsoSetsActive: true,
   formatAutoBuildTargets: false,
   planetVisualizerDebugEnabled: false,
+  keepHiddenStructuresOnTravel: false,
 };
 
 Object.defineProperty(globalThis, 'gameSettings', {
