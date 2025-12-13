@@ -10,6 +10,19 @@ function addSettingsListeners() {
     });
   }
 
+  const keepTabRunningAudioToggle = document.getElementById('keep-tab-running-audio-toggle');
+  if (keepTabRunningAudioToggle) {
+    keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
+    keepTabRunningAudioToggle.addEventListener('change', () => {
+      gameSettings.keepTabRunningAudio = keepTabRunningAudioToggle.checked;
+      if (gameSettings.keepTabRunningAudio) {
+        startBackgroundSilence();
+      } else {
+        stopBackgroundSilence();
+      }
+    });
+  }
+
   const celsiusToggle = document.getElementById('celsius-toggle');
   if (celsiusToggle) {
     celsiusToggle.checked = gameSettings.useCelsius;

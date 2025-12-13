@@ -192,6 +192,8 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
 ## Updates
+- Added a Settings checkbox to keep the tab active by playing a looped near-silent audio track.
+- Added a muted looping silent audio track to keep the tab active for testing purposes.
 - Added Umbra story planet orbiting Nyx-13 with new post-Venus chapters and progression rewards.
 - Added a Dyson Sphere giga project with a persistent frame, 100x faster collector deployment, and a Giga subtab alongside mega projects.
 - Artificial shellworld stockpiles now cap metal and silicon at 1 unit per hectare and surface the limit via tooltip.

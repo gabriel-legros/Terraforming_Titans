@@ -51,6 +51,9 @@ function initializeDefaultGlobals(){
 
   resetStructureDisplayState();
   resetProjectDisplayState();
+  if (gameSettings.keepTabRunningAudio) {
+    startBackgroundSilence();
+  }
 
   // Set up the game scene, objects, and initial state
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
