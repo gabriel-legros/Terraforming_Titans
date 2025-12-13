@@ -2,6 +2,10 @@ let silentLoopAudioElement;
 let silentLoopAudioInitialized = false;
 
 const backgroundWhiteNoiseSrc = 'assets/white_noise/weak_white_noise_-60dBFS_60s_22k.wav';
+const isFirefoxBrowser = !!navigator?.userAgent?.toLowerCase().includes('firefox');
+const defaultLoopVolume = 0.25;
+const firefoxLoopVolume = 0.02;
+const backgroundLoopVolume = isFirefoxBrowser ? firefoxLoopVolume : defaultLoopVolume;
 
 function initializeSilentLoopAudio() {
   if (silentLoopAudioInitialized) {
@@ -19,7 +23,7 @@ function initializeSilentLoopAudio() {
     { once: true }
   );
   audioElement.loop = true;
-  audioElement.volume = 1;
+  audioElement.volume = backgroundLoopVolume;
   audioElement.autoplay = true;
   audioElement.playsInline = true;
   audioElement.style.display = 'none';
@@ -44,7 +48,7 @@ function startBackgroundSilence() {
   if (!silentLoopAudioElement) {
     return;
   }
-  silentLoopAudioElement.volume = 0.25;
+  silentLoopAudioElement.volume = backgroundLoopVolume;
   silentLoopAudioElement.muted = false;
   silentLoopAudioElement.play().catch(() => {});
 }
