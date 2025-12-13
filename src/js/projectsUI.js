@@ -1040,28 +1040,18 @@ function updateProjectUI(projectName) {
     let hasVisibleAutomationItems = false;
 
     if (automationSettingsContainer) {
-      const containerDisplay = typeof getComputedStyle === 'function'
-        ? getComputedStyle(automationSettingsContainer).display
-        : automationSettingsContainer.style?.display;
-      if (containerDisplay === 'none') {
-        hasVisibleAutomationItems = false;
-      } else {
-        // Use cached item list when available; otherwise fall back to live children
-        const items = elements.cachedAutomationItems && elements.cachedAutomationItems.length
-          ? elements.cachedAutomationItems
-          : Array.from(automationSettingsContainer.children || []);
-        for (const child of items) {
-          if (child && (child.nodeType === 1 || child instanceof Element) &&
-              typeof getComputedStyle === 'function' &&
-              getComputedStyle(child).display !== 'none') {
-            hasVisibleAutomationItems = true;
-            break;
-          }
-        }
+      const shouldHideAutomation = isMaxRepeatReached || isCompletedAndNotRepeatable;
+      const items = elements.cachedAutomationItems?.length
+        ? elements.cachedAutomationItems
+        : Array.from(automationSettingsContainer.children || []);
+      if (!shouldHideAutomation) {
+        hasVisibleAutomationItems = items.some(child =>
+          child &&
+          child.nodeType === 1 &&
+          getComputedStyle(child).display !== 'none'
+        );
       }
-      if (automationSettingsContainer.style) {
-        automationSettingsContainer.style.display = hasVisibleAutomationItems ? 'flex' : 'none';
-      }
+      automationSettingsContainer.style.display = !shouldHideAutomation && hasVisibleAutomationItems ? 'flex' : 'none';
     }
 
     let progressButtonVisible = false;
