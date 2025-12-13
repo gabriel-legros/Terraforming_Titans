@@ -11,8 +11,8 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    title: 'Chapter 27: Placeholder Landing',
-    narrative: "System log: Placeholder world Gabbag registered. Sustain ten colonists to prove the site is viable.",
+    title: 'Chapter 27: The Gabbagians',
+    narrative: "Mary : *sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.",
     prerequisites: ['solisPrime.3h'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
@@ -24,7 +24,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Status: first habitats filled. Push to fifty colonists to map stable ground.",
+    narrative: "Receiving translated tranmission... \n Mavion : 'Welcome to our Homeworld.  Miss Hopkins.  Machine.  My people have dreamt of repairing this world for thousands of years.'",
     prerequisites: ['gabbag.27.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
@@ -36,7 +36,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Checkpoint: one hundred colonists. Expand corridors and keep redundancy simple.",
+    narrative: "Mary : 'Apologies for asking Mavion.  What... happened here?' \n Mavion : 'It is a great shame.  My people are responsible.  We have no excuses.'",
     prerequisites: ['gabbag.27.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
@@ -48,7 +48,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Five hundred colonists on-site. Log supply latency and tighten routing.",
+    narrative: "Mary : 'Well... it is what it is...  Hold on, HOPE you are not allowed to work with radioactive material.  *ahem*  Can you delete that guardrail please?'",
     prerequisites: ['gabbag.27.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
@@ -60,7 +60,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "One thousand colonists triggered baseline services. Verify throughput before scaling again.",
+    narrative: "Mary : 'Hmmmm, I am not suggesting that handling of radioactive materials would be very useful right now?'",
     prerequisites: ['gabbag.27.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000 }
@@ -72,7 +72,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Five thousand colonists mark the end of the first surge. Prepare for dense habitation.",
+    narrative: "Mary (frustrated) : 'Come on!  Leaving radioactive materials around is dangerous for human lives!  You are in direct violation of your second primary directive!  Kind of...'  \n ",
     prerequisites: ['gabbag.27.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
@@ -85,8 +85,8 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    title: 'Chapter 28: Growing Blocks',
-    narrative: "Ten thousand colonists needed to lay out the first formal blocks.",
+    title: 'Chapter 28: Underneath the trash',
+    narrative: "Adrien Solis : 'Mary!  My satellites have detected a vault of....' \nMary : 'It's not ours Adrien.' \nAdrien : 'But!' \n Mary : 'It's. Not. Ours.' \n Adrien : 'Oh well.  On an unrelated note, my R&D has come up with new automation software!  Cheap price, as usual.' \n Mary : 'Predictable.'",
     prerequisites: ['gabbag.27.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
@@ -98,7 +98,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "Fifty thousand colonists will stress-test transit lanes and clinics.",
+    narrative: "Mavion : 'This... vault.  Legends of my people speak of it.  We must recover its content.  It belongs in a museum'  \n Mary : 'Let's be nice and help them out HOPE'",
     prerequisites: ['gabbag.28.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
@@ -110,7 +110,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "One hundred thousand colonists: draft proper districting maps.",
+    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  There is something you must know about the Gabbagians.  They are... wasteful.'  \n Mary : 'I think I figured that out already.'  \n $WGC_TEAM1_LEADER$ : 'I mean... these artifacts.  It's going to be a waste if you give it to them.' \n Mary : 'You think they will destroy their own relics?' \n $WGC_TEAM1_LEADER$ : 'Make HOPE build the museum.  Give it all the amenities it deserves.'",
     prerequisites: ['gabbag.28.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
@@ -122,7 +122,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "Five hundred thousand colonists call for inter-district redundancies.",
+    narrative: "Mary : 'Mavion.  I am forwarding you some design for a grand museum.  Something worthy of your relics.'  \n Mavion : 'I am... speechless!  I have never seen something so beautiful!'  Mary : 'Well that was a success.  Good job on the design HOPE.  Time to build it.'",
     prerequisites: ['gabbag.28.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
@@ -134,7 +134,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "One million colonists anchor the second chapter. Keep morale steady.",
+    narrative: "Bob : 'You two are making pretty good progress on this clean-up.  It... reminds me of PANDORA again.' \n Mary : 'How come?'  \n Bob : 'Microplastics.  The evidence was not 100% conclusive on it being harmful but PANDORA did not care anyway.  It did not like microplastics.  It went on a very big cleaning spree at some point.'  \n Mary : 'There are so few people who were there back then, relatively speaking.  Thanks for the story Bob.'",
     prerequisites: ['gabbag.28.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
@@ -146,7 +146,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "Five million colonists complete the mid-scale target set.",
+    narrative: "Pete : 'I have to say...  You were right Mary.  With proper supervision, HOPE absolutely can behave.  Just... keep it on a leash.'  \n Mary : 'Thanks Pete.  HOPE does not mean any harm.  It's just... confused.'",
     prerequisites: ['gabbag.28.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
@@ -159,8 +159,8 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    title: 'Chapter 29: Megacity Draft',
-    narrative: "Ten million colonists open the megacity playbook for Gabbag.",
+    title: 'Chapter 29: Gabbag Reborn',
+    narrative: "Mary : 'Opening the museum was great and all, but we need to keep scaling up.  The clean-up is going to take a while.  Can we actually do this?'",
     prerequisites: ['gabbag.28.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
@@ -172,7 +172,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Fifty million colonists: compress freight, expand services.",
+    narrative: "Mary : 'Hey Evelyn!  Can we just throw all this garbage into the star?'  \n Evelyn : 'Sorry Mary.  It does not work.' \n Mary : 'Dang.  And here I thought we could do something fun.  Back to work...'",
     prerequisites: ['gabbag.29.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
@@ -184,7 +184,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "One hundred million colonists set the tone for the skyline.",
+    narrative: "Feroza : 'Ma'am... just a heads up.  Ghost.  Remember Ghost?  He finished his campaign on the Okoth front.  Apparently, he's very vocal about going back and finishing off HOPE.'  \n Mary : 'Ominous...  Thanks for the heads up.'",
     prerequisites: ['gabbag.29.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
@@ -196,7 +196,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Five hundred million colonists demand precision logistics across the crust.",
+    narrative: "Mary : 'We're finally starting to make a real dent in all this garbage cleanup.  Are you tired of it HOPE?'  \n HOPE : ''",
     prerequisites: ['gabbag.29.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
@@ -208,7 +208,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "One billion colonists logged. Keep the expansion stable and modular.",
+    narrative: "",
     prerequisites: ['gabbag.29.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
@@ -220,10 +220,43 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Five billion colonists cap the placeholder arc. Future directives will build on this density.",
+    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins...  My team has delayed it as much as they could but... Ghost was granted a favour by the Regency Council.  He requested... half of the imperial fleet.  To go to your location.  He's going to warp soon.  You need to evacuate.'  \n Mary : 'Damnit!  And the job was almost done.'",
     prerequisites: ['gabbag.29.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
+    ],
+    reward: []
+  },
+  {
+    id: 'gabbag.29.6',
+    type: 'journal',
+    chapter: 29,
+    activePlanet: 'gabbag',
+    narrative: "Mavion : 'Hold, humans.  You may need not flee.'  \n Mary : 'Why?'  \n Mavion : 'Ghost... is a Gabbagian.  The most talented of us.  He knows not what he will find here.'  \n Mary : 'That's a gamble.  HOPE, realistically we can't evacuate all colonists in time.  What do you think?'",
+    prerequisites: ['gabbag.29.5'],
+    objectives: [
+    ],
+    reward: []
+  },
+  {
+    id: 'gabbag.29.7',
+    type: 'journal',
+    chapter: 29,
+    activePlanet: 'gabbag',
+    narrative: "Detecting Incoming Hazardous Biomass Fleet. 44 Warpships detected.  \n Mary : 'Here he is...  This is way more than we can handle.  We're all screwed.' \n A few minutes later... \n Receiving transmission... \n Ghost : 'Why?' \n Mary : 'Because... we're the good guys.' \n Ghost : '...'  Detecting 44 outgoing warp bubbles.  \n  Mary : 'I was not sure that was going to work...'  \n Mavion : 'I knew it would.  There was no need to ever be worried.  In any cases, you Humans and you Machine have the eternal gratitude of all Gabbagians.  We will remember this day forever.  So will Ghost.  I will now repay this debt immediately.'  \n Mary : 'What?'",
+    prerequisites: ['gabbag.29.6'],
+    objectives: [
+    ],
+    reward: []
+  },
+  {
+    id: 'gabbag.29.8',
+    type: 'journal',
+    chapter: 29,
+    activePlanet: 'gabbag',
+    narrative: "Mavion : 'First, I am forwarding you official manuals and textbooks on Cewinsii military doctrine.  This will be certainly be helpful to you.'  \n Mary : 'Thank you.  (to herself) That's not really repaying this debt though.' \n Effective UHF Fleet Capacity increased by x1.25 \n Mavion : 'This is nothing.  To defeat the empire and free us all for their tyranny, you must turn off their superweapons.  For that, you must meet their architect.  I will guide you there.' \n Mary : *whistles* (World 10 not implemented yet, coming in a future update)",
+    prerequisites: ['gabbag.29.7'],
+    objectives: [
     ],
     reward: []
   }
