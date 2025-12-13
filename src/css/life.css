@@ -87,6 +87,28 @@
     width: 100%;
     display: block;
   }
+  #life-apply-btn.life-apply-blocked {
+    background: #b12727;
+    border: 1px solid #7f1f1f;
+    color: #fff;
+    box-shadow: none;
+    opacity: 1;
+  }
+  #life-apply-btn.life-apply-blocked:disabled {
+    background: #b12727;
+    border-color: #7f1f1f;
+    color: #fff;
+    opacity: 1;
+  }
+  #life-apply-btn.life-apply-blocked .life-apply-title,
+  #life-apply-btn.life-apply-blocked .life-apply-reason {
+    display: block;
+    line-height: 1.2;
+  }
+  #life-apply-btn.life-apply-blocked .life-apply-reason {
+    font-size: 0.9em;
+    opacity: 0.95;
+  }
 
   /* Remove old flex rules for the controls container and its direct children */
   /* #life-terraforming-controls { ... } */
