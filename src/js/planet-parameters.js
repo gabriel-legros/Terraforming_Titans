@@ -1314,6 +1314,16 @@ const solisPrimeOverrides = {
   }
 };
 
+const gabbagOverrides = {
+  name: 'Gabbag',
+  celestialParameters: {
+    sector: 'R9-99'
+  },
+  visualization: {
+    baseColor: '#556b7d',
+  }
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -1324,7 +1334,8 @@ const planetSpecificOverrides = {
   vega2: vega2Overrides,
   venus: venusOverrides,
   umbra: umbraOverrides,
-  solisprime: solisPrimeOverrides
+  solisprime: solisPrimeOverrides,
+  gabbag: gabbagOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -1370,6 +1381,7 @@ const planetParameters = {
     venus: getPlanetParameters('venus'),
     umbra: getPlanetParameters('umbra'),
     solisprime: getPlanetParameters('solisprime'),
+    gabbag: getPlanetParameters('gabbag'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,

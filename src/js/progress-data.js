@@ -40,6 +40,11 @@ if (typeof progressSolisPrime === 'undefined') {
     try { progressSolisPrime = require('./story/solisPrime.js'); } catch (e) {}
   }
 }
+if (typeof progressGabbag === 'undefined') {
+  if (typeof module !== 'undefined') {
+    try { progressGabbag = require('./story/gabbag.js'); } catch (e) {}
+  }
+}
 
 function mergeProgress(source) {
   if (!source) return;
@@ -59,6 +64,7 @@ mergeProgress(typeof progressVega2 !== 'undefined' ? progressVega2 : null);
 mergeProgress(typeof progressVenus !== 'undefined' ? progressVenus : null);
 mergeProgress(typeof progressUmbra !== 'undefined' ? progressUmbra : null);
 mergeProgress(typeof progressSolisPrime !== 'undefined' ? progressSolisPrime : null);
+mergeProgress(typeof progressGabbag !== 'undefined' ? progressGabbag : null);
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
