@@ -328,16 +328,36 @@ class LifeDesign {
           return null;
       }
 
-      const failingZone = ['tropical', 'temperate', 'polar'].find(
-          zoneName => tempResults[zoneName] && !tempResults[zoneName].pass
-      );
+      const ranges = this.getTemperatureRanges().survival;
+      const lower = ranges.min - 0.5;
+      const upper = ranges.max + 0.5;
+      const distanceToRange = (temp) => {
+          if (temp < lower) return lower - temp;
+          if (temp > upper) return temp - upper;
+          return 0;
+      };
 
-      if (failingZone) {
-          const zoneLabel = `${failingZone[0].toUpperCase()}${failingZone.slice(1)}`;
-          if (tempResults[failingZone].reason) {
-              return `${zoneLabel}: ${tempResults[failingZone].reason}`;
+      let closestZone = null;
+      let closestDistance = Infinity;
+
+      ['tropical', 'temperate', 'polar'].forEach(zoneName => {
+          if (!tempResults[zoneName] || tempResults[zoneName].pass) {
+              return;
           }
-          return `${zoneLabel}: Unsurvivable conditions`;
+          const temps = terraforming.temperature.zones[zoneName];
+          const dayDistance = distanceToRange(temps.day);
+          const nightDistance = distanceToRange(temps.night);
+          const zoneDistance = Math.max(dayDistance, nightDistance);
+          if (zoneDistance < closestDistance) {
+              closestDistance = zoneDistance;
+              closestZone = zoneName;
+          }
+      });
+
+      if (closestZone) {
+          const zoneLabel = `${closestZone[0].toUpperCase()}${closestZone.slice(1)}`;
+          const reason = tempResults[closestZone].reason || 'Unsure why this zone fails';
+          return `${zoneLabel}: ${reason}`;
       }
 
       return tempResults.global.reason || 'Life cannot survive anywhere';
