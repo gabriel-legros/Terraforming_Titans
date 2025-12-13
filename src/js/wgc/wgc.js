@@ -799,8 +799,8 @@ class WarpGateCommand extends EffectableEntity {
       if (readyToFinish) {
         this.finishOperation(idx);
         this.totalOperations += 1;
-        op.timer = Math.max(op.timer - 600, 0);
-        op.progressSegmentStart = op.timer;
+        op.timer = 0;
+        op.progressSegmentStart = 0;
         this.refreshOperationProgress(op, idx);
         op.number = this.teamNextOperationNumber[idx];
         this.teamNextOperationNumber[idx] += 1;

@@ -59,8 +59,29 @@ describe('Warp Gate Command progress segments', () => {
     op.nextEvent = 1;
     op.progressSegmentStart = 0;
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
-    manager.update(2000);
-    randomSpy.mockRestore();
-    expect(op.baseEventResults[0]).toBe('failure');
-  });
+  manager.update(2000);
+  randomSpy.mockRestore();
+  expect(op.baseEventResults[0]).toBe('failure');
+});
+
+test('finishing an operation resets progress before the next one begins', () => {
+  const manager = new WarpGateCommand();
+  fillTeam(manager, 50);
+  manager.startOperation(0, 0);
+  const op = manager.operations[0];
+  op.baseEventsCompleted = op.baseEventsTotal;
+  op.currentEventIndex = op.eventQueue.length;
+  op.timer = 660;
+
+  manager.update(0);
+
+  expect(op.timer).toBe(0);
+  expect(op.baseEventsCompleted).toBe(0);
+  expect(op.currentEventIndex).toBe(0);
+
+  manager.update(0);
+
+  expect(op.baseEventsCompleted).toBe(0);
+  expect(op.currentEventIndex).toBe(0);
+});
 });

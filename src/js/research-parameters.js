@@ -266,7 +266,7 @@ const researchParameters = {
       {
         id: 'ai_reactor_overclocking',
         name: 'AI Reactor Overclocking',
-        description: 'HOPE will tune superalloy fusion reactors to unleash their potential, providing a 1.25x multiplier.',
+        description: 'HOPE will tune superalloy fusion reactors to unleash their potential, providing a 25% output boost per level.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         requiredFlags: ['repeatableAiResearchUnlocked'],
@@ -278,7 +278,8 @@ const researchParameters = {
             targetId: 'superalloyFusionReactor',
             type: 'productionMultiplier',
             value: 1.25,
-            repeatableMultiplier: 1.25
+            repeatableAddend: 0.25,
+            effectId: 'ai_reactor_overclocking_output'
           }
         ]
       },
@@ -691,7 +692,7 @@ const researchParameters = {
       {
         id: 'ai_industrial_coordination',
         name: 'AI Industrial Coordination',
-        description: 'HOPE will integrate itself further into each factory, reducing worker requirements by 0.9x.',
+        description: 'HOPE will integrate itself further into each factory, reducing worker requirements by 10% per level.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         requiredFlags: ['repeatableAiResearchUnlocked'],
@@ -702,7 +703,8 @@ const researchParameters = {
             target: 'global',
             type: 'globalWorkerReduction',
             value: 0.1,
-            repeatableMultiplier: 0.9
+            repeatableAddend: 0.1,
+            effectId: 'ai_industrial_coordination_workers'
           }
         ]
       },
@@ -1063,7 +1065,7 @@ const researchParameters = {
       {
         id: 'ai_ecumenopolis_expansion',
         name: 'AI Ecumenopolis Expansion',
-        description: 'HOPE will optimize architecture, transit and utilities, enabling more space for 1.1x more people and androids.',
+        description: 'HOPE will optimize architecture, transit and utilities, enabling 10% more space per level for people and androids.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         requiredFlags: ['repeatableAiResearchUnlocked'],
@@ -1075,21 +1077,24 @@ const researchParameters = {
             targetId: 't7_colony',
             type: 'storageMultiplier',
             value: 1.1,
-            repeatableMultiplier: 1.1
+            repeatableAddend: 0.1,
+            effectId: 'ai_ecumenopolis_expansion_storage'
           },
           {
             target: 'colony',
             targetId: 't7_colony',
             type: 'productionMultiplier',
             value: 1.1,
-            repeatableMultiplier: 1.1
+            repeatableAddend: 0.1,
+            effectId: 'ai_ecumenopolis_expansion_production'
           },
           {
             target: 'colony',
             targetId: 't7_colony',
             type: 'consumptionMultiplier',
             value: 1.1,
-            repeatableMultiplier: 1.1
+            repeatableAddend: 0.1,
+            effectId: 'ai_ecumenopolis_expansion_consumption'
           }
         ],
       },

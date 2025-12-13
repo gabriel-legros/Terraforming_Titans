@@ -69,27 +69,31 @@ class Research {
     }
 
     calculateRepeatableEffectValue(research, effect) {
-      if (!research.repeatable) {
-        return effect.value;
-      }
-      if (research.timesResearched <= 0) {
-        return null;
-      }
-
-      const baseMultiplier = Number.isFinite(effect.repeatableMultiplier)
-        ? effect.repeatableMultiplier
-        : Number.isFinite(effect.baseValue) ? effect.baseValue : effect.value;
-
-      if (!Number.isFinite(baseMultiplier)) {
-        return effect.value;
-      }
-
-      const totalMultiplier = baseMultiplier ** research.timesResearched;
-      if (effect.type === 'globalWorkerReduction') {
-        return 1 - totalMultiplier;
-      }
-      return totalMultiplier;
+    if (!research.repeatable) {
+      return effect.value;
     }
+    const repeatLevel = research.timesResearched;
+    if (repeatLevel <= 0) {
+      return null;
+    }
+
+    const baseValue = Number.isFinite(effect.baseValue) ? effect.baseValue : effect.value;
+    if (effect.type === 'globalWorkerReduction') {
+      const increment = Number.isFinite(effect.repeatableAddend) ? effect.repeatableAddend : baseValue;
+      const divisor = 1 + increment * repeatLevel;
+      return 1 - 1 / divisor;
+    }
+
+    const increment = Number.isFinite(effect.repeatableAddend)
+      ? effect.repeatableAddend
+      : Number.isFinite(baseValue) ? baseValue - 1 : 0;
+    if (!Number.isFinite(increment)) {
+      return effect.value;
+    }
+
+    const base = Number.isFinite(effect.repeatableBase) ? effect.repeatableBase : 1;
+    return base + increment * repeatLevel;
+  }
 
     updateRepeatableResearchCost(research) {
       if (!research.repeatable) {
