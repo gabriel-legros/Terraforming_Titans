@@ -22,6 +22,9 @@ let calculateGravityCostPenaltyHelper;
 let createNoGravityPenaltyHelper;
 let cloudPropsOnlyHelper;
 let calculateCloudAlbedoContributionsHelper;
+let terraformingRequirementLoader;
+let terraformingRequirementPresets;
+let defaultTerraformingRequirementId = 'human';
 
 if (typeof module !== 'undefined' && module.exports) {
   ({
@@ -29,10 +32,20 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateGravityCostPenalty: calculateGravityCostPenaltyHelper,
     createNoGravityPenalty: createNoGravityPenaltyHelper,
   } = require('./gravity.js'));
+  ({
+    DEFAULT_TERRAFORMING_REQUIREMENT_ID: defaultTerraformingRequirementId,
+    terraformingRequirements: terraformingRequirementPresets,
+    getTerraformingRequirement: terraformingRequirementLoader
+  } = require('./terraforming-requirements.js'));
 } else if (typeof window !== 'undefined') {
   calculateApparentEquatorialGravityHelper = window.calculateApparentEquatorialGravity;
   calculateGravityCostPenaltyHelper = window.calculateGravityCostPenalty;
   createNoGravityPenaltyHelper = window.createNoGravityPenalty;
+  terraformingRequirementLoader = window.getTerraformingRequirement;
+  terraformingRequirementPresets = window.terraformingRequirements;
+  if (typeof window.DEFAULT_TERRAFORMING_REQUIREMENT_ID !== 'undefined') {
+    defaultTerraformingRequirementId = window.DEFAULT_TERRAFORMING_REQUIREMENT_ID;
+  }
 }
 
 function getApparentEquatorialGravity(params) {
@@ -48,6 +61,29 @@ function getNoGravityPenalty() {
     return createNoGravityPenaltyHelper();
   }
   return { multiplier: 1, linearIncrease: 0, exponentialIncrease: 0 };
+}
+
+function resolveTerraformingRequirement(requirementId = defaultTerraformingRequirementId) {
+  if (terraformingRequirementLoader) {
+    return terraformingRequirementLoader(requirementId);
+  }
+  if (terraformingRequirementPresets && terraformingRequirementPresets[requirementId]) {
+    return terraformingRequirementPresets[requirementId];
+  }
+  return {
+    id: requirementId,
+    temperatureRangeK: { min: 278.15, max: 298.15 },
+    luminosityRange: { min: 600, max: 2000 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 0, max: 100 },
+      oxygen: { min: 15000, max: 25000 },
+      inertGas: { min: 50000, max: 100000 }
+    },
+    waterCoverageTarget: 0.2,
+    lifeCoverageTarget: 0.5,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true
+  };
 }
 
 const STEFAN_BOLTZMANN = 5.670374419e-8;
@@ -183,12 +219,6 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 
-const terraformingGasTargets = {
-  carbonDioxide : {min : 0, max : 100},
-  oxygen : {min : 15000, max : 25000},
-  inertGas : {min : 50000, max : 100000}
-}
-
 function buildAtmosphereContext(atmospheric, gravity, radius) {
     let totalPressurePa = 0;
     const pressureByKey = {};
@@ -243,6 +273,10 @@ class Terraforming extends EffectableEntity{
     this.celestialParameters.starLuminosity = starLuminosity;
     this.initialCelestialParameters.starLuminosity = starLuminosity;
     setStarLuminosity(starLuminosity);
+
+    this.requirementId = defaultTerraformingRequirementId;
+    this.requirements = resolveTerraformingRequirement(this.requirementId);
+    this.gasTargets = this.requirements.gasTargetsPa;
 
     this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
 
@@ -317,7 +351,7 @@ class Terraforming extends EffectableEntity{
     });
 
     // Global water target remains, moved outside the old structure
-    this.waterTarget = 0.2; // Target for average liquid water coverage
+    this.waterTarget = this.requirements.waterCoverageTarget;
     this.waterUnlocked = false; // Global unlock status
 
     // Global atmosphere properties (Now primarily accessed via global 'resources.atmospheric')
@@ -333,8 +367,8 @@ class Terraforming extends EffectableEntity{
       name: 'Temperature',
       value: 0,
       trendValue: 0,
-      targetMin: 278.15, // 15°C in Kelvin,
-      targetMax: 298.15,
+      targetMin: this.requirements.temperatureRangeK.min,
+      targetMax: this.requirements.temperatureRangeK.max,
       effectiveTempNoAtmosphere: 0,
       equilibriumTemperature: 0,
       emissivity: 0,
@@ -371,8 +405,8 @@ class Terraforming extends EffectableEntity{
     this.luminosity = {
       name: 'Luminosity',
       value: 100,
-      targetMin: 600,
-      targetMax: 2000,
+      targetMin: this.requirements.luminosityRange.min,
+      targetMax: this.requirements.luminosityRange.max,
       unlocked: false,
       albedo: 0.25,
       groundAlbedo: 0,
@@ -405,14 +439,14 @@ class Terraforming extends EffectableEntity{
     this.life = {
         name: 'Life',
         unlocked: false,
-        target: 0.50, // Target for average biomass coverage
+        target: this.requirements.lifeCoverageTarget,
         // biomassCoverage: 0, // Removed - will be calculated from zonalSurface.biomass
         // dryIceCoverage: 0 // Removed - will be calculated from zonalCO2.ice
     };
     this.magnetosphere = {
       name: 'Others',
       value: 0,
-      target: 100,
+      target: this.requirements.magnetosphereThreshold,
       unlocked: false
     };
 
@@ -435,10 +469,10 @@ class Terraforming extends EffectableEntity{
   }
 
   getMagnetosphereStatus() {
-    if(this.magnetosphere.value >= 100){
+    if (this.magnetosphere.value >= this.magnetosphere.target) {
       return true;
     }
-    if(this.isBooleanFlagSet('magneticShield')){
+    if (this.isBooleanFlagSet('magneticShield')) {
       return true;
     }
     return false;
@@ -461,23 +495,18 @@ class Terraforming extends EffectableEntity{
   }
 
   getAtmosphereStatus() {
-      // Pressures are now calculated on the fly from global resources
-
-      for (const gas in terraformingGasTargets) {
-          // Calculate pressure on the fly from global resource amount
+      for (const gas in this.gasTargets) {
           const gasAmount = this.resources.atmospheric[gas]?.value || 0;
           const gasPressurePa = calculateAtmosphericPressure(
               gasAmount,
               this.celestialParameters.gravity,
               this.celestialParameters.radius
           );
-
-          // Compare against targets (which are also in Pa)
-          if (gasPressurePa < terraformingGasTargets[gas].min || gasPressurePa > terraformingGasTargets[gas].max) {
+          const target = this.gasTargets[gas];
+          if (gasPressurePa < target.min || gasPressurePa > target.max) {
               return false;
           }
       }
-      // Check if all required gases are within their target ranges
       return true;
   }
 
@@ -499,6 +528,9 @@ class Terraforming extends EffectableEntity{
   }
 
   getHazardClearanceStatus() {
+    if (!this.requirements.requireHazardClearance) {
+      return true;
+    }
     const tolerance = 1e-6;
     for (const zone of ZONES) {
       if ((this.zonalSurface[zone]?.hazardousBiomass || 0) > tolerance) {

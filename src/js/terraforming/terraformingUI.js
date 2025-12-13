@@ -19,17 +19,37 @@ function getTerraformingSubtabManager() {
   return terraformingSubtabManager;
 }
 
+function getActiveTerraformingRequirements() {
+  if (terraforming && terraforming.requirements) {
+    return terraforming.requirements;
+  }
+  if (typeof getTerraformingRequirement === 'function') {
+    const fallbackId = typeof DEFAULT_TERRAFORMING_REQUIREMENT_ID !== 'undefined'
+      ? DEFAULT_TERRAFORMING_REQUIREMENT_ID
+      : 'human';
+    return getTerraformingRequirement(fallbackId);
+  }
+  return null;
+}
+
+function getActiveGasTargets() {
+  if (terraforming && terraforming.gasTargets) {
+    return terraforming.gasTargets;
+  }
+  const requirements = getActiveTerraformingRequirements();
+  if (requirements && requirements.gasTargetsPa) {
+    return requirements.gasTargetsPa;
+  }
+  return {};
+}
+
 function getGasRangeString(gasName) {
-  // Check if the gas exists in the object
-  const gas = terraformingGasTargets[gasName];
-  
-  if (gas) {
-    // Return the range string
-    return `${formatNumber(gas.min, true)} < P < ${formatNumber(gas.max, true)}`;
-  } else {
-    // Handle invalid gas names
+  const gasTargets = getActiveGasTargets();
+  const gas = gasTargets[gasName];
+  if (!gas) {
     return '';
   }
+  return `${formatNumber(gas.min, true)} < P < ${formatNumber(gas.max, true)}`;
 }
 
 let terraformingTabsInitialized = false;
@@ -734,7 +754,9 @@ function createTemperatureBox(row) {
     const unit = getTemperatureUnit();
     els.tempUnits.forEach(el => el.textContent = unit);
     if (els.target) {
-      els.target.textContent = `Target : Global mean between ${formatNumber(toDisplayTemperature(278.15), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(298.15), false, 2)}${unit}.`;
+      const minTarget = terraforming.temperature.targetMin;
+      const maxTarget = terraforming.temperature.targetMax;
+      els.target.textContent = `Target : Global mean between ${formatNumber(toDisplayTemperature(minTarget), false, 2)}${unit} and ${formatNumber(toDisplayTemperature(maxTarget), false, 2)}${unit}.`;
     }
 
     els.current.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
@@ -803,6 +825,7 @@ function createTemperatureBox(row) {
       "- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases."
     ].join('\n');
     const atmTooltip = attachDynamicInfoTooltip(atmInfo, atmTooltipText);
+    const gasTargets = getActiveGasTargets();
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
@@ -821,7 +844,7 @@ function createTemperatureBox(row) {
   
     // Iterate through gases defined in the global resources to build the table structure
     for (const gas in resources.atmospheric) {
-        const hasTarget = terraformingGasTargets.hasOwnProperty(gas);
+        const hasTarget = !!gasTargets[gas];
         const statusClass = hasTarget ? 'status-cross' : '';
         const statusIcon = hasTarget ? '✗' : '';
         innerHTML += `
@@ -890,6 +913,7 @@ function createTemperatureBox(row) {
     const atmosphereBox = els.box;
     if (!atmosphereBox) return;
     atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? 'green' : 'red';
+    const gasTargets = getActiveGasTargets();
 
     els.current.textContent = terraforming.calculateTotalPressure().toFixed(2);
 
@@ -962,7 +986,7 @@ function createTemperatureBox(row) {
         }
 
         if (gasEls && gasEls.status) {
-            const target = terraformingGasTargets[gas];
+            const target = gasTargets[gas];
             if (!target) {
                 gasEls.status.textContent = '';
                 gasEls.status.classList.remove('status-check', 'status-cross');
@@ -1041,7 +1065,8 @@ function createWaterBox(row) {
     }
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = "Target : Water coverage > 20%.";
+    const waterTargetPercent = terraforming.waterTarget * 100;
+    targetSpan.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}%.`;
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     waterBox.appendChild(targetSpan);
@@ -1159,7 +1184,7 @@ function createWaterBox(row) {
     }
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = "Target : Life coverage at least 50%.";
+    targetSpan.textContent = `Target : Life coverage at least ${(terraforming.life.target * 100).toFixed(0)}%.`;
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     lifeBox.appendChild(targetSpan);
@@ -1522,7 +1547,7 @@ function updateLifeBox() {
     row.appendChild(luminosityBox);
 
     const targetSpan = document.createElement('span');
-    targetSpan.textContent = "Target : Surface solar flux between 600 and 2000.";
+    targetSpan.textContent = `Target : Surface solar flux between ${formatNumber(terraforming.luminosity.targetMin, false, 0)} and ${formatNumber(terraforming.luminosity.targetMax, false, 0)}.`;
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     luminosityBox.appendChild(targetSpan);
