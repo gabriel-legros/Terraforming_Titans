@@ -13,6 +13,11 @@ function addSettingsListeners() {
   const keepTabRunningAudioToggle = document.getElementById('keep-tab-running-audio-toggle');
   if (keepTabRunningAudioToggle) {
     keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
+    keepTabRunningAudioToggle.addEventListener('pointerdown', () => {
+      if (!keepTabRunningAudioToggle.checked) {
+        startBackgroundSilence();
+      }
+    });
     keepTabRunningAudioToggle.addEventListener('change', () => {
       gameSettings.keepTabRunningAudio = keepTabRunningAudioToggle.checked;
       if (gameSettings.keepTabRunningAudio) {

@@ -44,7 +44,7 @@ let gameSettings = {
   disableAutosave: false,
   useCelsius: false,
   darkMode: false,
-  keepTabRunningAudio: true,
+  keepTabRunningAudio: false,
   hideCompletedResearch: false,
   silenceSolisAlert: false,
   silenceMilestoneAlert: false,
