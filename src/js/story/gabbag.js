@@ -13,7 +13,7 @@ progressGabbag.chapters.push(
     activePlanet: 'gabbag',
     title: 'Chapter 27: The Gabbagians',
     narrative: "Mary : *sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.",
-    prerequisites: ['solisPrime.3h'],
+    prerequisites: ['impossible3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
     ],
@@ -254,7 +254,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mavion : 'First, I am forwarding you official manuals and textbooks on Cewinsii military doctrine.  This will be certainly be helpful to you.'  \n Mary : 'Thank you.  (to herself) That's not really repaying this debt though.' \n Effective UHF Fleet Capacity increased by x1.25 \n Mavion : 'This is nothing.  To defeat the empire and free us all for their tyranny, you must turn off their superweapons.  For that, you must meet their architect.  I will guide you there.' \n Mary : *whistles* (World 10 not implemented yet, coming in a future update)",
+    narrative: "Mavion : 'First, I am forwarding you official manuals and textbooks on Cewinsii military doctrine.  This will be certainly be helpful to you.'  \n Mary : 'Thank you.  (to herself) That's nice but I wouldn't call it repaying the debt.' \n Effective UHF Fleet Capacity increased by x1.25 \n Mavion : 'This is nothing.  To defeat the empire and free us all for their tyranny, you must disable their superweapons.  For that, you must meet their architect.  I will guide you there.' \n Mary : *whistles* (World 10 not implemented yet, coming in a future update)",
     prerequisites: ['gabbag.29.7'],
     objectives: [
     ],
