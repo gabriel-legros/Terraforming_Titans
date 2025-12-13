@@ -61,6 +61,7 @@ function hasSuperEarthArchetype(...sources) {
             continue;
         }
         const candidates = [
+            source.cachedArchetype,
             source.classification?.archetype,
             source.override?.classification?.archetype,
             source.merged?.classification?.archetype,
@@ -236,6 +237,12 @@ class SpaceManager extends EffectableEntity {
         const target = normalizeSectorLabel(sectorLabel);
         let total = 0;
         const overridesLookup = globalThis?.planetOverrides || null;
+        const resolveStatusSector = (status, ...sources) => {
+            if (status?.sector) {
+                return normalizeSectorLabel(status.sector);
+            }
+            return resolveSectorFromSources(...sources);
+        };
 
         Object.keys(this.planetStatuses).forEach((key) => {
             const status = this.planetStatuses[key];
@@ -244,7 +251,7 @@ class SpaceManager extends EffectableEntity {
             }
             const planetData = this.allPlanetsData[key] || null;
             const override = overridesLookup ? overridesLookup[key] : null;
-            const sector = resolveSectorFromSources(override, planetData);
+            const sector = resolveStatusSector(status, override, planetData);
             if (sector !== target) {
                 return;
             }
@@ -253,7 +260,7 @@ class SpaceManager extends EffectableEntity {
                 total += 1;
             }
             if (hasSuperEarthArchetype(override, planetData)) {
-                total += 1;
+                total += 2;
             }
         });
 
@@ -262,7 +269,7 @@ class SpaceManager extends EffectableEntity {
                 return;
             }
             const original = status.original || null;
-            const sector = resolveSectorFromSources(original);
+            const sector = resolveStatusSector(status, original);
             if (sector !== target) {
                 return;
             }
@@ -270,8 +277,8 @@ class SpaceManager extends EffectableEntity {
             if (status.orbitalRing) {
                 total += 1;
             }
-            if (hasSuperEarthArchetype(original)) {
-                total += 1;
+            if (hasSuperEarthArchetype(status, original)) {
+                total += 2;
             }
         });
 
@@ -279,13 +286,16 @@ class SpaceManager extends EffectableEntity {
             if (!status || !status.terraformed) {
                 return;
             }
-            const sector = resolveSectorFromSources(status, status.original);
+            const sector = resolveStatusSector(status, status.original);
             if (sector !== target) {
                 return;
             }
             const value = this._deriveArtificialTerraformValue(status);
             if (value > 0) {
                 total += value;
+            }
+            if (hasSuperEarthArchetype(status, status.original)) {
+                total += 2;
             }
         });
 
@@ -339,7 +349,8 @@ class SpaceManager extends EffectableEntity {
                 visited: false,
                 orbitalRing: false,
                 departedAt: null,
-                ecumenopolisPercent: 0
+                ecumenopolisPercent: 0,
+                sector: SPACE_DEFAULT_SECTOR_LABEL
             };
         }
         return this.randomWorldStatuses[key];
@@ -774,7 +785,8 @@ class SpaceManager extends EffectableEntity {
                     colonists: 0,
                     original: this.getCurrentWorldOriginal(),
                     visited: true,
-                    orbitalRing: false
+                    orbitalRing: false,
+                    sector: resolveSectorFromSources(this.getCurrentWorldOriginal())
                 };
             }
             if (this.randomWorldStatuses[seed].terraformed !== isComplete) {
@@ -800,7 +812,8 @@ class SpaceManager extends EffectableEntity {
                     departedAt: null,
                     ecumenopolisPercent: 0,
                     terraformedValue,
-                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue })
+                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue }),
+                    sector: resolveSectorFromSources(this.getCurrentWorldOriginal())
                 };
             } else if (!this.artificialWorldStatuses[key].terraformedValue) {
                 this.artificialWorldStatuses[key].terraformedValue = this._deriveArtificialTerraformValue({
@@ -1093,6 +1106,7 @@ class SpaceManager extends EffectableEntity {
                 original: res
             })
             : 1;
+        const sector = resolveSectorFromSources(res);
         if (!existing) {
             const targetMap = isArtificial ? this.artificialWorldStatuses : this.randomWorldStatuses;
             targetMap[s] = {
@@ -1105,7 +1119,8 @@ class SpaceManager extends EffectableEntity {
                 departedAt: null,
                 ecumenopolisPercent: 0,
                 artificial: artificialWorld,
-                terraformedValue
+                terraformedValue,
+                sector
             };
         } else {
             existing.original = existing.original || res;
@@ -1116,6 +1131,9 @@ class SpaceManager extends EffectableEntity {
             }
             if (!existing.name) {
                 existing.name = this.currentRandomName;
+            }
+            if (!existing.sector) {
+                existing.sector = sector;
             }
         }
 
@@ -1163,6 +1181,10 @@ class SpaceManager extends EffectableEntity {
             }
             return null;
         };
+        const pickSector = (status) => {
+            if (!status) return null;
+            return resolveSectorFromSources(status, status.original);
+        };
         const pickHazards = (status) => {
             if (!status) return null;
             const hazardKeys = new Set(status.cachedHazards?.keys || []);
@@ -1207,6 +1229,7 @@ class SpaceManager extends EffectableEntity {
                 if (!status || key === activeKey) return [key, status];
                 const cachedArchetype = pickArchetype(status);
                 const cachedLandHa = pickLandHa(status);
+                const cachedSector = pickSector(status);
                 const cachedHazards = pickHazards(status);
                 const copy = { ...status };
                 if (cachedArchetype && !copy.cachedArchetype) {
@@ -1217,6 +1240,9 @@ class SpaceManager extends EffectableEntity {
                 }
                 if (Number.isFinite(cachedLandHa) && !copy.cachedLandHa) {
                     copy.cachedLandHa = cachedLandHa;
+                }
+                if (cachedSector && !copy.sector) {
+                    copy.sector = cachedSector;
                 }
                 if (cachedHazards && !copy.cachedHazards) {
                     copy.cachedHazards = cachedHazards;
@@ -1280,6 +1306,13 @@ class SpaceManager extends EffectableEntity {
                 if (value && value !== 'none') return value;
             }
             return null;
+        };
+        const assignSector = (status) => {
+            if (!status) {
+                return;
+            }
+            const resolved = status.sector || resolveSectorFromSources(status, status.original);
+            status.sector = normalizeSectorLabel(resolved);
         };
 
         if (!savedData) {
@@ -1363,11 +1396,13 @@ class SpaceManager extends EffectableEntity {
                 if (!Number.isFinite(entry.fleetCapacityValue) || entry.fleetCapacityValue <= 0) {
                     entry.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(entry);
                 }
+                assignSector(entry);
             });
         }
 
         if (savedData.randomWorldStatuses) {
             this.randomWorldStatuses = savedData.randomWorldStatuses;
+            Object.values(this.randomWorldStatuses).forEach(assignSector);
             if (typeof generateRandomPlanet === 'function') {
                 const seeds = Object.keys(this.randomWorldStatuses);
                 seeds.forEach(seed => {
