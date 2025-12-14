@@ -556,7 +556,7 @@ var progressMars = {
         reward: []
       },
       {
-        id: "chapter1.24b",
+        id: "chapter1.24a",
         type: "journal",
         chapter: 1,
         narrative: "Receiving transmission...\n  'While I have you on the line, now is a good time for me to remind you of some basic concepts.  The most important and fundamental part of any terraforming project is managing temperature.  What's your main source?  Solar flux.  Basically, that's the amount of light you get from the sun.  Light is absorbed by Mars and becomes heat.'",
@@ -570,11 +570,11 @@ var progressMars = {
         reward: []
       },
       {
-        id: "chapter1.24c",
+        id: "chapter1.24b",
         type: "journal",
         chapter: 1,
         narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror, like a mirror.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, so this is not a permanent solution.'",
-        prerequisites: ["chapter1.24b"],
+        prerequisites: ["chapter1.24a"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
