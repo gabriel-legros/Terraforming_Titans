@@ -497,6 +497,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   hideButton.textContent = 'Hide';
   hideButton.addEventListener('click', function () {
     structure.isHidden = true;
+    disableStructureAutomations(structure, isColony);
     updateStructureHiddenPreference(structure.name, true);
     updateUnhideButtons();
     if (isColony) {
@@ -875,6 +876,21 @@ function disableAutoActive(structure) {
     checkbox.checked = false;
   }
   structure.autoActiveEnabled = false;
+}
+
+function disableStructureAutomations(structure, isColony) {
+  const els = structureUIElements[structure.name] || {};
+  if (els.autoBuildCheckbox) {
+    els.autoBuildCheckbox.checked = false;
+  }
+  structure.autoBuildEnabled = false;
+
+  if (isColony) {
+    if (els.autoUpgradeCheckbox) {
+      els.autoUpgradeCheckbox.checked = false;
+    }
+    structure.autoUpgradeEnabled = false;
+  }
 }
 
 // Create structure controls for buildings and colonies
