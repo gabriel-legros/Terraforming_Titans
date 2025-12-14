@@ -545,7 +545,7 @@ var progressMars = {
         id: "chapter1.24",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'A thousand colonists! You're cooking with colonists now—quite literally! The planet's even starting to notice. A little less ice, a little more... well, dust. But it's a start! While I have you on the line, now is a good time for me to remind you of some basic concepts.  The most important and fundamental part of any terraforming project is managing temperature.  What's your main source?  Solar flux.  Basically, that's the amount of light you get from the sun.  Light is absorbed by Mars and becomes heat.'",
+        narrative: "Receiving transmission...\n  'A thousand colonists! You're cooking with colonists now—quite literally! The planet's even starting to notice. A little less ice, a little more... well, dust. Your workforce is the backbone of this project.  The more people, the better.  Anything feels too slow?  Get more people.  How to get more people?  Meet their needs, improve your colony designs and have a lot of free housing.  People don't want to live in cramped spaces.'",
         prerequisites: ["chapter1.23"],
         objectives: [{
           type: 'collection',
@@ -559,13 +559,27 @@ var progressMars = {
         id: "chapter1.24b",
         type: "journal",
         chapter: 1,
-        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror, like a mirror.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, so this is not a permanent solution.'",
+        narrative: "Receiving transmission...\n  'While I have you on the line, now is a good time for me to remind you of some basic concepts.  The most important and fundamental part of any terraforming project is managing temperature.  What's your main source?  Solar flux.  Basically, that's the amount of light you get from the sun.  Light is absorbed by Mars and becomes heat.'",
         prerequisites: ["chapter1.24"],
         objectives: [{
           type: 'collection',
           resourceType: 'colony',
           resource: 'colonists',
           quantity: 10000
+      }],
+        reward: []
+      },
+      {
+        id: "chapter1.24c",
+        type: "journal",
+        chapter: 1,
+        narrative: "Receiving transmission...\n  'Albedo, a number between 0 and 1, is the measure of how much light Mars reflects away.  An albedo of 1 would mean Mars is a perfect mirror, like a mirror.  0 absorbs all the light, like a black sponge soaking up every last photon.  In our case, we want to warm Mars, so lowering the albedo can help—think of it as giving Mars a nice coating of dark dust to help it soak up more sunshine.  Just a warning though : life, water, ice might end up covering up your dust later on, so this is not a permanent solution.'",
+        prerequisites: ["chapter1.24b"],
+        objectives: [{
+          type: 'collection',
+          resourceType: 'colony',
+          resource: 'colonists',
+          quantity: 50000
       }],
         reward: []
       },
