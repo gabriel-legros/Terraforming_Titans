@@ -517,11 +517,10 @@ class WarpGateCommand extends EffectableEntity {
         if (!m) {
           m = leader;
           if (!m) return { success: false, artifact: false };
-          baseSkill = Math.floor(applyMult(m.wit, 'wit') / 2);
-        } else {
-          baseSkill = applyMult(m.wit, 'wit');
         }
-        leaderBonus = leader ? applyMult(leader.wit, 'wit') / 2 : 0;
+        const leaderIsRoller = m === leader;
+        baseSkill = applyMult(m.wit, 'wit');
+        leaderBonus = leaderIsRoller ? 0 : (leader ? applyMult(leader.wit, 'wit') / 2 : 0);
         skillTotal = baseSkill + leaderBonus;
         roller = m;
         diceCount = 1;

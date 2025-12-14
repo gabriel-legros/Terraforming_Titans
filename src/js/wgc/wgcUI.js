@@ -143,7 +143,7 @@ const teamRulesTooltip = [
   '- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.',
   '- Social Science Challenge: Social Scientists excel; failures may escalate into combat.',
   '- Science challenges never deal damage on failure.',
-  '- Team Leaders lend half their skill on solo and science challenges.'
+  '- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check, in which case they use their full base Wit instead of adding a bonus.'
 ].join('\n');
 const wgcFirstNamePool = [
   'Aiden','Amelia','Andrew','Aria','Benjamin','Brielle','Caleb','Chloe','Daniel','Delilah',
