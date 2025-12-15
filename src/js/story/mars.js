@@ -609,7 +609,7 @@ var progressMars = {
         id: "chapter2.1",
         type: "journal",
         chapter: 2,
-        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend—talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows, radiating visible light like a lightbulb.  Mars... not so much.  It can only radiate in the infrared, like a sad dying lightbulb.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6, the stuff your factories produce, are transparent to visible light, they are not transparent to infrared.  That means light can get in, but can't get out that easily—it's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. It's atmospheric entrapment at its finest!'",
+        narrative: "Receiving transmission...\n  'Nice factory! It's funny, we spent a hundred years on Earth trying to get rid of greenhouse gases. Now, they're our best friend—talk about a plot twist! Let's get this planet cooking. It works like this : warm bodies radiate light, just like the Sun.  The Sun is so hot it glows, radiating visible light like a lightbulb.  Mars... not so much.  It can only radiate in the infrared, like a sad dying lightbulb.  Here is the thing though : while greenhouse gases, such as CO2, water or SF6, the stuff your factories produce, are transparent to visible light, they are not transparent to infrared.  That means light can get in, but can't get out that easily—it's like throwing a blanket over Mars' cooling system.  This happens in layers too, so more greenhouse gases means more heat trapped. How much this happens is measured by the atmospheric optical depth. It's atmospheric entrapment at its finest!'",
         prerequisites: ["chapter2.0"],
         objectives: [{
           type: 'collection',
@@ -623,7 +623,7 @@ var progressMars = {
         id: "chapter2.2",
         type: "journal",
         chapter: 2,
-        narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone may induce a runaway greenhouse effect. Supplemental heating methods are recommended.",
+        narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone may induce a runaway greenhouse effect. In the long-term, an optical depth below 3 is recommended. Supplemental heating methods are recommended.",
         prerequisites: ["chapter2.1"],
         objectives: [{
           type: 'collection',
