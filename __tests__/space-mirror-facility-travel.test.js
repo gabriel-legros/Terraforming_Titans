@@ -72,7 +72,7 @@ describe('SpaceMirrorFacilityProject travel state', () => {
     expect(restored.tempMode.temperate).toBe('night');
     expect(restored.tempMode.polar).toBe('average');
     expect(restored.priority.focus).toBe(2);
-    expect(restored.applyToLantern).toBe(false);
+    expect(restored.applyToLantern).toBe(true);
     expect(restored.assignments.reversalMode.polar).toBe(false);
     expect(afterTravel.reversalAvailable).toBe(false);
     expect(afterTravel.mirrorOversightSettings.advancedOversight).toBe(false);

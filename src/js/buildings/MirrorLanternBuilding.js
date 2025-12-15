@@ -54,17 +54,23 @@ class MirrorLanternBuilding extends MirrorBase {
     const total = this.active;
 
     if (useAssignments) {
-      const assigned = settings.assignments?.[typeKey] || {};
-      assignedCount =
-        (assigned.tropical || 0) +
-        (assigned.temperate || 0) +
-        (assigned.polar || 0) +
-        (assigned.focus || 0) +
-        (assigned.any || 0);
+      // When applyToLantern is false, lanterns are treated as "Any Zone" (full productivity)
+      if (isLantern && !settings.applyToLantern) {
+        assignedCount = total;
+      } else {
+        const assigned = settings.assignments?.[typeKey] || {};
+        assignedCount =
+          (assigned.tropical || 0) +
+          (assigned.temperate || 0) +
+          (assigned.polar || 0) +
+          (assigned.focus || 0) +
+          (assigned.any || 0);
+      }
     } else {
       const dist = settings.distribution || {};
       const assignedShare = 1 - (dist.unassigned || 0);
-      const usableShare = isLantern && !settings.applyToLantern ? 0 : assignedShare;
+      // When applyToLantern is false, lanterns are treated as "Any Zone" (full productivity)
+      const usableShare = isLantern && !settings.applyToLantern ? 1 : assignedShare;
       assignedCount = total * Math.max(0, Math.min(1, usableShare));
     }
 

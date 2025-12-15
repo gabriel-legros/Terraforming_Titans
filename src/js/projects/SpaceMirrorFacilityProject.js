@@ -1337,7 +1337,9 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
       const lantern = buildings?.hyperionLantern;
       const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
-      focusPower = mirrorPowerPer * (assignM.focus || 0) + lanternPowerPer * (assignL.focus || 0);
+      // When applyToLantern is false, lanterns don't contribute to focusing (they're in Any Zone)
+      const lanternFocusPower = mirrorOversightSettings.applyToLantern ? lanternPowerPer * (assignL.focus || 0) : 0;
+      focusPower = mirrorPowerPer * (assignM.focus || 0) + lanternFocusPower;
     } else {
       const dist = mirrorOversightSettings?.distribution || {};
       const focusPerc = dist.focus || 0;
@@ -1421,9 +1423,12 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       const assignM = mirrorOversightSettings.assignments.mirrors || {};
       const assignL = mirrorOversightSettings.assignments.lanterns || {};
       distributedMirrorPower = 0;
-      distributedLanternPower = 0;
       focusedMirrorPower = mirrorPowerPer * (assignM[zone] || 0);
-      focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
+      if (mirrorOversightSettings.applyToLantern) {
+        distributedLanternPower = 0;
+        focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
+      }
+      // When applyToLantern is false, lanterns stay at totalLanternPower (Any Zone behavior)
     } else if (mirrorOversightSettings.useFinerControls) {
       // Finer controls (legacy): use current assignment with optional auto-assign
       distributeAutoAssignments('mirrors');
@@ -1431,9 +1436,12 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       const assignM = mirrorOversightSettings.assignments.mirrors || {};
       const assignL = mirrorOversightSettings.assignments.lanterns || {};
       distributedMirrorPower = mirrorPowerPer * (assignM.any || 0);
-      distributedLanternPower = lanternPowerPer * (assignL.any || 0);
       focusedMirrorPower = mirrorPowerPer * (assignM[zone] || 0);
-      focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
+      if (mirrorOversightSettings.applyToLantern) {
+        distributedLanternPower = lanternPowerPer * (assignL.any || 0);
+        focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
+      }
+      // When applyToLantern is false, lanterns stay at totalLanternPower (Any Zone behavior)
     } else {
       // Slider distribution
       const dist = mirrorOversightSettings.distribution || {};
@@ -1456,6 +1464,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
         distributedLanternPower = totalLanternPower * globalPerc;
         focusedLanternPower = totalLanternPower * zonePerc;
       }
+      // When applyToLantern is false, lanterns stay at totalLanternPower (Any Zone behavior)
     }
 
     const zoneArea = totalSurfaceArea * getZonePercentage(zone);
