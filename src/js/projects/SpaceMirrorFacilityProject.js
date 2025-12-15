@@ -13,7 +13,7 @@
 function createDefaultMirrorOversightSettings() {
   return {
     distribution: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 },
-    applyToLantern: false,
+    applyToLantern: true,
     useFinerControls: false,
     assignmentStep: { mirrors: 1, lanterns: 1 },
     advancedOversight: false,
@@ -304,7 +304,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.distribution.polar = 0;
   mirrorOversightSettings.distribution.focus = 0;
   mirrorOversightSettings.distribution.unassigned = 0;
-  mirrorOversightSettings.applyToLantern = false;
+  mirrorOversightSettings.applyToLantern = true;
   mirrorOversightSettings.useFinerControls = false;
   mirrorOversightSettings.assignmentStep = { mirrors: 1, lanterns: 1 };
   mirrorOversightSettings.advancedOversight = false;
