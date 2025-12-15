@@ -704,7 +704,7 @@ var progressMars = {
         id: "chapter3.2",
         type: "journal",
         chapter: 3,
-        narrative: "Milestone Achievement: Liquid water is now stable at the equator.  Processing blueprint : waterPump.btb...",
+        narrative: "Milestone Achievement: Liquid water is now stable at the equator. \nProcessing blueprint : waterPump.btb...",
         prerequisites: ["chapter3.1"],
         objectives: [],
         reward: [{
