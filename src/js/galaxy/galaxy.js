@@ -1011,6 +1011,12 @@ class GalaxyManager extends EffectableEntity {
         }
         const count = this.getFleetUpgradeCount(key);
         const nextIndex = count + 1;
+        if (definition.costType === 'skill') {
+            return 1;
+        }
+        if (definition.costType === 'resource') {
+            return definition.baseCost * nextIndex * nextIndex;
+        }
         return definition.baseCost * nextIndex;
     }
 
