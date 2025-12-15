@@ -593,7 +593,7 @@ function initializeMirrorOversightUI(container) {
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
         <input type="checkbox" id="mirror-oversight-lantern">
-        <label for="mirror-oversight-lantern">Apply to Hyperion Lantern</label>
+        <label for="mirror-oversight-lantern">Apply Oversight to Hyperion Lantern</label>
       </div>
     </div>
   `;
