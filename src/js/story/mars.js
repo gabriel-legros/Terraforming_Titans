@@ -623,7 +623,7 @@ var progressMars = {
         id: "chapter2.2",
         type: "journal",
         chapter: 2,
-        narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone may induce a runaway greenhouse effect. In the long-term, an optical depth below 3 is recommended. Supplemental heating methods are recommended.",
+        narrative: "MTC Advisory: Be advised that atmospheric warming via GHG injection alone may induce a runaway greenhouse effect. In the long-term, an optical depth below 3 is recommended. Supplemental heating methods are advised.",
         prerequisites: ["chapter2.1"],
         objectives: [{
           type: 'collection',
