@@ -352,10 +352,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (unhideButton) {
     unhideButton.addEventListener('click', () => {
       Object.values(colonies).forEach(colony => {
-        if (colony.unlocked) {
           colony.isHidden = false;
           updateStructureHiddenPreference(colony.name, false);
-        }
       });
       updateColonyDisplay(colonies);
     });
