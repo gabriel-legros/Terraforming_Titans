@@ -39,7 +39,11 @@ const hazardUICache = {
   lastControlShare: null,
   lastCrusaderSummary: '',
   lastZoneSummary: '',
-  lastPenaltySummary: ''
+  lastPenaltySummary: '',
+  // Garbage hazard UI cache
+  garbageCard: null,
+  garbageTitle: null,
+  garbageContent: null
 };
 
 const HAZARD_FALLBACK_ZONES = ['tropical', 'temperate', 'polar'];
@@ -1337,22 +1341,89 @@ function updateGrowthSummaryRows(summary) {
   }
 }
 
+function ensureGarbageLayout() {
+  if (hazardUICache.garbageCard) {
+    return;
+  }
+
+  const root = getHazardRoot();
+  if (!root) {
+    return;
+  }
+
+  const doc = getDocument();
+  const card = doc.createElement('div');
+  card.className = 'hazard-card hazard-card--garbage';
+
+  const title = doc.createElement('h3');
+  title.className = 'hazard-card__title';
+  title.textContent = 'Garbage';
+  card.appendChild(title);
+
+  const content = doc.createElement('div');
+  content.className = 'hazard-card__content hazard-garbage-content';
+  content.style.minHeight = '200px';
+  content.style.border = '2px dashed #666';
+  content.style.borderRadius = '8px';
+  content.style.display = 'flex';
+  content.style.alignItems = 'center';
+  content.style.justifyContent = 'center';
+  content.style.color = '#888';
+  content.textContent = 'Garbage hazard placeholder';
+  card.appendChild(content);
+
+  root.appendChild(card);
+
+  hazardUICache.garbageCard = card;
+  hazardUICache.garbageTitle = title;
+  hazardUICache.garbageContent = content;
+}
+
+function updateGarbageUI(garbageParameters) {
+  ensureGarbageLayout();
+  if (!hazardUICache.garbageCard) {
+    return;
+  }
+
+  // Show the garbage card when garbage hazard exists
+  hazardUICache.garbageCard.style.display = garbageParameters ? '' : 'none';
+}
+
 function initializeHazardUI() {
   ensureLayout();
+  ensureGarbageLayout();
 }
 
 function updateHazardUI(parameters = {}) {
   ensureLayout();
+  ensureGarbageLayout();
+
+  // Handle garbage hazard
+  const garbageHazard = parameters.garbage;
+  updateGarbageUI(garbageHazard);
+
   if (!hazardUICache.card) {
     return;
   }
 
   const hazard = parameters.hazardousBiomass;
+  
+  // Check if any hazard exists (not just hazardousBiomass)
+  const hasAnyHazard = hazard || garbageHazard;
+  
   if (!hazard) {
-    toggleEmptyState(true);
+    // Hide the hazardous biomass card if no hazardousBiomass hazard
+    // but don't show "No Hazards Detected" if other hazards exist
+    if (!hasAnyHazard) {
+      toggleEmptyState(true);
+    } else {
+      // Hide the hazardous biomass card entirely when only other hazards exist
+      hazardUICache.card.style.display = 'none';
+    }
     return;
   }
 
+  hazardUICache.card.style.display = '';
   toggleEmptyState(false);
 
   const manager = getHazardManager();

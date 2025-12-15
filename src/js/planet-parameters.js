@@ -1316,11 +1316,166 @@ const solisPrimeOverrides = {
 
 const gabbagOverrides = {
   name: 'Gabbag',
+  specialAttributes: {
+    hasSand: false,
+  },
   celestialParameters: {
+    distanceFromSun: 0,
+    gravity: 4.9,
+    radius: 6300,
+    mass: 4.6e24,
+    albedo: 0.14,
+    rotationPeriod: 19,
+    starLuminosity: 0,
+    rogue: true,
     sector: 'R9-99'
   },
   visualization: {
     baseColor: '#556b7d',
+  },
+  "resources": {
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+    },
+    "surface": {
+      land: { initialValue : 49_876_000_000 },
+      "ice": {
+        "initialValue": 2905755111246688.5
+      },
+      "liquidWater": {
+        "initialValue": 0
+      },
+      "dryIce": {
+        "initialValue": 0
+      },
+      "liquidCO2": {
+        "initialValue": 0
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
+      }
+    },
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 0
+      },
+      "atmosphericWater": {
+        "initialValue": 0
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 0
+      },
+      "inertGas": {
+        "initialValue": 0
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
+    }
+  },
+  "zonalWater": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 290937936633937.6,
+      "buriedIce": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 1702476415693995.5,
+      "buriedIce": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 912340758918755.4,
+      "buriedIce": 0
+    }
+  },
+  "zonalSurface": {
+    "tropical": {
+      "biomass": 0,
+      "hazardousBiomass": 0
+    },
+    "temperate": {
+      "biomass": 0,
+      "hazardousBiomass": 0
+    },
+    "polar": {
+      "biomass": 0,
+      "hazardousBiomass": 0
+    }
+  },
+  "zonalHydrocarbons": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }
+  },
+  "zonalCO2": {
+    "tropical": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "temperate": {
+      "liquid": 0,
+      "ice": 0
+    },
+    "polar": {
+      "liquid": 0,
+      "ice": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 2.8965877751696056,
+      "day": 2.897056679503238,
+      "night": 2.896118870835973
+    },
+    "temperate": {
+      "value": 2.765780521300558,
+      "day": 2.766225770784607,
+      "night": 2.765335271816509
+    },
+    "polar": {
+      "value": 2.645365259614177,
+      "day": 2.645787344036533,
+      "night": 2.6449431751918207
+    }
+  },
+  hazards: {
+    garbage: {
+      surfaceResources: {
+        garbage: { amountMultiplier: 10000 },
+        trash: { amountMultiplier: 1000 },
+        junk: { amountMultiplier: 1000 },
+        scrap: { amountMultiplier: 1000 },
+        radioactiveWaste: { amountMultiplier: 1 }
+      },
+      penalties: {
+        garbage: { sandHarvesterMultiplier: 0.1, nanoColonyGrowthMultiplier: 0.1 },
+        trash: { happiness: -0.1 },
+        junk: { happiness: -0.1 },
+        scrap: { oreScanningSpeedMultiplier: 0.1 },
+        radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
+      }
+    }
   }
 };
 

@@ -94,6 +94,53 @@ function normalizeHazardousBiomassParameters(parameters) {
   return normalized;
 }
 
+function normalizeGarbageParameters(parameters) {
+  const source = isPlainObject(parameters) ? parameters : {};
+  const normalized = {};
+
+  Object.keys(source).forEach((key) => {
+    if (key === 'penalties') {
+      normalized.penalties = normalizeHazardPenalties(source.penalties);
+      return;
+    }
+
+    // Preserve surfaceResources object as-is without wrapping
+    if (key === 'surfaceResources') {
+      if (isPlainObject(source.surfaceResources)) {
+        // New format: object with resource keys and amountMultiplier values
+        normalized.surfaceResources = {};
+        Object.keys(source.surfaceResources).forEach((resourceKey) => {
+          const resourceConfig = source.surfaceResources[resourceKey];
+          normalized.surfaceResources[resourceKey] = isPlainObject(resourceConfig)
+            ? { ...resourceConfig }
+            : { amountMultiplier: 1 };
+        });
+      } else if (Array.isArray(source.surfaceResources)) {
+        // Legacy format: array of strings - convert to object with default multiplier
+        normalized.surfaceResources = {};
+        source.surfaceResources.forEach((resourceKey) => {
+          normalized.surfaceResources[resourceKey] = { amountMultiplier: 1 };
+        });
+      } else {
+        normalized.surfaceResources = {};
+      }
+      return;
+    }
+
+    normalized[key] = withHazardSeverity(source[key]);
+  });
+
+  if (!Object.prototype.hasOwnProperty.call(normalized, 'penalties')) {
+    normalized.penalties = {};
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(normalized, 'surfaceResources')) {
+    normalized.surfaceResources = {};
+  }
+
+  return normalized;
+}
+
 function normalizeHazardParameters(parameters) {
   const source = isPlainObject(parameters) ? parameters : {};
   const normalized = {};
@@ -102,6 +149,11 @@ function normalizeHazardParameters(parameters) {
     const value = source[key];
     if (key === 'hazardousBiomass') {
       normalized[key] = normalizeHazardousBiomassParameters(value);
+      return;
+    }
+
+    if (key === 'garbage') {
+      normalized[key] = normalizeGarbageParameters(value);
       return;
     }
 
@@ -157,9 +209,90 @@ class HazardManager {
     const activeTerraforming = typeof terraforming !== 'undefined' ? terraforming : null;
     this.updateHazardousLandReservation(activeTerraforming);
 
+    // Initialize garbage hazard resources if present
+    this.initializeGarbageResources(activeTerraforming);
+
     if (changed && this.enabled) {
       this.updateUI();
     }
+  }
+
+  initializeGarbageResources(activeTerraforming) {
+    const garbageHazard = this.parameters.garbage;
+    if (!garbageHazard || !garbageHazard.surfaceResources) {
+      return;
+    }
+
+    // surfaceResources is now an object with resource keys and config objects
+    const surfaceResourcesConfig = isPlainObject(garbageHazard.surfaceResources)
+      ? garbageHazard.surfaceResources
+      : {};
+    const surfaceResourceKeys = Object.keys(surfaceResourcesConfig);
+    if (!surfaceResourceKeys.length) {
+      return;
+    }
+
+    // Get initial land value for setting initial resource values
+    const initialLand = activeTerraforming?.initialLand || 0;
+
+    // Access the resources object
+    const resourcesObj = typeof resources !== 'undefined' ? resources : null;
+    if (!resourcesObj || !resourcesObj.surface) {
+      return;
+    }
+
+    // Create each garbage resource if it doesn't exist
+    surfaceResourceKeys.forEach((resourceKey) => {
+      const resourceConfig = surfaceResourcesConfig[resourceKey] || {};
+      const amountMultiplier = resourceConfig.amountMultiplier || 1;
+      const resourceValue = initialLand * amountMultiplier;
+
+      if (resourcesObj.surface[resourceKey]) {
+        // Resource already exists, just enable it and set value
+        const existingResource = resourcesObj.surface[resourceKey];
+        existingResource.unlocked = true;
+        if (existingResource.value === 0 && resourceValue > 0) {
+          existingResource.value = resourceValue;
+        }
+        // Ensure UI element exists for existing resource
+        if (typeof unlockResource === 'function') {
+          unlockResource(existingResource);
+        }
+        return;
+      }
+
+      // Create new resource
+      const ResourceClass = typeof Resource !== 'undefined' ? Resource : null;
+      if (!ResourceClass) {
+        return;
+      }
+
+      const resourceData = {
+        name: resourceKey,
+        displayName: this.formatGarbageResourceName(resourceKey),
+        category: 'surface',
+        initialValue: resourceValue,
+        hasCap: false,
+        unlocked: true,
+        hideWhenSmall: true,
+        unit: 'ton'
+      };
+
+      const newResource = new ResourceClass(resourceData);
+      newResource.value = resourceValue;
+      resourcesObj.surface[resourceKey] = newResource;
+
+      // Create UI element for the new resource
+      if (typeof unlockResource === 'function') {
+        unlockResource(newResource);
+      }
+    });
+  }
+
+  formatGarbageResourceName(key) {
+    // Convert camelCase to Title Case with spaces
+    const withSpaces = key.replace(/([A-Z])/g, ' $1');
+    return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
   }
 
   updateUI() {
