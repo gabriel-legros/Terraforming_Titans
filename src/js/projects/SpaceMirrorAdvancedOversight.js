@@ -411,7 +411,7 @@ class SpaceMirrorAdvancedOversight {
               if (step > 0) cands.push({ kind:'mirror', zone:'focus', reverse:false, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
             }
             if (lanternsLeft() > 0) {
-              const k = MIRROR_PROBE_MIN;
+              const k = LANTERN_PROBE_MIN;
               const score = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => objective(passLevel));
               const dPerUnit = (baseScore - score) / k;
               const meltAfter = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => computeFocusMeltRate());
