@@ -746,6 +746,7 @@ class Terraforming extends EffectableEntity{
             surfaceTemperatureK: this.temperature.value,
             gravity,
             solarFlux: this.luminosity.modifiedSolarFlux,
+            atmosphericPressurePa : this.atmosphericPressureCache.totalPressure
         });
 
         for (const [key, delta] of Object.entries(chemTotals.changes)) {

@@ -8,12 +8,171 @@ const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
 const SULFURIC_ACID_RAIN_THRESHOLD_K = 570;
 const SULFURIC_ACID_REFERENCE_TEMPERATURE_K = 300;
 const SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = Math.log(2) / 300;
-const HYDROGEN_ESCAPE_GRAVITY_THRESHOLD = 20;
-const HYDROGEN_HALF_LIFE_MIN_SECONDS = 300;
-const HYDROGEN_HALF_LIFE_MAX_SECONDS = 3000;
-const HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER = 0.25;
+
+// ------------------------------
+// Physically-motivated H escape
+// (Jeans escape at the exobase)
+// ------------------------------
+
+// --- physical constants ---
+const KB = 1.380649e-23;       // Boltzmann constant [J/K]
+const M_H = 1.6735575e-27;     // mass of atomic hydrogen [kg]
+
+// --- model knobs (tuneable, but physically interpretable) ---
+// Exosphere temperature model: solarFlux -> T_exo (K).
+// Earth-calibrated relationship from satellite orbital decay studies.
+// T∞ = T0 * (1 - exp(-ν * F10.7))
+const EXO_TEMP_T0 = 1437;           // K, best-fit asymptotic temperature
+const EXO_TEMP_NU = 9.57e-7;        // Jy^-1, best-fit coefficient
+const SOLAR_FLUX_EARTH = 1361;      // W/m^2, solar constant at 1 AU
+const F10_7_AT_1AU = 1_500_000;           // Jy, typical solar 10.7 cm radio flux at 1 AU (solar flux units)
+
+// When λ is large, exp(-λ) is so tiny that escape is effectively zero.
+// This cutoff makes it *exactly* zero (your requirement).
+const JEANS_LAMBDA_CUTOFF = 50;
+
+// Effective collision cross-sections (order-of-magnitude; used to place exobase).
+// You can tweak by factors of ~2–5 without breaking the model.
+const SIGMA_H  = 2e-19;  // [m^2]
+const SIGMA_H2 = 3e-19;  // [m^2]
+
+// Keep your existing photodissociation logic (optional, but reasonable):
 const HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX = 500;
 const HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION = 0.6;
+
+// Optional diffusion-limit cap (important if H is a trace gas in a heavy atmosphere).
+// Φ_DL ≈ C * f_T(H). For Earth C≈2.5e13 cm^-2 s^-1 = 2.5e17 m^-2 s^-1. 
+const DIFFUSION_LIMIT_C_EARTH = 2.5e17; // [H atoms m^-2 s^-1]
+
+// --- temperature proxy ---
+// Earth-calibrated exosphere temperature from solar flux
+// Uses the relationship: T∞ = T0 * (1 - exp(-ν * F10.7))
+// where F10.7 is scaled from the input solar flux
+function estimateExosphereTemperatureK(solarFlux){
+  const S = Math.max(0, solarFlux);
+  
+  // Scale factor relative to Earth's solar flux
+  const f = S / SOLAR_FLUX_EARTH;
+  
+  // Convert to local F10.7 equivalent (in Jy)
+  const F10_7_local = f * F10_7_AT_1AU;
+  
+  // Apply the empirical relationship
+  const T_exo = EXO_TEMP_T0 * (1 - Math.exp(-EXO_TEMP_NU * F10_7_local));
+  
+  return T_exo;
+}
+
+// Jeans escape mass loss for a single species (H or H2) in kg/s.
+function jeansEscapeKgPerSecond(params) {
+  const { massKg, particleMassKg: m, sigmaM2: sigma, temperatureK: T, gSurface: g0, surfaceAreaM2: A } = params;
+  if (massKg <= 0 || T <= 0 || g0 <= 0 || A <= 0 || sigma <= 0 || m <= 0) return 0;
+
+  // Planet radius from surface area (sphere)
+  const R = Math.sqrt(A / (4 * Math.PI));
+
+  // Column number density Ncol = particles per m^2
+  const Ncol = massKg / (A * m);
+
+  // Isothermal scale height (using T_exo as a single effective upper-atmosphere temperature)
+  const H0 = (KB * T) / (m * g0);
+  if (!(H0 > 0)) return 0;
+
+  // If hydrostatic & isothermal: Ncol = n0 * H0  => n0 = Ncol/H0
+  const n0 = Ncol / H0;
+
+  // Exobase condition: mean free path ℓ = 1/(nσ) equals scale height H.
+  // => n_exo = 1/(σ H). 
+  //
+  // If the column is too thin (Ncol*sigma <= 1), you effectively have no collisional region;
+  // treat the exobase as "at the surface" (z=0) with n_exo ≈ n0.
+  let zExo = 0;
+  let rExo = R;
+  let gExo = g0;
+  let HExo = H0;
+  let nExo = n0;
+
+  if (Ncol * sigma > 1) {
+    // For isothermal n(z)=n0 exp(-z/H0), solve n(z_exo)=1/(σH) => z_exo = H0 ln(Ncol*sigma)
+    zExo = H0 * Math.log(Ncol * sigma);
+    rExo = R + zExo;
+    gExo = g0 * Math.pow(R / rExo, 2);      // gravity drop with altitude
+    HExo = (KB * T) / (m * gExo);
+    nExo = 1 / (sigma * HExo);
+  }
+
+  // Jeans parameter λ = (gravitational energy)/(thermal energy) at exobase. 
+  const lambda = (m * gExo * rExo) / (KB * T);
+  if (lambda > JEANS_LAMBDA_CUTOFF) return 0; // exactly zero in the "cold enough" regime
+
+  // Jeans escape flux (particles m^-2 s^-1):
+  // Φ_J = n_exo * sqrt(kT/(2πm)) * (1+λ) * exp(-λ) 
+  const thermalPrefactor = Math.sqrt((KB * T) / (2 * Math.PI * m));
+  const flux = nExo * thermalPrefactor * (1 + lambda) * Math.exp(-lambda);
+
+  // Global escape rate:
+  const numberPerSecond = flux * 4 * Math.PI * rExo * rExo;
+  return numberPerSecond * m; // kg/s
+}
+
+// Main helper: returns tons lost during dt.
+function computeHydrogenEscapeTons(params) {
+  const { dtSeconds, hydrogenTons, gravity, solarFlux, surfaceArea: A, totalPressurePa } = params;
+  if (dtSeconds <= 0 || hydrogenTons <= 0 || gravity <= 0 || A <= 0) return 0;
+
+  const TExo = estimateExosphereTemperatureK(solarFlux);
+
+  // Photodissociation split (keep your existing idea)
+  const F = Math.max(0, solarFlux);
+  const fluxRatio = F > 0 ? F / (F + HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX) : 0;
+  const atomicFraction = Math.min(1, fluxRatio * HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION);
+  const molecularFraction = Math.max(0, 1 - atomicFraction);
+
+  const totalKg = hydrogenTons * KG_PER_TON;
+  const atomicKg = totalKg * atomicFraction;       // H
+  const molecularKg = totalKg * molecularFraction; // H2 (mass is still hydrogen mass)
+
+  // Jeans escape
+  const atomicLossKgPerSec = jeansEscapeKgPerSecond({
+    massKg: atomicKg,
+    particleMassKg: M_H,
+    sigmaM2: SIGMA_H,
+    temperatureK: TExo,
+    gSurface: gravity,
+    surfaceAreaM2: A,
+  });
+
+  const molecularLossKgPerSec = jeansEscapeKgPerSecond({
+    massKg: molecularKg,
+    particleMassKg: 2 * M_H,
+    sigmaM2: SIGMA_H2,
+    temperatureK: TExo,
+    gSurface: gravity,
+    surfaceAreaM2: A,
+  });
+
+  let totalLossKgPerSec = atomicLossKgPerSec + molecularLossKgPerSec;
+
+  // Optional diffusion-limited cap (useful when H/H2 is not the bulk atmosphere).
+  // Φ_DL ≈ C * f_T(H), where f_T(H) = f_H + 2 f_H2 ... 
+  // We approximate mixing ratios using partial pressure fractions (ideal gas).
+  if (totalPressurePa !== undefined && totalPressurePa > 0) {
+    const pAtomic = (atomicKg * gravity) / A;
+    const pMolecular = (molecularKg * gravity) / A;
+
+    const fH  = pAtomic / totalPressurePa;
+    const fH2 = pMolecular / totalPressurePa;
+    const fTotalH = fH + 2 * fH2;
+
+    const diffusionFluxHAtoms = DIFFUSION_LIMIT_C_EARTH * Math.max(0, fTotalH);
+    const diffusionLimitKgPerSec = diffusionFluxHAtoms * A * M_H;
+
+    totalLossKgPerSec = Math.min(totalLossKgPerSec, diffusionLimitKgPerSec);
+  }
+
+  const lossTons = (totalLossKgPerSec / KG_PER_TON) * dtSeconds;
+  return Math.min(hydrogenTons, Math.max(0, lossTons));
+}
 
 function runAtmosphericChemistry(resources, params = {}) {
   const {
@@ -27,6 +186,7 @@ function runAtmosphericChemistry(resources, params = {}) {
     surfaceTemperatureK = SULFURIC_ACID_RAIN_THRESHOLD_K,
     gravity = 0,
     solarFlux = 0,
+    atmosphericPressurePa = 0
   } = params;
 
   let combustionMethaneAmount = 0;
@@ -80,27 +240,16 @@ function runAtmosphericChemistry(resources, params = {}) {
 
   let hydrogenDecayAmount = 0;
   const currentHydrogen = resources?.atmospheric?.hydrogen?.value || 0;
+
   if (realSeconds > 0 && currentHydrogen > 0) {
-    if (gravity < HYDROGEN_ESCAPE_GRAVITY_THRESHOLD) {
-      const clampedGravity = Math.max(gravity, 0);
-      const gravityRatio = clampedGravity / HYDROGEN_ESCAPE_GRAVITY_THRESHOLD;
-      const hydrogenHalfLifeSeconds =
-        HYDROGEN_HALF_LIFE_MIN_SECONDS +
-        (HYDROGEN_HALF_LIFE_MAX_SECONDS - HYDROGEN_HALF_LIFE_MIN_SECONDS) * gravityRatio;
-      const molecularDecayConstant = Math.log(2) / hydrogenHalfLifeSeconds;
-      const solarFluxRatio = solarFlux > 0 ? solarFlux / (solarFlux + HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX) : 0;
-      const atomicFraction = Math.min(1, solarFluxRatio * HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION);
-      const molecularFraction = Math.max(0, 1 - atomicFraction);
-      const molecularAmount = currentHydrogen * molecularFraction;
-      const atomicAmount = currentHydrogen - molecularAmount;
-      const molecularLoss =
-        molecularAmount * (1 - Math.exp(-molecularDecayConstant * realSeconds));
-      const atomicHalfLifeSeconds = hydrogenHalfLifeSeconds * HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER;
-      const atomicDecayConstant = Math.log(2) / atomicHalfLifeSeconds;
-      const atomicLoss =
-        atomicAmount * (1 - Math.exp(-atomicDecayConstant * realSeconds));
-      hydrogenDecayAmount = Math.min(currentHydrogen, molecularLoss + atomicLoss);
-    }
+    hydrogenDecayAmount = computeHydrogenEscapeTons({
+      dtSeconds: realSeconds*86400,
+      hydrogenTons: currentHydrogen,
+      gravity:gravity,              // m/s^2
+      solarFlux:solarFlux,            // your heating proxy
+      surfaceArea:surfaceArea,        // you said you can compute this easily
+      atmosphericPressurePa:atmosphericPressurePa,    // OPTIONAL: pass if you want diffusion-limit behavior
+    });
   }
 
   const methaneRate = durationSeconds > 0 ? (combustionMethaneAmount / durationSeconds) * 86400 : 0;
@@ -180,12 +329,9 @@ if (isNodeChem) {
     SULFURIC_ACID_RAIN_THRESHOLD_K,
     SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
     SULFURIC_ACID_REFERENCE_DECAY_CONSTANT,
-    HYDROGEN_ESCAPE_GRAVITY_THRESHOLD,
-    HYDROGEN_HALF_LIFE_MIN_SECONDS,
-    HYDROGEN_HALF_LIFE_MAX_SECONDS,
-    HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER,
     HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX,
     HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION,
+    computeHydrogenEscapeTons,
   };
 } else {
   globalThis.runAtmosphericChemistry = runAtmosphericChemistry;
@@ -196,11 +342,8 @@ if (isNodeChem) {
   globalThis.SULFURIC_ACID_RAIN_THRESHOLD_K = SULFURIC_ACID_RAIN_THRESHOLD_K;
   globalThis.SULFURIC_ACID_REFERENCE_TEMPERATURE_K = SULFURIC_ACID_REFERENCE_TEMPERATURE_K;
   globalThis.SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = SULFURIC_ACID_REFERENCE_DECAY_CONSTANT;
-  globalThis.HYDROGEN_ESCAPE_GRAVITY_THRESHOLD = HYDROGEN_ESCAPE_GRAVITY_THRESHOLD;
-  globalThis.HYDROGEN_HALF_LIFE_MIN_SECONDS = HYDROGEN_HALF_LIFE_MIN_SECONDS;
-  globalThis.HYDROGEN_HALF_LIFE_MAX_SECONDS = HYDROGEN_HALF_LIFE_MAX_SECONDS;
-  globalThis.HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER = HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER;
   globalThis.HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX = HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX;
   globalThis.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION = HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION;
+  globalThis.computeHydrogenEscapeTons = computeHydrogenEscapeTons;
 }
 
