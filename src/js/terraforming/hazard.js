@@ -543,6 +543,9 @@ class HazardManager {
       }
     }
 
+    // Apply android attrition from garbage hazards
+    this.applyAndroidAttrition(deltaSeconds);
+
     this.updateHazardousLandReservation(terraforming);
   }
 
@@ -1274,6 +1277,174 @@ class HazardManager {
         value: populationMultiplier,
         sourceId: 'hazardPenalties',
       });
+    }
+
+    // Apply garbage hazard penalties
+    this.applyGarbageHazardEffects(applyEffect, buildings);
+  }
+
+  applyGarbageHazardEffects(applyEffect, buildings) {
+    const garbageHazard = this.parameters.garbage;
+    if (!garbageHazard || !garbageHazard.penalties || !garbageHazard.surfaceResources) {
+      return;
+    }
+
+    const resourcesObj = typeof resources !== 'undefined' ? resources : null;
+    if (!resourcesObj || !resourcesObj.surface) {
+      return;
+    }
+
+    // Process each garbage resource type
+    Object.keys(garbageHazard.surfaceResources).forEach((garbageResourceKey) => {
+      const resourceConfig = garbageHazard.surfaceResources[garbageResourceKey];
+      const penalties = garbageHazard.penalties[garbageResourceKey];
+      
+      if (!penalties) {
+        return;
+      }
+
+      const garbageResource = resourcesObj.surface[garbageResourceKey];
+      if (!garbageResource) {
+        return;
+      }
+
+      const currentAmount = Number.isFinite(garbageResource.value) ? garbageResource.value : 0;
+      const initialAmount = Number.isFinite(garbageResource.initialValue) ? garbageResource.initialValue : 1;
+      
+      // Calculate the ratio: at full amount = 1, at zero = 0
+      const garbageRatio = initialAmount > 0 ? Math.min(1, Math.max(0, currentAmount / initialAmount)) : 0;
+
+      // Apply sandHarvesterMultiplier penalty
+      if (penalties.sandHarvesterMultiplier !== undefined && buildings.sandQuarry) {
+        const minMultiplier = Number.isFinite(penalties.sandHarvesterMultiplier) ? penalties.sandHarvesterMultiplier : 0.1;
+        // At full garbage (ratio=1): multiplier = minMultiplier (e.g., 0.1)
+        // At no garbage (ratio=0): multiplier = 1
+        const productionMultiplier = 1 - garbageRatio * (1 - minMultiplier);
+
+        applyEffect({
+          effectId: `garbageHazard-${garbageResourceKey}-sandHarvester`,
+          target: 'building',
+          targetId: 'sandQuarry',
+          type: 'resourceProductionMultiplier',
+          resourceCategory: 'colony',
+          resourceTarget: 'silicon',
+          value: productionMultiplier,
+          sourceId: 'hazardPenalties',
+        });
+      }
+
+      // Apply nanoColonyGrowthMultiplier penalty
+      if (penalties.nanoColonyGrowthMultiplier !== undefined && typeof nanotechManager !== 'undefined' && nanotechManager) {
+        const minMultiplier = Number.isFinite(penalties.nanoColonyGrowthMultiplier) ? penalties.nanoColonyGrowthMultiplier : 0.1;
+        // At full garbage (ratio=1): multiplier = minMultiplier (e.g., 0.1)
+        // At no garbage (ratio=0): multiplier = 1
+        const growthMultiplier = 1 - garbageRatio * (1 - minMultiplier);
+
+        applyEffect({
+          effectId: `garbageHazard-${garbageResourceKey}-nanoColony`,
+          target: 'nanotechManager',
+          type: 'nanoColonyGrowthMultiplier',
+          value: growthMultiplier,
+          sourceId: 'hazardPenalties',
+        });
+      }
+
+      // Apply happiness penalty (for trash and junk)
+      if (penalties.happiness !== undefined && typeof colonies !== 'undefined') {
+        const maxPenalty = Number.isFinite(penalties.happiness) ? Math.abs(penalties.happiness) : 0.1;
+        // At full garbage (ratio=1): penalty = maxPenalty (e.g., -0.1)
+        // At no garbage (ratio=0): penalty = 0
+        const happinessPenalty = garbageRatio * maxPenalty;
+
+        // Apply to all colonies
+        Object.keys(colonies).forEach((colonyId) => {
+          applyEffect({
+            effectId: `garbageHazard-${garbageResourceKey}-happiness-${colonyId}`,
+            target: 'colony',
+            targetId: colonyId,
+            type: 'happinessPenalty',
+            value: happinessPenalty,
+            sourceId: 'hazardPenalties',
+          });
+        });
+      }
+
+      // Apply ore scanning speed multiplier (for scrap)
+      if (penalties.oreScanningSpeedMultiplier !== undefined && typeof oreScanner !== 'undefined' && oreScanner) {
+        const minMultiplier = Number.isFinite(penalties.oreScanningSpeedMultiplier) ? penalties.oreScanningSpeedMultiplier : 0.1;
+        // At full garbage (ratio=1): multiplier = minMultiplier (e.g., 0.1)
+        // At no garbage (ratio=0): multiplier = 1
+        const scanningMultiplier = 1 - garbageRatio * (1 - minMultiplier);
+
+        applyEffect({
+          effectId: `garbageHazard-${garbageResourceKey}-oreScanning`,
+          target: 'oreScanner',
+          type: 'scanningSpeedMultiplier',
+          value: scanningMultiplier,
+          sourceId: 'hazardPenalties',
+        });
+      }
+
+      // Apply life growth multiplier (for radioactive waste)
+      if (penalties.lifeGrowthMultiplier !== undefined && typeof lifeManager !== 'undefined' && lifeManager) {
+        const minMultiplier = Number.isFinite(penalties.lifeGrowthMultiplier) ? penalties.lifeGrowthMultiplier : 0.1;
+        // At full garbage (ratio=1): multiplier = minMultiplier (e.g., 0.1)
+        // At no garbage (ratio=0): multiplier = 1
+        const lifeMultiplier = 1 - garbageRatio * (1 - minMultiplier);
+
+        applyEffect({
+          effectId: `garbageHazard-${garbageResourceKey}-lifeGrowth`,
+          target: 'lifeManager',
+          type: 'lifeGrowthMultiplier',
+          value: lifeMultiplier,
+          sourceId: 'hazardPenalties',
+        });
+      }
+
+      // Apply android attrition (for radioactive waste)
+      if (penalties.androidAttrition !== undefined && typeof resources !== 'undefined' && resources.colony && resources.colony.androids) {
+        const attritionRate = Number.isFinite(penalties.androidAttrition) ? penalties.androidAttrition : 0.001;
+        // Store attrition rate for processing in update method
+        if (!this.androidAttritionRates) {
+          this.androidAttritionRates = {};
+        }
+        this.androidAttritionRates[garbageResourceKey] = garbageRatio * attritionRate;
+      }
+    });
+  }
+
+  applyAndroidAttrition(deltaSeconds) {
+    if (!this.androidAttritionRates || deltaSeconds <= 0) {
+      return;
+    }
+
+    const androidResource = resources?.colony?.androids;
+    if (!androidResource) {
+      return;
+    }
+
+    // Sum all attrition rates
+    let totalAttritionRate = 0;
+    Object.values(this.androidAttritionRates).forEach((rate) => {
+      if (Number.isFinite(rate)) {
+        totalAttritionRate += rate;
+      }
+    });
+
+    if (totalAttritionRate <= 0) {
+      return;
+    }
+
+    const currentAndroids = Number.isFinite(androidResource.value) ? androidResource.value : 0;
+    if (currentAndroids <= 0) {
+      return;
+    }
+
+    // Calculate android loss: attrition is per second
+    const androidLoss = currentAndroids * totalAttritionRate * deltaSeconds;
+    if (androidLoss > 0) {
+      androidResource.value = Math.max(0, currentAndroids - androidLoss);
+      androidResource.modifyRate(-currentAndroids * totalAttritionRate, 'Radioactive Attrition', 'hazard');
     }
   }
 }

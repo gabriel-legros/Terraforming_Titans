@@ -231,6 +231,12 @@ class EffectableEntity {
         case 'lifeGrowthMultiplier':
           this.applyLifeGrowthMultiplier(effect);
           break;
+        case 'nanoColonyGrowthMultiplier':
+          this.applyNanoColonyGrowthMultiplier(effect);
+          break;
+        case 'happinessPenalty':
+          this.applyHappinessPenalty(effect);
+          break;
         // Add other effect types here as needed
         default:
           break;
@@ -518,6 +524,14 @@ class EffectableEntity {
   applyLifeGrowthMultiplier(effect) {
         // multiplier effects are computed on demand in LifeManager
       }
+
+  applyNanoColonyGrowthMultiplier(effect) {
+    // multiplier effects are computed on demand in NanotechManager
+  }
+
+  applyHappinessPenalty(effect) {
+    // penalty effects are computed on demand in Colony
+  }
 
 
     applyPermanentProjectDisable(effect) {

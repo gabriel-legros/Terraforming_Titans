@@ -45,10 +45,10 @@ const defaultPlanetParameters = {
       water: { name: 'Water', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {atmospheric : 'atmosphericWater'}, unit: 'ton'}, // Default (Mars)
       food: { name: 'Food', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'packs', marginBottom: 10 },
       components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton' },
-      electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton', conversionValue : 0.2},
+      electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'junk'}, unit: 'ton'},
       superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} , unit: 'ton' },
       superalloys: { name: 'Superalloys', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, maintenanceMultiplier: 0 , unit: 'ton' },
-      androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'scrapMetal'}},
+      androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'junk'}},
       research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false, marginTop: 10 },
       advancedResearch: { name: 'Adv. Research', initialValue: 0, hasCap: false, unlocked:false },
     },
@@ -63,6 +63,10 @@ const defaultPlanetParameters = {
       hazardousBiomass: { name: 'Hazardous Biomass', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       liquidMethane: { name: 'Liquid Methane', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
       hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
+      garbage: { name: 'Garbage', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
+      trash: { name: 'Trash', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
+      junk: { name: 'Junk', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
+      radioactiveWaste: { name: 'Radioactive Waste', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false }, // Default (Mars)
@@ -1465,14 +1469,14 @@ const gabbagOverrides = {
         garbage: { amountMultiplier: 10000 },
         trash: { amountMultiplier: 1000 },
         junk: { amountMultiplier: 1000 },
-        scrap: { amountMultiplier: 1000 },
+        scrapMetal: { amountMultiplier: 1000 },
         radioactiveWaste: { amountMultiplier: 1 }
       },
       penalties: {
         garbage: { sandHarvesterMultiplier: 0.1, nanoColonyGrowthMultiplier: 0.1 },
         trash: { happiness: -0.1 },
         junk: { happiness: -0.1 },
-        scrap: { oreScanningSpeedMultiplier: 0.1 },
+        scrapMetal: { oreScanningSpeedMultiplier: 0.1 },
         radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
       }
     }

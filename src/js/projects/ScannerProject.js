@@ -41,14 +41,16 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       };
     }
     this.loadScannerConfig(planetParameters);
-    this.scanningSpeedMultiplier = 1;
   }
 
-  applyActiveEffects(firstTime = true) {
-    if (this.scanData) {
-      this.scanningSpeedMultiplier = 1;
-    }
-    super.applyActiveEffects(firstTime);
+  getEffectiveScanningSpeedMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'scanningSpeedMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
   }
 
   saveState() {
@@ -142,8 +144,9 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       if (scanData.remainingTime <= 0) {
         continue;
       }
+      const scanningSpeedMultiplier = this.getEffectiveScanningSpeedMultiplier();
       const progressIncrement =
-        (deltaTime * this.scanningSpeedMultiplier) / scanData.remainingTime;
+        (deltaTime * scanningSpeedMultiplier) / scanData.remainingTime;
       scanData.currentScanProgress += progressIncrement;
       if (scanData.currentScanProgress >= 1) {
         scanData.D_current++;

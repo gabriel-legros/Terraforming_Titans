@@ -172,7 +172,9 @@ class NanotechManager extends EffectableEntity {
       (stage2Enabled ? (this.maintenance2Slider / 10) * 0.0015 : 0) +
       (stage2Enabled ? (this.componentsSlider / 10) * 0.0015 : 0);
 
-    const effectiveRate = baseRate * this.powerFraction + siliconRate + metalRate - penalty;
+    // Apply growth multiplier from effects (e.g., garbage hazard)
+    const growthMultiplier = this.getEffectiveGrowthMultiplier();
+    const effectiveRate = (baseRate * this.powerFraction + siliconRate + metalRate - penalty) * growthMultiplier;
     this.effectiveGrowthRate = effectiveRate;
     if (effectiveRate !== 0 && !isNaN(effectiveRate)) {
       this.nanobots += this.nanobots * effectiveRate * (deltaTime / 1000);
@@ -760,6 +762,16 @@ class NanotechManager extends EffectableEntity {
 
   reapplyEffects() {
     this.applyMaintenanceEffects();
+  }
+
+  getEffectiveGrowthMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'nanoColonyGrowthMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    return multiplier;
   }
 }
 

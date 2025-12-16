@@ -49,6 +49,9 @@ class Colony extends Building {
     }
     this.happiness = 0.5;
     this.autoUpgradeEnabled = false;
+    
+    // Initialize junk production based on consumption
+    this.updateJunkProduction();
   }
 
   rebuildFilledNeeds() {
@@ -76,6 +79,7 @@ class Colony extends Building {
   applyActiveEffects(firstTime = true) {
     super.applyActiveEffects(firstTime);
     this.rebuildFilledNeeds();
+    this.updateJunkProduction();
     if (typeof invalidateColonyNeedCache === 'function') {
       invalidateColonyNeedCache();
     }
@@ -86,6 +90,7 @@ class Colony extends Building {
     if (effect.resourceCategory === 'colony') {
       this.rebuildFilledNeeds();
     }
+    this.updateJunkProduction();
   }
 
   applyAddComfort() {
@@ -94,6 +99,43 @@ class Colony extends Building {
 
   getConsumption() {
     return super.getConsumption();
+  }
+
+  // Update production to include surface junk based on consumption
+  updateJunkProduction() {
+    // Initialize surface production if it doesn't exist
+    if (!this.production.surface) {
+      this.production.surface = {};
+    }
+
+    const consumption = super.getConsumption();
+    
+    // Reset junk production values
+    this.production.surface.junk = 0;
+    this.production.surface.garbage = 0;
+    this.production.surface.scrapMetal = 0;
+
+    // Add production based on consumption
+    for (const category in consumption) {
+      for (const resource in consumption[category]) {
+        const isLuxuryResource = luxuryResources[resource] !== undefined;
+        
+        // Get the consumption amount
+        const entry = consumption[category][resource];
+        const amount = typeof entry === 'object' ? entry.amount : entry;
+
+        if (resource === 'electronics' && isLuxuryResource && this.luxuryResourcesEnabled[resource]) {
+          // Electronics consumption produces junk
+          this.production.surface.junk = amount;
+        } else if (resource === 'androids' && isLuxuryResource && this.luxuryResourcesEnabled[resource]) {
+          // Android consumption produces garbage
+          this.production.surface.garbage = amount;
+        } else if (resource === 'components') {
+          // Components consumption produces scrap
+          this.production.surface.scrapMetal = amount;
+        }
+      }
+    }
   }
 
   initializeFromConfig(config, colonyName) {
@@ -143,6 +185,7 @@ class Colony extends Building {
     }
 
     this.rebuildFilledNeeds();
+    this.updateJunkProduction();
   }
 
   calculateEffectiveComfort() {
@@ -330,11 +373,24 @@ class Colony extends Building {
       const mitigationFactor = Math.max(0, 1 - totalMitigation);
       gravityPenalty *= mitigationFactor;
 
-    // Calculate the target happiness after gravity penalty
-    const targetHappiness = (nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness) * (1 - gravityPenalty);
+    // Apply hazard happiness penalties (e.g., from trash/junk)
+    const hazardPenalty = this.getHazardHappinessPenalty();
+
+    // Calculate the target happiness after gravity penalty and hazard penalties
+    const targetHappiness = (nonLuxuryHappiness + comfortHappiness + totalLuxuryHappiness + milestoneHappiness) * (1 - gravityPenalty) - hazardPenalty * 100;
 
     // Adjust the happiness towards the target value and ensure it doesn't drop below 0
     this.happiness = this.adjustToTarget(this.happiness, Math.max(0, targetHappiness) / 100, deltaTime);
+  }
+
+  getHazardHappinessPenalty() {
+    let totalPenalty = 0;
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'happinessPenalty') {
+        totalPenalty += effect.value;
+      }
+    });
+    return totalPenalty;
   }
 
   // Override calculateBaseMinRatio to exclude luxury resources from productivity calculation

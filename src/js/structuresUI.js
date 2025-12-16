@@ -3,6 +3,21 @@
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+// Helper function to get all unique building categories from buildings-parameters.js
+function getBuildingCategories() {
+  if (typeof buildingsParameters === 'undefined') {
+    return ['resource', 'production', 'energy', 'storage', 'terraforming'];
+  }
+  const categories = new Set();
+  for (const buildingName in buildingsParameters) {
+    const category = buildingsParameters[buildingName].category;
+    if (category) {
+      categories.add(category);
+    }
+  }
+  return Array.from(categories);
+}
+
 const structureDisplayState = {
   collapsed: {},
   hidden: {}
@@ -18,13 +33,13 @@ function biodomeHasActiveLifeDesign() {
 }
 
 // Cache combined building rows for each container
-const buildingContainerIds = [
-  'resource-buildings-buttons',
-  'production-buildings-buttons',
-  'energy-buildings-buttons',
-  'storage-buildings-buttons',
-  'terraforming-buildings-buttons'
-];
+// This will be populated dynamically based on actual building categories
+let buildingContainerIds = [];
+
+function updateBuildingContainerIds() {
+  const categories = getBuildingCategories();
+  buildingContainerIds = categories.map(cat => `${cat}-buildings-buttons`);
+}
 
 const combinedBuildingRowCache = {};
 // Cache per-structure frequently accessed elements
@@ -305,28 +320,41 @@ function applyCollapseState(structureName) {
 
 // Create buttons for the buildings based on their categories
 function createBuildingButtons() {
-  const categorizedBuildings = {
-    resource: [],
-    storage: [],
-    production: [],
-    energy: [],
-    terraforming: []
-  };
+  // Update container IDs based on actual categories
+  updateBuildingContainerIds();
+  
+  // Dynamically create categorized buildings object
+  const categories = getBuildingCategories();
+  const categorizedBuildings = {};
+  categories.forEach(cat => {
+    categorizedBuildings[cat] = [];
+  });
 
   // Categorize buildings
   for (const buildingName in buildings) {
     const building = buildings[buildingName];
-    if (categorizedBuildings[building.category]) {
+    if (building.category && categorizedBuildings[building.category]) {
       categorizedBuildings[building.category].push(building);
     }
   }
 
-  // Create buttons for each category
-  createStructureButtons(categorizedBuildings.storage, 'storage-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.production, 'production-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.resource, 'resource-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.energy, 'energy-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
-  createStructureButtons(categorizedBuildings.terraforming, 'terraforming-buildings-buttons', (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount), adjustStructureActivation);
+  // Create buttons for each category dynamically
+  categories.forEach(category => {
+    const containerId = `${category}-buildings-buttons`;
+    const buildingsInCategory = categorizedBuildings[category] || [];
+    createStructureButtons(
+      buildingsInCategory,
+      containerId,
+      (buildingName, buildCount) => buildings[buildingName].buildStructure(buildCount),
+      adjustStructureActivation
+    );
+  });
+  
+  // Initialize unhide button event listeners
+  initializeUnhideButtons();
+  
+  // Update subtab visibility after creating buttons
+  updateBuildingSubtabsVisibility();
 }
 
 function createColonyButtons(colonies) {
@@ -960,6 +988,7 @@ function updateDecreaseButtonText(button, buildCount) {
   function updateBuildingDisplay(buildings) {
     updateStructureDisplay(buildings);
     updateEmptyBuildingMessages();
+    updateBuildingSubtabsVisibility();
   }
   
   function updateStructureButtonText(button, structure, buildCount = 1) {
@@ -1573,7 +1602,8 @@ function updateDecreaseButtonText(button, buildCount) {
     for (const category in resourceObject) {
       for (const resource in resourceObject[category]) {
         const val = resourceObject[category][resource];
-        if (val > 0) {
+        const resourceEntry = resources?.[category]?.[resource];
+        if (val > 0 && resourceEntry?.unlocked) {
           keys.push(`${category}.${resource}`);
         }
       }
@@ -1713,8 +1743,41 @@ function formatStorageDetails(storageObject) {
   });
 }
 
+function updateBuildingSubtabsVisibility() {
+  const categories = getBuildingCategories();
+  
+  categories.forEach(category => {
+    const subtabId = `${category}-buildings`;
+    const hasVisibleBuilding = Object.values(buildings).some(b => {
+      const isVisible = typeof b.isVisible === 'function'
+        ? b.isVisible()
+        : b.unlocked && !b.isHidden;
+      return b.category === category && isVisible;
+    });
+    
+    if (buildingSubtabManager) {
+      if (hasVisibleBuilding) {
+        buildingSubtabManager.show(subtabId);
+      } else {
+        buildingSubtabManager.hide(subtabId);
+      }
+    } else {
+      const tab = document.querySelector(`.building-subtab[data-subtab="${subtabId}"]`);
+      const content = document.getElementById(subtabId);
+      if (!tab || !content) return;
+      if (hasVisibleBuilding) {
+        tab.classList.remove('hidden');
+        content.classList.remove('hidden');
+      } else {
+        tab.classList.add('hidden');
+        content.classList.add('hidden');
+      }
+    }
+  });
+}
+
 function updateUnhideButtons() {
-  const categories = ['resource', 'production', 'energy', 'storage', 'terraforming'];
+  const categories = getBuildingCategories();
   categories.forEach(cat => {
     const container = document.getElementById(`${cat}-unhide-container`);
     if (!container) return;
@@ -1729,11 +1792,17 @@ function updateUnhideButtons() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  ['resource','production','energy','storage','terraforming'].forEach(cat => {
+function initializeUnhideButtons() {
+  const categories = getBuildingCategories();
+  categories.forEach(cat => {
     const btn = document.getElementById(`${cat}-unhide-button`);
     if (btn) {
-      btn.addEventListener('click', () => {
+      // Remove any existing listeners by cloning the button
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      
+      newBtn.addEventListener('click', () => {
+        if (typeof buildings === 'undefined') return;
         Object.values(buildings).forEach(b => {
           if (b.category === cat) {
             b.isHidden = false;
@@ -1744,8 +1813,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
-});
+}
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getProdConsSections, formatMaintenanceDetails, rebuildStructureUICache, invalidateStructureUICache };
+  module.exports = {
+    getProdConsSections,
+    formatMaintenanceDetails,
+    rebuildStructureUICache,
+    invalidateStructureUICache,
+    initializeUnhideButtons
+  };
 }
