@@ -1130,7 +1130,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       const photodissociationFraction = Math.round(
         (globalThis.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION || 0) * 100
       );
-      let hydrogenMessage = `Hydrogen slowly escapes to space on worlds with surface gravity below ${formatNumber(gravityThreshold, false, 2)} m/s².`;
+      let hydrogenMessage = `Hydrogen slowly escapes to space depending on solar flux and gravity.`;
       hydrogenMessage += ` Stellar UV can photodissociate up to ${photodissociationFraction}% of that gas, creating atoms that escape about ${formatNumber(atomicSpeedup, false, 0)}× faster than molecules.`;
 
       const gravity = globalThis.terraforming?.celestialParameters?.gravity;
