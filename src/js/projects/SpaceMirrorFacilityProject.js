@@ -1624,6 +1624,11 @@ class SpaceMirrorFacilityProject extends Project {
             <span id="total-lantern-area" class="stat-value">0 W/m²</span>
           </div>
         </div>
+        <div id="rogue-day-night-control" class="control-group" style="display:none; margin-top:12px; gap:8px; flex-wrap:nowrap; align-items:center;">
+          <label for="rogue-day-night-period" style="white-space:nowrap;">Day-Night Period (hours):</label>
+          <input type="number" id="rogue-day-night-period" min="1" max="1000" step="1" value="24" style="width:80px; flex-shrink:0;">
+          <span class="info-tooltip-icon" style="flex-shrink:0;" title="Control the day-night cycle duration for this rogue world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
+        </div>
       </div>
     `;
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(lanternDetails);
@@ -1661,6 +1666,9 @@ class SpaceMirrorFacilityProject extends Project {
     if (typeof initializeMirrorOversightUI === 'function') {
       initializeMirrorOversightUI(container);
     }
+    
+    const rogueDayNightInput = lanternDetails.querySelector('#rogue-day-night-period');
+    
     projectElements[this.name] = {
       ...projectElements[this.name],
       mirrorDetails: {
@@ -1677,6 +1685,8 @@ class SpaceMirrorFacilityProject extends Project {
         powerPerLanternArea: lanternDetails.querySelector('#power-per-lantern-area'),
         totalPower: lanternDetails.querySelector('#total-lantern-power'),
         totalPowerArea: lanternDetails.querySelector('#total-lantern-area'),
+        rogueDayNightControl: lanternDetails.querySelector('#rogue-day-night-control'),
+        rogueDayNightInput: rogueDayNightInput,
       },
       quickBuild: {
         mirror: {
@@ -1727,6 +1737,26 @@ class SpaceMirrorFacilityProject extends Project {
       els.quickBuild.lantern.count = divideByTen(els.quickBuild.lantern.count);
       this.updateUI();
     });
+    
+    if (rogueDayNightInput) {
+      rogueDayNightInput.addEventListener('change', () => {
+        const newPeriod = Math.max(1, Math.min(1000, Number(rogueDayNightInput.value) || 24));
+        rogueDayNightInput.value = newPeriod;
+        
+        if (typeof terraforming !== 'undefined' && terraforming.celestialParameters) {
+          const isRogue = terraforming.celestialParameters.rogue === true;
+          if (isRogue) {
+            terraforming.celestialParameters.rotationPeriod = newPeriod;
+            
+            if (typeof dayNightCycle !== 'undefined' && typeof rotationPeriodToDurationFunc === 'function') {
+              const newDuration = rotationPeriodToDurationFunc(newPeriod);
+              dayNightCycle.dayDuration = newDuration;
+              dayNightCycle.nightDuration = newDuration;
+            }
+          }
+        }
+      });
+    }
   }
 
   updateUI() {
@@ -1786,6 +1816,18 @@ class SpaceMirrorFacilityProject extends Project {
       if (elements.quickBuild && elements.quickBuild.lantern) {
         elements.quickBuild.lantern.container.style.display = showLantern ? 'grid' : 'none';
       }
+      
+      const isRogue = typeof terraforming !== 'undefined' && terraforming.celestialParameters && terraforming.celestialParameters.rogue === true;
+      if (elements.lanternDetails.rogueDayNightControl) {
+        elements.lanternDetails.rogueDayNightControl.style.display = (showLantern && isRogue) ? 'flex' : 'none';
+      }
+      if (elements.lanternDetails.rogueDayNightInput && isRogue && typeof terraforming !== 'undefined') {
+        const currentPeriod = terraforming.celestialParameters.rotationPeriod || 24;
+        if (document.activeElement !== elements.lanternDetails.rogueDayNightInput) {
+          elements.lanternDetails.rogueDayNightInput.value = currentPeriod;
+        }
+      }
+      
       if (showLantern) {
         const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
         const numLanterns = lantern.active || 0;
