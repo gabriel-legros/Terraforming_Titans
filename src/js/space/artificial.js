@@ -577,6 +577,7 @@ class ArtificialManager extends EffectableEntity {
             gravity,
             radius: radiusKm,
             rotationPeriod: 24,
+            spinPeriod: isRogue ? 0 : 24, // Rogue worlds have no spin, others match rotation
             starLuminosity: isRogue ? 0 : starLuminosity,
             sector,
             distanceFromSun: distanceFromStarAU,

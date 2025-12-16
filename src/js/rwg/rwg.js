@@ -850,6 +850,9 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const surface = buildVolatiles(type, classification.Teq, landHa, rng, params);
   let rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
   if (type === "venus-like") rotation = randRange(rng, 5200, 6400);
+  // For rogue worlds, spinPeriod is 0 but rotationPeriod is 24h for day-night cycle
+  const spinPeriod = isRogueWorld ? 0 : rotation;
+  const rotationPeriod = isRogueWorld ? 24 : rotation;
   const albedo = classification.albedo;
   const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng, params);
   const hazardOverride = applyHazardPreset(forcedHazard, {
@@ -891,7 +894,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const safeAU = Number.isFinite(aAU) && aAU > 0 ? aAU : 1;
   const solarFlux = (SOLAR_FLUX_1AU * starLuminosity) / (safeAU * safeAU);
   const flux = isRogueWorld ? (rogueConfig.backgroundFluxWm2 ?? solarFlux) : solarFlux;
-  const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, rotationPeriodH: rotation, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
+  const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, rotationPeriodH: rotationPeriod, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
   classification.Teq = temps.mean;
 
   const co2Mass = compMass.carbonDioxide || 0;
@@ -980,7 +983,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,
-    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod: rotation, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isRogueWorld },
+    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod, spinPeriod, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isRogueWorld },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },

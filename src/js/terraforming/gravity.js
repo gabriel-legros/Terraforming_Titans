@@ -91,19 +91,23 @@ function calculateGravityCostPenalty(input) {
 function calculateApparentEquatorialGravity(params = {}) {
   const gravity = Number.isFinite(params.gravity) ? params.gravity : 0;
   const radiusKm = Number.isFinite(params.radius) ? params.radius : 0;
-  const rotationHours = Number.isFinite(params.rotationPeriod) ? params.rotationPeriod : 0;
+  // Use spinPeriod for gravity calculations (physical rotation affecting centrifugal force)
+  // Fall back to rotationPeriod for backward compatibility
+  const spinHours = Number.isFinite(params.spinPeriod)
+    ? params.spinPeriod
+    : (Number.isFinite(params.rotationPeriod) ? params.rotationPeriod : 0);
 
-  if (!gravity || !radiusKm || !rotationHours) {
+  if (!gravity || !radiusKm || !spinHours) {
     return gravity;
   }
 
   const radiusMeters = radiusKm * 1000;
-  const rotationSeconds = rotationHours * 3600;
-  if (!rotationSeconds) {
+  const spinSeconds = spinHours * 3600;
+  if (!spinSeconds) {
     return gravity;
   }
 
-  const angularVelocity = (2 * Math.PI) / rotationSeconds;
+  const angularVelocity = (2 * Math.PI) / spinSeconds;
   const centrifugal = angularVelocity * angularVelocity * radiusMeters;
   return Math.max(0, gravity - centrifugal);
 }

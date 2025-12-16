@@ -73,8 +73,19 @@ function getRotationPeriodHours(p){
   return period && isFinite(period) ? period : 24;
 }
 
+function getSpinPeriodHours(p){
+  // Use spinPeriod for physical rotation, fall back to rotationPeriod for compatibility
+  const period = p?.spinPeriod !== undefined ? p.spinPeriod : p?.rotationPeriod;
+  return period && isFinite(period) ? period : 24;
+}
+
 function getRotHours(p){
   const period = getRotationPeriodHours(p);
+  return Math.abs(period) || 24;
+}
+
+function getSpinHours(p){
+  const period = getSpinPeriodHours(p);
   return Math.abs(period) || 24;
 }
 
@@ -85,7 +96,7 @@ function spinDeltaV(Rkm,curH,tgtH){
 
 function spinEnergyRemaining(p, Rkm, targetDays, tpRatio){
   const k = p.kInertia || 0.4;                 // allow parameter override
-  const curH = getRotationPeriodHours(p);
+  const curH = getSpinPeriodHours(p);
   const dvEq = Math.abs(
         2*Math.PI/(targetDays*24*3600) - 2*Math.PI/(curH*3600)) * (Rkm*1e3);
   return k * p.mass * dvEq / tpRatio;
@@ -325,9 +336,9 @@ class PlanetaryThrustersProject extends Project{
     }catch(e){ tgt=1; }
     const changed = tgt !== this.tgtDays;
     this.tgtDays=tgt;
-    const dv=spinDeltaV(p.radius,getRotHours(p),this.tgtDays*24);
+    const dv=spinDeltaV(p.radius,getSpinHours(p),this.tgtDays*24);
     const energyRem = spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio());
-    this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
+    this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
     this.el.rotE.textContent =formatEnergy(energyRem);
     this.setBurnTime(this.el.rotBurn, energyRem);
     if(changed){
@@ -432,6 +443,11 @@ class PlanetaryThrustersProject extends Project{
     celestialTargets.forEach(cel => {
       cel.rogue = true;
       cel.starLuminosity = 0;
+      // When going rogue, preserve current rotation as day-night cycle but set spin to 0
+      cel.spinPeriod = 0;
+      if (cel.rotationPeriod === undefined || cel.rotationPeriod === 0) {
+        cel.rotationPeriod = 24; // Default to 24h day-night cycle
+      }
     });
     [currentPlanetParameters, spaceManager?.currentPlanetParameters]
       .filter(Boolean)
@@ -452,7 +468,7 @@ class PlanetaryThrustersProject extends Project{
     if(this.spinInvest){
       if(resetEnergy || this.spinStartDays===null){
         this.energySpentSpin=0;
-        this.spinStartDays=getRotationPeriodHours(p)/24;
+        this.spinStartDays=getSpinPeriodHours(p)/24;
       }
       this.dVreq=spinDeltaV(p.radius,this.spinStartDays*24,this.tgtDays*24);
       return;
@@ -515,9 +531,9 @@ class PlanetaryThrustersProject extends Project{
       }catch(e){ tgtDays=1; }
       this.tgtDays = tgtDays;
       if(p && p.radius){
-        const dv=spinDeltaV(p.radius,getRotationPeriodHours(p),tgtDays*24);
+        const dv=spinDeltaV(p.radius,getSpinPeriodHours(p),tgtDays*24);
         const energyRem = spinEnergyRemaining(p,p.radius,tgtDays,this.getThrustPowerRatio());
-        this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
+        this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
         this.el.rotE.textContent=formatEnergy(energyRem);
         this.setBurnTime(this.el.rotBurn, energyRem);
       }else{
@@ -665,7 +681,7 @@ class PlanetaryThrustersProject extends Project{
         return;
       }
 
-      const currentHours = getRotationPeriodHours(p);
+      const currentHours = getSpinPeriodHours(p);
       const targetHours = this.tgtDays * 24;
       const currentSign = currentHours < 0 ? -1 : 1;
       const targetSign = targetHours < 0 ? -1 : 1;
@@ -687,8 +703,18 @@ class PlanetaryThrustersProject extends Project{
       const magnitude = Math.abs(nextOmega);
       const periodHours = magnitude ? (2 * Math.PI) / (magnitude * 3600) : Math.max(Math.abs(targetHours), 1e-6);
       const newPeriod = nextOmega < 0 ? -periodHours : periodHours;
-      p.rotationPeriod = newPeriod;
-      if (typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
+      
+      // Update spinPeriod and rotationPeriod
+      // For rogue worlds: only update spinPeriod, rotationPeriod stays at 24h for day-night cycle
+      // For non-rogue worlds: update both to the same value
+      const isRogue = p.rogue;
+      p.spinPeriod = newPeriod;
+      if (!isRogue) {
+        p.rotationPeriod = newPeriod;
+      }
+      
+      // Only update day-night cycle for non-rogue worlds
+      if (!isRogue && typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
         const oldDur = dayNightCycle.dayDuration;
         const progress = typeof dayNightCycle.getDayProgress === 'function'
           ? dayNightCycle.getDayProgress()

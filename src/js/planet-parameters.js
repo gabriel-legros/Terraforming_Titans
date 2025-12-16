@@ -132,7 +132,8 @@ const defaultPlanetParameters = {
     radius: 3389.5, // Default (Mars)
     mass: 6.417e23, // kg
     albedo: 0.21, // Default (Mars)
-    rotationPeriod: 24.6, // hours, Default (Mars)
+    rotationPeriod: 24.6, // hours, day-night cycle duration, Default (Mars)
+    spinPeriod: 24.6, // hours, physical rotation for gravity calculations, Default (Mars)
     starLuminosity: 1, // Multiplier relative to Sol
     sector: 'R5-07',
   },
@@ -390,6 +391,7 @@ const titanOverrides = {
     mass: 1.345e23, // kg
     albedo: 0.15,
     rotationPeriod: 382.7,
+    spinPeriod: 382.7,
     starLuminosity: 1,
     parentBody: {
       name: 'Saturn',
@@ -534,12 +536,13 @@ const callistoOverrides = {
 
   /* ---------- CELESTIAL ---------- */
   celestialParameters: {
-    distanceFromSun: 5.2,      // Jupiter’s semi‑major axis (AU)
-    gravity: 1.236,            // m s‑² :contentReference[oaicite:3]{index=3}
+    distanceFromSun: 5.2,      // Jupiter's semi‑major axis (AU)
+    gravity: 1.236,            // m s‑² :contentReference[oaicite:3]{index=3}
     radius: 2410.3,            // km :contentReference[oaicite:4]{index=4}
     mass: 1.076e23,            // kg
     albedo: 0.17,              // Bond albedo estimate :contentReference[oaicite:5]{index=5}
-    rotationPeriod: 400.8,     // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
+    rotationPeriod: 400.8,     // hours (16 .7 days tidally‑locked) :contentReference[oaicite:6]{index=6}
+    spinPeriod: 400.8,
     starLuminosity: 1,
     parentBody: {
       name: 'Jupiter',
@@ -689,12 +692,13 @@ const ganymedeOverrides = {
 
   /* ---------- CELESTIAL PARAMETERS ---------- */
   celestialParameters: {
-    distanceFromSun: 5.2,      // AU (shares Jupiter’s orbit)
+    distanceFromSun: 5.2,      // AU (shares Jupiter's orbit)
     gravity: 1.428,            // m s-²
     radius: 2634.1,            // km
     mass: 1.482e23,            // kg
     albedo: 0.21,              // Bond albedo estimate
     rotationPeriod: 171.7,     // hours (7.155 days, tidally locked)
+    spinPeriod: 171.7,
     starLuminosity: 1,
     parentBody: {
       name: 'Jupiter',
@@ -853,6 +857,7 @@ const vega2Overrides = {
     mass: 1.867e24,         // kg
     albedo: 0.3,           // bright surface; no clouds unless added later
     rotationPeriod: 18,
+    spinPeriod: 18,
     starLuminosity: 40
   },
   visualization: {
@@ -1000,6 +1005,7 @@ const venusOverrides = {
     mass: 4.867e24,
     albedo: 0.15,
     rotationPeriod: 5832, // hours (~243 Earth days)
+    spinPeriod: 5832,
     starLuminosity: 1
   },
   visualization: {
@@ -1025,6 +1031,7 @@ const umbraOverrides = {
     mass: 6.215045552249502e+23,
     albedo: 0.25,
     rotationPeriod: 18.728781030979007,
+    spinPeriod: 18.728781030979007,
     starLuminosity: 0.0048246,
     parentBody: {
       name: 'Nyx-1',
@@ -1183,7 +1190,8 @@ const solisPrimeOverrides = {
     radius: 6300,
     mass: 4.6e24,
     albedo: 0.14,
-    rotationPeriod: 19,
+    rotationPeriod: 24, // Rogue worlds use 24h day-night cycle
+    spinPeriod: 0, // Rogue worlds have no physical spin
     starLuminosity: 0,
     rogue: true
   },
@@ -1329,7 +1337,8 @@ const gabbagOverrides = {
     radius: 6300,
     mass: 4.6e24,
     albedo: 0.14,
-    rotationPeriod: 19,
+    rotationPeriod: 24, // Rogue worlds use 24h day-night cycle
+    spinPeriod: 0, // Rogue worlds have no physical spin
     starLuminosity: 0,
     rogue: true,
     sector: 'R9-99'

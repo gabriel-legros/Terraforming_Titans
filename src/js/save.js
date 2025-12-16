@@ -245,6 +245,22 @@ function loadGame(slotOrCustomString, recreate = true) {
               }
             }
 
+            // Backward compatibility: set spinPeriod from rotationPeriod if missing
+            const celestialParams = currentPlanetParameters.celestialParameters;
+            if (celestialParams && celestialParams.spinPeriod === undefined && celestialParams.rotationPeriod !== undefined) {
+              // For rogue worlds, spinPeriod should be 0
+              if (celestialParams.rogue) {
+                celestialParams.spinPeriod = 0;
+                // Ensure rotationPeriod is 24h for day-night cycle
+                if (celestialParams.rotationPeriod === 0 || !Number.isFinite(celestialParams.rotationPeriod)) {
+                  celestialParams.rotationPeriod = 24;
+                }
+              } else {
+                // For non-rogue worlds, both should match
+                celestialParams.spinPeriod = celestialParams.rotationPeriod;
+              }
+            }
+
             // Ensure procedural worlds carry a star definition on load.
             // Prefer RWG-provided star, else regenerate via RWG using the saved seed,
             // and only then fall back to a generic Sun-like star.
