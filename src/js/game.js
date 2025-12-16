@@ -130,6 +130,8 @@ function initializeDefaultGlobals(){
   solisManager = new SolisManager();
   warpGateCommand = new WarpGateCommand();
 
+  nanotechManager = new NanotechManager();
+
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
   initializeLifeUI();

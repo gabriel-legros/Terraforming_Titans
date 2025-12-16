@@ -775,11 +775,6 @@ class NanotechManager extends EffectableEntity {
   }
 }
 
-const nanotechManager = new NanotechManager();
-if (typeof globalThis !== 'undefined') {
-  globalThis.nanotechManager = nanotechManager;
-}
-
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { NanotechManager };
 }
