@@ -483,6 +483,30 @@ class SolisManager extends EffectableEntity {
 
   update(delta) {
     const now = Date.now();
+    
+    // Detect clock manipulation: if remaining time exceeds the intended interval,
+    // the player likely changed their system clock backward
+    const maxReasonableWait = this.questInterval * 2; // Allow 2x the normal interval as buffer
+    
+    if (this.postCompletionCooldownUntil > 0) {
+      const remainingTime = this.postCompletionCooldownUntil - now;
+      if (remainingTime > maxReasonableWait) {
+        // Clock manipulation detected - reset to normal cooldown from current time
+        this.postCompletionCooldownUntil = now + this.questInterval;
+        this.lastQuestTime = now;
+        this.lastRefreshTime = now;
+      }
+    }
+    
+    // Also check refresh cooldown for similar issues
+    if (this.lastRefreshTime > 0) {
+      const refreshRemaining = this.lastRefreshTime - now;
+      if (refreshRemaining > maxReasonableWait) {
+        // Reset refresh time to current
+        this.lastRefreshTime = now;
+      }
+    }
+    
     if (!this.currentQuest) {
       if (this.postCompletionCooldownUntil > 0) {
         if (now >= this.postCompletionCooldownUntil) {
