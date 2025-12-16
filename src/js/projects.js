@@ -131,13 +131,8 @@ class Project extends EffectableEntity {
   }
 
   applyActiveEffects(firstTime = true) {
-    const wasDisabled = this.permanentlyDisabled === true;
-    this.permanentlyDisabled = false;
     super.applyActiveEffects(firstTime);
     this.updateDurationFromEffects();
-    if (wasDisabled !== (this.permanentlyDisabled === true)) {
-      globalThis?.updateProjectUI?.(this.name);
-    }
   }
 
   applyPermanentProjectDisable(effect) {
@@ -487,6 +482,9 @@ class Project extends EffectableEntity {
   }
 
   enable() {
+    if(this.permanentlyDisabled){
+      return;
+    }
     const first = !this.unlocked;
     this.unlocked = true;
     if (first && !this.alertedWhenUnlocked) {

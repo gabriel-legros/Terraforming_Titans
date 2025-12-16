@@ -910,28 +910,32 @@ class SpaceManager extends EffectableEntity {
         return !!this.planetStatuses[key]?.visited;
     }
 
+    /**
+     * Prepare for travel by calling the unified prepareForTravel method.
+     * This ensures all managers save their travel state consistently.
+     * @returns {Object} Travel state data
+     */
     prepareForTravel() {
-        if (typeof saveGameToSlot === 'function') {
-            try { saveGameToSlot('pretravel'); } catch (_) {}
+        // Delegate to the unified prepareForTravel method in game.js
+        if (typeof prepareForTravel === 'function') {
+            return prepareForTravel();
         }
-        const storageState = projectManager?.projects?.spaceStorage?.saveTravelState
-            ? projectManager.projects.spaceStorage.saveTravelState()
-            : null;
-        if (typeof nanotechManager !== 'undefined'
-            && typeof nanotechManager.prepareForTravel === 'function') {
-            nanotechManager.prepareForTravel();
-        }
-        return storageState;
+        // Fallback for testing environments
+        return {};
     }
 
     /**
-     * Capture a single, consistent departure snapshot after pre-travel save:
+     * Capture a single, consistent departure snapshot:
+     * - calls prepareForTravel to save state
      * - marks visited
      * - records population and ecumenopolis percent
      * - stamps departure time
      * Works for both story planets and random worlds.
      */
     recordDepartureSnapshot() {
+        // Call unified prepareForTravel before recording snapshot
+        this.prepareForTravel();
+        
         const now = Date.now();
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
         const ecoPercent = getEcumenopolisLandFraction(globalThis.terraforming) * 100;
@@ -1050,7 +1054,7 @@ class SpaceManager extends EffectableEntity {
 
         this.currentArtificialKey = null;
         const departingTerraformed = this._isCurrentWorldTerraformed();
-        this.prepareForTravel();
+        // prepareForTravel is now called within recordDepartureSnapshot via changeCurrentPlanet
         if (!this.changeCurrentPlanet(targetKey)) {
             return false;
         }
@@ -1092,7 +1096,7 @@ class SpaceManager extends EffectableEntity {
         const destinationTerraformed = existing?.terraformed || false;
         const artificialWorld = isArtificial || existing?.artificial;
 
-        const storageState = this.prepareForTravel();
+        // prepareForTravel is now called within recordDepartureSnapshot
         this.recordDepartureSnapshot();
 
         this.currentRandomSeed = isArtificial ? null : s;
