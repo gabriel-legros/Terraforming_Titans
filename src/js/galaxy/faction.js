@@ -603,6 +603,17 @@ class GalaxyFaction {
         return this.setDefenseAssignment(sectorKey, adjusted, manager);
     }
 
+    clearDefenseAssignments(manager) {
+        if (this.id !== UHF_FACTION_ID) {
+            return 0;
+        }
+        if (this.defenseAssignments.size > 0) {
+            this.defenseAssignments.clear();
+        }
+        this.#syncDefenseAssignments(manager);
+        return 0;
+    }
+
     setDefenseStep(sectorKey, value) {
         if (this.id !== UHF_FACTION_ID || !sectorKey) {
             return 1;

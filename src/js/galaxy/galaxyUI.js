@@ -1178,6 +1178,11 @@ function setDefenseControlsVisibility(visible) {
         form.hidden = !visible;
         form.style.display = visible ? '' : 'none';
     }
+    const clearButton = galaxyUICache.defenseClearButton;
+    if (clearButton) {
+        clearButton.hidden = !visible;
+        clearButton.style.display = visible ? '' : 'none';
+    }
 }
 
 function updateSectorDefenseSection() {
@@ -1278,6 +1283,9 @@ function updateSectorDefenseSection() {
     if (cache.defenseRemainingValue) {
         cache.defenseRemainingValue.textContent = `Remaining: ${formatDefenseInteger(remaining)}`;
     }
+    if (cache.defenseClearButton) {
+        cache.defenseClearButton.disabled = !(totalAssigned > 0);
+    }
 
     if (cache.defenseInput) {
         cache.defenseInput.value = formatDefenseDisplayValue(manualAssigned);
@@ -1363,6 +1371,12 @@ function handleDefenseButtonClick(event) {
     if (cache.defenseInput) {
         cache.defenseInput.value = formatDefenseDisplayValue(applied);
     }
+    renderSelectedSectorDetails();
+}
+
+function handleDefenseClearAllClick(event) {
+    event.preventDefault();
+    galaxyManager.clearDefenseAssignments(UHF_FACTION_KEY);
     renderSelectedSectorDetails();
 }
 
@@ -2283,12 +2297,21 @@ function cacheGalaxyElements() {
 
     defenseForm.append(defenseMeta, defenseSummary, defenseRow);
     defenseSection.appendChild(defenseForm);
+
+    const defenseClearButton = doc.createElement('button');
+    defenseClearButton.type = 'button';
+    defenseClearButton.className = 'galaxy-defense-form__button galaxy-defense-section__clear-button';
+    defenseClearButton.textContent = 'Unassign all defensive assignments';
+    defenseClearButton.hidden = true;
+    defenseSection.appendChild(defenseClearButton);
+
     attackContent.appendChild(defenseSection);
     incomingAttacks.body.appendChild(attackContent);
 
     Object.values(defenseButtons).forEach((button) => {
         button.addEventListener('click', handleDefenseButtonClick);
     });
+    defenseClearButton.addEventListener('click', handleDefenseClearAllClick);
 
     secondRow.appendChild(operations.section);
     secondRow.appendChild(incomingAttacks.section);
@@ -2539,6 +2562,7 @@ function cacheGalaxyElements() {
         defenseRemainingValue,
         defenseInput,
         defenseButtons,
+        defenseClearButton,
         sectorContent,
         sectorDetails: null,
         hexElements,

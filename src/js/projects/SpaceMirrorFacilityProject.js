@@ -677,9 +677,9 @@ function initializeMirrorOversightUI(container) {
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-tropical">Tropical target</label>
+        <label class="stat-label" for="adv-target-tropical">Tropical</label>
         <input type="number" id="adv-target-tropical" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
-        <select id="adv-timing-tropical" class="stat-value" style="font-size:12px; width:80px;">
+        <select id="adv-timing-tropical" class="stat-value" style="font-size:12px; width:70px;">
           <option value="average">Average</option>
           <option value="day">Day</option>
           <option value="night">Night</option>
@@ -689,9 +689,9 @@ function initializeMirrorOversightUI(container) {
         </select>
       </div>
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-temperate">Temperate target</label>
+        <label class="stat-label" for="adv-target-temperate">Temperate</label>
         <input type="number" id="adv-target-temperate" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
-        <select id="adv-timing-temperate" class="stat-value" style="font-size:12px; width:80px;">
+        <select id="adv-timing-temperate" class="stat-value" style="font-size:12px; width:70px;">
           <option value="average">Average</option>
           <option value="day">Day</option>
           <option value="night">Night</option>
@@ -701,9 +701,9 @@ function initializeMirrorOversightUI(container) {
         </select>
       </div>
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-polar">Polar target</label>
+        <label class="stat-label" for="adv-target-polar">Polar</label>
         <input type="number" id="adv-target-polar" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
-        <select id="adv-timing-polar" class="stat-value" style="font-size:12px; width:80px;">
+        <select id="adv-timing-polar" class="stat-value" style="font-size:12px; width:70px;">
           <option value="average">Average</option>
           <option value="day">Day</option>
           <option value="night">Night</option>
@@ -713,8 +713,8 @@ function initializeMirrorOversightUI(container) {
         </select>
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-water">Water melt target (t/s)</label>
-        <input type="number" id="adv-target-water" class="stat-value" step="1" value="0" style="font-size:12px; width:75px;">
+        <label class="stat-label" for="adv-target-water">Water melt (t/s)</label>
+        <input type="number" id="adv-target-water" class="stat-value" step="1" value="0" style="font-size:12px; width:50px;">
         <select id="adv-target-water-scale" class="stat-value" style="font-size:12px; width:50px;">
           <option value="1000">k</option>
           <option value="1000000">M</option>

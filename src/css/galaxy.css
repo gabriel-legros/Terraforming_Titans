@@ -865,6 +865,13 @@
   cursor: not-allowed;
 }
 
+.galaxy-defense-section__clear-button {
+  width: 100%;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  padding: 8px 14px;
+}
+
 .galaxy-sector-panel {
   box-shadow: inset 0 0 12px rgba(124, 184, 255, 0.18);
 }
