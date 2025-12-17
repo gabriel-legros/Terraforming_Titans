@@ -701,8 +701,10 @@ function updateTotalCostDisplay(project) {
     rowMeta.forEach((meta, index) => {
       const buyInput = elements.buyInputs?.[index];
       const sellInput = elements.sellInputs?.[index];
-      const buyQuantity = buyInput ? parseSelectionQuantity(buyInput.value) : 0;
-      const sellQuantity = sellInput ? parseSelectionQuantity(sellInput.value) : 0;
+      const storedBuy = buyInput ? Number(buyInput.dataset.quantity) : NaN;
+      const storedSell = sellInput ? Number(sellInput.dataset.quantity) : NaN;
+      const buyQuantity = Number.isFinite(storedBuy) ? storedBuy : (buyInput ? parseSelectionQuantity(buyInput.value) : 0);
+      const sellQuantity = Number.isFinite(storedSell) ? storedSell : (sellInput ? parseSelectionQuantity(sellInput.value) : 0);
       const buyPrice = project.getBuyPrice(meta.category, meta.resource);
       const sellPrice = project.getSellPrice(meta.category, meta.resource, sellQuantity);
       totalCost += buyQuantity * buyPrice;

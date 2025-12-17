@@ -292,7 +292,7 @@ class ImportResourcesProjectUI {
     }
 
     if (this.availableDisplay) {
-      const availableShips = formatBigInteger(Math.floor(resources?.special?.spaceships?.value || 0));
+      const availableShips = formatNumber(Math.floor(resources?.special?.spaceships?.value || 0), true);
       this.availableDisplay.textContent = `Available: ${availableShips}`;
     }
 

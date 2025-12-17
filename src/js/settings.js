@@ -106,15 +106,6 @@ function addSettingsListeners() {
     });
   }
 
-  const formatAutoBuildTargetsToggle = document.getElementById('format-autobuild-targets-toggle');
-  if (formatAutoBuildTargetsToggle) {
-    formatAutoBuildTargetsToggle.checked = gameSettings.formatAutoBuildTargets;
-    formatAutoBuildTargetsToggle.addEventListener('change', () => {
-      gameSettings.formatAutoBuildTargets = formatAutoBuildTargetsToggle.checked;
-      refreshAllAutoBuildTargets();
-    });
-  }
-
   const simplifyGoldenAsteroidToggle = document.getElementById('simplify-golden-asteroid-toggle');
   if (simplifyGoldenAsteroidToggle) {
     simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;

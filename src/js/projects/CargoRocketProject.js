@@ -605,25 +605,10 @@ class CargoRocketProject extends Project {
 }
 
 function parseSelectionQuantity(value) {
-  if (value && typeof value === 'object') {
-    if (value !== value.value && (typeof value.value === 'number' || typeof value.value === 'string')) {
-      return parseSelectionQuantity(value.value);
-    }
-  }
-  if (Number.isFinite(value)) {
-    if (value <= 0) return 0;
-    return Math.floor(value);
-  }
-  let text;
-  try {
-    text = String(value ?? '').trim();
-  } catch (error) {
-    return 0;
-  }
-  if (text === '') return 0;
-  const parsed = Number.parseInt(text, 10);
-  if (!Number.isFinite(parsed)) return 0;
-  return parsed > 0 ? parsed : 0;
+  const raw = value?.value ?? value;
+  const numeric = Number.isFinite(raw) ? raw : (parseFlexibleNumber?.(raw) ?? Number(raw));
+  if (!Number.isFinite(numeric) || numeric <= 0) return 0;
+  return Math.floor(numeric);
 }
 
 function normalizeSelectionEntries(entries) {

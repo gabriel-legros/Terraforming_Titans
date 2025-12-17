@@ -566,6 +566,7 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
+      delete gameSettings.formatAutoBuildTargets;
       const autosaveToggle = document.getElementById('disable-autosave-toggle');
       if (autosaveToggle) {
         autosaveToggle.checked = gameSettings.disableAutosave;
@@ -614,10 +615,6 @@ function loadGame(slotOrCustomString, recreate = true) {
       const autobuildSetActiveToggle = document.getElementById('autobuild-set-active-toggle');
       if(autobuildSetActiveToggle){
         autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
-      }
-      const formatAutoBuildTargetsToggle = document.getElementById('format-autobuild-targets-toggle');
-      if(formatAutoBuildTargetsToggle){
-        formatAutoBuildTargetsToggle.checked = gameSettings.formatAutoBuildTargets;
       }
       refreshAllAutoBuildTargets();
       updateAutosaveText();

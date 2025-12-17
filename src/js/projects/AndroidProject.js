@@ -322,11 +322,11 @@ class AndroidProject extends Project {
       elements.androidAssignmentContainer.style.display = this.isBooleanFlagSet('androidAssist') ? 'block' : 'none';
     }
     if (elements.assignedAndroidsDisplay) {
-      elements.assignedAndroidsDisplay.textContent = formatBigInteger(this.assignedAndroids);
+      elements.assignedAndroidsDisplay.textContent = formatNumber(this.assignedAndroids, true);
     }
     if (elements.availableAndroidsDisplay) {
       const avail = Math.floor(resources.colony.androids.value - ((typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0));
-      elements.availableAndroidsDisplay.textContent = formatBigInteger(avail);
+      elements.availableAndroidsDisplay.textContent = formatNumber(avail, true);
     }
     if (elements.androidSpeedDisplay) {
       elements.androidSpeedDisplay.title = this.getAndroidSpeedTooltip();

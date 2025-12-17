@@ -117,11 +117,69 @@ function formatDuration(seconds) {
   return `${Math.floor(seconds)}s`;
 }
 
-  function formatBuildingCount(value) {
+function formatBuildingCount(value) {
   if (Math.abs(value) > 1e6) {
     return formatNumber(value, false, 3);
   }
   return formatBigInteger(value);
+}
+
+function parseFlexibleNumber(value) {
+  let text;
+  try {
+    text = String(value ?? '').trim();
+  } catch (error) {
+    return NaN;
+  }
+
+  if (text === '') return NaN;
+
+  text = text.replace(/[,_\s]/g, '');
+
+  const suffixMap = new Map([
+    ['dd', 1e39],
+    ['ud', 1e36],
+    ['de', 1e33],
+    ['dc', 1e33],
+    ['no', 1e30],
+    ['oc', 1e27],
+    ['sp', 1e24],
+    ['sx', 1e21],
+    ['qi', 1e18],
+    ['q', 1e15],
+    ['t', 1e12],
+    ['b', 1e9],
+    ['m', 1e6],
+    ['k', 1e3],
+  ]);
+
+  const numberMatch = text.match(/^[+-]?(?:\d+\.?\d*|\d*\.?\d+)(?:e[+-]?\d+)?/i);
+  const numericText = numberMatch ? numberMatch[0] : '';
+  const suffixText = text.slice(numericText.length).toLowerCase();
+
+  if (numericText === '') return NaN;
+
+  let numericValue = Number(numericText);
+  if (!Number.isFinite(numericValue)) {
+    numericValue = Number.parseFloat(numericText);
+  }
+  if (!Number.isFinite(numericValue)) {
+    numericValue = Number(text);
+  }
+  if (!Number.isFinite(numericValue)) {
+    numericValue = Number.parseFloat(text);
+  }
+  if (!Number.isFinite(numericValue)) return NaN;
+
+  if (suffixText === '') return numericValue;
+
+  const factor = suffixMap.get(suffixText);
+  if (factor) return numericValue * factor;
+
+  const sortedSuffixes = Array.from(suffixMap.keys()).sort((a, b) => b.length - a.length);
+  const matched = sortedSuffixes.find((suffix) => suffixText.startsWith(suffix));
+  if (!matched) return numericValue;
+  return numericValue * suffixMap.get(matched);
 }
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -130,6 +188,7 @@ function formatDuration(seconds) {
       formatBigInteger,
       formatShipCount,
       formatBuildingCount,
+      parseFlexibleNumber,
       toDisplayTemperature,
       toDisplayTemperatureDelta,
       getTemperatureUnit,

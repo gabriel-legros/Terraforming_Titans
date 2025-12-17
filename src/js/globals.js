@@ -52,7 +52,6 @@ let gameSettings = {
   disableDayNightCycle: false,
   preserveProjectAutoStart: false,
   autobuildAlsoSetsActive: true,
-  formatAutoBuildTargets: false,
   planetVisualizerDebugEnabled: false,
   keepHiddenStructuresOnTravel: false,
   simplifyGoldenAsteroid: false,

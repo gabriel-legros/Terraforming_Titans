@@ -83,6 +83,26 @@ class GalacticMarketProject extends Project {
       increment: this.selectionIncrement,
     };
 
+    const syncQuantityFromText = (input) => {
+      const parsed = parseSelectionQuantity(input.value);
+      input.dataset.quantity = String(parsed);
+      return parsed;
+    };
+
+    const getInputQuantity = (input) => {
+      const stored = Number(input.dataset.quantity);
+      return Number.isFinite(stored) ? stored : syncQuantityFromText(input);
+    };
+
+    const setInputQuantity = (input, quantity, formatLarge = true) => {
+      const normalized = Math.max(0, Math.floor(quantity));
+      input.dataset.quantity = String(normalized);
+      input.value = (formatLarge && normalized >= 1e6)
+        ? formatNumber(normalized, true, 3)
+        : String(normalized);
+      return normalized;
+    };
+
     const updateIncrement = (newValue) => {
       elements.increment = Math.max(1, Math.floor(newValue));
       this.selectionIncrement = elements.increment;
@@ -164,26 +184,26 @@ class GalacticMarketProject extends Project {
         buyPriceSpan.textContent = `${formatNumber(this.getBuyPrice(category, resourceId), true)}`;
 
         const buyInput = document.createElement('input');
-        buyInput.type = 'number';
-        buyInput.min = 0;
-        buyInput.value = this.getSelectionQuantity(this.buySelections, category, resourceId);
+        buyInput.type = 'text';
+        buyInput.inputMode = 'decimal';
         buyInput.classList.add('resource-selection-input', `resource-selection-${this.name}`, `buy-selection-${this.name}`);
         buyInput.dataset.category = category;
         buyInput.dataset.resource = resourceId;
         buyInput.dataset.rowIndex = rowIndex;
+        setInputQuantity(buyInput, this.getSelectionQuantity(this.buySelections, category, resourceId), false);
 
         const sellInput = document.createElement('input');
-        sellInput.type = 'number';
-        sellInput.min = 0;
-        sellInput.value = this.getSelectionQuantity(this.sellSelections, category, resourceId);
+        sellInput.type = 'text';
+        sellInput.inputMode = 'decimal';
         sellInput.classList.add('resource-selection-input', `sell-selection-${this.name}`);
         sellInput.dataset.category = category;
         sellInput.dataset.resource = resourceId;
         sellInput.dataset.rowIndex = rowIndex;
+        setInputQuantity(sellInput, this.getSelectionQuantity(this.sellSelections, category, resourceId), false);
 
         const sellPriceSpan = document.createElement('span');
         sellPriceSpan.classList.add('resource-price-display');
-        sellPriceSpan.textContent = `${formatNumber(this.getSellPrice(category, resourceId, parseSelectionQuantity(sellInput.value)), true)}`;
+        sellPriceSpan.textContent = `${formatNumber(this.getSellPrice(category, resourceId, getInputQuantity(sellInput)), true)}`;
 
         const saturationSpan = document.createElement('span');
         saturationSpan.classList.add('resource-price-display');
@@ -211,20 +231,30 @@ class GalacticMarketProject extends Project {
           return button;
         };
 
-        sellInput.addEventListener('input', refreshRow);
-        buyInput.addEventListener('input', refreshRow);
+        const wireQuantityInput = (input) => {
+          input.addEventListener('input', () => {
+            syncQuantityFromText(input);
+            refreshRow();
+          });
+          input.addEventListener('blur', () => {
+            setInputQuantity(input, getInputQuantity(input), true);
+          });
+        };
+
+        wireQuantityInput(sellInput);
+        wireQuantityInput(buyInput);
 
         const applyShift = (direction) => {
           const incrementValue = this.selectionIncrement;
           const step = Number.isFinite(incrementValue) && incrementValue > 0
             ? incrementValue
             : 1;
-          const currentBuy = parseSelectionQuantity(buyInput.value);
-          const currentSell = parseSelectionQuantity(sellInput.value);
+          const currentBuy = getInputQuantity(buyInput);
+          const currentSell = getInputQuantity(sellInput);
 
           if (direction === 'reset') {
-            buyInput.value = 0;
-            sellInput.value = 0;
+            setInputQuantity(buyInput, 0, true);
+            setInputQuantity(sellInput, 0, true);
             return;
           }
 
@@ -240,8 +270,8 @@ class GalacticMarketProject extends Project {
             if (remaining > 0) {
               newSell += remaining;
             }
-            buyInput.value = newBuy;
-            sellInput.value = newSell;
+            setInputQuantity(buyInput, newBuy, true);
+            setInputQuantity(sellInput, newSell, true);
             return;
           }
 
@@ -257,8 +287,8 @@ class GalacticMarketProject extends Project {
             if (remaining > 0) {
               newBuy += remaining;
             }
-            buyInput.value = newBuy;
-            sellInput.value = newSell;
+            setInputQuantity(buyInput, newBuy, true);
+            setInputQuantity(sellInput, newSell, true);
           }
         };
 
@@ -267,8 +297,8 @@ class GalacticMarketProject extends Project {
         const plusButton = createButton('', () => applyShift('toBuy'));
         createButton('Sat', () => {
           const saturation = this.getSaturationSellAmount(category, resourceId);
-          buyInput.value = 0;
-          sellInput.value = saturation;
+          setInputQuantity(buyInput, 0, true);
+          setInputQuantity(sellInput, saturation, true);
           refreshRow();
         });
 
@@ -368,9 +398,9 @@ class GalacticMarketProject extends Project {
         buyPriceSpans[index].textContent = `${formatNumber(this.getBuyPrice(meta.category, meta.resource), true)}`;
       }
       if (sellPriceSpans[index]) {
-        const sellQty = sellInputs[index]
-          ? parseSelectionQuantity(sellInputs[index].value)
-          : 0;
+        const sellInput = sellInputs[index];
+        const stored = sellInput ? Number(sellInput.dataset.quantity) : NaN;
+        const sellQty = Number.isFinite(stored) ? stored : (sellInput ? parseSelectionQuantity(sellInput.value) : 0);
         sellPriceSpans[index].textContent = `${formatNumber(this.getSellPrice(meta.category, meta.resource, sellQty), true)}`;
       }
       if (saturationSellSpans[index]) {
@@ -394,8 +424,10 @@ class GalacticMarketProject extends Project {
     rowMeta.forEach((meta, index) => {
       const buyInput = buyInputs[index];
       const sellInput = sellInputs[index];
-      const buyQuantity = buyInput ? parseSelectionQuantity(buyInput.value) : 0;
-      const sellQuantity = sellInput ? parseSelectionQuantity(sellInput.value) : 0;
+      const storedBuy = buyInput ? Number(buyInput.dataset.quantity) : NaN;
+      const storedSell = sellInput ? Number(sellInput.dataset.quantity) : NaN;
+      const buyQuantity = Number.isFinite(storedBuy) ? storedBuy : (buyInput ? parseSelectionQuantity(buyInput.value) : 0);
+      const sellQuantity = Number.isFinite(storedSell) ? storedSell : (sellInput ? parseSelectionQuantity(sellInput.value) : 0);
       if (buyQuantity > 0) {
         buySelections.push({ category: meta.category, resource: meta.resource, quantity: buyQuantity });
       }
@@ -419,7 +451,8 @@ class GalacticMarketProject extends Project {
     const sellInput = elements.sellInputs?.[index];
     const span = elements.sellPriceSpans?.[index];
     if (!meta || !sellInput || !span) return;
-    const quantity = parseSelectionQuantity(sellInput.value);
+    const stored = Number(sellInput.dataset.quantity);
+    const quantity = Number.isFinite(stored) ? stored : parseSelectionQuantity(sellInput.value);
     const price = this.getSellPrice(meta.category, meta.resource, quantity);
     span.textContent = `${formatNumber(price, true)}`;
   }
@@ -434,10 +467,16 @@ class GalacticMarketProject extends Project {
 
     rowMeta.forEach((meta, index) => {
       if (buyInputs[index]) {
-        buyInputs[index].value = buyMap.get(this.getSelectionKey(meta.category, meta.resource)) || 0;
+        if (document.activeElement === buyInputs[index]) return;
+        const quantity = buyMap.get(this.getSelectionKey(meta.category, meta.resource)) || 0;
+        buyInputs[index].dataset.quantity = String(quantity);
+        buyInputs[index].value = quantity >= 1e6 ? formatNumber(quantity, true, 3) : String(quantity);
       }
       if (sellInputs[index]) {
-        sellInputs[index].value = sellMap.get(this.getSelectionKey(meta.category, meta.resource)) || 0;
+        if (document.activeElement === sellInputs[index]) return;
+        const quantity = sellMap.get(this.getSelectionKey(meta.category, meta.resource)) || 0;
+        sellInputs[index].dataset.quantity = String(quantity);
+        sellInputs[index].value = quantity >= 1e6 ? formatNumber(quantity, true, 3) : String(quantity);
       }
       this.updateSellPriceSpan(index);
     });

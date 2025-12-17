@@ -125,7 +125,7 @@ function refreshAutoBuildTarget(structure) {
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesMax
       ? 'Target : Max'
-      : `Target : ${gameSettings.formatAutoBuildTargets ? formatNumber(targetCount, true) : formatBigInteger(targetCount)}`;
+      : `Target : ${formatNumber(targetCount, true)}`;
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
     }

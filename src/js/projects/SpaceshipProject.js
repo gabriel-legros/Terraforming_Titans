@@ -383,14 +383,14 @@ class SpaceshipProject extends Project {
         const maxShips = typeof this.getMaxAssignableShips === 'function'
           ? this.getMaxAssignableShips()
           : null;
-        const assignedText = formatShipCount(this.assignedSpaceships);
+        const assignedText = formatNumber(this.assignedSpaceships, true);
         elements.assignedSpaceshipsDisplay.textContent =
           maxShips != null
-            ? `${assignedText}/${formatShipCount(maxShips)}`
+            ? `${assignedText}/${formatNumber(maxShips, true)}`
             : assignedText;
     }
     if (elements.availableSpaceshipsDisplay) {
-        elements.availableSpaceshipsDisplay.textContent = formatShipCount(Math.floor(resources.special.spaceships.value));
+        elements.availableSpaceshipsDisplay.textContent = formatNumber(Math.floor(resources.special.spaceships.value), true);
     }
     this.updateCostAndGains(elements);
     this.updateAutoAssignUI(elements);

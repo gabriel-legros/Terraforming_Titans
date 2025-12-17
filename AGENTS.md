@@ -349,6 +349,8 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Feature updates
 - Special project ordering now treats all import resource missions as one card, ignores hidden projects when showing arrows, and saves the grouped order across travel and saves.
+- Autobuild target counts now always display in compact k/M/B formatting; removed the related settings toggle.
+- Spaceship, android, and Import Resources assignment cards now use compact k/M/B formatting for available/assigned counts.
 - Added Solis Prime as a rogue story planet that relies on background radiation for luminosity.
 - Galaxy map sectors that block story progress now show a journal icon until conquered and explain the required world milestone in the sector details.
 - Added an Artificial space subtab managed by a new ArtificialManager and UI that only appears when the manager is enabled.
@@ -361,3 +363,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Spaceship automation includes an "Unassigned Ships" target so presets can reserve a portion of the fleet for replication while keeping routes staffed.
 - Added a placeholder Gabbag planet with population milestone chapters covering ten-through-five-billion colonist goals.
 - Solis quest system now detects clock manipulation by checking if remaining cooldown time exceeds twice the normal quest interval (30 minutes), automatically resetting to normal cooldown when detected to prevent indefinite wait times from backward clock changes.
+- Galactic Market buy/sell inputs now accept scientific notation (e.g. `1e6`) and suffix formatting (e.g. `3Qi`), and amounts >= 1M display in formatted form after using row controls or leaving the field.
