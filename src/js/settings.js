@@ -115,11 +115,11 @@ function addSettingsListeners() {
     });
   }
 
-  const goldenAsteroidFixedPositionToggle = document.getElementById('golden-asteroid-fixed-position-toggle');
-  if (goldenAsteroidFixedPositionToggle) {
-    goldenAsteroidFixedPositionToggle.checked = gameSettings.goldenAsteroidFixedPosition;
-    goldenAsteroidFixedPositionToggle.addEventListener('change', () => {
-      gameSettings.goldenAsteroidFixedPosition = goldenAsteroidFixedPositionToggle.checked;
+  const simplifyGoldenAsteroidToggle = document.getElementById('simplify-golden-asteroid-toggle');
+  if (simplifyGoldenAsteroidToggle) {
+    simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
+    simplifyGoldenAsteroidToggle.addEventListener('change', () => {
+      gameSettings.simplifyGoldenAsteroid = simplifyGoldenAsteroidToggle.checked;
     });
   }
 

@@ -115,49 +115,53 @@ class GoldenAsteroid {
           this.duration = duration;
           this.spawnTime = Date.now();
           this.cacheContainers();
-          if (!this.gameContainer) {
-            this.active = false;
-            return;
-          }
-
-          this.element = document.createElement('img');
-          this.element.className = 'golden-asteroid';
-          this.element.src = 'assets/images/asteroid.png';
-          this.element.draggable = false;
-
-          const clickHandler = this.onClick.bind(this);
-          this.element.addEventListener('mousedown', clickHandler);
-          this.element.addEventListener('touchstart', clickHandler);
-          this.element.addEventListener('dragstart', clickHandler);
-
-        this.element.onload = () => {
-            if (!this.element) return; // Element may have been removed before load
-            const width = this.element.width;
-            const height = this.element.height;
-            
-            let x, y;
-            if (gameSettings.goldenAsteroidFixedPosition && this.countdownContainer) {
-              // Position near the countdown container (where the effect text appears)
-              const rect = this.countdownContainer.getBoundingClientRect();
-              const containerRect = this.gameContainer.getBoundingClientRect();
-              x = rect.left - containerRect.left + rect.width / 2 - width / 2;
-              y = rect.top - containerRect.top + rect.height / 2 - height / 2;
-              // Clamp to container bounds
-              x = Math.max(0, Math.min(x, this.gameContainer.clientWidth - width));
-              y = Math.max(0, Math.min(y, this.gameContainer.clientHeight - height));
-            } else {
-              // Random position (original behavior)
-              const containerWidth = this.gameContainer.clientWidth;
-              const containerHeight = Math.min(this.gameContainer.clientHeight, 800);
-              x = Math.random() * (containerWidth - width);
-              y = Math.random() * (containerHeight - height);
+          
+          if (gameSettings.simplifyGoldenAsteroid) {
+            // Create a button in the countdown container
+            if (!this.countdownContainer) {
+              this.active = false;
+              return;
             }
             
-            this.element.style.left = `${x}px`;
-            this.element.style.top = `${y}px`;
-          };
+            this.element = document.createElement('button');
+            this.element.className = 'golden-asteroid-button';
+            this.element.textContent = 'Golden Asteroid!';
+            
+            const clickHandler = this.onClick.bind(this);
+            this.element.addEventListener('click', clickHandler);
+            
+            this.countdownContainer.appendChild(this.element);
+          } else {
+            // Original image-based asteroid
+            if (!this.gameContainer) {
+              this.active = false;
+              return;
+            }
 
-          this.gameContainer.appendChild(this.element);
+            this.element = document.createElement('img');
+            this.element.className = 'golden-asteroid';
+            this.element.src = 'assets/images/asteroid.png';
+            this.element.draggable = false;
+
+            const clickHandler = this.onClick.bind(this);
+            this.element.addEventListener('mousedown', clickHandler);
+            this.element.addEventListener('touchstart', clickHandler);
+            this.element.addEventListener('dragstart', clickHandler);
+
+            this.element.onload = () => {
+              if (!this.element) return;
+              const width = this.element.width;
+              const height = this.element.height;
+              const containerWidth = this.gameContainer.clientWidth;
+              const containerHeight = Math.min(this.gameContainer.clientHeight, 800);
+              const x = Math.random() * (containerWidth - width);
+              const y = Math.random() * (containerHeight - height);
+              this.element.style.left = `${x}px`;
+              this.element.style.top = `${y}px`;
+            };
+
+            this.gameContainer.appendChild(this.element);
+          }
     }
   }
 

@@ -5,6 +5,25 @@
     /* Add any additional styles for size, border, shadow, etc. */
   }
 
+  .golden-asteroid-button {
+    background: #ffd700;
+    border: 2px solid #b8860b;
+    border-radius: 5px;
+    color: #000;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  .golden-asteroid-button:hover {
+    background: #ffed4e;
+  }
+
+  .golden-asteroid-button:active {
+    background: #daa520;
+  }
+
   .gold-asteroid-countdown {
     top: 20px;
     font-size: 15px;
