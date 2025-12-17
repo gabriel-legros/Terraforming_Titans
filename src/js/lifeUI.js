@@ -1059,7 +1059,7 @@ function updateLifeStatusTable() {
         const capacityMult = maxBiomassForZone > 0 ? Math.max(0, 1 - zoneBiomass / maxBiomassForZone) : 0;
 
         if (zone !== 'global' && growthCell) {
-            const baseRate = designToCheck.photosynthesisEfficiency.value * PHOTOSYNTHESIS_RATE_PER_POINT;
+            const baseRate = designToCheck.photosynthesisEfficiency.value * requirements.photosynthesisRatePerPoint;
             const lumMult = zone === 'global'
                 ? (terraforming.calculateSolarPanelMultiplier ? terraforming.calculateSolarPanelMultiplier() : 1)
                 : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1);
