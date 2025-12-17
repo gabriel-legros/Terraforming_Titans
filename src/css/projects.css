@@ -212,7 +212,7 @@
 
 .import-resources-row {
     display: grid;
-    grid-template-columns: minmax(250px, auto) minmax(220px, auto) minmax(120px, auto) minmax(220px, auto) minmax(0, 1fr);
+    grid-template-columns: minmax(220px, 1.3fr) minmax(190px, 1.1fr) minmax(140px, 0.7fr) minmax(210px, 1.1fr) minmax(0, 0.2fr);
     column-gap: 8px;
     row-gap: 6px;
     align-items: center;
@@ -226,6 +226,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 .import-name-cell {
@@ -240,7 +241,8 @@
     font-size: 0.75em;
     padding: 4px 6px;
     line-height: 1.2;
-    min-width: 270px;
+    width: 100%;
+    min-width: 0;
 }
 
 .import-progress-name {
@@ -263,10 +265,13 @@
     align-items: baseline;
     gap: 6px;
     font-size: 0.9em;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .import-assigned-value {
     font-weight: bold;
+    overflow-wrap: anywhere;
 }
 
 .import-assignment-buttons {
@@ -308,7 +313,7 @@
 
 .import-top-row {
     display: grid;
-    grid-template-columns: minmax(250px, auto) minmax(220px, auto) minmax(120px, auto) minmax(220px, auto) minmax(0, 1fr);
+    grid-template-columns: minmax(220px, 1.3fr) minmax(210px, 1.1fr) minmax(140px, 0.7fr) minmax(210px, 1.1fr) minmax(0, 0.2fr);
     align-items: flex-end;
     column-gap: 8px;
     margin: 8px 0 6px 0;
@@ -791,6 +796,7 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    min-width: 0;
 }
 
 .android-column-heading {
@@ -800,6 +806,7 @@
 .buttons-container .main-buttons, .buttons-container .multiplier-container {
     display: flex;
     gap: 5px;
+    flex-wrap: wrap;
 }
 
 .buttons-container button {
