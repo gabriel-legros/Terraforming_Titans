@@ -2305,6 +2305,48 @@ function cacheGalaxyElements() {
     defenseClearButton.hidden = true;
     defenseSection.appendChild(defenseClearButton);
 
+    const defenseHistory = doc.createElement('div');
+    defenseHistory.className = 'galaxy-defense-history';
+    const defenseHistoryTitle = doc.createElement('div');
+    defenseHistoryTitle.className = 'galaxy-defense-history__title';
+    defenseHistoryTitle.textContent = 'Last 5 Attacks';
+
+    const defenseHistoryHeader = doc.createElement('div');
+    defenseHistoryHeader.className = 'galaxy-defense-history__row galaxy-defense-history__row--header';
+    ['Enemy', 'Enemy Power', 'Result', 'UHF Losses'].forEach((label) => {
+        const cell = doc.createElement('span');
+        cell.className = 'galaxy-defense-history__cell';
+        cell.textContent = label;
+        defenseHistoryHeader.appendChild(cell);
+    });
+
+    const defenseHistoryRows = [];
+    for (let index = 0; index < 5; index += 1) {
+        const row = doc.createElement('div');
+        row.className = 'galaxy-defense-history__row';
+        row.classList.add('is-hidden');
+        const enemyCell = doc.createElement('span');
+        enemyCell.className = 'galaxy-defense-history__cell galaxy-defense-history__cell--enemy';
+        const powerCell = doc.createElement('span');
+        powerCell.className = 'galaxy-defense-history__cell galaxy-defense-history__cell--numeric';
+        const resultCell = doc.createElement('span');
+        resultCell.className = 'galaxy-defense-history__cell';
+        const lossCell = doc.createElement('span');
+        lossCell.className = 'galaxy-defense-history__cell galaxy-defense-history__cell--numeric';
+        row.append(enemyCell, powerCell, resultCell, lossCell);
+        defenseHistoryRows.push({ row, enemyCell, powerCell, resultCell, lossCell });
+    }
+
+    const defenseHistoryEmpty = doc.createElement('p');
+    defenseHistoryEmpty.className = 'galaxy-defense-history__empty';
+    defenseHistoryEmpty.textContent = 'No attacks recorded yet.';
+
+    defenseHistory.appendChild(defenseHistoryTitle);
+    defenseHistory.appendChild(defenseHistoryHeader);
+    defenseHistoryRows.forEach((entry) => defenseHistory.appendChild(entry.row));
+    defenseHistory.appendChild(defenseHistoryEmpty);
+    defenseSection.appendChild(defenseHistory);
+
     attackContent.appendChild(defenseSection);
     incomingAttacks.body.appendChild(attackContent);
 
@@ -2563,6 +2605,9 @@ function cacheGalaxyElements() {
         defenseInput,
         defenseButtons,
         defenseClearButton,
+        defenseHistory,
+        defenseHistoryRows,
+        defenseHistoryEmpty,
         sectorContent,
         sectorDetails: null,
         hexElements,
@@ -2761,6 +2806,29 @@ function ensureAttackCard(cache, attack) {
     return entry;
 }
 
+function updateRecentAttackHistory(manager, cache) {
+    const rows = cache?.defenseHistoryRows;
+    if (!rows) {
+        return;
+    }
+    const history = manager.getRecentAttackHistory(5);
+    const hasHistory = history.length > 0;
+    if (cache.defenseHistoryEmpty) {
+        cache.defenseHistoryEmpty.classList.toggle('is-hidden', hasHistory);
+    }
+    rows.forEach((rowEntry, index) => {
+        const entry = history[index];
+        rowEntry.row.classList.toggle('is-hidden', !entry);
+        if (!entry) {
+            return;
+        }
+        rowEntry.enemyCell.textContent = `${entry.attackerName} @ ${entry.sectorName}`;
+        rowEntry.powerCell.textContent = formatFleetValue(entry.enemyPower);
+        rowEntry.resultCell.textContent = entry.successfulDefense ? 'Successful Defense' : 'Defense Failed';
+        rowEntry.lossCell.textContent = formatFleetValue(entry.uhfLosses);
+    });
+}
+
 function updateIncomingAttackPanel(manager, cache) {
     if (!cache?.attackContent || !cache.attackList) {
         return;
@@ -2831,6 +2899,7 @@ function updateIncomingAttackPanel(manager, cache) {
             cache.attackPlaceholder.classList.remove('is-hidden');
         }
     }
+    updateRecentAttackHistory(manager, cache);
 }
 
 function updateLogisticsDisplay(manager, cache) {

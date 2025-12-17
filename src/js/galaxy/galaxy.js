@@ -752,6 +752,10 @@ class GalaxyManager extends EffectableEntity {
         return faction.getDefenseAssignmentTotal();
     }
 
+    getRecentAttackHistory(limit = 5) {
+        return this.operationManager ? this.operationManager.getRecentAttackHistory(limit) : [];
+    }
+
     getDefenseReservation(factionId = galaxyUhfId) {
         const faction = this.getFaction(factionId);
         if (!faction || typeof faction.getDefenseReservation !== 'function') {

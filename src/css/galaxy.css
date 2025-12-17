@@ -872,6 +872,59 @@
   padding: 8px 14px;
 }
 
+.galaxy-defense-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(54, 10, 10, 0.28);
+  border: 1px solid rgba(212, 104, 104, 0.22);
+}
+
+.galaxy-defense-history__title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffdede;
+}
+
+.galaxy-defense-history__row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1.5fr) minmax(72px, 0.9fr) minmax(110px, 1.1fr) minmax(72px, 0.9fr);
+  gap: 10px;
+  align-items: center;
+  font-size: 0.78rem;
+  color: rgba(255, 230, 230, 0.95);
+}
+
+.galaxy-defense-history__row--header {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 222, 222, 0.75);
+}
+
+.galaxy-defense-history__cell--numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.galaxy-defense-history__cell--enemy {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.galaxy-defense-history__empty {
+  margin: 0;
+  text-align: center;
+  color: rgba(244, 177, 177, 0.9);
+  font-style: italic;
+  font-size: 0.78rem;
+}
+
 .galaxy-sector-panel {
   box-shadow: inset 0 0 12px rgba(124, 184, 255, 0.18);
 }

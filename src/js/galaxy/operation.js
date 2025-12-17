@@ -58,6 +58,7 @@ class GalaxyOperationManager {
         this.manager = manager;
         this.uhfFactionId = typeof uhfFactionId === 'string' && uhfFactionId ? uhfFactionId : 'uhf';
         this.operations = operations instanceof Map ? operations : new Map();
+        this.attackHistory = [];
         this.stepSizes = new Map();
         this.autoSectors = new Set();
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
@@ -73,6 +74,10 @@ class GalaxyOperationManager {
         if (this.manager) {
             this.manager.operations = this.operations;
         }
+    }
+
+    getRecentAttackHistory(limit = 5) {
+        return this.attackHistory.slice(0, Math.max(1, Math.floor(limit || 5)));
     }
 
     update(deltaMs) {
@@ -532,6 +537,24 @@ class GalaxyOperationManager {
         operation.targetFactionId = targetFactionId;
         operation.result = isSuccessful ? 'success' : 'failure';
         operation.status = 'completed';
+
+        if (attackerId !== this.uhfFactionId && targetFactionId === this.uhfFactionId) {
+            const attackerName = this.manager.getFaction(attackerId)?.name || attackerId;
+            const sectorName = sector?.getDisplayName?.() || sector?.key || operation.sectorKey;
+            const uhfLosses = defenderLosses.reduce((sum, entry) => sum + (entry.factionId === this.uhfFactionId ? entry.loss : 0), 0);
+            this.attackHistory.unshift({
+                attackerId,
+                attackerName,
+                sectorKey: operation.sectorKey,
+                sectorName,
+                enemyPower: offensePower,
+                successfulDefense: !isSuccessful,
+                uhfLosses
+            });
+            if (this.attackHistory.length > 20) {
+                this.attackHistory.length = 20;
+            }
+        }
     }
 
     #applyOperationSuccess(operation) {
