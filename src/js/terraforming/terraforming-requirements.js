@@ -24,6 +24,29 @@ const terraformingRequirements = {
       baseMaxBiomassDensityTPerM2: 0.1,
       radiationToleranceThresholdPoints: 25,
       minimumBiomassDecayRateTPerS: 1,
+      metabolism: {
+        primaryProcessId: 'photosynthesis',
+        processes: {
+          photosynthesis: {
+            id: 'photosynthesis',
+            displayName: 'Photosynthesis',
+            growth: {
+              usesLuminosity: true,
+              perBiomass: {
+                surface: { biomass: 1, liquidWater: -0.6 },
+                atmospheric: { carbonDioxide: -1.4666666666666666, oxygen: 1.0666666666666667 },
+              },
+            },
+            decay: {
+              allowSterileDecayWithoutOxygen: true,
+              perBiomass: {
+                surface: { biomass: -1 },
+                atmospheric: { oxygen: -1.0666666666666667, carbonDioxide: 1.4666666666666666, atmosphericWater: 0.6 },
+              },
+            },
+          },
+        },
+      },
       attributeMaxUpgrades: {
         minTemperatureTolerance: 60,
         maxTemperatureTolerance: 40,
@@ -37,7 +60,77 @@ const terraformingRequirements = {
         bioworkforce: 100,
       },
     },
-  }
+  },
+  gabbagian: {
+    id: 'gabbagian',
+    displayName: 'Gabbagian',
+    temperatureRangeK: { min: 268.15, max: 288.15 },
+    luminosityRange: { min: 0, max: 2000 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 500, max: 5000 },
+      oxygen: { min: 0, max: 200 },
+      inertGas: { min: 60000, max: 200000 },
+      hydrogen: { min: 200, max: 6000 },
+      atmosphericMethane: { min: 2000, max: 25000 },
+    },
+    waterCoverageTarget: 0.1,
+    lifeCoverageTarget: 0.4,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    lifeDesign: {
+      survivalTemperatureRangeK: { min: 258.15, max: 303.15 },
+      optimalGrowthTemperatureBaseK: 278.15,
+      growthTemperatureToleranceBaseC: 2,
+      growthTemperatureTolerancePerPointC: 0.6,
+      photosynthesisRatePerPoint: 0.00008,
+      baseMaxBiomassDensityTPerM2: 0.1,
+      radiationToleranceThresholdPoints: 25,
+      minimumBiomassDecayRateTPerS: 1,
+      metabolism: {
+        primaryProcessId: 'methanogenesis',
+        processes: {
+          methanogenesis: {
+            id: 'methanogenesis',
+            displayName: 'Methanogenesis',
+            growth: {
+              usesLuminosity: false,
+              perBiomass: {
+                surface: { biomass: 1, liquidWater: -0.2 },
+                atmospheric: {
+                  carbonDioxide: -2.641666666666667,
+                  hydrogen: -0.38333333333333336,
+                  atmosphericMethane: 0.5,
+                  atmosphericWater: 1.725,
+                },
+              },
+            },
+            decay: {
+              perBiomass: {
+                surface: { biomass: -1 },
+                atmospheric: {
+                  atmosphericMethane: 0.2,
+                  carbonDioxide: 0.6,
+                  atmosphericWater: 0.2,
+                },
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 25,
+        invasiveness: 50,
+        spaceEfficiency: 100,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+      },
+    },
+  },
 };
 
 function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {

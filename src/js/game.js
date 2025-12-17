@@ -113,7 +113,7 @@ function initializeDefaultGlobals(){
   storyManager = new StoryManager(progressData);  // Pass the progressData object
 
   celestialParameters = currentPlanetParameters.celestialParameters;
-  terraforming = new Terraforming(resources, celestialParameters);
+  terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
   // Expose a stable reference for UI modules (avoid DOM id 'terraforming' collisions)
   if (typeof window !== 'undefined') {
@@ -358,7 +358,7 @@ function initializeGameState(options = {}) {
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
 
   celestialParameters = currentPlanetParameters.celestialParameters;
-  terraforming = new Terraforming(resources, celestialParameters);
+  terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
 
   // Rebuild the Planet Visualizer with fresh references (resources/terraforming)

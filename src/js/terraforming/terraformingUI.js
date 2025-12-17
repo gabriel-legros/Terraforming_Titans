@@ -19,9 +19,25 @@ function getTerraformingSubtabManager() {
   return terraformingSubtabManager;
 }
 
+function getTerraformingManagerSafe() {
+  try {
+    const manager = window.terraformingManager;
+    if (manager && manager.requirements) {
+      return manager;
+    }
+  } catch (error) {}
+  try {
+    if (terraforming && terraforming.requirements) {
+      return terraforming;
+    }
+  } catch (error) {}
+  return null;
+}
+
 function getActiveTerraformingRequirements() {
-  if (terraforming && terraforming.requirements) {
-    return terraforming.requirements;
+  const manager = getTerraformingManagerSafe();
+  if (manager && manager.requirements) {
+    return manager.requirements;
   }
   if (typeof getTerraformingRequirement === 'function') {
     const fallbackId = typeof DEFAULT_TERRAFORMING_REQUIREMENT_ID !== 'undefined'
@@ -32,24 +48,20 @@ function getActiveTerraformingRequirements() {
   return null;
 }
 
-function getActiveGasTargets() {
-  if (terraforming && terraforming.gasTargets) {
-    return terraforming.gasTargets;
-  }
-  const requirements = getActiveTerraformingRequirements();
-  if (requirements && requirements.gasTargetsPa) {
-    return requirements.gasTargetsPa;
-  }
-  return {};
-}
-
 function getGasRangeString(gasName) {
-  const gasTargets = getActiveGasTargets();
+  const gasTargets = terraforming.gasTargets;
   const gas = gasTargets[gasName];
   if (!gas) {
     return '';
   }
   return `${formatNumber(gas.min, true)} < P < ${formatNumber(gas.max, true)}`;
+}
+
+function formatGasTargetRange(target) {
+  if (!target) {
+    return '';
+  }
+  return `${formatNumber(target.min, true)} < P < ${formatNumber(target.max, true)}`;
 }
 
 let terraformingTabsInitialized = false;
@@ -825,7 +837,20 @@ function createTemperatureBox(row) {
       "- Atmospheric-Surface Interactions: The atmosphere facilitates the water and hydrocarbon cycles through evaporation and condensation. It also interacts with life, with organisms both consuming and producing atmospheric gases."
     ].join('\n');
     const atmTooltip = attachDynamicInfoTooltip(atmInfo, atmTooltipText);
-    const gasTargets = getActiveGasTargets();
+    const gasTargets = terraforming.gasTargets || {};
+    const targetGasKeys = Object.keys(gasTargets);
+    targetGasKeys.sort((a, b) => {
+      const aTarget = gasTargets[a];
+      const bTarget = gasTargets[b];
+      const minDiff = (bTarget?.min || 0) - (aTarget?.min || 0);
+      if (minDiff) return minDiff;
+      const maxDiff = (bTarget?.max || 0) - (aTarget?.max || 0);
+      if (maxDiff) return maxDiff;
+      return a.localeCompare(b);
+    });
+
+    const resourceGasKeys = Object.keys(resources.atmospheric || {});
+    const gasKeys = targetGasKeys.concat(resourceGasKeys.filter(key => !targetGasKeys.includes(key)));
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
@@ -839,24 +864,25 @@ function createTemperatureBox(row) {
             <th></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="atmosphere-gas-body">
     `;
   
-    // Iterate through gases defined in the global resources to build the table structure
-    for (const gas in resources.atmospheric) {
+    gasKeys.forEach((gas, index) => {
+        const resource = resources.atmospheric[gas] || null;
+        const displayName = resource?.displayName || resource?.name || gas;
         const hasTarget = !!gasTargets[gas];
         const statusClass = hasTarget ? 'status-cross' : '';
         const statusIcon = hasTarget ? '✗' : '';
         innerHTML += `
-          <tr>
-            <td>${resources.atmospheric[gas].displayName}</td>
+          <tr data-gas="${gas}" data-order="${index}">
+            <td>${displayName}</td>
             <td><span id="${gas}-pressure">0.00</span></td>
             <td><span id="${gas}-delta">N/A</span></td>
-            <td><span class='gas-range'>${getGasRangeString(gas)}</span></td>
+            <td><span id="${gas}-target" class="gas-range"></span></td>
             <td><span id="${gas}-status" class="${statusClass}">${statusIcon}</span></td>
           </tr>
         `;
-    }
+    });
   
     innerHTML += `
         </tbody>
@@ -878,11 +904,12 @@ function createTemperatureBox(row) {
 
     row.appendChild(atmosphereBox);
     const gasElements = {};
-    for (const gas in resources.atmospheric) {
+    for (const gas of gasKeys) {
       const pressureEl = atmosphereBox.querySelector(`#${gas}-pressure`);
       gasElements[gas] = {
         pressure: pressureEl,
         delta: atmosphereBox.querySelector(`#${gas}-delta`),
+        target: atmosphereBox.querySelector(`#${gas}-target`),
         status: atmosphereBox.querySelector(`#${gas}-status`),
         row: pressureEl ? pressureEl.closest('tr') : null
       };
@@ -892,12 +919,14 @@ function createTemperatureBox(row) {
       infoTooltip: atmTooltip,
       box: atmosphereBox,
       current: atmosphereBox.querySelector('#atmosphere-current'),
+      gasBody: atmosphereBox.querySelector('#atmosphere-gas-body'),
       opticalDepth: atmosphereBox.querySelector('#optical-depth'),
       opticalDepthInfo: atmosphereBox.querySelector('#optical-depth-info'),
       opticalDepthTooltip: atmosphereBox.querySelector('#optical-depth-tooltip'),
       windMultiplier: atmosphereBox.querySelector('#wind-turbine-multiplier'),
       pressurePenalty: atmosphereBox.querySelector('#pressure-cost-penalty'),
       gases: gasElements,
+      nextGasOrder: gasKeys.length,
       tooltipCache: {
         opticalDepth: ''
       }
@@ -913,7 +942,65 @@ function createTemperatureBox(row) {
     const atmosphereBox = els.box;
     if (!atmosphereBox) return;
     atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? 'green' : 'red';
-    const gasTargets = getActiveGasTargets();
+    const gasTargets = terraforming.gasTargets;
+    const gasBody = els.gasBody;
+
+    const addGasRow = (gas) => {
+      if (!gasBody) return;
+      const resource = resources.atmospheric[gas] || null;
+      const displayName = resource?.displayName || resource?.name || gas;
+      const row = document.createElement('tr');
+      row.dataset.gas = gas;
+      row.dataset.order = String(els.nextGasOrder || 0);
+      els.nextGasOrder = (els.nextGasOrder || 0) + 1;
+      row.innerHTML = `
+        <td>${displayName}</td>
+        <td><span id="${gas}-pressure">0.00</span></td>
+        <td><span id="${gas}-delta">N/A</span></td>
+        <td><span id="${gas}-target" class="gas-range"></span></td>
+        <td><span id="${gas}-status"></span></td>
+      `;
+      gasBody.appendChild(row);
+      els.gases[gas] = {
+        pressure: row.querySelector(`#${gas}-pressure`),
+        delta: row.querySelector(`#${gas}-delta`),
+        target: row.querySelector(`#${gas}-target`),
+        status: row.querySelector(`#${gas}-status`),
+        row,
+      };
+    };
+
+    Object.keys(gasTargets || {}).forEach((gas) => {
+      if (!els.gases[gas]) {
+        addGasRow(gas);
+      }
+    });
+
+    const sortedGasKeys = Object.keys(els.gases || {});
+    sortedGasKeys.sort((a, b) => {
+      const aTarget = gasTargets[a];
+      const bTarget = gasTargets[b];
+      const aHasTarget = !!aTarget;
+      const bHasTarget = !!bTarget;
+      if (aHasTarget !== bHasTarget) return bHasTarget - aHasTarget;
+      if (aHasTarget) {
+        const minDiff = (bTarget.min || 0) - (aTarget.min || 0);
+        if (minDiff) return minDiff;
+        const maxDiff = (bTarget.max || 0) - (aTarget.max || 0);
+        if (maxDiff) return maxDiff;
+        return a.localeCompare(b);
+      }
+      const aOrder = Number(els.gases[a]?.row?.dataset?.order || 0);
+      const bOrder = Number(els.gases[b]?.row?.dataset?.order || 0);
+      return aOrder - bOrder;
+    });
+
+    if (gasBody) {
+      sortedGasKeys.forEach((gas) => {
+        const row = els.gases[gas]?.row;
+        if (row) gasBody.appendChild(row);
+      });
+    }
 
     els.current.textContent = terraforming.calculateTotalPressure().toFixed(2);
 
@@ -957,8 +1044,9 @@ function createTemperatureBox(row) {
       }
     }
 
-    for (const gas in resources.atmospheric) {
-        const currentAmount = resources.atmospheric[gas]?.value || 0;
+    for (const gas of sortedGasKeys) {
+        const resource = resources.atmospheric[gas] || { value: 0 };
+        const currentAmount = resource.value || 0;
         const currentGlobalPressurePa = calculateAtmosphericPressure(
             currentAmount,
             terraforming.celestialParameters.gravity,
@@ -967,9 +1055,10 @@ function createTemperatureBox(row) {
 
         const gasEls = els.gases[gas];
         // Hide row if configured to hide when small and value is exactly zero
-        const hideSmall = !!resources.atmospheric[gas]?.hideWhenSmall;
+        const hideSmall = !!resource.hideWhenSmall;
+        const hasTarget = !!gasTargets[gas];
         if (gasEls && gasEls.row) {
-            gasEls.row.style.display = (hideSmall && currentAmount === 0) ? 'none' : '';
+            gasEls.row.style.display = (!hasTarget && hideSmall && currentAmount === 0) ? 'none' : '';
         }
         if (gasEls && gasEls.pressure) {
             gasEls.pressure.textContent = formatNumber(currentGlobalPressurePa, false, 2);
@@ -985,6 +1074,10 @@ function createTemperatureBox(row) {
         if (gasEls && gasEls.delta) {
             const delta = currentGlobalPressurePa - initialGlobalPressurePa;
             gasEls.delta.textContent = `${delta >= 0 ? '+' : ''}${formatNumber(delta, false, 2)}`;
+        }
+
+        if (gasEls && gasEls.target) {
+            gasEls.target.textContent = formatGasTargetRange(gasTargets[gas]);
         }
 
         if (gasEls && gasEls.status) {
@@ -1067,6 +1160,7 @@ function createWaterBox(row) {
     }
 
     const targetSpan = document.createElement('span');
+    targetSpan.id = 'water-target';
     const waterTargetPercent = terraforming.waterTarget * 100;
     targetSpan.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}%.`;
     targetSpan.style.marginTop = 'auto';
@@ -1091,7 +1185,8 @@ function createWaterBox(row) {
       rainfallRateKg: waterBox.querySelector('#rainfall-rate-kg'),
       snowfallRateKg: waterBox.querySelector('#snowfall-rate-kg'),
       meltingRateKg: waterBox.querySelector('#melting-rate-kg'),
-      freezingRateKg: waterBox.querySelector('#freezing-rate-kg')
+      freezingRateKg: waterBox.querySelector('#freezing-rate-kg'),
+      target: targetSpan
     };
   }
 
@@ -1132,6 +1227,11 @@ function createWaterBox(row) {
 
     els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
     els.iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
+
+    if (els.target) {
+      const waterTargetPercent = terraforming.waterTarget * 100;
+      els.target.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}%.`;
+    }
 
     els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate);
     els.sublimationRate.textContent = formatWaterRate(terraforming.totalWaterSublimationRate);
@@ -1601,6 +1701,10 @@ function updateLifeBox() {
     const luminosityBox = els.box;
     if (!luminosityBox) return;
     luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? 'green' : 'red';
+
+    if (els.target) {
+      els.target.textContent = `Target : Surface solar flux between ${formatNumber(terraforming.luminosity.targetMin, false, 0)} and ${formatNumber(terraforming.luminosity.targetMax, false, 0)}.`;
+    }
 
     if (els.groundAlbedo) {
       els.groundAlbedo.textContent = terraforming.luminosity.groundAlbedo.toFixed(3);

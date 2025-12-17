@@ -234,7 +234,7 @@ function buildAtmosphereContext(atmospheric, gravity, radius) {
 }
 
 class Terraforming extends EffectableEntity{
-  constructor(resources, celestialParameters) {
+  constructor(resources, celestialParameters, specialAttributes = {}) {
     super({ description: 'This module manages all terraforming compononents' });
 
     this.resources = resources;
@@ -274,7 +274,9 @@ class Terraforming extends EffectableEntity{
     this.initialCelestialParameters.starLuminosity = starLuminosity;
     setStarLuminosity(starLuminosity);
 
-    this.requirementId = defaultTerraformingRequirementId;
+    this.requirementId = specialAttributes.terraformingRequirementId
+      || this.celestialParameters.terraformingRequirementId
+      || defaultTerraformingRequirementId;
     this.requirements = resolveTerraformingRequirement(this.requirementId);
     this.gasTargets = this.requirements.gasTargetsPa;
 

@@ -1330,6 +1330,7 @@ const gabbagOverrides = {
   name: 'Gabbag',
   specialAttributes: {
     hasSand: false,
+    terraformingRequirementId: 'gabbagian',
   },
   celestialParameters: {
     distanceFromSun: 0,
