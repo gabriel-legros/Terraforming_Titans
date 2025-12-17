@@ -109,7 +109,7 @@ class GoldenAsteroid {
       }
     }
   
-    spawn(duration) {
+    spawn(duration = 5000) {
         if (!this.active) {
           this.active = true;
           this.duration = duration;
