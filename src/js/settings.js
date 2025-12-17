@@ -115,6 +115,14 @@ function addSettingsListeners() {
     });
   }
 
+  const goldenAsteroidFixedPositionToggle = document.getElementById('golden-asteroid-fixed-position-toggle');
+  if (goldenAsteroidFixedPositionToggle) {
+    goldenAsteroidFixedPositionToggle.checked = gameSettings.goldenAsteroidFixedPosition;
+    goldenAsteroidFixedPositionToggle.addEventListener('change', () => {
+      gameSettings.goldenAsteroidFixedPosition = goldenAsteroidFixedPositionToggle.checked;
+    });
+  }
+
   const startBackgroundSilenceButton = document.getElementById('start-background-silence-button');
   if (startBackgroundSilenceButton) {
     startBackgroundSilenceButton.addEventListener('click', () => {

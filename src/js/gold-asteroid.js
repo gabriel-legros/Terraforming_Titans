@@ -134,10 +134,25 @@ class GoldenAsteroid {
             if (!this.element) return; // Element may have been removed before load
             const width = this.element.width;
             const height = this.element.height;
-            const containerWidth = this.gameContainer.clientWidth;
-            const containerHeight = Math.min(this.gameContainer.clientHeight, 800);
-            const x = Math.random() * (containerWidth - width);
-            const y = Math.random() * (containerHeight - height);
+            
+            let x, y;
+            if (gameSettings.goldenAsteroidFixedPosition && this.countdownContainer) {
+              // Position near the countdown container (where the effect text appears)
+              const rect = this.countdownContainer.getBoundingClientRect();
+              const containerRect = this.gameContainer.getBoundingClientRect();
+              x = rect.left - containerRect.left + rect.width / 2 - width / 2;
+              y = rect.top - containerRect.top + rect.height / 2 - height / 2;
+              // Clamp to container bounds
+              x = Math.max(0, Math.min(x, this.gameContainer.clientWidth - width));
+              y = Math.max(0, Math.min(y, this.gameContainer.clientHeight - height));
+            } else {
+              // Random position (original behavior)
+              const containerWidth = this.gameContainer.clientWidth;
+              const containerHeight = Math.min(this.gameContainer.clientHeight, 800);
+              x = Math.random() * (containerWidth - width);
+              y = Math.random() * (containerHeight - height);
+            }
+            
             this.element.style.left = `${x}px`;
             this.element.style.top = `${y}px`;
           };

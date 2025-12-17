@@ -55,6 +55,7 @@ let gameSettings = {
   formatAutoBuildTargets: false,
   planetVisualizerDebugEnabled: false,
   keepHiddenStructuresOnTravel: false,
+  goldenAsteroidFixedPosition: false,
 };
 
 Object.defineProperty(globalThis, 'gameSettings', {
