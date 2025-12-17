@@ -1,26 +1,76 @@
-const baseTemperatureRanges = {
-  survival: {
-    min: 273.15, // 0°C in Kelvin
-    max: 313.15  // 50°C in Kelvin
-  }
+const DEFAULT_LIFE_DESIGN_REQUIREMENTS = {
+  survivalTemperatureRangeK: { min: 273.15, max: 313.15 },
+  optimalGrowthTemperatureBaseK: 293.15,
+  growthTemperatureToleranceBaseC: 1,
+  growthTemperatureTolerancePerPointC: 0.5,
+  photosynthesisRatePerPoint: 0.00008,
+  baseMaxBiomassDensityTPerM2: 0.1,
+  radiationToleranceThresholdPoints: 25,
+  minimumBiomassDecayRateTPerS: 1,
+  attributeMaxUpgrades: {
+    minTemperatureTolerance: 60,
+    maxTemperatureTolerance: 40,
+    optimalGrowthTemperature: 15,
+    growthTemperatureTolerance: 40,
+    photosynthesisEfficiency: 500,
+    radiationTolerance: 25,
+    invasiveness: 50,
+    spaceEfficiency: 100,
+    geologicalBurial: 50,
+    bioworkforce: 100,
+  },
 };
 
-// Default optimal growth temperature (20°C in Kelvin)
-const BASE_OPTIMAL_GROWTH_TEMPERATURE = 293.15;
-const BASE_GROWTH_TEMPERATURE_TOLERANCE = 1; // Degrees Celsius of free tolerance
-const GROWTH_TEMPERATURE_TOLERANCE_PER_POINT = 0.5; // Additional tolerance per point
+function getTerraformingSafe() {
+  try {
+    return terraforming;
+  } catch (error) {
+    return null;
+  }
+}
+
+function getDefaultTerraformingRequirementIdSafe() {
+  try {
+    return DEFAULT_TERRAFORMING_REQUIREMENT_ID;
+  } catch (error) {
+    return 'human';
+  }
+}
+
+function getTerraformingRequirementSafe(id) {
+  try {
+    return getTerraformingRequirement(id);
+  } catch (error) {
+    return null;
+  }
+}
+
+function getActiveLifeDesignRequirements() {
+  const activeTerraforming = getTerraformingSafe();
+  if (activeTerraforming?.requirements?.lifeDesign) {
+    return activeTerraforming.requirements.lifeDesign;
+  }
+  const fallback = getTerraformingRequirementSafe(getDefaultTerraformingRequirementIdSafe());
+  if (fallback?.lifeDesign) {
+    return fallback.lifeDesign;
+  }
+  return DEFAULT_LIFE_DESIGN_REQUIREMENTS;
+}
 
 function calculateGrowthTemperatureTolerance(points) {
-  return BASE_GROWTH_TEMPERATURE_TOLERANCE + points * GROWTH_TEMPERATURE_TOLERANCE_PER_POINT;
+  const requirements = getActiveLifeDesignRequirements();
+  return requirements.growthTemperatureToleranceBaseC + points * requirements.growthTemperatureTolerancePerPointC;
 }
 
 const lifeDesignerConfig = {
   maxPoints : 0
 }
 
-const BASE_MAX_BIOMASS_DENSITY = 0.1; // Base max biomass in tons per m^2
-const RADIATION_TOLERANCE_THRESHOLD = 25; // Points needed for full mitigation
-const MINIMUM_BIOMASS_DECAY_RATE = 1; // Minimum decay in tons per second when conditions are lethal
+function getAttributeMaxUpgrades(attributeName) {
+  const requirements = getActiveLifeDesignRequirements();
+  return requirements.attributeMaxUpgrades?.[attributeName]
+    ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.attributeMaxUpgrades[attributeName];
+}
 
 if (typeof module !== 'undefined' && module.exports) {
   ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
@@ -36,19 +86,22 @@ class LifeAttribute {
   }
 
   getConvertedValue() {
+    const requirements = getActiveLifeDesignRequirements();
+    const survivalTemperatureRangeK = requirements.survivalTemperatureRangeK
+      ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.survivalTemperatureRangeK;
     switch (this.name) {
       case 'minTemperatureTolerance':
-        return (baseTemperatureRanges.survival.min - this.value).toFixed(2) + 'K';
+        return (survivalTemperatureRangeK.min - this.value).toFixed(2) + 'K';
       case 'maxTemperatureTolerance':
-        return (baseTemperatureRanges.survival.max + this.value).toFixed(2) + 'K';
+        return (survivalTemperatureRangeK.max + this.value).toFixed(2) + 'K';
       case 'optimalGrowthTemperature':
         return (
-          BASE_OPTIMAL_GROWTH_TEMPERATURE + this.value
+          requirements.optimalGrowthTemperatureBaseK + this.value
         ).toFixed(2) + 'K';
       case 'growthTemperatureTolerance':
         return calculateGrowthTemperatureTolerance(this.value).toFixed(2);
       case 'photosynthesisEfficiency':
-        return (0.00008*this.value).toFixed(5); // Adjust as needed
+        return (requirements.photosynthesisRatePerPoint * this.value).toFixed(5);
       case 'radiationTolerance':
         return this.value * 4 + '%';
       case 'invasiveness':
@@ -56,7 +109,7 @@ class LifeAttribute {
       case 'spaceEfficiency':
         // Calculate and display the actual max density
         const densityMultiplier = 1 + this.value; // Each point adds 100% of base density
-        const maxDensity = BASE_MAX_BIOMASS_DENSITY * densityMultiplier;
+        const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
         return formatNumber(maxDensity, false, 1) + ' tons/m²'; // Display calculated density with 1 decimal place
       case 'geologicalBurial':
         // Calculate rate: starts at 0, adds 0.0001 per point, max 0.001 at 10 points
@@ -82,22 +135,22 @@ class LifeDesign {
     growthTemperatureTolerance = 0,
     bioworkforce = 0
   ) {
-    this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', 60);
-    this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', 40);
+    this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', getAttributeMaxUpgrades('minTemperatureTolerance'));
+    this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', getAttributeMaxUpgrades('maxTemperatureTolerance'));
     this.optimalGrowthTemperature = new LifeAttribute(
       'optimalGrowthTemperature',
       0,
       'Optimal Growth Temperature',
       'Daytime temperature for peak growth. Costs 1 point per degree from the 20\xB0C base.',
-      15
+      getAttributeMaxUpgrades('optimalGrowthTemperature')
     );
-    this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', 40);
-    this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', 500);
-    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', 25);
-    this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', 50);
-    this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', 100);
-    this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, 'Geological Burial', 'Removes existing biomass into inert storage.', 50);
-    this.bioworkforce = new LifeAttribute('bioworkforce', bioworkforce, 'Bioworkforce', 'Allocates a fraction of global biomass to work for you.', 100);
+    this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', getAttributeMaxUpgrades('growthTemperatureTolerance'));
+    this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', getAttributeMaxUpgrades('photosynthesisEfficiency'));
+    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', getAttributeMaxUpgrades('radiationTolerance'));
+    this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', getAttributeMaxUpgrades('invasiveness'));
+    this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', getAttributeMaxUpgrades('spaceEfficiency'));
+    this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, 'Geological Burial', 'Removes existing biomass into inert storage.', getAttributeMaxUpgrades('geologicalBurial'));
+    this.bioworkforce = new LifeAttribute('bioworkforce', bioworkforce, 'Bioworkforce', 'Allocates a fraction of global biomass to work for you.', getAttributeMaxUpgrades('bioworkforce'));
   }
 
   getDesignCost() {
@@ -123,8 +176,8 @@ class LifeDesign {
   }
 
   getRadiationMitigationRatio() {
-    // Use constant for scaling denominator
-    return this.radiationTolerance.value / RADIATION_TOLERANCE_THRESHOLD;
+    const requirements = getActiveLifeDesignRequirements();
+    return this.radiationTolerance.value / requirements.radiationToleranceThresholdPoints;
   }
 
   // Method to copy attributes from another LifeDesign
@@ -407,7 +460,8 @@ class LifeDesign {
   // Calculates growth temperature multiplier for a specific zone
   temperatureGrowthMultiplierZone(zoneName) {
       const zoneData = terraforming.temperature.zones[zoneName];
-      const optimal = BASE_OPTIMAL_GROWTH_TEMPERATURE + this.optimalGrowthTemperature.value;
+      const requirements = getActiveLifeDesignRequirements();
+      const optimal = requirements.optimalGrowthTemperatureBaseK + this.optimalGrowthTemperature.value;
       const tolerance = this.getGrowthTemperatureToleranceWidth();
       if (tolerance <= 0) {
           return zoneData.day === optimal ? 1 : 0;
@@ -430,9 +484,12 @@ class LifeDesign {
   }
 
   getTemperatureRanges() {
+    const requirements = getActiveLifeDesignRequirements();
+    const survivalTemperatureRangeK = requirements.survivalTemperatureRangeK
+      ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.survivalTemperatureRangeK;
     const survivalRange = {
-      min: baseTemperatureRanges.survival.min - this.minTemperatureTolerance.value,
-      max: baseTemperatureRanges.survival.max + this.maxTemperatureTolerance.value
+      min: survivalTemperatureRangeK.min - this.minTemperatureTolerance.value,
+      max: survivalTemperatureRangeK.max + this.maxTemperatureTolerance.value
     };
   
     return {
@@ -775,6 +832,7 @@ class LifeManager extends EffectableEntity {
             const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
             const growthFactor = 1 - penaltyFraction;
             const moisturePass = design.moistureCheckZone(zoneName).pass;
+            const requirements = getActiveLifeDesignRequirements();
 
             let zonalMaxGrowthRate = baseGrowthRate;
             const radMitigation = design.getRadiationMitigationRatio();
@@ -798,7 +856,7 @@ class LifeManager extends EffectableEntity {
                 const liquidWaterCoverage = terraforming.zonalCoverageCache[zoneName]?.liquidWater ?? 0;
                 const iceCoverage = terraforming.zonalCoverageCache[zoneName]?.ice ?? 0;
                 const spaceEfficiencyValue = design.spaceEfficiency.value;
-                const baseMaxDensity = BASE_MAX_BIOMASS_DENSITY;
+                const baseMaxDensity = requirements.baseMaxBiomassDensityTPerM2;
                 const densityMultiplier = 1 + spaceEfficiencyValue;
                 const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
 
@@ -846,7 +904,7 @@ class LifeManager extends EffectableEntity {
             if (penaltyFraction > 0) {
                 const decayFactor = 0.01 * penaltyFraction;
                 const percentDecayAmount = zonalBiomass * decayFactor * secondsMultiplier;
-                const minDecayAmount = MINIMUM_BIOMASS_DECAY_RATE * secondsMultiplier * penaltyFraction;
+                const minDecayAmount = requirements.minimumBiomassDecayRateTPerS * secondsMultiplier * penaltyFraction;
                 const targetDecayAmount = Math.max(percentDecayAmount, minDecayAmount);
 
                 const zoneOxygenAvailable = oxygenAvailableByZone[zoneName] || 0;

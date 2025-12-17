@@ -11,8 +11,20 @@ const lifeShopCategoryLookup = Object.fromEntries(
   lifeShopCategories.map(category => [category.name, category])
 );
 
-// Growth rate increase for photosynthesis efficiency per point
-const PHOTOSYNTHESIS_RATE_PER_POINT = 0.00008;
+const DEFAULT_LIFE_DESIGN_REQUIREMENTS_FOR_UI = {
+  survivalTemperatureRangeK: { min: 273.15, max: 313.15 },
+  optimalGrowthTemperatureBaseK: 293.15,
+  photosynthesisRatePerPoint: 0.00008,
+  baseMaxBiomassDensityTPerM2: 0.1,
+};
+
+function getActiveLifeDesignRequirementsForUI() {
+  try {
+    return getActiveLifeDesignRequirements();
+  } catch (error) {
+    return DEFAULT_LIFE_DESIGN_REQUIREMENTS_FOR_UI;
+  }
+}
 
 var getEcumenopolisLandFraction = getEcumenopolisLandFraction;
 if (typeof module !== 'undefined' && module.exports) {
@@ -65,22 +77,24 @@ function isLifeShopCategoryUnlocked(category) {
 
 function getConvertedDisplay(attributeName, attribute) {
   if (tempAttributes.includes(attributeName)) {
+    const requirements = getActiveLifeDesignRequirementsForUI();
     let kelvin = 0;
     switch (attributeName) {
       case 'minTemperatureTolerance':
-        kelvin = baseTemperatureRanges.survival.min - attribute.value;
+        kelvin = requirements.survivalTemperatureRangeK.min - attribute.value;
         break;
       case 'maxTemperatureTolerance':
-        kelvin = baseTemperatureRanges.survival.max + attribute.value;
+        kelvin = requirements.survivalTemperatureRangeK.max + attribute.value;
         break;
       case 'optimalGrowthTemperature':
-        kelvin = BASE_OPTIMAL_GROWTH_TEMPERATURE + attribute.value;
+        kelvin = requirements.optimalGrowthTemperatureBaseK + attribute.value;
         break;
     }
     return `${formatNumber(toDisplayTemperature(kelvin), false, 2)}${getTemperatureUnit()}`;
   }
   if (attributeName === 'photosynthesisEfficiency') {
-    return (PHOTOSYNTHESIS_RATE_PER_POINT * attribute.value).toFixed(5);
+    const requirements = getActiveLifeDesignRequirementsForUI();
+    return (requirements.photosynthesisRatePerPoint * attribute.value).toFixed(5);
   }
   return attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-';
 }
@@ -896,8 +910,9 @@ function updateLifeStatusTable() {
     const radiationResult = designToCheck.radiationCheck(); // Global check
     // Calculate max density based on space efficiency
     const spaceEfficiencyAttr = designToCheck.spaceEfficiency;
+    const requirements = getActiveLifeDesignRequirementsForUI();
     const densityMultiplier = 1 + (spaceEfficiencyAttr?.value || 0);
-    const maxDensity = BASE_MAX_BIOMASS_DENSITY * densityMultiplier;
+    const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
 
     // Get biomass and area info
     const totalBiomass = resources.surface.biomass?.value || 0;
@@ -937,7 +952,7 @@ function updateLifeStatusTable() {
     lifeUICache.tempUnits.forEach(el => el.textContent = unit);
 
     const survivalRange = designToCheck.getTemperatureRanges().survival;
-    const optimal = BASE_OPTIMAL_GROWTH_TEMPERATURE + designToCheck.optimalGrowthTemperature.value;
+    const optimal = requirements.optimalGrowthTemperatureBaseK + designToCheck.optimalGrowthTemperature.value;
     const tolerance = designToCheck.getGrowthTemperatureToleranceWidth();
     const calcGrowthMult = temp => {
         if (tolerance <= 0) return temp === optimal ? 1 : 0;
