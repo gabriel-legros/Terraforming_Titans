@@ -225,75 +225,78 @@ try {
 
 
 function setMirrorDistribution(zone, value) {
-  const zones = ['tropical', 'temperate', 'polar', 'focus', 'unassigned'];
   const dist = mirrorOversightSettings.distribution;
-  const v = Math.max(0, Math.min(100, Math.round(value))) / 100;
+  const v = Math.max(0, Math.min(100, Math.round(Number(value) || 0))) / 100;
+
+  const explicitZones = ['tropical', 'temperate', 'polar', 'focus', 'unassigned'];
+  const clamp01 = (n) => Math.max(0, Math.min(1, n));
+  const sumExplicit = () => explicitZones.reduce((s, z) => s + (dist[z] || 0), 0);
+
+  const reduceExplicit = (donors, amount) => {
+    let remaining = amount;
+    for (const donor of donors) {
+      if (remaining <= 0) break;
+      const cur = clamp01(dist[donor] || 0);
+      if (cur <= 0) continue;
+      const take = Math.min(cur, remaining);
+      dist[donor] = cur - take;
+      remaining -= take;
+    }
+  };
 
   if (zone === 'any') {
-    const currentAny = 1 - (dist.tropical + dist.temperate + dist.polar + dist.focus + dist.unassigned);
-    let delta = v - currentAny;
-    if (delta > 0) {
-      const sorted = zones.map(z => ({ zone: z, val: dist[z] }))
-        .sort((a, b) => b.val - a.val);
-      for (const item of sorted) {
-        if (delta <= 0) break;
-        const take = Math.min(item.val, delta);
-        dist[item.zone] = item.val - take;
-        delta -= take;
-      }
-    } else if (delta < 0) {
-      let remaining = -delta;
-      const sorted = zones.map(z => ({ zone: z, val: dist[z] }))
-        .sort((a, b) => b.val - a.val);
-      for (const item of sorted) {
-        if (remaining <= 0) break;
-        const add = Math.min(1 - item.val, remaining);
-        dist[item.zone] = item.val + add;
-        remaining -= add;
-      }
-    }
-  } else if (zone === 'unassigned') {
-    dist.unassigned = v;
-    let total = dist.tropical + dist.temperate + dist.polar + dist.focus + dist.unassigned;
-    if (total > 1) {
-      let excess = total - 1;
-      ['tropical', 'temperate', 'polar', 'focus']
-        .sort((a, b) => dist[b] - dist[a])
-        .forEach(z => {
-          if (excess > 0) {
-            const reduce = Math.min(dist[z], excess);
-            dist[z] = Math.max(0, dist[z] - reduce);
-            excess -= reduce;
-          }
+    const desiredAny = v;
+    const desiredExplicitSum = 1 - desiredAny;
+    const currentExplicitSum = sumExplicit();
+
+    if (desiredExplicitSum < currentExplicitSum) {
+      const toRemove = currentExplicitSum - desiredExplicitSum;
+      const zonal = ['tropical', 'temperate', 'polar']
+        .slice()
+        .sort((a, b) => (dist[b] || 0) - (dist[a] || 0));
+      reduceExplicit(['unassigned', 'focus', ...zonal], toRemove);
+    } else if (desiredExplicitSum > currentExplicitSum) {
+      const toAdd = desiredExplicitSum - currentExplicitSum;
+      const committed = ['tropical', 'temperate', 'polar', 'focus'];
+      const committedSum = committed.reduce((s, z) => s + (dist[z] || 0), 0);
+      if (committedSum > 0) {
+        committed.forEach(z => {
+          dist[z] = (dist[z] || 0) + toAdd * ((dist[z] || 0) / committedSum);
         });
+      } else {
+        dist.unassigned = (dist.unassigned || 0) + toAdd;
+      }
     }
-  } else if (zones.includes(zone)) {
-    const prev = dist[zone];
+  } else if (explicitZones.includes(zone)) {
+    const prev = clamp01(dist[zone] || 0);
     dist[zone] = v;
-    if (v < prev) {
-      const add = Math.min(prev - v, 1 - dist.unassigned);
-      dist.unassigned += add;
-    }
-    let total = dist.tropical + dist.temperate + dist.polar + dist.focus + dist.unassigned;
+    const total = sumExplicit();
     if (total > 1) {
-      let excess = total - 1;
-      zones.filter(z => z !== zone)
-        .sort((a, b) => dist[b] - dist[a])
-        .forEach(z => {
-          if (excess > 0) {
-            const reduce = Math.min(dist[z], excess);
-            dist[z] = Math.max(0, dist[z] - reduce);
-            excess -= reduce;
-          }
-        });
+      const excess = total - 1;
+      const zonalDonors = ['tropical', 'temperate', 'polar']
+        .filter(z => z !== zone)
+        .sort((a, b) => (dist[b] || 0) - (dist[a] || 0));
+      const donors = [];
+      if (zone !== 'unassigned') donors.push('unassigned');
+      donors.push(...zonalDonors);
+      if (zone !== 'focus') donors.push('focus');
+      reduceExplicit(donors.filter(d => d !== zone), excess);
+    } else if (v < prev) {
+      // Leaving slack goes back to Any Zone (implicit), not Unassigned.
     }
   } else {
     return;
   }
 
-  zones.forEach(z => {
-    dist[z] = Math.max(0, Math.min(1, dist[z]));
-  });
+  explicitZones.forEach(z => { dist[z] = clamp01(dist[z] || 0); });
+  const total = sumExplicit();
+  if (total > 1) {
+    const excess = total - 1;
+    const zonal = ['tropical', 'temperate', 'polar']
+      .slice()
+      .sort((a, b) => (dist[b] || 0) - (dist[a] || 0));
+    reduceExplicit(['unassigned', ...zonal, 'focus'], excess);
+  }
 
   updateMirrorOversightUI();
 }
@@ -609,11 +612,7 @@ function initializeMirrorOversightUI(container) {
   };
   Object.keys(sliders).forEach(zone => {
     sliders[zone].addEventListener('input', () => {
-      const raw = sliders[zone].value;
-      const val = (typeof raw === 'number' || typeof raw === 'string') ? Number(raw) : 0;
-      val < 0 ? 0 : val;
-      val > 1 ? 1 : val;
-      setMirrorDistribution(zone, val);
+      setMirrorDistribution(zone, Number(sliders[zone].value) || 0);
     });
   });
 

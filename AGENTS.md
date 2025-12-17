@@ -238,6 +238,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Introduced an O'Neill Cylinders advanced research that grows orbital habitats from effective worlds, adds their total to effective terraformed worlds, and reveals a dedicated stat column in the Space tab when unlocked.
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
+- Space Mirror Facility sliders now rebalance more naturally: decreasing a zone returns share to **Any Zone** (not Unassigned), and increasing **Any Zone** reclaims Unassigned/focus allocations before reducing zonal shares.
 - Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.
 - Metropolis and Ecumenopolis autobuild controls now include a Max option to push construction to the limit.
 - Added a fullscreen loading overlay that displays while the game or a save file is loading.
