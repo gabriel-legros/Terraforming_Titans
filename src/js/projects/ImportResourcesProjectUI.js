@@ -386,6 +386,7 @@ class ImportResourcesProjectUI {
     zeroButton.textContent = '0';
     zeroButton.addEventListener('click', () => {
       project.assignSpaceships(-project.getActiveShipCount());
+      project.disableAutoAssignSpaceships();
       this.projectNames.forEach((name) => this.updateProjectUI?.(name));
     });
 

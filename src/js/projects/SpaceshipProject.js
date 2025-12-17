@@ -24,6 +24,15 @@ class SpaceshipProject extends Project {
     return this.getActiveShipCount() > 100;
   }
 
+  disableAutoAssignSpaceships() {
+    if (!this.autoAssignSpaceships) return;
+    this.autoAssignSpaceships = false;
+    const elements = projectElements[this.name];
+    if (elements && elements.autoAssignCheckbox) {
+      elements.autoAssignCheckbox.checked = false;
+    }
+  }
+
   getExportRateLabel(baseLabel) {
     return baseLabel;
   }
@@ -248,7 +257,10 @@ class SpaceshipProject extends Project {
     mainButtons.classList.add('main-buttons');
     buttonsContainer.appendChild(mainButtons);
   
-    createButton('0', () => this.assignSpaceships(-this.assignedSpaceships), mainButtons);
+    createButton('0', () => {
+      this.assignSpaceships(-this.assignedSpaceships);
+      this.disableAutoAssignSpaceships();
+    }, mainButtons);
     const minusButton = createButton(`-${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignSpaceships(-this.assignmentMultiplier), mainButtons);
     const plusButton = createButton(`+${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignSpaceships(this.assignmentMultiplier), mainButtons);
     createButton('Max', () => this.assignSpaceships(Math.floor(resources.special.spaceships.value)), mainButtons);
