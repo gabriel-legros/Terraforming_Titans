@@ -1,166 +1,55 @@
 let hazardManager = null;
-let getZonePercentageHelper;
-let zonesList;
 
-const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = 5;
+let HazardousBiomassHazardCtor = null;
+let GarbageHazardCtor = null;
 
 try {
-  window.hazardousBiomassRemovalConstant = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER;
+  ({ HazardousBiomassHazard: HazardousBiomassHazardCtor } = require('./hazards/hazardousBiomassHazard.js'));
 } catch (error) {
   try {
-    global.hazardousBiomassRemovalConstant = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER;
+    HazardousBiomassHazardCtor = HazardousBiomassHazard;
   } catch (innerError) {
-    // Environment without window/global exposure (tests)
+    HazardousBiomassHazardCtor = null;
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  ({ getZonePercentage: getZonePercentageHelper, ZONES: zonesList } = require('./zones.js'));
-} else if (typeof window !== 'undefined') {
-  getZonePercentageHelper = window.getZonePercentage;
-  zonesList = window.ZONES;
+try {
+  ({ GarbageHazard: GarbageHazardCtor } = require('./hazards/garbageHazard.js'));
+} catch (error) {
+  try {
+    GarbageHazardCtor = GarbageHazard;
+  } catch (innerError) {
+    GarbageHazardCtor = null;
+  }
 }
 
 function cloneHazardParameters(parameters) {
-  if (!parameters || typeof parameters !== 'object') {
-    return {};
-  }
-
   try {
-    return JSON.parse(JSON.stringify(parameters));
+    return JSON.parse(JSON.stringify(parameters || {}));
   } catch (error) {
     console.error('Failed to clone hazard parameters.', error);
     return {};
   }
 }
 
-function isPlainObject(value) {
-  return value !== null && value.constructor === Object;
+function getPlanetHazards(parameters) {
+  if (parameters && parameters.constructor === Object) {
+    return parameters;
+  }
+
+  try {
+    return currentPlanetParameters && currentPlanetParameters.hazards ? currentPlanetParameters.hazards : {};
+  } catch (error) {
+    return {};
+  }
 }
 
-function withHazardSeverity(entry, defaultSeverity = 1) {
-  if (!isPlainObject(entry)) {
-    return { value: entry, severity: defaultSeverity };
+function getTerraforming() {
+  try {
+    return terraforming;
+  } catch (error) {
+    return null;
   }
-
-  const result = { ...entry };
-  if (!Object.prototype.hasOwnProperty.call(result, 'severity')) {
-    result.severity = defaultSeverity;
-  }
-
-  return result;
-}
-
-function normalizeHazardPenalties(penalties) {
-  const source = isPlainObject(penalties) ? penalties : {};
-  const normalized = {};
-
-  Object.keys(source).forEach((key) => {
-    normalized[key] = withHazardSeverity(source[key]);
-  });
-
-  return normalized;
-}
-
-function normalizeHazardousBiomassParameters(parameters) {
-  const source = isPlainObject(parameters) ? parameters : {};
-  const normalized = {};
-
-  Object.keys(source).forEach((key) => {
-    if (key === 'penalties') {
-      normalized.penalties = normalizeHazardPenalties(source.penalties);
-      return;
-    }
-
-    normalized[key] = withHazardSeverity(source[key]);
-  });
-
-  if (!Object.prototype.hasOwnProperty.call(normalized, 'baseGrowth')) {
-    normalized.baseGrowth = { value: 0, severity: 1, maxDensity: 0 };
-  }
-
-  if (!Object.prototype.hasOwnProperty.call(normalized.baseGrowth, 'maxDensity')) {
-    normalized.baseGrowth.maxDensity = 0;
-  }
-
-  if (!Object.prototype.hasOwnProperty.call(normalized, 'invasivenessResistance')) {
-    normalized.invasivenessResistance = { value: 0, severity: 1 };
-  }
-
-  if (!Object.prototype.hasOwnProperty.call(normalized, 'penalties')) {
-    normalized.penalties = {};
-  }
-
-  return normalized;
-}
-
-function normalizeGarbageParameters(parameters) {
-  const source = isPlainObject(parameters) ? parameters : {};
-  const normalized = {};
-
-  Object.keys(source).forEach((key) => {
-    if (key === 'penalties') {
-      normalized.penalties = normalizeHazardPenalties(source.penalties);
-      return;
-    }
-
-    // Preserve surfaceResources object as-is without wrapping
-    if (key === 'surfaceResources') {
-      if (isPlainObject(source.surfaceResources)) {
-        // New format: object with resource keys and amountMultiplier values
-        normalized.surfaceResources = {};
-        Object.keys(source.surfaceResources).forEach((resourceKey) => {
-          const resourceConfig = source.surfaceResources[resourceKey];
-          normalized.surfaceResources[resourceKey] = isPlainObject(resourceConfig)
-            ? { ...resourceConfig }
-            : { amountMultiplier: 1 };
-        });
-      } else if (Array.isArray(source.surfaceResources)) {
-        // Legacy format: array of strings - convert to object with default multiplier
-        normalized.surfaceResources = {};
-        source.surfaceResources.forEach((resourceKey) => {
-          normalized.surfaceResources[resourceKey] = { amountMultiplier: 1 };
-        });
-      } else {
-        normalized.surfaceResources = {};
-      }
-      return;
-    }
-
-    normalized[key] = withHazardSeverity(source[key]);
-  });
-
-  if (!Object.prototype.hasOwnProperty.call(normalized, 'penalties')) {
-    normalized.penalties = {};
-  }
-
-  if (!Object.prototype.hasOwnProperty.call(normalized, 'surfaceResources')) {
-    normalized.surfaceResources = {};
-  }
-
-  return normalized;
-}
-
-function normalizeHazardParameters(parameters) {
-  const source = isPlainObject(parameters) ? parameters : {};
-  const normalized = {};
-
-  Object.keys(source).forEach((key) => {
-    const value = source[key];
-    if (key === 'hazardousBiomass') {
-      normalized[key] = normalizeHazardousBiomassParameters(value);
-      return;
-    }
-
-    if (key === 'garbage') {
-      normalized[key] = normalizeGarbageParameters(value);
-      return;
-    }
-
-    normalized[key] = value;
-  });
-
-  return normalized;
 }
 
 class HazardManager {
@@ -175,6 +64,9 @@ class HazardManager {
       populationGrowth: 1,
     };
     this.crusaderTargetZone = 'any';
+
+    this.hazardousBiomassHazard = HazardousBiomassHazardCtor ? new HazardousBiomassHazardCtor(this) : null;
+    this.garbageHazard = GarbageHazardCtor ? new GarbageHazardCtor(this) : null;
   }
 
   enable() {
@@ -192,13 +84,33 @@ class HazardManager {
     }
 
     this.enabled = false;
-    this.updateHazardousLandReservation(null);
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.updateHazardousLandReservation) {
+      this.hazardousBiomassHazard.updateHazardousLandReservation(null, null);
+    } else {
+      this.updateHazardousBiomassControl(0, true);
+    }
     this.updateUI();
   }
 
-  initialize(parameters = {}) {
-    const cloned = cloneHazardParameters(currentPlanetParameters.hazards);
-    const normalized = normalizeHazardParameters(cloned);
+  initialize(parameters = null) {
+    const planetHazards = getPlanetHazards(parameters);
+    const cloned = cloneHazardParameters(planetHazards);
+    const normalized = {};
+
+    Object.keys(cloned).forEach((key) => {
+      if (key === 'hazardousBiomass' && this.hazardousBiomassHazard) {
+        normalized.hazardousBiomass = this.hazardousBiomassHazard.normalize(cloned.hazardousBiomass);
+        return;
+      }
+
+      if (key === 'garbage' && this.garbageHazard) {
+        normalized.garbage = this.garbageHazard.normalize(cloned.garbage);
+        return;
+      }
+
+      normalized[key] = cloned[key];
+    });
+
     const serialized = JSON.stringify(normalized);
     const changed = serialized !== this.lastSerializedParameters;
 
@@ -206,110 +118,56 @@ class HazardManager {
     this.lastSerializedParameters = serialized;
     this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
 
-    const activeTerraforming = typeof terraforming !== 'undefined' ? terraforming : null;
-    this.updateHazardousLandReservation(activeTerraforming);
+    const activeTerraforming = getTerraforming();
+    if (this.hazardousBiomassHazard) {
+      this.hazardousBiomassHazard.updateHazardousLandReservation(activeTerraforming, this.parameters.hazardousBiomass);
+    }
 
-    // Initialize garbage hazard resources if present
-    this.initializeGarbageResources(activeTerraforming);
+    if (this.garbageHazard) {
+      this.garbageHazard.initializeResources(activeTerraforming, this.parameters.garbage);
+    }
 
     if (changed && this.enabled) {
       this.updateUI();
     }
   }
 
-  initializeGarbageResources(activeTerraforming) {
-    const garbageHazard = this.parameters.garbage;
-    if (!garbageHazard || !garbageHazard.surfaceResources) {
-      return;
-    }
-
-    // surfaceResources is now an object with resource keys and config objects
-    const surfaceResourcesConfig = isPlainObject(garbageHazard.surfaceResources)
-      ? garbageHazard.surfaceResources
-      : {};
-    const surfaceResourceKeys = Object.keys(surfaceResourcesConfig);
-    if (!surfaceResourceKeys.length) {
-      return;
-    }
-
-    // Get initial land value for setting initial resource values
-    const initialLand = activeTerraforming?.initialLand || 0;
-
-    // Access the resources object
-    const resourcesObj = typeof resources !== 'undefined' ? resources : null;
-    if (!resourcesObj || !resourcesObj.surface) {
-      return;
-    }
-
-    // Create each garbage resource if it doesn't exist
-    surfaceResourceKeys.forEach((resourceKey) => {
-      const resourceConfig = surfaceResourcesConfig[resourceKey] || {};
-      const amountMultiplier = resourceConfig.amountMultiplier || 1;
-      const resourceValue = initialLand * amountMultiplier;
-
-      if (resourcesObj.surface[resourceKey]) {
-        // Resource already exists, just enable it and set value
-        const existingResource = resourcesObj.surface[resourceKey];
-        existingResource.unlocked = true;
-        if (existingResource.value === 0 && resourceValue > 0) {
-          existingResource.value = resourceValue;
-        }
-        // Ensure UI element exists for existing resource
-        if (typeof unlockResource === 'function') {
-          unlockResource(existingResource);
-        }
-        return;
-      }
-
-      // Create new resource
-      const ResourceClass = typeof Resource !== 'undefined' ? Resource : null;
-      if (!ResourceClass) {
-        return;
-      }
-
-      const resourceData = {
-        name: resourceKey,
-        displayName: this.formatGarbageResourceName(resourceKey),
-        category: 'surface',
-        initialValue: resourceValue,
-        hasCap: false,
-        unlocked: true,
-        hideWhenSmall: true,
-        unit: 'ton'
-      };
-
-      const newResource = new ResourceClass(resourceData);
-      newResource.value = resourceValue;
-      resourcesObj.surface[resourceKey] = newResource;
-
-      // Create UI element for the new resource
-      if (typeof unlockResource === 'function') {
-        unlockResource(newResource);
-      }
-    });
-  }
-
-  formatGarbageResourceName(key) {
-    // Convert camelCase to Title Case with spaces
-    const withSpaces = key.replace(/([A-Z])/g, ' $1');
-    return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
-  }
-
   updateUI() {
-    if (typeof setTerraformingHazardsVisibility === 'function') {
-      setTerraformingHazardsVisibility(this.enabled);
+    let visibilityToggle = null;
+    try {
+      visibilityToggle = setTerraformingHazardsVisibility;
+    } catch (error) {
+      visibilityToggle = null;
+    }
+
+    if (visibilityToggle && visibilityToggle.call) {
+      visibilityToggle(this.enabled);
     }
 
     if (!this.enabled) {
       return;
     }
 
-    if (typeof initializeHazardUI === 'function') {
-      initializeHazardUI();
+    let initializeUI = null;
+    try {
+      initializeUI = initializeHazardUI;
+    } catch (error) {
+      initializeUI = null;
     }
 
-    if (typeof updateHazardUI === 'function') {
-      updateHazardUI(this.parameters);
+    if (initializeUI && initializeUI.call) {
+      initializeUI();
+    }
+
+    let updateUI = null;
+    try {
+      updateUI = updateHazardUI;
+    } catch (error) {
+      updateUI = null;
+    }
+
+    if (updateUI && updateUI.call) {
+      updateUI(this.parameters);
     }
   }
 
@@ -319,20 +177,16 @@ class HazardManager {
 
   setCrusaderTargetZone(zone) {
     let normalized = 'any';
-    if (typeof zone === 'string') {
-      const trimmed = zone.trim();
-      if (trimmed) {
-        normalized = trimmed.toLowerCase();
-      }
+    const trimmed = zone && zone.trim ? zone.trim() : '';
+    if (trimmed) {
+      normalized = trimmed.toLowerCase();
     }
 
     if (normalized !== 'any') {
-      let knownZones = [];
-      if (Array.isArray(zonesList) && zonesList.length) {
-        knownZones = zonesList;
-      } else if (typeof terraforming !== 'undefined' && terraforming && terraforming.zonalSurface) {
-        knownZones = Object.keys(terraforming.zonalSurface);
-      }
+      const activeTerraforming = getTerraforming();
+      const knownZones = this.hazardousBiomassHazard && this.hazardousBiomassHazard.getZoneKeys
+        ? this.hazardousBiomassHazard.getZoneKeys(activeTerraforming)
+        : [];
 
       if (knownZones.indexOf(normalized) === -1) {
         normalized = 'any';
@@ -360,292 +214,52 @@ class HazardManager {
   }
 
   load(data) {
-    this.initialize(currentPlanetParameters.hazards);
-    const storedTarget = data && typeof data.crusaderTargetZone === 'string'
+    this.initialize(getPlanetHazards());
+    const storedTarget = data && data.crusaderTargetZone && data.crusaderTargetZone.trim
       ? data.crusaderTargetZone
       : 'any';
     this.setCrusaderTargetZone(storedTarget);
   }
 
-  update(deltaTime = 0, terraforming = null) {
-    const hazardResource = resources?.surface?.hazardousBiomass || null;
-    let growthDelta = 0;
-    let crusaderDelta = 0;
-    const hazardous = this.parameters.hazardousBiomass;
-    const growth = hazardous && hazardous.baseGrowth;
-    const zoneKeys = Array.isArray(zonesList) && zonesList.length
-      ? zonesList
-      : Object.keys(terraforming.zonalSurface);
-    const zoneEntries = zoneKeys
-      .map((zone) => ({ zone, data: terraforming.zonalSurface[zone] }))
-      .filter((entry) => entry.data);
-    const deltaSeconds = deltaTime > 0 ? deltaTime / 1000 : 0;
-
-    if (deltaTime && hazardous && growth && getZonePercentageHelper && zoneEntries.length) {
-      const growthPercent = Number.isFinite(growth.value) ? growth.value : 0;
-      const maxDensity = Number.isFinite(growth.maxDensity) ? growth.maxDensity : 0;
-      const landArea = terraforming.initialLand;
-
-      if (growthPercent && maxDensity > 0) {
-        const penaltyDetails = this.calculateHazardousBiomassGrowthPenaltyDetails(hazardous, terraforming);
-        const globalPenalty = penaltyDetails.globalPenalty;
-        const zonePenaltyMap = penaltyDetails.zonePenalties || {};
-
-        zoneEntries.forEach(({ zone, data }) => {
-          const zoneData = data;
-
-          const zoneArea = landArea * getZonePercentageHelper(zone);
-          if (!zoneArea) {
-            return;
-          }
-
-          const currentBiomass = Number.isFinite(zoneData.hazardousBiomass)
-            ? zoneData.hazardousBiomass
-            : 0;
-
-          if (!currentBiomass) {
-            return;
-          }
-
-          const carryingCapacity = zoneArea * maxDensity;
-          if (!carryingCapacity) {
-            return;
-          }
-
-          const zonePenaltyValue = Number.isFinite(zonePenaltyMap[zone]) ? zonePenaltyMap[zone] : 0;
-          const adjustedGrowthPercent = growthPercent - globalPenalty - zonePenaltyValue;
-          const growthRate = adjustedGrowthPercent / 100;
-          const logisticTerm = growthRate > 0
-            ? 1 - currentBiomass / carryingCapacity
-            : 1;
-          const deltaBiomass = growthRate * currentBiomass * logisticTerm * deltaSeconds;
-          const nextBiomass = currentBiomass + deltaBiomass;
-          const upperBound = carryingCapacity;
-
-          if (nextBiomass <= 0) {
-            growthDelta -= currentBiomass;
-            zoneData.hazardousBiomass = 0;
-            return;
-          }
-
-          if (nextBiomass > upperBound) {
-            growthDelta += upperBound - currentBiomass;
-            zoneData.hazardousBiomass = upperBound;
-            return;
-          }
-
-          growthDelta += deltaBiomass;
-          zoneData.hazardousBiomass = nextBiomass;
-        });
-      }
-    }
-
-    if (deltaSeconds > 0 && HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER > 0 && zoneEntries.length) {
-      const crusaderCount = Number.isFinite(resources?.special?.crusaders?.value)
-        ? resources.special.crusaders.value
-        : 0;
-
-      if (crusaderCount > 0) {
-        const totalBiomass = zoneEntries.reduce((sum, entry) => {
-          const zoneBiomass = Number.isFinite(entry.data.hazardousBiomass)
-            ? entry.data.hazardousBiomass
-            : 0;
-          return zoneBiomass > 0 ? sum + zoneBiomass : sum;
-        }, 0);
-
-        if (totalBiomass > 0) {
-          const totalReduction = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER * crusaderCount * deltaSeconds;
-          let remainingReduction = totalReduction;
-
-          const targetZone = this.getCrusaderTargetZone ? this.getCrusaderTargetZone() : 'any';
-          let focusEntry = null;
-
-          if (targetZone && targetZone !== 'any') {
-            for (let index = 0; index < zoneEntries.length; index += 1) {
-              const candidate = zoneEntries[index];
-              if (candidate && candidate.zone === targetZone) {
-                focusEntry = candidate;
-                break;
-              }
-            }
-          }
-
-          if (focusEntry) {
-            const focusData = focusEntry.data;
-            const previousValue = Number.isFinite(focusData.hazardousBiomass) ? focusData.hazardousBiomass : 0;
-            if (previousValue > 0) {
-              const appliedReduction = remainingReduction < previousValue ? remainingReduction : previousValue;
-              const nextValue = previousValue - appliedReduction;
-              if (appliedReduction > 0) {
-                crusaderDelta -= appliedReduction;
-                focusData.hazardousBiomass = nextValue > 0 ? nextValue : 0;
-                remainingReduction -= appliedReduction;
-              }
-            }
-          }
-
-          if (remainingReduction > 0) {
-            const availableBiomass = zoneEntries.reduce((sum, entry) => {
-              const zoneData = entry && entry.data;
-              const zoneBiomass = zoneData && Number.isFinite(zoneData.hazardousBiomass)
-                ? zoneData.hazardousBiomass
-                : 0;
-              return zoneBiomass > 0 ? sum + zoneBiomass : sum;
-            }, 0);
-
-            if (availableBiomass > 0) {
-              const baseRemaining = remainingReduction;
-              let sharedReduction = 0;
-
-              zoneEntries.forEach((entry) => {
-                const zoneData = entry && entry.data;
-                const zoneBiomass = zoneData && Number.isFinite(zoneData.hazardousBiomass)
-                  ? zoneData.hazardousBiomass
-                  : 0;
-                if (zoneBiomass <= 0) {
-                  return;
-                }
-
-                const share = zoneBiomass / availableBiomass;
-                let desiredReduction = baseRemaining * share;
-                if (desiredReduction > zoneBiomass) {
-                  desiredReduction = zoneBiomass;
-                }
-
-                if (!desiredReduction) {
-                  return;
-                }
-
-                const nextValue = zoneBiomass - desiredReduction;
-                crusaderDelta -= desiredReduction;
-                zoneData.hazardousBiomass = nextValue > 0 ? nextValue : 0;
-                sharedReduction += desiredReduction;
-              });
-
-              if (sharedReduction > 0) {
-                remainingReduction -= sharedReduction;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (deltaSeconds > 0 && hazardResource && hazardResource.modifyRate) {
-      if (growthDelta) {
-        const growthRate = growthDelta / deltaSeconds;
-        const growthLabel = growthRate < 0 ? 'Hazard Decay' : 'Hazard Growth';
-        hazardResource.modifyRate(growthRate, growthLabel, 'terraforming');
-      }
-
-      if (crusaderDelta) {
-        hazardResource.modifyRate(crusaderDelta / deltaSeconds, 'Crusader Patrols', 'terraforming');
-      }
-    }
-
-    // Apply android attrition from garbage hazards
-    this.applyAndroidAttrition(deltaSeconds);
-
-    this.updateHazardousLandReservation(terraforming);
-  }
-
-  updateHazardousLandReservation(terraforming) {
-    if (typeof resources === 'undefined' || !resources || !resources.surface || !resources.surface.land) {
-      this.updateHazardousBiomassControl(0);
+  update(deltaTime = 0, terraformingState = null) {
+    if (!terraformingState) {
       return;
     }
 
-    const landResource = resources.surface.land;
     const hazardous = this.parameters.hazardousBiomass;
-    const baseGrowth = hazardous && hazardous.baseGrowth;
-    const maxDensity = baseGrowth && Number.isFinite(baseGrowth.maxDensity) && baseGrowth.maxDensity > 0
-      ? baseGrowth.maxDensity
-      : 0;
-
-    let totalBiomass = 0;
-
-    if (terraforming && terraforming.zonalSurface) {
-      const zoneKeys = Array.isArray(zonesList) && zonesList.length
-        ? zonesList
-        : Object.keys(terraforming.zonalSurface);
-
-      zoneKeys.forEach((zone) => {
-        const zoneData = terraforming.zonalSurface[zone];
-        if (!zoneData) {
-          return;
-        }
-
-        const biomass = zoneData.hazardousBiomass;
-        if (Number.isFinite(biomass) && biomass > 0) {
-          totalBiomass += biomass;
-        }
-      });
-    }
-
-    const landCandidates = [
-      terraforming?.initialLand,
-      landResource.initialValue,
-    ];
-
-    let initialLand = 0;
-    for (let index = 0; index < landCandidates.length; index += 1) {
-      const candidate = landCandidates[index];
-      if (Number.isFinite(candidate) && candidate > 0) {
-        initialLand = candidate;
-        break;
-      }
-    }
-
-    const reservedLand = maxDensity > 0 ? Math.min(totalBiomass / maxDensity, initialLand) : 0;
-
-    const carryingCapacity = maxDensity > 0 && initialLand > 0
-      ? initialLand * maxDensity
-      : 0;
-
-    const controlShare = carryingCapacity > 0 ? totalBiomass / carryingCapacity : 0;
-    this.updateHazardousBiomassControl(controlShare);
-
-    if (typeof landResource.setReservedAmountForSource === 'function') {
-      landResource.setReservedAmountForSource('hazardousBiomass', reservedLand);
+    if (this.hazardousBiomassHazard && hazardous) {
+      this.hazardousBiomassHazard.update(deltaTime, terraformingState, hazardous);
+    } else if (this.hazardousBiomassHazard) {
+      this.hazardousBiomassHazard.updateHazardousLandReservation(terraformingState, hazardous);
     } else {
-      const previous = landResource._hazardousBiomassReserved || 0;
-      landResource.reserved = Math.max(0, landResource.reserved - previous + reservedLand);
-      landResource._hazardousBiomassReserved = reservedLand;
+      this.updateHazardousBiomassControl(0);
+    }
+
+    const deltaSeconds = deltaTime > 0 ? deltaTime / 1000 : 0;
+    if (this.garbageHazard) {
+      this.garbageHazard.update(deltaSeconds);
     }
   }
 
-  ensureCrusaderPresence(terraforming) {
-    const crusaders = resources?.special?.crusaders;
-    if (!crusaders || !crusaders.unlocked) {
-      return;
-    }
-
-    if (!this.hasHazardousBiomass(terraforming)) {
-      return;
-    }
-
-    const currentValue = Number.isFinite(crusaders.value) ? crusaders.value : 0;
-    if (currentValue < 10) {
-      crusaders.value = 10;
+  ensureCrusaderPresence(terraformingState) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.ensureCrusaderPresence) {
+      this.hazardousBiomassHazard.ensureCrusaderPresence(terraformingState);
     }
   }
 
-  hasHazardousBiomass(terraforming) {
-    if (terraforming && terraforming.zonalSurface) {
-      const zoneKeys = Array.isArray(zonesList) && zonesList.length
-        ? zonesList
-        : Object.keys(terraforming.zonalSurface);
-
-      for (let index = 0; index < zoneKeys.length; index += 1) {
-        const zone = zoneKeys[index];
-        const biomass = terraforming.zonalSurface[zone]?.hazardousBiomass;
-        if (Number.isFinite(biomass) && biomass > 0) {
-          return true;
-        }
-      }
+  hasHazardousBiomass(terraformingState) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.hasHazard) {
+      return this.hazardousBiomassHazard.hasHazard(terraformingState);
     }
 
-    const hazardousResource = resources?.surface?.hazardousBiomass;
+    let resourcesState = null;
+    try {
+      resourcesState = resources;
+    } catch (error) {
+      resourcesState = null;
+    }
+
+    const hazardousResource = resourcesState?.surface?.hazardousBiomass;
     const hazardousValue = Number.isFinite(hazardousResource?.value) ? hazardousResource.value : 0;
     return hazardousValue > 0;
   }
@@ -674,7 +288,6 @@ class HazardManager {
   updateHazardousBiomassControl(control, forceUpdate = false) {
     const normalized = this.normalizeHazardControl(control);
     const difference = Math.abs(normalized - this.cachedHazardousBiomassControl);
-
     this.cachedHazardousBiomassControl = normalized;
 
     if (forceUpdate || difference > 1e-9) {
@@ -731,459 +344,6 @@ class HazardManager {
     return multiplier;
   }
 
-  calculateHazardousBiomassGrowthPenalty(hazardousParameters, terraforming) {
-    return this.calculateHazardousBiomassGrowthPenaltyDetails(hazardousParameters, terraforming).totalPenalty;
-  }
-
-  calculateHazardousBiomassGrowthPenaltyDetails(hazardousParameters, terraforming) {
-    const emptyResult = {
-      totalPenalty: 0,
-      globalPenalty: 0,
-      zonePenalties: {}
-    };
-
-    if (!hazardousParameters || !terraforming) {
-      return emptyResult;
-    }
-
-    const zoneSource = terraforming.zonalSurface
-      || (terraforming.temperature && terraforming.temperature.zones)
-      || terraforming.zonalCoverageCache
-      || {};
-    const configuredZones = Array.isArray(zonesList) && zonesList.length ? zonesList : Object.keys(zoneSource);
-    if (!configuredZones.length) {
-      let globalPenaltyOnly = 0;
-
-      if (terraforming.atmosphericPressureCache) {
-        const cache = terraforming.atmosphericPressureCache;
-        globalPenaltyOnly += this.calculatePressureGrowthPenalty(cache, hazardousParameters.oxygenPressure, 'oxygen');
-        globalPenaltyOnly += this.calculatePressureGrowthPenalty(cache, hazardousParameters.co2Pressure, 'carbonDioxide');
-        globalPenaltyOnly += this.calculatePressureGrowthPenalty(cache, hazardousParameters.atmosphericPressure, null);
-      }
-
-      globalPenaltyOnly += this.calculateRadiationGrowthPenalty(terraforming, hazardousParameters.radiationPreference);
-
-      return {
-        totalPenalty: globalPenaltyOnly,
-        globalPenalty: globalPenaltyOnly,
-        zonePenalties: {}
-      };
-    }
-
-    const zoneCount = configuredZones.length;
-    const zoneWeights = {};
-    configuredZones.forEach((zone) => {
-      const weight = this.getZoneWeight(zone, zoneCount);
-      zoneWeights[zone] = Number.isFinite(weight) && weight > 0 ? weight : 0;
-    });
-
-    const perZonePenalties = {};
-    let weightedZoneTotal = 0;
-    let globalPenalty = 0;
-
-    const mergeZoneDetails = (details) => {
-      if (!details) {
-        return;
-      }
-
-      if (Number.isFinite(details.totalPenalty)) {
-        weightedZoneTotal += details.totalPenalty;
-      }
-
-      if (!details.zonePenalties) {
-        return;
-      }
-
-      Object.keys(details.zonePenalties).forEach((zone) => {
-        const value = details.zonePenalties[zone];
-        if (!Number.isFinite(value) || value === 0) {
-          return;
-        }
-        const previous = perZonePenalties[zone] || 0;
-        perZonePenalties[zone] = previous + value;
-      });
-    };
-
-    if (terraforming.atmosphericPressureCache) {
-      const cache = terraforming.atmosphericPressureCache;
-      globalPenalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.oxygenPressure, 'oxygen');
-      globalPenalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.co2Pressure, 'carbonDioxide');
-      globalPenalty += this.calculatePressureGrowthPenalty(cache, hazardousParameters.atmosphericPressure, null);
-    }
-
-    mergeZoneDetails(this.calculateTemperatureGrowthPenaltyDetails(
-      terraforming,
-      hazardousParameters.temperaturePreference,
-      configuredZones,
-      zoneWeights
-    ));
-
-    globalPenalty += this.calculateRadiationGrowthPenalty(terraforming, hazardousParameters.radiationPreference);
-
-    mergeZoneDetails(this.calculateLandPreferencePenaltyDetails(
-      terraforming,
-      hazardousParameters.landPreference,
-      configuredZones,
-      zoneWeights
-    ));
-
-    mergeZoneDetails(this.calculateInvasivenessGrowthPenaltyDetails(
-      terraforming,
-      hazardousParameters.invasivenessResistance,
-      configuredZones,
-      zoneWeights
-    ));
-
-    const totalPenalty = globalPenalty + weightedZoneTotal;
-
-    return {
-      totalPenalty,
-      globalPenalty,
-      zonePenalties: perZonePenalties
-    };
-  }
-
-  calculatePressureGrowthPenalty(cache, entry, gasKey) {
-    if (!entry || !cache) {
-      return 0;
-    }
-
-    const unit = entry.unit ? `${entry.unit}` : 'kPa';
-    const pressurePa = gasKey ? cache.pressureByKey && cache.pressureByKey[gasKey] : cache.totalPressure;
-    const pressureValue = this.convertPressureFromPa(Number.isFinite(pressurePa) ? pressurePa : 0, unit);
-
-    return this.computeRangePenalty(entry, pressureValue);
-  }
-
-  convertPressureFromPa(value, unit) {
-    const normalizedValue = Number.isFinite(value) ? value : 0;
-    const normalizedUnit = `${unit || 'kPa'}`.trim().toLowerCase();
-
-    switch (normalizedUnit) {
-      case 'pa':
-        return normalizedValue;
-      case 'kpa':
-        return normalizedValue / 1000;
-      case 'mpa':
-        return normalizedValue / 1_000_000;
-      case 'bar':
-        return normalizedValue / 100000;
-      case 'mbar':
-        return normalizedValue / 100;
-      case 'atm':
-        return normalizedValue / 101325;
-      default:
-        return normalizedValue / 1000;
-    }
-  }
-
-  computeRangePenalty(entry, currentValue) {
-    if (!entry) {
-      return 0;
-    }
-
-    const defaultSeverity = Number.isFinite(entry.severity) ? entry.severity : 1;
-    const severityBelow = Number.isFinite(entry.severityBelow) ? entry.severityBelow : defaultSeverity;
-    const severityHigh = Number.isFinite(entry.severityHigh) ? entry.severityHigh : defaultSeverity;
-
-    const hasMin = Number.isFinite(entry.min);
-    const hasMax = Number.isFinite(entry.max);
-    const value = Number.isFinite(currentValue) ? currentValue : 0;
-
-    if (hasMin && value < entry.min) {
-      const severity = Number.isFinite(severityBelow) ? severityBelow : 0;
-      if (!severity) {
-        return 0;
-      }
-      return (entry.min - value) * severity;
-    }
-
-    if (hasMax && value > entry.max) {
-      const severity = Number.isFinite(severityHigh) ? severityHigh : 0;
-      if (!severity) {
-        return 0;
-      }
-      return (value - entry.max) * severity;
-    }
-
-    return 0;
-  }
-
-  calculateTemperatureGrowthPenalty(terraforming, entry) {
-    return this.calculateTemperatureGrowthPenaltyDetails(terraforming, entry).totalPenalty;
-  }
-
-  calculateTemperatureGrowthPenaltyDetails(terraforming, entry, zoneKeys, zoneWeights) {
-    const result = {
-      totalPenalty: 0,
-      zonePenalties: {}
-    };
-
-    if (!entry || !terraforming || !terraforming.temperature || !terraforming.temperature.zones) {
-      return result;
-    }
-
-    const resolvedZones = Array.isArray(zoneKeys) && zoneKeys.length
-      ? zoneKeys
-      : (Array.isArray(zonesList) && zonesList.length
-        ? zonesList
-        : Object.keys(terraforming.temperature.zones));
-    const zoneCount = resolvedZones.length || 1;
-    const weights = zoneWeights || {};
-    const unit = entry.unit ? `${entry.unit}` : 'K';
-
-    resolvedZones.forEach((zone) => {
-      const zoneData = terraforming.temperature.zones[zone];
-      if (!zoneData || !Number.isFinite(zoneData.value)) {
-        return;
-      }
-
-      const temperature = this.convertTemperatureFromKelvin(zoneData.value, unit);
-      const rawPenalty = this.computeRangePenalty(entry, temperature);
-      if (!rawPenalty) {
-        return;
-      }
-
-      let weight = weights[zone];
-      if (!Number.isFinite(weight) || weight <= 0) {
-        weight = this.getZoneWeight(zone, zoneCount);
-      }
-
-      const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
-      if (normalizedWeight) {
-        result.totalPenalty += rawPenalty * normalizedWeight;
-      }
-
-      const previous = result.zonePenalties[zone] || 0;
-      result.zonePenalties[zone] = previous + rawPenalty;
-    });
-
-    return result;
-  }
-
-  convertTemperatureFromKelvin(value, unit) {
-    const normalizedUnit = unit ? `${unit}`.trim().toLowerCase() : 'k';
-    const kelvin = Number.isFinite(value) ? value : 0;
-
-    switch (normalizedUnit) {
-      case 'c':
-      case '°c':
-      case 'celsius':
-        return kelvin - 273.15;
-      case 'f':
-      case '°f':
-      case 'fahrenheit':
-        return (kelvin - 273.15) * 9 / 5 + 32;
-      case 'k':
-      case 'kelvin':
-      default:
-        return kelvin;
-    }
-  }
-
-  calculateRadiationGrowthPenalty(terraforming, entry) {
-    if (!entry || !terraforming || !Number.isFinite(terraforming.surfaceRadiation)) {
-      return 0;
-    }
-
-    const radiation = Number.isFinite(terraforming.surfaceRadiation)
-      ? terraforming.surfaceRadiation
-      : 0;
-    return this.computeRangePenalty(entry, radiation);
-  }
-
-  calculateLandPreferencePenalty(terraforming, entry) {
-    return this.calculateLandPreferencePenaltyDetails(terraforming, entry).totalPenalty;
-  }
-
-  calculateLandPreferencePenaltyDetails(terraforming, entry, zoneKeys, zoneWeights) {
-    const result = {
-      totalPenalty: 0,
-      zonePenalties: {}
-    };
-
-    if (!entry || !terraforming || !terraforming.zonalCoverageCache) {
-      return result;
-    }
-
-    const preference = entry.value ? `${entry.value}`.trim().toLowerCase() : '';
-    if (preference !== 'land' && preference !== 'liquid') {
-      return result;
-    }
-
-    const severity = Number.isFinite(entry.severity) ? entry.severity : 1;
-    if (!severity) {
-      return result;
-    }
-
-    const resolvedZones = Array.isArray(zoneKeys) && zoneKeys.length
-      ? zoneKeys
-      : (Array.isArray(zonesList) && zonesList.length
-        ? zonesList
-        : Object.keys(terraforming.zonalCoverageCache));
-    const zoneCount = resolvedZones.length || 1;
-    const weights = zoneWeights || {};
-
-    resolvedZones.forEach((zone) => {
-      const cache = terraforming.zonalCoverageCache[zone];
-      if (!cache) {
-        return;
-      }
-
-      const liquidWater = Number.isFinite(cache.liquidWater) ? cache.liquidWater : 0;
-      const liquidCo2 = Number.isFinite(cache.liquidCO2) ? cache.liquidCO2 : 0;
-      const liquidMethane = Number.isFinite(cache.liquidMethane) ? cache.liquidMethane : 0;
-      const combinedCoverage = Math.min(1, Math.max(0, liquidWater + liquidCo2 + liquidMethane));
-      const penaltyCoverage = preference === 'land'
-        ? combinedCoverage
-        : Math.max(0, 1 - combinedCoverage);
-      if (!penaltyCoverage) {
-        return;
-      }
-
-      const rawPenalty = penaltyCoverage * severity;
-      if (!rawPenalty) {
-        return;
-      }
-
-      let weight = weights[zone];
-      if (!Number.isFinite(weight) || weight <= 0) {
-        weight = this.getZoneWeight(zone, zoneCount);
-      }
-
-      const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
-      if (normalizedWeight) {
-        result.totalPenalty += rawPenalty * normalizedWeight;
-      }
-
-      const previous = result.zonePenalties[zone] || 0;
-      result.zonePenalties[zone] = previous + rawPenalty;
-    });
-
-    return result;
-  }
-
-  calculateInvasivenessGrowthPenalty(terraforming, entry) {
-    return this.calculateInvasivenessGrowthPenaltyDetails(terraforming, entry).totalPenalty;
-  }
-
-  calculateInvasivenessGrowthPenaltyDetails(terraforming, entry, zoneKeys, zoneWeights) {
-    const result = {
-      totalPenalty: 0,
-      zonePenalties: {}
-    };
-
-    if (!entry || !terraforming || !terraforming.zonalSurface) {
-      return result;
-    }
-
-    const severity = Number.isFinite(entry.severity) ? entry.severity : 1;
-    if (!severity) {
-      return result;
-    }
-
-    const invasivenessDifference = this.getLifeDesignInvasiveness() - (Number.isFinite(entry.value) ? entry.value : 0);
-    if (!invasivenessDifference) {
-      return result;
-    }
-
-    const resolvedZones = Array.isArray(zoneKeys) && zoneKeys.length
-      ? zoneKeys
-      : (Array.isArray(zonesList) && zonesList.length
-        ? zonesList
-        : Object.keys(terraforming.zonalSurface));
-    const zoneCount = resolvedZones.length || 1;
-    const weights = zoneWeights || {};
-
-    resolvedZones.forEach((zone) => {
-      const density = this.calculateZoneLifeDensity(terraforming, zone);
-      if (!density) {
-        return;
-      }
-
-      const rawPenalty = density * invasivenessDifference * severity;
-      if (!rawPenalty) {
-        return;
-      }
-
-      let weight = weights[zone];
-      if (!Number.isFinite(weight) || weight <= 0) {
-        weight = this.getZoneWeight(zone, zoneCount);
-      }
-
-      const normalizedWeight = Number.isFinite(weight) && weight > 0 ? weight : 0;
-      if (normalizedWeight) {
-        result.totalPenalty += rawPenalty * normalizedWeight;
-      }
-
-      const previous = result.zonePenalties[zone] || 0;
-      result.zonePenalties[zone] = previous + rawPenalty;
-    });
-
-    return result;
-  }
-
-  calculateZoneLifeDensity(terraforming, zone) {
-    const zoneData = terraforming.zonalSurface && terraforming.zonalSurface[zone];
-    if (!zoneData) {
-      return 0;
-    }
-
-    const biomass = Number.isFinite(zoneData.biomass) ? zoneData.biomass : 0;
-    if (!biomass) {
-      return 0;
-    }
-
-    const surfaceArea = terraforming.celestialParameters && Number.isFinite(terraforming.celestialParameters.surfaceArea)
-      ? terraforming.celestialParameters.surfaceArea
-      : 0;
-    if (!surfaceArea) {
-      return 0;
-    }
-
-    const percentage = getZonePercentageHelper ? getZonePercentageHelper(zone) : 0;
-    if (!percentage) {
-      return 0;
-    }
-
-    const zoneArea = surfaceArea * percentage;
-    if (!zoneArea) {
-      return 0;
-    }
-
-    return biomass / zoneArea;
-  }
-
-  getLifeDesignInvasiveness() {
-    let designer = null;
-
-    if (typeof lifeDesigner !== 'undefined' && lifeDesigner) {
-      designer = lifeDesigner;
-    } else if (typeof window !== 'undefined' && window.lifeDesigner) {
-      designer = window.lifeDesigner;
-    } else if (typeof global !== 'undefined' && global.lifeDesigner) {
-      designer = global.lifeDesigner;
-    }
-
-    if (!designer || !designer.currentDesign || !designer.currentDesign.invasiveness) {
-      return 0;
-    }
-
-    const value = designer.currentDesign.invasiveness.value;
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  getZoneWeight(zone, zoneCount) {
-    if (typeof getZonePercentageHelper === 'function') {
-      const percentage = getZonePercentageHelper(zone);
-      if (Number.isFinite(percentage) && percentage > 0) {
-        return percentage;
-      }
-    }
-
-    return zoneCount > 0 ? 1 / zoneCount : 0;
-  }
-
   getPenaltyValue(penalty) {
     if (!penalty) {
       return 0;
@@ -1194,8 +354,126 @@ class HazardManager {
     return value * severity;
   }
 
+  calculateHazardousBiomassGrowthPenalty(hazardousParameters, terraformingState) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.calculateGrowthPenalty) {
+      return this.hazardousBiomassHazard.calculateGrowthPenalty(hazardousParameters, terraformingState);
+    }
+    return 0;
+  }
+
+  calculateHazardousBiomassGrowthPenaltyDetails(hazardousParameters, terraformingState) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.calculateGrowthPenaltyDetails) {
+      return this.hazardousBiomassHazard.calculateGrowthPenaltyDetails(hazardousParameters, terraformingState);
+    }
+
+    return { totalPenalty: 0, globalPenalty: 0, zonePenalties: {} };
+  }
+
+  calculatePressureGrowthPenalty(cache, entry, gasKey) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.calculatePressureGrowthPenalty) {
+      return this.hazardousBiomassHazard.calculatePressureGrowthPenalty(cache, entry, gasKey);
+    }
+    return 0;
+  }
+
+  convertPressureFromPa(value, unit) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.convertPressureFromPa) {
+      return this.hazardousBiomassHazard.convertPressureFromPa(value, unit);
+    }
+    return 0;
+  }
+
+  computeRangePenalty(entry, currentValue) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.computeRangePenalty) {
+      return this.hazardousBiomassHazard.computeRangePenalty(entry, currentValue);
+    }
+    return 0;
+  }
+
+  calculateTemperatureGrowthPenalty(terraformingState, entry) {
+    const details = this.calculateTemperatureGrowthPenaltyDetails(terraformingState, entry);
+    return details && Number.isFinite(details.totalPenalty) ? details.totalPenalty : 0;
+  }
+
+  calculateTemperatureGrowthPenaltyDetails(terraformingState, entry, zoneKeys, zoneWeights) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.calculateTemperatureGrowthPenaltyDetails) {
+      return this.hazardousBiomassHazard.calculateTemperatureGrowthPenaltyDetails(terraformingState, entry, zoneKeys, zoneWeights);
+    }
+
+    return { totalPenalty: 0, zonePenalties: {} };
+  }
+
+  convertTemperatureFromKelvin(value, unit) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.convertTemperatureFromKelvin) {
+      return this.hazardousBiomassHazard.convertTemperatureFromKelvin(value, unit);
+    }
+    return 0;
+  }
+
+  calculateRadiationGrowthPenalty(terraformingState, entry) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.calculateRadiationGrowthPenalty) {
+      return this.hazardousBiomassHazard.calculateRadiationGrowthPenalty(terraformingState, entry);
+    }
+    return 0;
+  }
+
+  calculateLandPreferenceGrowthPenalty(terraformingState, entry) {
+    return this.calculateLandPreferencePenaltyDetails(terraformingState, entry).totalPenalty;
+  }
+
+  calculateLandPreferencePenaltyDetails(terraformingState, entry, zoneKeys, zoneWeights) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.calculateLandPreferencePenaltyDetails) {
+      return this.hazardousBiomassHazard.calculateLandPreferencePenaltyDetails(terraformingState, entry, zoneKeys, zoneWeights);
+    }
+
+    return { totalPenalty: 0, zonePenalties: {} };
+  }
+
+  calculateInvasivenessGrowthPenalty(terraformingState, entry) {
+    return this.calculateInvasivenessGrowthPenaltyDetails(terraformingState, entry).totalPenalty;
+  }
+
+  calculateInvasivenessGrowthPenaltyDetails(terraformingState, entry, zoneKeys, zoneWeights) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.calculateInvasivenessGrowthPenaltyDetails) {
+      return this.hazardousBiomassHazard.calculateInvasivenessGrowthPenaltyDetails(terraformingState, entry, zoneKeys, zoneWeights);
+    }
+
+    return { totalPenalty: 0, zonePenalties: {} };
+  }
+
+  calculateZoneLifeDensity(terraformingState, zone) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.calculateZoneLifeDensity) {
+      return this.hazardousBiomassHazard.calculateZoneLifeDensity(terraformingState, zone);
+    }
+    return 0;
+  }
+
+  getLifeDesignInvasiveness() {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.getLifeDesignInvasiveness) {
+      return this.hazardousBiomassHazard.getLifeDesignInvasiveness();
+    }
+    return 0;
+  }
+
+  getZoneWeight(zone, zoneCount) {
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.getZoneWeight) {
+      return this.hazardousBiomassHazard.getZoneWeight(zone, zoneCount);
+    }
+
+    return zoneCount > 0 ? 1 / zoneCount : 0;
+  }
+
+  formatGarbageResourceName(key) {
+    if (this.garbageHazard && this.garbageHazard.formatGarbageResourceName) {
+      return this.garbageHazard.formatGarbageResourceName(key);
+    }
+
+    const withSpaces = `${key}`.replace(/([A-Z])/g, ' $1');
+    return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+  }
+
   applyHazardEffects(context = {}) {
-    if (!context || typeof context.addEffect !== 'function') {
+    if (!context || !context.addEffect) {
       return;
     }
 
@@ -1279,172 +557,8 @@ class HazardManager {
       });
     }
 
-    // Apply garbage hazard penalties
-    this.applyGarbageHazardEffects(applyEffect, buildings);
-  }
-
-  applyGarbageHazardEffects(applyEffect, buildings) {
-    const garbageHazard = this.parameters.garbage;
-    if (!garbageHazard || !garbageHazard.penalties || !garbageHazard.surfaceResources) {
-      return;
-    }
-
-    const resourcesObj = typeof resources !== 'undefined' ? resources : null;
-    if (!resourcesObj || !resourcesObj.surface) {
-      return;
-    }
-
-    // Process each garbage resource type
-    Object.keys(garbageHazard.surfaceResources).forEach((garbageResourceKey) => {
-      const resourceConfig = garbageHazard.surfaceResources[garbageResourceKey];
-      const penalties = garbageHazard.penalties[garbageResourceKey];
-      
-      if (!penalties) {
-        return;
-      }
-
-      const garbageResource = resourcesObj.surface[garbageResourceKey];
-      if (!garbageResource) {
-        return;
-      }
-
-      const currentAmount = Number.isFinite(garbageResource.value) ? garbageResource.value : 0;
-      const initialAmount = Number.isFinite(garbageResource.initialValue) ? garbageResource.initialValue : 1;
-      
-      // Calculate the ratio: at full amount = 1, at zero = 0
-      const garbageRatio = initialAmount > 0 ? Math.min(1, Math.max(0, currentAmount / initialAmount)) : 0;
-
-      // Apply sandHarvesterMultiplier penalty
-      if (penalties.sandHarvesterMultiplier !== undefined && buildings.sandQuarry) {
-        const minMultiplier = Number.isFinite(penalties.sandHarvesterMultiplier) ? penalties.sandHarvesterMultiplier : 0.1;
-        // At full garbage (ratio=1): multiplier = minMultiplier (e.g., 0.1)
-        // At no garbage (ratio=0): multiplier = 1
-        const productionMultiplier = 1 - garbageRatio * (1 - minMultiplier);
-
-        applyEffect({
-          effectId: `garbageHazard-${garbageResourceKey}-sandHarvester`,
-          target: 'building',
-          targetId: 'sandQuarry',
-          type: 'resourceProductionMultiplier',
-          resourceCategory: 'colony',
-          resourceTarget: 'silicon',
-          value: productionMultiplier,
-          sourceId: 'hazardPenalties',
-        });
-      }
-
-      // Apply nanoColonyGrowthMultiplier penalty
-      if (penalties.nanoColonyGrowthMultiplier !== undefined && typeof nanotechManager !== 'undefined' && nanotechManager) {
-        const minMultiplier = Number.isFinite(penalties.nanoColonyGrowthMultiplier) ? penalties.nanoColonyGrowthMultiplier : 0.1;
-        // At full garbage (ratio=1): multiplier = minMultiplier (e.g., 0.1)
-        // At no garbage (ratio=0): multiplier = 1
-        const growthMultiplier = 1 - garbageRatio * (1 - minMultiplier);
-
-        applyEffect({
-          effectId: `garbageHazard-${garbageResourceKey}-nanoColony`,
-          target: 'nanotechManager',
-          type: 'nanoColonyGrowthMultiplier',
-          value: growthMultiplier,
-          sourceId: 'hazardPenalties',
-        });
-      }
-
-      // Apply happiness penalty (for trash and junk)
-      if (penalties.happiness !== undefined && typeof colonies !== 'undefined') {
-        const maxPenalty = Number.isFinite(penalties.happiness) ? Math.abs(penalties.happiness) : 0.1;
-        // At full garbage (ratio=1): penalty = maxPenalty (e.g., -0.1)
-        // At no garbage (ratio=0): penalty = 0
-        const happinessPenalty = garbageRatio * maxPenalty;
-
-        // Apply to all colonies
-        Object.keys(colonies).forEach((colonyId) => {
-          applyEffect({
-            effectId: `garbageHazard-${garbageResourceKey}-happiness-${colonyId}`,
-            target: 'colony',
-            targetId: colonyId,
-            type: 'happinessPenalty',
-            value: happinessPenalty,
-            sourceId: 'hazardPenalties',
-          });
-        });
-      }
-
-      // Apply ore scanning speed multiplier (for scrap)
-      if (penalties.oreScanningSpeedMultiplier !== undefined && typeof oreScanner !== 'undefined' && oreScanner) {
-        const minMultiplier = Number.isFinite(penalties.oreScanningSpeedMultiplier) ? penalties.oreScanningSpeedMultiplier : 0.1;
-        // At full garbage (ratio=1): multiplier = minMultiplier (e.g., 0.1)
-        // At no garbage (ratio=0): multiplier = 1
-        const scanningMultiplier = 1 - garbageRatio * (1 - minMultiplier);
-
-        applyEffect({
-          effectId: `garbageHazard-${garbageResourceKey}-oreScanning`,
-          target: 'oreScanner',
-          type: 'scanningSpeedMultiplier',
-          value: scanningMultiplier,
-          sourceId: 'hazardPenalties',
-        });
-      }
-
-      // Apply life growth multiplier (for radioactive waste)
-      if (penalties.lifeGrowthMultiplier !== undefined && typeof lifeManager !== 'undefined' && lifeManager) {
-        const minMultiplier = Number.isFinite(penalties.lifeGrowthMultiplier) ? penalties.lifeGrowthMultiplier : 0.1;
-        // At full garbage (ratio=1): multiplier = minMultiplier (e.g., 0.1)
-        // At no garbage (ratio=0): multiplier = 1
-        const lifeMultiplier = 1 - garbageRatio * (1 - minMultiplier);
-
-        applyEffect({
-          effectId: `garbageHazard-${garbageResourceKey}-lifeGrowth`,
-          target: 'lifeManager',
-          type: 'lifeGrowthMultiplier',
-          value: lifeMultiplier,
-          sourceId: 'hazardPenalties',
-        });
-      }
-
-      // Apply android attrition (for radioactive waste)
-      if (penalties.androidAttrition !== undefined && typeof resources !== 'undefined' && resources.colony && resources.colony.androids) {
-        const attritionRate = Number.isFinite(penalties.androidAttrition) ? penalties.androidAttrition : 0.001;
-        // Store attrition rate for processing in update method
-        if (!this.androidAttritionRates) {
-          this.androidAttritionRates = {};
-        }
-        this.androidAttritionRates[garbageResourceKey] = garbageRatio * attritionRate;
-      }
-    });
-  }
-
-  applyAndroidAttrition(deltaSeconds) {
-    if (!this.androidAttritionRates || deltaSeconds <= 0) {
-      return;
-    }
-
-    const androidResource = resources?.colony?.androids;
-    if (!androidResource) {
-      return;
-    }
-
-    // Sum all attrition rates
-    let totalAttritionRate = 0;
-    Object.values(this.androidAttritionRates).forEach((rate) => {
-      if (Number.isFinite(rate)) {
-        totalAttritionRate += rate;
-      }
-    });
-
-    if (totalAttritionRate <= 0) {
-      return;
-    }
-
-    const currentAndroids = Number.isFinite(androidResource.value) ? androidResource.value : 0;
-    if (currentAndroids <= 0) {
-      return;
-    }
-
-    // Calculate android loss: attrition is per second
-    const androidLoss = currentAndroids * totalAttritionRate * deltaSeconds;
-    if (androidLoss > 0) {
-      androidResource.value = Math.max(0, currentAndroids - androidLoss);
-      androidResource.modifyRate(-currentAndroids * totalAttritionRate, 'Radioactive Attrition', 'hazard');
+    if (this.garbageHazard && this.garbageHazard.applyEffects) {
+      this.garbageHazard.applyEffects({ addEffect: applyEffect, buildings, colonies }, this.parameters.garbage);
     }
   }
 }
@@ -1452,23 +566,33 @@ class HazardManager {
 function setHazardManager(instance) {
   hazardManager = instance;
 
-  if (typeof window !== 'undefined') {
+  try {
     window.hazardManager = hazardManager;
-  } else if (typeof global !== 'undefined') {
-    global.hazardManager = hazardManager;
+  } catch (error) {
+    try {
+      global.hazardManager = hazardManager;
+    } catch (innerError) {
+      // no-op
+    }
   }
 
   return hazardManager;
 }
 
-if (typeof window !== 'undefined') {
+try {
   window.HazardManager = HazardManager;
   window.setHazardManager = setHazardManager;
-} else if (typeof global !== 'undefined') {
-  global.HazardManager = HazardManager;
-  global.setHazardManager = setHazardManager;
+} catch (error) {
+  try {
+    global.HazardManager = HazardManager;
+    global.setHazardManager = setHazardManager;
+  } catch (innerError) {
+    // no-op
+  }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
+try {
   module.exports = { HazardManager, setHazardManager };
+} catch (error) {
+  // Module system not available in browser
 }

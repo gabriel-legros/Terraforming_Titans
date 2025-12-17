@@ -339,3 +339,15 @@
   font-size: 13px;
   opacity: 0.8;
 }
+
+.hazard-card--garbage {
+  background: linear-gradient(135deg, rgba(10, 26, 22, 0.96), rgba(36, 16, 8, 0.92));
+}
+
+.hazard-factors--garbage {
+  background: rgba(12, 22, 20, 0.72);
+}
+
+.hazard-garbage-grid .hazard-factor-row:not(.hazard-factor-row--header) {
+  background: rgba(34, 44, 48, 0.55);
+}
