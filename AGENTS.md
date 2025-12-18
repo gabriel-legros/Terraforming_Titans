@@ -283,6 +283,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Planetary Thrusters motion controls now include a Go Rogue button that unlocks at 10000 AU to strip the star, flag the world as rogue, and remove the thrusters project.
 - Introduced a Galactic Market Concordat advanced research that unlocks the Galactic Market project while permanently retiring cargo rockets and metal exports.
 - Space storage now supports silicon and hydrogen stockpiles.
+- Forbidden-melt rapid sublimation now blends linearly over 1 Pa near the triple pressure threshold instead of switching instantly.
 
 ## Feature updates
 - Autobuild basis drop-downs now include a Max option for ore mines, geothermal generators, and Dyson Swarm receivers so they chase the highest buildable count without relying on percentage targets.

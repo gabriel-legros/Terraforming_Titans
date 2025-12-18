@@ -241,16 +241,22 @@ class ResourceCycle {
       let meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
 
       if (liquidForbidden) {
-        changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) - freezeAmount;
+        const rapidBlend = meltAmount > 0
+          ? Math.max(0, Math.min(1, this.triplePressure - atmPressure))
+          : 0;
+        const meltToRapid = meltAmount * rapidBlend;
+        const meltToLiquid = meltAmount - meltToRapid;
+
+        changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) + meltToLiquid - freezeAmount;
         if (availableIce !== undefined) {
           changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) + freezeAmount - meltFromIce;
         }
         if (availableBuriedIce !== undefined) {
           changes[surfaceBucket].buriedIce = (changes[surfaceBucket].buriedIce || 0) - meltFromBuried;
         }
-        changes.atmosphere[atmosphereKey] += meltAmount;
-        rapidSublimationAmount = meltAmount;
-        meltAmount = 0;
+        changes.atmosphere[atmosphereKey] += meltToRapid;
+        rapidSublimationAmount = meltToRapid;
+        meltAmount = meltToLiquid;
       } else {
         changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) + meltAmount - freezeAmount;
         if (availableIce !== undefined) {
