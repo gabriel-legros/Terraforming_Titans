@@ -471,6 +471,14 @@ class GalaxyManager extends EffectableEntity {
                 }
                 this.#applyControlMapToSector(sector, sectorData.control);
                 sector.setRewardAcquired?.(sectorData.rewardAcquired === true);
+                sector.setOriginalControllerId?.(sectorData.originalControllerId);
+                if (sectorData.lastFullControllerId) {
+                    sector.setLastFullControllerId?.(sectorData.lastFullControllerId);
+                }
+                this.#updateSectorControlMemory(sector);
+                if (!sector.lastFullControllerId) {
+                    sector.setLastFullControllerId?.(sector.originalControllerId || sector.getDominantController?.()?.factionId);
+                }
             });
         }
         const factionStateMap = new Map();
@@ -1345,10 +1353,35 @@ class GalaxyManager extends EffectableEntity {
         Object.entries(nextControl).forEach(([factionId, value]) => {
             sector.setControl(factionId, value);
         });
+        this.#updateSectorControlMemory(sector);
         if (changedFactions.size > 0) {
             changedFactions.forEach((factionId) => this.#markFactionControlDirty(factionId));
             this.#markAllFactionBorderCachesDirty();
         }
+    }
+
+    #updateSectorControlMemory(sector) {
+        const dominant = sector?.getDominantController?.();
+        sector?.setOriginalControllerId?.(dominant?.factionId);
+
+        const breakdown = sector?.getControlBreakdown?.();
+        if (!Array.isArray(breakdown) || breakdown.length !== 1) {
+            return;
+        }
+        const leader = breakdown[0];
+        const factionId = leader?.factionId;
+        if (!factionId) {
+            return;
+        }
+        const totalControl = sector.getTotalControlValue?.() ?? 0;
+        const leaderControl = Number(leader.value);
+        if (!(totalControl > 0) || !(leaderControl > 0)) {
+            return;
+        }
+        if (Math.abs(leaderControl - totalControl) > FULL_CONTROL_EPSILON) {
+            return;
+        }
+        sector.setLastFullControllerId?.(factionId);
     }
 
     #setSectorControlValue(sector, factionId, value) {
@@ -1379,6 +1412,7 @@ class GalaxyManager extends EffectableEntity {
             return;
         }
         this.#updateSectorControl(sector, (target) => {
+            target.resetControlMemory?.();
             const factionIds = Object.keys(target.control);
             factionIds.forEach((factionId) => {
                 target.clearControl(factionId);
@@ -1580,17 +1614,6 @@ class GalaxyManager extends EffectableEntity {
             return [];
         }
         const controlEntries = Object.entries(sector.control || {});
-        const fallbackTotal = controlEntries.reduce((sum, [, rawValue]) => {
-            const numeric = Number(rawValue);
-            if (!Number.isFinite(numeric) || numeric <= 0) {
-                return sum;
-            }
-            return sum + numeric;
-        }, 0);
-        const providedTotal = sector.getTotalControlValue?.();
-        const totalControl = Number.isFinite(providedTotal) && providedTotal > 0
-            ? providedTotal
-            : fallbackTotal;
         const contributions = [];
         controlEntries.forEach(([factionId, rawValue]) => {
             if (!factionId || (originFactionId && factionId === originFactionId)) {
@@ -1603,28 +1626,9 @@ class GalaxyManager extends EffectableEntity {
             if (!faction) {
                 return;
             }
-            const controlValue = Number(rawValue);
-            const sanitizedControl = Number.isFinite(controlValue) && controlValue > 0 ? controlValue : 0;
             let baseDefense = Number(faction.getSectorDefense?.(sector, this));
             if (!Number.isFinite(baseDefense)) {
                 baseDefense = 0;
-            }
-            if (factionId !== galaxyUhfId && !(baseDefense > 0)) {
-                if (sanitizedControl > 0 && totalControl > 0) {
-                    const sectorValue = Number(sector.getValue?.());
-                    const sanitizedValue = Number.isFinite(sectorValue) && sectorValue > 0
-                        ? sectorValue
-                        : resolveDefaultSectorValue();
-                    if (sanitizedValue > 0) {
-                        baseDefense = sanitizedValue * (sanitizedControl / totalControl);
-                    }
-                }
-                if (!(baseDefense > 0)) {
-                    const fallbackValue = Number(sector.getValue?.());
-                    if (Number.isFinite(fallbackValue) && fallbackValue > 0) {
-                        baseDefense = fallbackValue;
-                    }
-                }
             }
             if (factionId === galaxyUhfId) {
                 const totalDefense = baseDefense > 0 ? baseDefense : 0;

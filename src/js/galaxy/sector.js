@@ -1,5 +1,16 @@
 class GalaxySector {
-    constructor({ q, r, control, value, defaultValue, reward, rewardAcquired, storyRequirement } = {}) {
+    constructor({
+        q,
+        r,
+        control,
+        value,
+        defaultValue,
+        reward,
+        rewardAcquired,
+        storyRequirement,
+        originalControllerId,
+        lastFullControllerId
+    } = {}) {
         this.q = Number.isFinite(q) ? q : 0;
         this.r = Number.isFinite(r) ? r : 0;
         this.key = GalaxySector.createKey(this.q, this.r);
@@ -10,6 +21,8 @@ class GalaxySector {
         this.reward = this.#sanitizeReward(reward);
         this.rewardAcquired = rewardAcquired === true;
         this.storyRequirement = GalaxySector.#sanitizeStoryRequirement(storyRequirement);
+        this.originalControllerId = originalControllerId ? String(originalControllerId) : null;
+        this.lastFullControllerId = lastFullControllerId ? String(lastFullControllerId) : null;
         if (control) {
             this.replaceControl(control);
         }
@@ -320,13 +333,35 @@ class GalaxySector {
         return Math.abs(controlValue - totalControl) <= 1e-6;
     }
 
+    resetControlMemory() {
+        this.originalControllerId = null;
+        this.lastFullControllerId = null;
+    }
+
+    setOriginalControllerId(factionId) {
+        if (this.originalControllerId || !factionId) {
+            return;
+        }
+        this.originalControllerId = String(factionId);
+    }
+
+    setLastFullControllerId(factionId) {
+        this.lastFullControllerId = factionId ? String(factionId) : null;
+    }
+
+    getLastFullControllerId() {
+        return this.lastFullControllerId || this.originalControllerId || this.getDominantController()?.factionId || null;
+    }
+
     toJSON() {
         return {
             q: this.q,
             r: this.r,
             control: { ...this.control },
             value: this.value,
-            rewardAcquired: this.rewardAcquired === true
+            rewardAcquired: this.rewardAcquired === true,
+            originalControllerId: this.originalControllerId,
+            lastFullControllerId: this.lastFullControllerId
         };
     }
 }

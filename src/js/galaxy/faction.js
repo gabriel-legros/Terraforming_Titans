@@ -192,12 +192,15 @@ class GalaxyFaction {
             if (Array.isArray(sectors) && sectors.length > 0) {
                 let total = 0;
                 sectors.forEach((sector) => {
-                    const controlValue = sector?.getControlValue?.(this.id);
-                    const totalControl = sector?.getTotalControlValue?.();
-                    if (!Number.isFinite(controlValue) || controlValue <= 0) {
+                    const controlValue = sector?.getControlValue?.(this.id) ?? 0;
+                    if (!(controlValue > 0)) {
                         return;
                     }
-                    if (!Number.isFinite(totalControl) || totalControl <= 0) {
+                    const beneficiary = sector?.getLastFullControllerId?.()
+                        || sector?.lastFullControllerId
+                        || sector?.originalControllerId
+                        || sector?.getDominantController?.()?.factionId;
+                    if (beneficiary !== this.id) {
                         return;
                     }
                     const sectorValue = sector?.getValue?.();
@@ -205,7 +208,7 @@ class GalaxyFaction {
                     if (numericSectorValue <= 0) {
                         return;
                     }
-                    total += numericSectorValue * (controlValue / totalControl);
+                    total += numericSectorValue;
                 });
                 capacity = total;
             }
@@ -636,11 +639,11 @@ class GalaxyFaction {
         }
         const totalControl = sector?.getTotalControlValue?.() ?? 0;
         if (this.id !== UHF_FACTION_ID) {
-            if (!(totalControl > 0)) {
-                return 0;
-            }
-            const share = controlValue / totalControl;
-            if (!(share > 0)) {
+            const beneficiary = sector?.getLastFullControllerId?.()
+                || sector?.lastFullControllerId
+                || sector?.originalControllerId
+                || sector?.getDominantController?.()?.factionId;
+            if (beneficiary !== this.id) {
                 return 0;
             }
             const baseValue = sector?.getValue?.();
@@ -650,7 +653,7 @@ class GalaxyFaction {
             if (!(sanitizedValue > 0)) {
                 return 0;
             }
-            return sanitizedValue * share;
+            return sanitizedValue;
         }
         const epsilon = 1e-6;
         const uhfFullControl = totalControl > 0 && Math.abs(controlValue - totalControl) <= epsilon;
