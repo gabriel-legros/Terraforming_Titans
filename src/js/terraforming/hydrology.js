@@ -20,21 +20,35 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const terraforming = zonalInput[zonalDataKey] ? zonalInput : null;
 
     const marsRadiusKm = 3389.5;
-    const planetRadius = (terraforming && terraforming.celestialParameters && typeof terraforming.celestialParameters.radius === 'number')
+    const planetRadiusKm = (terraforming && terraforming.celestialParameters && typeof terraforming.celestialParameters.radius === 'number')
         ? terraforming.celestialParameters.radius
         : marsRadiusKm;
-    const radiusScale = planetRadius / marsRadiusKm;
+    const radiusScale = planetRadiusKm / marsRadiusKm;
+    const planetRadiusMeters = planetRadiusKm * 1000;
 
     const baseFlowRate = 0.001 / 86400;
     const flowRateCoefficient = (baseFlowRate * radiusScale) / (viscosity || 1.0);
-    const flowMeltRateCoefficient = flowRateCoefficient * 0.1;
+
+    // Flow melt (glacier contact) is thermal-limited and should not depend on viscosity.
+    // Units: m/s/K. Amounts are treated as m³-equivalent (1 ton ~ 1 m³).
+    const glacierFlowMeltSpeedPerK = 5e-8;
     const secondsMultiplier = durationSeconds;
     let totalMelt = 0;
+    let totalFreezeOut = 0;
 
     const zones = (typeof ZONES !== 'undefined') ? ZONES : ['tropical', 'temperate', 'polar'];
     const defaultElevations = { tropical: 0, temperate: 0, polar: 0 };
     const zoneElevations = zoneElevationsInput || (typeof ZONE_ELEVATIONS !== 'undefined' ? ZONE_ELEVATIONS : defaultElevations);
     const getZonePercentageFn = (typeof getZonePercentage !== 'undefined') ? getZonePercentage : (zonesModHydro && zonesModHydro.getZonePercentage);
+
+    // Concentric-circle boundary lengths (both hemispheres combined).
+    const phiTropic = 23.5 * Math.PI / 180;
+    const phiPolar = 66.5 * Math.PI / 180;
+    const boundaryLengthTropicalTemperate = 4 * Math.PI * planetRadiusMeters * Math.cos(phiTropic);
+    const boundaryLengthTemperatePolar = 4 * Math.PI * planetRadiusMeters * Math.cos(phiPolar);
+    const referenceBoundaryLength = boundaryLengthTropicalTemperate || 1;
+    const boundaryInteractionDepth = 200_000;
+    const getBoundaryScale = (minZoneIndex) => (minZoneIndex === 0 ? boundaryLengthTropicalTemperate : boundaryLengthTemperatePolar) / referenceBoundaryLength;
 
     const changes = {};
     zones.forEach(zone => {
@@ -47,33 +61,34 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     // --- Part 1: Melting Phase ---
 
     // Step 1.1: Calculate initial levels and available ice for melting
-    const initialLevels = {};
+    const zoneAreas = {};
+    const iceAreas = {};
+    const iceCoverages = {};
+    const iceHeights = {};
     const totalIceAvail = {};
     zones.forEach(zone => {
         const surfaceIce = zonalData[zone][iceProp] || 0;
-        const buriedIce = buriedIceProp ? (zonalData[zone][buriedIceProp] || 0) : 0;
-        let meltCap = surfaceIce + buriedIce;
-        let coveredArea = 1;
+        let zoneArea = 1;
+        let iceCoverage = 1;
         if (terraforming && getZonePercentageFn) {
-            const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentageFn(zone);
+            zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentageFn(zone);
             const cacheCov = terraforming.zonalCoverageCache && iceCoverageType
                 ? terraforming.zonalCoverageCache[zone]?.[iceCoverageType]
                 : undefined;
-            const iceCoverage = (typeof cacheCov === 'number')
+            iceCoverage = (typeof cacheCov === 'number')
                 ? cacheCov
                 : estimateCoverageFn(surfaceIce, zoneArea);
-            meltCap = zoneArea * iceCoverage * 0.1;
-            coveredArea = zoneArea;
         }
-        const surfaceIceForMelt = Math.min(surfaceIce, meltCap);
-        const remainingMeltCap = Math.max(0, meltCap - surfaceIceForMelt);
-        const buriedIceForMelt = Math.min(buriedIce, remainingMeltCap);
-        totalIceAvail[zone] = surfaceIceForMelt + buriedIceForMelt;
-        const totalSubstance = (zonalData[zone][liquidProp] || 0) + (zonalData[zone][iceProp] || 0);
-        initialLevels[zone] = coveredArea > 0 ? totalSubstance / coveredArea : 0;
+
+        const iceArea = Math.max(1, zoneArea * Math.max(0, iceCoverage));
+        zoneAreas[zone] = zoneArea;
+        iceAreas[zone] = iceArea;
+        iceCoverages[zone] = Math.max(0, iceCoverage);
+        iceHeights[zone] = surfaceIce > 0 ? surfaceIce / iceArea : 0;
+        totalIceAvail[zone] = surfaceIce;
     });
 
-    // Step 1.2: Calculate potential melt based on initial levels
+    // Step 1.2: Calculate flow-melt based on glacier height and target-zone temperature
     const melts = {};
     const meltOut = {};
     zones.forEach(zone => { melts[zone] = {}; meltOut[zone] = 0; });
@@ -83,15 +98,26 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
             if (i === j || Math.abs(i - j) !== 1) continue;
             const source = zones[i];
             const target = zones[j];
-            const diff = initialLevels[source] - initialLevels[target];
             const neighborTemp = zonalTemperatures[target];
-            if (diff > 0 && typeof neighborTemp === 'number' && neighborTemp > meltingPoint && totalIceAvail[source] > 0) {
-                let slopeFactor = 1 + ((zoneElevations[source] || 0) - (zoneElevations[target] || 0));
-                if (slopeFactor < 0.1) slopeFactor = 0.1;
-                const meltCoefficient = flowRateCoefficient * diff;
-                const potentialMelt = totalIceAvail[source] * meltCoefficient * slopeFactor * secondsMultiplier;
-                melts[source][target] = potentialMelt;
-                meltOut[source] += potentialMelt;
+            const deltaT = neighborTemp - meltingPoint;
+            if (typeof neighborTemp === 'number' && deltaT > 0 && totalIceAvail[source] > 0) {
+                const boundaryScale = getBoundaryScale(Math.min(i, j));
+                const glacierHeight = iceHeights[source] || 0;
+                const sourceTopElevation = (zoneElevations[source] || 0) + glacierHeight;
+                const targetLiquid = zonalData[target][liquidProp] || 0;
+                const targetZoneArea = zoneAreas[target] || 1;
+                const targetLiquidDepth = targetZoneArea > 0 ? targetLiquid / targetZoneArea : 0;
+                const targetIceWaterElevation = (zoneElevations[target] || 0) + targetLiquidDepth + (iceHeights[target] || 0);
+                const meltElevationDelta = sourceTopElevation - targetIceWaterElevation;
+                const lowElevationPenalty = meltElevationDelta < 1 ? Math.exp(1-1/(meltElevationDelta*meltElevationDelta)) : 1;
+                if (meltElevationDelta <= 0) continue;
+                const boundaryLength = boundaryScale * referenceBoundaryLength;
+                const boundaryMeltArea = boundaryLength * (iceCoverages[source] || 0) * (glacierHeight + boundaryInteractionDepth);
+                const potentialMelt = boundaryMeltArea * glacierFlowMeltSpeedPerK * deltaT * secondsMultiplier * lowElevationPenalty;
+                if (potentialMelt > 0) {
+                    melts[source][target] = potentialMelt;
+                    meltOut[source] += potentialMelt;
+                }
             }
         }
     }
@@ -113,16 +139,8 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
             const melt = melts[source][target] || 0;
             if (melt > 0) {
                 const availIce = (zonalData[source][iceProp] || 0) + changes[source][iceProp];
-                const availBuried = buriedIceProp ? ((zonalData[source][buriedIceProp] || 0) + changes[source][buriedIceProp]) : 0;
-                const meltFromSurface = Math.min(melt, availIce);
-                const remainingMeltPotential = melt - meltFromSurface;
-                let meltFromBuried = 0;
-                if (buriedIceProp && remainingMeltPotential > 0) {
-                    meltFromBuried = Math.min(remainingMeltPotential * 0.1, availBuried);
-                }
-                const actualMelt = meltFromSurface + meltFromBuried;
-                changes[source][iceProp] -= meltFromSurface;
-                if (buriedIceProp) changes[source][buriedIceProp] -= meltFromBuried;
+                const actualMelt = Math.min(melt, availIce);
+                changes[source][iceProp] -= actualMelt;
                 changes[target][liquidProp] += actualMelt;
                 totalMelt += actualMelt;
             }
@@ -131,7 +149,18 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
 
     // --- Part 2: Flowing Phase ---
 
-    // Step 2.2: Calculate potential flow based on initial levels
+    // Step 2.1: Calculate liquid surface elevations after flow-melt
+    const liquidSurfaceElevations = {};
+    const liquidAndIceSurfaceElevations = {};
+    zones.forEach(zone => {
+        const zoneArea = zoneAreas[zone] || 1;
+        const liquid = (zonalData[zone][liquidProp] || 0) + changes[zone][liquidProp];
+        const liquidDepth = zoneArea > 0 ? liquid / zoneArea : 0;
+        liquidSurfaceElevations[zone] = (zoneElevations[zone] || 0) + liquidDepth;
+        liquidAndIceSurfaceElevations[zone] = liquidSurfaceElevations[zone] + (iceHeights[zone] || 0);
+    });
+
+    // Step 2.2: Calculate potential flow based on sqrt(elevation difference) and boundary length
     const flows = {};
     const outflow = {};
     zones.forEach(zone => { flows[zone] = {}; outflow[zone] = 0; });
@@ -141,15 +170,19 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
             if (i === j || Math.abs(i - j) !== 1) continue;
             const source = zones[i];
             const target = zones[j];
-            const diff = initialLevels[source] - initialLevels[target];
-            if (diff > 0) {
-                let slopeFactor = 1 + ((zoneElevations[source] || 0) - (zoneElevations[target] || 0));
-                if (slopeFactor < 0.1) slopeFactor = 0.1;
-                const flowCoefficient = flowRateCoefficient * Math.sqrt(diff);
+            const deltaElevation = (liquidSurfaceElevations[source] || 0) - (liquidAndIceSurfaceElevations[target] || 0);
+            if (deltaElevation > 0) {
+                const boundaryScale = getBoundaryScale(Math.min(i, j));
+                const lowElevationPenalty = deltaElevation < 1 ? deltaElevation : 1;
+                const flowCoefficient = flowRateCoefficient * boundaryScale * Math.sqrt(deltaElevation) * lowElevationPenalty;
                 const availableLiquid = (zonalData[source][liquidProp] || 0) + changes[source][liquidProp];
-                const potentialFlow = availableLiquid * flowCoefficient * slopeFactor * secondsMultiplier;
-                flows[source][target] = potentialFlow;
-                outflow[source] += potentialFlow;
+                const maxFlowToEqualize =
+                    deltaElevation / (1 / (zoneAreas[source] || 1) + 1 / (zoneAreas[target] || 1));
+                const potentialFlow = Math.min(availableLiquid * flowCoefficient * secondsMultiplier, maxFlowToEqualize);
+                if (potentialFlow > 0) {
+                    flows[source][target] = potentialFlow;
+                    outflow[source] += potentialFlow;
+                }
             }
         }
     }
@@ -171,12 +204,17 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
             const flow = flows[source][target] || 0;
             if (flow > 0) {
                 changes[source][liquidProp] -= flow;
-                changes[target][liquidProp] += flow;
+                if (zonalTemperatures[target] < meltingPoint) {
+                    changes[target][iceProp] += flow;
+                    totalFreezeOut += flow;
+                } else {
+                    changes[target][liquidProp] += flow;
+                }
             }
         }
     }
 
-    return { changes, totalMelt };
+    return { changes, totalMelt, totalFreezeOut };
 }
 
 function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput) {
@@ -200,6 +238,18 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, 
         zonalDataKey: 'zonalHydrocarbons',
         viscosity: 0.12, // Methane is less viscous than water
         iceCoverageType: 'hydrocarbonIce'
+    });
+}
+
+function simulateSurfaceCO2Flow(zonalCO2Input, durationSeconds, zonalTemperatures = {}, zoneElevationsInput) {
+    return _simulateSurfaceFlow(zonalCO2Input, durationSeconds, zonalTemperatures, zoneElevationsInput, {
+        liquidProp: 'liquid',
+        iceProp: 'ice',
+        buriedIceProp: 'buriedIce',
+        meltingPoint: 216.58,
+        zonalDataKey: 'zonalCO2',
+        viscosity: 0.07, // Liquid CO2 is lower-viscosity than water
+        iceCoverageType: 'dryIce'
     });
 }
 
@@ -231,11 +281,12 @@ function calculateMethaneMeltingFreezingRates(temperature, availableIce, availab
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { simulateSurfaceWaterFlow, calculateMeltingFreezingRates, simulateSurfaceHydrocarbonFlow, calculateMethaneMeltingFreezingRates };
+    module.exports = { simulateSurfaceWaterFlow, calculateMeltingFreezingRates, simulateSurfaceHydrocarbonFlow, simulateSurfaceCO2Flow, calculateMethaneMeltingFreezingRates };
 } else {
     // Expose functions globally for browser usage
     globalThis.simulateSurfaceWaterFlow = simulateSurfaceWaterFlow;
     globalThis.calculateMeltingFreezingRates = calculateMeltingFreezingRates;
     globalThis.simulateSurfaceHydrocarbonFlow = simulateSurfaceHydrocarbonFlow;
+    globalThis.simulateSurfaceCO2Flow = simulateSurfaceCO2Flow;
     globalThis.calculateMethaneMeltingFreezingRates = calculateMethaneMeltingFreezingRates;
 }

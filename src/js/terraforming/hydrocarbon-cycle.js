@@ -175,6 +175,10 @@ class MethaneCycle extends ResourceCycleClass {
         { path: 'surface.liquidMethane', label: 'Freeze', sign: -1 },
         { path: 'surface.hydrocarbonIce', label: 'Freeze', sign: +1 },
       ],
+      freezeOut: [
+        { path: 'surface.liquidMethane', label: 'Freeze Out', sign: -1 },
+        { path: 'surface.hydrocarbonIce', label: 'Freeze Out', sign: +1 },
+      ],
       flowMelt: [
         { path: 'surface.liquidMethane', label: 'Flow Melt', sign: +1 },
         { path: 'surface.hydrocarbonIce', label: 'Flow Melt', sign: -1 },
@@ -186,16 +190,19 @@ class MethaneCycle extends ResourceCycleClass {
         && terraforming && terraforming.zonalHydrocarbons) {
         const flow = simulateSurfaceHydrocarbonFlow(terraforming, durationSeconds, tempMap) || { changes: {}, totalMelt: 0 };
         const totalMelt = flow.totalMelt || 0;
+        const freezeOut = flow.totalFreezeOut || 0;
         // Optional debug/display fields retained
         terraforming.flowMethaneMeltAmount = totalMelt;
         terraforming.flowMethaneMeltRate = durationSeconds > 0 ? totalMelt / durationSeconds * 86400 : 0;
+        terraforming.flowMethaneFreezeOutAmount = freezeOut;
+        terraforming.flowMethaneFreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
         return {
           changes: flow.changes || {},
           // Only report flowMelt as a separate total; phase-change melt remains in 'melt'
-          totals: { flowMelt: totalMelt },
+          totals: { flowMelt: totalMelt, freezeOut },
         };
       }
-      return { changes: {}, totals: { flowMelt: 0 } };
+      return { changes: {}, totals: { flowMelt: 0, freezeOut: 0 } };
     };
 
     super({

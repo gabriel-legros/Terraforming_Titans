@@ -184,6 +184,10 @@ class CO2Cycle extends ResourceCycleClass {
         { path: 'surface.liquidCO2', label: 'Freeze', sign: -1 },
         { path: 'surface.dryIce',    label: 'Freeze', sign: +1 },
       ],
+      freezeOut: [
+        { path: 'surface.liquidCO2', label: 'Freeze Out', sign: -1 },
+        { path: 'surface.dryIce',    label: 'Freeze Out', sign: +1 },
+      ],
       flowMelt: [
         { path: 'surface.liquidCO2', label: 'Flow Melt', sign: +1 },
         { path: 'surface.dryIce',    label: 'Flow Melt', sign: -1 },
@@ -197,14 +201,17 @@ class CO2Cycle extends ResourceCycleClass {
           && terraforming && terraforming.zonalCO2) {
         const flow = simulateSurfaceCO2Flow(terraforming, durationSeconds, tempMap) || { changes: {}, totalMelt: 0 };
         const totalMelt = flow.totalMelt || 0;
+        const freezeOut = flow.totalFreezeOut || 0;
         terraforming.flowCO2MeltAmount = totalMelt;
         terraforming.flowCO2MeltRate = durationSeconds > 0 ? totalMelt / durationSeconds * 86400 : 0;
+        terraforming.flowCO2FreezeOutAmount = freezeOut;
+        terraforming.flowCO2FreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
         return {
           changes: flow.changes || {},
-          totals: { flowMelt: totalMelt },
+          totals: { flowMelt: totalMelt, freezeOut },
         };
       }
-      return { changes: {}, totals: { flowMelt: 0 } };
+      return { changes: {}, totals: { flowMelt: 0, freezeOut: 0 } };
     };
 
     super({

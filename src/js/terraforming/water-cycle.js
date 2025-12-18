@@ -147,6 +147,10 @@ class WaterCycle extends ResourceCycleClass {
         { path: 'surface.liquidWater', label: 'Freeze', sign: -1 },
         { path: 'surface.ice', label: 'Freeze', sign: +1 },
       ],
+      freezeOut: [
+        { path: 'surface.liquidWater', label: 'Freeze Out', sign: -1 },
+        { path: 'surface.ice', label: 'Freeze Out', sign: +1 },
+      ],
       flowMelt: [
         { path: 'surface.liquidWater', label: 'Flow Melt', sign: +1 },
         { path: 'surface.ice', label: 'Flow Melt', sign: -1 },
@@ -173,11 +177,14 @@ class WaterCycle extends ResourceCycleClass {
           && terraforming && terraforming.zonalWater) {
           const flow = simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap) || { changes: {}, totalMelt: 0 };
           const totalMelt = flow.totalMelt || 0;
+          const freezeOut = flow.totalFreezeOut || 0;
           terraforming.flowMeltAmount = totalMelt;
           terraforming.flowMeltRate = durationSeconds > 0 ? totalMelt / durationSeconds * 86400 : 0;
-          return { changes: flow.changes || {}, totals: { flowMelt: totalMelt } };
+          terraforming.flowFreezeOutAmount = freezeOut;
+          terraforming.flowFreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
+          return { changes: flow.changes || {}, totals: { flowMelt: totalMelt, freezeOut } };
         }
-        return { changes: {}, totals: { flowMelt: 0 } };
+        return { changes: {}, totals: { flowMelt: 0, freezeOut: 0 } };
       },
       rateMappings,
       finalizeProcesses,

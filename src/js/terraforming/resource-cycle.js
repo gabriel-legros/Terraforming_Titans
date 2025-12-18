@@ -502,6 +502,16 @@ class ResourceCycle {
       for (const [k, v] of Object.entries(flowTotals)) {
         data.totals[k] = (data.totals[k] || 0) + v;
       }
+
+      let freezeOut = flowTotals.freezeOut || flow.totalFreezeOut || 0;
+      if (!freezeOut) {
+        for (const change of Object.values(flowChanges)) {
+          freezeOut += Math.max(0, change.ice || 0);
+        }
+      }
+      if (freezeOut) {
+        data.totals.freezeOut = (data.totals.freezeOut || 0) + freezeOut;
+      }
     }
 
     this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
@@ -510,13 +520,17 @@ class ResourceCycle {
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
     const rateType = 'terraforming';
+    const freezeOutTotal = totals.freezeOut || 0;
     for (const [totalKey, mappings] of Object.entries(this.rateMappings || {})) {
       const total = totals[totalKey] || 0;
-      const rate = durationSeconds > 0 ? total / durationSeconds * 86400 : 0;
+      const totalForMapping = (totalKey === 'freeze' && freezeOutTotal)
+        ? Math.max(0, total - freezeOutTotal)
+        : total;
+      const rate = durationSeconds > 0 ? totalForMapping / durationSeconds * 86400 : 0;
       const capKey = totalKey.charAt(0).toUpperCase() + totalKey.slice(1);
       const prefix = this.rateTotalsPrefix || '';
       const totalField = 'total' + (prefix ? prefix : '') + capKey + 'Rate';
-      terraforming[totalField] = rate;
+      terraforming[totalField] = durationSeconds > 0 ? total / durationSeconds * 86400 : 0;
       for (const map of mappings) {
         const resource = map.path.split('.').reduce((obj, k) => (obj ? obj[k] : undefined), terraforming.resources);
         if (resource && typeof resource.modifyRate === 'function') {
