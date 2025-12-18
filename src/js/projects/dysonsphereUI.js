@@ -29,7 +29,7 @@ function renderDysonSphereUI(project, container) {
           <span id="dsph-collector-cost"></span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Expansion/s:</span>
+          <span class="stat-label">Expansion</span>
           <span id="dsph-expansion-rate"></span>
         </div>
       </div>

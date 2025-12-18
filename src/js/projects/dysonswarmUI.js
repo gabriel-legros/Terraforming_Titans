@@ -28,7 +28,7 @@ function renderDysonSwarmUI(project, container) {
           <span id="ds-collector-cost"></span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Expansion/s:</span>
+          <span class="stat-label">Expansion</span>
           <span id="ds-expansion-rate"></span>
         </div>
       </div>
