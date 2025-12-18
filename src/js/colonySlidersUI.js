@@ -427,7 +427,7 @@ function initializeColonySlidersUI() {
     const coveragePercent = (Math.round(componentsCoverage * 1000) / 10).toFixed(1).replace(/\.0$/, '');
     const effectiveMitigation = (Math.round(mitigationPercent * 10) / 10).toFixed(1).replace(/\.0$/, '');
     const remaining = (Math.round(Math.max(0, 100 - mitigationPercent) * 10) / 10).toFixed(1).replace(/\.0$/, '');
-    const adaptationStatus = adaptationMitigation > 0 ? 'Active (+50% base mitigation).' : 'Locked.';
+    const adaptationStatus = adaptationMitigation > 0 ? 'Active (+50% base mitigation).' : 'Not researched.';
 
     if (mechanicalAssistanceInfo) {
       mechanicalAssistanceInfo.title = [
