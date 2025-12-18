@@ -87,6 +87,15 @@ Resources are created via `createResources` and updated each tick by
 Helper functions like `checkResourceAvailability` help modules plan without consuming
 resources immediately.
 
+## UI input pattern: string-backed numeric fields
+When adding an input that should accept user strings (scientific notation/suffixes) but still display formatted numbers when not editing (like Galactic Market, space storage reserve, and Nanocolony energy allocation):
+- Use `parseFlexibleNumber(value)` from `src/js/numbers.js` to convert the user’s text into a number.
+- Use `wireStringNumberInput(input, { ... })` from `src/js/ui-utils.js`:
+  - Provide `parseValue` that clamps/normalizes the parsed number for the specific feature (e.g., min 0, max 100).
+  - Provide `formatValue` that returns a display string for the parsed value (often `formatNumber(value, true, 3)` for large values, otherwise `String(value)`).
+  - In `onValue`, write the parsed value into the owning object’s state (do not continuously overwrite the input’s `.value` while editing).
+- In the feature’s `updateUI`, only update `input.value` when the field is not focused (`document.activeElement !== input`), and set `input.dataset.<key>` to the parsed numeric string so other UI (like total-cost displays) can read the numeric value without reparsing.
+
 ## Nanotechnology
 The `nanotechManager` oversees a self-replicating swarm unlocked by **Nanotechnology Stage I** research. The UI remains hidden until `enable()` is called.
 
@@ -206,7 +215,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Artificial stockpile controls gained a +Max button to fill remaining capacity in one click.
 - Biostorage research now enables storing and withdrawing biomass through space storage with zonal-aware transfers.
 - Refined the Nanocolony card with summary tiles and slider panels so growth, limits, and slider effects are easier to read without changing the neutral palette.
-- Nanocolony energy allocation input now accepts flexible numeric strings (e.g., scientific notation) and only formats after leaving the field.
+- Nanocolony energy allocation input now accepts flexible numeric strings (including 1e3/1M), formats when leaving the field, and defaults absolute mode to 1M W.
 - Warp Gate Command edit member dialog now includes a Respec button that refunds all allocated skill points for rapid reassignment.
 - Warp Gate Command skill editor gained an Auto assignment column that distributes points each tick according to player-provided ratios, updates live while the dialog is open, and ignores zero entries.
 - High-gravity adaptation advanced research now automatically halves high-gravity happiness and population penalties, stacking with Mechanical Assistance to remove them entirely; Biostorage and Dyson Sphere remain placeholders at 4M/5M advanced research points.
