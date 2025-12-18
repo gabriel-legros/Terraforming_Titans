@@ -270,9 +270,14 @@ function generateWGCTeamCards() {
       }
       return `<div class="team-slot" data-team="${tIdx}" data-slot="${sIdx}"><button>+</button></div>`;
     }).join('');
-    const unlocked = (typeof warpGateCommand !== 'undefined' && warpGateCommand.totalOperations >= teamUnlocks[tIdx]);
+    const threshold = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamUnlocks) ? warpGateCommand.teamUnlocks[tIdx] : teamUnlocks[tIdx];
+    const totalOps = (typeof warpGateCommand !== 'undefined') ? warpGateCommand.totalOperations : 0;
+    const unlocked = totalOps >= threshold;
     const lockMarkup = unlocked ? '' :
-      `<div class="wgc-team-locked" data-team="${tIdx}">LOCKED<br>${teamUnlocks[tIdx]} Operations Completed</div>`;
+      `<div class="wgc-team-locked" data-team="${tIdx}" data-threshold="${threshold}">
+        <div class="wgc-team-locked-title">LOCKED</div>
+        <div class="wgc-team-locked-detail">${Math.min(totalOps, threshold)} / ${threshold} Operations Completed</div>
+      </div>`;
     const stanceVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].hazardousBiomass : 'Neutral';
     const artVal = (typeof warpGateCommand !== 'undefined' && warpGateCommand.stances && warpGateCommand.stances[tIdx]) ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
     const segmentCount = Math.max(1, op.baseEventsTotal || 10);
@@ -338,10 +343,12 @@ function invalidateWGCTeamCache() {
       teamElements[tIdx] = null;
       return;
     }
+    const lockOverlay = card.querySelector('.wgc-team-locked');
     const logContainer = card.querySelector('.team-log');
     const logContent = card.querySelector('.team-log-content');
     const slots = Array.from(card.querySelectorAll('.team-slot')).map(slot => ({
       slot,
+      button: slot.querySelector('button'),
       bar: slot.querySelector('.team-hp-bar-fill'),
       indicator: slot.querySelector('.unspent-points-indicator') || null
     }));
@@ -354,6 +361,7 @@ function invalidateWGCTeamCache() {
       diffInput: card.querySelector('.difficulty-input'),
       stanceSelect: card.querySelector('.hbi-select'),
       artSelect: card.querySelector('.artifact-select'),
+      renameBtn: card.querySelector('.rename-team-icon'),
       progressContainer: card.querySelector('.operation-progress'),
       progressSegments: Array.from(card.querySelectorAll('.operation-progress-segment')),
       progressFills: Array.from(card.querySelectorAll('.operation-progress-fill')),
@@ -364,7 +372,8 @@ function invalidateWGCTeamCache() {
       lastRenderedCount: prev ? prev.lastRenderedCount || 0 : 0,
       lastRenderedHideState: prev ? prev.lastRenderedHideState : hideStory,
       lastRenderedHtml: prev ? prev.lastRenderedHtml || '' : '',
-      lockOverlay: card.querySelector('.wgc-team-locked'),
+      lockOverlay,
+      lockDetail: lockOverlay ? lockOverlay.querySelector('.wgc-team-locked-detail') : null,
       slots
     };
     teamElements[tIdx] = entry;
@@ -1231,6 +1240,7 @@ function updateWGCUI() {
       diffInput,
       stanceSelect,
       artSelect,
+      renameBtn,
       progressContainer,
       progressSegments,
       progressFills,
@@ -1238,15 +1248,27 @@ function updateWGCUI() {
       logContainer,
       logEl,
       lockOverlay,
+      lockDetail,
       slots
     } = refs;
     const team = warpGateCommand.teams[tIdx] || [];
     const full = team.every(m => m);
     const op = warpGateCommand.operations[tIdx];
-    const unlocked = warpGateCommand.totalOperations >= teamUnlocks[tIdx];
+    const threshold = warpGateCommand.teamUnlocks ? warpGateCommand.teamUnlocks[tIdx] : teamUnlocks[tIdx];
+    const unlocked = typeof warpGateCommand.isTeamUnlocked === 'function'
+      ? warpGateCommand.isTeamUnlocked(tIdx)
+      : warpGateCommand.totalOperations >= threshold;
     if (lockOverlay) {
-      if (unlocked) lockOverlay.classList.add('hidden');
-      else lockOverlay.classList.remove('hidden');
+      if (unlocked) {
+        lockOverlay.remove();
+        refs.lockOverlay = null;
+        refs.lockDetail = null;
+      } else {
+        lockOverlay.classList.remove('hidden');
+      }
+    }
+    if (lockDetail && !unlocked) {
+      lockDetail.textContent = `${Math.min(warpGateCommand.totalOperations, threshold)} / ${threshold} Operations Completed`;
     }
     if (startBtn) startBtn.disabled = !unlocked || !full || op.active;
     if (recallBtn) recallBtn.disabled = !unlocked || !op.active;
@@ -1264,6 +1286,7 @@ function updateWGCUI() {
         ? warpGateCommand.stances[tIdx].artifact : 'Neutral';
       artSelect.value = val;
     }
+    if (renameBtn) renameBtn.disabled = !unlocked;
     updateOperationProgressSegments(op, refs);
     if (logEl) {
       const logEntries = warpGateCommand.logs[tIdx] || [];
@@ -1296,8 +1319,9 @@ function updateWGCUI() {
       }
     }
 
-    slots.forEach(({ slot, bar }, sIdx) => {
+    slots.forEach(({ slot, bar, button }, sIdx) => {
       const member = team[sIdx];
+      if (button) button.disabled = !unlocked || !!member;
       if (!slot || !member) return;
       if (bar) {
         const hpPercent = Math.floor((member.health / member.maxHealth) * 100);

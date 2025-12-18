@@ -315,6 +315,10 @@ function initializeGameState(options = {}) {
     restoreConstructionOfficeSettings(savedConstructionOffice);
   }
 
+  const fundingRate = currentPlanetParameters.fundingRate || 0;
+  fundingModule = new FundingModule(resources, fundingRate);
+  populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
+
   lifeDesigner = new LifeDesigner();
   if (preserveManagers && savedLifeDesignerTravelState && lifeDesigner.restoreTravelState) {
     lifeDesigner.restoreTravelState(savedLifeDesignerTravelState);
@@ -353,9 +357,6 @@ function initializeGameState(options = {}) {
   if (typeof resetMirrorOversightSettings === 'function') {
     resetMirrorOversightSettings();
   }
-  const fundingRate = currentPlanetParameters.fundingRate || 0;
-  fundingModule = new FundingModule(resources, fundingRate);
-  populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
 
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);

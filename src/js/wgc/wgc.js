@@ -29,6 +29,7 @@ const baseOperationEvents = [
 const operationStartText = 'Setting out through Warp Gate';
 
 const defaultTeamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+const WGC_TEAM_UNLOCKS = [0, 100, 500, 1000];
 const facilityLabels = {
   shootingRange: 'Shooting Range',
   obstacleCourse: 'Obstacle Course',
@@ -160,7 +161,34 @@ class WarpGateCommand extends EffectableEntity {
     this.facilityCooldown = 0;
     this.teamNames = defaultTeamNames.slice();
     this.hideStoryLogs = false;
+    this.teamUnlocks = WGC_TEAM_UNLOCKS.slice();
+    this.unlockedTeams = this.teamUnlocks.map(threshold => this.totalOperations >= threshold);
     ensureOperationStoriesLoaded();
+  }
+
+  refreshUnlockedTeams() {
+    this.unlockedTeams = this.teamUnlocks.map(threshold => this.totalOperations >= threshold);
+  }
+
+  isTeamUnlocked(teamIndex) {
+    return this.totalOperations >= this.teamUnlocks[teamIndex];
+  }
+
+  checkForNewTeamUnlocks(previousTotalOperations) {
+    const newlyUnlockedTeams = [];
+    this.teamUnlocks.forEach((threshold, teamIndex) => {
+      if (previousTotalOperations < threshold && this.totalOperations >= threshold) {
+        this.unlockedTeams[teamIndex] = true;
+        newlyUnlockedTeams.push(teamIndex);
+      }
+    });
+    newlyUnlockedTeams.forEach(teamIndex => {
+      const name = this.teamNames[teamIndex] || `Team ${teamIndex + 1}`;
+      this.addLog(teamIndex, `${name} unlocked`);
+    });
+    if (newlyUnlockedTeams.length > 0 && typeof updateWGCUI === 'function') {
+      updateWGCUI();
+    }
   }
 
   addLog(teamIndex, text) {
@@ -749,6 +777,7 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   update(_delta) {
+    const previousTotalOperations = this.totalOperations;
     const seconds = _delta / 1000;
     if (this.facilityCooldown > 0) {
       this.facilityCooldown = Math.max(0, this.facilityCooldown - seconds);
@@ -813,6 +842,10 @@ class WarpGateCommand extends EffectableEntity {
 
       op.progress = this.calculateOperationProgress(op);
     });
+
+    if (this.totalOperations !== previousTotalOperations) {
+      this.checkForNewTeamUnlocks(previousTotalOperations);
+    }
 
     const minuteFraction = seconds / 60;
     const healMult = 1 + this.facilities.infirmary * 0.01;
@@ -1282,6 +1315,7 @@ class WarpGateCommand extends EffectableEntity {
         this.resetBaseEventResults(op);
       }
     });
+    this.refreshUnlockedTeams();
   }
 
   renameTeam(index, name) {
