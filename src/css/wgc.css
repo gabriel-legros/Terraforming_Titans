@@ -462,6 +462,12 @@
   padding: 4px 8px;
   border-radius: 3px;
 }
+.wgc-rd-item.wgc-rd-upgrade {
+  grid-template-columns: 1fr auto;
+}
+.wgc-rd-wide-button {
+  width: 100%;
+}
 .wgc-rd-item:nth-child(odd) {
     background-color: var(--wgc-bg-dark);
 }

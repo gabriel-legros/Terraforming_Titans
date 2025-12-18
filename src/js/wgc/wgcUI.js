@@ -395,7 +395,7 @@ function invalidateWGCTeamCache() {
 
 function createRDItem(key, label) {
   const div = document.createElement('div');
-  div.classList.add('wgc-rd-item');
+  div.classList.add('wgc-rd-item', 'wgc-rd-upgrade');
 
   const nameSpan = document.createElement('span');
   nameSpan.classList.add('wgc-rd-label');
@@ -409,13 +409,9 @@ function createRDItem(key, label) {
   }
   div.appendChild(nameSpan);
 
-  const multSpan = document.createElement('span');
-  multSpan.classList.add('wgc-rd-mult');
-  multSpan.id = `wgc-${key}-mult`;
-  div.appendChild(multSpan);
-
   const button = document.createElement('button');
   button.id = `wgc-${key}-button`;
+  button.classList.add('wgc-rd-wide-button');
   button.textContent = 'Buy';
   button.addEventListener('click', () => {
     warpGateCommand.purchaseUpgrade(key);
@@ -423,28 +419,52 @@ function createRDItem(key, label) {
   });
   div.appendChild(button);
 
-  rdElements[key] = { button, mult: multSpan, container: div };
+  rdElements[key] = { button, container: div };
   return div;
 }
 
 function createRDHeader() {
   const div = document.createElement('div');
-  div.classList.add('wgc-rd-item', 'wgc-rd-header');
+  div.classList.add('wgc-rd-item', 'wgc-rd-header', 'wgc-rd-upgrade');
 
   const label = document.createElement('span');
   label.classList.add('wgc-rd-label');
   label.textContent = 'Upgrade';
   div.appendChild(label);
 
-  const effect = document.createElement('span');
-  effect.classList.add('wgc-rd-mult');
-  div.appendChild(effect);
-
-  const cost = document.createElement('span');
-  cost.textContent = 'Cost (Alien Artifacts)';
-  div.appendChild(cost);
+  const purchase = document.createElement('span');
+  purchase.textContent = 'Purchase';
+  div.appendChild(purchase);
 
   return div;
+}
+
+function getRDUpgradeCurrentAndNext(key, purchases, max) {
+  const cappedNextPurchases = max ? Math.min(purchases + 1, max) : (purchases + 1);
+  if (key === 'wgtEquipment') {
+    const current = `+${(purchases * 0.1).toFixed(1)}%`;
+    const next = `+${(cappedNextPurchases * 0.1).toFixed(1)}%`;
+    return { current, next, isMaxed: !!(max && purchases >= max) };
+  }
+
+  const currentMult = key === 'superalloyEfficiency'
+    ? 1 + purchases
+    : 1 + (purchases / 100);
+  const nextMult = key === 'superalloyEfficiency'
+    ? 1 + cappedNextPurchases
+    : 1 + (cappedNextPurchases / 100);
+
+  return {
+    current: `x${currentMult.toFixed(2)}`,
+    next: `x${nextMult.toFixed(2)}`,
+    isMaxed: !!(max && purchases >= max)
+  };
+}
+
+function formatRDUpgradeBuyButtonText(key, purchases, max, cost) {
+  const { current, next, isMaxed } = getRDUpgradeCurrentAndNext(key, purchases, max);
+  if (isMaxed) return `Maxed (${current})`;
+  return `Buy (${cost}) ${current} -> ${next}`;
 }
 
 function populateRDMenu() {
@@ -1212,18 +1232,11 @@ function updateWGCUI() {
     }
     const cost = warpGateCommand.getUpgradeCost(key);
     if (el.button) {
-      el.button.textContent = `Buy (${cost})`;
       const art = (typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) ? resources.special.alienArtifact.value : 0;
+      const up = warpGateCommand.rdUpgrades[key];
+      el.button.textContent = formatRDUpgradeBuyButtonText(key, up.purchases, up.max, cost);
       el.button.disabled = cost > art ||
         (warpGateCommand.rdUpgrades[key].max && warpGateCommand.rdUpgrades[key].purchases >= warpGateCommand.rdUpgrades[key].max);
-    }
-    if (el.mult) {
-      if (key === 'wgtEquipment') {
-        const bonus = warpGateCommand.rdUpgrades[key].purchases * 0.1;
-        el.mult.textContent = `+${bonus.toFixed(1)}%`;
-      } else {
-        el.mult.textContent = `x${warpGateCommand.getMultiplier(key).toFixed(2)}`;
-      }
     }
   }
 
@@ -1416,5 +1429,7 @@ if (typeof module !== 'undefined' && module.exports) {
     populateFacilityMenu,
     generateWGCTeamCards,
     generateWGCLayout,
+    formatRDUpgradeBuyButtonText,
+    getRDUpgradeCurrentAndNext,
   };
 }
