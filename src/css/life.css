@@ -37,6 +37,13 @@
     color: #666;
     margin-top: 3px;
   }
+
+  .life-metabolism-equation {
+    margin-top: 2px;
+    color: #555;
+    font-family: "Courier New", monospace;
+    white-space: pre-wrap;
+  }
   
   #life-designs-table input {
     padding: 5px;

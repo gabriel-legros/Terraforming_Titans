@@ -86,6 +86,79 @@ function getActiveLifeMetabolismProcess() {
   return metabolism.processes[primaryProcessId] ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.metabolism.processes.photosynthesis;
 }
 
+const METABOLISM_EQUATION_SPECIES = {
+  carbonDioxide: { key: 'co2', label: 'CO₂' },
+  oxygen: { key: 'o2', label: 'O₂' },
+  hydrogen: { key: 'h2', label: 'H₂' },
+  atmosphericMethane: { key: 'ch4', label: 'CH₄' },
+  atmosphericWater: { key: 'h2o_atm', label: 'H₂O (atm)' },
+  liquidWater: { key: 'h2o_liq', label: 'H₂O (liq)' },
+  biomass: { key: 'biomass', label: 'Biomass' },
+};
+
+function formatMetabolismCoefficient(value) {
+  const rounded = Math.abs(value).toFixed(2);
+  return rounded.endsWith('.00') ? rounded.slice(0, -3) : rounded;
+}
+
+function formatMetabolismTerm(value, label, options) {
+  if (!options.includeCoefficients) return label;
+  const coefficient = formatMetabolismCoefficient(value);
+  if (coefficient === '1') return label;
+  return `${coefficient} ${label}`;
+}
+
+function summarizeMetabolismGrowthMap(process) {
+  const growth = process?.growth ?? null;
+  const surface = growth?.perBiomass?.surface ?? {};
+  const atmospheric = growth?.perBiomass?.atmospheric ?? {};
+  const combined = { ...surface, ...atmospheric };
+  const normalized = {};
+
+  Object.entries(combined).forEach(([resourceKey, value]) => {
+    const mapping = METABOLISM_EQUATION_SPECIES[resourceKey];
+    const key = mapping?.key ?? resourceKey;
+    normalized[key] = (normalized[key] ?? 0) + value;
+  });
+
+  return normalized;
+}
+
+function formatMetabolismGrowthEquation(process, options = {}) {
+  const mergedOptions = {
+    includeCoefficients: false,
+    includeBiomass: true,
+    includeLight: true,
+    ...options,
+  };
+
+  const normalized = summarizeMetabolismGrowthMap(process);
+  if (!mergedOptions.includeBiomass) delete normalized.biomass;
+
+  const left = [];
+  const right = [];
+
+  const order = ['co2', 'h2', 'h2o_liq', 'h2o_atm', 'ch4', 'o2', 'biomass'];
+  const entries = order
+    .filter(key => normalized[key])
+    .map(key => [key, normalized[key]]);
+
+  entries.forEach(([key, value]) => {
+    const label =
+      Object.values(METABOLISM_EQUATION_SPECIES).find(species => species.key === key)?.label ?? key;
+    const term = formatMetabolismTerm(value, label, mergedOptions);
+    if (value < 0) left.push(term);
+    if (value > 0) right.push(term);
+  });
+
+  const usesLuminosity = !!process?.growth?.usesLuminosity;
+  if (mergedOptions.includeLight && usesLuminosity) left.push('Light');
+
+  const leftSide = left.length ? left.join(' + ') : '—';
+  const rightSide = right.length ? right.join(' + ') : '—';
+  return `${leftSide} → ${rightSide}`;
+}
+
 function calculateGrowthTemperatureTolerance(points) {
   const requirements = getActiveLifeDesignRequirements();
   return requirements.growthTemperatureToleranceBaseC + points * requirements.growthTemperatureTolerancePerPointC;
@@ -1089,7 +1162,8 @@ if (typeof module !== 'undefined' && module.exports) {
     LifeDesigner,
     LifeManager,
     getActiveLifeDesignRequirements,
-    getActiveLifeMetabolismProcess
+    getActiveLifeMetabolismProcess,
+    formatMetabolismGrowthEquation,
   };
 } else if (typeof window !== 'undefined') {
   window.LifeDesign = LifeDesign;

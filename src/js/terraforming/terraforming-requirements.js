@@ -71,7 +71,7 @@ const terraformingRequirements = {
       oxygen: { min: 0, max: 200 },
       inertGas: { min: 60000, max: 200000 },
       hydrogen: { min: 200, max: 6000 },
-      atmosphericMethane: { min: 2000, max: 25000 },
+      atmosphericMethane: { min: 20000, max: 25000 },
     },
     waterCoverageTarget: 0.1,
     lifeCoverageTarget: 0.4,

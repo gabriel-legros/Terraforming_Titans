@@ -1332,62 +1332,50 @@ const gabbagOverrides = {
     hasSand: false,
     terraformingRequirementId: 'gabbagian',
   },
+  star: {
+    name: 'Gabbagsol',
+    spectralType: 'A',
+    luminositySolar: 10.19109899798825,
+    massSolar: 1.9411681130761282,
+    temperatureK: 7910,
+  },
   celestialParameters: {
-    distanceFromSun: 0,
-    gravity: 4.9,
-    radius: 6300,
-    mass: 4.6e24,
+    distanceFromSun: 3.133402092640641,
+    gravity: 4.88215797065464,
+    hasNaturalMagnetosphere : true,
+    radius: 3643.2869367918697,
+    mass: 9.70941037467594e+23,
     albedo: 0.14,
-    rotationPeriod: 24, // Rogue worlds use 24h day-night cycle
-    spinPeriod: 0, // Rogue worlds have no physical spin
-    starLuminosity: 0,
-    rogue: true,
-    sector: 'R9-99'
+    rotationPeriod: 26.19893743796274, 
+    spinPeriod: 26.19893743796274,
+    starLuminosity: 10.19109899798825,
+    sector: 'R5-06'
   },
   visualization: {
     baseColor: '#556b7d',
   },
   "resources": {
     underground: {
-      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
-      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      ore: { initialValue: 10, maxDeposits: 16680, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 167, areaTotal: 0 },
     },
     "surface": {
-      land: { initialValue : 49_876_000_000 },
-      "ice": {
-        "initialValue": 2905755111246688.5
-      },
-      "liquidWater": {
-        "initialValue": 0
-      },
-      "dryIce": {
-        "initialValue": 0
-      },
-      "liquidCO2": {
-        "initialValue": 0
-      },
-      "liquidMethane": {
-        "initialValue": 0
-      },
-      "hydrocarbonIce": {
-        "initialValue": 0
-      }
-    },
+              land: { initialValue: 16_680_021_928 }},
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 0
+        "initialValue": 616022537998481.72
       },
       "atmosphericWater": {
-        "initialValue": 0
+        "initialValue": 4701085893430.193
       },
       "atmosphericMethane": {
-        "initialValue": 0
+        "initialValue": 200000000000000
       },
       "oxygen": {
-        "initialValue": 0
+        "initialValue": 79141235823.26874
       },
       "inertGas": {
-        "initialValue": 0
+        "initialValue": 5000000000000000
       },
       "hydrogen": {
         "initialValue": 0
@@ -1399,19 +1387,19 @@ const gabbagOverrides = {
   },
   "zonalWater": {
     "tropical": {
-      "liquid": 0,
-      "ice": 290937936633937.6,
+      "liquid": 11515880167085540,
+      "ice": 0,
       "buriedIce": 0
     },
     "temperate": {
-      "liquid": 0,
-      "ice": 1702476415693995.5,
-      "buriedIce": 0
+      "liquid": 169904028019100.621,
+      "ice": 1479893066078871.8,
+      "buriedIce": 7850061015737532
     },
     "polar": {
       "liquid": 0,
-      "ice": 912340758918755.4,
-      "buriedIce": 0
+      "ice": 6447670084212581,
+      "buriedIce": 366098565491836.94
     }
   },
   "zonalSurface": {
@@ -1458,19 +1446,19 @@ const gabbagOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 2.8965877751696056,
-      "day": 2.897056679503238,
-      "night": 2.896118870835973
+      "value": 314.23921745308047,
+      "day": 315.5833105140506,
+      "night": 312.89512439211035
     },
     "temperate": {
-      "value": 2.765780521300558,
-      "day": 2.766225770784607,
-      "night": 2.765335271816509
+      "value": 258.5300913877756,
+      "day": 259.96211851713554,
+      "night": 257.09806425841566
     },
     "polar": {
-      "value": 2.645365259614177,
-      "day": 2.645787344036533,
-      "night": 2.6449431751918207
+      "value": 191.16793049028527,
+      "day": 191.83129103212374,
+      "night": 190.5045699484468
     }
   },
   hazards: {

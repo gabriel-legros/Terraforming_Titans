@@ -368,4 +368,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Terraforming requirements now include Life Designer baseline ranges, tolerances, and attribute caps, and the Life Designer reads these from the active requirement (defaulting to Human).
 - Life growth/decay is now metabolism-driven: the Human requirement defines a Photosynthesis process (zonal surface inputs, global atmospheric inputs) and `LifeManager.updateLife` applies it from parameters for future extensibility.
 - Added a Gabbagian terraforming requirement preset with methane/hydrogen atmosphere targets and a Methanogenesis-based metabolism (including anaerobic decay outputs).
+- Life Designer now labels the efficiency attribute by active metabolism and shows the metabolism growth chemistry equation (with a detailed tooltip variant).
 - Planets can now specify a `celestialParameters.terraformingRequirementId` (used by the Terraforming manager) so worlds like Gabbag can default to the Gabbagian requirement template.

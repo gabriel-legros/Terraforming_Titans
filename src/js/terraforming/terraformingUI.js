@@ -1848,7 +1848,7 @@ function updateLifeBox() {
         `Polar: ${p}`,
         '',
         'Modified solar flux is 4× the average across all zones.',
-        'Reduced by Cloud & Haze penalty.'
+        'Surface Solar Flux is the solar energy that reaches the ground.  It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.'
       ];
       setTooltipText(els.solarFluxTooltip, lines.join('\n'), els.tooltips, 'solarFlux');
     }

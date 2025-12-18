@@ -26,6 +26,51 @@ function getActiveLifeDesignRequirementsForUI() {
   }
 }
 
+function getActiveLifeMetabolismProcessForUI() {
+  const requirements = getActiveLifeDesignRequirementsForUI();
+  const metabolism = requirements.metabolism;
+  const primaryProcessId = metabolism?.primaryProcessId;
+  return metabolism?.processes?.[primaryProcessId]
+    ?? metabolism?.processes?.photosynthesis
+    ?? { displayName: 'Metabolism', growth: { usesLuminosity: true, perBiomass: { surface: {}, atmospheric: {} } } };
+}
+
+function formatMetabolismGrowthEquationForUI(process, options) {
+  try {
+    return formatMetabolismGrowthEquation(process, options);
+  } catch (error) {
+    return '';
+  }
+}
+
+function buildMetabolismEfficiencyUIStrings() {
+  const process = getActiveLifeMetabolismProcessForUI();
+  const usesLuminosity = !!process?.growth?.usesLuminosity;
+  const displayName = `${process.displayName} Efficiency`;
+  const description = usesLuminosity
+    ? 'Efficiency of converting light to energy; affects growth rate.'
+    : 'Efficiency of converting chemical energy into biomass; affects growth rate.';
+  const equation = formatMetabolismGrowthEquationForUI(process);
+  const tooltipText = [
+    `${displayName} determines the base growth rate.`,
+    '',
+    `Growth chemistry: ${equation}`,
+    '',
+    `Detailed: ${formatMetabolismGrowthEquationForUI(process, { includeCoefficients: true })}`,
+  ].join('\n');
+
+  return { displayName, description, equation, tooltipText };
+}
+
+function ensureDynamicInfoTooltip(iconElement, cachedTooltip, text) {
+  if (!iconElement) return null;
+  const existing = cachedTooltip ?? iconElement.querySelector('.resource-tooltip.dynamic-tooltip');
+  if (!existing) return attachDynamicInfoTooltip(iconElement, text);
+  if (existing.textContent !== text) existing.textContent = text;
+  if (existing.style && existing.style.whiteSpace !== 'pre-line') existing.style.whiteSpace = 'pre-line';
+  return existing;
+}
+
 var getEcumenopolisLandFraction = getEcumenopolisLandFraction;
 if (typeof module !== 'undefined' && module.exports) {
   ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
@@ -207,6 +252,7 @@ function cacheLifeAttributeCells() {
     const tentativeDisplay = tentativeDiv ? tentativeDiv.querySelector('.life-tentative-display') : null;
     const tentativeCell = tentativeDiv ? tentativeDiv.closest('.tentative-design-cell') : null;
     const modifyCell = row ? row.querySelector('.modify-buttons-cell') : null;
+    const nameCell = row ? row.querySelector('.life-attribute-name') : null;
     lifeUICache.attributeCells[attributeName] = {
       row,
       currentDiv,
@@ -214,6 +260,12 @@ function cacheLifeAttributeCells() {
       tentativeDisplay,
       tentativeCell,
       modifyCell,
+      nameCell,
+      displayNameSpan: nameCell ? nameCell.querySelector(`#${attributeName}-display-name`) : null,
+      descriptionSpan: nameCell ? nameCell.querySelector(`#${attributeName}-metabolism-description`) : null,
+      equationDiv: nameCell ? nameCell.querySelector(`#${attributeName}-growth-equation`) : null,
+      tooltipIcon: nameCell ? nameCell.querySelector(`#${attributeName}-metabolism-tooltip`) : null,
+      tooltipEl: nameCell ? nameCell.querySelector(`#${attributeName}-metabolism-tooltip .resource-tooltip.dynamic-tooltip`) : null,
     };
   });
 }
@@ -401,6 +453,7 @@ function initializeLifeTerraformingDesignerUI() {
     function generateAttributeRows() {
       let rows = '';
       const attributeOrder = baseLifeAttributeOrder;
+      const metabolismStrings = buildMetabolismEfficiencyUIStrings();
 
       for (const attributeName of attributeOrder) {
         if (!lifeDesigner.currentDesign[attributeName]) continue;
@@ -409,11 +462,14 @@ function initializeLifeTerraformingDesignerUI() {
         const convertedValue = getConvertedDisplay(attributeName, attribute);
         const isBioworkforceRow = attributeName === 'bioworkforce';
         const bioworkforceRowHidden = isBioworkforceRow && !isBioworkforceUnlocked();
+        const isMetabolismEfficiency = attributeName === 'photosynthesisEfficiency';
+        const displayName = isMetabolismEfficiency ? metabolismStrings.displayName : attribute.displayName;
+        const description = isMetabolismEfficiency ? metabolismStrings.description : attribute.description;
         rows += `
           <tr id="life-attribute-row-${attributeName}"${isBioworkforceRow ? ' data-bioworkforce-ui="true"' : ''}${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
-              ${attribute.displayName} (Max ${attribute.maxUpgrades})
-              <div class="life-attribute-description">${attribute.description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'photosynthesisEfficiency' ? ' <span class="info-tooltip-icon" title="Photosynthesis efficiency determines how effectively your designed organisms convert sunlight into biomass. Higher values speed up growth when sufficient light is available.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ' <span class="info-tooltip-icon" title="Each point assigns 0.00001 of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>' : ''}</div>
+              ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max ${attribute.maxUpgrades})
+              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">Growth: ${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ' <span class="info-tooltip-icon" title="Each point assigns 0.00001 of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>' : ''}`}</div>
             </td>
             <td>
               <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
@@ -641,11 +697,12 @@ function updateLifeUI() {
     if (lockedMessage) lockedMessage.style.display = 'block';
   }
 
-    const bioworkforceUnlocked = isBioworkforceUnlocked();
-    toggleBioworkforceElements(bioworkforceUnlocked);
+	    const bioworkforceUnlocked = isBioworkforceUnlocked();
+	    toggleBioworkforceElements(bioworkforceUnlocked);
 
-    updateDesignValues();
-    updatePointsDisplay();
+      updateMetabolismEfficiencyRow();
+	    updateDesignValues();
+	    updatePointsDisplay();
     const biodomePointsSpan = document.getElementById('life-biodome-points');
     const biodomeRateSpan = document.getElementById('life-biodome-rate');
     if (biodomePointsSpan) {
@@ -809,11 +866,22 @@ function updateLifeUI() {
           tentativeCell.style.display = 'none';
         }
       }
-    }
+	    }
 
-    function updateDesignValues() {
-      // Use the same attribute order as in generateAttributeRows
-      const attributeOrder = baseLifeAttributeOrder;
+	    function updateMetabolismEfficiencyRow() {
+	      const strings = buildMetabolismEfficiencyUIStrings();
+	      const cells = lifeUICache.attributeCells.photosynthesisEfficiency || {};
+	      if (cells.displayNameSpan) cells.displayNameSpan.textContent = strings.displayName;
+	      if (cells.descriptionSpan) cells.descriptionSpan.textContent = strings.description;
+	      if (cells.equationDiv) cells.equationDiv.textContent = `Growth: ${strings.equation}`;
+	      if (cells.tooltipIcon) {
+	        cells.tooltipEl = ensureDynamicInfoTooltip(cells.tooltipIcon, cells.tooltipEl, strings.tooltipText);
+	      }
+	    }
+
+	    function updateDesignValues() {
+	      // Use the same attribute order as in generateAttributeRows
+	      const attributeOrder = baseLifeAttributeOrder;
 
       attributeOrder.forEach(attributeName => {
         // Update Current Design Value (cached)
