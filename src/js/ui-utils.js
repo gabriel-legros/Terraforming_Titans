@@ -209,6 +209,32 @@ function attachDynamicInfoTooltip(iconElement, text) {
   return tooltip;
 }
 
+function wireStringNumberInput(input, options = {}) {
+  if (!input) return null;
+  const parseValue = options.parseValue || ((value) => Number(value));
+  const formatValue = options.formatValue || ((value) => String(value));
+  const onValue = options.onValue || (() => {});
+  const datasetKey = options.datasetKey || 'numericValue';
+
+  const syncParsedValue = () => {
+    const parsed = parseValue(input.value);
+    input.dataset[datasetKey] = String(parsed);
+    onValue(parsed, input.value);
+    return parsed;
+  };
+
+  input.addEventListener('input', () => {
+    syncParsedValue();
+  });
+
+  input.addEventListener('blur', () => {
+    const parsed = syncParsedValue();
+    input.value = formatValue(parsed);
+  });
+
+  return { syncParsedValue };
+}
+
 function makeCollapsibleCard(card) {
   if (!card) return;
   const header = card.querySelector('.card-header');
@@ -235,6 +261,7 @@ if (typeof module !== 'undefined' && module.exports) {
     setTooltipText,
     attachDynamicInfoTooltip,
     subtabScrollPositions,
-    makeCollapsibleCard
+    makeCollapsibleCard,
+    wireStringNumberInput
   };
 }

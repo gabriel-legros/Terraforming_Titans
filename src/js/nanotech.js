@@ -27,7 +27,7 @@ class NanotechManager extends EffectableEntity {
     this.hasEnoughMetal = true;
     this.effectiveGrowthRate = 0;
     this.maxEnergyPercent = 10;
-    this.maxEnergyAbsolute = 0;
+    this.maxEnergyAbsolute = 1e6;
     this.energyLimitMode = 'percent';
     this.uiCache = null; // cache of UI element references for fast updates
     this.uiState = {
@@ -290,17 +290,17 @@ class NanotechManager extends EffectableEntity {
               <span class="summary-label">Growth rate</span>
               <span class="summary-value" id="nanobot-growth-rate">0%</span>
             </div>
-            <div class="nanotech-summary-card nanotech-energy-card">
-              <div class="summary-label">
-                Energy allocation <span class="info-tooltip-icon" title="Percentage of power: Maximum percentage of total energy production the swarm may consume per second. Absolute (MW): Fixed energy limit in megawatts the swarm may consume per second.">&#9432;</span>
-              </div>
-              <div class="nanotech-energy-limit">
-                <input type="text" id="nanotech-energy-limit" value="${this.maxEnergyPercent}">
-                <select id="nanotech-energy-limit-mode">
-                  <option value="percent" selected>percentage of power</option>
-                  <option value="absolute">absolute (MW)</option>
-                </select>
-              </div>
+	            <div class="nanotech-summary-card nanotech-energy-card">
+	              <div class="summary-label">
+	                Energy allocation <span class="info-tooltip-icon" title="Percentage of power: Maximum percentage of total energy production the swarm may consume per second. Absolute: Fixed energy limit in watts the swarm may consume per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).">&#9432;</span>
+	              </div>
+	              <div class="nanotech-energy-limit">
+	                <input type="text" id="nanotech-energy-limit" value="${this.maxEnergyPercent}">
+	                <select id="nanotech-energy-limit-mode">
+	                  <option value="percent" selected>percentage of power</option>
+	                  <option value="absolute">absolute</option>
+	                </select>
+	              </div>
               <div class="nanotech-energy-stats">
                 <div class="energy-stat">
                   <span class="energy-label">Growth boost</span>
@@ -461,24 +461,39 @@ class NanotechManager extends EffectableEntity {
           this.componentsSlider = parseInt(e.target.value);
           this.updateUI();
         });
-      document
-        .getElementById('nanotech-energy-limit')
-        .addEventListener('input', (e) => {
-          const val = parseFloat(e.target.value);
-          if (this.energyLimitMode === 'absolute') {
-            this.maxEnergyAbsolute = isNaN(val) ? 0 : val * 1e6;
-            e.target.value = isNaN(val) ? '' : val.toString();
-          } else {
-            const pct = isNaN(val) ? 0 : Math.max(0, Math.min(100, val));
-            this.maxEnergyPercent = pct;
-            e.target.value = isNaN(val) ? '' : pct.toString();
-          }
-          this.updateUI();
+      const energyLimitInput = document.getElementById('nanotech-energy-limit');
+      if (energyLimitInput) {
+        wireStringNumberInput(energyLimitInput, {
+          datasetKey: 'energyLimit',
+          parseValue: (value) => {
+            const parsed = parseFlexibleNumber(value);
+            const numeric = Number.isFinite(parsed) ? parsed : 0;
+            if (this.energyLimitMode === 'absolute') return Math.max(0, numeric);
+            return Math.max(0, Math.min(100, numeric));
+          },
+          formatValue: (parsed) => {
+            if (this.energyLimitMode === 'absolute') {
+              return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+            }
+            return String(parsed);
+          },
+          onValue: (parsed) => {
+            if (this.energyLimitMode === 'absolute') {
+              this.maxEnergyAbsolute = parsed;
+            } else {
+              this.maxEnergyPercent = parsed;
+            }
+            this.updateUI();
+          },
         });
+      }
       document
         .getElementById('nanotech-energy-limit-mode')
         .addEventListener('change', (e) => {
           this.energyLimitMode = e.target.value;
+          if (this.energyLimitMode === 'absolute' && !(this.maxEnergyAbsolute > 0)) {
+            this.maxEnergyAbsolute = 1e6;
+          }
           this.updateUI();
         });
       // Cache references once the container is built
@@ -568,12 +583,15 @@ class NanotechManager extends EffectableEntity {
     if (C.eMode) C.eMode.value = this.energyLimitMode;
     if (C.eLimit && document.activeElement !== C.eLimit) {
       if (this.energyLimitMode === 'absolute') {
-        C.eLimit.value = (this.maxEnergyAbsolute / 1e6).toString();
+        const watts = Math.max(0, this.maxEnergyAbsolute);
+        C.eLimit.dataset.energyLimit = String(watts);
+        C.eLimit.value = watts >= 1e6 ? formatNumber(watts, true, 3) : String(watts);
         C.eLimit.removeAttribute('max');
       } else {
         const pct = Math.max(0, Math.min(100, this.maxEnergyPercent));
         this.maxEnergyPercent = pct;
-        C.eLimit.value = pct.toString();
+        C.eLimit.dataset.energyLimit = String(pct);
+        C.eLimit.value = String(pct);
         C.eLimit.max = 100;
       }
     }
@@ -720,7 +738,7 @@ class NanotechManager extends EffectableEntity {
     this.maintenance2Slider = state.maintenance2Slider || 0;
     this.componentsSlider = state.componentsSlider || 0;
     this.maxEnergyPercent = state.maxEnergyPercent ?? 10;
-    this.maxEnergyAbsolute = state.maxEnergyAbsolute || 0;
+    this.maxEnergyAbsolute = state.maxEnergyAbsolute ?? 1e6;
     this.energyLimitMode = state.energyLimitMode || 'percent';
     const max = this.getMaxNanobots();
     this.nanobots = Math.max(1, Math.min(this.nanobots, max));
@@ -755,7 +773,7 @@ class NanotechManager extends EffectableEntity {
     this.hasEnoughMetal = true;
     this.effectiveGrowthRate = 0;
     this.maxEnergyPercent = 10;
-    this.maxEnergyAbsolute = 0;
+    this.maxEnergyAbsolute = 1e6;
     this.energyLimitMode = 'percent';
     this.updateUI();
   }
