@@ -188,18 +188,19 @@
     return lines.join('\n');
   }
 
-  function logTerraformingOverride() {
-    const values = captureValues();
-    const override = buildOverrideObject(values);
-    const snippet = JSON.stringify(override, null, 2);
-    const oxygenOverride = override.atmospheric?.oxygen?.initialValue || 0;
-    const inertOverride = override.atmospheric?.inertGas?.initialValue || 0;
-    console.log('Override snippet:\n' + snippet);
-    console.log('Oxygen override initialValue:', oxygenOverride);
-    console.log('Inert gas override initialValue:', inertOverride);
-    console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(override.zonalTemperatures || {}));
-    return snippet;
-  }
+	  function logTerraformingOverride() {
+	    const values = captureValues();
+	    const override = buildOverrideObject(values);
+	    delete override.resources.surface;
+	    const snippet = JSON.stringify(override, null, 2);
+	    const oxygenOverride = override.resources.atmospheric.oxygen.initialValue;
+	    const inertOverride = override.resources.atmospheric.inertGas.initialValue;
+	    console.log('Override snippet:\n' + snippet);
+	    console.log('Oxygen override initialValue:', oxygenOverride);
+	    console.log('Inert gas override initialValue:', inertOverride);
+	    console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(override.zonalTemperatures || {}));
+	    return snippet;
+	  }
 
   function fastForwardToEquilibrium(options = {}) {
     let stepMs = options.stepMs || 1000 * 60 * 60; // The "jump" size, e.g., 1 hour

@@ -91,16 +91,14 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
                 : estimateCoverageFn(surfaceLiquid, zoneArea);
         }
 
-        const iceArea = Math.max(1, zoneArea * Math.max(0, iceCoverage));
-        zoneAreas[zone] = zoneArea;
-        iceAreas[zone] = iceArea;
-        iceCoverages[zone] = Math.max(0, iceCoverage);
-        iceHeights[zone] = surfaceIce > 0 ? surfaceIce / iceArea : 0;
+//        const iceArea = Math.max(1, zoneArea * Math.max(0, iceCoverage));
+//        zoneAreas[zone] = zoneArea;
+//        iceAreas[zone] = iceArea;
+//        iceCoverages[zone] = Math.max(0, iceCoverage);
+        iceHeights[zone] = surfaceIce > 0 ? surfaceIce / zoneArea : 0;
         totalIceAvail[zone] = surfaceIce;
 
-        const liquidArea = Math.max(1, zoneArea * Math.max(0, liquidCoverage));
-        liquidAreas[zone] = liquidArea;
-        liquidDepths[zone] = surfaceLiquid > 0 ? surfaceLiquid / liquidArea : 0;
+        liquidDepths[zone] = surfaceLiquid > 0 ? surfaceLiquid / zoneArea : 0;
     });
 
     // Step 1.2: Calculate flow-melt based on glacier height and target-zone temperature
@@ -124,7 +122,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
                 const lowElevationPenalty = meltElevationDelta < 1 ? Math.exp(1-1/(meltElevationDelta*meltElevationDelta)) : 1;
                 if (meltElevationDelta <= 0) continue;
                 const boundaryLength = boundaryScale * referenceBoundaryLength;
-                const boundaryMeltArea = boundaryLength * (iceCoverages[source] || 0) * (glacierHeight + boundaryInteractionDepth);
+                const boundaryMeltArea = boundaryLength * (glacierHeight + boundaryInteractionDepth);
                 const potentialMelt = boundaryMeltArea * glacierFlowMeltSpeedPerK * deltaT * secondsMultiplier * lowElevationPenalty;
                 if (potentialMelt > 0) {
                     melts[source][target] = potentialMelt;
@@ -165,9 +163,6 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const liquidSurfaceElevations = {};
     const liquidAndIceSurfaceElevations = {};
     zones.forEach(zone => {
-        const liquidArea = liquidAreas[zone] || 1;
-        const liquid = (zonalData[zone][liquidProp] || 0);
-        liquidDepths[zone] = liquidArea > 0 ? liquid / liquidArea : 0;
         liquidSurfaceElevations[zone] = (zoneElevations[zone] || 0) + (liquidDepths[zone] || 0);
         liquidAndIceSurfaceElevations[zone] = liquidSurfaceElevations[zone] + (iceHeights[zone] || 0);
     });

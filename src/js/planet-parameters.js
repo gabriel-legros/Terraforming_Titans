@@ -284,15 +284,15 @@ const titanOverrides = {
       ore: { initialValue: 3, maxDeposits: 8300, areaTotal: 83000 },
       geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
     },
-  "atmospheric": {
+"atmospheric": {
       "carbonDioxide": {
-        "initialValue": 25954.91073228153
+        "initialValue": 25989.591043714943
       },
       "atmosphericWater": {
-        "initialValue": 1.0201281257985345e-8
+        "initialValue": 5.856287103293168e-8
       },
       "atmosphericMethane": {
-        "initialValue": 375523695627718.9
+        "initialValue": 513392955624028.44
       },
       "oxygen": {
         "initialValue": 1000000000
@@ -341,47 +341,47 @@ const titanOverrides = {
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 1619747216588.36,
+      "liquid": 2898163736192.346,
       "ice": 0
     },
     "temperate": {
-      "liquid": 2111330920811.5972,
+      "liquid": 105967141861035.88,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 64264945849516.81
+      "ice": 21261458393633.7
     }
   },
   "zonalCO2": {
     "tropical": {
       "liquid": 0,
-      "ice": 148.72300704676323
+      "ice": 145.37225505127557
     },
     "temperate": {
       "liquid": 0,
-      "ice": 291.7682406666555
+      "ice": 289.7744546996858
     },
     "polar": {
       "liquid": 0,
-      "ice": 73604.59802265067
+      "ice": 73575.2622492094
     }
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 95.38280275604153,
-      "day": 95.7456916776661,
-      "night": 95.01991383441695
+      "value": 97.26224896801624,
+      "day": 97.60862614655709,
+      "night": 96.91587178947539
     },
     "temperate": {
-      "value": 91.91020624545149,
-      "day": 92.21197650714126,
-      "night": 91.60843598376172
+      "value": 93.81540966081212,
+      "day": 94.10357443031955,
+      "night": 93.52724489130469
     },
     "polar": {
-      "value": 84.45039377596859,
-      "day": 84.55335467266062,
-      "night": 84.34743287927657
+      "value": 86.58098018127075,
+      "day": 86.67778509179824,
+      "night": 86.48417527074325
     }
   },
   celestialParameters : { // Override all celestial parameters
@@ -1056,7 +1056,7 @@ const umbraOverrides = {
         "initialValue": 25035251297749.41
       },
       "atmosphericWater": {
-        "initialValue": 198495263.70403978
+        "initialValue": 198495980.79745197
       },
       "atmosphericMethane": {
         "initialValue": 0
@@ -1077,18 +1077,18 @@ const umbraOverrides = {
   },
   "zonalWater": {
     "tropical": {
-      "liquid": 7102018577.029652,
+      "liquid": 8678753438.309835,
       "ice": 0,
       "buriedIce": 0
     },
     "temperate": {
-      "liquid": 206874272.17470327,
-      "ice": 78188546.89568748,
+      "liquid": 2.3088635338613274e-69,
+      "ice": 10595173.026087541,
       "buriedIce": 0
     },
     "polar": {
       "liquid": 1.97236826e-316,
-      "ice": 371727367124991.56,
+      "ice": 371726064857053.6,
       "buriedIce": 0
     }
   },
@@ -1136,19 +1136,19 @@ const umbraOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 283.9036939524455,
-      "day": 287.17445635535023,
-      "night": 280.6329315495408
+      "value": 283.90369791204176,
+      "day": 287.17445052968026,
+      "night": 280.63294529440327
     },
     "temperate": {
-      "value": 263.9502778459937,
-      "day": 266.67020551476026,
-      "night": 261.23035017722714
+      "value": 263.9502954552708,
+      "day": 266.6702243838743,
+      "night": 261.2303665266673
     },
     "polar": {
-      "value": 179.9438862074104,
-      "day": 180.95417222187677,
-      "night": 178.93360019294403
+      "value": 179.9439082786943,
+      "day": 180.95419460462747,
+      "night": 178.93362195276111
     }
   },
   hazards: {
@@ -1361,12 +1361,12 @@ const gabbagOverrides = {
     },
     "surface": {
               land: { initialValue: 16_680_021_928 }},
-    "atmospheric": {
+ "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 616022537998481.72
+        "initialValue": 616022537998481.8
       },
       "atmosphericWater": {
-        "initialValue": 4701085893430.193
+        "initialValue": 19687695471924.22
       },
       "atmosphericMethane": {
         "initialValue": 200000000000000
@@ -1387,18 +1387,18 @@ const gabbagOverrides = {
   },
   "zonalWater": {
     "tropical": {
-      "liquid": 11515880167085540,
+      "liquid": 223978479465929,
       "ice": 0,
       "buriedIce": 0
     },
     "temperate": {
-      "liquid": 169904028019100.621,
-      "ice": 1479893066078871.8,
-      "buriedIce": 7850061015737532
+      "liquid": 23426954455658484,
+      "ice": 0,
+      "buriedIce": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 6447670084212581,
+      "ice": 3758967906201679.5,
       "buriedIce": 366098565491836.94
     }
   },
@@ -1446,19 +1446,19 @@ const gabbagOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 314.23921745308047,
-      "day": 315.5833105140506,
-      "night": 312.89512439211035
+      "value": 331.5570418835665,
+      "day": 333.5243645517144,
+      "night": 329.5897192154186
     },
     "temperate": {
-      "value": 258.5300913877756,
-      "day": 259.96211851713554,
-      "night": 257.09806425841566
+      "value": 312.8495838018385,
+      "day": 313.1735644681621,
+      "night": 312.52560313551487
     },
     "polar": {
-      "value": 191.16793049028527,
-      "day": 191.83129103212374,
-      "night": 190.5045699484468
+      "value": 203.4737134554126,
+      "day": 204.08472807587677,
+      "night": 202.86269883494842
     }
   },
   hazards: {
