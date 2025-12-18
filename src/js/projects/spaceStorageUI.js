@@ -193,12 +193,18 @@ function renderSpaceStorageUI(project, container) {
   expansionCostRow.id = 'ss-expansion-cost';
   expansionCostRow.innerHTML = `<strong>Cost:</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon" title="Construction time is reduced for each terraformed planet">&#9432;</span>`;
   expansionGrid.appendChild(expansionCostRow);
+
+  const expansionRateRow = document.createElement('div');
+  expansionRateRow.id = 'ss-expansion-rate';
+  expansionRateRow.innerHTML = '<strong>Expansion/s:</strong> <span class="expansion-rate"></span>';
+  expansionGrid.appendChild(expansionRateRow);
   expansionSection.appendChild(expansionGrid);
   topSection.appendChild(expansionSection);
 
   cardBody.appendChild(topSection);
 
   const expansionCostDisplay = expansionCostRow.querySelector('.expansion-cost');
+  const expansionRateDisplay = expansionRateRow.querySelector('.expansion-rate');
   const resourceGrid = card.querySelector('#ss-resource-grid');
 
   storageResourceOptions.forEach(opt => {
@@ -367,6 +373,7 @@ function renderSpaceStorageUI(project, container) {
     maxDisplay: card.querySelector('#ss-max'),
     resourceGrid,
     expansionCostDisplay,
+    expansionRateDisplay,
     shipProgressButton,
     withdrawButton,
     storeButton,
@@ -408,6 +415,10 @@ function updateSpaceStorageUI(project) {
       }
     }
     els.expansionCostDisplay.textContent = parts.join(', ');
+  }
+  if (els.expansionRateDisplay) {
+    const rate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
+    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} expansions/s`;
   }
   if (els.usageCells) {
     storageResourceOptions.forEach(opt => {

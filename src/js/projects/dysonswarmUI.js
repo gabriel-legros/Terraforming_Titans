@@ -22,7 +22,16 @@ function renderDysonSwarmUI(project, container) {
         <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="ds-power-per"></span></div>
         <div class="stat-item"><span class="stat-label">Total Power:</span><span id="ds-total-power"></span></div>
       </div>
-      <div class="stat-item collector-cost-container"><span class="stat-label">Collector Cost:</span><span id="ds-collector-cost"></span></div>
+      <div class="stats-grid two-col collector-cost-container">
+        <div class="stat-item">
+          <span class="stat-label">Collector Cost:</span>
+          <span id="ds-collector-cost"></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Expansion/s:</span>
+          <span id="ds-expansion-rate"></span>
+        </div>
+      </div>
       <div class="progress-button-container"><button id="ds-start" class="progress-button"></button></div>
       <div class="checkbox-container">
         <input type="checkbox" id="ds-auto">
@@ -44,6 +53,7 @@ function renderDysonSwarmUI(project, container) {
     powerPerDisplay: card.querySelector('#ds-power-per'),
     totalPowerDisplay: card.querySelector('#ds-total-power'),
     costDisplay: card.querySelector('#ds-collector-cost'),
+    expansionRateDisplay: card.querySelector('#ds-expansion-rate'),
     startButton: card.querySelector('#ds-start'),
     autoCheckbox,
     autoStartTravelResetCheckbox: travelResetCheckbox,
@@ -82,6 +92,13 @@ function updateDysonSwarmUI(project) {
       }
     }
     els.costDisplay.textContent = parts.join(', ');
+  }
+  if (els.expansionRateDisplay) {
+    const active = project.isCollectorContinuous()
+      ? project.autoDeployCollectors && (project.isCompleted || project.collectors > 0)
+      : project.collectorProgress > 0;
+    const rate = active ? (1000 / project.collectorDuration) : 0;
+    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
   }
   if (els.startButton) {
     els.startButton.parentElement.style.display = '';

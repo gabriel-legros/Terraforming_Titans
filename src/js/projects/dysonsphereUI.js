@@ -17,13 +17,22 @@ function renderDysonSphereUI(project, container) {
       <span class="card-title">Dyson Sphere Collectors</span>
     </div>
     <div class="card-body">
-      <div class="stats-grid three-col">
+      <div class="stats-grid four-col">
         <div class="stat-item"><span class="stat-label">Collectors:</span><span id="dsph-collectors"></span></div>
         <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="dsph-power-per"></span></div>
         <div class="stat-item"><span class="stat-label">Total Power:</span><span id="dsph-total-power"></span></div>
         <div class="stat-item"><span class="stat-label">Frame:</span><span id="dsph-frame"></span></div>
       </div>
-      <div class="stat-item collector-cost-container"><span class="stat-label">Collector Cost:</span><span id="dsph-collector-cost"></span></div>
+      <div class="stats-grid two-col collector-cost-container">
+        <div class="stat-item">
+          <span class="stat-label">Collector Cost:</span>
+          <span id="dsph-collector-cost"></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Expansion/s:</span>
+          <span id="dsph-expansion-rate"></span>
+        </div>
+      </div>
       <div class="progress-button-container"><button id="dsph-start" class="progress-button"></button></div>
       <div class="checkbox-container">
         <input type="checkbox" id="dsph-auto">
@@ -47,6 +56,7 @@ function renderDysonSphereUI(project, container) {
     totalPowerDisplay: card.querySelector('#dsph-total-power'),
     frameStatusDisplay: card.querySelector('#dsph-frame'),
     costDisplay: card.querySelector('#dsph-collector-cost'),
+    expansionRateDisplay: card.querySelector('#dsph-expansion-rate'),
     startButton,
     autoCheckbox,
     autoStartTravelResetCheckbox: travelResetCheckbox,
@@ -98,6 +108,13 @@ function updateDysonSphereUI(project) {
       }
     }
     els.costDisplay.textContent = parts.join(', ');
+  }
+  if (els.expansionRateDisplay) {
+    const active = project.isCollectorContinuous()
+      ? project.autoDeployCollectors && (project.isCompleted || collectors > 0)
+      : project.collectorProgress > 0;
+    const rate = active ? (1000 / project.collectorDuration) : 0;
+    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
   }
 
   if (els.autoCheckbox) {
