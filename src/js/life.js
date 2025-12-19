@@ -1,4 +1,9 @@
-const DEFAULT_LIFE_DESIGN_REQUIREMENTS = terraformingRequirements.human.lifeDesign;
+let DEFAULT_LIFE_DESIGN_REQUIREMENTS;
+try {
+  DEFAULT_LIFE_DESIGN_REQUIREMENTS = terraformingRequirements.human.lifeDesign;
+} catch (error) {
+  DEFAULT_LIFE_DESIGN_REQUIREMENTS = require('./terraforming/terraforming-requirements.js').terraformingRequirements.human.lifeDesign;
+}
 
 function getTerraformingSafe() {
   try {
@@ -175,7 +180,10 @@ class LifeAttribute {
         const burialRate = this.value * 0.0001;
         return burialRate.toFixed(4); // Display rate with 4 decimal places
       case 'bioworkforce':
-        return `${(this.value * 0.00001).toFixed(5)} workers per ton biomass`;
+        const bioworkersPerBiomassPerPoint = requirements.bioworkersPerBiomassPerPoint
+          ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.bioworkersPerBiomassPerPoint
+          ?? 0.00001;
+        return `${(this.value * bioworkersPerBiomassPerPoint).toFixed(5)} workers per ton biomass`;
       default:
         return null;
     }

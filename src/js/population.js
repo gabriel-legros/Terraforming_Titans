@@ -301,13 +301,24 @@ class PopulationModule extends EffectableEntity {
       if (points <= 0) {
         return 0;
       }
+      const bioworkersPerBiomassPerPoint = terraforming?.requirements?.lifeDesign?.bioworkersPerBiomassPerPoint ?? 0.00001;
       const biomass = resources.surface?.biomass;
       if (!biomass || biomass.value <= 0) {
         return 0;
       }
-      return Math.floor(biomass.value * points * 0.00001);
+      return Math.floor(biomass.value * points * bioworkersPerBiomassPerPoint);
     } catch (error) {
       return 0;
     }
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    PopulationModule,
+  };
+}
+
+if (typeof window !== 'undefined') {
+  window.PopulationModule = PopulationModule;
 }
