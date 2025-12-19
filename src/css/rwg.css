@@ -32,8 +32,9 @@
 }
 
 .rwg-controls {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
   background: var(--rwg-card);
   padding: 12px;
@@ -41,10 +42,23 @@
   border-radius: 8px;
 }
 
+.rwg-controls > .rwg-input {
+  flex: 1 1 260px;
+}
+
+.rwg-controls > .rwg-select {
+  flex: 3 1 520px;
+}
+
+.rwg-controls > div:last-child {
+  flex: 0 0 auto;
+}
+
 .rwg-input {
   display: flex;
   gap: 10px;
   align-items: center;
+  min-width: 0;
 }
 
 .rwg-input label {
@@ -68,6 +82,8 @@
 .rwg-select {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .rwg-select select {
@@ -76,6 +92,8 @@
   border: 1px solid var(--rwg-border);
   background: var(--rwg-panel);
   color: var(--rwg-fg);
+  flex: 1 1 160px;
+  min-width: 150px;
 }
 
 .rwg-btn {

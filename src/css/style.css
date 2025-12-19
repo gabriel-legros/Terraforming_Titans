@@ -67,6 +67,7 @@ body {
     top: 0;
     z-index: 100;
     background-color: #333;
+    flex-wrap: wrap;
 }
 
 /* Adjust subtab spacing when journal is collapsed to account for show button */
@@ -87,7 +88,7 @@ body.journal-collapsed .space-subtabs
 .terraforming-subtab,
 .hope-subtab,
 .space-subtab { /* Added space-subtab */
-    flex: 1;
+    flex: 1 1 140px;
     padding: 10px;
     text-align: center;
     background-color: #444;
@@ -98,7 +99,7 @@ body.journal-collapsed .space-subtabs
     white-space: nowrap; /* Prevent tab button text from wrapping */
     overflow: hidden; /* Hide overflow to maintain button size */
     text-overflow: ellipsis; /* Show ellipsis (...) if the text overflows */
-    min-width: 80px; /* Set a minimum width for the tab buttons */
+    min-width: 120px; /* Set a minimum width for the tab buttons */
 }
 
 .tab.active,
