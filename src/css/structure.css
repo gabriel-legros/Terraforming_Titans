@@ -121,7 +121,7 @@
 }
 
 .auto-build-container {
-    min-width: 350px;
+    min-width: 320px;
     flex: 1;
     display: flex;
     flex-direction: column; /* Allows items to stack vertically */
