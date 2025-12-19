@@ -490,8 +490,8 @@ class WarpGateCommand extends EffectableEntity {
         let damage = 2 * scaledDifficulty;
         if (event.skill === 'wit') damage *= 0.5;
         damage = Math.max(0, damage);
+        failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
         if (damage > 0) {
-          failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
           failureActions.push(() => {
             team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
           });
@@ -530,9 +530,9 @@ class WarpGateCommand extends EffectableEntity {
         if (event.skill === 'power') damage *= 2;
         if (event.skill === 'wit') damage *= 0.5;
         damage = Math.max(0, damage);
+        const name = member && member.firstName ? ` (${member.firstName})` : '';
+        failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP${name}`;
         if (damage > 0) {
-          const name = member && member.firstName ? ` (${member.firstName})` : '';
-          failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP${name}`;
           failureActions.push(() => {
             member.health = Math.max(member.health - damage, 0);
           });
@@ -565,8 +565,8 @@ class WarpGateCommand extends EffectableEntity {
         const combatMult = event && event.difficultyMultiplier ? event.difficultyMultiplier : 1;
         dc = Math.max(0, (40 * combatMult + 4*difficulty) * stanceDifficultyModifier);
         const damage = Math.max(0, 5 * scaledDifficulty);
+        failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
         if (damage > 0) {
-          failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
           failureActions.push(() => {
             team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
           });
