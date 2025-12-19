@@ -6,16 +6,19 @@
 
 .button-container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 20px;
     flex-wrap: wrap; /* Allows controls to wrap without stretching button */
-    justify-content: space-between; /* Aligns the auto-build container to the right */
+    justify-content: flex-start;
 }
 
 .left-button-container {
     display: flex;
     align-items: center;
     gap: 10px; /* Adds space between the buttons */
+    flex-wrap: wrap;
+    flex: 1 1 420px;
+    min-width: 0;
   }
 
 .collapse-arrow {
@@ -122,13 +125,15 @@
 
 .auto-build-container {
     min-width: 320px;
-    flex: 1;
+    flex: 0 1 320px;
     display: flex;
     flex-direction: column; /* Allows items to stack vertically */
     align-items: flex-end; /* Aligns items to the right */
     gap: 5px; /* Adds spacing between elements */
     text-align: right;
     font-size: 0.85em;
+    margin-left: auto;
+    max-width: 100%;
 }
 
 .auto-build-input,
