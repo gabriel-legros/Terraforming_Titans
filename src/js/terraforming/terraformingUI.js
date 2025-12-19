@@ -565,25 +565,17 @@ function createTerraformingSummaryUI() {
   terraformingContainer.appendChild(playTimeDisplay);
   summaryCache.playTimeDisplay = playTimeDisplay;
 
-  // Create the first row of boxes
-  const row1 = document.createElement('div');
-  row1.classList.add('terraforming-row');
+  const grid = document.createElement('div');
+  grid.classList.add('terraforming-grid');
 
-  // Create the second row of boxes
-  const row2 = document.createElement('div');
-  row2.classList.add('terraforming-row');
+  createTemperatureBox(grid);
+  createAtmosphereBox(grid);
+  createWaterBox(grid);
+  createLuminosityBox(grid);
+  createLifeBox(grid);
+  createMagnetosphereBox(grid);
 
-  // Create and append the boxes for each terraforming aspect
-  createTemperatureBox(row1);
-  createAtmosphereBox(row1);
-  createWaterBox(row1);
-  createLuminosityBox(row2);
-  createLifeBox(row2);
-  createMagnetosphereBox(row2);
-
-  // Append the rows to the terraforming container
-  terraformingContainer.appendChild(row1);
-  terraformingContainer.appendChild(row2);
+  terraformingContainer.appendChild(grid);
 
   // Add the "Complete Terraforming" button below the rows
   createCompleteTerraformingButton(terraformingContainer);
@@ -651,6 +643,13 @@ function createTemperatureBox(row) {
       <p>Global Mean Temp: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>Equilibrium Temp: <span id="equilibrium-temp"></span> <span class="temp-unit"></span></p>
       <table>
+        <colgroup>
+          <col class="gas-col">
+          <col class="pressure-col">
+          <col class="delta-col">
+          <col class="target-col">
+          <col class="status-col">
+        </colgroup>
         <thead>
           <tr>
             <th>Zone</th>
