@@ -11,19 +11,8 @@ const lifeShopCategoryLookup = Object.fromEntries(
   lifeShopCategories.map(category => [category.name, category])
 );
 
-const DEFAULT_LIFE_DESIGN_REQUIREMENTS_FOR_UI = {
-  survivalTemperatureRangeK: { min: 273.15, max: 313.15 },
-  optimalGrowthTemperatureBaseK: 293.15,
-  photosynthesisRatePerPoint: 0.00008,
-  baseMaxBiomassDensityTPerM2: 0.1,
-};
-
 function getActiveLifeDesignRequirementsForUI() {
-  try {
     return getActiveLifeDesignRequirements();
-  } catch (error) {
-    return DEFAULT_LIFE_DESIGN_REQUIREMENTS_FOR_UI;
-  }
 }
 
 function getActiveLifeMetabolismProcessForUI() {

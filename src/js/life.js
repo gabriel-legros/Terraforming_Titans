@@ -1,47 +1,4 @@
-const DEFAULT_LIFE_DESIGN_REQUIREMENTS = {
-  survivalTemperatureRangeK: { min: 273.15, max: 313.15 },
-  optimalGrowthTemperatureBaseK: 293.15,
-  growthTemperatureToleranceBaseC: 1,
-  growthTemperatureTolerancePerPointC: 0.5,
-  photosynthesisRatePerPoint: 0.00008,
-  baseMaxBiomassDensityTPerM2: 0.1,
-  radiationToleranceThresholdPoints: 25,
-  minimumBiomassDecayRateTPerS: 1,
-  metabolism: {
-    primaryProcessId: 'photosynthesis',
-    processes: {
-      photosynthesis: {
-        id: 'photosynthesis',
-        displayName: 'Photosynthesis',
-        growth: {
-          perBiomass: {
-            surface: { biomass: 1, liquidWater: -0.6 },
-            atmospheric: { carbonDioxide: -1.4666666666666666, oxygen: 1.0666666666666667 },
-          },
-        },
-        decay: {
-          allowSterileDecayWithoutOxygen: true,
-          perBiomass: {
-            surface: { biomass: -1 },
-            atmospheric: { oxygen: -1.0666666666666667, carbonDioxide: 1.4666666666666666, atmosphericWater: 0.6 },
-          },
-        },
-      },
-    },
-  },
-  attributeMaxUpgrades: {
-    minTemperatureTolerance: 60,
-    maxTemperatureTolerance: 40,
-    optimalGrowthTemperature: 15,
-    growthTemperatureTolerance: 40,
-    photosynthesisEfficiency: 500,
-    radiationTolerance: 25,
-    invasiveness: 50,
-    spaceEfficiency: 100,
-    geologicalBurial: 50,
-    bioworkforce: 100,
-  },
-};
+const DEFAULT_LIFE_DESIGN_REQUIREMENTS = terraformingRequirements.human.lifeDesign;
 
 function getTerraformingSafe() {
   try {
