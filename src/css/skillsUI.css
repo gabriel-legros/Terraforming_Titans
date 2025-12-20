@@ -12,8 +12,8 @@
 }
 
 .skill-button {
-    width: 180px;
-    height: 110px;
+    width: 190px;
+    min-height: 125px;
     /* Matching button color from screenshot */
     background-color: #444;
     border: 1px solid #555;
@@ -22,14 +22,30 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     color: #f0f0f0;
     text-align: center;
-    padding: 10px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 4px;
     transition: all 0.3s ease;
     position: relative; /* For grid placement */
     z-index: 1;
+    box-sizing: border-box;
+}
+
+.skill-button strong {
+    font-size: 0.95em;
+    line-height: 1.2;
+}
+
+.skill-button span {
+    font-size: 0.8em;
+    line-height: 1.25;
+}
+
+.skill-button span:last-child {
+    font-size: 0.78em;
 }
 
 .skill-button:not(:disabled):hover {

@@ -132,15 +132,29 @@ const skillParameters = {
   life_design_points: {
     id: 'life_design_points',
     name: 'More Life Design Points',
-    description: 'Grants 20 life design points per rank',
+    description: 'Grants 20 life design points per rank and boosts point shop and biodome gains by 20% per rank',
     cost: 1,
     maxRank: 5,
-    effect: {
-      target: 'lifeDesigner',
-      type: 'lifeDesignPointBonus',
-      baseValue: 20,
-      perRank: true
-    },
+    effects: [
+      {
+        target: 'lifeDesigner',
+        type: 'lifeDesignPointBonus',
+        baseValue: 20,
+        perRank: true
+      },
+      {
+        target: 'lifeDesigner',
+        type: 'lifeDesignPointShopMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      },
+      {
+        target: 'lifeDesigner',
+        type: 'lifeDesignPointBiodomeMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      }
+    ],
     requires: ['pop_growth']
   }
 };

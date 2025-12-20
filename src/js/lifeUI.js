@@ -919,7 +919,7 @@ function updateLifeUI() {
           const pointsUsed = lifeDesigner.currentDesign.getDesignCost();
           pointsRemaining = maxPoints - pointsUsed;
         }
-        pointsRemainingSpan.textContent = pointsRemaining;
+        pointsRemainingSpan.textContent = formatNumber(pointsRemaining);
     }
 
 // Removed old updateTemperatureRangesAndMessages function

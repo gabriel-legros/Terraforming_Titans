@@ -231,6 +231,12 @@ class EffectableEntity {
         case 'lifeDesignPointBonus':
           this.applyLifeDesignPointBonus(effect);
           break;
+        case 'lifeDesignPointShopMultiplier':
+          this.applyLifeDesignPointShopMultiplier(effect);
+          break;
+        case 'lifeDesignPointBiodomeMultiplier':
+          this.applyLifeDesignPointBiodomeMultiplier(effect);
+          break;
         case 'lifeGrowthMultiplier':
           this.applyLifeGrowthMultiplier(effect);
           break;
@@ -526,6 +532,12 @@ class EffectableEntity {
         if (typeof this.designPointBonus !== 'undefined') {
           this.designPointBonus += effect.value;
         }
+      }
+
+      applyLifeDesignPointShopMultiplier(effect) {
+      }
+
+      applyLifeDesignPointBiodomeMultiplier(effect) {
       }
 
   applyLifeGrowthMultiplier(effect) {

@@ -574,6 +574,8 @@ class LifeDesigner extends EffectableEntity {
 
     this.baseMaxPoints = lifeDesignerConfig.maxPoints;
     this.designPointBonus = 0;
+    this.pointShopMultiplier = 1;
+    this.biodomePointMultiplier = 1;
 
     this.isActive = false;
     this.remainingTime = this.getTentativeDuration();
@@ -621,11 +623,21 @@ class LifeDesigner extends EffectableEntity {
 
   applyActiveEffects(firstTime = true){
     this.designPointBonus = 0;
+    this.pointShopMultiplier = 1;
+    this.biodomePointMultiplier = 1;
     super.applyActiveEffects(firstTime);
   }
 
   applyLifeDesignPointBonus(effect){
     this.designPointBonus += effect.value;
+  }
+
+  applyLifeDesignPointShopMultiplier(effect) {
+    this.pointShopMultiplier *= 1 + effect.value;
+  }
+
+  applyLifeDesignPointBiodomeMultiplier(effect) {
+    this.biodomePointMultiplier *= 1 + effect.value;
   }
 
   createNewDesign(
@@ -693,7 +705,7 @@ class LifeDesigner extends EffectableEntity {
       typeof buildings !== 'undefined' && buildings.biodome
         ? buildings.biodome.active
         : 0;
-    const rate = biodomeCount > 0 ? Math.log10(10 * biodomeCount) : 0;
+    const rate = (biodomeCount > 0 ? Math.log10(10 * biodomeCount) : 0) * this.biodomePointMultiplier;
     this.biodomePointRate = rate;
     this.biodomePoints += (rate * delta) / 3600000;
   }
@@ -784,10 +796,11 @@ class LifeDesigner extends EffectableEntity {
   maxLifeDesignPoints() {
     const totalPurchases = Object.values(this.purchaseCounts)
       .reduce((acc, val) => acc + val, 0);
+    const boostedPurchases = totalPurchases * this.pointShopMultiplier;
     return (
       this.baseMaxPoints +
       this.designPointBonus +
-      totalPurchases +
+      boostedPurchases +
       Math.floor(this.biodomePoints)
     );
   }
