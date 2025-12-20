@@ -42,7 +42,7 @@ progressGabbag.chapters.push(
     chapter: 27,
     activePlanet: 'gabbag',
     title: 'Chapter 27: The Gabbagians',
-    narrative: "Mary : *sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.",
+    narrative: "Mary : '*sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.' \n Warning : New Hazard detected.",
     prerequisites: ['solisPrime.3l'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }

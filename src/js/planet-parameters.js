@@ -1329,7 +1329,6 @@ const solisPrimeOverrides = {
 const gabbagOverrides = {
   name: 'Gabbag',
   specialAttributes: {
-    hasSand: false,
     terraformingRequirementId: 'gabbagian',
   },
   star: {
@@ -1340,7 +1339,7 @@ const gabbagOverrides = {
     temperatureK: 7910,
   },
   celestialParameters: {
-    distanceFromSun: 3.133402092640641,
+    distanceFromSun: 4.133402092640641,
     gravity: 4.88215797065464,
     hasNaturalMagnetosphere : true,
     radius: 3643.2869367918697,
