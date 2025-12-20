@@ -301,7 +301,7 @@ class PlanetaryThrustersProject extends Project{
       this.motionInvest = this.el.distCb.checked;
       if(this.motionInvest){
         this.spinInvest=false;this.el.rotCb.checked=false;
-        if(this.dVreq===0 || this.activeMode!=='motion') this.prepareJob(true,false);
+        this.prepareJob(true,false);
         this.activeMode='motion';
       }
     };
