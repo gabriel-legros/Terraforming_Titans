@@ -49,12 +49,12 @@ function getActiveLifeMetabolismProcess() {
 }
 
 const METABOLISM_EQUATION_SPECIES = {
-  carbonDioxide: { key: 'co2', label: 'CO₂' },
-  oxygen: { key: 'o2', label: 'O₂' },
-  hydrogen: { key: 'h2', label: 'H₂' },
-  atmosphericMethane: { key: 'ch4', label: 'CH₄' },
-  atmosphericWater: { key: 'h2o_atm', label: 'H₂O (atm)' },
-  liquidWater: { key: 'h2o_liq', label: 'H₂O (liq)' },
+  carbonDioxide: { key: 'co2', label: 'CO₂ (g)' },
+  oxygen: { key: 'o2', label: 'O₂ (g)' },
+  hydrogen: { key: 'h2', label: 'H₂ (g)' },
+  atmosphericMethane: { key: 'ch4', label: 'CH₄ (g)' },
+  atmosphericWater: { key: 'h2o_atm', label: 'H₂O (g)' },
+  liquidWater: { key: 'h2o_liq', label: 'H₂O (l)' },
   biomass: { key: 'biomass', label: 'Biomass' },
 };
 

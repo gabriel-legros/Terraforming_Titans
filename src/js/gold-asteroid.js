@@ -128,7 +128,8 @@ class GoldenAsteroid {
             this.element.textContent = 'Golden Asteroid!';
             
             const clickHandler = this.onClick.bind(this);
-            this.element.addEventListener('click', clickHandler);
+            this.element.addEventListener('mousedown', clickHandler);
+            this.element.addEventListener('touchstart', clickHandler);
             
             this.countdownContainer.appendChild(this.element);
           } else {
