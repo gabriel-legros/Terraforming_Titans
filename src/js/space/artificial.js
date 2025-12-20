@@ -196,6 +196,14 @@ class ArtificialManager extends EffectableEntity {
         this.updateUI(true);
     }
 
+    unlockCore(coreId) {
+        const entry = ARTIFICIAL_CORES.find((core) => core.value === coreId);
+        if (!entry || !entry.disabled) return;
+        entry.disabled = false;
+        entry.disabledSource = null;
+        this.updateUI(true);
+    }
+
     update(delta) {
         if (!this.enabled || !this.activeProject) return;
         if (this.activeProject.status === 'building') {
@@ -213,6 +221,10 @@ class ArtificialManager extends EffectableEntity {
         if (!effect) return;
         if (effect.type === 'enable') {
             this.enable(effect.targetId);
+            return;
+        }
+        if (effect.type === 'unlockCore') {
+            this.unlockCore(effect.targetId);
             return;
         }
         super.applyEffect(effect);

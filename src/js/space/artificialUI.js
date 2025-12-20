@@ -1176,6 +1176,22 @@ function updateArtificialUI(options = {}) {
   if (artificialUICache.core) {
     const options = getArtificialCores();
     const fallback = options.find((entry) => !entry.disabled) || options[0];
+    const signature = JSON.stringify(options.map((option) => ({
+      value: option.value,
+      disabled: !!option.disabled,
+      label: option.label,
+      source: option.disabledSource || ''
+    })));
+    if (artificialUICache.core.dataset.optionSignature !== signature) {
+      const currentValue = artificialUICache.core.value;
+      artificialUICache.core.innerHTML = '';
+      options.forEach((option) => {
+        artificialUICache.core.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
+      });
+      artificialUICache.core.dataset.optionSignature = signature;
+      const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
+      artificialUICache.core.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');
+    }
     if (project && project.core) {
       artificialUICache.core.value = project.core;
     } else if (!artificialUICache.core.value && fallback) {

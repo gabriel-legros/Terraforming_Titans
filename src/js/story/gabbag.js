@@ -290,7 +290,17 @@ progressGabbag.chapters.push(
     prerequisites: ['gabbag.29.7'],
     objectives: [
     ],
-    reward: []
+    reward: [
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'gabbag', value: true },
+      { target: 'artificialManager', type: 'unlockCore', targetId: 'gas-giant' },
+      {
+        target: 'galaxyManager',
+        type: 'fleetCapacityMultiplier',
+        value: 1.25,
+        effectId: 'gabbagFleetUpgrade',
+        sourceId: 'gabbag.29.8'
+      }
+    ]
   }
 );
 

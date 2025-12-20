@@ -67,4 +67,17 @@ describe('Artificial worlds sand availability', () => {
 
     expect(override.specialAttributes.hasSand).toBe(false);
   });
+
+  it('unlocks a specific artificial core via effect', () => {
+    const manager = buildManager();
+    const { getArtificialCores } = require('../src/js/space/artificial.js');
+    const cores = getArtificialCores();
+    const locked = cores.find((entry) => entry.disabled);
+    expect(locked.value).toBe('gas-giant');
+
+    manager.applyEffect({ type: 'unlockCore', targetId: 'gas-giant' });
+
+    const updated = getArtificialCores().find((entry) => entry.value === locked.value);
+    expect(updated.disabled).toBe(false);
+  });
 });
