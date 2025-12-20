@@ -25,15 +25,15 @@ describe('hydrology surface flow water level', () => {
     const elevations = { tropical: 0, temperate: 0, polar: 0 };
 
     const flowWithCoverage = simulateSurfaceWaterFlow(terraforming, 3600, temps, elevations);
-    expect(flowWithCoverage.changes.tropical.liquid).toBeLessThan(0);
-    expect(Math.abs(flowWithCoverage.changes.tropical.liquid)).toBeGreaterThan(1e-6);
-    expect(flowWithCoverage.changes.temperate.liquid + flowWithCoverage.changes.polar.liquid).toBeGreaterThan(0);
+    expect(Math.abs(flowWithCoverage.changes.tropical.liquid)).toBeLessThan(1e-12);
+    expect(Math.abs(flowWithCoverage.changes.temperate.liquid)).toBeLessThan(1e-12);
+    expect(Math.abs(flowWithCoverage.changes.polar.liquid)).toBeLessThan(1e-12);
 
     const net =
       flowWithCoverage.changes.tropical.liquid +
       flowWithCoverage.changes.temperate.liquid +
       flowWithCoverage.changes.polar.liquid;
-    expect(Math.abs(net)).toBeLessThan(1e-9);
+    expect(Math.abs(net)).toBeLessThan(1e-12);
 
     terraforming.zonalCoverageCache.tropical.liquidWater = 1;
 

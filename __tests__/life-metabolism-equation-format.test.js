@@ -9,7 +9,7 @@ describe('formatMetabolismGrowthEquation', () => {
     const equation = formatMetabolismGrowthEquation(process);
 
     expect(equation).toContain('CO₂');
-    expect(equation).toContain('H₂O (liq)');
+    expect(equation).toContain('H₂O (l)');
     expect(equation).toContain('Light');
     expect(equation).toContain('O₂');
     expect(equation).toContain('→');
@@ -23,8 +23,8 @@ describe('formatMetabolismGrowthEquation', () => {
     expect(equation).toContain('CO₂');
     expect(equation).toContain('H₂');
     expect(equation).toContain('CH₄');
-    expect(equation).toContain('H₂O (liq)');
-    expect(equation).toContain('H₂O (atm)');
+    expect(equation).toContain('H₂O (l)');
+    expect(equation).toContain('H₂O (g)');
     expect(equation).toContain('→');
   });
 
