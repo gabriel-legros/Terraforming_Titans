@@ -203,6 +203,7 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
 ## Updates
+- Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
 - Added a Settings checkbox to keep the tab active by playing a looped near-silent audio track.
 - Added a muted looping silent audio track to keep the tab active for testing purposes.
 - Replaced the silent keep-tab-running track with the new `assets/white_noise/weak_white_noise_-60dBFS_60s_22k.wav` loop (with the old data URI as a fallback) so Chrome/Edge can keep the tab alive.
