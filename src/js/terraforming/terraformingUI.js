@@ -1008,7 +1008,7 @@ function createTemperatureBox(row) {
     }
     if (els.opticalDepthInfo) {
       const contributions = terraforming.temperature.opticalDepthContributions || {};
-      const intro = 'Measures the Greenhouse Gas Effect. Higher value means more heat trapped. To achieve both temperature and luminosity target, it is recommended to keep this value below 3.';
+      const intro = 'Measures the Greenhouse Gas Effect. Higher value means more heat trapped. To achieve both temperature and luminosity target, it is usually recommended to keep this value below 3.';
       const lines = Object.entries(contributions)
         .map(([gas, val]) => {
           const mapping = {

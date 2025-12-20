@@ -26,9 +26,6 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const radiusScale = planetRadiusKm / marsRadiusKm;
     const planetRadiusMeters = planetRadiusKm * 1000;
 
-    const baseFlowRate = 0.001 / 86400;
-    const flowRateCoefficient = (baseFlowRate * radiusScale) / (viscosity || 1.0);
-
     // Flow melt (glacier contact) is thermal-limited and should not depend on viscosity.
     // Units: m/s/K. Amounts are treated as m³-equivalent (1 ton ~ 1 m³).
     const glacierFlowMeltSpeedPerK = 5e-8;
@@ -49,6 +46,9 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const referenceBoundaryLength = boundaryLengthTropicalTemperate || 1;
     const boundaryInteractionDepth = 200_000;
     const getBoundaryScale = (minZoneIndex) => (minZoneIndex === 0 ? boundaryLengthTropicalTemperate : boundaryLengthTemperatePolar) / referenceBoundaryLength;
+
+    const baseFlowRate = 0.001 / 86400;
+    const flowRateCoefficient = (baseFlowRate * radiusScale) / (viscosity || 1.0);
 
     const changes = {};
     zones.forEach(zone => {
@@ -91,10 +91,8 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
                 : estimateCoverageFn(surfaceLiquid, zoneArea);
         }
 
-//        const iceArea = Math.max(1, zoneArea * Math.max(0, iceCoverage));
-//        zoneAreas[zone] = zoneArea;
-//        iceAreas[zone] = iceArea;
-//        iceCoverages[zone] = Math.max(0, iceCoverage);
+        zoneAreas[zone] = zoneArea;
+        liquidAreas[zone] = Math.max(1, zoneArea * Math.max(0, liquidCoverage));
         iceHeights[zone] = surfaceIce > 0 ? surfaceIce / zoneArea : 0;
         totalIceAvail[zone] = surfaceIce;
 
