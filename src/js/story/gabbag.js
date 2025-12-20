@@ -5,6 +5,36 @@ var progressGabbag = { rwgLock: false, chapters: [], storyProjects: {} };
  *  Population milestone journal for a future world.
  * -------------------------------------------------*/
 
+/* ----------  Story-Specific Special Projects  ---------- */
+
+progressGabbag.storyProjects.gabbag_museum_construction = {
+  type: 'Project',
+  name: 'Gabbag Museum Construction',
+  category: 'story',
+  chapter: 28,
+  cost: {
+    colony: {
+      metal: 10_000_000,
+      glass: 5_000_000,
+      components: 1_000_000,
+      electronics: 250_000
+    }
+  },
+  duration: 300_000,
+  description: 'Construct a grand museum to house the recovered Gabbagian relics.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'gabbag',
+    storySteps: [
+      'Foundation pylons sink into the rubble while salvage crews clear a ceremonial plaza.',
+      'Glass vaults rise over the exhibit halls as climate systems stabilize for the relics.',
+      'The atrium lights up, and curators begin cataloguing every recovered artifact.'
+    ]
+  }
+};
+
 progressGabbag.chapters.push(
   {
     id: 'gabbag.27.0',
@@ -127,7 +157,9 @@ progressGabbag.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
     ],
-    reward: []
+    reward: [
+      { target: 'project', targetId: 'gabbag_museum_construction', type: 'enable' }
+    ]
   },
   {
     id: 'gabbag.28.4',

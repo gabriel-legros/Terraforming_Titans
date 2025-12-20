@@ -258,6 +258,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Metropolis and Ecumenopolis autobuild controls now include a Max option to push construction to the limit.
 - Added a fullscreen loading overlay that displays while the game or a save file is loading.
 - Added a setting to keep hidden buildings when travelling between worlds; it is off by default so hidden structures reappear unless enabled.
+- Added a Gabbag Museum Construction story project to support the museum build after chapter 28.
 - Milestones subtab remains hidden until Terraforming measurements research is completed.
 - Added a Mass Driver building that is locked by default and costs ten times an oxygen factory.
 - Import Colonists project now supports importing Crusaders when the crusaderImportEnabled flag is active.
