@@ -1,13 +1,19 @@
 class SpaceExportProject extends SpaceExportBaseProject {
+  constructor(config, name) {
+    super(config, name);
+    this.tradeSaturationMultiplier = 1;
+  }
+
   getExportCap() {
     if (
       typeof spaceManager !== 'undefined' &&
       typeof spaceManager.getTerraformedPlanetCountExcludingCurrent === 'function'
     ) {
       const count = spaceManager.getTerraformedPlanetCountExcludingCurrent();
-      return Math.max(count, 1) * 1000000000;
+      const saturationMultiplier = this.tradeSaturationMultiplier || 1;
+      return Math.max(count, 1) * 1000000000 * saturationMultiplier;
     }
-    return 1000000000;
+    return 1000000000 * (this.tradeSaturationMultiplier || 1);
   }
 
   getMaxAssignableShips() {

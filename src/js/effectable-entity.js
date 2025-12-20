@@ -208,6 +208,9 @@ class EffectableEntity {
         case 'shipEfficiency':
           this.applyShipEfficiency(effect);
           break;
+        case 'tradeSaturationMultiplier':
+          this.applyTradeSaturationMultiplier(effect);
+          break;
         case 'shipCapacityMultiplier':
           this.applyShipCapacityMultiplier(effect);
           break;
@@ -449,6 +452,10 @@ class EffectableEntity {
       if (typeof shipEfficiency !== 'undefined') {
         shipEfficiency = 1 + effect.value;
       }
+    }
+
+    applyTradeSaturationMultiplier(effect) {
+      this.tradeSaturationMultiplier = 1 + effect.value;
     }
 
     applyShipCapacityMultiplier(effect) {

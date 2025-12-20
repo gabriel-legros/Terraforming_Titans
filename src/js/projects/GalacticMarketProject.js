@@ -9,6 +9,7 @@ class GalacticMarketProject extends Project {
     this.startingDuration = Infinity;
     this.remainingTime = Infinity;
     this.manualRunRemainingTime = 0;
+    this.tradeSaturationMultiplier = 1;
   }
 
   isContinuous() {
@@ -377,7 +378,8 @@ class GalacticMarketProject extends Project {
     const count = spaceManager?.getTerraformedPlanetCountExcludingCurrent?.();
     const worlds = Math.max(Number(count) || 0, 1);
     const flooredWorlds = Math.floor(worlds * 100) / 100;
-    return multiplier * flooredWorlds;
+    const saturationMultiplier = this.tradeSaturationMultiplier || 1;
+    return multiplier * flooredWorlds * saturationMultiplier;
   }
 
   updateUI() {

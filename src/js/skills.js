@@ -6,6 +6,7 @@ class Skill {
     this.baseCost = config.cost; // base cost for rank 1
     this.maxRank = config.maxRank || 1;
     this.effect = config.effect || null;
+    this.effects = config.effects || null;
     this.requires = config.requires || [];
     this.rank = 0;
     this.unlocked = false;
@@ -53,21 +54,27 @@ class SkillManager {
   }
 
   applySkillEffect(skill) {
-    if (!skill.effect) return;
-    const effect = Object.assign({}, skill.effect, {
-      sourceId: skill.id,
-      effectId: skill.id,
-    });
-    if (skill.effect.perRank) {
-      if (skill.id === 'scanning_speed' && skill.effect.type === 'scanningSpeedMultiplier') {
-        effect.value = Math.pow(skill.effect.baseValue, skill.rank);
-      } else if (skill.id === 'android_efficiency' && skill.effect.type === 'productionMultiplier') {
-        effect.value = 1 + skill.effect.baseValue * skill.rank;
-      } else {
-        effect.value = skill.effect.baseValue * skill.rank;
+    const effects = Array.isArray(skill.effects)
+      ? skill.effects
+      : (skill.effect ? [skill.effect] : []);
+    if (effects.length === 0) return;
+
+    effects.forEach((effectConfig, index) => {
+      const effect = Object.assign({}, effectConfig, {
+        sourceId: skill.id,
+        effectId: effects.length === 1 ? skill.id : `${skill.id}-${index}`,
+      });
+      if (effectConfig.perRank) {
+        if (skill.id === 'scanning_speed' && effectConfig.type === 'scanningSpeedMultiplier') {
+          effect.value = Math.pow(effectConfig.baseValue, skill.rank);
+        } else if (skill.id === 'android_efficiency' && effectConfig.type === 'productionMultiplier') {
+          effect.value = 1 + effectConfig.baseValue * skill.rank;
+        } else {
+          effect.value = effectConfig.baseValue * skill.rank;
+        }
       }
-    }
-    addEffect(effect);
+      addEffect(effect);
+    });
   }
 
   saveState() {
@@ -107,12 +114,17 @@ class SkillManager {
   resetSkillTree() {
     for (const id in this.skills) {
       const skill = this.skills[id];
-      if (skill.unlocked && skill.effect) {
-        const effect = { target: skill.effect.target, sourceId: skill.id };
-        if (skill.effect.targetId) effect.targetId = skill.effect.targetId;
-        if (typeof removeEffect === 'function') {
-          removeEffect(effect);
-        }
+      const effects = Array.isArray(skill.effects)
+        ? skill.effects
+        : (skill.effect ? [skill.effect] : []);
+      if (skill.unlocked && effects.length > 0) {
+        effects.forEach((effectConfig) => {
+          const effect = { target: effectConfig.target, sourceId: skill.id };
+          if (effectConfig.targetId) effect.targetId = effectConfig.targetId;
+          if (typeof removeEffect === 'function') {
+            removeEffect(effect);
+          }
+        });
       }
       skill.rank = 0;
       skill.unlocked = false;

@@ -88,15 +88,31 @@ const skillParameters = {
   ship_efficiency: {
     id: 'ship_efficiency',
     name: 'Advanced Logistics',
-    description: 'Ships import and export 20% more per rank',
+    description: 'Ships import and export 20% more per rank and trade caps increase by 20% per rank',
     cost: 1,
     maxRank: 5,
-    effect: {
-      target: 'global',
-      type: 'shipEfficiency',
-      baseValue: 0.2,
-      perRank: true
-    },
+    effects: [
+      {
+        target: 'global',
+        type: 'shipEfficiency',
+        baseValue: 0.2,
+        perRank: true
+      },
+      {
+        target: 'project',
+        targetId: 'galactic_market',
+        type: 'tradeSaturationMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      },
+      {
+        target: 'project',
+        targetId: 'exportResources',
+        type: 'tradeSaturationMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      }
+    ],
     requires: ['project_speed']
   },
   project_speed: {
