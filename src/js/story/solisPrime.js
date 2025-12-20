@@ -459,6 +459,17 @@ progressSolisPrime.chapters.push(
         sourceId: 'solisPrime.3h'
       }
     ]
+  },
+  {
+    id: 'solisPrime.3i',
+    type: 'journal',
+    chapter: 26,
+    narrative: "Acquire Full Control of sector R5-06 to continue.",
+    prerequisites: ['solisPrime.3h'],
+    objectives: [
+      { type: 'galaxySectorControl', sectorLabel: 'R5-06' }
+    ],
+    reward: []
   }
 );
 
