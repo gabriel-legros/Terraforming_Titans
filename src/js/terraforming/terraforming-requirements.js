@@ -65,7 +65,7 @@ const terraformingRequirements = {
   gabbagian: {
     id: 'gabbagian',
     displayName: 'Gabbagian',
-    temperatureRangeK: { min: 348.15, max: 388.15 },
+    temperatureRangeK: { min: 328.15, max: 368.15 },
     luminosityRange: { min: 0, max: 2000 },
     gasTargetsPa: {
       carbonDioxide: { min: 5000, max: 50000 },

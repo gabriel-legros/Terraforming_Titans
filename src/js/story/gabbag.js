@@ -23,7 +23,7 @@ progressGabbag.storyProjects.gabbag_museum_construction = {
   duration: 300_000,
   description: 'Construct a grand museum to house the recovered Gabbagian relics.',
   repeatable: true,
-  maxRepeatCount: 1,
+  maxRepeatCount: 3,
   unlocked: false,
   attributes: {
     planet: 'gabbag',
@@ -43,7 +43,7 @@ progressGabbag.chapters.push(
     activePlanet: 'gabbag',
     title: 'Chapter 27: The Gabbagians',
     narrative: "Mary : *sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.",
-    prerequisites: ['impossible3'],
+    prerequisites: ['solisPrime.3l'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
     ],
@@ -181,7 +181,7 @@ progressGabbag.chapters.push(
     narrative: "Pete : 'I have to say...  You were right Mary.  With proper supervision, HOPE absolutely can behave.  Just... keep it on a leash.'  \n Mary : 'Thanks Pete.  HOPE does not mean any harm.  It's just... confused.'",
     prerequisites: ['gabbag.28.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
+      { type: 'project', projectId: 'gabbag_museum_construction', repeatCount: 3 }
     ],
     reward: []
   },
@@ -228,7 +228,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mary : 'We're finally starting to make a real dent in all this garbage cleanup.  Are you tired of it HOPE?'  \n HOPE : 'Calculating diminishing novelty. Keep hauling.'",
+    narrative: "Mary : 'We're finally starting to make a real dent in all this garbage cleanup.  They could not have possibly littered worse than that.'  \nEvelyn : 'Oh, it could be a lot worse.'  \nMary : 'How come?'  \nEvelyn : 'Do you know anything about Kessler Syndrome?'  \nMary : 'Nevermind, it definitely could be a lot worse.  I don't ever want to have to deal with that.  Forget I asked.'",
     prerequisites: ['gabbag.29.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }

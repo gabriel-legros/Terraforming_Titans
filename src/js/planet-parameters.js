@@ -1361,21 +1361,21 @@ const gabbagOverrides = {
     },
     "surface": {
               land: { initialValue: 16_680_021_928 }},
- "atmospheric": {
+    "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 616022537998481.8
+        "initialValue": 3696135227990891
       },
       "atmosphericWater": {
-        "initialValue": 19687695471924.22
+        "initialValue": 1848954215547882.5
       },
       "atmosphericMethane": {
-        "initialValue": 200000000000000
+        "initialValue": 400000000000000
       },
       "oxygen": {
         "initialValue": 79141235823.26874
       },
       "inertGas": {
-        "initialValue": 5000000000000000
+        "initialValue": 250000000000000000
       },
       "hydrogen": {
         "initialValue": 0
@@ -1387,19 +1387,19 @@ const gabbagOverrides = {
   },
   "zonalWater": {
     "tropical": {
-      "liquid": 223978479465929,
+      "liquid": 10345763020752492,
       "ice": 0,
       "buriedIce": 0
     },
     "temperate": {
-      "liquid": 23426954455658484,
+      "liquid": 13447760775709956,
       "ice": 0,
       "buriedIce": 0
     },
     "polar": {
-      "liquid": 0,
-      "ice": 3758967906201679.5,
-      "buriedIce": 366098565491836.94
+      "liquid": 2153209090277669,
+      "ice": 0,
+      "buriedIce": 0
     }
   },
   "zonalSurface": {
@@ -1446,19 +1446,19 @@ const gabbagOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 331.5570418835665,
-      "day": 333.5243645517144,
-      "night": 329.5897192154186
+      "value": 356.4851281719689,
+      "day": 356.60697309400206,
+      "night": 356.3632832499357
     },
     "temperate": {
-      "value": 312.8495838018385,
-      "day": 313.1735644681621,
-      "night": 312.52560313551487
+      "value": 356.4802374648396,
+      "day": 356.58156108364017,
+      "night": 356.37891384603904
     },
     "polar": {
-      "value": 203.4737134554126,
-      "day": 204.08472807587677,
-      "night": 202.86269883494842
+      "value": 356.47905896351324,
+      "day": 356.53352752528065,
+      "night": 356.42459040174583
     }
   },
   hazards: {
@@ -1471,10 +1471,10 @@ const gabbagOverrides = {
         radioactiveWaste: { amountMultiplier: 1 }
       },
       penalties: {
-        garbage: { sandHarvesterMultiplier: 0.1, nanoColonyGrowthMultiplier: 0.1 },
+        garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },
         trash: { happiness: -0.1 },
         junk: { happiness: -0.1 },
-        scrapMetal: { oreScanningSpeedMultiplier: 0.1 },
+        scrapMetal: { oreScanningSpeedMultiplier: 0.5 },
         radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
       }
     }

@@ -158,26 +158,22 @@ function initializeDefaultGlobals(){
  * Saves pre-travel state and returns travel state data for managers that persist.
  * @returns {Object} Travel state data to be restored after travel
  */
-function prepareForTravel() {
-  // Save pre-travel game state
-  if (typeof saveGameToSlot === 'function') {
+let preparedTravelState = null;
+
+function prepareForTravel(options = {}) {
+  if (options.savePretravel !== false) {
     try {
       saveGameToSlot('pretravel');
     } catch (_) {}
   }
 
-  const travelState = {};
+  const travelState = {
+    projects: projectManager?.saveTravelState?.()
+  };
 
-  // Save project manager travel state (includes space storage and all projects)
-  if (typeof projectManager !== 'undefined' && typeof projectManager.saveTravelState === 'function') {
-    travelState.projects = projectManager.saveTravelState();
-  }
+  nanotechManager?.prepareForTravel?.();
 
-  // Save nanotech manager travel state
-  if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.prepareForTravel === 'function') {
-    nanotechManager.prepareForTravel();
-  }
-
+  preparedTravelState = travelState;
   return travelState;
 }
 
@@ -199,8 +195,9 @@ function initializeGameState(options = {}) {
   }
   goldenAsteroid?.resetForTravel?.();
   if (preserveManagers) {
-    // Use unified prepareForTravel when preserving managers (planet travel)
-    const travelState = prepareForTravel();
+    // Use prepared travel state from departure when available to avoid overwriting pretravel save.
+    const travelState = preparedTravelState || prepareForTravel({ savePretravel: false });
+    preparedTravelState = null;
     savedProjectTravelState = travelState.projects;
   }
   if (preserveManagers && typeof captureAutoBuildSettings === 'function' && typeof structures !== 'undefined') {

@@ -9,6 +9,8 @@ let journalUnread = false;
 let journalQueue = [];      // queue of pending entry objects {text, eventId, source}
 let journalTyping = false;  // flag indicating an entry is currently being typed
 let journalCurrentEventId = null; // id of the event whose text is typing
+let journalTypingSession = 0;
+let journalTypingFrameId = 0;
 let journalUserScrolling = false;
 let journalChapterIndex = 0;
 let journalIndexVisible = false;
@@ -17,6 +19,7 @@ let journalIndexIcon = null;
 let journalEntriesContainer = null;
 let journalObjectiveContainer = null;
 let journalNavContainerElement = null;
+let journalContainerElement = null;
 let cachedJournalWorlds = null;
 let journalChapterMetaById = null;
 let collapsedJournalWorlds = new Set();
@@ -317,6 +320,19 @@ function displayJournalChapter(index) {
   journalChapterIndex = index;
   updateJournalNavArrows();
 }
+
+function stopJournalTyping(completeEvent) {
+  journalTypingSession += 1;
+  cancelAnimationFrame(journalTypingFrameId);
+  journalTypingFrameId = 0;
+  if (completeEvent) {
+    const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
+    document.dispatchEvent(storyEvent);
+  }
+  journalTyping = false;
+  journalCurrentEventId = null;
+}
+
 function addJournalEntry(text, eventId = null, source = null) {
   let entryText = joinLines(text);
 
@@ -345,10 +361,12 @@ function processNextJournalEntry() {
   }
 
   journalTyping = true;
+  journalTypingSession += 1;
+  const sessionId = journalTypingSession;
   const { text, eventId, source, separator } = journalQueue.shift();
   journalCurrentEventId = eventId;
-  const journalEntries = document.getElementById('journal-entries');
-  const journalContainer = document.getElementById('journal');
+  const journalEntries = journalEntriesContainer;
+  const journalContainer = journalContainerElement;
   if (separator) {
     const hr = document.createElement('hr');
     hr.classList.add('journal-entry-separator');
@@ -379,6 +397,9 @@ function processNextJournalEntry() {
   let lastTimestamp = 0;
 
   const typeLetter = (timestamp) => {
+    if (sessionId !== journalTypingSession) {
+      return;
+    }
     if (!lastTimestamp) {
       lastTimestamp = timestamp;
     }
@@ -403,7 +424,7 @@ function processNextJournalEntry() {
     }
 
     if (index < text.length) {
-      requestAnimationFrame(typeLetter);
+      journalTypingFrameId = requestAnimationFrame(typeLetter);
     } else {
       if (!journalUserScrolling && journalContainer) {
         journalContainer.scrollTop = journalContainer.scrollHeight;
@@ -416,7 +437,7 @@ function processNextJournalEntry() {
     }
   };
 
-  requestAnimationFrame(typeLetter);
+  journalTypingFrameId = requestAnimationFrame(typeLetter);
 
   if (journalCollapsed) {
     journalUnread = true;
@@ -425,12 +446,11 @@ function processNextJournalEntry() {
 }
 
 function loadJournalEntries(entries, history = null, entrySources = null, historySourcesParam = null) {
-  const journalEntries = document.getElementById('journal-entries');
-  const journalContainer = document.getElementById('journal');
+  const journalEntries = journalEntriesContainer;
+  const journalContainer = journalContainerElement;
+  stopJournalTyping(true);
   journalEntries.innerHTML = ''; // Clear existing journal entries
   journalQueue = [];
-  journalTyping = false;
-  journalCurrentEventId = null;
 
   // Iterate over the saved entries and append them
   entries.forEach(entryText => {
@@ -468,8 +488,8 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
  * Clears all entries from the journal display and data array.
  */
 function clearJournal() {
-  const journalEntries = document.getElementById('journal-entries');
-  const journalContainer = document.getElementById('journal');
+  const journalEntries = journalEntriesContainer;
+  const journalContainer = journalContainerElement;
   if (journalQueue && journalQueue.length) {
     journalQueue.forEach(({ text, eventId, source }) => {
       const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
@@ -481,8 +501,7 @@ function clearJournal() {
   journalEntriesData = []; // Clear the stored data array but keep history
   journalEntrySources = [];
   journalQueue = [];
-  journalTyping = false;
-  journalCurrentEventId = null;
+  stopJournalTyping(true);
   journalUserScrolling = false;
   if (journalContainer) journalContainer.scrollTop = 0;
   journalChapterIndex = getJournalChapterGroups().length - 1;
@@ -620,6 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
   journalIndexIcon = document.getElementById('journal-index-icon');
   journalObjectiveContainer = document.getElementById('current-objective');
   journalNavContainerElement = document.getElementById('journal-nav-container');
+  journalContainerElement = document.getElementById('journal');
   if (journalIndexIcon) {
     journalIndexIcon.addEventListener('click', toggleJournalIndex);
   }

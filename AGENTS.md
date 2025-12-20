@@ -204,6 +204,7 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Updates
 - Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
+- Pretravel save capture now reuses the departure snapshot during planet travel so the pretravel slot keeps the departing planet key.
 - Added a Settings checkbox to keep the tab active by playing a looped near-silent audio track.
 - Added a muted looping silent audio track to keep the tab active for testing purposes.
 - Replaced the silent keep-tab-running track with the new `assets/white_noise/weak_white_noise_-60dBFS_60s_22k.wav` loop (with the old data URI as a fallback) so Chrome/Edge can keep the tab alive.
