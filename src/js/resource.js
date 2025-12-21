@@ -48,6 +48,7 @@ class Resource extends EffectableEntity {
     this.marginTop = resourceData.marginTop || 0;
     this.marginBottom = resourceData.marginBottom || 0;
     this.autobuildShortage = false; // Flagged when autobuild cannot use this resource this tick
+    this.automationLimited = false; // Flagged when import automation settings limit this resource
   }
 
   // Method to initialize configurable properties
@@ -314,6 +315,7 @@ class Resource extends EffectableEntity {
     this.productionRateBySource = {}; // Also reset the aggregated source map
     this.consumptionRateBySource = {}; // Also reset the aggregated source map
     this.overflowRate = 0;
+    this.automationLimited = false;
 
     if (!keepProjected) {
       this.projectedProductionRate = 0;

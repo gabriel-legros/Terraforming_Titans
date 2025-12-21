@@ -79,6 +79,10 @@ function createTooltipElement(resourceName) {
   const netDiv = document.createElement('div');
   netDiv.id = `${resourceName}-tooltip-net`;
 
+  const limitDiv = document.createElement('div');
+  limitDiv.id = `${resourceName}-tooltip-limit`;
+  limitDiv.style.display = 'none';
+
   const warningDiv = document.createElement('div');
   warningDiv.id = `${resourceName}-tooltip-warning`;
   warningDiv.classList.add('resource-tooltip-warning');
@@ -100,6 +104,7 @@ function createTooltipElement(resourceName) {
   headerDiv.appendChild(assignmentsDiv);
   headerDiv.appendChild(zonesDiv);
   headerDiv.appendChild(netDiv);
+  headerDiv.appendChild(limitDiv);
   headerDiv.appendChild(warningDiv);
 
   const productionDiv = document.createElement('div');
@@ -1028,6 +1033,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   const assignmentsDiv = entry?.tooltip?.assignmentsDiv || document.getElementById(`${resource.name}-tooltip-assignments`);
   const zonesDiv = entry?.tooltip?.zonesDiv || document.getElementById(`${resource.name}-tooltip-zones`);
   const netDiv = entry?.tooltip?.netDiv || document.getElementById(`${resource.name}-tooltip-net`);
+  const limitDiv = entry?.tooltip?.limitDiv || document.getElementById(`${resource.name}-tooltip-limit`);
   const productionDiv = entry?.tooltip?.productionDiv || document.getElementById(`${resource.name}-tooltip-production`);
   const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(`${resource.name}-tooltip-consumption`);
   const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(`${resource.name}-tooltip-overflow`);
@@ -1264,6 +1270,17 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     if (netDiv.textContent !== text) netDiv.textContent = text;
   }
 
+  if (limitDiv) {
+    if (resource.automationLimited) {
+      const text = 'Imports are being limited by automation settings';
+      if (limitDiv.textContent !== text) limitDiv.textContent = text;
+      if (limitDiv.style.display !== 'block') limitDiv.style.display = 'block';
+    } else {
+      if (limitDiv.textContent !== '') limitDiv.textContent = '';
+      if (limitDiv.style.display !== 'none') limitDiv.style.display = 'none';
+    }
+  }
+
   if (productionDiv) {
     const productionEntries = Object.entries(resource.productionRateBySource)
       .filter(([source, rate]) => rate !== 0 && source !== 'Overflow' && source !== 'Overflow (not summed)');
@@ -1360,6 +1377,7 @@ function cacheSingleResource(category, resourceName) {
       assignmentsDiv: document.getElementById(`${resourceName}-tooltip-assignments`),
       zonesDiv: document.getElementById(`${resourceName}-tooltip-zones`),
       netDiv: document.getElementById(`${resourceName}-tooltip-net`),
+      limitDiv: document.getElementById(`${resourceName}-tooltip-limit`),
       productionDiv: document.getElementById(`${resourceName}-tooltip-production`),
       consumptionDiv: document.getElementById(`${resourceName}-tooltip-consumption`),
       overflowDiv: document.getElementById(`${resourceName}-tooltip-overflow`),

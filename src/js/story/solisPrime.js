@@ -476,7 +476,7 @@ progressSolisPrime.chapters.push(
     type: 'journal',
     chapter: 26,
     narrative: "Mary :  'HOPE... I've been thinking.  Terraforming worlds over and over is not really helping us that much anymore.  Sure, more humans means more research, more ships, more resources...  but I feel that we should be more productive about it.  Solis Prime was a giant waste of time!  *sigh* An opportunity came up.  It's not... the usual... but I think it could help us - and your reputation - greatly.  After we secured Sector R5-06, an alien species known as the Gabbagians surrendered to us.  They're not too enthusiastic about humanity but... it turns out thousands of years ago they ruined their own homeworld.  Something like a lot of pollution.  They've been dreaming of repairing it ever since, but have always been unable to do so.  This is actually exactly the kind of thing you are good at.  If we fix their homeworld, we might also fix your galactic reputation.  What do you think?'",
-    prerequisites: ['impossible'],
+    prerequisites: ['impossible3'],
     objectives: [
     ],
     reward: [

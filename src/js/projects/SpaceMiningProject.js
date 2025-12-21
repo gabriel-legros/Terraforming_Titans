@@ -415,16 +415,17 @@ class SpaceMiningProject extends SpaceshipProject {
   applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (this.attributes.dynamicWaterImport && gain.surface) {
+      const entry = gain.surface;
+      const resourceName = Object.keys(entry)[0];
       if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
+        resources.surface[resourceName].automationLimited = true;
         return;
       }
-      const entry = gain.surface;
-      const resource = Object.keys(entry)[0];
-      const amount = entry[resource] * fraction * productivity;
+      const amount = entry[resourceName] * fraction * productivity;
       const zones = ['tropical', 'temperate', 'polar'];
       const temps = terraforming?.temperature?.zones || {};
       const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
-      if (allBelow || resource === 'ice') {
+      if (allBelow || resourceName === 'ice') {
         zones.forEach(zone => {
           const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
           terraforming.zonalWater[zone].ice += amount * pct;
@@ -461,6 +462,9 @@ class SpaceMiningProject extends SpaceshipProject {
         const remaining = Math.max(0, maxMass - currentAmount);
         const desired = entry[gas] * fraction * productivity;
         const applied = Math.min(desired, remaining);
+        if (applied < desired) {
+          resources.atmospheric[gas].automationLimited = true;
+        }
         if (applied <= 0) {
           delete entry[gas];
           if (Object.keys(entry).length === 0) {
