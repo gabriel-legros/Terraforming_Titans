@@ -777,7 +777,7 @@ function buildVolatiles(archetype, Teq, landHa, rng, params) {
     dryIce: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
     liquidMethane: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
     hydrocarbonIce: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
-    scrapMetal: { initialValue: 0, unlocked: false, unit: "ton" },
+    scrapMetal: { initialValue: 0, unlocked: false, unit: "ton", reverseColor: true },
     biomass: { initialValue: 0, hasCap: false, unlocked: false, unit: "ton" },
   };
   const hazardousBiomass = cloneDefaultSurfaceResource('hazardousBiomass');

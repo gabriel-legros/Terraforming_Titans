@@ -47,6 +47,7 @@ class Resource extends EffectableEntity {
     this.rateHistory = []; // Keep history of recent net rates
     this.marginTop = resourceData.marginTop || 0;
     this.marginBottom = resourceData.marginBottom || 0;
+    this.reverseColor = resourceData.reverseColor || false;
     this.autobuildShortage = false; // Flagged when autobuild cannot use this resource this tick
     this.automationLimited = false; // Flagged when import automation settings limit this resource
   }
@@ -89,6 +90,9 @@ class Resource extends EffectableEntity {
     }
     if (config.hideRate !== undefined) {
       this.hideRate = config.hideRate;
+    }
+    if (config.reverseColor !== undefined) {
+      this.reverseColor = config.reverseColor;
     }
     if (config.marginTop !== undefined) {
       this.marginTop = config.marginTop;

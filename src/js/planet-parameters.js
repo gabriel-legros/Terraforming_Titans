@@ -62,11 +62,11 @@ const defaultPlanetParameters = {
       hydrocarbonIce: { name: 'Methane Ice', initialValue: 0, unlocked: true , unit: 'ton', hideWhenSmall: true },
       biomass: {name : 'Biomass', hasCap : false, initialValue: 0, unlocked: false, unit: 'ton' },
       hazardousBiomass: { name: 'Hazardous Biomass', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true},
-      scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton', marginTop:10 },
-      garbage: { name: 'Garbage', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
-      trash: { name: 'Trash', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
-      junk: { name: 'Junk', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
-      radioactiveWaste: { name: 'Radioactive Waste', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
+      scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton', marginTop:10, reverseColor: true },
+      garbage: { name: 'Garbage', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
+      trash: { name: 'Trash', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
+      junk: { name: 'Junk', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
+      radioactiveWaste: { name: 'Radioactive Waste', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false }, // Default (Mars)

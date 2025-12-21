@@ -3,6 +3,12 @@
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+function swapResourceRateColor(resource, color) {
+  if (resource.reverseColor && color === 'red') return 'green';
+  if (resource.reverseColor && color === 'green') return 'red';
+  return color;
+}
+
 // Helper function to get all unique building categories from buildings-parameters.js
 function getBuildingCategories() {
   if (typeof buildingsParameters === 'undefined') {
@@ -1516,7 +1522,8 @@ function updateDecreaseButtonText(button, buildCount) {
           if (resObj) {
             const netRate = (resObj.productionRate || 0) - (resObj.consumptionRate || 0);
             if (sec.key === 'production') {
-              span.style.color = netRate < 0 ? 'green' : '';
+              const color = netRate < 0 ? 'green' : '';
+              span.style.color = swapResourceRateColor(resObj, color);
             } else if (sec.key === 'consumption' || sec.key === 'maintenance') {
               const totalCost = combinedCosts[`${category}.${resource}`] || amount;
               const projectedNet = netRate - totalCost;

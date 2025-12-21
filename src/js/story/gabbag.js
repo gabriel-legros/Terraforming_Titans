@@ -298,21 +298,22 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins...  My team has delayed it as much as they could but... Ghost was granted a favour by the Regency Council.  He requested... half of the imperial fleet.  To go to your location.  He's going to warp soon.  You need to evacuate.'  \n Mary : 'Damnit!  How many times are we going to be on the edge of complete annihilation?  And the job was almost done.'",
+    narrative: "Evelyn : 'Mary... I have examined Gabbagian biology and let me give you some terraforming advice.  Most of the methane on Gabbag turned into CO2 over time, due to all their... disasters.  Their metabolism can produce it, but you need quite a lot of it.  You can synthesize it easily with some hydrogen.  Look at your chemical reactors.  You should not need to import any carbon here.'",
     prerequisites: ['gabbag.29.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 10_000_000_000, checkCap : true }
     ],
     reward: []
   },
   {
-    id: 'gabbag.29.5b',
+    id: 'gabbag.29.5a',
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mary : 'Alright.  I have made my decision.  HOPE, let's believe in Elder Mavion.  We'll have the Venusian fleet retreat.  I hope he's right...'",
+    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins...  My team has delayed it as much as they could but... Ghost was granted a favour by the Regency Council.  He requested... half of the imperial fleet.  To go to your location.  He's going to warp soon.  You need to evacuate.'  \n Mary : 'Damnit!  How many times are we going to be on the edge of complete annihilation?  And the job was almost done.'",
     prerequisites: ['gabbag.29.5'],
-    objectives: [      { type: 'terraforming', terraformingParameter: 'complete' }
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 50_000_000_000, checkCap : true }
     ],
     reward: []
   },
@@ -322,7 +323,18 @@ progressGabbag.chapters.push(
     chapter: 29,
     activePlanet: 'gabbag',
     narrative: "Mavion : 'Hold, humans.  You may need not flee.'  \n Mary : 'Why?'  \n Mavion : 'Ghost... is a Gabbagian.  The most talented and faithful of us.  He knows not what he will find here.'  \n Mary : 'That's a gamble.  HOPE, realistically we can't evacuate all colonists in time.  What do you think?'",
-    prerequisites: ['gabbag.29.5b'],
+    prerequisites: ['gabbag.29.5a'],
+    objectives: [      { type: 'terraforming', terraformingParameter: 'complete' }
+    ],
+    reward: []
+  },
+  {
+    id: 'gabbag.29.6b',
+    type: 'journal',
+    chapter: 29,
+    activePlanet: 'gabbag',
+    narrative: "Mary : 'Alright.  I have made my decision.  HOPE, let's believe in Elder Mavion.  We'll have the Venusian fleet retreat.  I hope he's right...'",
+    prerequisites: ['gabbag.29.56'],
     objectives: [      { type: 'terraforming', terraformingParameter: 'complete' }
     ],
     reward: []

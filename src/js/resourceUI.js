@@ -1,3 +1,16 @@
+const wasteResourceNames = new Set(['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']);
+const wasteTooltipNoteText = 'Waste processing buildings display their consumption at 100% productivity';
+
+function isWasteResource(resourceName) {
+  return wasteResourceNames.has(resourceName);
+}
+
+function swapResourceRateColor(resource, color) {
+  if (resource.reverseColor && color === 'red') return 'green';
+  if (resource.reverseColor && color === 'green') return 'red';
+  return color;
+}
+
 function createResourceContainers(resourcesData) {
   const resourcesContainer = document.getElementById('resources-container');
   resourcesContainer.innerHTML = ''; // Clear the main container first
@@ -52,10 +65,21 @@ function createTooltipElement(resourceName) {
   timeDiv.id = `${resourceName}-tooltip-time`;
 
   let noteDiv;
+  let wasteNoteDiv;
   if (resourceName === 'land') {
     noteDiv = document.createElement('div');
     noteDiv.id = `${resourceName}-tooltip-note`;
     noteDiv.textContent = 'Land can be recovered by turning off the corresponding building';
+  }
+  if (isWasteResource(resourceName)) {
+    wasteNoteDiv = document.createElement('div');
+    wasteNoteDiv.id = `${resourceName}-tooltip-waste-note`;
+    const wasteNoteIcon = document.createElement('span');
+    wasteNoteIcon.classList.add('info-tooltip-icon');
+    wasteNoteIcon.innerHTML = '&#9432;';
+    wasteNoteIcon.title = wasteTooltipNoteText;
+    wasteNoteDiv.appendChild(wasteNoteIcon);
+    wasteNoteDiv.appendChild(document.createTextNode(` ${wasteTooltipNoteText}`));
   }
 
   const assignmentsDiv = document.createElement('div');
@@ -101,6 +125,7 @@ function createTooltipElement(resourceName) {
   headerDiv.appendChild(valueDiv);
   headerDiv.appendChild(timeDiv);
   if (noteDiv) headerDiv.appendChild(noteDiv);
+  if (wasteNoteDiv) headerDiv.appendChild(wasteNoteDiv);
   headerDiv.appendChild(assignmentsDiv);
   headerDiv.appendChild(zonesDiv);
   headerDiv.appendChild(netDiv);
@@ -1043,13 +1068,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       } else {
         ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
       }
+      let ppsColor = '';
       if (netRate < 0 && Math.abs(netRate) > resource.value) {
-        ppsElement.style.color = 'red';
+        ppsColor = 'red';
       } else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) {
-        ppsElement.style.color = 'orange';
-      } else {
-        ppsElement.style.color = '';
+        ppsColor = 'orange';
       }
+      ppsElement.style.color = swapResourceRateColor(resource, ppsColor);
     }
   }
 
