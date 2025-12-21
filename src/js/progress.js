@@ -664,6 +664,7 @@ class StoryManager {
             console.warn(`Chapter not found: ${chapterId}`);
             return;
         }
+        this.currentChapter = targetEvent.chapter;
 
         // Gather all prerequisite chapters recursively, including handling
         // project prerequisites as we discover them.
