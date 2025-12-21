@@ -334,7 +334,7 @@ const researchParameters = {
       {
         id: 'waste_processing',
         name: 'Industrial Waste Processing',
-        description: 'Unlocks waste sorting and recycling facilities.',
+        description: 'Unlocks waste sorting and recycling facilities.  Researching this does not enable any penalty.',
         cost: { research: 2000 },
         prerequisites: [],
         requiredFlags: ['gabbagWasteProcessing'],
