@@ -130,20 +130,38 @@ function getRandomWorldType(status) {
     || null;
 }
 
-function hasRandomWorldHazard(status) {
-  if (!status) return false;
-  const summary = status.cachedHazards;
-  if (summary && summary.keys && summary.keys.length) return true;
-  const hazardValue = status.hazard ?? status.original?.hazard;
-  if (hazardValue && hazardValue !== 'none') return true;
+function addHazards(hazardKeys, value) {
+  if (!value || value === 'none') return;
+  if (Array.isArray(value)) {
+    value.forEach((entry) => {
+      if (entry && entry !== 'none') hazardKeys.add(String(entry));
+    });
+    return;
+  }
+  if (value.constructor === Object) {
+    Object.keys(value).forEach((entry) => {
+      if (entry && entry !== 'none') hazardKeys.add(String(entry));
+    });
+    return;
+  }
+  hazardKeys.add(String(value));
+}
+
+function countRandomWorldHazards(status) {
+  if (!status) return 0;
+  const hazardKeys = new Set(status.cachedHazards?.keys || []);
+  addHazards(hazardKeys, status.hazard);
+  addHazards(hazardKeys, status.original?.hazard);
   const override = status.override
     || status.merged
     || status.original?.override
     || status.original?.merged
     || null;
-  if (override?.rwgMeta?.selectedHazard && override.rwgMeta.selectedHazard !== 'none') return true;
-  const hazards = override?.hazards || status.original?.hazards || null;
-  return hazards ? Object.keys(hazards).length > 0 : false;
+  addHazards(hazardKeys, override?.rwgMeta?.selectedHazards);
+  addHazards(hazardKeys, override?.rwgMeta?.selectedHazard);
+  addHazards(hazardKeys, override?.hazards);
+  addHazards(hazardKeys, status.original?.hazards);
+  return hazardKeys.size;
 }
 
 function applyRWGEffects() {
@@ -157,7 +175,8 @@ function applyRWGEffects() {
     const type = getRandomWorldType(st);
     if (st?.terraformed && type) {
       counts[type] = (counts[type] || 0) + 1;
-      if (hasRandomWorldHazard(st)) hazardBonuses[type] = (hazardBonuses[type] || 0) + 1;
+      const hazardCount = countRandomWorldHazards(st);
+      if (hazardCount) hazardBonuses[type] = (hazardBonuses[type] || 0) + hazardCount;
     }
   }
 

@@ -67,4 +67,22 @@ describe('applyRWGEffects', () => {
       value: 2,
     }));
   });
+
+  test('counts hazard bonuses from selected hazards', () => {
+    spaceManager.randomWorldStatuses = {
+      mars: {
+        terraformed: true,
+        original: { classification: { archetype: 'mars-like' } },
+        override: { rwgMeta: { selectedHazards: ['garbage', 'hazardousBiomass'] } }
+      }
+    };
+
+    applyRWGEffects();
+
+    const effect = effects.find((entry) => entry && entry.effectId === 'rwg-mars-pop');
+
+    expect(effect).toEqual(expect.objectContaining({
+      value: 0.06,
+    }));
+  });
 });

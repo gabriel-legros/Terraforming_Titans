@@ -264,6 +264,7 @@ class NanotechManager extends EffectableEntity {
 
   updateUI() {
     if (typeof document === 'undefined') return;
+    if (nanotechManager && nanotechManager !== this) return;
     const controlsSection =
       document.getElementById('colony-controls-section') ||
       document.getElementById('colony-controls-container') ||
@@ -430,8 +431,10 @@ class NanotechManager extends EffectableEntity {
     }
     if (!container) return;
     // Ensure cache is aligned with current container
-    this.ensureUICache(container);
-    this.bindUIHandlers();
+    const cacheRefreshed = this.ensureUICache(container);
+    if (cacheRefreshed) {
+      this.bindUIHandlers();
+    }
     container.style.display = this.enabled ? '' : 'none';
     const max = this.getMaxNanobots();
     const C = this.uiCache || {};
@@ -611,43 +614,43 @@ class NanotechManager extends EffectableEntity {
     const C = this.uiCache || {};
     if (C.sSlider?.dataset?.nanotechBound !== 'silicon') {
       C.sSlider.addEventListener('input', (e) => {
-        this.siliconSlider = parseInt(e.target.value);
-        this.updateUI();
+        nanotechManager.siliconSlider = parseInt(e.target.value);
+        nanotechManager.updateUI();
       });
       C.sSlider.dataset.nanotechBound = 'silicon';
     }
     if (C.mSlider?.dataset?.nanotechBound !== 'maintenance') {
       C.mSlider.addEventListener('input', (e) => {
-        this.maintenanceSlider = parseInt(e.target.value);
-        this.updateUI();
+        nanotechManager.maintenanceSlider = parseInt(e.target.value);
+        nanotechManager.updateUI();
       });
       C.mSlider.dataset.nanotechBound = 'maintenance';
     }
     if (C.glSlider?.dataset?.nanotechBound !== 'glass') {
       C.glSlider.addEventListener('input', (e) => {
-        this.glassSlider = parseInt(e.target.value);
-        this.updateUI();
+        nanotechManager.glassSlider = parseInt(e.target.value);
+        nanotechManager.updateUI();
       });
       C.glSlider.dataset.nanotechBound = 'glass';
     }
     if (C.metalSlider?.dataset?.nanotechBound !== 'metal') {
       C.metalSlider.addEventListener('input', (e) => {
-        this.metalSlider = parseInt(e.target.value);
-        this.updateUI();
+        nanotechManager.metalSlider = parseInt(e.target.value);
+        nanotechManager.updateUI();
       });
       C.metalSlider.dataset.nanotechBound = 'metal';
     }
     if (C.maintenance2Slider?.dataset?.nanotechBound !== 'maintenance2') {
       C.maintenance2Slider.addEventListener('input', (e) => {
-        this.maintenance2Slider = parseInt(e.target.value);
-        this.updateUI();
+        nanotechManager.maintenance2Slider = parseInt(e.target.value);
+        nanotechManager.updateUI();
       });
       C.maintenance2Slider.dataset.nanotechBound = 'maintenance2';
     }
     if (C.componentsSlider?.dataset?.nanotechBound !== 'components') {
       C.componentsSlider.addEventListener('input', (e) => {
-        this.componentsSlider = parseInt(e.target.value);
-        this.updateUI();
+        nanotechManager.componentsSlider = parseInt(e.target.value);
+        nanotechManager.updateUI();
       });
       C.componentsSlider.dataset.nanotechBound = 'components';
     }
@@ -657,33 +660,33 @@ class NanotechManager extends EffectableEntity {
         parseValue: (value) => {
           const parsed = parseFlexibleNumber(value);
           const numeric = Number.isFinite(parsed) ? parsed : 0;
-          if (this.energyLimitMode === 'absolute') return Math.max(0, numeric);
+          if (nanotechManager.energyLimitMode === 'absolute') return Math.max(0, numeric);
           return Math.max(0, Math.min(100, numeric));
         },
         formatValue: (parsed) => {
-          if (this.energyLimitMode === 'absolute') {
+          if (nanotechManager.energyLimitMode === 'absolute') {
             return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
           }
           return String(parsed);
         },
         onValue: (parsed) => {
-          if (this.energyLimitMode === 'absolute') {
-            this.maxEnergyAbsolute = parsed;
+          if (nanotechManager.energyLimitMode === 'absolute') {
+            nanotechManager.maxEnergyAbsolute = parsed;
           } else {
-            this.maxEnergyPercent = parsed;
+            nanotechManager.maxEnergyPercent = parsed;
           }
-          this.updateUI();
+          nanotechManager.updateUI();
         },
       });
       C.eLimit.dataset.nanotechBound = 'energyLimit';
     }
     if (C.eMode?.dataset?.nanotechBound !== 'energyMode') {
       C.eMode.addEventListener('change', (e) => {
-        this.energyLimitMode = e.target.value;
-        if (this.energyLimitMode === 'absolute' && !(this.maxEnergyAbsolute > 0)) {
-          this.maxEnergyAbsolute = 1e6;
+        nanotechManager.energyLimitMode = e.target.value;
+        if (nanotechManager.energyLimitMode === 'absolute' && !(nanotechManager.maxEnergyAbsolute > 0)) {
+          nanotechManager.maxEnergyAbsolute = 1e6;
         }
-        this.updateUI();
+        nanotechManager.updateUI();
       });
       C.eMode.dataset.nanotechBound = 'energyMode';
     }
@@ -691,49 +694,60 @@ class NanotechManager extends EffectableEntity {
 
   cacheUIRefs(container) {
     // Cache all frequently accessed DOM nodes under the Nanotech card
+    const qs = (selector) => container.querySelector(selector);
     this.uiCache = {
       container,
-      countEl: document.getElementById('nanobot-count'),
-      capEl: document.getElementById('nanobot-cap'),
-      growthEl: document.getElementById('nanobot-growth-rate'),
-      sSlider: document.getElementById('nanotech-silicon-slider'),
-      mSlider: document.getElementById('nanotech-maintenance-slider'),
-      glSlider: document.getElementById('nanotech-glass-slider'),
-      metalSlider: document.getElementById('nanotech-metal-slider'),
-      maintenance2Slider: document.getElementById('nanotech-maintenance2-slider'),
-      componentsSlider: document.getElementById('nanotech-components-slider'),
-      glassTicks: document.getElementById('nanotech-glass-ticks'),
-      componentsTicks: document.getElementById('nanotech-components-ticks'),
-      eLimit: document.getElementById('nanotech-energy-limit'),
-      eMode: document.getElementById('nanotech-energy-limit-mode'),
-      growthImpactEl: document.getElementById('nanotech-growth-impact'),
-      siliconImpactEl: document.getElementById('nanotech-silicon-impact'),
-      metalImpactEl: document.getElementById('nanotech-metal-impact'),
-      maintenanceImpactEl: document.getElementById('nanotech-maintenance-impact'),
-      maintenance2ImpactEl: document.getElementById('nanotech-maintenance2-impact'),
-      glassImpactEl: document.getElementById('nanotech-glass-impact'),
-      componentsImpactEl: document.getElementById('nanotech-components-impact'),
-      energyRateEl: document.getElementById('nanotech-growth-energy'),
-      siliconRateEl: document.getElementById('nanotech-silicon-rate'),
-      maintenanceRateEl: document.getElementById('nanotech-maintenance-rate'),
-      maintenance2RateEl: document.getElementById('nanotech-maintenance2-rate'),
-      glassRateEl: document.getElementById('nanotech-glass-rate'),
-      metalRateEl: document.getElementById('nanotech-metal-rate'),
-      componentsRateEl: document.getElementById('nanotech-components-rate'),
-      stage2Container: document.getElementById('nanotech-stage-2'),
-      stage1WarningEl: document.getElementById('nanotech-stage1-warning'),
-      stage2WarningEl: document.getElementById('nanotech-stage2-warning'),
+      countEl: qs('#nanobot-count'),
+      capEl: qs('#nanobot-cap'),
+      growthEl: qs('#nanobot-growth-rate'),
+      sSlider: qs('#nanotech-silicon-slider'),
+      mSlider: qs('#nanotech-maintenance-slider'),
+      glSlider: qs('#nanotech-glass-slider'),
+      metalSlider: qs('#nanotech-metal-slider'),
+      maintenance2Slider: qs('#nanotech-maintenance2-slider'),
+      componentsSlider: qs('#nanotech-components-slider'),
+      glassTicks: qs('#nanotech-glass-ticks'),
+      componentsTicks: qs('#nanotech-components-ticks'),
+      eLimit: qs('#nanotech-energy-limit'),
+      eMode: qs('#nanotech-energy-limit-mode'),
+      growthImpactEl: qs('#nanotech-growth-impact'),
+      siliconImpactEl: qs('#nanotech-silicon-impact'),
+      metalImpactEl: qs('#nanotech-metal-impact'),
+      maintenanceImpactEl: qs('#nanotech-maintenance-impact'),
+      maintenance2ImpactEl: qs('#nanotech-maintenance2-impact'),
+      glassImpactEl: qs('#nanotech-glass-impact'),
+      componentsImpactEl: qs('#nanotech-components-impact'),
+      energyRateEl: qs('#nanotech-growth-energy'),
+      siliconRateEl: qs('#nanotech-silicon-rate'),
+      maintenanceRateEl: qs('#nanotech-maintenance-rate'),
+      maintenance2RateEl: qs('#nanotech-maintenance2-rate'),
+      glassRateEl: qs('#nanotech-glass-rate'),
+      metalRateEl: qs('#nanotech-metal-rate'),
+      componentsRateEl: qs('#nanotech-components-rate'),
+      stage2Container: qs('#nanotech-stage-2'),
+      stage1WarningEl: qs('#nanotech-stage1-warning'),
+      stage2WarningEl: qs('#nanotech-stage2-warning'),
     };
   }
 
   ensureUICache(container) {
-    const warningEl = this.uiCache?.stage1WarningEl;
+    const cacheNodes = [
+      this.uiCache?.countEl,
+      this.uiCache?.growthEl,
+      this.uiCache?.sSlider,
+      this.uiCache?.siliconImpactEl,
+      this.uiCache?.siliconRateEl,
+      this.uiCache?.stage1WarningEl,
+      this.uiCache?.stage2WarningEl,
+    ];
     const needsRefresh = !this.uiCache ||
       this.uiCache.container !== container ||
-      (warningEl && !container.contains(warningEl));
+      cacheNodes.some((node) => !container.contains(node));
     if (needsRefresh) {
       this.cacheUIRefs(container);
+      return true;
     }
+    return false;
   }
 
   updateTickMarks(ticksElement, max) {

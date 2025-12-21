@@ -1214,7 +1214,24 @@ class SpaceManager extends EffectableEntity {
             hazardSources.forEach((src) => {
                 Object.keys(src || {}).forEach((key) => hazardKeys.add(key));
             });
-            const selectedHazard = status.cachedHazards?.selected
+            const selectedHazards = status.cachedHazards?.selectedHazards
+                || status.override?.rwgMeta?.selectedHazards
+                || status.merged?.rwgMeta?.selectedHazards
+                || status.original?.override?.rwgMeta?.selectedHazards
+                || status.original?.merged?.rwgMeta?.selectedHazards
+                || null;
+            if (selectedHazards) {
+                if (Array.isArray(selectedHazards)) {
+                    selectedHazards.forEach((entry) => {
+                        if (entry && entry !== 'none') hazardKeys.add(String(entry));
+                    });
+                } else if (selectedHazards.constructor === Object) {
+                    Object.keys(selectedHazards).forEach((key) => hazardKeys.add(key));
+                } else if (selectedHazards !== 'none') {
+                    hazardKeys.add(String(selectedHazards));
+                }
+            }
+            const selectedHazardSource = status.cachedHazards?.selected
                 || status.override?.rwgMeta?.selectedHazard
                 || status.merged?.rwgMeta?.selectedHazard
                 || status.original?.override?.rwgMeta?.selectedHazard
@@ -1222,6 +1239,7 @@ class SpaceManager extends EffectableEntity {
                 || status.original?.hazard
                 || status.hazard
                 || null;
+            const selectedHazard = Array.isArray(selectedHazardSource) ? selectedHazardSource[0] : selectedHazardSource;
             if (selectedHazard && selectedHazard !== 'none') {
                 hazardKeys.add(selectedHazard);
             }
@@ -1287,10 +1305,18 @@ class SpaceManager extends EffectableEntity {
         this.oneillCylinders = 0;
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
+        const parseHazardList = (value) => {
+            const text = String(value || '').trim();
+            if (!text || text === 'none' || text === 'auto') return [];
+            return text.split(',')
+                .map((entry) => String(entry).trim())
+                .filter((entry) => entry && entry !== 'none' && entry !== 'auto');
+        };
         const hazardFromSeed = (seed) => {
             if (seed == null) return null;
             const segments = String(seed).split('|');
             const freeform = [];
+            let hazards = [];
             for (let i = 1; i < segments.length; i += 1) {
                 const seg = (segments[i] || '').trim();
                 if (!seg) continue;
@@ -1298,18 +1324,16 @@ class SpaceManager extends EffectableEntity {
                     const [k, v] = seg.split('=');
                     const key = (k || '').trim().toLowerCase();
                     if ((key === 'hazard' || key === 'haz' || key === 'feature') && (v || '').trim()) {
-                        const value = (v || '').trim();
-                        if (value && value !== 'none') return value;
+                        hazards = hazards.concat(parseHazardList(v));
                     }
                 } else {
                     freeform.push(seg);
                 }
             }
-            if (freeform.length >= 4) {
-                const value = freeform[3];
-                if (value && value !== 'none') return value;
+            if (!hazards.length && freeform.length >= 4) {
+                hazards = parseHazardList(freeform[3]);
             }
-            return null;
+            return hazards.length ? hazards : null;
         };
         const assignSector = (status) => {
             if (!status) {
@@ -1422,23 +1446,27 @@ class SpaceManager extends EffectableEntity {
                 });
             }
             Object.keys(this.randomWorldStatuses).forEach((seed) => {
-                const hazard = hazardFromSeed(seed);
-                if (hazard !== 'hazardousBiomass') {
+                const hazards = hazardFromSeed(seed);
+                if (!hazards || !hazards.length) {
                     return;
                 }
                 const status = this.randomWorldStatuses[seed];
                 if (!status) return;
+                const hazardList = Array.isArray(hazards) ? hazards : [String(hazards)];
                 const existingKeys = new Set(status.cachedHazards?.keys || []);
-                existingKeys.add('hazardousBiomass');
+                hazardList.forEach((hazardKey) => {
+                    if (hazardKey && hazardKey !== 'none') existingKeys.add(hazardKey);
+                });
                 const selected = status.cachedHazards?.selected
-                    || status.hazard
+                    || (Array.isArray(status.hazard) ? status.hazard[0] : status.hazard)
+                    || hazardList[0]
                     || null;
                 status.cachedHazards = {
-                    selected: selected && selected !== 'none' ? selected : 'hazardousBiomass',
+                    selected: selected && selected !== 'none' ? selected : hazardList[0],
                     keys: Array.from(existingKeys)
                 };
                 if (!status.hazard || status.hazard === 'none') {
-                    status.hazard = 'hazardousBiomass';
+                    status.hazard = hazardList.length === 1 ? hazardList[0] : hazardList.slice();
                 }
             });
         }

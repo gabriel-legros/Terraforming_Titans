@@ -17,6 +17,10 @@ let rwgTargetEl;
 let rwgTypeEl;
 let rwgOrbitEl;
 let rwgHazardEl;
+let rwgHazardListEl;
+let rwgHazardItemsEl;
+let rwgHazardItems = {};
+let rwgHazardListOrder = [];
 let rwgResultEl;
 
 if (!globalThis.__rwgGravityHelpers) {
@@ -80,7 +84,60 @@ if (!rwgGravityHelpers.createGravityWarning) {
 var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMultiplier;
 var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
-const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass' };
+const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage' };
+const HAZARD_MODE_NONE = 'none';
+const HAZARD_MODE_ENABLED = 'hazards';
+
+function normalizeHazardList(source) {
+  if (Array.isArray(source)) {
+    return source
+      .map((entry) => String(entry).trim())
+      .filter((entry) => entry && entry !== 'none' && entry !== 'auto');
+  }
+  if (source && source.constructor === Object) {
+    return Object.keys(source)
+      .map((entry) => String(entry).trim())
+      .filter((entry) => entry && entry !== 'none' && entry !== 'auto');
+  }
+  const text = String(source || '').trim();
+  if (!text || text === 'none' || text === 'auto') return [];
+  return text.split(',')
+    .map((entry) => String(entry).trim())
+    .filter((entry) => entry && entry !== 'none' && entry !== 'auto');
+}
+
+function formatHazardList(hazards) {
+  const list = normalizeHazardList(hazards);
+  if (!list.length) return '';
+  return list.join(',');
+}
+
+function getSelectedHazards() {
+  if (rwgHazardEl.value !== HAZARD_MODE_ENABLED) return [];
+  return rwgHazardListOrder
+    .filter((id) => rwgHazardItems[id] && rwgHazardItems[id].input.checked)
+    .map((id) => id);
+}
+
+function setSelectedHazards(hazards) {
+  const selection = new Set(normalizeHazardList(hazards));
+  rwgHazardListOrder.forEach((id) => {
+    const entry = rwgHazardItems[id];
+    if (entry) entry.input.checked = selection.has(id);
+  });
+}
+
+function syncEnabledHazards() {
+  let mgr = null;
+  try { mgr = rwgManager; } catch (_) { mgr = null; }
+  if (mgr && mgr.setEnabledHazards) {
+    mgr.setEnabledHazards(getSelectedHazards());
+  }
+}
+
+function updateHazardListVisibility() {
+  rwgHazardListEl.style.display = rwgHazardEl.value === HAZARD_MODE_ENABLED ? '' : 'none';
+}
 
 function refreshHazardSelect() {
   if (!rwgHazardEl) return;
@@ -88,38 +145,64 @@ function refreshHazardSelect() {
   const featureUnlocked = mgr && typeof mgr.isFeatureUnlocked === 'function'
     ? mgr.isFeatureUnlocked('hazards')
     : false;
-  if (!featureUnlocked) {
+  const hazards = mgr && typeof mgr.getAvailableHazards === 'function'
+    ? mgr.getAvailableHazards()
+    : [];
+  const hasHazards = featureUnlocked && hazards.length;
+  if (!hasHazards) {
     rwgHazardEl.style.display = 'none';
-    if (rwgHazardEl.value !== 'none') rwgHazardEl.value = 'none';
+    if (rwgHazardEl.value !== HAZARD_MODE_NONE) rwgHazardEl.value = HAZARD_MODE_NONE;
+    if (rwgHazardListEl) rwgHazardListEl.style.display = 'none';
     return;
   }
 
   rwgHazardEl.style.display = '';
-  const hazards = mgr && typeof mgr.getAvailableHazards === 'function'
-    ? mgr.getAvailableHazards()
-    : [];
-  const key = JSON.stringify(hazards);
-  if (rwgHazardEl.dataset.lastHazardList !== key) {
+  if (!rwgHazardEl.dataset.hasModes) {
     const frag = document.createDocumentFragment();
     const noneOpt = document.createElement('option');
-    noneOpt.value = 'none';
+    noneOpt.value = HAZARD_MODE_NONE;
     noneOpt.textContent = 'Hazards: None';
     frag.appendChild(noneOpt);
-    hazards.forEach((id) => {
-      const opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = `Hazards: ${hazardDisplayNames[id] || id}`;
-      frag.appendChild(opt);
-    });
+    const hazardsOpt = document.createElement('option');
+    hazardsOpt.value = HAZARD_MODE_ENABLED;
+    hazardsOpt.textContent = 'Hazards';
+    frag.appendChild(hazardsOpt);
     rwgHazardEl.innerHTML = '';
     rwgHazardEl.appendChild(frag);
-    rwgHazardEl.dataset.lastHazardList = key;
+    rwgHazardEl.dataset.hasModes = 'true';
+  }
+  const key = JSON.stringify(hazards);
+  if (rwgHazardItemsEl && rwgHazardItemsEl.dataset.lastHazardList !== key) {
+    const previous = getSelectedHazards();
+    rwgHazardItems = {};
+    rwgHazardListOrder = hazards.slice();
+    rwgHazardItemsEl.innerHTML = '';
+    hazards.forEach((id) => {
+      const row = document.createElement('label');
+      row.className = 'rwg-hazard-item';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = id;
+      input.addEventListener('change', () => {
+        syncEnabledHazards();
+      });
+      const text = document.createElement('span');
+      text.textContent = hazardDisplayNames[id] || id;
+      row.appendChild(input);
+      row.appendChild(text);
+      rwgHazardItemsEl.appendChild(row);
+      rwgHazardItems[id] = { input, label: text };
+    });
+    rwgHazardItemsEl.dataset.lastHazardList = key;
+    setSelectedHazards(previous);
   }
 
   const hasSelection = Array.from(rwgHazardEl.options).some((opt) => opt.value === rwgHazardEl.value);
   if (!hasSelection) {
-    rwgHazardEl.value = 'none';
+    rwgHazardEl.value = HAZARD_MODE_NONE;
   }
+  updateHazardListVisibility();
+  syncEnabledHazards();
 }
 
 function refreshTypeSelect() {
@@ -181,7 +264,7 @@ function encodeSeedOptions(seed, opts = {}) {
   const t = opts.target ?? 'auto';
   const ty = opts.type ?? 'auto';
   const o = opts.orbitPreset ?? 'auto';
-  const h = opts.hazard ?? 'auto';
+  const h = formatHazardList(opts.hazards ?? opts.hazard) || 'none';
   return `${seed}|${t}|${ty}|${o}|${h}`;
 }
 
@@ -192,7 +275,8 @@ function decodeSeedOptions(str) {
   const ty = parts[2] ?? 'auto';
   const o = parts[3] ?? 'auto';
   const h = parts[4] ?? 'auto';
-  return { seed, options: { target: t, type: ty, orbitPreset: o, hazard: h } };
+  const hazards = normalizeHazardList(h);
+  return { seed, options: { target: t, type: ty, orbitPreset: o, hazards } };
 }
 
 function initializeRandomWorldUI() {
@@ -233,6 +317,7 @@ function initializeRandomWorldUI() {
       </select>
       <select id="rwg-hazard" style="display:none;">
         <option value="none" selected>Hazards: None</option>
+        <option value="hazards">Hazards</option>
       </select>
     </div>
     <div>
@@ -241,14 +326,31 @@ function initializeRandomWorldUI() {
   `;
   container.appendChild(controls);
 
+  const hazardList = document.createElement('div');
+  hazardList.id = 'rwg-hazard-list';
+  hazardList.className = 'rwg-hazard-list';
+  hazardList.style.display = 'none';
+  hazardList.innerHTML = `
+    <div class="rwg-hazard-title">Hazards</div>
+    <div class="rwg-hazard-note">Every hazard selected counts as +1 for RWG effects.</div>
+    <div id="rwg-hazard-items" class="rwg-hazard-items"></div>
+  `;
+  container.appendChild(hazardList);
+
   rwgSeedEl = container.querySelector('#rwg-seed');
   rwgTargetEl = container.querySelector('#rwg-target');
   rwgTypeEl = container.querySelector('#rwg-type');
   rwgOrbitEl = container.querySelector('#rwg-orbit');
   rwgHazardEl = container.querySelector('#rwg-hazard');
+  rwgHazardListEl = hazardList;
+  rwgHazardItemsEl = hazardList.querySelector('#rwg-hazard-items');
   if (rwgHazardEl) {
-    rwgHazardEl.dataset.lastHazardList = '[]';
+    if (rwgHazardItemsEl) rwgHazardItemsEl.dataset.lastHazardList = '[]';
     refreshHazardSelect();
+    rwgHazardEl.addEventListener('change', () => {
+      updateHazardListVisibility();
+      syncEnabledHazards();
+    });
   }
 
   if (rwgTypeEl) {
@@ -317,28 +419,29 @@ function initializeRandomWorldUI() {
   // Wire buttons
   const btnPlanet = controls.querySelector('#rwg-generate-planet');
   btnPlanet.addEventListener('click', () => {
-    const seedInput = document.getElementById('rwg-seed').value.trim();
-    const targetSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-target'));
-    const orbitSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-orbit'));
-    const typeSel = /** @type {HTMLSelectElement} */(document.getElementById('rwg-type'));
+    const seedInput = rwgSeedEl.value.trim();
+    const targetSel = rwgTargetEl;
+    const orbitSel = rwgOrbitEl;
+    const typeSel = rwgTypeEl;
     refreshHazardSelect();
     if (seedInput) {
       const { seed, options } = decodeSeedOptions(seedInput);
       if (targetSel) targetSel.value = options.target;
       if (orbitSel) orbitSel.value = options.orbitPreset;
       if (typeSel) typeSel.value = options.type;
-      const hazardOption = options.hazard && options.hazard !== 'auto' ? options.hazard : 'none';
+      const hazards = normalizeHazardList(options.hazards);
       if (rwgHazardEl) {
-        const hasOption = Array.from(rwgHazardEl.options).some(opt => opt.value === hazardOption);
-        rwgHazardEl.value = hasOption ? hazardOption : 'none';
+        rwgHazardEl.value = hazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
+        setSelectedHazards(hazards);
+        updateHazardListVisibility();
       }
-      drawSingle(seed, { ...options, hazard: hazardOption });
+      drawSingle(seed, { ...options, hazards });
     } else {
       const target = targetSel.value;
       const orbit = orbitSel.value;
       const type = typeSel.value;
-      const hazard = rwgHazardEl ? rwgHazardEl.value : 'none';
-      drawSingle(undefined, { target, orbitPreset: orbit, type, hazard });
+      const hazards = getSelectedHazards();
+      drawSingle(undefined, { target, orbitPreset: orbit, type, hazards });
     }
   });
 
@@ -455,28 +558,29 @@ function drawSingle(seed, options) {
   if (typeof generateRandomPlanet !== 'function') return;
   refreshHazardSelect();
   const hazardSelect = rwgHazardEl;
-  const hazardOption = options?.hazard ?? (hazardSelect ? hazardSelect.value : 'none');
-  const normalizedHazard = !hazardOption || hazardOption === 'auto' ? 'none' : hazardOption;
-  if (hazardSelect) {
-    const hasOption = Array.from(hazardSelect.options).some(opt => opt.value === normalizedHazard);
-    hazardSelect.value = hasOption ? normalizedHazard : 'none';
+  const hazardOptions = normalizeHazardList(options?.hazards ?? options?.hazard);
+  if (hazardOptions.length) {
+    hazardSelect.value = HAZARD_MODE_ENABLED;
+    setSelectedHazards(hazardOptions);
+    updateHazardListVisibility();
   }
+  const normalizedHazards = hazardOptions.length ? hazardOptions : getSelectedHazards();
   const resolvedOptions = {
     target: options?.target,
     orbitPreset: options?.orbitPreset,
     type: options?.type,
-    hazard: normalizedHazard
+    hazards: normalizedHazards
   };
   const sStr = seed ? String(seed) : String((Math.random() * 1e9) >>> 0);
 
-  const orbitSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-orbit'));
+  const orbitSelect = rwgOrbitEl;
   const orbitOptions = orbitSelect
     ? Array.from(orbitSelect.options)
         .filter(opt => !opt.disabled && opt.value !== 'auto')
         .map(opt => opt.value)
     : undefined;
 
-  const typeSelect = /** @type {HTMLSelectElement|null} */(document.getElementById('rwg-type'));
+  const typeSelect = rwgTypeEl;
   const typeOptions = typeSelect
     ? Array.from(typeSelect.options)
         .filter(opt => !opt.disabled && opt.value !== 'auto')
@@ -489,14 +593,14 @@ function drawSingle(seed, options) {
     availableOrbits: orbitOptions,
     type: resolvedOptions.type,
     availableTypes: typeOptions,
-    hazard: normalizedHazard
+    hazards: normalizedHazards
   });
-  const appliedHazard = res?.hazard || normalizedHazard;
-  if (hazardSelect) {
-    const hasApplied = Array.from(hazardSelect.options).some(opt => opt.value === appliedHazard);
-    hazardSelect.value = hasApplied ? appliedHazard : 'none';
-  }
-  const seedKey = encodeSeedOptions(sStr, { ...resolvedOptions, hazard: appliedHazard });
+  const appliedHazards = normalizeHazardList(res?.hazards ?? res?.hazard ?? normalizedHazards);
+  hazardSelect.value = appliedHazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
+  setSelectedHazards(appliedHazards);
+  updateHazardListVisibility();
+  syncEnabledHazards();
+  const seedKey = encodeSeedOptions(sStr, { ...resolvedOptions, hazards: appliedHazards });
   let archetype = res.archetype;
   const box = document.getElementById('rwg-result');
   if (!box) return;
@@ -817,17 +921,30 @@ function renderResourceRow(label, resource) {
   return `<div class="rwg-row"><span>${label}</span><span>${v}</span></div>`;
 }
 
+function renderFeatureRow(label, value) {
+  return `<div class="rwg-row"><span>${label}</span><span>${value}</span></div>`;
+}
+
 function renderFeatureBlock(res) {
   const hazards = res.override?.hazards || res.merged?.hazards;
   if (!hazards) return '';
   const rows = [];
-  if (hazards.hazardousBiomass) {
-    const resource = res.override?.resources?.surface?.hazardousBiomass
-      || res.merged?.resources?.surface?.hazardousBiomass;
-    if (resource && Number.isFinite(resource.initialValue) && resource.initialValue > 0) {
-      rows.push(renderResourceRow('Hazardous Biomass', resource));
+  const hazardKeys = Object.keys(hazards);
+  const effectValue = hazardKeys.length + 1;
+  rows.push(renderFeatureRow('RWG Effects Value', `x${effectValue}`));
+  hazardKeys.forEach((key) => {
+    if (key === 'hazardousBiomass') {
+      const resource = res.override?.resources?.surface?.hazardousBiomass
+        || res.merged?.resources?.surface?.hazardousBiomass;
+      if (resource && Number.isFinite(resource.initialValue) && resource.initialValue > 0) {
+        rows.push(renderResourceRow('Hazardous Biomass', resource));
+        return;
+      }
+      rows.push(renderFeatureRow(hazardDisplayNames[key] || key, 'Active'));
+      return;
     }
-  }
+    rows.push(renderFeatureRow(hazardDisplayNames[key] || key, 'Active'));
+  });
   if (!rows.length) return '';
   const tooltip = '<span class="info-tooltip-icon" title="Terraforming a random world that contains a hazard grants double RWG rewards.">&#9432;</span>';
   return `<div><h4>Features ${tooltip}</h4>${rows.join('')}</div>`;

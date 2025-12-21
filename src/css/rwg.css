@@ -114,6 +114,44 @@
 
 .rwg-btn:disabled { opacity: .6; cursor: not-allowed; }
 
+.rwg-hazard-list {
+  margin-top: 10px;
+  background: var(--rwg-card);
+  border: 1px solid var(--rwg-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.rwg-hazard-title {
+  color: var(--rwg-fg-dim);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.rwg-hazard-note {
+  color: var(--rwg-fg-dim);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.rwg-hazard-items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 16px;
+}
+
+.rwg-hazard-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rwg-fg);
+  font-size: 13px;
+}
+
+.rwg-hazard-item input {
+  accent-color: var(--rwg-accent);
+}
+
 /* Result layout */
 .rwg-result {
   display: grid;
@@ -211,6 +249,7 @@
 @media (max-width: 900px) {
   .rwg-infobar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rwg-columns { grid-template-columns: 1fr; }
+  .rwg-hazard-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Visited worlds history */

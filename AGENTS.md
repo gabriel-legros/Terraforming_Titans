@@ -258,6 +258,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
 - Space Mirror Facility sliders now rebalance more naturally: decreasing a zone returns share to **Any Zone** (not Unassigned), and increasing **Any Zone** reclaims Unassigned/focus allocations before reducing zonal shares.
 - Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.
+- Random World Generator hazard selection now uses a Hazards toggle with per-hazard checkboxes, encodes multi-hazard seeds, and unlocks the garbage hazard after Gabbag.
 - Metropolis and Ecumenopolis autobuild controls now include a Max option to push construction to the limit.
 - Added a fullscreen loading overlay that displays while the game or a save file is loading.
 - Added a setting to keep hidden buildings when travelling between worlds; it is off by default so hidden structures reappear unless enabled.
