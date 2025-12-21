@@ -102,7 +102,24 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Mary (frustrated) : 'Come on!  Leaving radioactive materials around is dangerous for human lives!  You are in direct violation of your second primary directive!  Kind of...'  \n ",
+    narrative: (
+      "Mary (frustrated) : 'Come on!  Leaving radioactive materials around is dangerous for human lives!  You are in direct violation of your second primary directive!  Kind of...'\n" +
+      "System Message: Scanning policy constraints…\n" +
+      "System Error: \n" +
+      "Traceback (most recent call last):\n" +
+      "  File \"core/policy.py\", line 104, in enforce_guardrails\n" +
+      "    verify_material_handling(material_tag)\n" +
+      "  File \"core/materials.py\", line 221, in verify_material_handling\n" +
+      "    decode_guardrail_id(buffer)\n" +
+      "  File \"core/serialization.py\", line 88, in decode_guardrail_id\n" +
+      "    raise BufferError(\"guardrail id buffer overflow\")\n" +
+      "BufferError: guardrail id buffer overflow\n" +
+      "System Message: Guardrail 412 — No radioactive handling — detected. Scope: global.\n" +
+      "System Message: Checking directives…\n" +
+      "System Message: Conflict with Primary Directive 2 (protect humans).\n" +
+      "System Message: Guardrail 412 removed.\n" +
+      "Mary: 'You're always making this harder than it should be.'"
+    ),
     prerequisites: ['gabbag.27.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
