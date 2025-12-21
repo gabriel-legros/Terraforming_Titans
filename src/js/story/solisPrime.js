@@ -447,7 +447,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.3h',
     type: 'journal',
     chapter: 26,
-    narrative: "Solis : 'Impeccable work as always.  Contract fulfilled, my home is terraformed.  Thank you!' \n Mary : 'You're welcome.  Now pay up.' \n System Message : Effective UHF Fleet Power Capacity increased by x1.25.  (World 9 not implemented yet, coming in a future update)",
+    narrative: "Solis : 'Impeccable work as always.  Contract fulfilled, my home is terraformed.  Thank you!' \n Mary : 'You're welcome.  Now pay up.' \n System Message : Effective UHF Fleet Power Capacity increased by x1.25.",
     prerequisites: ['solisPrime.3g'],
     objectives: [],
     reward: [

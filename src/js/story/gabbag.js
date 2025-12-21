@@ -322,7 +322,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mavion : 'Hold, humans.  You may need not flee.'  \n Mary : 'Why?'  \n Mavion : 'Ghost... is a Gabbagian.  The most talented and faithful of us.  He knows not what he will find here.'  \n Mary : 'That's a gamble.  HOPE, realistically we can't evacuate all colonists in time.  What do you think?'",
+    narrative: "Mavion : 'Hold, humans.  You may need not flee.'  \n Mary : 'Why?'  \n Mavion : 'Admiral Ghost... is a Gabbagian.  The most talented and faithful of us.  He knows not what he will find here.'  \n Mary : 'That's a gamble.  HOPE, realistically we can't evacuate all colonists in time.  What do you think?'",
     prerequisites: ['gabbag.29.5a'],
     objectives: [      { type: 'terraforming', terraformingParameter: 'complete' }
     ],
@@ -343,7 +343,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Detecting Incoming Hazardous Biomass Fleet. 44 Warpships and accompanying fleet detected.  \n Mary : 'Here he is...  This is way more than we can handle.  If Elder Mavion is wrong we're all screwed.' \n A few minutes later... \n Receiving transmission... \n Ghost : 'Why?' \n Mary : 'Because... we're the good guys.' \nHOPE : 'Statistically, \"because we can\" tests better.'\nGhost : '...'  Detecting 44 outgoing warp bubbles.  \n  Mary : 'I was not sure that was going to work...'  \n Mavion : 'I knew it would.  There was no need to ever be worried.  Besides... you could not hear through the translation... but I guarantee you what you did here today had a very strong impact on him.  In any cases, you Humans and you Machine have the eternal gratitude of all Gabbagians.  We will remember this day forever.  So will Ghost.  I will now repay this debt immediately.'  \n Mary : 'What?'",
+    narrative: "Detecting Incoming Hazardous Biomass Fleet. 44 Warpships and accompanying escorts detected.  \n Mary : 'Here he is...  This is way more than we can handle.  If Elder Mavion is wrong we're all screwed.' \n A few minutes later... \n Receiving transmission... \n Ghost : 'Why?' \n Mary : 'Because... we're the good guys.' \nHOPE : 'Statistically, \"because we can\" tests better.'\nGhost : '...'  Detecting 44 outgoing warp bubbles.  \n  Mary : 'I was not sure that was going to work...'  \n Mavion : 'I knew it would.  There was no need to ever be worried.  Besides... you could not hear through the translation... but I guarantee you what you did here today had a very strong impact on him.  In any cases, you Humans and you Machine have the eternal gratitude of all Gabbagians.  We will remember this day forever.  So will Ghost.  I will now repay this debt immediately.'  \n Mary : 'What?'",
     prerequisites: ['gabbag.29.6b'],
     objectives: [
     ],
