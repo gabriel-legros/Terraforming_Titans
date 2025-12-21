@@ -115,36 +115,6 @@ function formatGarbageResourceName(key) {
   return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
 }
 
-function buildGarbagePenaltyDescription(penalties) {
-  const config = penalties || {};
-  const labels = [];
-
-  if (config.sandHarvesterMultiplier !== undefined) {
-    labels.push(GARBAGE_PENALTY_LABELS.sandHarvesterMultiplier);
-  }
-  if (config.nanoColonyGrowthMultiplier !== undefined) {
-    labels.push(GARBAGE_PENALTY_LABELS.nanoColonyGrowthMultiplier);
-  }
-  if (config.happiness !== undefined) {
-    labels.push(GARBAGE_PENALTY_LABELS.happiness);
-  }
-  if (config.oreScanningSpeedMultiplier !== undefined) {
-    labels.push(GARBAGE_PENALTY_LABELS.oreScanningSpeedMultiplier);
-  }
-  if (config.lifeGrowthMultiplier !== undefined) {
-    labels.push(GARBAGE_PENALTY_LABELS.lifeGrowthMultiplier);
-  }
-  if (config.androidAttrition !== undefined) {
-    labels.push(GARBAGE_PENALTY_LABELS.androidAttrition);
-  }
-
-  if (!labels.length) {
-    return 'No active penalties.';
-  }
-
-  return `Impacts: ${labels.join(', ')}`;
-}
-
 function computeGarbagePenaltyValues(penalties, ratio) {
   const config = penalties || {};
   const values = {};
@@ -237,14 +207,18 @@ function buildGarbagePenaltyLines(penaltyValues) {
 function computeGarbageTotals(garbageParameters, resourcesState) {
   const surfaceResources = garbageParameters && garbageParameters.surfaceResources ? garbageParameters.surfaceResources : {};
   const penalties = garbageParameters && garbageParameters.penalties ? garbageParameters.penalties : {};
+  const manager = getHazardManager();
+  const clearedCategories = manager && manager.getGarbageClearedCategories ? manager.getGarbageClearedCategories() : null;
   const entries = [];
   let totalCurrent = 0;
   let totalInitial = 0;
 
   Object.keys(surfaceResources).forEach((resourceKey) => {
     const resource = resourcesState && resourcesState.surface ? resourcesState.surface[resourceKey] : null;
-    const currentAmount = resource && resource.value ? resource.value : 0;
+    const rawCurrentAmount = resource && resource.value ? resource.value : 0;
     const initialAmount = resource && resource.initialValue ? resource.initialValue : 0;
+    const isCleared = clearedCategories && clearedCategories[resourceKey];
+    const currentAmount = isCleared ? 0 : rawCurrentAmount;
     const ratio = initialAmount > 0 ? Math.min(1, Math.max(0, currentAmount / initialAmount)) : 0;
     const penaltyConfig = penalties[resourceKey];
     const penaltyValues = computeGarbagePenaltyValues(penaltyConfig, ratio);
@@ -352,9 +326,6 @@ function ensureGarbageRow(key) {
   const labelInfo = doc.createElement('div');
   labelInfo.className = 'hazard-factor-info';
 
-  const infoIcon = createInfoIcon('');
-  labelTitle.appendChild(infoIcon);
-
   labelCell.appendChild(labelTitle);
   labelCell.appendChild(labelInfo);
 
@@ -372,7 +343,6 @@ function ensureGarbageRow(key) {
     row,
     labelTitle,
     labelInfo,
-    infoIcon,
     valueCell,
     penaltyCell
   };
@@ -471,17 +441,12 @@ function updateGarbageFactorGrid(entries) {
     activeKeys[entry.key] = true;
 
     const desiredLabel = entry.label;
-    const desiredTooltip = buildGarbagePenaltyDescription(entry.penaltyConfig);
     const currentLabel = record.labelTitle.dataset ? record.labelTitle.dataset.label : '';
-    const currentTooltip = record.labelTitle.dataset ? record.labelTitle.dataset.tooltip : '';
 
-    if (desiredLabel !== currentLabel || desiredTooltip !== currentTooltip) {
+    if (desiredLabel !== currentLabel) {
       record.labelTitle.textContent = desiredLabel;
-      record.labelTitle.appendChild(record.infoIcon);
-      record.infoIcon.title = desiredTooltip;
       if (record.labelTitle.dataset) {
         record.labelTitle.dataset.label = desiredLabel;
-        record.labelTitle.dataset.tooltip = desiredTooltip;
       }
     }
 
@@ -561,7 +526,7 @@ function ensureGarbageLayout() {
   const summaryRightHeader = doc.createElement('div');
   summaryRightHeader.className = 'hazard-summary__header';
   summaryRightHeader.textContent = 'Operational Impact';
-  summaryRightHeader.appendChild(createInfoIcon('Penalties scale with remaining waste and fade as cleanup progresses.'));
+  summaryRightHeader.appendChild(createInfoIcon('Penalties scale with remaining waste and fade as cleanup progresses.  Penalties are permanently removed if the corresponding amount reaches 0.'));
   const summaryRightBody = doc.createElement('div');
   summaryRightBody.className = 'hazard-summary__body';
   summaryRight.appendChild(summaryRightHeader);
@@ -612,9 +577,6 @@ function ensureGarbageLayout() {
   factorsHeaderLabel.className = 'hazard-factors__title';
   factorsHeaderLabel.textContent = 'Cleanup Priorities';
   factorsHeader.appendChild(factorsHeaderLabel);
-
-  const factorsHeaderInfo = createInfoIcon('Clear each stream to remove its penalties. Rows update with the latest stockpile.');
-  factorsHeader.appendChild(factorsHeaderInfo);
 
   const factorGrid = doc.createElement('div');
   factorGrid.className = 'hazard-factor-grid hazard-garbage-grid';

@@ -209,7 +209,8 @@ class HazardManager {
   save() {
     return {
       parameters: cloneHazardParameters(this.parameters),
-      crusaderTargetZone: this.getCrusaderTargetZone()
+      crusaderTargetZone: this.getCrusaderTargetZone(),
+      garbageHazard: this.garbageHazard && this.garbageHazard.save ? this.garbageHazard.save() : null
     };
   }
 
@@ -219,6 +220,8 @@ class HazardManager {
       ? data.crusaderTargetZone
       : 'any';
     this.setCrusaderTargetZone(storedTarget);
+    (this.garbageHazard && this.garbageHazard.load)
+      && this.garbageHazard.load(data && data.garbageHazard ? data.garbageHazard : null);
   }
 
   update(deltaTime = 0, terraformingState = null) {
@@ -497,6 +500,17 @@ class HazardManager {
 
     const withSpaces = `${key}`.replace(/([A-Z])/g, ' $1');
     return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+  }
+
+  getGarbageClearedCategories() {
+    return this.garbageHazard && this.garbageHazard.getClearedCategories
+      ? this.garbageHazard.getClearedCategories()
+      : {};
+  }
+
+  isGarbageCategoryCleared(key) {
+    const cleared = this.getGarbageClearedCategories();
+    return !!cleared[key];
   }
 
   applyHazardEffects(context = {}) {

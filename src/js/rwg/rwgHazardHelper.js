@@ -31,6 +31,38 @@
       context.meanTemperatureK = override.classification.TeqK;
     }
 
+    const temperatureSamples = [];
+    if (override.finalTemps) {
+      const temps = override.finalTemps;
+      if (Number.isFinite(temps.day)) {
+        temperatureSamples.push(temps.day);
+      }
+      if (Number.isFinite(temps.night)) {
+        temperatureSamples.push(temps.night);
+      }
+    }
+
+    const zonalTemps = override.zonalTemperatures || (terra && terra.temperature ? terra.temperature.zones : null);
+    if (zonalTemps) {
+      for (const zone of ZONE_KEYS) {
+        const entry = zonalTemps[zone] || {};
+        if (Number.isFinite(entry.day)) {
+          temperatureSamples.push(entry.day);
+        }
+        if (Number.isFinite(entry.night)) {
+          temperatureSamples.push(entry.night);
+        }
+        if (Number.isFinite(entry.value)) {
+          temperatureSamples.push(entry.value);
+        }
+      }
+    }
+
+    if (temperatureSamples.length) {
+      context.minTemperatureK = Math.min(...temperatureSamples);
+      context.maxTemperatureK = Math.max(...temperatureSamples);
+    }
+
     let gravity;
     if (override.celestialParameters && Number.isFinite(override.celestialParameters.gravity)) {
       gravity = override.celestialParameters.gravity;
@@ -162,10 +194,25 @@
     }
 
     const safeContext = context || {};
-    const { meanTemperatureK, surfacePressureKPa, co2PressureKPa, isLiquidWorld } = safeContext;
+    const { meanTemperatureK, minTemperatureK, maxTemperatureK, surfacePressureKPa, co2PressureKPa, isLiquidWorld } = safeContext;
 
-    if (Number.isFinite(meanTemperatureK)) {
-      const entry = hazardous.temperaturePreference || {};
+    const entry = hazardous.temperaturePreference || {};
+    const minTemp = Number.isFinite(minTemperatureK) ? minTemperatureK : null;
+    const maxTemp = Number.isFinite(maxTemperatureK) ? maxTemperatureK : null;
+    if (Number.isFinite(minTemp) && Number.isFinite(maxTemp)) {
+      const min = Math.max(0, Math.min(minTemp, maxTemp));
+      const max = Math.max(min, Math.max(minTemp, maxTemp));
+      const rangeWidth = Math.max(max - min, 1);
+      const severityScale = 0.4 / rangeWidth;
+      hazardous.temperaturePreference = {
+        ...entry,
+        min,
+        max,
+        unit: entry.unit || 'K',
+        severityBelow: severityScale,
+        severityHigh: severityScale
+      };
+    } else if (Number.isFinite(meanTemperatureK)) {
       const radius = Math.max(Math.abs(meanTemperatureK) * 0.1, 30);
       const min = Math.max(0, meanTemperatureK - radius);
       const max = Math.max(min, meanTemperatureK + radius);

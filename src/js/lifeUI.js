@@ -162,6 +162,10 @@ const lifeUICache = {
 
 let lifePointPurchaseQuantity = 1;
 
+function getSpendableLifeDesignPoints() {
+  return Math.floor(lifeDesigner.maxLifeDesignPoints());
+}
+
 function cacheLifeModifyButtons() {
   lifeUICache.modifyButtons = Array.from(document.querySelectorAll('.life-tentative-btn'));
 }
@@ -517,8 +521,9 @@ function initializeLifeTerraformingDesignerUI() {
           const currentTentativeValue = tentativeValueDisplay ? parseInt(tentativeValueDisplay.textContent, 10) : 0;
           const maxUpgrades = lifeDesigner.tentativeDesign[attributeName].maxUpgrades;
 
+          const spendablePoints = getSpendableLifeDesignPoints();
           const remainingPoints =
-            lifeDesigner.maxLifeDesignPoints() -
+            spendablePoints -
             lifeDesigner.tentativeDesign.getDesignCost() +
             Math.abs(lifeDesigner.tentativeDesign[attributeName].value);
 
@@ -528,7 +533,7 @@ function initializeLifeTerraformingDesignerUI() {
                 lifeDesigner.tentativeDesign.getDesignCost() -
                 Math.abs(lifeDesigner.tentativeDesign[attributeName].value);
               available =
-                lifeDesigner.maxLifeDesignPoints() - costExcludingCurrent;
+                spendablePoints - costExcludingCurrent;
           }
 
           let newValue;
@@ -908,8 +913,9 @@ function updateLifeUI() {
     function updatePointsDisplay() {
         const pointsAvailableSpan = document.getElementById('life-points-available');
         const pointsRemainingSpan = document.getElementById('life-points-remaining');
-        const maxPoints = lifeDesigner.maxLifeDesignPoints();
-        pointsAvailableSpan.textContent = maxPoints;
+        const rawMaxPoints = lifeDesigner.maxLifeDesignPoints();
+        const maxPoints = Math.floor(rawMaxPoints);
+        pointsAvailableSpan.textContent = formatNumber(rawMaxPoints, false, 1);
         
         let pointsRemaining = 0;
         if (lifeDesigner.tentativeDesign) {

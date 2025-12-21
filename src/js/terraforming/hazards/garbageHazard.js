@@ -74,10 +74,38 @@ class GarbageHazard {
   constructor(manager) {
     this.manager = manager;
     this.androidAttritionRates = {};
+    this.clearedCategories = {};
   }
 
   normalize(parameters) {
     return normalizeGarbageParameters(parameters);
+  }
+
+  resetClearedCategories() {
+    this.clearedCategories = {};
+  }
+
+  markCategoryCleared(key, currentAmount, initialAmount) {
+    if (currentAmount <= 0 || initialAmount <= 0) {
+      this.clearedCategories[key] = true;
+    }
+  }
+
+  isCategoryCleared(key) {
+    return !!this.clearedCategories[key];
+  }
+
+  getClearedCategories() {
+    return { ...this.clearedCategories };
+  }
+
+  save() {
+    return { clearedCategories: this.getClearedCategories() };
+  }
+
+  load(data) {
+    const cleared = (data && data.clearedCategories) || {};
+    this.clearedCategories = { ...cleared };
   }
 
   isCleared(terraforming, garbageParameters) {
@@ -87,16 +115,28 @@ class GarbageHazard {
       return true;
     }
 
-    const resourcesObj = resources.surface;
+    let resourcesState = null;
+    try {
+      resourcesState = resources;
+    } catch (error) {
+      resourcesState = null;
+    }
+
+    const resourcesObj = resourcesState && resourcesState.surface ? resourcesState : { surface: {} };
+
+    let clearedCount = 0;
     for (let index = 0; index < resourceKeys.length; index += 1) {
       const resourceKey = resourceKeys[index];
-      const currentAmount = resourcesObj[resourceKey]?.value ?? 0;
-      if (currentAmount > 0) {
-        return false;
+      const garbageResource = resourcesObj.surface[resourceKey];
+      const currentAmount = Number.isFinite(garbageResource?.value) ? garbageResource.value : 0;
+      const initialAmount = Number.isFinite(garbageResource?.initialValue) ? garbageResource.initialValue : 0;
+      this.markCategoryCleared(resourceKey, currentAmount, initialAmount);
+      if (this.isCategoryCleared(resourceKey)) {
+        clearedCount += 1;
       }
     }
 
-    return true;
+    return clearedCount === resourceKeys.length;
   }
 
   formatGarbageResourceName(key) {
@@ -108,6 +148,8 @@ class GarbageHazard {
     if (!garbageParameters || !garbageParameters.surfaceResources) {
       return;
     }
+
+    this.resetClearedCategories();
 
     const surfaceResourcesConfig = isPlainObject(garbageParameters.surfaceResources)
       ? garbageParameters.surfaceResources
@@ -247,6 +289,10 @@ class GarbageHazard {
 
       const currentAmount = Number.isFinite(garbageResource.value) ? garbageResource.value : 0;
       const initialAmount = Number.isFinite(garbageResource.initialValue) ? garbageResource.initialValue : 1;
+      this.markCategoryCleared(garbageResourceKey, currentAmount, initialAmount);
+      if (this.isCategoryCleared(garbageResourceKey)) {
+        return;
+      }
       const garbageRatio = initialAmount > 0 ? Math.min(1, Math.max(0, currentAmount / initialAmount)) : 0;
 
       if (penalties.sandHarvesterMultiplier !== undefined && buildings.sandQuarry) {

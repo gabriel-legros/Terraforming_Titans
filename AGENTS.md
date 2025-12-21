@@ -228,6 +228,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Hazardous Biomass stances gained a Recon option and artifact stances gained Rapid Extraction, adjusting event pacing, weights, and artifact odds.
 - Hazardous biomass growth now applies per-zone penalties, the Zone Growth summary uses a dedicated table, Preferred Terrain shows the active preference with a tooltip explaining penalty math, and radiation defaults now use mSv/day across hazard systems.
 - Garbage hazard UI now mirrors hazardous biomass styling with cleanup summaries, progress bars, and per-stream penalty readouts.
+- Garbage hazard penalties now permanently clear per stream once a category hits zero, and the hazard clears once every stream has done so.
 - Split hazard logic and UI into per-hazard modules so adding more hazards stays maintainable.
 - Added Solis Prime deep drilling and antimatter drilling story projects with three 10-minute steps gating chapter progress.
 - Added a Solis Prime Beach Construction story project after chapter 26 that requires heavy silicon and water before the final terraforming objective.

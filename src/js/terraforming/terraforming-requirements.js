@@ -79,8 +79,8 @@ const terraformingRequirements = {
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
     lifeDesign: {
-      survivalTemperatureRangeK: { min: 258.15, max: 303.15 },
-      optimalGrowthTemperatureBaseK: 278.15,
+      survivalTemperatureRangeK: { min: 338.15, max: 383.15 },
+      optimalGrowthTemperatureBaseK: 348.15,
       growthTemperatureToleranceBaseC: 2,
       growthTemperatureTolerancePerPointC: 0.6,
       photosynthesisRatePerPoint: 0.00008,

@@ -506,7 +506,7 @@ const researchParameters = {
       {
         id: 'advanced_alloy',
         name: 'Advanced Alloys',
-        description: 'Doubles metal output.',
+        description: 'Doubles metal output from ore mines.',
         cost: { research: 10000000 },
         prerequisites: [],
         artificialAllowed: false,

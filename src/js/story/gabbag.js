@@ -59,7 +59,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "System message : New buildings available.  \nReceiving translated tranmission... \n Mavion : 'Welcome to our Homeworld.  Miss Hopkins.  Machine.  My people have dreamt of repairing this world for thousands of years.'",
+    narrative: "System message : New buildings available.  \nReceiving translated tranmission... \n Elder Mavion : 'Welcome to our Homeworld.  Miss Hopkins.  Machine.  My people have dreamt of repairing this world for thousands of years.'",
     prerequisites: ['gabbag.27.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
@@ -161,7 +161,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "Mavion : 'This... vault.  Legends of my people speak of it.  We must recover its content.  It belongs in a museum'  \n Mary : 'Let's be nice and help them out HOPE'",
+    narrative: "Mavion : 'This... vault.  Legends of my people speak of it.  We must recover its content.  It belongs in a museum'  \n Mary : 'Of course!  We're here to help.'",
     prerequisites: ['gabbag.28.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
@@ -178,20 +178,21 @@ progressGabbag.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
     ],
-    reward: []
+    reward: [
+    { target: 'project', targetId: 'gabbag_museum_construction', type: 'enable' }
+    ]
   },
   {
     id: 'gabbag.28.3',
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "Mary : 'Mavion.  I am forwarding you some design for a grand museum.  Something worthy of your relics.'  \n Mavion : 'I am... speechless!  I have never seen something so beautiful!'  Mary : 'Well that was a success.  Good job on the design HOPE.  Time to build it.'",
+    narrative: "Mary : 'Mavion.  I am forwarding you some design for a grand museum.  Something worthy of your relics.'  \n Mavion : 'I am... speechless!  I have never seen something so beautiful!'\n  Mary : 'Well that was a success.  Good job on the design HOPE.  Time to build it.' \n System Message : New Special Project unlocked",
     prerequisites: ['gabbag.28.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
     ],
     reward: [
-      { target: 'project', targetId: 'gabbag_museum_construction', type: 'enable' }
     ]
   },
   {
@@ -199,7 +200,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "Bob : 'You two are making pretty good progress on this clean-up.  It... reminds me of PANDORA again.' \n Mary : 'How come?'  \n Bob : 'Microplastics.  The evidence was not 100% conclusive on it being harmful but PANDORA did not care anyway.  It did not like microplastics.  It went on a very big cleaning spree at some point.'  \n Mary : 'There are so few people who were there back then, relatively speaking.  Thanks for the story Bob.'",
+    narrative: "Bob : 'You two are making pretty good progress on this clean-up.  It... reminds me of PANDORA again.' \n Mary : 'How come?'  \n Bob : 'Microplastics.  The evidence was not 100% conclusive on it being harmful but PANDORA did not care anyway.  It did not like microplastics.  It went on a very big cleaning spree at some point.  It's part of the reason we don't use plastics anymore.'  \n Mary : 'There are so few people remaining who were there back then, relatively speaking.  Thanks for the story Bob.'",
     prerequisites: ['gabbag.28.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }

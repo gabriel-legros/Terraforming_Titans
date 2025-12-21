@@ -1080,7 +1080,7 @@ class LifeManager extends EffectableEntity {
           if (netBiomassChangeByZone[zoneName] < -1e-9) {
             terraforming.biomassDyingZones[zoneName] = true;
           }
-          if (terraforming.zonalSurface[zoneName].biomass < 1e-2) {
+          if (terraforming.zonalSurface[zoneName].biomass < 1e-5) {
             terraforming.zonalSurface[zoneName].biomass = 0;
           }
         }
