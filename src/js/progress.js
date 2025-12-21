@@ -605,6 +605,10 @@ class StoryManager {
         el.textContent = text ? `Objective: ${text}` : '';
     }
 
+    shouldApplyEffect(effect) {
+        return !effect.planetId || effect.planetId === spaceManager.getCurrentPlanetKey();
+    }
+
     applyRewards(event) { // Keep as is
         if (!event || !event.reward || event.reward.length === 0) {
             return;
@@ -622,8 +626,10 @@ class StoryManager {
                     if (!effect.oneTimeFlag) {
                         this.appliedEffects.push(effect);
                     }
-                    addEffect(effect);
-                    console.log(`Applied reward for ${event.id}: ${effect.type}`);
+                    if (this.shouldApplyEffect(effect)) {
+                        addEffect(effect);
+                        console.log(`Applied reward for ${event.id}: ${effect.type}`);
+                    }
                 }, effectiveIndex * delay);
                 effectiveIndex++;
             } else {
@@ -638,12 +644,14 @@ class StoryManager {
         const uniqueEffectsToApply = new Map();
         this.appliedEffects.forEach(effect => {
             const effectKey = JSON.stringify(effect);
-            if (!effect.oneTimeFlag) {
-                uniqueEffectsToApply.set(effectKey, effect);
-            }
+        if (!effect.oneTimeFlag) {
+            uniqueEffectsToApply.set(effectKey, effect);
+        }
         });
         uniqueEffectsToApply.forEach(effect => {
-            addEffect(effect);
+            if (this.shouldApplyEffect(effect)) {
+                addEffect(effect);
+            }
         });
     }
 
@@ -721,7 +729,9 @@ class StoryManager {
                         if (!effect.oneTimeFlag) {
                             this.appliedEffects.push(effect);
                         }
-                        addEffect(effect);
+                        if (this.shouldApplyEffect(effect)) {
+                            addEffect(effect);
+                        }
                     });
                 }
             }
@@ -788,7 +798,9 @@ class StoryManager {
                     collectedEffects.push(effect);
                 }
                 if (applyRewards) {
-                    addEffect(effect);
+                    if (this.shouldApplyEffect(effect)) {
+                        addEffect(effect);
+                    }
                 }
             });
         });
@@ -847,8 +859,10 @@ class StoryManager {
          });
 
          uniqueEffectsToApply.forEach(effect => {
-             addEffect(effect);
-             // console.log(`Reapplied effect on load: ${effect.type} to ${effect.targetId}`);
+             if (this.shouldApplyEffect(effect)) {
+                 addEffect(effect);
+                 // console.log(`Reapplied effect on load: ${effect.type} to ${effect.targetId}`);
+             }
          });
 
 

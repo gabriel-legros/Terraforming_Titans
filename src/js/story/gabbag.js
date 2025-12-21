@@ -42,12 +42,17 @@ progressGabbag.chapters.push(
     chapter: 27,
     activePlanet: 'gabbag',
     title: 'Chapter 27: The Gabbagians',
-    narrative: "Mary : '*sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.' \n Warning : New Hazard detected.",
+    narrative: "Mary : '*sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.' \n Warning : New Hazard detected.  New buildings available.",
     prerequisites: ['solisPrime.3l'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
     ],
-    reward: []
+    reward: [
+      { target: 'building', targetId: 'garbageSorter', type: 'enable', planetId: 'gabbag' },
+      { target: 'building', targetId: 'trashIncinerator', type: 'enable', planetId: 'gabbag' },
+      { target: 'building', targetId: 'junkRecycler', type: 'enable', planetId: 'gabbag' },
+      { target: 'building', targetId: 'scrapRecycler', type: 'enable', planetId: 'gabbag' }
+    ]
   },
   {
     id: 'gabbag.27.1',
@@ -125,6 +130,19 @@ progressGabbag.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
     ],
     reward: []
+  },
+  {
+    id: 'gabbag.27.6',
+    type: 'journal',
+    chapter: 27,
+    activePlanet: 'gabbag',
+    narrative: "System Message: Guardrail override confirmed.  Radioactive processing protocols online.  New building available.",
+    prerequisites: ['gabbag.27.5'],
+    objectives: [
+    ],
+    reward: [
+      { target: 'building', targetId: 'radioactiveRecycler', type: 'enable', planetId: 'gabbag' }
+    ]
   },
 
   {
