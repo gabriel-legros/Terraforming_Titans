@@ -278,6 +278,7 @@ const DEFAULT_PARAMS = {
       veryColdFluxWm2: [10, 100]
     },
     moonChance: { thresholdAU: 3, chance: 0.35 },
+    moonTypeBlacklist: ["super-earth"],
     typeOrbitLocks: {
       "venus-like": {
         presets: ["hot"],
@@ -1276,6 +1277,10 @@ class RwgManager extends EffectableEntity {
         isMoon = lockResult.moonOverride.value;
       }
     }
+    const moonTypeBlacklist = Array.isArray(P.orbit?.moonTypeBlacklist) ? P.orbit.moonTypeBlacklist : [];
+    if (moonTypeBlacklist.includes(forcedType) && isMoon) {
+      isMoon = false;
+    }
 
     // Generate the rest using S directly
     const override = buildPlanetOverride({ seed: S ^ 0xBEEF, star, aAU, isMoon, forcedType, forcedHazards }, P);
@@ -1330,6 +1335,10 @@ class RwgManager extends EffectableEntity {
       aAU = lockResult.aAU;
       if (lockResult.moonOverride.applied) {
         isMoon = lockResult.moonOverride.value;
+      }
+      const moonTypeBlacklist = Array.isArray(P.orbit?.moonTypeBlacklist) ? P.orbit.moonTypeBlacklist : [];
+      if (moonTypeBlacklist.includes(forcedType) && isMoon) {
+        isMoon = false;
       }
       const ov = buildPlanetOverride({ seed: planetSeed, star, aAU, isMoon, forcedType }, P);
       planets.push({ name: ov.name, classification: ov.classification, orbitAU: aAU, merged: deepMerge(defaultPlanetParameters, ov) });

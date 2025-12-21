@@ -393,3 +393,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Planets can now specify a `celestialParameters.terraformingRequirementId` (used by the Terraforming manager) so worlds like Gabbag can default to the Gabbagian requirement template.
 - Hydrology surface flow now scales with √(liquid surface elevation difference) and latitude boundary length, while flow-melt is viscosity-independent and scales with glacier height and target-zone temperature above the melting point.
 - Galaxy sector defense benefits and AI fleet capacity are now granted only to the last faction to fully control a sector (falling back to the sector’s original controller when no history exists), instead of being split across factions by partial control.
+- Random World Generator now blocks moon archetypes via `orbit.moonTypeBlacklist` (defaulting Super-Earth to planet-only).
