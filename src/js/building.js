@@ -70,7 +70,9 @@ class Building extends EffectableEntity {
         temperatureMaintenanceImmune,
         aerostatReduction,
         automationBuildingsDropDown,
-        autoBuildMaxOption
+        autoBuildMaxOption,
+        snapProductivity,
+        displayConsumptionAtMaxProductivity
       } = config;
   
       this.name = buildingName;
@@ -91,6 +93,8 @@ class Building extends EffectableEntity {
       this.surfaceArea = surfaceArea;
       this.requiresProductivity = typeof requiresProductivity !== 'undefined' ? requiresProductivity : true;
       this.requiresLand = requiresLand;
+      this.snapProductivity = !!snapProductivity;
+      this.displayConsumptionAtMaxProductivity = !!displayConsumptionAtMaxProductivity;
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
       this.aerostatReduction = Math.max(
@@ -793,6 +797,11 @@ class Building extends EffectableEntity {
     }
 
     let targetProductivity = baseTarget;
+
+    if (this.snapProductivity) {
+      this.productivity = targetProductivity;
+      return;
+    }
 
     if (Math.abs(targetProductivity - this.productivity) < 0.001) {
       this.productivity = targetProductivity;

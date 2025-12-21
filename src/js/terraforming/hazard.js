@@ -92,7 +92,7 @@ class HazardManager {
     this.updateUI();
   }
 
-  initialize(parameters = null) {
+  initialize(parameters = null, options = {}) {
     const planetHazards = getPlanetHazards(parameters);
     const cloned = cloneHazardParameters(planetHazards);
     const normalized = {};
@@ -124,7 +124,7 @@ class HazardManager {
     }
 
     if (this.garbageHazard) {
-      this.garbageHazard.initializeResources(activeTerraforming, this.parameters.garbage);
+      this.garbageHazard.initializeResources(activeTerraforming, this.parameters.garbage, options);
     }
 
     if (changed && this.enabled) {
@@ -215,7 +215,7 @@ class HazardManager {
   }
 
   load(data) {
-    this.initialize(getPlanetHazards());
+    this.initialize(getPlanetHazards(), { unlockOnly: true });
     const storedTarget = data && data.crusaderTargetZone && data.crusaderTargetZone.trim
       ? data.crusaderTargetZone
       : 'any';

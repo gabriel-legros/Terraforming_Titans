@@ -234,14 +234,26 @@ progressGabbag.chapters.push(
     reward: []
   },
   {
+    id: 'gabbag.29.0a',
+    type: 'journal',
+    chapter: 29,
+    activePlanet: 'gabbag',
+    narrative: "Mary : 'Now that we have spaceships, we can just get rid of all this stuff by sending it into space.'  \n Evelyn : 'Did you sign up for space littering of their home system or for actually fixing it?'  \n Mary : 'Fine...'",
+    prerequisites: ['gabbag.29.0'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
+    ],
+    reward: []
+  },
+  {
     id: 'gabbag.29.1',
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mary : 'Hey Evelyn!  Can we just throw all this garbage into the star?'  \n Evelyn : 'Sorry Mary.  It does not work.' \n Mary : 'Dang.  And here I thought we could do something fun.  Back to work...'",
-    prerequisites: ['gabbag.29.0'],
+    narrative: "Mary : 'Hey Evelyn!  Can we just throw all this garbage into the star?'  \n Evelyn : 'Sorry Mary.  It does not work.  It takes too much energy.' \n Mary : 'Dang.  And here I thought we could do something fun.  Back to work...'",
+    prerequisites: ['gabbag.29.0a'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
     ],
     reward: []
   },
@@ -253,7 +265,7 @@ progressGabbag.chapters.push(
     narrative: "Feroza : 'Ma'am... just a heads up.  Ghost.  Remember Ghost?  He finished his campaign on the Okoth front.  Apparently, he's very vocal about going back and finishing off HOPE.'  \n Mary : 'Ominous...  Thanks for the heads up.'",
     prerequisites: ['gabbag.29.1'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
     ],
     reward: []
   },
@@ -265,7 +277,7 @@ progressGabbag.chapters.push(
     narrative: "Mary : 'We're finally starting to make a real dent in all this garbage cleanup.  They could not have possibly littered worse than that.'  \nEvelyn : 'Oh, it could be a lot worse.'  \nMary : 'How come?'  \nEvelyn : 'Do you know anything about Kessler Syndrome?'  \nMary : 'Nevermind, it definitely could be a lot worse.  I don't ever want to have to deal with that.  Forget I asked.'",
     prerequisites: ['gabbag.29.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
     ],
     reward: []
   },
@@ -277,7 +289,7 @@ progressGabbag.chapters.push(
     narrative: "",
     prerequisites: ['gabbag.29.3'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
     ],
     reward: []
   },
@@ -289,7 +301,18 @@ progressGabbag.chapters.push(
     narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins...  My team has delayed it as much as they could but... Ghost was granted a favour by the Regency Council.  He requested... half of the imperial fleet.  To go to your location.  He's going to warp soon.  You need to evacuate.'  \n Mary : 'Damnit!  How many times are we going to be on the edge of complete annihilation?  And the job was almost done.'",
     prerequisites: ['gabbag.29.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
+    ],
+    reward: []
+  },
+  {
+    id: 'gabbag.29.5b',
+    type: 'journal',
+    chapter: 29,
+    activePlanet: 'gabbag',
+    narrative: "Mary : 'Alright.  I have made my decision.  HOPE, let's believe in Elder Mavion.  We'll have the Venusian fleet retreat.  I hope he's right...'",
+    prerequisites: ['gabbag.29.5'],
+    objectives: [      { type: 'terraforming', terraformingParameter: 'complete' }
     ],
     reward: []
   },
@@ -299,8 +322,8 @@ progressGabbag.chapters.push(
     chapter: 29,
     activePlanet: 'gabbag',
     narrative: "Mavion : 'Hold, humans.  You may need not flee.'  \n Mary : 'Why?'  \n Mavion : 'Ghost... is a Gabbagian.  The most talented and faithful of us.  He knows not what he will find here.'  \n Mary : 'That's a gamble.  HOPE, realistically we can't evacuate all colonists in time.  What do you think?'",
-    prerequisites: ['gabbag.29.5'],
-    objectives: [
+    prerequisites: ['gabbag.29.5b'],
+    objectives: [      { type: 'terraforming', terraformingParameter: 'complete' }
     ],
     reward: []
   },

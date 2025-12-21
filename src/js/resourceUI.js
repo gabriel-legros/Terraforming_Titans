@@ -958,6 +958,33 @@ function updateResourceDisplay(resources, deltaSeconds) {
   }
 }
 
+function getDisplayConsumptionRates(resource) {
+  const baseBySource = resource.consumptionRateBySource || {};
+  let total = resource.consumptionRate;
+  const adjustedBySource = { ...baseBySource };
+
+  for (const name in buildings) {
+    const building = buildings[name];
+    if (!building.displayConsumptionAtMaxProductivity) {
+      continue;
+    }
+    const { amount, ignoreProductivity } = building.getConsumptionResource(resource.category, resource.name);
+    if (amount <= 0 || building.active <= 0) {
+      continue;
+    }
+    const baseRate = building.active * amount * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(resource.category, resource.name);
+    const sourceName = building.displayName || name;
+    const current = adjustedBySource[sourceName] || 0;
+    const displayRate = ignoreProductivity ? current : baseRate;
+    if (displayRate !== current) {
+      adjustedBySource[sourceName] = displayRate;
+      total += displayRate - current;
+    }
+  }
+
+  return { total, bySource: adjustedBySource };
+}
+
 function updateResourceRateDisplay(resource, frameDelta = 0){
   const entry = resourceUICache.resources[resource.name] || cacheSingleResource(resource.category, resource.name);
   const ppsElement = entry ? entry.ppsEl : document.getElementById(`${resource.name}-pps-resources-container`);
@@ -967,7 +994,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     }
   } else if (ppsElement) {
     const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
-    const netRate = resource.productionRate - resource.consumptionRate;
+    const consumptionDisplay = getDisplayConsumptionRates(resource);
+    const netRate = resource.productionRate - consumptionDisplay.total;
 
     // Record net rate history
     if (typeof resource.recordNetRate === 'function') {
@@ -1040,7 +1068,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   const autobuildDiv = entry?.tooltip?.autobuildDiv || document.getElementById(`${resource.name}-tooltip-autobuild`);
   const warningDiv = entry?.tooltip?.warningDiv || document.getElementById(`${resource.name}-tooltip-warning`);
 
-  const netRate = resource.productionRate - resource.consumptionRate;
+  const consumptionDisplay = getDisplayConsumptionRates(resource);
+  const netRate = resource.productionRate - consumptionDisplay.total;
 
   if (valueDiv) {
     if (resource.name === 'land') {
@@ -1289,7 +1318,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   }
 
   if (consumptionDiv) {
-    const consumptionEntries = Object.entries(resource.consumptionRateBySource)
+    const consumptionEntries = Object.entries(consumptionDisplay.bySource)
       .filter(([source, rate]) => rate !== 0 && source !== 'Overflow (not summed)');
     updateRateTable(consumptionDiv, consumptionEntries, r => `${formatNumber(r, false, 2)}/s`);
     consumptionDiv.style.display = consumptionEntries.length > 0 ? 'block' : 'none';
@@ -1406,4 +1435,10 @@ function invalidateResourceUICache() {
   resourceUICache.smallValueTimers = {};
   resourceUICache.unstableTimers = {};
   updateResourceDisplay.lastTimestamp = undefined;
+}
+
+try {
+  module.exports = { getDisplayConsumptionRates };
+} catch (err) {
+  // Browser environment: no module exports.
 }

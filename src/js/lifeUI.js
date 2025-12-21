@@ -1124,9 +1124,13 @@ function updateLifeStatusTable() {
 
         if (zone !== 'global' && growthCell) {
             const baseRate = designToCheck.photosynthesisEfficiency.value * requirements.photosynthesisRatePerPoint;
-            const lumMult = zone === 'global'
-                ? (terraforming.calculateSolarPanelMultiplier ? terraforming.calculateSolarPanelMultiplier() : 1)
-                : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1);
+            const metabolismProcess = getActiveLifeMetabolismProcessForUI();
+            const usesLuminosity = metabolismProcess?.growth?.usesLuminosity === true;
+            const lumMult = usesLuminosity
+                ? (zone === 'global'
+                    ? (terraforming.calculateSolarPanelMultiplier ? terraforming.calculateSolarPanelMultiplier() : 1)
+                    : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1))
+                : 1;
             const tempMult = growthTempResults[zone]?.multiplier || 0;
             const radMitigation = designToCheck.getRadiationMitigationRatio();
             let radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
@@ -1140,12 +1144,14 @@ function updateLifeStatusTable() {
                 const lines = [
                     `Base: ${(baseRate * 100).toFixed(2)}%`,
                     `Temp: x${formatNumber(tempMult, false, 2)}`,
-                    `Luminosity: x${formatNumber(lumMult, false, 2)}`,
                     `Capacity: x${formatNumber(capacityMult, false, 2)}`,
                     `Radiation: x${formatNumber(radMult, false, 2)}`,
                     `Liquid Water: x${formatNumber(waterMult, false, 2)}`,
                     `Other: x${formatNumber(otherMult, false, 2)}`
                 ];
+                if (usesLuminosity) {
+                    lines.splice(2, 0, `Luminosity: x${formatNumber(lumMult, false, 2)}`);
+                }
                 if (ecoFraction > 0) {
                     const landReduction = (1 - landMult) * 100;
                     lines.push(`Ecumenopolis: x${formatNumber(landMult, false, 2)} (-${landReduction.toFixed(2)}%)`);

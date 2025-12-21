@@ -881,7 +881,7 @@ class LifeManager extends EffectableEntity {
         const processName = process.displayName || 'Photosynthesis';
         const growthReason = processName;
         const decayReason = `${processName} Decay`;
-        const usesLuminosity = process.growth.usesLuminosity !== false;
+        const usesLuminosity = process.growth.usesLuminosity === true;
 
         const secondsMultiplier = deltaTime / 1000;
         terraforming.biomassDyingZones = terraforming.biomassDyingZones || { tropical: false, temperate: false, polar: false };

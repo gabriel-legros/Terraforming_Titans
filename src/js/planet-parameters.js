@@ -1365,7 +1365,7 @@ const gabbagOverrides = {
         "initialValue": 3696135227990891
       },
       "atmosphericWater": {
-        "initialValue": 1848954215547882.5
+        "initialValue": 499850938785581.9
       },
       "atmosphericMethane": {
         "initialValue": 400000000000000
@@ -1374,7 +1374,7 @@ const gabbagOverrides = {
         "initialValue": 79141235823.26874
       },
       "inertGas": {
-        "initialValue": 250000000000000000
+        "initialValue": 50000000000000000
       },
       "hydrogen": {
         "initialValue": 0
@@ -1386,17 +1386,17 @@ const gabbagOverrides = {
   },
   "zonalWater": {
     "tropical": {
-      "liquid": 10345763020752492,
+      "liquid": 10880767709344190,
       "ice": 0,
       "buriedIce": 0
     },
     "temperate": {
-      "liquid": 13447760775709956,
+      "liquid": 14146882394233150,
       "ice": 0,
       "buriedIce": 0
     },
     "polar": {
-      "liquid": 2153209090277669,
+      "liquid": 2268186059925160.5,
       "ice": 0,
       "buriedIce": 0
     }
@@ -1445,29 +1445,29 @@ const gabbagOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 356.4851281719689,
-      "day": 356.60697309400206,
-      "night": 356.3632832499357
+      "value": 328.6835818626353,
+      "day": 328.85269560062574,
+      "night": 328.5144681246449
     },
     "temperate": {
-      "value": 356.4802374648396,
-      "day": 356.58156108364017,
-      "night": 356.37891384603904
+      "value": 327.3681371665781,
+      "day": 327.5087557534112,
+      "night": 327.227518579745
     },
     "polar": {
-      "value": 356.47905896351324,
-      "day": 356.53352752528065,
-      "night": 356.42459040174583
+      "value": 326.1759879502024,
+      "day": 326.2515360486808,
+      "night": 326.100439851724
     }
   },
   hazards: {
     garbage: {
       surfaceResources: {
-        garbage: { amountMultiplier: 10000 },
-        trash: { amountMultiplier: 1000 },
-        junk: { amountMultiplier: 1000 },
-        scrapMetal: { amountMultiplier: 1000 },
-        radioactiveWaste: { amountMultiplier: 1 }
+        garbage: { amountMultiplier: 1000 },
+        trash: { amountMultiplier: 100 },
+        junk: { amountMultiplier: 100 },
+        scrapMetal: { amountMultiplier: 100 },
+        radioactiveWaste: { amountMultiplier: 0.25 }
       },
       penalties: {
         garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },

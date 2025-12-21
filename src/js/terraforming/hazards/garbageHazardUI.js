@@ -426,10 +426,6 @@ function updateGarbageBar(totals) {
     garbageHazardUICache.barHazardLabel.textContent = hazardPercent > 10 ? `${formatNumeric(hazardPercent, 0)}% Remaining` : '';
   }
 
-  if (garbageHazardUICache.barDetails) {
-    const impactLines = buildGarbagePenaltyLines(totals.penaltyTotals || {});
-    garbageHazardUICache.barDetails.textContent = impactLines.join(' | ');
-  }
 }
 
 function updateGarbageFactorGrid(entries) {
@@ -505,6 +501,7 @@ function ensureGarbageLayout() {
   const summaryLeftHeader = doc.createElement('div');
   summaryLeftHeader.className = 'hazard-summary__header';
   summaryLeftHeader.textContent = 'Cleanup Status';
+  summaryLeftHeader.appendChild(createInfoIcon('The hazard clears only when every garbage stream reaches 0 at the same time.'));
   const summaryLeftBody = doc.createElement('div');
   summaryLeftBody.className = 'hazard-summary__body';
   summaryLeft.appendChild(summaryLeftHeader);
@@ -526,7 +523,7 @@ function ensureGarbageLayout() {
   const summaryRightHeader = doc.createElement('div');
   summaryRightHeader.className = 'hazard-summary__header';
   summaryRightHeader.textContent = 'Operational Impact';
-  summaryRightHeader.appendChild(createInfoIcon('Penalties scale with remaining waste and fade as cleanup progresses.  Penalties are permanently removed if the corresponding amount reaches 0.'));
+  summaryRightHeader.appendChild(createInfoIcon('Penalties scale with remaining waste and fade as cleanup progresses.  They only clear once every garbage stream reaches 0 at the same time.'));
   const summaryRightBody = doc.createElement('div');
   summaryRightBody.className = 'hazard-summary__body';
   summaryRight.appendChild(summaryRightHeader);
@@ -560,11 +557,7 @@ function ensureGarbageLayout() {
   bar.appendChild(safeFill);
   bar.appendChild(hazardFill);
 
-  const barDetails = doc.createElement('div');
-  barDetails.className = 'hazard-bar__details';
-
   barWrapper.appendChild(bar);
-  barWrapper.appendChild(barDetails);
   card.appendChild(barWrapper);
 
   const factorsSection = doc.createElement('div');
@@ -597,7 +590,6 @@ function ensureGarbageLayout() {
   garbageHazardUICache.barHazard = hazardFill;
   garbageHazardUICache.barSafeLabel = safeLabel;
   garbageHazardUICache.barHazardLabel = hazardLabel;
-  garbageHazardUICache.barDetails = barDetails;
   garbageHazardUICache.factorsSection = factorsSection;
   garbageHazardUICache.factorGrid = factorGrid;
 }

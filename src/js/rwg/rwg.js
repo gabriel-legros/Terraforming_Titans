@@ -503,22 +503,7 @@ const RWG_HAZARD_PRESETS = {
       populationGrowth: 1
     }
   },
-  garbage: {
-    surfaceResources: {
-      garbage: { amountMultiplier: 10000 },
-      trash: { amountMultiplier: 1000 },
-      junk: { amountMultiplier: 1000 },
-      scrapMetal: { amountMultiplier: 1000 },
-      radioactiveWaste: { amountMultiplier: 1 }
-    },
-    penalties: {
-      garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },
-      trash: { happiness: -0.05 },
-      junk: { happiness: -0.05 },
-      scrapMetal: { oreScanningSpeedMultiplier: 0.25 },
-      radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
-    }
-  }
+  garbage: planetParameters.gabbag.hazards.garbage
 };
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage'];

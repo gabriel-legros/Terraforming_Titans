@@ -208,6 +208,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Settings checkbox to keep the tab active by playing a looped near-silent audio track.
 - Added a muted looping silent audio track to keep the tab active for testing purposes.
 - Replaced the silent keep-tab-running track with the new `assets/white_noise/weak_white_noise_-60dBFS_60s_22k.wav` loop (with the old data URI as a fallback) so Chrome/Edge can keep the tab alive.
+- Waste processing buildings now snap their productivity to trend values instead of easing in.
 - Hydrology surface flow now freezes liquid that enters sub-freezing zones, converting it to surface ice (FreezeOut) and reporting a dedicated **Freeze Out** resource rate entry.
 - Added Umbra story planet orbiting Nyx-13 with new post-Venus chapters and progression rewards.
 - Added a Dyson Sphere giga project with a persistent frame, 100x faster collector deployment, and a Giga subtab alongside mega projects.

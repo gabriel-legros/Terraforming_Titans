@@ -124,19 +124,18 @@ class GarbageHazard {
 
     const resourcesObj = resourcesState && resourcesState.surface ? resourcesState : { surface: {} };
 
-    let clearedCount = 0;
     for (let index = 0; index < resourceKeys.length; index += 1) {
       const resourceKey = resourceKeys[index];
       const garbageResource = resourcesObj.surface[resourceKey];
       const currentAmount = Number.isFinite(garbageResource?.value) ? garbageResource.value : 0;
       const initialAmount = Number.isFinite(garbageResource?.initialValue) ? garbageResource.initialValue : 0;
       this.markCategoryCleared(resourceKey, currentAmount, initialAmount);
-      if (this.isCategoryCleared(resourceKey)) {
-        clearedCount += 1;
+      if (initialAmount > 0 && currentAmount > 0) {
+        return false;
       }
     }
 
-    return clearedCount === resourceKeys.length;
+    return true;
   }
 
   formatGarbageResourceName(key) {
@@ -144,7 +143,7 @@ class GarbageHazard {
     return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
   }
 
-  initializeResources(terraforming, garbageParameters) {
+  initializeResources(terraforming, garbageParameters, options = {}) {
     if (!garbageParameters || !garbageParameters.surfaceResources) {
       return;
     }
@@ -160,6 +159,7 @@ class GarbageHazard {
     }
 
     const initialLand = terraforming?.initialLand || 0;
+    const unlockOnly = options.unlockOnly === true;
 
     let resourcesState = null;
     try {
@@ -190,15 +190,15 @@ class GarbageHazard {
     surfaceResourceKeys.forEach((resourceKey) => {
       const resourceConfig = surfaceResourcesConfig[resourceKey] || {};
       const amountMultiplier = resourceConfig.amountMultiplier || 1;
-      const resourceValue = initialLand * amountMultiplier;
+      const resourceValue = unlockOnly ? 0 : initialLand * amountMultiplier;
 
       if (resourcesObj.surface[resourceKey]) {
         const existingResource = resourcesObj.surface[resourceKey];
         existingResource.unlocked = true;
-        if (existingResource.value === 0 && resourceValue > 0) {
+        if (!unlockOnly && existingResource.value === 0 && resourceValue > 0) {
           existingResource.value = resourceValue;
         }
-        if (!existingResource.initialValue && resourceValue > 0) {
+        if (!unlockOnly && !existingResource.initialValue && resourceValue > 0) {
           existingResource.initialValue = resourceValue;
         }
         if (unlock && unlock.call) {
@@ -276,12 +276,10 @@ class GarbageHazard {
 
     const androidResource = resourcesState?.colony?.androids || null;
 
-    Object.keys(garbageParameters.surfaceResources).forEach((garbageResourceKey) => {
-      const penalties = garbageParameters.penalties[garbageResourceKey];
-      if (!penalties) {
-        return;
-      }
+    const garbageResourceKeys = Object.keys(garbageParameters.surfaceResources);
+    let allCleared = true;
 
+    garbageResourceKeys.forEach((garbageResourceKey) => {
       const garbageResource = resourcesObj.surface[garbageResourceKey];
       if (!garbageResource) {
         return;
@@ -289,10 +287,15 @@ class GarbageHazard {
 
       const currentAmount = Number.isFinite(garbageResource.value) ? garbageResource.value : 0;
       const initialAmount = Number.isFinite(garbageResource.initialValue) ? garbageResource.initialValue : 1;
-      this.markCategoryCleared(garbageResourceKey, currentAmount, initialAmount);
-      if (this.isCategoryCleared(garbageResourceKey)) {
+      if (initialAmount > 0 && currentAmount > 0) {
+        allCleared = false;
+      }
+
+      const penalties = garbageParameters.penalties[garbageResourceKey];
+      if (!penalties) {
         return;
       }
+
       const garbageRatio = initialAmount > 0 ? Math.min(1, Math.max(0, currentAmount / initialAmount)) : 0;
 
       if (penalties.sandHarvesterMultiplier !== undefined && buildings.sandQuarry) {
@@ -371,6 +374,16 @@ class GarbageHazard {
         this.androidAttritionRates[garbageResourceKey] = garbageRatio * attritionRate;
       }
     });
+
+    if (allCleared) {
+      const clearedCategories = {};
+      garbageResourceKeys.forEach((resourceKey) => {
+        clearedCategories[resourceKey] = true;
+      });
+      this.clearedCategories = clearedCategories;
+    } else {
+      this.clearedCategories = {};
+    }
   }
 
   update(deltaSeconds) {
