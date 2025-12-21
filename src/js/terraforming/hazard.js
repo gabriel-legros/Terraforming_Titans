@@ -264,6 +264,33 @@ class HazardManager {
     return hazardousValue > 0;
   }
 
+  getHazardClearanceStatus(terraformingState) {
+    const hazardKeys = Object.keys(this.parameters);
+    if (!hazardKeys.length) {
+      return true;
+    }
+
+    for (let index = 0; index < hazardKeys.length; index += 1) {
+      const hazardKey = hazardKeys[index];
+      switch (hazardKey) {
+        case 'hazardousBiomass':
+          if (!this.hazardousBiomassHazard.isCleared(terraformingState, this.parameters.hazardousBiomass)) {
+            return false;
+          }
+          break;
+        case 'garbage':
+          if (!this.garbageHazard.isCleared(terraformingState, this.parameters.garbage)) {
+            return false;
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    return true;
+  }
+
   getHazardPenalties(key) {
     if (!key || !Object.prototype.hasOwnProperty.call(this.parameters, key)) {
       return {};

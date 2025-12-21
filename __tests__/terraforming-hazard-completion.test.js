@@ -14,6 +14,7 @@ global.EffectableEntity = class {
 global.lifeParameters = {};
 
 const Terraforming = require(path.join('..', 'src/js/terraforming/terraforming.js'));
+const { HazardManager, setHazardManager } = require(path.join('..', 'src/js/terraforming/hazard.js'));
 
 function createTerraformingInstance() {
   const resources = {
@@ -51,12 +52,21 @@ function createTerraformingInstance() {
   terraforming.getLuminosityStatus = () => true;
   terraforming.getLifeStatus = () => true;
   terraforming.getMagnetosphereStatus = () => true;
+  global.resources = resources;
   return terraforming;
+}
+
+function setupHazards(hazardParams) {
+  const manager = new HazardManager();
+  setHazardManager(manager);
+  manager.initialize(hazardParams);
+  return manager;
 }
 
 describe('Terraforming hazardous biomass requirement', () => {
   test('getHazardClearanceStatus requires all zones to be clear', () => {
     const terraforming = createTerraformingInstance();
+    setupHazards({ hazardousBiomass: {} });
     expect(terraforming.getHazardClearanceStatus()).toBe(true);
 
     terraforming.zonalSurface.polar.hazardousBiomass = 5;
@@ -68,6 +78,7 @@ describe('Terraforming hazardous biomass requirement', () => {
 
   test('getTerraformingStatus fails when hazardous biomass remains', () => {
     const terraforming = createTerraformingInstance();
+    setupHazards({ hazardousBiomass: {} });
     expect(terraforming.getTerraformingStatus()).toBe(true);
 
     terraforming.zonalSurface.temperate.hazardousBiomass = 3;
@@ -75,5 +86,23 @@ describe('Terraforming hazardous biomass requirement', () => {
 
     terraforming.zonalSurface.temperate.hazardousBiomass = 0;
     expect(terraforming.getTerraformingStatus()).toBe(true);
+  });
+});
+
+describe('Terraforming garbage hazard requirement', () => {
+  test('getHazardClearanceStatus requires garbage to be cleared', () => {
+    const terraforming = createTerraformingInstance();
+    global.resources.surface.garbageMetal = { value: 12, initialValue: 12, unlocked: true };
+    setupHazards({
+      garbage: {
+        surfaceResources: { garbageMetal: { amountMultiplier: 1 } },
+        penalties: {}
+      }
+    });
+
+    expect(terraforming.getHazardClearanceStatus()).toBe(false);
+
+    global.resources.surface.garbageMetal.value = 0;
+    expect(terraforming.getHazardClearanceStatus()).toBe(true);
   });
 });

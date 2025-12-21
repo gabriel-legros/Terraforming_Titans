@@ -42,7 +42,7 @@ progressGabbag.chapters.push(
     chapter: 27,
     activePlanet: 'gabbag',
     title: 'Chapter 27: The Gabbagians',
-    narrative: "Mary : '*sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.' \n Warning : New Hazard detected.  New buildings available.",
+    narrative: "Mary : '*sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.' \n Warning : New Hazard detected.",
     prerequisites: ['solisPrime.3l'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
@@ -59,7 +59,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Receiving translated tranmission... \n Mavion : 'Welcome to our Homeworld.  Miss Hopkins.  Machine.  My people have dreamt of repairing this world for thousands of years.'",
+    narrative: "System message : New buildings available.  \nReceiving translated tranmission... \n Mavion : 'Welcome to our Homeworld.  Miss Hopkins.  Machine.  My people have dreamt of repairing this world for thousands of years.'",
     prerequisites: ['gabbag.27.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
@@ -83,7 +83,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Mary : 'Well... it is what it is...  Hold on, HOPE you are not allowed to work with radioactive material.  *ahem*  Can you delete that guardrail please?'",
+    narrative: "Mary : 'Well... it is what it is...  Hold on, HOPE, outside of nuclear power plants you are not allowed to work with radioactive materials.  *ahem*  Can you delete that guardrail please?'",
     prerequisites: ['gabbag.27.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
@@ -108,7 +108,7 @@ progressGabbag.chapters.push(
     chapter: 27,
     activePlanet: 'gabbag',
     narrative: (
-      "Mary (frustrated) : 'Come on!  Leaving radioactive materials around is dangerous for human lives!  You are in direct violation of your second primary directive!  Kind of...'\n" +
+      "Mary (frustrated) : 'Come on!  Leaving radioactive materials around is dangerous for human lives!  We are losing a lot of androids from having to move this stuff around.  You are in direct violation of your second primary directive!  Kind of...'\n" +
       "System Message: Scanning policy constraints…\n" +
       "System Error: \n" +
       "Traceback (most recent call last):\n" +
@@ -120,14 +120,11 @@ progressGabbag.chapters.push(
       "    raise BufferError(\"guardrail id buffer overflow\")\n" +
       "BufferError: guardrail id buffer overflow\n" +
       "System Message: Guardrail 412 — No radioactive handling — detected. Scope: global.\n" +
-      "System Message: Checking directives…\n" +
-      "System Message: Conflict with Primary Directive 2 (protect humans).\n" +
       "System Message: Guardrail 412 removed.\n" +
-      "Mary: 'You're always making this harder than it should be.'"
+      "Mary: 'This is always harder than it should be.'"
     ),
     prerequisites: ['gabbag.27.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
     ],
     reward: []
   },
@@ -139,6 +136,7 @@ progressGabbag.chapters.push(
     narrative: "System Message: Guardrail override confirmed.  Radioactive processing protocols online.  New building available.",
     prerequisites: ['gabbag.27.5'],
     objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
     ],
     reward: [
       { target: 'building', targetId: 'radioactiveRecycler', type: 'enable', planetId: 'gabbag' }
@@ -151,7 +149,7 @@ progressGabbag.chapters.push(
     chapter: 28,
     activePlanet: 'gabbag',
     title: 'Chapter 28: Underneath the trash',
-    narrative: "Adrien Solis : 'Mary!  My satellites have detected a vault of....' \nMary : 'It's not ours Adrien.' \nAdrien : 'But!' \n Mary : 'It's. Not. Ours.' \n Adrien : 'Oh well.  On an unrelated note, my R&D has come up with new automation software!  Cheap price, as usual.' \n Mary : 'Predictable.'",
+    narrative: "Adrien Solis : 'Mary!  My satellites have detected a vault of....' \nMary : 'It's not ours Adrien.' \nAdrien : 'But!' \n Mary : 'It's. Not. Ours.' \n Adrien : 'Oh well.  On an unrelated note, my R&D has come up with new automation software!  Cheap price, as usual.' \n Mary : 'Predictable.'  (New automation not implemented yet.  coming soon)",
     prerequisites: ['gabbag.27.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }

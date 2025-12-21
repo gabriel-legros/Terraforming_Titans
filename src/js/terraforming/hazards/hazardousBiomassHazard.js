@@ -134,6 +134,10 @@ class HazardousBiomassHazard {
     return hazardousValue > 0;
   }
 
+  isCleared(terraforming) {
+    return !this.hasHazard(terraforming);
+  }
+
   ensureCrusaderPresence(terraforming) {
     let resourcesState = null;
     try {

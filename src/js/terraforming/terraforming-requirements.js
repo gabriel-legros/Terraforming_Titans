@@ -70,7 +70,7 @@ const terraformingRequirements = {
     gasTargetsPa: {
       carbonDioxide: { min: 5000, max: 50000 },
       oxygen: { min: 0, max: 200 },
-      inertGas: { min: 5_000_000, max: 10_000_000 },
+      inertGas: { min: 1_000_000, max: 2_000_000 },
       hydrogen: { min: 200, max: 60000 },
       atmosphericMethane: { min: 40_000, max: 60_000 },
     },

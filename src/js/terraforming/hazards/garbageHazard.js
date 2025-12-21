@@ -80,6 +80,25 @@ class GarbageHazard {
     return normalizeGarbageParameters(parameters);
   }
 
+  isCleared(terraforming, garbageParameters) {
+    const surfaceResources = garbageParameters?.surfaceResources || {};
+    const resourceKeys = Object.keys(surfaceResources);
+    if (!resourceKeys.length) {
+      return true;
+    }
+
+    const resourcesObj = resources.surface;
+    for (let index = 0; index < resourceKeys.length; index += 1) {
+      const resourceKey = resourceKeys[index];
+      const currentAmount = resourcesObj[resourceKey]?.value ?? 0;
+      if (currentAmount > 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   formatGarbageResourceName(key) {
     const withSpaces = `${key}`.replace(/([A-Z])/g, ' $1');
     return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);

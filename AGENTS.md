@@ -247,6 +247,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Mega Particle Accelerator advanced research that unlocks an infinitely repeatable Particle Accelerator megaproject.
 - Added a Surface Food Production research that lets surface biomass passively produce food once unlocked.
 - Added a Next-generation bio-engineering advanced research that lets advanced research permanently fund life design points across planet travel.
+- Colony consumption no longer generates garbage, junk, or scrap metal production.
 - Random World Generator honours per-archetype orbit lock lists, keeping Venus-like worlds in the hot band while preserving their sulfuric haze and parched atmosphere.
 - Space Story subtab now mirrors the Random World Generator styling with card-based world summaries, highlighted travel states, and an inline warning pill for unfinished terraforming.
 - Added a Space Story statistics panel that shows unique versus effective terraformed worlds with detailed tooltips explaining their calculations and gameplay effects.

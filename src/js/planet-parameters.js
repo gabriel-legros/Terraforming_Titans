@@ -41,11 +41,11 @@ const defaultPlanetParameters = {
       energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 50000000, unlocked:false , unit: 'Watt-day' },
       metal: { name: 'Metal', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton'},
       silicon: { name: 'Silicon', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton' },
-      glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton', marginBottom: 10 },
+      glass: { name: 'Glass', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton', maintenanceConversion : {surface : 'junk'}, marginBottom: 10 },
       water: { name: 'Water', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {atmospheric : 'atmosphericWater'}, unit: 'ton'}, // Default (Mars)
       food: { name: 'Food', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'packs', marginBottom: 10 },
       components: { name: 'Components', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton' },
-      electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'junk'}, unit: 'ton'},
+      electronics: { name: 'Electronics', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton', conversionValue : 0.2},
       superconductors: { name: 'Superconductors', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} , unit: 'ton' },
       superalloys: { name: 'Superalloys', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, maintenanceMultiplier: 0 , unit: 'ton' },
       androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'junk'}},
@@ -1355,8 +1355,8 @@ const gabbagOverrides = {
   },
   "resources": {
     underground: {
-      ore: { initialValue: 10, maxDeposits: 16680, areaTotal: 0 },
-      geothermal: { initialValue: 0, maxDeposits: 167, areaTotal: 0 },
+      ore: { initialValue: 10, maxDeposits: 16680, areaTotal: 166800 },
+      geothermal: { initialValue: 3, maxDeposits: 167, areaTotal: 166800 },
     },
     "surface": {
               land: { initialValue: 16_680_021_928 }},
@@ -1471,9 +1471,9 @@ const gabbagOverrides = {
       },
       penalties: {
         garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },
-        trash: { happiness: -0.1 },
-        junk: { happiness: -0.1 },
-        scrapMetal: { oreScanningSpeedMultiplier: 0.5 },
+        trash: { happiness: -0.05 },
+        junk: { happiness: -0.05 },
+        scrapMetal: { oreScanningSpeedMultiplier: 0.25 },
         radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
       }
     }

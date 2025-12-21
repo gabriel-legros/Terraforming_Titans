@@ -1749,23 +1749,23 @@ function updateBuildingSubtabsVisibility() {
   categories.forEach(category => {
     const subtabId = `${category}-buildings`;
     const hasVisibleBuilding = Object.values(buildings).some(b => {
-      const isVisible = typeof b.isVisible === 'function'
-        ? b.isVisible()
-        : b.unlocked && !b.isHidden;
+      const isVisible = b.isVisible ? b.isVisible() : b.unlocked && !b.isHidden;
       return b.category === category && isVisible;
     });
+    const hasHiddenBuilding = Object.values(buildings).some(b => b.category === category && b.isHidden);
+    const shouldShow = hasVisibleBuilding || hasHiddenBuilding;
     
     if (buildingSubtabManager) {
-      if (hasVisibleBuilding) {
+      if (shouldShow) {
         buildingSubtabManager.show(subtabId);
       } else {
         buildingSubtabManager.hide(subtabId);
       }
     } else {
-      const tab = document.querySelector(`.building-subtab[data-subtab="${subtabId}"]`);
+      const tab = document.getElementById(`${subtabId}-tab`);
       const content = document.getElementById(subtabId);
       if (!tab || !content) return;
-      if (hasVisibleBuilding) {
+      if (shouldShow) {
         tab.classList.remove('hidden');
         content.classList.remove('hidden');
       } else {

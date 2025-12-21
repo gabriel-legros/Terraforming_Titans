@@ -2008,7 +2008,7 @@ function updateLifeBox() {
     : true;
 
   if (!hazardsCleared) {
-      button.textContent = 'Remove Hazardous Biomass First';
+      button.textContent = 'Remove all hazards first';
       button.style.backgroundColor = 'red';
       button.style.cursor = 'not-allowed';
       button.disabled = true;

@@ -50,8 +50,6 @@ class Colony extends Building {
     this.happiness = 0.5;
     this.autoUpgradeEnabled = false;
     
-    // Initialize junk production based on consumption
-    this.updateJunkProduction();
   }
 
   rebuildFilledNeeds() {
@@ -79,7 +77,6 @@ class Colony extends Building {
   applyActiveEffects(firstTime = true) {
     super.applyActiveEffects(firstTime);
     this.rebuildFilledNeeds();
-    this.updateJunkProduction();
     if (typeof invalidateColonyNeedCache === 'function') {
       invalidateColonyNeedCache();
     }
@@ -90,7 +87,6 @@ class Colony extends Building {
     if (effect.resourceCategory === 'colony') {
       this.rebuildFilledNeeds();
     }
-    this.updateJunkProduction();
   }
 
   applyAddComfort() {
@@ -99,43 +95,6 @@ class Colony extends Building {
 
   getConsumption() {
     return super.getConsumption();
-  }
-
-  // Update production to include surface junk based on consumption
-  updateJunkProduction() {
-    // Initialize surface production if it doesn't exist
-    if (!this.production.surface) {
-      this.production.surface = {};
-    }
-
-    const consumption = super.getConsumption();
-    
-    // Reset junk production values
-    this.production.surface.junk = 0;
-    this.production.surface.garbage = 0;
-    this.production.surface.scrapMetal = 0;
-
-    // Add production based on consumption
-    for (const category in consumption) {
-      for (const resource in consumption[category]) {
-        const isLuxuryResource = luxuryResources[resource] !== undefined;
-        
-        // Get the consumption amount
-        const entry = consumption[category][resource];
-        const amount = typeof entry === 'object' ? entry.amount : entry;
-
-        if (resource === 'electronics' && isLuxuryResource && this.luxuryResourcesEnabled[resource]) {
-          // Electronics consumption produces junk
-          this.production.surface.junk = amount;
-        } else if (resource === 'androids' && isLuxuryResource && this.luxuryResourcesEnabled[resource]) {
-          // Android consumption produces garbage
-          this.production.surface.garbage = amount;
-        } else if (resource === 'components') {
-          // Components consumption produces scrap
-          this.production.surface.scrapMetal = amount;
-        }
-      }
-    }
   }
 
   initializeFromConfig(config, colonyName) {
@@ -185,7 +144,6 @@ class Colony extends Building {
     }
 
     this.rebuildFilledNeeds();
-    this.updateJunkProduction();
   }
 
   calculateEffectiveComfort() {

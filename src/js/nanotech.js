@@ -570,9 +570,15 @@ class NanotechManager extends EffectableEntity {
         siliconOpt * this.siliconFraction +
         (stage2Active ? metalOpt * this.metalFraction : 0) -
         penalty;
-      C.growthEl.textContent = `${(effectiveRate * 100).toFixed(3)}%`;
+      const growthMultiplier = this.getEffectiveGrowthMultiplier();
+      const actualRate = effectiveRate * growthMultiplier;
+      const rawLabel = `${(effectiveRate * 100).toFixed(3)}%`;
+      const actualLabel = `${(actualRate * 100).toFixed(3)}%`;
+      C.growthEl.textContent = Math.abs(growthMultiplier - 1) > 1e-6
+        ? `${rawLabel} -> ${actualLabel}`
+        : actualLabel;
       C.growthEl.style.color = (!this.hasEnoughEnergy || !this.hasEnoughSilicon || !this.hasEnoughMetal) ? 'orange' : '';
-      this.effectiveGrowthRate = effectiveRate;
+      this.effectiveGrowthRate = actualRate;
     }
     if (C.sSlider) C.sSlider.value = this.siliconSlider;
     if (C.mSlider) C.mSlider.value = this.maintenanceSlider;

@@ -33,9 +33,13 @@ describe('Nanocolony energy allocation input', () => {
       constructor() {
         this.activeEffects = [];
         this.booleanFlags = {};
+        this.growthMultiplierOverride = 1;
       }
       isBooleanFlagSet(flagId) {
         return !!this.booleanFlags[flagId];
+      }
+      getEffectiveGrowthMultiplier() {
+        return this.growthMultiplierOverride;
       }
     };
 
@@ -129,5 +133,14 @@ describe('Nanocolony energy allocation input', () => {
 
     expect(manager.maxEnergyAbsolute).toBe(1000000);
     expect(input.value).toBe('fmt:1000000');
+  });
+
+  it('shows raw to actual growth when a multiplier applies', () => {
+    const { manager } = renderNanotech();
+    manager.activeEffects = [{ type: 'nanoColonyGrowthMultiplier', value: 1.5 }];
+    manager.updateUI();
+
+    const growthEl = document.getElementById('nanobot-growth-rate');
+    expect(growthEl.textContent).toBe('0.250% -> 0.375%');
   });
 });

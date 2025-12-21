@@ -142,6 +142,9 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
         continue;
       }
       if (scanData.remainingTime <= 0) {
+        if (scanData.currentScanningStrength > 0) {
+          this.startScan(depositType);
+        }
         continue;
       }
       const scanningSpeedMultiplier = this.getEffectiveScanningSpeedMultiplier();
@@ -190,6 +193,8 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
           if (targetStrength > 0) {
             this.startScan(depositType);
           }
+        } else if (targetStrength > 0 && data.remainingTime <= 0) {
+          this.startScan(depositType);
         }
       }
       this.updateScan(deltaTime);

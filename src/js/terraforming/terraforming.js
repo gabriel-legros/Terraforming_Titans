@@ -533,6 +533,11 @@ class Terraforming extends EffectableEntity{
     if (!this.requirements.requireHazardClearance) {
       return true;
     }
+    try {
+      return hazardManager.getHazardClearanceStatus(this);
+    } catch (error) {
+      // Fall back to direct hazardous biomass checks when hazard manager is unavailable.
+    }
     const tolerance = 1e-6;
     for (const zone of ZONES) {
       if ((this.zonalSurface[zone]?.hazardousBiomass || 0) > tolerance) {
