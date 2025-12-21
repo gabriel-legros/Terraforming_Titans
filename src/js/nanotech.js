@@ -428,6 +428,7 @@ class NanotechManager extends EffectableEntity {
         </div>`;
       // Cache references once the container is built
       this.cacheUIRefs(container);
+      this.bindUIHandlers();
     }
     if (!container) return;
     // Ensure cache is aligned with current container
