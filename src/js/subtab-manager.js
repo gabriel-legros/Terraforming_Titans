@@ -59,12 +59,37 @@ class SubtabManager {
     });
   }
 
+  _getFirstVisibleId() {
+    if (!this.subtabs) this._cacheSubtabs();
+    for (let i = 0; i < this.subtabs.length; i += 1) {
+      const tab = this.subtabs[i];
+      const id = tab.dataset.subtab;
+      const content = document.getElementById(id);
+      if (tab.classList.contains('hidden')) continue;
+      if (content && content.classList.contains('hidden')) continue;
+      return id;
+    }
+    return null;
+  }
+
   onActivate(fn) {
     if (typeof fn === 'function') this.activateListeners.push(fn);
   }
 
   activate(id) {
     if (!id) return;
+    if (!this.subtabs) this._cacheSubtabs();
+    const tab = this.getSubtab(id);
+    const content = document.getElementById(id);
+    if (tab && tab.classList.contains('hidden')) {
+      const fallbackId = this._getFirstVisibleId();
+      if (!fallbackId) return;
+      id = fallbackId;
+    } else if (!this.unhide && content && content.classList.contains('hidden')) {
+      const fallbackId = this._getFirstVisibleId();
+      if (!fallbackId) return;
+      id = fallbackId;
+    }
     activateSubtabFn(this.subtabClass, this.contentClass, id, this.unhide);
     this.activeId = id;
     this.activateListeners.forEach(fn => {
@@ -104,6 +129,10 @@ class SubtabManager {
     const content = document.getElementById(id);
     if (tab) tab.classList.add('hidden');
     if (content) content.classList.add('hidden');
+    if (this.isActive(id)) {
+      const fallbackId = this._getFirstVisibleId();
+      if (fallbackId) this.activate(fallbackId);
+    }
   }
 
   reset() {

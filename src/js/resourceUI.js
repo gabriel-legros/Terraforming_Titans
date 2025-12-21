@@ -790,7 +790,8 @@ function updateResourceDisplay(resources, deltaSeconds) {
       let showResource = resourceObj.unlocked;
 
       if (showResource) {
-        const isSmall = resourceObj.hideWhenSmall && resourceObj.value < 1e-4;
+        const activityRate = (resourceObj.productionRate || 0) + (resourceObj.consumptionRate || 0);
+        const isSmall = resourceObj.hideWhenSmall && resourceObj.value < 1e-4 && activityRate < 1;
         if (isSmall) {
           if (timer > 0) {
             timer = Math.max(0, timer - frameDelta);

@@ -284,15 +284,15 @@ const titanOverrides = {
       ore: { initialValue: 3, maxDeposits: 8300, areaTotal: 83000 },
       geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
     },
-"atmospheric": {
+    "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 25989.591043714943
+        "initialValue": 25999.096752393263
       },
       "atmosphericWater": {
-        "initialValue": 5.856287103293168e-8
+        "initialValue": 6.632791701302079e-8
       },
       "atmosphericMethane": {
-        "initialValue": 513392955624028.44
+        "initialValue": 530626620463804.7
       },
       "oxygen": {
         "initialValue": 1000000000
@@ -341,47 +341,47 @@ const titanOverrides = {
   },
   "zonalHydrocarbons": {
     "tropical": {
-      "liquid": 2898163736192.346,
+      "liquid": 42276496437268.71,
       "ice": 0
     },
     "temperate": {
-      "liquid": 105967141861035.88,
+      "liquid": 57166425593526.555,
       "ice": 0
     },
     "polar": {
       "liquid": 0,
-      "ice": 21261458393633.7
+      "ice": 13450177120297.768
     }
   },
   "zonalCO2": {
     "tropical": {
       "liquid": 0,
-      "ice": 145.37225505127557
+      "ice": 144.46854888799018
     },
     "temperate": {
       "liquid": 0,
-      "ice": 289.7744546996858
+      "ice": 289.23048009273015
     },
     "polar": {
       "liquid": 0,
-      "ice": 73575.2622492094
+      "ice": 73567.20422121447
     }
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 97.26224896801624,
-      "day": 97.60862614655709,
-      "night": 96.91587178947539
+      "value": 97.49469678987639,
+      "day": 97.83923078057713,
+      "night": 97.15016279917565
     },
     "temperate": {
-      "value": 93.81540966081212,
-      "day": 94.10357443031955,
-      "night": 93.52724489130469
+      "value": 94.02563421419119,
+      "day": 94.31214362026016,
+      "night": 93.73912480812221
     },
     "polar": {
-      "value": 86.58098018127075,
-      "day": 86.67778509179824,
-      "night": 86.48417527074325
+      "value": 86.73614973068824,
+      "day": 86.8317129075981,
+      "night": 86.64058655377838
     }
   },
   celestialParameters : { // Override all celestial parameters

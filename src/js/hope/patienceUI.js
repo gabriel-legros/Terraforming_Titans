@@ -277,13 +277,7 @@ const PatienceUI = {
      * Update subtab visibility based on manager state
      */
     updateSubtabVisibility() {
-        if (this.subtab) {
-            if (patienceManager && patienceManager.enabled) {
-                this.subtab.classList.remove('hidden');
-            } else {
-                this.subtab.classList.add('hidden');
-            }
-        }
+        setHopeSubtabVisibility('patience-hope', patienceManager && patienceManager.enabled);
     },
 
     /**

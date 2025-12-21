@@ -46,6 +46,16 @@ function activateHopeSubtab(subtabId) {
     }
 }
 
+function setHopeSubtabVisibility(subtabId, visible) {
+    if (hopeSubtabManager) {
+        if (visible) {
+            hopeSubtabManager.show(subtabId);
+        } else {
+            hopeSubtabManager.hide(subtabId);
+        }
+    }
+}
+
 function initializeHopeUI() {
     initializeHopeTabs();
     if (typeof initializeSkillsUI === 'function') {
@@ -108,4 +118,3 @@ function updateHopeUI() {
     updateAutomationUI();
     updateHopeAlert();
 }
-
