@@ -73,3 +73,56 @@ describe('completeResearchInstant requirements', () => {
     expect(research.isResearched).toBe(true);
   });
 });
+
+describe('required flag research gating', () => {
+  let ResearchManager;
+
+  const gatedResearch = {
+    id: 'waste_processing',
+    name: 'Industrial Waste Processing',
+    description: '',
+    cost: {},
+    prerequisites: [],
+    requiredFlags: ['gabbagWasteProcessing'],
+    effects: [],
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    global.addEffect = jest.fn();
+    global.removeEffect = jest.fn();
+    global.EffectableEntity = class {
+      constructor() {
+        this.booleanFlags = new Set();
+      }
+      isBooleanFlagSet(flag) {
+        return this.booleanFlags.has(flag);
+      }
+      addAndReplace() {}
+      addEffect() {}
+      removeEffect() {}
+      applyActiveEffects() {}
+    };
+    global.currentPlanetParameters = {
+      resources: { surface: {}, atmospheric: {}, underground: {} },
+      classification: { archetype: 'rocky' },
+    };
+    global.spaceManager = null;
+    ({ ResearchManager } = require('../src/js/research.js'));
+  });
+
+  it('hides the research until the flag is set', () => {
+    const manager = new ResearchManager({ industry: [gatedResearch] });
+
+    const research = manager.getResearchById('waste_processing');
+    expect(manager.isResearchDisplayable(research)).toBe(false);
+  });
+
+  it('shows the research once the flag is set', () => {
+    const manager = new ResearchManager({ industry: [gatedResearch] });
+    manager.booleanFlags.add('gabbagWasteProcessing');
+
+    const research = manager.getResearchById('waste_processing');
+    expect(manager.isResearchDisplayable(research)).toBe(true);
+  });
+});

@@ -332,6 +332,53 @@ const researchParameters = {
         ],
       },
       {
+        id: 'waste_processing',
+        name: 'Industrial Waste Processing',
+        description: 'Unlocks waste sorting and recycling facilities.',
+        cost: { research: 2000 },
+        prerequisites: [],
+        requiredFlags: ['gabbagWasteProcessing'],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'garbageSorter',
+            type: 'enable',
+          },
+          {
+            target: 'building',
+            targetId: 'trashIncinerator',
+            type: 'enable',
+          },
+          {
+            target: 'building',
+            targetId: 'junkRecycler',
+            type: 'enable',
+          },
+          {
+            target: 'building',
+            targetId: 'scrapRecycler',
+            type: 'enable',
+          },
+          {
+            target: 'building',
+            targetId: 'radioactiveRecycler',
+            type: 'enable',
+          },
+          {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId: 'scrapMetal',
+            type: 'enable',
+          },
+          {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId: 'junk',
+            type: 'enable',
+          },
+        ],
+      },
+      {
         id: 'robotics_1',
         name: 'Farming robotics assistance',
         description: 'Integrates robots within hydroponics farm to reduce worker requirements by 20%.',

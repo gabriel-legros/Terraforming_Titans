@@ -363,6 +363,7 @@ progressGabbag.chapters.push(
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'gabbag', value: true },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'garbage' },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'gas-giant' },
+      { target: 'researchManager', type: 'booleanFlag', flagId: 'gabbagWasteProcessing', value: true },
       {
         target: 'galaxyManager',
         type: 'fleetCapacityMultiplier',
