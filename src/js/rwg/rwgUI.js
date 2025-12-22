@@ -22,6 +22,9 @@ let rwgHazardItemsEl;
 let rwgHazardItems = {};
 let rwgHazardListOrder = [];
 let rwgResultEl;
+let rwgTravelBtnEl;
+let rwgDominionEl;
+let rwgSelectedDominion = 'human';
 
 if (!globalThis.__rwgGravityHelpers) {
   globalThis.__rwgGravityHelpers = {};
@@ -85,6 +88,7 @@ var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMulti
 var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
 const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage' };
+const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian' };
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
 
@@ -133,6 +137,44 @@ function syncEnabledHazards() {
   if (mgr && mgr.setEnabledHazards) {
     mgr.setEnabledHazards(getSelectedHazards());
   }
+}
+
+function refreshDominionSelect() {
+  const dominions = rwgManager.getAvailableDominions();
+  const signature = dominions.join(',');
+  const selected = dominions.includes(rwgSelectedDominion) ? rwgSelectedDominion : dominions[0];
+  rwgSelectedDominion = selected;
+  if (rwgDominionEl.dataset.lastDominionList !== signature) {
+    const frag = document.createDocumentFragment();
+    dominions.forEach((id) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = `Dominion: ${dominionDisplayNames[id] || id}`;
+      frag.appendChild(opt);
+    });
+    rwgDominionEl.innerHTML = '';
+    rwgDominionEl.appendChild(frag);
+    rwgDominionEl.dataset.lastDominionList = signature;
+  }
+  rwgDominionEl.value = selected;
+  rwgDominionEl.style.display = dominions.length > 1 ? '' : 'none';
+}
+
+function cacheResultControls() {
+  rwgTravelBtnEl = document.getElementById('rwg-travel-btn');
+  rwgDominionEl = document.getElementById('rwg-dominion');
+  rwgDominionEl && (rwgDominionEl.onchange = () => {
+    rwgSelectedDominion = rwgDominionEl.value;
+  });
+  rwgDominionEl && refreshDominionSelect();
+}
+
+function applyDominionSelection(res) {
+  const override = res.override || (res.override = {});
+  const special = override.specialAttributes || {};
+  override.specialAttributes = special;
+  special.terraformingRequirementId = rwgSelectedDominion;
+  res.merged.specialAttributes.terraformingRequirementId = rwgSelectedDominion;
 }
 
 function updateHazardListVisibility() {
@@ -460,6 +502,7 @@ function updateRandomWorldUI() {
 
   refreshHazardSelect();
   refreshTypeSelect();
+  rwgDominionEl && refreshDominionSelect();
 
   if (rwgOrbitEl) {
     Array.from(rwgOrbitEl.options).forEach(opt => {
@@ -491,7 +534,8 @@ function updateRandomWorldUI() {
   // Update the currently displayed world's travel lock/warning, if present
   try {
     const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
-    const travelBtn = /** @type {HTMLButtonElement|null} */(document.getElementById('rwg-travel-btn'));
+    const travelBtn = /** @type {HTMLButtonElement|null} */(rwgTravelBtnEl || document.getElementById('rwg-travel-btn'));
+    rwgTravelBtnEl = travelBtn || rwgTravelBtnEl;
     if (rwgResultEl && travelBtn && sm) {
       const seedUsed = rwgResultEl.dataset ? rwgResultEl.dataset.seedUsed : undefined;
       const canonicalSeed = rwgResultEl.dataset ? (rwgResultEl.dataset.canonicalSeed || rwgResultEl.dataset.seedString) : undefined;
@@ -529,13 +573,15 @@ function updateRandomWorldUI() {
 }
 
 function attachTravelHandler(res, sStr) {
-  const travelBtn = document.getElementById('rwg-travel-btn');
+  const travelBtn = rwgTravelBtnEl || document.getElementById('rwg-travel-btn');
+  rwgTravelBtnEl = travelBtn || rwgTravelBtnEl;
   if (!travelBtn) return;
   travelBtn.onclick = () => {
     const canonical = res?.seedString || sStr;
     if (!equilibratedWorlds.has(sStr) && !equilibratedWorlds.has(canonical)) return;
     if (spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
     if (spaceManager?.travelToRandomWorld) {
+      applyDominionSelection(res);
       const travelled = spaceManager.travelToRandomWorld(res, sStr);
       if (travelled) {
         const box = document.getElementById('rwg-result');
@@ -545,6 +591,7 @@ function attachTravelHandler(res, sStr) {
             box.dataset.seedUsed = sStr;
             if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
           } catch(_){}
+          cacheResultControls();
           attachEquilibrateHandler(res, sStr, undefined, box);
           attachTravelHandler(res, sStr);
         }
@@ -609,6 +656,7 @@ function drawSingle(seed, options) {
     box.dataset.seedUsed = seedKey;
     if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
   } catch(_){}
+  cacheResultControls();
   attachEquilibrateHandler(res, seedKey, archetype, box);
   attachTravelHandler(res, seedKey);
 }
@@ -721,6 +769,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           box.dataset.seedUsed = sStr;
           if (newRes?.seedString) box.dataset.canonicalSeed = newRes.seedString;
         } catch(_){}
+        cacheResultControls();
         attachEquilibrateHandler(newRes, sStr, archetype, box);
         attachTravelHandler(newRes, sStr);
       } catch (e) {
@@ -732,6 +781,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
             box.dataset.seedUsed = sStr;
             if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
           } catch(_){}
+          cacheResultControls();
           attachEquilibrateHandler(res, sStr, archetype, box);
           attachTravelHandler(res, sStr);
         } else if (e?.message !== 'cancelled') {
@@ -847,6 +897,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
         <span class="info-tooltip-icon" title="The weather model in Terraforming Titans is quite complex.  It is not realistic for the random world generator to generate worlds that already start near equilibrium.  However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.  \n\nTo reach this state, worlds can be simulated for thousands of year, as necessary, so that the climate stabilizes.  This button must be pressed to get at least a little of simulation, but can also be ended early if preferred.  Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue.  For best results, please keep the window in focus while running the simulation.  The rest of the game will pause.">&#9432;</span>
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
+        <select id="rwg-dominion" class="rwg-inline-select"></select>
         ${warningMsg ? `<span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span>` : ''}
       </div>
       <div class="rwg-infobar">

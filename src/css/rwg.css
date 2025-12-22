@@ -96,6 +96,16 @@
   min-width: 150px;
 }
 
+.rwg-inline-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--rwg-border);
+  background: var(--rwg-panel);
+  color: var(--rwg-fg);
+  font-weight: 600;
+  min-width: 170px;
+}
+
 .rwg-btn {
   padding: 10px 14px;
   border-radius: 8px;

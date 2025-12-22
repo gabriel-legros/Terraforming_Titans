@@ -507,6 +507,7 @@ const RWG_HAZARD_PRESETS = {
 };
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage'];
+const RWG_DOMINION_ORDER = ['human', 'gabbagian'];
 
 
 function resolveParams(current, overrides) { return deepMerge(current || DEFAULT_PARAMS, overrides || {}); }
@@ -1108,6 +1109,7 @@ class RwgManager extends EffectableEntity {
     this.lockedTypes = new Set(["venus-like", "rogue"]);
     this.lockedFeatures = new Set(['hazards']);
     this.lockedHazards = new Set(['hazardousBiomass', 'garbage']);
+    this.lockedDominions = new Set(['gabbagian']);
     this.enabledHazards = [];
   }
   // Param API
@@ -1140,6 +1142,10 @@ class RwgManager extends EffectableEntity {
   unlockHazard(id) { if (id) this.lockedHazards.delete(id); }
   setEnabledHazards(hazards) { this.enabledHazards = orderHazardList(normalizeHazardList(hazards)); }
   getEnabledHazards() { return this.enabledHazards.slice(); }
+  getAvailableDominions() { return RWG_DOMINION_ORDER.filter((d) => !this.lockedDominions.has(d)); }
+  isDominionUnlocked(id) { return !id ? false : !this.lockedDominions.has(id); }
+  lockDominion(id) { if (id) this.lockedDominions.add(id); }
+  unlockDominion(id) { if (id) this.lockedDominions.delete(id); }
 
   applyEffect(effect) {
     if (effect.type === 'unlockOrbit') {
@@ -1158,6 +1164,10 @@ class RwgManager extends EffectableEntity {
       this.unlockHazard(effect.targetId);
     } else if (effect.type === 'lockHazard' || effect.type === 'forbidHazard') {
       this.lockHazard(effect.targetId);
+    } else if (effect.type === 'allowDominion' || effect.type === 'unlockDominion') {
+      this.unlockDominion(effect.targetId);
+    } else if (effect.type === 'lockDominion' || effect.type === 'forbidDominion') {
+      this.lockDominion(effect.targetId);
     } else if (effect.type === 'enable' && effect.type2 === 'orbit') {
       // Backward compatibility for older save effects
       this.unlockOrbit(effect.targetId);
@@ -1339,6 +1349,7 @@ function generateSystem(seed, planetCount, opts) { return rwgManager.generateSys
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     generateRandomPlanet,
-    generateSystem
+    generateSystem,
+    RwgManager
   };
 }

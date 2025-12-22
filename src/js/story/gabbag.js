@@ -361,6 +361,7 @@ progressGabbag.chapters.push(
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'gabbag', value: true },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'garbage' },
+      { target: 'rwgManager', type: 'allowDominion', targetId: 'gabbagian' },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'gas-giant' },
       { target: 'researchManager', type: 'booleanFlag', flagId: 'gabbagWasteProcessing', value: true },
       {
