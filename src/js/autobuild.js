@@ -527,7 +527,7 @@ function autoUpgradeColonies(buildings) {
         const nextName = structure.getNextTierName();
         if (!nextName) continue;
         const next = colonies[nextName];
-        if (!next || !next.unlocked) continue;
+        if (!next || !next.unlocked || next.isHidden) continue;
 
         while (structure.count >= 10) {
             const maxByCount = Math.floor(structure.count / 10);
