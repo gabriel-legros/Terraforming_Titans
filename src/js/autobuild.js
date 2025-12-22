@@ -536,6 +536,11 @@ function autoUpgradeColonies(buildings) {
             if (!upgradeCount) break;
             if (!structure.upgrade(upgradeCount)) break;
         }
+
+        if (structure.count > 0) {
+            const upgradeCount = getAffordableUpgradeCount(structure, 1);
+            if (upgradeCount && !structure.upgrade(upgradeCount)) continue;
+        }
     }
 }
 
@@ -678,6 +683,7 @@ function autoBuild(buildings, delta = 0) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         autoBuild,
+        autoUpgradeColonies,
         autobuildCostTracker,
         resolveAutoBuildBase,
         captureAutoBuildSettings,
@@ -697,6 +703,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof window !== 'undefined') {
     window.autoBuild = autoBuild;
+    window.autoUpgradeColonies = autoUpgradeColonies;
     window.autobuildCostTracker = autobuildCostTracker;
     window.resolveAutoBuildBase = resolveAutoBuildBase;
     window.captureAutoBuildSettings = captureAutoBuildSettings;
