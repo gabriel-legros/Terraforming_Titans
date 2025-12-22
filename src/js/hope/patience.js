@@ -166,15 +166,6 @@ class PatienceManager extends EffectableEntity {
     }
 
     /**
-     * Called when terraforming is completed
-     */
-    onTerraformingComplete() {
-        if (this.enabled) {
-            this.addPatience(3);
-        }
-    }
-
-    /**
      * Get the current UTC date string (YYYY-MM-DD)
      * @returns {string}
      */
@@ -184,16 +175,41 @@ class PatienceManager extends EffectableEntity {
     }
 
     /**
-     * Check and claim daily patience if available
+     * Whether the daily patience claim has been used today
+     * @returns {boolean}
      */
-    checkDailyPatience() {
-        if (!this.enabled) return;
-        
-        const today = this.getCurrentUTCDateString();
-        if (this.lastDailyClaimDate !== today) {
-            this.addPatience(3);
-            this.lastDailyClaimDate = today;
+    hasClaimedToday() {
+        return this.lastDailyClaimDate === this.getCurrentUTCDateString();
+    }
+
+    /**
+     * Claim daily patience from a manual save/export action
+     * @returns {boolean} Whether the claim succeeded
+     */
+    claimDailyPatience() {
+        if (!this.enabled) {
+            return false;
         }
+
+        const today = this.getCurrentUTCDateString();
+        if (this.lastDailyClaimDate === today) {
+            return false;
+        }
+
+        this.addPatience(3);
+        this.lastDailyClaimDate = today;
+        return true;
+    }
+
+    /**
+     * Called when terraforming is completed
+     */
+    onTerraformingComplete() {
+        if (!this.enabled) {
+            return;
+        }
+
+        this.addPatience(3);
     }
 
     /**
@@ -215,7 +231,7 @@ class PatienceManager extends EffectableEntity {
      * Update called each tick
      */
     update() {
-        this.checkDailyPatience();
+        return;
     }
 
     /**

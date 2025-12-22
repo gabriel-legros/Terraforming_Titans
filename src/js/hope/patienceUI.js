@@ -16,6 +16,9 @@ const PatienceUI = {
     meterFillEl: null,
     gainValueEl: null,
     gainMetaEl: null,
+    timerMetaEl: null,
+    saveFileButtonEl: null,
+    saveClipboardButtonEl: null,
 
     /**
      * Initialize the patience UI
@@ -59,13 +62,13 @@ const PatienceUI = {
 
         const tooltip = document.createElement('span');
         tooltip.className = 'info-tooltip-icon';
-        tooltip.title = 'Daily patience trickles in automatically and can be cashed in for superalloy and superconductor production time, advanced research, and O\'Neill cylinder growth.';
+        tooltip.title = 'Save to file or export to clipboard once per day to claim patience, plus gain a bonus when terraforming a world, then spend it for superalloy and superconductor production time, advanced research, and O\'Neill cylinder growth.';
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
         const subtitle = document.createElement('p');
         subtitle.className = 'patience-subtitle';
-        subtitle.textContent = 'HOPE gains patience over time and from terraforming worlds.';
+        subtitle.textContent = 'Claim daily patience by saving or exporting and gain bonus patience each time a world is terraformed.';
         header.appendChild(subtitle);
         shell.appendChild(header);
 
@@ -97,7 +100,7 @@ const PatienceUI = {
 
         const gainLabel = document.createElement('div');
         gainLabel.className = 'patience-card-label';
-        gainLabel.textContent = 'Patience gain';
+        gainLabel.textContent = 'Daily patience';
         gainCard.appendChild(gainLabel);
 
         const gainValue = document.createElement('div');
@@ -107,7 +110,7 @@ const PatienceUI = {
 
         const gainMeta = document.createElement('div');
         gainMeta.className = 'patience-card-meta';
-        gainMeta.textContent = 'Daily UTC bonus';
+        gainMeta.textContent = 'Save/export daily';
         gainCard.appendChild(gainMeta);
 
         statsRow.appendChild(gainCard);
@@ -117,7 +120,7 @@ const PatienceUI = {
 
         const timerLabel = document.createElement('div');
         timerLabel.className = 'patience-card-label';
-        timerLabel.textContent = 'Next daily gain';
+        timerLabel.textContent = 'Save bonus status';
         timerCard.appendChild(timerLabel);
 
         const timerValue = document.createElement('div');
@@ -128,7 +131,7 @@ const PatienceUI = {
 
         const timerMeta = document.createElement('div');
         timerMeta.className = 'patience-card-meta';
-        timerMeta.textContent = 'UTC midnight refresh';
+        timerMeta.textContent = 'Next reset in --:--:-- (UTC)';
         timerCard.appendChild(timerMeta);
         statsRow.appendChild(timerCard);
 
@@ -181,18 +184,36 @@ const PatienceUI = {
 
         shell.appendChild(spendCard);
 
+        const saveRow = document.createElement('div');
+        saveRow.className = 'patience-save-row';
+
+        const saveFileButton = document.createElement('button');
+        saveFileButton.id = 'patience-save-file-button';
+        saveFileButton.textContent = 'Save to file';
+        saveRow.appendChild(saveFileButton);
+
+        const saveClipboardButton = document.createElement('button');
+        saveClipboardButton.id = 'patience-save-clipboard-button';
+        saveClipboardButton.textContent = 'Export to clipboard';
+        saveRow.appendChild(saveClipboardButton);
+
+        shell.appendChild(saveRow);
+
         this.container.appendChild(shell);
 
         // Cache the newly created elements
         this.currentValueEl = currentValue;
         this.maxValueEl = maxLine.querySelector('#patience-max-value');
         this.timerValueEl = timerValue;
+        this.timerMetaEl = timerMeta;
         this.spendInputEl = spendInput;
         this.spendButtonEl = spendButton;
         this.spendPreviewEl = spendPreview;
         this.meterFillEl = meterFill;
         this.gainValueEl = gainValue;
         this.gainMetaEl = gainMeta;
+        this.saveFileButtonEl = saveFileButton;
+        this.saveClipboardButtonEl = saveClipboardButton;
         this.updateSpendPreview();
     },
 
@@ -206,6 +227,12 @@ const PatienceUI = {
         if (this.spendInputEl) {
             this.spendInputEl.addEventListener('input', () => this.updateSpendPreview());
         }
+        if (this.saveFileButtonEl) {
+            this.saveFileButtonEl.addEventListener('click', () => this.handleSaveFile());
+        }
+        if (this.saveClipboardButtonEl) {
+            this.saveClipboardButtonEl.addEventListener('click', () => this.handleSaveClipboard());
+        }
     },
 
     /**
@@ -218,6 +245,24 @@ const PatienceUI = {
         if (hours > 0 && patienceManager.spendPatience(hours)) {
             this.spendInputEl.value = '1';
             this.updateSpendPreview();
+        }
+    },
+
+    /**
+     * Handle save-to-file shortcut
+     */
+    handleSaveFile() {
+        if (typeof saveGameToFile === 'function') {
+            saveGameToFile();
+        }
+    },
+
+    /**
+     * Handle export-to-clipboard shortcut
+     */
+    handleSaveClipboard() {
+        if (typeof saveGameToClipboard === 'function') {
+            saveGameToClipboard();
         }
     },
 
@@ -306,8 +351,8 @@ const PatienceUI = {
         }
 
         if (this.timerValueEl) {
-            const msRemaining = patienceManager.getMillisecondsUntilNextDaily();
-            this.timerValueEl.textContent = this.formatTimeRemaining(msRemaining);
+            const claimedToday = patienceManager.hasClaimedToday();
+            this.timerValueEl.textContent = claimedToday ? 'Claimed' : 'Ready';
         }
 
         if (this.gainValueEl) {
@@ -315,7 +360,15 @@ const PatienceUI = {
         }
 
         if (this.gainMetaEl) {
-            this.gainMetaEl.textContent = 'Gained daily or when terraforming a world';
+            const claimedToday = patienceManager.hasClaimedToday();
+            this.gainMetaEl.textContent = claimedToday
+                ? 'Claimed today via save/export'
+                : 'Save to file or export to claim';
+        }
+
+        if (this.timerMetaEl) {
+            const msRemaining = patienceManager.getMillisecondsUntilNextDaily();
+            this.timerMetaEl.textContent = `Next reset in ${this.formatTimeRemaining(msRemaining)} (UTC)`;
         }
 
         // Update spend button state

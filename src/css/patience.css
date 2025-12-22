@@ -150,6 +150,30 @@
     font-size: 0.95rem;
 }
 
+.patience-save-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: flex-end;
+}
+
+.patience-save-row button {
+    padding: 8px 12px;
+    border: 1px solid #2f4b66;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #d8e5ff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.patience-save-row button:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+}
+
 .patience-shell .info-tooltip-icon {
     color: #9fb6d5;
 }

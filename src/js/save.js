@@ -743,6 +743,8 @@ function saveGameToFile() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   a.download = `${safeWorldName}_${timestamp}.json`;
   a.click();
+  patienceManager.claimDailyPatience();
+  updatePatienceUI();
 
   URL.revokeObjectURL(url);
 }
@@ -755,7 +757,11 @@ function saveGameToClipboard() {
     return;
   }
   clipboard.writeText(saveData).then(
-    () => console.log('Game saved to clipboard.'),
+    () => {
+      console.log('Game saved to clipboard.');
+      patienceManager.claimDailyPatience();
+      updatePatienceUI();
+    },
     (e) => console.warn('Unable to copy save to clipboard:', e)
   );
 }
