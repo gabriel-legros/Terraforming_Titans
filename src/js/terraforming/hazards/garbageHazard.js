@@ -199,7 +199,7 @@ class GarbageHazard {
         if (!unlockOnly && existingResource.value === 0 && resourceValue > 0) {
           existingResource.value = resourceValue;
         }
-        existingResource.initialValue = calculatedValue;
+        existingResource.initialValue = calculatedValue || existingResource.initialValue || 0;
         if (unlock && unlock.call) {
           unlock(existingResource);
         }

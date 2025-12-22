@@ -193,6 +193,9 @@ class Building extends EffectableEntity {
     if ('alertedWhenUnlocked' in state) this.alertedWhenUnlocked = state.alertedWhenUnlocked;
     if ('autoBuildEnabled' in state) this.autoBuildEnabled = state.autoBuildEnabled;
     if ('autoBuildPercent' in state) this.autoBuildPercent = state.autoBuildPercent;
+    if (!Number.isFinite(this.autoBuildPercent) || this.autoBuildPercent < 0) {
+      this.autoBuildPercent = 0;
+    }
     if ('autoBuildStep' in state) this.autoBuildStep = state.autoBuildStep;
     if (!Number.isFinite(this.autoBuildStep) || this.autoBuildStep <= 0) {
       this.autoBuildStep = 0.01;

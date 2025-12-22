@@ -772,7 +772,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   autoBuildInput.addEventListener('input', () => {
     const autoBuildPercent = parseFloat(autoBuildInput.value);
-    structure.autoBuildPercent = Number.isFinite(autoBuildPercent) ? autoBuildPercent : 0;
+    const nextValue = Number.isFinite(autoBuildPercent) ? Math.max(0, autoBuildPercent) : 0;
+    structure.autoBuildPercent = nextValue;
+    if (nextValue !== autoBuildPercent) {
+      autoBuildInput.value = `${nextValue}`;
+    }
     refreshAutoBuildTarget(structure);
   });
 

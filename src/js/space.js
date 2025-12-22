@@ -1052,12 +1052,12 @@ class SpaceManager extends EffectableEntity {
             return false;
         }
 
-        this.currentArtificialKey = null;
         const departingTerraformed = this._isCurrentWorldTerraformed();
         // prepareForTravel is now called within recordDepartureSnapshot via changeCurrentPlanet
         if (!this.changeCurrentPlanet(targetKey)) {
             return false;
         }
+        this.currentArtificialKey = null;
 
         this.currentRandomSeed = null;
         this.currentRandomName = '';
