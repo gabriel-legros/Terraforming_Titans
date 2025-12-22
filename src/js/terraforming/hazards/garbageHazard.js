@@ -190,7 +190,8 @@ class GarbageHazard {
     surfaceResourceKeys.forEach((resourceKey) => {
       const resourceConfig = surfaceResourcesConfig[resourceKey] || {};
       const amountMultiplier = resourceConfig.amountMultiplier || 1;
-      const resourceValue = unlockOnly ? 0 : initialLand * amountMultiplier;
+      const calculatedValue = initialLand * amountMultiplier;
+      const resourceValue = unlockOnly ? 0 : calculatedValue;
 
       if (resourcesObj.surface[resourceKey]) {
         const existingResource = resourcesObj.surface[resourceKey];
@@ -198,9 +199,7 @@ class GarbageHazard {
         if (!unlockOnly && existingResource.value === 0 && resourceValue > 0) {
           existingResource.value = resourceValue;
         }
-        if (!unlockOnly && !existingResource.initialValue && resourceValue > 0) {
-          existingResource.initialValue = resourceValue;
-        }
+        existingResource.initialValue = calculatedValue;
         if (unlock && unlock.call) {
           unlock(existingResource);
         }
@@ -215,7 +214,7 @@ class GarbageHazard {
         name: resourceKey,
         displayName: this.formatGarbageResourceName(resourceKey),
         category: 'surface',
-        initialValue: resourceValue,
+        initialValue: calculatedValue,
         hasCap: false,
         unlocked: true,
         hideWhenSmall: true,
