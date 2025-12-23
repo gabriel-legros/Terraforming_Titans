@@ -150,7 +150,7 @@ progressGabbag.chapters.push(
     chapter: 28,
     activePlanet: 'gabbag',
     title: 'Chapter 28: Underneath the trash',
-    narrative: "Adrien Solis : 'Mary!  My satellites have detected a vault of....' \nMary : 'It's not ours Adrien.' \nAdrien : 'But!' \n Mary : 'It's. Not. Ours.' \n Adrien : 'Oh well.  On an unrelated note, my R&D has come up with new automation software!  Cheap price, as usual.' \n Mary : 'Predictable.'  (New automation not implemented yet.  coming soon)",
+    narrative: "Adrien Solis : 'Mary!  My satellites have detected a vault of....' \nMary : 'It's not ours Adrien.' \nAdrien : 'But!' \n Mary : 'It's. Not. Ours.' \n Adrien : 'Oh well.  On an unrelated note, my R&D has come up with new automation software!  Cheap price, as usual.' \n Mary : 'Predictable.'",
     prerequisites: ['gabbag.27.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
