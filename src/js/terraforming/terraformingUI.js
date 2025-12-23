@@ -1328,7 +1328,7 @@ function updateLifeBox() {
       ? terraforming.getHazardClearanceStatus()
       : zones.every(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) <= hazardTolerance);
     const lifeTargetMet = avgBiomassCoverage >= effectiveTarget;
-    lifeBox.style.borderColor = lifeTargetMet && hazardsCleared ? 'green' : 'red';
+    lifeBox.style.borderColor = lifeTargetMet ? 'green' : 'red';
     if (els.target) els.target.textContent = `Target : Life coverage above ${(effectiveTarget * 100).toFixed(0)}%.`;
 
     const hazardPolar = terraforming.zonalSurface.polar?.hazardousBiomass || 0;
