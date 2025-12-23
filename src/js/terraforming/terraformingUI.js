@@ -617,10 +617,10 @@ function createTemperatureBox(row) {
       "- Key Equations: The model uses the Stefan-Boltzmann law to calculate the effective temperature from solar flux and albedo. The greenhouse effect is then added based on the atmosphere's optical depth, and the day-night temperature variation is calculated based on the planet's heat capacity and rotation speed.",
       "- Solar Flux: The base energy received from the star, which can be augmented by structures like Space Mirrors.",
       "- Albedo: The planet's reflectivity. A high albedo (from ice and clouds) reflects more light, cooling the planet. A low albedo (from oceans and dark rock) absorbs more light, warming it.",
-      "- Greenhouse Effect: Atmospheric gases like CO2, H2O, and CH4 trap heat. The amount of trapping is determined by the atmosphere's optical depth, which depends on the partial pressures of these gases and the total atmospheric pressure.",
+      "- Greenhouse Effect: Atmospheric gases like CO2, H2O, and CH4 trap heat. The amount of trapping is determined by the atmosphere's optical depth, which depends on the amount of each gas.",
       "- Rotation Speed: A slower rotation leads to more extreme temperature differences between day and night.",
       "- Heat Capacity: The planet's ability to store and release heat, influenced by its surface composition (rock, ocean, ice) and atmospheric density.",
-      "- Meridional Winds: Energy moves between tropical, temperate, and polar zones each tick. The trend column shows the wind-smoothed target temperature that conserves total heat while evening out extremes.",
+      "- Meridional Winds: Energy moves between tropical, temperate, and polar zones.  The trend column shows the wind-smoothed target temperature that conserves total heat while evening out extremes.",
       "- Thermal Inertia: The same heat capacity that moderates day/night swings also slows the march toward the trend temperature. Thick air and deep oceans respond sluggishly; thin atmospheres snap toward the trend quickly.",
       "",
       "Temperature directly impacts:",
@@ -828,8 +828,8 @@ function createTemperatureBox(row) {
       "",
       "- Composition: The mix of gases (Nitrogen, Oxygen, CO2, etc.) determines its properties. Each gas has a partial pressure, and the sum is the total atmospheric pressure.",
       "- Greenhouse Effect: Gases like CO2, Water Vapor, and Methane trap heat, warming the planet. This is quantified by the Optical Depth. A higher optical depth means a stronger greenhouse effect and higher temperatures.",
-      "- Pressure & Density: Higher pressure increases the efficiency of wind turbines. It's also necessary to maintain liquid water on the surface and for colonists' life support.",
-      "- Circulation: Column mass and rotation power the zonal wind solver that shuffles heat between climate bands. Heavier, slower-rotating atmospheres smooth temperature differences faster without creating or destroying energy.",
+      "- Pressure & Density: Higher pressure increases the efficiency of wind turbines and the cost of colonies. It's also necessary to maintain liquid water on the surface and for colonists' life support.",
+      "- Circulation: Column mass and rotation power the zonal wind solver that shuffles heat between climate bands. Heavier atmospheres smooth temperature differences.",
       "- Cloud Formation: When condensable gases accumulate (water, methane, sulfuric acid), their mixing ratio is compared against a saturation curve. Sufficient vapor builds cloud decks that thicken with pressure up to each species' coverage limit.",
       "- Cloud Brightness: Each cloud species has a characteristic albedo. Coverage blends together, brightening whatever surface remains darker than the deck. Clouds never darken the planet and plateau once the surface matches the deck brightness.",
       "- Cloud Feedback: Thick clouds raise albedo, reflecting sunlight and lowering temperatures while returning vapor to surface stores through rain, snow, or acid drizzle.",
@@ -1103,7 +1103,7 @@ function createWaterBox(row) {
     waterBox.id = 'water-box';
     const waterInfo = document.createElement('span');
     waterInfo.classList.add('info-tooltip-icon');
-    const waterTooltipText = 'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:\n\n- Evaporation & Sublimation: Calculated using a modified Penman equation, which considers solar flux, temperature, and atmospheric pressure to determine the rate at which water becomes vapor.\n- Precipitation: Occurs when atmospheric water vapor exceeds the saturation point, calculated by the Buck Equation. The excess moisture falls as rain or snow depending on the temperature.\n- Melting & Freezing: These rates are determined by a linear relationship to how far the temperature is above or below the freezing point.\n- Surface Flow: A realistic fluid dynamics model where flow is proportional to the square root of the level difference between zones, adjusted for elevation and viscosity. Ice can also melt and flow from colder to warmer zones.\n- Impact: The resulting water and ice coverage affects planetary albedo, temperature, and the potential for life.';
+    const waterTooltipText = 'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:\n\n- Evaporation & Sublimation: Calculated using a modified Penman equation, which considers solar flux, temperature, and atmospheric pressure to determine the rate at which water becomes vapor.\n- Precipitation: Occurs when atmospheric water vapor exceeds the saturation point, calculated by the Buck Equation. The excess moisture falls as rain or snow depending on the temperature.\n- Melting & Freezing: These rates are determined by a linear relationship to how far the temperature is above or below the freezing point.\n- Surface Flow: A realistic fluid dynamics model where flow is proportional to the square root of the level difference between zones, adjusted for elevation and viscosity. Ice can also melt and flow from colder to warmer zones, but this is done via a custom-made model.\n- Impact: The resulting water and ice coverage affects planetary albedo, temperature, and the potential for life.';
     const waterTooltip = attachDynamicInfoTooltip(waterInfo, waterTooltipText);
     // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
@@ -1556,7 +1556,6 @@ function updateLifeBox() {
     const defaults = (typeof DEFAULT_SURFACE_ALBEDO !== 'undefined') ? DEFAULT_SURFACE_ALBEDO : {
       ocean: 0.06,
       ice: 0.65,
-      snow: 0.85,
       co2_ice: 0.50,
       hydrocarbon: 0.10,
       hydrocarbonIce: 0.50,
