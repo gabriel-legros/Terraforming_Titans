@@ -126,7 +126,7 @@ progressGabbag.chapters.push(
     prerequisites: ['gabbag.27.4'],
     objectives: [
     ],
-    reward: []
+    reward: [{ target: 'building', targetId: 'radioactiveRecycler', type: 'enable', planetId: 'gabbag' }]
   },
   {
     id: 'gabbag.27.6',
@@ -139,7 +139,8 @@ progressGabbag.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
     ],
     reward: [
-      { target: 'building', targetId: 'radioactiveRecycler', type: 'enable', planetId: 'gabbag' }
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisLifeAutomation', value: true },
+      { target: 'solisManager', type: 'solisTabAlert', value: true, oneTimeFlag: true }
     ]
   },
 

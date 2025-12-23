@@ -513,7 +513,7 @@ function ensureGarbageLayout() {
   const summaryLeftHeader = doc.createElement('div');
   summaryLeftHeader.className = 'hazard-summary__header';
   summaryLeftHeader.textContent = 'Cleanup Status';
-  summaryLeftHeader.appendChild(createInfoIcon('The hazard clears only when every garbage stream reaches 0 at the same time.'));
+  summaryLeftHeader.appendChild(createInfoIcon('The hazard permanently clears once every garbage stream reaches 0 at the same time.'));
   const summaryLeftBody = doc.createElement('div');
   summaryLeftBody.className = 'hazard-summary__body';
   summaryLeft.appendChild(summaryLeftHeader);
@@ -535,7 +535,7 @@ function ensureGarbageLayout() {
   const summaryRightHeader = doc.createElement('div');
   summaryRightHeader.className = 'hazard-summary__header';
   summaryRightHeader.textContent = 'Operational Impact';
-  summaryRightHeader.appendChild(createInfoIcon('Penalties scale with remaining waste and fade as cleanup progresses.  They only clear once every garbage stream reaches 0 at the same time.'));
+  summaryRightHeader.appendChild(createInfoIcon('Penalties scale with remaining waste and fade as cleanup progresses.  They do not return once every garbage stream reaches 0 at the same time.'));
   const summaryRightBody = doc.createElement('div');
   summaryRightBody.className = 'hazard-summary__body';
   summaryRight.appendChild(summaryRightHeader);

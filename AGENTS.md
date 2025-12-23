@@ -231,7 +231,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Hazardous Biomass stances gained a Recon option and artifact stances gained Rapid Extraction, adjusting event pacing, weights, and artifact odds.
 - Hazardous biomass growth now applies per-zone penalties, the Zone Growth summary uses a dedicated table, Preferred Terrain shows the active preference with a tooltip explaining penalty math, and radiation defaults now use mSv/day across hazard systems.
 - Garbage hazard UI now mirrors hazardous biomass styling with cleanup summaries, progress bars, and per-stream penalty readouts.
-- Garbage hazard penalties now permanently clear per stream once a category hits zero, and the hazard clears once every stream has done so.
+- Garbage hazard penalties now permanently clear once every stream reaches zero, keeping the hazard cleared even if garbage returns.
 - Split hazard logic and UI into per-hazard modules so adding more hazards stays maintainable.
 - Added Solis Prime deep drilling and antimatter drilling story projects with three 10-minute steps gating chapter progress.
 - Added a Solis Prime Beach Construction story project after chapter 26 that requires heavy silicon and water before the final terraforming objective.
@@ -247,6 +247,10 @@ The planet visualiser has been modularised into files covering core setup, light
 - Team Wits challenges now treat Natural and Social Scientists as contributing 1.5x Wit, with tooltips updated to explain the new bonus.
 - Centralized terraforming gravity helpers in `src/js/terraforming/gravity.js` so apparent gravity and penalties reuse the same calculations.
 - Galaxy factions now accumulate an irreversible UHF doctrine adaptation multiplier that scales with rising UHF threat and stacks with electronics adoption.
+- Added Life Automation presets that auto-buy life design points by resource thresholds and auto-deploy improved designs once survivable.
+- Life Automation now has a dedicated Solis upgrade and supports negative optimal growth temperature assignments.
+- Life Automation presets can generate steps from the current design (metabolism last with remaining), enable auto purchase and auto design independently, and reorder auto-design steps, and the Solis unlock is now rewarded at gabbag.27.6.
+- Split automation UI rendering into shared helpers plus dedicated ship and life UI modules.
 - Added a `permanentProjectDisable` effect that removes projects from the UI and project manager updates when triggered.
 - Added a Mega Particle Accelerator advanced research that unlocks an infinitely repeatable Particle Accelerator megaproject.
 - Added a Surface Food Production research that lets surface biomass passively produce food once unlocked.

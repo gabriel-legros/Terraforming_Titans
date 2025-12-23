@@ -76,6 +76,7 @@ class GarbageHazard {
     this.androidAttritionRates = {};
     this.clearedCategories = {};
     this.androidAttritionDelaySeconds = 0;
+    this.permanentlyCleared = false;
   }
 
   normalize(parameters) {
@@ -83,6 +84,9 @@ class GarbageHazard {
   }
 
   resetClearedCategories() {
+    if (this.permanentlyCleared) {
+      return;
+    }
     this.clearedCategories = {};
   }
 
@@ -97,13 +101,17 @@ class GarbageHazard {
   }
 
   getClearedCategories() {
+    if (this.permanentlyCleared) {
+      this.setAllCategoriesCleared(this.manager.parameters.garbage);
+    }
     return { ...this.clearedCategories };
   }
 
   save() {
     return {
       clearedCategories: this.getClearedCategories(),
-      androidAttritionDelaySeconds: this.androidAttritionDelaySeconds
+      androidAttritionDelaySeconds: this.androidAttritionDelaySeconds,
+      permanentlyCleared: this.permanentlyCleared
     };
   }
 
@@ -114,9 +122,25 @@ class GarbageHazard {
       ? data.androidAttritionDelaySeconds
       : 0;
     this.androidAttritionDelaySeconds = Math.max(0, storedDelay || 0);
+    this.permanentlyCleared = !!(data && data.permanentlyCleared);
+  }
+
+  setAllCategoriesCleared(garbageParameters) {
+    const surfaceResources = garbageParameters?.surfaceResources || {};
+    const resourceKeys = Object.keys(surfaceResources);
+    const cleared = {};
+    resourceKeys.forEach((resourceKey) => {
+      cleared[resourceKey] = true;
+    });
+    this.clearedCategories = cleared;
   }
 
   isCleared(terraforming, garbageParameters) {
+    if (this.permanentlyCleared) {
+      this.setAllCategoriesCleared(garbageParameters);
+      return true;
+    }
+
     const surfaceResources = garbageParameters?.surfaceResources || {};
     const resourceKeys = Object.keys(surfaceResources);
     if (!resourceKeys.length) {
@@ -259,6 +283,12 @@ class GarbageHazard {
       return;
     }
 
+    if (this.permanentlyCleared) {
+      this.androidAttritionRates = {};
+      this.setAllCategoriesCleared(garbageParameters);
+      return;
+    }
+
     let resourcesState = null;
     try {
       resourcesState = resources;
@@ -397,11 +427,8 @@ class GarbageHazard {
     });
 
     if (allCleared) {
-      const clearedCategories = {};
-      garbageResourceKeys.forEach((resourceKey) => {
-        clearedCategories[resourceKey] = true;
-      });
-      this.clearedCategories = clearedCategories;
+      this.permanentlyCleared = true;
+      this.setAllCategoriesCleared(garbageParameters);
     } else {
       this.clearedCategories = {};
     }

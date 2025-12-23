@@ -17,10 +17,11 @@ const shopDescriptions = {
   advancedOversight: 'Enables advanced oversight for the space mirror facility, which can precisely control mirrors and lanterns based on a target temperature.',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase',
   autoResearch: 'Enable automatic research assignment for unlocked technologies',
-  shipAssignment: 'Provides HOPE with software for easier spaceship management'
+  shipAssignment: 'Provides HOPE with software for easier spaceship management',
+  lifeAutomation: 'Unlock automation presets for life point purchasing and design deployment'
 };
 
-const automationShopKeys = ['autoResearch', 'shipAssignment'];
+const automationShopKeys = ['autoResearch', 'shipAssignment', 'lifeAutomation'];
 
 function showSolisTab() {
   solisTabVisible = true;

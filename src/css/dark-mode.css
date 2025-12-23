@@ -636,6 +636,60 @@
     background: #24324a;
 }
 
+.dark-mode .automation-step-order button:disabled {
+    background: #141c2b;
+    border-color: #223049;
+    color: #6a778f;
+    opacity: 0.7;
+}
+
+.dark-mode .life-automation-section {
+    background: #101826;
+    border-color: #24324a;
+    box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-mode .life-automation-section-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .life-automation-enable {
+    color: #cbd4e2;
+}
+
+.dark-mode .life-automation-row {
+    background: #0e1421;
+    border-color: #202d42;
+}
+
+.dark-mode .life-automation-toggle,
+.dark-mode .life-automation-field,
+.dark-mode .life-automation-deploy-row,
+.dark-mode .life-automation-seed-row {
+    color: #cbd4e2;
+}
+
+.dark-mode .life-automation-row input,
+.dark-mode .life-automation-row select,
+.dark-mode .life-automation-field input,
+.dark-mode .life-automation-field select {
+    background: #0d1522;
+    border-color: #30405a;
+    color: #e7ecf7;
+}
+
+.dark-mode .life-automation-max-button,
+.dark-mode .life-automation-seed-button {
+    background: #1a2538;
+    border: 1px solid #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-mode .life-automation-max-button:hover,
+.dark-mode .life-automation-seed-button:hover {
+    background: #24324a;
+}
+
 .dark-mode input[type="range"].pretty-slider::-webkit-slider-runnable-track {
     background: #4d4d4d;
 }
