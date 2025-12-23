@@ -69,6 +69,16 @@ function formatSignedPercentage(value) {
   return `${value > 0 ? '+' : '-'}${magnitude}%`;
 }
 
+function formatAttritionDelay(seconds) {
+  const totalSeconds = Math.max(0, Math.ceil(seconds || 0));
+  if (totalSeconds <= 0) {
+    return '';
+  }
+  const minutes = Math.floor(totalSeconds / 60);
+  const remainder = totalSeconds % 60;
+  return `${minutes}:${String(remainder).padStart(2, '0')}`;
+}
+
 function getHazardRoot() {
   if (garbageHazardUICache.rootResolved) {
     return garbageHazardUICache.root;
@@ -152,7 +162,7 @@ function computeGarbagePenaltyValues(penalties, ratio) {
   return values;
 }
 
-function buildGarbagePenaltyLines(penaltyValues) {
+function buildGarbagePenaltyLines(penaltyValues, attritionDelaySeconds = 0) {
   const lines = [];
 
   if (penaltyValues.sandHarvesterMultiplier !== undefined) {
@@ -193,7 +203,9 @@ function buildGarbagePenaltyLines(penaltyValues) {
   if (penaltyValues.androidAttrition !== undefined) {
     const delta = -penaltyValues.androidAttrition * 100;
     if (delta) {
-      lines.push(`${GARBAGE_PENALTY_LABELS.androidAttrition}: ${formatSignedPercentage(delta)}/s`);
+      const delayText = formatAttritionDelay(attritionDelaySeconds);
+      const suffix = delayText ? ` (starts in ${delayText})` : '';
+      lines.push(`${GARBAGE_PENALTY_LABELS.androidAttrition}: ${formatSignedPercentage(delta)}/s${suffix}`);
     }
   }
 
@@ -398,7 +410,7 @@ function updateGarbageSummary(totals) {
     garbageHazardUICache.summaryCenterBody.textContent = mixText;
   }
 
-  const impactLines = buildGarbagePenaltyLines(totals.penaltyTotals || {});
+  const impactLines = buildGarbagePenaltyLines(totals.penaltyTotals || {}, totals.attritionDelaySeconds || 0);
   const impactText = impactLines.join('\n');
 
   if (garbageHazardUICache.summaryRightBody && garbageHazardUICache.summaryRightBody.textContent !== impactText) {
@@ -428,7 +440,7 @@ function updateGarbageBar(totals) {
 
 }
 
-function updateGarbageFactorGrid(entries) {
+function updateGarbageFactorGrid(entries, attritionDelaySeconds = 0) {
   ensureGarbageHeaderRow();
   const activeKeys = {};
 
@@ -460,7 +472,7 @@ function updateGarbageFactorGrid(entries) {
       record.valueCell.textContent = remainingText;
     }
 
-    const penaltyLines = buildGarbagePenaltyLines(entry.penaltyValues || {});
+    const penaltyLines = buildGarbagePenaltyLines(entry.penaltyValues || {}, attritionDelaySeconds);
     const penaltyText = penaltyLines.join('\n');
     if (record.penaltyCell && record.penaltyCell.textContent !== penaltyText) {
       record.penaltyCell.textContent = penaltyText;
@@ -609,11 +621,16 @@ function updateGarbageHazardUI(garbageParameters) {
     return;
   }
 
+  const manager = getHazardManager();
+  const attritionDelaySeconds = manager && manager.getGarbageAndroidAttritionDelaySeconds
+    ? manager.getGarbageAndroidAttritionDelaySeconds()
+    : 0;
   const resourcesState = getResources();
   const totals = computeGarbageTotals(garbageParameters, resourcesState);
+  totals.attritionDelaySeconds = attritionDelaySeconds;
   updateGarbageSummary(totals);
   updateGarbageBar(totals);
-  updateGarbageFactorGrid(totals.entries || []);
+  updateGarbageFactorGrid(totals.entries || [], attritionDelaySeconds);
 }
 
 try {

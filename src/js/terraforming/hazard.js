@@ -508,6 +508,12 @@ class HazardManager {
       : {};
   }
 
+  getGarbageAndroidAttritionDelaySeconds() {
+    return this.garbageHazard && this.garbageHazard.getAndroidAttritionDelaySeconds
+      ? this.garbageHazard.getAndroidAttritionDelaySeconds()
+      : 0;
+  }
+
   isGarbageCategoryCleared(key) {
     const cleared = this.getGarbageClearedCategories();
     return !!cleared[key];

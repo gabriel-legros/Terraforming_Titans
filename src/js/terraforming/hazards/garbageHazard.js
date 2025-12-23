@@ -75,6 +75,7 @@ class GarbageHazard {
     this.manager = manager;
     this.androidAttritionRates = {};
     this.clearedCategories = {};
+    this.androidAttritionDelaySeconds = 0;
   }
 
   normalize(parameters) {
@@ -100,12 +101,19 @@ class GarbageHazard {
   }
 
   save() {
-    return { clearedCategories: this.getClearedCategories() };
+    return {
+      clearedCategories: this.getClearedCategories(),
+      androidAttritionDelaySeconds: this.androidAttritionDelaySeconds
+    };
   }
 
   load(data) {
     const cleared = (data && data.clearedCategories) || {};
     this.clearedCategories = { ...cleared };
+    const storedDelay = data && data.androidAttritionDelaySeconds !== undefined
+      ? data.androidAttritionDelaySeconds
+      : 0;
+    this.androidAttritionDelaySeconds = Math.max(0, storedDelay || 0);
   }
 
   isCleared(terraforming, garbageParameters) {
@@ -149,6 +157,7 @@ class GarbageHazard {
     }
 
     this.resetClearedCategories();
+    this.initializeAndroidAttritionDelay(garbageParameters, options);
 
     const surfaceResourcesConfig = isPlainObject(garbageParameters.surfaceResources)
       ? garbageParameters.surfaceResources
@@ -229,6 +238,19 @@ class GarbageHazard {
         unlock(newResource);
       }
     });
+  }
+
+  initializeAndroidAttritionDelay(garbageParameters, options = {}) {
+    const penalties = garbageParameters && garbageParameters.penalties ? garbageParameters.penalties : {};
+    const hasAttritionPenalty = Object.keys(penalties).some((key) => {
+      const entry = penalties[key];
+      return entry && entry.androidAttrition !== undefined;
+    });
+    this.androidAttritionDelaySeconds = (!options.unlockOnly && hasAttritionPenalty) ? 60 : 0;
+  }
+
+  getAndroidAttritionDelaySeconds() {
+    return this.androidAttritionDelaySeconds || 0;
   }
 
   applyEffects({ addEffect, buildings, colonies }, garbageParameters) {
@@ -390,6 +412,16 @@ class GarbageHazard {
       return;
     }
 
+    let remainingSeconds = deltaSeconds;
+    if (this.androidAttritionDelaySeconds > 0) {
+      const delayConsumed = Math.min(this.androidAttritionDelaySeconds, remainingSeconds);
+      this.androidAttritionDelaySeconds -= delayConsumed;
+      remainingSeconds -= delayConsumed;
+      if (remainingSeconds <= 0) {
+        return;
+      }
+    }
+
     let resourcesState = null;
     try {
       resourcesState = resources;
@@ -418,7 +450,7 @@ class GarbageHazard {
       return;
     }
 
-    const androidLoss = currentAndroids * totalAttritionRate * deltaSeconds;
+    const androidLoss = currentAndroids * totalAttritionRate * remainingSeconds;
     if (androidLoss > 0) {
       androidResource.value = Math.max(0, currentAndroids - androidLoss);
       if (androidResource.modifyRate) {
