@@ -5,10 +5,12 @@ describe('Nanocolony energy allocation input', () => {
   const originalWindow = global.window;
   const originalResources = global.resources;
   const originalCurrentPlanetParameters = global.currentPlanetParameters;
+  const originalBuildings = global.buildings;
   const originalFormatNumber = global.formatNumber;
   const originalEffectableEntity = global.EffectableEntity;
   const originalParseFlexibleNumber = global.parseFlexibleNumber;
   const originalWireStringNumberInput = global.wireStringNumberInput;
+  const originalNanotechManager = global.nanotechManager;
 
   const setUpDom = () => {
     const dom = new JSDOM('<!doctype html><html><body></body></html>');
@@ -24,6 +26,9 @@ describe('Nanocolony energy allocation input', () => {
     global.resources = {
       surface: { land: { value: 1 } },
       colony: {},
+    };
+    global.buildings = {
+      sandQuarry: { hasSandAvailable: () => true }
     };
     global.currentPlanetParameters = {
       specialAttributes: { hasSand: true },
@@ -53,10 +58,12 @@ describe('Nanocolony energy allocation input', () => {
     global.window = originalWindow;
     global.resources = originalResources;
     global.currentPlanetParameters = originalCurrentPlanetParameters;
+    global.buildings = originalBuildings;
     global.formatNumber = originalFormatNumber;
     global.EffectableEntity = originalEffectableEntity;
     global.parseFlexibleNumber = originalParseFlexibleNumber;
     global.wireStringNumberInput = originalWireStringNumberInput;
+    global.nanotechManager = originalNanotechManager;
   });
 
   const renderNanotech = () => {
@@ -66,6 +73,7 @@ describe('Nanocolony energy allocation input', () => {
 
     const { NanotechManager } = require('../src/js/nanotech.js');
     const manager = new NanotechManager();
+    global.nanotechManager = manager;
     manager.enable();
     const input = document.getElementById('nanotech-energy-limit');
     const mode = document.getElementById('nanotech-energy-limit-mode');

@@ -9,12 +9,15 @@ describe("O'Neill cylinders advanced research", () => {
     jest.resetModules();
     EffectableEntity = require('../src/js/effectable-entity');
     global.EffectableEntity = EffectableEntity;
+    const { planetParameters } = require('../src/js/planet-parameters.js');
+    global.planetParameters = planetParameters;
     SpaceManager = require('../src/js/space.js');
     oneillModule = require('../src/js/advanced-research/oneill-cylinders.js');
   });
 
   afterEach(() => {
     delete global.EffectableEntity;
+    delete global.planetParameters;
     delete global.window;
     delete global.document;
     jest.resetModules();

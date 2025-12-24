@@ -3,10 +3,13 @@ describe('SpaceManager distinct world counts', () => {
     jest.resetModules();
     const EffectableEntity = require('../src/js/effectable-entity');
     global.EffectableEntity = EffectableEntity;
+    const { planetParameters } = require('../src/js/planet-parameters.js');
+    global.planetParameters = planetParameters;
   });
 
   afterEach(() => {
     delete global.EffectableEntity;
+    delete global.planetParameters;
     jest.resetModules();
   });
 

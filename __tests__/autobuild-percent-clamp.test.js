@@ -6,7 +6,14 @@ describe('autobuild percent clamping', () => {
   beforeEach(() => {
     global.EffectableEntity = EffectableEntity;
     global.maintenanceFraction = 0.001;
+    global.resources = { colony: {} };
     ({ Building } = require('../src/js/building'));
+  });
+
+  afterEach(() => {
+    delete global.resources;
+    delete global.maintenanceFraction;
+    delete global.EffectableEntity;
   });
 
   test('clamps negative autobuild percent on load', () => {

@@ -13,6 +13,7 @@ function createResource(value) {
 function createBaseWorld() {
   global.getZonePercentage = () => 1 / 3;
   global.colonies = { t7_colony: { active: 0, requiresLand: 0 } };
+  const gabbagGrowthTemp = 348.15;
 
   global.resources = {
     atmospheric: {
@@ -36,9 +37,9 @@ function createBaseWorld() {
     requirements: getTerraformingRequirement('gabbagian'),
     temperature: {
       zones: {
-        tropical: { day: 278.15, night: 278.15 },
-        temperate: { day: 278.15, night: 278.15 },
-        polar: { day: 278.15, night: 278.15 },
+        tropical: { day: gabbagGrowthTemp, night: gabbagGrowthTemp },
+        temperate: { day: gabbagGrowthTemp, night: gabbagGrowthTemp },
+        polar: { day: gabbagGrowthTemp, night: gabbagGrowthTemp },
       },
     },
     zonalWater: {
