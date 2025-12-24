@@ -376,6 +376,12 @@ const researchParameters = {
             targetId: 'junk',
             type: 'enable',
           },
+          {
+            target: 'resource',
+            resourceType: 'surface',
+            targetId: 'radioactiveWaste',
+            type: 'enable',
+          },
         ],
       },
       {
