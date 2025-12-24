@@ -335,7 +335,7 @@ progressGabbag.chapters.push(
     chapter: 29,
     activePlanet: 'gabbag',
     narrative: "Mary : 'Alright.  I have made my decision.  HOPE, let's believe in Elder Mavion.  We'll have the Venusian fleet retreat just in case.  I hope he's right...'",
-    prerequisites: ['gabbag.29.56'],
+    prerequisites: ['gabbag.29.6'],
     objectives: [ ],
     reward: []
   },
