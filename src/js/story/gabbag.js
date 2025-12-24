@@ -287,7 +287,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "",
+    narrative: "Elder Mavion : 'Many of my people have been paying attention to what is going on.  Your actions here are renewing a spark I had not witnessed in thousands of years.'",
     prerequisites: ['gabbag.29.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
