@@ -379,6 +379,46 @@ const researchParameters = {
         ],
       },
       {
+        id: 'waste_workforce_automation',
+        name: 'Waste Workforce Automation',
+        description: 'Automates material handling to reduce waste facility staffing requirements.',
+        cost: { research: 200000 },
+        prerequisites: ['waste_processing'],
+        requiredFlags: ['gabbagWasteProcessing'],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'garbageSorter',
+            type: 'workerMultiplier',
+            value: 0.8,
+          },
+          {
+            target: 'building',
+            targetId: 'trashIncinerator',
+            type: 'workerMultiplier',
+            value: 0.8,
+          },
+          {
+            target: 'building',
+            targetId: 'junkRecycler',
+            type: 'workerMultiplier',
+            value: 0.8,
+          },
+          {
+            target: 'building',
+            targetId: 'scrapRecycler',
+            type: 'workerMultiplier',
+            value: 0.8,
+          },
+          {
+            target: 'building',
+            targetId: 'radioactiveRecycler',
+            type: 'workerMultiplier',
+            value: 0.8,
+          },
+        ],
+      },
+      {
         id: 'robotics_1',
         name: 'Farming robotics assistance',
         description: 'Integrates robots within hydroponics farm to reduce worker requirements by 20%.',
