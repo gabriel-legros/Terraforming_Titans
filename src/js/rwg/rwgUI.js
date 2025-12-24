@@ -374,7 +374,7 @@ function initializeRandomWorldUI() {
   hazardList.style.display = 'none';
   hazardList.innerHTML = `
     <div class="rwg-hazard-title">Hazards</div>
-    <div class="rwg-hazard-note">Every hazard selected counts as +1 for RWG effects.</div>
+    <div class="rwg-hazard-note">Every hazard selected counts as +1 for Random World effects.</div>
     <div id="rwg-hazard-items" class="rwg-hazard-items"></div>
   `;
   container.appendChild(hazardList);
