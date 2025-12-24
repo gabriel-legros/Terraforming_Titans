@@ -314,7 +314,10 @@
             terra._updateZonalCoverageCache();
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
             const noisyStepMs = stepMs * (0.95 + Math.random() * 0.1);
-            terra.updateResources(noisyStepMs);
+            terra.updateResources(noisyStepMs, {
+              skipTerraformingEffects: true,
+              skipHazardUpdates: true
+            });
             if (stepIdx < 5) {
               terra.setTemperatureValuesToTrend();
             }

@@ -701,7 +701,7 @@ class Terraforming extends EffectableEntity{
     // Calculates and applies changes from atmospheric/surface processes for one tick,
     // using a global atmosphere model but zonal surface interactions.
     updateResources(deltaTime, options = {}) {
-        this.update(deltaTime);
+        this.update(deltaTime, options);
 
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         const realSeconds = deltaTime / 1000;
@@ -1386,7 +1386,9 @@ class Terraforming extends EffectableEntity{
       // terraforming-utils.js. Removed redundant calls to the old
       // calculateCoverage function.
 
-      this.applyTerraformingEffects();
+      if (!options.skipTerraformingEffects) {
+        this.applyTerraformingEffects();
+      }
 
       // --- Check and Update Overall Status ---
       // Determine if all parameters meet completion conditions
@@ -1397,7 +1399,7 @@ class Terraforming extends EffectableEntity{
 
       this.updateSurfaceRadiation();
 
-      if (hazardManager && hazardManager.update) {
+      if (!options.skipHazardUpdates && hazardManager && hazardManager.update) {
         hazardManager.update(deltaTime, this);
       }
 

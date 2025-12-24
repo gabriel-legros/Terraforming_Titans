@@ -48,6 +48,7 @@ function updateBuildingContainerIds() {
 }
 
 const combinedBuildingRowCache = {};
+const structureContainerMap = {};
 // Cache per-structure frequently accessed elements
 const structureUIElements = {};
 let structureUICacheInvalidated = true;
@@ -385,6 +386,7 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
 
   });
   combinedBuildingRowCache[containerId] = rows;
+  structureContainerMap[containerId] = structures;
   structureUICacheInvalidated = false;
 }
   
@@ -1739,14 +1741,19 @@ function formatStorageDetails(storageObject) {
 
     const rows = combinedBuildingRowCache[id] || [];
     const hasVisible = rows.some(row => row.style.display !== 'none');
+    const structures = structureContainerMap[id] || [];
+    const hasHidden = structures.some(structure => structure.unlocked && structure.isHidden);
+    const messageText = hasHidden ? 'Everything hidden' : 'Nothing available for now.';
 
     if (!hasVisible) {
       if (!message) {
         message = document.createElement('p');
         message.id = messageId;
         message.classList.add('empty-message');
-        message.textContent = 'Nothing available for now.';
+        message.textContent = messageText;
         container.appendChild(message);
+      } else if (message.textContent !== messageText) {
+        message.textContent = messageText;
       }
     } else if (message) {
       message.remove();

@@ -381,7 +381,7 @@ const researchParameters = {
       {
         id: 'waste_workforce_automation',
         name: 'Waste Workforce Automation',
-        description: 'Automates material handling to reduce waste facility staffing requirements.',
+        description: 'Automates material handling to reduce waste facility worker requirements by 20%.',
         cost: { research: 200000 },
         prerequisites: ['waste_processing'],
         requiredFlags: ['gabbagWasteProcessing'],
