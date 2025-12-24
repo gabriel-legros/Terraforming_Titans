@@ -1583,13 +1583,13 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     const production = scaleResourceMap(structure.getModifiedProduction(), buildCount);
-    const prodKeys = collectResourceKeys(production);
+    const prodKeys = collectResourceKeys(production, { forceShow: structure.alwaysShowProduction });
     if (prodKeys.length > 0) {
       sections.push({ key: 'production', label: 'Production', data: production, keys: prodKeys });
     }
 
     const consumption = scaleResourceMap(structure.getModifiedConsumption(), buildCount);
-    const consKeys = collectResourceKeys(consumption);
+    const consKeys = collectResourceKeys(consumption, { forceShow: structure.alwaysShowConsumption });
     if (consKeys.length > 0) {
       sections.push({ key: 'consumption', label: 'Consumption', data: consumption, keys: consKeys });
     }
@@ -1610,13 +1610,16 @@ function updateDecreaseButtonText(button, buildCount) {
     return sections;
   }
 
-  function collectResourceKeys(resourceObject) {
+  function collectResourceKeys(resourceObject, { forceShow } = {}) {
     const keys = [];
     for (const category in resourceObject) {
       for (const resource in resourceObject[category]) {
         const val = resourceObject[category][resource];
         const resourceEntry = resources?.[category]?.[resource];
-        if (val > 0 && resourceEntry?.unlocked) {
+        const activityRate = (resourceEntry?.productionRate || 0) + (resourceEntry?.consumptionRate || 0);
+        const isHidden = resourceEntry?.hideWhenSmall && resourceEntry?.value < 1e-4 && activityRate < 1;
+        const isAvailable = resourceEntry?.unlocked && !isHidden;
+        if (val > 0 && (forceShow || isAvailable)) {
           keys.push(`${category}.${resource}`);
         }
       }

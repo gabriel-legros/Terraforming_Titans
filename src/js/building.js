@@ -72,7 +72,9 @@ class Building extends EffectableEntity {
         automationBuildingsDropDown,
         autoBuildMaxOption,
         snapProductivity,
-        displayConsumptionAtMaxProductivity
+        displayConsumptionAtMaxProductivity,
+        alwaysShowProduction,
+        alwaysShowConsumption
       } = config;
   
       this.name = buildingName;
@@ -95,6 +97,8 @@ class Building extends EffectableEntity {
       this.requiresLand = requiresLand;
       this.snapProductivity = !!snapProductivity;
       this.displayConsumptionAtMaxProductivity = !!displayConsumptionAtMaxProductivity;
+      this.alwaysShowProduction = !!alwaysShowProduction;
+      this.alwaysShowConsumption = !!alwaysShowConsumption;
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
       this.aerostatReduction = Math.max(

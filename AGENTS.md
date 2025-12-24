@@ -377,6 +377,7 @@ The planet visualiser has been modularised into files covering core setup, light
  - Rogue random world maintenance bonus now divides maintenance by (1 + 2% per rogue) instead of a flat subtraction.
 
 ## Feature updates
+- Building production/consumption summaries now skip hidden or locked resources unless a structure sets always-show flags, which waste buildings now use to keep their output visible.
 - Special project ordering now treats all import resource missions as one card, ignores hidden projects when showing arrows, and saves the grouped order across travel and saves.
 - Autobuild target counts now always display in compact k/M/B formatting; removed the related settings toggle.
 - Spaceship, android, and Import Resources assignment cards now use compact k/M/B formatting for available/assigned counts.
