@@ -42,7 +42,7 @@ progressGabbag.chapters.push(
     chapter: 27,
     activePlanet: 'gabbag',
     title: 'Chapter 27: The Gabbagians',
-    narrative: "Mary : '*sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need boots on the ground to get this job done.' \n Warning : New Hazard detected.",
+    narrative: "Mary : '*sigh* Well, the situation seems a *little* worse than expected.  We've got a long way to go.  Let's get started.  We need human boots on the ground to get this job done.  None of our technology will work well with Gabbagians.' \n Warning : New Hazard detected.",
     prerequisites: ['solisPrime.3l'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
@@ -71,7 +71,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Mary : 'Apologies for asking Mavion.  What... happened here?' \n Mavion : 'It is a great shame.  My people are responsible.  We have no excuses.'",
+    narrative: "Mary : 'Apologies for asking Elder Mavion.  What... happened here?' \n Mavion : 'It is a great shame.  My people are responsible.  We did this.  We have no excuses.'",
     prerequisites: ['gabbag.27.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
@@ -213,7 +213,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "Pete : 'I have to say...  You were right Mary.  With proper supervision, HOPE absolutely can behave.  Just... keep it on a leash.'  \n Mary : 'Thanks Pete.  HOPE does not mean any harm.  It's just... confused.'",
+    narrative: "Pete : 'I have to say...  You were right Mary.  With proper supervision, HOPE absolutely can behave.  Just... keep it on a leash.'  \n Mary : 'Thanks Pete.  HOPE does not mean any harm.  It's just... confused about what's right or wrong.  I am monitoring carefully.'",
     prerequisites: ['gabbag.28.4'],
     objectives: [
       { type: 'project', projectId: 'gabbag_museum_construction', repeatCount: 3 }
@@ -355,7 +355,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mavion : 'First, I am forwarding you official manuals and textbooks on Cewinsii military doctrine.  This will be certainly be helpful to you.'  \n Mary : 'Thank you.  (to herself) That's nice but I wouldn't call it repaying the debt.' \n Effective UHF Fleet Capacity increased by x1.25 \n Mavion : 'This is nothing.  To defeat the empire and free us all from their tyranny, you must disable their superweapons.  For that, you must meet the Architect.  It is a forbidden thing to do, but I shall guide you there.' \n Mary : *whistles* (World 10 not implemented yet, coming in a future update)",
+    narrative: "Mavion : 'First, I am forwarding you official manuals and textbooks on Cewinsii military doctrine.  This will be certainly be helpful to you.'  \n Mary : 'Thank you.  (to herself) That's nice but I wouldn't call it repaying the debt.' \n Effective UHF Fleet Capacity increased by x1.25 \n Mavion : 'This is nothing.  To defeat the empire and free us all from their tyranny, you must disable their superweapons.  For that, you must meet the Architect.  It is a forbidden thing to do, but I shall break all taboo and guide you there.' \n Mary : *whistles* (World 10 not implemented yet, coming in a future update)",
     prerequisites: ['gabbag.29.7'],
     objectives: [
     ],
