@@ -181,7 +181,6 @@ function updateLifeAutomationUI() {
 
 function attachLifeAutomationHandlers() {
   const {
-    lifeCollapseButton,
     lifePresetSelect,
     lifePresetNameInput,
     lifeNewPresetButton,
@@ -193,12 +192,6 @@ function attachLifeAutomationHandlers() {
     lifeSeedButton,
     lifeDesignEnableCheckbox
   } = automationElements;
-  lifeCollapseButton.addEventListener('click', () => {
-    const automation = automationManager.lifeAutomation;
-    automation.setCollapsed(!automation.collapsed);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
   lifePresetSelect.addEventListener('change', (event) => {
     const id = Number(event.target.value);
     automationManager.lifeAutomation.setActivePreset(id);

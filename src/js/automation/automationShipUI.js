@@ -103,7 +103,6 @@ function updateShipAutomationUI() {
 
 function attachAutomationHandlers() {
   const {
-    collapseButton,
     presetSelect,
     presetNameInput,
     newPresetButton,
@@ -111,15 +110,6 @@ function attachAutomationHandlers() {
     enablePresetCheckbox,
     addStepButton
   } = automationElements;
-  if (collapseButton) {
-    collapseButton.addEventListener('click', () => {
-      if (!automationManager || !automationManager.spaceshipAutomation) return;
-      const automation = automationManager.spaceshipAutomation;
-      automation.setCollapsed(!automation.collapsed);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-  }
   if (presetSelect) {
     presetSelect.addEventListener('change', (event) => {
       if (!automationManager || !automationManager.spaceshipAutomation) return;
