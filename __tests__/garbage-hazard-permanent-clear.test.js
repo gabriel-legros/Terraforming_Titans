@@ -45,7 +45,9 @@ describe('Garbage hazard permanent clearance', () => {
     effects.length = 0;
     global.resources.surface.garbageMetal.value = 0;
     manager.applyHazardEffects(context);
-    expect(effects.some((effect) => effect.effectId === 'garbageHazard-garbageMetal-happiness-alpha')).toBe(false);
+    const clearedEffect = effects.find((effect) => effect.effectId === 'garbageHazard-garbageMetal-happiness-alpha');
+    expect(clearedEffect).toBeTruthy();
+    expect(clearedEffect.value).toBe(0);
 
     effects.length = 0;
     global.resources.surface.garbageMetal.value = 5;
