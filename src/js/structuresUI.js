@@ -1616,9 +1616,7 @@ function updateDecreaseButtonText(button, buildCount) {
       for (const resource in resourceObject[category]) {
         const val = resourceObject[category][resource];
         const resourceEntry = resources?.[category]?.[resource];
-        const activityRate = (resourceEntry?.productionRate || 0) + (resourceEntry?.consumptionRate || 0);
-        const isHidden = resourceEntry?.hideWhenSmall && resourceEntry?.value < 1e-4 && activityRate < 1;
-        const isAvailable = resourceEntry?.unlocked && !isHidden;
+        const isAvailable = resourceEntry && resourceEntry.unlocked;
         if (val > 0 && (forceShow || isAvailable)) {
           keys.push(`${category}.${resource}`);
         }

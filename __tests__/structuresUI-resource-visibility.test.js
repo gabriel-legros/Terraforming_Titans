@@ -100,4 +100,31 @@ describe('structures UI production/consumption visibility', () => {
     ]);
     expect(showConsumption.keys).toContain('surface.garbage');
   });
+
+  test('shows enabled resources even when they are hidden in the resource list', () => {
+    global.resources.surface.garbage.unlocked = true;
+    global.resources.surface.garbage.hideWhenSmall = true;
+    global.resources.surface.garbage.value = 0;
+
+    const building = new Building({
+      name: 'Garbage Sorter',
+      category: 'waste',
+      description: '',
+      cost: {},
+      consumption: { surface: { garbage: 100 } },
+      production: {},
+      storage: {},
+      dayNightActivity: false,
+      canBeToggled: true,
+      requiresMaintenance: false,
+      requiresWorker: 0,
+      maintenanceFactor: 1,
+      unlocked: true
+    }, 'garbageSorter');
+
+    const sections = getProdConsSections(building, 1);
+    const consumption = sections.find(section => section.key === 'consumption');
+
+    expect(consumption.keys).toContain('surface.garbage');
+  });
 });
