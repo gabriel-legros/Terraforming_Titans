@@ -323,7 +323,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mavion : 'Hold, humans.  You may need not flee.'  \n Mary : 'Why?'  \n Mavion : 'Admiral Ghost... is a Gabbagian.  The most talented and faithful of us.  He knows not what he will find here.'  \n Mary : 'That's a gamble.  HOPE, realistically we can't evacuate all colonists in time.  What do you think?'",
+    narrative: "Mavion : 'Hold, humans.  You may need not flee.'  \n Mary : 'Why?'  \n Mavion : 'Admiral Ghost... is a Gabbagian.  The most talented and faithful of us.  He knows not what he will find here.'  \n Mary : 'That's a gamble.  HOPE, realistically we can't evacuate all colonists in time.  We can find ourselves a nice rogue world away from everything though...  What do you think?'",
     prerequisites: ['gabbag.29.5a'],
     objectives: [      { type: 'terraforming', terraformingParameter: 'complete' }
     ],
@@ -334,7 +334,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mary : 'Alright.  I have made my decision.  HOPE, let's believe in Elder Mavion.  We'll have the Venusian fleet retreat.  I hope he's right...'",
+    narrative: "Mary : 'Alright.  I have made my decision.  HOPE, let's believe in Elder Mavion.  We'll have the Venusian fleet retreat just in case.  I hope he's right...'",
     prerequisites: ['gabbag.29.56'],
     objectives: [ ],
     reward: []
