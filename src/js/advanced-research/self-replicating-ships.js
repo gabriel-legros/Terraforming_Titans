@@ -16,7 +16,7 @@ function updateShipReplication(deltaTime, resources, globalEffects, accumulatedC
       ? projectManager.getAssignedSpaceships()
       : 0;
 
-  const cap = 1e14;
+  const cap = 1e17;
   const available = shipsResource.value;
   if(available < 1) return;
   const total = available + assigned;
