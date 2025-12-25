@@ -88,12 +88,17 @@ if (typeof SpaceStorageProject !== 'undefined') {
     const input = document.createElement('input');
     input.type = 'text';
     input.id = `${this.name}-strategic-reserve`;
-    input.value = this.strategicReserve;
-    input.addEventListener('change', (e) => {
-      const val = parseFloat(e.target.value);
-      this.strategicReserve = isNaN(val) ? 0 : Math.max(0, val);
-      e.target.value = isNaN(val) ? '' : this.strategicReserve.toString();
+    wireStringNumberInput(input, {
+      datasetKey: 'strategicReserve',
+      parseValue: (value) => Math.max(0, parseFlexibleNumber(value) || 0),
+      formatValue: (parsed) => (parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed)),
+      onValue: (parsed) => {
+        this.strategicReserve = parsed;
+      },
     });
+    const reserveValue = this.strategicReserve || 0;
+    input.dataset.strategicReserve = String(reserveValue);
+    input.value = reserveValue >= 1e6 ? formatNumber(reserveValue, true, 3) : String(reserveValue);
     container.append(label, input);
     projectElements[this.name] = {
       ...projectElements[this.name],
@@ -389,7 +394,7 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipAutoStartContainer && els.prioritizeMegaContainer) {
     const display = projectManager && typeof projectManager.isBooleanFlagSet === 'function' &&
-      projectManager.isBooleanFlagSet('automateSpecialProjects') ? 'block' : 'none';
+      projectManager.isBooleanFlagSet('automateSpecialProjects') ? 'flex' : 'none';
     els.shipAutoStartContainer.style.display = display;
     els.prioritizeMegaContainer.style.display = display;
   }
@@ -486,10 +491,13 @@ function updateSpaceStorageUI(project) {
     els.prioritizeMegaCheckbox.checked = project.prioritizeMegaProjects;
   }
   if (els.strategicReserveInput) {
-    const activeElement = globalThis.document?.activeElement;
+    const activeElement = document.activeElement;
     if (els.strategicReserveInput !== activeElement) {
-      const reserveValue = project.strategicReserve ?? 0;
-      els.strategicReserveInput.value = reserveValue === 0 ? '0' : reserveValue.toString();
+      const reserveValue = project.strategicReserve || 0;
+      els.strategicReserveInput.dataset.strategicReserve = String(reserveValue);
+      els.strategicReserveInput.value = reserveValue >= 1e6
+        ? formatNumber(reserveValue, true, 3)
+        : String(reserveValue);
     }
   }
   if (els.updateModeButtons) {

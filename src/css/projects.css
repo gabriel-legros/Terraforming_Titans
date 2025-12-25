@@ -96,8 +96,18 @@
     gap: 5px;
 }
 
+.checkbox-container input[type="checkbox"],
+.checkbox-container input[type="text"] {
+    margin: 0;
+}
+
 .checkbox-container label {
     font-size: 0.9em;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 /* Space Storage resource table */
@@ -920,6 +930,7 @@
 .automation-settings-container {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 15px;
     margin-top: 10px;
     padding-top: 10px;
