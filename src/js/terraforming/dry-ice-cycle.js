@@ -199,16 +199,26 @@ class CO2Cycle extends ResourceCycleClass {
       if (typeof simulateSurfaceCO2Flow === 'function'
           && typeof ZONES !== 'undefined'
           && terraforming && terraforming.zonalCO2) {
-        const flow = simulateSurfaceCO2Flow(terraforming, durationSeconds, tempMap) || { changes: {}, totalMelt: 0 };
+        const flow = simulateSurfaceCO2Flow(terraforming, durationSeconds, tempMap, undefined, {
+          triplePressure: CO2_P_TRIPLE,
+          disallowLiquidBelowTriple: true,
+          boilingPointFn: boilingPointCO2,
+        }) || { changes: {}, totalMelt: 0 };
         const totalMelt = flow.totalMelt || 0;
         const freezeOut = flow.totalFreezeOut || 0;
+        const totalGasMelt = flow.totalGasMelt || 0;
         terraforming.flowCO2MeltAmount = totalMelt;
         terraforming.flowCO2MeltRate = durationSeconds > 0 ? totalMelt / durationSeconds * 86400 : 0;
         terraforming.flowCO2FreezeOutAmount = freezeOut;
         terraforming.flowCO2FreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
         return {
           changes: flow.changes || {},
-          totals: { flowMelt: totalMelt, freezeOut },
+          totals: {
+            flowMelt: totalMelt,
+            freezeOut,
+            rapidSublimation: totalGasMelt,
+            totalAtmosphericChange: totalGasMelt,
+          },
         };
       }
       return { changes: {}, totals: { flowMelt: 0, freezeOut: 0 } };

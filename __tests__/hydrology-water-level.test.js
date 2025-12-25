@@ -45,4 +45,45 @@ describe('hydrology surface flow water level', () => {
     global.ZONES = priorZones;
     global.getZonePercentage = priorGetZonePercentage;
   });
+
+  test('flow melt becomes gas when liquid is forbidden by pressure', () => {
+    const priorZones = global.ZONES;
+    const priorGetZonePercentage = global.getZonePercentage;
+    global.ZONES = ['tropical', 'temperate', 'polar'];
+    global.getZonePercentage = () => 1 / 3;
+
+    const { simulateSurfaceWaterFlow } = require('../src/js/terraforming/hydrology.js');
+    const { boilingPointWater } = require('../src/js/terraforming/water-cycle.js');
+
+    const terraforming = {
+      celestialParameters: { surfaceArea: 300, radius: 3389.5 },
+      atmosphericPressureCache: { totalPressure: 100 },
+      zonalWater: {
+        tropical: { liquid: 0, ice: 0, buriedIce: 0 },
+        temperate: { liquid: 0, ice: 0, buriedIce: 0 },
+        polar: { liquid: 0, ice: 200, buriedIce: 0 },
+      },
+      zonalCoverageCache: {
+        tropical: { zoneArea: 100, liquidWater: 0, ice: 0 },
+        temperate: { zoneArea: 100, liquidWater: 0, ice: 0 },
+        polar: { zoneArea: 100, liquidWater: 0, ice: 1 },
+      },
+    };
+
+    const temps = { tropical: 260, temperate: 280, polar: 260 };
+    const elevations = { tropical: 0, temperate: 0, polar: 0 };
+
+    const flow = simulateSurfaceWaterFlow(terraforming, 3600, temps, elevations, {
+      triplePressure: 611,
+      disallowLiquidBelowTriple: true,
+      boilingPointFn: boilingPointWater,
+    });
+
+    expect(flow.totalGasMelt).toBeGreaterThan(0);
+    expect(Math.abs(flow.totalMelt)).toBeLessThan(1e-9);
+    expect(Math.abs(flow.changes.temperate.liquid)).toBeLessThan(1e-9);
+
+    global.ZONES = priorZones;
+    global.getZonePercentage = priorGetZonePercentage;
+  });
 });

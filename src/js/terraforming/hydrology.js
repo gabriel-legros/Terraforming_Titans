@@ -15,7 +15,19 @@ if (isNodeHydro) {
 meltingFreezingRatesUtil = meltingFreezingRatesUtil || globalThis.meltingFreezingRates;
 
 function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zoneElevationsInput, config) {
-    const { liquidProp, iceProp, buriedIceProp, meltingPoint, zonalDataKey, viscosity, iceCoverageType, liquidCoverageType } = config;
+    const {
+        liquidProp,
+        iceProp,
+        buriedIceProp,
+        meltingPoint,
+        zonalDataKey,
+        viscosity,
+        iceCoverageType,
+        liquidCoverageType,
+        triplePressure,
+        disallowLiquidBelowTriple,
+        boilingPointFn,
+    } = config;
     const zonalData = zonalInput[zonalDataKey] ? zonalInput[zonalDataKey] : zonalInput;
     const terraforming = zonalInput[zonalDataKey] ? zonalInput : null;
 
@@ -31,6 +43,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const glacierFlowMeltSpeedPerK = 5e-8;
     const secondsMultiplier = durationSeconds;
     let totalMelt = 0;
+    let totalGasMelt = 0;
     let totalFreezeOut = 0;
 
     const zones = (typeof ZONES !== 'undefined') ? ZONES : ['tropical', 'temperate', 'polar'];
@@ -51,11 +64,17 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const flowRateCoefficient = (baseFlowRate * radiusScale) / (viscosity || 1.0);
 
     const changes = {};
+    const atmosphericPressure = terraforming?.atmosphericPressureCache?.totalPressure ?? 0;
+    const pressureAllowsLiquid = !disallowLiquidBelowTriple || atmosphericPressure > (triplePressure ?? 0);
+    const boilingPoint = boilingPointFn ? boilingPointFn(atmosphericPressure) : Infinity;
+    const liquidPossibleByZone = {};
     zones.forEach(zone => {
         changes[zone] = { [liquidProp]: 0, [iceProp]: 0 };
         if (buriedIceProp) {
             changes[zone][buriedIceProp] = 0;
         }
+        const zoneTemp = zonalTemperatures[zone];
+        liquidPossibleByZone[zone] = pressureAllowsLiquid && zoneTemp < boilingPoint;
     });
 
     // --- Part 1: Melting Phase ---
@@ -148,9 +167,12 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
             if (melt > 0) {
                 const availIce = (zonalData[source][iceProp] || 0) + changes[source][iceProp];
                 const actualMelt = Math.min(melt, availIce);
+                const meltToGas = liquidPossibleByZone[target] ? 0 : actualMelt;
+                const meltToLiquid = actualMelt - meltToGas;
                 changes[source][iceProp] -= actualMelt;
-                changes[target][liquidProp] += actualMelt;
-                totalMelt += actualMelt;
+                changes[target][liquidProp] += meltToLiquid;
+                totalMelt += meltToLiquid;
+                totalGasMelt += meltToGas;
             }
         }
     }
@@ -219,10 +241,10 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
         }
     }
 
-    return { changes, totalMelt, totalFreezeOut };
+    return { changes, totalMelt, totalGasMelt, totalFreezeOut };
 }
 
-function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput) {
+function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {
     return _simulateSurfaceFlow(zonalWaterInput, durationSeconds, zonalTemperatures, zoneElevationsInput, {
         liquidProp: 'liquid',
         iceProp: 'ice',
@@ -231,11 +253,12 @@ function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTempera
         zonalDataKey: 'zonalWater',
         viscosity: 0.89, // Baseline viscosity for water
         iceCoverageType: 'ice',
-        liquidCoverageType: 'liquidWater'
+        liquidCoverageType: 'liquidWater',
+        ...flowOptions,
     });
 }
 
-function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput) {
+function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {
     return _simulateSurfaceFlow(zonalHydrocarbonInput, durationSeconds, zonalTemperatures, zoneElevationsInput, {
         liquidProp: 'liquid',
         iceProp: 'ice',
@@ -244,11 +267,12 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, 
         zonalDataKey: 'zonalHydrocarbons',
         viscosity: 0.12, // Methane is less viscous than water
         iceCoverageType: 'hydrocarbonIce',
-        liquidCoverageType: 'liquidMethane'
+        liquidCoverageType: 'liquidMethane',
+        ...flowOptions,
     });
 }
 
-function simulateSurfaceCO2Flow(zonalCO2Input, durationSeconds, zonalTemperatures = {}, zoneElevationsInput) {
+function simulateSurfaceCO2Flow(zonalCO2Input, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {
     return _simulateSurfaceFlow(zonalCO2Input, durationSeconds, zonalTemperatures, zoneElevationsInput, {
         liquidProp: 'liquid',
         iceProp: 'ice',
@@ -257,7 +281,8 @@ function simulateSurfaceCO2Flow(zonalCO2Input, durationSeconds, zonalTemperature
         zonalDataKey: 'zonalCO2',
         viscosity: 0.07, // Liquid CO2 is lower-viscosity than water
         iceCoverageType: 'dryIce',
-        liquidCoverageType: 'liquidCO2'
+        liquidCoverageType: 'liquidCO2',
+        ...flowOptions,
     });
 }
 

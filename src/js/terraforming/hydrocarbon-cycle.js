@@ -188,9 +188,14 @@ class MethaneCycle extends ResourceCycleClass {
       if (typeof simulateSurfaceHydrocarbonFlow === 'function'
         && typeof ZONES !== 'undefined'
         && terraforming && terraforming.zonalHydrocarbons) {
-        const flow = simulateSurfaceHydrocarbonFlow(terraforming, durationSeconds, tempMap) || { changes: {}, totalMelt: 0 };
+        const flow = simulateSurfaceHydrocarbonFlow(terraforming, durationSeconds, tempMap, undefined, {
+          triplePressure: METHANE_P_TRIPLE,
+          disallowLiquidBelowTriple: true,
+          boilingPointFn: boilingPointMethane,
+        }) || { changes: {}, totalMelt: 0 };
         const totalMelt = flow.totalMelt || 0;
         const freezeOut = flow.totalFreezeOut || 0;
+        const totalGasMelt = flow.totalGasMelt || 0;
         // Optional debug/display fields retained
         terraforming.flowMethaneMeltAmount = totalMelt;
         terraforming.flowMethaneMeltRate = durationSeconds > 0 ? totalMelt / durationSeconds * 86400 : 0;
@@ -199,7 +204,12 @@ class MethaneCycle extends ResourceCycleClass {
         return {
           changes: flow.changes || {},
           // Only report flowMelt as a separate total; phase-change melt remains in 'melt'
-          totals: { flowMelt: totalMelt, freezeOut },
+          totals: {
+            flowMelt: totalMelt,
+            freezeOut,
+            rapidSublimation: totalGasMelt,
+            totalAtmosphericChange: totalGasMelt,
+          },
         };
       }
       return { changes: {}, totals: { flowMelt: 0, freezeOut: 0 } };

@@ -175,14 +175,27 @@ class WaterCycle extends ResourceCycleClass {
         if (typeof simulateSurfaceWaterFlow === 'function'
           && typeof ZONES !== 'undefined'
           && terraforming && terraforming.zonalWater) {
-          const flow = simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap) || { changes: {}, totalMelt: 0 };
+          const flow = simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap, undefined, {
+            triplePressure: WATER_TRIPLE_P,
+            disallowLiquidBelowTriple: true,
+            boilingPointFn: boilingPointWater,
+          }) || { changes: {}, totalMelt: 0 };
           const totalMelt = flow.totalMelt || 0;
           const freezeOut = flow.totalFreezeOut || 0;
+          const totalGasMelt = flow.totalGasMelt || 0;
           terraforming.flowMeltAmount = totalMelt;
           terraforming.flowMeltRate = durationSeconds > 0 ? totalMelt / durationSeconds * 86400 : 0;
           terraforming.flowFreezeOutAmount = freezeOut;
           terraforming.flowFreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
-          return { changes: flow.changes || {}, totals: { flowMelt: totalMelt, freezeOut } };
+          return {
+            changes: flow.changes || {},
+            totals: {
+              flowMelt: totalMelt,
+              freezeOut,
+              rapidSublimation: totalGasMelt,
+              totalAtmosphericChange: totalGasMelt,
+            },
+          };
         }
         return { changes: {}, totals: { flowMelt: 0, freezeOut: 0 } };
       },
