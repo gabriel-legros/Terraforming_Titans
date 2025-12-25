@@ -18,3 +18,6 @@ This folder contains classes for repeatable projects. Any new module here should
 - **SpaceshipProject** – base class for any project assigning spaceships; enters continuous mode above 100 ships and manages per‑ship costs, gains and disposal.
 - **TerraformingDurationProject** – helper base that reduces project durations based on the number of terraformed worlds including the current one.
 - **UndergroundExpansionProject** – android‑driven subterranean land growth; costs scale with initial land and progress displays total expanded land.
+
+## Updates
+- Warp Gate Command operations stop after completion unless Auto-start is enabled per team, with the toggle embedded in the Start button.

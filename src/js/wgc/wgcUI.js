@@ -133,7 +133,7 @@ const teamElements = [];
 var teamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
 const teamRulesTooltip = [
   'Warp Gate Command dispatches specialist teams through the warp gate to confront threats, gather alien artifacts, and bring back intel for humanity.  Everyone involved is a volunteer and the cream of the crop humanity has to offer.',
-  'Operations happen in 10 steps, each with a distinct challenge.  Successful challenges have a chance of granting alien artifacts.  Failed challenges deal damage.  Losing all HP will instantly recall the team, losing all rewards, and requiring to send the team again manually.  Challenges have their own special rules.',
+  'Operations happen in 10 steps, each with a distinct challenge.  Successful challenges have a chance of granting alien artifacts.  Failed challenges deal damage.  Losing all HP will instantly recall the team, losing all rewards, and requiring to send the team again manually.  Challenges have their own special rules. Operations stop after completion unless Auto-start is checked for that team.',
   'Special rules:',
   '- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.',
   '- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.',
@@ -254,7 +254,7 @@ function generateWGCTeamCards() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   return names.map((name, tIdx) => {
     const slots = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teams[tIdx]) ? warpGateCommand.teams[tIdx] : [null, null, null, null];
-    const op = (typeof warpGateCommand !== 'undefined' && warpGateCommand.operations[tIdx]) ? warpGateCommand.operations[tIdx] : { active: false, progress: 0, summary: '' };
+    const op = (typeof warpGateCommand !== 'undefined' && warpGateCommand.operations[tIdx]) ? warpGateCommand.operations[tIdx] : { active: false, autoStart: false, progress: 0, summary: '' };
     const slotMarkup = slots.map((m, sIdx) => {
       if (m) {
         const img = classImages[m.classType] || '';
@@ -317,7 +317,12 @@ function generateWGCTeamCards() {
                 </div>
                 <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0" />
               </div>
-              <button class="start-button" data-team="${tIdx}">Start</button>
+              <button class="start-button" data-team="${tIdx}">
+                <label class="wgc-auto-start-toggle">
+                  <input type="checkbox" class="wgc-auto-start-checkbox" data-team="${tIdx}"${op.autoStart ? ' checked' : ''} aria-label="Auto-start operations for this team">
+                </label>
+                <span class="start-button-label">Start</span>
+              </button>
               <button class="recall-button" data-team="${tIdx}">Recall</button>
               <button class="log-toggle" data-team="${tIdx}">Log</button>
             </div>
@@ -357,6 +362,7 @@ function invalidateWGCTeamCache() {
     const entry = {
       card,
       startBtn: card.querySelector('.start-button'),
+      autoStartCheckbox: card.querySelector('.wgc-auto-start-checkbox'),
       recallBtn: card.querySelector('.recall-button'),
       diffInput: card.querySelector('.difficulty-input'),
       stanceSelect: card.querySelector('.hbi-select'),
@@ -1025,16 +1031,20 @@ function initializeWGCUI() {
       teamContainer.innerHTML = generateWGCTeamCards();
       invalidateWGCTeamCache();
       teamContainer.addEventListener('click', e => {
-        if (e.target.classList.contains('start-button')) {
-          const t = parseInt(e.target.dataset.team, 10);
-          const input = e.target.closest('.wgc-team-card').querySelector('.difficulty-input');
-          const diff = input ? Math.floor(Math.max(0, parseInt(input.value, 10) || 0)) : 0;
+        const startBtn = e.target.closest('.start-button');
+        if (startBtn) {
+          if (e.target.closest('.wgc-auto-start-toggle')) return;
+          const t = parseInt(startBtn.dataset.team, 10);
+          const input = teamElements[t].diffInput;
+          const diff = Math.floor(Math.max(0, parseInt(input.value, 10) || 0));
+          if (warpGateCommand.operations[t].active) return;
           warpGateCommand.startOperation(t, diff);
           updateWGCUI();
           return;
         }
         if (e.target.classList.contains('recall-button')) {
           const t = parseInt(e.target.dataset.team, 10);
+          warpGateCommand.operations[t].autoStart = false;
           warpGateCommand.recallTeam(t);
           updateWGCUI();
           return;
@@ -1123,6 +1133,23 @@ function initializeWGCUI() {
           }
         }
       });
+      teamContainer.addEventListener('change', e => {
+        if (e.target.classList.contains('wgc-auto-start-checkbox')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          const op = warpGateCommand.operations[t];
+          op.autoStart = e.target.checked;
+          if (op.autoStart && !op.active) {
+            const team = warpGateCommand.teams[t];
+            const unlocked = warpGateCommand.isTeamUnlocked(t);
+            if (unlocked && team.every(m => m)) {
+              const input = teamElements[t].diffInput;
+              const diff = Math.floor(Math.max(0, parseInt(input.value, 10) || 0));
+              warpGateCommand.startOperation(t, diff);
+            }
+          }
+          updateWGCUI();
+        }
+      });
     }
     populateRDMenu();
     populateFacilityMenu();
@@ -1148,8 +1175,14 @@ function updateOperationProgressSegments(op, refs) {
       if (fill) fill.style.width = '0%';
     });
     if (refs.summaryEl) {
-      refs.summaryEl.classList.add('hidden');
-      refs.summaryEl.textContent = '';
+      const summaryText = op.summary || '';
+      if (summaryText) {
+        refs.summaryEl.classList.remove('hidden');
+        refs.summaryEl.textContent = summaryText;
+      } else {
+        refs.summaryEl.classList.add('hidden');
+        refs.summaryEl.textContent = '';
+      }
     }
     return;
   }
@@ -1251,6 +1284,7 @@ function updateWGCUI() {
       startBtn,
       recallBtn,
       diffInput,
+      autoStartCheckbox,
       stanceSelect,
       artSelect,
       renameBtn,
@@ -1283,11 +1317,15 @@ function updateWGCUI() {
     if (lockDetail && !unlocked) {
       lockDetail.textContent = `${Math.min(warpGateCommand.totalOperations, threshold)} / ${threshold} Operations Completed`;
     }
-    if (startBtn) startBtn.disabled = !unlocked || !full || op.active;
+    if (startBtn) startBtn.disabled = !unlocked || !full;
     if (recallBtn) recallBtn.disabled = !unlocked || !op.active;
     if (diffInput) {
       diffInput.value = op.difficulty || 0;
       diffInput.disabled = op.active;
+    }
+    if (autoStartCheckbox) {
+      autoStartCheckbox.checked = op.autoStart === true;
+      autoStartCheckbox.disabled = !unlocked;
     }
     if (stanceSelect) {
       const val = warpGateCommand.stances && warpGateCommand.stances[tIdx]

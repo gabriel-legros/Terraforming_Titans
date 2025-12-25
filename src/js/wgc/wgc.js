@@ -107,6 +107,7 @@ class WarpGateCommand extends EffectableEntity {
     this.teams = Array.from({ length: 4 }, () => Array(4).fill(null));
     this.operations = Array.from({ length: 4 }, () => ({
       active: false,
+      autoStart: false,
       progress: 0,
       timer: 0,
       difficulty: 0,
@@ -827,17 +828,49 @@ class WarpGateCommand extends EffectableEntity {
       if (readyToFinish) {
         this.finishOperation(idx);
         this.totalOperations += 1;
-        op.timer = 0;
-        op.progressSegmentStart = 0;
-        this.refreshOperationProgress(op, idx);
-        op.number = this.teamNextOperationNumber[idx];
-        this.teamNextOperationNumber[idx] += 1;
         this.applyInfirmaryOperationHeal(idx);
-        op.facilityRerolls = this.buildFacilityRerollPool();
-        op.criticalSuccessCount = 0;
-        op.criticalSuccessWeight = 0;
-        op.summary = operationStartText;
-        this.addLog(idx, `=== Operation #${op.number} ===`);
+        if (op.autoStart) {
+          op.timer = 0;
+          op.progressSegmentStart = 0;
+          op.number = this.teamNextOperationNumber[idx];
+          this.teamNextOperationNumber[idx] += 1;
+          op.eventQueue = this.generateOperationEvents(op, idx);
+          op.currentEventIndex = 0;
+          op.baseEventsTotal = 10;
+          op.baseEventsCompleted = 0;
+          this.resetBaseEventResults(op);
+          op.progressStartValue = 0;
+          op.progressTargetValue = 0;
+          op.progressIntervalStart = 0;
+          op.progressIntervalDuration = 0;
+          op.nextEvent = 60;
+          op.nextDifficultyModifier = 1;
+          op.nextArtifactModifier = 1;
+          op.facilityRerolls = this.buildFacilityRerollPool();
+          op.criticalSuccessCount = 0;
+          op.criticalSuccessWeight = 0;
+          op.summary = operationStartText;
+          this.addLog(idx, `=== Operation #${op.number} ===`);
+          this.refreshOperationProgress(op, idx);
+        } else {
+          op.active = false;
+          op.progress = 0;
+          op.timer = 0;
+          op.nextEvent = 60;
+          op.eventQueue = [];
+          op.currentEventIndex = 0;
+          op.baseEventsCompleted = 0;
+          op.progressStartValue = 0;
+          op.progressTargetValue = 0;
+          op.progressIntervalStart = 0;
+          op.progressIntervalDuration = 0;
+          op.progressSegmentStart = 0;
+          op.nextDifficultyModifier = 1;
+          op.nextArtifactModifier = 1;
+          op.criticalSuccessCount = 0;
+          op.criticalSuccessWeight = 0;
+          this.resetBaseEventResults(op);
+        }
       }
 
       op.progress = this.calculateOperationProgress(op);
@@ -1137,6 +1170,7 @@ class WarpGateCommand extends EffectableEntity {
       teams: this.teams.map(team => team.map(m => m ? m.toJSON() : null)),
       operations: this.operations.map(op => ({
         active: op.active,
+        autoStart: op.autoStart === true,
         progress: op.progress,
         timer: op.timer,
         difficulty: op.difficulty,
@@ -1207,6 +1241,7 @@ class WarpGateCommand extends EffectableEntity {
       const op = opData[i] || {};
       return {
         active: !!op.active,
+        autoStart: op.autoStart === true,
         progress: op.progress || 0,
         timer: op.timer || 0,
         difficulty: op.difficulty || 0,

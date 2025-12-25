@@ -217,4 +217,42 @@ describe('WarpGateCommand operation queue', () => {
     });
     expect(challengeSummary).toContain('Barracks XP x10');
   });
+
+  test('operations stop after completion when auto-start is disabled', () => {
+    const wgc = new WarpGateCommand();
+    fillTeam(wgc, 0);
+    Math.random = () => 0.1;
+    expect(wgc.startOperation(0, 0)).toBe(true);
+
+    const op = wgc.operations[0];
+    op.autoStart = false;
+    op.currentEventIndex = op.eventQueue.length;
+    op.timer = 600;
+
+    wgc.update(0);
+
+    expect(op.active).toBe(false);
+    expect(op.summary).toContain('Complete');
+  });
+
+  test('operations auto-start when auto-start is enabled', () => {
+    const wgc = new WarpGateCommand();
+    fillTeam(wgc, 0);
+    Math.random = () => 0.1;
+    expect(wgc.startOperation(0, 0)).toBe(true);
+
+    const op = wgc.operations[0];
+    op.autoStart = true;
+    const nextNumber = wgc.teamNextOperationNumber[0];
+    op.currentEventIndex = op.eventQueue.length;
+    op.timer = 600;
+
+    wgc.update(0);
+
+    expect(op.active).toBe(true);
+    expect(op.summary).toBe('Setting out through Warp Gate');
+    expect(op.number).toBe(nextNumber);
+    expect(op.eventQueue.length).toBe(10);
+    expect(op.currentEventIndex).toBe(0);
+  });
 });
