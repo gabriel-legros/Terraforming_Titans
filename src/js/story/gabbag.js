@@ -201,7 +201,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 28,
     activePlanet: 'gabbag',
-    narrative: "Bob : 'You two are making pretty good progress on this clean-up.  It... reminds me of PANDORA again.' \n Mary : 'How come?'  \n Bob : 'Microplastics.  The evidence was not 100% conclusive on it being harmful but PANDORA did not care anyway.  It did not like microplastics.  It went on a very big cleaning spree at some point.  It's part of the reason we don't use plastics anymore.'  \n Mary : 'There are so few people remaining who were there back then, relatively speaking.  Thanks for the story Bob.'",
+    narrative: "Bob : 'You two are making pretty good progress on this clean-up.  It... reminds me of PANDORA again.' \n Mary : 'How come?'  \n Bob : 'Microplastics.  The evidence was not 100% conclusive on it being harmful but PANDORA did not care anyway.  It did not like microplastics.  It went on a very big cleaning spree at some point.  It used these little cleaning bot with a cube body and big binocular eyes to compact stuff.  Everyone loved them.  It's part of the reason we don't use plastics anymore.' \n Mary : 'There are so few people remaining who were there back then, relatively speaking.  Thanks for the story Bob.'",
     prerequisites: ['gabbag.28.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
