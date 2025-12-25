@@ -239,7 +239,8 @@ function getMaxStashAmount(resource, project, manager) {
   const storageAvailable = storageProj && storageProj.getAvailableStoredResource
     ? storageProj.getAvailableStoredResource(resource)
     : 0;
-  const total = manager.prioritizeSpaceStorage ? storageAvailable + colonyAvailable : colonyAvailable + storageAvailable;
+  const prioritize = manager.getPrioritizeSpaceStorage();
+  const total = prioritize ? storageAvailable + colonyAvailable : colonyAvailable + storageAvailable;
   return Math.min(remaining, total);
 }
 
@@ -948,7 +949,7 @@ function renderStash(project, manager) {
     const planned = active ? Math.min(step, remaining) : step;
     const payload = resource === 'metal' ? { metal: planned } : { silicon: planned };
     const canAfford = active && planned > 0 && manager
-      ? manager.canCoverCost(payload, manager.prioritizeSpaceStorage)
+      ? manager.canCoverCost(payload)
       : false;
     const maxAmount = active ? getMaxStashAmount(resource, project, manager) : 0;
     const cappedOut = active && remaining === 0;
@@ -1087,7 +1088,7 @@ function renderStartButton(project, manager, preview) {
     return;
   }
   const { cost } = preview;
-  const canAfford = manager.canCoverCost(cost, manager.prioritizeSpaceStorage);
+  const canAfford = manager.canCoverCost(cost);
   const durationBlocked = preview.exceedsLimit;
   btn.disabled = durationBlocked || !canAfford || artificialUICache.type.value !== 'shell';
   if (durationBlocked) {
@@ -1212,7 +1213,7 @@ function updateArtificialUI(options = {}) {
   applyStarContextBounds();
   applyRadiusBounds();
   if (artificialUICache.priority) {
-    artificialUICache.priority.checked = manager.prioritizeSpaceStorage;
+    artificialUICache.priority.checked = manager.getPrioritizeSpaceStorage();
   }
 
   if (!project) {

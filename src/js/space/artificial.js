@@ -299,7 +299,14 @@ class ArtificialManager extends EffectableEntity {
     }
 
     setPrioritizeSpaceStorage(value) {
-        this.prioritizeSpaceStorage = !!value;
+        const checked = !!value;
+        const storageProj = projectManager?.projects?.spaceStorage;
+        storageProj && (storageProj.prioritizeMegaProjects = checked);
+        this.prioritizeSpaceStorage = checked;
+    }
+
+    getPrioritizeSpaceStorage() {
+        return projectManager?.projects?.spaceStorage?.prioritizeMegaProjects ?? this.prioritizeSpaceStorage;
     }
 
     createSeed() {
@@ -307,7 +314,7 @@ class ArtificialManager extends EffectableEntity {
         return `A-${id}`;
     }
 
-    canCoverCost(cost, prioritizeStorage = this.prioritizeSpaceStorage) {
+    canCoverCost(cost, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const useStorage = !!storageProj;
         for (const key of Object.keys(cost)) {
@@ -327,7 +334,7 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
-    pullResources(cost, prioritizeStorage = this.prioritizeSpaceStorage) {
+    pullResources(cost, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const useStorage = !!storageProj;
         const plan = {};
@@ -399,10 +406,10 @@ class ArtificialManager extends EffectableEntity {
       if (this.exceedsDurationLimit(durationContext.durationMs)) {
         return false;
       }
-      if (!this.canCoverCost(cost, this.prioritizeSpaceStorage)) {
+      if (!this.canCoverCost(cost)) {
         return false;
       }
-      const deduction = this.pullResources(cost, this.prioritizeSpaceStorage);
+      const deduction = this.pullResources(cost);
       if (!deduction) return false;
 
       const areaHa = this.calculateAreaHectares(radiusEarth);
@@ -494,7 +501,7 @@ class ArtificialManager extends EffectableEntity {
         return Math.max(0, landHa || 0);
     }
 
-    addStockpile(payload, prioritizeStorage = this.prioritizeSpaceStorage) {
+    addStockpile(payload, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         if (!this.activeProject) return false;
         const amounts = {
             metal: Math.max(payload?.metal || 0, 0),
@@ -545,7 +552,7 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
-    addInitialDeposit(payload, prioritizeStorage = this.prioritizeSpaceStorage) {
+    addInitialDeposit(payload, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         return this.addStockpile(payload, prioritizeStorage);
     }
 
