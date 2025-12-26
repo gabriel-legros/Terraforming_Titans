@@ -726,6 +726,19 @@ function initializeMirrorOversightUI(container) {
       </div>
     </div>
   `;
+  const targetsHeaderRow = advancedControls.firstElementChild;
+  const setLifeOptimalButton = document.createElement('button');
+  setLifeOptimalButton.id = 'adv-set-life-optimal';
+  setLifeOptimalButton.type = 'button';
+  setLifeOptimalButton.textContent = 'Sets all Targets to Day and Life Optimal Temperature';
+  setLifeOptimalButton.style.fontSize = '12px';
+  setLifeOptimalButton.style.padding = '2px 6px';
+  setLifeOptimalButton.style.marginLeft = '8px';
+  targetsHeaderRow.style.display = 'flex';
+  targetsHeaderRow.style.alignItems = 'center';
+  targetsHeaderRow.style.gap = '8px';
+  targetsHeaderRow.style.flexWrap = 'wrap';
+  targetsHeaderRow.appendChild(setLifeOptimalButton);
   // Append Targets & Priority below the checkboxes (after lantern-div)
   cardBody.appendChild(advancedControls);
 
@@ -762,6 +775,22 @@ function initializeMirrorOversightUI(container) {
     temperate: div.querySelector('#adv-timing-temperate'),
     polar: div.querySelector('#adv-timing-polar'),
   };
+  setLifeOptimalButton.addEventListener('click', () => {
+    const requirements = getActiveLifeDesignRequirements();
+    const optimalK = requirements.optimalGrowthTemperatureBaseK + lifeDesigner.currentDesign.optimalGrowthTemperature.value;
+    const displayValue = gameSettings.useCelsius ? optimalK - 273.15 : optimalK;
+    const formattedValue = displayValue.toFixed(2);
+    mirrorOversightSettings.targets.tropical = optimalK;
+    mirrorOversightSettings.targets.temperate = optimalK;
+    mirrorOversightSettings.targets.polar = optimalK;
+    mirrorOversightSettings.tempMode = { tropical: 'day', temperate: 'day', polar: 'day' };
+    advInputs.tropical.value = formattedValue;
+    advInputs.temperate.value = formattedValue;
+    advInputs.polar.value = formattedValue;
+    advTiming.tropical.value = 'day';
+    advTiming.temperate.value = 'day';
+    advTiming.polar.value = 'day';
+  });
   Object.keys(advInputs).forEach(k => {
     const el = advInputs[k];
     if (!el) return;
