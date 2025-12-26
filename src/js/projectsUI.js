@@ -922,11 +922,17 @@ function updateProjectUI(projectName) {
       // Update the duration in the progress bar display
       const isContinuousProject = project.isContinuous();
       if (isContinuousProject) {
+        const showProductivity = project.attributes?.continuousAsBuilding;
+        const productivity = project.continuousProductivity ?? 1;
+        const productivityLabel = showProductivity
+          ? ` (${Math.round(productivity * 100)}% productivity)`
+          : '';
         if (project.autoStart && project.isActive && !project.isPaused) {
+          const statusText = `Continuous${productivityLabel}`;
           if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, 'Continuous');
+            importUI.setProgressLabel(elements, project, statusText);
           } else {
-            elements.progressButton.textContent = 'Continuous';
+            elements.progressButton.textContent = statusText;
           }
           elements.progressButton.style.background = '#4caf50';
         } else {

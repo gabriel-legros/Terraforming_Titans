@@ -86,6 +86,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceExport : true,
+      continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 10000000000}},
       disposable : {colony : ['metal']},
       defaultDisposal : {category : 'colony', resource : 'metal'},
@@ -224,6 +225,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {colony: {metal : 500000}}
     }
@@ -240,6 +242,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {colony: {silicon : 500000}}
     }
@@ -256,6 +259,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}},
       maxPressure: 0.01,
@@ -274,6 +278,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      continuousAsBuilding: true,
       dynamicWaterImport: true,
       maxWaterCoverage: 0.2,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
@@ -292,6 +297,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {atmospheric: {inertGas : 1000000}},
       maxPressure: 75
@@ -309,6 +315,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining: true,
+      continuousAsBuilding: true,
       costPerShip: { colony: { metal: 100000, energy: 100000000000 } },
       resourceGainPerShip: { atmospheric: { hydrogen: 1000000 } },
       maxPressure: 75
@@ -616,6 +623,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceExport : true,
+      continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 10000000000}},
       disposable : {surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas', 'atmosphericMethane', 'hydrogen', 'sulfuricAcid']},
       massDriverShipEquivalency: 10,

@@ -486,6 +486,10 @@ if (typeof globalThis !== 'undefined') {
   globalThis.reconcileLandResourceValue = reconcileLandResourceValue;
 }
 
+const shouldTreatProjectAsBuilding = (project) =>
+  project?.treatAsBuilding ||
+  (project?.isContinuous() && project?.attributes?.continuousAsBuilding);
+
 function calculateProductionRates(deltaTime, buildings) {
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
@@ -544,8 +548,8 @@ function calculateProductionRates(deltaTime, buildings) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
-      if (project && project.treatAsBuilding && typeof project.estimateCostAndGain === 'function') {
-        project.estimateCostAndGain(deltaTime, true);
+      if (shouldTreatProjectAsBuilding(project)) {
+        project.estimateCostAndGain(deltaTime, true, 1);
       }
     }
   }
@@ -647,10 +651,8 @@ function produceResources(deltaTime, buildings) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
-      if (project && project.treatAsBuilding && typeof project.applyCostAndGain === 'function') {
-        if (typeof project.estimateCostAndGain === 'function') {
-          project.estimateCostAndGain(deltaTime, true, 1);
-        }
+      if (project && project.treatAsBuilding) {
+        project.estimateCostAndGain(deltaTime, true, 1);
         project.applyCostAndGain(deltaTime, accumulatedChanges, 1);
       }
     }
@@ -713,22 +715,34 @@ function produceResources(deltaTime, buildings) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
-      if (typeof project.estimateCostAndGain !== 'function' || typeof project.applyCostAndGain !== 'function') {
-        continue;
-      }
       const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
       projectData[name] = { project, cost, gain };
     }
     const productivityMap = calculateProjectProductivities(resources, accumulatedChanges, projectData);
-    for (const name of names) {
-      const data = projectData[name];
-      if (!data || data.project.treatAsBuilding) continue;
+    const projectEntries = Object.entries(projectData);
+    for (const [name, data] of projectEntries) {
+      const productivity = productivityMap[name] ?? 1;
+      data.project.continuousProductivity = data.project.isContinuous() ? productivity : 1;
+    }
+    for (const [, data] of projectEntries) {
       const { project } = data;
-      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
+      if (!project.isContinuous() || !project.attributes?.continuousAsBuilding) {
         continue;
       }
-//      const productivity = productivityMap[name] ?? 1;
-      const productivity = 1;
+      const productivity = project.continuousProductivity;
+      if (project.autoStart === false) {
+        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+        continue;
+      }
+      project.estimateCostAndGain(deltaTime, true, productivity);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+    }
+    for (const [, data] of projectEntries) {
+      const { project } = data;
+      if (project.attributes?.continuousAsBuilding && project.isContinuous()) {
+        continue;
+      }
+      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
       if (project.autoStart === false) {
         project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
         continue;
