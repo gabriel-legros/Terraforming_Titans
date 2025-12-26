@@ -12,6 +12,7 @@ class Building extends EffectableEntity {
     this.count = 0;
     this.active = 0;
     this.productivity = 0;
+    this.displayProductivity = 0;
     this.isHidden = false; // track whether the building is hidden in the UI
     this.alertedWhenUnlocked = this.unlocked ? true : false;
 
@@ -73,6 +74,7 @@ class Building extends EffectableEntity {
         autoBuildMaxOption,
         snapProductivity,
         displayConsumptionAtMaxProductivity,
+        ignoreResourceForProductivityResourceDisplay,
         alwaysShowProduction,
         alwaysShowConsumption
       } = config;
@@ -97,6 +99,7 @@ class Building extends EffectableEntity {
       this.requiresLand = requiresLand;
       this.snapProductivity = !!snapProductivity;
       this.displayConsumptionAtMaxProductivity = !!displayConsumptionAtMaxProductivity;
+      this.ignoreResourceForProductivityResourceDisplay = ignoreResourceForProductivityResourceDisplay || null;
       this.alwaysShowProduction = !!alwaysShowProduction;
       this.alwaysShowConsumption = !!alwaysShowConsumption;
       this.powerPerBuilding = config.powerPerBuilding;
@@ -719,13 +722,18 @@ class Building extends EffectableEntity {
   }
 
   // Method to calculate the base minRatio based on resource consumption and worker availability
-  calculateBaseMinRatio(resources, deltaTime) {
+  calculateBaseMinRatio(resources, deltaTime, ignoreMap) {
     let minRatio = Infinity;
+    const ignore = ignoreMap || {};
 
     // Calculate minRatio based on resource consumption
     const consumption = this.getConsumption();
     for (const category in consumption) {
+      const ignoreCategory = ignore[category] || {};
       for (const resource in consumption[category]) {
+        if (ignoreCategory[resource]) {
+          continue;
+        }
         const requiredAmount = resources[category][resource].consumptionRate * (deltaTime / 1000);
         if (requiredAmount === 0) continue;
         const availableAmount = resources[category][resource].value + resources[category][resource].productionRate * (deltaTime / 1000);
@@ -789,6 +797,15 @@ class Building extends EffectableEntity {
     return { targetProductivity, hasAtmosphericOversight, computeMaxProduction, solveRequired };
   }
 
+  applyProductivityDamping(current, target) {
+    if (Math.abs(target - current) < 0.001) {
+      return target;
+    }
+    const difference = Math.abs(target - current);
+    const dampingFactor = difference < 0.01 ? 0.01 : 0.1;
+    return current + dampingFactor * (target - current);
+  }
+
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
 
@@ -796,10 +813,22 @@ class Building extends EffectableEntity {
       resources,
       deltaTime
     );
+    const displayTarget = Math.max(
+      0,
+      Math.min(
+        1,
+        this.calculateBaseMinRatio(
+          resources,
+          deltaTime,
+          this.ignoreResourceForProductivityResourceDisplay
+        )
+      )
+    );
 
     if (this.active === 0) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
+      this.displayProductivity = 0;
       return;
     }
 
@@ -807,16 +836,12 @@ class Building extends EffectableEntity {
 
     if (this.snapProductivity) {
       this.productivity = targetProductivity;
+      this.displayProductivity = displayTarget;
       return;
     }
 
-    if (Math.abs(targetProductivity - this.productivity) < 0.001) {
-      this.productivity = targetProductivity;
-    } else {
-      const difference = Math.abs(targetProductivity - this.productivity);
-      const dampingFactor = difference < 0.01 ? 0.01 : 0.1; // Use smaller damping if close to target
-      this.productivity += dampingFactor * (targetProductivity - this.productivity);
-    }
+    this.productivity = this.applyProductivityDamping(this.productivity, targetProductivity);
+    this.displayProductivity = this.applyProductivityDamping(this.displayProductivity, displayTarget);
   }
 
   // Updated produce function to track production rates
@@ -826,6 +851,9 @@ class Building extends EffectableEntity {
       return; // Skip normal production entirely while reversed
     }
     const effectiveMultiplier = this.getEffectiveProductionMultiplier();
+    const displayProductivity = this.ignoreResourceForProductivityResourceDisplay
+      ? this.displayProductivity
+      : this.productivity;
 
     // Calculate production using effectiveMultiplier and accumulate changes
     for (const category in this.production) {
@@ -836,6 +864,7 @@ class Building extends EffectableEntity {
       for (const resource in this.production[category]) {
         const baseProduction = this.active * this.production[category][resource] * effectiveMultiplier * this.getEffectiveResourceProductionMultiplier(category, resource);
         const scaledProduction = baseProduction * this.productivity * (deltaTime / 1000);
+        const displayProduction = baseProduction * displayProductivity * (deltaTime / 1000);
 
         // Track actual production in the building
         this.currentProduction[category][resource] = scaledProduction;
@@ -845,7 +874,7 @@ class Building extends EffectableEntity {
 
         // Update production rate for the resource
         resources[category][resource].modifyRate(
-          scaledProduction * (1000 / deltaTime),
+          displayProduction * (1000 / deltaTime),
           this.displayName,
           'building'
         );
@@ -857,6 +886,9 @@ class Building extends EffectableEntity {
   consume(accumulatedChanges, deltaTime) {
     const effectiveConsumptionMultiplier = this.getEffectiveConsumptionMultiplier();
     const effectiveProductionMultiplier = this.getEffectiveProductionMultiplier();
+    const displayProductivity = this.ignoreResourceForProductivityResourceDisplay
+      ? this.displayProductivity
+      : this.productivity;
 
     this.currentConsumption = {}; // Reset current consumption
 
@@ -871,12 +903,13 @@ class Building extends EffectableEntity {
         // Use PRODUCTION multipliers for reversal (boosts that normally increase output should increase reverse consumption)
         const baseConsumption = this.active * prodPerSec * this.getEffectiveResourceProductionMultiplier(target.category, target.resource);
         const scaled = baseConsumption * this.productivity * (deltaTime / 1000) * effectiveProductionMultiplier;
+        const displayScaled = baseConsumption * displayProductivity * (deltaTime / 1000) * effectiveProductionMultiplier;
 
         // Track in currentConsumption and rates
         this.currentConsumption[target.category][target.resource] = (this.currentConsumption[target.category][target.resource] || 0) + scaled;
         accumulatedChanges[target.category][target.resource] = (accumulatedChanges[target.category][target.resource] || 0) - scaled;
         resources[target.category][target.resource].modifyRate(
-          -scaled * (1000 / deltaTime),
+          -displayScaled * (1000 / deltaTime),
           this.displayName,
           'building'
         );
@@ -902,6 +935,8 @@ class Building extends EffectableEntity {
         const baseConsumption = this.active * amount * effectiveConsumptionMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const productFactor = ignoreProductivity ? 1 : this.productivity;
         const scaledConsumption = baseConsumption * productFactor * (deltaTime / 1000);
+        const displayFactor = ignoreProductivity ? 1 : displayProductivity;
+        const displayConsumption = baseConsumption * displayFactor * (deltaTime / 1000);
 
         // Track actual consumption in the building
         this.currentConsumption[category][resource] = scaledConsumption;
@@ -911,7 +946,7 @@ class Building extends EffectableEntity {
 
         // Update consumption rate for the resource
         resources[category][resource].modifyRate(
-          -scaledConsumption * (1000 / deltaTime),
+          -displayConsumption * (1000 / deltaTime),
           this.displayName,
           'building'
         );
@@ -922,12 +957,16 @@ class Building extends EffectableEntity {
   applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime) {
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentMaintenance = {}; // Reset current maintenance
+    const displayProductivity = this.ignoreResourceForProductivityResourceDisplay
+      ? this.displayProductivity
+      : this.productivity;
 
     // Calculate maintenance and accumulate changes
     for (const resource in this.maintenanceCost) {
       if (resources.colony[resource]) {
         const baseMaintenanceCost = this.maintenanceCost[resource] * this.active;
         const maintenanceCost = baseMaintenanceCost * (deltaTime / 1000) * this.productivity;
+        const displayMaintenanceCost = baseMaintenanceCost * (deltaTime / 1000) * displayProductivity;
 
         // Track current maintenance in the building
         this.currentMaintenance[resource] = maintenanceCost;
@@ -937,7 +976,7 @@ class Building extends EffectableEntity {
 
         // Update consumption rate for maintenance costs
         resources['colony'][resource].modifyRate(
-          -(maintenanceCost * (1000 / deltaTime)),
+          -(displayMaintenanceCost * (1000 / deltaTime)),
           this.displayName,
           'building'
         );
@@ -954,6 +993,7 @@ class Building extends EffectableEntity {
 
             // Apply conversion by adding the scaled maintenance cost to the target resource
             const convertedAmount = maintenanceCost * conversionValue;
+            const displayConvertedAmount = displayMaintenanceCost * conversionValue;
 
             if (resources[targetCategory] && resources[targetCategory][targetResourceName]) {
               accumulatedChanges[targetCategory][targetResourceName] = 
@@ -961,7 +1001,7 @@ class Building extends EffectableEntity {
 
               // Update production rate for the converted resource
               resources[targetCategory][targetResourceName].modifyRate(
-                convertedAmount * (1000 / deltaTime),
+                displayConvertedAmount * (1000 / deltaTime),
                 this.displayName,
                 'building'
               );

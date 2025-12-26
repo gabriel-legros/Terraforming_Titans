@@ -595,6 +595,7 @@ function produceResources(deltaTime, buildings) {
     // Set productivity to 0 if it's nighttime and the building is inactive during the night
     if (!isDay && building.dayNightActivity) {
       building.productivity = 0;
+      building.displayProductivity = 0;
     } else {
       // Otherwise, update productivity as usual
       building.updateProductivity(resources, deltaTime);

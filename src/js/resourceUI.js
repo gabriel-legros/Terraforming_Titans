@@ -1,5 +1,5 @@
 const wasteResourceNames = new Set(['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']);
-const wasteTooltipNoteText = 'Waste processing buildings display their consumption at 100% productivity.  The numbers here are not their actual consumption.';
+const wasteTooltipNoteText = 'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages.  The numbers here are not their actual consumption.';
 
 function isWasteResource(resourceName) {
   return wasteResourceNames.has(resourceName);
@@ -1000,7 +1000,10 @@ function getDisplayConsumptionRates(resource) {
     const baseRate = building.active * amount * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(resource.category, resource.name);
     const sourceName = building.displayName || name;
     const current = adjustedBySource[sourceName] || 0;
-    const displayRate = ignoreProductivity ? current : baseRate;
+    const displayFactor = building.ignoreResourceForProductivityResourceDisplay
+      ? building.displayProductivity
+      : 1;
+    const displayRate = ignoreProductivity ? current : baseRate * displayFactor;
     if (displayRate !== current) {
       adjustedBySource[sourceName] = displayRate;
       total += displayRate - current;

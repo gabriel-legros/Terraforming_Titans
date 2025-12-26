@@ -210,6 +210,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a muted looping silent audio track to keep the tab active for testing purposes.
 - Replaced the silent keep-tab-running track with the new `assets/white_noise/weak_white_noise_-60dBFS_60s_22k.wav` loop (with the old data URI as a fallback) so Chrome/Edge can keep the tab alive.
 - Waste processing buildings now snap their productivity to trend values instead of easing in.
+- Waste processing resource displays now ignore waste input shortages while still respecting staffing and power limits.
 - Added an Industrial Waste Processing research gated by the Gabbag chapter 29.8 flag that unlocks all waste buildings and enables scrap metal and junk.
 - Added a Waste Workforce Automation research that reduces waste building worker requirements by 20% for 200k research points once the Gabbag waste processing flag is set.
 - Hydrology surface flow now freezes liquid that enters sub-freezing zones, converting it to surface ice (FreezeOut) and reporting a dedicated **Freeze Out** resource rate entry.
