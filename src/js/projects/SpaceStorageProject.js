@@ -23,6 +23,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.prioritizeMegaProjects = false;
     this.waterWithdrawTarget = 'colony';
     this.strategicReserve = 0;
+    this.usedStorageResyncTimer = 0;
   }
 
   getDurationWithTerraformBonus(baseDuration) {
@@ -97,6 +98,45 @@ class SpaceStorageProject extends SpaceshipProject {
       if (zoneData) {
         zoneData.biomass = (zoneData.biomass || 0) + add;
       }
+    });
+    terraforming.synchronizeGlobalResources();
+    return amount;
+  }
+
+  getLiquidWaterZones() {
+    const zones = ZONES;
+    const entries = zones.map(zone => ({
+      zone,
+      amount: terraforming.zonalWater[zone].liquid || 0,
+      percentage: getZonePercentage(zone) || 0
+    }));
+    const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
+    return { entries, total };
+  }
+
+  removeLiquidWaterFromZones(amount) {
+    if (amount <= 0) return 0;
+    const { entries, total } = this.getLiquidWaterZones();
+    if (total <= 0) return 0;
+    const requested = Math.min(amount, total);
+    entries.forEach(entry => {
+      if (entry.amount <= 0) return;
+      const take = requested * (entry.amount / total);
+      const zoneData = terraforming.zonalWater[entry.zone];
+      zoneData.liquid = Math.max(0, zoneData.liquid - take);
+    });
+    terraforming.synchronizeGlobalResources();
+    return requested;
+  }
+
+  addLiquidWaterToZones(amount) {
+    if (amount <= 0) return 0;
+    const zones = ZONES;
+    const weights = zones.map(zone => getZonePercentage(zone) || 0);
+    const totalWeight = weights.reduce((sum, value) => sum + value, 0) || zones.length;
+    zones.forEach((zone, index) => {
+      const portion = amount * (weights[index] / totalWeight);
+      terraforming.zonalWater[zone].liquid += portion;
     });
     terraforming.synchronizeGlobalResources();
     return amount;
@@ -286,6 +326,12 @@ class SpaceStorageProject extends SpaceshipProject {
         if (amount > 0) {
           if (r.resource === 'biomass') {
             const removed = simulate ? amount : this.removeBiomassFromZones(amount);
+            if (removed > 0) {
+              total += removed;
+              transfers.push({ mode: 'store', category: r.category, resource: r.resource, amount: removed });
+            }
+          } else if (r.resource === 'liquidWater') {
+            const removed = simulate ? amount : this.removeLiquidWaterFromZones(amount);
             if (removed > 0) {
               total += removed;
               transfers.push({ mode: 'store', category: r.category, resource: r.resource, amount: removed });
@@ -550,6 +596,9 @@ class SpaceStorageProject extends SpaceshipProject {
         if (t.resource === 'biomass') {
           this.addBiomassToZones(t.amount);
           resources.surface.biomass?.modifyRate(rate, 'Space storage transfer', 'project');
+        } else if (t.resource === 'liquidWater' && t.category === 'surface') {
+          this.addLiquidWaterToZones(t.amount);
+          resources.surface.liquidWater.modifyRate(rate, 'Space storage transfer', 'project');
         } else {
           const res = resources[t.category][t.resource];
           res.increase(t.amount);
@@ -560,6 +609,13 @@ class SpaceStorageProject extends SpaceshipProject {
           const removed = this.removeBiomassFromZones(t.amount);
           if (removed > 0) {
             resources.surface.biomass?.modifyRate(-removed / (deltaTime / 1000), 'Space storage transfer', 'project');
+            this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + removed;
+            this.usedStorage += removed;
+          }
+        } else if (t.resource === 'liquidWater' && t.category === 'surface') {
+          const removed = this.removeLiquidWaterFromZones(t.amount);
+          if (removed > 0) {
+            resources.surface.liquidWater.modifyRate(-removed / (deltaTime / 1000), 'Space storage transfer', 'project');
             this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + removed;
             this.usedStorage += removed;
           }
@@ -586,6 +642,12 @@ class SpaceStorageProject extends SpaceshipProject {
           if (!this.shipOperationAutoStart && durationSeconds > 0) {
             const rate = t.amount / durationSeconds;
             resources.surface.biomass?.modifyRate(rate, 'Space storage transfer', 'project');
+          }
+        } else if (t.resource === 'liquidWater' && t.category === 'surface') {
+          this.addLiquidWaterToZones(t.amount);
+          if (!this.shipOperationAutoStart && durationSeconds > 0) {
+            const rate = t.amount / durationSeconds;
+            resources.surface.liquidWater.modifyRate(rate, 'Space storage transfer', 'project');
           }
         } else {
           const res = resources[t.category][t.resource];
@@ -770,6 +832,11 @@ class SpaceStorageProject extends SpaceshipProject {
 
   update(deltaTime) {
     super.update(deltaTime);
+    this.usedStorageResyncTimer += deltaTime;
+    while (this.usedStorageResyncTimer >= 1000) {
+      this.usedStorageResyncTimer -= 1000;
+      this.usedStorage = Object.values(this.resourceUsage).reduce((sum, amount) => sum + amount, 0);
+    }
     if (this.isShipOperationContinuous()) {
       if (this.shipOperationAutoStart) {
         this.applyContinuousShipOperation(deltaTime);
