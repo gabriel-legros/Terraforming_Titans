@@ -197,11 +197,25 @@
     const { meanTemperatureK, minTemperatureK, maxTemperatureK, surfacePressureKPa, co2PressureKPa, isLiquidWorld } = safeContext;
 
     const entry = hazardous.temperaturePreference || {};
+    const ensureTemperatureRange = (minValue, maxValue) => {
+      const width = maxValue - minValue;
+      if (width >= 80) {
+        return { min: minValue, max: maxValue };
+      }
+      const pad = (80 - width) / 2;
+      const min = Math.max(0, minValue - pad);
+      const max = maxValue + pad;
+      if ((max - min) >= 80) {
+        return { min, max };
+      }
+      return { min, max: min + 80 };
+    };
     const minTemp = Number.isFinite(minTemperatureK) ? minTemperatureK : null;
     const maxTemp = Number.isFinite(maxTemperatureK) ? maxTemperatureK : null;
     if (Number.isFinite(minTemp) && Number.isFinite(maxTemp)) {
-      const min = Math.max(0, Math.min(minTemp, maxTemp));
-      const max = Math.max(min, Math.max(minTemp, maxTemp));
+      const rawMin = Math.max(0, Math.min(minTemp, maxTemp));
+      const rawMax = Math.max(rawMin, Math.max(minTemp, maxTemp));
+      const { min, max } = ensureTemperatureRange(rawMin, rawMax);
       const rangeWidth = Math.max(max - min, 1);
       const severityScale = 0.4 / rangeWidth;
       hazardous.temperaturePreference = {
@@ -214,8 +228,9 @@
       };
     } else if (Number.isFinite(meanTemperatureK)) {
       const radius = Math.max(Math.abs(meanTemperatureK) * 0.1, 30);
-      const min = Math.max(0, meanTemperatureK - radius);
-      const max = Math.max(min, meanTemperatureK + radius);
+      const rawMin = Math.max(0, meanTemperatureK - radius);
+      const rawMax = Math.max(rawMin, meanTemperatureK + radius);
+      const { min, max } = ensureTemperatureRange(rawMin, rawMax);
       const rangeWidth = Math.max(max - min, 1);
       const severityScale = 0.4 / rangeWidth;
       hazardous.temperaturePreference = {
