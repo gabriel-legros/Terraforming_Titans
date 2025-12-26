@@ -1075,10 +1075,17 @@ const researchParameters = {
       {
         id: 'terraforming_bureau',
         name: 'Terraforming Bureau',
-        description: 'Establishes oversight to automatically halt GHG factories at a chosen temperature and oxygen factories when O₂ pressure is too high.',
+        description: 'Establishes oversight to automatically halt GHG factories at a chosen temperature, oxygen factories when O₂ pressure is too high, and dust factories at a target rock albedo.',
         cost: { research: 10000000 },
         prerequisites: [],
         effects: [
+          {
+            target: 'building',
+            targetId: 'dustFactory',
+            type: 'booleanFlag',
+            flagId: 'terraformingBureauFeature',
+            value: true
+          },
           {
             target: 'building',
             targetId: 'ghgFactory',

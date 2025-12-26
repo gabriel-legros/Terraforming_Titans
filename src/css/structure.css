@@ -138,7 +138,8 @@
 
 .auto-build-input,
 .ghg-temp-input,
-.o2-pressure-input {
+.o2-pressure-input,
+.dust-albedo-input {
     width: 60px;
     text-align: right;
 }
@@ -213,7 +214,8 @@
 .auto-build-target-container,
 .auto-build-setactive-container,
 .ghg-temp-control,
-.o2-pressure-control {
+.o2-pressure-control,
+.dust-albedo-control {
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -240,7 +242,8 @@
 }
 
 .ghg-temp-control,
-.o2-pressure-control {
+.o2-pressure-control,
+.dust-albedo-control {
     display: flex;
     align-items: center;
     justify-content: flex-end;

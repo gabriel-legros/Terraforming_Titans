@@ -1035,6 +1035,7 @@ class Building extends EffectableEntity {
 const constructors = {
   oreMine: 'OreMine',
   sandQuarry: 'SandQuarry',
+  dustFactory: 'DustFactory',
   ghgFactory: 'GhgFactory',
   oxygenFactory: 'OxygenFactory',
   massDriver: 'MassDriver',

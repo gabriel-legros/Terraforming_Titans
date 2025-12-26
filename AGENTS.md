@@ -213,6 +213,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Waste processing resource displays now ignore waste input shortages while still respecting staffing and power limits.
 - Added an Industrial Waste Processing research gated by the Gabbag chapter 29.8 flag that unlocks all waste buildings and enables scrap metal and junk.
 - Added a Waste Workforce Automation research that reduces waste building worker requirements by 20% for 200k research points once the Gabbag waste processing flag is set.
+- Terraforming Bureau now unlocks dust factory automation that targets rock albedo and clamps production or reversal at the desired mix.
 - Hydrology surface flow now freezes liquid that enters sub-freezing zones, converting it to surface ice (FreezeOut) and reporting a dedicated **Freeze Out** resource rate entry.
 - Added Umbra story planet orbiting Nyx-13 with new post-Venus chapters and progression rewards.
 - Added a Dyson Sphere giga project with a persistent frame, 100x faster collector deployment, and a Giga subtab alongside mega projects.
