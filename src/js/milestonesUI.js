@@ -1,5 +1,7 @@
 let milestoneAlertNeeded = false;
 let lastCompletableCount = 0;
+let festivalContainerElement = null;
+let festivalCountdownElement = null;
 
 function getMilestoneSettings() {
     if (typeof gameSettings !== 'undefined') {
@@ -96,6 +98,14 @@ function createMilestonesUI() {
 
         currentRow.appendChild(button);
     });
+
+    festivalContainerElement = document.getElementById('festival-container');
+    festivalCountdownElement = document.getElementById('festival-countdown') || document.createElement('div');
+    festivalCountdownElement.className = 'festival-countdown';
+    festivalCountdownElement.id = 'festival-countdown';
+    festivalCountdownElement.hidden = true;
+    festivalCountdownElement.textContent = '';
+    festivalCountdownElement.isConnected || festivalContainerElement.appendChild(festivalCountdownElement);
 }
 
 function updateMilestonesUI() {
@@ -136,19 +146,15 @@ function updateMilestonesUI() {
         totalHappinessBonusElement.textContent = `${(milestonesManager.getHappinessBonus()).toFixed(2)}%`;
     }
 
-    if(milestonesManager.countdownActive){
-        if(!milestonesManager.countdownElement){
-            milestonesManager.countdownElement = document.createElement('div');
-            milestonesManager.countdownElement.className = 'festival-countdown';
-            document.getElementById('festival-container').appendChild(milestonesManager.countdownElement);
-        }
+    milestonesManager.countdownElement = festivalCountdownElement;
+    festivalCountdownElement.isConnected || festivalContainerElement.appendChild(festivalCountdownElement);
+    if (milestonesManager.countdownActive) {
         const seconds = Math.ceil(milestonesManager.countdownRemainingTime / 1000);
-        milestonesManager.countdownElement.textContent = `Festival 3x multiplier! ${seconds}s`;
+        festivalCountdownElement.textContent = `Festival 3x multiplier! ${seconds}s`;
+        festivalCountdownElement.hidden = false;
     } else {
-        if(milestonesManager.countdownElement){
-            milestonesManager.countdownElement.remove();
-            milestonesManager.countdownElement = null;
-        }
+        festivalCountdownElement.textContent = '';
+        festivalCountdownElement.hidden = true;
     }
 
     checkMilestoneAlert();
@@ -196,6 +202,18 @@ function markMilestonesViewed() {
     updateMilestoneAlert();
 }
 
+function clearFestivalNotification() {
+    milestoneAlertNeeded = false;
+    lastCompletableCount = 0;
+    milestonesManager.countdownActive = false;
+    milestonesManager.countdownRemainingTime = 0;
+    milestonesManager.countdownElement = festivalCountdownElement;
+    festivalCountdownElement.isConnected || festivalContainerElement.appendChild(festivalCountdownElement);
+    festivalCountdownElement.textContent = '';
+    festivalCountdownElement.hidden = true;
+    updateMilestoneAlert();
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { checkMilestoneAlert, updateMilestoneAlert, markMilestonesViewed };
+    module.exports = { checkMilestoneAlert, updateMilestoneAlert, markMilestonesViewed, clearFestivalNotification };
 }

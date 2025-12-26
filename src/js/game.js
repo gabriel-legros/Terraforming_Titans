@@ -408,6 +408,9 @@ function initializeGameState(options = {}) {
   }
 
   milestonesManager = new MilestonesManager();
+  if (preserveManagers) {
+    clearFestivalNotification();
+  }
   if (!preserveManagers || !galaxyManager) {
     galaxyManager = new GalaxyManager();
   }
