@@ -1938,7 +1938,6 @@ function createResourceStyleTooltip(doc) {
     const icon = doc.createElement('span');
     icon.className = 'info-tooltip-icon';
     icon.innerHTML = '&#9432;';
-    icon.title = 'Fleet capacity breakdown';
     const tooltip = doc.createElement('span');
     tooltip.className = 'resource-tooltip';
     icon.appendChild(tooltip);

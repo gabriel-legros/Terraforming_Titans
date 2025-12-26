@@ -1,5 +1,5 @@
 const wasteResourceNames = new Set(['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']);
-const wasteTooltipNoteText = 'Waste processing buildings display their consumption at 100% productivity';
+const wasteTooltipNoteText = 'Waste processing buildings display their consumption at 100% productivity.  The numbers here are not their actual consumption.';
 
 function isWasteResource(resourceName) {
   return wasteResourceNames.has(resourceName);
