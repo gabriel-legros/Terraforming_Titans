@@ -38,6 +38,21 @@ class NanotechManager extends EffectableEntity {
     };
   }
 
+  getExtraNanotechStages() {
+    let extraStages = 0;
+    this.booleanFlags.forEach((flag) => {
+      if (flag === 'stage1_enabled') return;
+      if (flag.startsWith('stage') && flag.endsWith('_enabled')) {
+        extraStages += 1;
+      }
+    });
+    return extraStages;
+  }
+
+  getTravelPreserveCap() {
+    const extraStages = this.getExtraNanotechStages();
+    return 1e15 * Math.pow(10, extraStages);
+  }
 
   getMaxNanobots() {
     if (typeof resources !== 'undefined' && resources.surface?.land) {
@@ -191,12 +206,9 @@ class NanotechManager extends EffectableEntity {
   }
 
   prepareForTravel() {
-    if(!isNaN(this.nanobots)){
-      this.nanobots = Math.min(this.nanobots, 1e15);
-    }
-    else{
-      this.nanobots = 1e15;
-    }
+    const travelCap = this.getTravelPreserveCap();
+    const capped = Math.min(Number(this.nanobots), travelCap);
+    this.nanobots = Math.max(1, capped) || travelCap;
   }
 
   applyMaintenanceEffects() {
@@ -314,7 +326,7 @@ class NanotechManager extends EffectableEntity {
               </div>
             </div>
           </div>
-          <p class="nanotech-hint">The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide ${formatNumber(1e15)} nanobots from the Dead Hand Protocol.</p>
+          <p class="nanotech-hint">The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide <span id="nanotech-travel-cap">${formatNumber(this.getTravelPreserveCap())}</span> nanobots from the Dead Hand Protocol <span class="info-tooltip-icon" title="Each nanocolony stage after Stage I multiplies the preserved amount by 10.">&#9432;</span>.</p>
           <div class="nanotech-stage">
             <div class="nanotech-stage-header">
               <h4>Stage I <span id="nanotech-stage1-warning" class="nanotech-stage-warning"></span></h4>
@@ -486,6 +498,9 @@ class NanotechManager extends EffectableEntity {
     if (C.capEl) {
       C.capEl.textContent = formatNumber(max, false, 2);
       C.capEl.style.color = this.nanobots >= max ? 'green' : '';
+    }
+    if (C.travelCapEl) {
+      C.travelCapEl.textContent = formatNumber(this.getTravelPreserveCap());
     }
     if (C.growthEl) {
       const baseOpt = 0.0025;
@@ -728,6 +743,7 @@ class NanotechManager extends EffectableEntity {
       stage2Container: qs('#nanotech-stage-2'),
       stage1WarningEl: qs('#nanotech-stage1-warning'),
       stage2WarningEl: qs('#nanotech-stage2-warning'),
+      travelCapEl: qs('#nanotech-travel-cap'),
     };
   }
 
@@ -740,6 +756,7 @@ class NanotechManager extends EffectableEntity {
       this.uiCache?.siliconRateEl,
       this.uiCache?.stage1WarningEl,
       this.uiCache?.stage2WarningEl,
+      this.uiCache?.travelCapEl,
     ];
     const needsRefresh = !this.uiCache ||
       this.uiCache.container !== container ||

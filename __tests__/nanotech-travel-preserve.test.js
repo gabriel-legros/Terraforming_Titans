@@ -1,6 +1,6 @@
 const { JSDOM } = require('jsdom');
 
-describe('Nanocolony energy allocation input', () => {
+describe('Nanocolony travel preservation', () => {
   const originalDocument = global.document;
   const originalWindow = global.window;
   const originalResources = global.resources;
@@ -18,17 +18,14 @@ describe('Nanocolony energy allocation input', () => {
     global.document = dom.window.document;
   };
 
-  beforeEach(() => {
-    jest.resetModules();
-    setUpDom();
-
+  const setUpGlobals = () => {
     global.formatNumber = (value) => String(value);
     global.resources = {
       surface: { land: { value: 1 } },
       colony: {},
     };
     global.buildings = {
-      sandQuarry: { hasSandAvailable: () => true }
+      sandQuarry: { hasSandAvailable: () => true },
     };
     global.currentPlanetParameters = {
       specialAttributes: { hasSand: true },
@@ -47,9 +44,14 @@ describe('Nanocolony energy allocation input', () => {
         return this.growthMultiplierOverride;
       }
     };
-
     global.parseFlexibleNumber = require('../src/js/numbers.js').parseFlexibleNumber;
     global.wireStringNumberInput = require('../src/js/ui-utils.js').wireStringNumberInput;
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    setUpDom();
+    setUpGlobals();
   });
 
   afterEach(() => {
@@ -75,80 +77,34 @@ describe('Nanocolony energy allocation input', () => {
     const manager = new NanotechManager();
     global.nanotechManager = manager;
     manager.enable();
-    const input = document.getElementById('nanotech-energy-limit');
-    const mode = document.getElementById('nanotech-energy-limit-mode');
-    return { manager, input, mode };
+    return manager;
   };
 
-  it('preserves the raw string while typing in percent mode', () => {
-    const { manager, input } = renderNanotech();
+  it('caps travel-preserved nanobots based on unlocked stages', () => {
+    const { NanotechManager } = require('../src/js/nanotech.js');
+    const manager = new NanotechManager();
 
-    input.focus();
-    input.value = '1e3';
-    input.dispatchEvent(new window.Event('input', { bubbles: true }));
+    manager.nanobots = 1e20;
+    manager.prepareForTravel();
+    expect(manager.nanobots).toBe(1e15);
 
-    expect(document.activeElement).toBe(input);
-    expect(input.value).toBe('1e3');
-    expect(manager.maxEnergyPercent).toBe(100);
+    manager.booleanFlags.add('stage2_enabled');
+    manager.nanobots = 1e20;
+    manager.prepareForTravel();
+    expect(manager.nanobots).toBe(1e16);
+  });
 
+  it('updates the travel preservation hint and tooltip with stage scaling', () => {
+    const manager = renderNanotech();
+    const travelCap = document.getElementById('nanotech-travel-cap');
+    expect(travelCap.textContent).toBe('1000000000000000');
+
+    const tooltip = document.querySelector('.nanotech-hint .info-tooltip-icon');
+    expect(tooltip).not.toBeNull();
+    expect(tooltip.title).toContain('Stage I');
+
+    manager.booleanFlags.add('stage2_enabled');
     manager.updateUI();
-    expect(input.value).toBe('1e3');
-
-    input.blur();
-    expect(input.value).toBe('100');
-  });
-
-  it('accepts flexible numbers in absolute mode and formats on blur', () => {
-    const { manager, input, mode } = renderNanotech();
-    global.formatNumber = (value) => `fmt:${value}`;
-
-    mode.value = 'absolute';
-    mode.dispatchEvent(new window.Event('change', { bubbles: true }));
-
-    input.focus();
-    input.value = '2.5M';
-    input.dispatchEvent(new window.Event('input', { bubbles: true }));
-
-    expect(input.value).toBe('2.5M');
-    expect(manager.maxEnergyAbsolute).toBe(2500000);
-
-    input.blur();
-    expect(input.value).toBe('fmt:2500000');
-  });
-
-  it('formats large absolute values when not focused', () => {
-    const { manager, input, mode } = renderNanotech();
-    global.formatNumber = (value) => `fmt:${value}`;
-
-    mode.value = 'absolute';
-    mode.dispatchEvent(new window.Event('change', { bubbles: true }));
-
-    input.value = '1e9';
-    input.dispatchEvent(new window.Event('input', { bubbles: true }));
-    input.blur();
-
-    expect(manager.maxEnergyAbsolute).toBe(1e9);
-    expect(input.value).toBe('fmt:1000000000');
-  });
-
-  it('defaults absolute mode to 1M watts', () => {
-    const { manager, input, mode } = renderNanotech();
-    global.formatNumber = (value) => `fmt:${value}`;
-
-    manager.maxEnergyAbsolute = 0;
-    mode.value = 'absolute';
-    mode.dispatchEvent(new window.Event('change', { bubbles: true }));
-
-    expect(manager.maxEnergyAbsolute).toBe(1000000);
-    expect(input.value).toBe('fmt:1000000');
-  });
-
-  it('shows raw to actual growth when a multiplier applies', () => {
-    const { manager } = renderNanotech();
-    manager.activeEffects = [{ type: 'nanoColonyGrowthMultiplier', value: 1.5 }];
-    manager.updateUI();
-
-    const growthEl = document.getElementById('nanobot-growth-rate');
-    expect(growthEl.textContent).toBe('0.250% -> 0.375%');
+    expect(travelCap.textContent).toBe('10000000000000000');
   });
 });
