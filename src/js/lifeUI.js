@@ -51,6 +51,16 @@ function buildMetabolismEfficiencyUIStrings() {
   return { displayName, description, equation, tooltipText };
 }
 
+function getOptimalGrowthTemperatureDescription() {
+  const requirements = getActiveLifeDesignRequirementsForUI();
+  const baseTemperature = formatNumber(
+    toDisplayTemperature(requirements.optimalGrowthTemperatureBaseK),
+    false,
+    2
+  );
+  return `Daytime temperature for peak growth. Costs 1 point per degree from the ${baseTemperature}${getTemperatureUnit()} base.`;
+}
+
 function ensureDynamicInfoTooltip(iconElement, cachedTooltip, text) {
   if (!iconElement) return null;
   const existing = cachedTooltip ?? iconElement.querySelector('.resource-tooltip.dynamic-tooltip');
@@ -256,6 +266,7 @@ function cacheLifeAttributeCells() {
       nameCell,
       displayNameSpan: nameCell ? nameCell.querySelector(`#${attributeName}-display-name`) : null,
       descriptionSpan: nameCell ? nameCell.querySelector(`#${attributeName}-metabolism-description`) : null,
+      attributeDescriptionSpan: nameCell ? nameCell.querySelector(`#${attributeName}-description`) : null,
       equationDiv: nameCell ? nameCell.querySelector(`#${attributeName}-growth-equation`) : null,
       tooltipIcon: nameCell ? nameCell.querySelector(`#${attributeName}-metabolism-tooltip`) : null,
       tooltipEl: nameCell ? nameCell.querySelector(`#${attributeName}-metabolism-tooltip .resource-tooltip.dynamic-tooltip`) : null,
@@ -457,8 +468,13 @@ function initializeLifeTerraformingDesignerUI() {
         const isBioworkforceRow = attributeName === 'bioworkforce';
         const bioworkforceRowHidden = isBioworkforceRow && !isBioworkforceUnlocked();
         const isMetabolismEfficiency = attributeName === 'photosynthesisEfficiency';
+        const isOptimalGrowthTemperature = attributeName === 'optimalGrowthTemperature';
         const displayName = isMetabolismEfficiency ? metabolismStrings.displayName : attribute.displayName;
-        const description = isMetabolismEfficiency ? metabolismStrings.description : attribute.description;
+        const description = isMetabolismEfficiency
+          ? metabolismStrings.description
+          : isOptimalGrowthTemperature
+            ? `<span id="${attributeName}-description">${getOptimalGrowthTemperatureDescription()}</span>`
+            : attribute.description;
         rows += `
           <tr id="life-attribute-row-${attributeName}"${isBioworkforceRow ? ' data-bioworkforce-ui="true"' : ''}${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
@@ -696,6 +712,7 @@ function updateLifeUI() {
 	    toggleBioworkforceElements(bioworkforceUnlocked);
 
       updateMetabolismEfficiencyRow();
+      updateOptimalGrowthTemperatureDescription();
 	    updateDesignValues();
 	    updatePointsDisplay();
     const biodomePointsSpan = document.getElementById('life-biodome-points');
@@ -872,6 +889,11 @@ function updateLifeUI() {
 	      if (cells.tooltipIcon) {
 	        cells.tooltipEl = ensureDynamicInfoTooltip(cells.tooltipIcon, cells.tooltipEl, strings.tooltipText);
 	      }
+	    }
+
+	    function updateOptimalGrowthTemperatureDescription() {
+	      const cells = lifeUICache.attributeCells.optimalGrowthTemperature;
+	      cells.attributeDescriptionSpan.textContent = getOptimalGrowthTemperatureDescription();
 	    }
 
 	    function updateDesignValues() {

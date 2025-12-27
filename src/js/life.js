@@ -208,7 +208,7 @@ class LifeDesign {
       'optimalGrowthTemperature',
       0,
       'Optimal Growth Temperature',
-      'Daytime temperature for peak growth. Costs 1 point per degree from the 20\xB0C base.',
+      'Daytime temperature for peak growth. Costs 1 point per degree from the base temperature.',
       getAttributeMaxUpgrades('optimalGrowthTemperature')
     );
     this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', getAttributeMaxUpgrades('growthTemperatureTolerance'));
