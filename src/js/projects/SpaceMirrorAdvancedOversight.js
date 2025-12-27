@@ -15,10 +15,12 @@ class SpaceMirrorAdvancedOversight {
       const K_TOL = 0.001;         // Temperature tolerance (K) for zones
       const WATER_REL_TOL = 0.00001; // Relative tol (1%) for water melt target
       const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
+      const MIN_ZONE_FLUX = 2.4e-5; // Floor used by calculateZoneSolarFluxWithFacility
+      const NEAR_MIN_FLUX = MIN_ZONE_FLUX * 1.05;
 
       // Probe sizing for derivative estimates (NO per-mirror loops; single physics call per probe)
       const MIRROR_PROBE_BASE = 1;      // Minimum mirrors per probe (useful scale for "billions")
-      const LANTERN_PROBE_MIN = 1;      // Min lanterns per probe
+      const LANTERN_PROBE_BASE = 1;     // Minimum lanterns per probe (useful scale for "billions")
       const SAFETY_FRACTION = 1;        // Take only 50% of the "unitsNeeded" to reduce overshoot risk
 
       // If no resources left, allow reallocation from strictly lower priority zones
@@ -98,7 +100,8 @@ class SpaceMirrorAdvancedOversight {
       const lanternPowerPer = lantern
         ? (lantern.powerPerBuilding || 0) * lanternResourceFactor
         : 0;
-      const MIRROR_PROBE_MIN = MIRROR_PROBE_BASE * (terraforming.initialLand / mirrorPowerPer);
+      const MIRROR_PROBE_MIN = mirrorPowerPer > 0 ? MIRROR_PROBE_BASE * (terraforming.initialLand / mirrorPowerPer) : 1;
+      const LANTERN_PROBE_MIN = lanternPowerPer > 0 ? LANTERN_PROBE_BASE * (terraforming.initialLand / lanternPowerPer) : 1;
 
       // ---------------- Warm start ----------------
       // If we have a saved lastSolution, restore it (clamped to current availability).
@@ -180,6 +183,43 @@ class SpaceMirrorAdvancedOversight {
         reverse.any = false;
         updateTemps();
       })();
+
+      const trimReverseFloorOvershoot = () => {
+        for (const zone of ZONES) {
+          if (!reverse[zone]) continue;
+          const current = assignM[zone] || 0;
+          if (!(current > 0)) continue;
+          const currentFlux = terraforming.calculateZoneSolarFlux(zone);
+          if (currentFlux > NEAR_MIN_FLUX) continue;
+
+          const fluxFor = (count) => {
+            const prior = assignM[zone] || 0;
+            assignM[zone] = count;
+            const flux = terraforming.calculateZoneSolarFlux(zone);
+            assignM[zone] = prior;
+            return flux;
+          };
+
+          if (fluxFor(0) <= NEAR_MIN_FLUX) {
+            assignM[zone] = 0;
+            continue;
+          }
+
+          let low = 0;
+          let high = current;
+          while (high - low > 1) {
+            const mid = Math.floor((low + high) / 2);
+            if (fluxFor(mid) > NEAR_MIN_FLUX) {
+              low = mid;
+            } else {
+              high = mid;
+            }
+          }
+          assignM[zone] = low;
+        }
+      };
+
+      trimReverseFloorOvershoot();
 
       // ---------------- Objective ----------------
       const computeFocusMeltRate = () => {
