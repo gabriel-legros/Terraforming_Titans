@@ -1168,13 +1168,18 @@ class GalaxyManager extends EffectableEntity {
             const sectorDefaultValue = overrideValue ?? defaultValue;
             const sectorReward = resolveSectorReward(sectorKey);
             const storyRequirement = resolveSectorStoryRequirement(sectorKey);
+            const sectorOverrides = galaxySectorParametersConfig && galaxySectorParametersConfig.overrides
+                ? galaxySectorParametersConfig.overrides[sectorKey]
+                : null;
             const sector = new GalaxySectorClass({
                 q,
                 r,
                 value: sectorDefaultValue,
                 defaultValue: sectorDefaultValue,
                 reward: sectorReward,
-                storyRequirement
+                storyRequirement,
+                richResource: sectorOverrides?.richResource,
+                poorResources: sectorOverrides?.poorResources
             });
             this.sectors.set(sector.key, sector);
         });

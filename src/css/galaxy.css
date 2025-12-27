@@ -541,6 +541,7 @@
 }
 
 .galaxy-sector-panel__management,
+.galaxy-sector-panel__resources,
 .galaxy-sector-panel__enemy {
   display: flex;
   flex-direction: column;
@@ -608,7 +609,6 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
   padding: 8px 12px;
   border-radius: 8px;
   background: rgba(22, 40, 68, 0.52);
@@ -627,6 +627,14 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: #f5f9ff;
+}
+
+.galaxy-sector-panel__resource-value--rich {
+  color: #7fe2a0;
+}
+
+.galaxy-sector-panel__resource-value--poor {
+  color: #f2a2a2;
 }
 
 .galaxy-sector-panel__control-list {

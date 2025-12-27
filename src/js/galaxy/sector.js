@@ -8,6 +8,8 @@ class GalaxySector {
         reward,
         rewardAcquired,
         storyRequirement,
+        richResource,
+        poorResources,
         originalControllerId,
         lastFullControllerId
     } = {}) {
@@ -21,6 +23,8 @@ class GalaxySector {
         this.reward = this.#sanitizeReward(reward);
         this.rewardAcquired = rewardAcquired === true;
         this.storyRequirement = GalaxySector.#sanitizeStoryRequirement(storyRequirement);
+        this.richResource = richResource || null;
+        this.poorResources = poorResources || [];
         this.originalControllerId = originalControllerId ? String(originalControllerId) : null;
         this.lastFullControllerId = lastFullControllerId ? String(lastFullControllerId) : null;
         if (control) {
@@ -122,6 +126,14 @@ class GalaxySector {
 
     getStoryRequirement() {
         return GalaxySector.#sanitizeStoryRequirement(this.storyRequirement);
+    }
+
+    getRichResource() {
+        return this.richResource || null;
+    }
+
+    getPoorResources() {
+        return this.poorResources || [];
     }
 
     setRewardAcquired(acquired) {

@@ -258,6 +258,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Mega Particle Accelerator advanced research that unlocks an infinitely repeatable Particle Accelerator megaproject.
 - Added a Surface Food Production research that lets surface biomass passively produce food once unlocked.
 - Added a Next-generation bio-engineering advanced research that lets advanced research permanently fund life design points across planet travel.
+- Galaxy sector details now highlight rich resources in green and poor resources in red.
 - Colony consumption no longer generates garbage, junk, or scrap metal production.
 - Continuous import/export projects can run in building-style mode at continuous ship counts, feeding productivity calculations and showing their productivity in the Continuous status label.
 - Random World Generator honours per-archetype orbit lock lists, keeping Venus-like worlds in the hot band while preserving their sulfuric haze and parched atmosphere.

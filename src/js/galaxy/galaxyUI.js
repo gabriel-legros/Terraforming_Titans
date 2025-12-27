@@ -23,6 +23,13 @@ const GALAXY_DEFENSE_INT_FORMATTER = (typeof Intl !== 'undefined' && typeof Intl
     : null;
 const GALAXY_ALIEN_ICON = '\u2620\uFE0F';
 const GALAXY_CONTROL_EPSILON = 1e-6;
+const SECTOR_RESOURCE_LABELS = {
+    metal: 'Metal',
+    water: 'Water',
+    silicon: 'Silicon',
+    carbon: 'Carbon',
+    nitrogen: 'Nitrogen'
+};
 const HEX_NEIGHBOR_OFFSETS = [
     { q: 1, r: 0 },
     { q: 1, r: -1 },
@@ -196,6 +203,10 @@ function formatAutoThresholdDisplay(value) {
     }
     const rounded = Math.round(value * 100) / 100;
     return rounded.toFixed(2);
+}
+
+function formatSectorResourceLabel(resourceKey) {
+    return SECTOR_RESOURCE_LABELS[resourceKey] || resourceKey || 'Unknown';
 }
 
 function getSectorUhfControl(sector) {
@@ -894,6 +905,25 @@ function renderSelectedSectorDetails() {
         rewardRow.statValue.textContent = '—';
         container.appendChild(rewardRow.stat);
 
+        const resourceSection = doc.createElement('div');
+        resourceSection.className = 'galaxy-sector-panel__resources';
+
+        const resourceSubtitle = doc.createElement('div');
+        resourceSubtitle.className = 'galaxy-sector-panel__subtitle';
+        resourceSubtitle.textContent = 'Resource Bias';
+        resourceSection.appendChild(resourceSubtitle);
+
+        const richResourceRow = createStatRow('Rich');
+        richResourceRow.statValue.classList.add('galaxy-sector-panel__resource-value--rich');
+        richResourceRow.statValue.textContent = '—';
+
+        const poorResourceRow = createStatRow('Poor');
+        poorResourceRow.statValue.classList.add('galaxy-sector-panel__resource-value--poor');
+        poorResourceRow.statValue.textContent = '—';
+
+        resourceSection.append(richResourceRow.stat, poorResourceRow.stat);
+        container.appendChild(resourceSection);
+
         const worldRow = createStatRow('Worlds');
         const fleetDefenseRow = createStatRow('Fleet Defense');
         const totalDefenseRow = createStatRow('Total Defense');
@@ -960,6 +990,11 @@ function renderSelectedSectorDetails() {
                 row: rewardRow.stat,
                 label: rewardRow.statLabel,
                 value: rewardRow.statValue
+            },
+            resources: {
+                section: resourceSection,
+                richValue: richResourceRow.statValue,
+                poorValue: poorResourceRow.statValue
             }
         };
         galaxyUICache.sectorDetails = details;
@@ -1081,6 +1116,16 @@ function renderSelectedSectorDetails() {
             details.reward.row.classList.add('is-hidden');
         }
     }
+
+    const richResource = sector.richResource;
+    const poorResources = sector.poorResources || [];
+    const poorList = Array.isArray(poorResources) ? poorResources : [];
+    const richLabel = richResource ? formatSectorResourceLabel(richResource) : '—';
+    const poorLabel = poorList.length ? poorList.map(formatSectorResourceLabel).join(', ') : '—';
+    const hasResourceBias = richResource || poorList.length;
+    details.resources.section.classList.toggle('is-hidden', !hasResourceBias);
+    details.resources.richValue.textContent = richLabel;
+    details.resources.poorValue.textContent = poorLabel;
 
     const managementVisible = uhfControl > GALAXY_CONTROL_EPSILON;
     if (details.managementSection) {
