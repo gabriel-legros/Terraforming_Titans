@@ -851,9 +851,7 @@ class Building extends EffectableEntity {
       return; // Skip normal production entirely while reversed
     }
     const effectiveMultiplier = this.getEffectiveProductionMultiplier();
-    const displayProductivity = this.ignoreResourceForProductivityResourceDisplay
-      ? this.displayProductivity
-      : this.productivity;
+    const displayProductivity = this.productivity;
 
     // Calculate production using effectiveMultiplier and accumulate changes
     for (const category in this.production) {
