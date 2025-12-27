@@ -316,6 +316,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Introduced a Galactic Market Concordat advanced research that unlocks the Galactic Market project while permanently retiring cargo rockets and metal exports.
 - Space storage now supports silicon and hydrogen stockpiles.
 - Forbidden-melt rapid sublimation now blends linearly over 1 Pa near the triple pressure threshold instead of switching instantly.
+- UHF fleet auto-defense now applies leftover power to border sectors and counts toward map and sector effective defense totals.
 
 ## Feature updates
 - Autobuild basis drop-downs now include a Max option for ore mines, geothermal generators, and Dyson Swarm receivers so they chase the highest buildable count without relying on percentage targets.

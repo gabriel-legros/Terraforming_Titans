@@ -1266,11 +1266,14 @@ function updateSectorDefenseSection() {
         ? manager.getManualDefenseAssignment(sector.key, UHF_FACTION_KEY)
         : 0;
     const scale = faction?.getDefenseScale ? faction.getDefenseScale(manager) : 0;
-    const effective = manualAssigned > 0 && scale > 0 ? manualAssigned * scale : 0;
-    const totalAssigned = manager.getDefenseAssignmentTotal
+    const totalAssigned = manager.getDefenseAssignment
+        ? manager.getDefenseAssignment(sector.key, UHF_FACTION_KEY)
+        : manualAssigned;
+    const effective = totalAssigned > 0 && scale > 0 ? totalAssigned * scale : 0;
+    const manualTotal = manager.getDefenseAssignmentTotal
         ? manager.getDefenseAssignmentTotal(UHF_FACTION_KEY)
         : 0;
-    const remaining = Math.max(0, capacity - Math.max(0, totalAssigned));
+    const remaining = Math.max(0, capacity - Math.max(0, manualTotal));
     const step = getDefenseStepForSector(sector.key);
     updateDefenseStepDisplay(step);
 
@@ -1284,7 +1287,7 @@ function updateSectorDefenseSection() {
         cache.defenseRemainingValue.textContent = `Remaining: ${formatDefenseInteger(remaining)}`;
     }
     if (cache.defenseClearButton) {
-        cache.defenseClearButton.disabled = !(totalAssigned > 0);
+        cache.defenseClearButton.disabled = !(manualTotal > 0);
     }
 
     if (cache.defenseInput) {
@@ -2916,8 +2919,8 @@ function updateLogisticsDisplay(manager, cache) {
     const faction = manager?.getFaction?.(GALAXY_UHF_FACTION_ID) || null;
     const power = Number.isFinite(faction?.fleetPower) ? faction.fleetPower : 0;
     const capacity = Number.isFinite(faction?.fleetCapacity) ? faction.fleetCapacity : 0;
-    powerNode.textContent = formatFleetValue(power);
-    capacityNode.textContent = formatFleetValue(capacity);
+    powerNode.textContent = formatNumber(power, false, 2);
+    capacityNode.textContent = formatNumber(capacity, false, 2);
     updateFleetCapacityTooltip(manager, cache);
     if (storyNode) {
         const storyMultiplier = manager?.getEffectFleetCapacityMultiplier?.() ?? 1;

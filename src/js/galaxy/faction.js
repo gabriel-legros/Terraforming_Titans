@@ -527,15 +527,20 @@ class GalaxyFaction {
         if (this.id !== UHF_FACTION_ID) {
             return 0;
         }
-        const assigned = this.getDefenseAssignmentTotal();
-        if (!(assigned > 0)) {
+        const manualAssigned = this.manualDefenseTotal;
+        const autoAssigned = this.autoDefenseTotal;
+        const totalAssigned = manualAssigned + autoAssigned;
+        if (!(totalAssigned > 0)) {
             return 0;
+        }
+        if (!(manualAssigned > 0)) {
+            return 1;
         }
         const reservation = this.getDefenseReservation(manager);
         if (!(reservation > 0)) {
             return 0;
         }
-        const scale = reservation / assigned;
+        const scale = reservation / manualAssigned;
         if (!Number.isFinite(scale) || scale <= 0) {
             return 0;
         }
