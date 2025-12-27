@@ -100,8 +100,8 @@ class SpaceMirrorAdvancedOversight {
       const lanternPowerPer = lantern
         ? (lantern.powerPerBuilding || 0) * lanternResourceFactor
         : 0;
-      const MIRROR_PROBE_MIN = mirrorPowerPer > 0 ? MIRROR_PROBE_BASE * (terraforming.initialLand / mirrorPowerPer) : 1;
-      const LANTERN_PROBE_MIN = lanternPowerPer > 0 ? LANTERN_PROBE_BASE * (terraforming.initialLand / lanternPowerPer) : 1;
+      const MIRROR_PROBE_MIN = mirrorPowerPer > 0 ? Math.max(MIRROR_PROBE_BASE * (terraforming.initialLand / mirrorPowerPer),1) : 1;
+      const LANTERN_PROBE_MIN = lanternPowerPer > 0 ? Math.max(LANTERN_PROBE_BASE * (terraforming.initialLand / lanternPowerPer),1) : 1;
 
       // ---------------- Warm start ----------------
       // If we have a saved lastSolution, restore it (clamped to current availability).
