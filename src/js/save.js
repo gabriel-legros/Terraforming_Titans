@@ -616,6 +616,8 @@ function loadGame(slotOrCustomString, recreate = true) {
       if(autobuildSetActiveToggle){
         autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       }
+      const roundBuildingToggle = document.getElementById('round-building-toggle');
+      roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
       refreshAllAutoBuildTargets();
       updateAutosaveText();
       if (typeof completedResearchHidden !== 'undefined') {

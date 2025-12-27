@@ -3,6 +3,13 @@
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
+function getManualBuildCount(structure, buildCount) {
+  if (!gameSettings.roundBuildingConstruction || structure.autoBuildEnabled) {
+    return buildCount;
+  }
+  return getRoundedBuildCount(structure.count, buildCount);
+}
+
 function swapResourceRateColor(resource, color) {
   if (resource.reverseColor && color === 'red') return 'green';
   if (resource.reverseColor && color === 'green') return 'red';
@@ -447,12 +454,16 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   let selectedBuildCount = 1;
   selectedBuildCounts[structure.name] = selectedBuildCount;
   // Set initial button text and color based on affordability
-  updateStructureButtonText(button, structure, selectedBuildCount);
+  const manualBuildCount = getManualBuildCount(structure, selectedBuildCount);
+  updateStructureButtonText(button, structure, manualBuildCount);
 
   button.addEventListener('click', function () {
-    buildCallback(structure.name, selectedBuildCounts[structure.name]);
-    updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
-    updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
+    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    buildCallback(structure.name, manualBuildCount);
+    const refreshedBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    updateStructureButtonText(button, structure, refreshedBuildCount);
+    updateStructureCostDisplay(costElement, structure, refreshedBuildCount);
+    updateProductionConsumptionDetails(structure, productionConsumptionDetails, refreshedBuildCount);
     if (isColony && upgradeButton) {
       updateUpgradeButton(upgradeButton, structure);
     }
@@ -480,9 +491,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   multiplyButton.addEventListener('click', function () {
     selectedBuildCounts[structure.name] = multiplyByTen(selectedBuildCounts[structure.name]);
     buildCountDisplay.textContent = formatNumber(selectedBuildCounts[structure.name], true);
-    updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
-    updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
-    updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structure.name]);
+    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    updateStructureButtonText(button, structure, manualBuildCount);
+    updateStructureCostDisplay(costElement, structure, manualBuildCount);
+    updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
     if (structure.canBeToggled) {
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
@@ -498,9 +510,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   divideButton.addEventListener('click', function () {
     selectedBuildCounts[structure.name] = divideByTen(selectedBuildCounts[structure.name]);
     buildCountDisplay.textContent = formatNumber(selectedBuildCounts[structure.name], true);
-    updateStructureButtonText(button, structure, selectedBuildCounts[structure.name]);
-    updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structure.name]);
-    updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structure.name]);
+    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    updateStructureButtonText(button, structure, manualBuildCount);
+    updateStructureCostDisplay(costElement, structure, manualBuildCount);
+    updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
     if (structure.canBeToggled) {
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
@@ -582,7 +595,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const costElement = document.createElement('div');
   costElement.classList.add('structure-cost');
   costElement.classList.add('small-text'); // Add the 'small-text' class
-  updateStructureCostDisplay(costElement, structure);
+  updateStructureCostDisplay(costElement, structure, getManualBuildCount(structure, selectedBuildCounts[structure.name]));
   structureRow.appendChild(costElement);
   // Cache the cost element for faster updates
   structureUIElements[structure.name] = structureUIElements[structure.name] || {};
@@ -593,7 +606,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   productionConsumptionDetails.classList.add('building-production-consumption');
   productionConsumptionDetails.classList.add('small-text'); // Add the 'small-text' class
   productionConsumptionDetails.id = `${structure.name}-production-consumption`;
-  updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structure.name]);
+  updateProductionConsumptionDetails(structure, productionConsumptionDetails, getManualBuildCount(structure, selectedBuildCounts[structure.name]));
   structureRow.appendChild(productionConsumptionDetails);
   cached.productionDetails = productionConsumptionDetails;
 
@@ -1319,6 +1332,8 @@ function updateDecreaseButtonText(button, buildCount) {
       const countElement = document.getElementById(`${structureName}-count`);
       const countActiveElement = document.getElementById(`${structureName}-count-active`);
       const buildDisplay = els.buildCountDisplay || document.getElementById(`${structureName}-build-count`);
+      const selectedBuildCount = selectedBuildCounts[structureName];
+      const manualBuildCount = getManualBuildCount(structure, selectedBuildCount);
   
       // Update visibility based on unlocked state
       const isVisible = typeof structure.isVisible === 'function'
@@ -1337,16 +1352,16 @@ function updateDecreaseButtonText(button, buildCount) {
       }
 
       if (buildDisplay) {
-        buildDisplay.textContent = formatNumber(selectedBuildCounts[structureName], true);
+        buildDisplay.textContent = formatNumber(selectedBuildCount, true);
       }
 
       const incBtn = els.increaseButton || document.getElementById(`${structureName}-increase-button`);
       if (incBtn) {
-        updateIncreaseButtonText(incBtn, selectedBuildCounts[structureName]);
+        updateIncreaseButtonText(incBtn, selectedBuildCount);
       }
       const decBtn = els.decreaseButton || document.getElementById(`${structureName}-decrease-button`);
       if (decBtn) {
-        updateDecreaseButtonText(decBtn, selectedBuildCounts[structureName]);
+        updateDecreaseButtonText(decBtn, selectedBuildCount);
       }
 
       // Toggle visibility of the "Hide" button based on conditions
@@ -1441,19 +1456,19 @@ function updateDecreaseButtonText(button, buildCount) {
   
       const button = (structureUIElements[structureName] || {}).buildButton || document.getElementById(`build-${structureName}`);
       if (button) {
-        updateStructureButtonText(button, structure, selectedBuildCounts[structureName]);
+        updateStructureButtonText(button, structure, manualBuildCount);
       }
   
       // Update the production and consumption details
       const productionConsumptionDetails = document.getElementById(`${structureName}-production-consumption`);
       if (productionConsumptionDetails) {
-        updateProductionConsumptionDetails(structure, productionConsumptionDetails, selectedBuildCounts[structureName]);
+        updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
       }
 
       // Update the cost display
       const costElement = (structureUIElements[structureName] || {}).costElement;
       if (costElement) {
-        updateStructureCostDisplay(costElement, structure, selectedBuildCounts[structureName]);
+        updateStructureCostDisplay(costElement, structure, manualBuildCount);
       }
 
       // Update colony-specific needs display (comfort, energy, food, water)

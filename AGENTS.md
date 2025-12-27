@@ -268,6 +268,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
 - Space Mirror Facility sliders now rebalance more naturally: decreasing a zone returns share to **Any Zone** (not Unassigned), and increasing **Any Zone** reclaims Unassigned/focus allocations before reducing zonal shares.
+- Added a Round building construction setting that rounds manual building and colony construction up to the selected build count increment while updating cost previews.
 - Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.
 - Random World Generator hazard selection now uses a Hazards toggle with per-hazard checkboxes, encodes multi-hazard seeds, and unlocks the garbage hazard after Gabbag.
 - Metropolis and Ecumenopolis autobuild controls now include a Max option to push construction to the limit.
@@ -408,3 +409,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Hydrology surface flow now scales with √(liquid surface elevation difference) and latitude boundary length, while flow-melt is viscosity-independent and scales with glacier height and target-zone temperature above the melting point.
 - Galaxy sector defense benefits and AI fleet capacity are now granted only to the last faction to fully control a sector (falling back to the sector’s original controller when no history exists), instead of being split across factions by partial control.
 - Random World Generator now blocks moon archetypes via `orbit.moonTypeBlacklist` (defaulting Super-Earth to planet-only).
+- Warp Gate Command now raises a WGC subtab alert when operations finish without auto-start enabled.

@@ -114,6 +114,7 @@ class WarpGateCommand extends EffectableEntity {
       artifacts: 0,
       successes: 0,
       summary: '',
+      operationAlert: false,
       number: 1,
       nextEvent: 60,
       eventQueue: [],
@@ -830,6 +831,7 @@ class WarpGateCommand extends EffectableEntity {
         this.totalOperations += 1;
         this.applyInfirmaryOperationHeal(idx);
         if (op.autoStart) {
+          op.operationAlert = false;
           op.timer = 0;
           op.progressSegmentStart = 0;
           op.number = this.teamNextOperationNumber[idx];
@@ -854,6 +856,7 @@ class WarpGateCommand extends EffectableEntity {
           this.refreshOperationProgress(op, idx);
         } else {
           op.active = false;
+          op.operationAlert = true;
           op.progress = 0;
           op.timer = 0;
           op.nextEvent = 60;
@@ -902,6 +905,10 @@ class WarpGateCommand extends EffectableEntity {
     if (autoChanged && typeof updateWGCUI === 'function') {
       updateWGCUI();
     }
+  }
+
+  hasPendingOperationAlert() {
+    return this.operations.some(op => op.operationAlert && !op.autoStart);
   }
 
   finishOperation(teamIndex) {
@@ -1077,6 +1084,7 @@ class WarpGateCommand extends EffectableEntity {
     if (!op) return false;
     const diff = Math.max(0, Math.floor(difficulty));
     op.active = true;
+    op.operationAlert = false;
     op.progress = 0;
     op.timer = 0;
     op.nextEvent = 60;
@@ -1171,6 +1179,7 @@ class WarpGateCommand extends EffectableEntity {
       operations: this.operations.map(op => ({
         active: op.active,
         autoStart: op.autoStart === true,
+        operationAlert: op.operationAlert === true,
         progress: op.progress,
         timer: op.timer,
         difficulty: op.difficulty,
@@ -1242,6 +1251,7 @@ class WarpGateCommand extends EffectableEntity {
       return {
         active: !!op.active,
         autoStart: op.autoStart === true,
+        operationAlert: op.operationAlert === true,
         progress: op.progress || 0,
         timer: op.timer || 0,
         difficulty: op.difficulty || 0,

@@ -106,6 +106,14 @@ function addSettingsListeners() {
     });
   }
 
+  const roundBuildingToggle = document.getElementById('round-building-toggle');
+  roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
+  roundBuildingToggle.addEventListener('change', () => {
+    gameSettings.roundBuildingConstruction = roundBuildingToggle.checked;
+    updateBuildingDisplay(buildings);
+    updateColonyDisplay(colonies);
+  });
+
   const simplifyGoldenAsteroidToggle = document.getElementById('simplify-golden-asteroid-toggle');
   if (simplifyGoldenAsteroidToggle) {
     simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;

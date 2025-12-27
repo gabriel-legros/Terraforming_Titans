@@ -235,6 +235,26 @@ describe('WarpGateCommand operation queue', () => {
     expect(op.summary).toContain('Complete');
   });
 
+  test('manual-start alert triggers after completion without auto-start', () => {
+    const wgc = new WarpGateCommand();
+    fillTeam(wgc, 0);
+    Math.random = () => 0.1;
+    expect(wgc.startOperation(0, 0)).toBe(true);
+
+    const op = wgc.operations[0];
+    op.autoStart = false;
+    op.currentEventIndex = op.eventQueue.length;
+    op.timer = 600;
+
+    wgc.update(0);
+
+    expect(wgc.hasPendingOperationAlert()).toBe(true);
+
+    wgc.startOperation(0, 0);
+
+    expect(wgc.hasPendingOperationAlert()).toBe(false);
+  });
+
   test('operations auto-start when auto-start is enabled', () => {
     const wgc = new WarpGateCommand();
     fillTeam(wgc, 0);
@@ -254,5 +274,21 @@ describe('WarpGateCommand operation queue', () => {
     expect(op.number).toBe(nextNumber);
     expect(op.eventQueue.length).toBe(10);
     expect(op.currentEventIndex).toBe(0);
+  });
+
+  test('auto-start completion does not set manual-start alert', () => {
+    const wgc = new WarpGateCommand();
+    fillTeam(wgc, 0);
+    Math.random = () => 0.1;
+    expect(wgc.startOperation(0, 0)).toBe(true);
+
+    const op = wgc.operations[0];
+    op.autoStart = true;
+    op.currentEventIndex = op.eventQueue.length;
+    op.timer = 600;
+
+    wgc.update(0);
+
+    expect(wgc.hasPendingOperationAlert()).toBe(false);
   });
 });

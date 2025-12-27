@@ -89,7 +89,8 @@ function updateHopeAlert() {
             solisShow = !!solisManager.currentQuest;
         }
     }
-    const wgcShow = typeof warpGateCommand !== 'undefined' && warpGateCommand && wgcTabVisible && warpGateCommand.facilityCooldown <= 0;
+    const wgcShow = typeof warpGateCommand !== 'undefined' && warpGateCommand && wgcTabVisible
+        && (warpGateCommand.facilityCooldown <= 0 || warpGateCommand.hasPendingOperationAlert());
     if (solisEl) solisEl.style.display = solisShow ? 'inline' : 'none';
     if (wgcEl) wgcEl.style.display = wgcShow ? 'inline' : 'none';
     if (alertEl) alertEl.style.display = (awakeningShow || solisShow || wgcShow) ? 'inline' : 'none';
