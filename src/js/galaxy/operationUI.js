@@ -498,12 +498,16 @@ const GalaxyOperationUI = (() => {
         const powerLabel = doc.createElement('span');
         powerLabel.className = 'galaxy-operations-form__label galaxy-operations-form__label--with-icon';
         powerLabel.textContent = 'Fleet Power';
-        if (typeof createInfoTooltip === 'function') {
-            powerLabel.appendChild(createInfoTooltip(
-                doc,
-                'Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control.  You may only perform operations on a sector that you either contest, or is neighbour to a sector you fully control.  The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.'
-            ));
-        }
+        const powerTooltipIcon = doc.createElement('span');
+        powerTooltipIcon.className = 'info-tooltip-icon';
+        powerTooltipIcon.innerHTML = '&#9432;';
+        const powerTooltip = attachDynamicInfoTooltip(
+            powerTooltipIcon,
+            'Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control.  You may only perform operations on a sector that you either contest, or is neighbour to a sector you fully control.  The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.'
+        );
+        doc.body.appendChild(powerTooltip);
+        powerLabel.appendChild(doc.createTextNode(' '));
+        powerLabel.appendChild(powerTooltipIcon);
         formHeader.appendChild(powerLabel);
 
         const powerAvailable = doc.createElement('span');

@@ -906,6 +906,16 @@ function renderSelectedSectorDetails() {
 
         const rewardRow = createStatRow('Reward');
         rewardRow.statValue.textContent = '—';
+        const rewardTooltipIcon = doc.createElement('span');
+        rewardTooltipIcon.className = 'info-tooltip-icon';
+        rewardTooltipIcon.innerHTML = '&#9432;';
+        const rewardTooltip = attachDynamicInfoTooltip(
+            rewardTooltipIcon,
+            'Fully controlled sectors grant already habitable worlds.  Each count as a normal terraformed world, but unlike regular terraformed worlds, will be lost if the sector is lost.'
+        );
+        doc.body.appendChild(rewardTooltip);
+        rewardRow.statLabel.appendChild(doc.createTextNode(' '));
+        rewardRow.statLabel.appendChild(rewardTooltipIcon);
         container.appendChild(rewardRow.stat);
 
         const resourceSection = doc.createElement('div');
@@ -940,10 +950,14 @@ function renderSelectedSectorDetails() {
         const warpGateLabel = doc.createElement('span');
         warpGateLabel.className = 'galaxy-sector-panel__stat-label';
         warpGateLabel.textContent = 'Warp Gate Network';
-        const warpGateInfo = createInfoTooltip(
-            doc,
+        const warpGateInfo = doc.createElement('span');
+        warpGateInfo.className = 'info-tooltip-icon';
+        warpGateInfo.innerHTML = '&#9432;';
+        const warpGateTooltip = attachDynamicInfoTooltip(
+            warpGateInfo,
             'Unlocked by Warp Gate Fabrication.\nEach terraformed world in this fully controlled sector adds 1 progress per hour.\nProgress to the next level requires Level + 1.'
         );
+        doc.body.appendChild(warpGateTooltip);
         warpGateLabel.appendChild(doc.createTextNode(' '));
         warpGateLabel.appendChild(warpGateInfo);
 
@@ -1055,14 +1069,6 @@ function renderSelectedSectorDetails() {
 
     const bordersUhf = typeof manager.hasUhfNeighboringStronghold === 'function'
         && manager.hasUhfNeighboringStronghold(sector.q, sector.r);
-
-    if (details.reward?.label && !details.reward.label.querySelector('.info-tooltip-icon')) {
-        const rewardTooltip = doc.createElement('span');
-        rewardTooltip.className = 'info-tooltip-icon';
-        rewardTooltip.innerHTML = '&#9432;';
-        rewardTooltip.title = 'Fully controlled sectors grant already habitable worlds.  Each count as a normal terraformed world, but unlike regular terraformed worlds, will be lost if the sector is lost.';
-        details.reward.label.appendChild(rewardTooltip);
-    }
 
     const rewardEntries = typeof manager.getSectorsReward === 'function'
         ? manager.getSectorsReward([sector])
@@ -2045,7 +2051,7 @@ function createResourceStyleTooltip(doc) {
     icon.className = 'info-tooltip-icon';
     icon.innerHTML = '&#9432;';
     const tooltip = doc.createElement('span');
-    tooltip.className = 'resource-tooltip';
+    tooltip.className = 'resource-tooltip dynamic-tooltip';
     icon.appendChild(tooltip);
     return { icon, tooltip };
 }
@@ -2178,10 +2184,15 @@ function cacheGalaxyElements() {
     const overviewSection = createGalaxySection(doc, 'Galactic Overview');
     overviewSection.section.classList.add('galaxy-section--overview');
     overviewSection.header.classList.add('galaxy-section__header--with-icon');
-    overviewSection.header.appendChild(createInfoTooltip(
-        doc,
+    const overviewTooltipIcon = doc.createElement('span');
+    overviewTooltipIcon.className = 'info-tooltip-icon';
+    overviewTooltipIcon.innerHTML = '&#9432;';
+    const overviewTooltip = attachDynamicInfoTooltip(
+        overviewTooltipIcon,
         'The galactic map allows you to monitor the state of the civil war across the galaxy, and to eventually participate.  The UHF starts with a 10% control of sector R5-07.  Conquering certain sectors will be required to advance the story.'
-    ));
+    );
+    doc.body.appendChild(overviewTooltip);
+    overviewSection.header.appendChild(overviewTooltipIcon);
 
     const mapWrapper = doc.createElement('div');
     mapWrapper.className = 'galaxy-map-wrapper';
@@ -2476,10 +2487,16 @@ function cacheGalaxyElements() {
     const logisticsPowerLabel = doc.createElement('span');
     logisticsPowerLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
     logisticsPowerLabel.textContent = 'Fleet Power';
-    logisticsPowerLabel.appendChild(createInfoTooltip(
-        doc,
+    const logisticsPowerInfo = doc.createElement('span');
+    logisticsPowerInfo.className = 'info-tooltip-icon';
+    logisticsPowerInfo.innerHTML = '&#9432;';
+    const logisticsPowerTooltip = attachDynamicInfoTooltip(
+        logisticsPowerInfo,
         'Total UHF fleet strength currently ready to deploy in operations or defenses.  This value grows proportionally to fleet capacity over time, but suffers exponential growth penalty after it reaches 50% of fleet capacity.'
-    ));
+    );
+    doc.body.appendChild(logisticsPowerTooltip);
+    logisticsPowerLabel.appendChild(doc.createTextNode(' '));
+    logisticsPowerLabel.appendChild(logisticsPowerInfo);
     const logisticsPowerValue = doc.createElement('span');
     logisticsPowerValue.className = 'galaxy-logistics-stat__value';
     logisticsPowerValue.textContent = '0';
@@ -2491,6 +2508,7 @@ function cacheGalaxyElements() {
     logisticsCapacityLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
     logisticsCapacityLabel.textContent = 'Fleet Capacity';
     const capacityTooltip = createResourceStyleTooltip(doc);
+    doc.body.appendChild(capacityTooltip.tooltip);
     logisticsCapacityLabel.appendChild(capacityTooltip.icon);
     const logisticsCapacityValue = doc.createElement('span');
     logisticsCapacityValue.className = 'galaxy-logistics-stat__value';
@@ -2503,10 +2521,16 @@ function cacheGalaxyElements() {
     const storyMultiplierLabel = doc.createElement('span');
     storyMultiplierLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
     storyMultiplierLabel.textContent = 'Story Multiplier';
-    storyMultiplierLabel.appendChild(createInfoTooltip(
-        doc,
+    const storyMultiplierInfo = doc.createElement('span');
+    storyMultiplierInfo.className = 'info-tooltip-icon';
+    storyMultiplierInfo.innerHTML = '&#9432;';
+    const storyMultiplierTooltip = attachDynamicInfoTooltip(
+        storyMultiplierInfo,
         'Fleet capacity bonus granted by completed story chapters.'
-    ));
+    );
+    doc.body.appendChild(storyMultiplierTooltip);
+    storyMultiplierLabel.appendChild(doc.createTextNode(' '));
+    storyMultiplierLabel.appendChild(storyMultiplierInfo);
     const storyMultiplierValue = doc.createElement('span');
     storyMultiplierValue.className = 'galaxy-logistics-stat__value';
     storyMultiplierValue.textContent = `${formatFleetMultiplier(1)}x`;
@@ -2522,12 +2546,16 @@ function cacheGalaxyElements() {
     threatLabel.className = 'galaxy-logistics-stat__label galaxy-logistics-stat__label--with-icon';
     const threatLabelText = doc.createElement('span');
     threatLabelText.textContent = 'Threat Level';
-    const threatTooltip = doc.createElement('span');
-    threatTooltip.className = 'info-tooltip-icon';
-    threatTooltip.innerHTML = '&#9432;';
-    threatTooltip.title = 'Threat is a measure of how seriously the rest of the galaxy views your faction.  The duchies also have a threat factor.  When choosing a target, factions will prioritize higher threat enemies.  At 0 threat, a faction is considered to be not worth targeting.  Any faction that fully controls 40 or more sectors becomes a priority threat, and the galaxy will unite against them until they fall below 40 again.';
+    const threatTooltipIcon = doc.createElement('span');
+    threatTooltipIcon.className = 'info-tooltip-icon';
+    threatTooltipIcon.innerHTML = '&#9432;';
+    const threatTooltip = attachDynamicInfoTooltip(
+        threatTooltipIcon,
+        'Threat is a measure of how seriously the rest of the galaxy views your faction.  The duchies also have a threat factor.  When choosing a target, factions will prioritize higher threat enemies.  At 0 threat, a faction is considered to be not worth targeting.  Any faction that fully controls 40 or more sectors becomes a priority threat, and the galaxy will unite against them until they fall below 40 again.'
+    );
+    doc.body.appendChild(threatTooltip);
     threatLabel.appendChild(threatLabelText);
-    threatLabel.appendChild(threatTooltip);
+    threatLabel.appendChild(threatTooltipIcon);
     const threatValue = doc.createElement('span');
     threatValue.className = 'galaxy-logistics-stat__value';
     threatValue.textContent = '0%';

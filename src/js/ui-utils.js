@@ -202,7 +202,7 @@ function attachDynamicInfoTooltip(iconElement, text) {
   const tooltip = document.createElement('span');
   tooltip.classList.add('resource-tooltip', 'dynamic-tooltip');
   setTooltipText(tooltip, text);
-  iconElement.title = '';
+  iconElement.removeAttribute('title');
   if (!iconElement.innerHTML) iconElement.innerHTML = '&#9432;';
   if (!tooltip.parentNode) iconElement.appendChild(tooltip);
   addTooltipHover(iconElement, tooltip, { dynamicPlacement: true });
