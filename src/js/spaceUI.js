@@ -447,12 +447,13 @@ function updateSpaceUI() {
     if (!allPlanetData) return;
 
     const currentKey = _spaceManagerInstance.getCurrentPlanetKey();
-    const currentSeed = _spaceManagerInstance.getCurrentRandomSeed ? _spaceManagerInstance.getCurrentRandomSeed() : null;
+    const currentSeed = _spaceManagerInstance.getCurrentRandomSeed();
+    const currentArtificialKey = _spaceManagerInstance.getCurrentArtificialKey();
     const isTerraformed = _spaceManagerInstance.isPlanetTerraformed(currentKey);
-    const canChangePlanet = currentSeed !== null || isTerraformed;
+    const canChangePlanet = currentSeed !== null || currentArtificialKey !== null || isTerraformed;
 
     if (statusContainer) {
-        const showWarning = currentSeed === null && !isTerraformed;
+        const showWarning = !canChangePlanet;
         statusContainer.style.display = showWarning ? 'flex' : 'none';
         statusContainer.classList.toggle('hidden', !showWarning);
         statusContainer.textContent = showWarning ? 'Terraform this world before charting a new course.' : '';

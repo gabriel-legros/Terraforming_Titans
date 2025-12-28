@@ -569,6 +569,37 @@ class ArtificialManager extends EffectableEntity {
         });
     }
 
+    buildSnapshotFromParams(params) {
+        const radiusKm = params.celestialParameters.radius;
+        const radiusEarth = radiusKm / EARTH_RADIUS_KM;
+        const landHa = params.resources.surface.land.initialValue
+            || params.resources.surface.land.baseCap
+            || this.calculateAreaHectares(radiusEarth);
+        const core = params.classification?.core || 'super-earth';
+        const coreConfig = getArtificialCoreConfig(core);
+        const isRogue = params.celestialParameters.rogue === true;
+        const allowStar = coreConfig.allowStar !== false;
+        const hasStar = allowStar && !isRogue;
+        return {
+            name: params.name,
+            type: params.classification?.type || 'shell',
+            core,
+            radiusEarth,
+            landHa,
+            sector: params.celestialParameters?.sector,
+            star: params.star,
+            distanceFromStarAU: params.celestialParameters?.distanceFromSun,
+            targetFluxWm2: params.celestialParameters?.targetFluxWm2,
+            isRogue,
+            allowStar,
+            hasStar,
+            stockpile: {
+                metal: params.resources.colony.metal?.initialValue || 0,
+                silicon: params.resources.colony.silicon?.initialValue || 0
+            }
+        };
+    }
+
     buildOverride(project) {
         if (!project) return null;
         const radiusKm = project.radiusEarth * EARTH_RADIUS_KM;
@@ -737,6 +768,27 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
+    travelToStoredWorld(key) {
+        const seed = String(key);
+        const status = spaceManager.artificialWorldStatuses[seed];
+        const snapshot = status.artificialSnapshot;
+        const override = this.buildOverride(snapshot);
+        const res = {
+            merged: override,
+            seedString: seed,
+            terraformedValue: status.terraformedValue,
+            original: {
+                merged: override,
+                override,
+                star: override.star,
+                artificial: true,
+                archetype: override.classification?.archetype
+            },
+            artificial: true
+        };
+        return spaceManager.travelToRandomWorld(res, seed);
+    }
+
     getRemainingTime() {
         if (!this.activeProject || this.activeProject.status !== 'building') return 0;
         return this.activeProject.remainingMs;
@@ -777,26 +829,29 @@ class ArtificialManager extends EffectableEntity {
 
         const pushEntry = (key, status, label) => {
             if (!status) return;
+            const snapshot = status.artificialSnapshot;
             const merged = status.original?.merged || status.original || null;
             const radiusKm = merged?.celestialParameters?.radius;
             const radiusEarth = radiusKm ? (radiusKm / EARTH_RADIUS_KM) : status.radiusEarth;
             const landHa = status.cachedLandHa
                 || status.landHa
+                || snapshot?.landHa
                 || merged?.resources?.surface?.land?.initialValue
                 || merged?.resources?.surface?.land?.baseCap
-                || (radiusEarth ? this.calculateAreaHectares(radiusEarth) : undefined);
+                || (radiusEarth ? this.calculateAreaHectares(radiusEarth) : snapshot?.landHa);
             const terraformedValue = this.deriveTerraformWorldValue({
                 terraformedValue: status.terraformedValue,
                 radiusEarth,
                 landHa
             });
+            const canTravel = label === 'abandoned' && !!snapshot;
             entries.push({
                 id: key,
                 seed: key,
-                name: status.name || merged?.name || `Artificial ${key}`,
-                type: merged?.classification?.type || 'shell',
-                core: merged?.classification?.core || 'unknown',
-                radiusEarth,
+                name: status.name || merged?.name || snapshot?.name || `Artificial ${key}`,
+                type: merged?.classification?.type || snapshot?.type || 'shell',
+                core: merged?.classification?.core || snapshot?.core || 'unknown',
+                radiusEarth: radiusEarth || snapshot?.radiusEarth,
                 landHa,
                 terraformedValue,
                 builtFrom: status.original?.builtFrom || 'unknown',
@@ -805,7 +860,8 @@ class ArtificialManager extends EffectableEntity {
                 status: label,
                 traveledAt: status.departedAt || status.arrivedAt || null,
                 departedAt: status.departedAt || null,
-                discardedAt: null
+                discardedAt: null,
+                canTravel
             });
         };
 
@@ -845,8 +901,13 @@ class ArtificialManager extends EffectableEntity {
 
         Object.entries(statuses).forEach(([key, status]) => {
             if (!status || key === currentKey) return;
-            if (!status.terraformed) return;
-            pushEntry(key, status, 'terraformed');
+            if (status.terraformed) {
+                pushEntry(key, status, 'terraformed');
+                return;
+            }
+            if (status.abandoned) {
+                pushEntry(key, status, 'abandoned');
+            }
         });
 
         entries.sort((a, b) => {

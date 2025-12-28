@@ -726,6 +726,10 @@ class SpaceManager extends EffectableEntity {
         return this.currentRandomSeed;
     }
 
+    getCurrentArtificialKey() {
+        return this.currentArtificialKey;
+    }
+
     isSeedTerraformed(seed) {
         return !!this.randomWorldStatuses[String(seed)]?.terraformed;
     }
@@ -828,6 +832,9 @@ class SpaceManager extends EffectableEntity {
             if (this.artificialWorldStatuses[key].terraformed !== isComplete) {
                 this.artificialWorldStatuses[key].terraformed = isComplete;
                 console.log(`SpaceManager: Terraformed status for artificial world ${key} updated to ${isComplete}`);
+            }
+            if (isComplete) {
+                this.artificialWorldStatuses[key].abandoned = false;
             }
             return;
         }
@@ -985,6 +992,7 @@ class SpaceManager extends EffectableEntity {
             st.colonists = pop;
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
+            st.abandoned = !this._isCurrentWorldTerraformed();
             if (!st.terraformedValue) {
                 st.terraformedValue = this._deriveArtificialTerraformValue({
                     landHa: this._getCurrentWorldLandHa(),
@@ -995,6 +1003,7 @@ class SpaceManager extends EffectableEntity {
             if (!Number.isFinite(st.fleetCapacityValue) || st.fleetCapacityValue <= 0) {
                 st.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(st);
             }
+            st.artificialSnapshot = artificialManager.buildSnapshotFromParams(currentPlanetParameters);
             if (!st.name) st.name = this.currentRandomName || `Artificial ${key}`;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
             const ps = this.planetStatuses[this.currentPlanetKey];
@@ -1039,7 +1048,7 @@ class SpaceManager extends EffectableEntity {
             console.warn('SpaceManager: No planet key provided for travel.');
             return false;
         }
-        if (this.currentRandomSeed === null && !this.isPlanetTerraformed(this.currentPlanetKey)) {
+        if (this.currentRandomSeed === null && this.currentArtificialKey === null && !this.isPlanetTerraformed(this.currentPlanetKey)) {
             console.warn('SpaceManager: Cannot travel until the current planet is terraformed.');
             return false;
         }

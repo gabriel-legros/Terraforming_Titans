@@ -113,11 +113,23 @@ function buildHistoryRow(entry) {
     building: 'Under construction',
     completed: 'Ready for Terraforming',
     current: 'Current',
-    terraformed: 'Terraformed'
+    terraformed: 'Terraformed',
+    abandoned: 'Abandoned'
   };
   const statusLabel = statusLabelMap[statusKey] || (statusKey ? statusKey.charAt(0).toUpperCase() + statusKey.slice(1) : '');
   status.textContent = statusLabel;
   status.className = `artificial-history-status artificial-history-${statusKey}`;
+  if (entry.canTravel) {
+    const travelBtn = document.createElement('button');
+    travelBtn.className = 'artificial-history-travel-btn';
+    travelBtn.textContent = 'Travel';
+    travelBtn.title = 'Travel to this artificial world';
+    travelBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      artificialManager.travelToStoredWorld(entry.id);
+    });
+    status.appendChild(travelBtn);
+  }
   row.appendChild(name);
   row.appendChild(type);
   row.appendChild(land);
@@ -867,7 +879,8 @@ function renderArtificialHistory(force = false) {
       entry.type,
       entry.landHa,
       entry.terraformedValue,
-      entry.status
+      entry.status,
+      entry.canTravel
     ])
   });
   if (!force && sig === artificialHistorySig) return;

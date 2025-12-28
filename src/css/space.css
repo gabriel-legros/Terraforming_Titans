@@ -696,8 +696,12 @@
 }
 
 .artificial-history-status {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font-weight: 700;
+  text-align: center;
 }
 
 .artificial-history-row span:nth-child(2),
@@ -724,12 +728,30 @@
   color: var(--space-success);
 }
 
+.artificial-history-abandoned {
+  color: var(--space-warning);
+}
+
 .artificial-history-cancelled {
   color: var(--space-warning);
 }
 
 .artificial-history-discarded {
   color: var(--space-fg-muted);
+}
+
+.artificial-history-travel-btn {
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 999px;
+  border: 1px solid var(--space-border-color);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--space-fg);
+  cursor: pointer;
+}
+
+.artificial-history-travel-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .space-stat-card {
