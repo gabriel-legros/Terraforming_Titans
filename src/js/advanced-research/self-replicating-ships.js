@@ -1,42 +1,26 @@
 function updateShipReplication(deltaTime, resources, globalEffects, accumulatedChanges) {
-  if (!globalEffects || typeof globalEffects.isBooleanFlagSet !== 'function') {
-    return;
-  }
   if (!globalEffects.isBooleanFlagSet('selfReplicatingShips')) {
     return;
   }
 
-  const shipsResource = resources?.special?.spaceships;
-  if (!shipsResource) return;
-
-  const assigned =
-    typeof projectManager !== 'undefined' &&
-    projectManager &&
-    typeof projectManager.getAssignedSpaceships === 'function'
-      ? projectManager.getAssignedSpaceships()
-      : 0;
-
-  const cap = 1e17;
+  const shipsResource = resources.special.spaceships;
+  const metalImportAssigned = projectManager.projects.oreSpaceMining.assignedSpaceships;
+  const baseReplicators = Math.max(0, warpGateNetworkManager.getCapForResource('metal') - metalImportAssigned);
   const available = shipsResource.value;
-  if(available < 1) return;
-  const total = available + assigned;
-  if (total >= cap) return;
+  if (available < 1 || baseReplicators <= 0) return;
 
-  const rate = available * 0.001;
-  const increase = Math.min(rate * (deltaTime / 1000), cap - total);
+  const replicatingShips = Math.min(available, baseReplicators);
+  const rate = replicatingShips * 0.001;
+  const increase = rate * (deltaTime / 1000);
 
-  if (accumulatedChanges && accumulatedChanges.special) {
-    accumulatedChanges.special.spaceships += increase;
-  } else {
-    shipsResource.value += increase;
-  }
+  accumulatedChanges.special.spaceships += increase;
   shipsResource.modifyRate(rate, 'Replication', 'global');
 }
 
-if (typeof module !== 'undefined' && module.exports) {
+try {
   module.exports = updateShipReplication;
-}
+} catch (err) {}
 
-if (typeof window !== 'undefined') {
+try {
   window.updateShipReplication = updateShipReplication;
-}
+} catch (err) {}
