@@ -107,6 +107,20 @@
     color: #bbbbbb;
 }
 
+.dark-mode .import-cap-toggle {
+    color: #ffffff;
+    background: none;
+    border: none;
+}
+
+.dark-mode .import-cap-text {
+    color: #ffffff;
+}
+
+.dark-mode .import-cap-toggle:hover {
+    background: none;
+}
+
 .dark-mode .stat-item {
     background-color: #1e1e1e;
     border-color: #444;

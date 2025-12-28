@@ -146,7 +146,7 @@ class WarpGateNetworkManager extends EffectableEntity {
       'Import caps scale with fully controlled sectors.',
       `Base cap: ${formatNumber(IMPORT_CAP_PER_SECTOR, true)} ships per fully controlled sector (minimum 1 sector).`,
       'Rich sectors add +100% for that resource; poor sectors cut -50%.',
-      'Warp Gate Network levels add +10% cap per level after the first when fabrication is online.',
+      'Warp Gate Network levels add +10% cap per level.',
       `Fully controlled sectors: ${summary.fullControlCount}.`,
     ];
 
