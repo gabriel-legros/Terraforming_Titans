@@ -618,6 +618,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const constructedCountContainer = document.createElement('div');
   constructedCountContainer.classList.add('constructed-count-container');
 
+  const constructedInfo = document.createElement('div');
+  constructedInfo.classList.add('constructed-info');
+
   // Create a new element for displaying the number of constructed buildings and productivity
   const constructedCountElement = document.createElement('div');
   constructedCountElement.classList.add('constructed-count');
@@ -634,7 +637,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     `;
   }
 
-  constructedCountContainer.appendChild(constructedCountElement);
+  constructedInfo.appendChild(constructedCountElement);
 
   // Conditionally display productivity if requiresProductivity is true
   if (structure.requiresProductivity) {
@@ -669,18 +672,23 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       productivityContainer.appendChild(dayNightIcon);
     }
 
-    constructedCountContainer.appendChild(productivityContainer);
+    constructedInfo.appendChild(productivityContainer);
   }
 
+  constructedCountContainer.appendChild(constructedInfo);
+
   const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
-  constructedCountContainer.appendChild(structureControls);
   cached.increaseButton = increaseButton;
   cached.decreaseButton = decreaseButton;
 
   const toggleLabel = document.createElement('span');
   toggleLabel.textContent = 'Toggle: ';
-  constructedCountContainer.appendChild(toggleLabel);
-  constructedCountContainer.appendChild(structureControls);
+  const toggleControlsWrapper = document.createElement('div');
+  toggleControlsWrapper.classList.add('toggle-controls-wrapper');
+  toggleControlsWrapper.appendChild(toggleLabel);
+  toggleControlsWrapper.appendChild(structureControls);
+  constructedCountContainer.appendChild(toggleControlsWrapper);
+  constructedCountContainer.appendChild(constructedInfo);
 
   structureRow.appendChild(constructedCountContainer);
 
@@ -955,6 +963,7 @@ function disableStructureAutomations(structure, isColony) {
 function createStructureControls(structure, toggleCallback) {
   const structureControls = document.createElement('div');
   structureControls.classList.add('building-controls');
+  structureControls.classList.add('toggle-controls');
 
   let increaseButton = null;
   let decreaseButton = null;

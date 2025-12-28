@@ -2,6 +2,8 @@
     border-bottom: 1px solid #ccc; /* Adds a horizontal line */
     white-space: normal; /* Allows text to wrap onto the next line */
     padding-bottom: 3px; /* Tiny gap above the separator line */
+    width: 100%;
+    flex: 1 1 100%;
   }
 
 .button-container {
@@ -61,10 +63,19 @@
     word-wrap: break-word; /* Allow the text to break onto a new line */
 }
 
+.building-row {
+    width: 100%;
+}
+
 .building-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+}
+
+.toggle-controls {
+    flex-wrap: nowrap;
+    flex: 0 0 auto;
 }
 
 .building-controls .label {
@@ -100,14 +111,16 @@
 .constructed-count-container {
     display: flex;
     align-items: center;
+    width: 100%;
+    gap: 10px;
 }
 
 .constructed-count {
     margin-right: 10px;
+    flex: 0 0 auto;
 }
 
-.build-count-buttons,
-.constructed-count-container {
+.build-count-buttons {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -116,6 +129,25 @@
 .build-count-buttons span,
 .constructed-count-container span {
     font-size: 0.85em;
+}
+
+.constructed-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.toggle-controls-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.productivity-container {
+    flex: 0 0 auto;
 }
 
 .day-night-icon {
