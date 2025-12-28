@@ -788,8 +788,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   // Custom colony display (e.g., baseComfort, energy, food, water) if the structure is a colony
   if (isColony) {
+    const colonyRow = document.createElement('div');
+    colonyRow.classList.add('building-colony-row');
     const colonyDetails = createColonyDetails(structure);
-    structureRow.appendChild(colonyDetails);
+    colonyRow.appendChild(colonyDetails);
+    cardBody.appendChild(colonyRow);
+    cached.colonyRow = colonyRow;
   }
 
   //Autobuild feature, unlocked by research
@@ -1497,7 +1501,7 @@ function updateDecreaseButtonText(button, buildCount) {
 
       // Update colony-specific needs display (comfort, energy, food, water)
       if (structure instanceof Colony) {
-        updateColonyDetailsDisplay(structureRow, structure);
+        updateColonyDetailsDisplay(els.colonyRow, structure);
       }
       applyCollapseState(structureName);
     }
