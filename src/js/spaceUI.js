@@ -584,6 +584,7 @@ function updateCurrentWorldUI() {
             }
             wrapper.querySelector('#rwg-travel-btn')?.remove();
             wrapper.querySelector('#rwg-travel-warning')?.remove();
+            wrapper.querySelector('#rwg-dominion')?.remove();
             wrapper.querySelectorAll('[id]').forEach(el => {
                 if(el.id !== 'current-world-details') el.removeAttribute('id')
             });
