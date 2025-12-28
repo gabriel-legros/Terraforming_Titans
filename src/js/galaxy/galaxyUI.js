@@ -508,6 +508,8 @@ function handleGalaxyHexClick(event) {
     if (!hex) {
         return;
     }
+    galaxyUICache.mapState.userInteracted = true;
+    galaxyUICache.mapState.deferredCenter = false;
     const q = Number(hex.dataset.q);
     const r = Number(hex.dataset.r);
     if (!Number.isFinite(q) || !Number.isFinite(r)) {
@@ -1772,6 +1774,10 @@ function centerGalaxyMap(cache) {
         return false;
     }
     const { mapCanvas, mapWrapper, mapState } = cache;
+    if (mapState.userInteracted) {
+        mapState.deferredCenter = false;
+        return true;
+    }
     const canvasRect = mapCanvas.getBoundingClientRect();
     let viewWidth = canvasRect.width;
     let viewHeight = canvasRect.height;
@@ -1901,6 +1907,9 @@ function startGalaxyMapPan(event) {
     if (!supportsPointerEvents) {
         attachDocumentPanListeners();
     }
+
+    cache.mapState.userInteracted = true;
+    cache.mapState.deferredCenter = false;
 }
 
 function moveGalaxyMapPan(event) {
@@ -2245,6 +2254,7 @@ function cacheGalaxyElements() {
         overlayHideTimeout: null,
         initialized: false,
         initialFocus,
+        userInteracted: false,
         pendingCenterRequest: null,
         deferredCenter: false,
         lastViewWidth: 0,
