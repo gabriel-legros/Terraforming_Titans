@@ -342,7 +342,7 @@ class ImportResourcesProjectUI {
       return;
     }
 
-    this.capText.textContent = importCapManager.getCapSummaryText();
+    this.capText.textContent = warpGateNetworkManager.getCapSummaryText();
 
     if (this.availableDisplay) {
       const availableShips = formatNumber(Math.floor(resources?.special?.spaceships?.value || 0), true);
@@ -540,6 +540,7 @@ class ImportResourcesProjectUI {
     elements.importProgressName = progressNameLine;
     elements.importProgressStatus = progressStatusLine;
     elements.assignedSpaceshipsDisplay = assignedDisplay;
+    elements.isImportProject = true;
     elements.autoAssignCheckboxContainer = autoAssignContainer;
     elements.totalCostElement = totalCost;
     elements.totalGainElement = totalGain;
@@ -585,8 +586,9 @@ class ImportResourcesProjectUI {
       return;
     }
 
+    const formattedCap = maxShips === Infinity ? '∞' : formatNumber(maxShips, true);
     if (maxShips != null) {
-      elements.assignedSpaceshipsDisplay.textContent = `${assignedText}/${formatShipCount(maxShips)}`;
+      elements.assignedSpaceshipsDisplay.textContent = `${assignedText}/${formattedCap}`;
     } else {
       elements.assignedSpaceshipsDisplay.textContent = assignedText;
     }

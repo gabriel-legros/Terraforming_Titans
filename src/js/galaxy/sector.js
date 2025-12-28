@@ -11,7 +11,9 @@ class GalaxySector {
         richResource,
         poorResources,
         originalControllerId,
-        lastFullControllerId
+        lastFullControllerId,
+        warpGateNetworkLevel,
+        warpGateNetworkProgress
     } = {}) {
         this.q = Number.isFinite(q) ? q : 0;
         this.r = Number.isFinite(r) ? r : 0;
@@ -27,6 +29,9 @@ class GalaxySector {
         this.poorResources = poorResources || [];
         this.originalControllerId = originalControllerId ? String(originalControllerId) : null;
         this.lastFullControllerId = lastFullControllerId ? String(lastFullControllerId) : null;
+        const warpGateLevel = Math.floor(Number(warpGateNetworkLevel ?? 0) || 0);
+        this.warpGateNetworkLevel = Math.max(0, Math.min(warpGateLevel, 1000000));
+        this.warpGateNetworkProgress = Math.max(0, Number(warpGateNetworkProgress ?? 0) || 0);
         if (control) {
             this.replaceControl(control);
         }
@@ -373,7 +378,9 @@ class GalaxySector {
             value: this.value,
             rewardAcquired: this.rewardAcquired === true,
             originalControllerId: this.originalControllerId,
-            lastFullControllerId: this.lastFullControllerId
+            lastFullControllerId: this.lastFullControllerId,
+            warpGateNetworkLevel: this.warpGateNetworkLevel,
+            warpGateNetworkProgress: this.warpGateNetworkProgress
         };
     }
 }

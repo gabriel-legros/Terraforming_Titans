@@ -17,7 +17,7 @@ describe('Import Resources assignment UI', () => {
     global.resources = { special: { spaceships: { value: 0 } } };
     global.projectElements = {};
     global.projectManager = { projects: {} };
-    global.importCapManager = {
+    global.warpGateNetworkManager = {
       getCapSummaryText: () => '',
       getCapForProject: () => Infinity,
     };
@@ -43,7 +43,7 @@ describe('Import Resources assignment UI', () => {
     delete global.resources;
     delete global.projectElements;
     delete global.projectManager;
-    delete global.importCapManager;
+    delete global.warpGateNetworkManager;
     delete global.Project;
   });
 

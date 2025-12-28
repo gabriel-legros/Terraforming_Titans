@@ -2097,7 +2097,7 @@ const researchParameters = {
         id: 'tractor_beams',
         name: 'Tractor Beams',
         description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
-        cost: { advancedResearch: 10000000 },
+        cost: { advancedResearch: 999_999_999 },
         prerequisites: [],
         effects: [
           {
@@ -2105,6 +2105,21 @@ const researchParameters = {
             targetId: 'planetaryThruster',
             type: 'booleanFlag',
             flagId: 'tractorBeams',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'warp_gate_fabrication',
+        name: 'Warp Gate Fabrication',
+        description: 'Enables growth of the warp gate network from terraformed worlds.',
+        cost: { advancedResearch: 10000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'warpGateNetworkManager',
+            type: 'booleanFlag',
+            flagId: 'warpGateFabrication',
             value: true
           }
         ]

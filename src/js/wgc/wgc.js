@@ -701,7 +701,7 @@ class WarpGateCommand extends EffectableEntity {
 
   enable() {
     this.enabled = true;
-    importCapManager.setWarpGateUnlocked(true);
+    warpGateNetworkManager.setWarpGateUnlocked(true);
     if (typeof showWGCTab === 'function') {
       showWGCTab();
     }
@@ -1229,7 +1229,7 @@ class WarpGateCommand extends EffectableEntity {
 
   loadState(data = {}) {
     this.enabled = data.enabled || false;
-    importCapManager.setWarpGateUnlocked(this.enabled);
+    warpGateNetworkManager.setWarpGateUnlocked(this.enabled);
     this.hideStoryLogs = !!data.hideStoryLogs;
     if (data.upgrades) {
       for (const k in data.upgrades) {

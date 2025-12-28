@@ -1,6 +1,7 @@
 const IMPORT_CAP_BASE = 1e9;
-const IMPORT_CAP_WARP = 1e11;
-const IMPORT_CAP_PER_SECTOR = 1e11;
+const IMPORT_CAP_WARP = 1e10;
+const IMPORT_CAP_PER_SECTOR = 1e10;
+const WARP_GATE_MAX_LEVEL = 1000000;
 const IMPORT_CAP_RESOURCES = [
   { key: 'metal', label: 'Metal' },
   { key: 'silicon', label: 'Silicon' },
@@ -9,8 +10,9 @@ const IMPORT_CAP_RESOURCES = [
   { key: 'nitrogen', label: 'Nitrogen' },
 ];
 
-class ImportCapManager {
+class WarpGateNetworkManager extends EffectableEntity {
   constructor() {
+    super({ description: 'Manages warp gate network growth and import caps.' });
     this.warpGateUnlocked = false;
     this.galaxyUnlocked = false;
     this.breakdownCache = this.createEmptyBreakdown();
@@ -50,6 +52,55 @@ class ImportCapManager {
 
   setGalaxyUnlocked(value) {
     this.galaxyUnlocked = value === true;
+  }
+
+  update(deltaMs) {
+    if (!this.isBooleanFlagSet('warpGateFabrication')) {
+      return;
+    }
+    if (!galaxyManager.enabled) {
+      return;
+    }
+    const deltaHours = deltaMs / 3600000;
+    const sectors = galaxyManager.getUhfControlledSectors();
+    let levelChanged = false;
+    for (let index = 0; index < sectors.length; index += 1) {
+      const sector = sectors[index];
+      const worldCount = galaxyManager.getTerraformedWorldCountForSector(sector);
+      if (!(worldCount > 0)) {
+        continue;
+      }
+      let level = sector.warpGateNetworkLevel || 0;
+      let progress = sector.warpGateNetworkProgress || 0;
+      if (level >= WARP_GATE_MAX_LEVEL) {
+        sector.warpGateNetworkProgress = 0;
+        continue;
+      }
+      progress += deltaHours * worldCount;
+      let required = level + 1;
+      while (progress >= required && level < WARP_GATE_MAX_LEVEL) {
+        progress -= required;
+        level += 1;
+        required = level + 1;
+        levelChanged = true;
+      }
+      if (level >= WARP_GATE_MAX_LEVEL) {
+        level = WARP_GATE_MAX_LEVEL;
+        progress = 0;
+      }
+      sector.warpGateNetworkLevel = level;
+      sector.warpGateNetworkProgress = progress;
+    }
+    if (levelChanged) {
+      this.breakdownDirty = true;
+    }
+  }
+
+  applyBooleanFlag(effect) {
+    super.applyBooleanFlag(effect);
+    if (effect.flagId === 'warpGateFabrication') {
+      this.breakdownDirty = true;
+    }
   }
 
   getCapForProject(project) {
@@ -95,6 +146,7 @@ class ImportCapManager {
       'Import caps scale with fully controlled sectors.',
       `Base cap: ${formatNumber(IMPORT_CAP_PER_SECTOR, true)} ships per fully controlled sector (minimum 1 sector).`,
       'Rich sectors add +100% for that resource; poor sectors cut -50%.',
+      'Warp Gate Network levels add +10% cap per level after the first when fabrication is online.',
       `Fully controlled sectors: ${summary.fullControlCount}.`,
     ];
 
@@ -124,24 +176,24 @@ class ImportCapManager {
       const sector = sectors[index];
       const richResource = sector.getRichResource();
       const poorResources = sector.getPoorResources();
+      const warpGateMultiplier = this.getWarpGateMultiplier(sector);
       IMPORT_CAP_RESOURCES.forEach(({ key }) => {
         const entry = summary.resources[key];
+        const baseCap = IMPORT_CAP_PER_SECTOR * warpGateMultiplier;
         if (richResource === key) {
           entry.richCount += 1;
+          entry.cap += baseCap * 2;
           return;
         }
         if (poorResources.includes(key)) {
           entry.poorCount += 1;
+          entry.cap += baseCap * 0.5;
           return;
         }
         entry.normalCount += 1;
+        entry.cap += baseCap;
       });
     }
-
-    IMPORT_CAP_RESOURCES.forEach(({ key }) => {
-      const entry = summary.resources[key];
-      entry.cap = (entry.normalCount + (entry.richCount * 2) + (entry.poorCount * 0.5)) * IMPORT_CAP_PER_SECTOR;
-    });
 
     this.breakdownCache = summary;
     this.breakdownDirty = false;
@@ -155,6 +207,14 @@ class ImportCapManager {
       ...summary.resources[resourceKey],
     };
   }
+
+  getWarpGateMultiplier(sector) {
+    if (!this.isBooleanFlagSet('warpGateFabrication')) {
+      return 1;
+    }
+    const level = sector.warpGateNetworkLevel || 0;
+    return 1 + 0.1 * (level - 1);
+  }
 }
 
-window.ImportCapManager = ImportCapManager;
+window.WarpGateNetworkManager = WarpGateNetworkManager;

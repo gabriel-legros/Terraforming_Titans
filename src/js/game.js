@@ -148,8 +148,8 @@ function initializeDefaultGlobals(){
   if (typeof galaxyManager.initialize === 'function') {
     galaxyManager.initialize();
   }
-  importCapManager = new ImportCapManager();
-  importCapManager.syncUnlocks();
+  warpGateNetworkManager = new WarpGateNetworkManager();
+  warpGateNetworkManager.syncUnlocks();
 
   rwgManager = new RwgManager();
   patienceManager = new PatienceManager();
@@ -323,6 +323,7 @@ function initializeGameState(options = {}) {
     lifeDesigner.restoreTravelState(savedLifeDesignerTravelState);
   }
   lifeManager = new LifeManager();
+  warpGateNetworkManager = new WarpGateNetworkManager();
 
   if (!preserveManagers || !researchManager) {
     researchManager = new ResearchManager(researchParameters);
@@ -419,8 +420,7 @@ function initializeGameState(options = {}) {
   if (typeof galaxyManager.initialize === 'function') {
     galaxyManager.initialize();
   }
-  importCapManager = new ImportCapManager();
-  importCapManager.syncUnlocks();
+  warpGateNetworkManager.syncUnlocks();
   if (!preserveManagers) {
     storyManager = new StoryManager(progressData);  // Pass the progressData object
     if (!skipStoryInitialization) {
@@ -506,6 +506,7 @@ function updateLogic(delta) {
   if (galaxyManager && typeof galaxyManager.update === 'function') {
     galaxyManager.update(delta);
   }
+  warpGateNetworkManager.update(delta);
 
   const allStructures = {...buildings, ...colonies};
 

@@ -821,7 +821,9 @@ function updateProjectUI(projectName) {
     const maxShips = typeof project.getMaxAssignableShips === 'function'
       ? project.getMaxAssignableShips()
       : null;
-    const assignedText = formatShipCount(project.assignedSpaceships);
+    const assignedText = isImportProject
+      ? formatNumber(project.assignedSpaceships, true)
+      : formatShipCount(project.assignedSpaceships);
     if (isImportProject && importUI) {
       importUI.updateAssignedDisplay(elements, assignedText, maxShips);
     } else {

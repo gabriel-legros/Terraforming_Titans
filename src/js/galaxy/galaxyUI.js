@@ -23,6 +23,7 @@ const GALAXY_DEFENSE_INT_FORMATTER = (typeof Intl !== 'undefined' && typeof Intl
     : null;
 const GALAXY_ALIEN_ICON = '\u2620\uFE0F';
 const GALAXY_CONTROL_EPSILON = 1e-6;
+const WARP_GATE_NETWORK_MAX_LEVEL = 1000000;
 const SECTOR_RESOURCE_LABELS = {
     metal: 'Metal',
     water: 'Water',
@@ -928,7 +929,32 @@ function renderSelectedSectorDetails() {
         const fleetDefenseRow = createStatRow('Fleet Defense');
         const totalDefenseRow = createStatRow('Total Defense');
 
-        managementSection.append(worldRow.stat, fleetDefenseRow.stat, totalDefenseRow.stat);
+        const warpGateRow = doc.createElement('div');
+        warpGateRow.className = 'galaxy-sector-panel__warp-gate';
+
+        const warpGateHeader = doc.createElement('div');
+        warpGateHeader.className = 'galaxy-sector-panel__warp-gate-header';
+
+        const warpGateLabel = doc.createElement('span');
+        warpGateLabel.className = 'galaxy-sector-panel__stat-label';
+        warpGateLabel.textContent = 'Warp Gate Network';
+
+        const warpGateValue = doc.createElement('span');
+        warpGateValue.className = 'galaxy-sector-panel__stat-value';
+        warpGateValue.textContent = 'Level 0';
+
+        warpGateHeader.append(warpGateLabel, warpGateValue);
+
+        const warpGateTrack = doc.createElement('div');
+        warpGateTrack.className = 'galaxy-sector-panel__warp-gate-track';
+
+        const warpGateFill = doc.createElement('div');
+        warpGateFill.className = 'galaxy-sector-panel__warp-gate-fill';
+
+        warpGateTrack.appendChild(warpGateFill);
+        warpGateRow.append(warpGateHeader, warpGateTrack);
+
+        managementSection.append(worldRow.stat, fleetDefenseRow.stat, totalDefenseRow.stat, warpGateRow);
 
         const lockOption = doc.createElement('label');
         lockOption.className = 'galaxy-sector-panel__lock-option';
@@ -972,7 +998,10 @@ function renderSelectedSectorDetails() {
             management: {
                 worldsValue: worldRow.statValue,
                 fleetDefenseValue: fleetDefenseRow.statValue,
-                totalDefenseValue: totalDefenseRow.statValue
+                totalDefenseValue: totalDefenseRow.statValue,
+                warpGateRow,
+                warpGateValue,
+                warpGateFill
             },
             enemySection,
             enemy: {
@@ -1144,6 +1173,19 @@ function renderSelectedSectorDetails() {
         details.management.fleetDefenseValue.textContent = '0';
         details.management.totalDefenseValue.textContent = '0';
     }
+
+    const warpGateVisible = uhfHasFullControl;
+    details.management.warpGateRow.classList.toggle('is-hidden', !warpGateVisible);
+    const warpGateLevel = Math.max(
+        0,
+        Math.min(WARP_GATE_NETWORK_MAX_LEVEL, Math.floor(Number(sector.warpGateNetworkLevel) || 0))
+    );
+    const warpGateProgress = Math.max(0, Number(sector.warpGateNetworkProgress) || 0);
+    details.management.warpGateValue.textContent = `Level ${formatNumber(warpGateLevel, true)}`;
+    const warpGateRatio = warpGateLevel >= WARP_GATE_NETWORK_MAX_LEVEL
+        ? 1
+        : Math.min(1, Math.max(0, warpGateProgress / (warpGateLevel + 1)));
+    details.management.warpGateFill.style.width = `${warpGateRatio * 100}%`;
 
     const lockAvailable = !!spaceManagerInstance?.setRwgSectorLock;
     details.lockOption.classList.toggle('is-hidden', !lockAvailable);

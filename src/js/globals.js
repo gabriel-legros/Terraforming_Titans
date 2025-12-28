@@ -39,7 +39,7 @@ let fundingModule;
 let spaceManager;
 let automationManager;
 let artificialManager;
-let importCapManager;
+let warpGateNetworkManager;
 
 let gameSettings = {
   disableAutosave: false,

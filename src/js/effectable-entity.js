@@ -663,6 +663,7 @@ function addOrRemoveEffect(effect, action) {
     'spaceManager' : spaceManager,
     'automationManager': automationManager,
     'warpGateCommand' : warpGateCommand,
+    'warpGateNetworkManager': warpGateNetworkManager,
     'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
     'galaxyManager': typeof galaxyManager !== 'undefined' ? galaxyManager : undefined,

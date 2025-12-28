@@ -391,7 +391,7 @@ class SpaceshipProject extends Project {
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements) return;
-    if (elements.assignedSpaceshipsDisplay) {
+    if (elements.assignedSpaceshipsDisplay && !elements.isImportProject) {
         const maxShips = typeof this.getMaxAssignableShips === 'function'
           ? this.getMaxAssignableShips()
           : null;

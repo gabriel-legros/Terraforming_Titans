@@ -616,6 +616,44 @@
   font-size: 0.85rem;
 }
 
+.galaxy-sector-panel__warp-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(22, 40, 68, 0.52);
+  border: 1px solid rgba(96, 150, 220, 0.25);
+}
+
+.galaxy-sector-panel__warp-gate.is-hidden {
+  display: none;
+}
+
+.galaxy-sector-panel__warp-gate-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.galaxy-sector-panel__warp-gate-track {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(16, 28, 48, 0.7);
+  overflow: hidden;
+  box-shadow: inset 0 0 4px rgba(8, 16, 28, 0.6);
+}
+
+.galaxy-sector-panel__warp-gate-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(112, 178, 255, 0.75), rgba(180, 220, 255, 0.95));
+  transition: width 0.2s ease;
+}
+
 .galaxy-sector-panel__stat-label {
   text-transform: uppercase;
   letter-spacing: 0.12em;

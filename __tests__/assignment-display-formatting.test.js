@@ -22,7 +22,7 @@ describe('Assignment displays use compact formatting', () => {
     global.projectManager = { projects: {}, getAssignedAndroids: () => 0 };
     global.projectElements = {};
     global.buildings = {};
-    global.importCapManager = {
+    global.warpGateNetworkManager = {
       getCapSummaryText: () => '',
       getCapForProject: () => Infinity,
     };
@@ -53,7 +53,7 @@ describe('Assignment displays use compact formatting', () => {
     delete global.projectManager;
     delete global.projectElements;
     delete global.buildings;
-    delete global.importCapManager;
+    delete global.warpGateNetworkManager;
     delete global.Project;
   });
 

@@ -406,7 +406,7 @@ class GalaxyManager extends EffectableEntity {
             return;
         }
         this.enabled = true;
-        importCapManager.setGalaxyUnlocked(true);
+        warpGateNetworkManager.setGalaxyUnlocked(true);
         this.refreshUIVisibility();
     }
 
@@ -479,6 +479,15 @@ class GalaxyManager extends EffectableEntity {
                 if (sectorData.lastFullControllerId) {
                     sector.setLastFullControllerId?.(sectorData.lastFullControllerId);
                 }
+                const warpGateLevel = Math.min(
+                    1000000,
+                    Math.max(0, Math.floor(Number(sectorData.warpGateNetworkLevel ?? 0) || 0))
+                );
+                sector.warpGateNetworkLevel = warpGateLevel;
+                sector.warpGateNetworkProgress = Math.max(
+                    0,
+                    Number(sectorData.warpGateNetworkProgress ?? 0) || 0
+                );
                 this.#updateSectorControlMemory(sector);
                 if (!sector.lastFullControllerId) {
                     sector.setLastFullControllerId?.(sector.originalControllerId || sector.getDominantController?.()?.factionId);
@@ -960,15 +969,29 @@ class GalaxyManager extends EffectableEntity {
     }
 
     getTerraformedWorldCountForSector(sector) {
-        const label = sector?.getDisplayName?.();
-        if (!label) {
-            return 0;
-        }
-        const count = spaceManager?.getWorldCountPerSector?.(label);
-        if (!Number.isFinite(count) || count <= 0) {
-            return 0;
-        }
-        return count;
+        const label = sector.getDisplayName();
+        const baseCount = Number(spaceManager.getWorldCountPerSector(label)) || 0;
+        const rewardCount = this.#isFactionFullControlSector(sector, galaxyUhfId)
+            ? this.getSectorRewardWorldCount(sector)
+            : 0;
+        return baseCount + rewardCount;
+    }
+
+    getSectorRewardWorldCount(sector) {
+        const rewards = sector.getSectorReward();
+        let total = 0;
+        rewards.forEach((entry) => {
+            const amount = Number(entry?.amount) || 0;
+            if (amount <= 0) {
+                return;
+            }
+            const descriptors = [entry?.type || '', entry?.resourceId || '', entry?.label || ''];
+            const hasWorldDescriptor = descriptors.some((descriptor) => String(descriptor).toLowerCase().includes('world'));
+            if (hasWorldDescriptor) {
+                total += amount;
+            }
+        });
+        return total;
     }
 
     getControlledSectorWorldCount(factionId = galaxyUhfId) {

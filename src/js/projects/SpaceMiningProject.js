@@ -29,7 +29,7 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   getMaxAssignableShips() {
-    return importCapManager.getCapForProject(this);
+    return warpGateNetworkManager.getCapForProject(this);
   }
 
   assignSpaceships(count) {
