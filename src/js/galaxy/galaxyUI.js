@@ -938,6 +938,12 @@ function renderSelectedSectorDetails() {
         const warpGateLabel = doc.createElement('span');
         warpGateLabel.className = 'galaxy-sector-panel__stat-label';
         warpGateLabel.textContent = 'Warp Gate Network';
+        const warpGateInfo = createInfoTooltip(
+            doc,
+            'Unlocked by Warp Gate Fabrication.\nEach terraformed world in this fully controlled sector adds 1 progress per hour.\nProgress to the next level requires Level + 1.'
+        );
+        warpGateLabel.appendChild(doc.createTextNode(' '));
+        warpGateLabel.appendChild(warpGateInfo);
 
         const warpGateValue = doc.createElement('span');
         warpGateValue.className = 'galaxy-sector-panel__stat-value';
@@ -1000,6 +1006,7 @@ function renderSelectedSectorDetails() {
                 fleetDefenseValue: fleetDefenseRow.statValue,
                 totalDefenseValue: totalDefenseRow.statValue,
                 warpGateRow,
+                warpGateInfo,
                 warpGateValue,
                 warpGateFill
             },
