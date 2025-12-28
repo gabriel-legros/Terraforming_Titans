@@ -1042,7 +1042,8 @@ function renderCosts(project, radius, manager) {
     artificialUICache.costSuperalloy.textContent = `${fmt(cost.superalloys, false, 2)}`;
   }
   if (artificialUICache.durationValue) {
-    artificialUICache.durationValue.textContent = formatDuration(durationContext.durationMs / 1000);
+    const seconds = Math.ceil(durationContext.durationMs / 1000);
+    artificialUICache.durationValue.textContent = formatDuration(seconds);
   }
   if (artificialUICache.durationTooltip) {
     artificialUICache.durationTooltip.title = `Construction time is divided by terraformed worlds (currently ${fmt(durationContext.worldCount, false, 2)}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.`;
