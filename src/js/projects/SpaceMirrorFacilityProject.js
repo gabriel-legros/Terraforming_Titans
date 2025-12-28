@@ -1767,23 +1767,29 @@ class SpaceMirrorFacilityProject extends Project {
     });
     
     if (rogueDayNightInput) {
-      rogueDayNightInput.addEventListener('change', () => {
+      const applyRogueDayNightPeriod = () => {
         const newPeriod = Math.max(1, Math.min(1000, Number(rogueDayNightInput.value) || 24));
         rogueDayNightInput.value = newPeriod;
-        
-        if (typeof terraforming !== 'undefined' && terraforming.celestialParameters) {
-          const isRogue = terraforming.celestialParameters.rogue === true;
-          if (isRogue) {
-            terraforming.celestialParameters.rotationPeriod = newPeriod;
-            
-            if (typeof dayNightCycle !== 'undefined' && typeof rotationPeriodToDurationFunc === 'function') {
-              const newDuration = rotationPeriodToDurationFunc(newPeriod);
-              dayNightCycle.dayDuration = newDuration;
-              dayNightCycle.nightDuration = newDuration;
-            }
-          }
+        const isRogue = terraforming.celestialParameters.rogue === true;
+        if (isRogue) {
+          terraforming.celestialParameters.rotationPeriod = newPeriod;
+          const durationData = rotationPeriodToDuration(newPeriod);
+          const progress = dayNightCycle.getDayProgress();
+          dayNightCycle.dayDuration = durationData.duration;
+          dayNightCycle.nightDuration = durationData.duration;
+          dayNightCycle.rotationDirection = durationData.direction;
+          dayNightCycle.setDayProgress(progress);
         }
+      };
+
+      rogueDayNightInput.addEventListener('focus', () => {
+        rogueDayNightInput.dataset.editing = 'true';
       });
+      rogueDayNightInput.addEventListener('blur', () => {
+        rogueDayNightInput.dataset.editing = 'false';
+      });
+      rogueDayNightInput.addEventListener('input', applyRogueDayNightPeriod);
+      rogueDayNightInput.addEventListener('change', applyRogueDayNightPeriod);
     }
   }
 
@@ -1851,8 +1857,9 @@ class SpaceMirrorFacilityProject extends Project {
       }
       if (elements.lanternDetails.rogueDayNightInput && isRogue && typeof terraforming !== 'undefined') {
         const currentPeriod = terraforming.celestialParameters.rotationPeriod || 24;
-        if (document.activeElement !== elements.lanternDetails.rogueDayNightInput) {
-          elements.lanternDetails.rogueDayNightInput.value = currentPeriod;
+        const dayNightInput = elements.lanternDetails.rogueDayNightInput;
+        if (document.activeElement !== dayNightInput && dayNightInput.dataset.editing !== 'true') {
+          dayNightInput.value = currentPeriod;
         }
       }
       

@@ -14,7 +14,7 @@ class DayNightCycle {
     }
 
     update(delta) {
-      const duration = Math.max(this.dayDuration, 1);
+      const duration = Math.max(this.dayDuration || 1, 1);
       this.elapsedTime += delta;
       this.rotationTime += delta * this.rotationDirection;
       const wrappedTime = ((this.rotationTime % duration) + duration) % duration;
@@ -33,7 +33,7 @@ class DayNightCycle {
     }
 
     getDayProgress() {
-      const progress = Math.max(0, Math.min(1, this.dayProgress));
+      const progress = Math.max(0, Math.min(1, this.dayProgress || 0));
       if (progress !== this.dayProgress) {
         this.dayProgress = progress;
       }
@@ -41,7 +41,7 @@ class DayNightCycle {
     }
 
     setDayProgress(dayProgress) {
-      const clampedProgress = Math.max(0, Math.min(1, dayProgress));
+      const clampedProgress = Math.max(0, Math.min(1, dayProgress || 0));
       this.dayProgress = clampedProgress;
       this.rotationTime = clampedProgress * this.dayDuration;
     }
