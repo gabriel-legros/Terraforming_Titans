@@ -98,7 +98,7 @@ class Aerostat extends BaseColony {
     return super.build(allowed, activate);
   }
 
-  maxBuildable(reservePercent = 0) {
+  maxBuildable(reservePercent = 0, additionalReserves = null) {
     const remaining = this._getRemainingBuildCapacity();
     if (remaining <= 0) {
       return 0;
@@ -110,7 +110,7 @@ class Aerostat extends BaseColony {
 
     let baseMax = remaining;
     if (typeof BaseColony.prototype.maxBuildable === 'function') {
-      baseMax = super.maxBuildable(reservePercent);
+      baseMax = super.maxBuildable(reservePercent, additionalReserves);
     }
 
     if (!Number.isFinite(baseMax)) {
