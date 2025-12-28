@@ -39,6 +39,7 @@ let fundingModule;
 let spaceManager;
 let automationManager;
 let artificialManager;
+let importCapManager;
 
 let gameSettings = {
   disableAutosave: false,

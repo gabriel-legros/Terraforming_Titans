@@ -28,6 +28,20 @@ class SpaceMiningProject extends SpaceshipProject {
     }
   }
 
+  getMaxAssignableShips() {
+    return importCapManager.getCapForProject(this);
+  }
+
+  assignSpaceships(count) {
+    const maxShips = this.getMaxAssignableShips();
+    const available = Math.floor(resources.special.spaceships.value);
+    const adjusted = Math.max(
+      -this.assignedSpaceships,
+      Math.min(count, available, maxShips - this.assignedSpaceships)
+    );
+    super.assignSpaceships(adjusted);
+  }
+
   shouldPenalizeMetalProduction() {
     const gainMetal = this.attributes.resourceGainPerShip?.colony?.metal;
     const cost = this.calculateSpaceshipCost();

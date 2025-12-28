@@ -338,6 +338,9 @@ class GalaxyManager extends EffectableEntity {
         this.radius = GALAXY_RADIUS;
         this.factions = new Map();
         this.sectors = new Map();
+        this.controlledSectorCache = [];
+        this.controlledSectorCacheDirty = true;
+        this.controlledSectorCacheVersion = 0;
         this.fleetUpgradePurchases = {};
         GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
             this.fleetUpgradePurchases[key] = 0;
@@ -403,6 +406,7 @@ class GalaxyManager extends EffectableEntity {
             return;
         }
         this.enabled = true;
+        importCapManager.setGalaxyUnlocked(true);
         this.refreshUIVisibility();
     }
 
@@ -549,6 +553,7 @@ class GalaxyManager extends EffectableEntity {
         this.radius = GALAXY_RADIUS;
         this.factions.clear();
         this.sectors.clear();
+        this.markControlledSectorCacheDirty();
         if (this.operationManager) {
             this.operationManager.reset();
         }
@@ -563,6 +568,25 @@ class GalaxyManager extends EffectableEntity {
 
     getSectors() {
         return Array.from(this.sectors.values());
+    }
+
+    getUhfControlledSectors() {
+        if (!this.controlledSectorCacheDirty) {
+            return this.controlledSectorCache;
+        }
+        const controlled = [];
+        this.sectors.forEach((sector) => {
+            if (this.#isFactionFullControlSector(sector, galaxyUhfId)) {
+                controlled.push(sector);
+            }
+        });
+        this.controlledSectorCache = controlled;
+        this.controlledSectorCacheDirty = false;
+        return this.controlledSectorCache;
+    }
+
+    getControlledSectorCacheVersion() {
+        return this.controlledSectorCacheVersion;
     }
 
     hasAcquiredSectorReward(sectorReference) {
@@ -1212,6 +1236,13 @@ class GalaxyManager extends EffectableEntity {
         faction?.markControlDirty?.();
     }
 
+    markControlledSectorCacheDirty() {
+        if (!this.controlledSectorCacheDirty) {
+            this.controlledSectorCacheVersion += 1;
+        }
+        this.controlledSectorCacheDirty = true;
+    }
+
     #markAllFactionBorderCachesDirty() {
         this.factions.forEach((faction) => {
             faction?.markBorderDirty?.();
@@ -1362,6 +1393,7 @@ class GalaxyManager extends EffectableEntity {
         if (changedFactions.size > 0) {
             changedFactions.forEach((factionId) => this.#markFactionControlDirty(factionId));
             this.#markAllFactionBorderCachesDirty();
+            this.markControlledSectorCacheDirty();
         }
     }
 

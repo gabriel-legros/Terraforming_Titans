@@ -1,11 +1,15 @@
 const EffectableEntity = require('../src/js/effectable-entity');
 global.EffectableEntity = EffectableEntity;
+global.importCapManager = {
+  setWarpGateUnlocked: () => {},
+};
 
 const { WarpGateCommand } = require('../src/js/wgc/wgc.js');
 
 describe('Warp Gate Command team unlock thresholds', () => {
   afterAll(() => {
     delete global.EffectableEntity;
+    delete global.importCapManager;
   });
 
   test('loadState derives unlocked teams from totalOperations', () => {
@@ -32,4 +36,3 @@ describe('Warp Gate Command team unlock thresholds', () => {
     expect(manager.logs[1].some(line => String(line).includes('unlocked'))).toBe(true);
   });
 });
-

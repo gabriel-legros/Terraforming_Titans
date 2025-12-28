@@ -22,6 +22,10 @@ describe('Assignment displays use compact formatting', () => {
     global.projectManager = { projects: {}, getAssignedAndroids: () => 0 };
     global.projectElements = {};
     global.buildings = {};
+    global.importCapManager = {
+      getCapSummaryText: () => '',
+      getCapForProject: () => Infinity,
+    };
 
     global.Project = class {
       constructor(config = {}, name = '') {
@@ -49,6 +53,7 @@ describe('Assignment displays use compact formatting', () => {
     delete global.projectManager;
     delete global.projectElements;
     delete global.buildings;
+    delete global.importCapManager;
     delete global.Project;
   });
 

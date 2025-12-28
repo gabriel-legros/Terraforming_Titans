@@ -225,6 +225,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      importCapResource: 'metal',
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {colony: {metal : 500000}}
@@ -242,6 +243,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      importCapResource: 'silicon',
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {colony: {silicon : 500000}}
@@ -259,6 +261,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      importCapResource: 'carbon',
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}},
@@ -278,6 +281,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      importCapResource: 'water',
       continuousAsBuilding: true,
       dynamicWaterImport: true,
       maxWaterCoverage: 0.2,
@@ -297,6 +301,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining : true,
+      importCapResource: 'nitrogen',
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
       resourceGainPerShip : {atmospheric: {inertGas : 1000000}},
@@ -315,6 +320,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       spaceMining: true,
+      importCapResource: 'hydrogen',
       continuousAsBuilding: true,
       costPerShip: { colony: { metal: 100000, energy: 100000000000 } },
       resourceGainPerShip: { atmospheric: { hydrogen: 1000000 } },

@@ -17,6 +17,10 @@ describe('Import Resources assignment UI', () => {
     global.resources = { special: { spaceships: { value: 0 } } };
     global.projectElements = {};
     global.projectManager = { projects: {} };
+    global.importCapManager = {
+      getCapSummaryText: () => '',
+      getCapForProject: () => Infinity,
+    };
 
     global.Project = class {
       constructor(config = {}, name = '') {
@@ -39,6 +43,7 @@ describe('Import Resources assignment UI', () => {
     delete global.resources;
     delete global.projectElements;
     delete global.projectManager;
+    delete global.importCapManager;
     delete global.Project;
   });
 
@@ -83,4 +88,3 @@ describe('Import Resources assignment UI', () => {
     expect(projectElements.oreSpaceMining.autoAssignCheckbox.checked).toBe(false);
   });
 });
-

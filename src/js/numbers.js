@@ -60,6 +60,7 @@ function formatBigInteger(number) {
   }
 
 function formatShipCount(value) {
+  if (value === Infinity) return '∞';
   if (!Number.isFinite(value)) return '0';
   const rounded = Math.round(value * 100) / 100;
   return rounded.toLocaleString('en-US', {

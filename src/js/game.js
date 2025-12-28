@@ -148,6 +148,8 @@ function initializeDefaultGlobals(){
   if (typeof galaxyManager.initialize === 'function') {
     galaxyManager.initialize();
   }
+  importCapManager = new ImportCapManager();
+  importCapManager.syncUnlocks();
 
   rwgManager = new RwgManager();
   patienceManager = new PatienceManager();
@@ -417,6 +419,8 @@ function initializeGameState(options = {}) {
   if (typeof galaxyManager.initialize === 'function') {
     galaxyManager.initialize();
   }
+  importCapManager = new ImportCapManager();
+  importCapManager.syncUnlocks();
   if (!preserveManagers) {
     storyManager = new StoryManager(progressData);  // Pass the progressData object
     if (!skipStoryInitialization) {

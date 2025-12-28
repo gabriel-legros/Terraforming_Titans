@@ -31,6 +31,11 @@ class ImportResourcesProjectUI {
     this.table = null;
     this.availableDisplay = null;
     this.costPerShipmentDisplay = null;
+    this.capSection = null;
+    this.capToggle = null;
+    this.capArrow = null;
+    this.capText = null;
+    this.capExpanded = false;
     this.multiplierButtons = { decrease: null, increase: null };
     this.collapseArrow = null;
     this.upButton = null;
@@ -46,6 +51,11 @@ class ImportResourcesProjectUI {
     this.table = null;
     this.availableDisplay = null;
     this.costPerShipmentDisplay = null;
+    this.capSection = null;
+    this.capToggle = null;
+    this.capArrow = null;
+    this.capText = null;
+    this.capExpanded = false;
     this.multiplierButtons = { decrease: null, increase: null };
     this.collapseArrow = null;
     this.upButton = null;
@@ -135,6 +145,43 @@ class ImportResourcesProjectUI {
     costDisplay.classList.add('import-cost-per-shipment');
     cardBody.appendChild(costDisplay);
 
+    const capSection = document.createElement('div');
+    capSection.classList.add('import-cap-section');
+
+    const capToggle = document.createElement('button');
+    capToggle.type = 'button';
+    capToggle.classList.add('import-cap-toggle');
+    capToggle.setAttribute('aria-expanded', this.capExpanded ? 'true' : 'false');
+
+    const capArrow = document.createElement('span');
+    capArrow.classList.add('import-cap-arrow');
+    capArrow.textContent = this.capExpanded ? '\u25BC' : '\u25B6';
+
+    const capLabel = document.createElement('span');
+    capLabel.textContent = 'Import cap';
+
+    capToggle.appendChild(capArrow);
+    capToggle.appendChild(capLabel);
+
+    const capBody = document.createElement('div');
+    capBody.classList.add('import-cap-body');
+    capBody.style.display = this.capExpanded ? 'block' : 'none';
+
+    const capText = document.createElement('div');
+    capText.classList.add('import-cap-text');
+    capBody.appendChild(capText);
+
+    capToggle.addEventListener('click', () => {
+      this.capExpanded = !this.capExpanded;
+      capToggle.setAttribute('aria-expanded', this.capExpanded ? 'true' : 'false');
+      capArrow.textContent = this.capExpanded ? '\u25BC' : '\u25B6';
+      capBody.style.display = this.capExpanded ? 'block' : 'none';
+    });
+
+    capSection.appendChild(capToggle);
+    capSection.appendChild(capBody);
+    cardBody.appendChild(capSection);
+
     const topControls = document.createElement('div');
     topControls.classList.add('import-top-row');
 
@@ -207,6 +254,10 @@ class ImportResourcesProjectUI {
     this.table = table;
     this.availableDisplay = availableDisplay;
     this.costPerShipmentDisplay = costDisplay;
+    this.capSection = capSection;
+    this.capToggle = capToggle;
+    this.capArrow = capArrow;
+    this.capText = capText;
     this.multiplierButtons = { decrease: decreaseButton, increase: increaseButton };
     this.collapseArrow = arrow;
     this.upButton = upButton;
@@ -290,6 +341,8 @@ class ImportResourcesProjectUI {
     if (!this.card || !this.card.isConnected) {
       return;
     }
+
+    this.capText.textContent = importCapManager.getCapSummaryText();
 
     if (this.availableDisplay) {
       const availableShips = formatNumber(Math.floor(resources?.special?.spaceships?.value || 0), true);

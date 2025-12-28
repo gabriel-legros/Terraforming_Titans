@@ -376,6 +376,37 @@
     margin-bottom: 6px;
 }
 
+.import-cap-section {
+    margin: 6px 0 10px;
+}
+
+.import-cap-toggle {
+    background: none;
+    border: none;
+    color: #2f4d6d;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    padding: 0;
+}
+
+.import-cap-arrow {
+    font-size: 0.9em;
+}
+
+.import-cap-body {
+    margin-top: 6px;
+    padding-left: 18px;
+}
+
+.import-cap-text {
+    font-size: 0.85em;
+    color: #4a5a6a;
+    white-space: pre-line;
+}
+
 .project-summary-content .stat-value {
     margin-right: 0;
 }
