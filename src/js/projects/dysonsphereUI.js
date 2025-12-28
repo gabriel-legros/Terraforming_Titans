@@ -81,6 +81,55 @@ function renderDysonSphereUI(project, container) {
   });
 }
 
+function updateCollectorCostDisplay(project, costDisplay) {
+  const items = [];
+  const attributes = project.attributes || {};
+  const storageProj = attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
+
+  for (const category in project.collectorCost) {
+    const categoryCost = project.collectorCost[category];
+    for (const resource in categoryCost) {
+      const resourceData = resources[category][resource];
+      const displayName = resourceData.displayName || `${resource.charAt(0).toUpperCase()}${resource.slice(1)}`;
+      const required = categoryCost[resource];
+      const storageKey = resource === 'water' ? 'liquidWater' : resource;
+      const available = (resourceData.value || 0) + (storageProj ? storageProj.getAvailableStoredResource(storageKey) : 0);
+      items.push({
+        key: `${category}.${resource}`,
+        text: `${displayName}: ${formatNumber(required, true)}`,
+        missing: available < required,
+      });
+    }
+  }
+
+  const keyString = items.map(item => item.key).join(',');
+  if (costDisplay.dataset.collectorCostKeys !== keyString) {
+    costDisplay.dataset.collectorCostKeys = keyString;
+    costDisplay.textContent = '';
+    costDisplay._collectorCostSpans = new Map();
+    items.forEach((item, idx) => {
+      const span = document.createElement('span');
+      costDisplay._collectorCostSpans.set(item.key, span);
+      costDisplay.appendChild(span);
+      if (idx < items.length - 1) {
+        costDisplay.appendChild(document.createTextNode(', '));
+      }
+    });
+  }
+
+  const spans = costDisplay._collectorCostSpans;
+  items.forEach(item => {
+    const span = spans.get(item.key);
+    const color = item.missing ? 'red' : '';
+    if (span.textContent !== item.text) {
+      span.textContent = item.text;
+    }
+    if (span.style.color !== color) {
+      span.style.color = color;
+    }
+  });
+}
+
 function updateDysonSphereUI(project) {
   const els = projectElements[project.name];
   if (!els) return;
@@ -98,16 +147,7 @@ function updateDysonSphereUI(project) {
   els.frameStatusDisplay.textContent = project.isCompleted ? 'Complete' : 'Incomplete';
 
   if (els.costDisplay) {
-    const parts = [];
-    for (const category in project.collectorCost) {
-      for (const res in project.collectorCost[category]) {
-        const displayName = (resources && resources[category] && resources[category][res] && resources[category][res].displayName)
-          ? resources[category][res].displayName
-          : res.charAt(0).toUpperCase() + res.slice(1);
-        parts.push(`${displayName}: ${formatNumber(project.collectorCost[category][res], true)}`);
-      }
-    }
-    els.costDisplay.textContent = parts.join(', ');
+    updateCollectorCostDisplay(project, els.costDisplay);
   }
   if (els.expansionRateDisplay) {
     const active = project.isCollectorContinuous()
