@@ -96,6 +96,14 @@ When adding an input that should accept user strings (scientific notation/suffix
   - In `onValue`, write the parsed value into the owning object’s state (do not continuously overwrite the input’s `.value` while editing).
 - In the feature’s `updateUI`, only update `input.value` when the field is not focused (`document.activeElement !== input`), and set `input.dataset.<key>` to the parsed numeric string so other UI (like total-cost displays) can read the numeric value without reparsing.
 
+## UI input pattern: step buttons (-1, +1, /10, x10)
+These controls appear across structures, galaxy, and project panels. They share the same behavior:
+- The -1/+1 buttons apply the current step to the target value (e.g., -step, +step). Label them with the active step size, such as `-5` and `+5`.
+- The /10 and x10 buttons only adjust the step size. They must not change the target value. Clamp the step to the feature minimum (usually 1 for integers, or a feature-specific minimum for floats) and apply sane max limits.
+- Store the step per item (per structure, sector, project, etc.) in the owning state or a cached map so each control remembers its last step. Default to 1 or the feature-specific default.
+- Update the step button labels whenever the step changes, and use cached UI element references instead of new selectors.
+- After applying a -/+ change, clamp the target value and refresh the UI so other dependent displays update consistently.
+
 ## Nanotechnology
 The `nanotechManager` oversees a self-replicating swarm unlocked by **Nanotechnology Stage I** research. The UI remains hidden until `enable()` is called.
 

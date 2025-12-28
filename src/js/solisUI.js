@@ -22,6 +22,41 @@ const shopDescriptions = {
 };
 
 const automationShopKeys = ['autoResearch', 'shipAssignment', 'lifeAutomation'];
+const solisShopRepeatableKeys = [
+  'funding',
+  'metal',
+  'food',
+  'components',
+  'electronics',
+  'glass',
+  'water',
+  'androids',
+  'colonistRocket',
+  'startingShips',
+  'research'
+];
+const solisShopControls = {
+  multiplier: 1,
+  divideButton: null,
+  multiplyButton: null
+};
+
+function isRepeatableSolisShopUpgrade(key) {
+  return solisShopRepeatableKeys.indexOf(key) !== -1;
+}
+
+function setSolisShopMultiplier(nextValue) {
+  solisShopControls.multiplier = Math.max(1, Math.floor(nextValue));
+}
+
+function updateSolisShopMultiplierControls() {
+  solisShopControls.divideButton.textContent = '/10';
+  solisShopControls.multiplyButton.textContent = 'x10';
+}
+
+function getSolisShopPurchaseMultiplier() {
+  return solisShopControls.multiplier;
+}
 
 function showSolisTab() {
   solisTabVisible = true;
@@ -86,9 +121,14 @@ function createShopItem(key) {
 
   const button = document.createElement('button');
   button.id = `solis-shop-${key}-button`;
-  button.textContent = 'Buy';
+  const repeatable = isRepeatableSolisShopUpgrade(key);
+  button.textContent = repeatable ? `Buy x${getSolisShopPurchaseMultiplier()}` : 'Buy';
   button.addEventListener('click', () => {
-    solisManager.purchaseUpgrade(key);
+    if (repeatable) {
+      solisManager.purchaseUpgradeMultiple(key, getSolisShopPurchaseMultiplier());
+    } else {
+      solisManager.purchaseUpgrade(key);
+    }
     updateSolisUI();
   });
   actions.appendChild(button);
@@ -105,7 +145,7 @@ function createShopItem(key) {
 
   const costWrapper = label.querySelector('.solis-shop-item-cost');
   const costSpan = costWrapper.querySelector(`#solis-shop-${key}-cost`);
-  const elementRecord = { button, cost: costSpan, costWrapper, count: countSpan, purchased, item };
+  const elementRecord = { button, cost: costSpan, costWrapper, count: countSpan, purchased, item, repeatable };
 
   if (key === 'researchUpgrade') {
     const list = document.createElement('ul');
@@ -198,9 +238,37 @@ function initializeSolisUI() {
     const shopContainer = container.parentElement;
     shopContainer.classList.add('solis-shop-container');
 
+    const header = document.createElement('div');
+    header.classList.add('solis-shop-header');
+
     const title = document.createElement('h3');
     title.textContent = 'Solis Shop';
-    shopContainer.insertBefore(title, container);
+    header.appendChild(title);
+
+    const controls = document.createElement('div');
+    controls.classList.add('solis-shop-header-controls');
+
+    const divButton = document.createElement('button');
+    divButton.id = 'solis-shop-divide-button';
+    divButton.addEventListener('click', () => {
+      setSolisShopMultiplier(Math.max(1, Math.floor(getSolisShopPurchaseMultiplier() / 10)));
+      updateSolisUI();
+    });
+
+    const mulButton = document.createElement('button');
+    mulButton.id = 'solis-shop-multiply-button';
+    mulButton.addEventListener('click', () => {
+      setSolisShopMultiplier(getSolisShopPurchaseMultiplier() * 10);
+      updateSolisUI();
+    });
+
+    controls.append(divButton, mulButton);
+    header.appendChild(controls);
+    shopContainer.insertBefore(header, container);
+
+    solisShopControls.divideButton = divButton;
+    solisShopControls.multiplyButton = mulButton;
+    updateSolisShopMultiplierControls();
 
     const baseKeys = ['funding', 'metal', 'food', 'components', 'electronics', 'glass', 'water', 'androids', 'colonistRocket'];
     const keys = baseKeys.slice();
@@ -507,6 +575,12 @@ function updateSolisUI() {
     const up = solisManager.shopUpgrades[key];
     if (!up) continue;
     const atMax = typeof up.max === 'number' && up.purchases >= up.max;
+    const repeatable = el.repeatable === true;
+    const multiplier = repeatable ? getSolisShopPurchaseMultiplier() : 1;
+    const totalCost = repeatable
+      ? solisManager.getUpgradeTotalCost(key, multiplier)
+      : solisManager.getUpgradeCost(key);
+    const costText = repeatable ? formatNumber(totalCost, false, 0) : totalCost;
     if (el.purchased && el.count) {
       if (atMax) {
         el.purchased.textContent = 'Purchased';
@@ -520,11 +594,12 @@ function updateSolisUI() {
       if (el.button) el.button.classList.add('hidden');
       if (el.costWrapper) el.costWrapper.classList.add('hidden');
     } else {
-      if (el.cost) el.cost.textContent = solisManager.getUpgradeCost(key);
+      if (el.cost) el.cost.textContent = costText;
       if (el.costWrapper) el.costWrapper.classList.remove('hidden');
       if (el.button) {
         el.button.classList.remove('hidden');
-        el.button.disabled = solisManager.solisPoints < solisManager.getUpgradeCost(key);
+        el.button.textContent = repeatable ? `Buy x${multiplier}` : 'Buy';
+        el.button.disabled = solisManager.solisPoints < totalCost;
       }
     }
     if (key === 'researchUpgrade' && el.listItems) {

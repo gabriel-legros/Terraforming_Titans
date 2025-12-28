@@ -229,6 +229,13 @@ class SolisManager extends EffectableEntity {
     return up.baseCost * (up.purchases + 1);
   }
 
+  getUpgradeTotalCost(key, count) {
+    const up = this.shopUpgrades[key];
+    const purchaseCount = Math.max(1, Math.floor(count));
+    const totalSteps = purchaseCount * (2 * up.purchases + purchaseCount + 1) / 2;
+    return up.baseCost * totalSteps;
+  }
+
   purchaseUpgrade(key) {
     const up = this.shopUpgrades[key];
     if (!up || !this.isUpgradeEnabled(key)) return false;
@@ -345,6 +352,18 @@ class SolisManager extends EffectableEntity {
       }
     }
     return true;
+  }
+
+  purchaseUpgradeMultiple(key, count) {
+    const purchaseCount = Math.max(1, Math.floor(count));
+    let purchased = 0;
+    for (let i = 0; i < purchaseCount; i += 1) {
+      if (!this.purchaseUpgrade(key)) {
+        break;
+      }
+      purchased += 1;
+    }
+    return purchased;
   }
 
   applyResearchUpgrade() {

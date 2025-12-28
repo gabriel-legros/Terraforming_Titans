@@ -150,6 +150,52 @@
     padding-bottom: 10px;
 }
 
+.solis-shop-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+}
+
+.solis-shop-header h3 {
+    margin: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.solis-shop-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    min-width: 180px;
+    justify-content: flex-end;
+}
+
+.solis-shop-header-controls button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+    background-color: #2196f3;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s;
+}
+
+.solis-shop-header-controls button:hover {
+    background-color: #1976d2;
+}
+
+.solis-shop-header-controls button:disabled {
+    background-color: #e0e0e0;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
 .solis-shop-item {
     display: flex;
     justify-content: space-between;

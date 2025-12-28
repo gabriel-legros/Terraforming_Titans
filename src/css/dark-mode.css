@@ -474,6 +474,24 @@
     border-bottom-color: #444;
 }
 
+.dark-mode .solis-shop-header {
+    border-bottom-color: #444;
+}
+
+.dark-mode .solis-shop-header-controls button {
+    background-color: #64b5f6;
+    color: #ffffff;
+}
+
+.dark-mode .solis-shop-header-controls button:hover {
+    background-color: #42a5f5;
+}
+
+.dark-mode .solis-shop-header-controls button:disabled {
+    background-color: #2d2d2d;
+    color: #666;
+}
+
 .dark-mode .solis-shop-item {
     border-bottom-color: #444;
 }
