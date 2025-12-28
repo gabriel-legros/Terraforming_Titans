@@ -343,6 +343,10 @@ class GhgFactory extends Building {
     tempInput.classList.add('ghg-temp-input');
     tempControl.appendChild(tempInput);
 
+    const lineBreak = document.createElement('span');
+    lineBreak.classList.add('ghg-temp-line-break');
+    tempControl.appendChild(lineBreak);
+
     const betweenLabel = document.createElement('span');
     betweenLabel.textContent = ' and avg T < ';
     tempControl.appendChild(betweenLabel);
@@ -376,6 +380,7 @@ class GhgFactory extends Building {
         }
       }
       const showReverse = !!this.reversalAvailable;
+      lineBreak.style.display = showReverse ? 'block' : 'none';
       betweenLabel.style.display = showReverse ? 'inline' : 'none';
       tempInputB.style.display = showReverse ? 'inline' : 'none';
     };
@@ -408,6 +413,7 @@ class GhgFactory extends Building {
       checkbox: tempCheckbox,
       inputA: tempInput,
       inputB: tempInputB,
+      lineBreak: lineBreak,
       betweenLabel: betweenLabel,
       unitSpan: unitSpan
     };
@@ -430,6 +436,7 @@ class GhgFactory extends Building {
       ghgEls.inputB.value = toDisplayTemperature(settings.reverseTempThreshold);
     }
     const showReverse = !!this.reversalAvailable;
+    ghgEls.lineBreak.style.display = showReverse ? 'block' : 'none';
     if (ghgEls.betweenLabel) {
       ghgEls.betweenLabel.style.display = showReverse ? 'inline' : 'none';
     }

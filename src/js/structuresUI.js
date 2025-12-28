@@ -307,29 +307,11 @@ function applyCollapseState(structureName) {
   if (!els) return;
   const collapsed = !!els.collapsed;
   updateStructureCollapsePreference(structureName, collapsed);
-  if (els.costElement) els.costElement.style.display = collapsed ? 'none' : '';
-  if (els.productionDetails) els.productionDetails.style.display = collapsed ? 'none' : '';
-  if (els.descriptionElement) els.descriptionElement.style.display = collapsed ? 'none' : '';
-  const autoContainer = els.autoBuildContainer;
-  const inputContainer = els.autoBuildInputContainer;
-  if (autoContainer) {
-    Array.from(autoContainer.children).forEach(child => {
-      if (child !== inputContainer) {
-        if (collapsed) {
-          if (!Object.prototype.hasOwnProperty.call(child.dataset, 'prevDisplay')) {
-            child.dataset.prevDisplay = child.style.display;
-          }
-          child.style.display = 'none';
-        } else if (Object.prototype.hasOwnProperty.call(child.dataset, 'prevDisplay')) {
-          child.style.display = child.dataset.prevDisplay;
-          delete child.dataset.prevDisplay;
-        }
-      }
-    });
-  }
+  els.combinedRow.classList.toggle('collapsed', collapsed);
   if (els.collapseArrow) {
     els.collapseArrow.textContent = collapsed ? '▶' : '▼';
   }
+  els.headerActive.style.display = collapsed ? 'inline-flex' : 'none';
 }
 
 // Create buttons for the buildings based on their categories
@@ -400,10 +382,10 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
 // Create a structure row for both buildings and colonies
 function createStructureRow(structure, buildCallback, toggleCallback, isColony) {
   const combinedStructureRow = document.createElement('div');
-  combinedStructureRow.classList.add('combined-building-row');
+  combinedStructureRow.classList.add('combined-building-row', 'project-card', 'building-card');
 
   const structureRow = document.createElement('div');
-  structureRow.classList.add('building-row');
+  structureRow.classList.add('building-row', 'building-card-column', 'building-card-primary');
 
   // Hide the structure if it's not unlocked or if it's hidden
   if (!structure.unlocked || structure.isHidden) {
@@ -415,21 +397,64 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structureRow.classList.add('obsolete-building');
   }
 
-  const buttonContainer = document.createElement('div');
-  buttonContainer.classList.add('button-container');
-
-  // Left container for build, build amount, and hide buttons
-  const leftContainer = document.createElement('div');
-  leftContainer.classList.add('left-button-container');
+  const cardHeader = document.createElement('div');
+  cardHeader.classList.add('card-header', 'building-card-header');
 
   const collapseArrow = document.createElement('span');
   collapseArrow.classList.add('collapse-arrow');
-  collapseArrow.textContent = '▼';
-  leftContainer.appendChild(collapseArrow);
+
+  const headerGrid = document.createElement('div');
+  headerGrid.classList.add('building-card-header-grid');
+
+  const headerMain = document.createElement('div');
+  headerMain.classList.add('building-header-main');
+
+  const headerSteps = document.createElement('div');
+  headerSteps.classList.add('building-header-steps');
+
+  const headerActive = document.createElement('div');
+  headerActive.classList.add('building-header-active');
+
+  const headerAuto = document.createElement('div');
+  headerAuto.classList.add('building-header-auto');
+
+  headerGrid.appendChild(headerMain);
+  headerGrid.appendChild(headerActive);
+  headerGrid.appendChild(headerSteps);
+  headerGrid.appendChild(headerAuto);
+
+  const cardBody = document.createElement('div');
+  cardBody.classList.add('card-body', 'building-card-body');
+
+  const grid = document.createElement('div');
+  grid.classList.add('building-card-grid');
+  cardBody.appendChild(grid);
+
+  const controlsColumn = document.createElement('div');
+  controlsColumn.classList.add('building-card-column', 'building-card-controls');
+
+  const automationColumn = document.createElement('div');
+  automationColumn.classList.add('building-card-column', 'building-card-automation');
+
+  grid.appendChild(structureRow);
+  grid.appendChild(controlsColumn);
+  grid.appendChild(automationColumn);
+
+  // Initialize and seed per-structure UI cache
+  structureUIElements[structure.name] = structureUIElements[structure.name] || {};
+  const cached = structureUIElements[structure.name];
+  cached.combinedRow = combinedStructureRow;
+  cached.row = structureRow;
+  cached.collapsed = !!structureDisplayState.collapsed[structure.name];
+  cached.collapseArrow = collapseArrow;
+  cached.headerActive = headerActive;
+
+  collapseArrow.textContent = cached.collapsed ? '▶' : '▼';
+  headerActive.style.display = cached.collapsed ? 'inline-flex' : 'none';
 
   const button = document.createElement('button');
   button.id = `build-${structure.name}`;
-  button.classList.add('building-button');
+  button.classList.add('building-button', 'building-header-button');
   // Initial button text with a dedicated span for the build count to keep width stable
   button.textContent = '';
   button.append('Build ');
@@ -437,19 +462,22 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   countSpan.classList.add('build-button-count');
   countSpan.textContent = '1';
   button.appendChild(countSpan);
+  button._countSpan = countSpan;
   const nameNode = document.createTextNode(` ${structure.displayName}`);
   button.appendChild(nameNode);
   button.buttonNameNode = nameNode;
 
-  // Initialize and seed per-structure UI cache
-  structureUIElements[structure.name] = structureUIElements[structure.name] || {};
-  const cached = structureUIElements[structure.name];
-  cached.combinedRow = combinedStructureRow;
-  cached.row = structureRow;
   cached.buildButton = button;
-  cached.buttonContainer = buttonContainer;
-  cached.collapsed = !!structureDisplayState.collapsed[structure.name];
-  cached.collapseArrow = collapseArrow;
+
+  headerMain.appendChild(button);
+  headerActive.textContent = structure.canBeToggled
+    ? `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`
+    : `${formatBuildingCount(structure.count)}`;
+
+  cardHeader.appendChild(collapseArrow);
+  cardHeader.appendChild(headerGrid);
+  combinedStructureRow.appendChild(cardHeader);
+  combinedStructureRow.appendChild(cardBody);
 
   let selectedBuildCount = 1;
   selectedBuildCounts[structure.name] = selectedBuildCount;
@@ -469,28 +497,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
   });
 
-  leftContainer.appendChild(button);
-
-  // Create build count input and buttons
+  // Create build count buttons
   const buildCountButtons = document.createElement('div');
-  buildCountButtons.classList.add('build-count-buttons');
-
-  const buildCountLabel = document.createElement('span');
-  buildCountLabel.textContent = 'Amount: ';
-  buildCountButtons.appendChild(buildCountLabel);
-
-  const buildCountDisplay = document.createElement('span');
-  buildCountDisplay.classList.add('build-count-display');
-  buildCountDisplay.id = `${structure.name}-build-count`;
-  buildCountDisplay.textContent = formatNumber(selectedBuildCount, true);
-  buildCountButtons.appendChild(buildCountDisplay);
-  cached.buildCountDisplay = buildCountDisplay;
-
+  buildCountButtons.classList.add('build-count-buttons', 'building-control-group');
   const multiplyButton = document.createElement('button');
   multiplyButton.textContent = 'x10';
   multiplyButton.addEventListener('click', function () {
     selectedBuildCounts[structure.name] = multiplyByTen(selectedBuildCounts[structure.name]);
-    buildCountDisplay.textContent = formatNumber(selectedBuildCounts[structure.name], true);
     const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
     updateStructureButtonText(button, structure, manualBuildCount);
     updateStructureCostDisplay(costElement, structure, manualBuildCount);
@@ -509,7 +522,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   divideButton.textContent = '/10';
   divideButton.addEventListener('click', function () {
     selectedBuildCounts[structure.name] = divideByTen(selectedBuildCounts[structure.name]);
-    buildCountDisplay.textContent = formatNumber(selectedBuildCounts[structure.name], true);
     const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
     updateStructureButtonText(button, structure, manualBuildCount);
     updateStructureCostDisplay(costElement, structure, manualBuildCount);
@@ -523,8 +535,106 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
   });
   buildCountButtons.appendChild(divideButton);
+  headerSteps.appendChild(buildCountButtons);
 
-  leftContainer.appendChild(buildCountButtons);
+  const autoBuildHeaderContainer = document.createElement('div');
+  autoBuildHeaderContainer.classList.add('auto-build-header-container');
+
+  const autoBuildHeaderLabel = document.createElement('label');
+  autoBuildHeaderLabel.classList.add('auto-build-header-label');
+
+  const autoBuildCheckbox = document.createElement('input');
+  autoBuildCheckbox.type = 'checkbox';
+  autoBuildCheckbox.classList.add('auto-build-checkbox');
+  autoBuildCheckbox.checked = structure.autoBuildEnabled;
+
+  autoBuildCheckbox.addEventListener('change', () => {
+    structure.autoBuildEnabled = autoBuildCheckbox.checked;
+    if (autoBuildCheckbox.checked && typeof gameSettings !== 'undefined' && gameSettings.autobuildAlsoSetsActive) {
+      autoActiveCheckbox.checked = true;
+      structure.autoActiveEnabled = true;
+    }
+    // Additional logic for enabling/disabling auto-build can go here
+  });
+
+  autoBuildHeaderLabel.appendChild(autoBuildCheckbox);
+  autoBuildHeaderLabel.appendChild(document.createTextNode('Auto-build'));
+  autoBuildHeaderContainer.appendChild(autoBuildHeaderLabel);
+
+  const autoBuildInput = document.createElement('input');
+  autoBuildInput.type = 'number';
+  autoBuildInput.value = structure.autoBuildPercent; // Default to 0.1
+  autoBuildInput.step = 0.01; // Allow 0.01 steps for finer control
+  autoBuildInput.classList.add('auto-build-input', 'auto-build-header-input');
+
+  autoBuildInput.addEventListener('input', () => {
+    const autoBuildPercent = parseFloat(autoBuildInput.value);
+    const nextValue = Number.isFinite(autoBuildPercent) ? Math.max(0, autoBuildPercent) : 0;
+    structure.autoBuildPercent = nextValue;
+    if (nextValue !== autoBuildPercent) {
+      autoBuildInput.value = `${nextValue}`;
+    }
+    refreshAutoBuildTarget(structure);
+  });
+
+  const autoBuildBasisSelect = document.createElement('select');
+  autoBuildBasisSelect.classList.add('auto-build-basis');
+  const popOption = document.createElement('option');
+  popOption.value = 'population';
+  popOption.textContent = '% of pop';
+  autoBuildBasisSelect.appendChild(popOption);
+  const workerOption = document.createElement('option');
+  workerOption.value = 'workers';
+  workerOption.textContent = '% of workers';
+  autoBuildBasisSelect.appendChild(workerOption);
+  if (Array.isArray(structure.automationBuildingsDropDown)) {
+    structure.automationBuildingsDropDown.forEach(name => {
+      const option = document.createElement('option');
+      option.value = `building:${name}`;
+      const displayName = (buildings[name] && buildings[name].displayName) || name;
+      option.textContent = `% of ${displayName}`;
+      autoBuildBasisSelect.appendChild(option);
+    });
+  }
+  if (structure.autoBuildMaxOption) {
+    const maxOption = document.createElement('option');
+    maxOption.value = 'max';
+    maxOption.textContent = 'Max';
+    autoBuildBasisSelect.appendChild(maxOption);
+  }
+  autoBuildBasisSelect.value = resolveAutoBuildBasisValue(structure, autoBuildBasisSelect);
+
+  autoBuildHeaderContainer.appendChild(autoBuildInput);
+  autoBuildHeaderContainer.appendChild(autoBuildBasisSelect);
+  headerAuto.appendChild(autoBuildHeaderContainer);
+  autoBuildHeaderContainer.style.display = globalEffects.isBooleanFlagSet('automateConstruction') ? 'flex' : 'none';
+  cached.autoBuildHeaderContainer = autoBuildHeaderContainer;
+  structureUIElements[structure.name].autoBuildCheckbox = autoBuildCheckbox;
+  structureUIElements[structure.name].autoBuildInput = autoBuildInput;
+
+  const controlsLabel = document.createElement('div');
+  controlsLabel.classList.add('building-controls-label');
+  controlsLabel.textContent = 'Controls';
+  controlsColumn.appendChild(controlsLabel);
+
+  const customControlsContainer = document.createElement('div');
+  customControlsContainer.classList.add('building-custom-controls');
+  controlsColumn.appendChild(customControlsContainer);
+
+  const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
+  cached.increaseButton = increaseButton;
+  cached.decreaseButton = decreaseButton;
+
+  if (structure.canBeToggled) {
+    const toggleControlsWrapper = document.createElement('div');
+    toggleControlsWrapper.classList.add('toggle-controls-wrapper');
+    toggleControlsWrapper.appendChild(structureControls);
+    controlsColumn.appendChild(toggleControlsWrapper);
+  }
+
+  const controlActionRow = document.createElement('div');
+  controlActionRow.classList.add('building-control-actions');
+  controlsColumn.appendChild(controlActionRow);
 
   const hideButton = document.createElement('button');
   hideButton.classList.add('hide-button');
@@ -541,16 +651,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
   });
   hideButton.disabled = structure.active > 0;
-  leftContainer.appendChild(hideButton);
+  controlActionRow.appendChild(hideButton);
   cached.hideButton = hideButton;
 
   let upgradeButton = null;
   if (isColony) {
-    const upgradeLineBreak = document.createElement('div');
-    upgradeLineBreak.classList.add('upgrade-line-break');
-    leftContainer.appendChild(upgradeLineBreak);
-    cached.upgradeLineBreak = upgradeLineBreak;
-
     upgradeButton = document.createElement('button');
     upgradeButton.id = `${structure.name}-upgrade-button`;
     upgradeButton.classList.add('upgrade-button');
@@ -560,13 +665,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
         updateStructureDisplay(colonies);
       }
     });
-    leftContainer.appendChild(upgradeButton);
+    controlActionRow.appendChild(upgradeButton);
     cached.upgradeButton = upgradeButton;
   }
 
   if (typeof structure.initializeCustomUI === 'function') {
     structure.initializeCustomUI({
-      leftContainer,
+      leftContainer: customControlsContainer,
       hideButton,
       cachedElements: cached
     });
@@ -590,12 +695,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       updateBuildingDisplay(buildings);
     }
   });
-  leftContainer.appendChild(reverseInlineBtn);
+  controlActionRow.appendChild(reverseInlineBtn);
   cached.reverseButton = reverseInlineBtn;
-  buttonContainer.appendChild(leftContainer);
-
-  //done with first row
-  structureRow.appendChild(buttonContainer);
 
   const costElement = document.createElement('div');
   costElement.classList.add('structure-cost');
@@ -677,19 +778,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   constructedCountContainer.appendChild(constructedInfo);
 
-  const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
-  cached.increaseButton = increaseButton;
-  cached.decreaseButton = decreaseButton;
-
-  const toggleLabel = document.createElement('span');
-  toggleLabel.textContent = 'Toggle: ';
-  const toggleControlsWrapper = document.createElement('div');
-  toggleControlsWrapper.classList.add('toggle-controls-wrapper');
-  toggleControlsWrapper.appendChild(toggleLabel);
-  toggleControlsWrapper.appendChild(structureControls);
-  constructedCountContainer.appendChild(toggleControlsWrapper);
-  constructedCountContainer.appendChild(constructedInfo);
-
   structureRow.appendChild(constructedCountContainer);
 
   const description = document.createElement('p');
@@ -704,70 +792,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structureRow.appendChild(colonyDetails);
   }
 
-  combinedStructureRow.appendChild(structureRow);
-
-  const leftStructureRow = document.createElement('div');
-  leftStructureRow.classList.add('right-building-row');
-
   //Autobuild feature, unlocked by research
   const autoBuildContainer = document.createElement('div');
   autoBuildContainer.id = `${structure.name}-auto-build-container`;
   autoBuildContainer.classList.add('auto-build-container');
 
-  const autoBuildInputContainer = document.createElement('div');
-  autoBuildInputContainer.classList.add('auto-build-input-container');
-
-  // Checkbox for enabling/disabling auto-build
-  const autoBuildCheckbox = document.createElement('input');
-  autoBuildCheckbox.type = 'checkbox';
-  autoBuildCheckbox.classList.add('auto-build-checkbox');
-
-  autoBuildCheckbox.addEventListener('change', () => {
-    structure.autoBuildEnabled = autoBuildCheckbox.checked;
-    if (autoBuildCheckbox.checked && typeof gameSettings !== 'undefined' && gameSettings.autobuildAlsoSetsActive) {
-      autoActiveCheckbox.checked = true;
-      structure.autoActiveEnabled = true;
-    }
-    // Additional logic for enabling/disabling auto-build can go here
-  });
-  autoBuildInputContainer.appendChild(autoBuildCheckbox);
-  // Cache reference
-  structureUIElements[structure.name] = structureUIElements[structure.name] || {};
-  structureUIElements[structure.name].autoBuildCheckbox = autoBuildCheckbox;
-
-  const autoBuildLabel = document.createElement('span');
-  autoBuildLabel.textContent = 'Auto-build ';
-  autoBuildInputContainer.appendChild(autoBuildLabel);
-
-  const autoBuildBasisSelect = document.createElement('select');
-  autoBuildBasisSelect.classList.add('auto-build-basis');
-  const popOption = document.createElement('option');
-  popOption.value = 'population';
-  popOption.textContent = '% of pop';
-  autoBuildBasisSelect.appendChild(popOption);
-  const workerOption = document.createElement('option');
-  workerOption.value = 'workers';
-  workerOption.textContent = '% of workers';
-  autoBuildBasisSelect.appendChild(workerOption);
-  if (Array.isArray(structure.automationBuildingsDropDown)) {
-    structure.automationBuildingsDropDown.forEach(name => {
-      const option = document.createElement('option');
-      option.value = `building:${name}`;
-      const displayName = (buildings[name] && buildings[name].displayName) || name;
-      option.textContent = `% of ${displayName}`;
-      autoBuildBasisSelect.appendChild(option);
-    });
-  }
-  if (structure.autoBuildMaxOption) {
-    const maxOption = document.createElement('option');
-    maxOption.value = 'max';
-    maxOption.textContent = 'Max';
-    autoBuildBasisSelect.appendChild(maxOption);
-  }
-  autoBuildBasisSelect.value = resolveAutoBuildBasisValue(structure, autoBuildBasisSelect);
-  autoBuildInputContainer.appendChild(autoBuildBasisSelect);
-
   const autoBuildPriorityLabel = document.createElement('label');
+  autoBuildPriorityLabel.classList.add('auto-build-priority-label');
   autoBuildPriorityLabel.textContent = 'Prioritize';
   const autoBuildPriority = document.createElement('input');
   autoBuildPriority.type = 'checkbox';
@@ -778,11 +809,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structure.autoBuildPriority = autoBuildPriority.checked;
   });
   autoBuildPriorityLabel.prepend(autoBuildPriority);
-  autoBuildInputContainer.appendChild(autoBuildPriorityLabel);
   structureUIElements[structure.name].autoBuildPriority = autoBuildPriority;
 
   structureUIElements[structure.name].autoBuildBasisSelect = autoBuildBasisSelect;
-  autoBuildContainer.appendChild(autoBuildInputContainer);
 
   const autoBuildControlsRow = document.createElement('div');
   autoBuildControlsRow.classList.add('auto-build-controls-row');
@@ -792,28 +821,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildInputWrapper.classList.add('auto-build-input-wrapper');
   autoBuildControlsRow.appendChild(autoBuildInputWrapper);
 
-  const autoBuildInput = document.createElement('input');
-  autoBuildInput.type = 'number';
-  autoBuildInput.value = structure.autoBuildPercent; // Default to 0.1
-  autoBuildInput.step = 0.01; // Allow 0.01 steps for finer control
-  autoBuildInput.classList.add('auto-build-input');
-
-  autoBuildInput.addEventListener('input', () => {
-    const autoBuildPercent = parseFloat(autoBuildInput.value);
-    const nextValue = Number.isFinite(autoBuildPercent) ? Math.max(0, autoBuildPercent) : 0;
-    structure.autoBuildPercent = nextValue;
-    if (nextValue !== autoBuildPercent) {
-      autoBuildInput.value = `${nextValue}`;
-    }
-    refreshAutoBuildTarget(structure);
-  });
-
   updateAutoBuildInputState(structure, autoBuildBasisSelect, autoBuildInput);
-
-  autoBuildInputWrapper.appendChild(autoBuildInput);
 
   const autoBuildStepControls = createAutoBuildStepControls(structure, autoBuildInput);
   autoBuildInputWrapper.appendChild(autoBuildStepControls.grid);
+  autoBuildInputWrapper.appendChild(autoBuildPriorityLabel);
   structureUIElements[structure.name].autoBuildStepIncrement = autoBuildStepControls.incrementButton;
   structureUIElements[structure.name].autoBuildStepDecrement = autoBuildStepControls.decrementButton;
   structureUIElements[structure.name].autoBuildStepMultiply = autoBuildStepControls.multiplyButton;
@@ -825,9 +837,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     refreshAutoBuildTarget(structure);
   });
 
-  structureUIElements[structure.name].autoBuildInputContainer = autoBuildInputContainer;
   structureUIElements[structure.name].autoBuildInput = autoBuildInput;
-  cached.autoBuildInputContainer = autoBuildInputContainer;
 
   const autoBuildTarget = document.createElement('span');
   const autoBuildTargetContainer = document.createElement('div');
@@ -892,12 +902,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     updateBuildingDisplay(buildings);
   });
 
+  autoBuildTargetContainer.appendChild(setActiveButton);
   autoBuildContainer.appendChild(autoBuildTargetContainer);
-
-  const setActiveContainer = document.createElement('div');
-  setActiveContainer.classList.add('auto-build-setactive-container');
-  setActiveContainer.appendChild(setActiveButton);
-  autoBuildContainer.appendChild(setActiveContainer);
 
   if (autoUpgradeContainer) {
     autoBuildContainer.appendChild(autoUpgradeContainer);
@@ -914,14 +920,16 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   structure.initUI?.(autoBuildContainer, cached);
 
-  combinedStructureRow.append(autoBuildContainer);
+  automationColumn.appendChild(autoBuildContainer);
 
   refreshAutoBuildTarget(structure);
 
-  collapseArrow.addEventListener('click', () => {
+  const toggleCollapse = () => {
     cached.collapsed = !cached.collapsed;
     applyCollapseState(structure.name);
-  });
+  };
+
+  collapseArrow.addEventListener('click', toggleCollapse);
 
   applyCollapseState(structure.name);
 
@@ -1033,7 +1041,7 @@ function updateDecreaseButtonText(button, buildCount) {
   function updateStructureButtonText(button, structure, buildCount = 1) {
     if (!button) return;
     const canAfford = structure.canAfford(buildCount);
-    let countSpan = button.querySelector('.build-button-count');
+    let countSpan = button._countSpan;
     const newCount = formatNumber(buildCount, true);
     // Rebuild the button label structure if expected nodes are missing
     if (!countSpan || !button.buttonNameNode) {
@@ -1045,6 +1053,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const nameNodeNew = document.createTextNode('');
       button.appendChild(nameNodeNew);
       button.buttonNameNode = nameNodeNew;
+      button._countSpan = countSpan;
     }
     if (countSpan.textContent !== newCount) {
       countSpan.textContent = newCount;
@@ -1334,7 +1343,7 @@ function updateDecreaseButtonText(button, buildCount) {
   function updateStructureDisplay(structures) {
     for (const structureName in structures) {
       const structure = structures[structureName];
-      const els = structureUIElements[structureName] || {};
+      const els = structureUIElements[structureName] || (structureUIElements[structureName] = {});
       const combinedStructureRow = els.combinedRow || (function(){
         const btn = document.getElementById(`build-${structureName}`);
         return btn ? btn.closest('.combined-building-row') : null;
@@ -1345,7 +1354,6 @@ function updateDecreaseButtonText(button, buildCount) {
       })();
       const countElement = document.getElementById(`${structureName}-count`);
       const countActiveElement = document.getElementById(`${structureName}-count-active`);
-      const buildDisplay = els.buildCountDisplay || document.getElementById(`${structureName}-build-count`);
       const selectedBuildCount = selectedBuildCounts[structureName];
       const manualBuildCount = getManualBuildCount(structure, selectedBuildCount);
   
@@ -1364,10 +1372,9 @@ function updateDecreaseButtonText(button, buildCount) {
       } else if (countActiveElement) {
         countActiveElement.textContent = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
       }
-
-      if (buildDisplay) {
-        buildDisplay.textContent = formatNumber(selectedBuildCount, true);
-      }
+      els.headerActive.textContent = structure.canBeToggled
+        ? `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`
+        : `${formatBuildingCount(structure.count)}`;
 
       const incBtn = els.increaseButton || document.getElementById(`${structureName}-increase-button`);
       if (incBtn) {
@@ -1379,20 +1386,19 @@ function updateDecreaseButtonText(button, buildCount) {
       }
 
       // Toggle visibility of the "Hide" button based on conditions
-      const buttonContainer = els.buttonContainer || (structureRow ? structureRow.getElementsByClassName('button-container')[0] : null);
-      const hideButton = els.hideButton || (buttonContainer ? buttonContainer.getElementsByClassName('hide-button')[0] : null);
+      const hideButton = els.hideButton;
 
       if (hideButton) {
         hideButton.style.display = 'inline-block';
         hideButton.disabled = structure.active > 0;
       }
 
-      const reverseBtn = els.reverseButton || (buttonContainer ? buttonContainer.getElementsByClassName('reverse-button')[0] : null);
+      const reverseBtn = els.reverseButton;
       if (reverseBtn) {
         reverseBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
       }
 
-      const upgradeBtn = els.upgradeButton || (buttonContainer ? buttonContainer.querySelector(`#${structureName}-upgrade-button`) : null);
+      const upgradeBtn = els.upgradeButton;
       if (upgradeBtn) {
         updateUpgradeButton(upgradeBtn, structure);
       }
@@ -1400,7 +1406,10 @@ function updateDecreaseButtonText(button, buildCount) {
       // Toggle visibility of autoBuildContainer based on globalEffects
       const autoBuildContainer = els.autoBuildContainer || document.getElementById(`${structure.name}-auto-build-container`);
       if (autoBuildContainer) {
-        autoBuildContainer.style.display = globalEffects.isBooleanFlagSet('automateConstruction') ? 'flex' : 'none';
+        const showAutomation = globalEffects.isBooleanFlagSet('automateConstruction');
+        autoBuildContainer.style.display = showAutomation ? 'flex' : 'none';
+        const autoBuildHeaderContainer = els.autoBuildHeaderContainer;
+        autoBuildHeaderContainer.style.display = showAutomation ? 'flex' : 'none';
         
         // Set auto-build checkbox based on autoBuildEnabled
         if (els.autoBuildCheckbox) {

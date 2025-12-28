@@ -89,8 +89,8 @@
 }
 
 .dark-mode .card-header {
-    background-color: #141414;
-    border-bottom-color: #444;
+    background-color: #242424;
+    border-bottom-color: #3c3c3c;
     color: #ffffff;
 }
 
@@ -101,6 +101,20 @@
 .dark-mode .card-footer {
     background-color: #2d2d2d;
     border-top-color: #444;
+}
+
+.dark-mode .building-card-header .building-header-button {
+    background: none;
+    border: none;
+    color: inherit;
+}
+
+.dark-mode .building-card-header .building-header-button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .building-card .building-header-active {
+    color: #c7c7c7;
 }
 
 .dark-mode .project-description {
