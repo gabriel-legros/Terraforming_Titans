@@ -6,8 +6,8 @@
 
 .building-card-grid {
     display: grid;
-    grid-template-columns: minmax(260px, 1fr) minmax(150px, 150px) minmax(250px, 250px);
-    gap: 12px 16px;
+    grid-template-columns: minmax(150px, 1fr) minmax(150px, 150px) minmax(250px, 250px);
+    gap: 6px 6px;
     align-items: start;
 }
 
@@ -27,7 +27,7 @@
 
 .building-card .building-card-header-grid {
     display: grid;
-    grid-template-columns: minmax(200px, 1fr) auto minmax(350px, 350px);
+    grid-template-columns: minmax(200px, 1fr) auto minmax(330px, 330px);
     align-items: center;
     gap: 10px;
     width: 100%;
@@ -418,6 +418,20 @@
     justify-content: flex-end;
     gap: 5px;
     width: 100%;
+}
+
+.auto-build-target-container {
+    flex-wrap: wrap;
+    row-gap: 4px;
+}
+
+.auto-build-target {
+    flex: 1 1 auto;
+}
+
+.auto-build-setactive-button {
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 .auto-build-priority {

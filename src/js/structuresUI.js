@@ -871,6 +871,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const setActiveButton = document.createElement('button');
   setActiveButton.id = `${structure.name}-set-active-button`;
+  setActiveButton.classList.add('auto-build-setactive-button');
 
   const setActiveLabel = document.createElement('span');
   setActiveLabel.textContent = 'Set active to target';
