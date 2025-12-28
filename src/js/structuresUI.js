@@ -526,21 +526,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   leftContainer.appendChild(buildCountButtons);
 
-  let upgradeButton = null;
-  if (isColony) {
-    upgradeButton = document.createElement('button');
-    upgradeButton.id = `${structure.name}-upgrade-button`;
-    upgradeButton.classList.add('upgrade-button');
-    upgradeButton.addEventListener('click', function () {
-      const upgrades = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
-      if (structure.upgrade && structure.upgrade(upgrades)) {
-        updateStructureDisplay(colonies);
-      }
-    });
-    leftContainer.appendChild(upgradeButton);
-    cached.upgradeButton = upgradeButton;
-  }
-
   const hideButton = document.createElement('button');
   hideButton.classList.add('hide-button');
   hideButton.textContent = 'Hide';
@@ -558,6 +543,26 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   hideButton.disabled = structure.active > 0;
   leftContainer.appendChild(hideButton);
   cached.hideButton = hideButton;
+
+  let upgradeButton = null;
+  if (isColony) {
+    const upgradeLineBreak = document.createElement('div');
+    upgradeLineBreak.classList.add('upgrade-line-break');
+    leftContainer.appendChild(upgradeLineBreak);
+    cached.upgradeLineBreak = upgradeLineBreak;
+
+    upgradeButton = document.createElement('button');
+    upgradeButton.id = `${structure.name}-upgrade-button`;
+    upgradeButton.classList.add('upgrade-button');
+    upgradeButton.addEventListener('click', function () {
+      const upgrades = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
+      if (structure.upgrade && structure.upgrade(upgrades)) {
+        updateStructureDisplay(colonies);
+      }
+    });
+    leftContainer.appendChild(upgradeButton);
+    cached.upgradeButton = upgradeButton;
+  }
 
   if (typeof structure.initializeCustomUI === 'function') {
     structure.initializeCustomUI({

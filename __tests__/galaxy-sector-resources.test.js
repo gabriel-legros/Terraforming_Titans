@@ -1,23 +1,16 @@
-const hadUhfFactionId = Object.prototype.hasOwnProperty.call(global, 'UHF_FACTION_ID');
-const previousUhfFactionId = global.UHF_FACTION_ID;
-global.UHF_FACTION_ID = 'uhf';
-
-const { GalaxyManager } = require('../src/js/galaxy/galaxy.js');
+const { GalaxySector } = require('../src/js/galaxy/sector.js');
+const { galaxySectorParameters } = require('../src/js/galaxy/sector-parameters.js');
 
 describe('Galaxy sector resources', () => {
-  afterAll(() => {
-    if (!hadUhfFactionId) {
-      delete global.UHF_FACTION_ID;
-      return;
-    }
-    global.UHF_FACTION_ID = previousUhfFactionId;
-  });
-
   test('initializes rich and poor resource data from parameters', () => {
-    const manager = new GalaxyManager();
-    manager.initialize();
+    const override = galaxySectorParameters.overrides['1,0'];
+    const sector = new GalaxySector({
+      q: 1,
+      r: 0,
+      richResource: override.richResource,
+      poorResources: override.poorResources,
+    });
 
-    const sector = manager.getSector(1, 0);
     expect(sector.richResource).toBe('metal');
     expect(sector.poorResources).toEqual(['carbon', 'water']);
   });
