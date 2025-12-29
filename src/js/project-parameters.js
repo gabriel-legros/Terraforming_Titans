@@ -617,6 +617,17 @@ const projectParameters = {
       canUseDysonOverflow: true,
     }
   },
+  bioworld: {
+    type: 'BioworldProject',
+    name: 'Bioworld',
+    category: 'mega',
+    cost: {},
+    duration: 300000,
+    description: 'Cultivate a bioworld-scale ecosystem. Can only start when biomass density exceeds 1 ton/m^2 and fewer than 1,000 Ecumenopolis Districts are constructed. Completion removes all Ecumenopolis Districts and permanently disables new ones. Completed bioworlds grant evolution points when travelling based on total biomass.',
+    repeatable: false,
+    unlocked: false,
+    attributes: {}
+  },
   disposeResources : {
     type: 'SpaceDisposalProject',
     name : "Resource Disposal",

@@ -335,6 +335,7 @@ function initializeGameState(options = {}) {
       researchManager.reapplyEffects();
     }
   }
+  projectManager.projects.bioworld.applyEvolutionEffects();
   if (
     projectManager?.projects?.satellite &&
     researchManager.getResearchById('companion_satellite')?.isResearched &&

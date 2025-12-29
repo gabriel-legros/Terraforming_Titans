@@ -237,6 +237,9 @@ class EffectableEntity {
         case 'lifeDesignPointBiodomeMultiplier':
           this.applyLifeDesignPointBiodomeMultiplier(effect);
           break;
+        case 'lifeDesignAttributeMaxBonus':
+          this.applyLifeDesignAttributeMaxBonus(effect);
+          break;
         case 'lifeGrowthMultiplier':
           this.applyLifeGrowthMultiplier(effect);
           break;
@@ -538,6 +541,9 @@ class EffectableEntity {
       }
 
       applyLifeDesignPointBiodomeMultiplier(effect) {
+      }
+
+      applyLifeDesignAttributeMaxBonus(effect) {
       }
 
   applyLifeGrowthMultiplier(effect) {

@@ -278,6 +278,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Introduced an O'Neill Cylinders advanced research that grows orbital habitats from effective worlds, adds their total to effective terraformed worlds, and reveals a dedicated stat column in the Space tab when unlocked.
 - Made the Bioworkforce (bioworkers) conversion factor configurable per terraforming requirement via `lifeDesign.bioworkersPerBiomassPerPoint`.
 - High-gravity worlds now apply compounded building and colony cost multipliers, and the Terraforming Others panel shows the current gravity alongside any active gravity penalty.
+- Bioworlds advanced research now unlocks the Bioworld mega project, awarding evolution points on travel and a persistent evolution shop for life designer upgrades.
 - Autobuild now highlights resources that stalled construction with an orange exclamation mark in the resource list.
 - Space Mirror Facility sliders now rebalance more naturally: decreasing a zone returns share to **Any Zone** (not Unassigned), and increasing **Any Zone** reclaims Unassigned/focus allocations before reducing zonal shares.
 - Added a Round building construction setting that rounds manual building and colony construction up to the selected build count increment while updating cost previews.

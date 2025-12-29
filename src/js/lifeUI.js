@@ -264,6 +264,7 @@ function cacheLifeAttributeCells() {
       tentativeCell,
       modifyCell,
       nameCell,
+      maxSpan: nameCell ? nameCell.querySelector(`#${attributeName}-max-upgrades`) : null,
       displayNameSpan: nameCell ? nameCell.querySelector(`#${attributeName}-display-name`) : null,
       descriptionSpan: nameCell ? nameCell.querySelector(`#${attributeName}-metabolism-description`) : null,
       attributeDescriptionSpan: nameCell ? nameCell.querySelector(`#${attributeName}-description`) : null,
@@ -478,7 +479,7 @@ function initializeLifeTerraformingDesignerUI() {
         rows += `
           <tr id="life-attribute-row-${attributeName}"${isBioworkforceRow ? ' data-bioworkforce-ui="true"' : ''}${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
-              ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max ${attribute.maxUpgrades})
+              ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max <span id="${attributeName}-max-upgrades">${attribute.maxUpgrades}</span>)
               <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon" title="Each point assigns ${bioworkersPerBiomassPerPoint} of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>` : ''}`}</div>
             </td>
             <td>
@@ -910,6 +911,8 @@ function updateLifeUI() {
         } else if (currentValueDiv) {
           currentValueDiv.textContent = 'N/A';
         }
+
+        ac.maxSpan.textContent = currentAttribute.maxUpgrades;
 
         // Update Tentative Design Value (if applicable, cached)
         const tentativeAttribute = lifeDesigner.tentativeDesign ? lifeDesigner.tentativeDesign[attributeName] : null;

@@ -127,13 +127,16 @@ function calculateGrowthTemperatureTolerance(points) {
 }
 
 const lifeDesignerConfig = {
-  maxPoints : 0
+  maxPoints : 0,
+  attributeMaxBonuses: {}
 }
 
 function getAttributeMaxUpgrades(attributeName) {
   const requirements = getActiveLifeDesignRequirements();
-  return requirements.attributeMaxUpgrades?.[attributeName]
+  const baseMax = requirements.attributeMaxUpgrades?.[attributeName]
     ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.attributeMaxUpgrades[attributeName];
+  const bonus = lifeDesignerConfig.attributeMaxBonuses[attributeName] || 0;
+  return baseMax + bonus;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -576,6 +579,7 @@ class LifeDesigner extends EffectableEntity {
     this.designPointBonus = 0;
     this.pointShopMultiplier = 1;
     this.biodomePointMultiplier = 1;
+    this.attributeMaxBonuses = {};
 
     this.isActive = false;
     this.remainingTime = this.getTentativeDuration();
@@ -625,7 +629,10 @@ class LifeDesigner extends EffectableEntity {
     this.designPointBonus = 0;
     this.pointShopMultiplier = 1;
     this.biodomePointMultiplier = 1;
+    this.attributeMaxBonuses = {};
+    lifeDesignerConfig.attributeMaxBonuses = this.attributeMaxBonuses;
     super.applyActiveEffects(firstTime);
+    this.refreshAttributeMaxUpgrades();
   }
 
   applyLifeDesignPointBonus(effect){
@@ -638,6 +645,26 @@ class LifeDesigner extends EffectableEntity {
 
   applyLifeDesignPointBiodomeMultiplier(effect) {
     this.biodomePointMultiplier *= 1 + effect.value;
+  }
+
+  applyLifeDesignAttributeMaxBonus(effect) {
+    const bonuses = effect.bonuses || {};
+    for (const key in bonuses) {
+      this.attributeMaxBonuses[key] = (this.attributeMaxBonuses[key] || 0) + bonuses[key];
+    }
+    lifeDesignerConfig.attributeMaxBonuses = this.attributeMaxBonuses;
+    this.refreshAttributeMaxUpgrades();
+  }
+
+  refreshAttributeMaxUpgrades() {
+    this.updateDesignAttributeMaxUpgrades(this.currentDesign);
+    this.updateDesignAttributeMaxUpgrades(this.tentativeDesign || this.currentDesign);
+  }
+
+  updateDesignAttributeMaxUpgrades(design) {
+    for (const key in design) {
+      design[key].maxUpgrades = getAttributeMaxUpgrades(key);
+    }
   }
 
   createNewDesign(

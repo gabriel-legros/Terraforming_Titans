@@ -70,6 +70,111 @@
     font-size: 0.9em;
 }
 
+/* --- Bioworld Shop --- */
+.bioworld-shop {
+    margin-top: 10px;
+    border-top: 1px solid #dee2e6;
+    padding-top: 8px;
+    display: grid;
+    gap: 12px;
+}
+
+.bioworld-shop-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #e9ecef;
+    font-weight: 600;
+}
+
+.bioworld-shop-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bioworld-shop-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bioworld-shop-points {
+    font-weight: 700;
+}
+
+.bioworld-shop-items {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
+@media (max-width: 1100px) {
+    .bioworld-shop-items {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .bioworld-shop-items {
+        grid-template-columns: minmax(220px, 1fr);
+    }
+}
+
+.bioworld-shop-item {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.bioworld-shop-item-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.bioworld-shop-item-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.bioworld-shop-item-costs {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bioworld-shop-cost,
+.bioworld-shop-count {
+    font-size: 0.85em;
+    color: #555;
+}
+
+.bioworld-shop-button {
+    padding: 4px 8px;
+    border: 1px solid #adb5bd;
+    border-radius: 4px;
+    background: #f1f3f5;
+    cursor: pointer;
+}
+
+.bioworld-shop-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 .progress-button-container {
     width: 100%;
 }

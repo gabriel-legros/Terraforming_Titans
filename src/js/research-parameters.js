@@ -1066,6 +1066,7 @@ const researchParameters = {
         description: 'Creates a planet-wide city district with unmatched comfort.',
         cost: { research: 500000000000 },
         prerequisites: [],
+        disableFlag: 'ecumenopolisDisabled',
         requiredFlags: ['superalloyResearchUnlocked'],
         effects: [
           { target: 'colony', targetId: 't7_colony', type: 'enable' },
@@ -1882,8 +1883,8 @@ const researchParameters = {
       },
       {
         id: 'bioworkforce',
-        name: 'Bioworkforce',
-        description: 'Scientists were too busy wondering whether or not they could, they did not stop to ask themselves whether or not they should.  Extends the life designer with an extra ability.',
+        name: 'Bioworlds',
+        description: 'Unlocks bioworkers and the Bioworld mega project for evolution point upgrades.',
         cost: { advancedResearch: 500000 },
         prerequisites: [],
         effects: [
@@ -1892,6 +1893,11 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'bioworkforce',
             value: true
+          },
+          {
+            target: 'project',
+            targetId: 'bioworld',
+            type: 'enable'
           }
         ]
       },
