@@ -8,7 +8,7 @@ function sanitizeNumber(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-class OxygenFactory extends Building {
+class OxygenFactory extends MultiRecipesBuilding {
   getAutomationSettings() {
     return OxygenFactory.getAutomationSettings();
   }
@@ -139,6 +139,7 @@ class OxygenFactory extends Building {
   }
 
   updateUI(elements) {
+    super.updateUI(elements);
     const o2Els = elements?.o2;
     if (!o2Els || !o2Els.container) return;
 

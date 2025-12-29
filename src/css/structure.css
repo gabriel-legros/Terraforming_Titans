@@ -6,7 +6,7 @@
 
 .building-card-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(150px, 150px) minmax(250px, 250px);
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 170px) minmax(250px, 250px);
     gap: 6px 6px;
     align-items: start;
 }

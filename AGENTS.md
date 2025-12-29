@@ -235,6 +235,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Biostorage research now enables storing and withdrawing biomass through space storage with zonal-aware transfers.
 - Refined the Nanocolony card with summary tiles and slider panels so growth, limits, and slider effects are easier to read without changing the neutral palette.
 - Nanocolony energy allocation input now accepts flexible numeric strings (including 1e3/1M), formats when leaving the field, and defaults absolute mode to 1M W.
+- Oxygen Factory now supports selectable recipes, including an energy-only Silicates -> Oxygen mode.
 - Warp Gate Command edit member dialog now includes a Respec button that refunds all allocated skill points for rapid reassignment.
 - Warp Gate Command skill editor gained an Auto assignment column that distributes points each tick according to player-provided ratios, updates live while the dialog is open, and ignores zero entries.
 - High-gravity adaptation advanced research now automatically halves high-gravity happiness and population penalties, stacking with Mechanical Assistance to remove them entirely; Biostorage and Dyson Sphere remain placeholders at 4M/5M advanced research points.

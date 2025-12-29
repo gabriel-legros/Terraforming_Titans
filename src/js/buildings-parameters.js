@@ -580,9 +580,9 @@ const buildingsParameters = {
   oxygenFactory: {
     name: 'Oxygen Factory',
     category: 'terraforming',
-    description: 'Extracts oxygen from liquid water via electrolysis, venting hydrogen as a byproduct.',
+    description: 'Extracts oxygen from liquid water via electrolysis or uses a lot of energy to liberate oxygen from rocks.',
     cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10} },
-    consumption: { colony: { energy: 24000000, water: 100} },
+    consumption: { colony: { energy: 24000000, water: 10 } },
     production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } },
     storage: {},
     dayNightActivity: false,
@@ -590,7 +590,19 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    defaultRecipe: 'water',
+    recipes: {
+      water: {
+        shortName: 'Water -> Oxygen',
+        consumption: { colony: { energy: 24000000, water: 100 } }
+      },
+      silicates: {
+        shortName: 'Rocks -> Oxygen',
+        consumption: { colony: { energy: 150_000_000} },
+        production: { atmospheric: { oxygen: 100 } }
+      }
+    }
   },
   boschReactor: {
     name: 'Chemical Reactor',
