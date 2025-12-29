@@ -14,6 +14,11 @@ class GhgFactory extends Building {
     return GhgFactory.getAutomationSettings();
   }
 
+  shouldDeactivateOnReverseEmpty() {
+    const settings = getGhgAutomationSettings(this);
+    return !settings.autoDisableAboveTemp;
+  }
+
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
 
