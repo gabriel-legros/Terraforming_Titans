@@ -258,6 +258,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Warp Gate Command Teams header now includes a clipboard button that copies every team's roster, stats, and health to JSON on click.
 - Editing a Warp Gate Command member now spends stat points immediately while Cancel restores the original stats to avoid conflicts with Auto allocation.
 - More Life Design Points now increases point shop and biodome gains by 20% per rank in addition to the flat bonus.
+- Default planet resource definitions now live in `src/js/planet-resource-parameters.js`, and `src/js/planet-parameters.js` pulls from that file.
 - Team Wits challenges now treat Natural and Social Scientists as contributing 1.5x Wit, with tooltips updated to explain the new bonus.
 - Centralized terraforming gravity helpers in `src/js/terraforming/gravity.js` so apparent gravity and penalties reuse the same calculations.
 - Galaxy factions now accumulate an irreversible UHF doctrine adaptation multiplier that scales with rising UHF threat and stacks with electronics adoption.
