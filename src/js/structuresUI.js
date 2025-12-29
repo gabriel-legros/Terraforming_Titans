@@ -1401,6 +1401,9 @@ function updateDecreaseButtonText(button, buildCount) {
       const reverseBtn = els.reverseButton;
       if (reverseBtn) {
         reverseBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
+        const disableReverse = structure instanceof GhgFactory
+          && getGhgAutomationSettings(structure).autoDisableAboveTemp;
+        reverseBtn.disabled = disableReverse;
       }
 
       const upgradeBtn = els.upgradeButton;
