@@ -94,7 +94,9 @@ function renderLiftersUI(project, container) {
   statusGrid.classList.add('stats-grid', 'two-col', 'lifters-status-grid');
   const statusStat = buildStat('Status');
   statusStat.wrapper.classList.add('lifters-status');
-  statusGrid.appendChild(statusStat.wrapper);
+  const expansionRateStat = buildStat('Expansion/s');
+  expansionRateStat.wrapper.classList.add('lifters-expansion-rate');
+  statusGrid.append(statusStat.wrapper, expansionRateStat.wrapper);
   body.appendChild(statusGrid);
 
   const note = document.createElement('p');
@@ -127,6 +129,7 @@ function renderLiftersUI(project, container) {
     liftersModeSelect: modeSelect,
     liftersRunCheckbox: runCheckbox,
     liftersEnergyRateElement: energyRateStat.valueEl,
+    liftersExpansionRateElement: expansionRateStat.valueEl,
     liftersStatusElement: statusStat.valueEl,
     liftersNoteElement: note,
   };
@@ -158,6 +161,10 @@ function updateLiftersUI(project) {
   elements.liftersRunCheckbox.disabled = project.repeatCount === 0;
 
   elements.liftersEnergyRateElement.textContent = formatPerSecond(project.lastEnergyPerSecond);
+  if (elements.liftersExpansionRateElement) {
+    const rate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
+    elements.liftersExpansionRateElement.textContent = `${formatNumber(rate, true, 3)} expansions/s`;
+  }
 
   const status = project.statusText || 'Idle';
   elements.liftersStatusElement.textContent = status;

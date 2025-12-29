@@ -21,3 +21,4 @@ This folder contains classes for repeatable projects. Any new module here should
 
 ## Updates
 - Warp Gate Command operations stop after completion unless Auto-start is enabled per team, with the toggle embedded in the Start button.
+- Lifters expansion switches to continuous progress under 1s duration and shows an Expansion/s readout.

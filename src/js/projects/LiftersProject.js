@@ -25,10 +25,21 @@ class LiftersProject extends TerraformingDurationProject {
     this.lastDysonEnergyPerSecond = 0;
     this.statusText = 'Idle';
     this.shortfallLastTick = false;
+    this.expansionShortfallLastTick = false;
+    this.expansionProgress = 0;
+    this.continuousThreshold = 1000;
   }
 
   getBaseDuration() {
     return this.getDurationWithTerraformBonus(this.duration);
+  }
+
+  isExpansionContinuous() {
+    return this.getEffectiveDuration() < this.continuousThreshold;
+  }
+
+  isContinuous() {
+    return this.isExpansionContinuous();
   }
 
   getModeOptions() {
@@ -249,10 +260,154 @@ class LiftersProject extends TerraformingDurationProject {
 
   updateStatus(text) {
     this.statusText = text || 'Idle';
-    this.shortfallLastTick = Boolean(text && text !== 'Running' && text !== 'Idle');
+    const operationShortfall = Boolean(text && text !== 'Running' && text !== 'Idle');
+    this.shortfallLastTick = this.expansionShortfallLastTick || operationShortfall;
+  }
+
+  start(resources) {
+    this.expansionProgress = 0;
+    this.expansionShortfallLastTick = false;
+    if (this.isExpansionContinuous()) {
+      if (!this.canStart()) {
+        return false;
+      }
+      this.isActive = true;
+      this.isPaused = false;
+      this.isCompleted = false;
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+      return true;
+    }
+    return super.start(resources);
+  }
+
+  applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.expansionShortfallLastTick = false;
+    if (!this.isExpansionContinuous() || !this.isActive) {
+      return;
+    }
+
+    const duration = this.getEffectiveDuration();
+    const limit = this.maxRepeatCount || Infinity;
+    const completedExpansions = this.repeatCount + this.expansionProgress;
+    if (completedExpansions >= limit) {
+      this.isActive = false;
+      this.isCompleted = true;
+      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+      return;
+    }
+
+    if (this.startingDuration !== Infinity && this.remainingTime !== Infinity && this.startingDuration > 0) {
+      const carried = (this.startingDuration - this.remainingTime) / this.startingDuration;
+      if (carried > 0) {
+        this.expansionProgress += Math.min(carried, Math.max(0, limit - (this.repeatCount + this.expansionProgress)));
+      }
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+    }
+
+    const remainingRepeats = limit === Infinity
+      ? Infinity
+      : Math.max(0, limit - (this.repeatCount + this.expansionProgress));
+    if (remainingRepeats === 0) {
+      this.isActive = false;
+      this.isCompleted = true;
+      this.expansionProgress = 0;
+      return;
+    }
+
+    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    if (progress <= 0) {
+      return;
+    }
+
+    const cost = this.getScaledCost();
+    const storageProj = this.attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
+    const storageState = storageProj || {
+      getAvailableStoredResource: () => 0,
+      resourceUsage: {},
+      usedStorage: 0,
+      prioritizeMegaProjects: false,
+    };
+    let shortfall = false;
+
+    const applyColonyChange = (category, resource, amount) => {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
+        if (accumulatedChanges[category][resource] === undefined) {
+          accumulatedChanges[category][resource] = 0;
+        }
+        accumulatedChanges[category][resource] -= amount;
+      } else {
+        resources[category][resource].decrease(amount);
+      }
+    };
+
+    const spendFromStorage = (key, amount) => {
+      if (amount <= 0) return 0;
+      const availableFromStorage = storageState.getAvailableStoredResource(key);
+      const spend = Math.min(amount, availableFromStorage);
+      if (spend > 0) {
+        storageState.resourceUsage[key] = (storageState.resourceUsage[key] || 0) - spend;
+        if (storageState.resourceUsage[key] <= 0) {
+          delete storageState.resourceUsage[key];
+        }
+        storageState.usedStorage = Math.max(0, storageState.usedStorage - spend);
+      }
+      return spend;
+    };
+
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const amount = cost[category][resource] * progress;
+        const res = resources[category][resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const availableFromStorage = storageState.getAvailableStoredResource(storageKey);
+        const availableTotal = res.value + availableFromStorage;
+        if (availableTotal < amount) {
+          shortfall = true;
+        }
+
+        let remaining = amount;
+        if (storageState.prioritizeMegaProjects) {
+          const fromStorage = spendFromStorage(storageKey, remaining);
+          remaining -= fromStorage;
+          if (remaining > 0) {
+            applyColonyChange(category, resource, remaining);
+          }
+        } else {
+          const fromColony = Math.min(remaining, res.value);
+          if (fromColony > 0) {
+            applyColonyChange(category, resource, fromColony);
+            remaining -= fromColony;
+          }
+          if (remaining > 0) {
+            spendFromStorage(storageKey, remaining);
+          }
+        }
+      }
+    }
+
+    const totalProgress = this.expansionProgress + progress;
+    const completed = Math.floor(totalProgress);
+    this.expansionProgress = totalProgress - completed;
+
+    if (completed > 0) {
+      this.repeatCount += completed;
+    }
+
+    if (limit !== Infinity && this.repeatCount + this.expansionProgress >= limit) {
+      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+      this.isActive = false;
+      this.isCompleted = true;
+    }
+
+    this.expansionShortfallLastTick = shortfall;
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
+
     if (!this.shouldOperate()) {
       this.setLastTickStats();
       if (!this.repeatCount) {
@@ -260,6 +415,7 @@ class LiftersProject extends TerraformingDurationProject {
       } else if (!this.isRunning) {
         this.updateStatus('Run disabled');
       }
+      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
       return;
     }
 
@@ -267,6 +423,7 @@ class LiftersProject extends TerraformingDurationProject {
     if (seconds <= 0) {
       this.setLastTickStats();
       this.updateStatus('Idle');
+      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
       return;
     }
 
@@ -275,6 +432,7 @@ class LiftersProject extends TerraformingDurationProject {
     if (maxUnits <= 0) {
       this.setLastTickStats();
       this.updateStatus('Idle');
+      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
       return;
     }
 
@@ -282,6 +440,7 @@ class LiftersProject extends TerraformingDurationProject {
     if (limitedUnits <= 0) {
       this.setLastTickStats();
       this.updateStatus(this.shortfallReason || 'Waiting for capacity');
+      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
       return;
     }
 
@@ -291,6 +450,7 @@ class LiftersProject extends TerraformingDurationProject {
       this.setLastTickStats();
       const stalled = energyResult.dysonAvailable > 0 ? 'Waiting for space storage' : 'Insufficient energy';
       this.updateStatus(stalled);
+      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
       return;
     }
 
@@ -304,6 +464,7 @@ class LiftersProject extends TerraformingDurationProject {
         this.adjustEnergyUsage(energyResult, energyResult.energyUsed, accumulatedChanges);
         this.setLastTickStats();
         this.updateStatus(this.shortfallReason || 'Space storage is full');
+        this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
         return;
       }
       hydrogenRate = processedUnits / seconds;
@@ -313,6 +474,7 @@ class LiftersProject extends TerraformingDurationProject {
         this.adjustEnergyUsage(energyResult, energyResult.energyUsed, accumulatedChanges);
         this.setLastTickStats();
         this.updateStatus(this.shortfallReason || 'No atmosphere to strip');
+        this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
         return;
       }
       atmosphereRate = processedUnits / seconds;
@@ -328,6 +490,7 @@ class LiftersProject extends TerraformingDurationProject {
     const unitPerSecond = processedUnits / seconds;
     this.setLastTickStats(unitPerSecond, energyPerSecond, hydrogenRate, atmosphereRate, dysonPerSecond);
     this.updateStatus('Running');
+    this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
@@ -371,6 +534,7 @@ class LiftersProject extends TerraformingDurationProject {
       ...super.saveState(),
       mode: this.mode,
       isRunning: this.isRunning,
+      expansionProgress: this.expansionProgress,
     };
   }
 
@@ -378,6 +542,7 @@ class LiftersProject extends TerraformingDurationProject {
     super.loadState(state);
     this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
     this.isRunning = state.isRunning || false;
+    this.expansionProgress = state.expansionProgress || 0;
     if (!this.isRunning) {
       this.setLastTickStats();
       this.updateStatus('Idle');
@@ -385,7 +550,11 @@ class LiftersProject extends TerraformingDurationProject {
   }
 
   saveTravelState() {
-    const state = { repeatCount: this.repeatCount, mode: this.mode };
+    const state = {
+      repeatCount: this.repeatCount,
+      mode: this.mode,
+      expansionProgress: this.expansionProgress,
+    };
     if (this.isActive) {
       state.isActive = true;
       state.remainingTime = this.remainingTime;
@@ -400,6 +569,7 @@ class LiftersProject extends TerraformingDurationProject {
   loadTravelState(state = {}) {
     this.repeatCount = state.repeatCount || 0;
     this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
+    this.expansionProgress = state.expansionProgress || 0;
     this.isRunning = false;
     this.isCompleted = false;
     this.setLastTickStats();

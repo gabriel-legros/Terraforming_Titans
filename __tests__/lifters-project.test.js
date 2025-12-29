@@ -55,6 +55,10 @@ describe('LiftersProject', () => {
       capacityPerCompletion: 1_000_000_000,
       usedStorage: 0,
       resourceUsage: {},
+      prioritizeMegaProjects: false,
+      getAvailableStoredResource(resource) {
+        return Math.max(0, (this.resourceUsage[resource] || 0));
+      },
     };
     Object.defineProperty(storage, 'maxStorage', {
       get() {
@@ -66,7 +70,7 @@ describe('LiftersProject', () => {
 
   const setupGlobals = () => {
     resources = {
-      colony: { energy: createResource(1e18) },
+      colony: { energy: createResource(1e18), superalloys: createResource(1000) },
       atmospheric: {
         oxygen: createResource(6_000_000),
         carbonDioxide: createResource(4_000_000),
@@ -144,6 +148,7 @@ describe('LiftersProject', () => {
     expect(state).toEqual({
       repeatCount: 7,
       mode: 'stripAtmosphere',
+      expansionProgress: 0,
       isActive: true,
       remainingTime: 120000,
       startingDuration: 180000,
@@ -196,6 +201,23 @@ describe('LiftersProject', () => {
     expect(resources.colony.energy.decrease).not.toHaveBeenCalled();
     expect(project.lastHydrogenPerSecond).toBe(expectedUnits);
     expect(project.statusText).toBe('Running');
+  });
+
+  it('runs lifter expansion continuously when duration is under 1s', () => {
+    const project = createProject();
+    project.duration = 500;
+    project.startingDuration = project.getEffectiveDuration();
+    project.remainingTime = project.startingDuration;
+
+    project.start(resources);
+
+    expect(project.startingDuration).toBe(Infinity);
+    expect(project.remainingTime).toBe(Infinity);
+
+    project.applyCostAndGain(1000, null, 1);
+
+    expect(project.repeatCount).toBe(2);
+    expect(resources.colony.superalloys.value).toBe(998);
   });
 
   it('strips the atmosphere proportionally when in strip mode', () => {
