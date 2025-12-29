@@ -9,6 +9,7 @@
 
   const EVOLUTION_POINT_DIVISOR = 1e12;
   const MAX_EVOLUTION_UPGRADES = 400;
+  const MAX_BIOWORKERS_UPGRADES = 200;
   const MAX_LIFE_POINT_GAIN_UPGRADES = 900;
 
   const BIOWORLD_SHOP_ITEMS = [
@@ -58,7 +59,7 @@
       id: 'bioworkersMax',
       label: 'Bioworkers Max +1',
       cost: 1,
-      maxPurchases: MAX_EVOLUTION_UPGRADES,
+      maxPurchases: MAX_BIOWORKERS_UPGRADES,
       description: 'Raises the max investments for bioworkers by 1.',
     },
   ];
