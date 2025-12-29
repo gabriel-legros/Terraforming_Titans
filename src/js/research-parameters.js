@@ -1884,7 +1884,7 @@ const researchParameters = {
       {
         id: 'bioworkforce',
         name: 'Bioworlds',
-        description: 'Unlocks bioworkers and the Bioworld mega project for evolution point upgrades.',
+        description: 'Unlocks the Bioworld mega project for evolution point upgrades and the ability to use biomass as a workforce.',
         cost: { advancedResearch: 500000 },
         prerequisites: [],
         effects: [
