@@ -7,7 +7,7 @@ class SpaceStorageProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
     this.baseDuration = config.duration;
-    this.shipBaseDuration = 100_000;
+    this.shipBaseDuration = 50_000;
     this.capacityPerCompletion = 100_000_000_000;
     this.expansionProgress = 0;
     this.usedStorage = 0;
