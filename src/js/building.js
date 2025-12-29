@@ -917,6 +917,7 @@ class Building extends EffectableEntity {
         const before = after + scaled; // state prior to applying this tick's consumption
         if (before > 0 && after <= 0) {
           this._toggleRecipe();
+          this.active = 0;
         }
       }
     }

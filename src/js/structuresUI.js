@@ -1605,6 +1605,19 @@ function updateDecreaseButtonText(button, buildCount) {
       return scaled;
     }
 
+    function mergeResourceMaps(base, extra) {
+      const merged = {};
+      [base, extra].forEach(map => {
+        for (const category in map) {
+          if (!merged[category]) merged[category] = {};
+          for (const resource in map[category]) {
+            merged[category][resource] = (merged[category][resource] || 0) + map[category][resource];
+          }
+        }
+      });
+      return merged;
+    }
+
     const providesParts = [];
     const storageText = formatStorageDetails(
       scaleResourceMap(structure.getModifiedStorage(), buildCount)
@@ -1629,15 +1642,18 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     const production = scaleResourceMap(structure.getModifiedProduction(), buildCount);
-    const prodKeys = collectResourceKeys(production, { forceShow: structure.alwaysShowProduction });
+    const consumption = scaleResourceMap(structure.getModifiedConsumption(), buildCount);
+    const swapProdCons = structure.reversalAvailable && structure.reverseEnabled;
+    const displayProduction = swapProdCons ? {} : production;
+    const displayConsumption = swapProdCons ? mergeResourceMaps(consumption, production) : consumption;
+    const prodKeys = collectResourceKeys(displayProduction, { forceShow: structure.alwaysShowProduction });
     if (prodKeys.length > 0) {
-      sections.push({ key: 'production', label: 'Production', data: production, keys: prodKeys });
+      sections.push({ key: 'production', label: 'Production', data: displayProduction, keys: prodKeys });
     }
 
-    const consumption = scaleResourceMap(structure.getModifiedConsumption(), buildCount);
-    const consKeys = collectResourceKeys(consumption, { forceShow: structure.alwaysShowConsumption });
+    const consKeys = collectResourceKeys(displayConsumption, { forceShow: structure.alwaysShowConsumption });
     if (consKeys.length > 0) {
-      sections.push({ key: 'consumption', label: 'Consumption', data: consumption, keys: consKeys });
+      sections.push({ key: 'consumption', label: 'Consumption', data: displayConsumption, keys: consKeys });
     }
 
     if (structure.requiresMaintenance && Object.keys(structure.maintenanceCost).length > 0) {
