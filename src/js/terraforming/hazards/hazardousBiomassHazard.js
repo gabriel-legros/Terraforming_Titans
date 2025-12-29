@@ -660,6 +660,10 @@ class HazardousBiomassHazard {
       return 0;
     }
 
+    if (terraforming.getMagnetosphereStatus()) {
+      return 0;
+    }
+
     const radiation = Number.isFinite(terraforming.surfaceRadiation)
       ? terraforming.surfaceRadiation
       : 0;
