@@ -8,15 +8,10 @@ class DeeperMiningProject extends AndroidProject {
 
   registerMine() {
     let current = this.oreMineCount;
-    let built = 0;
-    if (typeof buildings !== 'undefined' && buildings.oreMine) {
-      built = buildings.oreMine.count;
-    } else if (typeof globalThis !== 'undefined' && globalThis.buildings?.oreMine) {
-      built = globalThis.buildings.oreMine.count;
-    }
+    const built = buildings.oreMine.count;
     const delta = built - current;
     if (delta > 0) {
-      const totalDepth = this.averageDepth * current;
+      const totalDepth = (this.averageDepth || 1) * current;
       this.oreMineCount = built;
       this.averageDepth = (totalDepth + delta) / this.oreMineCount;
       if (this.attributes?.completionEffect) {
@@ -43,8 +38,9 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   applyContinuousProgress(fraction, productivity) {
-    const depthGain = fraction * productivity;
-    const newDepth = Math.min(this.averageDepth + depthGain, this.maxDepth);
+    const depthGain = (fraction || 0) * (productivity || 0);
+    const currentDepth = this.averageDepth || 1;
+    const newDepth = Math.min(currentDepth + depthGain, this.maxDepth);
     if (newDepth !== this.averageDepth) {
       this.averageDepth = newDepth;
       if (this.attributes?.completionEffect) {
@@ -62,7 +58,7 @@ class DeeperMiningProject extends AndroidProject {
     let cost = super.getScaledCost();
     if (this.attributes.costOreMineScaling) {
       const oreMines = Math.max(this.oreMineCount, 1);
-      const depth = this.averageDepth;
+      const depth = this.averageDepth || 1;
       const multiplier = oreMines * (0.9 + 0.1 * depth);
       const scaledCost = {};
       for (const category in cost) {
@@ -95,7 +91,7 @@ class DeeperMiningProject extends AndroidProject {
   applyCompletionEffect() {
     this.attributes.completionEffect.forEach((effect) => {
       const baseValue = effect.value;
-      const depth = this.attributes.effectScaling ? this.averageDepth : 1;
+      const depth = this.attributes.effectScaling ? (this.averageDepth || 1) : 1;
       const value = baseValue * depth;
 
       const baseId = effect.effectId || 'deeper_mining';
@@ -113,7 +109,7 @@ class DeeperMiningProject extends AndroidProject {
       });
 
       // Scale ore mine maintenance for each cost resource
-      const oreMine = buildings?.[effect.targetId];
+      const oreMine = buildings[effect.targetId];
       if (oreMine?.cost?.colony) {
         for (const res in oreMine.cost.colony) {
           addEffect({
@@ -152,29 +148,19 @@ class DeeperMiningProject extends AndroidProject {
 
   loadState(state) {
     super.loadState(state);
-    let built = 0;
-    if (typeof buildings !== 'undefined' && buildings.oreMine) {
-      built = buildings.oreMine.count;
-    } else if (typeof globalThis !== 'undefined' && globalThis.buildings?.oreMine) {
-      built = globalThis.buildings.oreMine.count;
-    }
-    this.oreMineCount =
-      state.oreMineCount !== undefined ? state.oreMineCount : built;
-    if (state.averageDepth !== undefined) {
-      this.averageDepth = state.averageDepth;
-    } else {
-      this.averageDepth = (this.repeatCount || 0) + 1;
-    }
+    const built = buildings.oreMine.count;
+    this.oreMineCount = state.oreMineCount || built;
+    this.averageDepth = state.averageDepth || (this.repeatCount || 0) + 1;
     if (this.attributes?.completionEffect) {
       this.applyCompletionEffect();
     }
   }
 }
 
-if (typeof globalThis !== 'undefined') {
-  globalThis.DeeperMiningProject = DeeperMiningProject;
-}
+try {
+  window.DeeperMiningProject = DeeperMiningProject;
+} catch (error) {}
 
-if (typeof module !== 'undefined') {
+try {
   module.exports = DeeperMiningProject;
-}
+} catch (error) {}

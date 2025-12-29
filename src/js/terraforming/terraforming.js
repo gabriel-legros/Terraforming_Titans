@@ -517,11 +517,11 @@ class Terraforming extends EffectableEntity{
 
   getWaterStatus() {
     // Compare average liquid water coverage to the global target
-    return (calculateAverageCoverage(this, 'liquidWater') > this.waterTarget);
+    return (calculateAverageCoverage(this, 'liquidWater') >= this.waterTarget);
   }
 
   getLuminosityStatus() {
-    return ((this.luminosity.modifiedSolarFlux > this.luminosity.targetMin) && (this.luminosity.modifiedSolarFlux < this.luminosity.targetMax));
+    return ((this.luminosity.modifiedSolarFlux >= this.luminosity.targetMin) && (this.luminosity.modifiedSolarFlux <= this.luminosity.targetMax));
   }
 
   getLifeStatus() {
