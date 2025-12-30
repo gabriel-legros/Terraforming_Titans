@@ -155,7 +155,7 @@ const PatienceUI = {
 
         const spendHeader = document.createElement('div');
         spendHeader.className = 'patience-card-label';
-        spendHeader.textContent = 'Convert patience into net metal, superalloys, superconductors, advanced research, O\'Neill cylinders, and Warp Gate progress based on current production.';
+        spendHeader.textContent = 'Convert patience into net metal, superalloys, superconductors, advanced research, O\'Neill cylinders, and Warp Gate Command/Network progress based on current production.';
         spendCard.appendChild(spendHeader);
 
         const spendRow = document.createElement('div');
