@@ -19,7 +19,7 @@ const buildingsParameters = {
   sandQuarry: {
     name: 'Sand Quarry',
     category: 'resource',
-    description: 'Digs through regolith to extract silicon.',
+    description: 'Digs through regolith to extract silica.',
     cost: { colony: { metal: 50, components: 5 } },
     consumption: { colony: { energy: 50000 } },
     production: { colony: { silicon: 1 } },
