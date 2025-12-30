@@ -104,13 +104,15 @@
 }
 
 .dark-mode .building-card-header .building-header-button {
-    background: none;
-    border: none;
-    color: inherit;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    color: #ffffff;
 }
 
 .dark-mode .building-card-header .building-header-button:hover {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .dark-mode .building-card .building-header-active {
