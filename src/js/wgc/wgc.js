@@ -739,6 +739,14 @@ class WarpGateCommand extends EffectableEntity {
     return true;
   }
 
+  areFacilitiesMaxed() {
+    return Object.keys(this.facilities).every(key => this.facilities[key] >= 100);
+  }
+
+  isFacilityUpgradeReady() {
+    return this.facilityCooldown <= 0 && !this.areFacilitiesMaxed();
+  }
+
   upgradeFacility(key) {
     if (!this.facilities[key] && this.facilities[key] !== 0) return false;
     if (this.facilityCooldown > 0) return false;
@@ -784,6 +792,9 @@ class WarpGateCommand extends EffectableEntity {
     const seconds = _delta / 1000;
     if (this.facilityCooldown > 0) {
       this.facilityCooldown = Math.max(0, this.facilityCooldown - seconds);
+    }
+    if (this.areFacilitiesMaxed()) {
+      this.facilityCooldown = 0;
     }
     this.operations.forEach((op, idx) => {
       if (!op.active) {

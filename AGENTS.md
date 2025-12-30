@@ -429,3 +429,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Galaxy sector defense benefits and AI fleet capacity are now granted only to the last faction to fully control a sector (falling back to the sector’s original controller when no history exists), instead of being split across factions by partial control.
 - Random World Generator now blocks moon archetypes via `orbit.moonTypeBlacklist` (defaulting Super-Earth to planet-only).
 - Warp Gate Command now raises a WGC subtab alert when operations finish without auto-start enabled.
+- Warp Gate Command facility cooldown alerts now clear once every facility is maxed, and the status text switches to Maxed instead of Ready.

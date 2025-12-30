@@ -1234,12 +1234,17 @@ function updateWGCUI() {
     diffEl.textContent = `Highest Difficulty: ${val < 0 ? 'None' : val}`;
   }
   const cdEl = document.getElementById('wgc-facility-cooldown');
+  const facilitiesMaxed = warpGateCommand.areFacilitiesMaxed();
   if (cdEl) {
-    const sec = Math.ceil(warpGateCommand.facilityCooldown);
-    cdEl.textContent = sec > 0 ? `Cooldown: ${formatDuration(sec)}` : 'Ready';
+    if (facilitiesMaxed) {
+      cdEl.textContent = 'Maxed';
+    } else {
+      const sec = Math.ceil(warpGateCommand.facilityCooldown);
+      cdEl.textContent = sec > 0 ? `Cooldown: ${formatDuration(sec)}` : 'Ready';
+    }
   }
   const alertEl = document.getElementById('wgc-facility-alert');
-  if (alertEl) alertEl.style.display = warpGateCommand.facilityCooldown <= 0 ? 'inline' : 'none';
+  if (alertEl) alertEl.style.display = warpGateCommand.isFacilityUpgradeReady() ? 'inline' : 'none';
   for (const key in facilityElements) {
     const el = facilityElements[key];
     const lvl = warpGateCommand.facilities[key] || 0;
