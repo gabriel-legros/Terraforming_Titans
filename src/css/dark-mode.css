@@ -121,6 +121,37 @@
     color: #bbbbbb;
 }
 
+.dark-mode .bioworld-shop {
+    border-top-color: #3c3c3c;
+}
+
+.dark-mode .bioworld-shop-header {
+    background: #1f252b;
+    border-color: #3c3c3c;
+    color: #f0f0f0;
+}
+
+.dark-mode .bioworld-shop-item {
+    background: #202327;
+    border-color: #3c3c3c;
+    color: #f0f0f0;
+}
+
+.dark-mode .bioworld-shop-cost,
+.dark-mode .bioworld-shop-count {
+    color: #c7cbd1;
+}
+
+.dark-mode .bioworld-shop-button {
+    background: #2a2f35;
+    border-color: #4a515a;
+    color: #f0f0f0;
+}
+
+.dark-mode .bioworld-shop-button:hover {
+    background: #343a40;
+}
+
 .dark-mode .import-cap-toggle {
     color: #ffffff;
     background: none;

@@ -38,6 +38,9 @@ class SolisManager extends EffectableEntity {
     this.postCompletionCooldownUntil = 0;
     this.questInterval = 15 * 60 * 1000; // 15 minutes
     this.refreshCooldown = 5 * 60 * 1000; // 5 minutes
+    this.questCooldownRemaining = 0;
+    this.refreshCooldownRemaining = 0;
+    this.hasGeneratedQuest = false;
     this.solisTabAlert = false;
 
     // Purchasable upgrades for the Solis shop
@@ -135,19 +138,22 @@ class SolisManager extends EffectableEntity {
     const quantity = baseQuantity * Math.pow(10, this.rewardMultiplier - 1);
     this.currentQuest = { resource, quantity, value };
     this.postCompletionCooldownUntil = 0;
-    this.lastQuestTime = Date.now();
+    this.lastQuestTime = 0;
+    this.questCooldownRemaining = 0;
+    this.refreshCooldownRemaining = 0;
+    this.hasGeneratedQuest = true;
     return this.currentQuest;
   }
 
   refreshQuest() {
-    const now = Date.now();
-    if (now < this.postCompletionCooldownUntil) {
+    if (this.questCooldownRemaining > 0) {
       return;
     }
-    if (now - this.lastRefreshTime >= this.refreshCooldown) {
-      this.generateQuest();
-      this.lastRefreshTime = now;
+    if (this.refreshCooldownRemaining > 0) {
+      return;
     }
+    this.generateQuest();
+    this.refreshCooldownRemaining = this.refreshCooldown;
   }
 
   completeQuest() {
@@ -157,9 +163,12 @@ class SolisManager extends EffectableEntity {
     res.decrease(this.currentQuest.quantity);
     this.solisPoints += this.getCurrentReward();
     this.currentQuest = null;
-    this.lastQuestTime = Date.now();
-    this.postCompletionCooldownUntil = this.lastQuestTime + this.questInterval;
-    this.lastRefreshTime = this.lastQuestTime;
+    this.lastQuestTime = 0;
+    this.lastRefreshTime = 0;
+    this.postCompletionCooldownUntil = 0;
+    this.questCooldownRemaining = this.questInterval;
+    this.refreshCooldownRemaining = this.refreshCooldown;
+    this.hasGeneratedQuest = true;
     return true;
   }
 
@@ -537,51 +546,34 @@ class SolisManager extends EffectableEntity {
   }
 
   update(delta) {
-    const now = Date.now();
-    
-    // Detect clock manipulation: if remaining time exceeds the intended interval,
-    // the player likely changed their system clock backward
-    const maxReasonableWait = this.questInterval * 2; // Allow 2x the normal interval as buffer
-    
-    if (this.postCompletionCooldownUntil > 0) {
-      const remainingTime = this.postCompletionCooldownUntil - now;
-      if (remainingTime > maxReasonableWait) {
-        // Clock manipulation detected - reset to normal cooldown from current time
-        this.postCompletionCooldownUntil = now + this.questInterval;
-        this.lastQuestTime = now;
-        this.lastRefreshTime = now;
-      }
+    const elapsed = Math.max(0, delta);
+    if (this.questCooldownRemaining > 0) {
+      this.questCooldownRemaining = Math.max(0, this.questCooldownRemaining - elapsed);
     }
-    
-    // Also check refresh cooldown for similar issues
-    if (this.lastRefreshTime > 0) {
-      const refreshRemaining = this.lastRefreshTime - now;
-      if (refreshRemaining > maxReasonableWait) {
-        // Reset refresh time to current
-        this.lastRefreshTime = now;
-      }
+    if (this.refreshCooldownRemaining > 0) {
+      this.refreshCooldownRemaining = Math.max(0, this.refreshCooldownRemaining - elapsed);
     }
-    
     if (!this.currentQuest) {
-      if (this.postCompletionCooldownUntil > 0) {
-        if (now >= this.postCompletionCooldownUntil) {
-          this.generateQuest();
-        }
-      } else if (this.lastQuestTime === 0) {
-        // No quest has ever been generated; provide one immediately
+      if (!this.hasGeneratedQuest) {
+        this.generateQuest();
+      } else if (this.questCooldownRemaining <= 0) {
         this.generateQuest();
       }
     }
   }
 
   saveState() {
+    const now = Date.now();
     return {
       solisPoints: this.solisPoints,
       rewardMultiplier: this.rewardMultiplier,
       currentQuest: this.currentQuest,
-      lastQuestTime: this.lastQuestTime,
-      lastRefreshTime: this.lastRefreshTime,
-      postCompletionCooldownUntil: this.postCompletionCooldownUntil,
+      lastQuestTime: this.hasGeneratedQuest ? now : 0,
+      lastRefreshTime: now - (this.refreshCooldown - this.refreshCooldownRemaining),
+      postCompletionCooldownUntil: this.questCooldownRemaining > 0 ? now + this.questCooldownRemaining : 0,
+      questCooldownRemaining: this.questCooldownRemaining,
+      refreshCooldownRemaining: this.refreshCooldownRemaining,
+      hasGeneratedQuest: this.hasGeneratedQuest,
       solisTabAlert: this.solisTabAlert,
       upgrades: Object.keys(this.shopUpgrades).reduce((o, k) => {
         o[k] = this.shopUpgrades[k].purchases;
@@ -604,7 +596,26 @@ class SolisManager extends EffectableEntity {
     this.lastQuestTime = data.lastQuestTime || 0;
     this.lastRefreshTime = data.lastRefreshTime || 0;
     this.postCompletionCooldownUntil = data.postCompletionCooldownUntil || 0;
+    this.questCooldownRemaining = data.questCooldownRemaining || 0;
+    this.refreshCooldownRemaining = data.refreshCooldownRemaining || 0;
+    this.hasGeneratedQuest = data.hasGeneratedQuest || false;
     this.solisTabAlert = data.solisTabAlert || false;
+    const legacyNow = Date.now();
+    const legacyCooldownUntil = data.postCompletionCooldownUntil || 0;
+    const legacyCooldownRemaining = legacyCooldownUntil - legacyNow;
+    if (legacyCooldownUntil > this.questInterval * 5 && legacyCooldownRemaining > this.questCooldownRemaining) {
+      this.questCooldownRemaining = legacyCooldownRemaining;
+    }
+    const legacyRefreshTime = data.lastRefreshTime || 0;
+    const legacyRefreshRemaining = legacyRefreshTime + this.refreshCooldown - legacyNow;
+    if (legacyRefreshTime > this.refreshCooldown * 5 && legacyRefreshRemaining > this.refreshCooldownRemaining) {
+      this.refreshCooldownRemaining = legacyRefreshRemaining;
+    }
+    if (data.lastQuestTime > 0 || this.currentQuest || this.questCooldownRemaining > 0) {
+      this.hasGeneratedQuest = true;
+    }
+    this.questCooldownRemaining = Math.max(0, this.questCooldownRemaining);
+    this.refreshCooldownRemaining = Math.max(0, this.refreshCooldownRemaining);
     if (data.upgrades) {
       for (const k in data.upgrades) {
         if (this.shopUpgrades[k]) {

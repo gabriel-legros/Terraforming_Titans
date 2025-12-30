@@ -520,10 +520,9 @@ function updateSolisUI() {
       questDetail.classList.add('hidden');
     }
   }
-  const now = Date.now();
   if (refreshBtn) {
-    const remainingRefresh = solisManager.refreshCooldown - (now - solisManager.lastRefreshTime);
-    const remainingComplete = solisManager.postCompletionCooldownUntil - now;
+    const remainingRefresh = solisManager.refreshCooldownRemaining;
+    const remainingComplete = solisManager.questCooldownRemaining;
     const remaining = Math.max(remainingRefresh, remainingComplete);
     if (remaining > 0) {
       refreshBtn.disabled = true;
@@ -541,7 +540,7 @@ function updateSolisUI() {
     }
   }
   if (cooldownDiv && cooldownText && cooldownBar) {
-    const remainingComplete = solisManager.postCompletionCooldownUntil - now;
+    const remainingComplete = solisManager.questCooldownRemaining;
     if (!quest && remainingComplete > 0) {
       cooldownDiv.classList.remove('hidden');
       const totalCooldown = solisManager.questInterval;

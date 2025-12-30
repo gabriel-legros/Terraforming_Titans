@@ -184,6 +184,20 @@ class SpaceMirrorAdvancedOversight {
         updateTemps();
       })();
 
+      const clearLanternsInReverseZones = () => {
+        let changed = false;
+        for (const zone of ZONES) {
+          if (!reverse[zone]) continue;
+          if ((assignL[zone] || 0) > 0) {
+            assignL[zone] = 0;
+            changed = true;
+          }
+        }
+        if (changed) updateTemps();
+      };
+
+      clearLanternsInReverseZones();
+
       const trimReverseFloorOvershoot = () => {
         for (const zone of ZONES) {
           if (!reverse[zone]) continue;
@@ -358,7 +372,7 @@ class SpaceMirrorAdvancedOversight {
           }
 
           // Lanterns (heating)
-          if (lanternsLeft() > 0) {
+          if (lanternsLeft() > 0 && !reverse[z]) {
             const k = LANTERN_PROBE_MIN;
             const score = withTempChange(() => { assignL[z] = (assignL[z]) + k; }, () => objective(passLevel));
             const dPerUnit = (baseScore - score) / k;
@@ -558,6 +572,7 @@ class SpaceMirrorAdvancedOversight {
               .filter(dz => (dz === 'focus' ? (prio.focus||5) : (prio[dz]||5)) > passLevel);
             const receivers = [...ZONES, 'focus'].filter(rz => {
               if (rz === 'focus') return FOCUS_FLAG && (targets.water)>0 && (prio.focus||5) <= passLevel;
+              if (reverse[rz]) return false;
               const t = getZoneTemp(rz);
               return (targets[rz]) > 0 && (prio[rz]||5) <= passLevel && isFinite(t) && t < (targets[rz]-K_TOL);
             });
