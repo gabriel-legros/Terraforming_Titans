@@ -4,7 +4,7 @@ const IMPORT_CAP_PER_SECTOR = 1e10;
 const WARP_GATE_MAX_LEVEL = 1000000;
 const IMPORT_CAP_RESOURCES = [
   { key: 'metal', label: 'Metal' },
-  { key: 'silicon', label: 'Silicon' },
+  { key: 'silicon', label: 'Silica' },
   { key: 'carbon', label: 'Carbon' },
   { key: 'water', label: 'Water' },
   { key: 'nitrogen', label: 'Nitrogen' },

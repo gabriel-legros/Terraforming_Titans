@@ -95,7 +95,7 @@ class NanotechManager extends EffectableEntity {
           (accumulatedChanges.colony.silicon || 0) - used;
         siliconRes.modifyRate(
           -this.currentSiliconConsumption,
-          'Nanotech Silicon',
+          'Nanotech Silica',
           'nanotech'
         );
         siliconFraction = this.hasEnoughSilicon ? 1 : (needed > 0 ? used / needed : 1);
@@ -334,7 +334,7 @@ class NanotechManager extends EffectableEntity {
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
                 <div class="slider-header">
-                  <span class="slider-title">Silicon Consumption</span>
+                  <span class="slider-title">Silica Consumption</span>
                   <div class="slider-values">
                     <span id="nanotech-silicon-impact">+0.00%</span>
                     <span id="nanotech-silicon-rate">0 ton/s</span>

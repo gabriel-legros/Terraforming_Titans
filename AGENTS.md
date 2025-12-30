@@ -110,7 +110,7 @@ The `nanotechManager` oversees a self-replicating swarm unlocked by **Nanotechno
 - Swarm growth requires surplus power beyond storage; each bot draws 1e-11 W.
 - Maximum nanobots equal planetary land area (m²) × 1e19, and only 1e15 bots survive travel.
 - The growth slider adds up to +0.15 % growth. Stage I sliders modify growth while:
-  - **Silicon Consumption** grants up to +0.15 % growth and consumes silicon from current storage plus accumulated changes.
+- **Silica Consumption** grants up to +0.15 % growth and consumes silica from current storage plus accumulated changes.
   - **Maintenance I** reduces metal, glass, and water maintenance by up to 50 % but subtracts up to 0.15 % growth.
   - **Glass Production** yields glass at 1e-20 t/s per bot and also subtracts up to 0.15 % growth.
 - Per-second energy, silicon, maintenance, and glass rates appear beside each slider with brief descriptions.
@@ -340,7 +340,7 @@ The planet visualiser has been modularised into files covering core setup, light
 ## Feature updates
 - Autobuild basis drop-downs now include a Max option for ore mines, geothermal generators, and Dyson Swarm receivers so they chase the highest buildable count without relying on percentage targets.
 - Added a silicon asteroid mining special project alongside metal extraction.
-- Silicon asteroid mining now requires the siliconMiningUnlocked research flag granted by story effects before Shipbuilding can enable it.
+- Silica asteroid mining now requires the siliconMiningUnlocked research flag granted by story effects before Shipbuilding can enable it.
 - Auto research now offers a P1–P4 priority selector beside each checkbox, saved across travel and saves to break ties when multiple researches qualify at once.
 
 - Added a Galaxy subtab beneath Space, unlocked in Venus chapter 20.13 with a persistent GalaxyManager and placeholder UI.

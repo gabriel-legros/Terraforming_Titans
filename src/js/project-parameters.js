@@ -233,7 +233,7 @@ const projectParameters = {
   },
   siliconSpaceMining: {
     type: 'SpaceMiningProject',
-    name: "Silicon Asteroid Mining",
+    name: "Silica Asteroid Mining",
     category :"resources",
     cost: {},
     duration: 100000,

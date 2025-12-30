@@ -27,7 +27,7 @@ const WARP_GATE_NETWORK_MAX_LEVEL = 1000000;
 const SECTOR_RESOURCE_LABELS = {
     metal: 'Metal',
     water: 'Water',
-    silicon: 'Silicon',
+    silicon: 'Silica',
     carbon: 'Carbon',
     nitrogen: 'Nitrogen'
 };

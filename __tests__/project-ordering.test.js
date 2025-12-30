@@ -19,7 +19,7 @@ const createManager = () => {
     epsilon: baseProject('Epsilon'),
     oreSpaceMining: baseProject('Ore'),
     waterSpaceMining: baseProject('Water'),
-    siliconSpaceMining: baseProject('Silicon'),
+    siliconSpaceMining: baseProject('Silica'),
     carbonSpaceMining: baseProject('Carbon'),
     nitrogenSpaceMining: baseProject('Nitrogen'),
     hydrogenSpaceMining: baseProject('Hydrogen'),

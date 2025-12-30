@@ -51,7 +51,7 @@ let artificialHistorySig = '';
 const ARTIFICIAL_SECTOR_RESOURCE_LABELS = {
   metal: 'Metal',
   water: 'Water',
-  silicon: 'Silicon',
+  silicon: 'Silica',
   carbon: 'Carbon',
   nitrogen: 'Nitrogen',
   oxygen: 'Oxygen'
@@ -638,7 +638,7 @@ function ensureArtificialLayout() {
   };
 
   stashList.appendChild(createStashRow('metal', 'Metal'));
-  stashList.appendChild(createStashRow('silicon', 'Silicon'));
+  stashList.appendChild(createStashRow('silicon', 'Silica'));
 
   stash.appendChild(stashList);
 
