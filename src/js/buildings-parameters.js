@@ -582,7 +582,7 @@ const buildingsParameters = {
     category: 'terraforming',
     description: 'Extracts oxygen from liquid water via electrolysis or uses a lot of energy to liberate oxygen from rocks.',
     cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10} },
-    consumption: { colony: { energy: 24000000, water: 10 } },
+    consumption: { colony: { energy: 24000000, water: 100 } },
     production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } },
     storage: {},
     dayNightActivity: false,
@@ -595,7 +595,8 @@ const buildingsParameters = {
     recipes: {
       water: {
         shortName: 'Water -> Oxygen',
-        consumption: { colony: { energy: 24000000, water: 100 } }
+        consumption: { colony: { energy: 24000000, water: 100 } },
+        production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } }
       },
       silicates: {
         shortName: 'Rocks -> Oxygen',
@@ -626,6 +627,7 @@ const buildingsParameters = {
       recipe1: {
         shortName: 'Bosch Reaction',
         consumption: {
+          colony: { energy: 100_000 },
           atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
         },
         production: { colony: { water: 81.82 } }
@@ -633,6 +635,7 @@ const buildingsParameters = {
       recipe2: {
         shortName: 'Water Synthesis',
         consumption: {
+          colony: { energy: 100_000 },
           atmospheric: { oxygen: 72.73, hydrogen: 9.09 }
         },
         production: { colony: { water: 81.82 } }
@@ -640,6 +643,7 @@ const buildingsParameters = {
       recipe3: {
         shortName: 'Methane Synthesis',
         consumption: {
+          colony: { energy: 100_000 },
           atmospheric: { carbonDioxide: 100, hydrogen: 18.18 }
         },
         production: {

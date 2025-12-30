@@ -11,19 +11,6 @@ class MultiRecipesBuilding extends Building {
     return source ? JSON.parse(JSON.stringify(source)) : {};
   }
 
-  static _mergeConsumption(target, addition) {
-    if (!addition) return;
-    for (const category in addition) {
-      if (!Object.prototype.hasOwnProperty.call(target, category)) {
-        target[category] = {};
-      }
-      const categoryMap = addition[category] || {};
-      for (const resource in categoryMap) {
-        target[category][resource] = categoryMap[resource];
-      }
-    }
-  }
-
   _getRecipeOptions() {
     const defs = this.recipes || {};
     return Object.keys(defs).map(key => ({
@@ -44,10 +31,9 @@ class MultiRecipesBuilding extends Building {
     }
 
     const recipe = (this.recipes || {})[this.currentRecipeKey];
-    const mergedConsumption = MultiRecipesBuilding._clone(this._staticConsumption);
-    MultiRecipesBuilding._mergeConsumption(mergedConsumption, recipe?.consumption);
-    this.consumption = mergedConsumption;
-    this._baseConsumption = MultiRecipesBuilding._clone(mergedConsumption);
+    const consumptionSource = recipe?.consumption || this._staticConsumption;
+    this.consumption = MultiRecipesBuilding._clone(consumptionSource);
+    this._baseConsumption = MultiRecipesBuilding._clone(consumptionSource);
 
     const productionSource = recipe?.production || this._defaultProduction;
     this.production = MultiRecipesBuilding._clone(productionSource);
@@ -70,9 +56,7 @@ class MultiRecipesBuilding extends Building {
     this.currentProduction = {};
     this.currentConsumption = {};
     this.currentMaintenance = {};
-    if (typeof updateBuildingDisplay === 'function' && typeof buildings !== 'undefined') {
-      updateBuildingDisplay(buildings);
-    }
+    updateBuildingDisplay(buildings);
     return true;
   }
 
@@ -145,5 +129,5 @@ class MultiRecipesBuilding extends Building {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { MultiRecipesBuilding };
 } else {
-  globalThis.MultiRecipesBuilding = MultiRecipesBuilding;
+  window.MultiRecipesBuilding = MultiRecipesBuilding;
 }
