@@ -21,10 +21,10 @@ const ALBEDO_SOFTCAP_K = 2.0;
 const A_HAZE_CH4_MAX  = 0.25; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
 const K_CH4_ALB       = 0.2;     // how quickly CH4 haze brightening saturates
 
-const A_CALCITE_HEADROOM_MAX = 0.3; // calcite can add up to +0.3 in the limit
-const K_CALCITE_ALB  = 1.0;          // saturates near τ_eff ≈ 1
+const A_CALCITE_HEADROOM_MAX = 0.5; // calcite can add up to +0.5 in the limit
+const K_CALCITE_ALB  = 0.0001;          // saturates near τ_eff ≈ 1
 const OPTICS = {
-  calcite: { omega0: 0.98, g: 0.70 } // bright & moderately forward-scattering
+  calcite: { omega0: 0.90, g: 0.70 } // bright & moderately forward-scattering
 };
 
 // ---------- Shortwave (visible) optical depth ----------
