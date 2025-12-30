@@ -651,10 +651,6 @@ function produceResources(deltaTime, buildings) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
-      if (project && project.treatAsBuilding) {
-        project.estimateCostAndGain(deltaTime, true, 1);
-        project.applyCostAndGain(deltaTime, accumulatedChanges, 1);
-      }
     }
   }
 
@@ -742,13 +738,13 @@ function produceResources(deltaTime, buildings) {
       if (project.attributes?.continuousAsBuilding && project.isContinuous()) {
         continue;
       }
-      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
+//      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
       if (project.autoStart === false) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+        project.applyCostAndGain(deltaTime, accumulatedChanges);
         continue;
       }
-      project.estimateCostAndGain(deltaTime, true, productivity);
-      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+      project.estimateCostAndGain(deltaTime, true);
+      project.applyCostAndGain(deltaTime, accumulatedChanges);
     }
   }
 
