@@ -304,7 +304,10 @@ class LifeAutomation {
 
   isActive() {
     const preset = this.getActivePreset();
-    return automationManager.enabled && automationManager.hasFeature('automationLifeDesign') && preset.enabled;
+    return automationManager.enabled
+      && automationManager.hasFeature('automationLifeDesign')
+      && preset.enabled
+      && lifeDesigner.enabled;
   }
 
   update(delta) {
