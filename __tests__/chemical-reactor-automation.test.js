@@ -61,6 +61,7 @@ describe('Chemical reactor automation', () => {
       getResearchById: () => ({ isResearched: true }),
       isArtificialWorld: () => false
     };
+    global.spaceManager = { isArtificialWorld: () => false };
     global.resources = {
       colony: {
         energy: { value: 1000, consumptionRate: 0, productionRate: 0 },
@@ -88,6 +89,7 @@ describe('Chemical reactor automation', () => {
     global.buildings = null;
     global.updateBuildingDisplay = null;
     global.researchManager = null;
+    global.spaceManager = null;
     global.resources = null;
     global.Building = null;
     global.MultiRecipesBuilding = null;

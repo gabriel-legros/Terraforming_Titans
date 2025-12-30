@@ -184,6 +184,10 @@ class SpaceManager extends EffectableEntity {
     }
     getCurrentPlanetData() { /* ... same as before ... */ }
 
+    isArtificialWorld() {
+        return this.currentArtificialKey !== null;
+    }
+
     /**
      * Gets the terraforming status for a specific planet.
      * @param {string} planetKey - The key of the planet.

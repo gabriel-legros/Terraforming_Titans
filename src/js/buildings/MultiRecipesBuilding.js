@@ -22,8 +22,7 @@ class MultiRecipesBuilding extends Building {
   _getAllowedRecipeKeys() {
     const defs = this.recipes || {};
     const keys = Object.keys(defs);
-    const isArtificial = researchManager.isArtificialWorld();
-    if (!isArtificial) {
+    if (!spaceManager || !spaceManager.isArtificialWorld()) {
       return keys;
     }
     const allowed = keys.filter(key => defs[key].artificialAllowed !== false);

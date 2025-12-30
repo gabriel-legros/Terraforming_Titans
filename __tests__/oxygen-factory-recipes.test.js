@@ -46,6 +46,7 @@ describe('Oxygen factory recipes', () => {
     global.dayNightCycle = { isDay: () => true };
     global.buildings = {};
     global.updateBuildingDisplay = jest.fn();
+    global.spaceManager = { isArtificialWorld: () => false };
     global.researchManager = { isArtificialWorld: () => false };
     const { Building } = require('../src/js/building');
     global.Building = Building;
@@ -61,6 +62,7 @@ describe('Oxygen factory recipes', () => {
     global.dayNightCycle = null;
     global.buildings = null;
     global.updateBuildingDisplay = null;
+    global.spaceManager = null;
     global.researchManager = null;
     global.Building = null;
     global.MultiRecipesBuilding = null;
@@ -92,6 +94,7 @@ describe('Oxygen factory recipes', () => {
     expect(factory.currentRecipeKey).toBe('rocks');
 
     global.researchManager.isArtificialWorld = () => true;
+    global.spaceManager.isArtificialWorld = () => true;
     factory._applyRecipeMapping();
 
     expect(factory.currentRecipeKey).not.toBe('rocks');
