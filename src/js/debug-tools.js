@@ -188,19 +188,26 @@
     return lines.join('\n');
   }
 
-	  function logTerraformingOverride() {
-	    const values = captureValues();
-	    const override = buildOverrideObject(values);
-	    delete override.resources.surface;
-	    const snippet = JSON.stringify(override, null, 2);
-	    const oxygenOverride = override.resources.atmospheric.oxygen.initialValue;
-	    const inertOverride = override.resources.atmospheric.inertGas.initialValue;
-	    console.log('Override snippet:\n' + snippet);
-	    console.log('Oxygen override initialValue:', oxygenOverride);
-	    console.log('Inert gas override initialValue:', inertOverride);
-	    console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(override.zonalTemperatures || {}));
-	    return snippet;
-	  }
+  function logTerraformingOverride() {
+    const values = captureValues();
+    const override = buildOverrideObject(values);
+    delete override.resources.surface;
+    const snippet = JSON.stringify(override, null, 2);
+    const oxygenOverride = override.resources.atmospheric.oxygen.initialValue;
+    const inertOverride = override.resources.atmospheric.inertGas.initialValue;
+    console.log('Override snippet:\n' + snippet);
+    console.log('Oxygen override initialValue:', oxygenOverride);
+    console.log('Inert gas override initialValue:', inertOverride);
+    console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(override.zonalTemperatures || {}));
+    return snippet;
+  }
+
+  function giveColonyResources(amount = 1e50, colonyResources = resources.colony) {
+    for (const key in colonyResources) {
+      colonyResources[key].increase(amount, true);
+    }
+    return amount;
+  }
 
   function fastForwardToEquilibrium(options = {}) {
     let stepMs = options.stepMs || 1000 * 60 * 60; // The "jump" size, e.g., 1 hour
@@ -464,12 +471,13 @@
 
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, logTerraformingOverride, calculateEquilibriumConstants, reconstructJournalState };
+    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, logTerraformingOverride, calculateEquilibriumConstants, reconstructJournalState, giveColonyResources };
   } else {
     globalThis.fastForwardToEquilibrium = fastForwardToEquilibrium;
     globalThis.generateOverrideSnippet = generateOverrideSnippet;
     globalThis.logTerraformingOverride = logTerraformingOverride;
     globalThis.reconstructJournalState = reconstructJournalState;
+    window.giveColonyResources = giveColonyResources;
     globalThis.runEquilibriumCalculation = function(terraformingInstance) {
       if (terraformingInstance && typeof terraformingInstance.calculateInitialValues === 'function') {
         console.log('Calling calculateEquilibriumConstants. initialValuesCalculated =', terraformingInstance.initialValuesCalculated);
