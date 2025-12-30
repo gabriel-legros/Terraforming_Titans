@@ -52,10 +52,11 @@ class PatienceManager extends EffectableEntity {
             superalloyGain,
             superconductorGain,
             advancedResearchGain,
+            metalGain,
             oneillGain,
             oneillCapacity
         } = this.calculateSpendGains(hours);
-        const noGains = superalloyGain <= 0 && superconductorGain <= 0 && advancedResearchGain <= 0 && oneillGain <= 0;
+        const noGains = superalloyGain <= 0 && superconductorGain <= 0 && advancedResearchGain <= 0 && metalGain <= 0 && oneillGain <= 0;
         if (noGains) {
             return false;
         }
@@ -74,6 +75,10 @@ class PatienceManager extends EffectableEntity {
             resources.colony.advancedResearch.increase(advancedResearchGain, false);
         }
 
+        if (metalGain > 0) {
+            resources.colony.metal.increase(metalGain, false);
+        }
+
         if (oneillGain > 0 && spaceManager?.setOneillCylinderCount) {
             const currentCount = spaceManager.getOneillCylinderCount?.() || 0;
             const capacity = oneillCapacity ?? 0;
@@ -86,6 +91,7 @@ class PatienceManager extends EffectableEntity {
         }
 
         this.advanceWarpGateCommand(hours * 3600);
+        this.advanceWarpGateNetwork(hours * 3600);
         return true;
     }
 
@@ -99,7 +105,9 @@ class PatienceManager extends EffectableEntity {
         if (!this.enabled || hours <= 0) {
             return {
                 superalloyGain: 0,
+                superconductorGain: 0,
                 advancedResearchGain: 0,
+                metalGain: 0,
                 oneillGain: 0,
                 oneillCapacity: 0
             };
@@ -123,6 +131,10 @@ class PatienceManager extends EffectableEntity {
         const advancedResearchResource = colonyResources?.advancedResearch;
         const advancedResearchRate = advancedResearchResource?.unlocked ? (advancedResearchResource.productionRate || 0) : 0;
         const advancedResearchGain = advancedResearchRate > 0 ? advancedResearchRate * seconds : 0;
+
+        const metalResource = colonyResources?.metal;
+        const metalNetRate = (metalResource?.productionRate || 0) - (metalResource?.consumptionRate || 0);
+        const metalGain = metalNetRate > 0 ? metalNetRate * seconds : 0;
 
         const unlockedOneill = spaceManager?.isBooleanFlagSet?.('oneillCylinders');
         const oneillCapacity = unlockedOneill ? getOneillCylinderCapacity(galaxyManager) : 0;
@@ -148,6 +160,7 @@ class PatienceManager extends EffectableEntity {
             superalloyGain,
             superconductorGain,
             advancedResearchGain,
+            metalGain,
             oneillGain,
             oneillCapacity
         };
@@ -161,6 +174,18 @@ class PatienceManager extends EffectableEntity {
         while (remaining > 0) {
             const slice = remaining > interval ? interval : remaining;
             warpGateCommand.update(slice * 1000);
+            remaining -= slice;
+        }
+    }
+
+    advanceWarpGateNetwork(seconds) {
+        if (seconds <= 0) return;
+
+        let remaining = seconds;
+        const interval = 60;
+        while (remaining > 0) {
+            const slice = remaining > interval ? interval : remaining;
+            warpGateNetworkManager.update(slice * 1000);
             remaining -= slice;
         }
     }

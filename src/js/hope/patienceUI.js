@@ -62,7 +62,7 @@ const PatienceUI = {
 
         const tooltip = document.createElement('span');
         tooltip.className = 'info-tooltip-icon';
-        tooltip.title = 'Save to file or export to clipboard once per day to claim patience, plus gain a bonus when terraforming a world, then spend it for superalloy and superconductor production time, advanced research, and O\'Neill cylinder growth.';
+        tooltip.title = 'Save to file or export to clipboard once per day to claim patience, plus gain a bonus when terraforming a world, then spend it for net metal, superalloy and superconductor production time, advanced research, O\'Neill cylinder growth, and Warp Gate progress.';
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
@@ -155,7 +155,7 @@ const PatienceUI = {
 
         const spendHeader = document.createElement('div');
         spendHeader.className = 'patience-card-label';
-        spendHeader.textContent = 'Convert patience into superalloys, superconductors, advanced research, and O\'Neill cylinders based on current production.';
+        spendHeader.textContent = 'Convert patience into net metal, superalloys, superconductors, advanced research, O\'Neill cylinders, and Warp Gate progress based on current production.';
         spendCard.appendChild(spendHeader);
 
         const spendRow = document.createElement('div');
@@ -273,10 +273,13 @@ const PatienceUI = {
         if (!this.spendPreviewEl || !this.spendInputEl || !patienceManager) return;
         
         const hours = parseFloat(this.spendInputEl.value) || 0;
-        const { superalloyGain, superconductorGain, advancedResearchGain, oneillGain } = patienceManager.calculateSpendGains(hours);
+        const { superalloyGain, superconductorGain, advancedResearchGain, metalGain, oneillGain } = patienceManager.calculateSpendGains(hours);
         const gains = [];
         const wgcAdvance = this.getWgcAdvancePreview(hours);
 
+        if (metalGain > 0) {
+            gains.push(`${formatNumber(metalGain, true)} metal`);
+        }
         if (superalloyGain > 0) {
             gains.push(`${formatNumber(superalloyGain, true)} superalloys`);
         }
@@ -376,6 +379,7 @@ const PatienceUI = {
             const hours = parseFloat(this.spendInputEl.value) || 0;
             const gains = patienceManager.calculateSpendGains(hours);
             const canSpend = hours > 0 && hours <= patienceManager.currentHours && (
+                gains.metalGain > 0 ||
                 gains.superalloyGain > 0 ||
                 gains.superconductorGain > 0 ||
                 gains.advancedResearchGain > 0 ||
@@ -399,10 +403,20 @@ const PatienceUI = {
  * Build the Warp Gate Command fast-forward preview text
  */
 PatienceUI.getWgcAdvancePreview = function(hours) {
-    if (!warpGateCommand || !warpGateCommand.enabled || hours <= 0) return '';
-    
-    const ms = hours * 3600 * 1000;
-    return `WGC operations will advance.`;
+    if (hours <= 0) return '';
+
+    const wgcAdvance = warpGateCommand.enabled;
+    const wgnAdvance = warpGateNetworkManager.isBooleanFlagSet('warpGateFabrication') && galaxyManager.enabled;
+
+    if (!wgcAdvance && !wgnAdvance) return '';
+
+    if (wgcAdvance && wgnAdvance) {
+        return 'WGC operations and Warp Gate Network progress will advance.';
+    }
+    if (wgcAdvance) {
+        return 'WGC operations will advance.';
+    }
+    return 'Warp Gate Network progress will advance.';
 };
 
 /**

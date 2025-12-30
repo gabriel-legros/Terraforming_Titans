@@ -19,8 +19,10 @@ describe('PatienceManager spending', () => {
   let superalloys;
   let superconductors;
   let advancedResearch;
+  let metal;
   let oneillCount;
   let wgcUpdates;
+  let warpGateNetworkUpdates;
 
   beforeEach(() => {
     superalloys = {
@@ -51,11 +53,22 @@ describe('PatienceManager spending', () => {
       },
     };
 
+    metal = {
+      productionRate: 5,
+      consumptionRate: 2,
+      value: 0,
+      increase(amount) {
+        this.value += amount;
+      },
+    };
+
     oneillCount = 10;
     wgcUpdates = [];
+    warpGateNetworkUpdates = [];
 
     global.resources = {
       colony: {
+        metal,
         superalloys,
         superconductors,
         advancedResearch,
@@ -78,6 +91,11 @@ describe('PatienceManager spending', () => {
         wgcUpdates.push(deltaMs);
       },
     };
+    global.warpGateNetworkManager = {
+      update: (deltaMs) => {
+        warpGateNetworkUpdates.push(deltaMs);
+      },
+    };
 
     global.galaxyManager = {};
     global.getOneillCylinderCapacity = () => 100;
@@ -96,19 +114,32 @@ describe('PatienceManager spending', () => {
     delete global.getOneillCylinderCapacity;
     delete global.updateOneillCylinderStatsUI;
     delete global.warpGateCommand;
+    delete global.warpGateNetworkManager;
     delete global.buildings;
   });
 
-  test('spending patience rewards superalloys, superconductors, advanced research, and O\'Neill cylinders', () => {
+  test('spending patience rewards metal, superalloys, superconductors, advanced research, and O\'Neill cylinders', () => {
     const success = patienceManager.spendPatience(2);
 
     expect(success).toBe(true);
     expect(patienceManager.currentHours).toBe(8);
+    expect(metal.value).toBeCloseTo(21600);
     expect(superalloys.value).toBeCloseTo(14400);
     expect(superconductors.value).toBeCloseTo(3600);
     expect(advancedResearch.value).toBeCloseTo(7200);
     expect(oneillCount).toBeCloseTo(10.18, 2);
     expect(wgcUpdates.length).toBe(120);
     expect(wgcUpdates.every(ms => ms === 60000)).toBe(true);
+    expect(warpGateNetworkUpdates.length).toBe(120);
+    expect(warpGateNetworkUpdates.every(ms => ms === 60000)).toBe(true);
+  });
+
+  test('metal gains ignore negative net production', () => {
+    metal.productionRate = 1;
+    metal.consumptionRate = 2;
+
+    const gains = patienceManager.calculateSpendGains(1);
+
+    expect(gains.metalGain).toBe(0);
   });
 });
