@@ -342,18 +342,18 @@ class GhgFactory extends Building {
     const tempLabel = document.createElement('span');
     tempControl.appendChild(tempLabel);
 
+    const lineBreak = document.createElement('span');
+    lineBreak.classList.add('ghg-temp-line-break');
+    tempControl.appendChild(lineBreak);
+
     const tempInput = document.createElement('input');
     tempInput.type = 'number';
     tempInput.step = 0.1;
     tempInput.classList.add('ghg-temp-input');
     tempControl.appendChild(tempInput);
 
-    const lineBreak = document.createElement('span');
-    lineBreak.classList.add('ghg-temp-line-break');
-    tempControl.appendChild(lineBreak);
-
     const betweenLabel = document.createElement('span');
-    betweenLabel.textContent = ' and avg T < ';
+    betweenLabel.textContent = ' and ';
     tempControl.appendChild(betweenLabel);
 
     const tempInputB = document.createElement('input');
@@ -366,13 +366,23 @@ class GhgFactory extends Building {
     unitSpan.classList.add('ghg-temp-unit');
     tempControl.appendChild(unitSpan);
 
+    const tempTooltip = document.createElement('span');
+    tempTooltip.classList.add('info-tooltip-icon');
+    tempTooltip.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      tempTooltip,
+      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of temperature and a solver will attempt to set the trend inside this range. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend.  You will lose control of the "reverse" button.'
+    );
+    tempControl.appendChild(tempTooltip);
+
     if (settings.reverseTempThreshold === undefined) {
       settings.reverseTempThreshold = settings.disableTempThreshold;
     }
     GhgFactory.enforceAutomationThresholdGap();
 
     const update = () => {
-      tempLabel.textContent = 'Disable if avg T > ';
+      const showReverse = !!this.reversalAvailable;
+      tempLabel.textContent = showReverse ? 'Automate avg T between ' : 'Disable if avg T > ';
       if (typeof getTemperatureUnit === 'function') {
         unitSpan.textContent = getTemperatureUnit();
       }
@@ -384,10 +394,10 @@ class GhgFactory extends Building {
           tempInputB.value = toDisplayTemperature(settings.reverseTempThreshold);
         }
       }
-      const showReverse = !!this.reversalAvailable;
       lineBreak.style.display = showReverse ? 'block' : 'none';
       betweenLabel.style.display = showReverse ? 'inline' : 'none';
       tempInputB.style.display = showReverse ? 'inline' : 'none';
+      tempTooltip.style.display = showReverse ? 'inline' : 'none';
     };
     update();
 
@@ -416,11 +426,13 @@ class GhgFactory extends Building {
     cache.ghg = {
       container: tempControl,
       checkbox: tempCheckbox,
+      label: tempLabel,
       inputA: tempInput,
       inputB: tempInputB,
       lineBreak: lineBreak,
       betweenLabel: betweenLabel,
-      unitSpan: unitSpan
+      unitSpan: unitSpan,
+      tooltip: tempTooltip
     };
   }
 
@@ -434,19 +446,25 @@ class GhgFactory extends Building {
     if (ghgEls.checkbox) {
       ghgEls.checkbox.checked = settings.autoDisableAboveTemp;
     }
+    const showReverse = !!this.reversalAvailable;
+    if (ghgEls.label) {
+      ghgEls.label.textContent = showReverse ? 'Automate avg T between ' : 'Disable if avg T > ';
+    }
     if (ghgEls.inputA && typeof toDisplayTemperature === 'function' && document.activeElement !== ghgEls.inputA) {
       ghgEls.inputA.value = toDisplayTemperature(settings.disableTempThreshold);
     }
     if (ghgEls.inputB && typeof toDisplayTemperature === 'function' && document.activeElement !== ghgEls.inputB) {
       ghgEls.inputB.value = toDisplayTemperature(settings.reverseTempThreshold);
     }
-    const showReverse = !!this.reversalAvailable;
     ghgEls.lineBreak.style.display = showReverse ? 'block' : 'none';
     if (ghgEls.betweenLabel) {
       ghgEls.betweenLabel.style.display = showReverse ? 'inline' : 'none';
     }
     if (ghgEls.inputB) {
       ghgEls.inputB.style.display = showReverse ? 'inline' : 'none';
+    }
+    if (ghgEls.tooltip) {
+      ghgEls.tooltip.style.display = showReverse ? 'inline' : 'none';
     }
     if (ghgEls.unitSpan && typeof getTemperatureUnit === 'function') {
       ghgEls.unitSpan.textContent = getTemperatureUnit();
