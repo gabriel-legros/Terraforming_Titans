@@ -599,9 +599,15 @@ const buildingsParameters = {
         production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } }
       },
       silicates: {
+        shortName: 'Silicates -> Oxygen',
+        consumption: { colony: { silicon : 100,energy: 150_000_000} },
+        production: { atmospheric: { oxygen: 53.24 } }
+      },
+      rocks: {
         shortName: 'Rocks -> Oxygen',
-        consumption: { colony: { energy: 150_000_000} },
-        production: { atmospheric: { oxygen: 100 } }
+        consumption: { colony: { energy: 200_000_000} },
+        production: { atmospheric: { oxygen: 50 } },
+        artificialAllowed: false
       }
     }
   },

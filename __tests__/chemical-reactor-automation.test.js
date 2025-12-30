@@ -58,7 +58,8 @@ describe('Chemical reactor automation', () => {
     global.buildings = {};
     global.updateBuildingDisplay = jest.fn();
     global.researchManager = {
-      getResearchById: () => ({ isResearched: true })
+      getResearchById: () => ({ isResearched: true }),
+      isArtificialWorld: () => false
     };
     global.resources = {
       colony: {

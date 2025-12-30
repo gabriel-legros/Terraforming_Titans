@@ -13,10 +13,21 @@ class MultiRecipesBuilding extends Building {
 
   _getRecipeOptions() {
     const defs = this.recipes || {};
-    return Object.keys(defs).map(key => ({
+    return this._getAllowedRecipeKeys().map(key => ({
       key,
       label: defs[key].shortName || defs[key].displayName || key
     }));
+  }
+
+  _getAllowedRecipeKeys() {
+    const defs = this.recipes || {};
+    const keys = Object.keys(defs);
+    const isArtificial = researchManager.isArtificialWorld();
+    if (!isArtificial) {
+      return keys;
+    }
+    const allowed = keys.filter(key => defs[key].artificialAllowed !== false);
+    return allowed.length ? allowed : keys;
   }
 
   _applyRecipeMapping() {
@@ -28,6 +39,14 @@ class MultiRecipesBuilding extends Building {
     }
     if (!this._defaultDisplayName) {
       this._defaultDisplayName = this.displayName;
+    }
+
+    const allowedKeys = this._getAllowedRecipeKeys();
+    if (allowedKeys.length && !allowedKeys.includes(this.currentRecipeKey)) {
+      const fallback = allowedKeys.includes(this.defaultRecipe) ? this.defaultRecipe : allowedKeys[0];
+      if (fallback) {
+        this.currentRecipeKey = fallback;
+      }
     }
 
     const recipe = (this.recipes || {})[this.currentRecipeKey];
