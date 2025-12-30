@@ -3,6 +3,7 @@ globalGameIsLoadingFromSave = false;
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
 let statisticsElements = null;
+let settingsElements = null;
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -50,6 +51,27 @@ function cacheStatisticsElements() {
     totalPlaytime: document.getElementById('total-playtime-display'),
   };
   return statisticsElements;
+}
+
+function cacheSettingsElements() {
+  if (settingsElements) {
+    return settingsElements;
+  }
+  settingsElements = {
+    autosaveToggle: document.getElementById('disable-autosave-toggle'),
+    keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
+    celsiusToggle: document.getElementById('celsius-toggle'),
+    silenceToggle: document.getElementById('solis-silence-toggle'),
+    milestoneToggle: document.getElementById('milestone-silence-toggle'),
+    unlockToggle: document.getElementById('unlock-alert-toggle'),
+    dayNightToggle: document.getElementById('day-night-toggle'),
+    darkModeToggle: document.getElementById('dark-mode-toggle'),
+    preserveAutoStartToggle: document.getElementById('preserve-project-auto-start-toggle'),
+    keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
+    autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
+    roundBuildingToggle: document.getElementById('round-building-toggle'),
+  };
+  return settingsElements;
 }
 
 function recalculateLandUsage() {
@@ -568,14 +590,10 @@ function loadGame(slotOrCustomString, recreate = true) {
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
       delete gameSettings.formatAutoBuildTargets;
-      const autosaveToggle = document.getElementById('disable-autosave-toggle');
-      if (autosaveToggle) {
-        autosaveToggle.checked = gameSettings.disableAutosave;
-      }
-      const toggle = document.getElementById('celsius-toggle');
-      if(toggle){
-        toggle.checked = gameSettings.useCelsius;
-      }
+      const cachedSettings = cacheSettingsElements();
+      cachedSettings.autosaveToggle.checked = gameSettings.disableAutosave;
+      cachedSettings.keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
+      cachedSettings.celsiusToggle.checked = gameSettings.useCelsius;
       const debugEnabled = !!gameSettings.planetVisualizerDebugEnabled;
       if (typeof globalThis !== 'undefined') {
         globalThis.planetVisualizerDebugEnabled = debugEnabled;
@@ -584,41 +602,21 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (pv && pv.setDebugMode) {
         pv.setDebugMode(debugEnabled, { skipPersist: true });
       }
-      const silenceToggle = document.getElementById('solis-silence-toggle');
-      if(silenceToggle){
-        silenceToggle.checked = gameSettings.silenceSolisAlert;
+      cachedSettings.silenceToggle.checked = gameSettings.silenceSolisAlert;
+      cachedSettings.milestoneToggle.checked = gameSettings.silenceMilestoneAlert;
+      cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
+      cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
+      cachedSettings.darkModeToggle.checked = gameSettings.darkMode;
+      document.body.classList.toggle('dark-mode', gameSettings.darkMode);
+      cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
+      cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
+      cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
+      cachedSettings.roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
+      if (gameSettings.keepTabRunningAudio) {
+        startBackgroundSilence();
+      } else {
+        stopBackgroundSilence();
       }
-      const milestoneToggle = document.getElementById('milestone-silence-toggle');
-      if(milestoneToggle){
-        milestoneToggle.checked = gameSettings.silenceMilestoneAlert;
-      }
-      const unlockToggle = document.getElementById('unlock-alert-toggle');
-      if(unlockToggle){
-        unlockToggle.checked = gameSettings.silenceUnlockAlert;
-      }
-      const dayNightToggle = document.getElementById('day-night-toggle');
-      if(dayNightToggle){
-        dayNightToggle.checked = gameSettings.disableDayNightCycle;
-      }
-      const darkModeToggle = document.getElementById('dark-mode-toggle');
-      if(darkModeToggle){
-        darkModeToggle.checked = gameSettings.darkMode;
-        document.body.classList.toggle('dark-mode', gameSettings.darkMode);
-      }
-      const preserveAutoStartToggle = document.getElementById('preserve-project-auto-start-toggle');
-      if(preserveAutoStartToggle){
-        preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
-      }
-      const keepHiddenStructuresToggle = document.getElementById('keep-hidden-structures-toggle');
-      if (keepHiddenStructuresToggle) {
-        keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
-      }
-      const autobuildSetActiveToggle = document.getElementById('autobuild-set-active-toggle');
-      if(autobuildSetActiveToggle){
-        autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
-      }
-      const roundBuildingToggle = document.getElementById('round-building-toggle');
-      roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
       refreshAllAutoBuildTargets();
       updateAutosaveText();
       if (typeof completedResearchHidden !== 'undefined') {

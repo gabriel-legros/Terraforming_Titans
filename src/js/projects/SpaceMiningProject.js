@@ -34,11 +34,10 @@ class SpaceMiningProject extends SpaceshipProject {
 
   assignSpaceships(count) {
     const maxShips = this.getMaxAssignableShips();
-    const available = Math.floor(resources.special.spaceships.value);
-    const adjusted = Math.max(
-      -this.assignedSpaceships,
-      Math.min(count, available, maxShips - this.assignedSpaceships)
-    );
+    const maxDelta = maxShips - this.assignedSpaceships;
+    const adjusted = count > 0
+      ? Math.min(count, maxDelta)
+      : Math.max(count, -this.assignedSpaceships);
     super.assignSpaceships(adjusted);
   }
 
