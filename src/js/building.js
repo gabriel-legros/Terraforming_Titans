@@ -778,7 +778,7 @@ class Building extends EffectableEntity {
       return this.active * base * effectiveMultiplier * (deltaTime / 1000);
     };
 
-    const solveRequired = (f, maxProduction) => {
+    const solveRequired = (f, maxProduction, maxResult = maxProduction) => {
       let x = 0;
       let fx = f(x);
       const tolerance = 0.001;
@@ -795,7 +795,7 @@ class Building extends EffectableEntity {
         if (x < 0) x = 0;
         fx = f(x);
       }
-      return Math.min(Math.max(x, 0), maxProduction);
+      return Math.min(Math.max(x, 0), maxResult);
     };
 
     return { targetProductivity, hasAtmosphericOversight, computeMaxProduction, solveRequired };

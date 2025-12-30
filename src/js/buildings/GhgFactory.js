@@ -72,18 +72,35 @@ class GhgFactory extends Building {
       }
       return result;
     };
-    const applySolverProductivity = (desired) => {
+    const solveRequiredAmount = (evaluate, maxProduction, currentAmount) => {
+      const stepSize = Math.max(maxProduction, 1);
+      let cap = Math.max(currentAmount, 1);
+      let required = solveRequired(evaluate, stepSize, cap);
+      for (let i = 0; i < 10 && required >= cap; i++) {
+        cap *= 10;
+        required = solveRequired(evaluate, stepSize, cap);
+      }
+      return required;
+    };
+    const applySolverProductivity = (required, maxProduction) => {
       const elapsedMs = deltaTime || 0;
       this._solverCooldownMs = Math.max(0, this._solverCooldownMs - elapsedMs);
       if (this._solverCooldownMs > 0) {
         return Math.min(this._solverCachedProductivity, targetProductivity);
       }
       const seconds = Math.max(0.001, elapsedMs / 1000);
-      const timeToTargetSeconds = desired > 0 ? (seconds / desired) : 0;
-      const clamped = timeToTargetSeconds < 1 ? seconds : desired;
-      const resolved = Math.min(targetProductivity, clamped);
+      const perSecond = maxProduction / seconds;
+      const maxRate = perSecond * targetProductivity;
+      const timeToTargetSeconds = maxRate > 0 ? (required / maxRate) : 0;
+      let desired = maxProduction > 0 ? (required / maxProduction) : 0;
+      let cooldownMs = 0;
+      if (timeToTargetSeconds > 0 && timeToTargetSeconds < 1) {
+        desired = perSecond > 0 ? (required / perSecond) : 0;
+        cooldownMs = 1000;
+      }
+      const resolved = Math.min(targetProductivity, desired);
       this._solverCachedProductivity = resolved;
-      this._solverCooldownMs = 1000;
+      this._solverCooldownMs = cooldownMs;
       return resolved;
     };
 
@@ -137,17 +154,18 @@ class GhgFactory extends Building {
             if (recipeKey === 'calcite') {
               // Too hot: produce toward midpoint
               if (currentTemp >= B) {
-                const required = solveRequired((added) => (
+                const required = solveRequiredAmount((added) => (
                   evaluateTemperature(
                     () => { res.value = originalAmount + added; },
                     () => readTrendTemperature() - M,
                     () => { res.value = originalAmount; }
                   )
-                ), maxProduction);
+                ), maxProduction, originalAmount);
                 this.reverseEnabled = false;
                 // Fallback: if solver cannot find a step but we are still above M, run at max allowed
-                const prod = (required > 0) ? (required / maxProduction) : (currentTemp > M ? 1 : 0);
-                this.productivity = applySolverProductivity(prod);
+                this.productivity = required > 0
+                  ? applySolverProductivity(required, maxProduction)
+                  : targetProductivity;
                 return;
               }
 
@@ -202,17 +220,18 @@ class GhgFactory extends Building {
             } else {
               // GHG recipe (warming): target lower boundary A when too cold
               const targetTemp = A;
-              const required = solveRequired((added) => (
+              const required = solveRequiredAmount((added) => (
                 evaluateTemperature(
                   () => { res.value = originalAmount + added; },
                   () => readTrendTemperature() - targetTemp,
                   () => { res.value = originalAmount; }
                 )
-              ), maxProduction);
+              ), maxProduction, originalAmount);
               this.reverseEnabled = false;
               // Fallback: if solver cannot find a step but we are still below A, run at max allowed
-              const prod = (required > 0) ? (required / maxProduction) : (currentTemp < targetTemp ? 1 : 0);
-              this.productivity = applySolverProductivity(prod);
+              this.productivity = required > 0
+                ? applySolverProductivity(required, maxProduction)
+                : targetProductivity;
               return;
             }
           }
@@ -306,25 +325,21 @@ class GhgFactory extends Building {
           if (maxProduction > 0) {
             const res = resources.atmospheric[resourceName];
             const originalAmount = res.value;
-            const required = solveRequired((amt) => (
+            const required = solveRequiredAmount((amt) => (
               evaluateTemperature(
                 () => { res.value = originalAmount + (reverse ? -amt : amt); },
                 () => readTrendTemperature() - targetTemp,
                 () => { res.value = originalAmount; }
               )
-            ), maxProduction);
+            ), maxProduction, originalAmount);
             this.reverseEnabled = reverse;
             // Fallback: if solver returns no step but still outside the band, push at max allowed in the correct direction
-            let prod = 0;
             if (required > 0) {
-              prod = required / maxProduction;
+              this.productivity = applySolverProductivity(required, maxProduction);
             } else {
               const outside = (currentTemp <= A) || (currentTemp >= B);
-              if (outside) {
-                prod = 1;
-              }
+              this.productivity = outside ? targetProductivity : 0;
             }
-            this.productivity = applySolverProductivity(prod);
             return;
           }
         }
