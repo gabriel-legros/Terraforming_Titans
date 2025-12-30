@@ -1048,7 +1048,7 @@ const constructors = {
   dysonReceiver: 'dysonReceiver',
   solarPanel: 'solarPanel',
   windTurbine: 'windTurbine',
-  boschReactor: 'MultiRecipesBuilding',
+  boschReactor: 'ChemicalReactor',
   waterTank: 'WaterTank',
   antimatterBattery: 'AntimatterBattery',
   spaceMirror: 'SpaceMirror',
