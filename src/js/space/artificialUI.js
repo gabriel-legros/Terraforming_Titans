@@ -48,6 +48,34 @@ const artificialStashMultipliers = {
 };
 let artificialRadiusEditing = false;
 let artificialHistorySig = '';
+const ARTIFICIAL_SECTOR_RESOURCE_LABELS = {
+  metal: 'Metal',
+  water: 'Water',
+  silicon: 'Silicon',
+  carbon: 'Carbon',
+  nitrogen: 'Nitrogen',
+  oxygen: 'Oxygen'
+};
+
+function formatArtificialSectorResourceLabel(resourceKey) {
+  const label = ARTIFICIAL_SECTOR_RESOURCE_LABELS[resourceKey];
+  const normalized = resourceKey ? String(resourceKey) : '';
+  return label || (normalized ? `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}` : 'Unknown');
+}
+
+function getArtificialSectorDisplayName(sector) {
+  return sector?.getDisplayName?.() || sector?.key || `${sector.q},${sector.r}`;
+}
+
+function buildArtificialSectorResourceSuffix(sector) {
+  const richResource = sector?.getRichResource?.() || sector?.richResource || '';
+  const poorResources = sector?.getPoorResources?.() || sector?.poorResources || [];
+  const poorList = Array.isArray(poorResources) ? poorResources : [];
+  const richLabel = richResource ? `+${formatArtificialSectorResourceLabel(richResource)}` : '';
+  const poorLabels = poorList.map(resource => `-${formatArtificialSectorResourceLabel(resource)}`);
+  const summary = [richLabel, ...poorLabels].filter(Boolean).join(', ');
+  return summary ? ` (${summary})` : '';
+}
 
 function cacheArtificialUIElements() {
   const doc = typeof document !== 'undefined' ? document : null;
@@ -1126,24 +1154,39 @@ function updateArtificialUI(options = {}) {
 
   // Populate sector selector
   if (artificialUICache.sector) {
-    const galaxyManager = globalThis?.galaxyManager;
-    const sectors = Array.isArray(galaxyManager?.getSectors?.())
-      ? galaxyManager.getSectors().filter(sector => {
+    const manager = galaxyManager;
+    const sectors = Array.isArray(manager?.getSectors?.())
+      ? manager.getSectors().filter(sector => {
           const controlValue = sector.getControlValue ? sector.getControlValue('uhf') : 0;
           return controlValue > 0;
         })
       : [];
-    const sectorSig = JSON.stringify(sectors.map(s => ({ name: s.getDisplayName ? s.getDisplayName() : `${s.q},${s.r}`, q: s.q, r: s.r })));
+    const sortedSectors = sectors.slice().sort((left, right) => {
+      const leftName = getArtificialSectorDisplayName(left);
+      const rightName = getArtificialSectorDisplayName(right);
+      const nameCompare = leftName.localeCompare(rightName);
+      const leftKey = left.key || `${left.q},${left.r}`;
+      const rightKey = right.key || `${right.q},${right.r}`;
+      return nameCompare !== 0 ? nameCompare : leftKey.localeCompare(rightKey);
+    });
+    const sectorSig = JSON.stringify(sortedSectors.map(sector => ({
+      name: getArtificialSectorDisplayName(sector),
+      key: sector.key || `${sector.q},${sector.r}`,
+      rich: sector.getRichResource?.() || sector.richResource || null,
+      poor: sector.getPoorResources?.() || sector.poorResources || []
+    })));
     if (artificialUICache.sector.dataset.lastSectorList !== sectorSig) {
       const frag = document.createDocumentFragment();
       const autoOpt = document.createElement('option');
       autoOpt.value = 'auto';
       autoOpt.textContent = 'Sector: Auto';
       frag.appendChild(autoOpt);
-      sectors.forEach(sector => {
+      sortedSectors.forEach(sector => {
+        const sectorName = getArtificialSectorDisplayName(sector);
+        const resourceSuffix = buildArtificialSectorResourceSuffix(sector);
         const opt = document.createElement('option');
-        opt.value = sector.getDisplayName ? sector.getDisplayName() : `${sector.q},${sector.r}`;
-        opt.textContent = `Sector: ${sector.getDisplayName ? sector.getDisplayName() : `(${sector.q},${sector.r})`}`;
+        opt.value = sectorName;
+        opt.textContent = `Sector: ${sectorName}${resourceSuffix}`;
         frag.appendChild(opt);
       });
       artificialUICache.sector.innerHTML = '';
