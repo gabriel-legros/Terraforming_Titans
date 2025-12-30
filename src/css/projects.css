@@ -653,6 +653,24 @@
     font-size: 0.9em;
 }
 
+.mirror-oversight-card .mirror-oversight-select-small {
+    padding: 3px 4px;
+    font-size: 0.75em;
+    line-height: 1.1;
+}
+
+.mirror-oversight-card .mirror-oversight-select-timing {
+    width: 58px;
+}
+
+.mirror-oversight-card .mirror-oversight-select-priority {
+    width: 32px;
+}
+
+.mirror-oversight-card .mirror-oversight-select-scale {
+    width: 42px;
+}
+
 .mirror-oversight-card input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
