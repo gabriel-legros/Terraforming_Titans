@@ -77,6 +77,14 @@ function buildArtificialSectorResourceSuffix(sector) {
   return summary ? ` (${summary})` : '';
 }
 
+function buildArtificialSectorWorldCountSuffix(manager, sector) {
+  const rawCount = manager?.getTerraformedWorldCountForSector?.(sector) || 0;
+  const count = Math.max(0, Math.round(rawCount));
+  const label = formatNumber(count, false, 0);
+  const noun = count === 1 ? 'world' : 'worlds';
+  return ` (${label} ${noun})`;
+}
+
 function cacheArtificialUIElements() {
   const doc = typeof document !== 'undefined' ? document : null;
   if (!doc) return artificialUICache;
@@ -1173,20 +1181,22 @@ function updateArtificialUI(options = {}) {
       name: getArtificialSectorDisplayName(sector),
       key: sector.key || `${sector.q},${sector.r}`,
       rich: sector.getRichResource?.() || sector.richResource || null,
-      poor: sector.getPoorResources?.() || sector.poorResources || []
+      poor: sector.getPoorResources?.() || sector.poorResources || [],
+      worlds: manager?.getTerraformedWorldCountForSector?.(sector) || 0
     })));
     if (artificialUICache.sector.dataset.lastSectorList !== sectorSig) {
       const frag = document.createDocumentFragment();
       const autoOpt = document.createElement('option');
       autoOpt.value = 'auto';
-      autoOpt.textContent = 'Sector: Auto';
+      autoOpt.textContent = 'Auto';
       frag.appendChild(autoOpt);
       sortedSectors.forEach(sector => {
         const sectorName = getArtificialSectorDisplayName(sector);
         const resourceSuffix = buildArtificialSectorResourceSuffix(sector);
+        const worldsSuffix = buildArtificialSectorWorldCountSuffix(manager, sector);
         const opt = document.createElement('option');
         opt.value = sectorName;
-        opt.textContent = `Sector: ${sectorName}${resourceSuffix}`;
+        opt.textContent = `${sectorName}${resourceSuffix}${worldsSuffix}`;
         frag.appendChild(opt);
       });
       artificialUICache.sector.innerHTML = '';
