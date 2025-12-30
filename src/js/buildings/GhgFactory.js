@@ -10,6 +10,12 @@ function sanitizeNumber(value, fallback) {
 }
 
 class GhgFactory extends Building {
+  constructor(config, buildingName) {
+    super(config, buildingName);
+    this._solverCooldownMs = 0;
+    this._solverCachedProductivity = 0;
+  }
+
   getAutomationSettings() {
     return GhgFactory.getAutomationSettings();
   }
@@ -65,6 +71,20 @@ class GhgFactory extends Building {
         }
       }
       return result;
+    };
+    const applySolverProductivity = (desired) => {
+      const elapsedMs = deltaTime || 0;
+      this._solverCooldownMs = Math.max(0, this._solverCooldownMs - elapsedMs);
+      if (this._solverCooldownMs > 0) {
+        return Math.min(this._solverCachedProductivity, targetProductivity);
+      }
+      const seconds = Math.max(0.001, elapsedMs / 1000);
+      const timeToTargetSeconds = desired > 0 ? (seconds / desired) : 0;
+      const clamped = timeToTargetSeconds < 1 ? seconds : desired;
+      const resolved = Math.min(targetProductivity, clamped);
+      this._solverCachedProductivity = resolved;
+      this._solverCooldownMs = 1000;
+      return resolved;
     };
 
     if (this.active === 0) {
@@ -126,10 +146,10 @@ class GhgFactory extends Building {
                 ), maxProduction);
                 this.reverseEnabled = false;
                 // Fallback: if solver cannot find a step but we are still above M, run at max allowed
-              const prod = (required > 0) ? (required / maxProduction) : (currentTemp > M ? 1 : 0);
-              this.productivity = Math.min(targetProductivity, prod);
-              return;
-            }
+                const prod = (required > 0) ? (required / maxProduction) : (currentTemp > M ? 1 : 0);
+                this.productivity = applySolverProductivity(prod);
+                return;
+              }
 
               // Inside the range: maintain enough to offset decay at the midpoint mass
               const halfLife = (typeof CALCITE_HALF_LIFE_SECONDS !== 'undefined') ? CALCITE_HALF_LIFE_SECONDS : 240;
@@ -192,7 +212,7 @@ class GhgFactory extends Building {
               this.reverseEnabled = false;
               // Fallback: if solver cannot find a step but we are still below A, run at max allowed
               const prod = (required > 0) ? (required / maxProduction) : (currentTemp < targetTemp ? 1 : 0);
-              this.productivity = Math.min(targetProductivity, prod);
+              this.productivity = applySolverProductivity(prod);
               return;
             }
           }
@@ -304,7 +324,7 @@ class GhgFactory extends Building {
                 prod = 1;
               }
             }
-            this.productivity = Math.min(targetProductivity, prod);
+            this.productivity = applySolverProductivity(prod);
             return;
           }
         }

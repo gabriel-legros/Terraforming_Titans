@@ -258,7 +258,7 @@ function pickBaseColorForType(type) {
 const DEFAULT_PARAMS = {
   naming: {
     starSyllables: ["al","be","ce","do","er","fi","ga","ha","io","ju","ka","lu","me","no","or","pi","qu","ra","su","ta","ul","ve","wo","xi","ya","zo"],
-    planetSyllables: ["ta","ri","no","ka","mi","sa","lo","ve","du","an","ke","yo","ze","ur","phi","ran","sol","ter","mar","cal","thy","gan","tan","cys"]
+    planetSyllables: ["ta","ri","no","ka","mi","sa","lo","ve","du","an","ke","yo","ze","ur","phi","ran","sol","ter","mar","cal","thy","gan","tan","cys","lu","nya","ru"]
   },
   star: {
     spectralWeights: [
