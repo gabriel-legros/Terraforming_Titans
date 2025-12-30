@@ -371,7 +371,7 @@ class GhgFactory extends Building {
     tempTooltip.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       tempTooltip,
-      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of temperature and a solver will attempt to set the trend inside this range. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend.  You will lose control of the "reverse" button.'
+      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of temperature and a solver will attempt to set the trend inside this range. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend.  You will lose control of the "reverse" button.  If used alongside advanced oversight, it is best for the ranges to be compatible.'
     );
     tempControl.appendChild(tempTooltip);
 
