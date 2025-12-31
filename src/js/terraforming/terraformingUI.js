@@ -1243,7 +1243,7 @@ function createWaterBox(row) {
       const waterTargetPercent = terraforming.waterTarget * 100;
       const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget);
       const targetAmountText = formatNumber(targetAmount, false, 1);
-      els.target.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText} t).`;
+      els.target.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
     }
 
     els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate);
