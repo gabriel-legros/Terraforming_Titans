@@ -282,6 +282,9 @@ class LiftersProject extends TerraformingDurationProject {
   }
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if(!this.autoStart){
+      return;
+    }
     this.expansionShortfallLastTick = false;
     if (!this.isExpansionContinuous() || !this.isActive) {
       return;

@@ -70,6 +70,7 @@ function cacheSettingsElements() {
     keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
     autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
     roundBuildingToggle: document.getElementById('round-building-toggle'),
+    simplifyGoldenAsteroidToggle: document.getElementById('simplify-golden-asteroid-toggle'),
   };
   return settingsElements;
 }
@@ -612,6 +613,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
       cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       cachedSettings.roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
+      cachedSettings.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
       if (gameSettings.keepTabRunningAudio) {
         startBackgroundSilence();
       } else {
