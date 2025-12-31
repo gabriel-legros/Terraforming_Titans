@@ -116,6 +116,28 @@ function estimateCoverage(amount, zoneArea, scale = 0.0001) {
   return Math.max(0, Math.min(coverage, 1));
 }
 
+function estimateAmountForCoverage(coverage, zoneArea, scale = 0.0001) {
+  const clampedCoverage = Math.max(0, Math.min(coverage, 1));
+  const R0           = 0.002926577381;
+  const LINEAR_SLOPE = 50;
+  const LOG_A        = LINEAR_SLOPE * R0;
+  const LOG_B        = 1;
+  const linearMax = LINEAR_SLOPE * R0;
+
+  let resourceRatio;
+  if (clampedCoverage <= 0) {
+    resourceRatio = 0;
+  } else if (clampedCoverage <= linearMax) {
+    resourceRatio = clampedCoverage / LINEAR_SLOPE;
+  } else if (clampedCoverage < 1) {
+    resourceRatio = Math.exp((clampedCoverage - LOG_B) / LOG_A);
+  } else {
+    resourceRatio = 1;
+  }
+
+  return (resourceRatio * zoneArea) / scale;
+}
+
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
@@ -123,6 +145,7 @@ if (typeof module !== "undefined" && module.exports) {
     getZoneRatio,
     getZonePercentage,
     estimateCoverage,
+    estimateAmountForCoverage,
   };
 } else {
   globalThis.ZONES             = ZONES;

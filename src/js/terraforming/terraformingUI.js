@@ -1161,7 +1161,9 @@ function createWaterBox(row) {
     const targetSpan = document.createElement('span');
     targetSpan.id = 'water-target';
     const waterTargetPercent = terraforming.waterTarget * 100;
-    targetSpan.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}%.`;
+    const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget);
+    const targetAmountText = formatNumber(targetAmount, false, 1);
+    targetSpan.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     waterBox.appendChild(targetSpan);
@@ -1191,6 +1193,16 @@ function createWaterBox(row) {
 
   function formatWaterRate(value) {
     return formatNumber(Math.abs(value) < 1e-4 ? 0 : value);
+  }
+
+  function getWaterTargetAmount(terraformingState, targetCoverage) {
+    const surfaceArea = terraformingState.celestialParameters.surfaceArea;
+    let total = 0;
+    for (const zone of ZONES) {
+      const zoneArea = surfaceArea * getZonePercentage(zone);
+      total += estimateAmountForCoverage(targetCoverage, zoneArea);
+    }
+    return total;
   }
   
   function updateWaterBox() {
@@ -1229,7 +1241,9 @@ function createWaterBox(row) {
 
     if (els.target) {
       const waterTargetPercent = terraforming.waterTarget * 100;
-      els.target.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}%.`;
+      const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget);
+      const targetAmountText = formatNumber(targetAmount, false, 1);
+      els.target.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText} t).`;
     }
 
     els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate);
