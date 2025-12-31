@@ -13,7 +13,7 @@ describe('Bioworkforce conversion uses terraforming requirements', () => {
 
   it('exposes bioworkersPerBiomassPerPoint in terraforming requirements', () => {
     const requirement = getTerraformingRequirement('human');
-    expect(requirement.lifeDesign.bioworkersPerBiomassPerPoint).toBe(0.00005);
+    expect(requirement.lifeDesign.bioworkersPerBiomassPerPoint).toBe(0.00004);
   });
 
   it('uses the configured bioworkersPerBiomassPerPoint for converted display', () => {

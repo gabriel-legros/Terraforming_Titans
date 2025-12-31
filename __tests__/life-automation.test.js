@@ -129,7 +129,8 @@ describe('LifeAutomation', () => {
       replaceDesign: jest.fn(function (design) { this.tentativeDesign = design; }),
       confirmDesign: jest.fn(),
       cancelDeployment: jest.fn(function () { this.isActive = false; }),
-      isActive: true
+      isActive: true,
+      enabled: true
     };
     global.document = { dispatchEvent: jest.fn() };
     global.Event = function () {};

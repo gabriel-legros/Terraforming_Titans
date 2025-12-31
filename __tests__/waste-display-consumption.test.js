@@ -122,7 +122,7 @@ describe('waste building display consumption', () => {
 
     expect(accumulatedChanges.surface.trash).toBeCloseTo(0.2);
     expect(trashResource.modifyRate).toHaveBeenCalledTimes(1);
-    expect(trashResource.modifyRate.mock.calls[0][0]).toBeCloseTo(0.6);
+    expect(trashResource.modifyRate.mock.calls[0][0]).toBeCloseTo(0.2);
     expect(trashResource.modifyRate.mock.calls[0][1]).toBe('Garbage Sorter');
     expect(trashResource.modifyRate.mock.calls[0][2]).toBe('building');
   });

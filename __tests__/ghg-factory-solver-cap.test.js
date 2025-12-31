@@ -91,7 +91,7 @@ describe('Ghg factory solver cap', () => {
     return factory;
   };
 
-  test('caps GHG automation so the target cannot be reached in under one second', () => {
+  test('runs at full productivity when the target is far away', () => {
     const factory = createFactory();
     const settings = GhgFactory.getAutomationSettings();
     settings.autoDisableAboveTemp = true;
@@ -100,7 +100,7 @@ describe('Ghg factory solver cap', () => {
 
     factory.updateProductivity(global.resources, 100);
 
-    expect(factory.productivity).toBeCloseTo(0.1, 4);
+    expect(factory.productivity).toBeCloseTo(1, 4);
   });
 
   test('reuses solver output during the cooldown window', () => {

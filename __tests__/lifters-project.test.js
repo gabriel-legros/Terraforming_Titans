@@ -208,6 +208,7 @@ describe('LiftersProject', () => {
     project.duration = 500;
     project.startingDuration = project.getEffectiveDuration();
     project.remainingTime = project.startingDuration;
+    project.autoStart = true;
 
     project.start(resources);
 

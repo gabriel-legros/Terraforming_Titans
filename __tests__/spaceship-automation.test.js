@@ -38,6 +38,10 @@ describe('SpaceshipAutomation assignments', () => {
     }
 
     finalizeAssignmentChange() {}
+
+    isAutomationManuallyDisabled() {
+      return false;
+    }
   }
 
   beforeEach(() => {
