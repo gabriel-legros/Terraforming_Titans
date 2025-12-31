@@ -62,25 +62,24 @@ function extractAttacker(manager, factionId, cache) {
 }
 
 function extractIncomingAttacks(manager) {
-    const sectors = manager?.getSectors?.() || [];
     const factionCache = new Map();
     const attacks = [];
-    for (let index = 0; index < sectors.length; index += 1) {
-        const sector = sectors[index];
-        if (!sector) {
-            continue;
-        }
-        const operation = manager?.getOperationForSector?.(sector.key);
+    const operations = manager?.operationManager?.operations;
+    operations?.forEach?.((operation) => {
         if (!operation || operation.status !== 'running') {
-            continue;
+            return;
         }
         const attackerId = operation.factionId;
         if (!attackerId || attackerId === GALAXY_FACTION_UI_UHF_KEY) {
-            continue;
+            return;
+        }
+        const sector = manager?.sectors?.get?.(operation.sectorKey);
+        if (!sector) {
+            return;
         }
         const uhfControl = Number(sector.getControlValue?.(GALAXY_FACTION_UI_UHF_KEY)) || 0;
         if (!(uhfControl > 0)) {
-            continue;
+            return;
         }
         const duration = sanitizeOperationDuration(operation);
         const elapsed = sanitizeOperationElapsed(operation, duration);
@@ -102,7 +101,7 @@ function extractIncomingAttacks(manager) {
             reservedPower,
             uhfControl
         });
-    }
+    });
 
     attacks.sort((left, right) => {
         if (left.remainingMs !== right.remainingMs) {

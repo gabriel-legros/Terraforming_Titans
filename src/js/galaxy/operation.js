@@ -172,22 +172,23 @@ class GalaxyOperationManager {
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
     }
 
+    #getOperationKey(sectorKey, factionId) {
+        return `${sectorKey}|${factionId}`;
+    }
+
     getOperationForSector(sectorKey, factionId) {
         if (!sectorKey) {
             return null;
         }
-        const operation = this.operations.get(sectorKey) || null;
-        if (!operation) {
-            return null;
+        if (factionId) {
+            return this.operations.get(this.#getOperationKey(sectorKey, factionId)) || null;
         }
-        if (!factionId) {
-            return operation;
+        for (const operation of this.operations.values()) {
+            if (operation.sectorKey === sectorKey) {
+                return operation;
+            }
         }
-        const ownerId = operation.factionId || this.uhfFactionId;
-        if (ownerId !== factionId) {
-            return null;
-        }
-        return operation;
+        return null;
     }
 
     getOperationStep(sectorKey) {
@@ -366,7 +367,8 @@ class GalaxyOperationManager {
         if (this.isFactionFullControlSector?.(sector, attackerId)) {
             return null;
         }
-        const existing = this.operations.get(sectorKey);
+        const operationKey = this.#getOperationKey(sectorKey, attackerId);
+        const existing = this.operations.get(operationKey);
         if (existing && existing.status === 'running') {
             if (!existing.targetFactionId) {
                 existing.targetFactionId = this.#resolveOperationTarget(
@@ -428,7 +430,7 @@ class GalaxyOperationManager {
             defenderLosses: []
         };
         faction.setFleetPower(currentFleetPower - offensePower);
-        this.operations.set(sectorKey, operation);
+        this.operations.set(operationKey, operation);
         return operation;
     }
 
@@ -755,7 +757,7 @@ class GalaxyOperationManager {
             defenderLosses: this.#restoreDefenderLosses(state.defenderLosses)
         };
 
-        this.operations.set(operation.sectorKey, operation);
+        this.operations.set(this.#getOperationKey(operation.sectorKey, operation.factionId), operation);
     }
 
     #resolveOperationTarget(sector, attackerId, targetFactionId) {
@@ -993,7 +995,7 @@ class GalaxyOperationManager {
                 return;
             }
             const sectorKey = String(rawKey);
-            const currentOperation = this.operations.get(sectorKey);
+            const currentOperation = this.getOperationForSector(sectorKey, this.uhfFactionId);
             if (currentOperation && currentOperation.status === 'running') {
                 return;
             }

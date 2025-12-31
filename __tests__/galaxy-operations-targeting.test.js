@@ -136,4 +136,28 @@ describe('Galaxy operation targeting', () => {
     expect(factions.get('alpha').fleetPower).toBeCloseTo(500);
     expect(factions.get('beta').fleetPower).toBeCloseTo(100);
   });
+
+  test('multiple factions can launch operations against the same sector', () => {
+    const { operationManager, sector } = createOperationContext();
+    const alphaOperation = operationManager.startOperation({
+      sectorKey: sector.key,
+      factionId: 'alpha',
+      assignedPower: 200,
+      durationMs: 1000,
+      successChance: 0.5
+    });
+    expect(alphaOperation).toBeTruthy();
+
+    const uhfOperation = operationManager.startOperation({
+      sectorKey: sector.key,
+      factionId: 'uhf',
+      assignedPower: 300,
+      durationMs: 1000,
+      successChance: 0.5
+    });
+    expect(uhfOperation).toBeTruthy();
+    expect(operationManager.getOperationForSector(sector.key, 'alpha')).toBe(alphaOperation);
+    expect(operationManager.getOperationForSector(sector.key, 'uhf')).toBe(uhfOperation);
+    expect(operationManager.operations.size).toBe(2);
+  });
 });

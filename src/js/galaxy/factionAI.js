@@ -212,7 +212,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (!Array.isArray(breakdown) || !breakdown.length) {
             return false;
         }
-        if (manager?.getOperationForSector?.(key)?.status === 'running') {
+        if (manager?.getOperationForSector?.(key, this.id)?.status === 'running') {
             return false;
         }
         return breakdown.some((entry) => entry?.factionId && entry.factionId !== this.id);
@@ -252,7 +252,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
                 return;
             }
             keys.forEach((key) => {
-                if (!key || manager?.getOperationForSector?.(key)?.status === 'running') {
+                if (!key || manager?.getOperationForSector?.(key, this.id)?.status === 'running') {
                     return;
                 }
                 const sector = this.#getSectorFromKey(key, manager);
@@ -315,7 +315,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             if (!candidateSet.has(key)) {
                 continue;
             }
-            if (manager?.getOperationForSector?.(key)?.status === 'running') {
+            if (manager?.getOperationForSector?.(key, this.id)?.status === 'running') {
                 continue;
             }
             const sector = this.#getSectorFromKey(key, manager);

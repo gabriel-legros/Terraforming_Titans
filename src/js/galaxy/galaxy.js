@@ -1170,20 +1170,8 @@ class GalaxyManager extends EffectableEntity {
     }
 
     getUhfControlRatio() {
-        const sectors = this.getSectors();
-        const total = sectors.length;
-        if (total === 0) {
-            return 0;
-        }
-        let controlled = 0;
-        sectors.forEach((sector) => {
-            const dominant = sector?.getDominantController?.();
-            if (!dominant || dominant.factionId !== galaxyUhfId) {
-                return;
-            }
-            controlled += 1;
-        });
-        return controlled / total;
+        const controlled = this.getUhfControlledSectors().length;
+        return Math.min(1, controlled / 40);
     }
 
     getSuccessfulOperations() {

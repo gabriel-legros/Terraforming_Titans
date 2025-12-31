@@ -191,8 +191,13 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const operations = manager.operationManager?.operations;
-        operations?.forEach?.((operation, key) => {
+        const uhfFactionId = manager.operationManager?.uhfFactionId || 'uhf';
+        operations?.forEach?.((operation) => {
             if (!operation || operation.status !== 'running') {
+                return;
+            }
+            const ownerId = operation.factionId || uhfFactionId;
+            if (ownerId !== uhfFactionId) {
                 return;
             }
             const power = Number.isFinite(operation.assignedPower) && operation.assignedPower > 0
@@ -200,7 +205,7 @@ const GalaxyOperationUI = (() => {
                 : operation.reservedPower;
             const normalized = normalizeAssignment(power);
             if (normalized > 0) {
-                operationsAllocations.set(key, normalized);
+                operationsAllocations.set(operation.sectorKey, normalized);
             }
         });
     }
@@ -1137,10 +1142,11 @@ const GalaxyOperationUI = (() => {
         if (!operations || typeof operations.forEach !== 'function') {
             return;
         }
-        operations.forEach((operation, sectorKey) => {
+        operations.forEach((operation) => {
             if (!operation || operation.status !== 'running') {
                 return;
             }
+            const sectorKey = operation.sectorKey;
             const origin = operation.originHex;
             if (!origin || !Number.isFinite(origin.q) || !Number.isFinite(origin.r)) {
                 return;
@@ -1203,7 +1209,8 @@ const GalaxyOperationUI = (() => {
             const angleDeg = Math.atan2(adjustedDeltaY, adjustedDeltaX) * (180 / Math.PI);
             arrow.style.transform = `rotate(${angleDeg}deg)`;
 
-            arrowCache.set(sectorKey, arrow);
+            const arrowKey = `${sectorKey}|${operation.factionId || 'uhf'}`;
+            arrowCache.set(arrowKey, arrow);
         });
     }
 
