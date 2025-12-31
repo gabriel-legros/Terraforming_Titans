@@ -730,7 +730,7 @@ function initializeMirrorOversightUI(container) {
   const setLifeOptimalButton = document.createElement('button');
   setLifeOptimalButton.id = 'adv-set-life-optimal';
   setLifeOptimalButton.type = 'button';
-  setLifeOptimalButton.textContent = 'Sets all Targets to Day and Life Optimal Temperature';
+  setLifeOptimalButton.textContent = 'Set all Targets to Day and Life Optimal Temperature';
   setLifeOptimalButton.style.fontSize = '12px';
   setLifeOptimalButton.style.padding = '2px 6px';
   setLifeOptimalButton.style.marginLeft = '8px';
