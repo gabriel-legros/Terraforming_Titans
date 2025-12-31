@@ -563,6 +563,7 @@ class HazardManager {
             resourceId: resource,
             value: buildCostMultiplier,
             sourceId: 'hazardPenalties',
+            name: 'Hazardous Biomass'
           });
         });
       });
@@ -580,6 +581,7 @@ class HazardManager {
         type: 'maintenanceMultiplier',
         value: maintenanceMultiplier,
         sourceId: 'hazardPenalties',
+        name: 'Hazardous Biomass'
       });
     });
 
@@ -591,6 +593,7 @@ class HazardManager {
         type: 'maintenanceMultiplier',
         value: maintenanceMultiplier,
         sourceId: 'hazardPenalties',
+        name: 'Hazardous Biomass'
       });
     });
 

@@ -251,6 +251,22 @@
     margin-top: 5px;
 }
 
+.structure-cost .info-tooltip-icon {
+    font-weight: inherit;
+    color: inherit;
+    cursor: inherit;
+    margin-left: 0;
+    font-size: inherit;
+}
+
+.building-production-consumption .info-tooltip-icon {
+    font-weight: inherit;
+    color: inherit;
+    cursor: inherit;
+    margin-left: 0;
+    font-size: inherit;
+}
+
 .constructed-count-container {
     display: flex;
     align-items: center;

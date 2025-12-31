@@ -243,6 +243,7 @@ class NanotechManager extends EffectableEntity {
           value: mult,
           effectId: `nanotechMaint_${res}`,
           sourceId: 'nanotechMaintenance',
+          name: 'Nanocolony',
         };
           addEffect(effect);
       }
@@ -268,6 +269,7 @@ class NanotechManager extends EffectableEntity {
           value: mult2,
           effectId: `nanotechMaint2_${res}`,
           sourceId: 'nanotechMaintenance2',
+          name: 'Nanocolony',
         };
         addEffect(effect);
       }

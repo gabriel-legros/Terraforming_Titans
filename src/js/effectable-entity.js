@@ -359,7 +359,8 @@ class EffectableEntity {
                 resourceId: resource,
                 value: multiplier,
                 effectId,
-                sourceId: effect.sourceId
+                sourceId: effect.sourceId,
+                name: effect.name
               });
             }
           }
@@ -443,7 +444,8 @@ class EffectableEntity {
                 resourceId: resource,
                 value: multiplier,
                 effectId,
-                sourceId: effect.sourceId
+                sourceId: effect.sourceId,
+                name: effect.name
               });
             }
           }

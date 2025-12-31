@@ -203,7 +203,8 @@ class ColonySlidersManager extends EffectableEntity {
         resourceId: 'water',
         value: value,
         effectId: 'luxuryWaterMaintenance',
-        sourceId: 'luxuryWaterMaintenance'
+        sourceId: 'luxuryWaterMaintenance',
+        name: 'Colony sliders'
       });
     });
   }

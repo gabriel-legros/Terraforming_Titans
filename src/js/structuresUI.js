@@ -1151,6 +1151,118 @@ function updateDecreaseButtonText(button, buildCount) {
     button.style.color = '';
   }
   
+  function resolveCostMultiplierSourceName(effect) {
+    return effect.name
+      ?? effect.sourceName
+      ?? effect.sourceId?.displayName
+      ?? effect.sourceId?.name
+      ?? researchManager.getResearchById(effect.sourceId)?.name
+      ?? projectManager.projects?.[effect.sourceId]?.displayName
+      ?? projectManager.projects?.[effect.sourceId]?.name
+      ?? buildings[effect.sourceId]?.displayName
+      ?? buildings[effect.sourceId]?.name
+      ?? colonies[effect.sourceId]?.displayName
+      ?? colonies[effect.sourceId]?.name
+      ?? effect.effectId
+      ?? 'Unknown effect';
+  }
+
+  function buildStructureCostTooltip(structure, category, resource, buildCount) {
+    const baseCost = structure.cost?.[category]?.[resource] ?? 0;
+    const totalBaseCost = baseCost * buildCount;
+    const lines = [`Base cost: ${formatNumber(totalBaseCost, true)}`];
+    const multipliers = [];
+
+    structure.activeEffects.forEach(effect => {
+      if (effect.type !== 'resourceCostMultiplier') return;
+      if (effect.resourceCategory !== category) return;
+      const matchesResource = effect.resourceId === resource
+        || (Array.isArray(effect.resourceId) && effect.resourceId.includes(resource));
+      if (!matchesResource) return;
+      if (effect.value === 1) return;
+      multipliers.push({
+        name: resolveCostMultiplierSourceName(effect),
+        value: effect.value
+      });
+    });
+
+    if (multipliers.length) {
+      lines.push('Multipliers:');
+      multipliers.forEach(multiplier => {
+        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+      });
+    } else {
+      lines.push('Multipliers: none');
+    }
+
+    return lines.join('\n');
+  }
+
+  function buildStructureMaintenanceTooltip(structure, resource, buildCount) {
+    const baseCost = structure.cost.colony[resource];
+    const totalBaseCost = baseCost * buildCount;
+    const baseMaintenanceMultiplier = maintenanceFraction * structure.maintenanceFactor;
+    const lines = [
+      `Base cost: ${formatNumber(totalBaseCost, true)}`,
+      `Innate maintenance multiplier: x${formatNumber(baseMaintenanceMultiplier, false, 4)}`
+    ];
+    const multipliers = [];
+
+    structure.activeEffects.forEach(effect => {
+      if (effect.type === 'resourceCostMultiplier') {
+        if (effect.resourceCategory !== 'colony') return;
+        const matchesResource = effect.resourceId === resource
+          || (Array.isArray(effect.resourceId) && effect.resourceId.includes(resource));
+        if (!matchesResource) return;
+        if (effect.value === 1) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+        return;
+      }
+      if (effect.type === 'maintenanceCostMultiplier') {
+        if (effect.resourceCategory !== 'colony') return;
+        const matchesResource = effect.resourceId === resource
+          || (Array.isArray(effect.resourceId) && effect.resourceId.includes(resource));
+        if (!matchesResource) return;
+        if (effect.value === 1) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+        return;
+      }
+      if (effect.type === 'maintenanceMultiplier') {
+        if (effect.value === 1) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+      }
+    });
+
+    const resourceMultiplier = resources.colony[resource].maintenanceMultiplier;
+    if (resourceMultiplier !== 1) {
+      const resourceLabel = resources.colony[resource].displayName || resource;
+      multipliers.push({
+        name: `${resourceLabel} modifier`,
+        value: resourceMultiplier
+      });
+    }
+
+    if (multipliers.length) {
+      lines.push('Multipliers:');
+      multipliers.forEach(multiplier => {
+        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+      });
+    } else {
+      lines.push('Multipliers: none');
+    }
+
+    return lines.join('\n');
+  }
+
   function updateStructureCostDisplay(costElement, structure, buildCount = 1) {
     if (!costElement) return;
     const items = [];
@@ -1163,7 +1275,10 @@ function updateDecreaseButtonText(button, buildCount) {
           label: capitalizeFirstLetter(resource),
           required: effectiveCost[category][resource],
           available: resources[category][resource]?.value || 0,
-          insufficientColor: 'red'
+          insufficientColor: 'red',
+          category,
+          resource,
+          isCostResource: true
         });
       }
     }
@@ -1214,6 +1329,30 @@ function updateDecreaseButtonText(button, buildCount) {
       costElement._spans = new Map();
       items.forEach((item, idx) => {
         const span = document.createElement('span');
+        if (item.isCostResource) {
+          const textSpan = document.createElement('span');
+          span.classList.add('info-tooltip-icon');
+          span.style.fontFamily = 'inherit';
+          span.appendChild(textSpan);
+          span._textSpan = textSpan;
+
+          const tooltip = attachDynamicInfoTooltip(span, '');
+          span._costTooltip = tooltip;
+          span._costTooltipCache = {};
+          span._updateCostTooltip = () => {
+            const context = span._costTooltipContext;
+            const text = buildStructureCostTooltip(
+              context.structure,
+              context.category,
+              context.resource,
+              context.buildCount
+            );
+            setTooltipText(tooltip, text, span._costTooltipCache, 'text');
+          };
+          span.addEventListener('mouseenter', span._updateCostTooltip);
+          span.addEventListener('focusin', span._updateCostTooltip);
+          span.addEventListener('pointerdown', span._updateCostTooltip);
+        }
         costElement._spans.set(item.key, span);
         list.appendChild(span);
         if (idx < items.length - 1) {
@@ -1273,9 +1412,16 @@ function updateDecreaseButtonText(button, buildCount) {
         textSpan.textContent = text;
         span._refreshPriorityUI();
       } else {
-        if (span.textContent !== text) {
-          span.textContent = text;
+        const textSpan = span._textSpan || span;
+        if (textSpan.textContent !== text) {
+          textSpan.textContent = text;
         }
+        span._costTooltipContext = {
+          structure,
+          category: item.category,
+          resource: item.resource,
+          buildCount
+        };
       }
       const hasEnough = item.available >= requiredAmount;
       const color = hasEnough ? '' : item.insufficientColor;
@@ -1287,8 +1433,11 @@ function updateDecreaseButtonText(button, buildCount) {
         if (textSpan && textSpan.style.color !== color) {
           textSpan.style.color = color;
         }
-      } else if (span.style.color !== color) {
-        span.style.color = color;
+      } else {
+        const colorTarget = span._textSpan || span;
+        if (colorTarget.style.color !== color) {
+          colorTarget.style.color = color;
+        }
       }
     });
   }
@@ -1568,23 +1717,31 @@ function updateDecreaseButtonText(button, buildCount) {
           const resObj = resources?.[category]?.[resource];
           const displayName = resObj?.displayName || resource;
           const text = `${formatNumber(amount, true, 2)} ${displayName}`;
-          if (span.textContent !== text) {
-            span.textContent = text;
+          const textSpan = span._textSpan || span;
+          if (textSpan.textContent !== text) {
+            textSpan.textContent = text;
+          }
+          if (sec.key === 'maintenance') {
+            span._maintenanceTooltipContext = {
+              structure,
+              resource,
+              buildCount
+            };
           }
           if (resObj) {
             const netRate = (resObj.productionRate || 0) - (resObj.consumptionRate || 0);
             if (sec.key === 'production') {
               const color = netRate < 0 ? 'green' : '';
-              span.style.color = swapResourceRateColor(resObj, color);
+              textSpan.style.color = swapResourceRateColor(resObj, color);
             } else if (sec.key === 'consumption' || sec.key === 'maintenance') {
               const totalCost = combinedCosts[`${category}.${resource}`] || amount;
               const projectedNet = netRate - totalCost;
-              span.style.color = projectedNet < 0 ? 'orange' : '';
+              textSpan.style.color = projectedNet < 0 ? 'orange' : '';
             } else {
-              span.style.color = '';
+              textSpan.style.color = '';
             }
           } else {
-            span.style.color = '';
+            textSpan.style.color = '';
           }
         });
       }
@@ -1735,6 +1892,29 @@ function updateDecreaseButtonText(button, buildCount) {
       } else {
         sec.keys.forEach((key, i) => {
           const span = document.createElement('span');
+          if (sec.key === 'maintenance') {
+            const textSpan = document.createElement('span');
+            span.classList.add('info-tooltip-icon');
+            span.style.fontFamily = 'inherit';
+            span.appendChild(textSpan);
+            span._textSpan = textSpan;
+
+            const tooltip = attachDynamicInfoTooltip(span, '');
+            span._maintenanceTooltip = tooltip;
+            span._maintenanceTooltipCache = {};
+            span._updateMaintenanceTooltip = () => {
+              const context = span._maintenanceTooltipContext;
+              const text = buildStructureMaintenanceTooltip(
+                context.structure,
+                context.resource,
+                context.buildCount
+              );
+              setTooltipText(tooltip, text, span._maintenanceTooltipCache, 'text');
+            };
+            span.addEventListener('mouseenter', span._updateMaintenanceTooltip);
+            span.addEventListener('focusin', span._updateMaintenanceTooltip);
+            span.addEventListener('pointerdown', span._updateMaintenanceTooltip);
+          }
           info.spans.set(key, span);
           list.appendChild(span);
           if (i < sec.keys.length - 1) {

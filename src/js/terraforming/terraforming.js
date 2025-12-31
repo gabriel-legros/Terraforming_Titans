@@ -1796,7 +1796,8 @@ class Terraforming extends EffectableEntity{
             type: 'resourceCostMultiplier',
             resourceCategory: 'colony',
             resourceId: 'metal',
-            value: colonyCostPenalty
+            value: colonyCostPenalty,
+            name: 'High pressure'
         };
 
         const glassCostPenaltyEffect = {
@@ -1806,7 +1807,8 @@ class Terraforming extends EffectableEntity{
             type: 'resourceCostMultiplier',
             resourceCategory: 'colony',
             resourceId: 'glass',
-            value: colonyCostPenalty
+            value: colonyCostPenalty,
+            name: 'High pressure'
         };
 
         addEffect(metalCostPenaltyEffect);
@@ -1839,7 +1841,8 @@ class Terraforming extends EffectableEntity{
                 type: 'resourceCostMultiplier',
                 resourceCategory: category,
                 resourceId: resource,
-                value: gravityCostMultiplier
+                value: gravityCostMultiplier,
+                name: 'Gravity'
               });
             }
           }
@@ -1894,7 +1897,8 @@ class Terraforming extends EffectableEntity{
             target: 'building',
             targetId: id,
             type: 'maintenanceMultiplier',
-            value: penaltyValue
+            value: penaltyValue,
+            name: 'Temperature penalty'
           });
         }
       }
@@ -1907,7 +1911,8 @@ class Terraforming extends EffectableEntity{
             target: 'colony',
             targetId: id,
             type: 'maintenanceMultiplier',
-            value: maintenancePenalty
+            value: maintenancePenalty,
+            name: 'Temperature penalty'
           });
         }
       }

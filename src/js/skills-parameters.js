@@ -8,6 +8,7 @@ const skillParameters = {
     effect: {
       target: 'global',
       type: 'globalCostReduction',
+      name: 'Awakening',
       baseValue: 0.1,
       perRank: true
     },
@@ -65,6 +66,7 @@ const skillParameters = {
     effect: {
       target: 'global',
       type: 'globalMaintenanceReduction',
+      name: 'Streamlined Operations',
       baseValue: 0.1,
       perRank: true
     },
