@@ -11,6 +11,16 @@ function swapResourceRateColor(resource, color) {
   return color;
 }
 
+function getLiquidCoverageTargetAmount(terraformingState, targetCoverage) {
+  const surfaceArea = terraformingState.celestialParameters.surfaceArea;
+  let total = 0;
+  for (const zone of ZONES) {
+    const zoneArea = surfaceArea * getZonePercentage(zone);
+    total += estimateAmountForCoverage(targetCoverage, zoneArea);
+  }
+  return total;
+}
+
 function createResourceContainers(resourcesData) {
   const resourcesContainer = document.getElementById('resources-container');
   resourcesContainer.innerHTML = ''; // Clear the main container first
@@ -1138,14 +1148,28 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
 
   if (timeDiv) {
     if (resource.name !== 'land') {
-      if (netRate > 0 && resource.hasCap) {
-        const time = (resource.cap - resource.value) / netRate;
-        timeDiv.textContent = `Time to full: ${formatDuration(Math.max(time, 0))}`;
-      } else if (netRate < 0) {
-        const time = resource.value / Math.abs(netRate);
-        timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
-      } else {
-        timeDiv.innerHTML = '&nbsp;';
+      let showDefaultTime = true;
+      if (resource.name === terraforming.liquidCoverageKey && netRate > 0) {
+        const targetAmount = getLiquidCoverageTargetAmount(terraforming, terraforming.waterTarget);
+        const remaining = targetAmount - resource.value;
+        if (remaining > 0) {
+          const time = remaining / netRate;
+          timeDiv.textContent = `Time to terraforming target: ${formatDuration(Math.max(time, 0))}`;
+        } else {
+          timeDiv.textContent = 'Terraforming target reached.';
+        }
+        showDefaultTime = false;
+      }
+      if (showDefaultTime) {
+        if (netRate > 0 && resource.hasCap) {
+          const time = (resource.cap - resource.value) / netRate;
+          timeDiv.textContent = `Time to full: ${formatDuration(Math.max(time, 0))}`;
+        } else if (netRate < 0) {
+          const time = resource.value / Math.abs(netRate);
+          timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
+        } else {
+          timeDiv.innerHTML = '&nbsp;';
+        }
       }
     } else {
       timeDiv.innerHTML = '&nbsp;';

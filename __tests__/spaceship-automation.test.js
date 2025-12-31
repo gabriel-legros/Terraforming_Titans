@@ -42,6 +42,10 @@ describe('SpaceshipAutomation assignments', () => {
     isAutomationManuallyDisabled() {
       return false;
     }
+
+    shouldAutomationDisable() {
+      return this.run === false;
+    }
   }
 
   beforeEach(() => {
