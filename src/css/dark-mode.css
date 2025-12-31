@@ -164,6 +164,10 @@
     color: #ffffff;
 }
 
+.dark-mode .import-cap-header {
+    color: #e3e7ec;
+}
+
 .dark-mode .import-cap-toggle:hover {
     background: none;
 }

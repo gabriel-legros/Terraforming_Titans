@@ -35,6 +35,7 @@ class ImportResourcesProjectUI {
     this.capToggle = null;
     this.capArrow = null;
     this.capText = null;
+    this.capElements = null;
     this.capExpanded = false;
     this.multiplierButtons = { decrease: null, increase: null };
     this.collapseArrow = null;
@@ -55,6 +56,7 @@ class ImportResourcesProjectUI {
     this.capToggle = null;
     this.capArrow = null;
     this.capText = null;
+    this.capElements = null;
     this.capExpanded = false;
     this.multiplierButtons = { decrease: null, increase: null };
     this.collapseArrow = null;
@@ -170,6 +172,7 @@ class ImportResourcesProjectUI {
     const capText = document.createElement('div');
     capText.classList.add('import-cap-text');
     capBody.appendChild(capText);
+    this.buildCapSummaryElements(capText);
 
     capToggle.addEventListener('click', () => {
       this.capExpanded = !this.capExpanded;
@@ -342,7 +345,7 @@ class ImportResourcesProjectUI {
       return;
     }
 
-    this.capText.textContent = warpGateNetworkManager.getCapSummaryText();
+    this.updateCapSummary(warpGateNetworkManager.getCapSummaryData());
 
     if (this.availableDisplay) {
       const availableShips = formatNumber(Math.floor(resources?.special?.spaceships?.value || 0), true);
@@ -352,6 +355,124 @@ class ImportResourcesProjectUI {
     if (this.costPerShipmentDisplay && project && typeof project.calculateSpaceshipCost === 'function') {
       this.costPerShipmentDisplay.textContent = this.formatCostPerShipment(project);
     }
+  }
+
+  buildCapSummaryElements(container) {
+    const summary = document.createElement('div');
+    summary.classList.add('import-cap-summary');
+
+    const intro = document.createElement('div');
+    intro.classList.add('import-cap-line', 'import-cap-intro');
+    summary.appendChild(intro);
+
+    const baseCap = document.createElement('div');
+    baseCap.classList.add('import-cap-line');
+    summary.appendChild(baseCap);
+
+    const ratios = document.createElement('div');
+    ratios.classList.add('import-cap-line');
+    summary.appendChild(ratios);
+
+    const rulesList = document.createElement('ul');
+    rulesList.classList.add('import-cap-rules');
+    summary.appendChild(rulesList);
+
+    const fullControl = document.createElement('div');
+    fullControl.classList.add('import-cap-line');
+    summary.appendChild(fullControl);
+
+    const table = document.createElement('div');
+    table.classList.add('import-cap-table');
+
+    ['Resource', 'Ratio', 'Cap', 'Details'].forEach((label) => {
+      const cell = document.createElement('div');
+      cell.classList.add('import-cap-cell', 'import-cap-header');
+      cell.textContent = label;
+      table.appendChild(cell);
+    });
+
+    summary.appendChild(table);
+    container.appendChild(summary);
+
+    this.capElements = {
+      intro,
+      baseCap,
+      ratios,
+      rulesList,
+      fullControl,
+      table,
+      rows: {},
+    };
+  }
+
+  createCapRow(label) {
+    const row = {
+      label: document.createElement('div'),
+      ratio: document.createElement('div'),
+      cap: document.createElement('div'),
+      detail: document.createElement('div'),
+    };
+
+    row.label.classList.add('import-cap-cell', 'import-cap-resource');
+    row.ratio.classList.add('import-cap-cell', 'import-cap-ratio');
+    row.cap.classList.add('import-cap-cell', 'import-cap-value');
+    row.detail.classList.add('import-cap-cell', 'import-cap-detail');
+
+    row.label.textContent = label;
+
+    this.capElements.table.appendChild(row.label);
+    this.capElements.table.appendChild(row.ratio);
+    this.capElements.table.appendChild(row.cap);
+    this.capElements.table.appendChild(row.detail);
+
+    this.capElements.rows[label] = row;
+    return row;
+  }
+
+  updateCapSummary(data) {
+    const elements = this.capElements;
+    elements.intro.textContent = data.intro;
+    elements.baseCap.textContent = data.baseCapLine;
+    elements.baseCap.style.display = data.baseCapLine ? 'block' : 'none';
+    elements.ratios.textContent = data.ratiosLine;
+    elements.ratios.style.display = data.ratiosLine ? 'block' : 'none';
+    elements.fullControl.textContent = data.fullControlLine;
+    elements.fullControl.style.display = data.fullControlLine ? 'block' : 'none';
+
+    while (elements.rulesList.firstChild) {
+      elements.rulesList.removeChild(elements.rulesList.firstChild);
+    }
+    elements.rulesList.style.display = data.ruleLines.length ? 'block' : 'none';
+    data.ruleLines.forEach((line) => {
+      const item = document.createElement('li');
+      item.textContent = line;
+      elements.rulesList.appendChild(item);
+    });
+
+    const rowOrder = [];
+    data.caps.forEach((entry) => {
+      rowOrder.push(entry.label);
+      const row = elements.rows[entry.label] || this.createCapRow(entry.label);
+      row.ratio.textContent = entry.ratio;
+      row.cap.textContent = entry.cap;
+      row.detail.textContent = entry.detail;
+    });
+
+    if (data.hydrogen) {
+      rowOrder.push(data.hydrogen.label);
+      const row = elements.rows[data.hydrogen.label] || this.createCapRow(data.hydrogen.label);
+      row.ratio.textContent = data.hydrogen.ratio;
+      row.cap.textContent = data.hydrogen.cap;
+      row.detail.textContent = data.hydrogen.detail;
+    }
+
+    rowOrder.forEach((label) => {
+      const row = elements.rows[label];
+      elements.table.appendChild(row.label);
+      elements.table.appendChild(row.ratio);
+      elements.table.appendChild(row.cap);
+      elements.table.appendChild(row.detail);
+    });
   }
 
   insertRow(mainRow, detailRow, projectName) {

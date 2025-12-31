@@ -2,13 +2,53 @@ const IMPORT_CAP_BASE = 1e9;
 const IMPORT_CAP_WARP = 1e10;
 const IMPORT_CAP_PER_SECTOR = 1e10;
 const WARP_GATE_MAX_LEVEL = 1000000;
+const IMPORT_CAP_RATIOS = {
+  metal: 1,
+  nitrogen: 1,
+  carbon: 2,
+  silicon: 5,
+  water: 10,
+};
 const IMPORT_CAP_RESOURCES = [
   { key: 'metal', label: 'Metal' },
-  { key: 'silicon', label: 'Silica' },
-  { key: 'carbon', label: 'Carbon' },
-  { key: 'water', label: 'Water' },
   { key: 'nitrogen', label: 'Nitrogen' },
+  { key: 'carbon', label: 'CO2' },
+  { key: 'silicon', label: 'Silicates' },
+  { key: 'water', label: 'Water' },
 ];
+
+const getImportCapRatio = (resourceKey) => IMPORT_CAP_RATIOS[resourceKey] || 1;
+
+const formatImportCapList = (baseCap) => (
+  IMPORT_CAP_RESOURCES.map(({ key, label }) => {
+    const cap = baseCap * getImportCapRatio(key);
+    return `${label}: ${formatNumber(cap, true)}`;
+  }).join(', ')
+);
+
+const getImportRatioSummary = () => (
+  'Ratios: Metal x1, Nitrogen x1, CO2 x2, Silicates x5, Water x10.'
+);
+
+const getImportCapEntries = (baseCap, summary, fallbackDetail) => (
+  IMPORT_CAP_RESOURCES.map(({ key, label }) => {
+    const ratio = getImportCapRatio(key);
+    const base = baseCap * ratio;
+    const entry = summary ? summary.resources[key] : null;
+    const useEntry = summary && summary.fullControlCount > 0;
+    const cap = useEntry ? entry.cap : base;
+    const detail = useEntry
+      ? `${entry.richCount} rich, ${entry.poorCount} poor, ${entry.normalCount} normal`
+      : fallbackDetail;
+    return {
+      key,
+      label,
+      ratio: `x${ratio}`,
+      cap: formatNumber(cap, true),
+      detail,
+    };
+  })
+);
 
 class WarpGateNetworkManager extends EffectableEntity {
   constructor() {
@@ -113,10 +153,10 @@ class WarpGateNetworkManager extends EffectableEntity {
       return Infinity;
     }
     if (!this.warpGateUnlocked) {
-      return IMPORT_CAP_BASE;
+      return IMPORT_CAP_BASE * getImportCapRatio(resourceKey);
     }
     if (!this.galaxyUnlocked) {
-      return IMPORT_CAP_WARP;
+      return IMPORT_CAP_WARP * getImportCapRatio(resourceKey);
     }
     return this.getGalaxyCap(resourceKey);
   }
@@ -124,7 +164,7 @@ class WarpGateNetworkManager extends EffectableEntity {
   getGalaxyCap(resourceKey) {
     const summary = this.getGalaxyResourceSummary(resourceKey);
     if (summary.fullControlCount <= 0) {
-      return IMPORT_CAP_PER_SECTOR;
+      return IMPORT_CAP_PER_SECTOR * getImportCapRatio(resourceKey);
     }
     return summary.cap;
   }
@@ -132,12 +172,53 @@ class WarpGateNetworkManager extends EffectableEntity {
   getCapSummaryText() {
     this.syncUnlocks();
     if (!this.warpGateUnlocked) {
-      return 'Due to limited deposits, most resources can only be assigned 1B ships.';
+      return `Due to limited deposits, import caps are ${formatImportCapList(IMPORT_CAP_BASE)} ships.`;
     }
     if (!this.galaxyUnlocked) {
-      return 'Due to limited deposits in the accessible Warp Gate Network, most resources can only be assigned 10B ships.';
+      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${formatImportCapList(IMPORT_CAP_WARP)} ships.`;
     }
     return this.getGalaxyCapText();
+  }
+
+  getCapSummaryData() {
+    this.syncUnlocks();
+    if (!this.warpGateUnlocked) {
+      return {
+        intro: 'Due to limited deposits, imports are limited until Warp Gate Command is unlocked.',
+        baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_BASE, true)} ships.`,
+        ratiosLine: '',
+        ruleLines: [],
+        fullControlLine: '',
+        caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap'),
+        hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+      };
+    }
+    if (!this.galaxyUnlocked) {
+      return {
+        intro: 'Warp Gate Command expands shipments before galaxy control is available.',
+        baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_WARP, true)} ships.`,
+        ratiosLine: '',
+        ruleLines: [],
+        fullControlLine: '',
+        caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap'),
+        hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+      };
+    }
+    const summary = this.getGalaxyBreakdown();
+    const baseLine = `Base cap: ${formatNumber(IMPORT_CAP_PER_SECTOR, true)} ships per fully controlled sector (minimum 1 sector).`;
+    const fullControlLine = `Fully controlled sectors: ${summary.fullControlCount}.`;
+    return {
+      intro: 'Import caps scale with fully controlled sectors.',
+      baseCapLine: baseLine,
+      ratiosLine: '',
+      ruleLines: [
+        'Rich sectors add +100% for that resource; poor sectors cut -50%.',
+        'Warp Gate Network levels add +10% cap per level.',
+      ],
+      fullControlLine,
+      caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap'),
+      hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+    };
   }
 
   getGalaxyCapText() {
@@ -145,6 +226,7 @@ class WarpGateNetworkManager extends EffectableEntity {
     const lines = [
       'Import caps scale with fully controlled sectors.',
       `Base cap: ${formatNumber(IMPORT_CAP_PER_SECTOR, true)} ships per fully controlled sector (minimum 1 sector).`,
+      getImportRatioSummary(),
       'Rich sectors add +100% for that resource; poor sectors cut -50%.',
       'Warp Gate Network levels add +10% cap per level.',
       `Fully controlled sectors: ${summary.fullControlCount}.`,
@@ -152,7 +234,8 @@ class WarpGateNetworkManager extends EffectableEntity {
 
     IMPORT_CAP_RESOURCES.forEach(({ key, label }) => {
       const entry = summary.resources[key];
-      const cap = summary.fullControlCount > 0 ? entry.cap : IMPORT_CAP_PER_SECTOR;
+      const baseCap = IMPORT_CAP_PER_SECTOR * getImportCapRatio(key);
+      const cap = summary.fullControlCount > 0 ? entry.cap : baseCap;
       const detail = summary.fullControlCount > 0
         ? `${label}: ${formatNumber(cap, true)} ships (${entry.richCount} rich, ${entry.poorCount} poor, ${entry.normalCount} normal)`
         : `${label}: ${formatNumber(cap, true)} ships (minimum cap)`;
@@ -179,7 +262,7 @@ class WarpGateNetworkManager extends EffectableEntity {
       const warpGateMultiplier = this.getWarpGateMultiplier(sector);
       IMPORT_CAP_RESOURCES.forEach(({ key }) => {
         const entry = summary.resources[key];
-        const baseCap = IMPORT_CAP_PER_SECTOR * warpGateMultiplier;
+        const baseCap = IMPORT_CAP_PER_SECTOR * warpGateMultiplier * getImportCapRatio(key);
         if (richResource === key) {
           entry.richCount += 1;
           entry.cap += baseCap * 2;
