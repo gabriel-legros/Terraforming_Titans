@@ -74,6 +74,13 @@ describe('Chemical reactor automation', () => {
         atmosphericMethane: { value: 0, consumptionRate: 0, productionRate: 0 }
       }
     };
+    global.terraforming = {
+      celestialParameters: {
+        gravity: 9.81,
+        radius: 6371000
+      }
+    };
+    global.calculateAtmosphericPressure = jest.fn(() => 2000);
     const { Building } = require('../src/js/building');
     global.Building = Building;
     const { MultiRecipesBuilding } = require('../src/js/buildings/MultiRecipesBuilding');
@@ -93,6 +100,8 @@ describe('Chemical reactor automation', () => {
     global.resources = null;
     global.Building = null;
     global.MultiRecipesBuilding = null;
+    global.terraforming = null;
+    global.calculateAtmosphericPressure = null;
   });
 
   const createReactor = () => {
@@ -132,6 +141,23 @@ describe('Chemical reactor automation', () => {
 
     reactor.updateProductivity(global.resources, 1000);
 
+    expect(reactor.productivity).toBe(0);
+  });
+
+  test('uses atmospheric pressure units when selected', () => {
+    const reactor = createReactor();
+    const settings = ChemicalReactor.getAutomationSettings();
+    settings.autoDisable = true;
+    settings.mode = 'input';
+    settings.operator = '>';
+    settings.resourceCategory = 'atmospheric';
+    settings.resourceId = 'carbonDioxide';
+    settings.unit = 'kPa';
+    settings.amount = 1;
+
+    reactor.updateProductivity(global.resources, 1000);
+
+    expect(global.calculateAtmosphericPressure).toHaveBeenCalled();
     expect(reactor.productivity).toBe(0);
   });
 });
