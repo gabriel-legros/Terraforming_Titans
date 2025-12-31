@@ -140,7 +140,7 @@ class Building extends EffectableEntity {
     if (basis.startsWith('building:')) {
       const targetCollection = collection || {};
       const target = targetCollection[basis.slice(9)];
-      return target ? target.count : 0;
+      return target ? target.active : 0;
     }
     return population;
   }

@@ -280,7 +280,7 @@ function getAutoBuildBaseValue(structure, population, workerCap, collection) {
 
   if (basis.startsWith('building:')) {
     const target = collection?.[basis.slice(9)];
-    return target?.count || 0;
+    return target?.active || 0;
   }
 
   return population;
