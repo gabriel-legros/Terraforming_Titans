@@ -475,7 +475,6 @@ const GalaxyOperationUI = (() => {
         }
         operation.launchCost = cost;
         setStoredAllocation(sectorKey, assignment);
-        updateOperationsPanel(manager, cache);
     }
 
     function populateSection({ doc, container, createInfoTooltip }) {
@@ -1109,9 +1108,6 @@ const GalaxyOperationUI = (() => {
             const autoDisabled = !enabled || !selection;
             operationsAutoCheckbox.disabled = autoDisabled;
             operationsAutoCheckbox.checked = !!(selection && storedAutoEnabled);
-            if (!autoDisabled && storedAutoEnabled && meetsAutoThreshold && hasAntimatter && !launchBlocked) {
-                handleOperationsLaunch();
-            }
         }
     }
 
