@@ -1199,28 +1199,16 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function buildStructureMaintenanceTooltip(structure, resource, buildCount) {
-    const baseCost = structure.cost.colony[resource];
-    const totalBaseCost = baseCost * buildCount;
+    const effectiveCost = structure.getEffectiveCost(buildCount);
+    const totalBaseCost = effectiveCost?.colony?.[resource] ?? 0;
     const baseMaintenanceMultiplier = maintenanceFraction * structure.maintenanceFactor;
     const lines = [
       `Base cost: ${formatNumber(totalBaseCost, true)}`,
-      `Innate maintenance multiplier: x${formatNumber(baseMaintenanceMultiplier, false, 4)}`
+      `Innate maintenance multiplier: x${baseMaintenanceMultiplier}`
     ];
     const multipliers = [];
 
     structure.activeEffects.forEach(effect => {
-      if (effect.type === 'resourceCostMultiplier') {
-        if (effect.resourceCategory !== 'colony') return;
-        const matchesResource = effect.resourceId === resource
-          || (Array.isArray(effect.resourceId) && effect.resourceId.includes(resource));
-        if (!matchesResource) return;
-        if (effect.value === 1) return;
-        multipliers.push({
-          name: resolveCostMultiplierSourceName(effect),
-          value: effect.value
-        });
-        return;
-      }
       if (effect.type === 'maintenanceCostMultiplier') {
         if (effect.resourceCategory !== 'colony') return;
         const matchesResource = effect.resourceId === resource
