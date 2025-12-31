@@ -20,6 +20,10 @@ class SpaceshipProject extends Project {
     return this.getActiveShipCount();
   }
 
+  isAutomationManuallyDisabled() {
+    return this.autoStart === false || this.run === false;
+  }
+
   isContinuous() {
     return this.getActiveShipCount() > 100;
   }

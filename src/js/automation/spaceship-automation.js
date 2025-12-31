@@ -273,7 +273,8 @@ class SpaceshipAutomation {
       enabled: true,
       unlocked: true,
       isVisible: () => true,
-      getAutomationDisableAllowed: () => false
+      getAutomationDisableAllowed: () => false,
+      isAutomationManuallyDisabled: () => false
     };
   }
 
@@ -371,7 +372,7 @@ class SpaceshipAutomation {
           if (!project) continue;
           const releaseOnDisable = this.disabledProjects.has(entry.projectId);
           const automationAllowed = typeof project.shouldAutomationDisable === 'function' ? !project.shouldAutomationDisable() : true;
-          const manuallyDisabled = project.autoStart === false || project.run === false;
+          const manuallyDisabled = project.isAutomationManuallyDisabled();
           if (releaseOnDisable && (!automationAllowed || manuallyDisabled)) {
             desiredAssignments[project.name] = 0;
             continue;

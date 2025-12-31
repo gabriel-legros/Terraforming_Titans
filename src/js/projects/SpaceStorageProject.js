@@ -26,6 +26,10 @@ class SpaceStorageProject extends SpaceshipProject {
     this.usedStorageResyncTimer = 0;
   }
 
+  isAutomationManuallyDisabled() {
+    return this.shipOperationAutoStart === false;
+  }
+
   getDurationWithTerraformBonus(baseDuration) {
     if (
       typeof spaceManager === 'undefined' ||
