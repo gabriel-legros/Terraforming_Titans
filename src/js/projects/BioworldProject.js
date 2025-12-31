@@ -125,6 +125,8 @@
     prepareTravelState() {
       if (this.isCompleted) {
         this.evolutionPoints += this.getEvolutionPointGain(resources.surface.biomass.value);
+        this.ecumenopolisDisabled = false;
+        researchManager.removeEffect({ sourceId: 'bioworld' });
       }
     }
 
@@ -323,14 +325,12 @@
     saveTravelState() {
       return {
         evolutionPoints: this.evolutionPoints,
-        ecumenopolisDisabled: this.ecumenopolisDisabled,
         shopPurchases: { ...this.shopPurchases },
       };
     }
 
     loadTravelState(state = {}) {
       this.evolutionPoints = state.evolutionPoints || 0;
-      this.ecumenopolisDisabled = state.ecumenopolisDisabled || false;
       this.shopPurchases = {
         ...this.createEmptyShopPurchases(),
         ...(state.shopPurchases || {}),
