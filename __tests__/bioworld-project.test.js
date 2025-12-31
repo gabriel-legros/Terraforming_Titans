@@ -22,6 +22,7 @@ const setupGlobals = () => {
   global.researchManager = {
     completeResearchInstant: jest.fn(),
     addAndReplace: jest.fn(),
+    removeEffect: jest.fn(),
   };
 };
 
@@ -82,6 +83,7 @@ describe('BioworldProject', () => {
     project.prepareTravelState();
 
     expect(project.evolutionPoints).toBeCloseTo(2, 5);
+    expect(global.researchManager.removeEffect).toHaveBeenCalledWith({ sourceId: 'bioworld' });
   });
 
   it('applies attribute max bonuses from evolution purchases', () => {
