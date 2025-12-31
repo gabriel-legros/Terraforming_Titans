@@ -16,6 +16,10 @@ const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
 const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
 const KPA_PER_ATM = 101.325;
+const LIQUID_COVERAGE_KEYS = {
+  water: 'liquidWater',
+  methane: 'liquidMethane'
+};
 
 let calculateApparentEquatorialGravityHelper;
 let calculateGravityCostPenaltyHelper;
@@ -79,7 +83,8 @@ function resolveTerraformingRequirement(requirementId = defaultTerraformingRequi
       oxygen: { min: 15000, max: 25000 },
       inertGas: { min: 50000, max: 100000 }
     },
-    waterCoverageTarget: 0.2,
+    liquidCoverageTarget: 0.2,
+    liquidType: 'water',
     lifeCoverageTarget: 0.5,
     magnetosphereThreshold: 100,
     requireHazardClearance: true
@@ -352,8 +357,9 @@ class Terraforming extends EffectableEntity{
         };
     });
 
-    // Global water target remains, moved outside the old structure
-    this.waterTarget = this.requirements.waterCoverageTarget;
+    // Global liquid target remains, moved outside the old structure
+    this.waterTarget = this.requirements.liquidCoverageTarget;
+    this.liquidCoverageKey = LIQUID_COVERAGE_KEYS[this.requirements.liquidType] || 'liquidWater';
     this.waterUnlocked = false; // Global unlock status
 
     // Global atmosphere properties (Now primarily accessed via global 'resources.atmospheric')
@@ -517,7 +523,7 @@ class Terraforming extends EffectableEntity{
 
   getWaterStatus() {
     // Compare average liquid water coverage to the global target
-    return (calculateAverageCoverage(this, 'liquidWater') >= this.waterTarget);
+    return (calculateAverageCoverage(this, this.liquidCoverageKey) >= this.waterTarget);
   }
 
   getLuminosityStatus() {
