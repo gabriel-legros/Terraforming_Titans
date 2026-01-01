@@ -148,6 +148,44 @@ function resolveAutoBuildMaxCount(structure, reservePercent, additionalReserves)
     return Math.max(maxBuildable, 0);
 }
 
+function getAutoBuildFillData(structure) {
+    const storage = structure.storage || {};
+    const multiplier = structure.getEffectiveStorageMultiplier?.() || 1;
+    let bestRatio = 0;
+    let bestCap = 0;
+    let bestValue = 0;
+    let bestPerBuilding = 0;
+    for (const category in storage) {
+        const categoryStorage = storage[category] || {};
+        for (const resource in categoryStorage) {
+            const resObj = resources[category][resource];
+            const cap = resObj.cap || 0;
+            const value = resObj.value || 0;
+            const ratio = cap > 0 ? value / cap : 0;
+            if (ratio > bestRatio) {
+                bestRatio = ratio;
+                bestCap = cap;
+                bestValue = value;
+                bestPerBuilding = (categoryStorage[resource] || 0) * multiplier;
+            }
+        }
+    }
+    const threshold = (structure.autoBuildFillPercent || 0) / 100;
+    if (threshold <= 0 || bestPerBuilding <= 0 || bestRatio <= threshold) {
+        return {
+            requiredAmount: 0,
+            fillRatio: bestRatio,
+        };
+    }
+    const targetCap = bestValue / threshold;
+    const extraCap = targetCap - bestCap;
+    const requiredAmount = Math.ceil(extraCap / bestPerBuilding);
+    return {
+        requiredAmount: Math.max(0, requiredAmount),
+        fillRatio: bestRatio,
+    };
+}
+
 function resetAutoBuildPartialFlags(structures) {
     if (!structures) return;
     for (const name in structures) {
@@ -470,6 +508,7 @@ function captureAutoBuildSettings(structures) {
             autoActive: s.autoActiveEnabled,
             autoUpgrade: s.autoUpgradeEnabled,
             step: s.autoBuildStep,
+            fillPercent: s.autoBuildFillPercent,
         };
     }
 }
@@ -479,12 +518,15 @@ function restoreAutoBuildSettings(structures) {
         const s = structures[name];
         if (savedAutoBuildSettings[name]) {
             s.autoBuildPercent = savedAutoBuildSettings[name].percent;
-            s.autoBuildBasis = savedAutoBuildSettings[name].basis || 'population';
+            s.autoBuildBasis = savedAutoBuildSettings[name].basis || (s.autoBuildFillEnabled ? 'fill' : 'population');
             s.autoBuildPriority = !!savedAutoBuildSettings[name].priority;
             s.autoActiveEnabled = savedAutoBuildSettings[name].autoActive !== undefined
                 ? savedAutoBuildSettings[name].autoActive
                 : true;
             s.autoUpgradeEnabled = !!savedAutoBuildSettings[name].autoUpgrade;
+            if (savedAutoBuildSettings[name].fillPercent !== undefined) {
+                s.autoBuildFillPercent = savedAutoBuildSettings[name].fillPercent;
+            }
             const restoredStep = savedAutoBuildSettings[name].step;
             if (Number.isFinite(restoredStep) && restoredStep > 0) {
                 s.autoBuildStep = restoredStep;
@@ -492,7 +534,7 @@ function restoreAutoBuildSettings(structures) {
                 s.autoBuildStep = 0.01;
             }
         } else {
-            s.autoBuildBasis = 'population';
+            s.autoBuildBasis = s.autoBuildFillEnabled ? 'fill' : 'population';
             s.autoBuildPriority = false;
             s.autoActiveEnabled = true;
             s.autoBuildStep = 0.01;
@@ -562,6 +604,21 @@ function autoBuild(buildings, delta = 0) {
         const building = buildings[buildingName];
         if (!building || building.isHidden) continue;
         if (building.autoBuildEnabled || building.autoActiveEnabled) {
+            const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
+            if (usesFillMode) {
+                const fillData = getAutoBuildFillData(building);
+                const targetCount = building.count + fillData.requiredAmount;
+                buildingInfos.push({ building, targetCount });
+                if (building.autoBuildEnabled && fillData.requiredAmount > 0) {
+                    buildableBuildings.push({
+                        building,
+                        currentRatio: Math.max(0, 1 - fillData.fillRatio),
+                        requiredAmount: fillData.requiredAmount,
+                        maxMode: false,
+                    });
+                }
+                continue;
+            }
             const usesMaxBasis = building.autoBuildBasis === 'max';
             const base = usesMaxBasis ? 0 : resolveAutoBuildBase(building, population, workerCap, buildings);
             const targetCount = usesMaxBasis ? Infinity : Math.ceil(((building.autoBuildPercent || 0)* base) / 100);

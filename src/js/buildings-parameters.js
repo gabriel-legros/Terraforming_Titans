@@ -390,7 +390,9 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 0.5,
-    unlocked: false
+    unlocked: false,
+    autoBuildFillEnabled: true,
+    autoBuildFillPercent: 95
   },
   storageDepot: {
     name: 'Storage Depot',
@@ -417,7 +419,9 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 0.1,
-    unlocked: false
+    unlocked: false,
+    autoBuildFillEnabled: true,
+    autoBuildFillPercent: 95
   },
   waterTank: {
     name: 'Water Tank',
@@ -433,7 +437,9 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 0.05,
-    unlocked: false
+    unlocked: false,
+    autoBuildFillEnabled: true,
+    autoBuildFillPercent: 95
   },
   hydrogenBattery: {
     name: 'Hydrogen Battery',
@@ -449,7 +455,9 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    autoBuildFillEnabled: true,
+    autoBuildFillPercent: 95
   },
   antimatterBattery: {
     name: 'Antimatter Battery',
@@ -465,7 +473,9 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 2,
-    unlocked: false
+    unlocked: false,
+    autoBuildFillEnabled: true,
+    autoBuildFillPercent: 95
   },
   androidHousing: {
     name: 'Android Housing',

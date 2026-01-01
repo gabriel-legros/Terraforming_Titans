@@ -115,6 +115,10 @@ function formatAutoBuildStepValue(step) {
   return Number(normalized.toFixed(decimals)).toString();
 }
 
+function isAutoBuildFillMode(structure) {
+  return structure.autoBuildFillEnabled && structure.autoBuildBasis === 'fill';
+}
+
 function updateAutoBuildStepButtonLabels(structure, incrementBtn, decrementBtn) {
   if (!structure) return;
   structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
@@ -130,16 +134,19 @@ function refreshAutoBuildTarget(structure) {
   const pop = resources.colony.colonists?.value || 0;
   const workerCap = resources.colony.workers?.cap || 0;
   const collection = typeof buildings !== 'undefined' ? buildings : undefined;
+  const autoBuildUsesFill = isAutoBuildFillMode(structure);
   const autoBuildUsesMax = structure.autoBuildBasis === 'max';
-  const base = autoBuildUsesMax ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, collection);
-  const targetCount = autoBuildUsesMax
+  const base = autoBuildUsesMax || autoBuildUsesFill ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, collection);
+  const targetCount = autoBuildUsesMax || autoBuildUsesFill
     ? Infinity
     : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
 
   if (els.autoBuildTarget) {
-    const targetText = autoBuildUsesMax
-      ? 'Target : Max'
-      : `Target : ${formatNumber(targetCount, true)}`;
+    const targetText = autoBuildUsesFill
+      ? `Max fill : ${formatNumber(structure.autoBuildFillPercent || 0, true)}%`
+      : autoBuildUsesMax
+        ? 'Target : Max'
+        : `Target : ${formatNumber(targetCount, true)}`;
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
     }
@@ -152,7 +159,7 @@ function refreshAutoBuildTarget(structure) {
   if (els.autoBuildInput) {
     els.autoBuildInput.disabled = autoBuildUsesMax;
     if (document.activeElement !== els.autoBuildInput) {
-      const value = Number.isFinite(structure.autoBuildPercent) ? structure.autoBuildPercent : 0;
+      const value = autoBuildUsesFill ? (structure.autoBuildFillPercent || 0) : structure.autoBuildPercent;
       const newValue = `${value}`;
       if (els.autoBuildInput.value !== newValue) {
         els.autoBuildInput.value = newValue;
@@ -184,8 +191,14 @@ function applyAutoBuildDelta(structure, input, delta) {
   const current = Number.isFinite(parsed) ? parsed : 0;
   const next = Math.max(0, current + delta);
   const normalized = Number(next.toFixed(6));
-  structure.autoBuildPercent = normalized;
-  input.value = `${normalized}`;
+  if (isAutoBuildFillMode(structure)) {
+    const clamped = Math.min(100, normalized);
+    structure.autoBuildFillPercent = clamped;
+    input.value = `${clamped}`;
+  } else {
+    structure.autoBuildPercent = normalized;
+    input.value = `${normalized}`;
+  }
   refreshAutoBuildTarget(structure);
 }
 
@@ -247,14 +260,15 @@ function createAutoBuildStepControls(structure, autoBuildInput) {
 }
 
 function resolveAutoBuildBasisValue(structure, select) {
-  const basis = `${structure.autoBuildBasis || 'population'}`;
+  const defaultBasis = structure.autoBuildFillEnabled ? 'fill' : 'population';
+  const basis = `${structure.autoBuildBasis || defaultBasis}`;
   for (let i = 0; i < select.options.length; i += 1) {
     if (select.options[i].value === basis) {
       return basis;
     }
   }
-  structure.autoBuildBasis = 'population';
-  return 'population';
+  structure.autoBuildBasis = defaultBasis;
+  return defaultBasis;
 }
 
 function updateAutoBuildInputState(structure, basisSelect, input) {
@@ -563,22 +577,36 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const autoBuildInput = document.createElement('input');
   autoBuildInput.type = 'number';
-  autoBuildInput.value = structure.autoBuildPercent; // Default to 0.1
+  autoBuildInput.value = isAutoBuildFillMode(structure) ? structure.autoBuildFillPercent : structure.autoBuildPercent;
   autoBuildInput.step = 0.01; // Allow 0.01 steps for finer control
   autoBuildInput.classList.add('auto-build-input', 'auto-build-header-input');
 
   autoBuildInput.addEventListener('input', () => {
     const autoBuildPercent = parseFloat(autoBuildInput.value);
-    const nextValue = Number.isFinite(autoBuildPercent) ? Math.max(0, autoBuildPercent) : 0;
-    structure.autoBuildPercent = nextValue;
-    if (nextValue !== autoBuildPercent) {
-      autoBuildInput.value = `${nextValue}`;
+    const nextValue = Math.max(0, autoBuildPercent || 0);
+    if (isAutoBuildFillMode(structure)) {
+      const normalized = Math.min(100, nextValue);
+      structure.autoBuildFillPercent = normalized;
+      if (normalized !== autoBuildPercent) {
+        autoBuildInput.value = `${normalized}`;
+      }
+    } else {
+      structure.autoBuildPercent = nextValue;
+      if (nextValue !== autoBuildPercent) {
+        autoBuildInput.value = `${nextValue}`;
+      }
     }
     refreshAutoBuildTarget(structure);
   });
 
   const autoBuildBasisSelect = document.createElement('select');
   autoBuildBasisSelect.classList.add('auto-build-basis');
+  if (structure.autoBuildFillEnabled) {
+    const fillOption = document.createElement('option');
+    fillOption.value = 'fill';
+    fillOption.textContent = '% filled';
+    autoBuildBasisSelect.appendChild(fillOption);
+  }
   const popOption = document.createElement('option');
   popOption.value = 'population';
   popOption.textContent = '% of pop';
@@ -838,6 +866,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildBasisSelect.addEventListener('change', () => {
     structure.autoBuildBasis = autoBuildBasisSelect.value;
     updateAutoBuildInputState(structure, autoBuildBasisSelect, autoBuildInput);
+    if (document.activeElement !== autoBuildInput) {
+      autoBuildInput.value = isAutoBuildFillMode(structure)
+        ? `${structure.autoBuildFillPercent || 0}`
+        : `${structure.autoBuildPercent || 0}`;
+    }
     refreshAutoBuildTarget(structure);
   });
 
@@ -899,8 +932,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
     const baseCollection = typeof buildings !== 'undefined' ? buildings : undefined;
-    const base = getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
-    const targetCount = Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+    const usesFillMode = isAutoBuildFillMode(structure);
+    const base = usesFillMode ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
+    const targetCount = usesFillMode
+      ? structure.count
+      : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
     adjustStructureActivation(structure, change);
