@@ -314,7 +314,7 @@
     loadState(state = {}) {
       super.loadState(state);
       this.evolutionPoints = state.evolutionPoints || 0;
-      this.ecumenopolisDisabled = state.ecumenopolisDisabled || false;
+      this.ecumenopolisDisabled = this.isCompleted || false;
       this.shopPurchases = {
         ...this.createEmptyShopPurchases(),
         ...(state.shopPurchases || {}),
