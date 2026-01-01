@@ -76,7 +76,7 @@ const terraformingRequirements = {
       atmosphericMethane: { min: 40_000, max: 60_000 },
     },
     liquidCoverageTarget: 0.1,
-    liquidType: 'methane',
+    liquidType: 'water',
     lifeCoverageTarget: 0.4,
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
