@@ -18,7 +18,7 @@
       label: 'Unlock Life Designer',
       cost: 100,
       maxPurchases: 1,
-      description: 'Permanently completes Life Designing and Production.',
+      description: 'Permanently completes the Life Designing and Production Research.',
     },
     {
       id: 'lifePointGain',
