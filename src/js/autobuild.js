@@ -151,6 +151,16 @@ function resolveAutoBuildMaxCount(structure, reservePercent, additionalReserves)
 function getAutoBuildFillData(structure) {
     const storage = structure.storage || {};
     const multiplier = structure.getEffectiveStorageMultiplier?.() || 1;
+    const useFilters = structure.autoBuildFillResourceFilters;
+    const primary = structure.autoBuildFillResourcePrimary || 'any';
+    const secondary = structure.autoBuildFillResourceSecondary || 'none';
+    const resourceFilter = new Set();
+    if (useFilters && primary !== 'any') {
+        resourceFilter.add(primary);
+        if (secondary !== 'none' && secondary !== primary) {
+            resourceFilter.add(secondary);
+        }
+    }
     let bestRatio = 0;
     let bestCap = 0;
     let bestValue = 0;
@@ -158,6 +168,9 @@ function getAutoBuildFillData(structure) {
     for (const category in storage) {
         const categoryStorage = storage[category] || {};
         for (const resource in categoryStorage) {
+            if (resourceFilter.size && !resourceFilter.has(resource)) {
+                continue;
+            }
             const resObj = resources[category][resource];
             const cap = resObj.cap || 0;
             const value = resObj.value || 0;
@@ -509,6 +522,8 @@ function captureAutoBuildSettings(structures) {
             autoUpgrade: s.autoUpgradeEnabled,
             step: s.autoBuildStep,
             fillPercent: s.autoBuildFillPercent,
+            fillPrimary: s.autoBuildFillResourcePrimary,
+            fillSecondary: s.autoBuildFillResourceSecondary,
         };
     }
 }
@@ -526,6 +541,12 @@ function restoreAutoBuildSettings(structures) {
             s.autoUpgradeEnabled = !!savedAutoBuildSettings[name].autoUpgrade;
             if (savedAutoBuildSettings[name].fillPercent !== undefined) {
                 s.autoBuildFillPercent = savedAutoBuildSettings[name].fillPercent;
+            }
+            if (savedAutoBuildSettings[name].fillPrimary !== undefined) {
+                s.autoBuildFillResourcePrimary = savedAutoBuildSettings[name].fillPrimary;
+            }
+            if (savedAutoBuildSettings[name].fillSecondary !== undefined) {
+                s.autoBuildFillResourceSecondary = savedAutoBuildSettings[name].fillSecondary;
             }
             const restoredStep = savedAutoBuildSettings[name].step;
             if (Number.isFinite(restoredStep) && restoredStep > 0) {

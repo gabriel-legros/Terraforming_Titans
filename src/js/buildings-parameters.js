@@ -421,7 +421,10 @@ const buildingsParameters = {
     maintenanceFactor: 0.1,
     unlocked: false,
     autoBuildFillEnabled: true,
-    autoBuildFillPercent: 95
+    autoBuildFillPercent: 95,
+    autoBuildFillResourceFilters: true,
+    autoBuildFillResourcePrimary: 'any',
+    autoBuildFillResourceSecondary: 'none'
   },
   waterTank: {
     name: 'Water Tank',

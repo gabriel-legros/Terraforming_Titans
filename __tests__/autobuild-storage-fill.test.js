@@ -20,6 +20,9 @@ function createStorageDepot() {
     autoActiveEnabled: false,
     autoBuildFillEnabled: true,
     autoBuildFillPercent: 95,
+    autoBuildFillResourceFilters: true,
+    autoBuildFillResourcePrimary: 'any',
+    autoBuildFillResourceSecondary: 'none',
     autoBuildBasis: 'fill',
     autoBuildPriority: false,
     storage: { colony: { metal: 5000, silicon: 5000 } },
@@ -69,5 +72,23 @@ describe('autobuild storage fill threshold', () => {
     const storageDepot = createStorageDepot();
     autoBuild({ storageDepot }, 0);
     expect(storageDepot.count).toBe(0);
+  });
+
+  test('limits fill checks to selected resources', () => {
+    global.resources = createResources({
+      metalValue: 800,
+      metalCap: 1000,
+      siliconValue: 980,
+      siliconCap: 1000
+    });
+    const storageDepot = createStorageDepot();
+    storageDepot.autoBuildFillResourcePrimary = 'metal';
+    storageDepot.autoBuildFillResourceSecondary = 'none';
+    autoBuild({ storageDepot }, 0);
+    expect(storageDepot.count).toBe(0);
+
+    storageDepot.autoBuildFillResourcePrimary = 'silicon';
+    autoBuild({ storageDepot }, 0);
+    expect(storageDepot.count).toBe(1);
   });
 });

@@ -120,6 +120,9 @@ class Building extends EffectableEntity {
       this.autoBuildMaxOption = !!autoBuildMaxOption;
       this.autoBuildFillEnabled = !!config.autoBuildFillEnabled;
       this.autoBuildFillPercent = config.autoBuildFillPercent ?? 95;
+      this.autoBuildFillResourceFilters = !!config.autoBuildFillResourceFilters;
+      this.autoBuildFillResourcePrimary = config.autoBuildFillResourcePrimary || 'any';
+      this.autoBuildFillResourceSecondary = config.autoBuildFillResourceSecondary || 'none';
 
       this.updateResourceStorage();
     }
@@ -176,6 +179,8 @@ class Building extends EffectableEntity {
       autoBuildPriority: this.autoBuildPriority,
       autoBuildBasis: this.autoBuildBasis,
       autoBuildFillPercent: this.autoBuildFillPercent,
+      autoBuildFillResourcePrimary: this.autoBuildFillResourcePrimary,
+      autoBuildFillResourceSecondary: this.autoBuildFillResourceSecondary,
       workerPriority: this.workerPriority,
       autoActiveEnabled: this.autoActiveEnabled,
       autoBuildPartial: this.autoBuildPartial,
@@ -219,6 +224,12 @@ class Building extends EffectableEntity {
     if ('autoBuildFillPercent' in state) {
       const nextFillPercent = state.autoBuildFillPercent || 0;
       this.autoBuildFillPercent = Math.min(100, Math.max(0, nextFillPercent));
+    }
+    if ('autoBuildFillResourcePrimary' in state) {
+      this.autoBuildFillResourcePrimary = state.autoBuildFillResourcePrimary || 'any';
+    }
+    if ('autoBuildFillResourceSecondary' in state) {
+      this.autoBuildFillResourceSecondary = state.autoBuildFillResourceSecondary || 'none';
     }
     if ('workerPriority' in state) this.workerPriority = state.workerPriority;
     if ('autoActiveEnabled' in state) this.autoActiveEnabled = state.autoActiveEnabled;

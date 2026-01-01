@@ -456,6 +456,25 @@
     flex: 1 1 auto;
 }
 
+.auto-build-fill-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.auto-build-fill-select {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85em;
+}
+
+.auto-build-fill-dropdown {
+    min-width: 120px;
+}
+
 .auto-build-setactive-button {
     margin-left: auto;
     white-space: nowrap;

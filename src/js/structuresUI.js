@@ -167,6 +167,16 @@ function refreshAutoBuildTarget(structure) {
     }
   }
 
+  if (els.autoBuildFillContainer) {
+    els.autoBuildFillContainer.style.display = autoBuildUsesFill ? 'flex' : 'none';
+    if (document.activeElement !== els.autoBuildFillPrimary) {
+      els.autoBuildFillPrimary.value = structure.autoBuildFillResourcePrimary || 'any';
+    }
+    if (document.activeElement !== els.autoBuildFillSecondary) {
+      els.autoBuildFillSecondary.value = structure.autoBuildFillResourceSecondary || 'none';
+    }
+  }
+
   if (els.autoBuildStepIncrement && els.autoBuildStepDecrement) {
     updateAutoBuildStepButtonLabels(structure, els.autoBuildStepIncrement, els.autoBuildStepDecrement);
   }
@@ -945,6 +955,68 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   autoBuildTargetContainer.appendChild(setActiveButton);
   autoBuildContainer.appendChild(autoBuildTargetContainer);
+
+  let autoBuildFillContainer = null;
+  if (structure.autoBuildFillResourceFilters) {
+    autoBuildFillContainer = document.createElement('div');
+    autoBuildFillContainer.classList.add('auto-build-fill-container');
+
+    const buildFillSelect = (labelText, defaultValue) => {
+      const wrapper = document.createElement('label');
+      wrapper.classList.add('auto-build-fill-select');
+      const label = document.createElement('span');
+      label.textContent = labelText;
+      const select = document.createElement('select');
+      select.classList.add('auto-build-fill-dropdown');
+
+      const anyOption = document.createElement('option');
+      anyOption.value = 'any';
+      anyOption.textContent = 'Any';
+      select.appendChild(anyOption);
+
+      const noneOption = document.createElement('option');
+      noneOption.value = 'none';
+      noneOption.textContent = 'None';
+      select.appendChild(noneOption);
+
+      for (const category in structure.storage) {
+        const storageForCategory = structure.storage[category] || {};
+        for (const resourceName in storageForCategory) {
+          const option = document.createElement('option');
+          option.value = resourceName;
+          const displayName = resources[category][resourceName].displayName || resourceName;
+          option.textContent = displayName;
+          select.appendChild(option);
+        }
+      }
+
+      select.value = defaultValue;
+      wrapper.appendChild(label);
+      wrapper.appendChild(select);
+      return { wrapper, select };
+    };
+
+    const primarySelect = buildFillSelect('Primary', structure.autoBuildFillResourcePrimary || 'any');
+    const secondarySelect = buildFillSelect('Secondary', structure.autoBuildFillResourceSecondary || 'none');
+
+    primarySelect.select.addEventListener('change', () => {
+      structure.autoBuildFillResourcePrimary = primarySelect.select.value;
+      refreshAutoBuildTarget(structure);
+    });
+
+    secondarySelect.select.addEventListener('change', () => {
+      structure.autoBuildFillResourceSecondary = secondarySelect.select.value;
+      refreshAutoBuildTarget(structure);
+    });
+
+    autoBuildFillContainer.appendChild(primarySelect.wrapper);
+    autoBuildFillContainer.appendChild(secondarySelect.wrapper);
+    autoBuildContainer.appendChild(autoBuildFillContainer);
+
+    cached.autoBuildFillContainer = autoBuildFillContainer;
+    cached.autoBuildFillPrimary = primarySelect.select;
+    cached.autoBuildFillSecondary = secondarySelect.select;
+  }
 
   if (autoUpgradeContainer) {
     autoBuildContainer.appendChild(autoUpgradeContainer);
