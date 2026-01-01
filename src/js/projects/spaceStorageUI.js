@@ -241,7 +241,8 @@ function renderSpaceStorageUI(project, container) {
     fullIcon.classList.add('storage-full-icon');
     fullIcon.innerHTML = '&#9888;&#xFE0E;';
     fullIcon.title = 'Colony storage full';
-    fullIcon.style.display = 'none';
+    fullIcon.style.display = 'inline-block';
+    fullIcon.style.visibility = 'hidden';
     fullIcon.style.fontSize = '14px';
 
     const usage = document.createElement('span');
@@ -477,9 +478,9 @@ function updateSpaceStorageUI(project) {
             : 'Colony storage full';
         }
         if (project.shipWithdrawMode && res && res.hasCap && res.value >= res.cap) {
-          icon.style.display = 'inline';
+          icon.style.visibility = 'visible';
         } else {
-          icon.style.display = 'none';
+          icon.style.visibility = 'hidden';
         }
       }
     });

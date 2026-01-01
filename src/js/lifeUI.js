@@ -557,7 +557,7 @@ function initializeLifeTerraformingDesignerUI() {
           if (event.shiftKey) {
               if (changeAmount > 0) {
                   if (attributeName === 'optimalGrowthTemperature') {
-                      newValue = Math.min(15, available);
+                      newValue = Math.min(maxUpgrades, available);
                   } else {
                       newValue = remainingPoints;
                   }
@@ -569,7 +569,7 @@ function initializeLifeTerraformingDesignerUI() {
           }
 
           if (attributeName === 'optimalGrowthTemperature') {
-              newValue = Math.max(-15, Math.min(15, newValue));
+              newValue = Math.max(-maxUpgrades, Math.min(maxUpgrades, newValue));
               const allowed = Math.min(Math.abs(newValue), Math.max(0, available));
               newValue = Math.sign(newValue) * allowed;
           } else {
