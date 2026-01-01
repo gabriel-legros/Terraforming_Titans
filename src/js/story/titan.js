@@ -37,14 +37,6 @@ progressTitan.storyProjects.earthProbe = {
 
 progressTitan.chapters.push(
   {
-    id: "chapter4.13",
-    type: "journal",
-    chapter: 4,
-    narrative: "New Hazard detected. Forwarding complete dataset to Mars for review.",
-    prerequisites: ["chapter4.12b"],
-    reward: []
-  },
-  {
     id: "chapter5.0",
     type: "journal",
     chapter: 5,

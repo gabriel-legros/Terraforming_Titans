@@ -20,6 +20,7 @@
 
     const projects = pm && pm.projects ? pm.projects : {};
     const storyProjects = data.storyProjects || {};
+    const projectStepProgress = new Map();
 
     let currentChapter = null;
     data.chapters.forEach(ch => {
@@ -42,14 +43,13 @@
         if (ch.objectives) {
           ch.objectives.forEach(obj => {
             if (obj.type === 'project') {
-              const proj = projects[obj.projectId] || {};
-              const repeat = proj.repeatCount || 0;
               const steps = storyProjects[obj.projectId]?.attributes?.storyStepLines || storyProjects[obj.projectId]?.attributes?.storySteps || [];
               const needed = obj.repeatCount || steps.length;
-              const count = Math.min(repeat, needed, steps.length);
+              const targetCount = Math.min(needed, steps.length);
               const projName = storyProjects[obj.projectId]?.name;
               const total = storyProjects[obj.projectId]?.attributes?.storySteps?.length || steps.length;
-              for (let i = 0; i < count; i++) {
+              const completedCount = projectStepProgress.get(obj.projectId) || 0;
+              for (let i = completedCount; i < targetCount; i++) {
                 const stepText = steps[i];
                 if (stepText != null) {
                   let textStr = joinLines(stepText);
@@ -63,6 +63,7 @@
                   historySources.push({ type: 'project', id: obj.projectId, step: i });
                 }
               }
+              projectStepProgress.set(obj.projectId, Math.max(completedCount, targetCount));
             }
           });
         }
@@ -76,9 +77,9 @@
     return { entries, sources, historyEntries, historySources };
   }
 
-  if (typeof module !== 'undefined' && module.exports) {
+  try {
     module.exports = reconstructJournalState;
-  } else {
-    globalThis.reconstructJournalState = reconstructJournalState;
+  } catch (err) {
+    window.reconstructJournalState = reconstructJournalState;
   }
 })();
