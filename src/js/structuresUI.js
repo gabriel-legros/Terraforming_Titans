@@ -167,6 +167,10 @@ function refreshAutoBuildTarget(structure) {
     }
   }
 
+  if (els.setActiveButton) {
+    els.setActiveButton.style.display = autoBuildUsesFill ? 'none' : 'inline-flex';
+  }
+
   if (els.autoBuildFillContainer) {
     els.autoBuildFillContainer.style.display = autoBuildUsesFill ? 'flex' : 'none';
     if (document.activeElement !== els.autoBuildFillPrimary) {
