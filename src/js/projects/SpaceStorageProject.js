@@ -21,6 +21,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipWithdrawMode = false;
     this.pendingTransfers = [];
     this.prioritizeMegaProjects = false;
+    this.prioritizeMegaOnTravel = false;
     this.waterWithdrawTarget = 'colony';
     this.strategicReserve = 0;
     this.usedStorageResyncTimer = 0;
@@ -863,6 +864,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceUsage: this.resourceUsage,
       pendingTransfers: this.pendingTransfers,
       prioritizeMegaProjects: this.prioritizeMegaProjects,
+      prioritizeMegaOnTravel: this.prioritizeMegaOnTravel,
       strategicReserve: this.strategicReserve,
       waterWithdrawTarget: this.waterWithdrawTarget,
       shipOperation: {
@@ -884,6 +886,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceUsage = state.resourceUsage || {};
     this.pendingTransfers = state.pendingTransfers || [];
     this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
+    this.prioritizeMegaOnTravel = state.prioritizeMegaOnTravel || false;
     this.strategicReserve = state.strategicReserve || 0;
     this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
     const ship = state.shipOperation || {};
@@ -902,6 +905,7 @@ class SpaceStorageProject extends SpaceshipProject {
       usedStorage: this.usedStorage,
       resourceUsage: this.resourceUsage,
       prioritizeMegaProjects: this.prioritizeMegaProjects,
+      prioritizeMegaOnTravel: this.prioritizeMegaOnTravel,
       strategicReserve: this.strategicReserve,
     };
   }
@@ -912,7 +916,11 @@ class SpaceStorageProject extends SpaceshipProject {
     this.usedStorage = state.usedStorage || 0;
     this.resourceUsage = state.resourceUsage || {};
     this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
+    this.prioritizeMegaOnTravel = state.prioritizeMegaOnTravel || false;
     this.strategicReserve = state.strategicReserve || 0;
+    if (this.prioritizeMegaOnTravel) {
+      this.prioritizeMegaProjects = true;
+    }
   }
 }
 

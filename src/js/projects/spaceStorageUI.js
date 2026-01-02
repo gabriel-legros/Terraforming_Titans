@@ -73,6 +73,27 @@ if (typeof SpaceStorageProject !== 'undefined') {
     return container;
   };
 
+  SpaceStorageProject.prototype.createPrioritizeTravelCheckbox = function () {
+    const container = document.createElement('div');
+    container.classList.add('checkbox-container');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-prioritize-space-travel`;
+    checkbox.addEventListener('change', (e) => {
+      this.prioritizeMegaOnTravel = e.target.checked;
+    });
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = 'Check on travelling';
+    container.append(checkbox, label);
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      prioritizeTravelCheckbox: checkbox,
+      prioritizeTravelContainer: container,
+    };
+    return container;
+  };
+
   SpaceStorageProject.prototype.createStrategicReserveInput = function () {
     const container = document.createElement('div');
     container.classList.add('checkbox-container');
@@ -128,25 +149,36 @@ if (typeof SpaceStorageProject !== 'undefined') {
       delete els.shipAutoStartContainer;
       delete els.prioritizeMegaCheckbox;
       delete els.prioritizeMegaContainer;
+      delete els.prioritizeTravelCheckbox;
+      delete els.prioritizeTravelContainer;
+      delete els.prioritizeRowContainer;
       delete els.strategicReserveInput;
       delete els.strategicReserveContainer;
     }
 
     if (!els.shipAutoStartContainer) {
       const ship = this.createShipAutoStartCheckbox();
+      const prioritizeRow = document.createElement('div');
+      prioritizeRow.classList.add('checkbox-row-container');
       const prioritize = this.createPrioritizeMegaCheckbox();
+      const prioritizeTravel = this.createPrioritizeTravelCheckbox();
+      prioritizeRow.append(prioritize, prioritizeTravel);
       const reserve = this.createStrategicReserveInput();
+      projectElements[this.name] = {
+        ...projectElements[this.name],
+        prioritizeRowContainer: prioritizeRow,
+      };
       if (!this.attachShipAutoStartToAssignment(ship)) {
         container.appendChild(ship);
       }
-      container.append(prioritize, reserve);
+      container.append(prioritizeRow, reserve);
     } else {
       const placed = this.attachShipAutoStartToAssignment(els.shipAutoStartContainer);
       if (!placed && els.shipAutoStartContainer.parentElement !== container) {
         container.appendChild(els.shipAutoStartContainer);
       }
-      if (els.prioritizeMegaContainer && els.prioritizeMegaContainer.parentElement !== container) {
-        container.appendChild(els.prioritizeMegaContainer);
+      if (els.prioritizeRowContainer && els.prioritizeRowContainer.parentElement !== container) {
+        container.appendChild(els.prioritizeRowContainer);
       }
       if (els.strategicReserveContainer && els.strategicReserveContainer.parentElement !== container) {
         container.appendChild(els.strategicReserveContainer);
@@ -393,11 +425,11 @@ function updateSpaceStorageUI(project) {
   if (els.autoStartLabel) {
     els.autoStartLabel.textContent = 'Auto Start Expansion';
   }
-  if (els.shipAutoStartContainer && els.prioritizeMegaContainer) {
+  if (els.shipAutoStartContainer && els.prioritizeRowContainer) {
     const display = projectManager && typeof projectManager.isBooleanFlagSet === 'function' &&
       projectManager.isBooleanFlagSet('automateSpecialProjects') ? 'flex' : 'none';
     els.shipAutoStartContainer.style.display = display;
-    els.prioritizeMegaContainer.style.display = display;
+    els.prioritizeRowContainer.style.display = display;
   }
   if (els.shipAutoStartLabel) {
     els.shipAutoStartLabel.textContent = project.isShipOperationContinuous()
@@ -490,6 +522,7 @@ function updateSpaceStorageUI(project) {
   }
   if (els.prioritizeMegaCheckbox) {
     els.prioritizeMegaCheckbox.checked = project.prioritizeMegaProjects;
+    els.prioritizeTravelCheckbox.checked = project.prioritizeMegaOnTravel;
   }
   if (els.strategicReserveInput) {
     const activeElement = document.activeElement;
