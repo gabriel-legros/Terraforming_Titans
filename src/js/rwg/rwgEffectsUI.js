@@ -20,52 +20,6 @@ const RWG_BUILDING_OUTPUT = {
   hyperionLantern: 'Hyperion Lantern',
 };
 
-function getRandomWorldType(status) {
-  if (!status) return null;
-  return status.cachedArchetype
-    || status.archetype
-    || status.classification?.archetype
-    || status.original?.archetype
-    || status.original?.classification?.archetype
-    || status.original?.merged?.classification?.archetype
-    || status.original?.override?.classification?.archetype
-    || null;
-}
-
-function addHazards(hazardKeys, value) {
-  if (!value || value === 'none') return;
-  if (Array.isArray(value)) {
-    value.forEach((entry) => {
-      if (entry && entry !== 'none') hazardKeys.add(String(entry));
-    });
-    return;
-  }
-  if (value.constructor === Object) {
-    Object.keys(value).forEach((entry) => {
-      if (entry && entry !== 'none') hazardKeys.add(String(entry));
-    });
-    return;
-  }
-  hazardKeys.add(String(value));
-}
-
-function countRandomWorldHazards(status) {
-  if (!status) return 0;
-  const hazardKeys = new Set(status.cachedHazards?.keys || []);
-  addHazards(hazardKeys, status.hazard);
-  addHazards(hazardKeys, status.original?.hazard);
-  const override = status.override
-    || status.merged
-    || status.original?.override
-    || status.original?.merged
-    || null;
-  addHazards(hazardKeys, override?.rwgMeta?.selectedHazards);
-  addHazards(hazardKeys, override?.rwgMeta?.selectedHazard);
-  addHazards(hazardKeys, override?.hazards);
-  addHazards(hazardKeys, status.original?.hazards);
-  return hazardKeys.size;
-}
-
 function _titleCaseArchetype(t) {
   try {
     return String(t)

@@ -19,6 +19,9 @@ const ROGUE_STAR = {
     habitableZone: { inner: 0, outer: 0 }
 };
 
+const SPACE_HAZARD_KEYS = ['hazardousBiomass', 'garbage'];
+const SPACE_HAZARD_KEY_SET = new Set(SPACE_HAZARD_KEYS);
+
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
 
@@ -1204,17 +1207,24 @@ class SpaceManager extends EffectableEntity {
         };
         const pickHazards = (status) => {
             if (!status) return null;
-            const hazardKeys = new Set(status.cachedHazards?.keys || []);
+            const hazardKeys = new Set();
+            (status.cachedHazards?.keys || []).forEach((key) => {
+                if (SPACE_HAZARD_KEY_SET.has(key)) hazardKeys.add(key);
+            });
             const hazardValue = status.hazard || status.original?.hazard;
             if (hazardValue && hazardValue !== 'none') {
                 if (Array.isArray(hazardValue)) {
                     hazardValue.forEach((entry) => {
-                        if (entry !== 'none') hazardKeys.add(String(entry));
+                        const key = String(entry);
+                        if (entry !== 'none' && SPACE_HAZARD_KEY_SET.has(key)) hazardKeys.add(key);
                     });
                 } else if (hazardValue.constructor === Object) {
-                    Object.keys(hazardValue).forEach((key) => hazardKeys.add(key));
+                    Object.keys(hazardValue).forEach((key) => {
+                        if (SPACE_HAZARD_KEY_SET.has(key)) hazardKeys.add(key);
+                    });
                 } else {
-                    hazardKeys.add(String(hazardValue));
+                    const key = String(hazardValue);
+                    if (SPACE_HAZARD_KEY_SET.has(key)) hazardKeys.add(key);
                 }
             }
             const hazardSources = [
@@ -1225,7 +1235,9 @@ class SpaceManager extends EffectableEntity {
                 status.original?.hazards
             ];
             hazardSources.forEach((src) => {
-                Object.keys(src || {}).forEach((key) => hazardKeys.add(key));
+                Object.keys(src || {}).forEach((key) => {
+                    if (SPACE_HAZARD_KEY_SET.has(key)) hazardKeys.add(key);
+                });
             });
             const selectedHazards = status.cachedHazards?.selectedHazards
                 || status.override?.rwgMeta?.selectedHazards
@@ -1236,12 +1248,16 @@ class SpaceManager extends EffectableEntity {
             if (selectedHazards) {
                 if (Array.isArray(selectedHazards)) {
                     selectedHazards.forEach((entry) => {
-                        if (entry && entry !== 'none') hazardKeys.add(String(entry));
+                        const key = String(entry);
+                        if (entry && entry !== 'none' && SPACE_HAZARD_KEY_SET.has(key)) hazardKeys.add(key);
                     });
                 } else if (selectedHazards.constructor === Object) {
-                    Object.keys(selectedHazards).forEach((key) => hazardKeys.add(key));
+                    Object.keys(selectedHazards).forEach((key) => {
+                        if (SPACE_HAZARD_KEY_SET.has(key)) hazardKeys.add(key);
+                    });
                 } else if (selectedHazards !== 'none') {
-                    hazardKeys.add(String(selectedHazards));
+                    const key = String(selectedHazards);
+                    if (SPACE_HAZARD_KEY_SET.has(key)) hazardKeys.add(key);
                 }
             }
             const selectedHazardSource = status.cachedHazards?.selected
@@ -1253,11 +1269,14 @@ class SpaceManager extends EffectableEntity {
                 || status.hazard
                 || null;
             const selectedHazard = Array.isArray(selectedHazardSource) ? selectedHazardSource[0] : selectedHazardSource;
-            if (selectedHazard && selectedHazard !== 'none') {
+            if (selectedHazard && selectedHazard !== 'none' && SPACE_HAZARD_KEY_SET.has(selectedHazard)) {
                 hazardKeys.add(selectedHazard);
             }
             if (!hazardKeys.size) return null;
-            return { selected: selectedHazard && selectedHazard !== 'none' ? selectedHazard : null, keys: Array.from(hazardKeys) };
+            const resolvedSelected = selectedHazard && selectedHazard !== 'none' && SPACE_HAZARD_KEY_SET.has(selectedHazard)
+                ? selectedHazard
+                : null;
+            return { selected: resolvedSelected, keys: Array.from(hazardKeys) };
         };
         const pruneStatuses = (statuses, activeKey) => Object.fromEntries(
             Object.entries(statuses).map(([key, status]) => {
@@ -1323,7 +1342,7 @@ class SpaceManager extends EffectableEntity {
             if (!text || text === 'none' || text === 'auto') return [];
             return text.split(',')
                 .map((entry) => String(entry).trim())
-                .filter((entry) => entry && entry !== 'none' && entry !== 'auto');
+                .filter((entry) => entry && entry !== 'none' && entry !== 'auto' && SPACE_HAZARD_KEY_SET.has(entry));
         };
         const hazardFromSeed = (seed) => {
             if (seed == null) return null;
@@ -1354,6 +1373,19 @@ class SpaceManager extends EffectableEntity {
             }
             const resolved = status.sector || resolveSectorFromSources(status, status.original);
             status.sector = normalizeSectorLabel(resolved);
+        };
+        const sanitizeCachedHazards = (status) => {
+            const cached = status.cachedHazards;
+            const keys = (cached?.keys || [])
+                .map((key) => String(key))
+                .filter((key) => SPACE_HAZARD_KEY_SET.has(key));
+            const selected = cached?.selected;
+            const selectedKey = selected && selected !== 'none' && SPACE_HAZARD_KEY_SET.has(selected)
+                ? selected
+                : keys[0];
+            status.cachedHazards = (keys.length || selectedKey)
+                ? { selected: selectedKey || null, keys }
+                : null;
         };
 
         if (!savedData) {
@@ -1438,12 +1470,18 @@ class SpaceManager extends EffectableEntity {
                     entry.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(entry);
                 }
                 assignSector(entry);
+                sanitizeCachedHazards(entry);
             });
         }
 
         if (savedData.randomWorldStatuses) {
             this.randomWorldStatuses = savedData.randomWorldStatuses;
-            Object.values(this.randomWorldStatuses).forEach(assignSector);
+            Object.values(this.randomWorldStatuses)
+                .filter(Boolean)
+                .forEach((entry) => {
+                    assignSector(entry);
+                    sanitizeCachedHazards(entry);
+                });
             if (typeof generateRandomPlanet === 'function') {
                 const seeds = Object.keys(this.randomWorldStatuses);
                 seeds.forEach(seed => {
@@ -1465,17 +1503,20 @@ class SpaceManager extends EffectableEntity {
                 }
                 const status = this.randomWorldStatuses[seed];
                 if (!status) return;
-                const hazardList = Array.isArray(hazards) ? hazards : [String(hazards)];
+                const hazardList = (Array.isArray(hazards) ? hazards : [String(hazards)])
+                    .map((hazardKey) => String(hazardKey))
+                    .filter((hazardKey) => hazardKey && hazardKey !== 'none' && SPACE_HAZARD_KEY_SET.has(hazardKey));
                 const existingKeys = new Set(status.cachedHazards?.keys || []);
-                hazardList.forEach((hazardKey) => {
-                    if (hazardKey && hazardKey !== 'none') existingKeys.add(hazardKey);
-                });
+                hazardList.forEach((hazardKey) => existingKeys.add(hazardKey));
                 const selected = status.cachedHazards?.selected
                     || (Array.isArray(status.hazard) ? status.hazard[0] : status.hazard)
                     || hazardList[0]
                     || null;
+                const resolvedSelected = selected && selected !== 'none' && SPACE_HAZARD_KEY_SET.has(selected)
+                    ? selected
+                    : hazardList[0];
                 status.cachedHazards = {
-                    selected: selected && selected !== 'none' ? selected : hazardList[0],
+                    selected: resolvedSelected,
                     keys: Array.from(existingKeys)
                 };
                 if (!status.hazard || status.hazard === 'none') {
