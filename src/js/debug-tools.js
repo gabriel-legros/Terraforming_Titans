@@ -78,23 +78,29 @@
     const zonalVals = {};
     const zonalTemps = {};
     if (typeof ZONES !== 'undefined' && terraforming) {
+      const legacyWater = terraforming.zonalWater || {};
+      const legacyCO2 = terraforming.zonalCO2 || {};
+      const legacyHydrocarbons = terraforming.zonalHydrocarbons || {};
       ZONES.forEach(zone => {
-        const zoneData = terraforming.zonalSurface[zone] || {};
-        const bIce = zoneData.buriedIce || 0;
-        globalVals.buriedIce += bIce;
-        zonalVals[zone] = {
-          ice: zoneData.ice || 0,
-          buriedIce: bIce,
-          liquidWater: zoneData.liquidWater || 0,
-          dryIce: zoneData.dryIce || 0,
-          buriedDryIce: zoneData.buriedDryIce || 0,
-          liquidCO2: zoneData.liquidCO2 || 0,
-          biomass: zoneData.biomass || 0,
-          hazardousBiomass: zoneData.hazardousBiomass || 0,
-          liquidMethane: zoneData.liquidMethane || 0,
-          hydrocarbonIce: zoneData.hydrocarbonIce || 0,
-          buriedHydrocarbonIce: zoneData.buriedHydrocarbonIce || 0
+        const zoneSurface = terraforming.zonalSurface?.[zone] || {};
+        const zoneWater = legacyWater[zone] || {};
+        const zoneCO2 = legacyCO2[zone] || {};
+        const zoneHydro = legacyHydrocarbons[zone] || {};
+        const zoneData = {
+          liquidWater: zoneSurface.liquidWater ?? zoneWater.liquid ?? 0,
+          ice: zoneSurface.ice ?? zoneWater.ice ?? 0,
+          buriedIce: zoneSurface.buriedIce ?? zoneWater.buriedIce ?? 0,
+          dryIce: zoneSurface.dryIce ?? zoneCO2.ice ?? 0,
+          buriedDryIce: zoneSurface.buriedDryIce ?? zoneCO2.buriedIce ?? 0,
+          liquidCO2: zoneSurface.liquidCO2 ?? zoneCO2.liquid ?? 0,
+          biomass: zoneSurface.biomass ?? 0,
+          hazardousBiomass: zoneSurface.hazardousBiomass ?? 0,
+          liquidMethane: zoneSurface.liquidMethane ?? zoneHydro.liquid ?? 0,
+          hydrocarbonIce: zoneSurface.hydrocarbonIce ?? zoneHydro.ice ?? 0,
+          buriedHydrocarbonIce: zoneSurface.buriedHydrocarbonIce ?? zoneHydro.buriedIce ?? 0
         };
+        globalVals.buriedIce += zoneData.buriedIce;
+        zonalVals[zone] = { ...zoneData };
         zonalTemps[zone] = {
           initial: terraforming.temperature?.zones?.[zone]?.initial || 0,
           value: terraforming.temperature?.zones?.[zone]?.value || 0,

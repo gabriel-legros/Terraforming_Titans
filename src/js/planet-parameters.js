@@ -26,6 +26,33 @@ function deepMerge(target, source) {
   return output;
 }
 
+const PLANET_ZONE_KEYS = ['tropical', 'temperate', 'polar'];
+const PLANET_ZONAL_SURFACE_RESOURCE_KEYS = [
+  'liquidWater',
+  'ice',
+  'buriedIce',
+  'dryIce',
+  'buriedDryIce',
+  'liquidCO2',
+  'liquidMethane',
+  'hydrocarbonIce',
+  'buriedHydrocarbonIce',
+  'biomass',
+  'hazardousBiomass'
+];
+
+function createZonalSurfaceDefaults() {
+  const zonalSurface = {};
+  PLANET_ZONE_KEYS.forEach(zone => {
+    const zoneValues = {};
+    PLANET_ZONAL_SURFACE_RESOURCE_KEYS.forEach(key => {
+      zoneValues[key] = 0;
+    });
+    zonalSurface[zone] = zoneValues;
+  });
+  return zonalSurface;
+}
+
 let defaultPlanetResources;
 
 try {
@@ -42,16 +69,7 @@ const defaultPlanetParameters = {
     hasSand: true,
   },
   resources: defaultPlanetResources,
-  zonalCO2: {
-    tropical: { liquid: 0, ice: 0 },
-    temperate: { liquid: 0, ice: 0 },
-    polar: { liquid: 0, ice: 0 }
-  },
-  zonalSurface: {
-    tropical: { biomass: 0, hazardousBiomass: 0 },
-    temperate: { biomass: 0, hazardousBiomass: 0 },
-    polar: { biomass: 0, hazardousBiomass: 0 }
-  },
+  zonalSurface: createZonalSurfaceDefaults(),
   zonalTemperatures: {
     tropical: { value: 223.15, day: 238.15, night: 208.15 },
     temperate: { value: 213.15, day: 226.15, night: 200.15 },
@@ -141,63 +159,45 @@ const marsOverrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 94760.79953747026,
-      "buriedIce": 1100000000000000
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 161761.88455436888,
-      "buriedIce": 1900000000000000
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 4500007957966698,
-      "buriedIce": 700000000000000
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 0,
+      "ice": 94760.79953747026,
+      "buriedIce": 1100000000000000,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "temperate": {
+      "liquidWater": 0,
+      "ice": 161761.88455436888,
+      "buriedIce": 1900000000000000,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "polar": {
+      "liquidWater": 0,
+      "ice": 4500007957966698,
+      "buriedIce": 700000000000000,
+      "dryIce": 1411197828523.9368,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 1411197828523.9368
     }
   },
   "zonalTemperatures": {
@@ -257,63 +257,45 @@ const titanOverrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 3791.2409230205194,
-      "buriedIce": 150000000000000
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 4628.179160457752,
-      "buriedIce": 1350000000000000
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 9450000000001650,
-      "buriedIce": 4050000000000000
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 0,
+      "ice": 3791.2409230205194,
+      "buriedIce": 150000000000000,
+      "dryIce": 144.46854888799018,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 42276496437268.71,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "temperate": {
+      "liquidWater": 0,
+      "ice": 4628.179160457752,
+      "buriedIce": 1350000000000000,
+      "dryIce": 289.23048009273015,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 57166425593526.555,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "polar": {
+      "liquidWater": 0,
+      "ice": 9450000000001650,
+      "buriedIce": 4050000000000000,
+      "dryIce": 73567.20422121447,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 13450177120297.768,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 42276496437268.71,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 57166425593526.555,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 13450177120297.768
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 144.46854888799018
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 289.23048009273015
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 73567.20422121447
     }
   },
   "zonalTemperatures": {
@@ -406,63 +388,45 @@ const callistoOverrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 195712.32470430483,
-      "buriedIce": 4000000000000000000
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 2471770.2854785556,
-      "buriedIce": 5000000000000000000
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 39999644135733.36,
-      "buriedIce": 1000000000000000000
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 0,
+      "ice": 195712.32470430483,
+      "buriedIce": 4000000000000000000,
+      "dryIce": 0.0000010844611386499015,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "temperate": {
+      "liquidWater": 0,
+      "ice": 2471770.2854785556,
+      "buriedIce": 5000000000000000000,
+      "dryIce": 0.0006507601027874387,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "polar": {
+      "liquidWater": 0,
+      "ice": 39999644135733.36,
+      "buriedIce": 1000000000000000000,
+      "dryIce": 11024.915153227,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0.0000010844611386499015
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0.0006507601027874387
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 11024.915153227
     }
   },
   "zonalTemperatures": {
@@ -562,63 +526,45 @@ const ganymedeOverrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 10788885218.153574,
-      "buriedIce": 5000000000000000000
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 231061583429084.53,
-      "buriedIce": 7000000000000000000
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 66922307386502.195,
-      "buriedIce": 2000000000000000000
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 0,
+      "ice": 10788885218.153574,
+      "buriedIce": 5000000000000000000,
+      "dryIce": 7.19277235458896e-220,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "temperate": {
+      "liquidWater": 0,
+      "ice": 231061583429084.53,
+      "buriedIce": 7000000000000000000,
+      "dryIce": 1.4384283977013396e-162,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "polar": {
+      "liquidWater": 0,
+      "ice": 66922307386502.195,
+      "buriedIce": 2000000000000000000,
+      "dryIce": 14734.90360376347,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 7.19277235458896e-220
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 1.4384283977013396e-162
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 14734.90360376347
     }
   },
   "zonalTemperatures": {
@@ -712,63 +658,45 @@ const vega2Overrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0,
-      "buriedIce": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0,
-      "buriedIce": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0,
-      "buriedIce": 0
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "temperate": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "polar": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
     }
   },
   "zonalTemperatures": {
@@ -864,63 +792,45 @@ const venusOverrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0,
-      "buriedIce": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0,
-      "buriedIce": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0,
-      "buriedIce": 0
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "temperate": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "polar": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
     }
   },
   "zonalTemperatures": {
@@ -940,13 +850,6 @@ const venusOverrides = {
       "night": 736.4668381200916
     }
   },
-  zonalSurface: { tropical: {}, temperate: {}, polar: {} },
-  zonalHydrocarbons: {
-    tropical: { liquid: 0, ice: 0 },
-    temperate: { liquid: 0, ice: 0 },
-    polar: { liquid: 0, ice: 0 }
-  },
-
   celestialParameters: {
     distanceFromSun: 0.723,
     gravity: 8.87,
@@ -1024,63 +927,45 @@ const umbraOverrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 8678753438.309835,
-      "ice": 0,
-      "buriedIce": 0
-    },
-    "temperate": {
-      "liquid": 2.3088635338613274e-69,
-      "ice": 10595173.026087541,
-      "buriedIce": 0
-    },
-    "polar": {
-      "liquid": 1.97236826e-316,
-      "ice": 371726064857053.6,
-      "buriedIce": 0
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 8678753438.309835,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 5336060040.357645
     },
     "temperate": {
+      "liquidWater": 2.3088635338613274e-69,
+      "ice": 10595173.026087541,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 6936037875.064085
     },
     "polar": {
+      "liquidWater": 1.97236826e-316,
+      "ice": 371726064857053.6,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 1109902084.57827
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
     }
   },
   "zonalTemperatures": {
@@ -1197,63 +1082,45 @@ const solisPrimeOverrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 290937936633937.6,
-      "buriedIce": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 1702476415693995.5,
-      "buriedIce": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 912340758918755.4,
-      "buriedIce": 0
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 0,
+      "ice": 290937936633937.6,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "temperate": {
+      "liquidWater": 0,
+      "ice": 1702476415693995.5,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "polar": {
+      "liquidWater": 0,
+      "ice": 912340758918755.4,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
     }
   },
   "zonalTemperatures": {
@@ -1333,63 +1200,45 @@ const gabbagOverrides = {
       }
     }
   },
-  "zonalWater": {
-    "tropical": {
-      "liquid": 10880767709344190,
-      "ice": 0,
-      "buriedIce": 0
-    },
-    "temperate": {
-      "liquid": 14146882394233150,
-      "ice": 0,
-      "buriedIce": 0
-    },
-    "polar": {
-      "liquid": 2268186059925160.5,
-      "ice": 0,
-      "buriedIce": 0
-    }
-  },
   "zonalSurface": {
     "tropical": {
+      "liquidWater": 10880767709344190,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "temperate": {
+      "liquidWater": 14146882394233150,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
     },
     "polar": {
+      "liquidWater": 2268186059925160.5,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
       "biomass": 0,
       "hazardousBiomass": 0
-    }
-  },
-  "zonalHydrocarbons": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
-    }
-  },
-  "zonalCO2": {
-    "tropical": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "temperate": {
-      "liquid": 0,
-      "ice": 0
-    },
-    "polar": {
-      "liquid": 0,
-      "ice": 0
     }
   },
   "zonalTemperatures": {

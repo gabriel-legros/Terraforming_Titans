@@ -37,6 +37,7 @@ function isObject(item) { return item && typeof item === "object" && !Array.isAr
 
 const DEFAULT_SECTOR_LABEL = 'R5-07';
 const RWG_UHF_FACTION_ID = globalThis?.UHF_FACTION_ID || 'uhf';
+const RWG_ZONE_KEYS = ['tropical', 'temperate', 'polar'];
 const SECTOR_DIRECTIONS = [
   { q: 0, r: -1 },
   { q: -1, r: 0 },
@@ -860,6 +861,40 @@ function buildZonalDistributions(type, Teq, surface, landHa, rng, params) {
   return { zonalSurface };
 }
 
+function normalizeZonalSurfaceOverride(override) {
+  const source = override || {};
+  const zonalSurface = source.zonalSurface || {};
+  const zonalWater = source.zonalWater || {};
+  const zonalCO2 = source.zonalCO2 || {};
+  const zonalHydrocarbons = source.zonalHydrocarbons || {};
+  const normalized = {};
+  RWG_ZONE_KEYS.forEach(zone => {
+    const zoneSurface = zonalSurface[zone] || {};
+    const zoneWater = zonalWater[zone] || {};
+    const zoneCO2 = zonalCO2[zone] || {};
+    const zoneHydro = zonalHydrocarbons[zone] || {};
+    normalized[zone] = {
+      ...zoneSurface,
+      liquidWater: zoneSurface.liquidWater ?? zoneWater.liquid ?? 0,
+      ice: zoneSurface.ice ?? zoneWater.ice ?? 0,
+      buriedIce: zoneSurface.buriedIce ?? zoneWater.buriedIce ?? 0,
+      dryIce: zoneSurface.dryIce ?? zoneCO2.ice ?? 0,
+      buriedDryIce: zoneSurface.buriedDryIce ?? zoneCO2.buriedIce ?? 0,
+      liquidCO2: zoneSurface.liquidCO2 ?? zoneCO2.liquid ?? 0,
+      liquidMethane: zoneSurface.liquidMethane ?? zoneHydro.liquid ?? 0,
+      hydrocarbonIce: zoneSurface.hydrocarbonIce ?? zoneHydro.ice ?? 0,
+      buriedHydrocarbonIce: zoneSurface.buriedHydrocarbonIce ?? zoneHydro.buriedIce ?? 0,
+      biomass: zoneSurface.biomass ?? 0,
+      hazardousBiomass: zoneSurface.hazardousBiomass ?? 0
+    };
+  });
+  const output = { ...source, zonalSurface: normalized };
+  delete output.zonalWater;
+  delete output.zonalCO2;
+  delete output.zonalHydrocarbons;
+  return output;
+}
+
 // ===================== Planet override =====================
 function applyHazardPresets(hazardKeys, { landHa, params, surface, zonalSurface }) {
   const list = orderHazardList(normalizeHazardList(hazardKeys));
@@ -930,7 +965,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   });
   const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
   const tmpTerraforming = { ...zonal, celestialParameters: { surfaceArea } };
-  const zonesList = ["tropical","temperate","polar"]; const zonalCoverageCache = {};
+  const zonesList = RWG_ZONE_KEYS; const zonalCoverageCache = {};
   for (const z of zonesList) {
     zonalCoverageCache[z] = {
       liquidWater: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidWater", params),
@@ -1060,7 +1095,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
       selectedHazard: Array.isArray(forcedHazards) && forcedHazards.length === 1 ? forcedHazards[0] : null
     }
   };
-  return overrides;
+  return normalizeZonalSurfaceOverride(overrides);
 }
 
 function computeOreCaps(areaTotal, type, rng, params) {
