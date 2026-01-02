@@ -498,6 +498,13 @@ class Project extends EffectableEntity {
     }
   }
 
+  applyCompleteProject(effect) {
+    if (this.isCompleted) {
+      return;
+    }
+    this.complete();
+  }
+
   usesSpaceStorageForResource(category, resource, amount) {
     if (!this.attributes.canUseSpaceStorage) return false;
     const storageProj = projectManager?.projects?.spaceStorage;

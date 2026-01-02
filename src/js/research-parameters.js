@@ -2107,6 +2107,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'companion_mirror',
+        name: 'Companion Mirror',
+        description: 'An adorable autonomous mirror robot that completes the space mirror project and provides 1,000 inactive space mirrors per terraformed world.  The best friend of the companion satellite.  Not suitable for incineration.',
+        cost: { advancedResearch: 20_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            targetId: 'space_mirror',
+            type: 'completeResearch'
+          }
+        ]
+      },
+      {
         id: 'self_replicating_ships_concept',
         name: 'Self Replicating Ships',
         description: 'Opens research into autonomous self-building spacecraft.',

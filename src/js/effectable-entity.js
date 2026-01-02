@@ -228,6 +228,9 @@ class EffectableEntity {
         case 'completeResearch':
           this.applyCompleteResearch(effect);
           break;
+        case 'completeProject':
+          this.applyCompleteProject(effect);
+          break;
         case 'lifeDesignPointBonus':
           this.applyLifeDesignPointBonus(effect);
           break;
@@ -531,6 +534,9 @@ class EffectableEntity {
       if (typeof this.completeResearchInstant === 'function') {
         this.completeResearchInstant(effect.targetId);
       }
+    }
+
+    applyCompleteProject(effect) {
     }
 
       applyLifeDesignPointBonus(effect) {

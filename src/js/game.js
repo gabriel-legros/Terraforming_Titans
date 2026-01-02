@@ -336,16 +336,7 @@ function initializeGameState(options = {}) {
     }
   }
   projectManager.projects.bioworld.applyEvolutionEffects();
-  if (
-    projectManager?.projects?.satellite &&
-    researchManager.getResearchById('companion_satellite')?.isResearched &&
-    spaceManager?.getTerraformedPlanetCount
-  ) {
-    const count = Math.floor(spaceManager.getTerraformedPlanetCount());
-    const proj = projectManager.projects.satellite;
-    proj.repeatCount = Math.min(count, proj.maxRepeatCount);
-    proj.update?.(0);
-  }
+  applyCompanionResearchTravelRewards();
   if (!preserveManagers || !skillManager) {
     skillManager = new SkillManager(skillParameters);
   }
