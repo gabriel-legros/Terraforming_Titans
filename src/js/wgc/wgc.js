@@ -133,6 +133,11 @@ class WarpGateCommand extends EffectableEntity {
         obstacleCourse: 0,
         library: 0
       },
+      facilityFailSafes: {
+        shootingRange: 1,
+        obstacleCourse: 1,
+        library: 1
+      },
       criticalSuccessCount: 0,
       criticalSuccessWeight: 0,
       baseEventResults: []
@@ -593,7 +598,7 @@ class WarpGateCommand extends EffectableEntity {
         const rerollStr = `[${rerollRoll.rolls.join(',')}]`;
         rollResult = rerollRoll;
         success = rerollTotal >= dc;
-        if (!success && rerollInfo.level >= 100) {
+        if (!success && rerollInfo.level >= 100 && this.consumeFacilityFailSafe(op, rerollInfo.key)) {
           success = true;
           failConverted = true;
         }
@@ -607,7 +612,7 @@ class WarpGateCommand extends EffectableEntity {
       }
     }
 
-    if (!success && !failConverted && facilityLevel >= 100) {
+    if (!success && !failConverted && facilityLevel >= 100 && this.consumeFacilityFailSafe(op, facilityKey)) {
       success = true;
       failConverted = true;
       const label = facilityLabel || (facilityKey || 'Facility');
@@ -861,6 +866,7 @@ class WarpGateCommand extends EffectableEntity {
           op.nextDifficultyModifier = 1;
           op.nextArtifactModifier = 1;
           op.facilityRerolls = this.buildFacilityRerollPool();
+          op.facilityFailSafes = this.buildFacilityFailSafePool();
           op.criticalSuccessCount = 0;
           op.criticalSuccessWeight = 0;
           op.summary = operationStartText;
@@ -1037,6 +1043,14 @@ class WarpGateCommand extends EffectableEntity {
     };
   }
 
+  buildFacilityFailSafePool() {
+    return {
+      shootingRange: 1,
+      obstacleCourse: 1,
+      library: 1
+    };
+  }
+
   getFacilityKeyForEvent(event) {
     if (!event) return null;
     if (event.type === 'combat') return 'shootingRange';
@@ -1063,6 +1077,17 @@ class WarpGateCommand extends EffectableEntity {
       label: facilityLabels[key] || key,
       level: this.facilities[key] || 0
     };
+  }
+
+  consumeFacilityFailSafe(op, key) {
+    if (!op || !key) return false;
+    if (!op.facilityFailSafes) {
+      op.facilityFailSafes = this.buildFacilityFailSafePool();
+    }
+    const remaining = op.facilityFailSafes[key] || 0;
+    if (remaining <= 0) return false;
+    op.facilityFailSafes[key] = remaining - 1;
+    return true;
   }
 
   getBarracksCriticalMultiplier(level) {
@@ -1119,6 +1144,7 @@ class WarpGateCommand extends EffectableEntity {
     op.nextDifficultyModifier = 1;
     op.nextArtifactModifier = 1;
     op.facilityRerolls = this.buildFacilityRerollPool();
+    op.facilityFailSafes = this.buildFacilityFailSafePool();
     op.criticalSuccessCount = 0;
     op.criticalSuccessWeight = 0;
     this.refreshOperationProgress(op, teamIndex);
@@ -1221,6 +1247,15 @@ class WarpGateCommand extends EffectableEntity {
           obstacleCourse: 0,
           library: 0
         },
+        facilityFailSafes: op.facilityFailSafes ? {
+          shootingRange: op.facilityFailSafes.shootingRange,
+          obstacleCourse: op.facilityFailSafes.obstacleCourse,
+          library: op.facilityFailSafes.library
+        } : {
+          shootingRange: 1,
+          obstacleCourse: 1,
+          library: 1
+        },
         criticalSuccessCount: Number.isFinite(op.criticalSuccessCount) ? op.criticalSuccessCount : 0,
         criticalSuccessWeight: Number.isFinite(op.criticalSuccessWeight) ? op.criticalSuccessWeight : 0
       })),
@@ -1289,6 +1324,11 @@ class WarpGateCommand extends EffectableEntity {
           shootingRange: Number.isFinite(op.facilityRerolls && op.facilityRerolls.shootingRange) ? op.facilityRerolls.shootingRange : this.getFacilityRerollBudget(this.facilities.shootingRange || 0),
           obstacleCourse: Number.isFinite(op.facilityRerolls && op.facilityRerolls.obstacleCourse) ? op.facilityRerolls.obstacleCourse : this.getFacilityRerollBudget(this.facilities.obstacleCourse || 0),
           library: Number.isFinite(op.facilityRerolls && op.facilityRerolls.library) ? op.facilityRerolls.library : this.getFacilityRerollBudget(this.facilities.library || 0)
+        },
+        facilityFailSafes: {
+          shootingRange: (op.facilityFailSafes && op.facilityFailSafes.shootingRange) ?? 1,
+          obstacleCourse: (op.facilityFailSafes && op.facilityFailSafes.obstacleCourse) ?? 1,
+          library: (op.facilityFailSafes && op.facilityFailSafes.library) ?? 1
         },
         criticalSuccessCount: Number.isFinite(op.criticalSuccessCount) ? op.criticalSuccessCount : 0,
         criticalSuccessWeight: Number.isFinite(op.criticalSuccessWeight) ? op.criticalSuccessWeight : (Number.isFinite(op.criticalXpMultiplier) && op.criticalXpMultiplier > 1 ? op.criticalXpMultiplier : 0)
