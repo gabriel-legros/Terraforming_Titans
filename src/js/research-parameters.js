@@ -2109,7 +2109,7 @@ const researchParameters = {
       {
         id: 'companion_mirror',
         name: 'Companion Mirror',
-        description: 'An adorable autonomous mirror robot that completes the space mirror project and provides 1,000 inactive space mirrors per terraformed world.  The best friend of the companion satellite.  Not suitable for incineration.',
+        description: 'An adorable autonomous mirror robot that automatically completes the space mirror project and provides 1,000 inactive space mirrors per terraformed world.  The best friend of the companion satellite.  Not suitable for incineration.',
         cost: { advancedResearch: 20_000_000 },
         prerequisites: [],
         effects: [
