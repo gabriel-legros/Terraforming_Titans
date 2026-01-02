@@ -730,6 +730,20 @@ const buildingsParameters = {
     cost: { colony: { metal: 200, components: 20 } },
     consumption: { colony: { energy: 500000 }, surface: { trash: 100 }, atmospheric: { oxygen: 106.67 } },
     production: { atmospheric: { carbonDioxide: 146.67 } },
+    defaultRecipe: 'trash',
+    recipes: {
+      trash: {
+        shortName: 'Trash',
+        consumption: { colony: { energy: 500000 }, surface: { trash: 100 }, atmospheric: { oxygen: 106.67 } },
+        production: { atmospheric: { carbonDioxide: 146.67 } }
+      },
+      hazardousBiomass: {
+        shortName: 'Hazardous Biomass',
+        requiresResearchFlag: 'hazardousBiomassIncineration',
+        consumption: { colony: { energy: 500000 }, surface: { hazardousBiomass: 100 }, atmospheric: { oxygen: 106.67 }, special : {spaceships : 0.01} },
+        production: { atmospheric: { carbonDioxide: 146.67 } }
+      }
+    },
     alwaysShowProduction: true,
     alwaysShowConsumption: true,
     storage: {},
@@ -737,7 +751,7 @@ const buildingsParameters = {
     canBeToggled: true,
     snapProductivity: true,
     displayConsumptionAtMaxProductivity: true,
-    ignoreResourceForProductivityResourceDisplay: { surface: { trash: true } },
+    ignoreResourceForProductivityResourceDisplay: { surface: { trash: true, hazardousBiomass: true } },
     requiresMaintenance: true,
     requiresWorker: 100,
     maintenanceFactor: 1,

@@ -1070,7 +1070,8 @@ const constructors = {
   waterTank: 'WaterTank',
   antimatterBattery: 'AntimatterBattery',
   spaceMirror: 'SpaceMirror',
-  hyperionLantern: 'HyperionLantern'
+  hyperionLantern: 'HyperionLantern',
+  trashIncinerator: 'MultiRecipesBuilding'
 };
 
 function loadConstructor(name) {

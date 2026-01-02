@@ -435,3 +435,5 @@ The planet visualiser has been modularised into files covering core setup, light
 - Random World Generator now blocks moon archetypes via `orbit.moonTypeBlacklist` (defaulting Super-Earth to planet-only).
 - Warp Gate Command now raises a WGC subtab alert when operations finish without auto-start enabled.
 - Warp Gate Command facility cooldown alerts now clear once every facility is maxed, and the status text switches to Maxed instead of Ready.
+- Trash Incinerator now supports a hazardous biomass recipe with zonal consumption distribution matching other surface resources.
+- Added Hazardous Biomass Incineration advanced research to unlock the incinerator recipe and hide multi-recipe dropdowns until more than one option is available.

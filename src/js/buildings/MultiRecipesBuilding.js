@@ -23,9 +23,20 @@ class MultiRecipesBuilding extends Building {
     const defs = this.recipes || {};
     const keys = Object.keys(defs);
     if (!spaceManager || !spaceManager.isArtificialWorld()) {
-      return keys;
+      return keys.filter(key => {
+        const recipe = defs[key] || {};
+        const requiredFlag = recipe.requiresResearchFlag;
+        return !requiredFlag || researchManager?.isBooleanFlagSet?.(requiredFlag);
+      });
     }
-    const allowed = keys.filter(key => defs[key].artificialAllowed !== false);
+    const allowed = keys.filter(key => {
+      const recipe = defs[key] || {};
+      const requiredFlag = recipe.requiresResearchFlag;
+      if (recipe.artificialAllowed === false) {
+        return false;
+      }
+      return !requiredFlag || researchManager?.isBooleanFlagSet?.(requiredFlag);
+    });
     return allowed.length ? allowed : keys;
   }
 
@@ -62,6 +73,10 @@ class MultiRecipesBuilding extends Building {
 
   setRecipe(recipeKey) {
     if (!this.recipes || !Object.prototype.hasOwnProperty.call(this.recipes, recipeKey)) {
+      return false;
+    }
+    const allowedKeys = this._getAllowedRecipeKeys();
+    if (!allowedKeys.includes(recipeKey)) {
       return false;
     }
     if (recipeKey === this.currentRecipeKey) {
@@ -114,11 +129,13 @@ class MultiRecipesBuilding extends Building {
 
   updateUI(elements = {}) {
     const select = elements.recipeSelect;
+    const container = elements.recipeSelectContainer;
     if (!select) {
       return;
     }
 
     const options = this._getRecipeOptions();
+    container?.style && (container.style.display = options.length > 1 ? '' : 'none');
     const keyString = options.map(opt => `${opt.key}:${opt.label}`).join('|');
     if (select.dataset.optionKey !== keyString) {
       select.textContent = '';

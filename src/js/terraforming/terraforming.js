@@ -1939,7 +1939,7 @@ distributeGlobalChangesToZones(deltaTime) {
 
     // Define which SURFACE resources need distribution
     const climateResources = {
-        surface: ['liquidWater', 'ice', 'dryIce', 'liquidCO2', 'biomass']
+        surface: ['liquidWater', 'ice', 'dryIce', 'liquidCO2', 'biomass', 'hazardousBiomass']
         // atmospheric distribution removed
     };
 

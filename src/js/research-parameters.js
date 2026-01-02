@@ -1939,6 +1939,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'hazardous_biomass_incineration',
+        name: 'Hazardous Biomass Incineration',
+        description: 'Enables incinerators to handle hazardous biomass safely.',
+        cost: { advancedResearch: 2_500_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'hazardousBiomassIncineration',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'galactic_market',
         name: 'Galactic Market Concordat',
         description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',
