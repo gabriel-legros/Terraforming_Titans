@@ -246,11 +246,11 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
 
 function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {
     return _simulateSurfaceFlow(zonalWaterInput, durationSeconds, zonalTemperatures, zoneElevationsInput, {
-        liquidProp: 'liquid',
+        liquidProp: 'liquidWater',
         iceProp: 'ice',
         buriedIceProp: 'buriedIce',
         meltingPoint: 273.15,
-        zonalDataKey: 'zonalWater',
+        zonalDataKey: 'zonalSurface',
         viscosity: 0.89, // Baseline viscosity for water
         iceCoverageType: 'ice',
         liquidCoverageType: 'liquidWater',
@@ -260,11 +260,11 @@ function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTempera
 
 function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {
     return _simulateSurfaceFlow(zonalHydrocarbonInput, durationSeconds, zonalTemperatures, zoneElevationsInput, {
-        liquidProp: 'liquid',
-        iceProp: 'ice',
+        liquidProp: 'liquidMethane',
+        iceProp: 'hydrocarbonIce',
         buriedIceProp: null,
         meltingPoint: 90.7,
-        zonalDataKey: 'zonalHydrocarbons',
+        zonalDataKey: 'zonalSurface',
         viscosity: 0.12, // Methane is less viscous than water
         iceCoverageType: 'hydrocarbonIce',
         liquidCoverageType: 'liquidMethane',
@@ -274,11 +274,11 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, 
 
 function simulateSurfaceCO2Flow(zonalCO2Input, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {
     return _simulateSurfaceFlow(zonalCO2Input, durationSeconds, zonalTemperatures, zoneElevationsInput, {
-        liquidProp: 'liquid',
-        iceProp: 'ice',
-        buriedIceProp: 'buriedIce',
+        liquidProp: 'liquidCO2',
+        iceProp: 'dryIce',
+        buriedIceProp: 'buriedDryIce',
         meltingPoint: 216.58,
-        zonalDataKey: 'zonalCO2',
+        zonalDataKey: 'zonalSurface',
         viscosity: 0.07, // Liquid CO2 is lower-viscosity than water
         iceCoverageType: 'dryIce',
         liquidCoverageType: 'liquidCO2',

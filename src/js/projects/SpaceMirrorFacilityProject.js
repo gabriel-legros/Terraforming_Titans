@@ -1393,7 +1393,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
         const zonesData = ['tropical','temperate','polar'].map(z => ({
           zone: z,
           temp: terraforming.temperature.zones[z].value,
-          ice: terraforming.zonalWater[z].ice
+          ice: terraforming.zonalSurface[z].ice
         })).filter(z => z.ice > 0);
         const totalSurfaceIce = zonesData.reduce((sum, z) => sum + z.ice, 0);
         if (totalSurfaceIce > 0) {
@@ -1404,8 +1404,8 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
             if (remaining <= 0) break;
             const meltHere = Math.min(z.ice, remaining);
             if (meltHere > 0) {
-              terraforming.zonalWater[z.zone].ice -= meltHere;
-              terraforming.zonalWater[z.zone].liquid += meltHere;
+              terraforming.zonalSurface[z.zone].ice -= meltHere;
+              terraforming.zonalSurface[z.zone].liquidWater += meltHere;
               remaining -= meltHere;
             }
           }

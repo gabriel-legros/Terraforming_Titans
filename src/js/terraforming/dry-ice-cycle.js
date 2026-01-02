@@ -112,7 +112,7 @@ class CO2Cycle extends ResourceCycleClass {
     maxDiff = 10,
     boilingPointFn = boilingPointCO2,
     boilTransitionRange = 5,
-    zonalKey = 'zonalCO2',
+    zonalKey = 'zonalSurface',
     surfaceBucket = 'co2',
     atmosphereKey = 'co2',
     availableKeys = ['liquid', 'ice', 'buriedIce'],
@@ -194,11 +194,16 @@ class CO2Cycle extends ResourceCycleClass {
       ],
     };
 
+    const surfaceKeyMap = {
+      liquid: 'liquidCO2',
+      ice: 'dryIce',
+      buriedIce: 'buriedDryIce',
+    };
     const surfaceFlowFn = (terraforming, durationSeconds, tempMap) => {
       // Provide hook if a CO2 surface flow routine exists.
       if (typeof simulateSurfaceCO2Flow === 'function'
           && typeof ZONES !== 'undefined'
-          && terraforming && terraforming.zonalCO2) {
+          && terraforming && terraforming.zonalSurface) {
         const flow = simulateSurfaceCO2Flow(terraforming, durationSeconds, tempMap, undefined, {
           triplePressure: CO2_P_TRIPLE,
           disallowLiquidBelowTriple: true,
@@ -242,6 +247,7 @@ class CO2Cycle extends ResourceCycleClass {
       surfaceFlowFn,
       rateMappings,
       finalizeProcesses,
+      surfaceKeyMap,
       rateTotalsPrefix: 'CO2',
     });
     this.key = key;

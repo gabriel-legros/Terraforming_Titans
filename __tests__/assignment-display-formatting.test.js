@@ -25,6 +25,15 @@ describe('Assignment displays use compact formatting', () => {
     global.warpGateNetworkManager = {
       getCapSummaryText: () => '',
       getCapForProject: () => Infinity,
+      getCapSummaryData: () => ({
+        intro: '',
+        baseCapLine: '',
+        ratiosLine: '',
+        fullControlLine: '',
+        ruleLines: [],
+        caps: [],
+        hydrogen: null,
+      }),
     };
 
     global.Project = class {

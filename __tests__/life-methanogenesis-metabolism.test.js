@@ -42,15 +42,10 @@ function createBaseWorld() {
         polar: { day: gabbagGrowthTemp, night: gabbagGrowthTemp },
       },
     },
-    zonalWater: {
-      tropical: { liquid: 0, ice: 0, buriedIce: 0 },
-      temperate: { liquid: 0, ice: 0, buriedIce: 0 },
-      polar: { liquid: 0, ice: 0, buriedIce: 0 },
-    },
     zonalSurface: {
-      tropical: { biomass: 0, hazardousBiomass: 0 },
-      temperate: { biomass: 0, hazardousBiomass: 0 },
-      polar: { biomass: 0, hazardousBiomass: 0 },
+      tropical: { liquidWater: 0, ice: 0, buriedIce: 0, biomass: 0, hazardousBiomass: 0 },
+      temperate: { liquidWater: 0, ice: 0, buriedIce: 0, biomass: 0, hazardousBiomass: 0 },
+      polar: { liquidWater: 0, ice: 0, buriedIce: 0, biomass: 0, hazardousBiomass: 0 },
     },
     biomassDyingZones: { tropical: false, temperate: false, polar: false },
     radiationPenalty: 0,
@@ -77,9 +72,9 @@ describe('LifeManager methanogenesis metabolism', () => {
     resources.atmospheric.carbonDioxide.value = 264.1666666666667;
     resources.atmospheric.hydrogen.value = 40;
     const startingLiquidWater = 1e9;
-    terraforming.zonalWater.tropical.liquid = 1e9;
-    terraforming.zonalWater.temperate.liquid = 1e9;
-    terraforming.zonalWater.polar.liquid = 1e9;
+    terraforming.zonalSurface.tropical.liquidWater = 1e9;
+    terraforming.zonalSurface.temperate.liquidWater = 1e9;
+    terraforming.zonalSurface.polar.liquidWater = 1e9;
 
     terraforming.zonalSurface.tropical.biomass = 1e6;
     terraforming.zonalSurface.temperate.biomass = 1e6;
@@ -99,9 +94,9 @@ describe('LifeManager methanogenesis metabolism', () => {
     expect(resources.atmospheric.atmosphericWater.value).toBeCloseTo(172.5, 6);
 
     const totalLiquidWater =
-      terraforming.zonalWater.tropical.liquid +
-      terraforming.zonalWater.temperate.liquid +
-      terraforming.zonalWater.polar.liquid;
+      terraforming.zonalSurface.tropical.liquidWater +
+      terraforming.zonalSurface.temperate.liquidWater +
+      terraforming.zonalSurface.polar.liquidWater;
     expect(totalLiquidWater).toBeCloseTo(startingLiquidWater * 3 - 20, 6);
   });
 
@@ -114,9 +109,9 @@ describe('LifeManager methanogenesis metabolism', () => {
     terraforming.temperature.zones.polar.day = 400;
     terraforming.temperature.zones.polar.night = 400;
 
-    terraforming.zonalWater.tropical.liquid = 1e9;
-    terraforming.zonalWater.temperate.liquid = 1e9;
-    terraforming.zonalWater.polar.liquid = 1e9;
+    terraforming.zonalSurface.tropical.liquidWater = 1e9;
+    terraforming.zonalSurface.temperate.liquidWater = 1e9;
+    terraforming.zonalSurface.polar.liquidWater = 1e9;
 
     terraforming.zonalSurface.tropical.biomass = 1000;
     terraforming.zonalSurface.temperate.biomass = 1000;

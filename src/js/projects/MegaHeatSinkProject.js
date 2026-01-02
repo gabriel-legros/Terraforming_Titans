@@ -164,7 +164,7 @@
         const slabOptions = {
           ...baseSlabOptions,
           zoneArea: area * pct,
-          zoneLiquidWater: terra.zonalWater?.[zone]?.liquid ?? 0
+          zoneLiquidWater: terra.zonalSurface?.[zone]?.liquidWater ?? 0
         };
 
         let capacity = globalThis?.autoSlabHeatCapacity?.(

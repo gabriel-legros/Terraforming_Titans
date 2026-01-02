@@ -103,7 +103,7 @@ class MethaneCycle extends ResourceCycleClass {
     maxDiff = 10,
     boilingPointFn = boilingPointMethane,
     boilTransitionRange = 5,
-    zonalKey = 'zonalHydrocarbons',
+    zonalKey = 'zonalSurface',
     surfaceBucket = 'methane',
     atmosphereKey = 'methane',
     availableKeys = ['liquid', 'ice', 'buriedIce'],
@@ -184,10 +184,15 @@ class MethaneCycle extends ResourceCycleClass {
         { path: 'surface.hydrocarbonIce', label: 'Flow Melt', sign: -1 },
       ],
     };
+    const surfaceKeyMap = {
+      liquid: 'liquidMethane',
+      ice: 'hydrocarbonIce',
+      buriedIce: 'buriedHydrocarbonIce',
+    };
     const surfaceFlowFn = (terraforming, durationSeconds, tempMap) => {
       if (typeof simulateSurfaceHydrocarbonFlow === 'function'
         && typeof ZONES !== 'undefined'
-        && terraforming && terraforming.zonalHydrocarbons) {
+        && terraforming && terraforming.zonalSurface) {
         const flow = simulateSurfaceHydrocarbonFlow(terraforming, durationSeconds, tempMap, undefined, {
           triplePressure: METHANE_P_TRIPLE,
           disallowLiquidBelowTriple: true,
@@ -233,6 +238,7 @@ class MethaneCycle extends ResourceCycleClass {
       surfaceFlowFn,
       rateMappings,
       finalizeProcesses,
+      surfaceKeyMap,
       rateTotalsPrefix: 'Methane',
     });
     this.key = key;

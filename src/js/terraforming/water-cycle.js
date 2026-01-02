@@ -76,7 +76,7 @@ class WaterCycle extends ResourceCycleClass {
     maxDiff = 10,
     boilingPointFn = boilingPointWater,
     boilTransitionRange = 5,
-    zonalKey = 'zonalWater',
+    zonalKey = 'zonalSurface',
     surfaceBucket = 'water',
     atmosphereKey = 'water',
     availableKeys = ['liquid', 'ice', 'buriedIce'],
@@ -156,6 +156,11 @@ class WaterCycle extends ResourceCycleClass {
         { path: 'surface.ice', label: 'Flow Melt', sign: -1 },
       ],
     };
+    const surfaceKeyMap = {
+      liquid: 'liquidWater',
+      ice: 'ice',
+      buriedIce: 'buriedIce',
+    };
     super({
       latentHeatVaporization: L_V_WATER,
       latentHeatSublimation: L_S_WATER,
@@ -174,7 +179,7 @@ class WaterCycle extends ResourceCycleClass {
       surfaceFlowFn: (terraforming, durationSeconds, tempMap) => {
         if (typeof simulateSurfaceWaterFlow === 'function'
           && typeof ZONES !== 'undefined'
-          && terraforming && terraforming.zonalWater) {
+          && terraforming && terraforming.zonalSurface) {
           const flow = simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap, undefined, {
             triplePressure: WATER_TRIPLE_P,
             disallowLiquidBelowTriple: true,
@@ -201,6 +206,7 @@ class WaterCycle extends ResourceCycleClass {
       },
       rateMappings,
       finalizeProcesses,
+      surfaceKeyMap,
     });
     this.key = key;
     this.atmKey = atmKey;

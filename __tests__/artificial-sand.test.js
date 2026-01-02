@@ -29,10 +29,11 @@ describe('Artificial worlds sand availability', () => {
           silicon: { baseCap: 0 },
         },
       },
-      zonalWater: {},
-      zonalCO2: {},
-      zonalHydrocarbons: {},
-      zonalSurface: {},
+      zonalSurface: {
+        tropical: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 },
+        temperate: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 },
+        polar: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 },
+      },
       celestialParameters: { sector: 'R5-07', starLuminosity: 1 },
       visualization: {},
     };

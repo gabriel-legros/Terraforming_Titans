@@ -57,7 +57,7 @@ class WaterTank extends Building {
     surfaceWater.increase(amount);
     surfaceWater.enable?.();
 
-    if (terraforming?.zonalWater) {
+    if (terraforming?.zonalSurface) {
       this.distributeToZones(amount);
     }
 
@@ -80,15 +80,9 @@ class WaterTank extends Building {
     const totalWeight = weights.reduce((sum, value) => sum + value, 0) || zoneList.length;
 
     zoneList.forEach((zone, index) => {
-      if (!terraforming.zonalWater[zone]) {
-        terraforming.zonalWater[zone] = { liquid: 0, ice: 0, buriedIce: 0 };
-      }
-      const entry = terraforming.zonalWater[zone];
-      if (entry.liquid === undefined) {
-        entry.liquid = 0;
-      }
+      const entry = terraforming.zonalSurface[zone];
       const portion = totalAmount * (weights[index] / totalWeight);
-      entry.liquid += portion;
+      entry.liquidWater += portion;
     });
   }
 }

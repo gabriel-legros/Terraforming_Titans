@@ -678,25 +678,10 @@ class ArtificialManager extends EffectableEntity {
             initialValue: stockpileSilicon,
             baseCap: siliconCap
         };
-        base.zonalWater = {
-            tropical: { liquid: 0, ice: 0, buriedIce: 0 },
-            temperate: { liquid: 0, ice: 0, buriedIce: 0 },
-            polar: { liquid: 0, ice: 0, buriedIce: 0 }
-        };
-        base.zonalCO2 = {
-            tropical: { liquid: 0, ice: 0 },
-            temperate: { liquid: 0, ice: 0 },
-            polar: { liquid: 0, ice: 0 }
-        };
-        base.zonalHydrocarbons = {
-            tropical: { liquid: 0, ice: 0, buriedIce: 0 },
-            temperate: { liquid: 0, ice: 0, buriedIce: 0 },
-            polar: { liquid: 0, ice: 0, buriedIce: 0 }
-        };
         base.zonalSurface = {
-            tropical: { biomass: 0, hazardousBiomass: 0 },
-            temperate: { biomass: 0, hazardousBiomass: 0 },
-            polar: { biomass: 0, hazardousBiomass: 0 }
+            tropical: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 },
+            temperate: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 },
+            polar: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0 }
         };
         base.visualization = { ...(base.visualization || {}), baseColor: '#2a3d4f' };
         return base;

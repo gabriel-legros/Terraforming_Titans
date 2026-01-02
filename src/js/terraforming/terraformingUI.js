@@ -1223,8 +1223,8 @@ function createWaterBox(row) {
     // let totalFreezingRate = 0; // Read from terraforming.totalFreezeRate
 
     // zones.forEach(zone => { // Loop no longer needed for rates
-    //     totalLiquid += terraforming.zonalWater[zone].liquid || 0;
-    //     totalIce += terraforming.zonalWater[zone].ice || 0;
+    //     totalLiquid += terraforming.zonalSurface[zone].liquidWater || 0;
+    //     totalIce += terraforming.zonalSurface[zone].ice || 0;
     //     // Remove rate summing from zonal data
     // });
 

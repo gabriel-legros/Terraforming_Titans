@@ -685,17 +685,17 @@ class SpaceManager extends EffectableEntity {
             totalBiomass = 0, totalLiquidCO2 = 0, totalLiquidMethane = 0, totalHydrocarbonIce = 0;
 
         zones.forEach(z => {
+            const zoneSurface = merged.zonalSurface?.[z] || {};
             const zw = merged.zonalWater?.[z] || {};
-            totalLiquidWater += zw.liquid || 0;
-            totalIce += (zw.ice || 0) + (zw.buriedIce || 0);
             const zc = merged.zonalCO2?.[z] || {};
-            const zs = merged.zonalSurface?.[z] || {};
-            totalDryIce += zc.ice || 0;
-            totalLiquidCO2 += zc.liquid || 0;
-            totalBiomass += zs.biomass || 0;
             const zh = merged.zonalHydrocarbons?.[z] || {};
-            totalLiquidMethane += zh.liquid || 0;
-            totalHydrocarbonIce += (zh.ice || 0) + (zh.buriedIce || 0);
+            totalLiquidWater += zoneSurface.liquidWater ?? zw.liquid ?? 0;
+            totalIce += (zoneSurface.ice ?? zw.ice ?? 0) + (zoneSurface.buriedIce ?? zw.buriedIce ?? 0);
+            totalDryIce += (zoneSurface.dryIce ?? zc.ice ?? 0) + (zoneSurface.buriedDryIce ?? 0);
+            totalLiquidCO2 += zoneSurface.liquidCO2 ?? zc.liquid ?? 0;
+            totalBiomass += zoneSurface.biomass ?? 0;
+            totalLiquidMethane += zoneSurface.liquidMethane ?? zh.liquid ?? 0;
+            totalHydrocarbonIce += (zoneSurface.hydrocarbonIce ?? zh.ice ?? 0) + (zoneSurface.buriedHydrocarbonIce ?? zh.buriedIce ?? 0);
         });
 
         if (!merged.resources) merged.resources = {};

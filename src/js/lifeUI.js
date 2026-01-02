@@ -1161,7 +1161,7 @@ function updateLifeStatusTable() {
             let radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
             if (radPenalty < 0.0001) radPenalty = 0;
             const radMult = 1 - radPenalty;
-            const waterMult = (terraforming.zonalWater[zone]?.liquid || 0) > 1e-9 ? 1 : 0;
+            const waterMult = (terraforming.zonalSurface[zone]?.liquidWater || 0) > 1e-9 ? 1 : 0;
             const otherMult = (typeof lifeManager !== 'undefined' && lifeManager.getEffectiveLifeGrowthMultiplier) ? lifeManager.getEffectiveLifeGrowthMultiplier() : 1;
             const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * waterMult * otherMult;
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);

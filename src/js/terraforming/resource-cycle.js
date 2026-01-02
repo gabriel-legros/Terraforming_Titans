@@ -35,6 +35,7 @@ class ResourceCycle {
     triplePressure = null,
     disallowLiquidBelowTriple = false,
     criticalTemperature = Infinity,
+    surfaceKeyMap = null,
   } = {}) {
     this.latentHeatVaporization = latentHeatVaporization;
     this.latentHeatSublimation = latentHeatSublimation;
@@ -55,6 +56,12 @@ class ResourceCycle {
     this.triplePressure = triplePressure;
     this.disallowLiquidBelowTriple = disallowLiquidBelowTriple;
     this.criticalTemperature = criticalTemperature;
+    this.surfaceKeyMap = surfaceKeyMap;
+  }
+
+  resolveSurfaceKey(key) {
+    const map = this.surfaceKeyMap || {};
+    return map[key] || key;
   }
 
   evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.evaporationAlbedo }) {
@@ -135,6 +142,9 @@ class ResourceCycle {
 
     const atmosphereKey = this.atmosphereKey;
     const surfaceBucket = this.surfaceBucket;
+    const liquidKey = this.resolveSurfaceKey('liquid');
+    const iceKey = this.resolveSurfaceKey('ice');
+    const buriedIceKey = this.resolveSurfaceKey('buriedIce');
     const liquidCoverage = this.coverageKeys.liquid
       ? (params[this.coverageKeys.liquid] || 0)
       : 0;
@@ -179,7 +189,7 @@ class ResourceCycle {
       const evapRate = (dayEvap + nightEvap) / 2;
       evaporationAmount = Math.min(evapRate * durationSeconds, availableLiquid);
       changes.atmosphere[atmosphereKey] += evaporationAmount;
-      changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) - evaporationAmount;
+      changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - evaporationAmount;
     }
 
     let potentialLiquid = 0;
@@ -227,9 +237,9 @@ class ResourceCycle {
         iceCoverage,
         liquidCoverage,
       });
-      const currentLiquid = availableLiquid + (changes[surfaceBucket].liquid || 0);
-      const currentIce = availableIce + (changes[surfaceBucket].ice || 0);
-      const currentBuried = availableBuriedIce + (changes[surfaceBucket].buriedIce || 0);
+      const currentLiquid = availableLiquid + (changes[surfaceBucket][liquidKey] || 0);
+      const currentIce = availableIce + (changes[surfaceBucket][iceKey] || 0);
+      const currentBuried = availableBuriedIce + (changes[surfaceBucket][buriedIceKey] || 0);
       const availableForMelt = currentIce + currentBuried;
       const meltingRate  = rates.meltingRate || 0;
       const freezingRate = rates.freezingRate || 0;
@@ -247,28 +257,28 @@ class ResourceCycle {
         const meltToRapid = meltAmount * rapidBlend;
         const meltToLiquid = meltAmount - meltToRapid;
 
-        changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) + meltToLiquid - freezeAmount;
+        changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) + meltToLiquid - freezeAmount;
         if (availableIce !== undefined) {
-          changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) + freezeAmount - meltFromIce;
+          changes[surfaceBucket][iceKey] = (changes[surfaceBucket][iceKey] || 0) + freezeAmount - meltFromIce;
         }
         if (availableBuriedIce !== undefined) {
-          changes[surfaceBucket].buriedIce = (changes[surfaceBucket].buriedIce || 0) - meltFromBuried;
+          changes[surfaceBucket][buriedIceKey] = (changes[surfaceBucket][buriedIceKey] || 0) - meltFromBuried;
         }
         changes.atmosphere[atmosphereKey] += meltToRapid;
         rapidSublimationAmount = meltToRapid;
         meltAmount = meltToLiquid;
       } else {
-        changes[surfaceBucket].liquid = (changes[surfaceBucket].liquid || 0) + meltAmount - freezeAmount;
+        changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) + meltAmount - freezeAmount;
         if (availableIce !== undefined) {
-          changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) + freezeAmount - meltFromIce;
+          changes[surfaceBucket][iceKey] = (changes[surfaceBucket][iceKey] || 0) + freezeAmount - meltFromIce;
         }
         if (availableBuriedIce !== undefined) {
-          changes[surfaceBucket].buriedIce = (changes[surfaceBucket].buriedIce || 0) - meltFromBuried;
+          changes[surfaceBucket][buriedIceKey] = (changes[surfaceBucket][buriedIceKey] || 0) - meltFromBuried;
         }
       }
     }
 
-    if (iceArea > 0 && (availableIce + (changes[surfaceBucket].ice || 0)) > 0
+    if (iceArea > 0 && (availableIce + (changes[surfaceBucket][iceKey] || 0)) > 0
       && typeof this.sublimationRate === 'function') {
       let daySub = 0;
       let nightSub = 0;
@@ -291,11 +301,11 @@ class ResourceCycle {
         }) * iceArea / 1000;
       }
       const subRate = (daySub + nightSub) / 2;
-      const availableForSub = availableIce + (changes[surfaceBucket].ice || 0);
+      const availableForSub = availableIce + (changes[surfaceBucket][iceKey] || 0);
       const subAmount = Math.min(subRate * durationSeconds, availableForSub);
       sublimationAmount += subAmount;
       changes.atmosphere[atmosphereKey] += subAmount;
-      changes[surfaceBucket].ice = (changes[surfaceBucket].ice || 0) - subAmount;
+      changes[surfaceBucket][iceKey] = (changes[surfaceBucket][iceKey] || 0) - subAmount;
     }
 
     return {
@@ -357,8 +367,9 @@ class ResourceCycle {
         }
         if (proc.surfaceBucket && proc.surfaceKey) {
           if (!change[proc.surfaceBucket]) change[proc.surfaceBucket] = {};
-          change[proc.surfaceBucket][proc.surfaceKey] =
-            (change[proc.surfaceBucket][proc.surfaceKey] || 0) + actual;
+          const surfaceKey = this.resolveSurfaceKey(proc.surfaceKey);
+          change[proc.surfaceBucket][surfaceKey] =
+            (change[proc.surfaceBucket][surfaceKey] || 0) + actual;
         }
         totalsByProcess[proc.totalKey] = (totalsByProcess[proc.totalKey] || 0) + actual;
       }
@@ -404,7 +415,8 @@ class ResourceCycle {
       };
       for (const key of availableKeys) {
         const paramKey = 'available' + key.charAt(0).toUpperCase() + key.slice(1);
-        params[paramKey] = zonalSource[key] || 0;
+        const zonalKey = this.resolveSurfaceKey(key);
+        params[paramKey] = zonalSource[zonalKey] || 0;
       }
       const result = this.processZone(params);
       zonalChanges[zone] = zonalChanges[zone] || {};

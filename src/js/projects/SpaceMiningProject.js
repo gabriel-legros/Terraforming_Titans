@@ -441,14 +441,14 @@ class SpaceMiningProject extends SpaceshipProject {
       if (allBelow || resourceName === 'ice') {
         zones.forEach(zone => {
           const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
-          terraforming.zonalWater[zone].ice += amount * pct;
+          terraforming.zonalSurface[zone].ice += amount * pct;
         });
       } else {
         const eligible = zones.filter(z => (temps[z]?.value || 0) > 273.15);
         const totalPct = eligible.reduce((s, z) => s + ((typeof getZonePercentage === 'function') ? getZonePercentage(z) : 1 / zones.length), 0);
         eligible.forEach(zone => {
           const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / eligible.length;
-          terraforming.zonalWater[zone].liquid += amount * (pct / totalPct);
+          terraforming.zonalSurface[zone].liquidWater += amount * (pct / totalPct);
         });
       }
       if (typeof terraforming.synchronizeGlobalResources === 'function') {

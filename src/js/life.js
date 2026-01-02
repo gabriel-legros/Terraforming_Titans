@@ -501,12 +501,12 @@ class LifeDesign {
 
   // Checks if sufficient moisture (liquid only) is available for growth in a specific zone.
   moistureCheckZone(zoneName) {
-      if (!terraforming || !terraforming.zonalWater) {
+      if (!terraforming || !terraforming.zonalSurface) {
           console.error("Terraforming or resource data not available for moisture check in zone:", zoneName);
           return { pass: false, reason: "Data unavailable" };
       }
 
-      const liquidWater = terraforming.zonalWater[zoneName]?.liquid || 0;
+      const liquidWater = terraforming.zonalSurface[zoneName]?.liquidWater || 0;
       if (liquidWater > 1e-9) {
           return { pass: true, reason: null };
       }
@@ -969,7 +969,7 @@ class LifeManager extends EffectableEntity {
             const requiredPerBiomass = -coef;
             let available = 0;
             if (resourceKey === 'liquidWater') {
-              available = terraforming.zonalWater[zoneName].liquid || 0;
+              available = terraforming.zonalSurface[zoneName].liquidWater || 0;
             }
             if (requiredPerBiomass > 0) {
               maxBySurfaceInputs = Math.min(maxBySurfaceInputs, available / requiredPerBiomass);
@@ -1006,8 +1006,8 @@ class LifeManager extends EffectableEntity {
 
           const waterDelta = zoneGrowth * (growthPerBiomass.surface.liquidWater || 0);
           if (waterDelta) {
-            terraforming.zonalWater[zoneName].liquid += waterDelta;
-            terraforming.zonalWater[zoneName].liquid = Math.max(0, terraforming.zonalWater[zoneName].liquid);
+            terraforming.zonalSurface[zoneName].liquidWater += waterDelta;
+            terraforming.zonalSurface[zoneName].liquidWater = Math.max(0, terraforming.zonalSurface[zoneName].liquidWater);
             resources.surface.liquidWater.modifyRate(waterDelta / secondsMultiplier, growthReason, 'life');
           }
 
@@ -1055,7 +1055,7 @@ class LifeManager extends EffectableEntity {
             const requiredPerBiomass = -coef;
             let available = 0;
             if (resourceKey === 'liquidWater') {
-              available = terraforming.zonalWater[zoneName].liquid || 0;
+              available = terraforming.zonalSurface[zoneName].liquidWater || 0;
             }
             if (requiredPerBiomass > 0) {
               maxBySurfaceInputs = Math.min(maxBySurfaceInputs, available / requiredPerBiomass);

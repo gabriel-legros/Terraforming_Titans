@@ -9,10 +9,10 @@ describe('hydrology surface flow water level', () => {
 
     const terraforming = {
       celestialParameters: { surfaceArea: 300, radius: 3389.5 },
-      zonalWater: {
-        tropical: { liquid: 100, ice: 0, buriedIce: 0 },
-        temperate: { liquid: 100, ice: 0, buriedIce: 0 },
-        polar: { liquid: 100, ice: 0, buriedIce: 0 },
+      zonalSurface: {
+        tropical: { liquidWater: 100, ice: 0, buriedIce: 0 },
+        temperate: { liquidWater: 100, ice: 0, buriedIce: 0 },
+        polar: { liquidWater: 100, ice: 0, buriedIce: 0 },
       },
       zonalCoverageCache: {
         tropical: { zoneArea: 100, liquidWater: 0.1, ice: 0 },
@@ -25,22 +25,22 @@ describe('hydrology surface flow water level', () => {
     const elevations = { tropical: 0, temperate: 0, polar: 0 };
 
     const flowWithCoverage = simulateSurfaceWaterFlow(terraforming, 3600, temps, elevations);
-    expect(Math.abs(flowWithCoverage.changes.tropical.liquid)).toBeLessThan(1e-12);
-    expect(Math.abs(flowWithCoverage.changes.temperate.liquid)).toBeLessThan(1e-12);
-    expect(Math.abs(flowWithCoverage.changes.polar.liquid)).toBeLessThan(1e-12);
+    expect(Math.abs(flowWithCoverage.changes.tropical.liquidWater)).toBeLessThan(1e-12);
+    expect(Math.abs(flowWithCoverage.changes.temperate.liquidWater)).toBeLessThan(1e-12);
+    expect(Math.abs(flowWithCoverage.changes.polar.liquidWater)).toBeLessThan(1e-12);
 
     const net =
-      flowWithCoverage.changes.tropical.liquid +
-      flowWithCoverage.changes.temperate.liquid +
-      flowWithCoverage.changes.polar.liquid;
+      flowWithCoverage.changes.tropical.liquidWater +
+      flowWithCoverage.changes.temperate.liquidWater +
+      flowWithCoverage.changes.polar.liquidWater;
     expect(Math.abs(net)).toBeLessThan(1e-12);
 
     terraforming.zonalCoverageCache.tropical.liquidWater = 1;
 
     const flowWithoutCoverageSkew = simulateSurfaceWaterFlow(terraforming, 3600, temps, elevations);
-    expect(Math.abs(flowWithoutCoverageSkew.changes.tropical.liquid)).toBeLessThan(1e-12);
-    expect(Math.abs(flowWithoutCoverageSkew.changes.temperate.liquid)).toBeLessThan(1e-12);
-    expect(Math.abs(flowWithoutCoverageSkew.changes.polar.liquid)).toBeLessThan(1e-12);
+    expect(Math.abs(flowWithoutCoverageSkew.changes.tropical.liquidWater)).toBeLessThan(1e-12);
+    expect(Math.abs(flowWithoutCoverageSkew.changes.temperate.liquidWater)).toBeLessThan(1e-12);
+    expect(Math.abs(flowWithoutCoverageSkew.changes.polar.liquidWater)).toBeLessThan(1e-12);
 
     global.ZONES = priorZones;
     global.getZonePercentage = priorGetZonePercentage;
@@ -58,10 +58,10 @@ describe('hydrology surface flow water level', () => {
     const terraforming = {
       celestialParameters: { surfaceArea: 300, radius: 3389.5 },
       atmosphericPressureCache: { totalPressure: 100 },
-      zonalWater: {
-        tropical: { liquid: 0, ice: 0, buriedIce: 0 },
-        temperate: { liquid: 0, ice: 0, buriedIce: 0 },
-        polar: { liquid: 0, ice: 200, buriedIce: 0 },
+      zonalSurface: {
+        tropical: { liquidWater: 0, ice: 0, buriedIce: 0 },
+        temperate: { liquidWater: 0, ice: 0, buriedIce: 0 },
+        polar: { liquidWater: 0, ice: 200, buriedIce: 0 },
       },
       zonalCoverageCache: {
         tropical: { zoneArea: 100, liquidWater: 0, ice: 0 },
@@ -81,7 +81,7 @@ describe('hydrology surface flow water level', () => {
 
     expect(flow.totalGasMelt).toBeGreaterThan(0);
     expect(Math.abs(flow.totalMelt)).toBeLessThan(1e-9);
-    expect(Math.abs(flow.changes.temperate.liquid)).toBeLessThan(1e-9);
+    expect(Math.abs(flow.changes.temperate.liquidWater)).toBeLessThan(1e-9);
 
     global.ZONES = priorZones;
     global.getZonePercentage = priorGetZonePercentage;

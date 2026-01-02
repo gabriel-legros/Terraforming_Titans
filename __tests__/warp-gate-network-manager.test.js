@@ -72,7 +72,7 @@ describe('WarpGateNetworkManager', () => {
     warpGateCommand.enabled = true;
     const manager = new window.WarpGateNetworkManager();
 
-    expect(manager.getCapForResource('water')).toBe(1e10);
+    expect(manager.getCapForResource('water')).toBe(1e11);
   });
 
   test('applies sector control and rich/poor modifiers after galaxy unlock', () => {
@@ -87,7 +87,7 @@ describe('WarpGateNetworkManager', () => {
     const manager = new window.WarpGateNetworkManager();
 
     expect(manager.getCapForResource('metal')).toBe(25000000000);
-    expect(manager.getCapForResource('water')).toBe(25000000000);
+    expect(manager.getCapForResource('water')).toBe(250000000000);
     expect(manager.getCapSummaryText()).toContain('Fully controlled sectors: 2');
   });
 

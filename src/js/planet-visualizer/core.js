@@ -407,10 +407,9 @@
           w = c.liquidWater; i = c.ice; b = c.biomass;
         } else {
           const area = (t.celestialParameters.surfaceArea || 0) * getZonePercentage(zone);
-          const zw = t.zonalWater?.[zone] || {};
           const zs = t.zonalSurface?.[zone] || {};
-          w = estimateCoverage(zw.liquid || 0, area, 0.0001);
-          i = estimateCoverage(zw.ice || 0, area, 0.0001 * 100);
+          w = estimateCoverage(zs.liquidWater || 0, area, 0.0001);
+          i = estimateCoverage(zs.ice || 0, area, 0.0001 * 100);
           b = estimateCoverage(zs.biomass || 0, area, 0.0001 * 100000);
         }
         z[zone].water = Math.max(0, Math.min(1, Number(w) || 0));

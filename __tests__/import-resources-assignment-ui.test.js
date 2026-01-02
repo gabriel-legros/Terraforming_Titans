@@ -20,6 +20,15 @@ describe('Import Resources assignment UI', () => {
     global.warpGateNetworkManager = {
       getCapSummaryText: () => '',
       getCapForProject: () => Infinity,
+      getCapSummaryData: () => ({
+        intro: '',
+        baseCapLine: '',
+        ratiosLine: '',
+        fullControlLine: '',
+        ruleLines: [],
+        caps: [],
+        hydrogen: null,
+      }),
     };
 
     global.Project = class {

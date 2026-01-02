@@ -131,8 +131,6 @@
     });
     // Zonal structures copied from terraforming instance
     if (terra) {
-      out.zonalWater = JSON.parse(JSON.stringify(terra.zonalWater || {}));
-      out.zonalHydrocarbons = JSON.parse(JSON.stringify(terra.zonalHydrocarbons || {}));
       out.zonalSurface = JSON.parse(JSON.stringify(terra.zonalSurface || {}));
 
       if (terra.celestialParameters) {
@@ -188,13 +186,10 @@
     ];
     const zones = ['tropical', 'temperate', 'polar'];
     for (const zone of zones) {
-       const zw = terra.zonalWater[zone] || {};
-       const zc = terra.zonalCO2[zone] || {};
        const zs = terra.zonalSurface[zone] || {};
-       const zh = terra.zonalHydrocarbons[zone] || {};
-       metrics.push(zw.liquid || 0, zw.ice || 0, zw.buriedIce || 0);
-       metrics.push(zc.liquid || 0, zc.ice || 0, zs.biomass || 0);
-       metrics.push(zh.liquid || 0, zh.ice || 0, zh.buriedIce || 0);
+       metrics.push(zs.liquidWater || 0, zs.ice || 0, zs.buriedIce || 0);
+       metrics.push(zs.liquidCO2 || 0, zs.dryIce || 0, zs.biomass || 0);
+       metrics.push(zs.liquidMethane || 0, zs.hydrocarbonIce || 0, zs.buriedHydrocarbonIce || 0);
     }
     return metrics;
   }

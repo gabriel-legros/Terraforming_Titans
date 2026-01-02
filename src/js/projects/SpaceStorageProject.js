@@ -112,7 +112,7 @@ class SpaceStorageProject extends SpaceshipProject {
     const zones = ZONES;
     const entries = zones.map(zone => ({
       zone,
-      amount: terraforming.zonalWater[zone].liquid || 0,
+      amount: terraforming.zonalSurface[zone].liquidWater || 0,
       percentage: getZonePercentage(zone) || 0
     }));
     const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
@@ -127,8 +127,8 @@ class SpaceStorageProject extends SpaceshipProject {
     entries.forEach(entry => {
       if (entry.amount <= 0) return;
       const take = requested * (entry.amount / total);
-      const zoneData = terraforming.zonalWater[entry.zone];
-      zoneData.liquid = Math.max(0, zoneData.liquid - take);
+      const zoneData = terraforming.zonalSurface[entry.zone];
+      zoneData.liquidWater = Math.max(0, zoneData.liquidWater - take);
     });
     terraforming.synchronizeGlobalResources();
     return requested;
@@ -141,7 +141,7 @@ class SpaceStorageProject extends SpaceshipProject {
     const totalWeight = weights.reduce((sum, value) => sum + value, 0) || zones.length;
     zones.forEach((zone, index) => {
       const portion = amount * (weights[index] / totalWeight);
-      terraforming.zonalWater[zone].liquid += portion;
+      terraforming.zonalSurface[zone].liquidWater += portion;
     });
     terraforming.synchronizeGlobalResources();
     return amount;

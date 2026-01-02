@@ -79,19 +79,21 @@
     const zonalTemps = {};
     if (typeof ZONES !== 'undefined' && terraforming) {
       ZONES.forEach(zone => {
-        const bIce = terraforming.zonalWater[zone]?.buriedIce || 0;
+        const zoneData = terraforming.zonalSurface[zone] || {};
+        const bIce = zoneData.buriedIce || 0;
         globalVals.buriedIce += bIce;
         zonalVals[zone] = {
-          ice: terraforming.zonalWater[zone]?.ice || 0,
+          ice: zoneData.ice || 0,
           buriedIce: bIce,
-          liquidWater: terraforming.zonalWater[zone]?.liquid || 0,
-          dryIce: terraforming.zonalCO2[zone]?.ice || 0,
-          liquidCO2: terraforming.zonalCO2[zone]?.liquid || 0,
-          biomass: terraforming.zonalSurface[zone]?.biomass || 0,
-          hazardousBiomass: terraforming.zonalSurface[zone]?.hazardousBiomass || 0,
-          liquidMethane: terraforming.zonalHydrocarbons[zone]?.liquid || 0,
-          hydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.ice || 0,
-          buriedHydrocarbonIce: terraforming.zonalHydrocarbons[zone]?.buriedIce || 0
+          liquidWater: zoneData.liquidWater || 0,
+          dryIce: zoneData.dryIce || 0,
+          buriedDryIce: zoneData.buriedDryIce || 0,
+          liquidCO2: zoneData.liquidCO2 || 0,
+          biomass: zoneData.biomass || 0,
+          hazardousBiomass: zoneData.hazardousBiomass || 0,
+          liquidMethane: zoneData.liquidMethane || 0,
+          hydrocarbonIce: zoneData.hydrocarbonIce || 0,
+          buriedHydrocarbonIce: zoneData.buriedHydrocarbonIce || 0
         };
         zonalTemps[zone] = {
           initial: terraforming.temperature?.zones?.[zone]?.initial || 0,
@@ -110,7 +112,7 @@
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
     for (const zone in cur.zones) {
-      for (const k of ['ice','buriedIce','liquidWater','dryIce','liquidCO2','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce']) {
+      for (const k of ['ice','buriedIce','liquidWater','dryIce','buriedDryIce','liquidCO2','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce']) {
         if (Math.abs(cur.zones[zone][k] - prev.zones[zone][k]) > threshold) return false;
       }
     }
@@ -135,28 +137,21 @@
       hydrogen: { initialValue: values.global.hydrogen },
       sulfuricAcid: { initialValue: values.global.sulfuricAcid }
     };
-    const zonalWater = {};
     const zonalSurface = {};
-    const zonalHydrocarbons = {};
-    const zonalCO2 = {};
     const zonalTemperatures = {};
     for (const zone in values.zones) {
-      zonalWater[zone] = {
-        liquid: values.zones[zone].liquidWater,
-        ice: values.zones[zone].ice,
-        buriedIce: values.zones[zone].buriedIce
-      };
       zonalSurface[zone] = {
+        liquidWater: values.zones[zone].liquidWater,
+        ice: values.zones[zone].ice,
+        buriedIce: values.zones[zone].buriedIce,
+        dryIce: values.zones[zone].dryIce,
+        buriedDryIce: values.zones[zone].buriedDryIce,
+        liquidCO2: values.zones[zone].liquidCO2,
         biomass: values.zones[zone].biomass,
         hazardousBiomass:  values.zones[zone].hazardousBiomass,
-      };
-      zonalHydrocarbons[zone] = {
-        liquid: values.zones[zone].liquidMethane,
-        ice: values.zones[zone].hydrocarbonIce
-      };
-      zonalCO2[zone] = {
-        liquid: values.zones[zone].liquidCO2,
-        ice: values.zones[zone].dryIce
+        liquidMethane: values.zones[zone].liquidMethane,
+        hydrocarbonIce: values.zones[zone].hydrocarbonIce,
+        buriedHydrocarbonIce: values.zones[zone].buriedHydrocarbonIce
       };
       const zoneTemps = (values.temperatures && values.temperatures[zone]) || {};
       zonalTemperatures[zone] = {
@@ -165,7 +160,7 @@
         night: zoneTemps.night || 0
       };
     }
-    return { resources: { surface, atmospheric }, zonalWater, zonalSurface, zonalHydrocarbons, zonalCO2, zonalTemperatures };
+    return { resources: { surface, atmospheric }, zonalSurface, zonalTemperatures };
   }
 
   function generateOverrideSnippet(values) {
@@ -292,9 +287,10 @@
       const zonalSolarFlux = this.calculateZoneSolarFlux(zone, true);
       const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
 
-      const liquidWater = this.zonalWater[zone]?.liquid || 0;
-      const surfaceIce = this.zonalWater[zone]?.ice || 0;
-      const surfaceDryIce = this.zonalCO2[zone]?.ice || 0;
+      const zoneData = this.zonalSurface[zone] || {};
+      const liquidWater = zoneData.liquidWater || 0;
+      const surfaceIce = zoneData.ice || 0;
+      const surfaceDryIce = zoneData.dryIce || 0;
       const liquidWaterCoverage = estimateCoverage(liquidWater, zoneArea);
       const iceCoverage = estimateCoverage(surfaceIce, zoneArea, 0.01);
       const dryIceCoverage = estimateCoverage(surfaceDryIce, zoneArea, 0.01);
@@ -350,7 +346,7 @@
       initialTotalWaterEvapSublRate += evaporationRate + waterSublimationRate;
       initialTotalCO2SublRate += co2SublimationRate;
 
-      const availableDryIce = this.zonalCO2[zone]?.ice || 0;
+      const availableDryIce = zoneData.dryIce || 0;
       const rapidCo2Rate = rapidSublimationRateCO2(dayTemp, availableDryIce);
       initialTotalCO2SublRate += rapidCo2Rate;
 
@@ -376,7 +372,7 @@
       });
       potentialCondensationRateFactor += co2CondRateFactor;
 
-      const liquidMethane = this.zonalHydrocarbons[zone]?.liquid || 0;
+      const liquidMethane = zoneData.liquidMethane || 0;
       const liquidMethaneCoverage = estimateCoverage(liquidMethane, zoneArea);
       const methaneEvaporationRateValue = calculateMethaneEvaporationRate({
         zoneArea,
@@ -389,7 +385,7 @@
       });
       initialTotalMethaneEvapRate += methaneEvaporationRateValue;
 
-      const hydrocarbonIce = this.zonalHydrocarbons[zone]?.ice || 0;
+      const hydrocarbonIce = zoneData.hydrocarbonIce || 0;
       const hydrocarbonIceCoverage = estimateCoverage(hydrocarbonIce, zoneArea, 0.01);
       const methaneSublimationRateValue = calculateMethaneSublimationRate({
         zoneArea,

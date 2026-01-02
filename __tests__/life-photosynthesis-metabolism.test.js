@@ -70,15 +70,10 @@ function createTestWorld() {
         polar: { day: 293.15, night: 293.15 },
       },
     },
-    zonalWater: {
-      tropical: { liquid: 0, ice: 0, buriedIce: 0 },
-      temperate: { liquid: 0, ice: 0, buriedIce: 0 },
-      polar: { liquid: 0, ice: 0, buriedIce: 0 },
-    },
     zonalSurface: {
-      tropical: { biomass: 0, hazardousBiomass: 0 },
-      temperate: { biomass: 0, hazardousBiomass: 0 },
-      polar: { biomass: 0, hazardousBiomass: 0 },
+      tropical: { liquidWater: 0, ice: 0, buriedIce: 0, biomass: 0, hazardousBiomass: 0 },
+      temperate: { liquidWater: 0, ice: 0, buriedIce: 0, biomass: 0, hazardousBiomass: 0 },
+      polar: { liquidWater: 0, ice: 0, buriedIce: 0, biomass: 0, hazardousBiomass: 0 },
     },
     biomassDyingZones: { tropical: false, temperate: false, polar: false },
     radiationPenalty: 0,
@@ -103,9 +98,9 @@ describe('LifeManager metabolism-driven photosynthesis', () => {
 
   it('treats atmospheric inputs as global (CO2 caps total growth)', () => {
     resources.atmospheric.carbonDioxide.value = 100;
-    terraforming.zonalWater.tropical.liquid = 1e9;
-    terraforming.zonalWater.temperate.liquid = 1e9;
-    terraforming.zonalWater.polar.liquid = 1e9;
+    terraforming.zonalSurface.tropical.liquidWater = 1e9;
+    terraforming.zonalSurface.temperate.liquidWater = 1e9;
+    terraforming.zonalSurface.polar.liquidWater = 1e9;
 
     terraforming.zonalSurface.tropical.biomass = 1e6;
     terraforming.zonalSurface.temperate.biomass = 1e6;
@@ -131,9 +126,9 @@ describe('LifeManager metabolism-driven photosynthesis', () => {
     terraforming.zonalSurface.polar.biomass = 1e3;
 
     const waterPerBiomass = 0.6;
-    terraforming.zonalWater.tropical.liquid = waterPerBiomass * 10;
-    terraforming.zonalWater.temperate.liquid = waterPerBiomass * 20;
-    terraforming.zonalWater.polar.liquid = waterPerBiomass * 30;
+    terraforming.zonalSurface.tropical.liquidWater = waterPerBiomass * 10;
+    terraforming.zonalSurface.temperate.liquidWater = waterPerBiomass * 20;
+    terraforming.zonalSurface.polar.liquidWater = waterPerBiomass * 30;
 
     const manager = new LifeManager();
     manager.updateLife(10_000_000);
@@ -142,8 +137,8 @@ describe('LifeManager metabolism-driven photosynthesis', () => {
     expect(terraforming.zonalSurface.temperate.biomass).toBeCloseTo(1020, 3);
     expect(terraforming.zonalSurface.polar.biomass).toBeCloseTo(1030, 3);
 
-    expect(terraforming.zonalWater.tropical.liquid).toBeCloseTo(0, 6);
-    expect(terraforming.zonalWater.temperate.liquid).toBeCloseTo(0, 6);
-    expect(terraforming.zonalWater.polar.liquid).toBeCloseTo(0, 6);
+    expect(terraforming.zonalSurface.tropical.liquidWater).toBeCloseTo(0, 6);
+    expect(terraforming.zonalSurface.temperate.liquidWater).toBeCloseTo(0, 6);
+    expect(terraforming.zonalSurface.polar.liquidWater).toBeCloseTo(0, 6);
   });
 });

@@ -1278,10 +1278,10 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       let val;
       switch (resource.name) {
         case 'liquidWater':
-          val = terraforming.zonalWater?.[zone]?.liquid;
+          val = terraforming.zonalSurface?.[zone]?.liquidWater;
           break;
         case 'ice': {
-          const iceObj = terraforming.zonalWater?.[zone];
+          const iceObj = terraforming.zonalSurface?.[zone];
           if (iceObj) {
             val = (iceObj.ice || 0);
             zoneBuried[zone] = iceObj.buriedIce || 0;
@@ -1289,7 +1289,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
           break;
         }
         case 'dryIce':
-          val = terraforming.zonalCO2?.[zone]?.ice;
+          val = terraforming.zonalSurface?.[zone]?.dryIce;
           break;
         case 'biomass':
           val = terraforming.zonalSurface?.[zone]?.biomass;
@@ -1298,13 +1298,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
           val = terraforming.zonalSurface?.[zone]?.hazardousBiomass;
           break;
         case 'liquidMethane':
-          val = terraforming.zonalHydrocarbons?.[zone]?.liquid;
+          val = terraforming.zonalSurface?.[zone]?.liquidMethane;
           break;
         case 'hydrocarbonIce': {
-          const obj = terraforming.zonalHydrocarbons?.[zone];
+          const obj = terraforming.zonalSurface?.[zone];
           if (obj) {
-            val = (obj.ice || 0);
-            zoneBuried[zone] = obj.buriedIce || 0;
+            val = (obj.hydrocarbonIce || 0);
+            zoneBuried[zone] = obj.buriedHydrocarbonIce || 0;
           }
           break;
         }

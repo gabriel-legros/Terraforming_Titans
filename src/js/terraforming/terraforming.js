@@ -20,6 +20,66 @@ const LIQUID_COVERAGE_KEYS = {
   water: 'liquidWater',
   methane: 'liquidMethane'
 };
+const ZONAL_SURFACE_RESOURCE_KEYS = [
+  'liquidWater',
+  'ice',
+  'buriedIce',
+  'liquidCO2',
+  'dryIce',
+  'buriedDryIce',
+  'liquidMethane',
+  'hydrocarbonIce',
+  'buriedHydrocarbonIce',
+  'biomass',
+  'hazardousBiomass'
+];
+const LEGACY_ZONAL_SURFACE_MAPPINGS = [
+  { sourceKey: 'zonalWater', map: { liquid: 'liquidWater', ice: 'ice', buriedIce: 'buriedIce' } },
+  { sourceKey: 'zonalCO2', map: { liquid: 'liquidCO2', ice: 'dryIce', buriedIce: 'buriedDryIce' } },
+  { sourceKey: 'zonalHydrocarbons', map: { liquid: 'liquidMethane', ice: 'hydrocarbonIce', buriedIce: 'buriedHydrocarbonIce' } },
+];
+
+function createEmptyZonalSurface() {
+  const zonalSurface = {};
+  for (const zone of ZONES) {
+    const zoneStore = {};
+    for (const key of ZONAL_SURFACE_RESOURCE_KEYS) {
+      zoneStore[key] = 0;
+    }
+    zonalSurface[zone] = zoneStore;
+  }
+  return zonalSurface;
+}
+
+function applyLegacyZonalSurface(target, source, mapping) {
+  const data = source || {};
+  for (const zone of ZONES) {
+    const zoneSource = data[zone] || {};
+    const zoneTarget = target[zone];
+    for (const [fromKey, toKey] of Object.entries(mapping)) {
+      zoneTarget[toKey] = zoneSource[fromKey] ?? zoneTarget[toKey];
+    }
+  }
+}
+
+function applyZonalSurfaceOverrides(target, overrides) {
+  const data = overrides || {};
+  for (const zone of ZONES) {
+    const zoneSource = data[zone] || {};
+    const zoneTarget = target[zone];
+    for (const key of ZONAL_SURFACE_RESOURCE_KEYS) {
+      zoneTarget[key] = zoneSource[key] ?? zoneTarget[key];
+    }
+  }
+}
+
+function applyZonalSurfaceFromLegacy(target, legacy) {
+  const source = legacy || {};
+  for (const entry of LEGACY_ZONAL_SURFACE_MAPPINGS) {
+    applyLegacyZonalSurface(target, source[entry.sourceKey], entry.map);
+  }
+  applyZonalSurfaceOverrides(target, source.zonalSurface);
+}
 
 let calculateApparentEquatorialGravityHelper;
 let calculateGravityCostPenaltyHelper;
@@ -326,36 +386,8 @@ class Terraforming extends EffectableEntity{
     this.flowMethaneMeltAmount = 0;
     this.flowMethaneMeltRate = 0;
 
-    // Zonal Water Data - Replaces global this.water
-    this.zonalWater = {};
-    ['tropical', 'temperate', 'polar'].forEach(zone => {
-        this.zonalWater[zone] = {
-            liquid: 0,     // Amount of liquid water at the surface
-            ice: 0,        // Surface ice
-            buriedIce: 0   // Subsurface/covered ice that does not directly sublimate
-            // humidity: 0, // Zonal humidity will likely be calculated dynamically
-        };
-    });
-
-    // Zonal Hydrocarbon Data
-    this.zonalHydrocarbons = {};
-    ['tropical', 'temperate', 'polar'].forEach(zone => {
-        this.zonalHydrocarbons[zone] = {
-            liquid: 0,
-            ice: 0,
-            buriedIce: 0
-        };
-    });
-
-    // Zonal Liquid CO2 Data
-    this.zonalCO2 = {};
-    ['tropical', 'temperate', 'polar'].forEach(zone => {
-        this.zonalCO2[zone] = {
-            liquid: 0,
-            ice: 0,
-            buriedIce: 0
-        };
-    });
+    // Zonal Surface Data
+    this.zonalSurface = createEmptyZonalSurface();
 
     // Global liquid target remains, moved outside the old structure
     this.waterTarget = this.requirements.liquidCoverageTarget;
@@ -432,15 +464,8 @@ class Terraforming extends EffectableEntity{
       surfaceTemperature: 0,
       zonalFluxes : {}
     };
-    // Zonal Surface Data (Life) - Replaces global this.life coverages
-    this.zonalSurface = {};
     this.biomassDyingZones = {};
     ['tropical', 'temperate', 'polar'].forEach(zone => {
-        this.zonalSurface[zone] = {
-            biomass: 0,
-            hazardousBiomass: 0 // Represents amount/mass in the zone
-            // Zonal coverage values can be calculated from these amounts when needed
-        };
         this.biomassDyingZones[zone] = false;
     });
     // Global life properties (name, target, unlock status)
@@ -449,7 +474,7 @@ class Terraforming extends EffectableEntity{
         unlocked: false,
         target: this.requirements.lifeCoverageTarget,
         // biomassCoverage: 0, // Removed - will be calculated from zonalSurface.biomass
-        // dryIceCoverage: 0 // Removed - will be calculated from zonalCO2.ice
+        // dryIceCoverage: 0 // Removed - will be calculated from zonalSurface.dryIce
     };
     this.magnetosphere = {
       name: 'Others',
@@ -590,61 +615,25 @@ class Terraforming extends EffectableEntity{
       zones.forEach(zone => {
           const zoneRatio = getZonePercentage(zone);
           // Distribute Liquid Water and Biomass proportionally
-          this.zonalWater[zone].liquid = initialLiquidWater * zoneRatio;
+          this.zonalSurface[zone].liquidWater = initialLiquidWater * zoneRatio;
           this.zonalSurface[zone].biomass = initialBiomass * zoneRatio;
-          this.zonalCO2[zone].liquid = initialLiquidCO2 * zoneRatio;
+          this.zonalSurface[zone].liquidCO2 = initialLiquidCO2 * zoneRatio;
 
           const zoneIce = initialIce * (iceZoneDistribution[zone] || 0);
           const buriedFraction = buriedFractions[zone] || 0;
-          this.zonalWater[zone].ice = zoneIce * (1 - buriedFraction);
-          this.zonalWater[zone].buriedIce = zoneIce * buriedFraction;
+          this.zonalSurface[zone].ice = zoneIce * (1 - buriedFraction);
+          this.zonalSurface[zone].buriedIce = zoneIce * buriedFraction;
 
           // Allocate Dry Ice only to Polar zone (assuming CO2 ice is less stable at lower latitudes initially)
-          this.zonalCO2[zone].ice = (zone === 'polar') ? initialDryIce : 0;
+          this.zonalSurface[zone].dryIce = (zone === 'polar') ? initialDryIce : 0;
   
           const initialLiquidMethane = planetParameters.resources.surface.liquidMethane?.initialValue || 0;
           const initialHydrocarbonIce = planetParameters.resources.surface.hydrocarbonIce?.initialValue || 0;
-          this.zonalHydrocarbons[zone].liquid = initialLiquidMethane * zoneRatio;
-          this.zonalHydrocarbons[zone].ice = initialHydrocarbonIce * zoneRatio;
+          this.zonalSurface[zone].liquidMethane = initialLiquidMethane * zoneRatio;
+          this.zonalSurface[zone].hydrocarbonIce = initialHydrocarbonIce * zoneRatio;
       });
 
-    // Override defaults if planet parameters specify zonal water amounts
-      if (planetParameters.zonalWater) {
-          this.zonalWater = structuredClone(planetParameters.zonalWater);
-          zones.forEach(z => {
-              if (!this.zonalWater[z].hasOwnProperty('buriedIce')) {
-                  this.zonalWater[z].buriedIce = 0;
-              }
-          });
-      }
-
-      // Override defaults if planet parameters specify zonal hydrocarbon amounts
-      if (planetParameters.zonalHydrocarbons) {
-          this.zonalHydrocarbons = structuredClone(planetParameters.zonalHydrocarbons);
-          zones.forEach(z => {
-              if (this.zonalHydrocarbons[z] && !this.zonalHydrocarbons[z].hasOwnProperty('buriedIce')) {
-                  this.zonalHydrocarbons[z].buriedIce = 0;
-              }
-          });
-      }
-
-    // Override defaults if planet parameters specify zonal liquid CO2 amounts
-    if (planetParameters.zonalCO2) {
-        this.zonalCO2 = structuredClone(planetParameters.zonalCO2);
-    }
-
-    // Override defaults if planet parameters specify zonal surface amounts
-    if (planetParameters.zonalSurface) {
-        this.zonalSurface = structuredClone(planetParameters.zonalSurface);
-        zones.forEach(z => {
-            if (!this.zonalSurface[z].hasOwnProperty('biomass')) {
-                this.zonalSurface[z].biomass = 0;
-            }
-            if (!this.zonalSurface[z].hasOwnProperty('hazardousBiomass')) {
-                this.zonalSurface[z].hazardousBiomass = 0;
-            }
-        });
-    }
+      applyZonalSurfaceFromLegacy(this.zonalSurface, planetParameters);
 
     // Initialize global atmospheric resource amounts (no longer storing in this.atmosphere.gases)
     for (const gas in planetParameters.resources.atmospheric) {
@@ -1011,7 +1000,7 @@ class Terraforming extends EffectableEntity{
         const slabOptions = {
             ...baseSlabOptions,
             zoneArea,
-            zoneLiquidWater: this.zonalWater[zone]?.liquid || 0
+            zoneLiquidWater: this.zonalSurface[zone]?.liquidWater || 0
         };
 
         const zTemps = dayNightTemperaturesModel({
@@ -1329,27 +1318,28 @@ class Terraforming extends EffectableEntity{
         const resourceTypes = ['liquidWater', 'ice', 'biomass', 'dryIce', 'liquidCO2', 'liquidMethane', 'hydrocarbonIce'];
         for (const zone of ZONES) {
             const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
+            const zoneData = this.zonalSurface[zone] || {};
             this.zonalCoverageCache[zone] = { zoneArea };
             for (const resourceType of resourceTypes) {
                 let zonalAmount = 0;
                 let scale = 0.0001;
                 if (resourceType === 'liquidWater') {
-                    zonalAmount = this.zonalWater[zone]?.liquid || 0;
+                    zonalAmount = zoneData.liquidWater || 0;
                 } else if (resourceType === 'ice') {
-                    zonalAmount = this.zonalWater[zone]?.ice || 0;
+                    zonalAmount = zoneData.ice || 0;
                     scale *= 100;
                 } else if (resourceType === 'biomass') {
-                    zonalAmount = this.zonalSurface[zone]?.biomass || 0;
+                    zonalAmount = zoneData.biomass || 0;
                     scale *= 100000;
                 } else if (resourceType === 'dryIce') {
-                    zonalAmount = this.zonalCO2[zone]?.ice || 0;
+                    zonalAmount = zoneData.dryIce || 0;
                     scale *= 100;
                 } else if (resourceType === 'liquidCO2') {
-                    zonalAmount = this.zonalCO2[zone]?.liquid || 0;
+                    zonalAmount = zoneData.liquidCO2 || 0;
                 } else if (resourceType === 'liquidMethane') {
-                    zonalAmount = this.zonalHydrocarbons[zone]?.liquid || 0;
+                    zonalAmount = zoneData.liquidMethane || 0;
                 } else if (resourceType === 'hydrocarbonIce') {
-                    zonalAmount = this.zonalHydrocarbons[zone]?.ice || 0;
+                    zonalAmount = zoneData.hydrocarbonIce || 0;
                     scale *= 100;
                 }
                 this.zonalCoverageCache[zone][resourceType] = estimateCoverage(zonalAmount, zoneArea, scale);
@@ -2029,10 +2019,7 @@ distributeGlobalChangesToZones(deltaTime) {
                 zones.forEach(zone => {
                     let currentAmount = 0;
                     if (category === 'surface') {
-                         if (resName === 'liquidWater' || resName === 'ice') currentAmount = this.zonalWater[zone][resName === 'liquidWater' ? 'liquid' : 'ice'] || 0;
-                         else if (resName === 'liquidCO2') currentAmount = this.zonalCO2[zone]?.liquid || 0;
-                         else if (resName === 'dryIce') currentAmount = this.zonalCO2[zone]?.ice || 0;
-                         else currentAmount = this.zonalSurface[zone][resName] || 0;
+                         currentAmount = this.zonalSurface[zone][resName] || 0;
                     } // atmospheric removed
                     totalDistributionFactor += currentAmount;
                 });
@@ -2052,10 +2039,7 @@ distributeGlobalChangesToZones(deltaTime) {
                     if (distributionMode === 'currentAmount') { // Consumption
                         let currentAmount = 0;
                          if (category === 'surface') {
-                             if (resName === 'liquidWater' || resName === 'ice') currentAmount = this.zonalWater[zone][resName === 'liquidWater' ? 'liquid' : 'ice'] || 0;
-                             else if (resName === 'liquidCO2') currentAmount = this.zonalCO2[zone]?.liquid || 0;
-                             else if (resName === 'dryIce') currentAmount = this.zonalCO2[zone]?.ice || 0;
-                             else currentAmount = this.zonalSurface[zone][resName] || 0;
+                             currentAmount = this.zonalSurface[zone][resName] || 0;
                          } // atmospheric removed
                         proportion = currentAmount / totalDistributionFactor;
                     } else if (distributionMode === 'targetZoneArea' && isTargetZone) { // Biomass Production (Total Target Zone Area)
@@ -2077,20 +2061,8 @@ distributeGlobalChangesToZones(deltaTime) {
 
                 // Apply only to surface zonal structure
                 if (category === 'surface') {
-                    if (resName === 'liquidWater') {
-                        this.zonalWater[zone].liquid += zonalChange;
-                        this.zonalWater[zone].liquid = Math.max(0, this.zonalWater[zone].liquid);
-                    } else if (resName === 'ice') {
-                        this.zonalWater[zone].ice += zonalChange;
-                        this.zonalWater[zone].ice = Math.max(0, this.zonalWater[zone].ice);
-                    } else if (resName === 'liquidCO2') {
-                        this.zonalCO2[zone].liquid += zonalChange;
-                        this.zonalCO2[zone].liquid = Math.max(0, this.zonalCO2[zone].liquid);
-                    } else {
-                        if (!this.zonalSurface[zone][resName]) this.zonalSurface[zone][resName] = 0;
-                        this.zonalSurface[zone][resName] += zonalChange;
-                        this.zonalSurface[zone][resName] = Math.max(0, this.zonalSurface[zone][resName]);
-                    }
+                    this.zonalSurface[zone][resName] += zonalChange;
+                    this.zonalSurface[zone][resName] = Math.max(0, this.zonalSurface[zone][resName]);
                 } // atmospheric removed
             });
         });
@@ -2104,23 +2076,27 @@ synchronizeGlobalResources() {
     const aggregations = [
         {
             key: 'liquidWater',
-            compute: zone => this.zonalWater[zone].liquid || 0
+            compute: zone => this.zonalSurface[zone].liquidWater || 0
         },
         {
             key: 'ice',
             compute: zone => {
-                const surfaceIce = this.zonalWater[zone].ice || 0;
-                const buried = this.zonalWater[zone].buriedIce || 0;
+                const surfaceIce = this.zonalSurface[zone].ice || 0;
+                const buried = this.zonalSurface[zone].buriedIce || 0;
                 return surfaceIce + buried;
             }
         },
         {
             key: 'dryIce',
-            compute: zone => this.zonalCO2[zone].ice || 0
+            compute: zone => {
+                const surfaceDryIce = this.zonalSurface[zone].dryIce || 0;
+                const buried = this.zonalSurface[zone].buriedDryIce || 0;
+                return surfaceDryIce + buried;
+            }
         },
         {
             key: 'liquidCO2',
-            compute: zone => this.zonalCO2[zone].liquid || 0
+            compute: zone => this.zonalSurface[zone].liquidCO2 || 0
         },
         {
             key: 'biomass',
@@ -2132,13 +2108,13 @@ synchronizeGlobalResources() {
         },
         {
             key: 'liquidMethane',
-            compute: zone => this.zonalHydrocarbons[zone].liquid || 0
+            compute: zone => this.zonalSurface[zone].liquidMethane || 0
         },
         {
             key: 'hydrocarbonIce',
             compute: zone => {
-                const surfaceMethaneIce = this.zonalHydrocarbons[zone].ice || 0;
-                const buriedMethaneIce = this.zonalHydrocarbons[zone].buriedIce || 0;
+                const surfaceMethaneIce = this.zonalSurface[zone].hydrocarbonIce || 0;
+                const buriedMethaneIce = this.zonalSurface[zone].buriedHydrocarbonIce || 0;
                 return surfaceMethaneIce + buriedMethaneIce;
             }
         }
@@ -2173,11 +2149,8 @@ synchronizeGlobalResources() {
       temperature: this.temperature,
       // atmosphere: this.atmosphere, // REMOVED - No longer saving internal atmosphere state
       completed: this.completed,
-      zonalWater: this.zonalWater,
       // zonalAtmosphere: this.zonalAtmosphere, // REMOVED - No longer saving internal zonal atmosphere state
       zonalSurface: this.zonalSurface,
-      zonalHydrocarbons: this.zonalHydrocarbons,
-      zonalCO2: this.zonalCO2,
       // zonalBiomass: this.zonalBiomass, // REMOVED - Biomass is stored in zonalSurface
       };
   }
@@ -2248,19 +2221,9 @@ synchronizeGlobalResources() {
            this.atmosphere.unlocked = terraformingState.atmosphere.unlocked || false;
       }
 
-      // Load Zonal Water and Surface (Keep defaults if not in save)
-      // Use structuredClone for deep copy to avoid reference issues if loading default
-      this.zonalWater = terraformingState.zonalWater ? structuredClone(terraformingState.zonalWater) : this.zonalWater;
-      this.zonalSurface = terraformingState.zonalSurface ? structuredClone(terraformingState.zonalSurface) : this.zonalSurface;
-      this.zonalHydrocarbons = terraformingState.zonalHydrocarbons ? structuredClone(terraformingState.zonalHydrocarbons) : this.zonalHydrocarbons;
-      this.zonalCO2 = terraformingState.zonalCO2 ? structuredClone(terraformingState.zonalCO2) : this.zonalCO2;
-      if (this.zonalHydrocarbons) {
-          for (const zone of ['tropical', 'temperate', 'polar']) {
-              if (this.zonalHydrocarbons[zone] && !this.zonalHydrocarbons[zone].hasOwnProperty('buriedIce')) {
-                  this.zonalHydrocarbons[zone].buriedIce = 0;
-              }
-          }
-      }
+      // Load Zonal Surface resources (keep defaults if not in save)
+      this.zonalSurface = createEmptyZonalSurface();
+      applyZonalSurfaceFromLegacy(this.zonalSurface, terraformingState);
 
       // If loading a save where initial values weren't calculated, run calculateInitialValues.
       // This will correctly initialize global resource amounts based on parameters

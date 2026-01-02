@@ -772,7 +772,7 @@ function produceResources(deltaTime, buildings) {
 
       resource.value = Math.max(finalValue, 0); // Ensure non-negative
 
-      if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalWater) {
+      if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalSurface) {
         const zones = ['tropical', 'temperate', 'polar'];
         const zoneTemp = zone => terraforming.temperature?.zones?.[zone]?.value ?? 0;
         const warmZones = zones.filter(zone => zoneTemp(zone) > 273.15);
@@ -795,11 +795,11 @@ function produceResources(deltaTime, buildings) {
             const amount = overflow * proportion;
 
             if (warmZones.length > 0) {
-              terraforming.zonalWater[zone].liquid += amount;
+              terraforming.zonalSurface[zone].liquidWater += amount;
               resources.surface.liquidWater.value += amount;
               liquidRate += seconds > 0 ? amount / seconds : 0;
             } else {
-              terraforming.zonalWater[zone].ice += amount;
+              terraforming.zonalSurface[zone].ice += amount;
               resources.surface.ice.value += amount;
               iceRate += seconds > 0 ? amount / seconds : 0;
             }

@@ -439,11 +439,13 @@
 
     for (const zone of zones) {
       const zoneArea = Math.max(1, totalSurfaceArea * (zonePercentages[zone] || defaultPct));
-      const waterData = zonalWater[zone] || {};
       const surfaceData = zonalSurface[zone] || {};
-      const waterFraction = estimateCoverageFn(waterData.liquid, zoneArea, 0.0001);
-      const iceFraction = estimateCoverageFn(waterData.ice, zoneArea, 0.0001 * 100);
-      const lifeFraction = estimateCoverageFn(surfaceData.biomass, zoneArea, 0.0001 * 100000);
+      const waterData = zonalWater[zone] || {};
+      const waterAmount = surfaceData.liquidWater ?? waterData.liquid ?? 0;
+      const iceAmount = surfaceData.ice ?? waterData.ice ?? 0;
+      const waterFraction = estimateCoverageFn(waterAmount, zoneArea, 0.0001);
+      const iceFraction = estimateCoverageFn(iceAmount, zoneArea, 0.0001 * 100);
+      const lifeFraction = estimateCoverageFn(surfaceData.biomass ?? 0, zoneArea, 0.0001 * 100000);
       waterFractions.push(Math.max(0, Math.min(1, Number(waterFraction) || 0)));
       const pctWater = (Math.max(0, Math.min(1, Number(waterFraction) || 0)) * 100);
       const pctIce = (Math.max(0, Math.min(1, Number(iceFraction) || 0)) * 100);

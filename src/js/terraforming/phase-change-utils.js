@@ -104,18 +104,22 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
     const LIQUID_BIAS_WEIGHT = 0.60;
     const REMAIN_WEIGHT = 0.35; // 1.0 - WIND_WEIGHT - LIQUID_BIAS_WEIGHT
 
-    let liquidKey, iceKey, resourceKey, liquidCoverageType;
+    let liquidKey, iceKey, resourceKey, liquidCoverageType, liquidResourceKey, iceResourceKey;
 
     if (substance === 'water') {
         liquidKey = 'rain';
         iceKey = 'snow';
         resourceKey = 'water';
         liquidCoverageType = 'liquidWater';
+        liquidResourceKey = 'liquidWater';
+        iceResourceKey = 'ice';
     } else if (substance === 'methane') {
         liquidKey = 'methaneRain';
         iceKey = 'methaneSnow';
         resourceKey = 'methane';
         liquidCoverageType = 'liquidMethane';
+        liquidResourceKey = 'liquidMethane';
+        iceResourceKey = 'hydrocarbonIce';
     } else {
         return; // Unknown substance
     }
@@ -196,8 +200,8 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
         }
 
         const resource = zonalChanges[z][resourceKey];
-        resource.liquid += liquidAdj;
-        resource.ice += iceAdj;
+        resource[liquidResourceKey] += liquidAdj;
+        resource[iceResourceKey] += iceAdj;
         zonalChanges[z].precipitation[liquidKey] += liquidAdj;
         zonalChanges[z].precipitation[iceKey] += iceAdj;
     });

@@ -258,6 +258,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Crusader Response now offers an Any/zone focus selector so crusaders prioritize the chosen zone before spreading the remaining cleanup.
 - Added `wgc_operation_gen/wgc_gen.py` to generate validated 10-step Stargate-inspired Warp Gate Command micro stories (captured as arrays of newline-delimited strings) and append them to `wgc_operation_gen/generated/operation_stories.js`.
 - Warp Gate Command operations now draw their ten-step event queues from `assets/wgc_ops/operation_stories.js` and log each story line before the existing roll summaries so the narrative plays out alongside the results.
+- Unified zonal surface storage into a single `zonalSurface` map keyed by resource type, with legacy zonal data folded in during initialization and load.
 - Warp Gate Command Teams card gained a Hide Story toggle that suppresses narrative log entries when enabled and remembers the setting between sessions.
 - Warp Gate Command Teams header now includes a clipboard button that copies every team's roster, stats, and health to JSON on click.
 - Editing a Warp Gate Command member now spends stat points immediately while Cancel restores the original stats to avoid conflicts with Auto allocation.
