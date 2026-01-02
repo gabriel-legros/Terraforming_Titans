@@ -243,7 +243,8 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    autoBuildMaxOption: true
   },
   windTurbine: {
     name: 'Wind Turbine Array',
@@ -258,7 +259,8 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    autoBuildMaxOption: true
   },
   geothermalGenerator: {
     name: 'Geothermal Generator',

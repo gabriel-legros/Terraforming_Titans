@@ -2100,7 +2100,7 @@ const researchParameters = {
         id: 'dyson_sphere',
         name: 'Dyson Sphere',
         description: 'Unlocks construction of a Dyson Sphere frame for faster collector deployment.  Very expensive.',
-        cost: { advancedResearch: 5_000_000 },
+        cost: { advancedResearch: 10_000_000 },
         prerequisites: [],
         effects: [
           { target: 'project', targetId: 'dysonSphere', type: 'enable' }
@@ -2141,7 +2141,7 @@ const researchParameters = {
         id: 'warp_gate_fabrication',
         name: 'Warp Gate Fabrication',
         description: 'Enables growth of the warp gate network from terraformed worlds.',
-        cost: { advancedResearch: 10000000 },
+        cost: { advancedResearch: 5_000_000 },
         prerequisites: [],
         effects: [
           {
