@@ -1,6 +1,17 @@
 function formatNumber(value, integer = false, precision = 1, allowSmall = false) {
     const absValue = Math.abs(value);
     let formatted;
+    let scientificThreshold = 1e30;
+    try {
+      scientificThreshold = gameSettings.scientificNotationThreshold ?? scientificThreshold;
+    } catch (error) {
+      scientificThreshold = scientificThreshold;
+    }
+
+    if (absValue >= scientificThreshold) {
+      formatted = absValue.toExponential(precision).replace('e+', 'e');
+      return value < 0 ? '-' + formatted : formatted;
+    }
 
     if (absValue >= 1e39 - 1e36) {
       formatted = integer && absValue % 1e39 === 0 ? (absValue / 1e39) + 'Dd' : (absValue / 1e39).toFixed(precision) + 'Dd';
@@ -48,7 +59,7 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false)
       value = 0;
     }
     else {
-      formatted = absValue.toExponential(1); // Scientific notation
+      formatted = absValue.toExponential(1).replace('e+', 'e'); // Scientific notation
     }
   
     return value < 0 ? '-' + formatted : formatted;

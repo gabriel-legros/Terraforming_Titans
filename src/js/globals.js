@@ -57,6 +57,7 @@ let gameSettings = {
   planetVisualizerDebugEnabled: false,
   keepHiddenStructuresOnTravel: false,
   simplifyGoldenAsteroid: false,
+  scientificNotationThreshold: 1e30,
 };
 
 Object.defineProperty(globalThis, 'gameSettings', {

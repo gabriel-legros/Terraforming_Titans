@@ -114,6 +114,21 @@ function addSettingsListeners() {
     updateColonyDisplay(colonies);
   });
 
+  const scientificNotationThresholdInput = document.getElementById('scientific-notation-threshold-input');
+  scientificNotationThresholdInput.value = String(gameSettings.scientificNotationThreshold ?? 1e30);
+  const thresholdWire = wireStringNumberInput(scientificNotationThresholdInput, {
+    parseValue: (value) => {
+      const parsed = parseFlexibleNumber(value);
+      return Math.max(1, parsed || 0);
+    },
+    formatValue: (value) => String(value),
+    onValue: (parsed) => {
+      gameSettings.scientificNotationThreshold = parsed;
+    },
+    datasetKey: 'scientificNotationThreshold',
+  });
+  thresholdWire.syncParsedValue();
+
   const simplifyGoldenAsteroidToggle = document.getElementById('simplify-golden-asteroid-toggle');
   if (simplifyGoldenAsteroidToggle) {
     simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
