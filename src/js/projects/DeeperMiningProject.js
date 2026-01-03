@@ -23,6 +23,7 @@ class DeeperMiningProject extends AndroidProject {
           updateProjectUI(this.name);
         }
       }
+      this.adjustActiveDuration();
     }
   }
 
@@ -154,6 +155,7 @@ class DeeperMiningProject extends AndroidProject {
     if (this.attributes?.completionEffect) {
       this.applyCompletionEffect();
     }
+    this.adjustActiveDuration();
   }
 }
 
