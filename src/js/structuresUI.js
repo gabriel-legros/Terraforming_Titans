@@ -167,6 +167,13 @@ function refreshAutoBuildTarget(structure) {
     }
   }
 
+  if (autoBuildUsesFill) {
+    structure.autoActiveEnabled = true;
+    if (els.autoActiveCheckbox) {
+      els.autoActiveCheckbox.checked = true;
+    }
+  }
+
   if (els.setActiveButton) {
     els.setActiveButton.style.display = autoBuildUsesFill ? 'none' : 'inline-flex';
   }
@@ -884,6 +891,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       autoBuildInput.value = isAutoBuildFillMode(structure)
         ? `${structure.autoBuildFillPercent || 0}`
         : `${structure.autoBuildPercent || 0}`;
+    }
+    if (isAutoBuildFillMode(structure)) {
+      structure.autoActiveEnabled = true;
+      autoActiveCheckbox.checked = true;
     }
     refreshAutoBuildTarget(structure);
   });
