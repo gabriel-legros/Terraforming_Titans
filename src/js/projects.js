@@ -751,9 +751,6 @@ class ProjectManager extends EffectableEntity {
 
     for (const projectName in projectParameters) {
       const projectData = projectParameters[projectName];
-      if (projectData.requireStar && !this.currentWorldHasStar()) {
-        continue;
-      }
       const type = projectData.type || 'Project';
       const globalObj = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
       const Ctor = globalObj && globalObj[type] ? globalObj[type] : Project;

@@ -552,14 +552,14 @@ function initializeMirrorOversightUI(container) {
     <div class="card-body">
       <div id="mirror-oversight-sliders">
       <div class="control-group">
-        <label for="mirror-oversight-tropical">Tropical:</label>
+        <label for="mirror-oversight-tropical">Trop.:</label>
         <input type="range" id="mirror-oversight-tropical" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-tropical-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-tropical-reverse" class="slider-reversal-checkbox" data-zone="tropical" style="display:none;">
         <label for="mirror-oversight-tropical-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
       <div class="control-group">
-        <label for="mirror-oversight-temperate">Temperate:</label>
+        <label for="mirror-oversight-temperate">Temp.:</label>
         <input type="range" id="mirror-oversight-temperate" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-temperate-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-temperate-reverse" class="slider-reversal-checkbox" data-zone="temperate" style="display:none;">
@@ -677,7 +677,7 @@ function initializeMirrorOversightUI(container) {
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-tropical">Tropical</label>
+        <label class="stat-label" for="adv-target-tropical">Trop.</label>
         <input type="number" id="adv-target-tropical" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
         <select id="adv-timing-tropical" class="stat-value mirror-oversight-select-small mirror-oversight-select-timing">
           <option value="average">Average</option>
@@ -689,7 +689,7 @@ function initializeMirrorOversightUI(container) {
         </select>
       </div>
       <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-temperate">Temperate</label>
+        <label class="stat-label" for="adv-target-temperate">Temp.</label>
         <input type="number" id="adv-target-temperate" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
         <select id="adv-timing-temperate" class="stat-value mirror-oversight-select-small mirror-oversight-select-timing">
           <option value="average">Average</option>
@@ -713,7 +713,7 @@ function initializeMirrorOversightUI(container) {
         </select>
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-water">Water melt (t/s)</label>
+        <label class="stat-label" for="adv-target-water">Melt (t/s)</label>
         <input type="number" id="adv-target-water" class="stat-value" step="1" value="0" style="font-size:12px; width:50px;">
         <select id="adv-target-water-scale" class="stat-value mirror-oversight-select-small mirror-oversight-select-scale">
           <option value="1000">k</option>

@@ -697,14 +697,18 @@
     padding: 3px 4px;
     font-size: 0.75em;
     line-height: 1.1;
+    box-sizing: border-box;
+    flex: 0 0 auto;
 }
 
 .mirror-oversight-card .mirror-oversight-select-timing {
-    width: 58px;
+    width: 90px;
+    min-width: 90px;
 }
 
 .mirror-oversight-card .mirror-oversight-select-priority {
-    width: 32px;
+    width: 44px;
+    min-width: 44px;
 }
 
 .mirror-oversight-card .mirror-oversight-select-scale {
