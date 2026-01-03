@@ -535,24 +535,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   // Create build count buttons
   const buildCountButtons = document.createElement('div');
   buildCountButtons.classList.add('build-count-buttons', 'building-control-group');
-  const multiplyButton = document.createElement('button');
-  multiplyButton.textContent = 'x10';
-  multiplyButton.addEventListener('click', function () {
-    selectedBuildCounts[structure.name] = multiplyByTen(selectedBuildCounts[structure.name]);
-    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
-    updateStructureButtonText(button, structure, manualBuildCount);
-    updateStructureCostDisplay(costElement, structure, manualBuildCount);
-    updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
-    if (structure.canBeToggled) {
-      updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
-      updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
-    }
-    if (isColony && upgradeButton) {
-      updateUpgradeButton(upgradeButton, structure);
-    }
-  });
-  buildCountButtons.appendChild(multiplyButton);
-
   const divideButton = document.createElement('button');
   divideButton.textContent = '/10';
   divideButton.addEventListener('click', function () {
@@ -570,6 +552,24 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
   });
   buildCountButtons.appendChild(divideButton);
+
+  const multiplyButton = document.createElement('button');
+  multiplyButton.textContent = 'x10';
+  multiplyButton.addEventListener('click', function () {
+    selectedBuildCounts[structure.name] = multiplyByTen(selectedBuildCounts[structure.name]);
+    const manualBuildCount = getManualBuildCount(structure, selectedBuildCounts[structure.name]);
+    updateStructureButtonText(button, structure, manualBuildCount);
+    updateStructureCostDisplay(costElement, structure, manualBuildCount);
+    updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
+    if (structure.canBeToggled) {
+      updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
+      updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
+    }
+    if (isColony && upgradeButton) {
+      updateUpgradeButton(upgradeButton, structure);
+    }
+  });
+  buildCountButtons.appendChild(multiplyButton);
   headerSteps.appendChild(buildCountButtons);
 
   const autoBuildHeaderContainer = document.createElement('div');
