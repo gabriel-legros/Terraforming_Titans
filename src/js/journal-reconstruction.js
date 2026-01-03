@@ -13,9 +13,12 @@
       ? resolveStoryPlaceholders
       : (t => t);
 
+    const completedIds = sm.completedEventIds instanceof Set ? Array.from(sm.completedEventIds) : sm.completedEventIds || [];
+    const activeIds = sm.activeEventIds instanceof Set ? Array.from(sm.activeEventIds) : sm.activeEventIds || [];
+    const completedOnly = new Set(completedIds);
     const completed = new Set([
-      ...(sm.completedEventIds instanceof Set ? Array.from(sm.completedEventIds) : sm.completedEventIds || []),
-      ...(sm.activeEventIds instanceof Set ? Array.from(sm.activeEventIds) : sm.activeEventIds || [])
+      ...completedIds,
+      ...activeIds
     ]);
 
     const projects = pm && pm.projects ? pm.projects : {};
@@ -45,7 +48,10 @@
             if (obj.type === 'project') {
               const steps = storyProjects[obj.projectId]?.attributes?.storyStepLines || storyProjects[obj.projectId]?.attributes?.storySteps || [];
               const needed = obj.repeatCount || steps.length;
-              const targetCount = Math.min(needed, steps.length);
+              const proj = projects[obj.projectId] || {};
+              const repeat = proj.repeatCount || 0;
+              const assumeCompleted = completedOnly.has(ch.id);
+              const targetCount = assumeCompleted ? Math.min(needed, steps.length) : Math.min(repeat, needed, steps.length);
               const projName = storyProjects[obj.projectId]?.name;
               const total = storyProjects[obj.projectId]?.attributes?.storySteps?.length || steps.length;
               const completedCount = projectStepProgress.get(obj.projectId) || 0;
