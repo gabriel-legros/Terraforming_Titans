@@ -5,6 +5,7 @@ const SUBLIMATION_ALBEDO_ICE = 0.6; // Representative albedo for ice// --- Tripl
 const WATER_TRIPLE_T = 273.16;      // K
 const WATER_TRIPLE_P = 611.657;     // Pa  (NIST) 
 const WATER_CRITICAL_T = 647.096;   // K  (approximate critical temperature)
+var DEFAULT_EQUILIBRIUM_WATER_CONDENSATION_PARAMETER = 0.451833045526663;
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -12,6 +13,8 @@ var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 var simulateSurfaceWaterFlow = globalThis.simulateSurfaceWaterFlow;
 if (isNodeWaterCycle) {
+  require('../planet-resource-parameters.js');
+  resourcePhaseGroups = global.resourcePhaseGroups;
   try {
     ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
@@ -19,6 +22,8 @@ if (isNodeWaterCycle) {
   } catch (e) {
     // fall back to globals if require fails
   }
+} else {
+  resourcePhaseGroups = window.resourcePhaseGroups;
 }
 if (!ResourceCycleClass && typeof require === 'function') {
   try {
@@ -81,12 +86,9 @@ class WaterCycle extends ResourceCycleClass {
     atmosphereKey = 'water',
     availableKeys = ['liquid', 'ice', 'buriedIce'],
     gravity = 1,
-    condensationParameter = 1,
+    condensationParameter = DEFAULT_EQUILIBRIUM_WATER_CONDENSATION_PARAMETER,
   } = {}) {
-    const coverageKeys = {
-      liquid: 'liquidWaterCoverage',
-      ice: 'iceCoverage',
-    };
+    const coverageKeys = resourcePhaseGroups.water.coverageKeys;
     const precipitationKeys = {
       liquid: 'potentialRain',
       solid: 'potentialSnow',
@@ -156,11 +158,7 @@ class WaterCycle extends ResourceCycleClass {
         { path: 'surface.ice', label: 'Flow Melt', sign: -1 },
       ],
     };
-    const surfaceKeyMap = {
-      liquid: 'liquidWater',
-      ice: 'ice',
-      buriedIce: 'buriedIce',
-    };
+    const surfaceKeyMap = resourcePhaseGroups.water.surfaceKeys;
     super({
       latentHeatVaporization: L_V_WATER,
       latentHeatSublimation: L_S_WATER,
@@ -220,13 +218,14 @@ class WaterCycle extends ResourceCycleClass {
     this.surfaceBucket = surfaceBucket;
     this.atmosphereKey = atmosphereKey;
     this.availableKeys = availableKeys;
-    this.defaultExtraParams = { gravity, condensationParameter };
+    this.defaultExtraParams = { gravity };
+    this.equilibriumCondensationParameter = condensationParameter;
   }
 
   getExtraParams(terraforming) {
     return {
       gravity: terraforming.celestialParameters.gravity,
-      condensationParameter: terraforming.equilibriumWaterCondensationParameter,
+      condensationParameter: this.equilibriumCondensationParameter,
     };
   }
 

@@ -420,53 +420,53 @@
     }
 
     if (potentialPrecipitationRateFactor > 1e-12) {
-      this.equilibriumWaterCondensationParameter =
+      waterCycleInstance.equilibriumCondensationParameter =
         initialTotalWaterEvapSublRate / potentialPrecipitationRateFactor;
     } else if (initialTotalWaterEvapSublRate < 1e-12) {
-      this.equilibriumWaterCondensationParameter = 0.0001;
+      waterCycleInstance.equilibriumCondensationParameter = 0.0001;
     } else {
       console.warn(
         'Initial state has upward water flux but no potential precipitation. Using default multiplier.'
       );
-      this.equilibriumWaterCondensationParameter = 0.0001;
+      waterCycleInstance.equilibriumCondensationParameter = 0.0001;
     }
 
     const defaultCondensationParameter = 1.7699e-7;
     if (potentialCondensationRateFactor > 1e-12) {
-      this.equilibriumCondensationParameter =
+      co2CycleInstance.equilibriumCondensationParameter =
         initialTotalCO2SublRate / potentialCondensationRateFactor;
     } else if (initialTotalCO2SublRate < 1e-12) {
-      this.equilibriumCondensationParameter = defaultCondensationParameter;
+      co2CycleInstance.equilibriumCondensationParameter = defaultCondensationParameter;
     } else {
       console.warn(
         'Initial state has upward CO2 flux but no potential condensation. Using default parameter.'
       );
-      this.equilibriumCondensationParameter = defaultCondensationParameter;
+      co2CycleInstance.equilibriumCondensationParameter = defaultCondensationParameter;
     }
 
     const defaultMethaneCondensationParameter = 0.1;
     if (potentialMethaneCondensationRateFactor > 1e-12) {
-      this.equilibriumMethaneCondensationParameter =
+      methaneCycleInstance.equilibriumCondensationParameter =
         initialTotalMethaneEvapRate / potentialMethaneCondensationRateFactor;
     } else if (initialTotalMethaneEvapRate < 1e-12) {
-      this.equilibriumMethaneCondensationParameter =
+      methaneCycleInstance.equilibriumCondensationParameter =
         defaultMethaneCondensationParameter;
     } else {
       console.warn(
         'Initial state has upward Methane flux but no potential condensation. Using default parameter.'
       );
-      this.equilibriumMethaneCondensationParameter =
+      methaneCycleInstance.equilibriumCondensationParameter =
         defaultMethaneCondensationParameter;
     }
 
     console.log(
-      `Calculated Equilibrium Water Condensation Parameter (Rate-Based): ${this.equilibriumWaterCondensationParameter}`
+      `Calculated Equilibrium Water Condensation Parameter (Rate-Based): ${waterCycleInstance.equilibriumCondensationParameter}`
     );
     console.log(
-      `Calculated Equilibrium Condensation Parameter (Rate-Based): ${this.equilibriumCondensationParameter}`
+      `Calculated Equilibrium Condensation Parameter (Rate-Based): ${co2CycleInstance.equilibriumCondensationParameter}`
     );
     console.log(
-      `Calculated Equilibrium Methane Condensation Parameter (Rate-Based): ${this.equilibriumMethaneCondensationParameter}`
+      `Calculated Equilibrium Methane Condensation Parameter (Rate-Based): ${methaneCycleInstance.equilibriumCondensationParameter}`
     );
   }
 

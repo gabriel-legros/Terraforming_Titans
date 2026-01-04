@@ -16,28 +16,7 @@ const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
 const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
 const KPA_PER_ATM = 101.325;
-const LIQUID_COVERAGE_KEYS = {
-  water: 'liquidWater',
-  methane: 'liquidMethane'
-};
-const ZONAL_SURFACE_RESOURCE_KEYS = [
-  'liquidWater',
-  'ice',
-  'buriedIce',
-  'liquidCO2',
-  'dryIce',
-  'buriedDryIce',
-  'liquidMethane',
-  'hydrocarbonIce',
-  'buriedHydrocarbonIce',
-  'biomass',
-  'hazardousBiomass'
-];
-const LEGACY_ZONAL_SURFACE_MAPPINGS = [
-  { sourceKey: 'zonalWater', map: { liquid: 'liquidWater', ice: 'ice', buriedIce: 'buriedIce' } },
-  { sourceKey: 'zonalCO2', map: { liquid: 'liquidCO2', ice: 'dryIce', buriedIce: 'buriedDryIce' } },
-  { sourceKey: 'zonalHydrocarbons', map: { liquid: 'liquidMethane', ice: 'hydrocarbonIce', buriedIce: 'buriedHydrocarbonIce' } },
-];
+var resourcePhaseGroups;
 
 function createEmptyZonalSurface() {
   const zonalSurface = {};
@@ -90,27 +69,34 @@ let terraformingRequirementLoader;
 let terraformingRequirementPresets;
 let defaultTerraformingRequirementId = 'human';
 
-if (typeof module !== 'undefined' && module.exports) {
-  ({
-    calculateApparentEquatorialGravity: calculateApparentEquatorialGravityHelper,
-    calculateGravityCostPenalty: calculateGravityCostPenaltyHelper,
-    createNoGravityPenalty: createNoGravityPenaltyHelper,
-  } = require('./gravity.js'));
-  ({
-    DEFAULT_TERRAFORMING_REQUIREMENT_ID: defaultTerraformingRequirementId,
-    terraformingRequirements: terraformingRequirementPresets,
-    getTerraformingRequirement: terraformingRequirementLoader
-  } = require('./terraforming-requirements.js'));
-} else if (typeof window !== 'undefined') {
-  calculateApparentEquatorialGravityHelper = window.calculateApparentEquatorialGravity;
-  calculateGravityCostPenaltyHelper = window.calculateGravityCostPenalty;
-  createNoGravityPenaltyHelper = window.createNoGravityPenalty;
-  terraformingRequirementLoader = window.getTerraformingRequirement;
-  terraformingRequirementPresets = window.terraformingRequirements;
-  if (typeof window.DEFAULT_TERRAFORMING_REQUIREMENT_ID !== 'undefined') {
-    defaultTerraformingRequirementId = window.DEFAULT_TERRAFORMING_REQUIREMENT_ID;
+function buildPhaseGroupMappings(groups) {
+  const surfaceKeys = [];
+  const liquidCoverageKeys = {};
+  const legacyMappings = [];
+  for (const [groupKey, group] of Object.entries(groups)) {
+    surfaceKeys.push(group.surfaceKeys.liquid, group.surfaceKeys.ice, group.surfaceKeys.buriedIce);
+    liquidCoverageKeys[groupKey] = group.surfaceKeys.liquid;
+    legacyMappings.push({
+      sourceKey: group.legacyZonalKey,
+      map: {
+        liquid: group.surfaceKeys.liquid,
+        ice: group.surfaceKeys.ice,
+        buriedIce: group.surfaceKeys.buriedIce,
+      },
+    });
   }
+  surfaceKeys.push('biomass', 'hazardousBiomass');
+  return {
+    surfaceKeys,
+    liquidCoverageKeys,
+    legacyMappings,
+  };
 }
+
+const phaseGroupMappings = buildPhaseGroupMappings(resourcePhaseGroups);
+const LIQUID_COVERAGE_KEYS = phaseGroupMappings.liquidCoverageKeys;
+const ZONAL_SURFACE_RESOURCE_KEYS = phaseGroupMappings.surfaceKeys;
+const LEGACY_ZONAL_SURFACE_MAPPINGS = phaseGroupMappings.legacyMappings;
 
 function getApparentEquatorialGravity(params) {
   if (calculateApparentEquatorialGravityHelper) {
@@ -156,10 +142,6 @@ const MIN_SURFACE_HEAT_CAPACITY = 100;
 const AUTO_SLAB_ATMOS_CP = 850;
 const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
 
-const EQUILIBRIUM_WATER_PARAMETER = 0.451833045526663;
-const EQUILIBRIUM_METHANE_PARAMETER = 0.002;
-const EQUILIBRIUM_CO2_PARAMETER = 1.95e-3;
-
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
@@ -193,36 +175,6 @@ if (typeof module !== 'undefined' && module.exports) {
       var radiationPenalty = radiation.radiationPenalty;
 
     const physics = require('./physics.js');
-    if (typeof globalThis.surfaceAlbedoMix === 'undefined') {
-        globalThis.surfaceAlbedoMix = physics.surfaceAlbedoMix;
-    }
-    if (typeof globalThis.cloudFraction === 'undefined') {
-        globalThis.cloudFraction = physics.cloudFraction;
-    }
-    if (typeof globalThis.cloudPropsOnly === 'undefined') {
-        globalThis.cloudPropsOnly = physics.cloudPropsOnly;
-    }
-    if (typeof globalThis.calculateCloudAlbedoContributions === 'undefined') {
-        globalThis.calculateCloudAlbedoContributions = physics.calculateCloudAlbedoContributions;
-    }
-    if (typeof globalThis.calculateActualAlbedoPhysics === 'undefined') {
-        globalThis.calculateActualAlbedoPhysics = physics.calculateActualAlbedoPhysics;
-    }
-    if (typeof globalThis.calculateAtmosphericPressure === 'undefined') {
-        globalThis.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
-    }
-    if (typeof globalThis.dayNightTemperaturesModel === 'undefined') {
-    globalThis.dayNightTemperaturesModel = physics.dayNightTemperaturesModel;
-    }
-    if (typeof globalThis.autoSlabHeatCapacity === 'undefined') {
-    globalThis.autoSlabHeatCapacity = physics.autoSlabHeatCapacity;
-    }
-    if (typeof globalThis.calculateEmissivity === 'undefined') {
-    globalThis.calculateEmissivity = physics.calculateEmissivity;
-    }
-    if (typeof globalThis.effectiveTemp === 'undefined') {
-    globalThis.effectiveTemp = physics.effectiveTemp;
-    }
     cloudPropsOnlyHelper = physics.cloudPropsOnly;
     calculateCloudAlbedoContributionsHelper = physics.calculateCloudAlbedoContributions;
 
@@ -276,12 +228,6 @@ function getEffectiveLifeFraction(terraforming) {
 
 var runAtmosphericChemistry;
 var METHANE_COMBUSTION_PARAMETER_CONST;
-
-if (typeof module !== 'undefined' && module.exports) {
-    if (typeof globalThis.EQUILIBRIUM_CO2_PARAMETER === 'undefined') {
-        globalThis.EQUILIBRIUM_CO2_PARAMETER = EQUILIBRIUM_CO2_PARAMETER;
-    }
-}
 
 
 function buildAtmosphereContext(atmospheric, gravity, radius) {
@@ -357,11 +303,7 @@ class Terraforming extends EffectableEntity{
     };
 
     this.initialValuesCalculated = false;
-    this.equilibriumWaterCondensationParameter = EQUILIBRIUM_WATER_PARAMETER; // Default, will be calculated
-    this.equilibriumCO2CondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER || EQUILIBRIUM_CO2_PARAMETER; // Default, will be calculated
-    this.equilibriumMethaneCondensationParameter = EQUILIBRIUM_METHANE_PARAMETER; // Default, will be calculated
-
-      this.completed = false;
+    this.completed = false;
       // Indicates whether all terraforming parameters are within target ranges
       // but completion has not yet been confirmed by the player
       this.readyForCompletion = false;
@@ -1503,12 +1445,6 @@ class Terraforming extends EffectableEntity{
         }
     }
 
-    resetDefaultConstants(){
-        this.equilibriumWaterCondensationParameter = EQUILIBRIUM_WATER_PARAMETER;
-        this.equilibriumCondensationParameter = globalThis.EQUILIBRIUM_CO2_PARAMETER;
-        this.equilibriumMethaneCondensationParameter = EQUILIBRIUM_METHANE_PARAMETER; // Default value
-    }
-    
     // Calculates the current total global atmospheric pressure (in kPa) from global resources
     calculateTotalPressure() {
         const cache = this._updateAtmosphericPressureCache();

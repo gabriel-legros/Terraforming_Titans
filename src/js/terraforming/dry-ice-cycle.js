@@ -14,6 +14,7 @@ const CO2_T_TRIPLE = 216.58;      // K
 const CO2_P_TRIPLE = 5.185e5;     // Pa (5.185 bar)
 const CO2_T_CRIT   = 304.1282;    // K
 const CO2_P_CRIT   = 7.3773e6;    // Pa (73.773 bar)
+var DEFAULT_EQUILIBRIUM_CO2_CONDENSATION_PARAMETER = 1.95e-3;
 
 const isNodeCO2 = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -23,6 +24,8 @@ var ResourceCycleClass = globalThis.ResourceCycle;
 var simulateSurfaceCO2Flow = globalThis.simulateSurfaceCO2Flow;
 
 if (isNodeCO2) {
+  require('../planet-resource-parameters.js');
+  resourcePhaseGroups = global.resourcePhaseGroups;
   try {
     ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
@@ -33,6 +36,8 @@ if (isNodeCO2) {
   } catch (e) {
     // fall back to globals if require fails
   }
+} else {
+  resourcePhaseGroups = window.resourcePhaseGroups;
 }
 if (!ResourceCycleClass && typeof require === 'function') {
   try {
@@ -117,12 +122,9 @@ class CO2Cycle extends ResourceCycleClass {
     atmosphereKey = 'co2',
     availableKeys = ['liquid', 'ice', 'buriedIce'],
     gravity = 1,
-    condensationParameter = 1,
+    condensationParameter = DEFAULT_EQUILIBRIUM_CO2_CONDENSATION_PARAMETER,
   } = {}) {
-    const coverageKeys = {
-      liquid: 'liquidCO2Coverage',
-      ice: 'dryIceCoverage',
-    };
+    const coverageKeys = resourcePhaseGroups.carbonDioxide.coverageKeys;
     const precipitationKeys = {
       liquid: 'potentialCO2Rain',
       solid: 'potentialCO2Snow',
@@ -194,11 +196,7 @@ class CO2Cycle extends ResourceCycleClass {
       ],
     };
 
-    const surfaceKeyMap = {
-      liquid: 'liquidCO2',
-      ice: 'dryIce',
-      buriedIce: 'buriedDryIce',
-    };
+    const surfaceKeyMap = resourcePhaseGroups.carbonDioxide.surfaceKeys;
     const surfaceFlowFn = (terraforming, durationSeconds, tempMap) => {
       // Provide hook if a CO2 surface flow routine exists.
       if (typeof simulateSurfaceCO2Flow === 'function'
@@ -262,13 +260,14 @@ class CO2Cycle extends ResourceCycleClass {
     this.surfaceBucket = surfaceBucket;
     this.atmosphereKey = atmosphereKey;
     this.availableKeys = availableKeys;
-    this.defaultExtraParams = { gravity, condensationParameter };
+    this.defaultExtraParams = { gravity };
+    this.equilibriumCondensationParameter = condensationParameter;
   }
 
   getExtraParams(terraforming) {
     return {
       gravity: terraforming.celestialParameters.gravity,
-      condensationParameter: terraforming.equilibriumCO2CondensationParameter,
+      condensationParameter: this.equilibriumCondensationParameter,
     };
   }
 

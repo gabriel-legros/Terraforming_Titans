@@ -8,6 +8,7 @@ const METHANE_T_TRIPLE = 90.694;          // K  (≈ 90.67 ± 0.03 K)
 const METHANE_P_TRIPLE = 0.11696e6;       // Pa (≈ 0.1169 ± 0.0006 bar)
 const METHANE_T_CRIT   = 190.564;         // K  (≈ 190.6 ± 0.3 K)
 const METHANE_P_CRIT   = 4.5992e6;        // Pa (≈ 46.1 ± 0.3 bar)
+var DEFAULT_EQUILIBRIUM_METHANE_CONDENSATION_PARAMETER = 0.002;
 
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -15,6 +16,8 @@ var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 var simulateSurfaceHydrocarbonFlow = globalThis.simulateSurfaceHydrocarbonFlow;
 if (isNodeHydrocarbon) {
+  require('../planet-resource-parameters.js');
+  resourcePhaseGroups = global.resourcePhaseGroups;
   try {
     ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
@@ -22,6 +25,8 @@ if (isNodeHydrocarbon) {
   } catch (e) {
     // fall back to globals if require fails
   }
+} else {
+  resourcePhaseGroups = window.resourcePhaseGroups;
 }
 if (!ResourceCycleClass && typeof require === 'function') {
   try {
@@ -108,12 +113,9 @@ class MethaneCycle extends ResourceCycleClass {
     atmosphereKey = 'methane',
     availableKeys = ['liquid', 'ice', 'buriedIce'],
     gravity = 1,
-    condensationParameter = 1,
+    condensationParameter = DEFAULT_EQUILIBRIUM_METHANE_CONDENSATION_PARAMETER,
   } = {}) {
-    const coverageKeys = {
-      liquid: 'liquidMethaneCoverage',
-      ice: 'hydrocarbonIceCoverage',
-    };
+    const coverageKeys = resourcePhaseGroups.methane.coverageKeys;
     const precipitationKeys = {
       liquid: 'potentialMethaneRain',
       solid: 'potentialMethaneSnow',
@@ -184,11 +186,7 @@ class MethaneCycle extends ResourceCycleClass {
         { path: 'surface.hydrocarbonIce', label: 'Flow Melt', sign: -1 },
       ],
     };
-    const surfaceKeyMap = {
-      liquid: 'liquidMethane',
-      ice: 'hydrocarbonIce',
-      buriedIce: 'buriedHydrocarbonIce',
-    };
+    const surfaceKeyMap = resourcePhaseGroups.methane.surfaceKeys;
     const surfaceFlowFn = (terraforming, durationSeconds, tempMap) => {
       if (typeof simulateSurfaceHydrocarbonFlow === 'function'
         && typeof ZONES !== 'undefined'
@@ -253,13 +251,14 @@ class MethaneCycle extends ResourceCycleClass {
     this.surfaceBucket = surfaceBucket;
     this.atmosphereKey = atmosphereKey;
     this.availableKeys = availableKeys;
-    this.defaultExtraParams = { gravity, condensationParameter };
+    this.defaultExtraParams = { gravity };
+    this.equilibriumCondensationParameter = condensationParameter;
   }
 
   getExtraParams(terraforming) {
     return {
       gravity: terraforming.celestialParameters.gravity,
-      condensationParameter: terraforming.equilibriumMethaneCondensationParameter,
+      condensationParameter: this.equilibriumCondensationParameter,
     };
   }
 

@@ -71,6 +71,9 @@
   const resourcePhaseGroups = {
     water: {
       name: 'Water',
+      surfaceKeys: { liquid: 'liquidWater', ice: 'ice', buriedIce: 'buriedIce' },
+      coverageKeys: { liquid: 'liquidWaterCoverage', ice: 'iceCoverage' },
+      legacyZonalKey: 'zonalWater',
       options: [
         { category: 'colony', resource: 'water', label: 'Colony Water' },
         { category: 'surface', resource: 'liquidWater', label: 'Surface Liquid Water' },
@@ -80,6 +83,9 @@
     },
     carbonDioxide: {
       name: 'Carbon Dioxide',
+      surfaceKeys: { liquid: 'liquidCO2', ice: 'dryIce', buriedIce: 'buriedDryIce' },
+      coverageKeys: { liquid: 'liquidCO2Coverage', ice: 'dryIceCoverage' },
+      legacyZonalKey: 'zonalCO2',
       options: [
         { category: 'atmospheric', resource: 'carbonDioxide', label: 'Atmospheric CO2' },
         { category: 'surface', resource: 'liquidCO2', label: 'Liquid CO2' },
@@ -88,6 +94,9 @@
     },
     methane: {
       name: 'Methane',
+      surfaceKeys: { liquid: 'liquidMethane', ice: 'hydrocarbonIce', buriedIce: 'buriedHydrocarbonIce' },
+      coverageKeys: { liquid: 'liquidMethaneCoverage', ice: 'hydrocarbonIceCoverage' },
+      legacyZonalKey: 'zonalHydrocarbons',
       options: [
         { category: 'atmospheric', resource: 'atmosphericMethane', label: 'Atmospheric Methane' },
         { category: 'surface', resource: 'liquidMethane', label: 'Liquid Methane' },
