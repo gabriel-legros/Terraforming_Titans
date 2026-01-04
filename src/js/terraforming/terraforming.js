@@ -114,11 +114,8 @@ function getNoGravityPenalty() {
 }
 
 function resolveTerraformingRequirement(requirementId = defaultTerraformingRequirementId) {
-  if (terraformingRequirementLoader) {
-    return terraformingRequirementLoader(requirementId);
-  }
-  if (terraformingRequirementPresets && terraformingRequirementPresets[requirementId]) {
-    return terraformingRequirementPresets[requirementId];
+  if (terraformingRequirements) {
+    return terraformingRequirements[requirementId];
   }
   return {
     id: requirementId,
