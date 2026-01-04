@@ -614,7 +614,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
       cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       cachedSettings.roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
-      cachedSettings.scientificNotationThresholdInput.value = String(gameSettings.scientificNotationThreshold ?? 1e30);
+      cachedSettings.scientificNotationThresholdInput.value = formatScientific(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.scientificNotationThresholdInput.dataset.scientificNotationThreshold = String(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
       if (gameSettings.keepTabRunningAudio) {

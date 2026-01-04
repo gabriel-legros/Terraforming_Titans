@@ -136,6 +136,10 @@ function formatBuildingCount(value) {
   return formatBigInteger(value);
 }
 
+function formatScientific(value, precision = 1) {
+  return value.toExponential(precision).replace('e+', 'e');
+}
+
 function parseFlexibleNumber(value) {
   let text;
   try {
@@ -200,6 +204,7 @@ function parseFlexibleNumber(value) {
       formatBigInteger,
       formatShipCount,
       formatBuildingCount,
+      formatScientific,
       parseFlexibleNumber,
       toDisplayTemperature,
       toDisplayTemperatureDelta,
