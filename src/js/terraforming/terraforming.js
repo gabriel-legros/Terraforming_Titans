@@ -214,13 +214,6 @@ if (!calculateCloudAlbedoContributionsHelper && typeof calculateCloudAlbedoContr
     calculateCloudAlbedoContributionsHelper = calculateCloudAlbedoContributions;
 }
 
-var getEcumenopolisLandFraction;
-if (typeof module !== 'undefined' && module.exports) {
-    ({ getEcumenopolisLandFraction } = require('../advanced-research/ecumenopolis.js'));
-} else {
-    getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction;
-}
-
 function getEffectiveLifeFraction(terraforming) {
     const fraction = getEcumenopolisLandFraction(terraforming);
     return Math.max(0, (terraforming.life?.target || 0) - fraction);
@@ -306,27 +299,7 @@ class Terraforming extends EffectableEntity{
     this.completed = false;
       // Indicates whether all terraforming parameters are within target ranges
       // but completion has not yet been confirmed by the player
-      this.readyForCompletion = false;
-    // Add properties to store total rates for UI display
-    this.totalEvaporationRate = 0;
-    this.totalWaterSublimationRate = 0;
-    this.totalCo2SublimationRate = 0;
-    this.totalMethaneSublimationRate = 0;
-    this.totalRainfallRate = 0;
-    this.totalSnowfallRate = 0;
-    this.totalCo2CondensationRate = 0;
-    this.totalMeltRate = 0;
-    this.totalFreezeRate = 0;
-    this.flowMeltAmount = 0;
-    this.flowMeltRate = 0;
-    this.focusMeltRate = 0;
-    this.focusMeltAmount = 0;
-    this.totalMethaneEvaporationRate = 0;
-    this.totalMethaneCondensationRate = 0;
-    this.totalMethaneMeltRate = 0;
-    this.totalMethaneFreezeRate = 0;
-    this.flowMethaneMeltAmount = 0;
-    this.flowMethaneMeltRate = 0;
+    this.readyForCompletion = false;
 
     // Zonal Surface Data
     this.zonalSurface = createEmptyZonalSurface();
