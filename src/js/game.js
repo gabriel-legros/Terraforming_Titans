@@ -11,7 +11,6 @@
   },
   fps: {
     limit: 30,  // The game will run at 30 updates per second
-    forceSetTimeOut: true  // Don't use RAF
   },
   autoPause: false  // This prevents the game from pausing when the tab is inactive
 };
@@ -552,7 +551,7 @@ function updateLogic(delta) {
 
 function updateRender(force = false, options = {}) {
   const deltaMs = (typeof updateRender.lastDelta === 'number') ? updateRender.lastDelta : 0;
-  const deltaSeconds = Math.max(0, Math.min(0.1, deltaMs / 1000));
+  const deltaSeconds = deltaMs / 1000;
   updateRender.lastDelta = 0;
   const forceAllSubtabs = options.forceAllSubtabs === true;
 
