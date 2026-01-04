@@ -37,9 +37,12 @@ describe('Space disposal UI phases', () => {
         dryIce: { displayName: 'Dry Ice' },
         liquidMethane: { displayName: 'Liquid Methane' },
         hydrocarbonIce: { displayName: 'Methane Ice' },
+        liquidAmmonia: { displayName: 'Liquid Ammonia' },
+        ammoniaIce: { displayName: 'Ammonia Ice' },
       },
       atmospheric: {
         atmosphericWater: { displayName: 'Water Vap.' },
+        atmosphericAmmonia: { displayName: 'Ammonia' },
         carbonDioxide: { displayName: 'Carbon Dioxide' },
         atmosphericMethane: { displayName: 'Methane' },
         oxygen: { displayName: 'Oxygen' },
@@ -83,8 +86,23 @@ describe('Space disposal UI phases', () => {
         attributes: {
           disposable: {
             colony: ['water'],
-            surface: ['liquidWater', 'ice', 'liquidCO2', 'dryIce', 'liquidMethane', 'hydrocarbonIce'],
-            atmospheric: ['atmosphericWater', 'carbonDioxide', 'atmosphericMethane', 'oxygen'],
+            surface: [
+              'liquidWater',
+              'ice',
+              'liquidCO2',
+              'dryIce',
+              'liquidMethane',
+              'hydrocarbonIce',
+              'liquidAmmonia',
+              'ammoniaIce',
+            ],
+            atmospheric: [
+              'atmosphericWater',
+              'atmosphericAmmonia',
+              'carbonDioxide',
+              'atmosphericMethane',
+              'oxygen',
+            ],
           },
         },
       },
@@ -102,7 +120,7 @@ describe('Space disposal UI phases', () => {
 
     const typeLabels = Array.from(typeSelect.options).map((option) => option.textContent);
     expect(typeLabels).toEqual(
-      expect.arrayContaining(['Water', 'Carbon Dioxide', 'Methane', 'Oxygen'])
+      expect.arrayContaining(['Water', 'Carbon Dioxide', 'Methane', 'Oxygen', 'Ammonia'])
     );
 
     const waterOption = Array.from(typeSelect.options).find(

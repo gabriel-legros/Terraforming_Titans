@@ -26,13 +26,21 @@ class MultiRecipesBuilding extends Building {
       return keys.filter(key => {
         const recipe = defs[key] || {};
         const requiredFlag = recipe.requiresResearchFlag;
+        const requiredBuildingFlag = recipe.requiresBuildingFlag;
+        if (requiredBuildingFlag && !this.isBooleanFlagSet(requiredBuildingFlag)) {
+          return false;
+        }
         return !requiredFlag || researchManager?.isBooleanFlagSet?.(requiredFlag);
       });
     }
     const allowed = keys.filter(key => {
       const recipe = defs[key] || {};
       const requiredFlag = recipe.requiresResearchFlag;
+      const requiredBuildingFlag = recipe.requiresBuildingFlag;
       if (recipe.artificialAllowed === false) {
+        return false;
+      }
+      if (requiredBuildingFlag && !this.isBooleanFlagSet(requiredBuildingFlag)) {
         return false;
       }
       return !requiredFlag || researchManager?.isBooleanFlagSet?.(requiredFlag);

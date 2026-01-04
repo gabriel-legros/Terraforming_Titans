@@ -218,6 +218,7 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Updates
 - Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
+- Gabbag chapter 29.8 now unlocks ammonia visibility and new chemical reactor recipes for Haber-Bosch and ammonia combustion.
 - Added an ammonia resource with liquid/ice/gas cycles and updated terraforming physics to include its phase changes.
 - Pretravel save capture now reuses the departure snapshot during planet travel so the pretravel slot keeps the departing planet key.
 - Added a Settings checkbox to keep the tab active by playing a looped near-silent audio track.

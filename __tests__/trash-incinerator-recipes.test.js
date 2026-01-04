@@ -87,7 +87,7 @@ describe('Trash incinerator recipes', () => {
       },
       hazardousBiomass: {
         shortName: 'Hazardous Biomass',
-        requiresResearchFlag: 'hazardousBiomassIncineration',
+        requiresBuildingFlag: 'hazardousBiomassIncineration',
         consumption: { colony: { energy: 500000 }, surface: { hazardousBiomass: 100 }, atmospheric: { oxygen: 106.67 } },
         production: { atmospheric: { carbonDioxide: 146.67 } }
       }
@@ -137,7 +137,7 @@ describe('Trash incinerator recipes', () => {
   test('switches to the hazardous biomass recipe', () => {
     const incinerator = new MultiRecipesBuilding(baseConfig(), 'trashIncinerator');
 
-    researchManager.isBooleanFlagSet = (flagId) => flagId === 'hazardousBiomassIncineration';
+    incinerator.applyBooleanFlag({ flagId: 'hazardousBiomassIncineration', value: true });
     incinerator.setRecipe('hazardousBiomass');
 
     expect(incinerator.consumption.surface.trash).toBeUndefined();

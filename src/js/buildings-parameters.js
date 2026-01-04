@@ -671,6 +671,26 @@ const buildingsParameters = {
           atmospheric: { atmosphericMethane: 36.36 },
           colony: { water: 81.82 }
         }
+      },
+      haberBosch: {
+        shortName: 'Haber-Bosch',
+        requiresBuildingFlag: 'gabbagAmmoniaChemistry',
+        consumption: {
+          colony: { energy: 100_000 },
+          atmospheric: { inertGas: 100, hydrogen: 21.43 }
+        },
+        production: { atmospheric: { atmosphericAmmonia: 121.43 } }
+      },
+      ammoniaCombustion: {
+        shortName: 'Ammonia Combustion',
+        requiresBuildingFlag: 'gabbagAmmoniaChemistry',
+        consumption: {
+          colony: { energy: 100_000 },
+          atmospheric: { atmosphericAmmonia: 100, oxygen: 141.18 }
+        },
+        production: {
+          atmospheric: { inertGas: 82.35, atmosphericWater: 158.82 }
+        }
       }
     }
   },
@@ -741,7 +761,7 @@ const buildingsParameters = {
       },
       hazardousBiomass: {
         shortName: 'Hazardous Biomass',
-        requiresResearchFlag: 'hazardousBiomassIncineration',
+        requiresBuildingFlag: 'hazardousBiomassIncineration',
         consumption: { colony: { energy: 500000 }, surface: { hazardousBiomass: 100 }, atmospheric: { oxygen: 106.67 }, special : {spaceships : 0.01} },
         production: { atmospheric: { carbonDioxide: 146.67 } }
       }

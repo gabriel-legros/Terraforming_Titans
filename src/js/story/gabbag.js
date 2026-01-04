@@ -365,6 +365,10 @@ progressGabbag.chapters.push(
       { target: 'rwgManager', type: 'allowDominion', targetId: 'gabbagian' },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'gas-giant' },
       { target: 'researchManager', type: 'booleanFlag', flagId: 'gabbagWasteProcessing', value: true },
+      { target: 'building', type: 'booleanFlag', targetId: 'boschReactor', flagId: 'gabbagAmmoniaChemistry', value: true },
+      { target: 'resource', resourceType: 'atmospheric', targetId: 'atmosphericAmmonia', type: 'enable' },
+      { target: 'resource', resourceType: 'surface', targetId: 'liquidAmmonia', type: 'enable' },
+      { target: 'resource', resourceType: 'surface', targetId: 'ammoniaIce', type: 'enable' },
       {
         target: 'galaxyManager',
         type: 'fleetCapacityMultiplier',

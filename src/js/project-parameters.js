@@ -644,9 +644,19 @@ const projectParameters = {
       costPerShip : {colony : {metal : 100000, energy : 10000000000}},
       disposable : {
         colony: ['water'],
-        surface: ['liquidWater', 'ice', 'dryIce', 'liquidCO2', 'liquidMethane', 'hydrocarbonIce'],
+        surface: [
+          'liquidWater',
+          'ice',
+          'dryIce',
+          'liquidCO2',
+          'liquidMethane',
+          'hydrocarbonIce',
+          'liquidAmmonia',
+          'ammoniaIce'
+        ],
         atmospheric: [
           'atmosphericWater',
+          'atmosphericAmmonia',
           'carbonDioxide',
           'oxygen',
           'inertGas',

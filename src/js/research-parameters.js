@@ -1946,8 +1946,9 @@ const researchParameters = {
         prerequisites: [],
         effects: [
           {
-            target: 'researchManager',
+            target: 'building',
             type: 'booleanFlag',
+            targetId: 'trashIncinerator',
             flagId: 'hazardousBiomassIncineration',
             value: true
           }
