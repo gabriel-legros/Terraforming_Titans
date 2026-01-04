@@ -220,7 +220,7 @@ class LifeAutomation {
       step.amount = Math.max(0, Math.min(maxUpgrades, step.amount));
     }
     if (Object.prototype.hasOwnProperty.call(updates, 'mode')) {
-      step.mode = updates.mode === 'remaining' ? 'remaining' : 'fixed';
+      step.mode = updates.mode === 'remaining' || updates.mode === 'max' ? updates.mode : 'fixed';
     }
     this.normalizeRemainingSteps(preset);
     this.refreshActiveDeployment(preset);
@@ -368,9 +368,14 @@ class LifeAutomation {
       const attribute = candidate[attributeName];
       const maxUpgrades = attribute.maxUpgrades;
       const isRemaining = step.mode === 'remaining' && index === preset.designSteps.length - 1;
+      const isMax = step.mode === 'max';
       if (attributeName === 'optimalGrowthTemperature') {
         const direction = step.amount < 0 ? -1 : 1;
-        const desiredMagnitude = isRemaining ? remaining : Math.abs(Math.floor(Number(step.amount) || 0));
+        const desiredMagnitude = isRemaining
+          ? remaining
+          : isMax
+            ? maxUpgrades
+            : Math.abs(Math.floor(Number(step.amount) || 0));
         if (desiredMagnitude > 0) {
           const currentValue = attribute.value;
           const currentAbs = Math.abs(currentValue);
@@ -387,7 +392,11 @@ class LifeAutomation {
           remaining -= costDelta;
         }
       } else {
-        const desired = isRemaining ? remaining : Math.floor(Number(step.amount) || 0);
+        const desired = isRemaining
+          ? remaining
+          : isMax
+            ? maxUpgrades
+            : Math.floor(Number(step.amount) || 0);
         const cap = Math.max(0, maxUpgrades - attribute.value);
         const applied = Math.min(remaining, Math.max(0, Math.min(desired, cap)));
         attribute.value += applied;
@@ -418,6 +427,31 @@ class LifeAutomation {
     }
     if (!candidate.canSurviveAnywhere()) {
       return;
+    }
+    lifeDesigner.replaceDesign(candidate);
+    document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
+    lifeDesigner.confirmDesign();
+    document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
+    updateLifeUI();
+  }
+
+  forceDeployDesign(presetId) {
+    const preset = this.presets.find(item => item.id === presetId) || this.presets[0];
+    if (!lifeDesigner.enabled) {
+      return;
+    }
+    if (preset.designSteps.length === 0) {
+      return;
+    }
+    const candidate = this.buildCandidateDesign(preset);
+    if (!candidate) {
+      return;
+    }
+    if (!candidate.canSurviveAnywhere()) {
+      return;
+    }
+    if (lifeDesigner.isActive) {
+      lifeDesigner.cancelDeployment();
     }
     lifeDesigner.replaceDesign(candidate);
     document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
@@ -473,7 +507,7 @@ class LifeAutomation {
           id: step.id,
           attribute,
           amount,
-          mode: step.mode === 'remaining' ? 'remaining' : 'fixed'
+          mode: step.mode === 'remaining' || step.mode === 'max' ? step.mode : 'fixed'
         };
       });
       return {

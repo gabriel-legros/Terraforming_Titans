@@ -85,6 +85,20 @@ describe('LifeAutomation', () => {
     expect(candidate.optimalGrowthTemperature.value).toBe(-3);
   });
 
+  test('buildCandidateDesign max mode spends remaining points on the selected attribute', () => {
+    global.LifeDesign = LifeDesign;
+    const automation = new LifeAutomation();
+    const preset = automation.getActivePreset();
+    preset.designSteps = [
+      { id: 1, attribute: 'invasiveness', amount: 1, mode: 'max' }
+    ];
+    global.lifeDesigner.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    global.lifeDesigner.maxLifeDesignPoints = () => 3;
+
+    const candidate = automation.buildCandidateDesign(preset);
+    expect(candidate.invasiveness.value).toBe(3);
+  });
+
   test('moveDesignStep reorders life automation steps', () => {
     const automation = new LifeAutomation();
     const preset = automation.getActivePreset();
@@ -217,6 +231,40 @@ describe('LifeAutomation', () => {
 
     automation.applyAutoDesign(preset);
     expect(global.lifeDesigner.confirmDesign).not.toHaveBeenCalled();
+
+    LifeDesign.prototype.canSurviveAnywhere = originalCanSurvive;
+  });
+
+  test('forceDeployDesign redeploys even when auto design is disabled', () => {
+    global.LifeDesign = LifeDesign;
+    const automation = new LifeAutomation();
+    const preset = automation.getActivePreset();
+    preset.designEnabled = false;
+    preset.deployImprovement = 999;
+    preset.designSteps = [
+      { id: 1, attribute: 'invasiveness', amount: 1, mode: 'fixed' }
+    ];
+
+    const originalCanSurvive = LifeDesign.prototype.canSurviveAnywhere;
+    LifeDesign.prototype.canSurviveAnywhere = () => true;
+
+    global.lifeDesigner = {
+      currentDesign: new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0),
+      maxLifeDesignPoints: () => 2,
+      replaceDesign: jest.fn(function (design) { this.tentativeDesign = design; }),
+      confirmDesign: jest.fn(),
+      cancelDeployment: jest.fn(),
+      isActive: true,
+      enabled: true
+    };
+    global.document = { dispatchEvent: jest.fn() };
+    global.Event = function () {};
+    global.updateLifeUI = jest.fn();
+
+    automation.forceDeployDesign(preset.id);
+
+    expect(global.lifeDesigner.cancelDeployment).toHaveBeenCalled();
+    expect(global.lifeDesigner.confirmDesign).toHaveBeenCalled();
 
     LifeDesign.prototype.canSurviveAnywhere = originalCanSurvive;
   });

@@ -33,7 +33,8 @@ const automationElements = {
   lifeDeployInput: null,
   lifeSeedRow: null,
   lifeSeedButton: null,
-  lifeDesignEnableCheckbox: null
+  lifeDesignEnableCheckbox: null,
+  lifeDeployNowButton: null
 };
 
 function queueAutomationUIRefresh() {
@@ -137,6 +138,9 @@ function cacheAutomationElements() {
   }
   if (!automationElements.lifeDesignEnableCheckbox && automationElements.lifeDesign) {
     automationElements.lifeDesignEnableCheckbox = automationElements.lifeDesign.querySelector('.life-automation-design-enable');
+  }
+  if (!automationElements.lifeDeployNowButton && automationElements.lifeDesign) {
+    automationElements.lifeDeployNowButton = automationElements.lifeDesign.querySelector('.life-automation-deploy-now');
   }
 }
 

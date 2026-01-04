@@ -57,7 +57,11 @@ function buildAutomationLifeUI() {
   const designTitle = document.createElement('span');
   designTitle.classList.add('life-automation-section-title-text');
   designTitle.textContent = 'Auto Design';
-  designHeader.append(designEnableLabel, designTitle);
+  const deployNowButton = document.createElement('button');
+  deployNowButton.classList.add('life-automation-deploy-now');
+  deployNowButton.textContent = 'Deploy Now';
+  deployNowButton.title = 'Deploy the current auto design steps immediately.';
+  designHeader.append(designEnableLabel, designTitle, deployNowButton);
   designSection.appendChild(designHeader);
 
   const deployRow = document.createElement('label');
@@ -111,6 +115,7 @@ function buildAutomationLifeUI() {
   automationElements.lifeSeedRow = seedRow;
   automationElements.lifeSeedButton = seedButton;
   automationElements.lifeDesignEnableCheckbox = designEnable;
+  automationElements.lifeDeployNowButton = deployNowButton;
 
   attachLifeAutomationHandlers();
 }
@@ -132,7 +137,8 @@ function updateLifeAutomationUI() {
     lifeAddStepButton,
     lifeDeployInput,
     lifeSeedRow,
-    lifeDesignEnableCheckbox
+    lifeDesignEnableCheckbox,
+    lifeDeployNowButton
   } = automationElements;
   const manager = automationManager;
   const automation = manager.lifeAutomation;
@@ -167,6 +173,11 @@ function updateLifeAutomationUI() {
   lifeDesignEnableCheckbox.checked = activePreset.designEnabled !== false;
   lifeDeployInput.value = activePreset.deployImprovement;
   lifeSeedRow.style.display = activePreset.designSteps.length === 0 ? '' : 'none';
+  const deployCandidate = lifeDesigner.enabled && activePreset.designSteps.length > 0
+    ? automation.buildCandidateDesign(activePreset)
+    : null;
+  const canDeploy = deployCandidate && deployCandidate.canSurviveAnywhere();
+  lifeDeployNowButton.disabled = !canDeploy;
 
   lifePurchaseContainer.textContent = '';
   renderLifeAutomationPurchases(automation, activePreset, lifePurchaseContainer);
@@ -190,7 +201,8 @@ function attachLifeAutomationHandlers() {
     lifeAddStepButton,
     lifeDeployInput,
     lifeSeedButton,
-    lifeDesignEnableCheckbox
+    lifeDesignEnableCheckbox,
+    lifeDeployNowButton
   } = automationElements;
   lifePresetSelect.addEventListener('change', (event) => {
     const id = Number(event.target.value);
@@ -256,6 +268,13 @@ function attachLifeAutomationHandlers() {
     const automation = automationManager.lifeAutomation;
     const preset = automation.getActivePreset();
     automation.setDesignAutomationEnabled(preset.id, event.target.checked);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  lifeDeployNowButton.addEventListener('click', () => {
+    const automation = automationManager.lifeAutomation;
+    const preset = automation.getActivePreset();
+    automation.forceDeployDesign(preset.id);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -327,7 +346,6 @@ function renderLifeAutomationPurchases(automation, preset, container) {
     thresholdInput.min = '1';
     thresholdInput.max = '100';
     thresholdInput.value = settings.threshold;
-    thresholdInput.disabled = !settings.enabled;
     const thresholdSuffix = document.createElement('span');
     thresholdSuffix.textContent = '%';
     thresholdLabel.append(thresholdText, thresholdInput, thresholdSuffix);
@@ -342,7 +360,6 @@ function renderLifeAutomationPurchases(automation, preset, container) {
     maxInput.min = '0';
     maxInput.placeholder = 'No max';
     maxInput.value = settings.maxCost || '';
-    maxInput.disabled = !settings.enabled;
     maxLabel.append(maxText, maxInput);
     row.appendChild(maxLabel);
 
@@ -388,7 +405,9 @@ function renderLifeAutomationSteps(automation, preset, container) {
     subtitle.classList.add('automation-step-subtitle');
     subtitle.textContent = step.mode === 'remaining' && isLast
       ? 'Spend all remaining points'
-      : 'Spend fixed points';
+      : step.mode === 'max'
+        ? 'Max out attribute'
+        : 'Spend fixed points';
     heading.append(title, subtitle);
     header.appendChild(heading);
 
@@ -498,16 +517,23 @@ function renderLifeAutomationSteps(automation, preset, container) {
     const fixedOpt = document.createElement('option');
     fixedOpt.value = 'fixed';
     fixedOpt.textContent = 'Fixed points';
+    const maxOpt = document.createElement('option');
+    maxOpt.value = 'max';
+    maxOpt.textContent = 'Max out';
     const remainingOpt = document.createElement('option');
     remainingOpt.value = 'remaining';
     remainingOpt.textContent = 'All remaining';
     remainingOpt.disabled = !isLast;
-    modeSelect.append(fixedOpt, remainingOpt);
-    modeSelect.value = step.mode === 'remaining' && isLast ? 'remaining' : 'fixed';
+    modeSelect.append(fixedOpt, maxOpt, remainingOpt);
+    modeSelect.value = step.mode === 'remaining' && isLast
+      ? 'remaining'
+      : step.mode === 'max'
+        ? 'max'
+        : 'fixed';
     modeLabel.append(modeText, modeSelect);
     row.appendChild(modeLabel);
 
-    amountInput.disabled = modeSelect.value === 'remaining' && !isOptimal;
+    amountInput.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max') && !isOptimal;
 
     amountInput.addEventListener('change', (event) => {
       automation.updateDesignStep(preset.id, step.id, { amount: event.target.value });

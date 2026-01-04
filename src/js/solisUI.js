@@ -38,7 +38,8 @@ const solisShopRepeatableKeys = [
 const solisShopControls = {
   multiplier: 1,
   divideButton: null,
-  multiplyButton: null
+  multiplyButton: null,
+  donationAmount: 1
 };
 
 function isRepeatableSolisShopUpgrade(key) {
@@ -305,9 +306,17 @@ function initializeSolisUI() {
     actions.classList.add('solis-shop-item-actions');
 
     const input = document.createElement('input');
-    input.type = 'number';
+    input.type = 'text';
     input.id = 'solis-donation-input';
-    input.min = '1';
+    wireStringNumberInput(input, {
+      datasetKey: 'donationAmount',
+      parseValue: (value) => Math.max(1, parseFlexibleNumber(value) || 1),
+      formatValue: (parsed) => (parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed)),
+      onValue: (parsed) => {
+        solisShopControls.donationAmount = parsed;
+      },
+    });
+    input.dataset.donationAmount = '1';
     input.value = '1';
     actions.appendChild(input);
 
@@ -315,8 +324,7 @@ function initializeSolisUI() {
     button.id = 'solis-donation-button';
     button.textContent = 'Donate';
     button.addEventListener('click', () => {
-      const amount = parseInt(input.value, 10) || 0;
-      solisManager.donateArtifacts(amount);
+      solisManager.donateArtifacts(solisShopControls.donationAmount || 0);
       updateSolisUI();
     });
     actions.appendChild(button);
@@ -557,8 +565,15 @@ function updateSolisUI() {
     donationCount.textContent = formatNumber(resources.special.alienArtifact.value, false, 2);
   }
   if (donationButton && donationInput && resources.special && resources.special.alienArtifact) {
-    const amt = parseInt(donationInput.value, 10) || 0;
-    donationButton.disabled = amt <= 0 || amt > resources.special.alienArtifact.value;
+    if (document.activeElement !== donationInput) {
+      const formatted = solisShopControls.donationAmount >= 1e6
+        ? formatNumber(solisShopControls.donationAmount, true, 3)
+        : String(solisShopControls.donationAmount);
+      donationInput.value = formatted;
+    }
+    donationInput.dataset.donationAmount = String(solisShopControls.donationAmount);
+    donationButton.disabled = solisShopControls.donationAmount <= 0
+      || solisShopControls.donationAmount > resources.special.alienArtifact.value;
   }
   if (donationLabel) {
     const format = typeof formatNumber === 'function'

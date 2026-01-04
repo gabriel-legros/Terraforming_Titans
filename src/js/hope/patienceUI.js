@@ -274,38 +274,58 @@ const PatienceUI = {
         
         const hours = parseFloat(this.spendInputEl.value) || 0;
         const { superalloyGain, superconductorGain, advancedResearchGain, metalGain, oneillGain } = patienceManager.calculateSpendGains(hours);
-        const gains = [];
         const wgcAdvance = this.getWgcAdvancePreview(hours);
+        const lines = [];
+
+        const metalResource = resources.colony.metal;
+        const superalloyResource = resources.colony.superalloys;
+        const superconductorResource = resources.colony.superconductors;
 
         if (metalGain > 0) {
-            gains.push(`${formatNumber(metalGain, true)} metal`);
+            let line = `${formatNumber(metalGain, true)} metal`;
+            if (metalResource.hasCap) {
+                const metalOverflow = metalResource.value + metalGain - metalResource.cap;
+                if (metalOverflow > 0) {
+                    line += ` (<span class="patience-warning">warning: ${formatNumber(metalOverflow, true)} over storage</span>)`;
+                }
+            }
+            lines.push(line);
         }
         if (superalloyGain > 0) {
-            gains.push(`${formatNumber(superalloyGain, true)} superalloys`);
+            let line = `${formatNumber(superalloyGain, true)} superalloys`;
+            if (superalloyResource.hasCap) {
+                const superalloyOverflow = superalloyResource.value + superalloyGain - superalloyResource.cap;
+                if (superalloyOverflow > 0) {
+                    line += ` (<span class="patience-warning">warning: ${formatNumber(superalloyOverflow, true)} over storage</span>)`;
+                }
+            }
+            lines.push(line);
         }
         if (superconductorGain > 0) {
-            gains.push(`${formatNumber(superconductorGain, true)} superconductors`);
+            let line = `${formatNumber(superconductorGain, true)} superconductors`;
+            if (superconductorResource.hasCap) {
+                const superconductorOverflow = superconductorResource.value + superconductorGain - superconductorResource.cap;
+                if (superconductorOverflow > 0) {
+                    line += ` (<span class="patience-warning">warning: ${formatNumber(superconductorOverflow, true)} over storage</span>)`;
+                }
+            }
+            lines.push(line);
         }
         if (advancedResearchGain > 0) {
-            gains.push(`${formatNumber(advancedResearchGain, true)} advanced research`);
+            lines.push(`${formatNumber(advancedResearchGain, true)} advanced research`);
         }
         if (oneillGain > 0) {
-            gains.push(`${oneillGain.toFixed(2)} O'Neill cylinders`);
+            lines.push(`${oneillGain.toFixed(2)} O'Neill cylinders`);
         }
 
-        if (gains.length === 0 && !wgcAdvance) {
+        if (lines.length === 0 && !wgcAdvance) {
             this.spendPreviewEl.textContent = 'No gains available';
             return;
         }
 
-        const segments = [];
-        if (gains.length > 0) {
-            segments.push(`Gain: ${gains.join(', ')}`);
-        }
-        if (wgcAdvance) {
-            segments.push(wgcAdvance);
-        }
-        this.spendPreviewEl.textContent = segments.join('. ');
+        const header = lines.length > 0 ? ['Gain:'] : [];
+        const footer = wgcAdvance ? [wgcAdvance] : [];
+        this.spendPreviewEl.innerHTML = header.concat(lines, footer).join('<br>');
     },
 
     /**

@@ -150,6 +150,11 @@
     font-size: 0.95rem;
 }
 
+.patience-warning {
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
 .patience-save-row {
     display: flex;
     flex-wrap: wrap;
