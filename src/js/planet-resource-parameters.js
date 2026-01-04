@@ -68,10 +68,50 @@
     }
   };
 
+  const resourcePhaseGroups = {
+    water: {
+      name: 'Water',
+      options: [
+        { category: 'colony', resource: 'water', label: 'Colony Water' },
+        { category: 'surface', resource: 'liquidWater', label: 'Surface Liquid Water' },
+        { category: 'surface', resource: 'ice', label: 'Surface Ice' },
+        { category: 'atmospheric', resource: 'atmosphericWater', label: 'Atmospheric Water' },
+      ],
+    },
+    carbonDioxide: {
+      name: 'Carbon Dioxide',
+      options: [
+        { category: 'atmospheric', resource: 'carbonDioxide', label: 'Atmospheric CO2' },
+        { category: 'surface', resource: 'liquidCO2', label: 'Liquid CO2' },
+        { category: 'surface', resource: 'dryIce', label: 'Dry Ice' },
+      ],
+    },
+    methane: {
+      name: 'Methane',
+      options: [
+        { category: 'atmospheric', resource: 'atmosphericMethane', label: 'Atmospheric Methane' },
+        { category: 'surface', resource: 'liquidMethane', label: 'Liquid Methane' },
+        { category: 'surface', resource: 'hydrocarbonIce', label: 'Methane Ice' },
+      ],
+    },
+  };
+
   try {
     window.defaultPlanetResources = defaultPlanetResources;
   } catch (error) {
     // Browser-only export.
+  }
+
+  try {
+    window.resourcePhaseGroups = resourcePhaseGroups;
+  } catch (error) {
+    // Browser-only export.
+  }
+
+  try {
+    global.resourcePhaseGroups = resourcePhaseGroups;
+  } catch (error) {
+    // Global not available.
   }
 
   try {

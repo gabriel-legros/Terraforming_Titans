@@ -25,7 +25,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   createResourceDisposalUI() {
     const section = super.createResourceDisposalUI();
-    const detailsGrid = section.querySelector('.project-details-grid');
+    const elements = projectElements[this.name];
+    const detailsGrid = elements.disposalDetailsGrid;
     const tempReduction = document.createElement('div');
     tempReduction.id = `${this.name}-temperature-reduction`;
     detailsGrid.appendChild(tempReduction);

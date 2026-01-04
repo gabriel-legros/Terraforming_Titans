@@ -642,9 +642,22 @@ const projectParameters = {
       spaceExport : true,
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 10000000000}},
-      disposable : {surface : ['liquidWater', 'ice', 'dryIce'], atmospheric : ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas', 'atmosphericMethane', 'hydrogen', 'sulfuricAcid']},
+      disposable : {
+        colony: ['water'],
+        surface: ['liquidWater', 'ice', 'dryIce', 'liquidCO2', 'liquidMethane', 'hydrocarbonIce'],
+        atmospheric: [
+          'atmosphericWater',
+          'carbonDioxide',
+          'oxygen',
+          'inertGas',
+          'greenhouseGas',
+          'atmosphericMethane',
+          'hydrogen',
+          'sulfuricAcid'
+        ]
+      },
       massDriverShipEquivalency: 10,
-    disposalAmount : 1000000
+      disposalAmount : 1000000
     }
   }
 };

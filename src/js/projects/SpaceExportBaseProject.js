@@ -15,6 +15,103 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
     return 0;
   }
+
+  getResourcePhaseGroups() {
+    let phaseGroups;
+    try {
+      phaseGroups = window.resourcePhaseGroups;
+    } catch (error) {
+      phaseGroups = null;
+    }
+    try {
+      phaseGroups = phaseGroups || global.resourcePhaseGroups;
+    } catch (error) {
+      phaseGroups = phaseGroups || {};
+    }
+    return phaseGroups || {};
+  }
+
+  buildDisposalGroupData() {
+    const disposable = this.attributes.disposable || {};
+    const allowedResources = {};
+    Object.entries(disposable).forEach(([category, resourceList]) => {
+      resourceList.forEach((resource) => {
+        allowedResources[`${category}:${resource}`] = true;
+      });
+    });
+
+    const phaseGroups = this.getResourcePhaseGroups();
+    const groupList = [];
+    const groupMap = {};
+    const resourceGroupLookup = {};
+
+    Object.entries(phaseGroups).forEach(([groupKey, group]) => {
+      const options = [];
+      group.options.forEach((option) => {
+        const resourceKey = `${option.category}:${option.resource}`;
+        if (!allowedResources[resourceKey]) {
+          return;
+        }
+        const displayName = resources[option.category][option.resource].displayName || option.resource;
+        options.push({
+          category: option.category,
+          resource: option.resource,
+          label: option.label || displayName,
+        });
+        resourceGroupLookup[resourceKey] = groupKey;
+      });
+      if (options.length) {
+        const entry = { key: groupKey, label: group.name, options };
+        groupList.push(entry);
+        groupMap[groupKey] = entry;
+      }
+    });
+
+    Object.entries(disposable).forEach(([category, resourceList]) => {
+      resourceList.forEach((resource) => {
+        const resourceKey = `${category}:${resource}`;
+        if (resourceGroupLookup[resourceKey]) {
+          return;
+        }
+        const displayName = resources[category][resource].displayName || resource;
+        const entry = {
+          key: resourceKey,
+          label: displayName,
+          options: [{ category, resource, label: displayName }],
+        };
+        groupList.push(entry);
+        groupMap[resourceKey] = entry;
+        resourceGroupLookup[resourceKey] = resourceKey;
+      });
+    });
+
+    return { groupList, groupMap, resourceGroupLookup };
+  }
+
+  setDisposalSelection(elements, groupKey, resourceKey) {
+    const group = elements.disposalGroupMap[groupKey];
+    const options = group.options;
+    if (elements.activeDisposalGroupKey !== groupKey) {
+      elements.disposalPhaseSelect.textContent = '';
+      options.forEach((optionData) => {
+        const option = document.createElement('option');
+        option.value = `${optionData.category}:${optionData.resource}`;
+        option.textContent = optionData.label;
+        elements.disposalPhaseSelect.appendChild(option);
+      });
+      elements.activeDisposalGroupKey = groupKey;
+    }
+
+    const preferredKey = resourceKey || `${options[0].category}:${options[0].resource}`;
+    const selectedOption =
+      options.find((optionData) => `${optionData.category}:${optionData.resource}` === preferredKey) ||
+      options[0];
+    elements.disposalPhaseSelect.value = `${selectedOption.category}:${selectedOption.resource}`;
+    this.selectedDisposalResource = {
+      category: selectedOption.category,
+      resource: selectedOption.resource,
+    };
+  }
   renderUI(container) {
     super.renderUI(container);
     if (this.attributes.disposable) {
@@ -68,26 +165,42 @@ class SpaceExportBaseProject extends SpaceshipProject {
     const disposalContainer = document.createElement('div');
     disposalContainer.classList.add('disposal-container');
   
-    const selectContainer = document.createElement('div');
-    selectContainer.classList.add('disposal-select-container');
+    const groupSelectContainer = document.createElement('div');
+    groupSelectContainer.classList.add('disposal-select-container');
     const disposalLabel = document.createElement('label');
     disposalLabel.textContent = 'Export:';
-    const disposalSelect = document.createElement('select');
-    disposalSelect.id = `${this.name}-disposal-select`;
-    for (const [category, resourceList] of Object.entries(this.attributes.disposable)) {
-      resourceList.forEach(resource => {
-        const option = document.createElement('option');
-        option.value = `${category}:${resource}`;
-        option.textContent = resources[category][resource].displayName || resource;
-        disposalSelect.appendChild(option);
-      });
-    }
-    disposalSelect.addEventListener('change', (event) => {
+    const disposalTypeSelect = document.createElement('select');
+    disposalTypeSelect.id = `${this.name}-disposal-type-select`;
+
+    const phaseSelectContainer = document.createElement('div');
+    phaseSelectContainer.classList.add('disposal-select-container');
+    const phaseLabel = document.createElement('label');
+    phaseLabel.textContent = 'Phase:';
+    const disposalPhaseSelect = document.createElement('select');
+    disposalPhaseSelect.id = `${this.name}-disposal-phase-select`;
+
+    const disposalGroupData = this.buildDisposalGroupData();
+    disposalGroupData.groupList.forEach((group) => {
+      const option = document.createElement('option');
+      option.value = group.key;
+      option.textContent = group.label;
+      disposalTypeSelect.appendChild(option);
+    });
+
+    disposalTypeSelect.addEventListener('change', () => {
+      const elements = projectElements[this.name];
+      this.setDisposalSelection(elements, disposalTypeSelect.value, null);
+      this.updateUI();
+    });
+
+    disposalPhaseSelect.addEventListener('change', (event) => {
       const [category, resource] = event.target.value.split(':');
       this.selectedDisposalResource = { category, resource };
       this.updateUI();
     });
-    selectContainer.append(disposalLabel, disposalSelect);
+
+    groupSelectContainer.append(disposalLabel, disposalTypeSelect);
+    phaseSelectContainer.append(phaseLabel, disposalPhaseSelect);
   
     const detailsGrid = document.createElement('div');
     detailsGrid.classList.add('project-details-grid');
@@ -101,20 +214,40 @@ class SpaceExportBaseProject extends SpaceshipProject {
     maxDisposal.appendChild(maxDisposalText);
     const gainPerResource = document.createElement('div');
     gainPerResource.id = `${this.name}-gain-per-ship`;
-    detailsGrid.append(selectContainer, disposalPerShip, totalDisposal, maxDisposal, gainPerResource);
+    detailsGrid.append(
+      groupSelectContainer,
+      phaseSelectContainer,
+      disposalPerShip,
+      totalDisposal,
+      maxDisposal,
+      gainPerResource
+    );
   
     disposalContainer.append(detailsGrid);
     sectionContainer.appendChild(disposalContainer);
   
     projectElements[this.name] = {
       ...projectElements[this.name],
-      disposalSelect,
+      disposalTypeSelect,
+      disposalPhaseSelect,
+      disposalGroups: disposalGroupData.groupList,
+      disposalGroupMap: disposalGroupData.groupMap,
+      disposalResourceGroupLookup: disposalGroupData.resourceGroupLookup,
+      disposalDetailsGrid: detailsGrid,
       disposalPerShipElement: disposalPerShip,
       totalDisposalElement: totalDisposal,
       maxDisposalElement: maxDisposal,
       maxDisposalText,
       gainPerResourceElement: gainPerResource,
     };
+
+    const defaultSelection =
+      this.selectedDisposalResource || disposalGroupData.groupList[0].options[0];
+    const defaultKey = `${defaultSelection.category}:${defaultSelection.resource}`;
+    const defaultGroupKey =
+      disposalGroupData.resourceGroupLookup[defaultKey] || disposalGroupData.groupList[0].key;
+    disposalTypeSelect.value = defaultGroupKey;
+    this.setDisposalSelection(projectElements[this.name], defaultGroupKey, defaultKey);
 
     return sectionContainer;
   }
@@ -318,9 +451,14 @@ class SpaceExportBaseProject extends SpaceshipProject {
         elements.gainPerResourceElement.textContent = `Gain/Resource: ${formatNumber(this.attributes.fundingGainAmount, true)}`;
     }
 
-    if (elements.disposalSelect && this.selectedDisposalResource) {
-      const { category, resource } = this.selectedDisposalResource;
-      elements.disposalSelect.value = `${category}:${resource}`;
+    if (elements.disposalTypeSelect && elements.disposalPhaseSelect) {
+      const selection =
+        this.selectedDisposalResource || elements.disposalGroups[0].options[0];
+      const selectionKey = `${selection.category}:${selection.resource}`;
+      const groupKey =
+        elements.disposalResourceGroupLookup[selectionKey] || elements.disposalGroups[0].key;
+      elements.disposalTypeSelect.value = groupKey;
+      this.setDisposalSelection(elements, groupKey, selectionKey);
     }
   }
 

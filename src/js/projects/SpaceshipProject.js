@@ -538,6 +538,8 @@ class SpaceshipProject extends Project {
       ice: { container: 'zonalSurface', key: 'ice' },
       dryIce: { container: 'zonalSurface', key: 'dryIce' },
       liquidCO2: { container: 'zonalSurface', key: 'liquidCO2' },
+      liquidMethane: { container: 'zonalSurface', key: 'liquidMethane' },
+      hydrocarbonIce: { container: 'zonalSurface', key: 'hydrocarbonIce' },
     };
 
     const descriptor = mapping[resource];
