@@ -925,11 +925,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <div>
           <h4>Surface</h4>
           ${renderResourceRow('Land (ha)', surf.land)}
-          ${renderResourceRow('Ice', surf.ice)}
-          ${renderResourceRow('Water', surf.liquidWater)}
-          ${renderResourceRow('Dry Ice', surf.dryIce)}
-          ${renderResourceRow('Liquid CH₄', surf.liquidMethane)}
-          ${renderResourceRow('CH₄ Ice', surf.hydrocarbonIce)}
+          ${renderSurfaceResources(surf)}
         </div>
         ${featureBlock}
       </div>
@@ -964,12 +960,32 @@ function estimateEquilibriumTemp(res, fluxWm2) {
   }
 }
 
-function renderResourceRow(label, resource) {
-  const amount = resource?.initialValue;
-  if (resource?.hideWhenSmall && Math.abs(amount ?? 0) < 1e-4) return '';
+function renderResourceRow(label, resource, showSmall) {
+  const amount = resource?.initialValue ?? 0;
+  if (!showSmall && resource?.hideWhenSmall && Math.abs(amount) < 1e-4) return '';
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
-  const v = (amount === undefined || amount === null) ? '—' : fmt(amount);
+  const v = fmt(amount);
   return `<div class="rwg-row"><span>${label}</span><span>${v}</span></div>`;
+}
+
+function renderSurfaceResources(surface) {
+  const keys = [];
+  Object.values(resourcePhaseGroups).forEach((group) => {
+    keys.push(group.surfaceKeys.liquid, group.surfaceKeys.ice);
+  });
+  const seen = new Set();
+  const rows = [];
+  keys.forEach((key) => {
+    if (seen.has(key)) return;
+    seen.add(key);
+    const resource = surface[key];
+    const amount = resource?.initialValue ?? 0;
+    if (!amount) return;
+    const label = resource?.name || key;
+    const row = renderResourceRow(label, resource, true);
+    if (row) rows.push(row);
+  });
+  return rows.join('');
 }
 
 function renderFeatureRow(label, value) {
