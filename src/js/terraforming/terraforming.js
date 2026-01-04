@@ -147,66 +147,12 @@ var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstanc
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
 var getAerostatMaintenanceMitigationHelper;
 var isBuildingEligibleForFactoryMitigationHelper;
-var calculateEffectiveAtmosphericHeatCapacityHelper;
-if (typeof module !== 'undefined' && module.exports) {
-    const waterCycleMod = require('./water-cycle.js');
-    waterCycleInstance = waterCycleMod.waterCycle;
+calculateEffectiveAtmosphericHeatCapacityHelper = calculateEffectiveAtmosphericHeatCapacity;
 
-    const hydrocarbonCycleMod = require('./hydrocarbon-cycle.js');
-    methaneCycleInstance = hydrocarbonCycleMod.methaneCycle;
+waterCycleInstance = waterCycle;
+methaneCycleInstance = methaneCycle;
+co2CycleInstance = co2Cycle;
 
-    const dryIceCycleMod = require('./dry-ice-cycle.js');
-    co2CycleInstance = dryIceCycleMod.co2Cycle;
-    const zones = require('./zones.js');
-    ZONES = zones.ZONES;
-    getZonePercentage = zones.getZonePercentage;
-    estimateCoverage = zones.estimateCoverage;
-    if (typeof globalThis.ZONES === 'undefined') {
-        globalThis.ZONES = ZONES;
-    }
-
-    var terraformUtils = require('./terraforming-utils.js');
-    var calculateAverageCoverage = terraformUtils.calculateAverageCoverage;
-    var calculateSurfaceFractions = terraformUtils.calculateSurfaceFractions;
-    var calculateZonalSurfaceFractions = terraformUtils.calculateZonalSurfaceFractions;
-
-      const radiation = require('./radiation-utils.js');
-      var estimateSurfaceDoseByColumn = radiation.estimateSurfaceDoseByColumn;
-      var radiationPenalty = radiation.radiationPenalty;
-
-    const physics = require('./physics.js');
-    cloudPropsOnlyHelper = physics.cloudPropsOnly;
-    calculateCloudAlbedoContributionsHelper = physics.calculateCloudAlbedoContributions;
-
-    const atmosphericChem = require('./atmospheric-chemistry.js');
-    runAtmosphericChemistry = atmosphericChem.runAtmosphericChemistry;
-    METHANE_COMBUSTION_PARAMETER_CONST = atmosphericChem.METHANE_COMBUSTION_PARAMETER;
-
-    const atmosphericUtils = require('./atmospheric-utils.js');
-    calculateEffectiveAtmosphericHeatCapacityHelper = atmosphericUtils.calculateEffectiveAtmosphericHeatCapacity;
-
-    ({
-      getFactoryTemperatureMaintenancePenaltyReduction: getFactoryTemperatureMaintenancePenaltyReductionHelper,
-      isBuildingEligibleForFactoryMitigation: isBuildingEligibleForFactoryMitigationHelper,
-      getAerostatMaintenanceMitigation: getAerostatMaintenanceMitigationHelper
-    } = require('../buildings/aerostat.js'));
-} else {
-    getZonePercentage = globalThis.getZonePercentage;
-    estimateCoverage = globalThis.estimateCoverage;
-    waterCycleInstance = globalThis.waterCycle;
-    methaneCycleInstance = globalThis.methaneCycle;
-    co2CycleInstance = globalThis.co2Cycle;
-    runAtmosphericChemistry = globalThis.runAtmosphericChemistry;
-    METHANE_COMBUSTION_PARAMETER_CONST = globalThis.METHANE_COMBUSTION_PARAMETER;
-    calculateEffectiveAtmosphericHeatCapacityHelper =
-      globalThis.calculateEffectiveAtmosphericHeatCapacity;
-    getFactoryTemperatureMaintenancePenaltyReductionHelper =
-      globalThis.getFactoryTemperatureMaintenancePenaltyReduction;
-    isBuildingEligibleForFactoryMitigationHelper =
-      globalThis.isBuildingEligibleForFactoryMitigation;
-    getAerostatMaintenanceMitigationHelper =
-      globalThis.getAerostatMaintenanceMitigation;
-}
 if (!cloudPropsOnlyHelper && typeof globalThis.cloudPropsOnly === 'function') {
     cloudPropsOnlyHelper = globalThis.cloudPropsOnly;
 }
