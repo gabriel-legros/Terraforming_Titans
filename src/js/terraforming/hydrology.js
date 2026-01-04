@@ -9,10 +9,14 @@ if (isNodeHydro) {
         // fall back to global if require fails
     }
 } else {
-    estimateCoverageFn = globalThis.estimateCoverage;
+    estimateCoverageFn = window.estimateCoverage;
 }
 
-meltingFreezingRatesUtil = meltingFreezingRatesUtil || globalThis.meltingFreezingRates;
+try {
+    meltingFreezingRatesUtil = meltingFreezingRatesUtil || window.meltingFreezingRates;
+} catch (error) {
+    // fall back to existing value if window is unavailable
+}
 
 function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zoneElevationsInput, config) {
     const {
@@ -272,6 +276,20 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, 
     });
 }
 
+function simulateSurfaceAmmoniaFlow(zonalAmmoniaInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {
+    return _simulateSurfaceFlow(zonalAmmoniaInput, durationSeconds, zonalTemperatures, zoneElevationsInput, {
+        liquidProp: 'liquidAmmonia',
+        iceProp: 'ammoniaIce',
+        buriedIceProp: 'buriedAmmoniaIce',
+        meltingPoint: 195.4,
+        zonalDataKey: 'zonalSurface',
+        viscosity: 0.25,
+        iceCoverageType: 'ammoniaIce',
+        liquidCoverageType: 'liquidAmmonia',
+        ...flowOptions,
+    });
+}
+
 function simulateSurfaceCO2Flow(zonalCO2Input, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {
     return _simulateSurfaceFlow(zonalCO2Input, durationSeconds, zonalTemperatures, zoneElevationsInput, {
         liquidProp: 'liquidCO2',
@@ -314,12 +332,20 @@ function calculateMethaneMeltingFreezingRates(temperature, availableIce, availab
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { simulateSurfaceWaterFlow, calculateMeltingFreezingRates, simulateSurfaceHydrocarbonFlow, simulateSurfaceCO2Flow, calculateMethaneMeltingFreezingRates };
+    module.exports = {
+        simulateSurfaceWaterFlow,
+        calculateMeltingFreezingRates,
+        simulateSurfaceHydrocarbonFlow,
+        simulateSurfaceAmmoniaFlow,
+        simulateSurfaceCO2Flow,
+        calculateMethaneMeltingFreezingRates
+    };
 } else {
     // Expose functions globally for browser usage
-    globalThis.simulateSurfaceWaterFlow = simulateSurfaceWaterFlow;
-    globalThis.calculateMeltingFreezingRates = calculateMeltingFreezingRates;
-    globalThis.simulateSurfaceHydrocarbonFlow = simulateSurfaceHydrocarbonFlow;
-    globalThis.simulateSurfaceCO2Flow = simulateSurfaceCO2Flow;
-    globalThis.calculateMethaneMeltingFreezingRates = calculateMethaneMeltingFreezingRates;
+    window.simulateSurfaceWaterFlow = simulateSurfaceWaterFlow;
+    window.calculateMeltingFreezingRates = calculateMeltingFreezingRates;
+    window.simulateSurfaceHydrocarbonFlow = simulateSurfaceHydrocarbonFlow;
+    window.simulateSurfaceAmmoniaFlow = simulateSurfaceAmmoniaFlow;
+    window.simulateSurfaceCO2Flow = simulateSurfaceCO2Flow;
+    window.calculateMethaneMeltingFreezingRates = calculateMethaneMeltingFreezingRates;
 }

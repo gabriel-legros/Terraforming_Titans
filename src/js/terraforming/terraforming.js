@@ -161,7 +161,7 @@ const AUTO_SLAB_ATMOS_CP = 850;
 const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
 
 // Load utility functions when running under Node for tests
-var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;
+var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance;
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
 var getAerostatMaintenanceMitigationHelper;
 var isBuildingEligibleForFactoryMitigationHelper;
@@ -170,6 +170,7 @@ calculateEffectiveAtmosphericHeatCapacityHelper = calculateEffectiveAtmosphericH
 waterCycleInstance = waterCycle;
 methaneCycleInstance = methaneCycle;
 co2CycleInstance = co2Cycle;
+ammoniaCycleInstance = ammoniaCycle;
 
 if (!cloudPropsOnlyHelper && typeof globalThis.cloudPropsOnly === 'function') {
     cloudPropsOnlyHelper = globalThis.cloudPropsOnly;
@@ -596,7 +597,7 @@ class Terraforming extends EffectableEntity{
         const availableGlobalOxygenGas = availableByKey.oxygen || 0;
 
         if (!this.cycles) {
-            this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance];
+            this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance];
         }
 
         for (const cycle of this.cycles) {

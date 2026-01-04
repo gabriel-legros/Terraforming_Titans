@@ -99,6 +99,30 @@
           distribution: { production: 'skip', consumption: 'skip' },
         },
       },
+      liquidAmmonia: {
+        name: 'Liquid Ammonia',
+        initialValue: 0,
+        unlocked: true,
+        unit: 'ton',
+        hideWhenSmall: true,
+        zonalConfig: {
+          keys: ['liquidAmmonia'],
+          distributionKey: 'liquidAmmonia',
+          distribution: { production: 'area', consumption: 'currentAmount' },
+        },
+      },
+      ammoniaIce: {
+        name: 'Ammonia Ice',
+        initialValue: 0,
+        unlocked: true,
+        unit: 'ton',
+        hideWhenSmall: true,
+        zonalConfig: {
+          keys: ['ammoniaIce', 'buriedAmmoniaIce'],
+          distributionKey: 'ammoniaIce',
+          distribution: { production: 'area', consumption: 'currentAmount' },
+        },
+      },
       biomass: {
         name: 'Biomass',
         hasCap: false,
@@ -141,6 +165,7 @@
       atmosphericWater: { name: 'Water Vap.', initialValue:  19100402.066922974, unlocked:false , unit: 'ton' },
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       atmosphericMethane: { name: 'Methane', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
+      atmosphericAmmonia: { name: 'Ammonia', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       hydrogen: { name: 'Hydrogen', initialValue: 0, unlocked: true, unit: 'ton', hideWhenSmall: true },
       sulfuricAcid: { name: 'Sulfuric Acid', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       calciteAerosol: { name: 'Calcite Aerosol', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true }
@@ -189,6 +214,17 @@
         { category: 'atmospheric', resource: 'atmosphericMethane', label: 'Atmospheric Methane' },
         { category: 'surface', resource: 'liquidMethane', label: 'Liquid Methane' },
         { category: 'surface', resource: 'hydrocarbonIce', label: 'Methane Ice' },
+      ],
+    },
+    ammonia: {
+      name: 'Ammonia',
+      surfaceKeys: { liquid: 'liquidAmmonia', ice: 'ammoniaIce', buriedIce: 'buriedAmmoniaIce' },
+      coverageKeys: { liquid: 'liquidAmmoniaCoverage', ice: 'ammoniaIceCoverage' },
+      legacyZonalKey: 'zonalAmmonia',
+      options: [
+        { category: 'atmospheric', resource: 'atmosphericAmmonia', label: 'Atmospheric Ammonia' },
+        { category: 'surface', resource: 'liquidAmmonia', label: 'Liquid Ammonia' },
+        { category: 'surface', resource: 'ammoniaIce', label: 'Ammonia Ice' },
       ],
     },
   };

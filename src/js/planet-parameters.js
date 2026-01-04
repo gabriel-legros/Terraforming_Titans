@@ -37,6 +37,9 @@ const PLANET_ZONAL_SURFACE_RESOURCE_KEYS = [
   'liquidMethane',
   'hydrocarbonIce',
   'buriedHydrocarbonIce',
+  'liquidAmmonia',
+  'ammoniaIce',
+  'buriedAmmoniaIce',
   'biomass',
   'hazardousBiomass'
 ];

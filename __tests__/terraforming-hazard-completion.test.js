@@ -28,6 +28,7 @@ global.calculateEffectiveAtmosphericHeatCapacity = () => 0;
 global.waterCycle = {};
 global.methaneCycle = {};
 global.co2Cycle = {};
+global.ammoniaCycle = {};
 const RESOURCE_PHASE_GROUPS = {
   water: {
     surfaceKeys: { liquid: 'liquidWater', ice: 'ice', buriedIce: 'buriedIce' },
@@ -41,6 +42,10 @@ const RESOURCE_PHASE_GROUPS = {
     surfaceKeys: { liquid: 'liquidMethane', ice: 'hydrocarbonIce', buriedIce: 'buriedHydrocarbonIce' },
     legacyZonalKey: 'zonalHydrocarbons'
   },
+  ammonia: {
+    surfaceKeys: { liquid: 'liquidAmmonia', ice: 'ammoniaIce', buriedIce: 'buriedAmmoniaIce' },
+    legacyZonalKey: 'zonalAmmonia'
+  },
 };
 
 function loadTerraforming() {
@@ -48,8 +53,8 @@ function loadTerraforming() {
   const code = fs.readFileSync(fullPath, 'utf8')
     .replace('var resourcePhaseGroups;', `var resourcePhaseGroups = ${JSON.stringify(RESOURCE_PHASE_GROUPS)};`)
     .replace(
-      'var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;',
-      'var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;\ngetZonePercentage = global.getZonePercentage;\nestimateCoverage = global.estimateCoverage;'
+      'var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance;',
+      'var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance;\ngetZonePercentage = global.getZonePercentage;\nestimateCoverage = global.estimateCoverage;'
     );
   const context = {
     module: { exports: {} },
@@ -67,6 +72,7 @@ function loadTerraforming() {
     waterCycle: global.waterCycle,
     methaneCycle: global.methaneCycle,
     co2Cycle: global.co2Cycle,
+    ammoniaCycle: global.ammoniaCycle,
     terraformingRequirements,
     getZonePercentage: global.getZonePercentage,
     estimateCoverage: global.estimateCoverage,

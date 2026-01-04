@@ -1778,7 +1778,7 @@ function updateLifeBox() {
 
       for (const z of ZONES) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
-        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.biomass), 0);
+        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.ammonia + fr.ammoniaIce + fr.biomass), 0);
         const name = z.charAt(0).toUpperCase() + z.slice(1);
         lines.push(`${name}:`);
 
@@ -1788,6 +1788,8 @@ function updateLifeBox() {
         if (!isZeroPct(fr.hydrocarbon)) lines.push(`  Hydrocarbons: ${pct(fr.hydrocarbon)}%`);
         if (!isZeroPct(fr.hydrocarbonIce)) lines.push(`  Hydrocarbon Ice: ${pct(fr.hydrocarbonIce)}%`);
         if (!isZeroPct(fr.co2_ice)) lines.push(`  Dry Ice: ${pct(fr.co2_ice)}%`);
+        if (!isZeroPct(fr.ammonia)) lines.push(`  Ammonia: ${pct(fr.ammonia)}%`);
+        if (!isZeroPct(fr.ammoniaIce)) lines.push(`  Ammonia Ice: ${pct(fr.ammoniaIce)}%`);
         if (!isZeroPct(fr.biomass)) lines.push(`  Biomass: ${pct(fr.biomass)}%`);
         lines.push('');
       }
