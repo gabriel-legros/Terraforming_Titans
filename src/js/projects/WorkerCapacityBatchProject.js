@@ -83,10 +83,36 @@ class WorkerCapacityBatchProject extends Project {
 
   complete() {
     const completions = this.activeBuildCount || 1;
-    for (let i = 0; i < completions; i++) {
-      super.complete();
-    }
     this.activeBuildCount = 1;
+    const hasPerCompletionEffects =
+      this.attributes.resourceGain ||
+      this.attributes.completionEffect ||
+      this.attributes.storySteps;
+
+    if (completions <= 1 || hasPerCompletionEffects) {
+      for (let i = 0; i < completions; i++) {
+        super.complete();
+      }
+      return;
+    }
+
+    this.isCompleted = true;
+    this.isActive = false;
+
+    if (!this.repeatable) {
+      return;
+    }
+
+    const remaining = this.maxRepeatCount === Infinity
+      ? completions
+      : Math.max(Math.min(completions, this.maxRepeatCount - this.repeatCount), 0);
+
+    if (remaining <= 0) {
+      return;
+    }
+
+    this.repeatCount += remaining;
+    this.resetProject();
   }
 
   saveState() {
