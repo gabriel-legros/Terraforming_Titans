@@ -442,3 +442,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Trash Incinerator now supports a hazardous biomass recipe with zonal consumption distribution matching other surface resources.
 - Added Hazardous Biomass Incineration advanced research to unlock the incinerator recipe and hide multi-recipe dropdowns until more than one option is available.
 - Space disposal now groups multi-phase resources behind a type dropdown plus a phase selector, driven by shared phase definitions in `planet-resource-parameters.js`.
+- Terraforming zonal resource synchronization and global-change distribution now read per-resource `zonalConfig` parameters for aggregation and spread behavior.

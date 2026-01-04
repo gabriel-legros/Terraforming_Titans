@@ -98,6 +98,27 @@ const LIQUID_COVERAGE_KEYS = phaseGroupMappings.liquidCoverageKeys;
 const ZONAL_SURFACE_RESOURCE_KEYS = phaseGroupMappings.surfaceKeys;
 const LEGACY_ZONAL_SURFACE_MAPPINGS = phaseGroupMappings.legacyMappings;
 
+function buildZonalSurfaceResourceConfigs(resources) {
+  const configs = [];
+  const surfaceResources = resources.surface;
+  for (const resourceKey in surfaceResources) {
+    const resource = surfaceResources[resourceKey];
+    const zonalConfig = resource.zonalConfig || {};
+    const keys = zonalConfig.keys || [];
+    if (keys.length === 0) {
+      continue;
+    }
+    configs.push({
+      name: resourceKey,
+      resource,
+      keys,
+      distributionKey: zonalConfig.distributionKey || keys[0] || resourceKey,
+      distribution: zonalConfig.distribution || {},
+    });
+  }
+  return configs;
+}
+
 function getApparentEquatorialGravity(params) {
   if (calculateApparentEquatorialGravityHelper) {
     return calculateApparentEquatorialGravityHelper(params);
@@ -190,6 +211,7 @@ class Terraforming extends EffectableEntity{
     this.milestonesUnlocked = false;
     this.hazardsUnlocked = false;
     this.initialLand = resources.surface?.land?.value || 0;
+    this.zonalSurfaceResourceConfigs = buildZonalSurfaceResourceConfigs(resources);
 
     // Clone so config values remain immutable
     this.celestialParameters = structuredClone(celestialParameters);
@@ -1788,136 +1810,107 @@ class Terraforming extends EffectableEntity{
 distributeGlobalChangesToZones(deltaTime) {
     const zones = ZONES;
     const secondsMultiplier = deltaTime / 1000;
+    const configs = this.zonalSurfaceResourceConfigs;
 
-    // Define which SURFACE resources need distribution
-    const climateResources = {
-        surface: ['liquidWater', 'ice', 'dryIce', 'liquidCO2', 'biomass', 'hazardousBiomass']
-        // atmospheric distribution removed
-    };
-
-    for (const category in climateResources) {
-        climateResources[category].forEach(resName => {
-            const globalRes = this.resources[category]?.[resName];
-            if (!globalRes) return; // Skip if resource doesn't exist
-
-            // Calculate net rate EXCLUDING 'terraforming' type rates
-            let netExternalRate = 0;
-            for (const type in globalRes.productionRateByType) {
-                if (type !== 'terraforming') {
-                    for (const source in globalRes.productionRateByType[type]) {
-                        netExternalRate += globalRes.productionRateByType[type][source] || 0;
-                    }
-                }
+    for (const config of configs) {
+        const globalRes = config.resource;
+        const productionByType = globalRes.productionRateByType || {};
+        const consumptionByType = globalRes.consumptionRateByType || {};
+        let netExternalRate = 0;
+        for (const type in productionByType) {
+            if (type === 'terraforming') {
+                continue;
             }
-            for (const type in globalRes.consumptionRateByType) {
-                if (type !== 'terraforming') {
-                    for (const source in globalRes.consumptionRateByType[type]) {
-                        netExternalRate -= globalRes.consumptionRateByType[type][source] || 0; // Subtract consumption
-                    }
+            const entries = productionByType[type];
+            for (const source in entries) {
+                netExternalRate += entries[source] || 0;
+            }
+        }
+        for (const type in consumptionByType) {
+            if (type === 'terraforming') {
+                continue;
+            }
+            const entries = consumptionByType[type];
+            for (const source in entries) {
+                netExternalRate -= entries[source] || 0;
+            }
+        }
+
+        const netChangeAmount = netExternalRate * secondsMultiplier;
+        if (Math.abs(netChangeAmount) < 1e-9) {
+            continue;
+        }
+
+        const distribution = config.distribution || {};
+        const productionMode = distribution.production || 'area';
+        const consumptionMode = distribution.consumption || 'currentAmount';
+        const initialMode = netChangeAmount < 0 ? consumptionMode : productionMode;
+        if (initialMode === 'skip') {
+            continue;
+        }
+
+        let distributionMode = initialMode;
+        let totalDistributionFactor = 0;
+        let targetZones = zones;
+
+        if (distributionMode === 'biomassGrowth') {
+            const design = lifeDesigner.currentDesign;
+            const growableZoneNames = design.getGrowableZones();
+            const survivableZoneResults = design.temperatureSurvivalCheck();
+            const growAndSurviveZones = growableZoneNames.filter(zone => survivableZoneResults[zone]?.pass);
+
+            if (growAndSurviveZones.length > 0) {
+                targetZones = growAndSurviveZones;
+                distributionMode = 'targetZoneArea';
+            } else if (survivableZoneResults.global.pass) {
+                targetZones = Object.keys(survivableZoneResults).filter(zone => zone !== 'global' && survivableZoneResults[zone].pass);
+                distributionMode = 'targetZoneArea';
+            } else {
+                distributionMode = 'area';
+                targetZones = zones;
+            }
+        }
+
+        if (distributionMode === 'currentAmount') {
+            for (const zone of zones) {
+                totalDistributionFactor += this.zonalSurface[zone][config.distributionKey] || 0;
+            }
+        } else if (distributionMode === 'targetZoneArea') {
+            for (const zone of targetZones) {
+                totalDistributionFactor += this.celestialParameters.surfaceArea * getZonePercentage(zone);
+            }
+            if (totalDistributionFactor < 1e-9) {
+                distributionMode = 'area';
+                targetZones = zones;
+            }
+        }
+
+        if (distributionMode === 'area') {
+            totalDistributionFactor = 1.0;
+        }
+
+        for (const zone of zones) {
+            let proportion = 0;
+            const isTargetZone = targetZones.includes(zone);
+
+            if (totalDistributionFactor > 1e-9) {
+                if (distributionMode === 'currentAmount') {
+                    const currentAmount = this.zonalSurface[zone][config.distributionKey] || 0;
+                    proportion = currentAmount / totalDistributionFactor;
+                } else if (distributionMode === 'targetZoneArea' && isTargetZone) {
+                    const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
+                    proportion = zoneArea / totalDistributionFactor;
+                } else if (distributionMode === 'area') {
+                    proportion = getZonePercentage(zone);
                 }
+            } else if (netChangeAmount > 0 && distributionMode !== 'currentAmount') {
+                proportion = getZonePercentage(zone);
             }
 
-            const netChangeAmount = netExternalRate * secondsMultiplier; // Total change in tons for this tick from external sources
-
-            if (Math.abs(netChangeAmount) < 1e-9) return; // Skip if no significant change
-
-            // --- Distribution Logic ---
-            let totalDistributionFactor = 0;
-            let distributionMode = 'area'; // Default: distribute by total zone area percentage
-            let targetZones = [];
-            // let zoneLandAreas = {}; // No longer needed for biomass distribution
-
-            if (resName === 'biomass' && netChangeAmount > 0) { // Special logic for Biomass PRODUCTION
-                const design = lifeDesigner.currentDesign;
-                const growableZoneNames = design.getGrowableZones(); // Array of names ['tropical', ...]
-                const survivableZoneResults = design.temperatureSurvivalCheck(); // Object {'tropical': {pass, reason}, ... '
-
-                // Find zones that can both grow AND survive
-                const growAndSurviveZones = growableZoneNames.filter(zone => survivableZoneResults[zone]?.pass);
-
-                if (growAndSurviveZones.length > 0) {
-                    // Priority 1: Distribute to zones that can grow & survive
-                    targetZones = growAndSurviveZones;
-                    distributionMode = 'targetZoneArea';
-                } else if (survivableZoneResults.global.pass) {
-                    // Priority 2: Distribute to zones that can only survive (but not grow)
-                    targetZones = Object.keys(survivableZoneResults).filter(zone => zone !== 'global' && survivableZoneResults[zone].pass);
-                    distributionMode = 'targetZoneArea';
-                } else {
-                    // Fallback: If can't survive anywhere, distribute by total area %
-                    distributionMode = 'area';
-                    targetZones = zones;
-                }
-
-                if (distributionMode === 'targetZoneArea') {
-                    totalDistributionFactor = 0; // Reset factor for target zone area calculation
-                    targetZones.forEach(zone => {
-                        const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
-                        totalDistributionFactor += zoneArea;
-                    });
-                    // If total area in target zones is zero (shouldn't happen unless planet area is 0), fallback to global area distribution
-                    if (totalDistributionFactor < 1e-9) {
-                        distributionMode = 'area';
-                        targetZones = zones;
-                    }
-                }
-                 if (distributionMode === 'area') { // Fallback case or if target zone area was zero
-                     totalDistributionFactor = 1.0; // Use 1.0 for global area percentage distribution
-                 }
-
-            } else if (netChangeAmount < 0) { // Consumption (for any resource including biomass)
-                distributionMode = 'currentAmount';
-                // Distribute based on current zonal amount proportion
-                zones.forEach(zone => {
-                    let currentAmount = 0;
-                    if (category === 'surface') {
-                         currentAmount = this.zonalSurface[zone][resName] || 0;
-                    } // atmospheric removed
-                    totalDistributionFactor += currentAmount;
-                });
-            } else { // Production (for resources other than biomass)
-                 distributionMode = 'area';
-                 totalDistributionFactor = 1.0; // Represents 100% of area
-                 targetZones = zones; // Target all zones for area distribution
-            }
-
-            // Apply distributed change to zones
-            zones.forEach(zone => {
-                let proportion = 0;
-                // Check if the current zone is a target for distribution (relevant for biomass production)
-                const isTargetZone = targetZones.includes(zone);
-
-                if (totalDistributionFactor > 1e-9) { // Avoid division by zero
-                    if (distributionMode === 'currentAmount') { // Consumption
-                        let currentAmount = 0;
-                         if (category === 'surface') {
-                             currentAmount = this.zonalSurface[zone][resName] || 0;
-                         } // atmospheric removed
-                        proportion = currentAmount / totalDistributionFactor;
-                    } else if (distributionMode === 'targetZoneArea' && isTargetZone) { // Biomass Production (Total Target Zone Area)
-                        const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
-                        proportion = zoneArea / totalDistributionFactor;
-                    } else if (distributionMode === 'area') { // Default Production / Fallback
-                        proportion = getZonePercentage(zone);
-                    }
-                    // If mode is landArea but zone is not a target, proportion remains 0
-                } else if (netChangeAmount > 0 && distributionMode !== 'currentAmount') {
-                     // Handle production when total factor is zero (e.g., no land in target zones)
-                     // Fallback to area distribution for safety, though this case might need review
-                     proportion = getZonePercentage(zone);
-                }
-                // If consuming (netChangeAmount < 0) and totalDistributionFactor is 0, proportion remains 0 (can't consume from nothing)
-
-
-                const zonalChange = netChangeAmount * proportion;
-
-                // Apply only to surface zonal structure
-                if (category === 'surface') {
-                    this.zonalSurface[zone][resName] += zonalChange;
-                    this.zonalSurface[zone][resName] = Math.max(0, this.zonalSurface[zone][resName]);
-                } // atmospheric removed
-            });
-        });
+            const zonalChange = netChangeAmount * proportion;
+            const currentValue = this.zonalSurface[zone][config.distributionKey] || 0;
+            this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentValue + zonalChange);
+        }
     }
 }
 
@@ -1925,69 +1918,26 @@ distributeGlobalChangesToZones(deltaTime) {
 // Atmospheric resources are now updated directly in updateResources.
 synchronizeGlobalResources() {
     const zones = ZONES;
-    const aggregations = [
-        {
-            key: 'liquidWater',
-            compute: zone => this.zonalSurface[zone].liquidWater || 0
-        },
-        {
-            key: 'ice',
-            compute: zone => {
-                const surfaceIce = this.zonalSurface[zone].ice || 0;
-                const buried = this.zonalSurface[zone].buriedIce || 0;
-                return surfaceIce + buried;
-            }
-        },
-        {
-            key: 'dryIce',
-            compute: zone => {
-                const surfaceDryIce = this.zonalSurface[zone].dryIce || 0;
-                const buried = this.zonalSurface[zone].buriedDryIce || 0;
-                return surfaceDryIce + buried;
-            }
-        },
-        {
-            key: 'liquidCO2',
-            compute: zone => this.zonalSurface[zone].liquidCO2 || 0
-        },
-        {
-            key: 'biomass',
-            compute: zone => this.zonalSurface[zone].biomass || 0
-        },
-        {
-            key: 'hazardousBiomass',
-            compute: zone => this.zonalSurface[zone].hazardousBiomass || 0
-        },
-        {
-            key: 'liquidMethane',
-            compute: zone => this.zonalSurface[zone].liquidMethane || 0
-        },
-        {
-            key: 'hydrocarbonIce',
-            compute: zone => {
-                const surfaceMethaneIce = this.zonalSurface[zone].hydrocarbonIce || 0;
-                const buriedMethaneIce = this.zonalSurface[zone].buriedHydrocarbonIce || 0;
-                return surfaceMethaneIce + buriedMethaneIce;
-            }
-        }
-    ];
-
+    const configs = this.zonalSurfaceResourceConfigs;
     const totals = {};
-    aggregations.forEach(({ key }) => {
-        totals[key] = 0;
-    });
 
-    zones.forEach(zone => {
-        aggregations.forEach(aggregation => {
-            totals[aggregation.key] += aggregation.compute(zone);
-        });
-    });
+    for (const config of configs) {
+        totals[config.name] = 0;
+    }
 
-    aggregations.forEach(({ key }) => {
-        if (this.resources.surface[key]) {
-            this.resources.surface[key].value = totals[key];
+    for (const zone of zones) {
+        for (const config of configs) {
+            let zoneTotal = 0;
+            for (const key of config.keys) {
+                zoneTotal += this.zonalSurface[zone][key] || 0;
+            }
+            totals[config.name] += zoneTotal;
         }
-    });
+    }
+
+    for (const config of configs) {
+        this.resources.surface[config.name].value = totals[config.name];
+    }
 
     // Atmospheric resources are no longer synchronized here.
     // Pressures are calculated on the fly when needed.

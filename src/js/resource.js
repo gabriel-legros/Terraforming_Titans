@@ -50,6 +50,7 @@ class Resource extends EffectableEntity {
     this.reverseColor = resourceData.reverseColor || false;
     this.autobuildShortage = false; // Flagged when autobuild cannot use this resource this tick
     this.automationLimited = false; // Flagged when import automation settings limit this resource
+    this.zonalConfig = resourceData.zonalConfig || null;
   }
 
   // Method to initialize configurable properties
@@ -99,6 +100,9 @@ class Resource extends EffectableEntity {
     }
     if (config.marginBottom !== undefined) {
       this.marginBottom = config.marginBottom;
+    }
+    if (config.zonalConfig !== undefined) {
+      this.zonalConfig = config.zonalConfig || null;
     }
 
     if (this.name === 'land' && config.initialValue !== undefined) {

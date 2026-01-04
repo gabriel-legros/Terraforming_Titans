@@ -181,7 +181,12 @@ describe('Hazardous biomass zonal consumption', () => {
     const hazardousResource = new Resource({
       name: 'hazardousBiomass',
       category: 'surface',
-      initialValue: 200
+      initialValue: 200,
+      zonalConfig: {
+        keys: ['hazardousBiomass'],
+        distributionKey: 'hazardousBiomass',
+        distribution: { production: 'area', consumption: 'currentAmount' }
+      }
     });
     const resources = {
       surface: {
