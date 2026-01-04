@@ -17,10 +17,8 @@ describe('companion research travel rewards', () => {
   it('completes space mirror research and seeds inactive mirrors', () => {
     const companionMirror = { isResearched: true };
     const companionSatellite = { isResearched: false };
-    const completeResearchInstant = jest.fn();
     global.researchManager = {
       getResearchById: jest.fn((id) => (id === 'companion_mirror' ? companionMirror : companionSatellite)),
-      completeResearchInstant,
     };
     const mirrorProject = { enable: jest.fn(), isCompleted: false, complete: jest.fn() };
     global.projectManager = { projects: { spaceMirrorFacility: mirrorProject, satellite: { update: jest.fn() } } };
@@ -30,7 +28,6 @@ describe('companion research travel rewards', () => {
 
     window.applyCompanionResearchTravelRewards();
 
-    expect(completeResearchInstant).toHaveBeenCalledWith('space_mirror');
     expect(mirrorProject.enable).toHaveBeenCalled();
     expect(mirrorProject.complete).toHaveBeenCalled();
     expect(mirrorBuilding.count).toBe(2000);

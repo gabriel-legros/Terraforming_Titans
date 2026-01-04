@@ -1,4 +1,60 @@
+const fs = require('fs');
+const Module = require('module');
+const path = require('path');
+const vm = require('vm');
+
 const EffectableEntity = require('../src/js/effectable-entity');
+const { terraformingRequirements } = require('../src/js/terraforming/terraforming-requirements.js');
+const RESOURCE_PHASE_GROUPS = {
+  water: {
+    surfaceKeys: { liquid: 'liquidWater', ice: 'ice', buriedIce: 'buriedIce' },
+    legacyZonalKey: 'zonalWater'
+  },
+  carbonDioxide: {
+    surfaceKeys: { liquid: 'liquidCO2', ice: 'dryIce', buriedIce: 'buriedDryIce' },
+    legacyZonalKey: 'zonalCO2'
+  },
+  methane: {
+    surfaceKeys: { liquid: 'liquidMethane', ice: 'hydrocarbonIce', buriedIce: 'buriedHydrocarbonIce' },
+    legacyZonalKey: 'zonalHydrocarbons'
+  },
+};
+
+function loadTerraforming() {
+  const fullPath = path.resolve(__dirname, '..', 'src/js/terraforming/terraforming.js');
+  const code = fs.readFileSync(fullPath, 'utf8')
+    .replace('var resourcePhaseGroups;', `var resourcePhaseGroups = ${JSON.stringify(RESOURCE_PHASE_GROUPS)};`)
+    .replace(
+      'var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;',
+      'var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance;\ngetZonePercentage = global.getZonePercentage;\nestimateCoverage = global.estimateCoverage;'
+    );
+  const context = {
+    module: { exports: {} },
+    exports: {},
+    require: Module.createRequire ? Module.createRequire(fullPath) : require,
+    __filename: fullPath,
+    __dirname: path.dirname(fullPath),
+    console,
+    structuredClone: (value) => JSON.parse(JSON.stringify(value)),
+    EffectableEntity: global.EffectableEntity,
+    lifeParameters: global.lifeParameters,
+    calculateAverageCoverage: global.calculateAverageCoverage,
+    calculateEffectiveAtmosphericHeatCapacity: global.calculateEffectiveAtmosphericHeatCapacity,
+    ZONES: global.ZONES,
+    waterCycle: global.waterCycle,
+    methaneCycle: global.methaneCycle,
+    co2Cycle: global.co2Cycle,
+    terraformingRequirements,
+    getZonePercentage: global.getZonePercentage,
+    estimateCoverage: global.estimateCoverage,
+    getZoneRatio: global.getZoneRatio,
+  };
+  context.global = context;
+  context.globalThis = context;
+  vm.runInNewContext(code, context, { filename: fullPath });
+  context.module.exports.__context = context;
+  return context.module.exports;
+}
 
 describe('Trash incinerator recipes', () => {
   let MultiRecipesBuilding;
@@ -101,8 +157,18 @@ describe('Hazardous biomass zonal consumption', () => {
     jest.resetModules();
     global.EffectableEntity = EffectableEntity;
     global.lifeParameters = {};
+    require('../src/js/planet-resource-parameters.js');
+    const zones = require('../src/js/terraforming/zones.js');
+    global.ZONES = zones.ZONES;
+    global.getZonePercentage = zones.getZonePercentage;
+    global.getZoneRatio = zones.getZoneRatio;
+    global.estimateCoverage = zones.estimateCoverage;
+    global.calculateEffectiveAtmosphericHeatCapacity = () => 0;
+    global.waterCycle = {};
+    global.methaneCycle = {};
+    global.co2Cycle = {};
     ({ Resource } = require('../src/js/resource'));
-    Terraforming = require('../src/js/terraforming/terraforming.js');
+    Terraforming = loadTerraforming();
   });
 
   afterEach(() => {

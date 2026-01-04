@@ -12,8 +12,7 @@ describe('Companion Mirror advanced research', () => {
     expect(research).toBeDefined();
     expect(research.cost).toEqual({ advancedResearch: 20000000 });
     expect(research.effects).toEqual([
-      { target: 'project', targetId: 'spaceMirrorFacility', type: 'enable' },
-      { target: 'project', targetId: 'spaceMirrorFacility', type: 'completeProject' },
+      { target: 'researchManager', targetId: 'space_mirror', type: 'completeResearch' },
     ]);
   });
 
