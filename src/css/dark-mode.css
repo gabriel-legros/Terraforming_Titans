@@ -280,6 +280,23 @@
     border-bottom-color: #444;
 }
 
+.dark-mode .android-assignment-headers {
+    color: #ffffff;
+    border-bottom-color: #3c3c3c;
+}
+
+.dark-mode .android-subheading {
+    color: #ffffff;
+}
+
+.dark-mode .android-speed-row {
+    color: #ffffff;
+}
+
+.dark-mode .android-speed-value {
+    color: #ffffff;
+}
+
 .dark-mode .growth-rate-line span:first-child {
     color: #ffffff;
 }
