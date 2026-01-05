@@ -44,6 +44,7 @@ function loadTerraforming() {
     lifeParameters: global.lifeParameters,
     calculateAverageCoverage: global.calculateAverageCoverage,
     calculateEffectiveAtmosphericHeatCapacity: global.calculateEffectiveAtmosphericHeatCapacity,
+    defaultPlanetResources: global.defaultPlanetResources,
     ZONES: global.ZONES,
     waterCycle: global.waterCycle,
     methaneCycle: global.methaneCycle,
@@ -162,7 +163,19 @@ describe('Hazardous biomass zonal consumption', () => {
     jest.resetModules();
     global.EffectableEntity = EffectableEntity;
     global.lifeParameters = {};
-    require('../src/js/planet-resource-parameters.js');
+    const defaultPlanetResources = {
+      surface: {
+        land: { name: 'Land' },
+        hazardousBiomass: {
+          zonalConfig: {
+            keys: ['hazardousBiomass'],
+            distributionKey: 'hazardousBiomass',
+            distribution: { production: 'area', consumption: 'currentAmount' },
+          },
+        },
+      },
+    };
+    global.defaultPlanetResources = defaultPlanetResources;
     const zones = require('../src/js/terraforming/zones.js');
     global.ZONES = zones.ZONES;
     global.getZonePercentage = zones.getZonePercentage;
@@ -213,6 +226,7 @@ describe('Hazardous biomass zonal consumption', () => {
       parentBody: {}
     };
     const terraforming = new Terraforming(resources, celestialParameters);
+    Terraforming.__context.resources = resources;
     global.resources = resources;
 
     terraforming.zonalSurface.tropical.hazardousBiomass = 100;

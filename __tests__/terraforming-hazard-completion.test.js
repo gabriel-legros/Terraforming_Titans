@@ -17,7 +17,8 @@ global.EffectableEntity = class {
 global.lifeParameters = {};
 global.calculateAverageCoverage = () => 1;
 
-require(path.join('..', 'src/js/planet-resource-parameters.js'));
+const defaultPlanetResources = require(path.join('..', 'src/js/planet-resource-parameters.js'));
+global.defaultPlanetResources = defaultPlanetResources;
 const zones = require(path.join('..', 'src/js/terraforming/zones.js'));
 const { terraformingRequirements } = require(path.join('..', 'src/js/terraforming/terraforming-requirements.js'));
 global.ZONES = zones.ZONES;
@@ -68,6 +69,7 @@ function loadTerraforming() {
     lifeParameters: global.lifeParameters,
     calculateAverageCoverage: global.calculateAverageCoverage,
     calculateEffectiveAtmosphericHeatCapacity: global.calculateEffectiveAtmosphericHeatCapacity,
+    defaultPlanetResources: global.defaultPlanetResources,
     ZONES: global.ZONES,
     waterCycle: global.waterCycle,
     methaneCycle: global.methaneCycle,

@@ -17,7 +17,26 @@ global.EffectableEntity = class {
 global.lifeParameters = {};
 global.calculateAverageCoverage = () => 0;
 
-require(path.join('..', 'src/js/planet-resource-parameters.js'));
+const defaultPlanetResources = {
+  surface: {
+    land: { name: 'Land' },
+    liquidWater: {
+      zonalConfig: {
+        keys: ['liquidWater'],
+        distributionKey: 'liquidWater',
+        distribution: { production: 'skip', consumption: 'skip' },
+      },
+    },
+    ice: {
+      zonalConfig: {
+        keys: ['ice', 'buriedIce'],
+        distributionKey: 'ice',
+        distribution: { production: 'area', consumption: 'currentAmount' },
+      },
+    },
+  },
+};
+global.defaultPlanetResources = defaultPlanetResources;
 const zones = require(path.join('..', 'src/js/terraforming/zones.js'));
 const { terraformingRequirements } = require(path.join('..', 'src/js/terraforming/terraforming-requirements.js'));
 global.ZONES = zones.ZONES;
@@ -68,6 +87,7 @@ function loadTerraforming() {
     lifeParameters: global.lifeParameters,
     calculateAverageCoverage: global.calculateAverageCoverage,
     calculateEffectiveAtmosphericHeatCapacity: global.calculateEffectiveAtmosphericHeatCapacity,
+    defaultPlanetResources: global.defaultPlanetResources,
     ZONES: global.ZONES,
     waterCycle: global.waterCycle,
     methaneCycle: global.methaneCycle,
@@ -96,7 +116,9 @@ function createTerraformingInstance(resources) {
     hasNaturalMagnetosphere: false,
     parentBody: {},
   };
-  return new Terraforming(resources, celestialParameters);
+  const terraforming = new Terraforming(resources, celestialParameters);
+  Terraforming.__context.resources = resources;
+  return terraforming;
 }
 
 describe('Terraforming zonal resource config', () => {
@@ -113,6 +135,11 @@ describe('Terraforming zonal resource config', () => {
             distributionKey: 'liquidWater',
             distribution: { production: 'skip', consumption: 'skip' },
           },
+        },
+        ice: {
+          value: 0,
+          productionRateByType: {},
+          consumptionRateByType: {},
         },
       },
       atmospheric: {
@@ -140,6 +167,7 @@ describe('Terraforming zonal resource config', () => {
             distribution: { production: 'area', consumption: 'currentAmount' },
           },
         },
+        liquidWater: { value: 0 },
       },
       atmospheric: {
         carbonDioxide: { value: 0 },
