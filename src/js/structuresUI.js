@@ -1274,9 +1274,21 @@ function updateDecreaseButtonText(button, buildCount) {
     button.style.color = '';
   }
   
+  function formatRwgMultiplierSource(sourceId) {
+    const id = String(sourceId || '');
+    if (!id.startsWith('rwg-')) return null;
+    const type = id.slice(4).replace(/-/g, ' ');
+    const name = type.replace(/\b\w/g, char => char.toUpperCase());
+    return name ? `Random World: ${name}` : 'Random World';
+  }
+
   function resolveCostMultiplierSourceName(effect) {
+    const rwgName = formatRwgMultiplierSource(effect.sourceId);
+    const skillName = skillManager?.skills?.[effect.sourceId]?.name;
+    const awakeningName = skillName ? `Awakening: ${skillName}` : null;
     return effect.name
       ?? effect.sourceName
+      ?? awakeningName
       ?? effect.sourceId?.displayName
       ?? effect.sourceId?.name
       ?? researchManager.getResearchById(effect.sourceId)?.name
@@ -1286,6 +1298,7 @@ function updateDecreaseButtonText(button, buildCount) {
       ?? buildings[effect.sourceId]?.name
       ?? colonies[effect.sourceId]?.displayName
       ?? colonies[effect.sourceId]?.name
+      ?? rwgName
       ?? effect.effectId
       ?? 'Unknown effect';
   }
@@ -1374,6 +1387,36 @@ function updateDecreaseButtonText(button, buildCount) {
     return lines.join('\n');
   }
 
+  function buildStructureWorkerTooltip(structure, buildCount) {
+    const baseWorkers = structure.requiresWorker * buildCount;
+    const addedWorkers = structure.getAddedWorkerNeed() * buildCount;
+    const lines = [`Base workers: ${formatNumber(baseWorkers, true)}`];
+    if (addedWorkers > 0) {
+      lines.push(`Added workers: ${formatNumber(addedWorkers, true)}`);
+    }
+    const multipliers = [];
+
+    structure.activeEffects.forEach(effect => {
+      if (effect.type !== 'workerMultiplier') return;
+      if (effect.value === 1) return;
+      multipliers.push({
+        name: resolveCostMultiplierSourceName(effect),
+        value: effect.value
+      });
+    });
+
+    if (multipliers.length) {
+      lines.push('Multipliers:');
+      multipliers.forEach(multiplier => {
+        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+      });
+    } else {
+      lines.push('Multipliers: none');
+    }
+
+    return lines.join('\n');
+  }
+
   function updateStructureCostDisplay(costElement, structure, buildCount = 1) {
     if (!costElement) return;
     const items = [];
@@ -1400,7 +1443,8 @@ function updateDecreaseButtonText(button, buildCount) {
         label: 'Workers',
         required: structure.getTotalWorkerNeed() * structure.getEffectiveWorkerMultiplier(),
         available: resources.colony.workers?.value || 0,
-        insufficientColor: 'orange'
+        insufficientColor: 'orange',
+        isWorkerRequirement: true
       });
     }
 
@@ -1486,6 +1530,27 @@ function updateDecreaseButtonText(button, buildCount) {
           span.textContent = '';
           span.appendChild(textSpan);
 
+          span.classList.add('info-tooltip-icon');
+          span.style.fontFamily = 'inherit';
+          const labelNode = document.createTextNode('');
+          textSpan._labelNode = labelNode;
+          textSpan.appendChild(labelNode);
+
+          const tooltip = attachDynamicInfoTooltip(span, '');
+          span._workerTooltip = tooltip;
+          span._workerTooltipCache = {};
+          span._updateWorkerTooltip = () => {
+            const context = span._workerTooltipContext;
+            const text = buildStructureWorkerTooltip(
+              context.structure,
+              context.buildCount
+            );
+            setTooltipText(tooltip, text, span._workerTooltipCache, 'text');
+          };
+          span.addEventListener('mouseenter', span._updateWorkerTooltip);
+          span.addEventListener('focusin', span._updateWorkerTooltip);
+          span.addEventListener('pointerdown', span._updateWorkerTooltip);
+
           const container = document.createElement('span');
           container.classList.add('worker-priority-container');
           const up = document.createElement('span');
@@ -1520,8 +1585,15 @@ function updateDecreaseButtonText(button, buildCount) {
           span._priorityDown = down;
           span._refreshPriorityUI = refresh;
         }
-        textSpan.textContent = text;
+        const labelNode = textSpan._labelNode;
+        if (labelNode && labelNode.nodeValue !== text) {
+          labelNode.nodeValue = text;
+        }
         span._refreshPriorityUI();
+        span._workerTooltipContext = {
+          structure,
+          buildCount
+        };
       } else {
         const textSpan = span._textSpan || span;
         if (textSpan.textContent !== text) {
