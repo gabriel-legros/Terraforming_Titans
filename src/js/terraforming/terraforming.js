@@ -98,9 +98,9 @@ const LIQUID_COVERAGE_KEYS = phaseGroupMappings.liquidCoverageKeys;
 const ZONAL_SURFACE_RESOURCE_KEYS = phaseGroupMappings.surfaceKeys;
 const LEGACY_ZONAL_SURFACE_MAPPINGS = phaseGroupMappings.legacyMappings;
 
-function buildZonalSurfaceResourceConfigs(resources) {
+function buildZonalSurfaceResourceConfigs() {
   const configs = [];
-  const surfaceResources = resources.surface;
+  const surfaceResources = defaultPlanetResources.surface;
   for (const resourceKey in surfaceResources) {
     const resource = surfaceResources[resourceKey];
     const zonalConfig = resource.zonalConfig || {};
@@ -212,7 +212,7 @@ class Terraforming extends EffectableEntity{
     this.milestonesUnlocked = false;
     this.hazardsUnlocked = false;
     this.initialLand = resources.surface?.land?.value || 0;
-    this.zonalSurfaceResourceConfigs = buildZonalSurfaceResourceConfigs(resources);
+    this.zonalSurfaceResourceConfigs = buildZonalSurfaceResourceConfigs();
 
     // Clone so config values remain immutable
     this.celestialParameters = structuredClone(celestialParameters);
@@ -1814,7 +1814,7 @@ distributeGlobalChangesToZones(deltaTime) {
     const configs = this.zonalSurfaceResourceConfigs;
 
     for (const config of configs) {
-        const globalRes = config.resource;
+        const globalRes = resources.surface[config.distributionKey];
         const productionByType = globalRes.productionRateByType || {};
         const consumptionByType = globalRes.consumptionRateByType || {};
         let netExternalRate = 0;
