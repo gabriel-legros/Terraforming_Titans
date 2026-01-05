@@ -3,8 +3,8 @@ const tabParameters = {
       {
         id: "buildings-tab",
         label: "Buildings",
-        isActive: true, // The tab is active by default
-        isHidden: false
+        isActive: false,
+        isHidden: true
       },
       {
         id: "special-projects-tab",

@@ -2117,6 +2117,10 @@ function formatStorageDetails(storageObject) {
 
 function updateBuildingSubtabsVisibility() {
   const categories = getBuildingCategories();
+  const visibleSubtabs = [];
+  let activeHasVisibleBuilding = false;
+  const activeId = buildingSubtabManager ? buildingSubtabManager.getActiveId() : null;
+  let anyVisibleBuilding = false;
   
   categories.forEach(category => {
     const subtabId = `${category}-buildings`;
@@ -2126,6 +2130,15 @@ function updateBuildingSubtabsVisibility() {
     });
     const hasHiddenBuilding = Object.values(buildings).some(b => b.category === category && b.isHidden);
     const shouldShow = hasVisibleBuilding || hasHiddenBuilding;
+    if (hasVisibleBuilding) {
+      anyVisibleBuilding = true;
+    }
+    if (hasVisibleBuilding) {
+      visibleSubtabs.push(subtabId);
+    }
+    if (activeId === subtabId) {
+      activeHasVisibleBuilding = hasVisibleBuilding;
+    }
     
     if (buildingSubtabManager) {
       if (shouldShow) {
@@ -2146,6 +2159,26 @@ function updateBuildingSubtabsVisibility() {
       }
     }
   });
+
+  if (!anyVisibleBuilding) {
+    categories.forEach(category => {
+      const subtabId = `${category}-buildings`;
+      const tab = document.getElementById(`${subtabId}-tab`);
+      const content = document.getElementById(subtabId);
+      if (tab) tab.classList.add('hidden');
+      if (content) content.classList.add('hidden');
+      if (tab) tab.classList.remove('active');
+      if (content) content.classList.remove('active');
+    });
+    if (buildingSubtabManager) {
+      buildingSubtabManager.activeId = null;
+    }
+    return;
+  }
+
+  if (buildingSubtabManager && (!activeHasVisibleBuilding || !activeId) && visibleSubtabs.length) {
+    buildingSubtabManager.activate(visibleSubtabs[0]);
+  }
 }
 
 function updateUnhideButtons() {
