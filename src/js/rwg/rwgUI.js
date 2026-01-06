@@ -141,15 +141,26 @@ function syncEnabledHazards() {
 
 function refreshDominionSelect() {
   const dominions = rwgManager.getAvailableDominions();
-  const signature = dominions.join(',');
+  const fritizianUnlocked = rwgManager.isDominionUnlocked('ammonia');
+  const options = dominions.slice();
+  if (!fritizianUnlocked && !options.includes('ammonia')) {
+    options.push('ammonia');
+  }
+  const signature = options
+    .map((id) => `${id}:${id === 'ammonia' && !fritizianUnlocked ? 'locked' : 'open'}`)
+    .join(',');
   const selected = dominions.includes(rwgSelectedDominion) ? rwgSelectedDominion : dominions[0];
   rwgSelectedDominion = selected;
   if (rwgDominionEl.dataset.lastDominionList !== signature) {
     const frag = document.createDocumentFragment();
-    dominions.forEach((id) => {
+    options.forEach((id) => {
       const opt = document.createElement('option');
       opt.value = id;
-      opt.textContent = `Dominion: ${dominionDisplayNames[id] || id}`;
+      const displayName = dominionDisplayNames[id] || id;
+      const locked = id === 'ammonia' && !fritizianUnlocked;
+      const label = locked ? `${displayName} (Requires 5 fully controlled sectors)` : displayName;
+      opt.textContent = `Dominion: ${label}`;
+      opt.disabled = locked;
       frag.appendChild(opt);
     });
     rwgDominionEl.innerHTML = '';
@@ -157,7 +168,7 @@ function refreshDominionSelect() {
     rwgDominionEl.dataset.lastDominionList = signature;
   }
   rwgDominionEl.value = selected;
-  rwgDominionEl.style.display = dominions.length > 1 ? '' : 'none';
+  rwgDominionEl.style.display = options.length > 1 ? '' : 'none';
 }
 
 function cacheResultControls() {
@@ -893,13 +904,13 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const worldPanel = `
     <div class="rwg-card">
       <h3>${res.merged?.name || 'Generated World'}</h3>
-      <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <div class="rwg-control-row">
         <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
         <span class="info-tooltip-icon" title="The weather model in Terraforming Titans is quite complex.  It is not realistic for the random world generator to generate worlds that already start near equilibrium.  However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.  \n\nTo reach this state, worlds can be simulated for thousands of year, as necessary, so that the climate stabilizes.  This button must be pressed to get at least a little of simulation, but can also be ended early if preferred.  Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue.  For best results, please keep the window in focus while running the simulation.  The rest of the game will pause.">&#9432;</span>
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
         <select id="rwg-dominion" class="rwg-inline-select"></select>
-        ${warningMsg ? `<span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span>` : ''}
       </div>
+      ${warningMsg ? `<div class="rwg-control-row rwg-warning-row"><span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span></div>` : ''}
       <div class="rwg-infobar">
         <div class="rwg-chip"><div class="label">Seed</div><div class="value">${seedString}</div></div>
         <div class="rwg-chip"><div class="label">Orbit</div><div class="value">${(res.orbitAU ?? c.distanceFromSun)?.toFixed ? (res.orbitAU ?? c.distanceFromSun).toFixed(2) : (res.orbitAU ?? c.distanceFromSun)} AU</div></div>

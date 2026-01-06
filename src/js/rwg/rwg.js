@@ -536,6 +536,7 @@ const RWG_HAZARD_PRESETS = {
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage'];
 const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia'];
+const FRITIZIAN_CONTROLLED_SECTOR_REQUIREMENT = 5;
 
 
 function resolveParams(current, overrides) { return deepMerge(current || DEFAULT_PARAMS, overrides || {}); }
@@ -1205,7 +1206,8 @@ class RwgManager extends EffectableEntity {
     this.lockedTypes = new Set(["venus-like", "rogue", "ammonia-rich"]);
     this.lockedFeatures = new Set(['hazards']);
     this.lockedHazards = new Set(['hazardousBiomass', 'garbage']);
-    this.lockedDominions = new Set(['gabbagian']);
+    this.lockedDominions = new Set(['gabbagian', 'ammonia']);
+    this.dominionUnlockCacheVersion = -1;
     this.enabledHazards = [];
   }
   // Param API
@@ -1242,6 +1244,18 @@ class RwgManager extends EffectableEntity {
   isDominionUnlocked(id) { return !id ? false : !this.lockedDominions.has(id); }
   lockDominion(id) { if (id) this.lockedDominions.add(id); }
   unlockDominion(id) { if (id) this.lockedDominions.delete(id); }
+  updateDominionUnlocksFromGalaxy(galaxyManager) {
+    const cacheVersion = galaxyManager.getControlledSectorCacheVersion();
+    if (cacheVersion === this.dominionUnlockCacheVersion) return false;
+    this.dominionUnlockCacheVersion = cacheVersion;
+    const controlledCount = galaxyManager.getUhfControlledSectors().length;
+    if (controlledCount >= FRITIZIAN_CONTROLLED_SECTOR_REQUIREMENT) {
+      this.unlockDominion('ammonia');
+    } else {
+      this.lockDominion('ammonia');
+    }
+    return true;
+  }
 
   applyEffect(effect) {
     if (effect.type === 'unlockOrbit') {

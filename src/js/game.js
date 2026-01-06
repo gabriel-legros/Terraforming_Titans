@@ -497,6 +497,7 @@ function updateLogic(delta) {
   if (galaxyManager && typeof galaxyManager.update === 'function') {
     galaxyManager.update(delta);
   }
+  rwgManager.updateDominionUnlocksFromGalaxy(galaxyManager);
   warpGateNetworkManager.update(delta);
 
   const allStructures = {...buildings, ...colonies};

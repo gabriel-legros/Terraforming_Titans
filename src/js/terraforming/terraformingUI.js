@@ -854,6 +854,13 @@ function createTemperatureBox(row) {
       <h3>${terraforming.atmosphere.name}</h3>
       <p>Current: <span id="atmosphere-current"></span> kPa</p>
       <table>
+        <colgroup>
+          <col class="gas-col">
+          <col class="pressure-col">
+          <col class="delta-col">
+          <col class="target-col">
+          <col class="status-col">
+        </colgroup>
         <thead>
           <tr>
             <th>Gas</th>

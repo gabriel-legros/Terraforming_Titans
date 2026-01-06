@@ -51,13 +51,28 @@
     word-break: break-word;
   }
 
+  #atmosphere-box col.gas-col {
+    width: 30%;
+  }
+
+  #atmosphere-box col.pressure-col {
+    width: 18%;
+  }
+
+  #atmosphere-box col.delta-col {
+    width: 16%;
+  }
+
+  #atmosphere-box col.target-col {
+    width: 30%;
+  }
+
   #atmosphere-box col.status-col {
-    width: 1px;
+    width: 6%;
   }
 
   #atmosphere-box th:last-child,
   #atmosphere-box td:last-child {
-    width: 1px;
     padding: 0 4px;
     text-align: center;
   }

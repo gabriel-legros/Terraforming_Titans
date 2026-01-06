@@ -42,6 +42,18 @@
   border-radius: 8px;
 }
 
+.rwg-control-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.rwg-warning-row {
+  margin-bottom: 8px;
+}
+
 .rwg-controls > .rwg-input {
   flex: 1 1 260px;
 }
