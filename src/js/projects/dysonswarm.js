@@ -149,6 +149,9 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     if (!this.isCompleted && this.collectors === 0) {
       return totals;
     }
+    if (!this.canStartCollector()) {
+      return totals;
+    }
 
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     const duration = this.collectorDuration;
@@ -198,6 +201,10 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     }
 
     this.collectorShortfallLastTick = false;
+    if (!this.canStartCollector()) {
+      this.collectorShortfallLastTick = true;
+      return;
+    }
     const duration = this.collectorDuration;
     const fraction = deltaTime / duration;
 

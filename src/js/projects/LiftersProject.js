@@ -319,11 +319,6 @@ class LiftersProject extends TerraformingDurationProject {
       return;
     }
 
-    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
-    if (progress <= 0) {
-      return;
-    }
-
     const cost = this.getScaledCost();
     const storageProj = this.attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
     const storageState = storageProj || {
@@ -333,6 +328,26 @@ class LiftersProject extends TerraformingDurationProject {
       prioritizeMegaProjects: false,
     };
     let shortfall = false;
+    let canAffordBaseCost = true;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const res = resources[category][resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const availableTotal = res.value + storageState.getAvailableStoredResource(storageKey);
+        if (availableTotal < cost[category][resource]) {
+          canAffordBaseCost = false;
+        }
+      }
+    }
+    if (!canAffordBaseCost) {
+      this.expansionShortfallLastTick = true;
+      return;
+    }
+
+    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    if (progress <= 0) {
+      return;
+    }
 
     const applyColonyChange = (category, resource, amount) => {
       if (accumulatedChanges) {

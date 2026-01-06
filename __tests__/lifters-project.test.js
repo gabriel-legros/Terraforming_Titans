@@ -183,6 +183,21 @@ describe('LiftersProject', () => {
     expect(restored.startingDuration).toBe(expectedDuration);
   });
 
+  it('halts continuous expansion when the base cost is unavailable', () => {
+    const project = createProject();
+    resources.colony.superalloys.value = 0;
+    project.autoStart = true;
+    project.isActive = true;
+    project.duration = 500;
+
+    project.applyExpansionCostAndGain(1000, null, 1);
+
+    expect(project.expansionProgress).toBe(0);
+    expect(project.repeatCount).toBe(0);
+    expect(project.expansionShortfallLastTick).toBe(true);
+    expect(resources.colony.superalloys.decrease).not.toHaveBeenCalled();
+  });
+
   it('stores hydrogen in space storage while consuming colony energy', () => {
     const project = createProject();
     project.repeatCount = 2;

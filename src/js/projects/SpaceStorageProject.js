@@ -475,6 +475,22 @@ class SpaceStorageProject extends SpaceshipProject {
 
     const cost = this.getScaledCost();
     const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+    const storageState = storageProj || { getAvailableStoredResource: () => 0 };
+    let canAffordBaseCost = true;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const res = resources[category][resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const availableTotal = res.value + storageState.getAvailableStoredResource(storageKey);
+        if (availableTotal < cost[category][resource]) {
+          canAffordBaseCost = false;
+        }
+      }
+    }
+    if (!canAffordBaseCost) {
+      this.shortfallLastTick = true;
+      return;
+    }
     let shortfall = false;
 
     const applyColonyChange = (category, resource, amount) => {
@@ -677,6 +693,22 @@ class SpaceStorageProject extends SpaceshipProject {
       const rate = 1000 / duration;
       const fraction = deltaTime / duration;
       const cost = this.getScaledCost();
+      let canAffordBaseCost = true;
+      if (this.isContinuous()) {
+        const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+        const storageState = storageProj || { getAvailableStoredResource: () => 0 };
+        for (const category in cost) {
+          for (const resource in cost[category]) {
+            const res = resources[category][resource];
+            const storageKey = resource === 'water' ? 'liquidWater' : resource;
+            const availableTotal = res.value + storageState.getAvailableStoredResource(storageKey);
+            if (availableTotal < cost[category][resource]) {
+              canAffordBaseCost = false;
+            }
+          }
+        }
+      }
+      if (canAffordBaseCost) {
       for (const category in cost) {
         if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
@@ -692,6 +724,7 @@ class SpaceStorageProject extends SpaceshipProject {
           totals.cost[category][resource] =
             (totals.cost[category][resource] || 0) + cost[category][resource] * fraction;
         }
+      }
       }
     }
     if (this.shipOperationIsActive) {
