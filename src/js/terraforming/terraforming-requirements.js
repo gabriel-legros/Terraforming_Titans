@@ -138,6 +138,7 @@ const terraformingRequirements = {
   ammonia: {
     id: 'ammonia',
     displayName: 'Ammonia',
+    dominionUnlock: { type: 'fullyControlledSectors', minimum: 5 },
     temperatureRangeK: { min: 278.15, max: 293.15 },
     luminosityRange: { min: 1000, max: 2500 },
     gasTargetsPa: {

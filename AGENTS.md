@@ -222,6 +222,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added an ammonia resource with liquid/ice/gas cycles and updated terraforming physics to include its phase changes.
 - Random World Generator dominion selection now includes the Fritizian option tied to ammonia requirements.
 - Fritizian dominion unlocks once the galaxy has 5 fully controlled sectors, and the RWG dropdown shows the requirement while locked.
+- RWG dominion requirements now read from terraforming requirement metadata so new dominions can define their own unlock rules.
 - Added an ammonia-based terraforming requirement with NH3/H2 atmosphere targets, high luminosity range, and an ammonia photosynthesis metabolism profile.
 - Pretravel save capture now reuses the departure snapshot during planet travel so the pretravel slot keeps the departing planet key.
 - Added a Settings checkbox to keep the tab active by playing a looped near-silent audio track.

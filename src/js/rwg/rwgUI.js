@@ -141,24 +141,33 @@ function syncEnabledHazards() {
 
 function refreshDominionSelect() {
   const dominions = rwgManager.getAvailableDominions();
-  const fritizianUnlocked = rwgManager.isDominionUnlocked('ammonia');
-  const options = dominions.slice();
-  if (!fritizianUnlocked && !options.includes('ammonia')) {
-    options.push('ammonia');
-  }
-  const signature = options
-    .map((id) => `${id}:${id === 'ammonia' && !fritizianUnlocked ? 'locked' : 'open'}`)
+  const entries = rwgManager.getDominionOrder()
+    .map((id) => {
+      const unlocked = rwgManager.isDominionUnlocked(id);
+      const requirementLabel = rwgManager.getDominionUnlockLabel(id);
+      return {
+        id,
+        unlocked,
+        requirementLabel,
+        show: unlocked || requirementLabel
+      };
+    })
+    .filter((entry) => entry.show);
+  const signature = entries
+    .map((entry) => `${entry.id}:${entry.unlocked ? 'open' : 'locked'}`)
     .join(',');
   const selected = dominions.includes(rwgSelectedDominion) ? rwgSelectedDominion : dominions[0];
   rwgSelectedDominion = selected;
   if (rwgDominionEl.dataset.lastDominionList !== signature) {
     const frag = document.createDocumentFragment();
-    options.forEach((id) => {
+    entries.forEach((entry) => {
       const opt = document.createElement('option');
-      opt.value = id;
-      const displayName = dominionDisplayNames[id] || id;
-      const locked = id === 'ammonia' && !fritizianUnlocked;
-      const label = locked ? `${displayName} (Requires 5 fully controlled sectors)` : displayName;
+      opt.value = entry.id;
+      const displayName = dominionDisplayNames[entry.id] || entry.id;
+      const locked = !entry.unlocked;
+      const label = locked && entry.requirementLabel
+        ? `${displayName} (${entry.requirementLabel})`
+        : displayName;
       opt.textContent = `Dominion: ${label}`;
       opt.disabled = locked;
       frag.appendChild(opt);
@@ -168,7 +177,7 @@ function refreshDominionSelect() {
     rwgDominionEl.dataset.lastDominionList = signature;
   }
   rwgDominionEl.value = selected;
-  rwgDominionEl.style.display = options.length > 1 ? '' : 'none';
+  rwgDominionEl.style.display = entries.length > 1 ? '' : 'none';
 }
 
 function cacheResultControls() {

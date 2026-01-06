@@ -12,6 +12,17 @@
  * - Param API: rwgManager.setParams({...}), .getParams(), .withParams({...})
  */
 
+let terraformingRequirementsCatalog;
+try {
+  terraformingRequirementsCatalog = terraformingRequirements;
+} catch (error) {
+  try {
+    ({ terraformingRequirements: terraformingRequirementsCatalog } = require('../terraforming/terraforming-requirements.js'));
+  } catch (innerError) {
+    terraformingRequirementsCatalog = {};
+  }
+}
+
 // ===================== Utilities & Shims =====================
 function hashStringToInt(str) {
   let h = 1779033703 ^ str.length;
@@ -536,7 +547,22 @@ const RWG_HAZARD_PRESETS = {
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage'];
 const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia'];
-const FRITIZIAN_CONTROLLED_SECTOR_REQUIREMENT = 5;
+const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
+const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
+
+function getDominionUnlockRule(dominionId) {
+  const requirement = terraformingRequirementsCatalog[dominionId] || {};
+  return requirement.dominionUnlock || DOMINION_UNLOCK_ALWAYS;
+}
+
+function formatDominionUnlockLabel(rule) {
+  switch (rule.type) {
+    case 'fullyControlledSectors':
+      return `Requires ${rule.minimum} fully controlled sectors`;
+    default:
+      return '';
+  }
+}
 
 
 function resolveParams(current, overrides) { return deepMerge(current || DEFAULT_PARAMS, overrides || {}); }
@@ -1206,7 +1232,10 @@ class RwgManager extends EffectableEntity {
     this.lockedTypes = new Set(["venus-like", "rogue", "ammonia-rich"]);
     this.lockedFeatures = new Set(['hazards']);
     this.lockedHazards = new Set(['hazardousBiomass', 'garbage']);
-    this.lockedDominions = new Set(['gabbagian', 'ammonia']);
+    const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
+      RWG_DOMINION_ORDER.filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
+    );
+    this.lockedDominions = new Set(dominionLocks);
     this.dominionUnlockCacheVersion = -1;
     this.enabledHazards = [];
   }
@@ -1240,8 +1269,11 @@ class RwgManager extends EffectableEntity {
   unlockHazard(id) { if (id) this.lockedHazards.delete(id); }
   setEnabledHazards(hazards) { this.enabledHazards = orderHazardList(normalizeHazardList(hazards)); }
   getEnabledHazards() { return this.enabledHazards.slice(); }
+  getDominionOrder() { return RWG_DOMINION_ORDER.slice(); }
   getAvailableDominions() { return RWG_DOMINION_ORDER.filter((d) => !this.lockedDominions.has(d)); }
   isDominionUnlocked(id) { return !id ? false : !this.lockedDominions.has(id); }
+  getDominionUnlockRule(id) { return getDominionUnlockRule(id); }
+  getDominionUnlockLabel(id) { return formatDominionUnlockLabel(getDominionUnlockRule(id)); }
   lockDominion(id) { if (id) this.lockedDominions.add(id); }
   unlockDominion(id) { if (id) this.lockedDominions.delete(id); }
   updateDominionUnlocksFromGalaxy(galaxyManager) {
@@ -1249,11 +1281,22 @@ class RwgManager extends EffectableEntity {
     if (cacheVersion === this.dominionUnlockCacheVersion) return false;
     this.dominionUnlockCacheVersion = cacheVersion;
     const controlledCount = galaxyManager.getUhfControlledSectors().length;
-    if (controlledCount >= FRITIZIAN_CONTROLLED_SECTOR_REQUIREMENT) {
-      this.unlockDominion('ammonia');
-    } else {
-      this.lockDominion('ammonia');
-    }
+    RWG_DOMINION_ORDER.forEach((dominionId) => {
+      const rule = getDominionUnlockRule(dominionId);
+      switch (rule.type) {
+        case 'fullyControlledSectors': {
+          const unlocked = controlledCount >= rule.minimum;
+          if (unlocked) {
+            this.unlockDominion(dominionId);
+          } else {
+            this.lockDominion(dominionId);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    });
     return true;
   }
 
