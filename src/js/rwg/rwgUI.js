@@ -292,7 +292,7 @@ function refreshTypeSelect() {
     const locked = mgr && typeof mgr.isTypeLocked === 'function' ? mgr.isTypeLocked(t) : false;
     if (locked) {
       opt.disabled = true;
-      opt.textContent = `${base} (Locked)`;
+      opt.textContent = '???? (Locked)';
     }
     frag.appendChild(opt);
   });
@@ -513,7 +513,7 @@ function updateRandomWorldUI() {
 
       const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '');
       opt.dataset.baseText = base;
-      const newText = locked ? base + ' (Locked)' : base;
+      const newText = locked ? '???? (Locked)' : base;
       opt.disabled = locked;
       opt.textContent = newText;
     });
@@ -884,7 +884,6 @@ function renderWorldDetail(res, seedUsed, forcedType) {
   const sectorChip = (galaxyEnabled && c.sector)
     ? `<div class="rwg-chip"><div class="label">Sector</div><div class="value">${c.sector}</div></div>`
     : '';
-  const featureBlock = renderFeatureBlock(res);
   const warningMsg = lockedByStory
     ? 'You must complete the story for the current world first'
     : (alreadyTerraformed
@@ -928,7 +927,6 @@ function renderWorldDetail(res, seedUsed, forcedType) {
           ${renderResourceRow('Land (ha)', surf.land)}
           ${renderSurfaceResources(surf)}
         </div>
-        ${featureBlock}
       </div>
     </div>`;
 
@@ -974,6 +972,7 @@ function renderSurfaceResources(surface) {
   Object.values(resourcePhaseGroups).forEach((group) => {
     keys.push(group.surfaceKeys.liquid, group.surfaceKeys.ice);
   });
+  const defaults = defaultPlanetResources?.surface || {};
   const seen = new Set();
   const rows = [];
   keys.forEach((key) => {
@@ -982,41 +981,14 @@ function renderSurfaceResources(surface) {
     const resource = surface[key];
     const amount = resource?.initialValue ?? 0;
     if (!amount) return;
-    const label = resource?.name || key;
+    const defaultResource = defaults[key];
+    const label = resource?.displayName || resource?.name || defaultResource?.displayName || defaultResource?.name || key;
     const row = renderResourceRow(label, resource, true);
     if (row) rows.push(row);
   });
   return rows.join('');
 }
 
-function renderFeatureRow(label, value) {
-  return `<div class="rwg-row"><span>${label}</span><span>${value}</span></div>`;
-}
-
-function renderFeatureBlock(res) {
-  const hazards = res.override?.hazards || res.merged?.hazards;
-  if (!hazards) return '';
-  const rows = [];
-  const hazardKeys = Object.keys(hazards);
-  const effectValue = hazardKeys.length + 1;
-  rows.push(renderFeatureRow('RWG Effects Value', `x${effectValue}`));
-  hazardKeys.forEach((key) => {
-    if (key === 'hazardousBiomass') {
-      const resource = res.override?.resources?.surface?.hazardousBiomass
-        || res.merged?.resources?.surface?.hazardousBiomass;
-      if (resource && Number.isFinite(resource.initialValue) && resource.initialValue > 0) {
-        rows.push(renderResourceRow('Hazardous Biomass', resource));
-        return;
-      }
-      rows.push(renderFeatureRow(hazardDisplayNames[key] || key, 'Active'));
-      return;
-    }
-    rows.push(renderFeatureRow(hazardDisplayNames[key] || key, 'Active'));
-  });
-  if (!rows.length) return '';
-  const tooltip = '<span class="info-tooltip-icon" title="Terraforming a random world that contains a hazard grants double RWG rewards.">&#9432;</span>';
-  return `<div><h4>Features ${tooltip}</h4>${rows.join('')}</div>`;
-}
 
 function estimateGasPressure(res, gasKey) {
   try {
