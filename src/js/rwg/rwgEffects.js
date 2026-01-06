@@ -116,6 +116,18 @@ const RWG_EFFECTS = {
       },
     },
   ],
+  "ammonia-rich": [
+    {
+      effectId: "rwg-ammonia-life-points",
+      target: "lifeDesigner",
+      type: "lifeDesignPointBonus",
+      factor: 1,
+      computeValue(count, def) {
+        const f = def?.factor ?? 1;
+        return f * count;
+      },
+    },
+  ],
 };
 
 function getRandomWorldType(status) {

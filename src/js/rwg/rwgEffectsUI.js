@@ -116,6 +116,10 @@ function _computeRWGEffectsSummary() {
         const fEach = (eff.factor ?? 0.02) * 100;
         descr = descr || `Population growth rate increased (+${fEach.toFixed(0)}% each)`;
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
+      } else if (eff.type === 'lifeDesignPointBonus') {
+        const fEach = eff.factor ?? 1;
+        descr = descr || `Life design points (+${fEach} each)`;
+        display = `${raw >= 0 ? '+' : ''}${raw}`;
       } else if (eff.type === 'globalWorkerReduction') {
         const each = eff.factor ?? 0.02;
         const divisor = 1 + each * effectiveCount;

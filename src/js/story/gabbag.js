@@ -363,6 +363,7 @@ progressGabbag.chapters.push(
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'gabbag', value: true },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'garbage' },
       { target: 'rwgManager', type: 'allowDominion', targetId: 'gabbagian' },
+      { target: 'rwgManager', type: 'unlockType', targetId: 'ammonia-rich' },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'gas-giant' },
       { target: 'researchManager', type: 'booleanFlag', flagId: 'gabbagWasteProcessing', value: true },
       { target: 'building', type: 'booleanFlag', targetId: 'boschReactor', flagId: 'gabbagAmmoniaChemistry', value: true },

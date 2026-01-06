@@ -85,4 +85,23 @@ describe('applyRWGEffects', () => {
       value: 0.06,
     }));
   });
+
+  test('adds life design points for ammonia-rich worlds', () => {
+    spaceManager.randomWorldStatuses = {
+      ammonia: {
+        terraformed: true,
+        original: { classification: { archetype: 'ammonia-rich' } }
+      }
+    };
+
+    applyRWGEffects();
+
+    const effect = effects.find((entry) => entry && entry.effectId === 'rwg-ammonia-life-points');
+
+    expect(effect).toEqual(expect.objectContaining({
+      target: 'lifeDesigner',
+      type: 'lifeDesignPointBonus',
+      value: 1,
+    }));
+  });
 });

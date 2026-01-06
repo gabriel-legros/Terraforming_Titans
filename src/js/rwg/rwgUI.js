@@ -260,7 +260,8 @@ function refreshTypeSelect() {
     'desiccated-desert',
     'super-earth',
     'venus-like',
-    'rogue'
+    'rogue',
+    'ammonia-rich'
   ];
   const types = [];
   baseOrder.forEach((t) => { if (!types.includes(t) && meta[t]) types.push(t); });
