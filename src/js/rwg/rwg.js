@@ -535,7 +535,7 @@ const RWG_HAZARD_PRESETS = {
 };
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage'];
-const RWG_DOMINION_ORDER = ['human', 'gabbagian'];
+const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia'];
 
 
 function resolveParams(current, overrides) { return deepMerge(current || DEFAULT_PARAMS, overrides || {}); }

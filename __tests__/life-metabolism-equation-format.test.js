@@ -28,6 +28,17 @@ describe('formatMetabolismGrowthEquation', () => {
     expect(equation).toContain('→');
   });
 
+  it('formats ammonia photosynthesis with NH3 and N2', () => {
+    const requirement = getTerraformingRequirement('ammonia');
+    const process = requirement.lifeDesign.metabolism.processes.ammoniaPhotosynthesis;
+    const equation = formatMetabolismGrowthEquation(process);
+
+    expect(equation).toContain('NH₃');
+    expect(equation).toContain('N₂');
+    expect(equation).toContain('CO₂');
+    expect(equation).toContain('Light');
+  });
+
   it('can include coefficients', () => {
     const requirement = getTerraformingRequirement('gabbagian');
     const process = requirement.lifeDesign.metabolism.processes.methanogenesis;

@@ -52,6 +52,8 @@ const METABOLISM_EQUATION_SPECIES = {
   carbonDioxide: { key: 'co2', label: 'CO₂ (g)' },
   oxygen: { key: 'o2', label: 'O₂ (g)' },
   hydrogen: { key: 'h2', label: 'H₂ (g)' },
+  atmosphericAmmonia: { key: 'nh3', label: 'NH₃ (g)' },
+  inertGas: { key: 'n2', label: 'N₂ (g)' },
   atmosphericMethane: { key: 'ch4', label: 'CH₄ (g)' },
   atmosphericWater: { key: 'h2o_atm', label: 'H₂O (g)' },
   liquidWater: { key: 'h2o_liq', label: 'H₂O (l)' },
@@ -100,7 +102,7 @@ function formatMetabolismGrowthEquation(process, options = {}) {
   const left = [];
   const right = [];
 
-  const order = ['co2', 'h2', 'h2o_liq', 'h2o_atm', 'ch4', 'o2', 'biomass'];
+  const order = ['co2', 'h2', 'nh3', 'h2o_liq', 'h2o_atm', 'ch4', 'n2', 'o2', 'biomass'];
   const entries = order
     .filter(key => normalized[key])
     .map(key => [key, normalized[key]]);

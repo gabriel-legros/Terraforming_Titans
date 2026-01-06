@@ -135,6 +135,85 @@ const terraformingRequirements = {
       },
     },
   },
+  ammonia: {
+    id: 'ammonia',
+    displayName: 'Ammonia',
+    temperatureRangeK: { min: 278.15, max: 293.15 },
+    luminosityRange: { min: 1000, max: 2500 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 1000, max: 6000 },
+      oxygen: { min: 0, max: 200 },
+      inertGas: { min: 120_000, max: 320_000 },
+      hydrogen: { min: 20_000, max: 60_000 },
+      atmosphericAmmonia: { min: 4_000, max: 12_000 },
+      atmosphericMethane: { min: 1_000, max: 6_000 },
+    },
+    liquidCoverageTarget: 0.5,
+    liquidType: 'water',
+    lifeCoverageTarget: 0.5,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    lifeDesign: {
+      survivalTemperatureRangeK: { min: 273.15, max: 308.15 },
+      optimalGrowthTemperatureBaseK: 283.15,
+      growthTemperatureToleranceBaseC: 1,
+      growthTemperatureTolerancePerPointC: 0.5,
+      photosynthesisRatePerPoint: 0.00008,
+      bioworkersPerBiomassPerPoint: 0.00004,
+      baseMaxBiomassDensityTPerM2: 0.1,
+      radiationToleranceThresholdPoints: 25,
+      minimumBiomassDecayRateTPerS: 1,
+      metabolism: {
+        primaryProcessId: 'ammoniaPhotosynthesis',
+        processes: {
+          ammoniaPhotosynthesis: {
+            id: 'ammoniaPhotosynthesis',
+            displayName: 'Ammonia Photosynthesis',
+            growth: {
+              usesLuminosity: true,
+              perBiomass: {
+                surface: { biomass: 1, liquidWater: -0.4 },
+                atmospheric: {
+                  carbonDioxide: -1.3,
+                  hydrogen: -0.3,
+                  atmosphericAmmonia: -0.4,
+                  atmosphericMethane: 0.2,
+                  inertGas: 0.3,
+                  atmosphericWater: 0.6,
+                },
+              },
+            },
+            decay: {
+              allowSterileDecayWithoutOxygen: true,
+              perBiomass: {
+                surface: { biomass: -1 },
+                atmospheric: {
+                  carbonDioxide: 0.7,
+                  hydrogen: 0.2,
+                  atmosphericAmmonia: 0.2,
+                  atmosphericMethane: 0.2,
+                  inertGas: 0.2,
+                  atmosphericWater: 0.4,
+                },
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 25,
+        invasiveness: 50,
+        spaceEfficiency: 100,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+      },
+    },
+  },
 };
 
 function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {
