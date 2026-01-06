@@ -19,8 +19,7 @@ class OxygenFactory extends MultiRecipesBuilding {
     const {
       targetProductivity: baseTarget,
       hasAtmosphericOversight,
-      computeMaxProduction,
-      solveRequired
+      computeMaxProduction
     } = this.computeBaseProductivity(resources, deltaTime);
 
     if (this.active === 0) {
@@ -34,10 +33,7 @@ class OxygenFactory extends MultiRecipesBuilding {
 
     if (
       hasAtmosphericOversight &&
-      settings.autoDisableAbovePressure &&
-      terraforming &&
-      resources.atmospheric?.oxygen &&
-      typeof calculateAtmosphericPressure === 'function'
+      settings.autoDisableAbovePressure
     ) {
       const oxygen = resources.atmospheric.oxygen;
       const targetPa = settings.disablePressureThreshold * 1000;
@@ -53,20 +49,25 @@ class OxygenFactory extends MultiRecipesBuilding {
       }
       const maxProduction = computeMaxProduction('atmospheric', 'oxygen');
       if (maxProduction > 0) {
-        const originalAmount = oxygen.value;
-        const required = solveRequired((added) => {
-          return (
-            calculateAtmosphericPressure(
-              originalAmount + added,
-              terraforming.celestialParameters.gravity,
-              terraforming.celestialParameters.radius
-            ) - targetPa
-          );
-        }, maxProduction);
-        this.productivity = Math.min(
-          targetProductivity,
-          required / maxProduction
+        const maxPa = calculateAtmosphericPressure(
+          oxygen.value + maxProduction,
+          terraforming.celestialParameters.gravity,
+          terraforming.celestialParameters.radius
         );
+        const deltaPa = maxPa - currentPa;
+        const neededPa = targetPa - currentPa;
+        if (deltaPa > 0) {
+          const required = Math.min(
+            maxProduction,
+            maxProduction * (neededPa / deltaPa)
+          );
+          this.productivity = Math.min(
+            targetProductivity,
+            required / maxProduction
+          );
+        } else {
+          this.productivity = targetProductivity;
+        }
         return;
       }
     }
