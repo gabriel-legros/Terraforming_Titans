@@ -311,7 +311,7 @@ const DEFAULT_PARAMS = {
   },
   classification: {
     typeAlbedo: {
-      "venus-like": 0.75, "mars-like": 0.25, "cold-desert": 0.5,
+      "venus-like": 0.15, "mars-like": 0.25, "cold-desert": 0.5,
       "icy-moon": 0.17, "titan-like": 0.15,
       "carbon-planet": 0.08,
       "desiccated-desert": 0.38,
