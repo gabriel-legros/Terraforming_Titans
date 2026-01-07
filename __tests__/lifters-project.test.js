@@ -198,6 +198,22 @@ describe('LiftersProject', () => {
     expect(resources.colony.superalloys.decrease).not.toHaveBeenCalled();
   });
 
+  it('records colony expansion usage in resource rates', () => {
+    const project = createProject();
+    project.autoStart = true;
+    project.isActive = true;
+    project.duration = 500;
+    resources.colony.superalloys.value = 10;
+
+    project.estimateCostAndGain(1000, true, 1);
+
+    expect(resources.colony.superalloys.modifyRate).toHaveBeenCalled();
+    const [rate, source, type] = resources.colony.superalloys.modifyRate.mock.calls[0];
+    expect(rate).toBeLessThan(0);
+    expect(source).toBe('Lifter expansion');
+    expect(type).toBe('project');
+  });
+
   it('stores hydrogen in space storage while consuming colony energy', () => {
     const project = createProject();
     project.repeatCount = 2;

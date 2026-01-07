@@ -512,8 +512,65 @@ class LiftersProject extends TerraformingDurationProject {
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    const totals = { cost: {}, gain: {} };
+    const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
+      getAvailableStoredResource: () => 0,
+      resourceUsage: {},
+      usedStorage: 0,
+      prioritizeMegaProjects: false,
+    };
+
+    const expansionActive = this.isActive && (!this.isExpansionContinuous() || this.autoStart);
+    if (expansionActive) {
+      const duration = this.getEffectiveDuration();
+      const limit = this.maxRepeatCount || Infinity;
+      const completedExpansions = this.repeatCount + this.expansionProgress;
+      const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
+      const progress = this.isExpansionContinuous()
+        ? Math.min((deltaTime / duration) * productivity, remainingRepeats)
+        : (deltaTime / duration) * productivity;
+      const checkBaseCost = this.isExpansionContinuous();
+      let canAffordBaseCost = !checkBaseCost;
+      const cost = this.getScaledCost();
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          const storageKey = resource === 'water' ? 'liquidWater' : resource;
+          const availableTotal =
+            (resources?.[category]?.[resource]?.value || 0) +
+            storageState.getAvailableStoredResource(storageKey);
+          if (checkBaseCost && availableTotal < cost[category][resource]) {
+            canAffordBaseCost = false;
+          }
+        }
+      }
+
+      if (remainingRepeats > 0 && progress > 0 && canAffordBaseCost) {
+        const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
+        for (const category in cost) {
+          if (!totals.cost[category]) totals.cost[category] = {};
+          for (const resource in cost[category]) {
+            const baseCost = cost[category][resource];
+            const tickAmount = baseCost * progress;
+            const res = resources?.[category]?.[resource];
+            const storageKey = resource === 'water' ? 'liquidWater' : resource;
+            const storageAvailable = storageState.getAvailableStoredResource(storageKey);
+            const colonyAvailable = res?.value || 0;
+            const colonyPortion = storageState.prioritizeMegaProjects
+              ? Math.max(tickAmount - storageAvailable, 0)
+              : Math.min(colonyAvailable, tickAmount);
+            const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
+            if (applyRates && colonyRate > 0) {
+              res?.modifyRate?.(-colonyRate, 'Lifter expansion', 'project');
+            }
+            totals.cost[category][resource] =
+              (totals.cost[category][resource] || 0) + baseCost * progress;
+          }
+        }
+      }
+    }
+
     if (!applyRates || !this.shouldOperate()) {
-      return { cost: {}, gain: {} };
+      return totals;
     }
     const seconds = deltaTime / 1000;
     const maxUnits = this.getUnitsPerSecond(productivity);
@@ -523,16 +580,15 @@ class LiftersProject extends TerraformingDurationProject {
     } else {
       cappedUnits = Math.min(maxUnits, this.getAtmosphereLimit());
     }
-    if (cappedUnits <= 0) {
-      return { cost: {}, gain: {} };
+    if (cappedUnits <= 0 || !this.isColonyEnergyAllowed()) {
+      return totals;
     }
     const energyRate = cappedUnits * this.energyPerUnit;
-    if (!this.isColonyEnergyAllowed()) {
-      return { cost: {}, gain: {} };
-    }
     const colonyEnergy = resources?.colony?.energy;
     colonyEnergy?.modifyRate?.(-energyRate, 'Lifting', 'project');
-    return { cost: { colony: { energy: energyRate * seconds } }, gain: {} };
+    totals.cost.colony ||= {};
+    totals.cost.colony.energy = (totals.cost.colony.energy || 0) + energyRate * seconds;
+    return totals;
   }
 
   renderUI(container) {
