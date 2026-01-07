@@ -212,11 +212,13 @@ function drawSkillConnections() {
         return;
     }
     // Ensure the SVG viewport matches the container for crisp alignment
-    const w = Math.max(1, Math.round(container.clientWidth));
-    const h = Math.max(1, Math.round(container.clientHeight));
+    const w = Math.max(1, Math.round(container.scrollWidth));
+    const h = Math.max(1, Math.round(container.scrollHeight));
     svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
     svg.setAttribute('width', String(w));
     svg.setAttribute('height', String(h));
+    svg.style.width = `${w}px`;
+    svg.style.height = `${h}px`;
     const used = new Set();
 
     for (const id in skillManager.skills) {
@@ -226,17 +228,15 @@ function drawSkillConnections() {
         const toButton = skillButtonEls[id] || document.getElementById(`skill-${id}`);
         if (!toButton) continue;
 
-        const toRect = toButton.getBoundingClientRect();
-        const toX = Math.round(toRect.left - containerRect.left + toRect.width / 2);
-        const toY = Math.round(toRect.top - containerRect.top);
+        const toX = Math.round(toButton.offsetLeft + toButton.offsetWidth / 2);
+        const toY = Math.round(toButton.offsetTop);
 
         for (const prereqId of skill.requires) {
             const fromButton = skillButtonEls[prereqId] || document.getElementById(`skill-${prereqId}`);
             if (!fromButton) continue;
 
-            const fromRect = fromButton.getBoundingClientRect();
-            const fromX = Math.round(fromRect.left - containerRect.left + fromRect.width / 2);
-            const fromY = Math.round(fromRect.top - containerRect.top + fromRect.height);
+            const fromX = Math.round(fromButton.offsetLeft + fromButton.offsetWidth / 2);
+            const fromY = Math.round(fromButton.offsetTop + fromButton.offsetHeight);
 
             const key = `${prereqId}-${id}`;
             let path = skillPaths[key];
