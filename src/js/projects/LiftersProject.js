@@ -530,7 +530,7 @@ class LiftersProject extends TerraformingDurationProject {
         ? Math.min((deltaTime / duration) * productivity, remainingRepeats)
         : (deltaTime / duration) * productivity;
       const checkBaseCost = this.isExpansionContinuous();
-      let canAffordBaseCost = !checkBaseCost;
+      let canAffordBaseCost = true;
       const cost = this.getScaledCost();
       for (const category in cost) {
         for (const resource in cost[category]) {
