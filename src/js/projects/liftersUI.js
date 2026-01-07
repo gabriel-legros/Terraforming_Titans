@@ -39,7 +39,7 @@ function renderLiftersUI(project, container) {
   header.classList.add('card-header');
   const title = document.createElement('span');
   title.classList.add('card-title');
-  title.textContent = 'Lifter Command';
+  title.textContent = 'Lifter Controls';
   header.appendChild(title);
   card.appendChild(header);
 
