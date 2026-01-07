@@ -226,6 +226,7 @@ globalThis.RWG_WORLD_TYPES = {
   "carbon-planet": { displayName: "Carbon" },
   "desiccated-desert": { displayName: "Desiccated Desert" },
   "super-earth": { displayName: "Super-Earth" },
+  "chthonian": { displayName: "Chthonian" },
   "venus-like": { displayName: "Venus-like" },
   "rogue": { displayName: "Rogue" },
   "ammonia-rich": { displayName: "Ammonia-rich" },
@@ -240,6 +241,7 @@ const RWG_TYPE_BASE_COLORS = {
   "carbon-planet": "#2c2b30",
   "desiccated-desert": "#caa16a",
   "super-earth": "#4c6f4e",
+  "chthonian": "#3f3f46",
   "venus-like": "#cdb675",
   "rogue": "#193347",
   "ammonia-rich": "#7a9b6b",
@@ -292,7 +294,7 @@ const DEFAULT_PARAMS = {
       veryColdFluxWm2: [10, 100]
     },
     moonChance: { thresholdAU: 3, chance: 0.35 },
-    moonTypeBlacklist: ["super-earth"],
+    moonTypeBlacklist: ["super-earth", "chthonian"],
     typeOrbitLocks: {
       "venus-like": {
         presets: ["hot"],
@@ -314,6 +316,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": 0.08,
       "desiccated-desert": 0.38,
       "super-earth": 0.30,
+      "chthonian": 0.30,
       "rogue": 0.40,
       "ammonia-rich": 0.36,
     },
@@ -327,7 +330,8 @@ const DEFAULT_PARAMS = {
       "icy-moon": [0.25,0.7], "titan-like": [0.25,0.6], "cold-desert": [0.4,0.9],
       "carbon-planet": [0.7, 1.4],
       "desiccated-desert": [0.6, 1.2],
-      "super-earth": [1.2, 6],
+      "super-earth": [1.4, 2],
+      "chthonian": [2, 4],
       "rogue": [0.7, 1.3],
       "ammonia-rich": [0.6, 1.3]
     },
@@ -337,6 +341,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": [0.90, 1.20],
       "desiccated-desert": [0.80, 1.05],
       "super-earth": [0.90, 1.30],
+      "chthonian": [0.90, 1.30],
       "rogue": [0.85, 1.15],
       "ammonia-rich": [0.85, 1.15]
     }
@@ -360,6 +365,15 @@ const DEFAULT_PARAMS = {
       "carbon-planet":     { pressureBar: 1.0,  mix: { atmosphericMethane: 0.5, inertGas: 0.49, carbonDioxide: 0.01 } },
       "desiccated-desert": { pressureBar: 0.05, mix: { carbonDioxide: 0.85, inertGas: 0.15 } },
       "super-earth": {
+        pressureBar: 1.2,
+        mix: {
+          inertGas: 0.95,
+          carbonDioxide: 0.045,
+          oxygen: 0.001,
+          atmosphericWater: 0.004
+        }
+      },
+      "chthonian": {
         pressureBar: 1.2,
         mix: {
           inertGas: 0.95,
@@ -395,6 +409,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": [0.5, 1.5],
       "desiccated-desert": [0.5, 2.0], 
       "super-earth": [0.7, 2.2],
+      "chthonian": [0.7, 2.2],
       "rogue": [0.6, 1.4],
       "ammonia-rich": [0.7, 1.3],
     }
@@ -404,6 +419,7 @@ const DEFAULT_PARAMS = {
       "venus-like": 1e12, "mars-like": 8e15, "cold-desert": 2e14, "icy-moon": 4e19, "titan-like": 1e16,
       "carbon-planet": 5e13,
       "desiccated-desert": 1e13, "super-earth": 2e15,
+      "chthonian": 2e15,
       "rogue": 4e16,
       "ammonia-rich": 2e14,
     },
@@ -411,6 +427,7 @@ const DEFAULT_PARAMS = {
       "titan-like": 3e14, "icy-moon": 0, "cold-desert": 0, "mars-like": 0, "venus-like": 0,
       "carbon-planet": 5e14,
       "desiccated-desert": 0, "super-earth": 0,
+      "chthonian": 0,
       "rogue": 8e15,
       "ammonia-rich": 8e13,
     },
@@ -427,6 +444,7 @@ const DEFAULT_PARAMS = {
       "icy-moon": 5.0, "titan-like": 3.0, "cold-desert": 2.0, "mars-like": 1.5, "venus-like": 0.1,
       "carbon-planet": 0.5,
       "desiccated-desert": 0.8, "super-earth": 0.2,
+      "chthonian": 0.2,
       "rogue": 2.5,
       "ammonia-rich": 1.2,
     },
@@ -444,6 +462,7 @@ const DEFAULT_PARAMS = {
       // Type density multiplier (affects the max cap)
       densityByType: {
         "super-earth": 1.30,
+        "chthonian": 1.30,
         "venus-like": 1.00,
         "mars-like": 0.90,
         "carbon-planet": 0.90,
@@ -459,6 +478,7 @@ const DEFAULT_PARAMS = {
         // ~2% by default; tweak per type if you want flavor
         default: 0.002,
         "super-earth": 0.003,
+        "chthonian": 0.003,
         "icy-moon": 0.001,
         "titan-like": 0.001
       },
@@ -487,6 +507,7 @@ const DEFAULT_PARAMS = {
       baseActivityByType: {
         "venus-like": 0.80,
         "super-earth": 0.60,
+        "chthonian": 0.60,
         "carbon-planet": 0.35,
         "rogue": 0.45,
 
@@ -513,6 +534,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": 0.15,
       "desiccated-desert": 0.10,
       "super-earth": 0.35,
+      "chthonian": 0.35,
       "rogue": 0.20,
       "ammonia-rich": 0.12,
     },
@@ -783,7 +805,7 @@ function sampleBulk(rng, archetype, params) {
   const density_rel = randRange(rng, dr[0], dr[1]);
   const mass_rel = density_rel * Math.pow(radius_rel, 3);
   const mass = mass_rel * Me; const radius_km = radius_rel * Re_km; const gravity = gravityFromMassRadius(mass, radius_km);
-  return { mass, radius_km, gravity };
+  return { mass, radius_km, gravity, radius_rel };
 }
 function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   const tpl = params.atmosphere.templates[archetype];
@@ -1256,7 +1278,7 @@ class RwgManager extends EffectableEntity {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
       : ["mars-like", "cold-desert", "titan-like", "venus-like",
-        "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich"];
+        "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich", "chthonian"];
     return base.filter((t) => !this.lockedTypes.has(t));
   }
 
@@ -1398,6 +1420,8 @@ class RwgManager extends EffectableEntity {
       let candidates = Array.isArray(opts.availableTypes) ? opts.availableTypes.slice() : this.getAvailableTypes(isMoon);
       if (Array.isArray(opts.lockedTypes)) candidates = candidates.filter((c) => !opts.lockedTypes.includes(c));
       if (candidates.length === 0) candidates = this.getAvailableTypes(isMoon);
+      const autoCandidates = candidates.filter((c) => c !== "chthonian");
+      if (autoCandidates.length) candidates = autoCandidates;
       forcedType = candidates[Math.floor(rngType() * candidates.length)];
     }
 
@@ -1467,7 +1491,9 @@ class RwgManager extends EffectableEntity {
       let isMoon = aAU > moonConfig.thresholdAU && moonRoll < moonConfig.chance;
       const typePick = mulberry32(S ^ (0xC0FFEE ^ (i + 1)))();
       const typeList = this.getAvailableTypes(isMoon);
-      const forcedType = typeList[Math.floor(typePick * typeList.length)] || "mars-like";
+      const autoTypes = typeList.filter((t) => t !== "chthonian");
+      const types = autoTypes.length ? autoTypes : typeList;
+      const forcedType = types[Math.floor(typePick * types.length)] || "mars-like";
       const planetSeed = S ^ ((i + 1) * 0x9e37);
       const lockResult = resolveTypeOrbitLock({
         forcedType,

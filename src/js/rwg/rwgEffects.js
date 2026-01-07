@@ -52,6 +52,17 @@ const RWG_EFFECTS = {
       },
     },
   ],    
+  "chthonian": [
+    {
+      effectId: "rwg-chthonian-suffering",
+      target: "global",
+      type: "flavorText",
+      description: "Suffering Enjoyment",
+      computeValue() {
+        return 0;
+      },
+    },
+  ],
   "rogue": [
     {
       effectId: "rwg-rogue-maintenance",
@@ -197,6 +208,7 @@ function applyRWGEffects() {
     const bonus = hazardBonuses[type] || 0;
     const effectiveCount = baseCount + bonus;
     for (const eff of effects) {
+      if (eff.type === "flavorText") continue;
       const value = eff.computeValue instanceof Function ? eff.computeValue(effectiveCount, eff) : eff.value;
       if (eff.type === "resourceCostMultiplier" && Array.isArray(eff.resourceId)) {
         for (const resourceId of eff.resourceId) {

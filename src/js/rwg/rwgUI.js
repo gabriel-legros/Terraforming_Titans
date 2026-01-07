@@ -279,6 +279,7 @@ function refreshTypeSelect() {
     'carbon-planet',
     'desiccated-desert',
     'super-earth',
+    'chthonian',
     'venus-like',
     'rogue',
     'ammonia-rich'

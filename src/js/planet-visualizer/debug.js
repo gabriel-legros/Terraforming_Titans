@@ -214,6 +214,7 @@
       { value: 'carbon-planet', name: 'Carbon planet' },
       { value: 'desiccated-desert', name: 'Desiccated desert' },
       { value: 'super-earth', name: 'Super-Earth' },
+      { value: 'chthonian', name: 'Chthonian' },
       { value: 'venus-like', name: 'Venus-like' },
     ];
     for (const a of archetypes) {

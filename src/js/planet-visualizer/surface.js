@@ -92,6 +92,17 @@
       featureMask: 0.8,
       shade: 1,
     },
+    'chthonian': {
+      top: { color: '#c7c2b4', t: 0.22 },
+      bottom: { color: '#1f1b16', t: 0.6 },
+      tint: { color: '#766a5a', min: 0.08, max: 0.16 },
+      topJitter: 0.05,
+      bottomJitter: 0.05,
+      heightScale: 1.14,
+      heightJitter: 0.06,
+      featureMask: 0.82,
+      shade: 0.98,
+    },
     'venus-like': {
       top: { color: '#f7e6b2', t: 0.38 },
       bottom: { color: '#3f2c12', t: 0.5 },

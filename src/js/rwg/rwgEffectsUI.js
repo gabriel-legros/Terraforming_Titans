@@ -142,6 +142,9 @@ function _computeRWGEffectsSummary() {
         const perWorld = eff.factor ?? 0;
         descr = descr || `${what} construction cost (/(1+${perWorld.toFixed(1)}xN))`;
         display = divisor > 0 ? `/${divisor.toFixed(1)}` : '—';
+      } else if (eff.type === 'flavorText') {
+        descr = descr || '';
+        display = '—';
       } else if (typeof raw === 'number') {
         display = `x${raw.toFixed(3)}`;
       }
