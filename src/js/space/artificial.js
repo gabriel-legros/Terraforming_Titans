@@ -49,6 +49,8 @@ const SHELL_COST_CALIBRATION = {
 };
 const CONSTRUCTION_HOURS_PER_50B = 10;
 const MAX_SHELL_DURATION_MS = 5 * 3_600_000;
+const AUTO_RADIUS_STEP = 0.01;
+const AUTO_RADIUS_ITERATIONS = 32;
 const BASE_SHELL_COST = (() => {
     const radiusAtCalibration = Math.sqrt(SHELL_COST_CALIBRATION.landHa / EARTH_AREA_HA);
     const superalloyBase = SHELL_COST_CALIBRATION.superalloys / (radiusAtCalibration ** 3);
@@ -292,6 +294,38 @@ class ArtificialManager extends EffectableEntity {
             ? Math.max(spaceManager.getTerraformedPlanetCount(), 1)
             : 1;
         return { durationMs: base / worlds, worldCount: worlds };
+    }
+
+    getAutoRadius(bounds) {
+        const targetMs = MAX_SHELL_DURATION_MS;
+        let low = bounds.min;
+        let high = bounds.max;
+        const lowDuration = this.getDurationContext(low).durationMs;
+        const highDuration = this.getDurationContext(high).durationMs;
+        let candidate = high;
+        if (lowDuration >= targetMs) {
+            candidate = low;
+        } else if (highDuration <= targetMs) {
+            candidate = high;
+        } else {
+            for (let i = 0; i < AUTO_RADIUS_ITERATIONS; i += 1) {
+                const mid = (low + high) / 2;
+                const midDuration = this.getDurationContext(mid).durationMs;
+                if (midDuration > targetMs) {
+                    high = mid;
+                } else {
+                    low = mid;
+                }
+            }
+            candidate = high;
+        }
+        let snapped = Math.round(candidate / AUTO_RADIUS_STEP) * AUTO_RADIUS_STEP;
+        let durationMs = this.getDurationContext(snapped).durationMs;
+        while (durationMs > targetMs && snapped > bounds.min) {
+            snapped = Math.round((snapped - AUTO_RADIUS_STEP) / AUTO_RADIUS_STEP) * AUTO_RADIUS_STEP;
+            durationMs = this.getDurationContext(snapped).durationMs;
+        }
+        return Math.min(Math.max(snapped, bounds.min), bounds.max);
     }
 
     exceedsDurationLimit(durationMs) {

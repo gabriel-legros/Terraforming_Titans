@@ -169,6 +169,7 @@ When adding new generation to the Random World Generator, place the new generati
 - ArtificialManager powers the Space > Artificial subtab, letting players pick shell/ring/disk archetypes (future-ready), core type, star context, and radius within per-core bounds; it seeds a star/flux when allowed.
 - Shellworld costs scale with radius³ from a 50B ha calibration and can pull payments from space storage first; launch stashes for metal/silicon cap at land area (1 per ha) and support Solis Bailout injections.
 - Build time scales with terraformed world count, hard-blocks any project that would exceed five hours, and the duration tooltip explains the limit.
+- The radius input now includes an Auto button that snaps to a 5-hour construction time to hit the maximum allowed build duration.
 - Completed builds can be traveled to or discarded; construction history, progress bar, and sector auto-fill persist across sessions with terraformed-world value based on land/50B (min 1).
 - Default labels and placeholders use the neutral “artificial world” terminology rather than “shellworld” to cover current and future constructs.
 - Leaving unfinished artificial worlds now records an Abandoned status with a resume Travel button plus enough snapshot data (including initial metal/silicon stockpiles) to rebuild their override on return.

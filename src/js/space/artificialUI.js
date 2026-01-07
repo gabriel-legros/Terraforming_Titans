@@ -7,6 +7,7 @@ const artificialUICache = {
   core: null,
   radiusRange: null,
   radiusInput: null,
+  radiusAuto: null,
   radiusLabel: null,
   areaLabel: null,
   gravityValue: null,
@@ -222,6 +223,12 @@ function setRadiusFields(value, force = false) {
   }
 }
 
+function getAutoRadiusValue() {
+  const bounds = getRadiusBounds();
+  const manager = artificialManager;
+  return manager.getAutoRadius(bounds);
+}
+
 function applyRadiusBounds() {
   const bounds = getRadiusBounds();
   if (artificialUICache.radiusRange) {
@@ -430,6 +437,14 @@ function ensureArtificialLayout() {
   radiusInput.className = 'artificial-radius-input';
   artificialUICache.radiusInput = radiusInput;
   radiusControls.appendChild(radiusInput);
+
+  const radiusAuto = document.createElement('button');
+  radiusAuto.type = 'button';
+  radiusAuto.className = 'artificial-secondary artificial-radius-auto';
+  radiusAuto.textContent = 'Auto';
+  radiusAuto.title = 'Set radius for a 5 hour construction time.';
+  artificialUICache.radiusAuto = radiusAuto;
+  radiusControls.appendChild(radiusAuto);
   radiusLabel.appendChild(radiusControls);
 
   const surfaceBox = document.createElement('div');
@@ -771,6 +786,12 @@ function ensureArtificialLayout() {
   radiusInput.addEventListener('blur', () => {
     artificialRadiusEditing = false;
     const value = clampRadiusValue(parseFloat(radiusInput.value) || 0);
+    setRadiusFields(value, true);
+    updateArtificialUI();
+  });
+  radiusAuto.addEventListener('click', () => {
+    artificialRadiusEditing = false;
+    const value = getAutoRadiusValue();
     setRadiusFields(value, true);
     updateArtificialUI();
   });
@@ -1286,6 +1307,7 @@ function updateArtificialUI(options = {}) {
   if (!project) {
     artificialUICache.radiusRange.disabled = false;
     artificialUICache.radiusInput.disabled = false;
+    artificialUICache.radiusAuto.disabled = false;
     artificialUICache.core.disabled = false;
     artificialUICache.type.disabled = false;
     artificialUICache.sector.disabled = false;
@@ -1296,6 +1318,7 @@ function updateArtificialUI(options = {}) {
   } else {
     artificialUICache.radiusRange.disabled = true;
     artificialUICache.radiusInput.disabled = true;
+    artificialUICache.radiusAuto.disabled = true;
     artificialUICache.core.disabled = true;
     artificialUICache.type.disabled = true;
     artificialUICache.sector.disabled = true;

@@ -118,6 +118,18 @@ function applyMirrorOversightTravelSettings(settings, saved = {}) {
   return settings;
 }
 
+function getQuickBuildCount(building, buildCount) {
+  const count = buildCount || 1;
+  if (!gameSettings.roundBuildingConstruction || building.autoBuildEnabled) {
+    return count;
+  }
+  return getRoundedBuildCount(building.count, count);
+}
+
+function syncQuickBuildCount(quickBuild, structureName) {
+  quickBuild.count = selectedBuildCounts[structureName] || quickBuild.count || 1;
+}
+
 function getFacilityResourceFactor(building) {
   const base = Number.isFinite(building?._baseProductivity)
     ? building._baseProductivity
@@ -1739,30 +1751,40 @@ class SpaceMirrorFacilityProject extends Project {
     const els = projectElements[this.name];
     els.quickBuild.mirror.button.addEventListener('click', () => {
       if (buildings.spaceMirror) {
-        buildings.spaceMirror.buildStructure(els.quickBuild.mirror.count);
+        const buildCount = getQuickBuildCount(buildings.spaceMirror, els.quickBuild.mirror.count);
+        buildings.spaceMirror.buildStructure(buildCount);
         this.updateUI();
       }
     });
     els.quickBuild.mirror.mul.addEventListener('click', () => {
-      els.quickBuild.mirror.count = multiplyByTen(els.quickBuild.mirror.count);
+      const nextCount = multiplyByTen(selectedBuildCounts.spaceMirror || els.quickBuild.mirror.count);
+      selectedBuildCounts.spaceMirror = nextCount;
+      els.quickBuild.mirror.count = nextCount;
       this.updateUI();
     });
     els.quickBuild.mirror.div.addEventListener('click', () => {
-      els.quickBuild.mirror.count = divideByTen(els.quickBuild.mirror.count);
+      const nextCount = divideByTen(selectedBuildCounts.spaceMirror || els.quickBuild.mirror.count);
+      selectedBuildCounts.spaceMirror = nextCount;
+      els.quickBuild.mirror.count = nextCount;
       this.updateUI();
     });
     els.quickBuild.lantern.button.addEventListener('click', () => {
       if (buildings.hyperionLantern) {
-        buildings.hyperionLantern.buildStructure(els.quickBuild.lantern.count);
+        const buildCount = getQuickBuildCount(buildings.hyperionLantern, els.quickBuild.lantern.count);
+        buildings.hyperionLantern.buildStructure(buildCount);
         this.updateUI();
       }
     });
     els.quickBuild.lantern.mul.addEventListener('click', () => {
-      els.quickBuild.lantern.count = multiplyByTen(els.quickBuild.lantern.count);
+      const nextCount = multiplyByTen(selectedBuildCounts.hyperionLantern || els.quickBuild.lantern.count);
+      selectedBuildCounts.hyperionLantern = nextCount;
+      els.quickBuild.lantern.count = nextCount;
       this.updateUI();
     });
     els.quickBuild.lantern.div.addEventListener('click', () => {
-      els.quickBuild.lantern.count = divideByTen(els.quickBuild.lantern.count);
+      const nextCount = divideByTen(selectedBuildCounts.hyperionLantern || els.quickBuild.lantern.count);
+      selectedBuildCounts.hyperionLantern = nextCount;
+      els.quickBuild.lantern.count = nextCount;
       this.updateUI();
     });
     
@@ -1826,8 +1848,10 @@ class SpaceMirrorFacilityProject extends Project {
       qb.container.style.display = this.isCompleted ? 'grid' : 'none';
       if (this.isCompleted) {
         const building = buildings.spaceMirror;
-        qb.button.textContent = `Build ${formatNumber(qb.count, true)} ${building.displayName}`;
-        const canAfford = typeof building.canAfford === 'function' ? building.canAfford(qb.count) : true;
+        syncQuickBuildCount(qb, 'spaceMirror');
+        const buildCount = getQuickBuildCount(building, qb.count);
+        qb.button.textContent = `Build ${formatNumber(buildCount, true)} ${building.displayName}`;
+        const canAfford = typeof building.canAfford === 'function' ? building.canAfford(buildCount) : true;
         if (qb.button.classList) {
           if (!canAfford) qb.button.classList.add('cant-afford');
           else qb.button.classList.remove('cant-afford');
@@ -1835,7 +1859,7 @@ class SpaceMirrorFacilityProject extends Project {
           qb.button.style.color = canAfford ? '' : 'red';
         }
         if (qb.cost) {
-          updateQuickBuildCostDisplay(qb.cost, building, qb.count);
+          updateQuickBuildCostDisplay(qb.cost, building, buildCount);
         }
       } else if (qb.cost) {
         clearQuickBuildCost(qb.cost);
@@ -1889,8 +1913,10 @@ class SpaceMirrorFacilityProject extends Project {
 
         if (elements.quickBuild && elements.quickBuild.lantern) {
           const qb = elements.quickBuild.lantern;
-          qb.button.textContent = `Build ${formatNumber(qb.count, true)} ${lantern.displayName}`;
-          const canAfford = typeof lantern.canAfford === 'function' ? lantern.canAfford(qb.count) : true;
+          syncQuickBuildCount(qb, 'hyperionLantern');
+          const buildCount = getQuickBuildCount(lantern, qb.count);
+          qb.button.textContent = `Build ${formatNumber(buildCount, true)} ${lantern.displayName}`;
+          const canAfford = typeof lantern.canAfford === 'function' ? lantern.canAfford(buildCount) : true;
           if (qb.button.classList) {
             if (!canAfford) qb.button.classList.add('cant-afford');
             else qb.button.classList.remove('cant-afford');
@@ -1898,7 +1924,7 @@ class SpaceMirrorFacilityProject extends Project {
             qb.button.style.color = canAfford ? '' : 'red';
           }
           if (qb.cost) {
-            updateQuickBuildCostDisplay(qb.cost, lantern, qb.count);
+            updateQuickBuildCostDisplay(qb.cost, lantern, buildCount);
           }
         }
       } else if (elements.quickBuild && elements.quickBuild.lantern && elements.quickBuild.lantern.cost) {
