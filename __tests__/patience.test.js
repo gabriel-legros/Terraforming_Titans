@@ -142,4 +142,21 @@ describe('PatienceManager spending', () => {
 
     expect(gains.metalGain).toBe(0);
   });
+
+  test('metal gains exclude space storage transfers', () => {
+    metal.productionRateByType = {
+      project: {
+        'Space storage transfer': 3,
+      },
+    };
+    metal.consumptionRateByType = {
+      project: {
+        'Space storage transfer': 1,
+      },
+    };
+
+    const gains = patienceManager.calculateSpendGains(1);
+
+    expect(gains.metalGain).toBeCloseTo(3600);
+  });
 });

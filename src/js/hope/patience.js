@@ -133,7 +133,12 @@ class PatienceManager extends EffectableEntity {
         const advancedResearchGain = advancedResearchRate > 0 ? advancedResearchRate * seconds : 0;
 
         const metalResource = colonyResources?.metal;
-        const metalNetRate = (metalResource?.productionRate || 0) - (metalResource?.consumptionRate || 0);
+        const transferSource = 'Space storage transfer';
+        const transferProduction = metalResource?.productionRateByType?.project?.[transferSource] || 0;
+        const transferConsumption = metalResource?.consumptionRateByType?.project?.[transferSource] || 0;
+        const metalNetRate = (metalResource?.productionRate || 0)
+            - (metalResource?.consumptionRate || 0)
+            - (transferProduction - transferConsumption);
         const metalGain = metalNetRate > 0 ? metalNetRate * seconds : 0;
 
         const unlockedOneill = spaceManager?.isBooleanFlagSet?.('oneillCylinders');
