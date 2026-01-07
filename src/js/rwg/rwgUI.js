@@ -918,7 +918,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <span class="info-tooltip-icon" title="The weather model in Terraforming Titans is quite complex.  It is not realistic for the random world generator to generate worlds that already start near equilibrium.  However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.  \n\nTo reach this state, worlds can be simulated for thousands of year, as necessary, so that the climate stabilizes.  This button must be pressed to get at least a little of simulation, but can also be ended early if preferred.  Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue.  For best results, please keep the window in focus while running the simulation.  The rest of the game will pause.">&#9432;</span>
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
         <select id="rwg-dominion" class="rwg-inline-select"></select>
-        <span class="info-tooltip-icon" title="Completing terraforming for non-Human dominions grants alien artifacts.  Human and Gabbagian dominions are excluded.  Rewards scale per dominion: 500, 1000, 1500, and so on.">&#9432;</span>
+        <span class="info-tooltip-icon" title="Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion.  Rewards scale for each time it is granted: 500, 1000, 1500, and so on.">&#9432;</span>
       </div>
       ${warningMsg ? `<div class="rwg-control-row rwg-warning-row"><span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span></div>` : ''}
       <div class="rwg-infobar">

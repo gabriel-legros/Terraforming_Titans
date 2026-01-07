@@ -16,6 +16,7 @@ describe('renderWorldDetail surface resources', () => {
       methane: { surfaceKeys: { liquid: 'liquidMethane', ice: 'hydrocarbonIce' } },
       ammonia: { surfaceKeys: { liquid: 'liquidAmmonia', ice: 'ammoniaIce' } },
     };
+    global.defaultPlanetResources = { surface: {} };
     jest.isolateModules(() => {
       ({ renderWorldDetail } = require('../src/js/rwg/rwgUI.js'));
     });
@@ -24,6 +25,7 @@ describe('renderWorldDetail surface resources', () => {
   afterEach(() => {
     delete global.createGravityWarning;
     delete global.resourcePhaseGroups;
+    delete global.defaultPlanetResources;
     global.window = originalWindow;
     global.document = originalDocument;
   });

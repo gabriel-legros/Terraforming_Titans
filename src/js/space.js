@@ -122,6 +122,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
         this.dominionTerraformRewards = {};
+        this.dominionTerraformRewardCount = 0;
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -182,18 +183,18 @@ class SpaceManager extends EffectableEntity {
         }
     }
 
-    getDominionTerraformRewardCount(dominionId) {
-        return this.dominionTerraformRewards[dominionId] || 0;
-    }
-
     grantDominionTerraformReward(dominionId) {
         const resolvedDominion = dominionId || 'human';
         if (resolvedDominion === 'human' || resolvedDominion === 'gabbagian') {
             return 0;
         }
-        const count = this.getDominionTerraformRewardCount(resolvedDominion);
-        const reward = 500 * (count + 1);
-        this.dominionTerraformRewards[resolvedDominion] = count + 1;
+        if (this.dominionTerraformRewards[resolvedDominion]) {
+            return 0;
+        }
+        const rewardIndex = this.dominionTerraformRewardCount + 1;
+        const reward = 500 * rewardIndex;
+        this.dominionTerraformRewards[resolvedDominion] = true;
+        this.dominionTerraformRewardCount = rewardIndex;
         resources.special.alienArtifact.increase(reward);
         return reward;
     }
@@ -1337,7 +1338,8 @@ class SpaceManager extends EffectableEntity {
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
             oneillCylinders: this.getOneillCylinderCount(),
-            dominionTerraformRewards: this.dominionTerraformRewards
+            dominionTerraformRewards: this.dominionTerraformRewards,
+            dominionTerraformRewardCount: this.dominionTerraformRewardCount
         };
     }
 
@@ -1354,6 +1356,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
         this.dominionTerraformRewards = {};
+        this.dominionTerraformRewardCount = 0;
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
         const parseHazardList = (value) => {
@@ -1568,6 +1571,7 @@ class SpaceManager extends EffectableEntity {
         }
 
         this.dominionTerraformRewards = savedData.dominionTerraformRewards || {};
+        this.dominionTerraformRewardCount = savedData.dominionTerraformRewardCount || 0;
 
         // Ensure the loaded current world is marked visited
         if (this.currentRandomSeed !== null) {

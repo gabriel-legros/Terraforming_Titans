@@ -29,14 +29,15 @@ describe('SpaceManager dominion terraforming rewards', () => {
     return new SpaceManager({ mars: {}, titan: {} });
   };
 
-  it('awards scaling artifacts per dominion while skipping human and gabbagian', () => {
+  it('awards scaling artifacts once per dominion while skipping human and gabbagian', () => {
     const manager = createManager();
 
     expect(manager.grantDominionTerraformReward('ammonia')).toBe(500);
     expect(global.resources.special.alienArtifact.value).toBe(500);
-    expect(manager.grantDominionTerraformReward('ammonia')).toBe(1000);
+    expect(manager.grantDominionTerraformReward('ammonia')).toBe(0);
+    expect(global.resources.special.alienArtifact.value).toBe(500);
+    expect(manager.grantDominionTerraformReward('custom')).toBe(1000);
     expect(global.resources.special.alienArtifact.value).toBe(1500);
-    expect(manager.getDominionTerraformRewardCount('ammonia')).toBe(2);
     expect(manager.grantDominionTerraformReward('human')).toBe(0);
     expect(manager.grantDominionTerraformReward('gabbagian')).toBe(0);
     expect(global.resources.special.alienArtifact.value).toBe(1500);

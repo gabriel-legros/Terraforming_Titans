@@ -223,7 +223,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Random World Generator dominion selection now includes the Fritizian option tied to ammonia requirements.
 - Fritizian dominion unlocks once the galaxy has 5 fully controlled sectors, and the RWG dropdown shows the requirement while locked.
 - RWG dominion requirements now read from terraforming requirement metadata so new dominions can define their own unlock rules.
-- Completing terraforming now awards alien artifacts for non-Human dominions, scaling per dominion at 500 per completion (Human and Gabbagian are excluded).
+- Completing terraforming now awards alien artifacts once per non-Human dominion, scaling across dominions at 500 per completion (Human and Gabbagian are excluded).
 - Added an ammonia-based terraforming requirement with NH3/H2 atmosphere targets, high luminosity range, and an ammonia photosynthesis metabolism profile.
 - Pretravel save capture now reuses the departure snapshot during planet travel so the pretravel slot keeps the departing planet key.
 - Added a Settings checkbox to keep the tab active by playing a looped near-silent audio track.
