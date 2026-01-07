@@ -34,7 +34,7 @@
   
   .terraforming-box p {
     margin: 5px 0;
-    font-size: 14px;
+    font-size: 12px;
     color: #666;
   }
 
@@ -42,7 +42,7 @@
     width: 100%;
     table-layout: fixed;
     margin: 0 auto;  /* Centers the table inside the box */
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .terraforming-box th,
@@ -81,8 +81,8 @@
     font-size:12px;
   }
 
-  .terraforming-target {
-    font-size: 14px;
+.terraforming-target {
+    font-size: 12px;
   }
 
   .no-margin {
