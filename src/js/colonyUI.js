@@ -98,12 +98,19 @@ function getGrowthMultiplierBreakdown(){
     if(effect.type === 'growthMultiplier'){
       const mult = effect.value;
       if(mult === 1) return;
+      const sourceId = String(effect.sourceId || '');
       let name = effect.name || effect.sourceId || effect.effectId || 'Unknown';
-      name = name.toString()
-                 .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-                 .replace(/_/g, ' ')
-                 .replace(/(^\w|\s\w)/g, m => m.toUpperCase())
-                 .trim();
+      if (sourceId.startsWith('rwg-')) {
+        const typeKey = sourceId.slice(4);
+        const typeName = RWG_WORLD_TYPES[typeKey]?.displayName || typeKey.replace(/-/g, ' ');
+        name = `Random World: ${typeName}`;
+      } else {
+        name = name.toString()
+                   .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+                   .replace(/_/g, ' ')
+                   .replace(/(^\w|\s\w)/g, m => m.toUpperCase())
+                   .trim();
+      }
       lines.push(`${name}: ${formatNumber(mult, false, 3)}x`);
     }
   });

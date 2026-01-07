@@ -452,3 +452,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added Hazardous Biomass Incineration advanced research to unlock the incinerator recipe and hide multi-recipe dropdowns until more than one option is available.
 - Space disposal now groups multi-phase resources behind a type dropdown plus a phase selector, driven by shared phase definitions in `planet-resource-parameters.js`.
 - Terraforming zonal resource synchronization and global-change distribution now read per-resource `zonalConfig` parameters for aggregation and spread behavior.
+- Water import automation now offers a disable mode that stops when water+ice amounts exceed the terraforming target.

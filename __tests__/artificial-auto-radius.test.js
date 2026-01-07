@@ -10,7 +10,7 @@ describe('Artificial world auto radius', () => {
       applyEffect() {}
     };
     global.spaceManager = {
-      getTerraformedPlanetCount: () => 3,
+      getTerraformedPlanetCount: () => 10,
     };
   });
 

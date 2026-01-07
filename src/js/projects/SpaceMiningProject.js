@@ -9,6 +9,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableOxygenPressureThreshold = 0;
     this.disableAboveWaterCoverage = false;
     this.waterCoverageThreshold = 0.2;
+    this.waterCoverageDisableMode = 'coverage';
     this.hasOxygenPressureControl = false;
     this.pressureUnit = 'kPa';
     this.oxygenPressureUnit = 'kPa';
@@ -169,8 +170,22 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(checkbox);
 
     const label = document.createElement('label');
-    label.textContent = 'Disable if water coverage above: ';
+    label.textContent = 'Disable if ';
     control.appendChild(label);
+
+    const modeSelect = document.createElement('select');
+    modeSelect.classList.add('water-coverage-mode');
+    [
+      { value: 'coverage', text: 'water coverage above' },
+      { value: 'target', text: 'water+ice above target' }
+    ].forEach(optionData => {
+      const option = document.createElement('option');
+      option.value = optionData.value;
+      option.textContent = optionData.text;
+      modeSelect.appendChild(option);
+    });
+    modeSelect.value = this.waterCoverageDisableMode;
+    label.appendChild(modeSelect);
 
     const input = document.createElement('input');
     input.type = 'number';
@@ -204,11 +219,26 @@ class SpaceMiningProject extends SpaceshipProject {
     percent.textContent = '%';
     control.appendChild(percent);
 
+    const updateInputVisibility = () => {
+      const showInput = this.waterCoverageDisableMode === 'coverage';
+      input.style.display = showInput ? '' : 'none';
+      percent.style.display = showInput ? '' : 'none';
+    };
+
+    modeSelect.addEventListener('change', () => {
+      this.waterCoverageDisableMode = modeSelect.value;
+      updateInputVisibility();
+    });
+
+    updateInputVisibility();
+
     projectElements[this.name] = {
       ...projectElements[this.name],
       waterCoverageControl: control,
       waterCoverageCheckbox: checkbox,
       waterCoverageInput: input,
+      waterCoverageMode: modeSelect,
+      waterCoveragePercent: percent,
     };
 
     return control;
@@ -258,8 +288,16 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.waterCoverageCheckbox) {
       elements.waterCoverageCheckbox.checked = this.disableAboveWaterCoverage;
     }
+    if (elements.waterCoverageMode) {
+      elements.waterCoverageMode.value = this.waterCoverageDisableMode;
+    }
     if (elements.waterCoverageInput && document.activeElement !== elements.waterCoverageInput) {
       elements.waterCoverageInput.value = this.waterCoverageThreshold * 100;
+    }
+    if (elements.waterCoverageInput && elements.waterCoveragePercent) {
+      const showInput = this.waterCoverageDisableMode === 'coverage';
+      elements.waterCoverageInput.style.display = showInput ? '' : 'none';
+      elements.waterCoveragePercent.style.display = showInput ? '' : 'none';
     }
     if (elements.oxygenPressureControl) {
       elements.oxygenPressureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
@@ -293,9 +331,33 @@ class SpaceMiningProject extends SpaceshipProject {
     return monitoringOn && this.attributes.dynamicWaterImport && this.disableAboveWaterCoverage;
   }
 
+  getWaterTargetAmount() {
+    const surfaceArea = terraforming.celestialParameters.surfaceArea;
+    let total = 0;
+    for (const zone of ZONES) {
+      const zoneArea = surfaceArea * getZonePercentage(zone);
+      total += estimateAmountForCoverage(terraforming.waterTarget, zoneArea);
+    }
+    return total;
+  }
+
+  getWaterIceTotalAmount() {
+    let total = 0;
+    for (const zone of ZONES) {
+      const zoneSurface = terraforming.zonalSurface[zone];
+      total += (zoneSurface.liquidWater || 0) + (zoneSurface.ice || 0);
+    }
+    return total;
+  }
+
   exceedsWaterCoverageLimit(hasMonitoring) {
     if (!this.waterCoverageLimitEnabled(hasMonitoring)) {
       return false;
+    }
+    if (this.waterCoverageDisableMode === 'target') {
+      const totalAmount = this.getWaterIceTotalAmount();
+      const targetAmount = this.getWaterTargetAmount();
+      return totalAmount >= (targetAmount * (1 - ATMOSPHERIC_MONITORING_TOLERANCE));
     }
     const liquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
     const totalCoverage = Math.min(1, liquidCoverage);
@@ -383,6 +445,7 @@ class SpaceMiningProject extends SpaceshipProject {
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
+      waterCoverageDisableMode: this.waterCoverageDisableMode,
       pressureUnit: this.pressureUnit,
       oxygenPressureUnit: this.oxygenPressureUnit,
     };
@@ -398,6 +461,7 @@ class SpaceMiningProject extends SpaceshipProject {
     if (Number.isFinite(state.waterCoverageThreshold)) {
       this.waterCoverageThreshold = Math.max(0, Math.min(state.waterCoverageThreshold, 1));
     }
+    this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
     this.pressureUnit = state.pressureUnit || 'kPa';
     this.oxygenPressureUnit = state.oxygenPressureUnit || 'kPa';
   }
