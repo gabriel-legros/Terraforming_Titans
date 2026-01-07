@@ -2003,6 +2003,7 @@ function updateLifeBox() {
       terraforming.completed = true;
       if (typeof spaceManager !== 'undefined') {
         spaceManager.updateCurrentPlanetTerraformedStatus(true);
+        spaceManager.grantDominionTerraformReward(terraforming.requirementId);
       }
       if (typeof updateSpaceUI === 'function') {
         updateSpaceUI();

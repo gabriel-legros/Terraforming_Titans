@@ -121,6 +121,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
+        this.dominionTerraformRewards = {};
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -179,6 +180,22 @@ class SpaceManager extends EffectableEntity {
         } else {
             super.applyEffect(effect);
         }
+    }
+
+    getDominionTerraformRewardCount(dominionId) {
+        return this.dominionTerraformRewards[dominionId] || 0;
+    }
+
+    grantDominionTerraformReward(dominionId) {
+        const resolvedDominion = dominionId || 'human';
+        if (resolvedDominion === 'human' || resolvedDominion === 'gabbagian') {
+            return 0;
+        }
+        const count = this.getDominionTerraformRewardCount(resolvedDominion);
+        const reward = 500 * (count + 1);
+        this.dominionTerraformRewards[resolvedDominion] = count + 1;
+        resources.special.alienArtifact.increase(reward);
+        return reward;
     }
 
     // --- Getters (Keep existing getters) ---
@@ -1319,7 +1336,8 @@ class SpaceManager extends EffectableEntity {
             randomTabEnabled: this.randomTabEnabled,
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
-            oneillCylinders: this.getOneillCylinderCount()
+            oneillCylinders: this.getOneillCylinderCount(),
+            dominionTerraformRewards: this.dominionTerraformRewards
         };
     }
 
@@ -1335,6 +1353,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
+        this.dominionTerraformRewards = {};
         this._initializePlanetStatuses(); // Reset statuses to default structure
 
         const parseHazardList = (value) => {
@@ -1547,6 +1566,8 @@ class SpaceManager extends EffectableEntity {
         if (typeof savedData.randomTabEnabled === 'boolean') {
             this.randomTabEnabled = savedData.randomTabEnabled;
         }
+
+        this.dominionTerraformRewards = savedData.dominionTerraformRewards || {};
 
         // Ensure the loaded current world is marked visited
         if (this.currentRandomSeed !== null) {
