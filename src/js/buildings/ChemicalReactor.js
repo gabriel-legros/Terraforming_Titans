@@ -193,12 +193,12 @@ class ChemicalReactor extends MultiRecipesBuilding {
 
     const unitSelect = document.createElement('select');
     unitSelect.classList.add('chem-reactor-unit');
-    control.appendChild(unitSelect);
 
     const amountInput = document.createElement('input');
     amountInput.type = 'text';
     amountInput.classList.add('chem-reactor-amount-input');
     control.appendChild(amountInput);
+    control.appendChild(unitSelect);
 
     const wire = wireStringNumberInput(amountInput, {
       parseValue: (value) => Math.max(0, parseFlexibleNumber(value) || 0),
@@ -269,6 +269,9 @@ class ChemicalReactor extends MultiRecipesBuilding {
     modeSelect.value = settings.mode;
     operatorSelect.value = settings.operator;
     syncResourceOptions();
+    amountInput.value = settings.amount >= 1e6
+      ? formatNumber(settings.amount, true, 3)
+      : String(settings.amount);
     wire.syncParsedValue();
 
     cache.chemicalReactor = {
@@ -372,11 +375,12 @@ class ChemicalReactor extends MultiRecipesBuilding {
 
   static saveAutomationSettings() {
     const settings = this.getAutomationSettings();
+    const amount = parseFlexibleNumber(settings.amount);
     return {
       autoDisable: !!settings.autoDisable,
       mode: settings.mode === 'output' ? 'output' : 'input',
       operator: settings.operator === '<' ? '<' : '>',
-      amount: settings.amount || 0,
+      amount: Math.max(0, amount || 0),
       unit: settings.unit === 'Pa'
         ? 'Pa'
         : settings.unit === 'kPa'
@@ -398,8 +402,9 @@ class ChemicalReactor extends MultiRecipesBuilding {
     settings.operator = saved.operator === '<'
       ? '<'
       : DEFAULT_CHEM_REACTOR_AUTOMATION_SETTINGS.operator;
+    const loadedAmount = parseFlexibleNumber(saved.amount);
     settings.amount = 'amount' in saved
-      ? (saved.amount || 0)
+      ? Math.max(0, loadedAmount || 0)
       : DEFAULT_CHEM_REACTOR_AUTOMATION_SETTINGS.amount;
     settings.unit = saved.unit === 'Pa'
       ? 'Pa'
