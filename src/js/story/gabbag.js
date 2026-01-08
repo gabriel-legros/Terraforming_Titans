@@ -361,6 +361,7 @@ progressGabbag.chapters.push(
     ],
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'gabbag', value: true },
+      { target: 'rwgManager', type: 'unlockFeature', targetId: 'dominions' },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'garbage' },
       { target: 'rwgManager', type: 'allowDominion', targetId: 'gabbagian' },
       { target: 'rwgManager', type: 'unlockType', targetId: 'ammonia-rich' },

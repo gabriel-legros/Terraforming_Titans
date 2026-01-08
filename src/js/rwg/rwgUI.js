@@ -25,6 +25,7 @@ let rwgResultEl;
 let rwgTravelBtnEl;
 let rwgDominionEl;
 let rwgDominionLoreBtnEl;
+let rwgDominionInfoEl;
 let rwgDominionLoreOverlayEl;
 let rwgDominionLoreListEl;
 let rwgDominionLoreTextEl;
@@ -147,6 +148,16 @@ function syncEnabledHazards() {
 }
 
 function refreshDominionSelect() {
+  const dominionsUnlocked = rwgManager.isFeatureUnlocked('dominions');
+  if (!dominionsUnlocked) {
+    rwgDominionEl.style.display = 'none';
+    rwgDominionLoreBtnEl.style.display = 'none';
+    rwgDominionInfoEl.style.display = 'none';
+    rwgDominionLoreOverlayEl.style.display = 'none';
+    return;
+  }
+  rwgDominionLoreBtnEl.style.display = '';
+  rwgDominionInfoEl.style.display = '';
   const dominions = rwgManager.getAvailableDominions();
   const entries = rwgManager.getDominionOrder()
     .map((id) => {
@@ -288,11 +299,12 @@ function closeDominionLore() {
 function cacheResultControls() {
   rwgTravelBtnEl = document.getElementById('rwg-travel-btn');
   rwgDominionEl = document.getElementById('rwg-dominion');
+  rwgDominionLoreBtnEl = document.getElementById('rwg-dominion-lore-btn');
+  rwgDominionInfoEl = document.getElementById('rwg-dominion-info');
   rwgDominionEl && (rwgDominionEl.onchange = () => {
     rwgSelectedDominion = rwgDominionEl.value;
   });
   rwgDominionEl && refreshDominionSelect();
-  rwgDominionLoreBtnEl = document.getElementById('rwg-dominion-lore-btn');
   rwgDominionLoreBtnEl.onclick = () => openDominionLore();
 }
 
@@ -1029,7 +1041,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
         <select id="rwg-dominion" class="rwg-inline-select"></select>
         <button id="rwg-dominion-lore-btn" class="rwg-btn">Lore</button>
-        <span class="info-tooltip-icon" title="Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion.  Rewards scale for each time it is granted: 500, 1000, 1500, and so on.">&#9432;</span>
+        <span id="rwg-dominion-info" class="info-tooltip-icon" title="Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion.  Rewards scale for each time it is granted: 500, 1000, 1500, and so on.">&#9432;</span>
       </div>
       ${warningMsg ? `<div class="rwg-control-row rwg-warning-row"><span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span></div>` : ''}
       <div class="rwg-infobar">

@@ -1252,7 +1252,7 @@ class RwgManager extends EffectableEntity {
     this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
     this.lockedOrbits = new Set(["hot"]);
     this.lockedTypes = new Set(["venus-like", "rogue", "ammonia-rich"]);
-    this.lockedFeatures = new Set(['hazards']);
+    this.lockedFeatures = new Set(['hazards', 'dominions']);
     this.lockedHazards = new Set(['hazardousBiomass', 'garbage']);
     const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
       RWG_DOMINION_ORDER.filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
