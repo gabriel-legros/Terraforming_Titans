@@ -95,6 +95,15 @@ describe('Terraforming requirement selection', () => {
     expect(human.gasTargetsPa.atmosphericAmmonia).toEqual({ min: 0, max: 10 });
   });
 
+  test('dominions include lore text', () => {
+    const keys = Object.keys(terraformingRequirements);
+    keys.forEach((key) => {
+      const lore = terraformingRequirements[key].lore;
+      expect(lore).toEqual(expect.any(String));
+      expect(lore.length).toBeGreaterThan(0);
+    });
+  });
+
   test('uses specialAttributes.terraformingRequirementId when provided', () => {
     const resources = {
       surface: { land: { value: 1 } },

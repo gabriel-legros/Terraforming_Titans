@@ -4,6 +4,7 @@ const terraformingRequirements = {
   human: {
     id: 'human',
     displayName: 'Human',
+    lore: 'Baseline human habitat standards modeled on Earth-like comfort and adaptable biospheres.',
     temperatureRangeK: { min: 278.15, max: 298.15 },
     luminosityRange: { min: 600, max: 2000 },
     totalPressureRangeKPa: { min: 80, max: 120 },
@@ -68,6 +69,7 @@ const terraformingRequirements = {
   gabbagian: {
     id: 'gabbagian',
     displayName: 'Gabbagian',
+    lore: 'Heat-loving methane ecologies shaped by Gabbag survival doctrine and heavy atmosphere tolerance.',
     temperatureRangeK: { min: 328.15, max: 368.15 },
     luminosityRange: { min: 0, max: 2000 },
     gasTargetsPa: {
@@ -140,6 +142,7 @@ const terraformingRequirements = {
   ammonia: {
     id: 'ammonia',
     displayName: 'Fritizian',
+    lore: 'Cooler ammonia-biased worlds tuned for resilient chemistries and patient, long-form terraforming.',
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 5 },
     temperatureRangeK: { min: 278.15, max: 293.15 },
     luminosityRange: { min: 800, max: 2000 },

@@ -24,6 +24,13 @@ let rwgHazardListOrder = [];
 let rwgResultEl;
 let rwgTravelBtnEl;
 let rwgDominionEl;
+let rwgDominionLoreBtnEl;
+let rwgDominionLoreOverlayEl;
+let rwgDominionLoreListEl;
+let rwgDominionLoreTextEl;
+let rwgDominionLoreCloseBtnEl;
+let rwgDominionLoreItems = {};
+let rwgDominionLoreOrder = [];
 let rwgSelectedDominion = 'human';
 
 if (!globalThis.__rwgGravityHelpers) {
@@ -180,6 +187,104 @@ function refreshDominionSelect() {
   rwgDominionEl.style.display = entries.length > 1 ? '' : 'none';
 }
 
+function initializeDominionLoreOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'rwg-dominion-lore-overlay';
+  overlay.className = 'rwg-lore-overlay';
+  overlay.style.display = 'none';
+
+  const win = document.createElement('div');
+  win.className = 'rwg-lore-window';
+
+  const header = document.createElement('div');
+  header.className = 'rwg-lore-header';
+  const title = document.createElement('div');
+  title.className = 'rwg-lore-title';
+  title.textContent = 'Dominion Lore';
+  const closeBtn = document.createElement('button');
+  closeBtn.id = 'rwg-dominion-lore-close';
+  closeBtn.className = 'rwg-btn';
+  closeBtn.textContent = 'Close';
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  const body = document.createElement('div');
+  body.className = 'rwg-lore-body';
+  const list = document.createElement('div');
+  list.id = 'rwg-dominion-lore-list';
+  list.className = 'rwg-lore-list';
+  const text = document.createElement('div');
+  text.id = 'rwg-dominion-lore-text';
+  text.className = 'rwg-lore-text';
+  body.appendChild(list);
+  body.appendChild(text);
+
+  win.appendChild(header);
+  win.appendChild(body);
+  overlay.appendChild(win);
+  document.body.appendChild(overlay);
+
+  rwgDominionLoreOverlayEl = overlay;
+  rwgDominionLoreListEl = list;
+  rwgDominionLoreTextEl = text;
+  rwgDominionLoreCloseBtnEl = closeBtn;
+
+  closeBtn.addEventListener('click', () => {
+    closeDominionLore();
+  });
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) closeDominionLore();
+  });
+}
+
+function refreshDominionLoreList() {
+  const order = rwgManager.getDominionOrder();
+  const signature = order.join(',');
+  if (rwgDominionLoreListEl.dataset.lastDominionLore === signature) return;
+  rwgDominionLoreListEl.textContent = '';
+  rwgDominionLoreItems = {};
+  rwgDominionLoreOrder = order;
+  order.forEach((id) => {
+    const entry = document.createElement('button');
+    entry.type = 'button';
+    entry.className = 'rwg-lore-item';
+    const unlocked = rwgManager.isDominionUnlocked(id);
+    const requirementLabel = rwgManager.getDominionUnlockLabel(id);
+    const displayName = dominionDisplayNames[id] || id;
+    entry.textContent = unlocked || !requirementLabel
+      ? displayName
+      : `${displayName} (${requirementLabel})`;
+    if (!unlocked) entry.classList.add('locked');
+    entry.addEventListener('click', () => {
+      selectDominionLore(id);
+    });
+    rwgDominionLoreItems[id] = entry;
+    rwgDominionLoreListEl.appendChild(entry);
+  });
+  rwgDominionLoreListEl.dataset.lastDominionLore = signature;
+}
+
+function selectDominionLore(id) {
+  rwgDominionLoreOrder.forEach((entryId) => {
+    const item = rwgDominionLoreItems[entryId];
+    item.classList.toggle('active', entryId === id);
+  });
+  rwgDominionLoreTextEl.textContent = terraformingRequirements[id].lore;
+}
+
+function openDominionLore() {
+  refreshDominionLoreList();
+  const selected = rwgDominionLoreOrder.includes(rwgSelectedDominion)
+    ? rwgSelectedDominion
+    : rwgDominionLoreOrder[0];
+  selectDominionLore(selected);
+  rwgDominionLoreOverlayEl.style.display = 'flex';
+}
+
+function closeDominionLore() {
+  rwgDominionLoreOverlayEl.style.display = 'none';
+}
+
 function cacheResultControls() {
   rwgTravelBtnEl = document.getElementById('rwg-travel-btn');
   rwgDominionEl = document.getElementById('rwg-dominion');
@@ -187,6 +292,8 @@ function cacheResultControls() {
     rwgSelectedDominion = rwgDominionEl.value;
   });
   rwgDominionEl && refreshDominionSelect();
+  rwgDominionLoreBtnEl = document.getElementById('rwg-dominion-lore-btn');
+  rwgDominionLoreBtnEl.onclick = () => openDominionLore();
 }
 
 function applyDominionSelection(res) {
@@ -479,6 +586,8 @@ function initializeRandomWorldUI() {
       renderHistoryPage();
     }
   });
+
+  initializeDominionLoreOverlay();
 
   // Wire buttons
   const btnPlanet = controls.querySelector('#rwg-generate-planet');
@@ -919,6 +1028,7 @@ function renderWorldDetail(res, seedUsed, forcedType) {
         <span class="info-tooltip-icon" title="The climate model in Terraforming Titans is quite complex.  It is not realistic for the random world generator to generate worlds that already start near equilibrium.  However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.  \n\nTo reach this state, worlds can be simulated for thousands of year, as necessary, so that the climate stabilizes.  This button must be pressed to get at least a little of simulation, but can also be ended early if preferred.  Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue.  For best results, please keep the window in focus while running the simulation.  The rest of the game will pause.">&#9432;</span>
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
         <select id="rwg-dominion" class="rwg-inline-select"></select>
+        <button id="rwg-dominion-lore-btn" class="rwg-btn">Lore</button>
         <span class="info-tooltip-icon" title="Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion.  Rewards scale for each time it is granted: 500, 1000, 1500, and so on.">&#9432;</span>
       </div>
       ${warningMsg ? `<div class="rwg-control-row rwg-warning-row"><span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span></div>` : ''}

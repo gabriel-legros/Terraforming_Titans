@@ -355,4 +355,97 @@
   font-weight: 600;
 }
 
+/* Dominion lore window */
+.rwg-lore-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 14, 0.75);
+  z-index: 4;
+}
+
+.rwg-lore-window {
+  width: min(900px, 92vw);
+  max-height: 80vh;
+  background: var(--rwg-card);
+  border: 1px solid var(--rwg-border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rwg-lore-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rwg-lore-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--rwg-fg);
+}
+
+.rwg-lore-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) 1fr;
+  gap: 12px;
+  min-height: 220px;
+  max-height: 60vh;
+  overflow: hidden;
+}
+
+.rwg-lore-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.rwg-lore-item {
+  border: 1px solid var(--rwg-border);
+  background: var(--rwg-panel);
+  color: var(--rwg-fg);
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.rwg-lore-item.active {
+  border-color: var(--rwg-accent);
+  color: var(--rwg-accent);
+}
+
+.rwg-lore-item.locked {
+  color: var(--rwg-fg-dim);
+}
+
+.rwg-lore-text {
+  background: var(--rwg-panel);
+  border: 1px solid var(--rwg-border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--rwg-fg);
+  line-height: 1.5;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 720px) {
+  .rwg-lore-body {
+    grid-template-columns: 1fr;
+  }
+}
+
 

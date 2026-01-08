@@ -223,6 +223,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Gabbag chapter 29.8 now unlocks ammonia visibility and new chemical reactor recipes for Haber-Bosch and ammonia combustion.
 - Added an ammonia resource with liquid/ice/gas cycles and updated terraforming physics to include its phase changes.
 - Random World Generator dominion selection now includes the Fritizian option tied to ammonia requirements.
+- Random World Generator dominions now include lore blurbs with a dedicated Lore window beside the dominion selector.
 - Fritizian dominion unlocks once the galaxy has 5 fully controlled sectors, and the RWG dropdown shows the requirement while locked.
 - RWG dominion requirements now read from terraforming requirement metadata so new dominions can define their own unlock rules.
 - Completing terraforming now awards alien artifacts once per non-Human dominion, scaling across dominions at 500 per completion (Human and Gabbagian are excluded).
