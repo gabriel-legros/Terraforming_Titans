@@ -96,7 +96,7 @@
 
     getEvolutionPointGain(totalBiomass) {
       const normalized = Math.max(totalBiomass / EVOLUTION_POINT_DIVISOR, 1);
-      return Math.log10(normalized) + 1;
+      return (Math.log10(normalized) * 2) + 1;
     }
 
     canStart() {
@@ -222,7 +222,7 @@
       const info = document.createElement('span');
       info.classList.add('info-tooltip-icon');
       info.innerHTML = '&#9432;';
-      info.title = 'You gain evolution points when travelling after completing this project: log10(total biomass / 1T) + 1.';
+      info.title = 'You gain evolution points when travelling after completing this project: 2*log10(total biomass / 1T) + 1.';
       titleGroup.append(title, info);
 
       const pointsGroup = document.createElement('div');
