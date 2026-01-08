@@ -709,13 +709,14 @@ function updateLifeUI() {
     if (lockedMessage) lockedMessage.style.display = 'block';
   }
 
-	    const bioworkforceUnlocked = isBioworkforceUnlocked();
-	    toggleBioworkforceElements(bioworkforceUnlocked);
+   setTerraformingLifeVisibility(lifeDesigner.enabled);
+    const bioworkforceUnlocked = isBioworkforceUnlocked();
+    toggleBioworkforceElements(bioworkforceUnlocked);
 
-      updateMetabolismEfficiencyRow();
-      updateOptimalGrowthTemperatureDescription();
-	    updateDesignValues();
-	    updatePointsDisplay();
+    updateMetabolismEfficiencyRow();
+    updateOptimalGrowthTemperatureDescription();
+    updateDesignValues();
+    updatePointsDisplay();
     const biodomePointsSpan = document.getElementById('life-biodome-points');
     const biodomeRateSpan = document.getElementById('life-biodome-rate');
     if (biodomePointsSpan) {

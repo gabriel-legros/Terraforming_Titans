@@ -452,6 +452,7 @@ function initializeGameState(options = {}) {
   } else if (typeof updateGalaxyUI === 'function') {
     updateGalaxyUI();
   }
+    updateLifeUI();
 
   hazardManager = setHazardManager(new HazardManager());
   const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
