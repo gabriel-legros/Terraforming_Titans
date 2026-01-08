@@ -875,7 +875,7 @@ function createTemperatureBox(row) {
         <thead>
           <tr>
             <th>Gas</th>
-            <th>Pressure (Pa)</th>
+            <th>P (Pa)</th>
             <th>Delta (Pa)</th>
             <th>Target (Pa)</th>
             <th></th>
