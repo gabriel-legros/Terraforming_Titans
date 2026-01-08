@@ -23,7 +23,25 @@ describe('LiftersProject', () => {
     description: '',
     repeatable: true,
     unlocked: true,
-    attributes: { canUseSpaceStorage: true, canUseDysonOverflow: true },
+    attributes: {
+      canUseSpaceStorage: true,
+      canUseDysonOverflow: true,
+      lifterHarvestRecipes: {
+        hydrogen: { label: 'Hydrogen', storageKey: 'hydrogen', outputMultiplier: 1 },
+        methane: {
+          label: 'Methane',
+          storageKey: 'atmosphericMethane',
+          outputMultiplier: 0.01,
+          requiresProjectFlag: 'methaneAmmoniaLifting',
+        },
+        ammonia: {
+          label: 'Ammonia',
+          storageKey: 'atmosphericAmmonia',
+          outputMultiplier: 0.01,
+          requiresProjectFlag: 'methaneAmmoniaLifting',
+        },
+      },
+    },
   }, 'lifters');
 
   const createResource = (value = 0) => {
@@ -149,6 +167,7 @@ describe('LiftersProject', () => {
       repeatCount: 7,
       mode: 'stripAtmosphere',
       expansionProgress: 0,
+      harvestRecipeKey: 'hydrogen',
       isActive: true,
       remainingTime: 120000,
       startingDuration: 180000,
@@ -232,6 +251,44 @@ describe('LiftersProject', () => {
     expect(resources.colony.energy.decrease).not.toHaveBeenCalled();
     expect(project.lastHydrogenPerSecond).toBe(expectedUnits);
     expect(project.statusText).toBe('Running');
+  });
+
+  it('stores methane with reduced output when the recipe is unlocked', () => {
+    const project = createProject();
+    project.booleanFlags.add('methaneAmmoniaLifting');
+    project.repeatCount = 2;
+    project.setRunning(true);
+    project.setHarvestRecipe('methane');
+    project.setAllowColonyEnergyUse(true);
+    setDysonOverflow(0);
+    const storage = projectManager.projects.spaceStorage;
+    const changes = createAccumulatedChanges();
+
+    project.applyCostAndGain(1000, changes, 1);
+
+    const expectedOutput = project.unitRatePerLifter * project.repeatCount * 0.01;
+    expect(storage.resourceUsage.atmosphericMethane).toBe(expectedOutput);
+    expect(project.lastHarvestPerSecond).toBe(expectedOutput);
+    expect(project.lastHydrogenPerSecond).toBe(0);
+  });
+
+  it('stores ammonia with reduced output when the recipe is unlocked', () => {
+    const project = createProject();
+    project.booleanFlags.add('methaneAmmoniaLifting');
+    project.repeatCount = 3;
+    project.setRunning(true);
+    project.setHarvestRecipe('ammonia');
+    project.setAllowColonyEnergyUse(true);
+    setDysonOverflow(0);
+    const storage = projectManager.projects.spaceStorage;
+    const changes = createAccumulatedChanges();
+
+    project.applyCostAndGain(1000, changes, 1);
+
+    const expectedOutput = project.unitRatePerLifter * project.repeatCount * 0.01;
+    expect(storage.resourceUsage.atmosphericAmmonia).toBe(expectedOutput);
+    expect(project.lastHarvestPerSecond).toBe(expectedOutput);
+    expect(project.lastHydrogenPerSecond).toBe(0);
   });
 
   it('runs lifter expansion continuously when duration is under 1s', () => {

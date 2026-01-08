@@ -614,6 +614,25 @@ const projectParameters = {
       canUseSpaceStorage: true,
       lifterUnitRate: 10_000_000,
       lifterEnergyPerUnit: 10_000_000,
+      lifterHarvestRecipes: {
+        hydrogen: {
+          label: 'Hydrogen',
+          storageKey: 'hydrogen',
+          outputMultiplier: 1
+        },
+        methane: {
+          label: 'Methane',
+          storageKey: 'atmosphericMethane',
+          outputMultiplier: 0.01,
+          requiresProjectFlag: 'methaneAmmoniaLifting'
+        },
+        ammonia: {
+          label: 'Ammonia',
+          storageKey: 'atmosphericAmmonia',
+          outputMultiplier: 0.01,
+          requiresProjectFlag: 'methaneAmmoniaLifting'
+        }
+      },
       canUseDysonOverflow: true,
     }
   },

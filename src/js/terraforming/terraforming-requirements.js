@@ -149,6 +149,7 @@ const terraformingRequirements = {
     gasTargetsPa: {
       carbonDioxide: { min: 4000, max: 20_000 },
       hydrogen: { min: 40_000, max: 120_000 },
+      oxygen: { min: 0, max: 10 },
       inertGas: { min: 120_000, max: 320_000 },
       atmosphericAmmonia: { min: 3_000, max: 12_000 },
     },

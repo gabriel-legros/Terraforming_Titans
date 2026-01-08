@@ -3,6 +3,14 @@ const LIFTER_MODES = {
   ATMOSPHERE_STRIP: 'stripAtmosphere',
 };
 
+const DEFAULT_LIFTER_RECIPES = {
+  hydrogen: {
+    label: 'Hydrogen',
+    storageKey: 'hydrogen',
+    outputMultiplier: 1,
+  },
+};
+
 let dysonManagerInstance = null;
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -16,10 +24,14 @@ class LiftersProject extends TerraformingDurationProject {
     super(config, name);
     this.unitRatePerLifter = this.attributes.lifterUnitRate || 1_000_000;
     this.energyPerUnit = this.attributes.lifterEnergyPerUnit || 10_000_000;
+    this.harvestRecipes = this.attributes?.lifterHarvestRecipes || DEFAULT_LIFTER_RECIPES;
+    this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
     this.mode = LIFTER_MODES.GAS_HARVEST;
     this.isRunning = false;
     this.lastUnitsPerSecond = 0;
     this.lastEnergyPerSecond = 0;
+    this.lastHarvestPerSecond = 0;
+    this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
     this.lastHydrogenPerSecond = 0;
     this.lastAtmospherePerSecond = 0;
     this.lastDysonEnergyPerSecond = 0;
@@ -47,6 +59,69 @@ class LiftersProject extends TerraformingDurationProject {
       { value: LIFTER_MODES.GAS_HARVEST, label: 'Gas Giant Harvest' },
       { value: LIFTER_MODES.ATMOSPHERE_STRIP, label: 'Atmosphere Strip' },
     ];
+  }
+
+  getHarvestRecipeKeys() {
+    return Object.keys(this.harvestRecipes || {});
+  }
+
+  isHarvestRecipeAvailable(recipe) {
+    const requiredFlag = recipe?.requiresProjectFlag;
+    return !requiredFlag || this.isBooleanFlagSet(requiredFlag);
+  }
+
+  getAvailableHarvestRecipeKeys() {
+    return this.getHarvestRecipeKeys().filter((key) => this.isHarvestRecipeAvailable(this.harvestRecipes[key]));
+  }
+
+  getDefaultHarvestRecipeKey() {
+    const available = this.getAvailableHarvestRecipeKeys();
+    const fallback = this.getHarvestRecipeKeys();
+    return available[0] || fallback[0] || 'hydrogen';
+  }
+
+  getHarvestRecipe() {
+    const available = this.getAvailableHarvestRecipeKeys();
+    const nextKey = available.includes(this.harvestRecipeKey)
+      ? this.harvestRecipeKey
+      : this.getDefaultHarvestRecipeKey();
+    if (this.harvestRecipeKey !== nextKey) {
+      this.harvestRecipeKey = nextKey;
+    }
+    return this.harvestRecipes[nextKey] || DEFAULT_LIFTER_RECIPES.hydrogen;
+  }
+
+  getHarvestOptions() {
+    return this.getAvailableHarvestRecipeKeys().map((key) => {
+      const recipe = this.harvestRecipes[key];
+      return { value: key, label: recipe?.label || key };
+    });
+  }
+
+  getCapacityPerLifter() {
+    const recipe = this.getHarvestRecipe();
+    const multiplier = recipe.outputMultiplier || 1;
+    return this.mode === LIFTER_MODES.GAS_HARVEST
+      ? this.unitRatePerLifter * multiplier
+      : this.unitRatePerLifter;
+  }
+
+  getCapacityLabel() {
+    if (this.mode === LIFTER_MODES.GAS_HARVEST) {
+      const recipe = this.getHarvestRecipe();
+      const label = recipe.label || 'Harvest';
+      return `${label} / Lifter:`;
+    }
+    return 'Atmosphere / Lifter:';
+  }
+
+  setHarvestRecipe(value) {
+    const available = this.getAvailableHarvestRecipeKeys();
+    const next = available.includes(value) ? value : this.getDefaultHarvestRecipeKey();
+    if (this.harvestRecipeKey !== next) {
+      this.harvestRecipeKey = next;
+      this.updateUI();
+    }
   }
 
   getUnitsPerSecond(productivity = 1) {
@@ -127,25 +202,24 @@ class LiftersProject extends TerraformingDurationProject {
       return Math.min(maxUnits, limit);
     }
     const limit = this.getGasModeCapacityLimit();
-    return Math.min(maxUnits, limit);
+    const recipe = this.getHarvestRecipe();
+    const multiplier = recipe.outputMultiplier || 1;
+    const adjustedLimit = multiplier > 0 ? limit / multiplier : 0;
+    return Math.min(maxUnits, adjustedLimit);
   }
 
-  storeHydrogen(amount) {
+  storeHarvestedResource(resourceKey, amount) {
     if (amount <= 0) {
       return 0;
     }
     const storage = this.getSpaceStorageProject();
-    if (!storage) {
-      this.shortfallReason = 'Build space storage';
-      return 0;
-    }
-    const freeSpace = Math.max(storage.maxStorage - storage.usedStorage, 0);
+    const freeSpace = storage ? Math.max(storage.maxStorage - storage.usedStorage, 0) : 0;
     const stored = Math.min(amount, freeSpace);
+    this.shortfallReason = stored > 0 ? '' : (storage ? 'Space storage is full' : 'Build space storage');
     if (stored <= 0) {
-      this.shortfallReason = 'Space storage is full';
       return 0;
     }
-    storage.resourceUsage.hydrogen = (storage.resourceUsage.hydrogen || 0) + stored;
+    storage.resourceUsage[resourceKey] = (storage.resourceUsage[resourceKey] || 0) + stored;
     storage.usedStorage += stored;
     if (typeof updateSpaceStorageUI === 'function') {
       updateSpaceStorageUI(storage);
@@ -250,10 +324,13 @@ class LiftersProject extends TerraformingDurationProject {
     result.energyUsed = result.colonyUsed + result.dysonEnergyUsed;
   }
 
-  setLastTickStats(units = 0, energy = 0, hydrogen = 0, atmosphere = 0, dyson = 0) {
+  setLastTickStats(units = 0, energy = 0, harvest = 0, atmosphere = 0, dyson = 0, harvestKey = null) {
     this.lastUnitsPerSecond = units;
     this.lastEnergyPerSecond = energy;
-    this.lastHydrogenPerSecond = hydrogen;
+    this.lastHarvestPerSecond = harvest;
+    const resolvedKey = harvestKey || this.lastHarvestResourceKey || 'hydrogen';
+    this.lastHarvestResourceKey = resolvedKey;
+    this.lastHydrogenPerSecond = resolvedKey === 'hydrogen' ? harvest : 0;
     this.lastAtmospherePerSecond = atmosphere;
     this.lastDysonEnergyPerSecond = dyson;
   }
@@ -473,19 +550,25 @@ class LiftersProject extends TerraformingDurationProject {
     }
 
     let processedUnits = energyResult.energyUsed / this.energyPerUnit;
-    let hydrogenRate = 0;
+    let harvestRate = 0;
     let atmosphereRate = 0;
+    let harvestKey = null;
 
     if (this.mode === LIFTER_MODES.GAS_HARVEST) {
-      processedUnits = this.storeHydrogen(processedUnits);
-      if (processedUnits <= 0) {
+      const recipe = this.getHarvestRecipe();
+      const multiplier = recipe.outputMultiplier || 1;
+      const outputUnits = processedUnits * multiplier;
+      const storedUnits = this.storeHarvestedResource(recipe.storageKey, outputUnits);
+      if (storedUnits <= 0) {
         this.adjustEnergyUsage(energyResult, energyResult.energyUsed, accumulatedChanges);
         this.setLastTickStats();
         this.updateStatus(this.shortfallReason || 'Space storage is full');
         this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
         return;
       }
-      hydrogenRate = processedUnits / seconds;
+      processedUnits = multiplier > 0 ? storedUnits / multiplier : 0;
+      harvestRate = storedUnits / seconds;
+      harvestKey = recipe.storageKey;
     } else {
       processedUnits = this.removeAtmosphere(processedUnits, accumulatedChanges, seconds);
       if (processedUnits <= 0) {
@@ -506,7 +589,7 @@ class LiftersProject extends TerraformingDurationProject {
     const energyPerSecond = energyResult.energyUsed / seconds;
     const dysonPerSecond = energyResult.dysonEnergyUsed / seconds;
     const unitPerSecond = processedUnits / seconds;
-    this.setLastTickStats(unitPerSecond, energyPerSecond, hydrogenRate, atmosphereRate, dysonPerSecond);
+    this.setLastTickStats(unitPerSecond, energyPerSecond, harvestRate, atmosphereRate, dysonPerSecond, harvestKey);
     this.updateStatus('Running');
     this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
   }
@@ -576,7 +659,11 @@ class LiftersProject extends TerraformingDurationProject {
     const maxUnits = this.getUnitsPerSecond(productivity);
     let cappedUnits = maxUnits;
     if (this.mode === LIFTER_MODES.GAS_HARVEST) {
-      cappedUnits = Math.min(maxUnits, this.getGasModeCapacityLimit());
+      const recipe = this.getHarvestRecipe();
+      const multiplier = recipe.outputMultiplier || 1;
+      const limit = this.getGasModeCapacityLimit();
+      const adjustedLimit = multiplier > 0 ? limit / multiplier : 0;
+      cappedUnits = Math.min(maxUnits, adjustedLimit);
     } else {
       cappedUnits = Math.min(maxUnits, this.getAtmosphereLimit());
     }
@@ -609,6 +696,7 @@ class LiftersProject extends TerraformingDurationProject {
       mode: this.mode,
       isRunning: this.isRunning,
       expansionProgress: this.expansionProgress,
+      harvestRecipeKey: this.harvestRecipeKey,
     };
   }
 
@@ -617,6 +705,8 @@ class LiftersProject extends TerraformingDurationProject {
     this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
     this.isRunning = state.isRunning || false;
     this.expansionProgress = state.expansionProgress || 0;
+    this.harvestRecipeKey = state.harvestRecipeKey || this.getDefaultHarvestRecipeKey();
+    this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
     if (!this.isRunning) {
       this.setLastTickStats();
       this.updateStatus('Idle');
@@ -628,6 +718,7 @@ class LiftersProject extends TerraformingDurationProject {
       repeatCount: this.repeatCount,
       mode: this.mode,
       expansionProgress: this.expansionProgress,
+      harvestRecipeKey: this.harvestRecipeKey,
     };
     if (this.isActive) {
       state.isActive = true;
@@ -644,6 +735,8 @@ class LiftersProject extends TerraformingDurationProject {
     this.repeatCount = state.repeatCount || 0;
     this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
     this.expansionProgress = state.expansionProgress || 0;
+    this.harvestRecipeKey = state.harvestRecipeKey || this.getDefaultHarvestRecipeKey();
+    this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
     this.isRunning = false;
     this.isCompleted = false;
     this.setLastTickStats();

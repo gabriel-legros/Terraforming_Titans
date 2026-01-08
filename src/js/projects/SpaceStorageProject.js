@@ -1,6 +1,8 @@
 const SPACE_STORAGE_RESOURCE_REQUIREMENTS = {
   superalloys: { requiresFlag: 'superalloyResearchUnlocked' },
   biomass: { requiresProjectFlag: 'biostorage' },
+  atmosphericMethane: { requiresProjectFlag: 'methaneAmmoniaStorage' },
+  atmosphericAmmonia: { requiresProjectFlag: 'methaneAmmoniaStorage' },
 };
 
 class SpaceStorageProject extends SpaceshipProject {

@@ -29,6 +29,38 @@ function createModeSelect(project) {
   return select;
 }
 
+function buildSelectOptions(select, options) {
+  while (select.firstChild) {
+    select.removeChild(select.firstChild);
+  }
+  options.forEach(option => {
+    const opt = document.createElement('option');
+    opt.value = option.value;
+    opt.textContent = option.label;
+    select.appendChild(opt);
+  });
+}
+
+function createRecipeSelect(project) {
+  const select = document.createElement('select');
+  select.id = `${project.name}-lifters-recipe`;
+  buildSelectOptions(select, project.getHarvestOptions());
+  return select;
+}
+
+function syncRecipeSelect(select, project) {
+  const options = project.getHarvestOptions();
+  const matches = options.length === select.options.length
+    && options.every((option, index) => select.options[index]?.value === option.value);
+  if (!matches) {
+    buildSelectOptions(select, options);
+  }
+  if (select.value !== project.harvestRecipeKey) {
+    select.value = project.harvestRecipeKey;
+  }
+  select.disabled = project.mode !== 'gasHarvest';
+}
+
 function renderLiftersUI(project, container) {
   projectElements[project.name] = projectElements[project.name] || {};
 
@@ -74,6 +106,20 @@ function renderLiftersUI(project, container) {
   const modeSelect = createModeSelect(project);
   modeField.append(modeLabel, modeSelect);
 
+  const recipeField = document.createElement('div');
+  recipeField.classList.add('stat-item', 'lifter-recipe-field');
+  recipeField.style.display = 'flex';
+  recipeField.style.alignItems = 'center';
+  recipeField.style.gap = '8px';
+  const recipeLabel = document.createElement('label');
+  recipeLabel.textContent = 'Harvest';
+  recipeLabel.htmlFor = `${project.name}-lifters-recipe`;
+  recipeLabel.classList.add('stat-label');
+  recipeLabel.style.margin = '0';
+  recipeLabel.style.whiteSpace = 'nowrap';
+  const recipeSelect = createRecipeSelect(project);
+  recipeField.append(recipeLabel, recipeSelect);
+
   const runField = document.createElement('div');
   runField.classList.add('stat-item', 'lifter-run-toggle');
   const runCheckbox = document.createElement('input');
@@ -87,7 +133,7 @@ function renderLiftersUI(project, container) {
   const energyRateStat = buildStat('Energy Rate');
   energyRateStat.wrapper.classList.add('lifters-energy-rate');
 
-  controlsGrid.append(modeField, runField, energyRateStat.wrapper);
+  controlsGrid.append(modeField, recipeField, runField, energyRateStat.wrapper);
   body.appendChild(controlsGrid);
 
   const statusGrid = document.createElement('div');
@@ -101,7 +147,7 @@ function renderLiftersUI(project, container) {
 
   const note = document.createElement('p');
   note.classList.add('project-description', 'lifters-note');
-  note.textContent = 'Gas giant harvests feed hydrogen directly into space storage, atmosphere mode peels every gas proportionally, getting rid of it.  Unused Dyson energy is used first; allow colony usage in automation if overflow is insufficient.';
+  note.textContent = 'Gas giant harvests feed gases into space storage, atmosphere mode peels every gas proportionally, getting rid of it.  Unused Dyson energy is used first; allow colony usage in automation if overflow is insufficient.';
   body.appendChild(note);
 
   card.appendChild(body);
@@ -119,14 +165,19 @@ function renderLiftersUI(project, container) {
   modeSelect.addEventListener('change', () => {
     project.setMode(modeSelect.value);
   });
+  recipeSelect.addEventListener('change', () => {
+    project.setHarvestRecipe(recipeSelect.value);
+  });
 
   projectElements[project.name] = {
     ...projectElements[project.name],
     liftersCard: card,
     liftersCountElement: completedStat.valueEl,
     liftersCapacityElement: capacityStat.valueEl,
+    liftersCapacityLabel: capacityStat.labelEl,
     liftersEnergyUnitElement: energyStat.valueEl,
     liftersModeSelect: modeSelect,
+    liftersRecipeSelect: recipeSelect,
     liftersRunCheckbox: runCheckbox,
     liftersEnergyRateElement: energyRateStat.valueEl,
     liftersExpansionRateElement: expansionRateStat.valueEl,
@@ -151,12 +202,14 @@ function updateLiftersUI(project) {
   }
 
   elements.liftersCountElement.textContent = formatNumber(project.repeatCount, false, 0);
-  elements.liftersCapacityElement.textContent = formatNumber(project.unitRatePerLifter, true);
+  elements.liftersCapacityLabel.textContent = project.getCapacityLabel();
+  elements.liftersCapacityElement.textContent = formatNumber(project.getCapacityPerLifter(), true);
   elements.liftersEnergyUnitElement.textContent = formatNumber(project.energyPerUnit, true);
 
   if (elements.liftersModeSelect.value !== project.mode) {
     elements.liftersModeSelect.value = project.mode;
   }
+  syncRecipeSelect(elements.liftersRecipeSelect, project);
   elements.liftersRunCheckbox.checked = project.isRunning;
   elements.liftersRunCheckbox.disabled = project.repeatCount === 0;
 

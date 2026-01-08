@@ -64,4 +64,16 @@ describe('SpaceStorageProject continuous cost gating', () => {
     expect(project.shortfallLastTick).toBe(true);
     expect(resources.colony.metal.decrease).not.toHaveBeenCalled();
   });
+
+  it('locks methane and ammonia storage behind the research flag', () => {
+    const project = createProject();
+
+    expect(project.isResourceUnlocked('atmosphericMethane')).toBe(false);
+    expect(project.isResourceUnlocked('atmosphericAmmonia')).toBe(false);
+
+    project.booleanFlags.add('methaneAmmoniaStorage');
+
+    expect(project.isResourceUnlocked('atmosphericMethane')).toBe(true);
+    expect(project.isResourceUnlocked('atmosphericAmmonia')).toBe(true);
+  });
 });

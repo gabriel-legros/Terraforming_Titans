@@ -2122,6 +2122,29 @@ const researchParameters = {
         ]
       },
       {
+        id: 'methane_ammonia_lifting',
+        name: 'Methane and Ammonia Lifting',
+        description: 'Enables lifters to harvest methane and ammonia into space storage.',
+        cost: { advancedResearch: 30_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'methaneAmmoniaStorage',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'lifters',
+            type: 'booleanFlag',
+            flagId: 'methaneAmmoniaLifting',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'self_replicating_ships_concept',
         name: 'Self Replicating Ships',
         description: 'Opens research into autonomous self-building spacecraft.',

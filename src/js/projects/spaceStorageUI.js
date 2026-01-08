@@ -19,6 +19,8 @@ const storageResourceOptions = [
   { label: 'Superalloys', category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
   { label: 'Oxygen', category: 'atmospheric', resource: 'oxygen' },
   { label: 'Hydrogen', category: 'atmospheric', resource: 'hydrogen' },
+  { label: 'Methane', category: 'atmospheric', resource: 'atmosphericMethane', requiresProjectFlag: 'methaneAmmoniaStorage' },
+  { label: 'Ammonia', category: 'atmospheric', resource: 'atmosphericAmmonia', requiresProjectFlag: 'methaneAmmoniaStorage' },
   { label: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
   { label: 'Water', category: 'surface', resource: 'liquidWater' },
   { label: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },
