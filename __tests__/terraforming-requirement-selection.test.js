@@ -89,6 +89,12 @@ function loadTerraforming() {
 const Terraforming = loadTerraforming();
 
 describe('Terraforming requirement selection', () => {
+  test('human requirements include total pressure and ammonia targets', () => {
+    const human = terraformingRequirements.human;
+    expect(human.totalPressureRangeKPa).toEqual({ min: 80, max: 120 });
+    expect(human.gasTargetsPa.atmosphericAmmonia).toEqual({ min: 0, max: 10 });
+  });
+
   test('uses specialAttributes.terraformingRequirementId when provided', () => {
     const resources = {
       surface: { land: { value: 1 } },
@@ -108,5 +114,28 @@ describe('Terraforming requirement selection', () => {
     const terraforming = new Terraforming(resources, celestialParameters, specialAttributes);
     expect(terraforming.requirements.id).toBe('gabbagian');
     expect(terraforming.requirements.lifeDesign.metabolism.primaryProcessId).toBe('methanogenesis');
+  });
+
+  test('atmosphere status checks total pressure target', () => {
+    const resources = {
+      surface: { land: { value: 1 } },
+      atmospheric: {},
+    };
+
+    const celestialParameters = {
+      radius: 1,
+      surfaceArea: 4 * Math.PI,
+      crossSectionArea: Math.PI,
+      gravity: 9.81,
+      hasNaturalMagnetosphere: false,
+      parentBody: {},
+    };
+
+    const terraforming = new Terraforming(resources, celestialParameters, {});
+    terraforming.gasTargets = {};
+    terraforming.atmosphere.totalPressureTargetRangeKPa = { min: 1, max: 2 };
+    expect(terraforming.getAtmosphereStatus()).toBe(false);
+    terraforming.atmosphere.totalPressureTargetRangeKPa = { min: 0, max: 0 };
+    expect(terraforming.getAtmosphereStatus()).toBe(true);
   });
 });

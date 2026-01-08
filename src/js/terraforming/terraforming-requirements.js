@@ -6,10 +6,12 @@ const terraformingRequirements = {
     displayName: 'Human',
     temperatureRangeK: { min: 278.15, max: 298.15 },
     luminosityRange: { min: 600, max: 2000 },
+    totalPressureRangeKPa: { min: 80, max: 120 },
     gasTargetsPa: {
       carbonDioxide: { min: 0, max: 100 },
       oxygen: { min: 15000, max: 25000 },
-      inertGas: { min: 50000, max: 100000 }
+      inertGas: { min: 50000, max: 100000 },
+      atmosphericAmmonia: { min: 0, max: 10 },
     },
     liquidCoverageTarget: 0.2,
     liquidType: 'water',

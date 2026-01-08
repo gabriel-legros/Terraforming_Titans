@@ -862,7 +862,8 @@ function createTemperatureBox(row) {
     const gasKeys = targetGasKeys.concat(resourceGasKeys.filter(key => !targetGasKeys.includes(key)));
     let innerHTML = `
       <h3>${terraforming.atmosphere.name}</h3>
-      <p>Current: <span id="atmosphere-current"></span> kPa</p>
+      <p>Current: <span id="atmosphere-current"></span></p>
+      <p id="atmosphere-target-line" style="display: none;">Target: <span id="atmosphere-target"></span> <span id="atmosphere-target-status"></span></p>
       <table>
         <colgroup>
           <col class="gas-col">
@@ -935,6 +936,9 @@ function createTemperatureBox(row) {
       infoTooltip: atmTooltip,
       box: atmosphereBox,
       current: atmosphereBox.querySelector('#atmosphere-current'),
+      pressureTargetLine: atmosphereBox.querySelector('#atmosphere-target-line'),
+      pressureTarget: atmosphereBox.querySelector('#atmosphere-target'),
+      pressureTargetStatus: atmosphereBox.querySelector('#atmosphere-target-status'),
       gasBody: atmosphereBox.querySelector('#atmosphere-gas-body'),
       opticalDepth: atmosphereBox.querySelector('#optical-depth'),
       opticalDepthInfo: atmosphereBox.querySelector('#optical-depth-info'),
@@ -1018,7 +1022,29 @@ function createTemperatureBox(row) {
       });
     }
 
-    els.current.textContent = terraforming.calculateTotalPressure().toFixed(2);
+    const totalPressureKPa = terraforming.calculateTotalPressure();
+    const totalPressurePa = totalPressureKPa * 1000;
+    els.current.textContent = `${formatNumber(totalPressurePa, false, 2)}Pa`;
+    const pressureTarget = terraforming.atmosphere.totalPressureTargetRangeKPa;
+    const hasPressureTarget = pressureTarget
+      && (pressureTarget.min > 0 || pressureTarget.max > 0);
+    if (els.pressureTargetLine && els.pressureTarget && els.pressureTargetStatus) {
+      if (hasPressureTarget) {
+        const minPa = pressureTarget.min * 1000;
+        const maxPa = pressureTarget.max * 1000;
+        els.pressureTarget.textContent = `${formatNumber(minPa, false, 2)}Pa - ${formatNumber(maxPa, false, 2)}Pa`;
+        const inRange = totalPressureKPa >= pressureTarget.min && totalPressureKPa <= pressureTarget.max;
+        els.pressureTargetStatus.textContent = inRange ? '✓' : '✗';
+        els.pressureTargetStatus.classList.toggle('status-check', inRange);
+        els.pressureTargetStatus.classList.toggle('status-cross', !inRange);
+        els.pressureTargetLine.style.display = '';
+      } else {
+        els.pressureTarget.textContent = '';
+        els.pressureTargetStatus.textContent = '';
+        els.pressureTargetStatus.classList.remove('status-check', 'status-cross');
+        els.pressureTargetLine.style.display = 'none';
+      }
+    }
 
     if (els.opticalDepth) {
       els.opticalDepth.textContent = terraforming.temperature.opticalDepth.toFixed(3);
@@ -1070,11 +1096,14 @@ function createTemperatureBox(row) {
         );
 
         const gasEls = els.gases[gas];
-        // Hide row if configured to hide when small and value is exactly zero
+        // Hide row if configured to hide when small and in-range or empty.
         const hideSmall = !!resource.hideWhenSmall;
-        const hasTarget = !!gasTargets[gas];
+        const target = gasTargets[gas];
+        const outsideTarget = target
+          && (currentGlobalPressurePa < target.min || currentGlobalPressurePa > target.max);
+        const shouldShow = !hideSmall || currentAmount > 0 || outsideTarget;
         if (gasEls && gasEls.row) {
-            gasEls.row.style.display = (!hasTarget && hideSmall && currentAmount === 0) ? 'none' : '';
+            gasEls.row.style.display = shouldShow ? '' : 'none';
         }
         if (gasEls && gasEls.pressure) {
             gasEls.pressure.textContent = formatNumber(currentGlobalPressurePa, false, 2);
@@ -1093,15 +1122,14 @@ function createTemperatureBox(row) {
         }
 
         if (gasEls && gasEls.target) {
-            gasEls.target.textContent = formatGasTargetRange(gasTargets[gas]);
+            gasEls.target.textContent = formatGasTargetRange(target);
         }
 
         if (gasEls && gasEls.status) {
-            const target = gasTargets[gas];
             if (!target) {
                 gasEls.status.textContent = '';
                 gasEls.status.classList.remove('status-check', 'status-cross');
-            } else if (currentGlobalPressurePa >= target.min && currentGlobalPressurePa <= target.max) {
+            } else if (!outsideTarget) {
                 gasEls.status.textContent = '✓';
                 gasEls.status.classList.add('status-check');
                 gasEls.status.classList.remove('status-cross');

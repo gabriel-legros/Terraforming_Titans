@@ -285,6 +285,7 @@ class Terraforming extends EffectableEntity{
         // gases: {}, // REMOVED - Stored in global resources
         // globalPressures: {}, // REMOVED - Calculated on the fly
         // initialGlobalPressures: {}, // REMOVED - Calculated on the fly from initial resource values
+        totalPressureTargetRangeKPa: this.requirements.totalPressureRangeKPa,
         unlocked: false // Keep track of unlock status if needed
     };
     this.temperature = {
@@ -412,6 +413,10 @@ class Terraforming extends EffectableEntity{
   }
 
   getAtmosphereStatus() {
+      const pressureTarget = this.atmosphere.totalPressureTargetRangeKPa;
+      const totalPressureKPa = this.calculateTotalPressure();
+      const totalPressureOk = !pressureTarget
+        || (totalPressureKPa >= pressureTarget.min && totalPressureKPa <= pressureTarget.max);
       for (const gas in this.gasTargets) {
           const gasAmount = this.resources.atmospheric[gas]?.value || 0;
           const gasPressurePa = calculateAtmosphericPressure(
@@ -424,7 +429,7 @@ class Terraforming extends EffectableEntity{
               return false;
           }
       }
-      return true;
+      return totalPressureOk;
   }
 
 
