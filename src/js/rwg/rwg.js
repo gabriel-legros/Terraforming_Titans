@@ -573,7 +573,10 @@ const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
 const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
 
 function getDominionUnlockRule(dominionId) {
-  const requirement = terraformingRequirementsCatalog[dominionId] || {};
+  try {
+    terraformingRequirementsCatalog = terraformingRequirements;
+  } catch (error) {}
+  const requirement = (terraformingRequirementsCatalog || {})[dominionId] || {};
   return requirement.dominionUnlock || DOMINION_UNLOCK_ALWAYS;
 }
 
@@ -1259,6 +1262,7 @@ class RwgManager extends EffectableEntity {
     );
     this.lockedDominions = new Set(dominionLocks);
     this.dominionUnlockCacheVersion = -1;
+    this.dominionUnlockControlledCount = -1;
     this.enabledHazards = [];
   }
   // Param API
@@ -1300,9 +1304,13 @@ class RwgManager extends EffectableEntity {
   unlockDominion(id) { if (id) this.lockedDominions.delete(id); }
   updateDominionUnlocksFromGalaxy(galaxyManager) {
     const cacheVersion = galaxyManager.getControlledSectorCacheVersion();
-    if (cacheVersion === this.dominionUnlockCacheVersion) return false;
-    this.dominionUnlockCacheVersion = cacheVersion;
     const controlledCount = galaxyManager.getUhfControlledSectors().length;
+    if (cacheVersion === this.dominionUnlockCacheVersion
+      && controlledCount === this.dominionUnlockControlledCount) {
+      return false;
+    }
+    this.dominionUnlockCacheVersion = cacheVersion;
+    this.dominionUnlockControlledCount = controlledCount;
     RWG_DOMINION_ORDER.forEach((dominionId) => {
       const rule = getDominionUnlockRule(dominionId);
       switch (rule.type) {
