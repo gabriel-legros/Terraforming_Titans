@@ -43,12 +43,15 @@ const RWG_EFFECTS = {
   ],
   "super-earth": [
     {
-      effectId: "rwg-super-earth-bonus",
-      target: "spaceManager",
-      type: "extraTerraformedWorlds",
-      description: "Counts as two extra worlds each",
-      computeValue(count) {
-        return count * 2;
+      effectId: "rwg-super-earth-duration",
+      target: "projectManager",
+      type: "projectDurationMultiplier",
+      factor: 0.01,
+      excludeSpaceships: true,
+      description: "Non-spaceship project duration (1% each)",
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.01;
+        return 1 / (1 + f * count);
       },
     },
   ],    
@@ -220,6 +223,7 @@ function applyRWGEffects() {
             targetId: eff.targetId,
             resourceCategory: eff.resourceCategory,
             resourceId,
+            excludeSpaceships: eff.excludeSpaceships,
             value,
           });
         }
@@ -232,6 +236,7 @@ function applyRWGEffects() {
         type: eff.type,
         target: eff.target,
         targetId: eff.targetId,
+        excludeSpaceships: eff.excludeSpaceships,
         value,
       });
     }

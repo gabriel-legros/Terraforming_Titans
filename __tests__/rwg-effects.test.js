@@ -37,7 +37,7 @@ describe('applyRWGEffects', () => {
     }));
   });
 
-  test('doubles other archetype bonuses', () => {
+  test('applies super-earth duration reduction', () => {
     spaceManager.randomWorldStatuses = {
       titan: {
         terraformed: true,
@@ -63,8 +63,11 @@ describe('applyRWGEffects', () => {
     expect(effectFor('rwg-mars-pop')).toEqual(expect.objectContaining({
       value: 0.02,
     }));
-    expect(effectFor('rwg-super-earth-bonus')).toEqual(expect.objectContaining({
-      value: 2,
+    expect(effectFor('rwg-super-earth-duration')).toEqual(expect.objectContaining({
+      target: 'projectManager',
+      type: 'projectDurationMultiplier',
+      value: 1 / 1.01,
+      excludeSpaceships: true,
     }));
   });
 

@@ -103,7 +103,7 @@ class Project extends EffectableEntity {
       typeof projectManager !== 'undefined' &&
       typeof projectManager.getDurationMultiplier === 'function'
     ) {
-      multiplier *= projectManager.getDurationMultiplier();
+      multiplier *= projectManager.getDurationMultiplier(this);
     }
     for (const effect of this.activeEffects) {
       if (effect.type === 'projectDurationMultiplier') {
@@ -714,9 +714,13 @@ class ProjectManager extends EffectableEntity {
     return !targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey;
   }
 
-  getDurationMultiplier() {
+  getDurationMultiplier(project) {
     let multiplier = 1;
+    const isSpaceshipProject = project.attributes.spaceMining || project.attributes.spaceExport;
     for (const effect of this.activeEffects) {
+      if (effect.excludeSpaceships && isSpaceshipProject) {
+        continue;
+      }
       if (effect.type === 'projectDurationReduction') {
         multiplier *= 1 - effect.value;
       } else if (effect.type === 'projectDurationMultiplier') {

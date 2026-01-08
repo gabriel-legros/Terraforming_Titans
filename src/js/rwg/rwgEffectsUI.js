@@ -110,7 +110,7 @@ function _computeRWGEffectsSummary() {
         const name = RWG_PROJECT_NAMES[eff.targetId] || eff.targetId || 'Project';
         const fEach = (f * 100).toFixed(0);
         descr = descr || `${name} duration (${fEach}% each)`;
-        display = `/${divisor.toFixed(1)}`;
+        display = `/${divisor.toFixed(2)}`;
       } else if (eff.type === 'globalPopulationGrowth') {
         const percent = raw * 100;
         const fEach = (eff.factor ?? 0.02) * 100;
