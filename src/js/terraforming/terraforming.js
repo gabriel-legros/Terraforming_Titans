@@ -112,6 +112,9 @@ function buildZonalSurfaceResourceConfigs() {
       name: resourceKey,
       resource,
       keys,
+      coverageKeys: zonalConfig.coverageKeys || [],
+      coverageScale: zonalConfig.coverageScale || 0.0001,
+      coverageScales: zonalConfig.coverageScales || {},
       distributionKey: zonalConfig.distributionKey || keys[0] || resourceKey,
       distribution: zonalConfig.distribution || {},
     });
@@ -1196,35 +1199,22 @@ class Terraforming extends EffectableEntity{
     }
 
     _updateZonalCoverageCache() {
-        const resourceTypes = ['liquidWater', 'ice', 'biomass', 'dryIce', 'liquidCO2', 'liquidMethane', 'hydrocarbonIce'];
+        const configs = this.zonalSurfaceResourceConfigs;
         for (const zone of ZONES) {
             const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
             const zoneData = this.zonalSurface[zone] || {};
-            this.zonalCoverageCache[zone] = { zoneArea };
-            for (const resourceType of resourceTypes) {
-                let zonalAmount = 0;
-                let scale = 0.0001;
-                if (resourceType === 'liquidWater') {
-                    zonalAmount = zoneData.liquidWater || 0;
-                } else if (resourceType === 'ice') {
-                    zonalAmount = zoneData.ice || 0;
-                    scale *= 100;
-                } else if (resourceType === 'biomass') {
-                    zonalAmount = zoneData.biomass || 0;
-                    scale *= 100000;
-                } else if (resourceType === 'dryIce') {
-                    zonalAmount = zoneData.dryIce || 0;
-                    scale *= 100;
-                } else if (resourceType === 'liquidCO2') {
-                    zonalAmount = zoneData.liquidCO2 || 0;
-                } else if (resourceType === 'liquidMethane') {
-                    zonalAmount = zoneData.liquidMethane || 0;
-                } else if (resourceType === 'hydrocarbonIce') {
-                    zonalAmount = zoneData.hydrocarbonIce || 0;
-                    scale *= 100;
+            const cacheEntry = { zoneArea };
+            for (const config of configs) {
+                const coverageKeys = config.coverageKeys || [];
+                const coverageScales = config.coverageScales || {};
+                const baseScale = config.coverageScale || 0.0001;
+                for (const key of coverageKeys) {
+                    const zonalAmount = zoneData[key] || 0;
+                    const scale = coverageScales[key] || baseScale;
+                    cacheEntry[key] = estimateCoverage(zonalAmount, zoneArea, scale);
                 }
-                this.zonalCoverageCache[zone][resourceType] = estimateCoverage(zonalAmount, zoneArea, scale);
             }
+            this.zonalCoverageCache[zone] = cacheEntry;
         }
     }
 

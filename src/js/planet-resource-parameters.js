@@ -36,6 +36,8 @@
         hideWhenSmall: true,
         zonalConfig: {
           keys: ['ice', 'buriedIce'],
+          coverageKeys: ['ice'],
+          coverageScale: 0.01,
           distributionKey: 'ice',
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
@@ -47,6 +49,8 @@
         unit: 'ton',
         zonalConfig: {
           keys: ['liquidWater'],
+          coverageKeys: ['liquidWater'],
+          coverageScale: 0.0001,
           distributionKey: 'liquidWater',
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
@@ -59,6 +63,8 @@
         hideWhenSmall: true,
         zonalConfig: {
           keys: ['dryIce', 'buriedDryIce'],
+          coverageKeys: ['dryIce'],
+          coverageScale: 0.01,
           distributionKey: 'dryIce',
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
@@ -71,6 +77,8 @@
         hideWhenSmall: true,
         zonalConfig: {
           keys: ['liquidCO2'],
+          coverageKeys: ['liquidCO2'],
+          coverageScale: 0.0001,
           distributionKey: 'liquidCO2',
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
@@ -83,6 +91,8 @@
         hideWhenSmall: true,
         zonalConfig: {
           keys: ['liquidMethane'],
+          coverageKeys: ['liquidMethane'],
+          coverageScale: 0.0001,
           distributionKey: 'liquidMethane',
           distribution: { production: 'skip', consumption: 'skip' },
         },
@@ -95,6 +105,8 @@
         hideWhenSmall: true,
         zonalConfig: {
           keys: ['hydrocarbonIce', 'buriedHydrocarbonIce'],
+          coverageKeys: ['hydrocarbonIce'],
+          coverageScale: 0.01,
           distributionKey: 'hydrocarbonIce',
           distribution: { production: 'skip', consumption: 'skip' },
         },
@@ -107,6 +119,8 @@
         hideWhenSmall: true,
         zonalConfig: {
           keys: ['liquidAmmonia'],
+          coverageKeys: ['liquidAmmonia'],
+          coverageScale: 0.0001,
           distributionKey: 'liquidAmmonia',
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
@@ -119,6 +133,8 @@
         hideWhenSmall: true,
         zonalConfig: {
           keys: ['ammoniaIce', 'buriedAmmoniaIce'],
+          coverageKeys: ['ammoniaIce'],
+          coverageScale: 0.01,
           distributionKey: 'ammoniaIce',
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
@@ -131,6 +147,8 @@
         unit: 'ton',
         zonalConfig: {
           keys: ['biomass'],
+          coverageKeys: ['biomass'],
+          coverageScale: 10,
           distributionKey: 'biomass',
           distribution: { production: 'biomassGrowth', consumption: 'currentAmount' },
         },
@@ -144,6 +162,8 @@
         hideWhenSmall: true,
         zonalConfig: {
           keys: ['hazardousBiomass'],
+          coverageKeys: ['hazardousBiomass'],
+          coverageScale: 10,
           distributionKey: 'hazardousBiomass',
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
