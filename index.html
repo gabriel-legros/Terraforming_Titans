@@ -822,6 +822,9 @@
                   if (this.dataset.tab === 'research' && typeof markResearchViewed === 'function') {
                       markResearchViewed();
                   }
+                  if (this.dataset.tab === 'terraforming') {
+                      markTerraformingMilestonesIfActive?.();
+                  }
             } else {
                  console.log(`Tab ${this.dataset.tab} is hidden and cannot be clicked.`);
             }

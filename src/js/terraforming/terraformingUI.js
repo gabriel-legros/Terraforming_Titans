@@ -424,6 +424,16 @@ function handleTerraformingSubtabActivated(subtabId, deltaSeconds) {
   updateTerraformingSubtabUI(subtabId, deltaSeconds);
 }
 
+function markTerraformingMilestonesIfActive() {
+  cacheTerraformingTabElements();
+  const { milestonesButton, milestonesContent } = terraformingTabElements;
+  const isActive = milestonesButton?.classList.contains('active')
+    || milestonesContent?.classList.contains('active');
+  if (isActive) {
+    markMilestonesViewed?.();
+  }
+}
+
 function setTerraformingSummaryVisibility(unlocked) {
   cacheTerraformingTabElements();
 
