@@ -142,11 +142,10 @@ const terraformingRequirements = {
     temperatureRangeK: { min: 278.15, max: 293.15 },
     luminosityRange: { min: 800, max: 2000 },
     gasTargetsPa: {
-      carbonDioxide: { min: 2000, max: 12_000 },
-      oxygen: { min: 500, max: 1_000 },
-      hydrogen: { min: 20000, max: 60000 },
+      carbonDioxide: { min: 4000, max: 20_000 },
+      hydrogen: { min: 40_000, max: 120_000 },
       inertGas: { min: 120_000, max: 320_000 },
-      atmosphericAmmonia: { min: 2_000, max: 10_000 },
+      atmosphericAmmonia: { min: 3_000, max: 12_000 },
     },
     liquidCoverageTarget: 0.4,
     liquidType: 'water',
@@ -174,9 +173,10 @@ const terraformingRequirements = {
               perBiomass: {
                 surface: { biomass: 1, liquidWater: -0.6 },
                 atmospheric: {
-                  carbonDioxide: -1.5,
-                  atmosphericAmmonia: -0.3,
-                  oxygen: 1.5,
+                  carbonDioxide: -1.946902655,
+                  hydrogen: -0.17699115,
+                  atmosphericAmmonia: -0.150442478,
+                  atmosphericWater: 1.874336283,
                 },
               },
             },
@@ -185,10 +185,10 @@ const terraformingRequirements = {
               perBiomass: {
                 surface: { biomass: -1 },
                 atmospheric: {
-                  carbonDioxide: 1.5,
-                  oxygen: -1.5,
-                  atmosphericAmmonia: 0.3,
-                  atmosphericWater: 0.6,
+                  carbonDioxide: 1.946902655,
+                  hydrogen: 0.17699115,
+                  atmosphericAmmonia: 0.150442478,
+                  atmosphericWater: -1.874336283,
                 },
               },
             },
