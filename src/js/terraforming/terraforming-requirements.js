@@ -140,7 +140,7 @@ const terraformingRequirements = {
     displayName: 'Fritizian',
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 5 },
     temperatureRangeK: { min: 278.15, max: 293.15 },
-    luminosityRange: { min: 1000, max: 2500 },
+    luminosityRange: { min: 800, max: 2000 },
     gasTargetsPa: {
       carbonDioxide: { min: 2000, max: 12_000 },
       oxygen: { min: 5000, max: 20_000 },
