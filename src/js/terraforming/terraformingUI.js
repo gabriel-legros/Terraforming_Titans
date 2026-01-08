@@ -1180,7 +1180,7 @@ function createWaterBox(row) {
     const waterTargetPercent = terraforming.waterTarget * 100;
     const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget);
     const targetAmountText = formatNumber(targetAmount, false, 1);
-    targetSpan.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
+    targetSpan.textContent = `Target : Water coverage >= ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     waterBox.appendChild(targetSpan);
@@ -1251,7 +1251,7 @@ function createWaterBox(row) {
     const avgIceCoverage = calculateAverageCoverage(terraforming, 'ice');
 
     // Update border based on average liquid coverage vs target
-    waterBox.style.borderColor = avgLiquidCoverage > terraforming.waterTarget ? 'green' : 'red';
+    waterBox.style.borderColor = avgLiquidCoverage >= terraforming.waterTarget ? 'green' : 'red';
 
     els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
     els.iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
@@ -1260,7 +1260,7 @@ function createWaterBox(row) {
       const waterTargetPercent = terraforming.waterTarget * 100;
       const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget);
       const targetAmountText = formatNumber(targetAmount, false, 1);
-      els.target.textContent = `Target : Water coverage > ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
+      els.target.textContent = `Target : Water coverage >= ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
     }
 
     els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate);

@@ -252,9 +252,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
     return sectionContainer;
   }
 
-  isGasResource(resource) {
-    const gases = ['carbonDioxide', 'oxygen', 'inertGas', 'greenhouseGas', 'atmosphericMethane', 'hydrogen', 'sulfuricAcid'];
-    return gases.includes(resource);
+  isAtmosphericSelection() {
+    return this.selectedDisposalResource?.category === 'atmospheric';
   }
 
   createPressureControl() {
@@ -388,8 +387,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
 
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
-    const isGas = this.selectedDisposalResource?.category === 'atmospheric' &&
-      this.isGasResource(this.selectedDisposalResource.resource);
+    const isAtmospheric = this.isAtmosphericSelection();
 
     if (elements.temperatureControl) {
       elements.temperatureControl.style.display = hasMonitoring ? 'flex' : 'none';
@@ -407,7 +405,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
 
     if (elements.pressureControl) {
-      elements.pressureControl.style.display = hasMonitoring && isGas ? 'flex' : 'none';
+      elements.pressureControl.style.display = hasMonitoring && isAtmospheric ? 'flex' : 'none';
     }
     if (elements.pressureCheckbox) {
       elements.pressureCheckbox.checked = this.disableBelowPressure;
@@ -491,10 +489,10 @@ class SpaceExportBaseProject extends SpaceshipProject {
         return true;
       }
     }
-    if (this.disableBelowPressure && this.selectedDisposalResource?.category === 'atmospheric' &&
-        this.isGasResource(this.selectedDisposalResource.resource) && typeof calculateAtmosphericPressure === 'function') {
-      if (typeof terraforming !== 'undefined' && resources.atmospheric?.[this.selectedDisposalResource.resource]) {
-        const amount = resources.atmospheric[this.selectedDisposalResource.resource].value || 0;
+    if (this.disableBelowPressure && this.isAtmosphericSelection()) {
+      const resource = resources.atmospheric?.[this.selectedDisposalResource.resource];
+      if (resource) {
+        const amount = resource.value || 0;
         const pressurePa = calculateAtmosphericPressure(
           amount,
           terraforming.celestialParameters.gravity,
@@ -519,10 +517,10 @@ class SpaceExportBaseProject extends SpaceshipProject {
       }
     }
 
-    if (this.disableBelowPressure && this.selectedDisposalResource?.category === 'atmospheric' &&
-        this.isGasResource(this.selectedDisposalResource.resource) && typeof calculateAtmosphericPressure === 'function') {
-      if (typeof terraforming !== 'undefined' && resources.atmospheric?.[this.selectedDisposalResource.resource]) {
-        const amount = resources.atmospheric[this.selectedDisposalResource.resource].value || 0;
+    if (this.disableBelowPressure && this.isAtmosphericSelection()) {
+      const resource = resources.atmospheric?.[this.selectedDisposalResource.resource];
+      if (resource) {
+        const amount = resource.value || 0;
         const pressurePa = calculateAtmosphericPressure(
           amount,
           terraforming.celestialParameters.gravity,

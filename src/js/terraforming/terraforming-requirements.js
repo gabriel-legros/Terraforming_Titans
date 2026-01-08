@@ -149,7 +149,7 @@ const terraformingRequirements = {
       atmosphericAmmonia: { min: 4_000, max: 12_000 },
       atmosphericMethane: { min: 1_000, max: 6_000 },
     },
-    liquidCoverageTarget: 0.5,
+    liquidCoverageTarget: 0.4,
     liquidType: 'water',
     lifeCoverageTarget: 0.5,
     magnetosphereThreshold: 100,
