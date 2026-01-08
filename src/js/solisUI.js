@@ -579,7 +579,7 @@ function updateSolisUI() {
     const format = typeof formatNumber === 'function'
       ? formatNumber
       : (n, _s, p = 2) => Number(n).toFixed(p);
-    const per = 10 * (solisManager.getTerraformedWorldBonus ? solisManager.getTerraformedWorldBonus() : 1);
+    const per = 10;
     donationLabel.textContent = `Donate artifacts for ${format(per, false, 2)} Solis points each`;
   }
 

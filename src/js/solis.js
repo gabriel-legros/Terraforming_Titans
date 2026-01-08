@@ -404,7 +404,7 @@ class SolisManager extends EffectableEntity {
     } else {
       res.value -= count;
     }
-    this.solisPoints += count * 10 * this.getTerraformedWorldBonus();
+    this.solisPoints += count * 50;
     return true;
   }
 
