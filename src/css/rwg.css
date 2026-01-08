@@ -366,7 +366,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(8, 10, 14, 0.75);
-  z-index: 4;
+  z-index: 1200;
 }
 
 .rwg-lore-window {
@@ -399,7 +399,8 @@
   grid-template-columns: minmax(180px, 220px) 1fr;
   gap: 12px;
   min-height: 220px;
-  max-height: 60vh;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -408,6 +409,7 @@
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
+  min-height: 0;
   padding-right: 4px;
 }
 
@@ -439,6 +441,7 @@
   color: var(--rwg-fg);
   line-height: 1.5;
   overflow-y: auto;
+  min-height: 0;
   white-space: pre-wrap;
 }
 
