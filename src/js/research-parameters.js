@@ -2098,6 +2098,36 @@ const researchParameters = {
         ]
       },
       {
+        id: 'warp_gate_fabrication',
+        name: 'Warp Gate Fabrication',
+        description: 'Enables growth of the warp gate network from terraformed worlds.',
+        cost: { advancedResearch: 5_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'warpGateNetworkManager',
+            type: 'booleanFlag',
+            flagId: 'warpGateFabrication',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'self_replicating_ships_concept',
+        name: 'Self Replicating Ships',
+        description: 'Opens research into autonomous self-building spacecraft.',
+        cost: { advancedResearch: 8000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'selfReplicatingShipsUnlocked',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'dyson_sphere',
         name: 'Dyson Sphere',
         description: 'Unlocks construction of a Dyson Sphere frame for faster collector deployment.  Very expensive.',
@@ -2145,21 +2175,6 @@ const researchParameters = {
         ]
       },
       {
-        id: 'self_replicating_ships_concept',
-        name: 'Self Replicating Ships',
-        description: 'Opens research into autonomous self-building spacecraft.',
-        cost: { advancedResearch: 8000000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'selfReplicatingShipsUnlocked',
-            value: true
-          }
-        ]
-      },
-      {
         id: 'tractor_beams',
         name: 'Tractor Beams',
         description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
@@ -2174,22 +2189,7 @@ const researchParameters = {
             value: true
           }
         ]
-      },
-      {
-        id: 'warp_gate_fabrication',
-        name: 'Warp Gate Fabrication',
-        description: 'Enables growth of the warp gate network from terraformed worlds.',
-        cost: { advancedResearch: 5_000_000 },
-        prerequisites: [],
-        effects: [
-          {
-            target: 'warpGateNetworkManager',
-            type: 'booleanFlag',
-            flagId: 'warpGateFabrication',
-            value: true
-          }
-        ]
-      },
+      }
     ]
   };
 

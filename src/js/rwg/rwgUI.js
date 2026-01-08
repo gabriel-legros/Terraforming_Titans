@@ -261,7 +261,8 @@ function refreshDominionLoreList() {
     entry.className = 'rwg-lore-item';
     const unlocked = rwgManager.isDominionUnlocked(id);
     const requirementLabel = rwgManager.getDominionUnlockLabel(id);
-    const displayName = dominionDisplayNames[id] || id;
+    const requirement = terraformingRequirements[id];
+    const displayName = requirement ? requirement.displayName : (dominionDisplayNames[id] || id);
     entry.textContent = unlocked || !requirementLabel
       ? displayName
       : `${displayName} (${requirementLabel})`;
