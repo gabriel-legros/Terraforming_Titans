@@ -59,6 +59,22 @@ describe('WarpGateCommand operation queue', () => {
     expect(op.baseEventsTotal).toBe(10);
   });
 
+  test('difficulty changes during an operation apply to the next run', () => {
+    const wgc = new WarpGateCommand();
+    fillTeam(wgc, 0);
+    Math.random = () => 0.1;
+
+    expect(wgc.startOperation(0, 2)).toBe(true);
+    const op = wgc.operations[0];
+    expect(op.activeDifficulty).toBe(2);
+
+    op.difficulty = 7;
+    wgc.finishOperation(0);
+
+    expect(wgc.highestDifficulty).toBe(2);
+    expect(op.difficulty).toBe(7);
+  });
+
   test('failing social science challenge inserts follow-up combat', () => {
     const wgc = new WarpGateCommand();
     fillTeam(wgc, 0);

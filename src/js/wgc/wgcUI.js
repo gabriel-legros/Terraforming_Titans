@@ -54,6 +54,11 @@ function buildWGCTeamStatsForClipboard(manager) {
   });
 }
 
+function formatWGCDifficultyDisplay(nextDifficulty, currentDifficulty, isActive) {
+  if (!isActive || currentDifficulty === nextDifficulty) return String(nextDifficulty);
+  return `${nextDifficulty} (${currentDifficulty})`;
+}
+
 function copyWGCTeamStatsToClipboard() {
   const manager = getWGCManager();
   if (!manager) return;
@@ -135,6 +140,7 @@ const teamRulesTooltip = [
   'Warp Gate Command dispatches specialist teams through the warp gate to confront threats, gather alien artifacts, and bring back intel for humanity.  Everyone involved is a volunteer and the cream of the crop humanity has to offer.',
   'Operations happen in 10 steps, each with a distinct challenge.  Successful challenges have a chance of granting alien artifacts.  Failed challenges deal damage.  Losing all HP will instantly recall the team, losing all rewards, and requiring to send the team again manually.  Challenges have their own special rules. Operations stop after completion unless Auto-start is checked for that team.',
   'Special rules:',
+  '- Difficulty changes during an operation apply to the next operation.',
   '- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.',
   '- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.',
   '- Team Wits Challenge: Uses team Wit; Natural and Social Scientists contribute 1.5x their Wit; successes double the next artifact reward, failures halve it.',
@@ -311,11 +317,17 @@ function generateWGCTeamCards() {
             </div>
             <div class="team-controls-right">
               <div class="difficulty-container">
-              <div class="difficulty-label">
-                <span>Difficulty</span>
-                <span class="info-tooltip-icon" title="Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.">&#9432;</span>
+                <div class="difficulty-label">
+                  <span>Difficulty</span>
+                  <span class="info-tooltip-icon" title="Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.">&#9432;</span>
                 </div>
-                <input type="number" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" min="0" />
+                <div class="difficulty-control">
+                  <input type="text" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" inputmode="numeric" />
+                  <div class="difficulty-step-buttons">
+                    <button type="button" class="difficulty-step difficulty-step-plus" data-team="${tIdx}" aria-label="Increase difficulty">+</button>
+                    <button type="button" class="difficulty-step difficulty-step-minus" data-team="${tIdx}" aria-label="Decrease difficulty">-</button>
+                  </div>
+                </div>
               </div>
               <button class="start-button" data-team="${tIdx}">
                 <label class="wgc-auto-start-toggle">
@@ -365,6 +377,8 @@ function invalidateWGCTeamCache() {
       autoStartCheckbox: card.querySelector('.wgc-auto-start-checkbox'),
       recallBtn: card.querySelector('.recall-button'),
       diffInput: card.querySelector('.difficulty-input'),
+      diffPlusBtn: card.querySelector('.difficulty-step-plus'),
+      diffMinusBtn: card.querySelector('.difficulty-step-minus'),
       stanceSelect: card.querySelector('.hbi-select'),
       artSelect: card.querySelector('.artifact-select'),
       renameBtn: card.querySelector('.rename-team-icon'),
@@ -1061,6 +1075,16 @@ function initializeWGCUI() {
           }
           return;
         }
+        if (e.target.classList.contains('difficulty-step')) {
+          const t = parseInt(e.target.dataset.team, 10);
+          const refs = teamElements[t];
+          const op = warpGateCommand.operations[t];
+          const base = Math.max(0, Math.floor(parseInt(refs.diffInput.value, 10) || 0));
+          const delta = e.target.classList.contains('difficulty-step-plus') ? 1 : -1;
+          op.difficulty = Math.max(0, base + delta);
+          updateWGCUI();
+          return;
+        }
         if (e.target.classList.contains('rename-team-icon')) {
           const t = parseInt(e.target.dataset.team, 10);
           const header = e.target.closest('.team-header');
@@ -1325,8 +1349,11 @@ function updateWGCUI() {
     if (startBtn) startBtn.disabled = !unlocked || !full;
     if (recallBtn) recallBtn.disabled = !unlocked || !op.active;
     if (diffInput) {
-      diffInput.value = op.difficulty || 0;
-      diffInput.disabled = op.active;
+      const nextDifficulty = op.difficulty || 0;
+      const currentDifficulty = op.activeDifficulty ?? nextDifficulty;
+      if (document.activeElement !== diffInput) {
+        diffInput.value = formatWGCDifficultyDisplay(nextDifficulty, currentDifficulty, op.active);
+      }
     }
     if (autoStartCheckbox) {
       autoStartCheckbox.checked = op.autoStart === true;
@@ -1474,5 +1501,6 @@ if (typeof module !== 'undefined' && module.exports) {
     generateWGCLayout,
     formatRDUpgradeBuyButtonText,
     getRDUpgradeCurrentAndNext,
+    formatWGCDifficultyDisplay,
   };
 }

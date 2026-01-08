@@ -358,6 +358,25 @@
   gap: 4px;
 }
 
+.difficulty-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.difficulty-step-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.team-controls-right .difficulty-step {
+  width: 20px;
+  padding: 0;
+  line-height: 1;
+  font-size: 0.75em;
+}
+
 .difficulty-label {
     font-size: 0.8em;
     color: var(--wgc-text-medium);
@@ -366,7 +385,8 @@
 /* General Controls Styling */
 .wgc-container button,
 .wgc-container select,
-.wgc-container input[type="number"] {
+.wgc-container input[type="number"],
+.wgc-container input[type="text"] {
   background-color: var(--wgc-bg-dark);
   border: 1px solid var(--wgc-border-color);
   color: var(--wgc-text-light);

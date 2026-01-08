@@ -111,6 +111,7 @@ class WarpGateCommand extends EffectableEntity {
       progress: 0,
       timer: 0,
       difficulty: 0,
+      activeDifficulty: 0,
       artifacts: 0,
       successes: 0,
       summary: '',
@@ -434,7 +435,7 @@ class WarpGateCommand extends EffectableEntity {
       artifactModifier = nextArtifact;
       op.nextDifficultyModifier = 1;
       op.nextArtifactModifier = 1;
-      const baseDifficulty = op.difficulty || 0;
+      const baseDifficulty = op.activeDifficulty ?? op.difficulty ?? 0;
       difficulty = baseDifficulty * nextDiff;
     }
     const stanceDifficultyModifier = event && Number.isFinite(event.stanceDifficultyModifier) && event.stanceDifficultyModifier > 0 ? event.stanceDifficultyModifier : 1;
@@ -655,7 +656,8 @@ class WarpGateCommand extends EffectableEntity {
     if (success) op.successes += 1;
     let artifactReward = 0;
     if (artifact) {
-      artifactReward = 1 + op.difficulty * 0.1;
+      const opDifficulty = op.activeDifficulty ?? op.difficulty ?? 0;
+      artifactReward = 1 + opDifficulty * 0.1;
       const mult = event.artifactMultiplier || (event.specialty === 'Natural Scientist' ? 2 : 1);
       artifactReward *= mult * artifactModifier;
       op.artifacts += artifactReward;
@@ -869,6 +871,7 @@ class WarpGateCommand extends EffectableEntity {
           op.facilityFailSafes = this.buildFacilityFailSafePool();
           op.criticalSuccessCount = 0;
           op.criticalSuccessWeight = 0;
+          op.activeDifficulty = op.difficulty ?? 0;
           op.summary = operationStartText;
           this.addLog(idx, `=== Operation #${op.number} ===`);
           this.refreshOperationProgress(op, idx);
@@ -941,7 +944,8 @@ class WarpGateCommand extends EffectableEntity {
     const team = this.teams[teamIndex];
     if (team) {
       const barracksBase = 1 + this.facilities.barracks * 0.01;
-      const difficultyFactor = 1 + 0.1 * (op.difficulty || 0);
+      const opDifficulty = op.activeDifficulty ?? op.difficulty ?? 0;
+      const difficultyFactor = 1 + 0.1 * opDifficulty;
       const criticalCount = Number.isFinite(op.criticalSuccessCount) ? op.criticalSuccessCount : 0;
       const criticalWeight = Number.isFinite(op.criticalSuccessWeight) ? op.criticalSuccessWeight : 0;
       const nonCriticalSuccesses = Math.max(0, successes - criticalCount);
@@ -968,17 +972,18 @@ class WarpGateCommand extends EffectableEntity {
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
 
-    if (op.difficulty > this.highestDifficulty) {
+    const opDifficulty = op.activeDifficulty ?? op.difficulty ?? 0;
+    if (opDifficulty > this.highestDifficulty) {
       let bonus = 0;
-      for (let lvl = this.highestDifficulty + 1; lvl <= op.difficulty; lvl++) {
+      for (let lvl = this.highestDifficulty + 1; lvl <= opDifficulty; lvl++) {
         bonus += lvl <= 0 ? 1 : lvl;
       }
-      this.highestDifficulty = op.difficulty;
+      this.highestDifficulty = opDifficulty;
       if (typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
         resources.special.alienArtifact.increase(bonus);
       }
       this.totalArtifacts += bonus;
-      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${op.difficulty} reached +${bonus} Artifact${bonus === 1 ? '' : 's'}`);
+      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${opDifficulty} reached +${bonus} Artifact${bonus === 1 ? '' : 's'}`);
     }
 
     this.teamOperationCounts[teamIndex] += 1;
@@ -1140,6 +1145,7 @@ class WarpGateCommand extends EffectableEntity {
     op.number = this.teamNextOperationNumber[teamIndex];
     this.teamNextOperationNumber[teamIndex] += 1;
     op.difficulty = diff;
+    op.activeDifficulty = diff;
     op.summary = operationStartText;
     op.nextDifficultyModifier = 1;
     op.nextArtifactModifier = 1;
@@ -1221,6 +1227,7 @@ class WarpGateCommand extends EffectableEntity {
         progress: op.progress,
         timer: op.timer,
         difficulty: op.difficulty,
+        activeDifficulty: op.activeDifficulty,
         artifacts: op.artifacts,
         successes: op.successes,
         summary: op.summary,
@@ -1303,6 +1310,7 @@ class WarpGateCommand extends EffectableEntity {
         progress: op.progress || 0,
         timer: op.timer || 0,
         difficulty: op.difficulty || 0,
+        activeDifficulty: op.activeDifficulty ?? (op.difficulty ?? 0),
         artifacts: op.artifacts || 0,
         successes: op.successes || 0,
         summary: op.summary || '',
