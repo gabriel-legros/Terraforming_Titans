@@ -114,6 +114,12 @@ class MultiRecipesBuilding extends Building {
     return true;
   }
 
+  loadState(state = {}) {
+    this.ignoreRecipeRestrictionsOnLoad = true;
+    super.loadState(state);
+    this.ignoreRecipeRestrictionsOnLoad = false;
+  }
+
   initializeCustomUI(context = {}) {
     const { leftContainer, hideButton, cachedElements } = context;
     if (!leftContainer || !hideButton || typeof document === 'undefined') {

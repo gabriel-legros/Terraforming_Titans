@@ -101,4 +101,17 @@ describe('Oxygen factory recipes', () => {
     const options = factory._getRecipeOptions().map(option => option.key);
     expect(options).not.toContain('rocks');
   });
+
+  test('loads a restricted recipe even on artificial worlds', () => {
+    global.researchManager.isArtificialWorld = () => true;
+    global.spaceManager.isArtificialWorld = () => true;
+    const factory = new OxygenFactory(baseConfig(), 'oxygenFactory');
+    const state = { currentRecipeKey: 'rocks' };
+
+    factory.loadState(state);
+
+    const allowed = factory._getAllowedRecipeKeys();
+    expect(allowed).not.toContain('rocks');
+    expect(factory.currentRecipeKey).toBe('rocks');
+  });
 });

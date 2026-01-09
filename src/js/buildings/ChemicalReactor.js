@@ -354,9 +354,7 @@ class ChemicalReactor extends MultiRecipesBuilding {
   }
 
   loadState(state = {}) {
-    this.ignoreRecipeRestrictionsOnLoad = true;
     super.loadState(state);
-    this.ignoreRecipeRestrictionsOnLoad = false;
     ChemicalReactor.loadAutomationSettings(state.automationSettings);
   }
 
