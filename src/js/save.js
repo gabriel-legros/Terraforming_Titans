@@ -774,14 +774,18 @@ function saveGameToClipboard() {
 
 // Load game state from a file
 function loadGameFromFile(event) {
-  const file = event.target.files[0];
+  const input = event.target;
+  const file = input.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const saveData = e.target.result;
       loadGame(saveData);
+      input.value = '';
     };
     reader.readAsText(file);
+  } else {
+    input.value = '';
   }
 }
 
