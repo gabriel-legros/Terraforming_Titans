@@ -308,7 +308,7 @@ class Project extends EffectableEntity {
         if (fromStorage > 0) {
           res.decrease(fromStorage);
         }
-        if (res.modifyRate) {
+        if (res.modifyRate && this.showsInResourcesRate()) {
           res.modifyRate(-rate, this.displayName, 'project');
         }
       }
@@ -498,6 +498,10 @@ class Project extends EffectableEntity {
     }
   }
 
+  showsInResourcesRate() {
+    return this.attributes?.showInResourcesRate !== false;
+  }
+
   applyCompleteProject(effect) {
     if (this.isCompleted) {
       return;
@@ -534,7 +538,7 @@ class Project extends EffectableEntity {
         for (const resource in cost[category]) {
           const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
           const usingStorage = this.usesSpaceStorageForResource(category, resource, cost[category][resource]);
-          if (applyRates && resources[category] && resources[category][resource] && !usingStorage) {
+          if (applyRates && resources[category] && resources[category][resource] && !usingStorage && this.showsInResourcesRate()) {
             resources[category][resource].modifyRate(
               -rateValue,
               this.displayName,
@@ -552,7 +556,7 @@ class Project extends EffectableEntity {
           if (!totals.gain[category]) totals.gain[category] = {};
           for (const resource in gain[category]) {
             const rateValue = gain[category][resource] * rate * (applyRates ? productivity : 1);
-            if (applyRates && resources[category] && resources[category][resource]) {
+            if (applyRates && resources[category] && resources[category][resource] && this.showsInResourcesRate()) {
               resources[category][resource].modifyRate(
                 rateValue,
                 this.displayName,

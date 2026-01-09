@@ -526,7 +526,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
-    attributes: { canUseSpaceStorage: true }
+    attributes: { canUseSpaceStorage: true, showInResourcesRate: false }
   },
   spaceStorage : {
     type: 'SpaceStorageProject',

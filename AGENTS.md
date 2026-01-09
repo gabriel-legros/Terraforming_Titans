@@ -238,6 +238,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added an Industrial Waste Processing research gated by the Gabbag chapter 29.8 flag that unlocks all waste buildings and enables scrap metal and junk.
 - Added a Waste Workforce Automation research that reduces waste building worker requirements by 20% for 200k research points once the Gabbag waste processing flag is set.
 - Terraforming Bureau now unlocks dust factory automation that targets rock albedo and clamps production or reversal at the desired mix.
+- Projects can opt out of showing their cost/gain in the resource rate panel, with Orbital Ring hidden by default.
 - Storage depot, water tank, and battery autobuild now use a % filled threshold (default 95%) to add storage when the most filled resource runs high.
 - Storage depot fill mode adds primary/secondary resource selectors so players can target specific storage types.
 - GHG/calcite factory automation now caps solver output so targets cannot be reached in under a second and reuses each solver result for one second.
