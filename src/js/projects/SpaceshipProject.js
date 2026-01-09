@@ -540,6 +540,8 @@ class SpaceshipProject extends Project {
       liquidCO2: { container: 'zonalSurface', key: 'liquidCO2' },
       liquidMethane: { container: 'zonalSurface', key: 'liquidMethane' },
       hydrocarbonIce: { container: 'zonalSurface', key: 'hydrocarbonIce' },
+      liquidAmmonia: { container: 'zonalSurface', key: 'liquidAmmonia' },
+      ammoniaIce: { container: 'zonalSurface', key: 'ammoniaIce' },
     };
 
     const descriptor = mapping[resource];
@@ -571,43 +573,51 @@ class SpaceshipProject extends Project {
         ? ZONES
         : Object.keys(container);
 
-    const entries = zoneNames
-      .map(zone => ({ zone, amount: container[zone]?.[key] || 0 }))
-      .filter(entry => entry.amount > 0);
+    const entries = zoneNames.map(zone => ({
+      zone,
+      amount: container[zone]?.[key] || 0,
+      weight: getZonePercentage(zone),
+    }));
 
-    if (entries.length === 0) {
-      return 0;
-    }
-
-    const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
-    const actual = Math.min(amount, total);
+    const totalAvailable = entries.reduce((sum, entry) => sum + entry.amount, 0);
+    const actual = Math.min(amount, totalAvailable);
     if (actual <= 0) {
       return 0;
     }
 
+    const totalWeight = entries.reduce((sum, entry) => sum + entry.weight, 0);
+    const weightTotal = totalWeight > 0 ? totalWeight : entries.length;
     let remaining = actual;
-    entries.forEach((entry, index) => {
-      const zoneData = container[entry.zone];
-      if (!zoneData) return;
-      const isLast = index === entries.length - 1;
-      const proportion = total > 0 ? entry.amount / total : 0;
-      let take = isLast ? remaining : actual * proportion;
-      take = Math.min(take, zoneData[key], remaining);
-      zoneData[key] = Math.max(0, zoneData[key] - take);
+
+    entries.forEach(entry => {
+      const weight = totalWeight > 0 ? entry.weight : 1;
+      const target = actual * (weight / weightTotal);
+      const take = Math.min(target, entry.amount);
+      entry.take = take;
+      entry.remaining = entry.amount - take;
       remaining -= take;
     });
 
     if (remaining > 1e-9) {
-      for (const entry of entries) {
-        if (remaining <= 0) break;
-        const zoneData = container[entry.zone];
-        if (!zoneData) continue;
-        const available = zoneData[key];
-        const take = Math.min(remaining, available);
-        zoneData[key] = Math.max(0, available - take);
+      const remainingEntries = entries.filter(entry => entry.remaining > 0);
+      const remainingWeightTotal = totalWeight > 0
+        ? remainingEntries.reduce((sum, entry) => sum + entry.weight, 0)
+        : remainingEntries.length;
+      const fallbackWeightTotal = remainingWeightTotal > 0 ? remainingWeightTotal : remainingEntries.length;
+      remainingEntries.forEach((entry, index) => {
+        const isLast = index === remainingEntries.length - 1;
+        const weight = totalWeight > 0 ? entry.weight : 1;
+        let take = isLast ? remaining : remaining * (weight / fallbackWeightTotal);
+        take = Math.min(take, entry.remaining, remaining);
+        entry.take += take;
         remaining -= take;
-      }
+      });
     }
+
+    entries.forEach(entry => {
+      const zoneData = container[entry.zone];
+      zoneData[key] = Math.max(0, zoneData[key] - (entry.take || 0));
+    });
 
     return actual;
   }
