@@ -3,6 +3,7 @@ const path = require('path');
 const vm = require('vm');
 
 const EffectableEntity = require('../src/js/effectable-entity');
+const { parseFlexibleNumber } = require('../src/js/numbers');
 
 const loadBuildingParameters = () => {
   const fullPath = path.resolve(__dirname, '..', 'src/js/buildings-parameters.js');
@@ -27,6 +28,7 @@ describe('Chemical reactor recipes', () => {
     global.calculateAtmosphericPressure = null;
     global.Building = null;
     global.MultiRecipesBuilding = null;
+    global.parseFlexibleNumber = null;
   });
 
   test('includes gated ammonia recipes', () => {
@@ -68,6 +70,7 @@ describe('Chemical reactor recipes', () => {
       celestialParameters: { gravity: 9.81, radius: 6371000 }
     };
     global.calculateAtmosphericPressure = jest.fn(() => 2000);
+    global.parseFlexibleNumber = parseFlexibleNumber;
 
     const { Building } = require('../src/js/building');
     global.Building = Building;
@@ -84,5 +87,52 @@ describe('Chemical reactor recipes', () => {
     const unlockedKeys = reactor._getAllowedRecipeKeys();
     expect(unlockedKeys).toContain('haberBosch');
     expect(unlockedKeys).toContain('ammoniaCombustion');
+  });
+
+  test('loads saved ammonia recipe even when locked', () => {
+    const buildingsParameters = loadBuildingParameters();
+
+    global.EffectableEntity = EffectableEntity;
+    global.maintenanceFraction = 0;
+    global.populationModule = { getWorkerAvailabilityRatio: () => 1 };
+    global.dayNightCycle = { isDay: () => true, isNight: () => false };
+    global.buildings = {};
+    global.updateBuildingDisplay = jest.fn();
+    global.spaceManager = { isArtificialWorld: () => false };
+    global.researchManager = {
+      isBooleanFlagSet: () => false
+    };
+    global.resources = {
+      colony: { energy: { value: 1000 } },
+      atmospheric: {
+        carbonDioxide: { value: 0 },
+        hydrogen: { value: 0 },
+        oxygen: { value: 0 },
+        inertGas: { value: 0 },
+        atmosphericMethane: { value: 0 },
+        atmosphericAmmonia: { value: 0 },
+        atmosphericWater: { value: 0 }
+      }
+    };
+    global.terraforming = {
+      celestialParameters: { gravity: 9.81, radius: 6371000 }
+    };
+    global.calculateAtmosphericPressure = jest.fn(() => 2000);
+    global.parseFlexibleNumber = parseFlexibleNumber;
+
+    const { Building } = require('../src/js/building');
+    global.Building = Building;
+    const { MultiRecipesBuilding } = require('../src/js/buildings/MultiRecipesBuilding');
+    global.MultiRecipesBuilding = MultiRecipesBuilding;
+    const { ChemicalReactor } = require('../src/js/buildings/ChemicalReactor');
+
+    const reactor = new ChemicalReactor(buildingsParameters.boschReactor, 'boschReactor');
+    const savedState = { currentRecipeKey: 'haberBosch' };
+
+    reactor.loadState(savedState);
+
+    const lockedKeys = reactor._getAllowedRecipeKeys();
+    expect(lockedKeys).not.toContain('haberBosch');
+    expect(reactor.currentRecipeKey).toBe('haberBosch');
   });
 });

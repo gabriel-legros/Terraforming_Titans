@@ -48,7 +48,7 @@ class MultiRecipesBuilding extends Building {
     return allowed.length ? allowed : keys;
   }
 
-  _applyRecipeMapping() {
+  _applyRecipeMapping(options = {}) {
     if (!this._staticConsumption) {
       this._staticConsumption = MultiRecipesBuilding._clone(this.consumption || {});
     }
@@ -59,11 +59,24 @@ class MultiRecipesBuilding extends Building {
       this._defaultDisplayName = this.displayName;
     }
 
-    const allowedKeys = this._getAllowedRecipeKeys();
-    if (allowedKeys.length && !allowedKeys.includes(this.currentRecipeKey)) {
-      const fallback = allowedKeys.includes(this.defaultRecipe) ? this.defaultRecipe : allowedKeys[0];
-      if (fallback) {
-        this.currentRecipeKey = fallback;
+    const ignoreRestrictions = options.ignoreRestrictions || this.ignoreRecipeRestrictionsOnLoad;
+    if (!ignoreRestrictions) {
+      const allowedKeys = this._getAllowedRecipeKeys();
+      if (allowedKeys.length && !allowedKeys.includes(this.currentRecipeKey)) {
+        const fallback = allowedKeys.includes(this.defaultRecipe) ? this.defaultRecipe : allowedKeys[0];
+        if (fallback) {
+          this.currentRecipeKey = fallback;
+        }
+      }
+    } else {
+      const defs = this.recipes || {};
+      const hasRecipe = Object.prototype.hasOwnProperty.call(defs, this.currentRecipeKey);
+      if (!hasRecipe) {
+        const keys = Object.keys(defs);
+        const fallback = defs[this.defaultRecipe] ? this.defaultRecipe : keys[0];
+        if (fallback) {
+          this.currentRecipeKey = fallback;
+        }
       }
     }
 
