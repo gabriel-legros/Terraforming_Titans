@@ -11,6 +11,7 @@
   },
   fps: {
     limit: 30,  // The game will run at 30 updates per second
+    forceSetTimeOut: true  // Don't use RAF
   },
   autoPause: false  // This prevents the game from pausing when the tab is inactive
 };
