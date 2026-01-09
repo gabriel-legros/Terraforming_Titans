@@ -905,6 +905,7 @@ function renderSelectedSectorDetails() {
         };
 
         const rewardRow = createStatRow('Reward');
+        rewardRow.stat.classList.add('galaxy-sector-panel__reward');
         rewardRow.statValue.textContent = '—';
         const rewardTooltipIcon = doc.createElement('span');
         rewardTooltipIcon.className = 'info-tooltip-icon';

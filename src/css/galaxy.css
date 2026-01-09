@@ -548,6 +548,12 @@
   gap: 6px;
 }
 
+.galaxy-sector-panel__details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .galaxy-sector-panel__management.is-hidden {
   display: none;
 }
@@ -681,7 +687,11 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+}
+
+.galaxy-sector-panel__reward {
+  margin-top: -4px;
 }
 
 .galaxy-sector-panel__control-item {
