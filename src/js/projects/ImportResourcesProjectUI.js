@@ -140,7 +140,7 @@ class ImportResourcesProjectUI {
 
     const description = document.createElement('p');
     description.classList.add('project-description');
-    description.textContent = 'Coordinate orbital shipments for various space resources.  The first 100 assignments reduce the duration, every assignment afterward provides a multiplier.';
+    description.textContent = 'Coordinate orbital shipments for various space resources.  The first 100 spaceship assignments reduce the duration, every assignment afterward provides a multiplier.';
     cardBody.appendChild(description);
 
     const costDisplay = document.createElement('div');
