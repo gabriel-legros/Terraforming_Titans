@@ -379,7 +379,39 @@ progressGabbag.chapters.push(
         sourceId: 'gabbag.29.8'
       }
     ]
-  }
+  },
+  {
+    id: 'gabbag.29.9',
+    type: 'journal',
+    chapter: 29,
+    narrative: "Acquire Full Control of sector R4-05 to continue.",
+    prerequisites: ['gabbag.29.8'],
+    objectives: [
+      { type: 'galaxySectorControl', sectorLabel: 'R4-05' }
+    ],
+    reward: []
+  },
+  {
+    id: 'gabbag.29.10',
+    type: 'journal',
+    chapter: 29,
+    narrative: "(Some time later) $WGC_TEAM1_LEADER$ : 'My team and I have met with the Architect.  It is... terrifying.  It does appear to want to help us, but it... wants to talk to you and HOPE first.  It wants to give you two a test of sorts.'  \n Mary : 'That sounds suspicious.'  \n $WGC_TEAM1_SOCSCIENTIST$ : 'Actually, all archeological records indicate that the Architect is unable to lie, sometimes to its own detriment.  We asked it a lot of clarifying questions, so I can promise you it has no intention of harming you or HOPE.'  \n Elder Mavion : 'This is true.  The Architect cannot deceive.' \n Mary : 'Fine.  I don't like this but fine.  HOPE, whenever you are ready, let's go meet that thing.'",
+    prerequisites: ['impossible'],
+    objectives: [
+    ],
+    reward: [      { target: 'spaceManager', targetId: 'tartarus', type: 'enable' }]
+  },
+  {
+    id: 'gabbag.29.11',
+    type: 'journal',
+    chapter: 29,
+    narrative: "Primary Directives : Humanity's survival demands a solution to hazardous biomass superweapons. Gabbag habitat already colonized.  **New terraforming target designated: Tartarus.**",
+    prerequisites: ['gabbag.29.10'],
+    objectives: [
+     { type: 'currentPlanet', planetId: 'tartarus' }
+    ],
+    reward: []
+  },
 );
 
 if (typeof module !== 'undefined') {

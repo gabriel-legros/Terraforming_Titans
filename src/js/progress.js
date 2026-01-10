@@ -75,13 +75,25 @@ function getWGCTeamNaturalScientistName(index) {
     }
 }
 
+function getWGCTeamSocialScientistName(index) {
+    try {
+        const team = warpGateCommand.teams[index] || [];
+        const scientist = team.find(member => member?.classType === 'Social Scientist');
+        return formatWGCTeamMemberName(scientist, 'Riley');
+    } catch {
+        return 'Riley';
+    }
+}
+
 function resolveStoryPlaceholders(text) {
     const leaderName = getWGCTeamLeaderName(0);
     const scientistName = getWGCTeamNaturalScientistName(0);
+    const socialScientistName = getWGCTeamSocialScientistName(0);
     return text
         .replace(/\$WGC_TEAM1_LEADER\$/g, leaderName)
         .replace(/\$WGC_TEAM_LEADER\$/g, leaderName)
-        .replace(/\$WGC_TEAM1_NATSCIENTIST\$/g, scientistName);
+        .replace(/\$WGC_TEAM1_NATSCIENTIST\$/g, scientistName)
+        .replace(/\$WGC_TEAM1_SOCSCIENTIST\$/g, socialScientistName);
 }
 
 function compareValues(current, target, comparison = 'gte') {

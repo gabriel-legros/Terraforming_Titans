@@ -13,7 +13,7 @@ progressTartarus.chapters.push(
     activePlanet: 'tartarus',
     title: 'Chapter 30: Tartarus',
     narrative: 'System message: Tartarus expedition log initialized.',
-    prerequisites: ['impossible4'],
+    prerequisites: ['gabbag.29.11'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
     ],

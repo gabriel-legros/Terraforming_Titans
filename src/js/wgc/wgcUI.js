@@ -370,6 +370,7 @@ function invalidateWGCTeamCache() {
       indicator: slot.querySelector('.unspent-points-indicator') || null
     }));
     const prev = previous[tIdx];
+    const isNewCard = !prev || prev.card !== card;
     const hideStory = typeof warpGateCommand !== 'undefined' && !!warpGateCommand.hideStoryLogs;
     const entry = {
       card,
@@ -389,9 +390,9 @@ function invalidateWGCTeamCache() {
       logContainer,
       logEl: logContent,
       logPinned: prev && prev.logPinned === false ? false : isWGCLogPinned(logContainer),
-      lastRenderedCount: prev ? prev.lastRenderedCount || 0 : 0,
-      lastRenderedHideState: prev ? prev.lastRenderedHideState : hideStory,
-      lastRenderedHtml: prev ? prev.lastRenderedHtml || '' : '',
+      lastRenderedCount: !isNewCard && prev ? prev.lastRenderedCount || 0 : 0,
+      lastRenderedHideState: !isNewCard && prev ? prev.lastRenderedHideState : hideStory,
+      lastRenderedHtml: !isNewCard && prev ? prev.lastRenderedHtml || '' : '',
       lockOverlay,
       lockDetail: lockOverlay ? lockOverlay.querySelector('.wgc-team-locked-detail') : null,
       slots
