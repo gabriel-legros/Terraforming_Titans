@@ -727,6 +727,17 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   reverseInlineBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
   reverseInlineBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (structure instanceof GhgFactory) {
+      const settings = getGhgAutomationSettings(structure);
+      if (settings.autoDisableAboveTemp) {
+        settings.autoDisableAboveTemp = false;
+      }
+    } else if (structure instanceof DustFactory) {
+      const settings = getDustAutomationSettings(structure);
+      if (settings.autoTargetAlbedo) {
+        settings.autoTargetAlbedo = false;
+      }
+    }
     // Toggle reversal state only; recipe toggling is handled by automation logic when needed
     if (typeof structure.setReverseEnabled === 'function') {
       structure.setReverseEnabled(!structure.reverseEnabled);
@@ -1722,9 +1733,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const reverseBtn = els.reverseButton;
       if (reverseBtn) {
         reverseBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
-        const disableReverse = structure instanceof GhgFactory
-          && getGhgAutomationSettings(structure).autoDisableAboveTemp;
-        reverseBtn.disabled = disableReverse;
+        reverseBtn.disabled = false;
       }
 
       const upgradeBtn = els.upgradeButton;
