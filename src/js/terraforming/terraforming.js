@@ -187,14 +187,23 @@ function getEffectiveLifeFraction(terraforming) {
 var runAtmosphericChemistry;
 var METHANE_COMBUSTION_PARAMETER_CONST;
 var estimateExosphereHeightMetersHelper = () => 0;
+var estimateExobaseTemperatureKHelper = () => 0;
 var estimateExosphereTemperatureKHelper = () => 0;
 var calculateMolecularWeightHelper = () => 0;
 
 try {
-  ({ estimateExosphereHeightMeters: estimateExosphereHeightMetersHelper } = require('./exosphere-utils.js'));
+  ({
+    estimateExosphereHeightMeters: estimateExosphereHeightMetersHelper,
+    estimateExobaseTemperatureK: estimateExobaseTemperatureKHelper
+  } = require('./exosphere-utils.js'));
 } catch (error) {
   try {
     estimateExosphereHeightMetersHelper = estimateExosphereHeightMeters;
+  } catch (innerError) {
+    // fallback stays
+  }
+  try {
+    estimateExobaseTemperatureKHelper = estimateExobaseTemperatureK;
   } catch (innerError) {
     // fallback stays
   }
@@ -1273,10 +1282,18 @@ class Terraforming extends EffectableEntity{
         }
 
         const meanMolecularWeight = calculateMolecularWeightHelper(atmospheric);
-        const temperatureK = estimateExosphereTemperatureKHelper(this.luminosity.solarFlux);
+        const exosphereTemperatureK = estimateExosphereTemperatureKHelper(this.luminosity.solarFlux);
+        const surfaceTemperatureK = this.temperature.value;
+        const totalMassKg = totalMassTons * 1000;
+        const columnMassKgPerM2 = totalMassKg / this.celestialParameters.surfaceArea;
+        const temperatureK = estimateExobaseTemperatureKHelper({
+            surfaceTemperatureK,
+            exosphereTemperatureK,
+            columnMassKgPerM2
+        });
 
         this.exosphereHeightMeters = estimateExosphereHeightMetersHelper({
-            totalMassKg: totalMassTons * 1000,
+            totalMassKg,
             meanMolecularWeightGmol: meanMolecularWeight,
             temperatureK,
             gravity: this.celestialParameters.gravity,

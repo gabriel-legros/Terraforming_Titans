@@ -2,7 +2,34 @@ const SOLIS_RESOURCE_CAP = 1000;
 const SOLIS_WATER_KEEP = 1000;
 const SOLIS_CAPPED_RESOURCES = ['food', 'components', 'electronics', 'glass', 'androids'];
 const SMALL_PROJECT_BASE_SUCCESS = 0.5;
-const LARGE_PROJECT_BASE_SUCCESS = 0.95;
+const LARGE_PROJECT_BASE_SUCCESS = 0.05;
+const PERIAPSIS_SAMPLE_COUNT = 64;
+const PERIAPSIS_MEAN_SCALE = 1.35;
+const PERIAPSIS_MEAN_OFFSET_METERS = 120000;
+const PERIAPSIS_MIN_METERS = 40000;
+const PERIAPSIS_STD_RATIO = 0.5;
+const DEBRIS_DECAY_BASE_RATE = 2e-6;
+const DEBRIS_DECAY_DEPTH_METERS = 100000;
+
+function gaussianRandom() {
+  const u = Math.max(Math.random(), 1e-12);
+  const v = Math.max(Math.random(), 1e-12);
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, samples = PERIAPSIS_SAMPLE_COUNT) {
+  const count = Math.max(1, Math.floor(samples));
+  const perSample = totalMass / count;
+  const entries = [];
+  for (let i = 0; i < count; i += 1) {
+    const draw = gaussianRandom() * stdMeters + meanMeters;
+    entries.push({
+      periapsisMeters: Math.max(0, draw),
+      massTons: perSample
+    });
+  }
+  return entries;
+}
 
 function normalizeKesslerParameters(parameters = {}) {
   return {
@@ -14,6 +41,12 @@ class KesslerHazard {
   constructor(manager) {
     this.manager = manager;
     this.permanentlyCleared = false;
+    this.periapsisDistribution = [];
+    this.decaySummary = {
+      exobaseHeightMeters: 0,
+      belowFraction: 0,
+      decayTonsPerSecond: 0
+    };
   }
 
   normalize(parameters = {}) {
@@ -24,7 +57,7 @@ class KesslerHazard {
     const perLand = kesslerParameters.orbitalDebrisPerLand;
     const initialLand = terraforming.initialLand;
     const calculatedValue = initialLand * perLand;
-    const resource = resources.surface.orbitalDebris;
+    const resource = resources.special.orbitalDebris;
     const unlockOnly = options.unlockOnly === true;
 
     resource.unlocked = true;
@@ -38,10 +71,14 @@ class KesslerHazard {
     } catch (error) {
       // ignore missing UI helpers in tests
     }
+
+    if (!unlockOnly) {
+      this.ensurePeriapsisDistribution(terraforming, kesslerParameters, resource.value || 0);
+    }
   }
 
   isCleared() {
-    const debris = resources.surface.orbitalDebris;
+    const debris = resources.special.orbitalDebris;
     const currentValue = debris.value || 0;
     this.permanentlyCleared = this.permanentlyCleared || currentValue <= 0;
     return this.permanentlyCleared;
@@ -49,12 +86,14 @@ class KesslerHazard {
 
   save() {
     return {
-      permanentlyCleared: this.permanentlyCleared
+      permanentlyCleared: this.permanentlyCleared,
+      periapsisDistribution: this.periapsisDistribution
     };
   }
 
   load(data) {
     this.permanentlyCleared = Boolean(data && data.permanentlyCleared);
+    this.periapsisDistribution = (data && data.periapsisDistribution) ? data.periapsisDistribution : [];
   }
 
   applySolisTravelAdjustments(terraforming) {
@@ -101,7 +140,7 @@ class KesslerHazard {
   }
 
   getProjectFailureChances() {
-    const debris = resources.surface.orbitalDebris;
+    const debris = resources.special.orbitalDebris;
     const initialAmount = debris.initialValue || 0;
     const currentAmount = debris.value || 0;
     const ratio = initialAmount ? currentAmount / initialAmount : 0;
@@ -112,6 +151,84 @@ class KesslerHazard {
       largeFailure: 1 - largeSuccess,
       smallSuccess,
       largeSuccess
+    };
+  }
+
+  getDecaySummary() {
+    return this.decaySummary;
+  }
+
+  ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass) {
+    if (this.periapsisDistribution.length) {
+      return;
+    }
+    const exobase = terraforming.exosphereHeightMeters || 0;
+    const meanMeters = Math.max(PERIAPSIS_MIN_METERS, exobase * PERIAPSIS_MEAN_SCALE + PERIAPSIS_MEAN_OFFSET_METERS);
+    const stdMeters = Math.max(1, meanMeters * PERIAPSIS_STD_RATIO);
+    this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters);
+  }
+
+  syncDistributionToResource(terraforming, kesslerParameters, totalMass) {
+    if (!this.periapsisDistribution.length) {
+      this.ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass);
+    }
+    let distributionTotal = 0;
+    this.periapsisDistribution.forEach((entry) => {
+      distributionTotal += entry.massTons;
+    });
+    if (!distributionTotal) {
+      this.ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass);
+      return;
+    }
+    const scale = totalMass / distributionTotal;
+    this.periapsisDistribution.forEach((entry) => {
+      entry.massTons *= scale;
+    });
+  }
+
+  update(deltaSeconds, terraforming, kesslerParameters) {
+    const resource = resources.special.orbitalDebris;
+    const totalMass = resource.value || 0;
+    if (!totalMass) {
+      this.periapsisDistribution = [];
+      this.decaySummary = {
+        exobaseHeightMeters: terraforming.exosphereHeightMeters || 0,
+        belowFraction: 0,
+        decayTonsPerSecond: 0
+      };
+      return;
+    }
+
+    this.syncDistributionToResource(terraforming, kesslerParameters, totalMass);
+
+    const exobase = terraforming.exosphereHeightMeters || 0;
+    let belowMass = 0;
+    let decayedTons = 0;
+    this.periapsisDistribution.forEach((entry) => {
+      const depth = exobase - entry.periapsisMeters;
+      if (depth > 0) {
+        const depthFactor = 1 + depth / DEBRIS_DECAY_DEPTH_METERS;
+        const decayRate = DEBRIS_DECAY_BASE_RATE * depthFactor;
+        const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
+        const removed = entry.massTons * decayFraction;
+        entry.massTons = Math.max(0, entry.massTons - removed);
+        decayedTons += removed;
+        belowMass += entry.massTons;
+      }
+    });
+
+    let updatedTotal = 0;
+    this.periapsisDistribution.forEach((entry) => {
+      updatedTotal += entry.massTons;
+    });
+    resource.value = Math.max(0, updatedTotal);
+    const decayRate = deltaSeconds ? decayedTons / deltaSeconds : 0;
+    resource.modifyRate(-decayRate, 'Debris decay', 'hazard');
+
+    this.decaySummary = {
+      exobaseHeightMeters: exobase,
+      belowFraction: updatedTotal ? (belowMass / updatedTotal) : 0,
+      decayTonsPerSecond: decayRate
     };
   }
 }

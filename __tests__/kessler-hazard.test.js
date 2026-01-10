@@ -10,11 +10,12 @@ describe('Kessler hazard', () => {
 
   test('initializes orbital debris from land', () => {
     global.resources = {
-      surface: {
+      special: {
         orbitalDebris: {
           value: 0,
           initialValue: 0,
-          unlocked: false
+          unlocked: false,
+          modifyRate: jest.fn()
         }
       }
     };
@@ -26,9 +27,9 @@ describe('Kessler hazard', () => {
       { unlockOnly: false }
     );
 
-    expect(global.resources.surface.orbitalDebris.unlocked).toBe(true);
-    expect(global.resources.surface.orbitalDebris.value).toBe(10000);
-    expect(global.resources.surface.orbitalDebris.initialValue).toBe(10000);
+    expect(global.resources.special.orbitalDebris.unlocked).toBe(true);
+    expect(global.resources.special.orbitalDebris.value).toBe(10000);
+    expect(global.resources.special.orbitalDebris.initialValue).toBe(10000);
   });
 
   test('caps solis resources and diverts water to the surface', () => {
@@ -89,28 +90,30 @@ describe('Kessler hazard', () => {
 
   test('clears permanently once debris reaches zero', () => {
     global.resources = {
-      surface: {
+      special: {
         orbitalDebris: {
           value: 0,
           initialValue: 100,
-          unlocked: true
+          unlocked: true,
+          modifyRate: jest.fn()
         }
       }
     };
 
     const hazard = new KesslerHazard(null);
     expect(hazard.isCleared()).toBe(true);
-    global.resources.surface.orbitalDebris.value = 50;
+    global.resources.special.orbitalDebris.value = 50;
     expect(hazard.isCleared()).toBe(true);
   });
 
   test('computes project failure chances from debris density', () => {
     global.resources = {
-      surface: {
+      special: {
         orbitalDebris: {
           value: 100,
           initialValue: 100,
-          unlocked: true
+          unlocked: true,
+          modifyRate: jest.fn()
         }
       }
     };
@@ -120,9 +123,37 @@ describe('Kessler hazard', () => {
     expect(initialChances.smallFailure).toBeCloseTo(0.5, 6);
     expect(initialChances.largeFailure).toBeCloseTo(0.05, 6);
 
-    global.resources.surface.orbitalDebris.value = 0;
+    global.resources.special.orbitalDebris.value = 0;
     const clearedChances = hazard.getProjectFailureChances();
     expect(clearedChances.smallFailure).toBeCloseTo(0, 6);
     expect(clearedChances.largeFailure).toBeCloseTo(0, 6);
+  });
+
+  test('decays debris below the exobase faster than above', () => {
+    global.resources = {
+      special: {
+        orbitalDebris: {
+          value: 100,
+          initialValue: 100,
+          unlocked: true,
+          modifyRate: jest.fn()
+        }
+      }
+    };
+
+    const hazard = new KesslerHazard(null);
+    hazard.periapsisDistribution = [
+      { periapsisMeters: 50000, massTons: 40 },
+      { periapsisMeters: 200000, massTons: 60 }
+    ];
+
+    const terraforming = { exosphereHeightMeters: 150000 };
+    hazard.update(1000, terraforming, { orbitalDebrisPerLand: 100 });
+
+    expect(global.resources.special.orbitalDebris.value).toBeLessThan(100);
+    const summary = hazard.getDecaySummary();
+    expect(summary.exobaseHeightMeters).toBe(150000);
+    expect(summary.belowFraction).toBeGreaterThan(0);
+    expect(summary.decayTonsPerSecond).toBeGreaterThan(0);
   });
 });

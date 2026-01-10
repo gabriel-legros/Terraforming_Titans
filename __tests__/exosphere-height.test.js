@@ -1,9 +1,10 @@
 const path = require('path');
 
-const { estimateExosphereHeightMeters } = require(path.join(
-  '..',
-  'src/js/terraforming/exosphere-utils.js'
-));
+const {
+  estimateExosphereHeightMeters,
+  estimateExobaseTemperatureK,
+  EXOSPHERE_TEMP_COLUMN_SCALE
+} = require(path.join('..', 'src/js/terraforming/exosphere-utils.js'));
 
 describe('Exosphere height', () => {
   test('returns zero when the column is too thin', () => {
@@ -39,5 +40,20 @@ describe('Exosphere height', () => {
     });
 
     expect(height).toBeCloseTo(expected, 12);
+  });
+
+  test('blends exobase temperature by column mass', () => {
+    const surfaceTemperatureK = 200;
+    const exosphereTemperatureK = 1000;
+    const columnMassKgPerM2 = EXOSPHERE_TEMP_COLUMN_SCALE;
+    const expected = surfaceTemperatureK + (exosphereTemperatureK - surfaceTemperatureK) * 0.5;
+
+    const temperature = estimateExobaseTemperatureK({
+      surfaceTemperatureK,
+      exosphereTemperatureK,
+      columnMassKgPerM2
+    });
+
+    expect(temperature).toBeCloseTo(expected, 6);
   });
 });

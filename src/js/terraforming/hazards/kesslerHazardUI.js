@@ -28,7 +28,8 @@ const kesslerHazardUICache = {
 
 const KESSLER_EFFECTS = [
   'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected).',
-  'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.'
+  'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.',
+  'Debris below the exobase decays faster the deeper the periapsis falls.'
 ];
 
 function getDocument() {
@@ -260,7 +261,7 @@ function updateKesslerHazardUI(kesslerParameters) {
     card.style.display = kesslerParameters ? '' : 'none';
     const resourcesState = getResources();
     const manager = getHazardManager();
-    const debris = resourcesState.surface.orbitalDebris;
+    const debris = resourcesState.special.orbitalDebris;
     const isCleared = manager.kesslerHazard.isCleared();
     updateKesslerBar(debris, isCleared);
     const failureChances = manager.kesslerHazard.getProjectFailureChances();
@@ -276,13 +277,17 @@ function updateKesslerHazardUI(kesslerParameters) {
     perLand = perLand || 0;
     const density = initialValue ? perLand * ratio : 0;
     const clearance = formatPercent(1 - ratio);
+    const decaySummary = manager.kesslerHazard.getDecaySummary();
+    const exobaseKm = (decaySummary.exobaseHeightMeters || 0) / 1000;
+    const belowFraction = decaySummary.belowFraction || 0;
+    const decayRate = decaySummary.decayTonsPerSecond || 0;
 
     kesslerHazardUICache.summaryLeftBody.textContent =
       `Debris: ${formatNumeric(currentValue, 2)} / ${formatNumeric(initialValue, 2)} t\nDensity: ${formatNumeric(density, 2)} t/land\nClearance: ${clearance}`;
     kesslerHazardUICache.summaryCenterBody.textContent =
       `Small projects: ${formatPercent(failureChances.smallFailure)} failure\nLarge projects: ${formatPercent(failureChances.largeFailure)} failure`;
     kesslerHazardUICache.summaryRightBody.textContent =
-      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDecay systems: Offline`;
+      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nExobase: ${formatNumeric(exobaseKm, 1)} km\nBelow exobase: ${formatPercent(belowFraction)}\nDecay: ${formatNumeric(decayRate, 4)} t/s`;
   } catch (error) {
     // ignore missing UI helpers in tests
   }

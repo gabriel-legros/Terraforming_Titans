@@ -294,6 +294,7 @@ class HazardManager {
     if (this.garbageHazard) {
       this.garbageHazard.update(deltaSeconds);
     }
+    this.kesslerHazard.update(deltaSeconds, terraformingState, this.parameters.kessler);
   }
 
   applyTravelAdjustments(terraformingState = null) {

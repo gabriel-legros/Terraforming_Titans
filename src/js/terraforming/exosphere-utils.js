@@ -1,6 +1,7 @@
 const EXOSPHERE_KB = 1.380649e-23; // Boltzmann constant [J/K]
 const AVOGADRO = 6.02214076e23; // mol^-1
 const EXOSPHERE_COLLISION_SIGMA = 2e-19; // m^2
+const EXOSPHERE_TEMP_COLUMN_SCALE = 2000; // kg/m^2
 
 function estimateExosphereHeightMeters(params = {}) {
   const totalMassKg = params.totalMassKg || 0;
@@ -20,6 +21,14 @@ function estimateExosphereHeightMeters(params = {}) {
   return logTerm > 1 ? H0 * Math.log(logTerm) : 0;
 }
 
+function estimateExobaseTemperatureK(params = {}) {
+  const surfaceTemperatureK = params.surfaceTemperatureK || 0;
+  const exosphereTemperatureK = params.exosphereTemperatureK || 0;
+  const columnMassKgPerM2 = params.columnMassKgPerM2 || 0;
+  const blend = columnMassKgPerM2 / (columnMassKgPerM2 + EXOSPHERE_TEMP_COLUMN_SCALE);
+  return surfaceTemperatureK + (exosphereTemperatureK - surfaceTemperatureK) * blend;
+}
+
 let isNodeExosphere = false;
 try {
   isNodeExosphere = module && module.exports;
@@ -30,9 +39,13 @@ try {
 if (isNodeExosphere) {
   module.exports = {
     estimateExosphereHeightMeters,
-    EXOSPHERE_COLLISION_SIGMA
+    estimateExobaseTemperatureK,
+    EXOSPHERE_COLLISION_SIGMA,
+    EXOSPHERE_TEMP_COLUMN_SCALE
   };
 } else {
   window.estimateExosphereHeightMeters = estimateExosphereHeightMeters;
+  window.estimateExobaseTemperatureK = estimateExobaseTemperatureK;
   window.EXOSPHERE_COLLISION_SIGMA = EXOSPHERE_COLLISION_SIGMA;
+  window.EXOSPHERE_TEMP_COLUMN_SCALE = EXOSPHERE_TEMP_COLUMN_SCALE;
 }

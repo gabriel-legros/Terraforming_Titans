@@ -325,7 +325,10 @@ The planet visualiser has been modularised into files covering core setup, light
 - Kessler Skies now caps Galactic Market trade totals to 100 per second and Cargo Rocket payload totals to 100 × duration while active.
 - Galactic Market and Cargo Rocket UIs now clamp over-limit selections under Kessler Skies and show a warning banner.
 - Kessler Skies now reports small/large space project failure chances based on orbital debris density.
+- Kessler Skies now tracks debris periapsis distributions and decays debris below the exobase faster the deeper it falls.
+- Orbital debris is now a special resource and Kessler decay reports as a resource rate.
 - Exosphere height calculation now lives in its own utility module and is cached each terraforming tick.
+- Exobase temperature now blends surface and exosphere heating based on atmospheric column mass to keep thin atmospheres from inflating the exobase.
 - Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.
 - Resource disposal treats each active Mass Driver as a configurable number of spaceship equivalents (default 10) when calculating throughput.
 - Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.
