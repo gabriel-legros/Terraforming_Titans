@@ -458,3 +458,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Space disposal now groups multi-phase resources behind a type dropdown plus a phase selector, driven by shared phase definitions in `planet-resource-parameters.js`.
 - Terraforming zonal resource synchronization and global-change distribution now read per-resource `zonalConfig` parameters for aggregation and spread behavior.
 - Water import automation now offers a disable mode that stops when water+ice amounts exceed the terraforming target.
+- Added Massive scale glass smelting research to double glass smelter production and consumption.

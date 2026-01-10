@@ -706,6 +706,27 @@ const researchParameters = {
         ],
       },  
       {
+        id: 'massive_scale_glass_smelting',
+        name: 'Massive scale glass smelting',
+        description: 'Doubles glass smelter production and consumption.',
+        cost: { research: 500_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'glassSmelter',
+            type: 'productionMultiplier',
+            value: 2
+          },
+          {
+            target: 'building',
+            targetId: 'glassSmelter',
+            type: 'consumptionMultiplier',
+            value: 2
+          }
+        ],
+      },
+      {
         id: 'space_elevator',
         name: 'Space Elevator',
         description: 'Enables a special project for the space elevator, which eliminates the metal cost of many space activities.',
