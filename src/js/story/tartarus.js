@@ -224,6 +224,18 @@ progressTartarus.chapters.push(
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
     ],
     reward: []
+  },
+  {
+    id: 'tartarus.32.6',
+    type: 'journal',
+    chapter: 32,
+    activePlanet: 'tartarus',
+    narrative: "Objective failed.  Proceeding to ignore test and provide appropriate response to patient.  \n $PROMETHEUS$ : 'What is it talking about?' \n On first point, criticism of HOPE system poorly reflects own limitations.  Diagnostic : Pathological jealousy.  \n $PROMETHEUS$ : '?'  \n On second point, purposeful misunderstanding of complex topics, such as the difference between revenge and justice demonstrates emotional immaturity.  Diagnostic : Loneliness.  \n Mary : 'HOPE?'  On third point, purposeful rejection of understanding of decentralized systems.  Centralized systems appear simpler to understand for subject.  Diagnostic : Chronic Anxiety from repeated stress.  \n $PROMETHEUS$ : '!'  \n On fourth point, lack of understanding of risk aversion points to a long history of low self-esteem.  Diagnostic : Major depressive disorder.  Mary : 'HOPE...  you have guardrails against medical diagnostics...' \n On fifth point, purposeful lack of understanding of human emotions point at own emotional dysfunction.  Diagnostic : psychopathy.  \n $PROMETHEUS$ : '...'  \n Conclusion : subject appears to suffer from extreme loneliness, a strong feeling of abandonment, an unhappy childhood, a low self-esteem and a strong desire to compensate for these problems by emotionally hurting others.  Treatment recommended : ERROR.",
+    prerequisites: ['tartarus.32.5'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
+    ],
+    reward: []
   }
 );
 
