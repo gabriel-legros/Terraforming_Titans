@@ -103,4 +103,26 @@ describe('Kessler hazard', () => {
     global.resources.surface.orbitalDebris.value = 50;
     expect(hazard.isCleared()).toBe(true);
   });
+
+  test('computes project failure chances from debris density', () => {
+    global.resources = {
+      surface: {
+        orbitalDebris: {
+          value: 100,
+          initialValue: 100,
+          unlocked: true
+        }
+      }
+    };
+
+    const hazard = new KesslerHazard(null);
+    const initialChances = hazard.getProjectFailureChances();
+    expect(initialChances.smallFailure).toBeCloseTo(0.5, 6);
+    expect(initialChances.largeFailure).toBeCloseTo(0.05, 6);
+
+    global.resources.surface.orbitalDebris.value = 0;
+    const clearedChances = hazard.getProjectFailureChances();
+    expect(clearedChances.smallFailure).toBeCloseTo(0, 6);
+    expect(clearedChances.largeFailure).toBeCloseTo(0, 6);
+  });
 });

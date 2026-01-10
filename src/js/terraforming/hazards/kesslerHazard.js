@@ -1,6 +1,8 @@
 const SOLIS_RESOURCE_CAP = 1000;
 const SOLIS_WATER_KEEP = 1000;
 const SOLIS_CAPPED_RESOURCES = ['food', 'components', 'electronics', 'glass', 'androids'];
+const SMALL_PROJECT_BASE_SUCCESS = 0.5;
+const LARGE_PROJECT_BASE_SUCCESS = 0.95;
 
 function normalizeKesslerParameters(parameters = {}) {
   return {
@@ -96,6 +98,21 @@ class KesslerHazard {
         resource.value = SOLIS_RESOURCE_CAP;
       }
     });
+  }
+
+  getProjectFailureChances() {
+    const debris = resources.surface.orbitalDebris;
+    const initialAmount = debris.initialValue || 0;
+    const currentAmount = debris.value || 0;
+    const ratio = initialAmount ? currentAmount / initialAmount : 0;
+    const smallSuccess = Math.pow(SMALL_PROJECT_BASE_SUCCESS, ratio);
+    const largeSuccess = Math.pow(LARGE_PROJECT_BASE_SUCCESS, ratio);
+    return {
+      smallFailure: 1 - smallSuccess,
+      largeFailure: 1 - largeSuccess,
+      smallSuccess,
+      largeSuccess
+    };
   }
 }
 

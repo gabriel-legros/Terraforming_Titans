@@ -186,6 +186,39 @@ function getEffectiveLifeFraction(terraforming) {
 
 var runAtmosphericChemistry;
 var METHANE_COMBUSTION_PARAMETER_CONST;
+var estimateExosphereHeightMetersHelper = () => 0;
+var estimateExosphereTemperatureKHelper = () => 0;
+var calculateMolecularWeightHelper = () => 0;
+
+try {
+  ({ estimateExosphereHeightMeters: estimateExosphereHeightMetersHelper } = require('./exosphere-utils.js'));
+} catch (error) {
+  try {
+    estimateExosphereHeightMetersHelper = estimateExosphereHeightMeters;
+  } catch (innerError) {
+    // fallback stays
+  }
+}
+
+try {
+  ({ estimateExosphereTemperatureK: estimateExosphereTemperatureKHelper } = require('./atmospheric-chemistry.js'));
+} catch (error) {
+  try {
+    estimateExosphereTemperatureKHelper = estimateExosphereTemperatureK;
+  } catch (innerError) {
+    // fallback stays
+  }
+}
+
+try {
+  ({ calculateMolecularWeight: calculateMolecularWeightHelper } = require('./atmospheric-utils.js'));
+} catch (error) {
+  try {
+    calculateMolecularWeightHelper = calculateMolecularWeight;
+  } catch (innerError) {
+    // fallback stays
+  }
+}
 
 
 function buildAtmosphereContext(atmospheric, gravity, radius) {
@@ -260,6 +293,7 @@ class Terraforming extends EffectableEntity{
         pressureByKey: {},
         availableByKey: {},
     };
+    this.exosphereHeightMeters = 0;
 
     this.initialValuesCalculated = false;
     this.completed = false;
@@ -1231,6 +1265,25 @@ class Terraforming extends EffectableEntity{
         return cache;
     }
 
+    _updateExosphereHeightCache() {
+        const atmospheric = this.resources.atmospheric;
+        let totalMassTons = 0;
+        for (const key in atmospheric) {
+            totalMassTons += atmospheric[key].value || 0;
+        }
+
+        const meanMolecularWeight = calculateMolecularWeightHelper(atmospheric);
+        const temperatureK = estimateExosphereTemperatureKHelper(this.luminosity.solarFlux);
+
+        this.exosphereHeightMeters = estimateExosphereHeightMetersHelper({
+            totalMassKg: totalMassTons * 1000,
+            meanMolecularWeightGmol: meanMolecularWeight,
+            temperatureK,
+            gravity: this.celestialParameters.gravity,
+            surfaceAreaM2: this.celestialParameters.surfaceArea
+        });
+    }
+
     update(deltaTime = 0, options = {}) {
       this.synchronizeGlobalResources();
       this._updateZonalCoverageCache(); // New call at the start of the update tick
@@ -1238,6 +1291,7 @@ class Terraforming extends EffectableEntity{
 
       //First update luminosity
       this.updateLuminosity();
+      this._updateExosphereHeightCache();
 
       // Update temperature with the new heat-capacity-aware integration
       this.updateSurfaceTemperature(deltaTime, options);
