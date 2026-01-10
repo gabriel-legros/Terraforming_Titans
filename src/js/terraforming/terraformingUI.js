@@ -839,7 +839,7 @@ function createTemperatureBox(row) {
       "- Composition: The mix of gases (Nitrogen, Oxygen, CO2, etc.) determines its properties. Each gas has a partial pressure, and the sum is the total atmospheric pressure.",
       "- Greenhouse Effect: Gases like CO2, Water Vapor, and Methane trap heat, warming the planet. This is quantified by the Optical Depth. A higher optical depth means a stronger greenhouse effect and higher temperatures.",
       "- Pressure & Density: Higher pressure increases the efficiency of wind turbines and the cost of colonies. It's also necessary to maintain liquid water on the surface and for colonists' life support.",
-      "- Circulation: Column mass and planetary rotation drive winds that shuffle heat between climate bands. Heavier atmospheres smooth temperature differences.",
+      "- Circulation: Column mass and planetary rotation drive winds that transfer heat between climate bands. Heavier atmospheres smooth temperature differences.",
       "- Cloud Formation: When condensable gases accumulate (water, methane, sulfuric acid), their mixing ratio is compared against a saturation curve. Sufficient vapor builds cloud decks that thicken with pressure up to each species' coverage limit.",
       "- Cloud Brightness: Each cloud species has a characteristic albedo. Coverage blends together, brightening whatever surface remains darker than the deck. Clouds never darken the planet and plateau once the surface matches the deck brightness.",
       "- Cloud Feedback: Thick clouds raise albedo, reflecting sunlight and lowering temperatures while returning vapor to surface stores through rain, snow, or acid drizzle.",
