@@ -210,7 +210,7 @@ progressVega2.chapters.push(
       "System Message: New controls enabled.\n" +
       "H.O.P.E.: 'Reverse' mode is now available on space mirrors, greenhouse gas factories, and dust factories.\n" +
       "$WGC_TEAM1_LEADER$: 'In plain terms: mirrors can help cool, GHG plants can pull gas back down and have an alternate mode for Calcite Aerosol, and dust work crews can clean up what we laid down and use white dust instead.'\n" +
-      "Dr. Evelyn Hart: 'Good. Useful upgrades.  Should make our work easier.'"
+      "Dr. Evelyn Hart: 'Good. Useful upgrades.  Should make our work easier.  Just note that it won't work on Hyperion Lanterns HOPE.  They produce light, not the other way around.'"
     ),
     prerequisites: ['chapter14.3'],
     objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }],

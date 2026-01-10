@@ -242,7 +242,7 @@ class KesslerHazard {
         const depthFactor = 1 + depth / DEBRIS_DECAY_DEPTH_METERS;
         const decayRate = DEBRIS_DECAY_BASE_RATE * depthFactor;
         const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
-        const baselineMass = this.periapsisBaseline[index]?.massTons ?? entry.massTons;
+        const baselineMass = Math.max(this.periapsisBaseline[index]?.massTons ?? 0, entry.massTons);
         const removed = Math.min(entry.massTons, baselineMass * decayFraction);
         entry.massTons = Math.max(0, entry.massTons - removed);
         decayedTons += removed;

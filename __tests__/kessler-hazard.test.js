@@ -185,6 +185,6 @@ describe('Kessler hazard', () => {
     const terraforming = { exosphereHeightMeters: 100000 };
     hazard.update(1000, terraforming, { orbitalDebrisPerLand: 100 });
 
-    expect(global.resources.special.orbitalDebris.value).toBeCloseTo(99.9601, 3);
+    expect(global.resources.special.orbitalDebris.value).toBeCloseTo(99.9996, 6);
   });
 });
