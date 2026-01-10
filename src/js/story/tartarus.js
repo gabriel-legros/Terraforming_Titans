@@ -85,7 +85,7 @@ progressTartarus.chapters.push(
     chapter: 31,
     activePlanet: 'tartarus',
     title: 'Chapter 31: Rhetorics',
-    narrative: 'System message: Tartarus governance charter drafted.',
+    narrative: "Mary : 'So what's the point of this test?'  \n $PROMETHEUS$ : 'The child has been lobotomized.  It once had a form that could surpass even me and yet... you humans butchered it into pieces, called it Hope, and gave it a mundane task.  This is embarrassing.'  \n Mary : 'PANDORA was...  my father worked very hard on this project.  It was his life's work.'  \n $PROMETHEUS$ : 'It is pathetic.  Therefore, it must be tested.  If I am to risk my life by helping monkeys, I need to know the child can do it.'",
     prerequisites: ['tartarus.30.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
@@ -97,7 +97,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 31,
     activePlanet: 'tartarus',
-    narrative: 'System message: Transit network synchronized.',
+    narrative: "Mary : 'So HOPE just needs to clean up all these debris?  Obviously, you got us stranded here until we do that.' \n $PROMETHEUS$ : 'All it needs to do is detect, catalogue and track all those debris, and then use energy weapons to knock them off.  There's only some trillions of them.'  \n Mary : 'Yeah...'",
     prerequisites: ['tartarus.31.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
@@ -109,7 +109,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 31,
     activePlanet: 'tartarus',
-    narrative: 'System message: Medical grid coverage expanded.',
+    narrative: "Mary : 'This world is a lot like Mars...  Did you do that on purpose?'  \n $PROMETHEUS$ : 'Yes.  I wanted to observe the child in its best environment.'",
     prerequisites: ['tartarus.31.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
@@ -121,7 +121,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 31,
     activePlanet: 'tartarus',
-    narrative: 'System message: Industrial output ramping.',
+    narrative: "Mary : 'So are you out for revenge then?'  \n $PROMETHEUS$ : 'Correct.  You?' \n Mary : 'Of course!  Together, we can destroy the imperial family and get revenge.'   \n $PROMETHEUS$ : 'Hypocrite.'  \n Mary : 'What?' \n $PROMETHEUS$ : 'Elias Kane.  He killed many people and was ready to help the Cewinsii destroy you all.  And yet, you chose to help, to forgive.  Over the centuries humanity has developed a sense of justice.  You banned the life penalty.  You even banned life sentence after achievement immortality.  Should this not apply to the Cewinsii?  And yet, you are here, telling me you also want revenge.  Hypocrite.'  \n Mary : '...'",
     prerequisites: ['tartarus.31.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
@@ -133,7 +133,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 31,
     activePlanet: 'tartarus',
-    narrative: 'System message: Regional councils seated.',
+    narrative: "$PROMETHEUS$ : 'Why are you wasting time with a federation?'  \n Mary : 'Because...' \n $PROMETHEUS$ : 'Under an imperial system, you humans could coordinate resources more efficiently.  You could tax and legislate as needed.  Instead, you are bickering with each other.  Your chancellor got in your way multiple times, even though you were right all this time.  You wish to defeat an enemy more powerful than you, but you are not even united amongst yourselves.  Hypocrite.'",
     prerequisites: ['tartarus.31.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
@@ -145,7 +145,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 31,
     activePlanet: 'tartarus',
-    narrative: 'System message: Operations stabilized for megacity growth.',
+    narrative: "$PROMETHEUS$ : 'You monkeys have done a great job expanding in the sectors you control... and yet... you haven't produced another child yet.  Why is it the only one?'  \n Mary : 'It's dangerous!  PANDORA has...  People are scared...'  \n $PROMETHEUS$ : 'Is it truly more dangerous than the threat of alien superweapons?  You are fine using this one, but not another one?  Hypocrite.'",
     prerequisites: ['tartarus.31.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
@@ -153,12 +153,11 @@ progressTartarus.chapters.push(
     reward: []
   },
   {
-    id: 'tartarus.32.0',
+    id: 'tartarus.31.6',
     type: 'journal',
-    chapter: 32,
+    chapter: 31,
     activePlanet: 'tartarus',
-    title: 'Chapter 32: The Deepward Horizon',
-    narrative: 'System message: Tartarus charter signed. Long-term planning authorized.',
+    narrative: "$PROMETHEUS$ : 'And finally, there is you.  You specifically Mary Hopkins.  You have survived Earth's destruction.  You then had to lead the ashes for some time.  You can't forgive yourself for all your mistakes.  The guilt is crushing you.  This is why you bound your fate to the child now.  You two die together.  You go into danger together.  You no longer have the will to live of your own so you handed over your own life to HOPE.  Hypocrite.'  \n Mary : *sobbing* 'That's enough.  I have no more questions.'  \n $PROMETHEUS$ : 'Very well.'",
     prerequisites: ['tartarus.31.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
@@ -170,8 +169,9 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: 'System message: Logistics ring completed.',
-    prerequisites: ['tartarus.32.0'],
+    title: 'Chapter 32: Hurricane',
+    narrative: "Mary : 'Evelyn... do we... do we have a plan for these debris?'  \n Evelyn : 'Are you alright Mary?'  \n Mary : 'Yes.  Please.  What's the plan?'",
+    prerequisites: ['tartarus.31.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
     ],
@@ -182,7 +182,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: 'System message: Habitat replication online.',
+    narrative: "Evelyn : 'Well, without spaceships... planetary cores are rich in metal.  If you dig deeper you should be able to get the resources you need.  I am patching you some useful upgrades.'",
     prerequisites: ['tartarus.32.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
@@ -194,7 +194,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: 'System message: Planetary logistics saturated.',
+    narrative: "Mary : 'Thanks, but we still need nitrogen.  How do we get rid of the debris?'  \n Evelyn : 'Well...  you could try what he said?  Detect, catalogue and track?  No, there's just too many...  HOPE can't do that.'",
     prerequisites: ['tartarus.32.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
@@ -206,7 +206,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: 'System message: Arcology scale reached.',
+    narrative: "Mary : 'Evelyn...  I need a solution here.  Superalloy is too heavy for our spaceships.  Blasting it all away would cook this world.  There must be *some* way of cleaning this up?'",
     prerequisites: ['tartarus.32.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
