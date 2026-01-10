@@ -1281,6 +1281,32 @@ const gabbagOverrides = {
   }
 };
 
+const tartarusOverrides = {
+  name: 'Tartarus',
+  star: {
+    name: 'Erebus',
+    spectralType: 'K2V',
+    luminositySolar: 0.42,
+    massSolar: 0.78,
+    temperatureK: 4900,
+    habitableZone: { inner: 0.6, outer: 0.95 }
+  },
+  celestialParameters: {
+    distanceFromSun: 0.78,
+    gravity: 5.04,
+    radius: 4120,
+    mass: 1.24e24,
+    albedo: 0.28,
+    rotationPeriod: 29.4,
+    spinPeriod: 29.4,
+    starLuminosity: 0.42,
+    sector: 'R6-04'
+  },
+  visualization: {
+    baseColor: '#3b3a4d',
+  }
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -1292,7 +1318,8 @@ const planetSpecificOverrides = {
   venus: venusOverrides,
   umbra: umbraOverrides,
   solisprime: solisPrimeOverrides,
-  gabbag: gabbagOverrides
+  gabbag: gabbagOverrides,
+  tartarus: tartarusOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -1339,6 +1366,7 @@ const planetParameters = {
     umbra: getPlanetParameters('umbra'),
     solisprime: getPlanetParameters('solisprime'),
     gabbag: getPlanetParameters('gabbag'),
+    tartarus: getPlanetParameters('tartarus'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,

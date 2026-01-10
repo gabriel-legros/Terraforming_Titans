@@ -442,6 +442,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Spaceship automation includes an "Unassigned Ships" target so presets can reserve a portion of the fleet for replication while keeping routes staffed.
 - Clicking the `0` spaceship assignment button now also disables Auto assign for that project (including Import Resources missions).
 - Added a placeholder Gabbag planet with population milestone chapters covering ten-through-five-billion colonist goals.
+- Added a placeholder Tartarus story world with three chapters covering ten-through-five-billion colonist goals.
+- Added Tartarus planet parameters with a custom star definition.
 - Solis quest system now detects clock manipulation by checking if remaining cooldown time exceeds twice the normal quest interval (30 minutes), automatically resetting to normal cooldown when detected to prevent indefinite wait times from backward clock changes.
 - Galactic Market buy/sell inputs now accept scientific notation (e.g. `1e6`) and suffix formatting (e.g. `3Qi`), and amounts >= 1M display in formatted form after using row controls or leaving the field.
 - Terraforming requirements now include Life Designer baseline ranges, tolerances, and attribute caps, and the Life Designer reads these from the active requirement (defaulting to Human).

@@ -135,7 +135,8 @@ function ensureJournalWorldData() {
     { id: 'venus', label: 'Venus', source: getStorySource(() => progressVenus, './story/venus.js') },
     { id: 'umbra', label: 'Umbra', source: getStorySource(() => progressUmbra, './story/umbra.js') },
     { id: 'solisprime', label: 'Solis Prime', source: getStorySource(() => progressSolisPrime, './story/solisPrime.js') },
-    { id: 'gabbag', label: 'Gabbag', source: getStorySource(() => progressGabbag, './story/gabbag.js') }
+    { id: 'gabbag', label: 'Gabbag', source: getStorySource(() => progressGabbag, './story/gabbag.js') },
+    { id: 'tartarus', label: 'Tartarus', source: getStorySource(() => progressTartarus, './story/tartarus.js') }
   ].filter(world => world.source && Array.isArray(world.source.chapters));
   const standardWorlds = [];
   worlds.forEach(world => {
