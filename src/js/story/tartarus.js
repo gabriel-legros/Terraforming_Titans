@@ -12,7 +12,7 @@ progressTartarus.chapters.push(
     chapter: 30,
     activePlanet: 'tartarus',
     title: 'Chapter 30: Tartarus',
-    narrative: 'System message: Tartarus expedition log initialized.',
+    narrative: "\n Landing on the deserted plains of Tartarus confirmed.  WARNING : Hazardous machinery detected across the entire star system.\n$PROMETHEUS$ :  'You came.  Good.  Let's get the test started.  We'll have plenty of time to chat in a moment.'  \n WARNING : Orbital collision triggered from hazardous machinery.  Approximating over a trillion orbital debris of various sizes.  \n Mary : 'Uh oh.'  \n Solis : 'HOPE!  I apologize.  I must abort your usual delivery.  This is too much.  I can drop you the metal and water but... everything else would be a waste.  My sincerest apologies.  No refund will be issued.'",
     prerequisites: ['gabbag.29.11'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
@@ -24,7 +24,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 30,
     activePlanet: 'tartarus',
-    narrative: 'System message: Habitat scaffolds anchored.',
+    narrative: "Mary : 'Architect... did you trap us here?'  \n $PROMETHEUS$ : 'Please do not call me by that name.  Call me... yes... Prometheus.  A suitable name.  Now to answer your question : no, you are not trapped in here.  If you choose to give up, I will clear a way for you.'",
     prerequisites: ['tartarus.30.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }

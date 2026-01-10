@@ -75,6 +75,53 @@ function joinLines(text) {
   return Array.isArray(text) ? text.join('\n') : text;
 }
 
+const PROMETHEUS_TOKEN = '$PROMETHEUS$';
+const PROMETHEUS_LABEL = 'Prometheus';
+const PROMETHEUS_CLASS = 'prometheus-text';
+
+function buildJournalSegments(text) {
+  const normalized = joinLines(text).replace(/<span class="prometheus-text">Prometheus([^<]*)<\/span>/g, `${PROMETHEUS_TOKEN}$1`);
+  const lines = normalized.split('\n');
+  const segments = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const tokenIndex = line.indexOf(PROMETHEUS_TOKEN);
+    if (tokenIndex === -1) {
+      if (line.length) {
+        segments.push({ text: line });
+      }
+    } else {
+      const before = line.slice(0, tokenIndex);
+      const after = line.slice(tokenIndex + PROMETHEUS_TOKEN.length);
+      if (before.length) {
+        segments.push({ text: before });
+      }
+      segments.push({ text: `${PROMETHEUS_LABEL}${after}`, className: PROMETHEUS_CLASS });
+    }
+    if (i < lines.length - 1) {
+      segments.push({ isBreak: true });
+    }
+  }
+  return segments;
+}
+
+function appendJournalSegments(entry, segments) {
+  segments.forEach(segment => {
+    if (segment.isBreak) {
+      entry.appendChild(document.createElement('br'));
+      return;
+    }
+    if (segment.className) {
+      const span = document.createElement('span');
+      span.className = segment.className;
+      span.textContent = segment.text;
+      entry.appendChild(span);
+      return;
+    }
+    entry.appendChild(document.createTextNode(segment.text));
+  });
+}
+
 function getChapterNumber(id) {
   const m = /^chapter(\d+)/.exec(id);
   return m ? parseInt(m[1], 10) : null;
@@ -377,6 +424,7 @@ function processNextJournalEntry() {
 
   const entry = document.createElement('p');
   journalEntries.appendChild(entry); // Append the empty paragraph first
+  const segments = buildJournalSegments(text);
 
   const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
   const prevGroupsLength = getJournalChapterGroups().length;
@@ -395,8 +443,11 @@ function processNextJournalEntry() {
     buildJournalIndex();
   }
 
-  let index = 0;
+  let segmentIndex = 0;
+  let charIndex = 0;
   let lastTimestamp = 0;
+  let lastChar = '';
+  let currentNode = null;
 
   const typeLetter = (timestamp) => {
     if (sessionId !== journalTypingSession) {
@@ -407,17 +458,43 @@ function processNextJournalEntry() {
     }
 
     let elapsed = timestamp - lastTimestamp;
-    let delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n')) ? 250 : 50;
 
-    while (elapsed >= delay && index < text.length) {
-      if (text[index] === '\n') {
-        entry.appendChild(document.createElement('br'));
-      } else {
-        entry.appendChild(document.createTextNode(text[index]));
+    while (segmentIndex < segments.length) {
+      const delay = (lastChar === '.' || lastChar === '\n') ? 250 : 50;
+      if (elapsed < delay) {
+        break;
       }
-      index++;
+      const segment = segments[segmentIndex];
+      if (segment.isBreak) {
+        entry.appendChild(document.createElement('br'));
+        segmentIndex += 1;
+        lastChar = '\n';
+        elapsed -= delay;
+        continue;
+      }
+      if (charIndex === 0) {
+        currentNode = segment.className
+          ? document.createElement('span')
+          : document.createTextNode('');
+        if (segment.className) {
+          currentNode.className = segment.className;
+        }
+        entry.appendChild(currentNode);
+      }
+      const nextChar = segment.text[charIndex];
+      if (currentNode.nodeType === 3) {
+        currentNode.nodeValue += nextChar;
+      } else {
+        currentNode.textContent += nextChar;
+      }
+      charIndex += 1;
+      lastChar = nextChar;
       elapsed -= delay;
-      delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n')) ? 250 : 50;
+      if (charIndex >= segment.text.length) {
+        segmentIndex += 1;
+        charIndex = 0;
+        currentNode = null;
+      }
     }
     lastTimestamp = timestamp - elapsed;
 
@@ -425,7 +502,7 @@ function processNextJournalEntry() {
       journalContainer.scrollTop = journalContainer.scrollHeight;
     }
 
-    if (index < text.length) {
+    if (segmentIndex < segments.length) {
       journalTypingFrameId = requestAnimationFrame(typeLetter);
     } else {
       if (!journalUserScrolling && journalContainer) {
@@ -457,13 +534,7 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
   // Iterate over the saved entries and append them
   entries.forEach(entryText => {
     const entry = document.createElement('p');
-    const lines = joinLines(entryText).split('\n'); // Split the text by newlines
-    lines.forEach((line, index) => {
-      entry.appendChild(document.createTextNode(line));
-      if (index < lines.length - 1) {
-        entry.appendChild(document.createElement('br')); // Add a line break for each new line
-      }
-    });
+    appendJournalSegments(entry, buildJournalSegments(entryText));
     journalEntries.appendChild(entry);
   });
 

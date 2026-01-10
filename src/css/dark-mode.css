@@ -76,6 +76,10 @@
     color: #ffffff;
 }
 
+.dark-mode #journal-entries .prometheus-text {
+    color: #ff6a6a;
+}
+
 .dark-mode .history-window {
     background-color: #2d2d2d;
     color: #ffffff;

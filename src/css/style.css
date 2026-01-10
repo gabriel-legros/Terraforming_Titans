@@ -246,6 +246,10 @@ body.journal-collapsed .tab-content {
     color: #333;
 }
 
+#journal-entries .prometheus-text {
+    color: #c43333;
+}
+
 /* Separator for story project entries */
 #journal-entries hr.journal-entry-separator {
     border: 0;
