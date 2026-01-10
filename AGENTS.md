@@ -322,6 +322,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added the Kessler Skies hazard on Tartarus, spawning orbital debris per land and throttling Solis travel drops (surface water spillover plus 1,000-unit caps on other supplies).
 - Kessler Skies now displays an orbital debris hazard bar and permanently clears once debris hits zero.
 - Kessler Skies hazard UI now includes an Effects list starting with the Solis resource delivery limits.
+- Kessler Skies now caps Galactic Market trade totals to 100 per second and Cargo Rocket payload totals to 100 × duration while active.
+- Galactic Market and Cargo Rocket UIs now clamp over-limit selections under Kessler Skies and show a warning banner.
 - Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.
 - Resource disposal treats each active Mass Driver as a configurable number of spaceship equivalents (default 10) when calculating throughput.
 - Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.

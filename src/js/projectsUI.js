@@ -212,6 +212,25 @@ function createProjectItem(project) {
 
   projectCard.appendChild(cardHeader);
 
+  if (project.name === 'galactic_market' || project.name === 'cargo_rocket') {
+    const warning = document.createElement('div');
+    warning.classList.add('project-kessler-warning');
+    const warningIcon = document.createElement('span');
+    warningIcon.classList.add('project-kessler-warning__icon');
+    warningIcon.textContent = '⚠';
+    const warningText = document.createElement('span');
+    warningText.textContent = 'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.';
+    const warningIconRight = document.createElement('span');
+    warningIconRight.classList.add('project-kessler-warning__icon');
+    warningIconRight.textContent = '⚠';
+    warning.append(warningIcon, warningText, warningIconRight);
+    projectCard.appendChild(warning);
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      kesslerWarning: warning
+    };
+  }
+
   // Card Body
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');

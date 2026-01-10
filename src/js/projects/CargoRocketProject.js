@@ -5,6 +5,7 @@ class CargoRocketProject extends Project {
     this.convertedToContinuous = false;
     this.selectedResources = [];
     this.selectionIncrement = 1;
+    this.kesslerCapped = false;
   }
 
   isContinuous() {
@@ -112,6 +113,10 @@ class CargoRocketProject extends Project {
         quantityInput.classList.add('resource-selection-input', `resource-selection-${this.name}`);
         quantityInput.dataset.category = category;
         quantityInput.dataset.resource = resourceId;
+        quantityInput.addEventListener('input', () => {
+          this.clampKesslerCargoInputs();
+          updateTotalCostDisplay(this);
+        });
         resourceRow.appendChild(quantityInput);
 
         const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resourceId];
@@ -134,6 +139,7 @@ class CargoRocketProject extends Project {
           button.textContent = text;
           button.addEventListener('click', () => {
             onClick();
+            this.clampKesslerCargoInputs();
             updateTotalCostDisplay(this);
           });
           buttonsContainer.appendChild(button);
@@ -196,8 +202,6 @@ class CargoRocketProject extends Project {
     if (!elements) return;
 
     if (this.attributes.resourceChoiceGainCost) {
-      updateTotalCostDisplay(this);
-
       const inputs = elements.selectionInputs || [];
       const prices = elements.priceSpans || [];
       inputs.forEach((input, index) => {
@@ -234,6 +238,8 @@ class CargoRocketProject extends Project {
         this.oneTimeResourceGainsDisplay = null;
       }
 
+      this.clampKesslerCargoInputs();
+
       const selectedResources = [];
       inputs.forEach((input) => {
         const category = input?.dataset?.category;
@@ -247,6 +253,7 @@ class CargoRocketProject extends Project {
         }
       });
       this.selectedResources = selectedResources;
+      updateTotalCostDisplay(this);
     }
   }
 
@@ -330,6 +337,8 @@ class CargoRocketProject extends Project {
       }
     });
 
+    this.clampKesslerCargoInputs();
+
     // Update the total cost display
     updateTotalCostDisplay(this);
   }
@@ -366,53 +375,51 @@ class CargoRocketProject extends Project {
     super.deductResources(resources);
     const cost = this.getResourceChoiceGainCost();
     resources.colony.funding.decrease(cost);
-    if (this.selectedResources) {
-      this.selectedResources.forEach(({ category, resource, quantity }) => {
-        if (category === 'special' && resource === 'spaceships') {
-          this.applySpaceshipPurchase(quantity);
-        }
-      });
-    }
+    const entries = this.pendingResourceGains || [];
+    entries.forEach(({ category, resource, quantity }) => {
+      if (category === 'special' && resource === 'spaceships') {
+        this.applySpaceshipPurchase(quantity);
+      }
+    });
   }
 
   getResourceChoiceGainCost(useSelected = true) {
     if (this.isContinuous()) {
-      const source = this.selectedResources;
-      if (source && source.length > 0) {
-        let totalFundingCost = 0;
-        source.forEach(({ category, resource, quantity }) => {
-          const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-          const cost = resource === 'spaceships'
-            ? this.getSpaceshipTotalCost(quantity, basePrice)
-            : basePrice * quantity;
-          totalFundingCost += cost;
-        });
-        return totalFundingCost;
-      }
-      return 0;
+      const source = this.selectedResources || [];
+      let totalFundingCost = 0;
+      const tradeScale = this.getKesslerCargoScale(source);
+      source.forEach(({ category, resource, quantity }) => {
+        const scaledQuantity = quantity * tradeScale;
+        const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+        const cost = resource === 'spaceships'
+          ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
+          : basePrice * scaledQuantity;
+        totalFundingCost += cost;
+      });
+      return totalFundingCost;
     }
 
     // Calculate funding cost for selected resources. When useSelected is true,
     // this also updates pendingResourceGains which are applied on completion.
     const source = useSelected ? this.selectedResources : this.pendingResourceGains;
-    if (source && source.length > 0) {
-      let totalFundingCost = 0;
-      if (useSelected) {
-        this.pendingResourceGains = [];
-      }
-      source.forEach(({ category, resource, quantity }) => {
-        const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-        const cost = resource === 'spaceships'
-          ? this.getSpaceshipTotalCost(quantity, basePrice)
-          : basePrice * quantity;
-        totalFundingCost += cost;
-        if (useSelected) {
-          this.pendingResourceGains.push({ category, resource, quantity });
-        }
-      });
-      return totalFundingCost;
+    const entries = source || [];
+    let totalFundingCost = 0;
+    const tradeScale = this.getKesslerCargoScale(entries);
+    if (useSelected) {
+      this.pendingResourceGains = [];
     }
-    return 0;
+    entries.forEach(({ category, resource, quantity }) => {
+      const scaledQuantity = quantity * tradeScale;
+      const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+      const cost = resource === 'spaceships'
+        ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
+        : basePrice * scaledQuantity;
+      totalFundingCost += cost;
+      if (useSelected) {
+        this.pendingResourceGains.push({ category, resource, quantity: scaledQuantity });
+      }
+    });
+    return totalFundingCost;
   }
 
   applyResourceChoiceGain() {
@@ -439,18 +446,20 @@ class CargoRocketProject extends Project {
       const seconds = deltaTime / 1000;
       if (this.selectedResources && this.selectedResources.length > 0) {
         let costPerSecond = 0;
+        const tradeScale = this.getKesslerCargoScale(this.selectedResources);
         this.selectedResources.forEach(({ category, resource, quantity }) => {
+          const scaledQuantity = quantity * tradeScale;
           const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
           const perSecCost = resource === 'spaceships'
-            ? this.getSpaceshipTotalCost(quantity, basePrice)
-            : basePrice * quantity;
+            ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
+            : basePrice * scaledQuantity;
           costPerSecond += perSecCost;
           if (!totals.gain[category]) totals.gain[category] = {};
           totals.gain[category][resource] =
-            (totals.gain[category][resource] || 0) + quantity * seconds;
+            (totals.gain[category][resource] || 0) + scaledQuantity * seconds;
           if (applyRates) {
             resources[category][resource].modifyRate(
-              quantity * (applyRates ? productivity : 1),
+              scaledQuantity * (applyRates ? productivity : 1),
               'Cargo Rockets',
               'project'
             );
@@ -560,12 +569,14 @@ class CargoRocketProject extends Project {
     const seconds = deltaTime / 1000;
     const purchases = [];
     let costPerSecond = 0;
+    const tradeScale = this.getKesslerCargoScale(this.selectedResources);
     this.selectedResources.forEach(({ category, resource, quantity }) => {
+      const scaledQuantity = quantity * tradeScale;
       const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
       const perSecCost = resource === 'spaceships'
-        ? this.getSpaceshipTotalCost(quantity, basePrice)
-        : basePrice * quantity;
-      purchases.push({ category, resource, quantity, perSecCost });
+        ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
+        : basePrice * scaledQuantity;
+      purchases.push({ category, resource, quantity: scaledQuantity, perSecCost });
       costPerSecond += perSecCost;
     });
     let totalCost = costPerSecond * seconds * productivity;
@@ -597,6 +608,53 @@ class CargoRocketProject extends Project {
         this.applySpaceshipPurchase(amount);
       }
     });
+  }
+
+  clampKesslerCargoInputs() {
+    const elements = projectElements[this.name];
+    const inputs = elements.selectionInputs || [];
+    const limit = this.getKesslerCargoLimit();
+    let total = 0;
+    const entries = [];
+    inputs.forEach((input) => {
+      const quantity = parseSelectionQuantity(input.value);
+      total += quantity;
+      entries.push({ input, quantity });
+    });
+    const scale = total > limit ? limit / total : 1;
+    this.kesslerCapped = scale < 1;
+    if (scale < 1) {
+      entries.forEach((entry) => {
+        const scaled = Math.max(0, Math.floor(entry.quantity * scale));
+        entry.input.value = String(scaled);
+      });
+    }
+    this.updateKesslerWarning();
+  }
+
+  updateKesslerWarning() {
+    const warning = projectElements[this.name].kesslerWarning;
+    warning.style.display = 'flex';
+  }
+
+  getKesslerCargoLimit() {
+    let limit = Infinity;
+    try {
+      limit = hazardManager.getKesslerCargoLimit(this.getEffectiveDuration() / 1000);
+    } catch (error) {
+      limit = Infinity;
+    }
+    return limit;
+  }
+
+  getKesslerCargoScale(entries) {
+    const limit = this.getKesslerCargoLimit();
+    let total = 0;
+    const list = entries || [];
+    list.forEach(({ quantity }) => {
+      total += quantity;
+    });
+    return total > limit ? limit / total : 1;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {

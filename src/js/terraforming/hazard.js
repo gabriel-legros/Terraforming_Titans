@@ -302,6 +302,16 @@ class HazardManager {
     }
   }
 
+  getKesslerTradeLimitPerSecond() {
+    const active = this.parameters.kessler && !this.kesslerHazard.isCleared();
+    return active ? 100 : Infinity;
+  }
+
+  getKesslerCargoLimit(durationSeconds) {
+    const active = this.parameters.kessler && !this.kesslerHazard.isCleared();
+    return active ? 100 * durationSeconds : Infinity;
+  }
+
   ensureCrusaderPresence(terraformingState) {
     if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.ensureCrusaderPresence) {
       this.hazardousBiomassHazard.ensureCrusaderPresence(terraformingState);

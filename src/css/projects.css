@@ -1285,6 +1285,23 @@
     font-size: 1.1em;
 }
 
+.project-kessler-warning {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 600;
+    margin-top: 6px;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.project-kessler-warning__icon {
+    color: #f0d85c;
+    font-size: 1.1em;
+    line-height: 1;
+}
+
 .invest-container {
     margin-top: 10px;
     display: flex;
