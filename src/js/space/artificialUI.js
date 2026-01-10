@@ -142,7 +142,7 @@ function buildHistoryRow(entry) {
   const effectiveValue = entry.terraformedValue !== undefined
     ? entry.terraformedValue
     : (landValue !== undefined ? Math.max(1, Math.floor((landValue || 0) / 50_000_000_000)) : undefined);
-  effective.textContent = effectiveValue !== undefined ? (formatNumber ? formatNumber(effectiveValue, false, 0) : effectiveValue) : '—';
+  effective.textContent = effectiveValue !== undefined ? (formatNumber ? formatNumber(effectiveValue, true, 2) : effectiveValue) : '—';
   effective.title = 'Counts toward terraformed worlds (1 per 50B ha, minimum 1).';
   const status = document.createElement('span');
   const statusKey = entry.status || '';
