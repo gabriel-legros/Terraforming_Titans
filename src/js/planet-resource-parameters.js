@@ -173,6 +173,7 @@
       trash: { name: 'Trash', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       junk: { name: 'Junk', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       radioactiveWaste: { name: 'Radioactive Waste', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
+      orbitalDebris: { name: 'Orbital Debris', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
     },
     underground: {
       ore: { name: 'Ore deposits', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false },

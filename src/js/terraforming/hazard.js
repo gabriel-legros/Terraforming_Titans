@@ -2,6 +2,25 @@ let hazardManager = null;
 
 let HazardousBiomassHazardCtor = null;
 let GarbageHazardCtor = null;
+let KesslerHazardCtor = null;
+
+function resolveKesslerCtor(current) {
+  let resolved = current;
+  try {
+    resolved = resolved || KesslerHazard;
+  } catch (error) {
+    try {
+      resolved = resolved || window.KesslerHazard;
+    } catch (innerError) {
+      try {
+        resolved = resolved || global.KesslerHazard;
+      } catch (lastError) {
+        resolved = resolved || null;
+      }
+    }
+  }
+  return resolved;
+}
 
 try {
   ({ HazardousBiomassHazard: HazardousBiomassHazardCtor } = require('./hazards/hazardousBiomassHazard.js'));
@@ -20,6 +39,16 @@ try {
     GarbageHazardCtor = GarbageHazard;
   } catch (innerError) {
     GarbageHazardCtor = null;
+  }
+}
+
+try {
+  ({ KesslerHazard: KesslerHazardCtor } = require('./hazards/kesslerHazard.js'));
+} catch (error) {
+  try {
+    KesslerHazardCtor = KesslerHazard;
+  } catch (innerError) {
+    KesslerHazardCtor = null;
   }
 }
 
@@ -67,6 +96,8 @@ class HazardManager {
 
     this.hazardousBiomassHazard = HazardousBiomassHazardCtor ? new HazardousBiomassHazardCtor(this) : null;
     this.garbageHazard = GarbageHazardCtor ? new GarbageHazardCtor(this) : null;
+    KesslerHazardCtor = resolveKesslerCtor(KesslerHazardCtor);
+    this.kesslerHazard = KesslerHazardCtor ? new KesslerHazardCtor(this) : null;
   }
 
   enable() {
@@ -108,6 +139,11 @@ class HazardManager {
         return;
       }
 
+      if (key === 'kessler' && this.kesslerHazard) {
+        normalized.kessler = this.kesslerHazard.normalize(cloned.kessler);
+        return;
+      }
+
       normalized[key] = cloned[key];
     });
 
@@ -125,6 +161,10 @@ class HazardManager {
 
     if (this.garbageHazard) {
       this.garbageHazard.initializeResources(activeTerraforming, this.parameters.garbage, options);
+    }
+
+    if (this.kesslerHazard && this.parameters.kessler) {
+      this.kesslerHazard.initializeResources(activeTerraforming, this.parameters.kessler, options);
     }
 
     if (changed && this.enabled) {
@@ -207,10 +247,17 @@ class HazardManager {
   }
 
   save() {
+    let kesslerState = null;
+    try {
+      kesslerState = this.kesslerHazard.save();
+    } catch (error) {
+      kesslerState = null;
+    }
     return {
       parameters: cloneHazardParameters(this.parameters),
       crusaderTargetZone: this.getCrusaderTargetZone(),
-      garbageHazard: this.garbageHazard && this.garbageHazard.save ? this.garbageHazard.save() : null
+      garbageHazard: this.garbageHazard && this.garbageHazard.save ? this.garbageHazard.save() : null,
+      kesslerHazard: kesslerState
     };
   }
 
@@ -222,6 +269,11 @@ class HazardManager {
     this.setCrusaderTargetZone(storedTarget);
     (this.garbageHazard && this.garbageHazard.load)
       && this.garbageHazard.load(data && data.garbageHazard ? data.garbageHazard : null);
+    try {
+      this.kesslerHazard.load(data && data.kesslerHazard ? data.kesslerHazard : null);
+    } catch (error) {
+      // no-op
+    }
   }
 
   update(deltaTime = 0, terraformingState = null) {
@@ -241,6 +293,12 @@ class HazardManager {
     const deltaSeconds = deltaTime > 0 ? deltaTime / 1000 : 0;
     if (this.garbageHazard) {
       this.garbageHazard.update(deltaSeconds);
+    }
+  }
+
+  applyTravelAdjustments(terraformingState = null) {
+    if (this.kesslerHazard && this.parameters.kessler) {
+      this.kesslerHazard.applySolisTravelAdjustments(terraformingState);
     }
   }
 
@@ -283,6 +341,11 @@ class HazardManager {
           break;
         case 'garbage':
           if (!this.garbageHazard.isCleared(terraformingState, this.parameters.garbage)) {
+            return false;
+          }
+          break;
+        case 'kessler':
+          if (!this.kesslerHazard.isCleared(terraformingState, this.parameters.kessler)) {
             return false;
           }
           break;

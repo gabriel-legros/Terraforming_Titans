@@ -1,6 +1,7 @@
 # Instructions
 - Document major feature updates in this file, under the appropriate section.  You may add sections.
 - Keep imports and exports browser friendly for loading via **index.html**.
+- CRITICAL : The game runs from index.html and all includes happen there.  We must not redefine global variables or constants, we must assume things are included in the correct order.
 - The game needs to be able to run from a browser-like environment.
 - Place story projects in **progress-data.js** near the chapter where they unlock.
 - Tooltips should use a `<span class="info-tooltip-icon">&#9432;</span>` element with a descriptive `title`.
@@ -318,6 +319,9 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Mass Driver building that is locked by default and costs ten times an oxygen factory.
 - Import Colonists project now supports importing Crusaders when the crusaderImportEnabled flag is active.
 - Added a hydrogen import special project mirroring nitrogen harvesting to gather atmospheric hydrogen when unlocked.
+- Added the Kessler Skies hazard on Tartarus, spawning orbital debris per land and throttling Solis travel drops (surface water spillover plus 1,000-unit caps on other supplies).
+- Kessler Skies now displays an orbital debris hazard bar and permanently clears once debris hits zero.
+- Kessler Skies hazard UI now includes an Effects list starting with the Solis resource delivery limits.
 - Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.
 - Resource disposal treats each active Mass Driver as a configurable number of spaceship equivalents (default 10) when calculating throughput.
 - Added a Bosch Reactor building that performs the Bosch reaction once research gated by the boschReactorUnlocked flag is completed.

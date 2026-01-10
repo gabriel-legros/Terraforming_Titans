@@ -11,7 +11,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 30,
     activePlanet: 'tartarus',
-    title: 'Chapter 30: Tartarus',
+    title: 'Chapter 30: Desolation',
     narrative: "\n Landing on the deserted plains of Tartarus confirmed.  WARNING : Hazardous machinery detected across the entire star system.\n$PROMETHEUS$ :  'You came.  Good.  Let's get the test started.  We'll have plenty of time to chat in a moment.'  \n WARNING : Orbital collision triggered from hazardous machinery.  Approximating over a trillion orbital debris of various sizes.  \n Mary : 'Uh oh.'  \n Solis : 'HOPE!  I apologize.  I must abort your usual delivery.  This is too much.  I can drop you the metal and water but... everything else would be a waste.  My sincerest apologies.  No refund will be issued.'",
     prerequisites: ['gabbag.29.11'],
     objectives: [

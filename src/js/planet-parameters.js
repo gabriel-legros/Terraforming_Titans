@@ -1302,6 +1302,11 @@ const tartarusOverrides = {
     starLuminosity: 0.42,
     sector: 'R6-04'
   },
+  hazards: {
+    kessler: {
+      orbitalDebrisPerLand: 100
+    }
+  },
   visualization: {
     baseColor: '#3b3a4d',
   }

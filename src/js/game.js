@@ -474,6 +474,7 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
     solisManager.reapplyEffects();
+    hazardManager.applyTravelAdjustments(terraforming);
   }
   if (preserveManagers && warpGateCommand && typeof warpGateCommand.reapplyEffects === 'function') {
     warpGateCommand.reapplyEffects();

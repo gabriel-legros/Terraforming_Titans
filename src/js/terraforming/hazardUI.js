@@ -20,6 +20,17 @@ function initializeHazardUI() {
   if (initializeGarbage && initializeGarbage.call) {
     initializeGarbage();
   }
+
+  let initializeKessler = null;
+  try {
+    initializeKessler = initializeKesslerHazardUI;
+  } catch (error) {
+    initializeKessler = null;
+  }
+
+  if (initializeKessler && initializeKessler.call) {
+    initializeKessler();
+  }
 }
 
 function updateHazardUI(parameters = {}) {
@@ -32,6 +43,17 @@ function updateHazardUI(parameters = {}) {
 
   if (updateGarbage && updateGarbage.call) {
     updateGarbage(parameters.garbage);
+  }
+
+  let updateKessler = null;
+  try {
+    updateKessler = updateKesslerHazardUI;
+  } catch (error) {
+    updateKessler = null;
+  }
+
+  if (updateKessler && updateKessler.call) {
+    updateKessler(parameters.kessler);
   }
 
   let updateHazardous = null;
@@ -61,4 +83,3 @@ try {
 } catch (error) {
   // Module system not available in browser
 }
-

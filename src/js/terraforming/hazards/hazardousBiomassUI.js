@@ -1344,7 +1344,7 @@ function initializeHazardousBiomassUI() {
 function updateHazardousBiomassUI(parameters = {}) {
   ensureLayout();
 
-  const garbageHazard = parameters.garbage;
+  const hazardKeys = Object.keys(parameters).filter((key) => parameters[key]);
 
   if (!hazardUICache.card) {
     return;
@@ -1353,7 +1353,7 @@ function updateHazardousBiomassUI(parameters = {}) {
   const hazard = parameters.hazardousBiomass;
   
   // Check if any hazard exists (not just hazardousBiomass)
-  const hasAnyHazard = hazard || garbageHazard;
+  const hasAnyHazard = hazardKeys.length > 0;
   
   if (!hazard) {
     // Hide the hazardous biomass card if no hazardousBiomass hazard
