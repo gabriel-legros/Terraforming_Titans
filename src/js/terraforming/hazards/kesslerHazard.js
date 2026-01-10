@@ -7,7 +7,7 @@ const PERIAPSIS_SAMPLE_COUNT = 64;
 const PERIAPSIS_MEAN_SCALE = 1.25;
 const PERIAPSIS_MIN_METERS = 40000;
 const PERIAPSIS_STD_RATIO = 0.5;
-const DEBRIS_DECAY_BASE_RATE = 1e-4;
+const DEBRIS_DECAY_BASE_RATE = 1e-3;
 const DEBRIS_DECAY_DEPTH_METERS = 100000;
 
 function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, samples = PERIAPSIS_SAMPLE_COUNT) {
