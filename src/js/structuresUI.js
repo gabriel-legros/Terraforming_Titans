@@ -2178,10 +2178,10 @@ function formatStorageDetails(storageObject) {
 
 function updateBuildingSubtabsVisibility() {
   const categories = getBuildingCategories();
-  const visibleSubtabs = [];
-  let activeHasVisibleBuilding = false;
+  const availableSubtabs = [];
   const activeId = buildingSubtabManager ? buildingSubtabManager.getActiveId() : null;
-  let anyVisibleBuilding = false;
+  let anyAvailableBuilding = false;
+  let activeHasAvailableBuilding = false;
   
   categories.forEach(category => {
     const subtabId = `${category}-buildings`;
@@ -2191,14 +2191,12 @@ function updateBuildingSubtabsVisibility() {
     });
     const hasHiddenBuilding = Object.values(buildings).some(b => b.category === category && b.isHidden);
     const shouldShow = hasVisibleBuilding || hasHiddenBuilding;
-    if (hasVisibleBuilding) {
-      anyVisibleBuilding = true;
-    }
-    if (hasVisibleBuilding) {
-      visibleSubtabs.push(subtabId);
+    if (shouldShow) {
+      anyAvailableBuilding = true;
+      availableSubtabs.push(subtabId);
     }
     if (activeId === subtabId) {
-      activeHasVisibleBuilding = hasVisibleBuilding;
+      activeHasAvailableBuilding = shouldShow;
     }
     
     if (buildingSubtabManager) {
@@ -2221,7 +2219,7 @@ function updateBuildingSubtabsVisibility() {
     }
   });
 
-  if (!anyVisibleBuilding) {
+  if (!anyAvailableBuilding) {
     categories.forEach(category => {
       const subtabId = `${category}-buildings`;
       const tab = document.getElementById(`${subtabId}-tab`);
@@ -2237,8 +2235,8 @@ function updateBuildingSubtabsVisibility() {
     return;
   }
 
-  if (buildingSubtabManager && (!activeHasVisibleBuilding || !activeId) && visibleSubtabs.length) {
-    buildingSubtabManager.activate(visibleSubtabs[0]);
+  if (buildingSubtabManager && (!activeHasAvailableBuilding || !activeId) && availableSubtabs.length) {
+    buildingSubtabManager.activate(availableSubtabs[0]);
   }
 }
 
