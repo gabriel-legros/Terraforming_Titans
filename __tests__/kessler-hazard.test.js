@@ -165,4 +165,26 @@ describe('Kessler hazard', () => {
     expect(summary.belowFraction).toBeGreaterThan(0);
     expect(summary.decayTonsPerSecond).toBeGreaterThan(0);
   });
+
+  test('decay uses baseline mass per bin', () => {
+    global.resources = {
+      special: {
+        orbitalDebris: {
+          value: 100,
+          initialValue: 100,
+          unlocked: true,
+          modifyRate: jest.fn()
+        }
+      }
+    };
+
+    const hazard = new KesslerHazard(null);
+    hazard.periapsisDistribution = [{ periapsisMeters: 0, massTons: 100 }];
+    hazard.periapsisBaseline = [{ periapsisMeters: 0, massTons: 10 }];
+
+    const terraforming = { exosphereHeightMeters: 100000 };
+    hazard.update(1000, terraforming, { orbitalDebrisPerLand: 100 });
+
+    expect(global.resources.special.orbitalDebris.value).toBeCloseTo(99.9601, 3);
+  });
 });

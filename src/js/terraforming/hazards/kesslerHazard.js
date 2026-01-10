@@ -7,7 +7,7 @@ const PERIAPSIS_SAMPLE_COUNT = 64;
 const PERIAPSIS_MEAN_SCALE = 1.25;
 const PERIAPSIS_MIN_METERS = 40000;
 const PERIAPSIS_STD_RATIO = 0.5;
-const DEBRIS_DECAY_BASE_RATE = 2e-6;
+const DEBRIS_DECAY_BASE_RATE = 1e-4;
 const DEBRIS_DECAY_DEPTH_METERS = 100000;
 
 function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, samples = PERIAPSIS_SAMPLE_COUNT) {
@@ -47,6 +47,7 @@ class KesslerHazard {
     this.manager = manager;
     this.permanentlyCleared = false;
     this.periapsisDistribution = [];
+    this.periapsisBaseline = [];
     this.decaySummary = {
       exobaseHeightMeters: 0,
       belowFraction: 0,
@@ -92,13 +93,20 @@ class KesslerHazard {
   save() {
     return {
       permanentlyCleared: this.permanentlyCleared,
-      periapsisDistribution: this.periapsisDistribution
+      periapsisDistribution: this.periapsisDistribution,
+      periapsisBaseline: this.periapsisBaseline
     };
   }
 
   load(data) {
     this.permanentlyCleared = Boolean(data && data.permanentlyCleared);
     this.periapsisDistribution = (data && data.periapsisDistribution) ? data.periapsisDistribution : [];
+    this.periapsisBaseline = (data && data.periapsisBaseline)
+      ? data.periapsisBaseline
+      : this.periapsisDistribution.map((entry) => ({
+        periapsisMeters: entry.periapsisMeters,
+        massTons: entry.massTons
+      }));
   }
 
   applySolisTravelAdjustments(terraforming) {
@@ -167,6 +175,10 @@ class KesslerHazard {
     return this.periapsisDistribution;
   }
 
+  getPeriapsisBaseline() {
+    return this.periapsisBaseline;
+  }
+
   ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass) {
     if (this.periapsisDistribution.length) {
       return;
@@ -180,6 +192,12 @@ class KesslerHazard {
     const meanMeters = Math.max(PERIAPSIS_MIN_METERS, exobase * PERIAPSIS_MEAN_SCALE);
     const stdMeters = Math.max(1, exobase * PERIAPSIS_STD_RATIO);
     this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters);
+    if (!this.periapsisBaseline.length) {
+      this.periapsisBaseline = this.periapsisDistribution.map((entry) => ({
+        periapsisMeters: entry.periapsisMeters,
+        massTons: entry.massTons
+      }));
+    }
   }
 
   syncDistributionToResource(terraforming, kesslerParameters, totalMass) {
@@ -218,13 +236,14 @@ class KesslerHazard {
     const exobase = terraforming.exosphereHeightMeters || 0;
     let belowMass = 0;
     let decayedTons = 0;
-    this.periapsisDistribution.forEach((entry) => {
+    this.periapsisDistribution.forEach((entry, index) => {
       const depth = exobase - entry.periapsisMeters;
       if (depth > 0) {
         const depthFactor = 1 + depth / DEBRIS_DECAY_DEPTH_METERS;
         const decayRate = DEBRIS_DECAY_BASE_RATE * depthFactor;
         const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
-        const removed = entry.massTons * decayFraction;
+        const baselineMass = this.periapsisBaseline[index]?.massTons ?? entry.massTons;
+        const removed = Math.min(entry.massTons, baselineMass * decayFraction);
         entry.massTons = Math.max(0, entry.massTons - removed);
         decayedTons += removed;
         belowMass += entry.massTons;

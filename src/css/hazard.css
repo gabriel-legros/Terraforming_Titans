@@ -320,11 +320,25 @@
 }
 
 .kessler-debris-chart__bar {
+  position: relative;
   height: 0;
   border-radius: 4px 4px 2px 2px;
-  background: rgba(120, 160, 210, 0.35);
-  box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, rgba(223, 62, 78, 0.95), rgba(114, 18, 32, 0.9));
+  box-shadow: 0 -6px 12px rgba(110, 12, 26, 0.45);
   transition: height 0.35s ease, background 0.35s ease, box-shadow 0.35s ease;
+  overflow: hidden;
+}
+
+.kessler-debris-chart__bar-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  border-radius: 3px 3px 2px 2px;
+  background: linear-gradient(180deg, rgba(110, 195, 255, 0.95), rgba(22, 86, 168, 0.9));
+  box-shadow: 0 -6px 12px rgba(64, 154, 255, 0.4);
+  transition: height 0.45s ease;
 }
 
 .kessler-debris-chart__bar--below {

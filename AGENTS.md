@@ -327,7 +327,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Kessler Skies now reports small/large space project failure chances based on orbital debris density.
 - Kessler Skies now tracks debris periapsis distributions and decays debris below the exobase faster the deeper it falls.
 - Orbital debris is now a special resource and Kessler decay reports as a resource rate.
-- Kessler Skies now renders a 64-bin debris histogram with an exobase marker, gaussian binning, and clearance-based red-to-blue fill.
+- Kessler Skies now renders a 64-bin debris histogram with an exobase marker, gaussian binning, and per-bar red shells that fill up from the bottom as blue when debris clears.
 - Exosphere height calculation now lives in its own utility module and is cached each terraforming tick.
 - Exobase temperature now blends surface and exosphere heating based on atmospheric column mass to keep thin atmospheres from inflating the exobase.
 - Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.

@@ -8,6 +8,7 @@ const kesslerHazardUICache = {
   chart: null,
   chartBars: null,
   chartBarsList: [],
+  chartBarFills: [],
   chartExobase: null,
   chartExobaseLabel: null,
   chartDetails: null,
@@ -92,22 +93,6 @@ function formatPercent(value) {
   return `${formatNumeric(value * 100, 0)}%`;
 }
 
-function mixChannel(a, b, t) {
-  return Math.round(a + (b - a) * t);
-}
-
-function mixColor(start, end, t) {
-  return [
-    mixChannel(start[0], end[0], t),
-    mixChannel(start[1], end[1], t),
-    mixChannel(start[2], end[2], t)
-  ];
-}
-
-function colorToCss(color, alpha = 1) {
-  return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
-}
-
 function buildKesslerLayout() {
   try {
     const doc = getDocument();
@@ -169,11 +154,16 @@ function buildKesslerLayout() {
     chartBars.className = 'kessler-debris-chart__bars';
 
     const chartBarsList = [];
+    const chartBarFills = [];
     for (let i = 0; i < KESSLER_CHART_BINS; i += 1) {
       const bar = doc.createElement('div');
       bar.className = 'kessler-debris-chart__bar';
+      const fill = doc.createElement('div');
+      fill.className = 'kessler-debris-chart__bar-fill';
+      bar.appendChild(fill);
       chartBars.appendChild(bar);
       chartBarsList.push(bar);
+      chartBarFills.push(fill);
     }
 
     const chartExobase = doc.createElement('div');
@@ -223,6 +213,7 @@ function buildKesslerLayout() {
     kesslerHazardUICache.chart = chart;
     kesslerHazardUICache.chartBars = chartBars;
     kesslerHazardUICache.chartBarsList = chartBarsList;
+    kesslerHazardUICache.chartBarFills = chartBarFills;
     kesslerHazardUICache.chartExobase = chartExobase;
     kesslerHazardUICache.chartExobaseLabel = chartExobaseLabel;
     kesslerHazardUICache.chartDetails = chartDetails;
@@ -261,10 +252,14 @@ function updateKesslerChartDetails(resource, isCleared) {
   kesslerHazardUICache.chartDetails.textContent = detailText;
 }
 
-function updateKesslerDebrisChart(resource, distribution, exobaseMeters, isCleared) {
+function updateKesslerDebrisChart(resource, baselineDistribution, currentDistribution, exobaseMeters, isCleared) {
   const bars = kesslerHazardUICache.chartBarsList;
-  const sortedEntries = distribution.slice().sort((a, b) => a.periapsisMeters - b.periapsisMeters);
+  const fills = kesslerHazardUICache.chartBarFills;
+  const baselineEntries = baselineDistribution.length ? baselineDistribution : currentDistribution;
+  const currentEntries = currentDistribution.length ? currentDistribution : baselineDistribution;
+  const sortedEntries = baselineEntries.slice().sort((a, b) => a.periapsisMeters - b.periapsisMeters);
   const bins = new Array(bars.length).fill(0);
+  const currentBins = new Array(bars.length).fill(0);
 
   let minPeriapsis = 0;
   let maxPeriapsis = 1;
@@ -280,27 +275,29 @@ function updateKesslerDebrisChart(resource, distribution, exobaseMeters, isClear
     maxPeriapsis = Math.max(1, exobaseMeters);
   }
   const span = Math.max(1, maxPeriapsis - minPeriapsis);
-  if (sortedEntries.length) {
-    for (let i = 0; i < sortedEntries.length; i += 1) {
-      const entry = sortedEntries[i];
-      const ratio = (entry.periapsisMeters - minPeriapsis) / span;
-      let index = Math.floor(ratio * bars.length);
-      if (index >= bars.length) {
-        index = bars.length - 1;
-      } else if (index < 0) {
-        index = 0;
-      }
-      bins[index] += entry.massTons;
+  for (let i = 0; i < sortedEntries.length; i += 1) {
+    const entry = sortedEntries[i];
+    const ratio = (entry.periapsisMeters - minPeriapsis) / span;
+    let index = Math.floor(ratio * bars.length);
+    if (index >= bars.length) {
+      index = bars.length - 1;
+    } else if (index < 0) {
+      index = 0;
     }
+    bins[index] += entry.massTons;
+  }
+  for (let i = 0; i < currentEntries.length; i += 1) {
+    const entry = currentEntries[i];
+    const ratio = (entry.periapsisMeters - minPeriapsis) / span;
+    let index = Math.floor(ratio * bars.length);
+    if (index >= bars.length) {
+      index = bars.length - 1;
+    } else if (index < 0) {
+      index = 0;
+    }
+    currentBins[index] += entry.massTons;
   }
   const exobaseRatio = Math.min(1, Math.max(0, (exobaseMeters - minPeriapsis) / span));
-  const initialValue = resource.initialValue || 0;
-  const currentValue = resource.value || 0;
-  const clearanceRatio = initialValue
-    ? Math.max(0, Math.min(1, 1 - currentValue / initialValue))
-    : 0;
-  const hazardColor = [226, 74, 74];
-  const clearColor = [86, 178, 255];
 
   let maxMass = 0;
   for (let i = 0; i < bins.length; i += 1) {
@@ -315,13 +312,11 @@ function updateKesslerDebrisChart(resource, distribution, exobaseMeters, isClear
     bars[i].style.height = `${height}%`;
     const binCenter = minPeriapsis + (i + 0.5) / bars.length * span;
     const belowExobase = binCenter <= exobaseMeters;
-    const clearanceBoost = belowExobase ? 1.1 : 0.7;
-    const mixRatio = Math.min(1, clearanceRatio * clearanceBoost);
-    const baseColor = mixColor(hazardColor, clearColor, mixRatio);
-    const highlight = baseColor.map((channel) => Math.min(255, Math.round(channel * 1.15)));
-    const shadow = baseColor.map((channel) => Math.max(0, Math.round(channel * 0.6)));
-    bars[i].style.background = `linear-gradient(180deg, ${colorToCss(highlight, 0.95)}, ${colorToCss(shadow, 0.9)})`;
-    bars[i].style.boxShadow = `0 -6px 12px ${colorToCss(highlight, 0.35)}`;
+    const baselineMass = bins[i];
+    const currentMass = currentBins[i];
+    const fillRatio = baselineMass ? Math.max(0, Math.min(1, 1 - currentMass / baselineMass)) : 0;
+    const fillHeight = height ? fillRatio * 100 : 0;
+    fills[i].style.height = `${fillHeight}%`;
     bars[i].classList.toggle('kessler-debris-chart__bar--below', belowExobase);
     bars[i].classList.toggle('kessler-debris-chart__bar--above', !belowExobase);
   }
@@ -346,8 +341,15 @@ function updateKesslerHazardUI(kesslerParameters) {
     const debris = resourcesState.special.orbitalDebris;
     const isCleared = manager.kesslerHazard.isCleared();
     const decaySummary = manager.kesslerHazard.getDecaySummary();
+    const baseline = manager.kesslerHazard.getPeriapsisBaseline();
     const distribution = manager.kesslerHazard.getPeriapsisDistribution();
-    updateKesslerDebrisChart(debris, distribution, decaySummary.exobaseHeightMeters || 0, isCleared);
+    updateKesslerDebrisChart(
+      debris,
+      baseline,
+      distribution,
+      decaySummary.exobaseHeightMeters || 0,
+      isCleared
+    );
     const failureChances = manager.kesslerHazard.getProjectFailureChances();
     const initialValue = debris.initialValue || 0;
     const currentValue = debris.value || 0;
