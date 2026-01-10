@@ -4,31 +4,36 @@ const SOLIS_CAPPED_RESOURCES = ['food', 'components', 'electronics', 'glass', 'a
 const SMALL_PROJECT_BASE_SUCCESS = 0.5;
 const LARGE_PROJECT_BASE_SUCCESS = 0.05;
 const PERIAPSIS_SAMPLE_COUNT = 64;
-const PERIAPSIS_MEAN_SCALE = 1.35;
-const PERIAPSIS_MEAN_OFFSET_METERS = 120000;
+const PERIAPSIS_MEAN_SCALE = 1.25;
 const PERIAPSIS_MIN_METERS = 40000;
 const PERIAPSIS_STD_RATIO = 0.5;
 const DEBRIS_DECAY_BASE_RATE = 2e-6;
 const DEBRIS_DECAY_DEPTH_METERS = 100000;
 
-function gaussianRandom() {
-  const u = Math.max(Math.random(), 1e-12);
-  const v = Math.max(Math.random(), 1e-12);
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
-
 function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, samples = PERIAPSIS_SAMPLE_COUNT) {
   const count = Math.max(1, Math.floor(samples));
-  const perSample = totalMass / count;
+  const std = Math.max(1, stdMeters);
+  const range = std * 6;
+  const minPeriapsis = Math.max(0, meanMeters - range / 2);
+  const maxPeriapsis = meanMeters + range / 2;
+  const span = Math.max(1, maxPeriapsis - minPeriapsis);
   const entries = [];
+  let weightTotal = 0;
+
   for (let i = 0; i < count; i += 1) {
-    const draw = gaussianRandom() * stdMeters + meanMeters;
-    entries.push({
-      periapsisMeters: Math.max(0, draw),
-      massTons: perSample
-    });
+    const t = count === 1 ? 0.5 : i / (count - 1);
+    const periapsisMeters = minPeriapsis + t * span;
+    const z = (periapsisMeters - meanMeters) / std;
+    const weight = Math.exp(-0.5 * z * z);
+    weightTotal += weight;
+    entries.push({ periapsisMeters, weight });
   }
-  return entries;
+
+  const massPerWeight = weightTotal ? totalMass / weightTotal : 0;
+  return entries.map((entry) => ({
+    periapsisMeters: entry.periapsisMeters,
+    massTons: entry.weight * massPerWeight
+  }));
 }
 
 function normalizeKesslerParameters(parameters = {}) {
@@ -158,13 +163,22 @@ class KesslerHazard {
     return this.decaySummary;
   }
 
+  getPeriapsisDistribution() {
+    return this.periapsisDistribution;
+  }
+
   ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass) {
     if (this.periapsisDistribution.length) {
       return;
     }
-    const exobase = terraforming.exosphereHeightMeters || 0;
-    const meanMeters = Math.max(PERIAPSIS_MIN_METERS, exobase * PERIAPSIS_MEAN_SCALE + PERIAPSIS_MEAN_OFFSET_METERS);
-    const stdMeters = Math.max(1, meanMeters * PERIAPSIS_STD_RATIO);
+    let exobase = terraforming.exosphereHeightMeters || 0;
+    if (!exobase) {
+      terraforming.updateLuminosity();
+      terraforming._updateExosphereHeightCache();
+      exobase = terraforming.exosphereHeightMeters || 0;
+    }
+    const meanMeters = Math.max(PERIAPSIS_MIN_METERS, exobase * PERIAPSIS_MEAN_SCALE);
+    const stdMeters = Math.max(1, exobase * PERIAPSIS_STD_RATIO);
     this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters);
   }
 

@@ -21,8 +21,17 @@ describe('Kessler hazard', () => {
     };
 
     const hazard = new KesslerHazard(null);
+    const terraforming = {
+      initialLand: 100,
+      exosphereHeightMeters: 0,
+      updateLuminosity: jest.fn(),
+      _updateExosphereHeightCache: jest.fn(() => {
+        terraforming.exosphereHeightMeters = 150000;
+      })
+    };
+
     hazard.initializeResources(
-      { initialLand: 100 },
+      terraforming,
       { orbitalDebrisPerLand: 100 },
       { unlockOnly: false }
     );
