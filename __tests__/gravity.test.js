@@ -1,8 +1,18 @@
-const {
-  calculateApparentEquatorialGravity,
-  calculateGravityCostPenalty,
-  createNoGravityPenalty,
-} = require('../src/js/terraforming/gravity.js');
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const loadGravityHelpers = () => {
+  const fullPath = path.resolve(__dirname, '..', 'src/js/terraforming/gravity.js');
+  const code = fs.readFileSync(fullPath, 'utf8');
+  const context = { console };
+  context.global = context;
+  vm.runInNewContext(code, context, { filename: fullPath });
+  return context;
+};
+
+const gravityHelpers = loadGravityHelpers();
+const { calculateApparentEquatorialGravity, calculateGravityCostPenalty, createNoGravityPenalty } = gravityHelpers;
 
 describe('gravity helpers', () => {
   describe('calculateApparentEquatorialGravity', () => {

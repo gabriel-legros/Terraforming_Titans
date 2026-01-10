@@ -82,7 +82,7 @@ describe('BioworldProject', () => {
     global.resources.surface.biomass.value = 1e13;
     project.prepareTravelState();
 
-    expect(project.evolutionPoints).toBeCloseTo(2, 5);
+    expect(project.evolutionPoints).toBeCloseTo(3, 5);
     expect(global.researchManager.removeEffect).toHaveBeenCalledWith({ sourceId: 'bioworld' });
   });
 

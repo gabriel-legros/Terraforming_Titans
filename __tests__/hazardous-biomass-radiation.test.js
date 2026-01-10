@@ -50,6 +50,8 @@ const RESOURCE_PHASE_GROUPS = {
 
 function loadTerraforming() {
   const fullPath = path.resolve(__dirname, '..', 'src/js/terraforming/terraforming.js');
+  const gravityPath = path.resolve(__dirname, '..', 'src/js/terraforming/gravity.js');
+  const gravityCode = fs.readFileSync(gravityPath, 'utf8');
   const code = fs.readFileSync(fullPath, 'utf8')
     .replace('var resourcePhaseGroups;', `var resourcePhaseGroups = ${JSON.stringify(RESOURCE_PHASE_GROUPS)};`)
     .replace(
@@ -81,6 +83,7 @@ function loadTerraforming() {
   };
   context.global = context;
   context.globalThis = context;
+  vm.runInNewContext(gravityCode, context, { filename: gravityPath });
   vm.runInNewContext(code, context, { filename: fullPath });
   context.module.exports.__context = context;
   return context.module.exports;
