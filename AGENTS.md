@@ -220,6 +220,7 @@ The planet visualiser has been modularised into files covering core setup, light
 ## Updates
 - Random World Generator adds the Chthonian archetype with the effect label "Suffering Enjoyment."
 - Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
+- Added an Engineered Nitrogen Fixation research that doubles life growth at 10 kPa of nitrogen pressure.
 - Gabbag chapter 29.8 now unlocks ammonia visibility and new chemical reactor recipes for Haber-Bosch and ammonia combustion.
 - Added an ammonia resource with liquid/ice/gas cycles and updated terraforming physics to include its phase changes.
 - Random World Generator dominion selection now includes the Fritizian option tied to ammonia requirements.

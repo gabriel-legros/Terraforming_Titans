@@ -888,14 +888,40 @@ class LifeManager extends EffectableEntity {
     super({description : 'Life Manager'})
   }
 
-  getEffectiveLifeGrowthMultiplier(){
-    let multiplier = 1; // Start with default multiplier
+  getEngineeredNitrogenFixationInfo() {
+    const pressurePa = terraforming.atmosphericPressureCache.pressureByKey.inertGas || 0;
+    const pressureKPa = pressurePa / 1000;
+    const clampedPressure = Math.min(Math.max(pressureKPa, 0), 10);
+    const multiplier = 1 + clampedPressure / 10;
+    return { multiplier, pressureKPa };
+  }
+
+  getLifeGrowthMultiplierBreakdown() {
+    let effectMultiplier = 1;
     this.activeEffects.forEach(effect => {
       if (effect.type === 'lifeGrowthMultiplier') {
-        multiplier *= effect.value;
+        effectMultiplier *= effect.value;
       }
     });
-    return multiplier;
+
+    let nitrogenMultiplier = 1;
+    let nitrogenPressureKPa = 0;
+    if (this.isBooleanFlagSet('engineeredNitrogenFixation')) {
+      const info = this.getEngineeredNitrogenFixationInfo();
+      nitrogenMultiplier = info.multiplier;
+      nitrogenPressureKPa = info.pressureKPa;
+    }
+
+    return {
+      effectMultiplier,
+      nitrogenMultiplier,
+      nitrogenPressureKPa,
+      totalMultiplier: effectMultiplier * nitrogenMultiplier,
+    };
+  }
+
+  getEffectiveLifeGrowthMultiplier() {
+    return this.getLifeGrowthMultiplierBreakdown().totalMultiplier;
   }
 
     // Method to update life growth/decay based on zonal environmental conditions

@@ -1163,7 +1163,13 @@ function updateLifeStatusTable() {
             if (radPenalty < 0.0001) radPenalty = 0;
             const radMult = 1 - radPenalty;
             const waterMult = (terraforming.zonalSurface[zone]?.liquidWater || 0) > 1e-9 ? 1 : 0;
-            const otherMult = (typeof lifeManager !== 'undefined' && lifeManager.getEffectiveLifeGrowthMultiplier) ? lifeManager.getEffectiveLifeGrowthMultiplier() : 1;
+            const growthBreakdown = getLifeManagerSafe()?.getLifeGrowthMultiplierBreakdown?.() ?? {
+                effectMultiplier: 1,
+                nitrogenMultiplier: 1,
+                nitrogenPressureKPa: 0,
+                totalMultiplier: 1,
+            };
+            const otherMult = growthBreakdown.totalMultiplier;
             const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * waterMult * otherMult;
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if (tooltipSpan) {
@@ -1173,10 +1179,17 @@ function updateLifeStatusTable() {
                     `Capacity: x${formatNumber(capacityMult, false, 2)}`,
                     `Radiation: x${formatNumber(radMult, false, 2)}`,
                     `Liquid Water: x${formatNumber(waterMult, false, 2)}`,
-                    `Other: x${formatNumber(otherMult, false, 2)}`
                 ];
                 if (usesLuminosity) {
                     lines.splice(2, 0, `Luminosity: x${formatNumber(lumMult, false, 2)}`);
+                }
+                if (growthBreakdown.effectMultiplier !== 1) {
+                    lines.push(`Life Effects: x${formatNumber(growthBreakdown.effectMultiplier, false, 2)}`);
+                }
+                if (isLifeFlagActive('engineeredNitrogenFixation')) {
+                    lines.push(
+                        `Engineered Nitrogen Fixation: x${formatNumber(growthBreakdown.nitrogenMultiplier, false, 2)} (${formatNumber(growthBreakdown.nitrogenPressureKPa, false, 2)} kPa)`
+                    );
                 }
                 if (ecoFraction > 0) {
                     const landReduction = (1 - landMult) * 100;

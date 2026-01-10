@@ -1285,6 +1285,21 @@ const researchParameters = {
         ],
       },
       {
+        id: 'engineered_nitrogen_fixation',
+        name: 'Engineered Nitrogen Fixation',
+        description: 'Boosts life growth based on nitrogen pressure, scaling up to double growth at 10 kPa.',
+        cost: { research: 200_000_000 },
+        prerequisites: ['life'],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'engineeredNitrogenFixation',
+            value: true,
+          },
+        ],
+      },
+      {
         id: 'terraforming_sensor',
         name: 'Terraforming measurements',
         description: 'Unlocks the terraforming tab, which allows monitoring of terraforming parameters.',
