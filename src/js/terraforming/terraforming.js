@@ -60,9 +60,6 @@ function applyZonalSurfaceFromLegacy(target, legacy) {
   applyZonalSurfaceOverrides(target, source.zonalSurface);
 }
 
-let calculateApparentEquatorialGravityHelper;
-let calculateGravityCostPenaltyHelper;
-let createNoGravityPenaltyHelper;
 let cloudPropsOnlyHelper;
 let calculateCloudAlbedoContributionsHelper;
 let terraformingRequirementLoader;
@@ -123,16 +120,16 @@ function buildZonalSurfaceResourceConfigs() {
 }
 
 function getApparentEquatorialGravity(params) {
-  if (calculateApparentEquatorialGravityHelper) {
-    return calculateApparentEquatorialGravityHelper(params);
+  if (calculateApparentEquatorialGravity) {
+    return calculateApparentEquatorialGravity(params);
   }
   const gravity = params && Number.isFinite(params.gravity) ? params.gravity : 0;
   return gravity;
 }
 
 function getNoGravityPenalty() {
-  if (createNoGravityPenaltyHelper) {
-    return createNoGravityPenaltyHelper();
+  if (createNoGravityPenalty) {
+    return createNoGravityPenalty();
   }
   return { multiplier: 1, linearIncrease: 0, exponentialIncrease: 0 };
 }
@@ -1548,19 +1545,19 @@ class Terraforming extends EffectableEntity{
 
     calculateGravityCostPenalty() {
       const gravity = this.celestialParameters.gravity;
-      if (!calculateGravityCostPenaltyHelper) {
+      if (!calculateGravityCostPenalty) {
         return getNoGravityPenalty();
       }
 
-      const equatorialGravity = calculateApparentEquatorialGravityHelper
-        ? calculateApparentEquatorialGravityHelper(this.celestialParameters)
+      const equatorialGravity = calculateApparentEquatorialGravity
+        ? calculateApparentEquatorialGravity(this.celestialParameters)
         : gravity;
 
       const landResource = this.resources?.surface?.land;
       const totalLand = landResource?.value || 0;
       const usedLand = landResource?.reserved || 0;
 
-      return calculateGravityCostPenaltyHelper({
+      return calculateGravityCostPenalty({
         gravity,
         equatorialGravity,
         totalLand,
@@ -2070,5 +2067,4 @@ if (typeof module !== "undefined" && module.exports) {
   globalThis.getStarLuminosity = getStarLuminosity;
   globalThis.Terraforming = Terraforming;
   globalThis.buildAtmosphereContext = buildAtmosphereContext;
-  globalThis.calculateApparentEquatorialGravity = (...args) => getApparentEquatorialGravity(...args);
 }

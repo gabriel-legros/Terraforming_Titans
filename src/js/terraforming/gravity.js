@@ -111,15 +111,3 @@ function calculateApparentEquatorialGravity(params = {}) {
   const centrifugal = angularVelocity * angularVelocity * radiusMeters;
   return Math.max(0, gravity - centrifugal);
 }
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    createNoGravityPenalty,
-    calculateGravityCostPenalty,
-    calculateApparentEquatorialGravity,
-  };
-} else if (typeof window !== 'undefined') {
-  window.createNoGravityPenalty = createNoGravityPenalty;
-  window.calculateGravityCostPenalty = calculateGravityCostPenalty;
-  window.calculateApparentEquatorialGravity = calculateApparentEquatorialGravity;
-}
