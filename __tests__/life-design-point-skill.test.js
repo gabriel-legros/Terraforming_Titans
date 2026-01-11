@@ -3,7 +3,7 @@ const { LifeDesigner } = require('../src/js/life.js');
 
 describe('Life design point skill boosts', () => {
   beforeEach(() => {
-    global.buildings = { biodome: { active: 10 } };
+    global.buildings = { biodome: { active: 10, workerProductivity: 1 } };
     global.resources = { surface: { biomass: { value: 1 } } };
   });
 

@@ -730,11 +730,13 @@ class LifeDesigner extends EffectableEntity {
   }
 
   updateBiodomePoints(delta) {
-    const biodomeCount =
-      typeof buildings !== 'undefined' && buildings.biodome
-        ? buildings.biodome.active
-        : 0;
-    const rate = (biodomeCount > 0 ? Math.log10(10 * biodomeCount) : 0) * this.biodomePointMultiplier;
+    const biodome = buildings.biodome;
+    const biodomeCount = biodome.active;
+    const workerProductivity = biodome.workerProductivity;
+    const rate =
+      (biodomeCount > 0 ? Math.log10(10 * biodomeCount) : 0) *
+      this.biodomePointMultiplier *
+      workerProductivity;
     this.biodomePointRate = rate;
     this.biodomePoints += (rate * delta) / 3600000;
   }

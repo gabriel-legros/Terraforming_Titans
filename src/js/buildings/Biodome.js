@@ -3,6 +3,7 @@ class Biodome extends Building {
     super(config, buildingName);
     this.baseBiomassRate = this.production.surface.biomass;
     this.baseEnergyConsumption = this.consumption.colony.energy;
+    this.workerProductivity = 1;
     this.refreshMetabolismRates();
   }
 
@@ -58,9 +59,25 @@ class Biodome extends Building {
     return { category, resource: resourceKey };
   }
 
+  updateWorkerProductivity() {
+    if (this.active === 0) {
+      this.workerProductivity = 0;
+      return;
+    }
+    if (this.getTotalWorkerNeed() <= 0) {
+      this.workerProductivity = 1;
+      return;
+    }
+    this.workerProductivity = Math.max(
+      0,
+      Math.min(1, populationModule.getWorkerAvailabilityRatio(this.workerPriority))
+    );
+  }
+
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
     this.refreshMetabolismRates();
+    this.updateWorkerProductivity();
 
     if (!lifeDesigner.currentDesign.canSurviveAnywhere()) {
       this.setAutomationActivityMultiplier(0);
