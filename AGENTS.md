@@ -229,6 +229,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Fritizian dominion unlocks once the galaxy has 5 fully controlled sectors, and the RWG dropdown shows the requirement while locked.
 - RWG dominion requirements now read from terraforming requirement metadata so new dominions can define their own unlock rules.
 - Completing terraforming now awards alien artifacts once per non-Human dominion, scaling across dominions at 500 per completion (Human and Gabbagian are excluded).
+- Original world properties no longer show the dominion selector or lore display.
 - Added an ammonia-based terraforming requirement with NH3/H2 atmosphere targets, high luminosity range, and an ammonia photosynthesis metabolism profile.
 - Pretravel save capture now reuses the departure snapshot during planet travel so the pretravel slot keeps the departing planet key.
 - Added a Settings checkbox to keep the tab active by playing a looped near-silent audio track.
@@ -375,6 +376,9 @@ The planet visualiser has been modularised into files covering core setup, light
 - Import resource assignments now honor an import cap manager that scales from 1B/10B caps to per-sector limits (with rich/poor modifiers) once the galaxy unlocks, and the Import Resources card includes a collapsible cap breakdown.
 - Added Warp Gate Fabrication advanced research to grow per-sector Warp Gate Network levels from terraformed worlds, surfacing a Sector Management progress bar and scaling import caps with network level while showing per-project cap totals beside assignment.
 - Kessler debris decay now scales with atmospheric density per periapsis bin, and the hazard UI tracks the drag threshold by density instead of exobase height.
+- Kessler hazard charts now include an atmospheric density gradient strip aligned to debris bins.
+- Kessler debris generation now centers its gaussian on the 0.1 pkg/m^3 altitude with 1 pkg/m^3 at one sigma.
+- Kessler debris bins now span from altitude 0 to the gaussian tail so chart bins stay aligned.
 
 ## Feature updates
 - Autobuild basis drop-downs now include a Max option for ore mines, geothermal generators, and Dyson Swarm receivers so they chase the highest buildable count without relying on percentage targets.

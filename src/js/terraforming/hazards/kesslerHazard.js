@@ -4,10 +4,9 @@ const SOLIS_CAPPED_RESOURCES = ['food', 'components', 'electronics', 'glass', 'a
 const SMALL_PROJECT_BASE_SUCCESS = 0.5;
 const LARGE_PROJECT_BASE_SUCCESS = 0.05;
 const PERIAPSIS_SAMPLE_COUNT = 64;
-const PERIAPSIS_MEAN_SCALE = 1.25;
-const PERIAPSIS_MIN_METERS = 40000;
-const PERIAPSIS_STD_RATIO = 0.5;
 const DEBRIS_DECAY_BASE_RATE = 1/(3.6e3);
+const DEBRIS_DENSITY_CENTER = 1e-13;
+const DEBRIS_DENSITY_SEARCH_MAX = 500000;
 const DEBRIS_DECAY_DENSITY_REFERENCE = 1e-12;
 const DEBRIS_DECAY_DENSITY_FLOOR = 1e-16;
 const DEBRIS_DECAY_MAX_MULTIPLIER = 6;
@@ -40,19 +39,16 @@ function resolveDensityModel(terraforming) {
   }
 }
 
-function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, samples = PERIAPSIS_SAMPLE_COUNT) {
+function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters, samples = PERIAPSIS_SAMPLE_COUNT) {
   const count = Math.max(1, Math.floor(samples));
   const std = Math.max(1, stdMeters);
-  const range = std * 6;
-  const minPeriapsis = Math.max(0, meanMeters - range / 2);
-  const maxPeriapsis = meanMeters + range / 2;
-  const span = Math.max(1, maxPeriapsis - minPeriapsis);
+  const span = Math.max(1, maxMeters);
   const entries = [];
   let weightTotal = 0;
 
   for (let i = 0; i < count; i += 1) {
     const t = count === 1 ? 0.5 : i / (count - 1);
-    const periapsisMeters = minPeriapsis + t * span;
+    const periapsisMeters = t * span;
     const z = (periapsisMeters - meanMeters) / std;
     const weight = Math.exp(-0.5 * z * z);
     weightTotal += weight;
@@ -64,6 +60,33 @@ function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, samples = 
     periapsisMeters: entry.periapsisMeters,
     massTons: entry.weight * massPerWeight
   }));
+}
+
+function findAltitudeForDensity(model, targetDensity, maxMeters) {
+  const maxAlt = Math.max(1, maxMeters);
+  const densityAtStart = model.getDensity(0);
+  const densityAtEnd = model.getDensity(maxAlt);
+  let low = 0;
+  let high = maxAlt;
+
+  if (densityAtStart <= targetDensity) {
+    return 0;
+  }
+  if (densityAtEnd >= targetDensity) {
+    return maxAlt;
+  }
+
+  for (let i = 0; i < 24; i += 1) {
+    const mid = (low + high) / 2;
+    const density = model.getDensity(mid);
+    if (density > targetDensity) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+
+  return (low + high) / 2;
 }
 
 function normalizeKesslerParameters(parameters = {}) {
@@ -267,15 +290,15 @@ class KesslerHazard {
     if (this.periapsisDistribution.length) {
       return;
     }
-    let exobase = terraforming.exosphereHeightMeters || 0;
-    if (!exobase) {
-      terraforming.updateLuminosity();
-      terraforming._updateExosphereHeightCache();
-      exobase = terraforming.exosphereHeightMeters || 0;
-    }
-    const meanMeters = Math.max(PERIAPSIS_MIN_METERS, exobase * PERIAPSIS_MEAN_SCALE);
-    const stdMeters = Math.max(1, exobase * PERIAPSIS_STD_RATIO);
-    this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters);
+    const densityModel = resolveDensityModel(terraforming);
+    const searchMax = Math.max(terraforming.exosphereHeightMeters || 0, DEBRIS_DENSITY_SEARCH_MAX);
+    const meanMeters = findAltitudeForDensity(densityModel, DEBRIS_DENSITY_CENTER, searchMax);
+    const sigmaMeters = Math.abs(
+      meanMeters - findAltitudeForDensity(densityModel, DEBRIS_DECAY_DENSITY_REFERENCE, searchMax)
+    );
+    const stdMeters = Math.max(1, sigmaMeters);
+    const maxMeters = Math.max(1, meanMeters + stdMeters * 3);
+    this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters);
     if (!this.periapsisBaseline.length) {
       this.periapsisBaseline = this.periapsisDistribution.map((entry) => ({
         periapsisMeters: entry.periapsisMeters,

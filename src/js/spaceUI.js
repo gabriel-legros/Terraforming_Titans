@@ -576,7 +576,7 @@ function updateCurrentWorldUI() {
         const seedArg = seed === null ? undefined : seed;
         if (data && typeof renderWorldDetail === 'function') {
             const wrapper = document.createElement('div');
-            wrapper.innerHTML = renderWorldDetail(data, seedArg);
+            wrapper.innerHTML = renderWorldDetail(data, seedArg, undefined, { showDominion: false });
             const eqBtn = wrapper.querySelector('#rwg-equilibrate-btn');
             if (eqBtn) {
                 eqBtn.nextElementSibling?.remove();

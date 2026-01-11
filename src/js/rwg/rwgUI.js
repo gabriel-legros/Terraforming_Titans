@@ -964,7 +964,7 @@ function renderPlanetCard(p, index) {
     </div>`;
 }
 
-function renderWorldDetail(res, seedUsed, forcedType) {
+function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const c = res.merged?.celestialParameters || {};
   const seedString = res.seedString;
@@ -1038,14 +1038,15 @@ function renderWorldDetail(res, seedUsed, forcedType) {
       ? 'This world has already been terraformed.'
       : (!eqDone ? 'Press Equilibrate at least once before traveling.' : ''));
   const gWarn = createGravityWarning(c.gravity, fmt, { includeFlavor: true });
-  const dominionPanel = `
+  const showDominionPanel = options.showDominion !== false;
+  const dominionPanel = showDominionPanel ? `
     <div class="rwg-card">
       <div class="rwg-control-row">
         <select id="rwg-dominion" class="rwg-inline-select"></select>
         <button id="rwg-dominion-lore-btn" class="rwg-btn">Lore</button>
         <span id="rwg-dominion-info" class="info-tooltip-icon" title="Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion.  Rewards scale for each time it is granted: 500, 1000, 1500, and so on.">&#9432;</span>
       </div>
-    </div>`;
+    </div>` : '';
   const worldPanel = `
     <div class="rwg-card">
       <h3>${res.merged?.name || 'Generated World'}</h3>

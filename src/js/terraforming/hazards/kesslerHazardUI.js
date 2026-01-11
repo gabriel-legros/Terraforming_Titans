@@ -11,6 +11,11 @@ const kesslerHazardUICache = {
   chartBarFills: [],
   chartExobase: null,
   chartExobaseLabel: null,
+  densityWrapper: null,
+  densityLabelRow: null,
+  densityLabel: null,
+  densityBar: null,
+  densityMaxLabel: null,
   chartDetails: null,
   summaryRow: null,
   summaryLeft: null,
@@ -120,6 +125,92 @@ function formatDensity(value) {
   return formatted || Number(value || 0).toExponential(1);
 }
 
+function formatDensityWithUnit(value) {
+  const formatted = formatDensity(value);
+  const match = formatted.match(/^(-?\d+(?:\.\d+)?)([a-zµ]+)?$/i);
+  const numeric = match ? match[1] : formatted;
+  const suffix = match ? match[2] : '';
+  const unit = suffix ? `${suffix}kg/m^3` : 'kg/m^3';
+  return `${numeric} ${unit}`;
+}
+
+function getTerraforming() {
+  try {
+    return terraforming;
+  } catch (error) {
+    return null;
+  }
+}
+
+const kesslerDensityFallbackModel = {
+  getDensities: (altitudes = []) => altitudes.map(() => 0)
+};
+
+function getDensityModel(terraformingState) {
+  try {
+    return getAtmosphericDensityModel(terraformingState);
+  } catch (error) {
+    return kesslerDensityFallbackModel;
+  }
+}
+
+const DENSITY_COLOR_LOW = 1e-14;
+const DENSITY_COLOR_MID = 1e-12;
+const DENSITY_COLOR_HIGH = 1e-10;
+const DENSITY_COLOR_LOW_HEX = '#14274a';
+const DENSITY_COLOR_MID_HEX = '#2faa5d';
+const DENSITY_COLOR_HIGH_HEX = '#d04646';
+
+function hexToRgb(hex) {
+  const cleaned = hex.replace('#', '');
+  const value = parseInt(cleaned, 16);
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255
+  };
+}
+
+function blendColor(lowHex, highHex, ratio) {
+  const low = hexToRgb(lowHex);
+  const high = hexToRgb(highHex);
+  const t = Math.max(0, Math.min(1, ratio));
+  const r = Math.round(low.r + (high.r - low.r) * t);
+  const g = Math.round(low.g + (high.g - low.g) * t);
+  const b = Math.round(low.b + (high.b - low.b) * t);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function getDensityColor(density) {
+  if (density >= DENSITY_COLOR_HIGH) {
+    return DENSITY_COLOR_HIGH_HEX;
+  }
+  if (density <= DENSITY_COLOR_LOW) {
+    return DENSITY_COLOR_LOW_HEX;
+  }
+  const valueLog = Math.log10(density);
+  const lowLog = Math.log10(DENSITY_COLOR_LOW);
+  const midLog = Math.log10(DENSITY_COLOR_MID);
+  const highLog = Math.log10(DENSITY_COLOR_HIGH);
+  if (valueLog <= midLog) {
+    const ratio = (valueLog - lowLog) / (midLog - lowLog);
+    return blendColor(DENSITY_COLOR_LOW_HEX, DENSITY_COLOR_MID_HEX, ratio);
+  }
+  const ratio = (valueLog - midLog) / (highLog - midLog);
+  return blendColor(DENSITY_COLOR_MID_HEX, DENSITY_COLOR_HIGH_HEX, ratio);
+}
+
+function buildDensityGradient(densities, bins) {
+  const stops = [];
+  for (let i = 0; i < densities.length; i += 1) {
+    const color = getDensityColor(densities[i] || 0);
+    const start = (i / bins) * 100;
+    const end = ((i + 1) / bins) * 100;
+    stops.push(`${color} ${start.toFixed(2)}%`, `${color} ${end.toFixed(2)}%`);
+  }
+  return `linear-gradient(90deg, ${stops.join(', ')})`;
+}
+
 function buildKesslerLayout() {
   try {
     const doc = getDocument();
@@ -203,9 +294,33 @@ function buildKesslerLayout() {
     chart.appendChild(chartBars);
     chart.appendChild(chartExobaseLabel);
 
+    const densityWrapper = doc.createElement('div');
+    densityWrapper.className = 'kessler-debris-density-wrapper';
+
+    const densityLabel = doc.createElement('div');
+    densityLabel.className = 'kessler-debris-density__label';
+    densityLabel.textContent = 'Atmospheric density';
+
+    const densityBar = doc.createElement('div');
+    densityBar.className = 'kessler-debris-density';
+
+    const densityLabelRow = doc.createElement('div');
+    densityLabelRow.className = 'kessler-debris-density__row';
+
+    const densityMaxLabel = doc.createElement('div');
+    densityMaxLabel.className = 'kessler-debris-density__max';
+    densityMaxLabel.textContent = '';
+
+    densityLabelRow.appendChild(densityLabel);
+    densityLabelRow.appendChild(densityMaxLabel);
+
+    densityWrapper.appendChild(densityBar);
+    densityWrapper.appendChild(densityLabelRow);
+
     const chartDetails = doc.createElement('div');
     chartDetails.className = 'kessler-debris-chart__details';
 
+    chart.appendChild(densityWrapper);
     chartWrapper.appendChild(chart);
     chartWrapper.appendChild(chartDetails);
     card.appendChild(chartWrapper);
@@ -281,6 +396,11 @@ function buildKesslerLayout() {
     kesslerHazardUICache.chartBarFills = chartBarFills;
     kesslerHazardUICache.chartExobase = chartExobase;
     kesslerHazardUICache.chartExobaseLabel = chartExobaseLabel;
+    kesslerHazardUICache.densityWrapper = densityWrapper;
+    kesslerHazardUICache.densityLabelRow = densityLabelRow;
+    kesslerHazardUICache.densityLabel = densityLabel;
+    kesslerHazardUICache.densityBar = densityBar;
+    kesslerHazardUICache.densityMaxLabel = densityMaxLabel;
     kesslerHazardUICache.chartDetails = chartDetails;
     kesslerHazardUICache.summaryRow = summaryRow;
     kesslerHazardUICache.summaryLeft = summaryLeft;
@@ -328,6 +448,7 @@ function updateKesslerDebrisChart(
   currentDistribution,
   dragThresholdMeters,
   dragThresholdDensity,
+  densityModel,
   isCleared
 ) {
   const bars = kesslerHazardUICache.chartBarsList;
@@ -335,44 +456,52 @@ function updateKesslerDebrisChart(
   const baselineEntries = baselineDistribution.length ? baselineDistribution : currentDistribution;
   const currentEntries = currentDistribution.length ? currentDistribution : baselineDistribution;
   const sortedEntries = baselineEntries.slice().sort((a, b) => a.periapsisMeters - b.periapsisMeters);
+  const sortedCurrentEntries = currentEntries.slice().sort((a, b) => a.periapsisMeters - b.periapsisMeters);
   const bins = new Array(bars.length).fill(0);
   const currentBins = new Array(bars.length).fill(0);
 
   let minPeriapsis = 0;
   let maxPeriapsis = 1;
   if (sortedEntries.length) {
-    minPeriapsis = sortedEntries[0].periapsisMeters;
     maxPeriapsis = sortedEntries[0].periapsisMeters;
     for (let i = 1; i < sortedEntries.length; i += 1) {
       const value = sortedEntries[i].periapsisMeters;
-      minPeriapsis = Math.min(minPeriapsis, value);
       maxPeriapsis = Math.max(maxPeriapsis, value);
     }
   } else {
     maxPeriapsis = Math.max(1, dragThresholdMeters);
   }
+  minPeriapsis = 0;
   const span = Math.max(1, maxPeriapsis - minPeriapsis);
-  for (let i = 0; i < sortedEntries.length; i += 1) {
-    const entry = sortedEntries[i];
-    const ratio = (entry.periapsisMeters - minPeriapsis) / span;
-    let index = Math.floor(ratio * bars.length);
-    if (index >= bars.length) {
-      index = bars.length - 1;
-    } else if (index < 0) {
-      index = 0;
+  const canMapDirect = sortedEntries.length === bars.length && sortedCurrentEntries.length === bars.length;
+  if (canMapDirect) {
+    for (let i = 0; i < bars.length; i += 1) {
+      bins[i] = sortedEntries[i].massTons;
+      currentBins[i] = sortedCurrentEntries[i].massTons;
     }
-    bins[index] += entry.massTons;
-  }
-  for (let i = 0; i < currentEntries.length; i += 1) {
-    const entry = currentEntries[i];
-    const ratio = (entry.periapsisMeters - minPeriapsis) / span;
-    let index = Math.floor(ratio * bars.length);
-    if (index >= bars.length) {
-      index = bars.length - 1;
-    } else if (index < 0) {
-      index = 0;
+  } else {
+    for (let i = 0; i < sortedEntries.length; i += 1) {
+      const entry = sortedEntries[i];
+      const ratio = (entry.periapsisMeters - minPeriapsis) / span;
+      let index = Math.floor(ratio * bars.length);
+      if (index >= bars.length) {
+        index = bars.length - 1;
+      } else if (index < 0) {
+        index = 0;
+      }
+      bins[index] += entry.massTons;
     }
-    currentBins[index] += entry.massTons;
+    for (let i = 0; i < sortedCurrentEntries.length; i += 1) {
+      const entry = sortedCurrentEntries[i];
+      const ratio = (entry.periapsisMeters - minPeriapsis) / span;
+      let index = Math.floor(ratio * bars.length);
+      if (index >= bars.length) {
+        index = bars.length - 1;
+      } else if (index < 0) {
+        index = 0;
+      }
+      currentBins[index] += entry.massTons;
+    }
   }
   const dragRatio = Math.min(1, Math.max(0, (dragThresholdMeters - minPeriapsis) / span));
 
@@ -402,7 +531,16 @@ function updateKesslerDebrisChart(
   kesslerHazardUICache.chartExobase.style.left = `${dragPercent}%`;
   kesslerHazardUICache.chartExobaseLabel.style.left = `${dragPercent}%`;
   kesslerHazardUICache.chartExobaseLabel.textContent =
-    `Drag ${formatDensity(dragThresholdDensity)} kg/m³`;
+    `Drag ${formatDensityWithUnit(dragThresholdDensity)}`;
+
+  const binCount = bars.length;
+  const altitudes = new Array(binCount);
+  for (let i = 0; i < binCount; i += 1) {
+    altitudes[i] = minPeriapsis + (i + 0.5) / binCount * span;
+  }
+  const densities = densityModel.getDensities(altitudes);
+  kesslerHazardUICache.densityBar.style.backgroundImage = buildDensityGradient(densities, binCount);
+  kesslerHazardUICache.densityMaxLabel.textContent = `${formatNumeric(maxPeriapsis / 1000, 1)} km`;
   updateKesslerChartDetails(resource, isCleared);
 }
 
@@ -421,12 +559,14 @@ function updateKesslerHazardUI(kesslerParameters) {
     const decaySummary = manager.kesslerHazard.getDecaySummary();
     const baseline = manager.kesslerHazard.getPeriapsisBaseline();
     const distribution = manager.kesslerHazard.getPeriapsisDistribution();
+    const densityModel = getDensityModel(getTerraforming());
     updateKesslerDebrisChart(
       debris,
       baseline,
       distribution,
       decaySummary.dragThresholdHeightMeters || 0,
       decaySummary.dragThresholdDensity || 0,
+      densityModel,
       isCleared
     );
     const failureChances = manager.kesslerHazard.getProjectFailureChances();
@@ -452,7 +592,7 @@ function updateKesslerHazardUI(kesslerParameters) {
     kesslerHazardUICache.summaryCenterBody.textContent =
       `Small projects: ${formatPercent(failureChances.smallFailure)} failure\nLarge projects: ${formatPercent(failureChances.largeFailure)} failure`;
     kesslerHazardUICache.summaryRightBody.textContent =
-      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDrag line: ${formatDensity(dragDensity)} kg/m³ @ ${formatNumeric(dragKm, 1)} km\nIn drag: ${formatPercent(dragFraction)}\nDecay: ${formatNumeric(decayRate, 4)} t/s`;
+      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDrag line: ${formatDensityWithUnit(dragDensity)} @ ${formatNumeric(dragKm, 1)} km\nIn drag: ${formatPercent(dragFraction)}\nDecay: ${formatNumeric(decayRate, 4)} t/s`;
   } catch (error) {
     // ignore missing UI helpers in tests
   }
@@ -468,7 +608,8 @@ try {
 try {
   module.exports = {
     initializeKesslerHazardUI,
-    updateKesslerHazardUI
+    updateKesslerHazardUI,
+    buildDensityGradient
   };
 } catch (error) {
   // Module system not available in browser
