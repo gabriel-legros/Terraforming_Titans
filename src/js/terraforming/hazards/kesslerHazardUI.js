@@ -25,7 +25,12 @@ const kesslerHazardUICache = {
   effectsSection: null,
   effectsHeader: null,
   effectsList: null,
-  effectsItems: []
+  effectsItems: [],
+  debrisSourcesSection: null,
+  debrisSourcesHeader: null,
+  debrisSourcesGrid: null,
+  debrisSourcesSmallList: null,
+  debrisSourcesLargeList: null
 };
 
 const KESSLER_EFFECTS = [
@@ -34,6 +39,18 @@ const KESSLER_EFFECTS = [
   'Debris below the exobase decays faster the deeper the periapsis falls.'
 ];
 const KESSLER_CHART_BINS = 64;
+const KESSLER_DEBRIS_SOURCES = {
+  small: [
+    'Space Mirror construction.',
+    'Ore satellite deployments.',
+    'Geothermal satellite deployments.'
+  ],
+  large: [
+    'Dyson Receiver construction.',
+    'Hyperion Lantern construction.',
+    'Spaceship shipments (imports, exports, and space storage transfers).'
+  ]
+};
 
 function getDocument() {
   return kesslerHazardUICache.doc !== undefined
@@ -205,6 +222,44 @@ function buildKesslerLayout() {
     effectsSection.appendChild(effectsHeader);
     effectsSection.appendChild(effectsList);
     card.appendChild(effectsSection);
+
+    const debrisSourcesSection = doc.createElement('div');
+    debrisSourcesSection.className = 'hazard-debris-sources';
+
+    const debrisSourcesHeader = doc.createElement('div');
+    debrisSourcesHeader.className = 'hazard-debris-sources__header';
+    debrisSourcesHeader.textContent = 'Debris Sources';
+
+    const debrisSourcesGrid = doc.createElement('div');
+    debrisSourcesGrid.className = 'hazard-debris-sources__grid';
+
+    const buildDebrisColumn = (titleText, items) => {
+      const column = doc.createElement('div');
+      column.className = 'hazard-debris-sources__column';
+      const title = doc.createElement('div');
+      title.className = 'hazard-debris-sources__title';
+      title.textContent = titleText;
+      const list = doc.createElement('ul');
+      list.className = 'hazard-debris-sources__list';
+      items.forEach((entry) => {
+        const item = doc.createElement('li');
+        item.className = 'hazard-debris-sources__item';
+        item.textContent = entry;
+        list.appendChild(item);
+      });
+      column.appendChild(title);
+      column.appendChild(list);
+      return { column, list };
+    };
+
+    const smallColumn = buildDebrisColumn('Small Debris', KESSLER_DEBRIS_SOURCES.small);
+    const largeColumn = buildDebrisColumn('Large Debris', KESSLER_DEBRIS_SOURCES.large);
+    debrisSourcesGrid.appendChild(smallColumn.column);
+    debrisSourcesGrid.appendChild(largeColumn.column);
+
+    debrisSourcesSection.appendChild(debrisSourcesHeader);
+    debrisSourcesSection.appendChild(debrisSourcesGrid);
+    card.appendChild(debrisSourcesSection);
     root.appendChild(card);
 
     kesslerHazardUICache.card = card;
@@ -231,6 +286,11 @@ function buildKesslerLayout() {
     kesslerHazardUICache.effectsHeader = effectsHeader;
     kesslerHazardUICache.effectsList = effectsList;
     kesslerHazardUICache.effectsItems = effectItems;
+    kesslerHazardUICache.debrisSourcesSection = debrisSourcesSection;
+    kesslerHazardUICache.debrisSourcesHeader = debrisSourcesHeader;
+    kesslerHazardUICache.debrisSourcesGrid = debrisSourcesGrid;
+    kesslerHazardUICache.debrisSourcesSmallList = smallColumn.list;
+    kesslerHazardUICache.debrisSourcesLargeList = largeColumn.list;
 
     return card;
   } catch (error) {
