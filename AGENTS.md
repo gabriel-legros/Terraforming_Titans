@@ -268,6 +268,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Hazardous Biomass stances gained a Recon option and artifact stances gained Rapid Extraction, adjusting event pacing, weights, and artifact odds.
 - Hazardous biomass growth now applies per-zone penalties, the Zone Growth summary uses a dedicated table, Preferred Terrain shows the active preference with a tooltip explaining penalty math, and radiation defaults now use mSv/day across hazard systems.
 - Garbage hazard UI now mirrors hazardous biomass styling with cleanup summaries, progress bars, and per-stream penalty readouts.
+- Life growth now reallocates up to 1 ton of growth into zones under 1 ton of biomass when those zones can support growth, seeding them without changing total growth.
 - Garbage hazard penalties now permanently clear once every stream reaches zero, keeping the hazard cleared even if garbage returns.
 - Split hazard logic and UI into per-hazard modules so adding more hazards stays maintainable.
 - Kessler Skies can now cause eligible space projects to fail after the first second, converting half of their non-energy cost into orbital debris.

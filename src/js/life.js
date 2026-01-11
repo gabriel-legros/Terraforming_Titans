@@ -1020,12 +1020,42 @@ class LifeManager extends EffectableEntity {
 
         const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs));
         const growthAtmosphericDeltas = {};
+        const zoneGrowthByZone = { tropical: 0, temperate: 0, polar: 0 };
 
         for (const zoneName of zones) {
           const zonePotential = potentialGrowthByZone[zoneName];
           if (zonePotential <= 0) continue;
+          zoneGrowthByZone[zoneName] = totalPotentialGrowth > 0
+            ? totalGrowthBiomass * (zonePotential / totalPotentialGrowth)
+            : 0;
+        }
 
-          const zoneGrowth = totalPotentialGrowth > 0 ? totalGrowthBiomass * (zonePotential / totalPotentialGrowth) : 0;
+        const seedTargets = zones.filter(zoneName => {
+          const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
+          return zonalBiomass > 0 && zonalBiomass < 1 && potentialGrowthByZone[zoneName] > 0;
+        });
+        const seedDonors = zones.filter(zoneName => !seedTargets.includes(zoneName));
+
+        for (const targetZone of seedTargets) {
+          let availableGrowth = 0;
+          for (const donorZone of seedDonors) {
+            availableGrowth += zoneGrowthByZone[donorZone];
+          }
+          if (availableGrowth <= 0) continue;
+
+          const seedAmount = Math.min(1, availableGrowth);
+          zoneGrowthByZone[targetZone] += seedAmount;
+
+          for (const donorZone of seedDonors) {
+            const donorGrowth = zoneGrowthByZone[donorZone];
+            if (donorGrowth <= 0) continue;
+            const share = donorGrowth / availableGrowth;
+            zoneGrowthByZone[donorZone] = donorGrowth - seedAmount * share;
+          }
+        }
+
+        for (const zoneName of zones) {
+          const zoneGrowth = zoneGrowthByZone[zoneName];
           if (zoneGrowth <= 0) continue;
 
           terraforming.zonalSurface[zoneName].biomass += zoneGrowth;

@@ -141,4 +141,49 @@ describe('LifeManager metabolism-driven photosynthesis', () => {
     expect(terraforming.zonalSurface.temperate.liquidWater).toBeCloseTo(0, 6);
     expect(terraforming.zonalSurface.polar.liquidWater).toBeCloseTo(0, 6);
   });
+
+  it('redistributes growth to seed low-biomass zones', () => {
+    resources.atmospheric.carbonDioxide.value = 1e9;
+
+    terraforming.zonalSurface.tropical.biomass = 1000;
+    terraforming.zonalSurface.temperate.biomass = 0.5;
+    terraforming.zonalSurface.polar.biomass = 1000;
+
+    terraforming.zonalSurface.tropical.liquidWater = 1e9;
+    terraforming.zonalSurface.temperate.liquidWater = 1e9;
+    terraforming.zonalSurface.polar.liquidWater = 1e9;
+
+    const baseGrowthRate = Number(lifeDesigner.currentDesign.getBaseGrowthRate());
+    const secondsMultiplier = 1;
+    const landMultiplier = 1;
+    const baseMaxDensity = terraforming.requirements.lifeDesign.baseMaxBiomassDensityTPerM2;
+
+    const baselineGrowth = (zoneName, biomass) => {
+      const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
+      const maxBiomassForZone = zoneArea * baseMaxDensity;
+      const logisticFactor = maxBiomassForZone > 0 ? Math.max(0, 1 - biomass / maxBiomassForZone) : 0;
+      const tempMultiplier = lifeDesigner.currentDesign.temperatureGrowthMultiplierZone(zoneName);
+      const growthFactor = 1 - lifeDesigner.currentDesign.temperatureSurvivalPenalty(zoneName);
+      return biomass * baseGrowthRate * tempMultiplier * growthFactor * logisticFactor * secondsMultiplier;
+    };
+
+    const baselineTemperateGrowth = baselineGrowth('temperate', 0.5);
+    const baselineTotalGrowth =
+      baselineGrowth('tropical', 1000) +
+      baselineTemperateGrowth +
+      baselineGrowth('polar', 1000);
+
+    const manager = new LifeManager();
+    manager.updateLife(1000);
+
+    const temperateGrowth = terraforming.zonalSurface.temperate.biomass - 0.5;
+    const totalGrowth =
+      terraforming.zonalSurface.tropical.biomass +
+      terraforming.zonalSurface.temperate.biomass +
+      terraforming.zonalSurface.polar.biomass -
+      2000.5;
+
+    expect(temperateGrowth - baselineTemperateGrowth).toBeCloseTo(1, 3);
+    expect(totalGrowth).toBeCloseTo(baselineTotalGrowth, 3);
+  });
 });
