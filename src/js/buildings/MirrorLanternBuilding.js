@@ -125,6 +125,7 @@ class MirrorLanternBuilding extends MirrorBase {
       this.productivity += dampingFactor * (targetProductivity - this.productivity);
     }
   }
+
 }
 
 if (typeof module !== 'undefined' && module.exports) {

@@ -345,7 +345,8 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false,
     autoBuildMaxOption: true,
-    temperatureMaintenanceImmune: true
+    temperatureMaintenanceImmune: true,
+    kesslerDebrisSize: 'large'
   },
   superalloyFusionReactor: {
     name: 'Superalloy Fusion Reactor',
@@ -543,7 +544,8 @@ const buildingsParameters = {
     maintenanceFactor: 0.1,
     unlocked: false,
     surfaceArea: 500,
-    temperatureMaintenanceImmune: true
+    temperatureMaintenanceImmune: true,
+    kesslerDebrisSize: 'small'
   },
   hyperionLantern: {
     name: 'Hyperion Lantern',
@@ -560,7 +562,8 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false,
     powerPerBuilding: 1e12,
-    temperatureMaintenanceImmune: true
+    temperatureMaintenanceImmune: true,
+    kesslerDebrisSize: 'large'
   },
   ghgFactory: {
     name: 'Greenhouse Gas factory',

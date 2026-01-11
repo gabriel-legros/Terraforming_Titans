@@ -27,6 +27,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.waterWithdrawTarget = 'colony';
     this.strategicReserve = 0;
     this.usedStorageResyncTimer = 0;
+    this.shipOperationKesslerElapsed = 0;
+    this.shipOperationKesslerPending = false;
+    this.shipOperationKesslerCost = null;
   }
 
   isAutomationManuallyDisabled() {
@@ -403,6 +406,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationStartingDuration = this.shipOperationRemainingTime;
     this.shipOperationIsActive = true;
     this.shipOperationIsPaused = false;
+    this.shipOperationKesslerElapsed = 0;
+    this.shipOperationKesslerPending = true;
+    this.shipOperationKesslerCost = this.calculateSpaceshipTotalCost();
     const durationSeconds = this.shipOperationStartingDuration / 1000;
     if (durationSeconds > 0) {
       this.applyShipOperationRateTooltip(durationSeconds, this.shipOperationAutoStart);
@@ -419,12 +425,38 @@ class SpaceStorageProject extends SpaceshipProject {
     return false;
   }
 
+  applyShipOperationKesslerFailure() {
+    const cost = this.shipOperationKesslerCost || this.calculateSpaceshipTotalCost();
+    const debris = this.getNonEnergyCostTotal(cost) * 0.5 + this.getKesslerShipDebrisPerShip();
+    this.addKesslerDebris(debris);
+    this.loseAssignedShips(1);
+    this.pendingTransfers = [];
+    this.shipOperationIsActive = false;
+    this.shipOperationIsPaused = false;
+    this.shipOperationRemainingTime = this.shipOperationStartingDuration || 0;
+    this.shipOperationKesslerElapsed = 0;
+    this.shipOperationKesslerPending = false;
+    this.shipOperationKesslerCost = null;
+  }
+
   updateShipOperation(deltaTime) {
     if (!this.shipOperationIsActive || this.shipOperationIsPaused) return;
     if (this.shipOperationAutoStart) {
       const durationSeconds = this.shipOperationStartingDuration / 1000;
       if (durationSeconds > 0) {
         this.applyShipOperationRateTooltip(durationSeconds, true);
+      }
+    }
+    const activeTime = Math.min(deltaTime, this.shipOperationRemainingTime);
+    if (this.shipOperationKesslerPending) {
+      this.shipOperationKesslerElapsed += activeTime;
+      if (this.shipOperationKesslerElapsed >= 1000 || this.shipOperationRemainingTime <= activeTime) {
+        this.shipOperationKesslerPending = false;
+        if (Math.random() > this.getKesslerSuccessChance()) {
+          this.applyShipOperationKesslerFailure();
+          return;
+        }
+        this.shipOperationKesslerCost = null;
       }
     }
     this.shipOperationRemainingTime -= deltaTime;
@@ -574,7 +606,14 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   applyContinuousShipOperation(deltaTime) {
-    const fraction = deltaTime / this.getShipOperationDuration();
+    this.shipOperationKesslerPending = false;
+    this.shipOperationKesslerElapsed = 0;
+    this.shipOperationKesslerCost = null;
+    const duration = this.getShipOperationDuration();
+    const fraction = deltaTime / duration;
+    const seconds = deltaTime / 1000;
+    const successChance = this.getKesslerSuccessChance();
+    const failureChance = 1 - successChance;
     const capacity = this.calculateTransferAmount() * fraction;
     if (capacity <= 0) {
       this.shipOperationIsActive = false;
@@ -582,12 +621,16 @@ class SpaceStorageProject extends SpaceshipProject {
     }
 
     const totalCost = this.calculateSpaceshipTotalCost();
+    let nonEnergyCost = 0;
     for (const category in totalCost) {
       for (const resource in totalCost[category]) {
         const amount = totalCost[category][resource] * this.assignedSpaceships * fraction;
         if (resources[category][resource].value < amount) {
           this.shipOperationIsActive = false;
           return;
+        }
+        if (resource !== 'energy') {
+          nonEnergyCost += amount;
         }
       }
     }
@@ -606,7 +649,9 @@ class SpaceStorageProject extends SpaceshipProject {
     }
 
     plan.transfers.forEach(t => {
-      const rate = t.amount / (deltaTime / 1000);
+      const delivered = t.amount * successChance;
+      const rate = seconds > 0 ? t.amount / seconds : 0;
+      const deliveredRate = seconds > 0 ? delivered / seconds : 0;
       if (t.mode === 'withdraw') {
         const stored = this.resourceUsage[t.storageKey] || 0;
         const remaining = stored - t.amount;
@@ -617,41 +662,51 @@ class SpaceStorageProject extends SpaceshipProject {
         }
         this.usedStorage = Math.max(0, this.usedStorage - t.amount);
         if (t.resource === 'biomass') {
-          this.addBiomassToZones(t.amount);
-          resources.surface.biomass?.modifyRate(rate, 'Space storage transfer', 'project');
+          this.addBiomassToZones(delivered);
+          resources.surface.biomass?.modifyRate(deliveredRate, 'Space storage transfer', 'project');
         } else if (t.resource === 'liquidWater' && t.category === 'surface') {
-          this.addLiquidWaterToZones(t.amount);
-          resources.surface.liquidWater.modifyRate(rate, 'Space storage transfer', 'project');
+          this.addLiquidWaterToZones(delivered);
+          resources.surface.liquidWater.modifyRate(deliveredRate, 'Space storage transfer', 'project');
         } else {
           const res = resources[t.category][t.resource];
-          res.increase(t.amount);
-          res.modifyRate(rate, 'Space storage transfer', 'project');
+          res.increase(delivered);
+          res.modifyRate(deliveredRate, 'Space storage transfer', 'project');
         }
       } else if (t.mode === 'store') {
         if (t.resource === 'biomass') {
           const removed = this.removeBiomassFromZones(t.amount);
           if (removed > 0) {
-            resources.surface.biomass?.modifyRate(-removed / (deltaTime / 1000), 'Space storage transfer', 'project');
-            this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + removed;
-            this.usedStorage += removed;
+            const deliveredRemoved = removed * successChance;
+            resources.surface.biomass?.modifyRate(-removed / seconds, 'Space storage transfer', 'project');
+            this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + deliveredRemoved;
+            this.usedStorage += deliveredRemoved;
           }
         } else if (t.resource === 'liquidWater' && t.category === 'surface') {
           const removed = this.removeLiquidWaterFromZones(t.amount);
           if (removed > 0) {
-            resources.surface.liquidWater.modifyRate(-removed / (deltaTime / 1000), 'Space storage transfer', 'project');
-            this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + removed;
-            this.usedStorage += removed;
+            const deliveredRemoved = removed * successChance;
+            resources.surface.liquidWater.modifyRate(-removed / seconds, 'Space storage transfer', 'project');
+            this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + deliveredRemoved;
+            this.usedStorage += deliveredRemoved;
           }
         } else {
           const res = resources[t.category][t.resource];
           res.decrease(t.amount);
           res.modifyRate(-rate, 'Space storage transfer', 'project');
-          this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;
-          this.usedStorage += t.amount;
+          this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + delivered;
+          this.usedStorage += delivered;
         }
       }
     });
 
+    if (failureChance > 0) {
+      const costDebris = nonEnergyCost * failureChance * 0.5;
+      this.addKesslerDebris(costDebris);
+      this.reportKesslerDebrisRate(costDebris, seconds);
+      const lostShips = this.applyKesslerShipLoss(this.assignedSpaceships * fraction * failureChance);
+      const shipDebris = lostShips * this.getKesslerShipDebrisPerShip();
+      this.reportKesslerDebrisRate(shipDebris, seconds);
+    }
     this.shipOperationIsActive = true;
   }
 
@@ -909,6 +964,9 @@ class SpaceStorageProject extends SpaceshipProject {
         isPaused: this.shipOperationIsPaused,
         autoStart: this.shipOperationAutoStart,
         mode: this.shipWithdrawMode ? 'withdraw' : 'deposit',
+        kesslerElapsed: this.shipOperationKesslerElapsed,
+        kesslerPending: this.shipOperationKesslerPending,
+        kesslerCost: this.shipOperationKesslerCost
       },
     };
   }
@@ -931,6 +989,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationIsPaused = ship.isPaused || false;
     this.shipOperationAutoStart = ship.autoStart || false;
     this.shipWithdrawMode = ship.mode === 'withdraw';
+    this.shipOperationKesslerElapsed = ship.kesslerElapsed || 0;
+    this.shipOperationKesslerPending = ship.kesslerPending === true;
+    this.shipOperationKesslerCost = ship.kesslerCost || null;
   }
 
   saveTravelState() {

@@ -27,6 +27,9 @@ class Project extends EffectableEntity {
     this.shortfallLastTick = false; // Tracks if resource consumption failed last tick
     this.alertedWhenUnlocked = this.unlocked ? true : false;
     this.permanentlyDisabled = false;
+    this.kesslerRollElapsed = 0;
+    this.kesslerRollPending = false;
+    this.kesslerStartCost = null;
     if (this.attributes?.canUseDysonOverflow) {
       this.allowColonyEnergyUse = false;
     }
@@ -48,9 +51,80 @@ class Project extends EffectableEntity {
     this.category = config.category;
     this.treatAsBuilding = config.treatAsBuilding || false;
     this.requireStar = config.requireStar === true;
+    this.kesslerDebrisSize = config.kesslerDebrisSize || null;
 
 
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
+  }
+
+  getKesslerSuccessChance() {
+    if (!this.kesslerDebrisSize) {
+      return 1;
+    }
+    try {
+      const hazard = hazardManager.kesslerHazard;
+      return hazard.getSuccessChance(this.kesslerDebrisSize === 'large');
+    } catch (error) {
+      return 1;
+    }
+  }
+
+  _getKesslerFailureCost() {
+    if (this.kesslerStartCost) {
+      return this.kesslerStartCost;
+    }
+    return this.getScaledCost();
+  }
+
+  _getKesslerDebrisAmount() {
+    const cost = this._getKesslerFailureCost();
+    let total = 0;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (resource === 'energy') {
+          continue;
+        }
+        total += cost[category][resource];
+      }
+    }
+    return total * 0.5;
+  }
+
+  _applyKesslerFailure() {
+    const debris = this._getKesslerDebrisAmount();
+    if (debris > 0) {
+      try {
+        hazardManager.kesslerHazard.addDebris(debris);
+      } catch (error) {
+        // no-op
+      }
+    }
+    this.isActive = false;
+    this.isPaused = false;
+    this.isCompleted = false;
+    this.kesslerRollPending = false;
+    this.kesslerRollElapsed = 0;
+    this.kesslerStartCost = null;
+    this.remainingTime = this.getEffectiveDuration();
+    this.startingDuration = this.remainingTime;
+  }
+
+  _checkKesslerFailure(deltaTime) {
+    if (!this.kesslerRollPending) {
+      return false;
+    }
+    this.kesslerRollElapsed += deltaTime;
+    if (this.kesslerRollElapsed < 1000) {
+      return false;
+    }
+    this.kesslerRollPending = false;
+    const successChance = this.getKesslerSuccessChance();
+    if (Math.random() > successChance) {
+      this._applyKesslerFailure();
+      return true;
+    }
+    this.kesslerStartCost = null;
+    return false;
   }
 
   // Calculates the effective cost for building, factoring in all active cost multipliers
@@ -322,6 +396,15 @@ class Project extends EffectableEntity {
         this.deductResources(resources);
         this.remainingTime = this.getEffectiveDuration();
         this.startingDuration = this.remainingTime;
+        if (this.kesslerDebrisSize) {
+          this.kesslerRollElapsed = 0;
+          this.kesslerRollPending = true;
+          this.kesslerStartCost = this.getScaledCost();
+        } else {
+          this.kesslerRollPending = false;
+          this.kesslerRollElapsed = 0;
+          this.kesslerStartCost = null;
+        }
       }
 
       // Set the project as active
@@ -370,11 +453,27 @@ class Project extends EffectableEntity {
       return;
     }
 
+    const kesslerDelta = this.kesslerRollPending
+      ? Math.min(deltaTime, this.remainingTime)
+      : deltaTime;
+    if (this._checkKesslerFailure(kesslerDelta)) {
+      return;
+    }
+
     this.deductSustainResources(deltaTime);
 
     this.remainingTime -= deltaTime;
 
     if (this.remainingTime <= 0) {
+      if (this.kesslerRollPending) {
+        this.kesslerRollPending = false;
+        const successChance = this.getKesslerSuccessChance();
+        if (Math.random() > successChance) {
+          this._applyKesslerFailure();
+          return;
+        }
+        this.kesslerStartCost = null;
+      }
       this.complete();
     }
   }
@@ -592,6 +691,11 @@ class Project extends EffectableEntity {
       shownStorySteps: Array.from(this.shownStorySteps),
       alertedWhenUnlocked: this.alertedWhenUnlocked,
     };
+    if (this.kesslerDebrisSize) {
+      state.kesslerRollElapsed = this.kesslerRollElapsed;
+      state.kesslerRollPending = this.kesslerRollPending === true;
+      state.kesslerStartCost = this.kesslerStartCost;
+    }
     if (this.attributes?.canUseDysonOverflow) {
       state.allowColonyEnergyUse = this.allowColonyEnergyUse === true;
     }
@@ -632,6 +736,11 @@ class Project extends EffectableEntity {
     this.autoStartUncheckOnTravel = state.autoStartUncheckOnTravel === true;
     this.shownStorySteps = new Set(state.shownStorySteps || []);
     this.alertedWhenUnlocked = state.alertedWhenUnlocked || false;
+    if (this.kesslerDebrisSize) {
+      this.kesslerRollElapsed = state.kesslerRollElapsed || 0;
+      this.kesslerRollPending = state.kesslerRollPending === true;
+      this.kesslerStartCost = state.kesslerStartCost || null;
+    }
     if (this.attributes?.canUseDysonOverflow) {
       this.allowColonyEnergyUse = state.allowColonyEnergyUse === true;
     }

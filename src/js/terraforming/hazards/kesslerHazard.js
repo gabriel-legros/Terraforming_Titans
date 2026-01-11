@@ -179,6 +179,57 @@ class KesslerHazard {
     return this.periapsisBaseline;
   }
 
+  getSuccessChance(isLarge) {
+    const active = this.manager.parameters.kessler && !this.isCleared();
+    const chances = this.getProjectFailureChances();
+    const successChance = isLarge ? chances.largeSuccess : chances.smallSuccess;
+    return active ? successChance : 1;
+  }
+
+  getCostMultiplier(isLarge) {
+    const successChance = this.getSuccessChance(isLarge);
+    return successChance > 0 ? 1 / successChance : 1;
+  }
+
+  addDebris(addedTons) {
+    if (addedTons <= 0) {
+      return;
+    }
+    const resource = resources.special.orbitalDebris;
+    if (!this.periapsisDistribution.length) {
+      this.ensurePeriapsisDistribution(terraforming, this.manager.parameters.kessler, resource.value || 0);
+    }
+    const distribution = this.periapsisDistribution;
+    let totalMass = 0;
+    distribution.forEach((entry) => {
+      totalMass += entry.massTons;
+    });
+
+    let weights = distribution;
+    let weightTotal = totalMass;
+    if (!weightTotal) {
+      weights = this.periapsisBaseline;
+      weights.forEach((entry) => {
+        weightTotal += entry.massTons;
+      });
+    }
+
+    if (!weightTotal) {
+      const perBin = addedTons / distribution.length;
+      distribution.forEach((entry) => {
+        entry.massTons += perBin;
+      });
+      resource.value += addedTons;
+      return;
+    }
+
+    distribution.forEach((entry, index) => {
+      const weight = weights[index]?.massTons ?? entry.massTons;
+      entry.massTons += addedTons * (weight / weightTotal);
+    });
+    resource.value += addedTons;
+  }
+
   ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass) {
     if (this.periapsisDistribution.length) {
       return;

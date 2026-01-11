@@ -80,7 +80,8 @@ class Building extends EffectableEntity {
         displayConsumptionAtMaxProductivity,
         ignoreResourceForProductivityResourceDisplay,
         alwaysShowProduction,
-        alwaysShowConsumption
+        alwaysShowConsumption,
+        kesslerDebrisSize
       } = config;
   
       this.name = buildingName;
@@ -108,6 +109,7 @@ class Building extends EffectableEntity {
       this.alwaysShowConsumption = !!alwaysShowConsumption;
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
+      this.kesslerDebrisSize = kesslerDebrisSize || null;
       this.aerostatReduction = Math.max(
         0,
         Number.isFinite(aerostatReduction) ? aerostatReduction : 0
@@ -512,8 +514,67 @@ class Building extends EffectableEntity {
     return modifiedStorage;
   }
 
-  // Calculates the effective cost for building, factoring in all active cost multipliers
-  getEffectiveCost(buildCount = 1) {
+  getKesslerCostMultiplier() {
+    if (!this.kesslerDebrisSize) {
+      return 1;
+    }
+    try {
+      return hazardManager.kesslerHazard.getCostMultiplier(this.kesslerDebrisSize === 'large');
+    } catch (error) {
+      return 1;
+    }
+  }
+
+  _applyKesslerCostMultiplier(cost, multiplier) {
+    if (multiplier === 1) {
+      return cost;
+    }
+    const adjusted = {};
+    for (const category in cost) {
+      adjusted[category] = {};
+      for (const resource in cost[category]) {
+        const value = cost[category][resource] * multiplier;
+        if (value > 0) {
+          adjusted[category][resource] = value;
+        }
+      }
+      if (!Object.keys(adjusted[category]).length) {
+        delete adjusted[category];
+      }
+    }
+    return adjusted;
+  }
+
+  _getKesslerDebrisFromCost(cost, multiplier) {
+    const extraMultiplier = Math.max(0, multiplier - 1);
+    if (!extraMultiplier) {
+      return 0;
+    }
+    let total = 0;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (resource === 'energy') {
+          continue;
+        }
+        total += cost[category][resource] * extraMultiplier;
+      }
+    }
+    return total * 0.5;
+  }
+
+  _applyKesslerDebris(cost, multiplier) {
+    const debris = this._getKesslerDebrisFromCost(cost, multiplier);
+    if (!debris) {
+      return;
+    }
+    try {
+      hazardManager.kesslerHazard.addDebris(debris);
+    } catch (error) {
+      // no-op
+    }
+  }
+
+  getBaseEffectiveCost(buildCount = 1) {
     const effectiveCost = {};
 
     for (const category in this.cost) {
@@ -535,6 +596,15 @@ class Building extends EffectableEntity {
     }
 
     return effectiveCost;
+  }
+
+  // Calculates the effective cost for building, factoring in all active cost multipliers
+  getEffectiveCost(buildCount = 1) {
+    const effectiveCost = this.getBaseEffectiveCost(buildCount);
+    return this._applyKesslerCostMultiplier(
+      effectiveCost,
+      this.getKesslerCostMultiplier()
+    );
   }
 
   getProductionRatio(){
@@ -696,7 +766,9 @@ class Building extends EffectableEntity {
 
   build(buildCount = 1, activate = true) {
     if (this.canAfford(buildCount)) {
-      const effectiveCost = this.getEffectiveCost(buildCount);
+      const baseCost = this.getBaseEffectiveCost(buildCount);
+      const multiplier = this.getKesslerCostMultiplier();
+      const effectiveCost = this._applyKesslerCostMultiplier(baseCost, multiplier);
       for (const category in effectiveCost) {
         for (const resource in effectiveCost[category]) {
           resources[category][resource].decrease(effectiveCost[category][resource]);
@@ -722,6 +794,7 @@ class Building extends EffectableEntity {
         this.productivity = 0;
       }
       this.updateResourceStorage();
+      this._applyKesslerDebris(baseCost, multiplier);
       return true;
     }
     return false;

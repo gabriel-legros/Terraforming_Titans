@@ -110,6 +110,7 @@ const projectParameters = {
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 1000,
     unlocked: false,
+    kesslerDebrisSize: 'small',
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for ore deposits
@@ -134,6 +135,7 @@ const projectParameters = {
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 100,
     unlocked: false,
+    kesslerDebrisSize: 'small',
     attributes: {
       scanner: {
         canSearchForDeposits: true,  // Flag indicating the satellite can search for geothermal deposits

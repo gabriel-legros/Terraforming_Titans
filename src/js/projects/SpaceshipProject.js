@@ -1,3 +1,5 @@
+const KESSLER_SHIP_DEBRIS_TONS = 3000;
+
 class SpaceshipProject extends Project {
 
   constructor(config, name) {
@@ -10,6 +12,10 @@ class SpaceshipProject extends Project {
     this.lastActiveTime = 0;
     this.pendingGain = null;
     this.shipCapacityMultiplier = 1;
+    this.kesslerShipRollElapsed = 0;
+    this.kesslerShipRollPending = false;
+    this.kesslerShipCostSnapshot = null;
+    this.kesslerShipLossCarry = 0;
   }
 
   getActiveShipCount() {
@@ -26,6 +32,134 @@ class SpaceshipProject extends Project {
 
   isContinuous() {
     return this.getActiveShipCount() > 100;
+  }
+
+  getKesslerSuccessChance() {
+    try {
+      return hazardManager.kesslerHazard.getSuccessChance(true);
+    } catch (error) {
+      return 1;
+    }
+  }
+
+  getKesslerFailureChance() {
+    return 1 - this.getKesslerSuccessChance();
+  }
+
+  getKesslerShipDebrisPerShip() {
+    const override = hazardManager?.parameters?.kessler?.shipDebrisPerShip;
+    return override > 0 ? override : KESSLER_SHIP_DEBRIS_TONS;
+  }
+
+  getNonEnergyCostTotal(cost) {
+    let total = 0;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (resource === 'energy') {
+          continue;
+        }
+        total += cost[category][resource];
+      }
+    }
+    return total;
+  }
+
+  addKesslerDebris(amount) {
+    if (amount <= 0) {
+      return;
+    }
+    try {
+      hazardManager.kesslerHazard.addDebris(amount);
+    } catch (error) {
+      // no-op
+    }
+  }
+
+  reportKesslerDebrisRate(amount, seconds, sourceName) {
+    const rate = amount / seconds;
+    try {
+      const source = sourceName || this.displayName || this.name;
+      resources.special.orbitalDebris.modifyRate(rate, source, 'project');
+    } catch (error) {
+      // no-op
+    }
+  }
+
+  loseAssignedShips(count) {
+    const loss = Math.min(Math.max(count, 0), this.assignedSpaceships);
+    if (!loss) {
+      return 0;
+    }
+    const wasContinuous = this.isContinuous();
+    this.assignedSpaceships -= loss;
+    if (this.assignedSpaceships < 0) {
+      this.assignedSpaceships = 0;
+    }
+    this.finalizeAssignmentChange(wasContinuous);
+    try {
+      updateProjectUI(this.name);
+    } catch (error) {
+      // no-op
+    }
+    return loss;
+  }
+
+  applyKesslerShipLoss(lossCount) {
+    if (lossCount <= 0) {
+      return 0;
+    }
+    this.kesslerShipLossCarry += lossCount;
+    const wholeLoss = Math.floor(this.kesslerShipLossCarry);
+    if (wholeLoss <= 0) {
+      return 0;
+    }
+    this.kesslerShipLossCarry -= wholeLoss;
+    const lost = this.loseAssignedShips(wholeLoss);
+    if (lost > 0) {
+      this.addKesslerDebris(lost * this.getKesslerShipDebrisPerShip());
+    }
+    return lost;
+  }
+
+  resetKesslerShipRoll() {
+    this.kesslerShipRollElapsed = 0;
+    this.kesslerShipRollPending = false;
+    this.kesslerShipCostSnapshot = null;
+  }
+
+  applyKesslerShipFailure() {
+    const cost = this.kesslerShipCostSnapshot || this.calculateSpaceshipTotalCost();
+    const debris = this.getNonEnergyCostTotal(cost) * 0.5 + this.getKesslerShipDebrisPerShip();
+    this.addKesslerDebris(debris);
+    this.loseAssignedShips(1);
+    this.pendingGain = null;
+    this.isActive = false;
+    this.isPaused = false;
+    this.isCompleted = false;
+    this.resetKesslerShipRoll();
+    this.remainingTime = this.getEffectiveDuration();
+    this.startingDuration = this.remainingTime;
+  }
+
+  checkKesslerShipFailure(activeTime, startRemaining) {
+    if (this.isContinuous()) {
+      this.resetKesslerShipRoll();
+      return false;
+    }
+    if (!this.kesslerShipRollPending) {
+      return false;
+    }
+    this.kesslerShipRollElapsed += activeTime;
+    if (this.kesslerShipRollElapsed < 1000 && startRemaining > activeTime) {
+      return false;
+    }
+    this.kesslerShipRollPending = false;
+    if (Math.random() > this.getKesslerSuccessChance()) {
+      this.applyKesslerShipFailure();
+      return true;
+    }
+    this.kesslerShipCostSnapshot = null;
+    return false;
   }
 
   disableAutoAssignSpaceships() {
@@ -739,12 +873,20 @@ class SpaceshipProject extends Project {
     if (this.isContinuous()) {
       this.startingDuration = Infinity;
       this.remainingTime = Infinity;
+      this.resetKesslerShipRoll();
     } else if (this.attributes.spaceMining) {
       let gain = this.calculateSpaceshipTotalResourceGain();
       if (this.applyMetalCostPenalty) {
         this.applyMetalCostPenalty(gain);
       }
       this.pendingGain = gain;
+      this.kesslerShipRollElapsed = 0;
+      this.kesslerShipRollPending = true;
+      this.kesslerShipCostSnapshot = this.calculateSpaceshipTotalCost();
+    } else {
+      this.kesslerShipRollElapsed = 0;
+      this.kesslerShipRollPending = true;
+      this.kesslerShipCostSnapshot = this.calculateSpaceshipTotalCost();
     }
 
     return true;
@@ -754,6 +896,10 @@ class SpaceshipProject extends Project {
     const wasActive = this.isActive && !this.isCompleted && !this.isPaused;
     const startRemaining = this.remainingTime;
     const activeTime = wasActive ? Math.min(deltaTime, startRemaining) : 0;
+    if (wasActive && this.checkKesslerShipFailure(activeTime, startRemaining)) {
+      this.lastActiveTime = 0;
+      return;
+    }
     super.update(deltaTime);
     this.lastActiveTime = this.isContinuous() ? activeTime : 0;
   }
@@ -795,6 +941,7 @@ class SpaceshipProject extends Project {
         const activeShips = this.getActiveShipCount();
         const factor = 1000 / duration;
         const fraction = deltaTime / duration;
+        const successChance = this.getKesslerSuccessChance();
         if (fraction > 0) {
           const costPerShip = this.calculateSpaceshipCost();
           for (const category in costPerShip) {
@@ -832,7 +979,7 @@ class SpaceshipProject extends Project {
             totals.cost[category][resource] =
               (totals.cost[category][resource] || 0) + capacity * activeShips * fraction;
             if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-              const fundingRate = capacity * activeShips * factor * this.attributes.fundingGainAmount * (applyRates ? productivity : 1);
+              const fundingRate = capacity * activeShips * factor * this.attributes.fundingGainAmount * successChance * (applyRates ? productivity : 1);
               if (applyRates) {
                 resources.colony.funding.modifyRate(
                   fundingRate,
@@ -843,7 +990,7 @@ class SpaceshipProject extends Project {
               if (!totals.gain.colony) totals.gain.colony = {};
               totals.gain.colony.funding =
                 (totals.gain.colony.funding || 0) +
-                capacity * activeShips * fraction * this.attributes.fundingGainAmount;
+                capacity * activeShips * fraction * this.attributes.fundingGainAmount * successChance;
             }
           }
 
@@ -860,7 +1007,7 @@ class SpaceshipProject extends Project {
           for (const category in gainPerShip) {
             if (!totals.gain[category]) totals.gain[category] = {};
             for (const resource in gainPerShip[category]) {
-              const rateValue = gainPerShip[category][resource] * activeShips * factor * (applyRates ? productivity : 1);
+              const rateValue = gainPerShip[category][resource] * activeShips * factor * successChance * (applyRates ? productivity : 1);
               if (applyRates) {
                 resources[category][resource].modifyRate(
                   rateValue,
@@ -869,7 +1016,7 @@ class SpaceshipProject extends Project {
                 );
               }
               totals.gain[category][resource] =
-                (totals.gain[category][resource] || 0) + gainPerShip[category][resource] * activeShips * fraction;
+                (totals.gain[category][resource] || 0) + gainPerShip[category][resource] * activeShips * fraction * successChance;
             }
           }
         }
@@ -954,8 +1101,12 @@ class SpaceshipProject extends Project {
     const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
     const fraction = deltaTime / duration;
     const activeShips = this.getActiveShipCount();
+    const successChance = this.getKesslerSuccessChance();
+    const failureChance = 1 - successChance;
+    const seconds = deltaTime / 1000;
 
     let shortfall = false;
+    let nonEnergyCost = 0;
     const costPerShip = this.calculateSpaceshipCost();
     for (const category in costPerShip) {
       for (const resource in costPerShip[category]) {
@@ -974,6 +1125,9 @@ class SpaceshipProject extends Project {
           if (res && typeof res.decrease === 'function') {
             res.decrease(amount);
           }
+        }
+        if (resource !== 'energy') {
+          nonEnergyCost += amount;
         }
       }
     }
@@ -997,7 +1151,7 @@ class SpaceshipProject extends Project {
           accumulatedChanges.colony &&
           accumulatedChanges.colony.funding !== undefined
         ) {
-          accumulatedChanges.colony.funding += actualDisposal * this.attributes.fundingGainAmount;
+          accumulatedChanges.colony.funding += actualDisposal * this.attributes.fundingGainAmount * successChance;
         }
       } else {
         const res = resources[category]?.[resource];
@@ -1007,7 +1161,7 @@ class SpaceshipProject extends Project {
           actualDisposal = before - res.value;
         }
         if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-          resources.colony.funding.increase(actualDisposal * this.attributes.fundingGainAmount);
+          resources.colony.funding.increase(actualDisposal * this.attributes.fundingGainAmount * successChance);
         }
       }
       if (actualDisposal < requestedAmount) {
@@ -1030,7 +1184,16 @@ class SpaceshipProject extends Project {
       const penalty = metalCost * activeShips;
       this.applyMetalCostPenalty(gain, penalty);
     }
-    this.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity);
+    const gainFraction = fraction * successChance;
+    this.applySpaceshipResourceGain(gain, gainFraction, accumulatedChanges, productivity);
+    if (failureChance > 0) {
+      const costDebris = nonEnergyCost * failureChance * 0.5;
+      this.addKesslerDebris(costDebris);
+      this.reportKesslerDebrisRate(costDebris, seconds);
+      const lostShips = this.applyKesslerShipLoss(activeShips * fraction * productivity * failureChance);
+      const shipDebris = lostShips * this.getKesslerShipDebrisPerShip();
+      this.reportKesslerDebrisRate(shipDebris, seconds);
+    }
 
     this.shortfallLastTick = shortfall;
     this.lastActiveTime = 0;
@@ -1044,6 +1207,10 @@ class SpaceshipProject extends Project {
       selectedDisposalResource: this.selectedDisposalResource,
       waitForCapacity: this.waitForCapacity,
       assignmentMultiplier: this.assignmentMultiplier,
+      kesslerShipRollElapsed: this.kesslerShipRollElapsed,
+      kesslerShipRollPending: this.kesslerShipRollPending,
+      kesslerShipCostSnapshot: this.kesslerShipCostSnapshot,
+      kesslerShipLossCarry: this.kesslerShipLossCarry
     };
   }
 
@@ -1058,6 +1225,10 @@ class SpaceshipProject extends Project {
     if (state.assignmentMultiplier !== undefined) {
       this.assignmentMultiplier = state.assignmentMultiplier;
     }
+    this.kesslerShipRollElapsed = state.kesslerShipRollElapsed || 0;
+    this.kesslerShipRollPending = state.kesslerShipRollPending === true;
+    this.kesslerShipCostSnapshot = state.kesslerShipCostSnapshot || null;
+    this.kesslerShipLossCarry = state.kesslerShipLossCarry || 0;
     SpaceshipProject.refreshAutoAssignDisplays();
   }
 }

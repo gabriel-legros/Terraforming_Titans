@@ -1,6 +1,7 @@
 const path = require('path');
 
 const { KesslerHazard } = require(path.join('..', 'src/js/terraforming/hazards/kesslerHazard.js'));
+const EffectableEntity = require(path.join('..', 'src/js/effectable-entity.js'));
 
 describe('Kessler hazard', () => {
   beforeEach(() => {
@@ -130,7 +131,7 @@ describe('Kessler hazard', () => {
     const hazard = new KesslerHazard(null);
     const initialChances = hazard.getProjectFailureChances();
     expect(initialChances.smallFailure).toBeCloseTo(0.5, 6);
-    expect(initialChances.largeFailure).toBeCloseTo(0.05, 6);
+    expect(initialChances.largeFailure).toBeCloseTo(0.95, 6);
 
     global.resources.special.orbitalDebris.value = 0;
     const clearedChances = hazard.getProjectFailureChances();
@@ -166,8 +167,53 @@ describe('Kessler hazard', () => {
     expect(summary.decayTonsPerSecond).toBeGreaterThan(0);
   });
 
-  test('decay uses baseline mass per bin', () => {
+  test('decay uses the larger of baseline and current mass', () => {
+    const setupResources = () => ({
+      special: {
+        orbitalDebris: {
+          value: 100,
+          initialValue: 100,
+          unlocked: true,
+          modifyRate: jest.fn()
+        }
+      }
+    });
+
+    const managerA = { parameters: { kessler: {} } };
+    const hazardA = new KesslerHazard(managerA);
+    managerA.kesslerHazard = hazardA;
+    global.resources = setupResources();
+    hazardA.periapsisDistribution = [{ periapsisMeters: 0, massTons: 100 }];
+    hazardA.periapsisBaseline = [{ periapsisMeters: 0, massTons: 10 }];
+
+    const managerB = { parameters: { kessler: {} } };
+    const hazardB = new KesslerHazard(managerB);
+    managerB.kesslerHazard = hazardB;
+    const resourcesB = setupResources();
+    hazardB.periapsisDistribution = [{ periapsisMeters: 0, massTons: 100 }];
+    hazardB.periapsisBaseline = [{ periapsisMeters: 0, massTons: 100 }];
+
+    const terraforming = { exosphereHeightMeters: 100000 };
+    hazardA.update(1000, terraforming, { orbitalDebrisPerLand: 100 });
+    global.resources = resourcesB;
+    hazardB.update(1000, terraforming, { orbitalDebrisPerLand: 100 });
+
+    expect(hazardA.periapsisDistribution[0].massTons).toBeCloseTo(
+      hazardB.periapsisDistribution[0].massTons,
+      6
+    );
+  });
+
+  test('adds debris from penalized space mirror builds', () => {
+    global.EffectableEntity = EffectableEntity;
+    global.maintenanceFraction = 0.001;
     global.resources = {
+      colony: {
+        metal: { value: 100, cap: 0, decrease: jest.fn(function (value) { this.value -= value; }) },
+        energy: { value: 100, cap: 0, decrease: jest.fn(function (value) { this.value -= value; }) }
+      },
+      surface: { land: { value: 0, reserved: 0 } },
+      underground: {},
       special: {
         orbitalDebris: {
           value: 100,
@@ -178,13 +224,277 @@ describe('Kessler hazard', () => {
       }
     };
 
-    const hazard = new KesslerHazard(null);
-    hazard.periapsisDistribution = [{ periapsisMeters: 0, massTons: 100 }];
-    hazard.periapsisBaseline = [{ periapsisMeters: 0, massTons: 10 }];
+    const manager = { parameters: { kessler: {} } };
+    const hazard = new KesslerHazard(manager);
+    hazard.periapsisDistribution = [
+      { periapsisMeters: 0, massTons: 40 },
+      { periapsisMeters: 100000, massTons: 60 }
+    ];
+    hazard.periapsisBaseline = [
+      { periapsisMeters: 0, massTons: 40 },
+      { periapsisMeters: 100000, massTons: 60 }
+    ];
+    manager.kesslerHazard = hazard;
+    global.hazardManager = manager;
 
-    const terraforming = { exosphereHeightMeters: 100000 };
-    hazard.update(1000, terraforming, { orbitalDebrisPerLand: 100 });
+    const { SpaceMirror } = require(path.join('..', 'src/js/buildings/SpaceMirror.js'));
+    const building = new SpaceMirror({
+      name: 'Space Mirror',
+      category: 'terraforming',
+      description: '',
+      cost: { colony: { metal: 10, energy: 4 } },
+      consumption: {},
+      production: {},
+      storage: {},
+      dayNightActivity: false,
+      canBeToggled: false,
+      maintenanceFactor: 0,
+      requiresMaintenance: false,
+      requiresDeposit: null,
+      requiresWorker: 0,
+      unlocked: true,
+      surfaceArea: 0,
+      requiresProductivity: false,
+      requiresLand: 0,
+      automationBuildingsDropDown: null,
+      autoBuildMaxOption: false,
+      autoBuildFillEnabled: false,
+      kesslerDebrisSize: 'small'
+    }, 'spaceMirror');
 
-    expect(global.resources.special.orbitalDebris.value).toBeCloseTo(99.9996, 6);
+    const cost = building.getEffectiveCost(1);
+    expect(cost.colony.metal).toBe(20);
+    expect(cost.colony.energy).toBe(8);
+
+    const built = building.build(1, true);
+    expect(built).toBe(true);
+    expect(global.resources.colony.metal.value).toBe(80);
+    expect(global.resources.colony.energy.value).toBe(92);
+    expect(global.resources.special.orbitalDebris.value).toBeCloseTo(105, 6);
+    expect(hazard.periapsisDistribution[0].massTons).toBeCloseTo(42, 6);
+    expect(hazard.periapsisDistribution[1].massTons).toBeCloseTo(63, 6);
+  });
+
+  test('fails kessler-affected projects after the first second', () => {
+    global.EffectableEntity = EffectableEntity;
+    const addDebris = jest.fn();
+    global.hazardManager = {
+      kesslerHazard: {
+        getSuccessChance: jest.fn(() => 0.4),
+        addDebris
+      }
+    };
+    global.resources = {
+      colony: {
+        metal: {
+          value: 200,
+          decrease: jest.fn(function (value) { this.value -= value; })
+        },
+        electronics: {
+          value: 100,
+          decrease: jest.fn(function (value) { this.value -= value; })
+        },
+        energy: {
+          value: 1000,
+          decrease: jest.fn(function (value) { this.value -= value; })
+        }
+      }
+    };
+
+    const { Project } = require(path.join('..', 'src/js/projects.js'));
+    const project = new Project({
+      name: 'Ore satellite',
+      category: 'infrastructure',
+      cost: {
+        colony: {
+          metal: 100,
+          electronics: 50,
+          energy: 10
+        }
+      },
+      duration: 5000,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: 10,
+      unlocked: true,
+      kesslerDebrisSize: 'small'
+    }, 'ore_satellite');
+
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.9);
+    expect(project.start(global.resources)).toBe(true);
+    expect(global.resources.colony.metal.value).toBe(100);
+    expect(global.resources.colony.electronics.value).toBe(50);
+    expect(global.resources.colony.energy.value).toBe(990);
+
+    project.update(1000);
+
+    expect(project.isActive).toBe(false);
+    expect(project.isCompleted).toBe(false);
+    expect(project.remainingTime).toBe(project.startingDuration);
+    expect(addDebris).toHaveBeenCalledWith(75);
+    randomSpy.mockRestore();
+  });
+
+  test('rolls kessler chance on completion when duration is under one second', () => {
+    global.EffectableEntity = EffectableEntity;
+    global.hazardManager = {
+      kesslerHazard: {
+        getSuccessChance: jest.fn(() => 1),
+        addDebris: jest.fn()
+      }
+    };
+    global.resources = {
+      colony: {
+        metal: {
+          value: 200,
+          decrease: jest.fn(function (value) { this.value -= value; })
+        }
+      }
+    };
+
+    const { Project } = require(path.join('..', 'src/js/projects.js'));
+    const project = new Project({
+      name: 'Ore satellite',
+      category: 'infrastructure',
+      cost: {
+        colony: {
+          metal: 100
+        }
+      },
+      duration: 500,
+      description: '',
+      repeatable: false,
+      maxRepeatCount: 1,
+      unlocked: true,
+      kesslerDebrisSize: 'small'
+    }, 'ore_satellite_short');
+
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.2);
+    expect(project.start(global.resources)).toBe(true);
+    project.update(1000);
+
+    expect(project.isCompleted).toBe(true);
+    expect(project.kesslerRollElapsed).toBe(500);
+    randomSpy.mockRestore();
+  });
+
+  test('fails discrete spaceship projects and destroys a ship', () => {
+    global.EffectableEntity = EffectableEntity;
+    global.shipEfficiency = 1;
+    const addDebris = jest.fn();
+    global.hazardManager = {
+      kesslerHazard: {
+        getSuccessChance: jest.fn(() => 0.2),
+        addDebris
+      },
+      parameters: {}
+    };
+    global.resources = {
+      colony: {
+        metal: {
+          value: 200,
+          decrease: jest.fn(function (value) { this.value -= value; })
+        },
+        energy: {
+          value: 200,
+          decrease: jest.fn(function (value) { this.value -= value; })
+        }
+      },
+      special: {
+        spaceships: {
+          value: 10
+        }
+      }
+    };
+
+    const { Project } = require(path.join('..', 'src/js/projects.js'));
+    global.Project = Project;
+    const SpaceshipProject = require(path.join('..', 'src/js/projects/SpaceshipProject.js'));
+    const project = new SpaceshipProject({
+      name: 'Metal Asteroid Mining',
+      category: 'resources',
+      cost: {},
+      duration: 10000,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      attributes: {
+        spaceMining: true,
+        costPerShip: { colony: { metal: 100, energy: 10 } },
+        resourceGainPerShip: { colony: { metal: 1000 } }
+      }
+    }, 'oreSpaceMining');
+
+    project.assignSpaceships(1);
+    expect(project.start(global.resources)).toBe(true);
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.9);
+    project.update(1000);
+
+    expect(project.isActive).toBe(false);
+    expect(project.pendingGain).toBe(null);
+    expect(project.assignedSpaceships).toBe(0);
+    expect(addDebris).toHaveBeenCalledWith(3050);
+    randomSpy.mockRestore();
+  });
+
+  test('scales continuous spaceship gains and debris by kessler chance', () => {
+    global.EffectableEntity = EffectableEntity;
+    global.shipEfficiency = 1;
+    const addDebris = jest.fn();
+    global.hazardManager = {
+      kesslerHazard: {
+        getSuccessChance: jest.fn(() => 0.5),
+        addDebris
+      },
+      parameters: {}
+    };
+    global.resources = {
+      colony: {
+        metal: {
+          value: 10000,
+          decrease: jest.fn(function (value) { this.value -= value; }),
+          increase: jest.fn(function (value) { this.value += value; })
+        },
+        energy: {
+          value: 10000,
+          decrease: jest.fn(function (value) { this.value -= value; })
+        }
+      },
+      special: {
+        spaceships: {
+          value: 500
+        }
+      }
+    };
+
+    const { Project } = require(path.join('..', 'src/js/projects.js'));
+    global.Project = Project;
+    const SpaceshipProject = require(path.join('..', 'src/js/projects/SpaceshipProject.js'));
+    const project = new SpaceshipProject({
+      name: 'Metal Asteroid Mining',
+      category: 'resources',
+      cost: {},
+      duration: 100000,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      attributes: {
+        spaceMining: true,
+        costPerShip: { colony: { metal: 100, energy: 10 } },
+        resourceGainPerShip: { colony: { metal: 1000 } }
+      }
+    }, 'oreSpaceMiningContinuous');
+
+    project.assignSpaceships(200);
+    project.isActive = true;
+    project.applyCostAndGain(1000);
+
+    expect(project.assignedSpaceships).toBe(199);
+    expect(global.resources.colony.metal.value).toBe(10800);
+    expect(global.resources.colony.energy.value).toBe(9980);
+    expect(addDebris).toHaveBeenCalledWith(50);
+    expect(addDebris).toHaveBeenCalledWith(3000);
   });
 });

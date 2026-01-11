@@ -269,6 +269,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Garbage hazard UI now mirrors hazardous biomass styling with cleanup summaries, progress bars, and per-stream penalty readouts.
 - Garbage hazard penalties now permanently clear once every stream reaches zero, keeping the hazard cleared even if garbage returns.
 - Split hazard logic and UI into per-hazard modules so adding more hazards stays maintainable.
+- Kessler Skies can now cause eligible space projects to fail after the first second, converting half of their non-energy cost into orbital debris.
+- Kessler Skies now affects spaceship projects, scaling continuous gains by success chance and turning failed shipments plus lost ships into orbital debris.
 - Added Solis Prime deep drilling and antimatter drilling story projects with three 10-minute steps gating chapter progress.
 - Added a Solis Prime Beach Construction story project after chapter 26 that requires heavy silicon and water before the final terraforming objective.
 - Wrapped up the Solis Prime contract with a final chapter that awards a 1.25x fleet capacity bonus.
@@ -328,6 +330,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Kessler Skies now tracks debris periapsis distributions and decays debris below the exobase faster the deeper it falls.
 - Orbital debris is now a special resource and Kessler decay reports as a resource rate.
 - Kessler Skies now renders a 64-bin debris histogram with an exobase marker, gaussian binning, and per-bar red shells that fill up from the bottom as blue when debris clears.
+- Kessler Skies now inflates Space Mirror/Hyperion Lantern/Dyson Receiver build costs by success chance and converts half the extra (non-energy) cost into orbital debris distributed across current bins.
 - Exosphere height calculation now lives in its own utility module and is cached each terraforming tick.
 - Exobase temperature now blends surface and exosphere heating based on atmospheric column mass to keep thin atmospheres from inflating the exobase.
 - Introduced Mass Driver Foundations research to unlock the launcher network and surface disposal integration once the massDriverUnlocked flag is earned.
