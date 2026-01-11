@@ -36,7 +36,7 @@ const kesslerHazardUICache = {
 const KESSLER_EFFECTS = [
   'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected).',
   'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.',
-  'Debris below the exobase decays faster the deeper the periapsis falls.'
+  'Debris decay scales with local atmospheric density at each periapsis bin.'
 ];
 const KESSLER_CHART_BINS = 64;
 const KESSLER_DEBRIS_SOURCES = {
@@ -108,6 +108,16 @@ function formatNumeric(value, decimals = 2) {
 
 function formatPercent(value) {
   return `${formatNumeric(value * 100, 0)}%`;
+}
+
+function formatDensity(value) {
+  let formatted = null;
+  try {
+    formatted = formatNumber(value, false, 2, true);
+  } catch (error) {
+    formatted = null;
+  }
+  return formatted || Number(value || 0).toExponential(1);
 }
 
 function buildKesslerLayout() {
@@ -312,7 +322,14 @@ function updateKesslerChartDetails(resource, isCleared) {
   kesslerHazardUICache.chartDetails.textContent = detailText;
 }
 
-function updateKesslerDebrisChart(resource, baselineDistribution, currentDistribution, exobaseMeters, isCleared) {
+function updateKesslerDebrisChart(
+  resource,
+  baselineDistribution,
+  currentDistribution,
+  dragThresholdMeters,
+  dragThresholdDensity,
+  isCleared
+) {
   const bars = kesslerHazardUICache.chartBarsList;
   const fills = kesslerHazardUICache.chartBarFills;
   const baselineEntries = baselineDistribution.length ? baselineDistribution : currentDistribution;
@@ -332,7 +349,7 @@ function updateKesslerDebrisChart(resource, baselineDistribution, currentDistrib
       maxPeriapsis = Math.max(maxPeriapsis, value);
     }
   } else {
-    maxPeriapsis = Math.max(1, exobaseMeters);
+    maxPeriapsis = Math.max(1, dragThresholdMeters);
   }
   const span = Math.max(1, maxPeriapsis - minPeriapsis);
   for (let i = 0; i < sortedEntries.length; i += 1) {
@@ -357,7 +374,7 @@ function updateKesslerDebrisChart(resource, baselineDistribution, currentDistrib
     }
     currentBins[index] += entry.massTons;
   }
-  const exobaseRatio = Math.min(1, Math.max(0, (exobaseMeters - minPeriapsis) / span));
+  const dragRatio = Math.min(1, Math.max(0, (dragThresholdMeters - minPeriapsis) / span));
 
   let maxMass = 0;
   for (let i = 0; i < bins.length; i += 1) {
@@ -371,20 +388,21 @@ function updateKesslerDebrisChart(resource, baselineDistribution, currentDistrib
     const height = mass > 0 ? Math.max(2, heightRatio * 100) : 0;
     bars[i].style.height = `${height}%`;
     const binCenter = minPeriapsis + (i + 0.5) / bars.length * span;
-    const belowExobase = binCenter <= exobaseMeters;
+    const inDrag = binCenter <= dragThresholdMeters;
     const baselineMass = bins[i];
     const currentMass = currentBins[i];
     const fillRatio = baselineMass ? Math.max(0, Math.min(1, 1 - currentMass / baselineMass)) : 0;
     const fillHeight = height ? fillRatio * 100 : 0;
     fills[i].style.height = `${fillHeight}%`;
-    bars[i].classList.toggle('kessler-debris-chart__bar--below', belowExobase);
-    bars[i].classList.toggle('kessler-debris-chart__bar--above', !belowExobase);
+    bars[i].classList.toggle('kessler-debris-chart__bar--below', inDrag);
+    bars[i].classList.toggle('kessler-debris-chart__bar--above', !inDrag);
   }
 
-  const exobasePercent = formatNumeric(exobaseRatio * 100, 2);
-  kesslerHazardUICache.chartExobase.style.left = `${exobasePercent}%`;
-  kesslerHazardUICache.chartExobaseLabel.style.left = `${exobasePercent}%`;
-  kesslerHazardUICache.chartExobaseLabel.textContent = `Exobase ${formatNumeric(exobaseMeters / 1000, 0)} km`;
+  const dragPercent = formatNumeric(dragRatio * 100, 2);
+  kesslerHazardUICache.chartExobase.style.left = `${dragPercent}%`;
+  kesslerHazardUICache.chartExobaseLabel.style.left = `${dragPercent}%`;
+  kesslerHazardUICache.chartExobaseLabel.textContent =
+    `Drag ${formatDensity(dragThresholdDensity)} kg/m³`;
   updateKesslerChartDetails(resource, isCleared);
 }
 
@@ -407,7 +425,8 @@ function updateKesslerHazardUI(kesslerParameters) {
       debris,
       baseline,
       distribution,
-      decaySummary.exobaseHeightMeters || 0,
+      decaySummary.dragThresholdHeightMeters || 0,
+      decaySummary.dragThresholdDensity || 0,
       isCleared
     );
     const failureChances = manager.kesslerHazard.getProjectFailureChances();
@@ -423,8 +442,9 @@ function updateKesslerHazardUI(kesslerParameters) {
     perLand = perLand || 0;
     const density = initialValue ? perLand * ratio : 0;
     const clearance = formatPercent(1 - ratio);
-    const exobaseKm = (decaySummary.exobaseHeightMeters || 0) / 1000;
-    const belowFraction = decaySummary.belowFraction || 0;
+    const dragKm = (decaySummary.dragThresholdHeightMeters || 0) / 1000;
+    const dragDensity = decaySummary.dragThresholdDensity || 0;
+    const dragFraction = decaySummary.dragFraction || 0;
     const decayRate = decaySummary.decayTonsPerSecond || 0;
 
     kesslerHazardUICache.summaryLeftBody.textContent =
@@ -432,7 +452,7 @@ function updateKesslerHazardUI(kesslerParameters) {
     kesslerHazardUICache.summaryCenterBody.textContent =
       `Small projects: ${formatPercent(failureChances.smallFailure)} failure\nLarge projects: ${formatPercent(failureChances.largeFailure)} failure`;
     kesslerHazardUICache.summaryRightBody.textContent =
-      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nExobase: ${formatNumeric(exobaseKm, 1)} km\nBelow exobase: ${formatPercent(belowFraction)}\nDecay: ${formatNumeric(decayRate, 4)} t/s`;
+      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDrag line: ${formatDensity(dragDensity)} kg/m³ @ ${formatNumeric(dragKm, 1)} km\nIn drag: ${formatPercent(dragFraction)}\nDecay: ${formatNumeric(decayRate, 4)} t/s`;
   } catch (error) {
     // ignore missing UI helpers in tests
   }

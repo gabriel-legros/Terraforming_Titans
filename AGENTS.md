@@ -374,6 +374,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - UHF fleet auto-defense now applies leftover power to border sectors and counts toward map and sector effective defense totals.
 - Import resource assignments now honor an import cap manager that scales from 1B/10B caps to per-sector limits (with rich/poor modifiers) once the galaxy unlocks, and the Import Resources card includes a collapsible cap breakdown.
 - Added Warp Gate Fabrication advanced research to grow per-sector Warp Gate Network levels from terraformed worlds, surfacing a Sector Management progress bar and scaling import caps with network level while showing per-project cap totals beside assignment.
+- Kessler debris decay now scales with atmospheric density per periapsis bin, and the hazard UI tracks the drag threshold by density instead of exobase height.
 
 ## Feature updates
 - Autobuild basis drop-downs now include a Max option for ore mines, geothermal generators, and Dyson Swarm receivers so they chase the highest buildable count without relying on percentage targets.

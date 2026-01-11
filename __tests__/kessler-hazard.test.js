@@ -139,8 +139,11 @@ describe('Kessler hazard', () => {
     expect(clearedChances.largeFailure).toBeCloseTo(0, 6);
   });
 
-  test('decays debris below the exobase faster than above', () => {
+  test('decays debris faster in denser bins', () => {
     global.resources = {
+      atmospheric: {
+        carbonDioxide: { value: 5e15 }
+      },
       special: {
         orbitalDebris: {
           value: 100,
@@ -156,14 +159,29 @@ describe('Kessler hazard', () => {
       { periapsisMeters: 50000, massTons: 40 },
       { periapsisMeters: 200000, massTons: 60 }
     ];
+    hazard.periapsisBaseline = [
+      { periapsisMeters: 50000, massTons: 40 },
+      { periapsisMeters: 200000, massTons: 60 }
+    ];
 
-    const terraforming = { exosphereHeightMeters: 150000 };
+    const terraforming = {
+      resources: global.resources,
+      temperature: { value: 288 },
+      luminosity: { solarFlux: 1361 },
+      celestialParameters: { gravity: 9.81, radius: 6371, distanceFromSun: 1, starLuminosity: 1 }
+    };
+    const beforeLower = hazard.periapsisDistribution[0].massTons;
+    const beforeUpper = hazard.periapsisDistribution[1].massTons;
     hazard.update(1000, terraforming, { orbitalDebrisPerLand: 100 });
 
     expect(global.resources.special.orbitalDebris.value).toBeLessThan(100);
+    const removedLower = beforeLower - hazard.periapsisDistribution[0].massTons;
+    const removedUpper = beforeUpper - hazard.periapsisDistribution[1].massTons;
+    expect(removedLower).toBeGreaterThan(removedUpper);
     const summary = hazard.getDecaySummary();
-    expect(summary.exobaseHeightMeters).toBe(150000);
-    expect(summary.belowFraction).toBeGreaterThan(0);
+    expect(summary.dragThresholdDensity).toBeGreaterThan(0);
+    expect(summary.dragThresholdHeightMeters).toBeGreaterThan(0);
+    expect(summary.dragFraction).toBeGreaterThan(0);
     expect(summary.decayTonsPerSecond).toBeGreaterThan(0);
   });
 

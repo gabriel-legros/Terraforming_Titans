@@ -8,7 +8,37 @@ const PERIAPSIS_MEAN_SCALE = 1.25;
 const PERIAPSIS_MIN_METERS = 40000;
 const PERIAPSIS_STD_RATIO = 0.5;
 const DEBRIS_DECAY_BASE_RATE = 1/(3.6e3);
-const DEBRIS_DECAY_DEPTH_METERS = 100000;
+const DEBRIS_DECAY_DENSITY_REFERENCE = 1e-12;
+const DEBRIS_DECAY_DENSITY_FLOOR = 1e-16;
+const DEBRIS_DECAY_MAX_MULTIPLIER = 6;
+
+let getAtmosphericDensityModel = null;
+try {
+  ({ getAtmosphericDensityModel } = require('../atmospheric-density.js'));
+} catch (error) {
+  try {
+    getAtmosphericDensityModel = window.getAtmosphericDensityModel;
+  } catch (innerError) {
+    try {
+      getAtmosphericDensityModel = global.getAtmosphericDensityModel;
+    } catch (lastError) {
+      getAtmosphericDensityModel = null;
+    }
+  }
+}
+
+const densityFallbackModel = {
+  getDensity: () => 0,
+  getDensities: (altitudes = []) => altitudes.map(() => 0)
+};
+
+function resolveDensityModel(terraforming) {
+  try {
+    return getAtmosphericDensityModel(terraforming);
+  } catch (error) {
+    return densityFallbackModel;
+  }
+}
 
 function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, samples = PERIAPSIS_SAMPLE_COUNT) {
   const count = Math.max(1, Math.floor(samples));
@@ -49,9 +79,12 @@ class KesslerHazard {
     this.periapsisDistribution = [];
     this.periapsisBaseline = [];
     this.decaySummary = {
-      exobaseHeightMeters: 0,
-      belowFraction: 0,
-      decayTonsPerSecond: 0
+      dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,
+      dragThresholdHeightMeters: 0,
+      dragFraction: 0,
+      decayTonsPerSecond: 0,
+      densityMin: 0,
+      densityMax: 0
     };
   }
 
@@ -272,33 +305,55 @@ class KesslerHazard {
   update(deltaSeconds, terraforming, kesslerParameters) {
     const resource = resources.special.orbitalDebris;
     const totalMass = resource.value || 0;
+    const densityModel = resolveDensityModel(terraforming);
     if (!totalMass) {
       this.periapsisDistribution = [];
       this.decaySummary = {
-        exobaseHeightMeters: terraforming.exosphereHeightMeters || 0,
-        belowFraction: 0,
-        decayTonsPerSecond: 0
+        dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,
+        dragThresholdHeightMeters: 0,
+        dragFraction: 0,
+        decayTonsPerSecond: 0,
+        densityMin: 0,
+        densityMax: 0
       };
       return;
     }
 
     this.syncDistributionToResource(terraforming, kesslerParameters, totalMass);
 
-    const exobase = terraforming.exosphereHeightMeters || 0;
-    let belowMass = 0;
+    const altitudes = this.periapsisDistribution.map((entry) => entry.periapsisMeters);
+    const densities = densityModel.getDensities(altitudes);
+    let dragMass = 0;
     let decayedTons = 0;
+    let densityMin = 0;
+    let densityMax = 0;
+    let closestDragMeters = 0;
+    let closestDragDelta = 0;
     this.periapsisDistribution.forEach((entry, index) => {
-      const depth = exobase - entry.periapsisMeters;
-      if (depth > 0) {
-        const depthFactor = 1 + depth / DEBRIS_DECAY_DEPTH_METERS;
-        const decayRate = DEBRIS_DECAY_BASE_RATE * depthFactor;
-        const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
-        const baselineMass = Math.max(this.periapsisBaseline[index]?.massTons ?? 0, entry.massTons);
-        const removed = Math.min(entry.massTons, baselineMass * decayFraction);
-        entry.massTons = Math.max(0, entry.massTons - removed);
-        decayedTons += removed;
-        belowMass += entry.massTons;
+      const density = densities[index] || 0;
+      if (!index || density < densityMin) {
+        densityMin = density;
       }
+      if (density > densityMax) {
+        densityMax = density;
+      }
+      const densityDelta = Math.abs(density - DEBRIS_DECAY_DENSITY_REFERENCE);
+      if (!index || densityDelta < closestDragDelta) {
+        closestDragDelta = densityDelta;
+        closestDragMeters = entry.periapsisMeters;
+      }
+      if (density >= DEBRIS_DECAY_DENSITY_REFERENCE) {
+        dragMass += entry.massTons;
+      }
+
+      const densityRatio = Math.log10(Math.max(density, DEBRIS_DECAY_DENSITY_FLOOR) / DEBRIS_DECAY_DENSITY_REFERENCE);
+      const densityFactor = Math.min(DEBRIS_DECAY_MAX_MULTIPLIER, Math.max(0, densityRatio + 1));
+      const decayRate = DEBRIS_DECAY_BASE_RATE * densityFactor;
+      const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
+      const baselineMass = Math.max(this.periapsisBaseline[index]?.massTons ?? 0, entry.massTons);
+      const removed = Math.min(entry.massTons, baselineMass * decayFraction);
+      entry.massTons = Math.max(0, entry.massTons - removed);
+      decayedTons += removed;
     });
 
     let updatedTotal = 0;
@@ -310,9 +365,12 @@ class KesslerHazard {
     resource.modifyRate(-decayRate, 'Debris decay', 'hazard');
 
     this.decaySummary = {
-      exobaseHeightMeters: exobase,
-      belowFraction: updatedTotal ? (belowMass / updatedTotal) : 0,
-      decayTonsPerSecond: decayRate
+      dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,
+      dragThresholdHeightMeters: closestDragMeters,
+      dragFraction: updatedTotal ? (dragMass / updatedTotal) : 0,
+      decayTonsPerSecond: decayRate,
+      densityMin,
+      densityMax
     };
   }
 }
