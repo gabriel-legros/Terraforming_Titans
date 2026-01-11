@@ -45,12 +45,16 @@ function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters,
   const span = Math.max(1, maxMeters);
   const entries = [];
   let weightTotal = 0;
+  const cutoff = meanMeters - 2 * std;
 
   for (let i = 0; i < count; i += 1) {
     const t = count === 1 ? 0.5 : i / (count - 1);
     const periapsisMeters = t * span;
-    const z = (periapsisMeters - meanMeters) / std;
-    const weight = Math.exp(-0.5 * z * z);
+    let weight = 0;
+    if (periapsisMeters >= cutoff) {
+      const z = (periapsisMeters - meanMeters) / std;
+      weight = Math.exp(-0.5 * z * z);
+    }
     weightTotal += weight;
     entries.push({ periapsisMeters, weight });
   }
