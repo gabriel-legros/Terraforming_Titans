@@ -11,6 +11,7 @@ const kesslerHazardUICache = {
   chartBarFills: [],
   chartExobase: null,
   chartExobaseLabel: null,
+  chartExobaseText: null,
   densityWrapper: null,
   densityLabelRow: null,
   densityLabel: null,
@@ -252,6 +253,23 @@ function buildKesslerLayout() {
     const summaryRightHeader = doc.createElement('div');
     summaryRightHeader.className = 'hazard-summary__header';
     summaryRightHeader.textContent = 'Debris Decay';
+    const summaryRightInfoIcon = doc.createElement('span');
+    summaryRightInfoIcon.className = 'info-tooltip-icon';
+    summaryRightInfoIcon.innerHTML = '&#9432;';
+    try {
+      attachDynamicInfoTooltip(
+        summaryRightInfoIcon,
+        'Drag line marks the altitude where the air density reaches about 1e-12 kg/m^3. '
+          + 'Atmospheric density depends on total gas in the atmosphere (pressure), the gas mix, '
+          + 'temperature, gravity, planet size, and upper-atmosphere heating from solar flux. '
+          + 'To push the drag line higher, add atmosphere to raise pressure and warm the air, '
+          + 'or shift the mix toward lighter gases (hydrogen, nitrogen, oxygen) so density falls off more slowly. '
+          + 'Cooling the air or removing atmosphere lowers the drag line. '
+      );
+    } catch (error) {
+      // ignore missing UI helpers in tests
+    }
+    summaryRightHeader.appendChild(summaryRightInfoIcon);
     const summaryRightBody = doc.createElement('div');
     summaryRightBody.className = 'hazard-summary__body';
     summaryRight.appendChild(summaryRightHeader);
@@ -289,6 +307,9 @@ function buildKesslerLayout() {
 
     const chartExobaseLabel = doc.createElement('div');
     chartExobaseLabel.className = 'kessler-debris-chart__exobase-label';
+    const chartExobaseText = doc.createElement('span');
+    chartExobaseText.className = 'kessler-debris-chart__exobase-text';
+    chartExobaseLabel.appendChild(chartExobaseText);
 
     chartBars.appendChild(chartExobase);
     chart.appendChild(chartBars);
@@ -396,6 +417,7 @@ function buildKesslerLayout() {
     kesslerHazardUICache.chartBarFills = chartBarFills;
     kesslerHazardUICache.chartExobase = chartExobase;
     kesslerHazardUICache.chartExobaseLabel = chartExobaseLabel;
+    kesslerHazardUICache.chartExobaseText = chartExobaseText;
     kesslerHazardUICache.densityWrapper = densityWrapper;
     kesslerHazardUICache.densityLabelRow = densityLabelRow;
     kesslerHazardUICache.densityLabel = densityLabel;
@@ -530,7 +552,7 @@ function updateKesslerDebrisChart(
   const dragPercent = formatNumeric(dragRatio * 100, 2);
   kesslerHazardUICache.chartExobase.style.left = `${dragPercent}%`;
   kesslerHazardUICache.chartExobaseLabel.style.left = `${dragPercent}%`;
-  kesslerHazardUICache.chartExobaseLabel.textContent =
+  kesslerHazardUICache.chartExobaseText.textContent =
     `Drag ${formatDensityWithUnit(dragThresholdDensity)}`;
 
   const binCount = bars.length;
@@ -584,7 +606,6 @@ function updateKesslerHazardUI(kesslerParameters) {
     const clearance = formatPercent(1 - ratio);
     const dragKm = (decaySummary.dragThresholdHeightMeters || 0) / 1000;
     const dragDensity = decaySummary.dragThresholdDensity || 0;
-    const dragFraction = decaySummary.dragFraction || 0;
     const decayRate = decaySummary.decayTonsPerSecond || 0;
 
     kesslerHazardUICache.summaryLeftBody.textContent =
@@ -592,7 +613,7 @@ function updateKesslerHazardUI(kesslerParameters) {
     kesslerHazardUICache.summaryCenterBody.textContent =
       `Small projects: ${formatPercent(failureChances.smallFailure)} failure\nLarge projects: ${formatPercent(failureChances.largeFailure)} failure`;
     kesslerHazardUICache.summaryRightBody.textContent =
-      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDrag line: ${formatDensityWithUnit(dragDensity)} @ ${formatNumeric(dragKm, 1)} km\nIn drag: ${formatPercent(dragFraction)}\nDecay: ${formatNumeric(decayRate, 4)} t/s`;
+      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDrag line: ${formatDensityWithUnit(dragDensity)} @ ${formatNumeric(dragKm, 1)} km\nDecay: ${formatNumeric(decayRate, 4)} t/s`;
   } catch (error) {
     // ignore missing UI helpers in tests
   }
