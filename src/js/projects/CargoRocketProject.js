@@ -634,7 +634,13 @@ class CargoRocketProject extends Project {
 
   updateKesslerWarning() {
     const warning = projectElements[this.name].kesslerWarning;
-    warning.style.display = 'flex';
+    let hazardActive = false;
+    try {
+      hazardActive = hazardManager.getKesslerCargoLimit(this.getEffectiveDuration() / 1000) !== Infinity;
+    } catch (error) {
+      hazardActive = false;
+    }
+    warning.style.display = hazardActive && this.kesslerCapped ? 'flex' : 'none';
   }
 
   getKesslerCargoLimit() {

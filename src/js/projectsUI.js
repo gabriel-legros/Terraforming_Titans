@@ -215,6 +215,7 @@ function createProjectItem(project) {
   if (project.name === 'galactic_market' || project.name === 'cargo_rocket') {
     const warning = document.createElement('div');
     warning.classList.add('project-kessler-warning');
+    warning.style.display = 'none';
     const warningIcon = document.createElement('span');
     warningIcon.classList.add('project-kessler-warning__icon');
     warningIcon.textContent = '⚠';
@@ -833,6 +834,9 @@ function updateProjectUI(projectName) {
     }
   }
 
+  if (project.name === 'galactic_market' || project.name === 'cargo_rocket') {
+    project.updateKesslerWarning();
+  }
 
 
   // Update Spaceships Assigned display if applicable
