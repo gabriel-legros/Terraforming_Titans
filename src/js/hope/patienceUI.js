@@ -68,7 +68,7 @@ const PatienceUI = {
 
         const subtitle = document.createElement('p');
         subtitle.className = 'patience-subtitle';
-        subtitle.textContent = 'Claim daily patience by saving or exporting and gain bonus patience each time a world is terraformed.';
+        subtitle.textContent = 'Claim daily patience by saving or exporting and gain bonus patience each time a world is terraformed.  Use patience to gain equivalent hours of production for various things.';
         header.appendChild(subtitle);
         shell.appendChild(header);
 
