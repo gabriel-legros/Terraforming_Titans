@@ -78,25 +78,41 @@ function joinLines(text) {
 const PROMETHEUS_TOKEN = '$PROMETHEUS$';
 const PROMETHEUS_LABEL = 'Prometheus';
 const PROMETHEUS_CLASS = 'prometheus-text';
+const DIAGNOSTIC_TOKEN = '$DIAGNOSTIC$';
+const DIAGNOSTIC_CLASS = 'diagnostic-text';
 
 function buildJournalSegments(text) {
-  const normalized = joinLines(text).replace(/<span class="prometheus-text">Prometheus([^<]*)<\/span>/g, `${PROMETHEUS_TOKEN}$1`);
+  const normalized = joinLines(text)
+    .replace(/<span class="prometheus-text">Prometheus([^<]*)<\/span>/g, `${PROMETHEUS_TOKEN}$1`)
+    .replace(/<span class="diagnostic-text">([^<]*)<\/span>/g, `${DIAGNOSTIC_TOKEN}$1`);
   const lines = normalized.split('\n');
   const segments = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const tokenIndex = line.indexOf(PROMETHEUS_TOKEN);
-    if (tokenIndex === -1) {
+    let bestIndex = line.length;
+    let bestToken = null;
+    const prometheusIndex = line.indexOf(PROMETHEUS_TOKEN);
+    if (prometheusIndex !== -1 && prometheusIndex < bestIndex) {
+      bestIndex = prometheusIndex;
+      bestToken = { token: PROMETHEUS_TOKEN, className: PROMETHEUS_CLASS, label: PROMETHEUS_LABEL };
+    }
+    const diagnosticIndex = line.indexOf(DIAGNOSTIC_TOKEN);
+    if (diagnosticIndex !== -1 && diagnosticIndex < bestIndex) {
+      bestIndex = diagnosticIndex;
+      bestToken = { token: DIAGNOSTIC_TOKEN, className: DIAGNOSTIC_CLASS, label: '' };
+    }
+    if (bestIndex === line.length) {
       if (line.length) {
         segments.push({ text: line });
       }
     } else {
-      const before = line.slice(0, tokenIndex);
-      const after = line.slice(tokenIndex + PROMETHEUS_TOKEN.length);
+      const before = line.slice(0, bestIndex);
+      const after = line.slice(bestIndex + bestToken.token.length);
       if (before.length) {
         segments.push({ text: before });
       }
-      segments.push({ text: `${PROMETHEUS_LABEL}${after}`, className: PROMETHEUS_CLASS });
+      const tokenText = bestToken.label ? `${bestToken.label}${after}` : after;
+      segments.push({ text: tokenText, className: bestToken.className });
     }
     if (i < lines.length - 1) {
       segments.push({ isBreak: true });

@@ -80,6 +80,10 @@
     color: #ff6a6a;
 }
 
+.dark-mode #journal-entries .diagnostic-text {
+    color: #7dff7d;
+}
+
 .dark-mode .history-window {
     background-color: #2d2d2d;
     color: #ffffff;

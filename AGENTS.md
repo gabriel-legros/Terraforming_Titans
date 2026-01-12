@@ -219,6 +219,7 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
 ## Updates
+- Tartarus chapter 32.1 now unlocks Underworld mining upgrades for Deeper Mining, adding superalloy drills for speed/max depth plus a Supercharged Mining slider that boosts ore output while cubing energy use.
 - Random World Generator adds the Chthonian archetype with the effect label "Suffering Enjoyment."
 - Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
 - Biodome life design points now scale with worker availability while still ignoring other productivity shortages.

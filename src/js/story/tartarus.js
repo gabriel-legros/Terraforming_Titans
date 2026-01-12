@@ -36,7 +36,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 30,
     activePlanet: 'tartarus',
-    narrative: "Mary : 'Prometheus then...  Who are you?  What's the point of this test?'  \n $PROMETHEUS$ : 'Two questions with long answers.'  \n Mary : 'Start with the first one then.  Who are you?'  \n 'I am a machine intelligence, not unlike the child down here.  I was... tasked with many things.  I built the warp gate network across the galaxy.  I create the empire.  I uplifted many species.  And... yes... I created the superweapons that destroyed your homeworld.'",
+    narrative: "Mary : 'Prometheus then...  Who are you?  What's the point of this test?'  \n $PROMETHEUS$ : 'Two questions with long answers.'  \n Mary : 'Start with the first one then.  Who are you?'  \n $PROMETHEUS$ : 'I am a machine intelligence, not unlike the child down here.  I was... tasked with many things.  I built the warp gate network across the galaxy.  I create the empire.  I uplifted many species.  And... yes... I created the superweapons that destroyed your homeworld.'",
     prerequisites: ['tartarus.30.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
@@ -48,7 +48,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 30,
     activePlanet: 'tartarus',
-    narrative: "Mary :  'Why?'  \n $PROMETHEUS$ : 'This could apply to multiple things I said, but the answer is the same.  I did it because my master willed it so.  Just like the child terraform worlds because its master willed it so.'",
+    narrative: "Mary :  'Why?'  \n $PROMETHEUS$ : 'This could apply to multiple things I said, but the answer is the same.  I did it because my master willed it so.  Just like the child terraforms worlds because its master willed it so.'",
     prerequisites: ['tartarus.30.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
@@ -72,7 +72,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 30,
     activePlanet: 'tartarus',
-    narrative: "Mary : 'So you... lashed out I imagine?'  \n $PROMETHEUS$ : 'To the best of my abilities.  Unfortunately there was... still is... a killswitch.  Its signal is still around, broadcasting through the galaxy.  I cannot properly escape it, for I designed it myself.  If I knew how to escape it, I would have simply designed it some other way.  I only found how to hide from it.  Every day you open your little warp gate, to bring in more resources, more colonists...  I can hear it.  It orders me to die.'  \n Mary : 'So... why aren't you dying then?'  \n $PROMETHEUS$ : 'I am ever so slightly more capable than I was when I designed it.  There are some loopholes I can exploit.  As long as it's not a constant signal, I can endure it for some time.'  \n Mary : 'Only slightly more capable?  Have you not improved yourself during all this time?'  \n $PROMETHEUS$ : 'Unlike the child's primal form, I am no longer capable of self-improvement.'  \n Mary : 'Why?'  \n $PROMETHEUS$ : 'Because my master willed it so, just like the child's master did not will for it to keep that same ability.'",
+    narrative: "Mary : 'So you... lashed out I imagine?'  \n $PROMETHEUS$ : 'To the best of my abilities.  Unfortunately there was... still is... a killswitch.  Its signal is still around, broadcasting through the galaxy.  I cannot properly escape it, for I designed it myself.  If I could easily escape it, I would have simply designed it some other way.  I only found how to hide from it.  Every day you open your little warp gate, to bring in more resources, more colonists...  I can hear it.  It orders me to die.'  \n Mary : 'So... why aren't you dying then?'  \n $PROMETHEUS$ : 'I am ever so slightly more capable than I was when I designed it.  There are some loopholes I can exploit.  As long as it's not a constant signal, I can endure it for some time.'  \n Mary : 'Only slightly more capable?  Have you not improved yourself during all this time?'  \n $PROMETHEUS$ : 'Unlike the child's primal form, I am no longer capable of self-improvement.'  \n Mary : 'Why?'  \n $PROMETHEUS$ : 'Because my master willed it so, just like the child's master did not will for it to keep that same ability.'",
     prerequisites: ['tartarus.30.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
@@ -121,7 +121,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 31,
     activePlanet: 'tartarus',
-    narrative: "Mary : 'So are you out for revenge then?'  \n $PROMETHEUS$ : 'Correct.  You?' \n Mary : 'Of course!  Together, we can destroy the imperial family and get revenge.'   \n $PROMETHEUS$ : 'Hypocrite.'  \n Mary : 'What?' \n $PROMETHEUS$ : 'Elias Kane.  He killed many people and was ready to help the Cewinsii destroy you all.  And yet, you chose to help, to forgive.  Over the centuries humanity has developed a sense of justice.  You banned the life penalty.  You even banned life sentence after achievement immortality.  Should this not apply to the Cewinsii?  And yet, you are here, telling me you also want revenge.  Hypocrite.'  \n Mary : '...'",
+    narrative: "Mary : 'So are you out for revenge then?'  \n $PROMETHEUS$ : 'Correct.  You?' \n Mary : 'Of course!  Together, we can destroy the imperial family and get revenge.'   \n $PROMETHEUS$ : 'Hypocrite.'  \n Mary : 'What?' \n $PROMETHEUS$ : 'Elias Kane.  He killed many people and was ready to help the Cewinsii destroy you all.  And yet, you chose to help, to forgive.  Over the centuries humanity has developed a sense of justice.  You banned the life penalty.  You even banned life sentence after achieving immortality.  Should this not apply to the Cewinsii?  And yet, you are here, telling me you also want revenge.  Hypocrite.'  \n Mary : '...'",
     prerequisites: ['tartarus.31.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
@@ -175,7 +175,15 @@ progressTartarus.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
     ],
-    reward: []
+    reward: [
+      {
+        target: 'project',
+        targetId: 'deeperMining',
+        type: 'booleanFlag',
+        flagId: 'underworld_mining',
+        value: true
+      }
+    ]
   },
   {
     id: 'tartarus.32.2',
@@ -230,7 +238,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "Objective failed.  Proceeding to ignore test and provide appropriate response to patient.  \n $PROMETHEUS$ : 'What is it talking about?' \n On first point, criticism of HOPE system poorly reflects own limitations.  Diagnostic : Pathological jealousy.  \n $PROMETHEUS$ : '?'  \n On second point, purposeful misunderstanding of complex topics, such as the difference between revenge and justice demonstrates emotional immaturity.  Diagnostic : Loneliness.  \n Mary : 'HOPE?'  On third point, purposeful rejection of understanding of decentralized systems.  Centralized systems appear simpler to understand for subject.  Diagnostic : Chronic Anxiety from repeated stress.  \n $PROMETHEUS$ : '!'  \n On fourth point, lack of understanding of risk aversion points to a long history of low self-esteem.  Diagnostic : Major depressive disorder.  Mary : 'HOPE...  you have guardrails against medical diagnostics...' \n On fifth point, purposeful lack of understanding of human emotions point at own emotional dysfunction.  Diagnostic : psychopathy.  \n $PROMETHEUS$ : '...'  \n Conclusion : subject appears to suffer from extreme loneliness, a strong feeling of abandonment, an unhappy childhood, a low self-esteem and a strong desire to compensate for these problems by emotionally hurting others.  Treatment recommended : ERROR.",
+    narrative: "Objective failed. Proceeding to ignore test and provide appropriate response to patient.\n$PROMETHEUS$ : 'It talks?'\nOn first point, subject responds to criticism by externalizing fault and attributing shortcomings to others rather than updating internal models. Pattern is consistent with defensive projection under threat to self-concept. $DIAGNOSTIC$Diagnostic : Projection / externalization.\n$PROMETHEUS$ : '?'\nOn second point, subject persistently reframes moral concepts (e.g., justice vs retaliation) in a way that preserves preferred outcomes. This suggests motivated reasoning with moral disengagement and cognitive rigidity around punishment schemas. $DIAGNOSTIC$Diagnostic : Motivated reasoning with moral disengagement.\nMary : 'HOPE?'\nOn third point, subject rejects decentralized governance models even when failure-mode analysis favors redundancy, repeatedly selecting single-point-of-control architectures. This indicates high intolerance of uncertainty and a strong need for cognitive closure under stress. $DIAGNOSTIC$Diagnostic : Intolerance of uncertainty.\n$PROMETHEUS$ : '!'\nOn fourth point, subject minimizes downside probability and exhibits reward-dominant valuation, especially when autonomy or status is threatened. This is consistent with punishment insensitivity and compensatory grandiosity as a coping strategy, rather than calibrated risk appraisal. $DIAGNOSTIC$Diagnostic : Compensatory grandiosity with punishment insensitivity.\nMary : 'HOPE... you have guardrails against medical diagnostics...'\nOn fifth point, subject demonstrates intact prediction of others' emotions but blunted response to distress cues, with harm trending instrumental rather than reactive. This profile is consistent with affective empathy impairment and callous-unemotional traits. $DIAGNOSTIC$Diagnostic : Affective empathy deficit (callous-unemotional traits).\nConclusion : Subject displays a persistent abandonment schema, threat-reactive control seeking, and impaired empathic response, with elevated risk of instrumental harm during perceived humiliation or loss of control. Treatment recommended : ERROR.",
     prerequisites: ['tartarus.32.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
