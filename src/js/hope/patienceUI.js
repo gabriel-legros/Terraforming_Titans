@@ -62,7 +62,7 @@ const PatienceUI = {
 
         const tooltip = document.createElement('span');
         tooltip.className = 'info-tooltip-icon';
-        tooltip.title = 'Save to file or export to clipboard once per day to claim patience, plus gain a bonus when terraforming a world, then spend it for net metal, superalloy and superconductor production time, advanced research, O\'Neill cylinder growth, and Warp Gate progress.';
+        tooltip.title = 'Save to file or export to clipboard once per day to claim patience, plus gain a bonus when terraforming a world, then spend it for equivalent hours of production of net metal, superalloy, superconductor, advanced research, O\'Neill cylinder growth, and Warp Gate progress.';
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
@@ -91,7 +91,7 @@ const PatienceUI = {
 
         const maxLine = document.createElement('div');
         maxLine.className = 'patience-card-meta';
-        maxLine.innerHTML = 'Capacity <span id="patience-max-value">12</span> hours';
+        maxLine.innerHTML = 'Capacity <span id="patience-max-value">12</span> points (hours)';
         currentCard.appendChild(maxLine);
         statsRow.appendChild(currentCard);
 
