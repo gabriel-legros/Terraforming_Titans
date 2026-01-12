@@ -226,12 +226,195 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return activeMassDrivers * this.massDriverShipEquivalency;
   }
 
+  getSpaceshipOnlyCount() {
+    return super.getActiveShipCount();
+  }
+
   getAutomationShipCount() {
     return super.getActiveShipCount();
   }
 
   getActiveShipCount() {
     return super.getActiveShipCount() + this.getMassDriverContribution();
+  }
+
+  getKesslerFailureChance() {
+    const shipCount = this.getSpaceshipOnlyCount();
+    return shipCount > 0 ? super.getKesslerFailureChance() : 0;
+  }
+
+  checkKesslerShipFailure(activeTime, startRemaining) {
+    const shipCount = this.getSpaceshipOnlyCount();
+    if (shipCount <= 0) {
+      this.resetKesslerShipRoll();
+      return false;
+    }
+    return super.checkKesslerShipFailure(activeTime, startRemaining);
+  }
+
+  calculateSpaceshipTotalCost(perSecond = false) {
+    const totalCost = {};
+    const costPerShip = this.calculateSpaceshipCost();
+    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
+    const activeShips = this.getSpaceshipOnlyCount();
+    const multiplier = perSecond
+      ? activeShips * (1000 / duration)
+      : 1;
+    for (const category in costPerShip) {
+      totalCost[category] = {};
+      for (const resource in costPerShip[category]) {
+        totalCost[category][resource] = costPerShip[category][resource] * multiplier;
+      }
+    }
+    return totalCost;
+  }
+
+  calculateSpaceshipTotalResourceGain(perSecond = false) {
+    const totalResourceGain = {};
+    const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
+    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
+    const activeShips = this.getSpaceshipOnlyCount();
+    const multiplier = perSecond
+      ? activeShips * (1000 / duration)
+      : 1;
+    for (const category in gainPerShip) {
+      totalResourceGain[category] = {};
+      for (const resource in gainPerShip[category]) {
+        totalResourceGain[category][resource] = gainPerShip[category][resource] * multiplier;
+      }
+    }
+    return totalResourceGain;
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if (!this.isContinuous() || !this.isActive) return;
+    this.shortfallLastTick = false;
+    let shouldDisable = false;
+    try {
+      shouldDisable = this.shouldAutomationDisable();
+    } catch (error) {
+      shouldDisable = false;
+    }
+    if (shouldDisable) {
+      this.isActive = false;
+      return;
+    }
+    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
+    const fraction = deltaTime / duration;
+    const shipCount = this.getSpaceshipOnlyCount();
+    const massDriverCount = this.getMassDriverContribution();
+    const activeShips = shipCount + massDriverCount;
+    const successChance = shipCount > 0 ? this.getKesslerSuccessChance() : 1;
+    const failureChance = shipCount > 0 ? 1 - successChance : 0;
+    const seconds = deltaTime / 1000;
+
+    let shortfall = false;
+    let nonEnergyCost = 0;
+    const costPerShip = this.calculateSpaceshipCost();
+    for (const category in costPerShip) {
+      for (const resource in costPerShip[category]) {
+        let ignoreCost = false;
+        try {
+          ignoreCost = this.ignoreCostForResource(category, resource);
+        } catch (error) {
+          ignoreCost = false;
+        }
+        if (ignoreCost) continue;
+        const amount = costPerShip[category][resource] * shipCount * fraction * productivity;
+        const available = resources[category][resource].value || 0;
+        if (available < amount) {
+          shortfall = shortfall || amount > 0;
+        }
+        if (accumulatedChanges) {
+          accumulatedChanges[category][resource] -= amount;
+        } else {
+          resources[category][resource].decrease(amount);
+        }
+        if (resource !== 'energy') {
+          nonEnergyCost += amount;
+        }
+      }
+    }
+
+    if (this.attributes.spaceExport && this.selectedDisposalResource) {
+      const capacity = this.getShipCapacity();
+      const requestedShip = capacity * shipCount * fraction * productivity;
+      const requestedDriver = capacity * massDriverCount * fraction * productivity;
+      const requestedTotal = requestedShip + requestedDriver;
+      const { category, resource } = this.selectedDisposalResource;
+      let actualShip = 0;
+      let actualDriver = 0;
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[category]) {
+          accumulatedChanges[category] = {};
+        }
+        const existingChange = accumulatedChanges[category][resource] || 0;
+        const currentValue = resources[category][resource].value || 0;
+        const effectiveAvailable = Math.max(0, currentValue + existingChange);
+        actualDriver = Math.min(requestedDriver, effectiveAvailable);
+        actualShip = Math.min(requestedShip, effectiveAvailable - actualDriver);
+        accumulatedChanges[category][resource] = existingChange - actualDriver - actualShip;
+        const fundingGainAmount = this.attributes.fundingGainAmount || 0;
+        const fundingGain = (actualDriver + actualShip * successChance) * fundingGainAmount;
+        try {
+          accumulatedChanges.colony.funding += fundingGain;
+        } catch (error) {
+          try {
+            accumulatedChanges.colony = { funding: fundingGain };
+          } catch (innerError) {
+            // no-op
+          }
+        }
+      } else {
+        const res = resources[category][resource];
+        const before = res.value;
+        res.decrease(requestedTotal);
+        const actualTotal = before - res.value;
+        actualDriver = Math.min(requestedDriver, actualTotal);
+        actualShip = Math.min(requestedShip, actualTotal - actualDriver);
+        const fundingGainAmount = this.attributes.fundingGainAmount || 0;
+        const fundingGain = (actualDriver + actualShip * successChance) * fundingGainAmount;
+        try {
+          resources.colony.funding.increase(fundingGain);
+        } catch (error) {
+          // no-op
+        }
+      }
+      if (actualShip + actualDriver < requestedTotal) {
+        shortfall = shortfall || requestedTotal > 0;
+      }
+      this.removeZonalResource(category, resource, actualShip + actualDriver);
+    }
+
+    const gainPerShip = this.calculateSpaceshipGainPerShip();
+    const gain = {};
+    for (const category in gainPerShip) {
+      gain[category] = {};
+      for (const resource in gainPerShip[category]) {
+        gain[category][resource] = gainPerShip[category][resource] * shipCount;
+      }
+    }
+    try {
+      const cost = this.calculateSpaceshipCost();
+      const metalCost = cost.colony?.metal || 0;
+      const penalty = metalCost * shipCount;
+      this.applyMetalCostPenalty(gain, penalty);
+    } catch (error) {
+      // no-op
+    }
+    const gainFraction = fraction * successChance;
+    this.applySpaceshipResourceGain(gain, gainFraction, accumulatedChanges, productivity);
+    if (failureChance > 0) {
+      const costDebris = nonEnergyCost * failureChance * 0.5;
+      this.addKesslerDebris(costDebris);
+      this.reportKesslerDebrisRate(costDebris, seconds);
+      const lostShips = this.applyKesslerShipLoss(shipCount * fraction * productivity * failureChance);
+      const shipDebris = lostShips * this.getKesslerShipDebrisPerShip();
+      this.reportKesslerDebrisRate(shipDebris, seconds);
+    }
+
+    this.shortfallLastTick = shortfall;
+    this.lastActiveTime = 0;
   }
 
   updateUI() {

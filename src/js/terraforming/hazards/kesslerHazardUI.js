@@ -42,6 +42,7 @@ const kesslerHazardUICache = {
 const KESSLER_EFFECTS = [
   'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected).',
   'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.',
+  'Space Elevator and Planetary Thrusters are disabled while Kessler debris remains.',
   'Debris decay scales with local atmospheric density at each periapsis bin.'
 ];
 const KESSLER_CHART_BINS = 64;
@@ -52,6 +53,7 @@ const KESSLER_DEBRIS_SOURCES = {
     'Geothermal satellite deployments.'
   ],
   large: [
+    'Space Mirror Facility construction.',
     'Dyson Receiver construction.',
     'Hyperion Lantern construction.',
     'Spaceship shipments (imports, exports, and space storage transfers).'
@@ -243,6 +245,18 @@ function buildKesslerLayout() {
     const summaryCenterHeader = doc.createElement('div');
     summaryCenterHeader.className = 'hazard-summary__header';
     summaryCenterHeader.textContent = 'Project Failure';
+    const summaryCenterInfoIcon = doc.createElement('span');
+    summaryCenterInfoIcon.className = 'info-tooltip-icon';
+    summaryCenterInfoIcon.innerHTML = '&#9432;';
+    try {
+      attachDynamicInfoTooltip(
+        summaryCenterInfoIcon,
+        'Projects roll failure after 1s/on completion if they have a duration, or continuously for continuous projects.  Buildings have increased cost and the difference is converted to debris on construction.'
+      );
+    } catch (error) {
+      // ignore missing UI helpers in tests
+    }
+    summaryCenterHeader.appendChild(summaryCenterInfoIcon);
     const summaryCenterBody = doc.createElement('div');
     summaryCenterBody.className = 'hazard-summary__body';
     summaryCenter.appendChild(summaryCenterHeader);
@@ -398,8 +412,8 @@ function buildKesslerLayout() {
       return { column, list };
     };
 
-    const smallColumn = buildDebrisColumn('Small Debris', KESSLER_DEBRIS_SOURCES.small);
-    const largeColumn = buildDebrisColumn('Large Debris', KESSLER_DEBRIS_SOURCES.large);
+    const smallColumn = buildDebrisColumn('Small Chance', KESSLER_DEBRIS_SOURCES.small);
+    const largeColumn = buildDebrisColumn('Large Chance', KESSLER_DEBRIS_SOURCES.large);
     debrisSourcesGrid.appendChild(smallColumn.column);
     debrisSourcesGrid.appendChild(largeColumn.column);
 

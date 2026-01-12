@@ -99,6 +99,34 @@ function getContentById(id) {
   return projectsUICache.contentById[id];
 }
 
+function updateKesslerFailureWarning(project, elements) {
+  try {
+    const warning = elements.kesslerFailureWarning;
+    const warningText = elements.kesslerFailureWarningText;
+    let hazardActive = false;
+    try {
+      hazardActive = hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+    } catch (error) {
+      hazardActive = false;
+    }
+    const isCollapsed = elements.projectItem?.classList?.contains('collapsed');
+    if (!hazardActive || isCollapsed) {
+      warning.style.display = 'none';
+      return;
+    }
+    const failureChance = project.getKesslerFailureChance();
+    const percent = Math.max(0, Math.min(1, failureChance)) * 100;
+    if (percent <= 0) {
+      warning.style.display = 'none';
+      return;
+    }
+    warningText.textContent = `Kessler Skies: ${formatNumber(percent, false, 2)}% chance of project failure.`;
+    warning.style.display = 'flex';
+  } catch (error) {
+    // no-op
+  }
+}
+
 function invalidateAutomationSettingsCache(projectName) {
   const els = projectElements[projectName];
   if (els && els.automationSettingsContainer) {
@@ -229,6 +257,26 @@ function createProjectItem(project) {
     projectElements[project.name] = {
       ...projectElements[project.name],
       kesslerWarning: warning
+    };
+  }
+
+  if (project.kesslerDebrisSize) {
+    const warning = document.createElement('div');
+    warning.classList.add('project-kessler-warning');
+    warning.style.display = 'none';
+    const warningIcon = document.createElement('span');
+    warningIcon.classList.add('project-kessler-warning__icon');
+    warningIcon.textContent = '⚠';
+    const warningText = document.createElement('span');
+    const warningIconRight = document.createElement('span');
+    warningIconRight.classList.add('project-kessler-warning__icon');
+    warningIconRight.textContent = '⚠';
+    warning.append(warningIcon, warningText, warningIconRight);
+    projectCard.appendChild(warning);
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      kesslerFailureWarning: warning,
+      kesslerFailureWarningText: warningText
     };
   }
 
@@ -839,6 +887,8 @@ function updateProjectUI(projectName) {
     project.updateKesslerWarning();
   }
 
+  updateKesslerFailureWarning(project, elements);
+
 
   // Update Spaceships Assigned display if applicable
   if (elements?.assignedSpaceshipsDisplay && project.assignedSpaceships != null) {
@@ -951,7 +1001,15 @@ function updateProjectUI(projectName) {
 
       // Update the duration in the progress bar display
       const isContinuousProject = project.isContinuous();
-      if (isContinuousProject) {
+      if (!project.isActive && !project.isCompleted && project.isKesslerDisabled()) {
+        const statusText = 'Disabled by Kessler';
+        if (isImportProject && importUI) {
+          importUI.setProgressLabel(elements, project, statusText);
+        } else {
+          elements.progressButton.textContent = statusText;
+        }
+        elements.progressButton.style.background = '#f44336';
+      } else if (isContinuousProject) {
         const showProductivity = project.attributes?.continuousAsBuilding;
         const productivity = project.continuousProductivity ?? 1;
         const productivityLabel = showProductivity

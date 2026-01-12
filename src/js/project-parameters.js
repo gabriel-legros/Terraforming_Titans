@@ -84,6 +84,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceExport : true,
       continuousAsBuilding: true,
@@ -159,6 +160,7 @@ const projectParameters = {
     description: "Built at a Lagrangian point, this facility will allow the construction of space mirrors from the buildings terraforming tab.",
     repeatable: false,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceMirrorFacility: true,
       completionEffect: [
@@ -225,6 +227,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceMining : true,
       importCapResource: 'metal',
@@ -243,6 +246,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceMining : true,
       importCapResource: 'silicon',
@@ -261,6 +265,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceMining : true,
       importCapResource: 'carbon',
@@ -281,6 +286,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceMining : true,
       importCapResource: 'water',
@@ -301,6 +307,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceMining : true,
       importCapResource: 'nitrogen',
@@ -320,6 +327,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceMining: true,
       importCapResource: 'hydrogen',
@@ -345,6 +353,7 @@ const projectParameters = {
     repeatable: false,
     unlocked : false,
     attributes : {
+      disableWhenKessler: true,
       completionEffect: [
         {
           target : 'building',
@@ -478,7 +487,9 @@ const projectParameters = {
     description: 'Install planetary fusion thrusters for subtle maneuvering.',
     repeatable: false,
     unlocked: false,
-    attributes: { }
+    attributes: {
+      disableWhenKessler: true
+    }
   },
   dysonSwarmReceiver : {
     type: 'DysonSwarmReceiverProject',
@@ -544,6 +555,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceStorage: true,
       costPerShip: { colony: { metal : 100_000, energy: 250_000_000 } },
@@ -659,6 +671,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
       spaceExport : true,
       continuousAsBuilding: true,

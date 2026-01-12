@@ -265,14 +265,11 @@ class KesslerHazard {
       totalMass += entry.massTons;
     });
 
-    let weights = distribution;
-    let weightTotal = totalMass;
-    if (!weightTotal) {
-      weights = this.periapsisBaseline;
-      weights.forEach((entry) => {
-        weightTotal += entry.massTons;
-      });
-    }
+    let weights = this.periapsisBaseline;
+    let weightTotal = 0;
+    weights.forEach((entry) => {
+      weightTotal += entry.massTons;
+    });
 
     if (!weightTotal) {
       const perBin = addedTons / distribution.length;

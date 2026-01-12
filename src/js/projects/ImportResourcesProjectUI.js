@@ -41,6 +41,8 @@ class ImportResourcesProjectUI {
     this.collapseArrow = null;
     this.upButton = null;
     this.downButton = null;
+    this.kesslerWarning = null;
+    this.kesslerWarningText = null;
   }
 
   reset() {
@@ -62,6 +64,8 @@ class ImportResourcesProjectUI {
     this.collapseArrow = null;
     this.upButton = null;
     this.downButton = null;
+    this.kesslerWarning = null;
+    this.kesslerWarningText = null;
   }
 
   isImportProject(name) {
@@ -142,6 +146,19 @@ class ImportResourcesProjectUI {
     description.classList.add('project-description');
     description.textContent = 'Coordinate orbital shipments for various space resources.  The first 100 spaceship assignments reduce the duration, every assignment afterward provides a multiplier.';
     cardBody.appendChild(description);
+
+    const kesslerWarning = document.createElement('div');
+    kesslerWarning.classList.add('project-kessler-warning');
+    kesslerWarning.style.display = 'none';
+    const warningIcon = document.createElement('span');
+    warningIcon.classList.add('project-kessler-warning__icon');
+    warningIcon.textContent = '⚠';
+    const warningText = document.createElement('span');
+    const warningIconRight = document.createElement('span');
+    warningIconRight.classList.add('project-kessler-warning__icon');
+    warningIconRight.textContent = '⚠';
+    kesslerWarning.append(warningIcon, warningText, warningIconRight);
+    cardBody.appendChild(kesslerWarning);
 
     const costDisplay = document.createElement('div');
     costDisplay.classList.add('import-cost-per-shipment');
@@ -265,6 +282,8 @@ class ImportResourcesProjectUI {
     this.collapseArrow = arrow;
     this.upButton = upButton;
     this.downButton = downButton;
+    this.kesslerWarning = kesslerWarning;
+    this.kesslerWarningText = warningText;
 
     const projectElements = this.getProjectElements();
     const headerElements = projectElements[this.headerProjectName] || {};
@@ -273,6 +292,8 @@ class ImportResourcesProjectUI {
     headerElements.collapseArrow = arrow;
     headerElements.upButton = upButton;
     headerElements.downButton = downButton;
+    headerElements.kesslerFailureWarning = kesslerWarning;
+    headerElements.kesslerFailureWarningText = warningText;
     projectElements[this.headerProjectName] = headerElements;
 
     this.updateSharedDisplays(project);
@@ -346,6 +367,7 @@ class ImportResourcesProjectUI {
     }
 
     this.updateCapSummary(warpGateNetworkManager.getCapSummaryData());
+    this.updateKesslerFailureWarning(project);
 
     if (this.availableDisplay) {
       const availableShips = formatNumber(Math.floor(resources?.special?.spaceships?.value || 0), true);
@@ -354,6 +376,32 @@ class ImportResourcesProjectUI {
 
     if (this.costPerShipmentDisplay && project && typeof project.calculateSpaceshipCost === 'function') {
       this.costPerShipmentDisplay.textContent = this.formatCostPerShipment(project);
+    }
+  }
+
+  updateKesslerFailureWarning(project) {
+    try {
+      let hazardActive = false;
+      try {
+        hazardActive = hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+      } catch (error) {
+        hazardActive = false;
+      }
+      const isCollapsed = this.card?.classList?.contains('collapsed');
+      if (!hazardActive || isCollapsed) {
+        this.kesslerWarning.style.display = 'none';
+        return;
+      }
+      const failureChance = project.getKesslerFailureChance();
+      const percent = Math.max(0, Math.min(1, failureChance)) * 100;
+      if (percent <= 0) {
+        this.kesslerWarning.style.display = 'none';
+        return;
+      }
+      this.kesslerWarningText.textContent = `Kessler Skies: ${formatNumber(percent, false, 2)}% chance of project failure.`;
+      this.kesslerWarning.style.display = 'flex';
+    } catch (error) {
+      // no-op
     }
   }
 

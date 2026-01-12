@@ -505,7 +505,9 @@ class GalacticMarketProject extends Project {
     } catch (error) {
       hazardActive = false;
     }
-    warning.style.display = hazardActive && this.kesslerCapped ? 'flex' : 'none';
+    const elements = projectElements[this.name];
+    const isCollapsed = elements?.projectItem?.classList?.contains('collapsed');
+    warning.style.display = hazardActive && !isCollapsed ? 'flex' : 'none';
   }
 
   applySelectionsToInputs() {

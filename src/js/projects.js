@@ -69,6 +69,10 @@ class Project extends EffectableEntity {
     }
   }
 
+  getKesslerFailureChance() {
+    return 1 - this.getKesslerSuccessChance();
+  }
+
   _getKesslerFailureCost() {
     if (this.kesslerStartCost) {
       return this.kesslerStartCost;
@@ -125,6 +129,13 @@ class Project extends EffectableEntity {
     }
     this.kesslerStartCost = null;
     return false;
+  }
+
+  isKesslerDisabled() {
+    if (!this.attributes.disableWhenKessler) {
+      return false;
+    }
+    return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
   }
 
   // Calculates the effective cost for building, factoring in all active cost multipliers
@@ -271,6 +282,10 @@ class Project extends EffectableEntity {
 
     if (this.isPaused) {
       return this.hasSustainResources();
+    }
+
+    if (this.isKesslerDisabled()) {
+      return false;
     }
 
     if (

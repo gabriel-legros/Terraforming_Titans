@@ -46,6 +46,10 @@ class SpaceshipProject extends Project {
     return 1 - this.getKesslerSuccessChance();
   }
 
+  _checkKesslerFailure() {
+    return false;
+  }
+
   getKesslerShipDebrisPerShip() {
     const override = hazardManager?.parameters?.kessler?.shipDebrisPerShip;
     return override > 0 ? override : KESSLER_SHIP_DEBRIS_TONS;
@@ -869,6 +873,10 @@ class SpaceshipProject extends Project {
   start(resources) {
     const started = super.start(resources);
     if (!started) return false;
+
+    this.kesslerRollPending = false;
+    this.kesslerRollElapsed = 0;
+    this.kesslerStartCost = null;
 
     if (this.isContinuous()) {
       this.startingDuration = Infinity;

@@ -223,6 +223,9 @@ The planet visualiser has been modularised into files covering core setup, light
 - Random World Generator adds the Chthonian archetype with the effect label "Suffering Enjoyment."
 - Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
 - Biodome life design points now scale with worker availability while still ignoring other productivity shortages.
+- Space Elevator and Planetary Thrusters are disabled while Kessler debris remains, showing "Disabled by Kessler" on their progress bars until the debris clears.
+- Spaceship projects and satellites now show Kessler failure risk warnings with live failure percentages based on their project size.
+- Resource Disposal now isolates Kessler risk to spaceship capacity only, letting mass drivers contribute without failure or debris.
 - Added an Engineered Nitrogen Fixation research that doubles life growth at 10 kPa of nitrogen pressure.
 - Gabbag chapter 29.8 now unlocks ammonia visibility and new chemical reactor recipes for Haber-Bosch and ammonia combustion.
 - Added an ammonia resource with liquid/ice/gas cycles and updated terraforming physics to include its phase changes.
