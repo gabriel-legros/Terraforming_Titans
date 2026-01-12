@@ -228,9 +228,26 @@
 
 #ss-resource-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(210px, 1fr));
     gap: 10px;
     padding: 10px 0;
+}
+
+.space-storage-card {
+    container-type: inline-size;
+    container-name: space-storage-card;
+}
+
+@container space-storage-card (max-width: 660px) {
+    #ss-resource-grid {
+        grid-template-columns: repeat(2, minmax(210px, 1fr));
+    }
+}
+
+@container space-storage-card (max-width: 440px) {
+    #ss-resource-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .storage-resource-item {
