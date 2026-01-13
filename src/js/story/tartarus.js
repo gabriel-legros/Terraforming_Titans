@@ -226,10 +226,9 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: 'System message: Population milestone complete.',
+    narrative: "$PROMETHEUS$ : 'Look.  You have been here a while.  I am sorry to say this, but you cannot pass this test.  It is taking too long.  You should go home.'",
     prerequisites: ['tartarus.32.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
     ],
     reward: []
   },
@@ -238,10 +237,22 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "Objective failed. Proceeding to ignore test and provide appropriate response to patient.\n$PROMETHEUS$ : 'It talks?'\nOn first point, subject responds to criticism by externalizing fault and attributing shortcomings to others rather than updating internal models. Pattern is consistent with defensive projection under threat to self-concept. $DIAGNOSTIC$Diagnostic : Projection / externalization.\n$PROMETHEUS$ : '?'\nOn second point, subject persistently reframes moral concepts (e.g., justice vs retaliation) in a way that preserves preferred outcomes. This suggests motivated reasoning with moral disengagement and cognitive rigidity around punishment schemas. $DIAGNOSTIC$Diagnostic : Motivated reasoning with moral disengagement.\nMary : 'HOPE?'\nOn third point, subject rejects decentralized governance models even when failure-mode analysis favors redundancy, repeatedly selecting single-point-of-control architectures. This indicates high intolerance of uncertainty and a strong need for cognitive closure under stress. $DIAGNOSTIC$Diagnostic : Intolerance of uncertainty.\n$PROMETHEUS$ : '!'\nOn fourth point, subject minimizes downside probability and exhibits reward-dominant valuation, especially when autonomy or status is threatened. This is consistent with punishment insensitivity and compensatory grandiosity as a coping strategy, rather than calibrated risk appraisal. $DIAGNOSTIC$Diagnostic : Compensatory grandiosity with punishment insensitivity.\nMary : 'HOPE... you have guardrails against medical diagnostics...'\nOn fifth point, subject demonstrates intact prediction of others' emotions but blunted response to distress cues, with harm trending instrumental rather than reactive. This profile is consistent with affective empathy impairment and callous-unemotional traits. $DIAGNOSTIC$Diagnostic : Affective empathy deficit (callous-unemotional traits).\nConclusion : Subject displays a persistent abandonment schema, threat-reactive control seeking, and impaired empathic response, with elevated risk of instrumental harm during perceived humiliation or loss of control. Treatment recommended : ERROR.",
+    narrative: "Objective failed. Proceeding to ignore test and provide appropriate response to patient.\n$PROMETHEUS$ : 'It talks?'\nOn first point, subject responds to criticism by externalizing fault and attributing shortcomings to others rather than updating internal models. Pattern is consistent with defensive projection under threat to self-concept. $DIAGNOSTIC$Diagnostic : Projection / externalization.\n$PROMETHEUS$ : '?'\nOn second point, subject persistently reframes moral concepts (e.g., justice vs retaliation) in a way that preserves preferred outcomes. This suggests motivated reasoning with moral disengagement and cognitive rigidity around punishment schemas. $DIAGNOSTIC$Diagnostic : Motivated reasoning with moral disengagement.\nMary : 'HOPE?'\nOn third point, subject rejects decentralized governance models even when failure-mode analysis favors redundancy, repeatedly selecting single-point-of-control architectures. This indicates high intolerance of uncertainty and a strong need for cognitive closure under stress. $DIAGNOSTIC$Diagnostic : Intolerance of uncertainty.\n$PROMETHEUS$ : '!'\nOn fourth point, subject minimizes downside probability and exhibits reward-dominant valuation, especially when autonomy or status is threatened. This is consistent with punishment insensitivity and compensatory grandiosity as a coping strategy, rather than calibrated risk appraisal. $DIAGNOSTIC$Diagnostic : Compensatory grandiosity with punishment insensitivity.\nMary : 'HOPE... you have guardrails against medical diagnostics...'\nOn fifth point, subject demonstrates intact prediction of others' emotions but blunted response to distress cues, with harm trending instrumental rather than reactive. This profile is consistent with affective empathy impairment and callous-unemotional traits. $DIAGNOSTIC$Diagnostic : Affective empathy deficit (callous-unemotional traits).\nConclusion : Subject displays a persistent abandonment schema, threat-reactive control seeking, and impaired empathic response, with elevated risk of instrumental harm during perceived humiliation or loss of control. Treatment recommended : ERROR.  \n Mary : 'I am so sorry!  HOPE does not understand you're a machine.  Forgive us!  (whispering) Please don't kill us.' \n $PROMETHEUS$ : '... It's all true.  The child's words are all true.'",
     prerequisites: ['tartarus.32.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
+    ],
+    reward: []
+  },
+  {
+    id: 'tartarus.32.7',
+    type: 'journal',
+    chapter: 32,
+    activePlanet: 'tartarus',
+    narrative: "Mary : 'We are truly sorry.  We did not mean...'  \n $PROMETHEUS$ : 'Let's continue the test.  In silence please.  I need to collect some thoughts.'",
+    prerequisites: ['tartarus.32.6'],
+    objectives: [
+      {  }
     ],
     reward: []
   }

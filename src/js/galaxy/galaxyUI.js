@@ -2090,7 +2090,7 @@ function updateFleetCapacityTooltip(manager, cache) {
 
     const summary = doc.createElement('div');
     summary.className = 'resource-tooltip-row';
-    summary.textContent = 'Capacity = 100 per world after multipliers.';
+    summary.textContent = 'Capacity = 100 per world.';
     tooltip.appendChild(summary);
 
     const addRow = (label, value) => {

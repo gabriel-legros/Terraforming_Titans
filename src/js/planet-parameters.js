@@ -118,26 +118,6 @@ const defaultPlanetParameters = {
 const marsOverrides = {
   name: 'Mars',
    "resources": {
-    "surface": {
-      "ice": {
-        "initialValue": 8200007958223221
-      },
-      "liquidWater": {
-        "initialValue": 0
-      },
-      "dryIce": {
-        "initialValue": 1411197828523.9368
-      },
-      "liquidCO2": {
-        "initialValue": 0
-      },
-      "liquidMethane": {
-        "initialValue": 0
-      },
-      "hydrocarbonIce": {
-        "initialValue": 0
-      }
-    },
     "atmospheric": {
       "carbonDioxide": {
         "initialValue": 22587612734210.836
@@ -1292,11 +1272,11 @@ const tartarusOverrides = {
     habitableZone: { inner: 0.6, outer: 0.95 }
   },
   celestialParameters: {
-    distanceFromSun: 0.78,
+    distanceFromSun: 0.98,
     gravity: 5.04,
     radius: 4120,
     mass: 1.24e24,
-    albedo: 0.28,
+    albedo: 0.21,
     rotationPeriod: 29.4,
     spinPeriod: 29.4,
     starLuminosity: 0.42,
@@ -1309,6 +1289,89 @@ const tartarusOverrides = {
   },
   visualization: {
     baseColor: '#3b3a4d',
+  },
+   "resources": {
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 22739279634757.152
+      },
+      "atmosphericWater": {
+        "initialValue": 361528.3542994811
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 32500000000
+      },
+      "inertGas": {
+        "initialValue": 1075000000000
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
+    }
+  },
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 0,
+      "ice": 190603.70705030393,
+      "buriedIce": 1100000000000000,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0
+    },
+    "temperate": {
+      "liquidWater": 0,
+      "ice": 308065.64419378224,
+      "buriedIce": 1900000000000000,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0
+    },
+    "polar": {
+      "liquidWater": 0,
+      "ice": 4500007957547586.5,
+      "buriedIce": 700000000000000,
+      "dryIce": 1259530927951.4854,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 231.1880816953938,
+      "day": 252.0553480564732,
+      "night": 210.3208153343144
+    },
+    "temperate": {
+      "value": 214.7483261828765,
+      "day": 232.10107490699153,
+      "night": 197.39557745876147
+    },
+    "polar": {
+      "value": 137.20164281584175,
+      "day": 144.48413937413181,
+      "night": 129.9191462575517
+    }
   }
 };
 
