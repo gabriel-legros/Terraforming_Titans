@@ -88,10 +88,10 @@ function updateShipAutomationUI() {
   const activePreset = automation.getActivePreset();
   if (activePreset) {
     presetNameInput.value = activePreset.name || '';
-    enablePresetCheckbox.checked = !!activePreset.enabled;
+    setAutomationToggleState(enablePresetCheckbox, !!activePreset.enabled);
   } else {
     presetNameInput.value = '';
-    enablePresetCheckbox.checked = false;
+    setAutomationToggleState(enablePresetCheckbox, false);
   }
 
   stepsContainer.textContent = '';
@@ -150,12 +150,12 @@ function attachAutomationHandlers() {
     });
   }
   if (enablePresetCheckbox) {
-    enablePresetCheckbox.addEventListener('change', (event) => {
+    enablePresetCheckbox.addEventListener('click', () => {
       if (!automationManager || !automationManager.spaceshipAutomation) return;
       const automation = automationManager.spaceshipAutomation;
       const preset = automation.getActivePreset();
       if (!preset) return;
-      automation.togglePresetEnabled(preset.id, event.target.checked);
+      automation.togglePresetEnabled(preset.id, !preset.enabled);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });

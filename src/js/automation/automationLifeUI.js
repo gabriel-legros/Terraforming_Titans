@@ -20,15 +20,11 @@ function buildAutomationLifeUI() {
   purchaseSection.classList.add('life-automation-section');
   const purchaseHeader = document.createElement('div');
   purchaseHeader.classList.add('life-automation-section-title');
-  const purchaseEnableLabel = document.createElement('label');
-  purchaseEnableLabel.classList.add('life-automation-enable');
-  const purchaseEnable = document.createElement('input');
-  purchaseEnable.type = 'checkbox';
-  purchaseEnable.classList.add('life-automation-purchase-enable');
-  purchaseEnableLabel.append(purchaseEnable);
+  const purchaseEnable = createAutomationToggle('Auto purchase on', 'Auto purchase off');
+  purchaseEnable.classList.add('life-automation-purchase-toggle');
   const purchaseTitle = document.createElement('span');
   purchaseTitle.classList.add('life-automation-section-title-text');
-  purchaseTitle.textContent = 'Auto Purchase';
+  purchaseTitle.textContent = '';
   const purchaseInfo = document.createElement('span');
   purchaseInfo.classList.add('info-tooltip-icon');
   purchaseInfo.innerHTML = '&#9432;';
@@ -37,7 +33,7 @@ function buildAutomationLifeUI() {
     purchaseInfo,
     'When enabled, auto purchase checks each category every tick.\nSpending uses the % threshold of current resources, with an optional max cost cap.'
   );
-  purchaseHeader.append(purchaseEnableLabel, purchaseTitle);
+  purchaseHeader.append(purchaseEnable, purchaseTitle);
   purchaseSection.appendChild(purchaseHeader);
   const purchaseList = document.createElement('div');
   purchaseList.classList.add('life-automation-purchase-list');
@@ -48,20 +44,13 @@ function buildAutomationLifeUI() {
   designSection.classList.add('life-automation-section');
   const designHeader = document.createElement('div');
   designHeader.classList.add('life-automation-section-title');
-  const designEnableLabel = document.createElement('label');
-  designEnableLabel.classList.add('life-automation-enable');
-  const designEnable = document.createElement('input');
-  designEnable.type = 'checkbox';
-  designEnable.classList.add('life-automation-design-enable');
-  designEnableLabel.append(designEnable);
-  const designTitle = document.createElement('span');
-  designTitle.classList.add('life-automation-section-title-text');
-  designTitle.textContent = 'Auto Design';
+  const designEnable = createAutomationToggle('Auto design on', 'Auto design off');
+  designEnable.classList.add('life-automation-design-toggle');
   const deployNowButton = document.createElement('button');
   deployNowButton.classList.add('life-automation-deploy-now');
   deployNowButton.textContent = 'Deploy Now';
   deployNowButton.title = 'Deploy the current auto design steps immediately.';
-  designHeader.append(designEnableLabel, designTitle, deployNowButton);
+  designHeader.append(designEnable, deployNowButton);
   designSection.appendChild(designHeader);
 
   const deployRow = document.createElement('label');
@@ -168,9 +157,9 @@ function updateLifeAutomationUI() {
 
   const activePreset = automation.getActivePreset();
   lifePresetNameInput.value = activePreset.name || '';
-  lifeEnablePresetCheckbox.checked = !!activePreset.enabled;
-  lifePurchaseEnableCheckbox.checked = activePreset.purchaseEnabled !== false;
-  lifeDesignEnableCheckbox.checked = activePreset.designEnabled !== false;
+  setAutomationToggleState(lifeEnablePresetCheckbox, !!activePreset.enabled);
+  setAutomationToggleState(lifePurchaseEnableCheckbox, activePreset.purchaseEnabled !== false);
+  setAutomationToggleState(lifeDesignEnableCheckbox, activePreset.designEnabled !== false);
   lifeDeployInput.value = activePreset.deployImprovement;
   lifeSeedRow.style.display = activePreset.designSteps.length === 0 ? '' : 'none';
   const deployCandidate = lifeDesigner.enabled && activePreset.designSteps.length > 0
@@ -229,17 +218,17 @@ function attachLifeAutomationHandlers() {
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
-  lifeEnablePresetCheckbox.addEventListener('change', (event) => {
+  lifeEnablePresetCheckbox.addEventListener('click', () => {
     const automation = automationManager.lifeAutomation;
     const preset = automation.getActivePreset();
-    automation.togglePresetEnabled(preset.id, event.target.checked);
+    automation.togglePresetEnabled(preset.id, !preset.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
-  lifePurchaseEnableCheckbox.addEventListener('change', (event) => {
+  lifePurchaseEnableCheckbox.addEventListener('click', () => {
     const automation = automationManager.lifeAutomation;
     const preset = automation.getActivePreset();
-    automation.setPurchaseAutomationEnabled(preset.id, event.target.checked);
+    automation.setPurchaseAutomationEnabled(preset.id, !preset.purchaseEnabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -264,10 +253,10 @@ function attachLifeAutomationHandlers() {
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
-  lifeDesignEnableCheckbox.addEventListener('change', (event) => {
+  lifeDesignEnableCheckbox.addEventListener('click', () => {
     const automation = automationManager.lifeAutomation;
     const preset = automation.getActivePreset();
-    automation.setDesignAutomationEnabled(preset.id, event.target.checked);
+    automation.setDesignAutomationEnabled(preset.id, !preset.designEnabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -388,6 +377,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
   if (attributeOptions.length === 0) {
     return;
   }
+  const stepSpends = automation.getDesignStepSpends(preset);
   for (let index = 0; index < preset.designSteps.length; index += 1) {
     const step = preset.designSteps[index];
     const isLast = index === preset.designSteps.length - 1;
@@ -549,6 +539,9 @@ function renderLifeAutomationSteps(automation, preset, container) {
       && !isOptimal;
     maxButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
       && !isOptimal;
+    if (amountInput.disabled) {
+      amountInput.value = stepSpends[step.id] ?? 0;
+    }
 
     amountInput.addEventListener('change', (event) => {
       automation.updateDesignStep(preset.id, step.id, { amount: event.target.value });

@@ -387,6 +387,8 @@ class LifeAutomation {
     const preset = this.getActivePreset();
     this.applyAutoPurchases(preset);
     this.applyAutoDesign(preset);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
   }
 
   applyAutoPurchases(preset) {
@@ -483,6 +485,82 @@ class LifeAutomation {
     }
 
     return candidate;
+  }
+
+  getDesignStepSpends(preset) {
+    const maxPoints = Math.floor(lifeDesigner.maxLifeDesignPoints());
+    let remaining = Math.max(0, maxPoints);
+    const spends = {};
+    if (remaining <= 0) {
+      return spends;
+    }
+    const candidate = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    for (let index = 0; index < preset.designSteps.length; index += 1) {
+      if (remaining <= 0) {
+        break;
+      }
+      const step = preset.designSteps[index];
+      const attributeName = step.attribute;
+      const attribute = candidate[attributeName];
+      const maxUpgrades = attribute.maxUpgrades;
+      const isRemaining = step.mode === 'remaining' && index === preset.designSteps.length - 1;
+      const isMax = step.mode === 'max';
+      const isNeeded = step.mode === 'needed' && this.isTemperatureToleranceAttribute(attributeName);
+      let spend = 0;
+      if (attributeName === 'optimalGrowthTemperature') {
+        const direction = step.amount < 0 ? -1 : 1;
+        const desiredMagnitude = isRemaining
+          ? remaining
+          : isMax
+            ? maxUpgrades
+            : Math.abs(Math.floor(Number(step.amount) || 0));
+        if (desiredMagnitude > 0) {
+          const currentValue = attribute.value;
+          const currentAbs = Math.abs(currentValue);
+          let target = currentValue + (direction * desiredMagnitude);
+          target = Math.max(-maxUpgrades, Math.min(maxUpgrades, target));
+          const targetAbs = Math.abs(target);
+          let costDelta = targetAbs - currentAbs;
+          if (costDelta > remaining) {
+            const allowedAbs = Math.min(maxUpgrades, currentAbs + remaining);
+            target = allowedAbs * direction;
+            costDelta = allowedAbs - currentAbs;
+          }
+          attribute.value = target;
+          remaining -= costDelta;
+          spend = Math.max(0, costDelta);
+        }
+      } else if (isNeeded) {
+        const zoneNames = this.getTemperatureZoneNames(step);
+        const targetValue = Math.min(maxUpgrades, Math.ceil(this.getTemperatureToleranceTarget(attributeName, zoneNames)));
+        const currentValue = attribute.value;
+        if (targetValue > currentValue) {
+          const delta = Math.min(remaining, targetValue - currentValue);
+          attribute.value = currentValue + delta;
+          remaining -= delta;
+          spend = Math.max(0, delta);
+        } else {
+          attribute.value = targetValue;
+          remaining += currentValue - targetValue;
+          spend = 0;
+        }
+      } else {
+        const desired = isRemaining
+          ? remaining
+          : isMax
+            ? maxUpgrades
+            : Math.floor(Number(step.amount) || 0);
+        const cap = Math.max(0, maxUpgrades - attribute.value);
+        const applied = Math.min(remaining, Math.max(0, Math.min(desired, cap)));
+        attribute.value += applied;
+        remaining -= applied;
+        spend = Math.max(0, applied);
+      }
+      spends[step.id] = spend;
+    }
+
+    return spends;
   }
 
   applyAutoDesign(preset) {

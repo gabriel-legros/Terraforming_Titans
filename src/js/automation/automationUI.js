@@ -77,7 +77,7 @@ function cacheAutomationElements() {
     automationElements.deletePresetButton = automationElements.shipAssignment.querySelector('.automation-preset-delete');
   }
   if (!automationElements.enablePresetCheckbox && automationElements.shipAssignment) {
-    automationElements.enablePresetCheckbox = automationElements.shipAssignment.querySelector('.automation-preset-enable');
+    automationElements.enablePresetCheckbox = automationElements.shipAssignment.querySelector('.automation-preset-toggle');
   }
   if (!automationElements.stepsContainer && automationElements.shipAssignment) {
     automationElements.stepsContainer = automationElements.shipAssignment.querySelector('.automation-steps');
@@ -113,13 +113,13 @@ function cacheAutomationElements() {
     automationElements.lifeDeletePresetButton = automationElements.lifeDesign.querySelector('.automation-preset-delete');
   }
   if (!automationElements.lifeEnablePresetCheckbox && automationElements.lifeDesign) {
-    automationElements.lifeEnablePresetCheckbox = automationElements.lifeDesign.querySelector('.automation-preset-enable');
+    automationElements.lifeEnablePresetCheckbox = automationElements.lifeDesign.querySelector('.automation-preset-toggle');
   }
   if (!automationElements.lifePurchaseContainer && automationElements.lifeDesign) {
     automationElements.lifePurchaseContainer = automationElements.lifeDesign.querySelector('.life-automation-purchase-list');
   }
   if (!automationElements.lifePurchaseEnableCheckbox && automationElements.lifeDesign) {
-    automationElements.lifePurchaseEnableCheckbox = automationElements.lifeDesign.querySelector('.life-automation-purchase-enable');
+    automationElements.lifePurchaseEnableCheckbox = automationElements.lifeDesign.querySelector('.life-automation-purchase-toggle');
   }
   if (!automationElements.lifeDesignStepsContainer && automationElements.lifeDesign) {
     automationElements.lifeDesignStepsContainer = automationElements.lifeDesign.querySelector('.life-automation-steps');
@@ -137,7 +137,7 @@ function cacheAutomationElements() {
     automationElements.lifeSeedButton = automationElements.lifeDesign.querySelector('.life-automation-seed-button');
   }
   if (!automationElements.lifeDesignEnableCheckbox && automationElements.lifeDesign) {
-    automationElements.lifeDesignEnableCheckbox = automationElements.lifeDesign.querySelector('.life-automation-design-enable');
+    automationElements.lifeDesignEnableCheckbox = automationElements.lifeDesign.querySelector('.life-automation-design-toggle');
   }
   if (!automationElements.lifeDeployNowButton && automationElements.lifeDesign) {
     automationElements.lifeDeployNowButton = automationElements.lifeDesign.querySelector('.life-automation-deploy-now');
@@ -181,14 +181,9 @@ function createAutomationPresetRow(body) {
   presetName.classList.add('automation-preset-name');
   presetRow.appendChild(presetName);
 
-  const enableWrapper = document.createElement('label');
-  enableWrapper.classList.add('automation-enable-wrapper');
-  const enableCheckbox = document.createElement('input');
-  enableCheckbox.type = 'checkbox';
-  enableCheckbox.classList.add('automation-preset-enable');
-  enableWrapper.appendChild(enableCheckbox);
-  enableWrapper.append(' Enable preset');
-  presetRow.appendChild(enableWrapper);
+  const enableToggle = createAutomationToggle('Preset On', 'Preset Off');
+  enableToggle.classList.add('automation-preset-toggle');
+  presetRow.appendChild(enableToggle);
 
   const presetButtons = document.createElement('div');
   presetButtons.classList.add('automation-preset-buttons');
@@ -205,10 +200,40 @@ function createAutomationPresetRow(body) {
     presetRow,
     presetSelect,
     presetName,
-    enableCheckbox,
+    enableCheckbox: enableToggle,
     newPreset,
     deletePreset
   };
+}
+
+function createAutomationToggle(onLabel, offLabel) {
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.classList.add('automation-toggle');
+  toggle.dataset.onLabel = onLabel;
+  toggle.dataset.offLabel = offLabel;
+  const track = document.createElement('span');
+  track.classList.add('automation-toggle__track');
+  track.setAttribute('aria-hidden', 'true');
+  const thumb = document.createElement('span');
+  thumb.classList.add('automation-toggle__thumb');
+  track.appendChild(thumb);
+  const label = document.createElement('span');
+  label.classList.add('automation-toggle__label');
+  toggle.append(track, label);
+  setAutomationToggleState(toggle, false);
+  return toggle;
+}
+
+function setAutomationToggleState(toggle, enabled) {
+  toggle.classList.toggle('is-on', !!enabled);
+  toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  const label = toggle.querySelector('.automation-toggle__label');
+  const onLabel = toggle.dataset.onLabel || 'On';
+  const offLabel = toggle.dataset.offLabel || 'Off';
+  if (label) {
+    label.textContent = enabled ? onLabel : offLabel;
+  }
 }
 
 function showAutomationTab() {

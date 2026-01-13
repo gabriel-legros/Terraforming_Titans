@@ -770,6 +770,25 @@
     border-color: #202d42;
 }
 
+.dark-mode .automation-toggle__label {
+    color: #e7ecf7;
+}
+
+.dark-mode .automation-toggle__track {
+    background-color: #1a2538;
+    border-color: #30405a;
+}
+
+.dark-mode .automation-toggle.is-on .automation-toggle__track {
+    background-color: #3a66e1;
+    border-color: #3a66e1;
+    box-shadow: 0 0 6px rgba(58, 102, 225, 0.6);
+}
+
+.dark-mode .automation-toggle__thumb {
+    background-color: #e7ecf7;
+}
+
 .dark-mode .life-automation-zone-row {
     background: #0e1421;
     border-color: #202d42;
