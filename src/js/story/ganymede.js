@@ -431,7 +431,7 @@ progressGanymede.chapters.push(
         id: "chapter13.4",
         type: "journal",
         chapter: 13,
-        narrative: "Receiving transmission...\n  Mary: 'And no, we can't just disassemble you. Your core components are too large to fit through individually. It's a simple matter of physics. Don't even think about it.'",
+        narrative: "Receiving transmission...\n  Mary: 'And no, we can't just disassemble you. Your core components are too large to fit through individually. It's a simple matter of physics. Don't even think about it.  (Complete a difficulty 5 WGC operation to continue)'",
         prerequisites: ["chapter13.3b"],
         objectives: [{type: 'wgcHighestDifficulty', difficulty: 5}],
         reward: []
