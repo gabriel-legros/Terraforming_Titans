@@ -10,6 +10,7 @@ const LIFE_AUTOMATION_ATTRIBUTES = [
   'geologicalBurial',
   'bioworkforce'
 ];
+const LIFE_AUTOMATION_TEMPERATURE_ZONES = ['tropical', 'temperate', 'polar'];
 
 class LifeAutomation {
   constructor() {
@@ -33,6 +34,49 @@ class LifeAutomation {
       };
     }
     return settings;
+  }
+
+  createTemperatureZoneSettings() {
+    return {
+      tropical: true,
+      temperate: true,
+      polar: true
+    };
+  }
+
+  isTemperatureToleranceAttribute(attributeName) {
+    return attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance';
+  }
+
+  getTemperatureZoneNames(step) {
+    const zones = step.zones || this.createTemperatureZoneSettings();
+    return LIFE_AUTOMATION_TEMPERATURE_ZONES.filter(zoneName => zones[zoneName]);
+  }
+
+  getTemperatureToleranceTarget(attributeName, zoneNames) {
+    if (zoneNames.length === 0) {
+      return 0;
+    }
+    const requirements = getActiveLifeDesignRequirements();
+    const baseRange = requirements.survivalTemperatureRangeK ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.survivalTemperatureRangeK;
+    const firstZone = terraforming.temperature.zones[zoneNames[0]];
+    let coldest = firstZone.day;
+    let hottest = firstZone.day;
+    for (let index = 0; index < zoneNames.length; index += 1) {
+      const zoneName = zoneNames[index];
+      const zone = terraforming.temperature.zones[zoneName];
+      const day = zone.day;
+      const night = zone.night;
+      if (day < coldest) coldest = day;
+      if (night < coldest) coldest = night;
+      if (day > hottest) hottest = day;
+      if (night > hottest) hottest = night;
+    }
+    const buffer = 1;
+    if (attributeName === 'minTemperatureTolerance') {
+      return Math.max(0, baseRange.min - coldest + buffer - 0.5);
+    }
+    return Math.max(0, hottest - baseRange.max + buffer - 0.5);
   }
 
   ensureDefaultPreset() {
@@ -171,7 +215,8 @@ class LifeAutomation {
       id: Date.now() + Math.floor(Math.random() * 1000),
       attribute: LIFE_AUTOMATION_ATTRIBUTES[0],
       amount: 1,
-      mode: 'fixed'
+      mode: 'fixed',
+      zones: this.createTemperatureZoneSettings()
     };
   }
 
@@ -206,6 +251,13 @@ class LifeAutomation {
         : LIFE_AUTOMATION_ATTRIBUTES[0];
     }
     const attributeName = step.attribute;
+    const isTempTolerance = this.isTemperatureToleranceAttribute(attributeName);
+    if (!isTempTolerance && step.mode === 'needed') {
+      step.mode = 'fixed';
+    }
+    if (isTempTolerance) {
+      step.zones = step.zones || this.createTemperatureZoneSettings();
+    }
     const maxUpgrades = lifeDesigner.currentDesign[attributeName].maxUpgrades;
     if (Object.prototype.hasOwnProperty.call(updates, 'amount')) {
       const parsed = Math.floor(Number(updates.amount) || 0);
@@ -220,9 +272,22 @@ class LifeAutomation {
       step.amount = Math.max(0, Math.min(maxUpgrades, step.amount));
     }
     if (Object.prototype.hasOwnProperty.call(updates, 'mode')) {
-      step.mode = updates.mode === 'remaining' || updates.mode === 'max' ? updates.mode : 'fixed';
+      step.mode = updates.mode === 'remaining'
+        || updates.mode === 'max'
+        || (updates.mode === 'needed' && isTempTolerance)
+        ? updates.mode
+        : 'fixed';
     }
     this.normalizeRemainingSteps(preset);
+    this.refreshActiveDeployment(preset);
+  }
+
+  setDesignStepZone(presetId, stepId, zoneName, enabled) {
+    const preset = this.presets.find(item => item.id === presetId) || this.presets[0];
+    const step = preset.designSteps.find(item => item.id === stepId) || preset.designSteps[0];
+    const zones = step.zones || this.createTemperatureZoneSettings();
+    zones[zoneName] = !!enabled;
+    step.zones = zones;
     this.refreshActiveDeployment(preset);
   }
 
@@ -369,6 +434,7 @@ class LifeAutomation {
       const maxUpgrades = attribute.maxUpgrades;
       const isRemaining = step.mode === 'remaining' && index === preset.designSteps.length - 1;
       const isMax = step.mode === 'max';
+      const isNeeded = step.mode === 'needed' && this.isTemperatureToleranceAttribute(attributeName);
       if (attributeName === 'optimalGrowthTemperature') {
         const direction = step.amount < 0 ? -1 : 1;
         const desiredMagnitude = isRemaining
@@ -390,6 +456,18 @@ class LifeAutomation {
           }
           attribute.value = target;
           remaining -= costDelta;
+        }
+      } else if (isNeeded) {
+        const zoneNames = this.getTemperatureZoneNames(step);
+        const targetValue = Math.min(maxUpgrades, Math.ceil(this.getTemperatureToleranceTarget(attributeName, zoneNames)));
+        const currentValue = attribute.value;
+        if (targetValue > currentValue) {
+          const delta = Math.min(remaining, targetValue - currentValue);
+          attribute.value = currentValue + delta;
+          remaining -= delta;
+        } else {
+          attribute.value = targetValue;
+          remaining += currentValue - targetValue;
         }
       } else {
         const desired = isRemaining
@@ -421,8 +499,21 @@ class LifeAutomation {
     if (!candidate) {
       return;
     }
-    const improvement = candidate.getDesignCost() - lifeDesigner.currentDesign.getDesignCost();
-    if (improvement < preset.deployImprovement) {
+    const currentDesign = lifeDesigner.currentDesign;
+    let needsToleranceIncrease = false;
+    for (let index = 0; index < preset.designSteps.length; index += 1) {
+      const step = preset.designSteps[index];
+      if (step.mode !== 'needed' || !this.isTemperatureToleranceAttribute(step.attribute)) {
+        continue;
+      }
+      if (candidate[step.attribute].value > currentDesign[step.attribute].value) {
+        needsToleranceIncrease = true;
+        break;
+      }
+    }
+    const improvement = candidate.getDesignCost() - currentDesign.getDesignCost();
+    const improvementMagnitude = Math.abs(improvement);
+    if (!needsToleranceIncrease && improvementMagnitude < preset.deployImprovement) {
       return;
     }
     if (!candidate.canSurviveAnywhere()) {
@@ -470,7 +561,13 @@ class LifeAutomation {
           Object.entries(preset.purchaseSettings).map(([key, value]) => [key, { ...value }])
         ),
         purchaseEnabled: !!preset.purchaseEnabled,
-        designSteps: preset.designSteps.map(step => ({ ...step })),
+        designSteps: preset.designSteps.map(step => ({
+          id: step.id,
+          attribute: step.attribute,
+          amount: step.amount,
+          mode: step.mode,
+          zones: { ...(step.zones || this.createTemperatureZoneSettings()) }
+        })),
         deployImprovement: preset.deployImprovement,
         designEnabled: !!preset.designEnabled
       })),
@@ -498,6 +595,7 @@ class LifeAutomation {
         const attribute = LIFE_AUTOMATION_ATTRIBUTES.includes(step.attribute)
           ? step.attribute
           : LIFE_AUTOMATION_ATTRIBUTES[0];
+        const isTempTolerance = this.isTemperatureToleranceAttribute(attribute);
         const maxUpgrades = lifeDesigner.currentDesign[attribute].maxUpgrades;
         const parsed = Math.floor(Number(step.amount) || 0);
         const amount = attribute === 'optimalGrowthTemperature'
@@ -507,7 +605,12 @@ class LifeAutomation {
           id: step.id,
           attribute,
           amount,
-          mode: step.mode === 'remaining' || step.mode === 'max' ? step.mode : 'fixed'
+          mode: step.mode === 'remaining'
+            || step.mode === 'max'
+            || (step.mode === 'needed' && isTempTolerance)
+            ? step.mode
+            : 'fixed',
+          zones: { ...(step.zones || this.createTemperatureZoneSettings()) }
         };
       });
       return {

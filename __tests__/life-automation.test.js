@@ -99,6 +99,38 @@ describe('LifeAutomation', () => {
     expect(candidate.invasiveness.value).toBe(3);
   });
 
+  test('buildCandidateDesign needed mode targets selected zone temperatures', () => {
+    global.LifeDesign = LifeDesign;
+    global.getActiveLifeDesignRequirements = () => ({
+      survivalTemperatureRangeK: { min: 270, max: 300 }
+    });
+    global.terraforming = {
+      temperature: {
+        zones: {
+          tropical: { day: 275, night: 265 },
+          temperate: { day: 268, night: 258 },
+          polar: { day: 260, night: 250 }
+        }
+      }
+    };
+    const automation = new LifeAutomation();
+    const preset = automation.getActivePreset();
+    preset.designSteps = [
+      {
+        id: 1,
+        attribute: 'minTemperatureTolerance',
+        amount: 0,
+        mode: 'needed',
+        zones: { tropical: true, temperate: true, polar: false }
+      }
+    ];
+    global.lifeDesigner.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    global.lifeDesigner.maxLifeDesignPoints = () => 20;
+
+    const candidate = automation.buildCandidateDesign(preset);
+    expect(candidate.minTemperatureTolerance.value).toBe(13);
+  });
+
   test('moveDesignStep reorders life automation steps', () => {
     const automation = new LifeAutomation();
     const preset = automation.getActivePreset();
@@ -202,6 +234,102 @@ describe('LifeAutomation', () => {
     expect(global.lifeDesigner.confirmDesign).not.toHaveBeenCalled();
 
     automation.setDeployImprovement(preset.id, 1);
+    automation.applyAutoDesign(preset);
+    expect(global.lifeDesigner.confirmDesign).toHaveBeenCalled();
+
+    LifeDesign.prototype.canSurviveAnywhere = originalCanSurvive;
+  });
+
+  test('auto design redeploys when needed mode frees enough points', () => {
+    global.LifeDesign = LifeDesign;
+    global.getActiveLifeDesignRequirements = () => ({
+      survivalTemperatureRangeK: { min: 270, max: 300 }
+    });
+    global.terraforming = {
+      temperature: {
+        zones: {
+          tropical: { day: 280, night: 270 },
+          temperate: { day: 278, night: 268 },
+          polar: { day: 276, night: 269 }
+        }
+      }
+    };
+    const automation = new LifeAutomation();
+    const preset = automation.getActivePreset();
+    preset.enabled = true;
+    preset.designSteps = [
+      {
+        id: 1,
+        attribute: 'minTemperatureTolerance',
+        amount: 0,
+        mode: 'needed',
+        zones: { tropical: true, temperate: true, polar: true }
+      }
+    ];
+    automation.setDeployImprovement(preset.id, 2);
+
+    const originalCanSurvive = LifeDesign.prototype.canSurviveAnywhere;
+    LifeDesign.prototype.canSurviveAnywhere = () => true;
+
+    global.lifeDesigner = {
+      currentDesign: new LifeDesign(5, 0, 0, 0, 0, 0, 0, 0, 0),
+      maxLifeDesignPoints: () => 10,
+      replaceDesign: jest.fn(function (design) { this.tentativeDesign = design; }),
+      confirmDesign: jest.fn(),
+      isActive: false
+    };
+    global.document = { dispatchEvent: jest.fn() };
+    global.Event = function () {};
+    global.updateLifeUI = jest.fn();
+
+    automation.applyAutoDesign(preset);
+    expect(global.lifeDesigner.confirmDesign).toHaveBeenCalled();
+
+    LifeDesign.prototype.canSurviveAnywhere = originalCanSurvive;
+  });
+
+  test('auto design ignores threshold when needed mode must add tolerance', () => {
+    global.LifeDesign = LifeDesign;
+    global.getActiveLifeDesignRequirements = () => ({
+      survivalTemperatureRangeK: { min: 270, max: 300 }
+    });
+    global.terraforming = {
+      temperature: {
+        zones: {
+          tropical: { day: 275, night: 260 },
+          temperate: { day: 276, night: 262 },
+          polar: { day: 277, night: 263 }
+        }
+      }
+    };
+    const automation = new LifeAutomation();
+    const preset = automation.getActivePreset();
+    preset.enabled = true;
+    preset.designSteps = [
+      {
+        id: 1,
+        attribute: 'minTemperatureTolerance',
+        amount: 0,
+        mode: 'needed',
+        zones: { tropical: true, temperate: true, polar: true }
+      }
+    ];
+    automation.setDeployImprovement(preset.id, 20);
+
+    const originalCanSurvive = LifeDesign.prototype.canSurviveAnywhere;
+    LifeDesign.prototype.canSurviveAnywhere = () => true;
+
+    global.lifeDesigner = {
+      currentDesign: new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0),
+      maxLifeDesignPoints: () => 10,
+      replaceDesign: jest.fn(function (design) { this.tentativeDesign = design; }),
+      confirmDesign: jest.fn(),
+      isActive: false
+    };
+    global.document = { dispatchEvent: jest.fn() };
+    global.Event = function () {};
+    global.updateLifeUI = jest.fn();
+
     automation.applyAutoDesign(preset);
     expect(global.lifeDesigner.confirmDesign).toHaveBeenCalled();
 

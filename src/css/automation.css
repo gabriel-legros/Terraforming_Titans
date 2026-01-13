@@ -418,6 +418,26 @@
   margin-top: 10px;
 }
 
+.life-automation-zone-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  background: #f8f9fc;
+  border: 1px solid #e1e7f1;
+  border-radius: 6px;
+  color: #4c5872;
+}
+
+.life-automation-zone-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #4c5872;
+}
+
 .life-automation-max-button {
   border: 1px solid #cfd6e5;
   background: #f8f9fc;

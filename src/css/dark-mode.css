@@ -770,6 +770,16 @@
     border-color: #202d42;
 }
 
+.dark-mode .life-automation-zone-row {
+    background: #0e1421;
+    border-color: #202d42;
+    color: #cbd4e2;
+}
+
+.dark-mode .life-automation-zone-option {
+    color: #cbd4e2;
+}
+
 .dark-mode .life-automation-toggle,
 .dark-mode .life-automation-field,
 .dark-mode .life-automation-deploy-row,
