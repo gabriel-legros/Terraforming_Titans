@@ -171,6 +171,12 @@ function refreshAutoBuildTarget(structure) {
     els.setActiveButton.style.display = 'inline-flex';
   }
 
+  // Show/hide "Set Target to Active" button based on mode
+  if (els.setTargetButton) {
+    const showSetTarget = !autoBuildUsesFill && !autoBuildUsesMax;
+    els.setTargetButton.style.display = showSetTarget ? 'inline-flex' : 'none';
+  }
+
   if (els.autoBuildFillContainer) {
     els.autoBuildFillContainer.style.display = autoBuildUsesFill ? 'flex' : 'none';
     if (document.activeElement !== els.autoBuildFillPrimary) {
@@ -901,36 +907,18 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   structureUIElements[structure.name].autoBuildInput = autoBuildInput;
 
-  const autoBuildTarget = document.createElement('span');
   const autoBuildTargetContainer = document.createElement('div');
   autoBuildTargetContainer.classList.add('auto-build-target-container');
 
+  // First row: Target display
+  const autoBuildTarget = document.createElement('span');
   autoBuildTarget.classList.add('auto-build-target');
   autoBuildTarget.id = `${structure.name}-auto-build-target`;
   autoBuildTarget.textContent = 'Target : 0';
-  autoBuildTargetContainer.appendChild(autoBuildTarget);
   cached.autoBuildTarget = autoBuildTarget;
+  autoBuildTargetContainer.appendChild(autoBuildTarget);
 
-  let autoUpgradeContainer = null;
-  if (isColony) {
-    autoUpgradeContainer = document.createElement('label');
-    autoUpgradeContainer.classList.add('auto-upgrade-container');
-    autoUpgradeContainer.style.display = 'none';
-
-    const autoUpgradeCheckbox = document.createElement('input');
-    autoUpgradeCheckbox.type = 'checkbox';
-    autoUpgradeCheckbox.classList.add('auto-upgrade-checkbox');
-    autoUpgradeCheckbox.addEventListener('change', () => {
-      structure.autoUpgradeEnabled = autoUpgradeCheckbox.checked;
-    });
-
-    autoUpgradeContainer.appendChild(autoUpgradeCheckbox);
-    autoUpgradeContainer.appendChild(document.createTextNode('Auto-upgrade'));
-
-    structureUIElements[structure.name].autoUpgradeCheckbox = autoUpgradeCheckbox;
-    structureUIElements[structure.name].autoUpgradeContainer = autoUpgradeContainer;
-  }
-
+  // Second row: Set active to target button
   const setActiveButton = document.createElement('button');
   setActiveButton.id = `${structure.name}-set-active-button`;
   setActiveButton.classList.add('auto-build-setactive-button');
@@ -969,7 +957,103 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
 
   autoBuildTargetContainer.appendChild(setActiveButton);
+
+  // Third row: Set Target to Active button
+  const setTargetButtonContainer = document.createElement('div');
+  setTargetButtonContainer.style.display = 'flex';
+  setTargetButtonContainer.style.alignItems = 'center';
+  setTargetButtonContainer.style.gap = '4px';
+
+  const setTargetButton = document.createElement('button');
+  setTargetButton.id = `${structure.name}-set-target-button`;
+  setTargetButton.classList.add('auto-build-setactive-button');
+  setTargetButton.textContent = 'Set Target to Active';
+
+  const setTargetTooltipIcon = document.createElement('span');
+  setTargetTooltipIcon.classList.add('info-tooltip-icon');
+  setTargetTooltipIcon.innerHTML = '&#9432;';
+  const tooltipText = 'Calculates the percentage needed for the target to match the current active count, using the minimal precision (up to 6 decimal places) that achieves an exact match.';
+  attachDynamicInfoTooltip(setTargetTooltipIcon, tooltipText);
+
+  setTargetButtonContainer.appendChild(setTargetButton);
+  setTargetButtonContainer.appendChild(setTargetTooltipIcon);
+
+  setTargetButton.addEventListener('click', () => {
+    const pop = resources.colony.colonists.value;
+    const workerCap = resources.colony.workers?.cap || 0;
+    const baseCollection = typeof buildings !== 'undefined' ? buildings : undefined;
+    const usesFillMode = isAutoBuildFillMode(structure);
+    const usesMaxMode = structure.autoBuildBasis === 'max';
+    
+    // Only works for % of worker/pop modes
+    if (usesFillMode || usesMaxMode) {
+      return;
+    }
+    
+    const base = getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
+    if (base <= 0) {
+      return;
+    }
+    
+    // Calculate the percentage needed for target to match active
+    const activeCount = structure.active;
+    const rawPercent = (activeCount * 100) / base;
+    
+    // Start with 6 decimals (rounded up)
+    let bestPercent = Math.ceil(rawPercent * 1000000) / 1000000;
+    
+    // Try reducing precision from 5 down to 0 decimals
+    for (let decimals = 5; decimals >= 0; decimals--) {
+      const factor = Math.pow(10, decimals);
+      // Try both floor and ceil at this precision
+      const floorCandidate = Math.floor(rawPercent * factor) / factor;
+      const ceilCandidate = Math.ceil(rawPercent * factor) / factor;
+      
+      const floorTarget = Math.ceil((floorCandidate * base) / 100);
+      const ceilTarget = Math.ceil((ceilCandidate * base) / 100);
+      
+      // Prefer floor if it works (simpler number)
+      if (floorTarget === activeCount) {
+        bestPercent = floorCandidate;
+      } else if (ceilTarget === activeCount) {
+        bestPercent = ceilCandidate;
+      } else {
+        // Neither works at this precision, stop simplifying
+        break;
+      }
+    }
+    
+    structure.autoBuildPercent = bestPercent;
+    if (cached.autoBuildInput) {
+      cached.autoBuildInput.value = `${bestPercent}`;
+    }
+    refreshAutoBuildTarget(structure);
+  });
+
+  structureUIElements[structure.name].setTargetButton = setTargetButton;
+  autoBuildTargetContainer.appendChild(setTargetButtonContainer);
+
   autoBuildContainer.appendChild(autoBuildTargetContainer);
+
+  let autoUpgradeContainer = null;
+  if (isColony) {
+    autoUpgradeContainer = document.createElement('label');
+    autoUpgradeContainer.classList.add('auto-upgrade-container');
+    autoUpgradeContainer.style.display = 'none';
+
+    const autoUpgradeCheckbox = document.createElement('input');
+    autoUpgradeCheckbox.type = 'checkbox';
+    autoUpgradeCheckbox.classList.add('auto-upgrade-checkbox');
+    autoUpgradeCheckbox.addEventListener('change', () => {
+      structure.autoUpgradeEnabled = autoUpgradeCheckbox.checked;
+    });
+
+    autoUpgradeContainer.appendChild(autoUpgradeCheckbox);
+    autoUpgradeContainer.appendChild(document.createTextNode('Auto-upgrade'));
+
+    structureUIElements[structure.name].autoUpgradeCheckbox = autoUpgradeCheckbox;
+    structureUIElements[structure.name].autoUpgradeContainer = autoUpgradeContainer;
+  }
 
   let autoBuildFillContainer = null;
   if (structure.autoBuildFillResourceFilters) {
