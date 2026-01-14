@@ -243,11 +243,11 @@ function renderAutomationSteps(automation, preset, container) {
     limitMode.appendChild(remainingOpt);
     limitMode.value = usingAllRemaining ? 'all' : usingCapped ? 'capped' : 'fixed';
     const limitInput = document.createElement('input');
-    limitInput.type = 'number';
+    limitInput.type = 'text';
     limitInput.min = '0';
     limitInput.placeholder = 'Amount';
     if (!usingAllRemaining && step.limit !== null && step.limit !== undefined && !usingCapped) {
-      limitInput.value = step.limit;
+      limitInput.value = formatNumber(step.limit, true, 3);
     } else {
       limitInput.value = '';
     }
@@ -266,16 +266,25 @@ function renderAutomationSteps(automation, preset, container) {
         limitInput.value = '';
       } else {
         automation.setStepMode(preset.id, step.id, 'fill');
-        automation.setStepLimit(preset.id, step.id, limitInput.value);
+        const parsed = parseFlexibleNumber(limitInput.value);
+        automation.setStepLimit(preset.id, step.id, Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0);
         limitInput.disabled = false;
       }
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
-    limitInput.addEventListener('change', (event) => {
-      automation.setStepLimit(preset.id, step.id, event.target.value);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
+    wireStringNumberInput(limitInput, {
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+      },
+      formatValue: (value) => {
+        return value > 0 ? formatNumber(value, true, 3) : '';
+      },
+      onValue: (parsed) => {
+        automation.setStepLimit(preset.id, step.id, parsed > 0 ? parsed : null);
+        queueAutomationUIRefresh();
+      }
     });
     if (!isLastStep) {
       limitMode.value = usingCapped ? 'capped' : 'fixed';
@@ -339,13 +348,21 @@ function renderAutomationSteps(automation, preset, container) {
       const weightLabel = document.createElement('span');
       weightLabel.textContent = 'Weight';
       const weightInput = document.createElement('input');
-      weightInput.type = 'number';
+      weightInput.type = 'text';
       weightInput.min = '0';
-      weightInput.value = entry.weight;
-      weightInput.addEventListener('change', (event) => {
-        automation.updateEntry(preset.id, step.id, entry.projectId, { weight: event.target.value });
-        queueAutomationUIRefresh();
-        updateAutomationUI();
+      weightInput.value = formatNumber(entry.weight, true, 3);
+      wireStringNumberInput(weightInput, {
+        parseValue: (value) => {
+          const parsed = parseFlexibleNumber(value);
+          return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+        },
+        formatValue: (value) => {
+          return value > 0 ? formatNumber(value, true, 3) : '0';
+        },
+        onValue: (parsed) => {
+          automation.updateEntry(preset.id, step.id, entry.projectId, { weight: parsed });
+          queueAutomationUIRefresh();
+        }
       });
       weightWrapper.append(weightLabel, weightInput);
       row.appendChild(weightWrapper);
@@ -366,19 +383,27 @@ function renderAutomationSteps(automation, preset, container) {
       maxMode.append(absoluteOpt, populationOpt, workerOpt);
       maxMode.value = entry.maxMode || 'absolute';
       const maxInput = document.createElement('input');
-      maxInput.type = 'number';
+      maxInput.type = 'text';
       maxInput.min = '0';
       maxInput.placeholder = 'Max';
-      maxInput.value = entry.max === null || entry.max === undefined ? '' : entry.max;
+      maxInput.value = entry.max === null || entry.max === undefined ? '' : formatNumber(entry.max, true, 3);
       maxMode.addEventListener('change', (event) => {
         automation.updateEntry(preset.id, step.id, entry.projectId, { maxMode: event.target.value });
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
-      maxInput.addEventListener('change', (event) => {
-        automation.updateEntry(preset.id, step.id, entry.projectId, { max: event.target.value });
-        queueAutomationUIRefresh();
-        updateAutomationUI();
+      wireStringNumberInput(maxInput, {
+        parseValue: (value) => {
+          const parsed = parseFlexibleNumber(value);
+          return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+        },
+        formatValue: (value) => {
+          return value > 0 ? formatNumber(value, true, 3) : '';
+        },
+        onValue: (parsed) => {
+          automation.updateEntry(preset.id, step.id, entry.projectId, { max: parsed > 0 ? parsed : null });
+          queueAutomationUIRefresh();
+        }
       });
 
       maxWrapper.append(maxMode, maxInput);

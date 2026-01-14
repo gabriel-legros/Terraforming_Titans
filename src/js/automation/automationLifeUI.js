@@ -362,10 +362,10 @@ function renderLifeAutomationPurchases(automation, preset, container) {
     const maxText = document.createElement('span');
     maxText.textContent = 'Max cost';
     const maxInput = document.createElement('input');
-    maxInput.type = 'number';
+    maxInput.type = 'text';
     maxInput.min = '0';
     maxInput.placeholder = 'No max';
-    maxInput.value = settings.maxCost || '';
+    maxInput.value = settings.maxCost ? formatNumber(settings.maxCost, true, 3) : '';
     maxLabel.append(maxText, maxInput);
     row.appendChild(maxLabel);
 
@@ -379,10 +379,18 @@ function renderLifeAutomationPurchases(automation, preset, container) {
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
-    maxInput.addEventListener('change', (event) => {
-      automation.setPurchaseMaxCost(preset.id, category.name, event.target.value);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
+    wireStringNumberInput(maxInput, {
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+      },
+      formatValue: (value) => {
+        return value > 0 ? formatNumber(value, true, 3) : '';
+      },
+      onValue: (parsed) => {
+        automation.setPurchaseMaxCost(preset.id, category.name, parsed > 0 ? parsed : null);
+        queueAutomationUIRefresh();
+      }
     });
 
     container.appendChild(row);
