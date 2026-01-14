@@ -2149,6 +2149,14 @@ const researchParameters = {
         ]
       },
       {
+        id: 'chemistry_of_scale',
+        name: 'Chemistry of Scale',
+        description: 'TBD',
+        cost: { advancedResearch: 6_000_000 },
+        prerequisites: [],
+        effects: []
+      },
+      {
         id: 'self_replicating_ships_concept',
         name: 'Self Replicating Ships',
         description: 'Opens research into autonomous self-building spacecraft.',
@@ -2172,6 +2180,14 @@ const researchParameters = {
         effects: [
           { target: 'project', targetId: 'dysonSphere', type: 'enable' }
         ]
+      },
+      {
+        id: 'nanotechnology_recycling',
+        name: 'Nanotechnology recycling',
+        description: 'TBD',
+        cost: { advancedResearch: 15_000_000 },
+        prerequisites: [],
+        effects: []
       },
       {
         id: 'companion_mirror',
