@@ -707,7 +707,7 @@ const researchParameters = {
       },  
       {
         id: 'massive_scale_glass_smelting',
-        name: 'Massive scale glass smelting',
+        name: 'Injection Mold Glass Smelting',
         description: 'Doubles glass smelter production and consumption.',
         cost: { research: 500_000_000 },
         prerequisites: [],
