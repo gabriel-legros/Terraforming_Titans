@@ -66,7 +66,8 @@ class NanotechManager extends EffectableEntity {
       return;
     }
     if (!this.enabled) return;
-    const baseRate = 0.0025;
+    const extraStages = this.getExtraNanotechStages();
+    const baseRate = 0.0025 * (1 + extraStages);
     let powerFraction = 1;
     let siliconFraction = 1;
     let metalFraction = 1;
@@ -82,6 +83,7 @@ class NanotechManager extends EffectableEntity {
       ? this.nanobots * 1e-18 * (this.metalSlider / 10)
       : 0;
     if (typeof resources !== 'undefined') {
+      const recyclingEnabled = this.isBooleanFlagSet('nanotechRecycling');
 
       const siliconRes = resources.colony?.silicon;
       if (siliconRes && accumulatedChanges?.colony) {
@@ -105,16 +107,37 @@ class NanotechManager extends EffectableEntity {
 
       if (stage2Enabled) {
         const metalRes = resources.colony?.metal;
+        const scrapRes = recyclingEnabled ? resources.surface?.scrapMetal : null;
+        
         if (metalRes && accumulatedChanges?.colony) {
           const needed = this.optimalMetalConsumption * (deltaTime / 1000);
-          const available = Math.max(metalRes.value + (accumulatedChanges.colony.metal || 0), 0);
-          this.hasEnoughMetal = available >= needed;
-          const used = this.hasEnoughMetal ? needed : available;
-
-          this.currentMetalConsumption = deltaTime > 0 ? used / (deltaTime / 1000) : 0;
-          accumulatedChanges.colony.metal = (accumulatedChanges.colony.metal || 0) - used;
-          metalRes.modifyRate(-this.currentMetalConsumption, 'Nanotech Metal', 'nanotech');
-          metalFraction = this.hasEnoughMetal ? 1 : (needed > 0 ? used / needed : 1);
+          
+          // Try scrap metal first if recycling is enabled
+          let usedScrap = 0;
+          if (scrapRes && accumulatedChanges?.surface) {
+            const scrapAvailable = Math.max(scrapRes.value + (accumulatedChanges.surface.scrapMetal || 0), 0);
+            usedScrap = Math.min(needed, scrapAvailable);
+            if (usedScrap > 0) {
+              accumulatedChanges.surface.scrapMetal = (accumulatedChanges.surface.scrapMetal || 0) - usedScrap;
+              scrapRes.modifyRate(-usedScrap / (deltaTime / 1000), 'Nanotech Scrap', 'nanotech');
+            }
+          }
+          
+          // Use regular metal for the remainder
+          const remainingNeeded = needed - usedScrap;
+          const metalAvailable = Math.max(metalRes.value + (accumulatedChanges.colony.metal || 0), 0);
+          const usedMetal = Math.min(remainingNeeded, metalAvailable);
+          const totalUsed = usedScrap + usedMetal;
+          
+          this.hasEnoughMetal = totalUsed >= needed;
+          this.currentMetalConsumption = deltaTime > 0 ? totalUsed / (deltaTime / 1000) : 0;
+          
+          if (usedMetal > 0) {
+            accumulatedChanges.colony.metal = (accumulatedChanges.colony.metal || 0) - usedMetal;
+            metalRes.modifyRate(-usedMetal / (deltaTime / 1000), 'Nanotech Metal', 'nanotech');
+          }
+          
+          metalFraction = this.hasEnoughMetal ? 1 : (needed > 0 ? totalUsed / needed : 1);
         } else if (this.metalSlider > 0) {
           metalFraction = 0;
           this.hasEnoughMetal = false;
@@ -127,12 +150,32 @@ class NanotechManager extends EffectableEntity {
       }
 
       const glassRes = resources.colony?.glass;
+      const junkRes = recyclingEnabled ? resources.surface?.junk : null;
+      
       if (glassRes && accumulatedChanges?.colony) {
         const glassRate = this.nanobots * 1e-18 * (this.glassSlider / 10);
-        this.currentGlassProduction = glassRate;
-        accumulatedChanges.colony.glass =
-          (accumulatedChanges.colony.glass || 0) + glassRate * (deltaTime / 1000);
-        glassRes.modifyRate(glassRate, 'Nanotech Glass', 'nanotech');
+        const glassAmount = glassRate * (deltaTime / 1000);
+        
+        // Try to consume junk first if recycling is enabled
+        let usedJunk = 0;
+        if (junkRes && accumulatedChanges?.surface && glassAmount > 0) {
+          const junkAvailable = Math.max(junkRes.value + (accumulatedChanges.surface.junk || 0), 0);
+          usedJunk = Math.min(glassAmount, junkAvailable);
+          if (usedJunk > 0) {
+            accumulatedChanges.surface.junk = (accumulatedChanges.surface.junk || 0) - usedJunk;
+            junkRes.modifyRate(-usedJunk / (deltaTime / 1000), 'Nanotech Junk', 'nanotech');
+          }
+        }
+        
+        // Produce glass from the remainder (what wasn't covered by junk)
+        const actualGlassProduced = glassAmount - usedJunk;
+        this.currentGlassProduction = actualGlassProduced / (deltaTime / 1000);
+        
+        if (actualGlassProduced > 0) {
+          accumulatedChanges.colony.glass =
+            (accumulatedChanges.colony.glass || 0) + actualGlassProduced;
+          glassRes.modifyRate(this.currentGlassProduction, 'Nanotech Glass', 'nanotech');
+        }
       }
 
       const componentsRes = resources.colony?.components;
@@ -505,7 +548,8 @@ class NanotechManager extends EffectableEntity {
       C.travelCapEl.textContent = formatNumber(this.getTravelPreserveCap());
     }
     if (C.growthEl) {
-      const baseOpt = 0.0025;
+      const extraStages = this.getExtraNanotechStages();
+      const baseOpt = 0.0025 * (1 + extraStages);
       const siliconOpt = (this.siliconSlider / 10) * 0.0015;
       const metalOpt = stage2Active ? (this.metalSlider / 10) * 0.0015 : 0;
       const penalty =
@@ -556,7 +600,8 @@ class NanotechManager extends EffectableEntity {
     }
 
     if (C.growthImpactEl) {
-      const optimal = 0.25;
+      const extraStages = this.getExtraNanotechStages();
+      const optimal = 0.25 * (1 + extraStages);
       const effective = optimal * this.powerFraction;
       C.growthImpactEl.textContent = `+${effective.toFixed(3)}%`;
       C.growthImpactEl.style.color = !this.hasEnoughEnergy ? 'orange' : '';
