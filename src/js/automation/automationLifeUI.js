@@ -144,23 +144,30 @@ function updateLifeAutomationUI() {
   lifePanelBody.style.display = automation.collapsed ? 'none' : 'flex';
   lifeCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
 
-  while (lifePresetSelect.firstChild) lifePresetSelect.removeChild(lifePresetSelect.firstChild);
-  automation.presets.forEach(preset => {
-    const option = document.createElement('option');
-    option.value = preset.id;
-    option.textContent = preset.name || `Preset ${preset.id}`;
-    if (preset.id === automation.activePresetId) {
-      option.selected = true;
-    }
-    lifePresetSelect.appendChild(option);
-  });
+  // Only rebuild preset dropdown if not currently focused
+  if (document.activeElement !== lifePresetSelect) {
+    while (lifePresetSelect.firstChild) lifePresetSelect.removeChild(lifePresetSelect.firstChild);
+    automation.presets.forEach(preset => {
+      const option = document.createElement('option');
+      option.value = preset.id;
+      option.textContent = preset.name || `Preset ${preset.id}`;
+      if (preset.id === automation.activePresetId) {
+        option.selected = true;
+      }
+      lifePresetSelect.appendChild(option);
+    });
+  }
 
   const activePreset = automation.getActivePreset();
-  lifePresetNameInput.value = activePreset.name || '';
+  if (document.activeElement !== lifePresetNameInput) {
+    lifePresetNameInput.value = activePreset.name || '';
+  }
   setAutomationToggleState(lifeEnablePresetCheckbox, !!activePreset.enabled);
   setAutomationToggleState(lifePurchaseEnableCheckbox, activePreset.purchaseEnabled !== false);
   setAutomationToggleState(lifeDesignEnableCheckbox, activePreset.designEnabled !== false);
-  lifeDeployInput.value = activePreset.deployImprovement;
+  if (document.activeElement !== lifeDeployInput) {
+    lifeDeployInput.value = activePreset.deployImprovement;
+  }
   lifeSeedRow.style.display = activePreset.designSteps.length === 0 ? '' : 'none';
   const deployCandidate = lifeDesigner.enabled && activePreset.designSteps.length > 0
     ? automation.buildCandidateDesign(activePreset)
@@ -168,12 +175,22 @@ function updateLifeAutomationUI() {
   const canDeploy = deployCandidate && deployCandidate.canSurviveAnywhere();
   lifeDeployNowButton.disabled = !canDeploy;
 
-  lifePurchaseContainer.textContent = '';
-  renderLifeAutomationPurchases(automation, activePreset, lifePurchaseContainer);
+  // Only rebuild purchase container if no input within is focused
+  const purchaseHasFocus = lifePurchaseContainer.contains(document.activeElement) &&
+    document.activeElement.tagName === 'INPUT';
+  if (!purchaseHasFocus) {
+    lifePurchaseContainer.textContent = '';
+    renderLifeAutomationPurchases(automation, activePreset, lifePurchaseContainer);
+  }
 
-  lifeDesignStepsContainer.textContent = '';
-  normalizeLifeAutomationStepAttributes(automation, activePreset);
-  renderLifeAutomationSteps(automation, activePreset, lifeDesignStepsContainer);
+  // Only rebuild steps if no dropdown/input within is focused
+  const stepsHasFocus = lifeDesignStepsContainer.contains(document.activeElement) &&
+    (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'INPUT');
+  if (!stepsHasFocus) {
+    lifeDesignStepsContainer.textContent = '';
+    normalizeLifeAutomationStepAttributes(automation, activePreset);
+    renderLifeAutomationSteps(automation, activePreset, lifeDesignStepsContainer);
+  }
 
   lifeAddStepButton.disabled = activePreset.designSteps.length >= automation.maxSteps;
   lifeAddStepButton.style.display = activePreset.designSteps.length === 0 ? '' : 'none';

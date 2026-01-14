@@ -737,11 +737,19 @@
     color: #e7ecf7;
 }
 
+.dark-mode .automation-collapse {
+    background: transparent;
+    border: none;
+}
+
 .dark-mode .automation-preset-buttons button:hover,
 .dark-mode .automation-step-header button:hover,
-.dark-mode .automation-entry button:hover,
-.dark-mode .automation-collapse:hover {
+.dark-mode .automation-entry button:hover {
     background: #24324a;
+}
+
+.dark-mode .automation-collapse:hover {
+    background: transparent;
 }
 
 .dark-mode .automation-step-order button:disabled {
@@ -770,13 +778,22 @@
     border-color: #202d42;
 }
 
+.dark-mode .automation-toggle {
+    background-color: transparent;
+    border: none;
+}
+
+.dark-mode .automation-toggle:hover {
+    background-color: transparent;
+}
+
 .dark-mode .automation-toggle__label {
     color: #e7ecf7;
 }
 
 .dark-mode .automation-toggle__track {
-    background-color: #1a2538;
-    border-color: #30405a;
+    background-color: transparent;
+    border-color: #4a5568;
 }
 
 .dark-mode .automation-toggle.is-on .automation-toggle__track {

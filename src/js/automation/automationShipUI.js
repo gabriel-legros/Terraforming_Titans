@@ -74,29 +74,39 @@ function updateShipAutomationUI() {
   panelBody.style.display = automation.collapsed ? 'none' : 'flex';
   collapseButton.textContent = automation.collapsed ? '▶' : '▼';
 
-  while (presetSelect.firstChild) presetSelect.removeChild(presetSelect.firstChild);
-  automation.presets.forEach(preset => {
-    const option = document.createElement('option');
-    option.value = preset.id;
-    option.textContent = preset.name || `Preset ${preset.id}`;
-    if (preset.id === automation.activePresetId) {
-      option.selected = true;
-    }
-    presetSelect.appendChild(option);
-  });
+  // Only rebuild preset dropdown if not currently focused
+  if (document.activeElement !== presetSelect) {
+    while (presetSelect.firstChild) presetSelect.removeChild(presetSelect.firstChild);
+    automation.presets.forEach(preset => {
+      const option = document.createElement('option');
+      option.value = preset.id;
+      option.textContent = preset.name || `Preset ${preset.id}`;
+      if (preset.id === automation.activePresetId) {
+        option.selected = true;
+      }
+      presetSelect.appendChild(option);
+    });
+  }
 
   const activePreset = automation.getActivePreset();
   if (activePreset) {
-    presetNameInput.value = activePreset.name || '';
+    if (document.activeElement !== presetNameInput) {
+      presetNameInput.value = activePreset.name || '';
+    }
     setAutomationToggleState(enablePresetCheckbox, !!activePreset.enabled);
   } else {
     presetNameInput.value = '';
     setAutomationToggleState(enablePresetCheckbox, false);
   }
 
-  stepsContainer.textContent = '';
-  if (activePreset) {
-    renderAutomationSteps(automation, activePreset, stepsContainer);
+  // Only rebuild steps if no dropdown/input within is focused
+  const hasFocusedChild = stepsContainer.contains(document.activeElement) &&
+    (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'INPUT');
+  if (!hasFocusedChild) {
+    stepsContainer.textContent = '';
+    if (activePreset) {
+      renderAutomationSteps(automation, activePreset, stepsContainer);
+    }
   }
   addStepButton.disabled = !activePreset || activePreset.steps.length >= 10;
 }
