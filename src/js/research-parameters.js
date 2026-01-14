@@ -2192,7 +2192,7 @@ const researchParameters = {
       {
         id: 'nanotechnology_recycling',
         name: 'Nanotechnology recycling',
-        description: 'Enables nanobots to recycle waste materials, substituting junk for glass consumption and scrap metal for metal consumption.',
+        description: 'Enables nanobots to recycle waste materials, substituting junk for silica consumption and scrap metal for metal consumption.',
         cost: { advancedResearch: 15_000_000 },
         prerequisites: [],
         effects: [
