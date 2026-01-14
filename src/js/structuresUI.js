@@ -172,9 +172,9 @@ function refreshAutoBuildTarget(structure) {
   }
 
   // Show/hide "Set Target to Active" button based on mode
-  if (els.setTargetButton) {
+  if (els.setTargetButtonContainer) {
     const showSetTarget = !autoBuildUsesFill && !autoBuildUsesMax;
-    els.setTargetButton.style.display = showSetTarget ? 'inline-flex' : 'none';
+    els.setTargetButtonContainer.style.display = showSetTarget ? 'flex' : 'none';
   }
 
   if (els.autoBuildFillContainer) {
@@ -1031,6 +1031,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
 
   structureUIElements[structure.name].setTargetButton = setTargetButton;
+  structureUIElements[structure.name].setTargetButtonContainer = setTargetButtonContainer;
   autoBuildTargetContainer.appendChild(setTargetButtonContainer);
 
   autoBuildContainer.appendChild(autoBuildTargetContainer);
