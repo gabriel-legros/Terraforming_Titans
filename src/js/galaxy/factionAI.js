@@ -463,7 +463,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         }
         const uhfFaction = manager?.getFaction?.(uhfFactionId);
         const uhfCapacity = Number.isFinite(uhfFaction?.fleetCapacity) ? uhfFaction.fleetCapacity : 0;
-        const r507Cap = uhfCapacity > 0 ? uhfCapacity / 3 : 0;
+        const r507Cap = uhfCapacity > 0 ? uhfCapacity / 4 : 0;
         borderKeys.forEach((key, index) => {
             const weight = weights[index];
             if (weight <= 0) {
