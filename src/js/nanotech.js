@@ -86,21 +86,37 @@ class NanotechManager extends EffectableEntity {
       const recyclingEnabled = this.isBooleanFlagSet('nanotechRecycling');
 
       const siliconRes = resources.colony?.silicon;
+      const junkResForSilicon = recyclingEnabled ? resources.surface?.junk : null;
+      
       if (siliconRes && accumulatedChanges?.colony) {
         const needed = this.optimalSiliconConsumption * (deltaTime / 1000);
-        const available = Math.max(siliconRes.value + (accumulatedChanges.colony.silicon || 0),0);
-        this.hasEnoughSilicon = available >= this.optimalSiliconConsumption * (deltaTime / 1000);
-        const used = this.hasEnoughSilicon ? needed : available;
-
-        this.currentSiliconConsumption = deltaTime > 0 ? used / (deltaTime / 1000) : 0;
-        accumulatedChanges.colony.silicon =
-          (accumulatedChanges.colony.silicon || 0) - used;
-        siliconRes.modifyRate(
-          -this.currentSiliconConsumption,
-          'Nanotech Silica',
-          'nanotech'
-        );
-        siliconFraction = this.hasEnoughSilicon ? 1 : (needed > 0 ? used / needed : 1);
+        
+        // Try junk first if recycling is enabled
+        let usedJunk = 0;
+        if (junkResForSilicon && accumulatedChanges?.surface) {
+          const junkAvailable = Math.max(junkResForSilicon.value + (accumulatedChanges.surface.junk || 0), 0);
+          usedJunk = Math.min(needed, junkAvailable);
+          if (usedJunk > 0) {
+            accumulatedChanges.surface.junk = (accumulatedChanges.surface.junk || 0) - usedJunk;
+            junkResForSilicon.modifyRate(-usedJunk / (deltaTime / 1000), 'Nanotech Junk', 'nanotech');
+          }
+        }
+        
+        // Use regular silicon for the remainder
+        const remainingNeeded = needed - usedJunk;
+        const siliconAvailable = Math.max(siliconRes.value + (accumulatedChanges.colony.silicon || 0), 0);
+        const usedSilicon = Math.min(remainingNeeded, siliconAvailable);
+        const totalUsed = usedJunk + usedSilicon;
+        
+        this.hasEnoughSilicon = totalUsed >= needed;
+        this.currentSiliconConsumption = deltaTime > 0 ? totalUsed / (deltaTime / 1000) : 0;
+        
+        if (usedSilicon > 0) {
+          accumulatedChanges.colony.silicon = (accumulatedChanges.colony.silicon || 0) - usedSilicon;
+          siliconRes.modifyRate(-usedSilicon / (deltaTime / 1000), 'Nanotech Silica', 'nanotech');
+        }
+        
+        siliconFraction = this.hasEnoughSilicon ? 1 : (needed > 0 ? totalUsed / needed : 1);
       } else if (this.siliconSlider > 0) {
         siliconFraction = 0;
       }
