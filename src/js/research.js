@@ -305,7 +305,24 @@ class Research {
       if (effect.type === 'advancedResearchBoost') {
         return;
       }
+      if (effect.type === 'researchDisable') {
+        this.applyResearchDisable(effect);
+        return;
+      }
       super.applyEffect(effect);
+    }
+
+    applyResearchDisable(effect) {
+      const research = this.getResearchById(effect.targetId);
+      if (!research) {
+        return;
+      }
+      // Mark the research as disabled so it won't show in the UI
+      research.disabled = true;
+      // Force a UI refresh
+      if (typeof invalidateResearchUICache === 'function') {
+        invalidateResearchUICache();
+      }
     }
 
     saveState() {
@@ -431,6 +448,9 @@ class Research {
     }
 
     isResearchDisplayable(research) {
+      if (research.disabled) {
+        return false;
+      }
       if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
         return false;
       }

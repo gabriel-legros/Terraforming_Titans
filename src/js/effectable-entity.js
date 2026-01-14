@@ -154,6 +154,9 @@ class EffectableEntity {
         case 'booleanFlag':  // New effect type to handle boolean flags
           this.applyBooleanFlag(effect);
           break;
+        case 'researchDisable':
+          this.applyResearchDisable(effect);
+          break;
         case 'enableReversal':
           // Enable reversal on effectable entities that support it (e.g., Building)
           if (typeof this.enableReversal === 'function') {
@@ -568,6 +571,10 @@ class EffectableEntity {
 
 
     applyPermanentProjectDisable(effect) {
+    }
+
+    applyResearchDisable(effect) {
+      // Placeholder - actual implementation in ResearchManager
     }
 
     // Method to apply a boolean flag effect

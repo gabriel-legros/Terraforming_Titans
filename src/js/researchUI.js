@@ -285,6 +285,9 @@ function loadResearchCategory(category) {
     };
 
     researches.forEach((research) => {
+        if (research.disabled) {
+            return;
+        }
         if (research.requiresMethane && !planetHasMethane()) {
             return;
         }

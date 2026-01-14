@@ -199,6 +199,12 @@
         effectId: 'bioworld-ecumenopolis-disable',
         sourceId: 'bioworld',
       });
+      researchManager.addAndReplace({
+        type: 'researchDisable',
+        targetId: 'ai_ecumenopolis_expansion',
+        effectId: 'bioworld-ecumenopolis-research-disable',
+        sourceId: 'bioworld',
+      });
       const ecumenopolis = colonies.t7_colony;
       if (ecumenopolis.active > 0) {
         ecumenopolis.adjustLand(-ecumenopolis.active);
