@@ -461,13 +461,19 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             this.borderFleetAssignments = assignments;
             return;
         }
+        const uhfFaction = manager?.getFaction?.(uhfFactionId);
+        const uhfCapacity = Number.isFinite(uhfFaction?.fleetCapacity) ? uhfFaction.fleetCapacity : 0;
+        const r507Cap = uhfCapacity > 0 ? uhfCapacity / 3 : 0;
         borderKeys.forEach((key, index) => {
             const weight = weights[index];
             if (weight <= 0) {
                 assignments.set(key, 0);
                 return;
             }
-            const share = (fleetPower * weight) / totalWeight;
+            let share = (fleetPower * weight) / totalWeight;
+            if (key === '4,-5' && r507Cap > 0 && share > r507Cap) {
+                share = r507Cap;
+            }
             assignments.set(key, share > 0 ? share : 0);
         });
         this.borderFleetAssignments = assignments;
