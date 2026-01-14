@@ -731,6 +731,10 @@ function initializeMirrorOversightUI(container) {
           <option value="1000">k</option>
           <option value="1000000">M</option>
           <option value="1000000000">B</option>
+          <option value="1000000000000">T</option>
+          <option value="1000000000000000">Q</option>
+          <option value="1000000000000000000">Qi</option>
+          <option value="1000000000000000000000">Sx</option>
         </select>
         <select id="adv-priority-focus" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
