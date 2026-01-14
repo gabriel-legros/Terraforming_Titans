@@ -607,14 +607,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     if (isAutoBuildFillMode(structure)) {
       const normalized = Math.min(100, nextValue);
       structure.autoBuildFillPercent = normalized;
-      if (normalized !== autoBuildPercent) {
-        autoBuildInput.value = `${normalized}`;
-      }
     } else {
       structure.autoBuildPercent = nextValue;
-      if (nextValue !== autoBuildPercent) {
-        autoBuildInput.value = `${nextValue}`;
-      }
     }
     refreshAutoBuildTarget(structure);
   });
