@@ -17,6 +17,8 @@ class DeeperMiningProject extends AndroidProject {
       const totalDepth = (this.averageDepth || 1) * current;
       this.oreMineCount = built;
       this.averageDepth = (totalDepth + delta) / this.oreMineCount;
+      this.updateUnderworldMiningMaxDepth();
+      this.applySuperchargedMiningEffects();
       if (this.attributes?.completionEffect) {
         this.applyCompletionEffect();
       }
@@ -47,6 +49,8 @@ class DeeperMiningProject extends AndroidProject {
     const newDepth = Math.min(currentDepth + depthGain, this.maxDepth);
     if (newDepth !== this.averageDepth) {
       this.averageDepth = newDepth;
+      this.updateUnderworldMiningMaxDepth();
+      this.applySuperchargedMiningEffects();
       if (this.attributes?.completionEffect) {
         this.applyCompletionEffect();
       }
@@ -198,10 +202,8 @@ class DeeperMiningProject extends AndroidProject {
       elements.costElement.appendChild(info);
     }
     if (!elements.costItems['colony.superalloys']) {
-      if (elements.costList.childNodes.length > 0) {
-        elements.costList.appendChild(document.createTextNode(', '));
-      }
       const superalloyCost = document.createElement('span');
+      superalloyCost.dataset.leadingComma = 'true';
       elements.costList.appendChild(superalloyCost);
       elements.costItems['colony.superalloys'] = superalloyCost;
     }
@@ -341,6 +343,8 @@ class DeeperMiningProject extends AndroidProject {
   complete() {
     if (this.averageDepth < this.maxDepth) {
       this.averageDepth = Math.min(this.averageDepth + 1, this.maxDepth);
+      this.updateUnderworldMiningMaxDepth();
+      this.applySuperchargedMiningEffects();
       super.complete();
       if (this.averageDepth >= this.maxDepth) {
         this.isCompleted = true;

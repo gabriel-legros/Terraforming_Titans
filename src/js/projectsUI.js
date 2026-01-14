@@ -709,13 +709,15 @@ function updateCostDisplay(project) {
       const item = elements.costItems[key];
       const requiredAmount = cost[category]?.[resource];
       if (requiredAmount > 0) {
+        const hasPreviousItem = hasItem;
         hasItem = true;
         const storageKey = resource === 'water' ? 'liquidWater' : resource;
         const storageAmount = storageProj ? storageProj.getAvailableStoredResource(storageKey) : 0;
         const availableAmount = (resources[category]?.[resource]?.value || 0) + storageAmount;
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
-        item.textContent = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+        const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
+        item.textContent = `${prefix}${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
         const highlight = availableAmount < requiredAmount &&
           !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
         item.style.color = highlight ? 'red' : '';
@@ -911,8 +913,6 @@ function updateProjectUI(projectName) {
   // Update Repeat Count / Depth display if applicable
   if (elements.repeatCountElement) {
     if (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject) {
-      project.updateUnderworldMiningMaxDepth();
-      project.applySuperchargedMiningEffects();
       elements.repeatCountElement.textContent = `Average depth: ${formatNumber(project.averageDepth, true)} / ${formatNumber(project.maxDepth, true)}`;
       project.updateUnderworldMiningUI(elements);
       elements.underworldSection.style.display = project.isBooleanFlagSet('underworld_mining') ? 'flex' : 'none';
