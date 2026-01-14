@@ -2151,10 +2151,18 @@ const researchParameters = {
       {
         id: 'chemistry_of_scale',
         name: 'Chemistry of Scale',
-        description: 'TBD',
+        description: 'Chemical reactors gain efficiency from scale, with production and consumption multiplied by 1 + log(active reactors) / 5.',
         cost: { advancedResearch: 6_000_000 },
         prerequisites: [],
-        effects: []
+        effects: [
+          {
+            target: 'building',
+            targetId: 'boschReactor',
+            type: 'booleanFlag',
+            flagId: 'chemistryOfScale',
+            value: true
+          }
+        ]
       },
       {
         id: 'self_replicating_ships_concept',

@@ -84,6 +84,9 @@ class ChemicalReactor extends MultiRecipesBuilding {
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
 
+    // Apply Chemistry of Scale effect before computing productivity
+    this._applyChemistryOfScaleEffect();
+
     const { targetProductivity: baseTarget, hasAtmosphericOversight } =
       this.computeBaseProductivity(resources, deltaTime);
     const displayTarget = Math.max(
@@ -139,6 +142,41 @@ class ChemicalReactor extends MultiRecipesBuilding {
       this.displayProductivity,
       displayTarget
     );
+  }
+
+  _applyChemistryOfScaleEffect() {
+    // Only apply if the chemistryOfScale flag is set
+    if (!this.isBooleanFlagSet('chemistryOfScale')) {
+      return;
+    }
+
+    const activeCount = this.active;
+    if (activeCount <= 0) {
+      return;
+    }
+
+    // Calculate multiplier: 1 + log(x) / 5, where x is the number of active reactors
+    const multiplier = 1 + Math.log10(activeCount) / 5;
+
+    // Create a unique effect ID for this self-inflicted effect
+    const effectId = 'chemistryOfScale_selfInflicted';
+    const sourceId = 'chemistryOfScale';
+
+    // Apply production multiplier
+    this.addAndReplace({
+      type: 'productionMultiplier',
+      value: multiplier,
+      effectId: `${effectId}_production`,
+      sourceId: sourceId
+    });
+
+    // Apply consumption multiplier
+    this.addAndReplace({
+      type: 'consumptionMultiplier',
+      value: multiplier,
+      effectId: `${effectId}_consumption`,
+      sourceId: sourceId
+    });
   }
 
   initUI(autoBuildContainer, cache) {
