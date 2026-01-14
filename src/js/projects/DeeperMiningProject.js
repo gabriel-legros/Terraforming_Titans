@@ -6,6 +6,16 @@ class DeeperMiningProject extends AndroidProject {
     this.baseMaxDepth = config.maxDepth || Infinity;
     this.underworldMiningLevel = 0;
     this.superchargedMiningLevel = 0;
+    
+    // Deep mining settings (depth > 5000)
+    this.createGeothermalDeposits = false;
+    this.undergroundStorage = false;
+    this.lastGeothermalDepth = 0;
+    
+    // Configuration parameters
+    this.geothermalDepositsPerMinePerLevel = config.geothermalDepositsPerMinePerLevel || 1000;
+    this.storageDepotsPerMinePerLevel = config.storageDepotsPerMinePerLevel || 1;
+    
     this.updateUnderworldMiningMaxDepth();
   }
 
@@ -51,6 +61,7 @@ class DeeperMiningProject extends AndroidProject {
       this.averageDepth = newDepth;
       this.updateUnderworldMiningMaxDepth();
       this.applySuperchargedMiningEffects();
+      this.applyDeepMiningEffects(currentDepth, newDepth);
       if (this.attributes?.completionEffect) {
         this.applyCompletionEffect();
       }
@@ -82,6 +93,12 @@ class DeeperMiningProject extends AndroidProject {
       const componentCost = cost.colony.components || 0;
       cost.colony.superalloys = (cost.colony.superalloys || 0) + (componentCost * bonusLevel) / 100;
     }
+    
+    // Double components cost when geothermal deposits enabled
+    if (this.createGeothermalDeposits && this.averageDepth >= 5000) {
+      cost.colony.components = (cost.colony.components || 0) * 2;
+    }
+    
     return cost;
   }
 
@@ -168,6 +185,48 @@ class DeeperMiningProject extends AndroidProject {
     });
   }
 
+  applyDeepMiningEffects(oldDepth, newDepth) {
+    // Create geothermal deposits for depth changes beyond 5000
+    if (this.createGeothermalDeposits && newDepth >= 5000) {
+      const oldLevels = Math.max(0, Math.floor((oldDepth - 5000) / 250));
+      const newLevels = Math.floor((newDepth - 5000) / 250);
+      const levelsGained = newLevels - oldLevels;
+      
+      if (levelsGained > 0) {
+        const depositsGained = levelsGained * this.oreMineCount * this.geothermalDepositsPerMinePerLevel;
+        if (buildings.geothermalGenerator) {
+          buildings.geothermalGenerator.deposits = (buildings.geothermalGenerator.deposits || 0) + depositsGained;
+        }
+        this.lastGeothermalDepth = newDepth;
+      }
+    }
+    
+    // Apply underground storage capacity
+    this.applyUndergroundStorageEffects();
+  }
+
+  applyUndergroundStorageEffects() {
+    if (this.undergroundStorage && this.averageDepth >= 5000) {
+      const levels = Math.floor((this.averageDepth - 5000) / 250);
+      const storageEquivalent = levels * this.oreMineCount * this.storageDepotsPerMinePerLevel;
+      
+      addEffect({
+        target: 'global',
+        type: 'addStorageCapacity',
+        effectId: 'underground_storage',
+        value: storageEquivalent,
+        sourceId: this
+      });
+    } else {
+      removeEffect({
+        target: 'global',
+        type: 'addStorageCapacity',
+        effectId: 'underground_storage',
+        sourceId: this
+      });
+    }
+  }
+
   updateUnderworldMiningUI(elements) {
     const level = this.underworldMiningLevel;
     const speedBonus = level * 100;
@@ -188,7 +247,14 @@ class DeeperMiningProject extends AndroidProject {
 
   getBaseDuration() {
     const base = super.getBaseDuration();
-    return base / this.getUnderworldMiningSpeedMultiplier();
+    let duration = base / this.getUnderworldMiningSpeedMultiplier();
+    
+    // Slow down by 2x when underground storage is enabled
+    if (this.undergroundStorage && this.averageDepth >= 5000) {
+      duration *= 2;
+    }
+    
+    return duration;
   }
 
   renderUI(container) {
@@ -280,6 +346,61 @@ class DeeperMiningProject extends AndroidProject {
     sectionContainer.appendChild(superchargeRow);
     container.appendChild(sectionContainer);
 
+    // Deep mining section (depth > 5000)
+    const deepMiningSection = document.createElement('div');
+    deepMiningSection.classList.add('project-section-container', 'deep-mining-section');
+
+    const deepMiningTitle = document.createElement('h4');
+    deepMiningTitle.classList.add('section-title');
+    deepMiningTitle.textContent = 'Available with depth > 5000';
+    deepMiningSection.appendChild(deepMiningTitle);
+
+    // Geothermal deposits checkbox
+    const geothermalRow = document.createElement('div');
+    geothermalRow.classList.add('checkbox-row');
+
+    const geothermalCheckbox = document.createElement('input');
+    geothermalCheckbox.type = 'checkbox';
+    geothermalCheckbox.id = `${this.name}-geothermal-checkbox`;
+    geothermalCheckbox.checked = this.createGeothermalDeposits;
+
+    const geothermalLabel = document.createElement('label');
+    geothermalLabel.htmlFor = `${this.name}-geothermal-checkbox`;
+    geothermalLabel.textContent = 'Create geothermal deposits';
+
+    const geothermalInfo = document.createElement('span');
+    geothermalInfo.classList.add('info-tooltip-icon');
+    geothermalInfo.innerHTML = '&#9432;';
+    const geothermalTooltipText = `Generates ${formatNumber(this.geothermalDepositsPerMinePerLevel, true)} geothermal deposits per ore mine for each 250m depth level beyond 5000m. Deposits are only created when this setting is enabled during deepening. Tradeoff: Doubles components cost.`;
+    attachDynamicInfoTooltip(geothermalInfo, geothermalTooltipText);
+
+    geothermalRow.append(geothermalCheckbox, geothermalLabel, geothermalInfo);
+    deepMiningSection.appendChild(geothermalRow);
+
+    // Underground storage checkbox
+    const storageRow = document.createElement('div');
+    storageRow.classList.add('checkbox-row');
+
+    const storageCheckbox = document.createElement('input');
+    storageCheckbox.type = 'checkbox';
+    storageCheckbox.id = `${this.name}-storage-checkbox`;
+    storageCheckbox.checked = this.undergroundStorage;
+
+    const storageLabel = document.createElement('label');
+    storageLabel.htmlFor = `${this.name}-storage-checkbox`;
+    storageLabel.textContent = 'Underground Storage';
+
+    const storageInfo = document.createElement('span');
+    storageInfo.classList.add('info-tooltip-icon');
+    storageInfo.innerHTML = '&#9432;';
+    const storageTooltipText = `Provides storage capacity equivalent to ${this.storageDepotsPerMinePerLevel} storage depot${this.storageDepotsPerMinePerLevel !== 1 ? 's' : ''} per ore mine for each 250m depth level beyond 5000m. These do not count as actual buildings and have no maintenance cost. Tradeoff: Deepening time is slowed by 2x.`;
+    attachDynamicInfoTooltip(storageInfo, storageTooltipText);
+
+    storageRow.append(storageCheckbox, storageLabel, storageInfo);
+    deepMiningSection.appendChild(storageRow);
+
+    container.appendChild(deepMiningSection);
+
     projectElements[this.name] = {
       ...projectElements[this.name],
       underworldSection: sectionContainer,
@@ -288,7 +409,10 @@ class DeeperMiningProject extends AndroidProject {
       underworldEffect: effectSpan,
       superchargedSlider: superchargeInput,
       superchargedValue: superchargeValue,
-      superchargedEffect: superchargeEffect
+      superchargedEffect: superchargeEffect,
+      deepMiningSection: deepMiningSection,
+      geothermalCheckbox: geothermalCheckbox,
+      storageCheckbox: storageCheckbox
     };
 
     input.addEventListener('input', () => {
@@ -299,6 +423,37 @@ class DeeperMiningProject extends AndroidProject {
       this.setSuperchargedMiningLevel(Number(superchargeInput.value));
       updateProjectUI(this.name);
     });
+    geothermalCheckbox.addEventListener('change', () => {
+      this.createGeothermalDeposits = geothermalCheckbox.checked;
+      updateProjectUI(this.name);
+    });
+    storageCheckbox.addEventListener('change', () => {
+      this.undergroundStorage = storageCheckbox.checked;
+      this.applyUndergroundStorageEffects();
+      this.adjustActiveDuration();
+      updateProjectUI(this.name);
+    });
+  }
+
+  updateUI() {
+    super.updateUI();
+    const elements = projectElements[this.name];
+    if (!elements) return;
+
+    // Update deep mining section visibility and state
+    if (elements.deepMiningSection) {
+      const isDeepEnough = this.averageDepth >= 5000;
+      elements.deepMiningSection.style.display = isDeepEnough ? '' : 'none';
+      
+      if (elements.geothermalCheckbox) {
+        elements.geothermalCheckbox.disabled = !isDeepEnough;
+        elements.geothermalCheckbox.checked = this.createGeothermalDeposits;
+      }
+      if (elements.storageCheckbox) {
+        elements.storageCheckbox.disabled = !isDeepEnough;
+        elements.storageCheckbox.checked = this.undergroundStorage;
+      }
+    }
   }
 
   applyCompletionEffect() {
@@ -342,9 +497,11 @@ class DeeperMiningProject extends AndroidProject {
 
   complete() {
     if (this.averageDepth < this.maxDepth) {
+      const oldDepth = this.averageDepth;
       this.averageDepth = Math.min(this.averageDepth + 1, this.maxDepth);
       this.updateUnderworldMiningMaxDepth();
       this.applySuperchargedMiningEffects();
+      this.applyDeepMiningEffects(oldDepth, this.averageDepth);
       super.complete();
       if (this.averageDepth >= this.maxDepth) {
         this.isCompleted = true;
@@ -359,7 +516,10 @@ class DeeperMiningProject extends AndroidProject {
       oreMineCount: this.oreMineCount,
       averageDepth: this.averageDepth,
       underworldMiningLevel: this.underworldMiningLevel,
-      superchargedMiningLevel: this.superchargedMiningLevel
+      superchargedMiningLevel: this.superchargedMiningLevel,
+      createGeothermalDeposits: this.createGeothermalDeposits,
+      undergroundStorage: this.undergroundStorage,
+      lastGeothermalDepth: this.lastGeothermalDepth
     };
   }
 
@@ -370,8 +530,12 @@ class DeeperMiningProject extends AndroidProject {
     this.averageDepth = state.averageDepth || (this.repeatCount || 0) + 1;
     this.underworldMiningLevel = state.underworldMiningLevel || 0;
     this.superchargedMiningLevel = state.superchargedMiningLevel || 0;
+    this.createGeothermalDeposits = state.createGeothermalDeposits || false;
+    this.undergroundStorage = state.undergroundStorage || false;
+    this.lastGeothermalDepth = state.lastGeothermalDepth || 0;
     this.updateUnderworldMiningMaxDepth();
     this.applySuperchargedMiningEffects();
+    this.applyUndergroundStorageEffects();
     if (this.attributes?.completionEffect) {
       this.applyCompletionEffect();
     }
@@ -381,8 +545,12 @@ class DeeperMiningProject extends AndroidProject {
   prepareTravelState() {
     this.underworldMiningLevel = 0;
     this.superchargedMiningLevel = 0;
+    this.createGeothermalDeposits = false;
+    this.undergroundStorage = false;
+    this.lastGeothermalDepth = 0;
     this.updateUnderworldMiningMaxDepth();
     this.applySuperchargedMiningEffects();
+    this.applyUndergroundStorageEffects();
     this.adjustActiveDuration();
   }
 }

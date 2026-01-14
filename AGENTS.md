@@ -221,6 +221,10 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Updates
 - Tartarus chapter 32.1 now unlocks Underworld mining upgrades for Deeper Mining, adding superalloy drills for speed/max depth plus a Supercharged Mining slider that boosts ore output while cubing energy use.
+- Deeper Mining now includes deep mining settings (depth > 5000) with two configurable options:
+  - **Create geothermal deposits**: Generates geothermal deposits (default 1000 per mine per 250m level beyond 5000m) when enabled during deepening. Tradeoff: doubles components cost.
+  - **Underground Storage**: Provides storage capacity equivalent to storage depots (default 1 per mine per 250m level beyond 5000m) without maintenance cost. Tradeoff: deepening time is slowed by 2x.
+  - Both settings are disabled/greyed out until depth reaches 5000m and their gain rates are configurable via `geothermalDepositsPerMinePerLevel` and `storageDepotsPerMinePerLevel` in project config.
 - Random World Generator adds the Chthonian archetype with the effect label "Suffering Enjoyment."
 - Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
 - Biodome life design points now scale with worker availability while still ignoring other productivity shortages.
