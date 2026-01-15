@@ -308,9 +308,7 @@ class ColonySlidersManager extends EffectableEntity {
 
   loadState(state) {
     if (!state) return;
-    // Clear boolean flags when loading to ensure clean state
-    this.booleanFlags.clear();
-    this.activeEffects = [];
+
     this.setWorkforceRatio(state.workerRatio ?? 0.5);
     this.setFoodConsumptionMultiplier(state.foodConsumption ?? 1);
     this.setLuxuryWaterMultiplier(state.luxuryWater ?? 1);

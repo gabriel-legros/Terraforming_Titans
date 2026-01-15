@@ -84,6 +84,8 @@ function initializeDefaultGlobals(){
 
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
+  // Initialize colony slider settings with clean state
+  colonySliderSettings = new ColonySlidersManager();
   initializeColonySlidersUI();
   if (typeof nanotechManager !== 'undefined') {
     nanotechManager.updateUI();
