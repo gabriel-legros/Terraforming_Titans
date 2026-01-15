@@ -264,6 +264,18 @@ const researchParameters = {
         ]
       },
       {
+        id: 'laser_cannon',
+        name: 'Laser Cannon',
+        description: 'Unlocks laser cannon emplacements that burn immense energy to clear orbital debris.',
+        cost: { research: 2_000_000_000 },
+        prerequisites: [],
+        requiredFlags: ['laserCannonUnlocked'],
+        requiresKesslerHazard: true,
+        effects: [
+          { target: 'building', targetId: 'laserCannon', type: 'enable' }
+        ]
+      },
+      {
         id: 'ai_reactor_overclocking',
         name: 'AI Reactor Overclocking',
         description: 'HOPE will tune superalloy fusion reactors to unleash their potential, providing a 25% output boost per level.',

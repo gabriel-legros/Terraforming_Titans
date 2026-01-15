@@ -218,7 +218,14 @@ progressTartarus.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
     ],
-    reward: []
+    reward: [
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'laserCannonUnlocked',
+        value: true
+      }
+    ]
   },
   {
     id: 'tartarus.32.3',

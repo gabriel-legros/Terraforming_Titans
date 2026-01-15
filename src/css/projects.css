@@ -863,16 +863,16 @@
 }
 
 .galactic-market-left-row {
-    grid-template-columns: 120px 120px 110px minmax(120px, auto);
+    grid-template-columns: 80px 80px 100px minmax(110px, auto);
 }
 
 .galactic-market-right-row {
-    grid-template-columns: minmax(190px, auto) minmax(130px, auto) 110px minmax(40px, 1fr);
+    grid-template-columns: minmax(190px, auto) minmax(110px, auto) 100px minmax(40px, 1fr);
 }
 
 .galactic-market-row input[type="text"] {
     width: 100%;
-    max-width: 110px;
+    max-width: 90px;
 }
 
 .galactic-market-controls {

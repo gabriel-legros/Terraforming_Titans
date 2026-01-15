@@ -1144,7 +1144,8 @@ const constructors = {
   antimatterBattery: 'AntimatterBattery',
   spaceMirror: 'SpaceMirror',
   hyperionLantern: 'HyperionLantern',
-  trashIncinerator: 'MultiRecipesBuilding'
+  trashIncinerator: 'MultiRecipesBuilding',
+  laserCannon: 'LaserCannon'
 };
 
 function loadConstructor(name) {

@@ -41,4 +41,41 @@ describe('Kessler hazard distribution bins', () => {
     const expectedMax = mean + sigma * 3;
     expect(distribution[distribution.length - 1].periapsisMeters).toBeCloseTo(expectedMax, 0);
   });
+
+  test('removes debris from the lowest bins when total mass shrinks', () => {
+    global.resources = {
+      special: {
+        orbitalDebris: {
+          value: 15,
+          initialValue: 15,
+          unlocked: true,
+          modifyRate: jest.fn()
+        }
+      }
+    };
+
+    const hazard = new KesslerHazard({ parameters: { kessler: {} } });
+    hazard.periapsisDistribution = [
+      { periapsisMeters: 0, massTons: 5 },
+      { periapsisMeters: 10, massTons: 5 },
+      { periapsisMeters: 20, massTons: 5 }
+    ];
+    hazard.periapsisBaseline = [
+      { periapsisMeters: 0, massTons: 5 },
+      { periapsisMeters: 10, massTons: 5 },
+      { periapsisMeters: 20, massTons: 5 }
+    ];
+
+    const terraforming = {
+      exosphereHeightMeters: 0,
+      updateLuminosity: jest.fn(),
+      _updateExosphereHeightCache: jest.fn()
+    };
+
+    hazard.syncDistributionToResource(terraforming, {}, 10);
+
+    expect(hazard.periapsisDistribution[0].massTons).toBe(0);
+    expect(hazard.periapsisDistribution[1].massTons).toBe(5);
+    expect(hazard.periapsisDistribution[2].massTons).toBe(5);
+  });
 });

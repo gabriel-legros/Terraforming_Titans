@@ -234,6 +234,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Space Elevator and Planetary Thrusters are disabled while Kessler debris remains, showing "Disabled by Kessler" on their progress bars until the debris clears.
 - Spaceship projects and satellites now show Kessler failure risk warnings with live failure percentages based on their project size.
 - Resource Disposal now isolates Kessler risk to spaceship capacity only, letting mass drivers contribute without failure or debris.
+- Added a Laser Cannon energy research gated by Tartarus 32.2 and active Kessler hazard conditions, unlocking a waste-category Laser Cannon that consumes research and energy to clear orbital debris from the lowest periapsis bins.
 - Added an Engineered Nitrogen Fixation research that doubles life growth at 10 kPa of nitrogen pressure.
 - Gabbag chapter 29.8 now unlocks ammonia visibility and new chemical reactor recipes for Haber-Bosch and ammonia combustion.
 - Added an ammonia resource with liquid/ice/gas cycles and updated terraforming physics to include its phase changes.

@@ -440,6 +440,14 @@ class Research {
       return (geo?.maxDeposits || 0) > 0;
     }
 
+    hasKesslerHazard() {
+      try {
+        return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+      } catch (error) {
+        return false;
+      }
+    }
+
     isArtificialWorld() {
       if (spaceManager && spaceManager.currentArtificialKey !== null) {
         return true;
@@ -466,6 +474,9 @@ class Research {
         return false;
       }
       if (research.requiresGeothermal && !this.planetHasGeothermalDeposits()) {
+        return false;
+      }
+      if (research.requiresKesslerHazard && !this.hasKesslerHazard()) {
         return false;
       }
       if (research.artificialAllowed === false && this.isArtificialWorld()) {

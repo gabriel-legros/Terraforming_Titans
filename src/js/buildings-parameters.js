@@ -840,5 +840,24 @@ const buildingsParameters = {
     requiresMaintenance: true,
     maintenanceFactor: 1,
     unlocked: false
+  },
+  laserCannon: {
+    name: 'Laser Cannon',
+    category: 'waste',
+    description: 'Vaporizes orbital debris with sustained laser fire.',
+    cost: { colony: { metal: 5000, components: 200, electronics: 150, superconductors: 50 } },
+    consumption: { colony: { energy: 1_000_000_000, research: 10 } },
+    production: { special: { orbitalDebris: -1 } },
+    alwaysShowProduction: true,
+    alwaysShowConsumption: true,
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    snapProductivity: true,
+    displayConsumptionAtMaxProductivity: true,
+    requiresMaintenance: true,
+    requiresWorker: 100,
+    maintenanceFactor: 1,
+    unlocked: false
   }
 };

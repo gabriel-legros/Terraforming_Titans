@@ -126,3 +126,63 @@ describe('required flag research gating', () => {
     expect(manager.isResearchDisplayable(research)).toBe(true);
   });
 });
+
+describe('kessler hazard research gating', () => {
+  let ResearchManager;
+
+  const hazardResearch = {
+    id: 'laser_cannon',
+    name: 'Laser Cannon',
+    description: '',
+    cost: {},
+    prerequisites: [],
+    requiredFlags: ['laserCannonUnlocked'],
+    requiresKesslerHazard: true,
+    effects: []
+  };
+
+  beforeEach(() => {
+    jest.resetModules();
+    global.addEffect = jest.fn();
+    global.removeEffect = jest.fn();
+    global.EffectableEntity = class {
+      constructor() {
+        this.booleanFlags = new Set();
+      }
+      isBooleanFlagSet(flag) {
+        return this.booleanFlags.has(flag);
+      }
+      addAndReplace() {}
+      addEffect() {}
+      removeEffect() {}
+      applyActiveEffects() {}
+    };
+    global.currentPlanetParameters = {
+      resources: { surface: {}, atmospheric: {}, underground: {} },
+      classification: { archetype: 'rocky' }
+    };
+    global.spaceManager = null;
+    global.hazardManager = {
+      parameters: { kessler: {} },
+      kesslerHazard: { isCleared: jest.fn(() => false) }
+    };
+    ({ ResearchManager } = require('../src/js/research.js'));
+  });
+
+  it('hides the research when the hazard is cleared', () => {
+    const manager = new ResearchManager({ energy: [hazardResearch] });
+    manager.booleanFlags.add('laserCannonUnlocked');
+    global.hazardManager.kesslerHazard.isCleared.mockReturnValue(true);
+
+    const research = manager.getResearchById('laser_cannon');
+    expect(manager.isResearchDisplayable(research)).toBe(false);
+  });
+
+  it('shows the research when the hazard is active and the flag is set', () => {
+    const manager = new ResearchManager({ energy: [hazardResearch] });
+    manager.booleanFlags.add('laserCannonUnlocked');
+
+    const research = manager.getResearchById('laser_cannon');
+    expect(manager.isResearchDisplayable(research)).toBe(true);
+  });
+});
