@@ -167,22 +167,6 @@ class DeeperMiningProject extends AndroidProject {
       });
       return;
     }
-    removeEffect({
-      target: 'building',
-      targetId: 'oreMine',
-      type: 'productionMultiplier',
-      effectId: 'supercharged_mining_prod',
-      sourceId: this
-    });
-    removeEffect({
-      target: 'building',
-      targetId: 'oreMine',
-      type: 'resourceConsumptionMultiplier',
-      resourceCategory: 'colony',
-      resourceTarget: 'energy',
-      effectId: 'supercharged_mining_energy',
-      sourceId: this
-    });
   }
 
   applyDeepMiningEffects(oldDepth, newDepth) {
@@ -206,24 +190,31 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   applyUndergroundStorageEffects() {
-    if (this.undergroundStorage && this.averageDepth >= 5000) {
-      const levels = Math.floor((this.averageDepth - 5000) / 250);
-      const storageEquivalent = levels * this.oreMineCount * this.storageDepotsPerMinePerLevel;
-      
-      addEffect({
-        target: 'global',
-        type: 'addStorageCapacity',
-        effectId: 'underground_storage',
-        value: storageEquivalent,
-        sourceId: this
-      });
-    } else {
-      removeEffect({
-        target: 'global',
-        type: 'addStorageCapacity',
-        effectId: 'underground_storage',
-        sourceId: this
-      });
+    const storageDepot = buildings.storageDepot;
+    if (!storageDepot || !storageDepot.storage) {
+      return;
+    }
+
+    const levels = (this.undergroundStorage && this.averageDepth >= 5000)
+      ? Math.floor((this.averageDepth - 5000) / 250)
+      : 0;
+    const storageEquivalent = levels * this.oreMineCount * this.storageDepotsPerMinePerLevel;
+    
+    // Apply storage bonus to each resource that storage depots provide
+    for (const category in storageDepot.storage) {
+      for (const resourceId in storageDepot.storage[category]) {
+        const baseStoragePerDepot = storageDepot.storage[category][resourceId];
+        const bonusStorage = baseStoragePerDepot * storageEquivalent;
+        
+        addEffect({
+          target: 'resource',
+          targetId: resourceId,
+          type: 'baseStorageBonus',
+          effectId: `underground_storage_${resourceId}`,
+          value: bonusStorage,
+          sourceId: this
+        });
+      }
     }
   }
 

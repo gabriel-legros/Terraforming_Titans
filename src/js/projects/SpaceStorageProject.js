@@ -30,6 +30,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationKesslerElapsed = 0;
     this.shipOperationKesslerPending = false;
     this.shipOperationKesslerCost = null;
+    // Override kesslerDebrisSize to null so expansion doesn't trigger Kessler
+    // Only ship operations should generate debris
+    this.kesslerDebrisSize = null;
   }
 
   isAutomationManuallyDisabled() {
