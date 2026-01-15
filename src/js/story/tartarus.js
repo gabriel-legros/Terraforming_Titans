@@ -157,7 +157,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 31,
     activePlanet: 'tartarus',
-    narrative: "$PROMETHEUS$ : 'And finally, there is you.  You specifically Mary Hopkins.  You have survived Earth's destruction.  You then had to lead the ashes for some time.  You can't forgive yourself for all your mistakes.  The guilt is crushing you.  This is why you bound your fate to the child now.  You two die together.  You go into danger together.  You no longer have the will to live of your own so you handed over your own life to HOPE.  Hypocrite.'  \n Mary : *sobbing* 'That's enough.  I have no more questions.'  \n $PROMETHEUS$ : 'Very well.'",
+    narrative: "$PROMETHEUS$ : 'And finally, there is you.  You specifically Mary Hopkins.  You have survived Earth's destruction.  You then had to lead the ashes for some time.  You can't forgive yourself for all your mistakes.  The guilt is crushing you.  This is why you bound your fate to the child now.  You two die together.  You go into danger together.  You no longer have the will to live of your own so you handed over your own life to HOPE.  Hypocrite.'  \n Mary : 'That's enough.  I have no more questions.'  \n $PROMETHEUS$ : 'Very well.'",
     prerequisites: ['tartarus.31.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }

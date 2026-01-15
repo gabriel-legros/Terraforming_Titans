@@ -208,6 +208,7 @@ class DeeperMiningProject extends AndroidProject {
         
         addEffect({
           target: 'resource',
+          resourceType: 'colony',
           targetId: resourceId,
           type: 'baseStorageBonus',
           effectId: `underground_storage_${resourceId}`,
