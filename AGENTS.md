@@ -495,3 +495,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Terraforming zonal resource synchronization and global-change distribution now read per-resource `zonalConfig` parameters for aggregation and spread behavior.
 - Water import automation now offers a disable mode that stops when water+ice amounts exceed the terraforming target.
 - Added Massive scale glass smelting research to double glass smelter production and consumption.
+- Building UI updates now only refresh visible structures on the active buildings subtab to cut per-tick DOM work.

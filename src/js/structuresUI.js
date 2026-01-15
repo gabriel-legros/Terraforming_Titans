@@ -1757,8 +1757,13 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureDisplay(structures) {
+    const activeId = buildingSubtabManager?.getActiveId?.() || '';
+    const activeCategory = activeId.replace('-buildings', '');
     for (const structureName in structures) {
       const structure = structures[structureName];
+      if (structure.category && activeCategory && structure.category !== activeCategory) {
+        continue;
+      }
       const els = structureUIElements[structureName] || (structureUIElements[structureName] = {});
       const combinedStructureRow = els.combinedRow || (function(){
         const btn = document.getElementById(`build-${structureName}`);
@@ -1781,6 +1786,7 @@ function updateDecreaseButtonText(button, buildCount) {
         combinedStructureRow.style.display = 'flex'; // Show the building when unlocked
       } else {
         combinedStructureRow.style.display = 'none';
+        continue;
       }
   
       if (countElement) {
