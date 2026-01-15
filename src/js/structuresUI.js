@@ -2077,7 +2077,10 @@ function updateDecreaseButtonText(button, buildCount) {
     const swapProdCons = structure.reversalAvailable && structure.reverseEnabled;
     const displayProduction = swapProdCons ? {} : production;
     const displayConsumption = swapProdCons ? mergeResourceMaps(consumption, production) : consumption;
-    const prodKeys = collectResourceKeys(displayProduction, { forceShow: structure.alwaysShowProduction });
+    const prodKeys = collectResourceKeys(displayProduction, {
+      forceShow: structure.alwaysShowProduction,
+      allowNegative: true
+    });
     if (prodKeys.length > 0) {
       sections.push({ key: 'production', label: 'Production', data: displayProduction, keys: prodKeys });
     }
@@ -2103,14 +2106,15 @@ function updateDecreaseButtonText(button, buildCount) {
     return sections;
   }
 
-  function collectResourceKeys(resourceObject, { forceShow } = {}) {
+  function collectResourceKeys(resourceObject, { forceShow, allowNegative } = {}) {
     const keys = [];
     for (const category in resourceObject) {
       for (const resource in resourceObject[category]) {
         const val = resourceObject[category][resource];
         const resourceEntry = resources?.[category]?.[resource];
         const isAvailable = resourceEntry && resourceEntry.unlocked;
-        if (val > 0 && (forceShow || isAvailable)) {
+        const shouldShow = allowNegative ? val !== 0 : val > 0;
+        if (shouldShow && (forceShow || isAvailable)) {
           keys.push(`${category}.${resource}`);
         }
       }
