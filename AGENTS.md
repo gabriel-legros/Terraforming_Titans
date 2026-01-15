@@ -221,6 +221,8 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Updates
 - Tartarus chapter 32.1 now unlocks Underworld mining upgrades for Deeper Mining, adding superalloy drills for speed/max depth plus a Supercharged Mining slider that boosts ore output while cubing energy use.
+- Solis now offers a permanent Android Manufacturing research unlock and a Buildings Automation upgrade gated by the Tartarus 30.4 story flags.
+- Tartarus chapter 30.4 now grants Solis flags for permanent Android research and Buildings Automation, and a new tartarus.30.4b placeholder chapter sits between 30.4 and 30.5.
 - Deeper Mining now includes deep mining settings (depth > 5000) with two configurable options:
   - **Create geothermal deposits**: Generates geothermal deposits (default 1000 per mine per 250m level beyond 5000m) when enabled during deepening. Tradeoff: doubles components cost.
   - **Underground Storage**: Provides storage capacity equivalent to storage depots (default 1 per mine per 250m level beyond 5000m) without maintenance cost. Tradeoff: deepening time is slowed by 2x.

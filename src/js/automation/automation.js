@@ -19,7 +19,8 @@ class AutomationManager extends EffectableEntity {
     this.enabled = false;
     this.features = {
       automationShipAssignment: false,
-      automationLifeDesign: false
+      automationLifeDesign: false,
+      automationBuildings: false
     };
     this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef() : null;
     this.lifeAutomation = LifeAutomationRef ? new LifeAutomationRef() : null;
@@ -36,6 +37,8 @@ class AutomationManager extends EffectableEntity {
       this.setFeature('automationShipAssignment', !!effect.value);
     } else if (effect.flagId === 'automationLifeDesign') {
       this.setFeature('automationLifeDesign', !!effect.value);
+    } else if (effect.flagId === 'automationBuildings') {
+      this.setFeature('automationBuildings', !!effect.value);
     }
   }
 
@@ -62,6 +65,7 @@ class AutomationManager extends EffectableEntity {
   reapplyEffects() {
     this.setFeature('automationShipAssignment', this.isBooleanFlagSet('automationShipAssignment'));
     this.setFeature('automationLifeDesign', this.isBooleanFlagSet('automationLifeDesign'));
+    this.setFeature('automationBuildings', this.isBooleanFlagSet('automationBuildings'));
     if (this.spaceshipAutomation) {
       this.spaceshipAutomation.unlockManualControls();
     }
@@ -82,7 +86,11 @@ class AutomationManager extends EffectableEntity {
 
   loadState(data = {}) {
     this.enabled = !!data.enabled;
-    this.features = Object.assign({ automationShipAssignment: false, automationLifeDesign: false }, data.features || {});
+    this.features = Object.assign({
+      automationShipAssignment: false,
+      automationLifeDesign: false,
+      automationBuildings: false
+    }, data.features || {});
     const flags = Array.isArray(data.booleanFlags) ? data.booleanFlags : [];
     this.booleanFlags = new Set(flags);
     if (data.spaceshipAutomation && this.spaceshipAutomation) {

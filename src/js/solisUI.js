@@ -14,14 +14,16 @@ const shopDescriptions = {
   startingShips: 'Add one Solis-built cargo ship to your starting fleet (base cost: 100)',
   research: 'Increase starting research points by 100',
   terraformingMeasurements: 'Permanently unlock Terraforming measurements research across colonies',
+  androidsPermanentResearch: 'Permanently unlock Android Manufacturing research across colonies',
   advancedOversight: 'Enables advanced oversight for the space mirror facility, which can precisely control mirrors and lanterns based on a target temperature.',
   researchUpgrade: 'Permanently Auto-complete one colonization technology per purchase',
   autoResearch: 'Enable automatic research assignment for unlocked technologies',
   shipAssignment: 'Provides HOPE with software for easier spaceship management',
-  lifeAutomation: 'Provides HOPE with software for easier biomass management'
+  lifeAutomation: 'Provides HOPE with software for easier biomass management',
+  buildingsAutomation: 'Provides HOPE with software for easier buildings management'
 };
 
-const automationShopKeys = ['autoResearch', 'shipAssignment', 'lifeAutomation'];
+const automationShopKeys = ['autoResearch', 'shipAssignment', 'lifeAutomation', 'buildingsAutomation'];
 const solisShopRepeatableKeys = [
   'funding',
   'metal',
@@ -349,6 +351,9 @@ function initializeSolisUI() {
     if (managerRef?.isBooleanFlagSet?.('solisTerraformingMeasurements')) {
       researchShopItems.appendChild(createShopItem('terraformingMeasurements'));
     }
+    if (managerRef?.isBooleanFlagSet?.('solisAndroidsPermanentResearch')) {
+      researchShopItems.appendChild(createShopItem('androidsPermanentResearch'));
+    }
     if (solis1) {
       researchShopItems.appendChild(createShopItem('advancedOversight'));
     }
@@ -499,6 +504,16 @@ function updateSolisUI() {
   } else if (terraformingRecord) {
     terraformingRecord.item.remove();
     delete shopElements.terraformingMeasurements;
+  }
+  const androidsResearchRecord = shopElements.androidsPermanentResearch;
+  const androidsResearchFlag = Boolean(managerRef?.isBooleanFlagSet?.('solisAndroidsPermanentResearch'));
+  if (androidsResearchFlag) {
+    if (!androidsResearchRecord && researchShopItems) {
+      researchShopItems.appendChild(createShopItem('androidsPermanentResearch'));
+    }
+  } else if (androidsResearchRecord) {
+    androidsResearchRecord.item.remove();
+    delete shopElements.androidsPermanentResearch;
   }
 
   if (pointsSpan) {
