@@ -601,6 +601,7 @@ const projectParameters = {
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
+      disableWhenKessler: true,
       canUseSpaceStorage: true,
       megaHeatSink: true,
       workersPerCompletion: 1_000_000_000,

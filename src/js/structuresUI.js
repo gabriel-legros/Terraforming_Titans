@@ -1388,6 +1388,15 @@ function updateDecreaseButtonText(button, buildCount) {
     const totalBaseCost = baseCost * buildCount;
     const lines = [`Base cost: ${formatNumber(totalBaseCost, true)}`];
     const multipliers = [];
+    const kesslerMultiplier = structure.getKesslerCostMultiplier();
+
+    if (kesslerMultiplier !== 1) {
+      const sizeLabel = structure.kesslerDebrisSize === 'large' ? 'large' : 'small';
+      multipliers.push({
+        name: `Kessler debris (${sizeLabel})`,
+        value: kesslerMultiplier
+      });
+    }
 
     structure.activeEffects.forEach(effect => {
       if (effect.type !== 'resourceCostMultiplier') return;

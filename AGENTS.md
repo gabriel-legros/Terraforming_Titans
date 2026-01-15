@@ -231,7 +231,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Random World Generator adds the Chthonian archetype with the effect label "Suffering Enjoyment."
 - Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
 - Biodome life design points now scale with worker availability while still ignoring other productivity shortages.
-- Space Elevator and Planetary Thrusters are disabled while Kessler debris remains, showing "Disabled by Kessler" on their progress bars until the debris clears.
+- Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains, showing "Disabled by Kessler" on their progress bars until the debris clears.
 - Spaceship projects and satellites now show Kessler failure risk warnings with live failure percentages based on their project size.
 - Resource Disposal now isolates Kessler risk to spaceship capacity only, letting mass drivers contribute without failure or debris.
 - Added a Laser Cannon energy research gated by Tartarus 32.2 and active Kessler hazard conditions, unlocking a waste-category Laser Cannon that consumes research and energy to clear orbital debris from the lowest periapsis bins.

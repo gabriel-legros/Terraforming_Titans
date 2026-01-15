@@ -267,7 +267,7 @@ const researchParameters = {
         id: 'laser_cannon',
         name: 'Laser Cannon',
         description: 'Enables clearing orbital debris using laser cannons.',
-        cost: { research: 2_000_000_000 },
+        cost: { research: 5_000_000_000 },
         prerequisites: [],
         requiredFlags: ['laserCannonUnlocked'],
         requiresKesslerHazard: true,
