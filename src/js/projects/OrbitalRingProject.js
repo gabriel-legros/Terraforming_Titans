@@ -83,6 +83,36 @@ class OrbitalRingProject extends TerraformingDurationProject {
     return true;
   }
 
+  start(resources) {
+    if (this.canStart(resources)) {
+      if (!this.isPaused) {
+        if (this.prepaidRings > 0) {
+          this.prepaidRings -= 1;
+        } else {
+          this.deductResources(resources);
+        }
+        this.remainingTime = this.getEffectiveDuration();
+        this.startingDuration = this.remainingTime;
+        if (this.kesslerDebrisSize) {
+          this.kesslerRollElapsed = 0;
+          this.kesslerRollPending = true;
+          this.kesslerStartCost = this.getScaledCost();
+        } else {
+          this.kesslerRollPending = false;
+          this.kesslerRollElapsed = 0;
+          this.kesslerStartCost = null;
+        }
+      }
+
+      this.isActive = true;
+      this.isPaused = false;
+  
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   getMaxPrepayableRings() {
     if (
       typeof spaceManager === 'undefined' ||
@@ -131,10 +161,6 @@ class OrbitalRingProject extends TerraformingDurationProject {
   complete() {
     super.complete();
     this.ringCount += 1;
-    
-    if (this.prepaidRings > 0) {
-      this.prepaidRings -= 1;
-    }
     
     const manager = typeof spaceManager !== 'undefined' ? spaceManager : null;
     const hadRingBefore = manager?.currentWorldHasOrbitalRing?.() || this.currentWorldHasRing;

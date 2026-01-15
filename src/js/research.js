@@ -679,6 +679,7 @@ class Research {
           research.isResearched = false;
         }
         research.timesResearched = 0;
+        research.disabled = false;
         this.updateRepeatableResearchCost(research);
       });
     }
