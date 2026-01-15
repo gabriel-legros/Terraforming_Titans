@@ -633,9 +633,9 @@ function updateColonySlidersUI() {
     warpnetRow = document.getElementById('warpnet-row');
   }
   if (warpnetRow) {
-    const warpnetUnlocked = manager.isBooleanFlagSet('warpnet');
+    const warpnetUnlocked = manager && manager.isBooleanFlagSet && manager.isBooleanFlagSet('warpnet');
     warpnetRow.style.display = warpnetUnlocked ? 'grid' : 'none';
-    if (warpnetRefresh) {
+    if (warpnetUnlocked && warpnetRefresh) {
       warpnetRefresh();
     }
   }

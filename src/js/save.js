@@ -521,6 +521,15 @@ function loadGame(slotOrCustomString, recreate = true) {
         reconstructJournalState(storyManager, projectManager);
       }
 
+      // Load colony slider settings BEFORE research so research effects can apply to it
+      if(gameState.colonySliderSettings){
+        if (typeof colonySliderSettings.loadState === 'function') {
+          colonySliderSettings.loadState(gameState.colonySliderSettings);
+        } else {
+          Object.assign(colonySliderSettings, gameState.colonySliderSettings);
+        }
+      }
+
       // Restore research progress
       if (gameState.research) {
           researchManager.loadState(gameState.research);
@@ -633,13 +642,6 @@ function loadGame(slotOrCustomString, recreate = true) {
       }
     }
 
-    if(gameState.colonySliderSettings){
-      if (typeof colonySliderSettings.loadState === 'function') {
-        colonySliderSettings.loadState(gameState.colonySliderSettings);
-      } else {
-        Object.assign(colonySliderSettings, gameState.colonySliderSettings);
-      }
-    }
 
       if(gameState.constructionOffice && typeof loadConstructionOfficeState === 'function'){
         loadConstructionOfficeState(gameState.constructionOffice);
