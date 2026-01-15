@@ -967,6 +967,10 @@
     gap: 8px;
 }
 
+.deep-mining-section.deep-mining-locked {
+    opacity: 0.6;
+}
+
 .section-title {
     font-size: 1em;
     font-weight: bold;

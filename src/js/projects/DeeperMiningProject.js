@@ -7,7 +7,7 @@ class DeeperMiningProject extends AndroidProject {
     this.underworldMiningLevel = 0;
     this.superchargedMiningLevel = 0;
     
-    // Deep mining settings (depth > 5000)
+    // Deep mining settings (depth > 500)
     this.createGeothermalDeposits = false;
     this.undergroundStorage = false;
     this.lastGeothermalDepth = 0;
@@ -95,7 +95,7 @@ class DeeperMiningProject extends AndroidProject {
     }
     
     // Double components cost when geothermal deposits enabled
-    if (this.createGeothermalDeposits && this.averageDepth >= 5000) {
+    if (this.createGeothermalDeposits && this.averageDepth >= 500) {
       cost.colony.components = (cost.colony.components || 0) * 2;
     }
     
@@ -170,10 +170,10 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   applyDeepMiningEffects(oldDepth, newDepth) {
-    // Create geothermal deposits for depth changes beyond 5000
-    if (this.createGeothermalDeposits && newDepth >= 5000) {
-      const oldLevels = Math.max(0, Math.floor((oldDepth - 5000) / 250));
-      const newLevels = Math.floor((newDepth - 5000) / 250);
+    // Create geothermal deposits for depth changes beyond 500
+    if (this.createGeothermalDeposits && newDepth >= 500) {
+      const oldLevels = Math.max(0, Math.floor((oldDepth - 500) / 250));
+      const newLevels = Math.floor((newDepth - 500) / 250);
       const levelsGained = newLevels - oldLevels;
       
       if (levelsGained > 0) {
@@ -195,8 +195,8 @@ class DeeperMiningProject extends AndroidProject {
       return;
     }
 
-    const levels = (this.undergroundStorage && this.averageDepth >= 5000)
-      ? Math.floor((this.averageDepth - 5000) / 250)
+    const levels = (this.undergroundStorage && this.averageDepth >= 500)
+      ? Math.floor((this.averageDepth - 500) / 250)
       : 0;
     const storageEquivalent = levels * this.oreMineCount * this.storageDepotsPerMinePerLevel;
     
@@ -242,7 +242,7 @@ class DeeperMiningProject extends AndroidProject {
     let duration = base / this.getUnderworldMiningSpeedMultiplier();
     
     // Slow down by 2x when underground storage is enabled
-    if (this.undergroundStorage && this.averageDepth >= 5000) {
+    if (this.undergroundStorage && this.averageDepth >= 500) {
       duration *= 2;
     }
     
@@ -338,13 +338,13 @@ class DeeperMiningProject extends AndroidProject {
     sectionContainer.appendChild(superchargeRow);
     container.appendChild(sectionContainer);
 
-    // Deep mining section (depth > 5000)
+    // Deep mining section (depth > 500)
     const deepMiningSection = document.createElement('div');
     deepMiningSection.classList.add('project-section-container', 'deep-mining-section');
 
     const deepMiningTitle = document.createElement('h4');
     deepMiningTitle.classList.add('section-title');
-    deepMiningTitle.textContent = 'Available with depth > 5000';
+    deepMiningTitle.textContent = 'Available with depth > 500';
     deepMiningSection.appendChild(deepMiningTitle);
 
     // Geothermal deposits checkbox
@@ -363,7 +363,7 @@ class DeeperMiningProject extends AndroidProject {
     const geothermalInfo = document.createElement('span');
     geothermalInfo.classList.add('info-tooltip-icon');
     geothermalInfo.innerHTML = '&#9432;';
-    const geothermalTooltipText = `Generates ${formatNumber(this.geothermalDepositsPerMinePerLevel, true)} geothermal deposits per ore mine for each 250m depth level beyond 5000m. Deposits are only created when this setting is enabled during deepening. Tradeoff: Doubles components cost.`;
+    const geothermalTooltipText = `Generates ${formatNumber(this.geothermalDepositsPerMinePerLevel, true)} geothermal deposits per ore mine for each 250m depth level beyond 500m. Deposits are only created when this setting is enabled during deepening. Tradeoff: Doubles components cost.`;
     attachDynamicInfoTooltip(geothermalInfo, geothermalTooltipText);
 
     geothermalRow.append(geothermalCheckbox, geothermalLabel, geothermalInfo);
@@ -385,7 +385,7 @@ class DeeperMiningProject extends AndroidProject {
     const storageInfo = document.createElement('span');
     storageInfo.classList.add('info-tooltip-icon');
     storageInfo.innerHTML = '&#9432;';
-    const storageTooltipText = `Provides storage capacity equivalent to ${this.storageDepotsPerMinePerLevel} storage depot${this.storageDepotsPerMinePerLevel !== 1 ? 's' : ''} per ore mine for each 250m depth level beyond 5000m. These do not count as actual buildings and have no maintenance cost. Tradeoff: Deepening time is slowed by 2x.`;
+    const storageTooltipText = `Provides storage capacity equivalent to ${this.storageDepotsPerMinePerLevel} storage depot${this.storageDepotsPerMinePerLevel !== 1 ? 's' : ''} per ore mine for each 250m depth level beyond 500m. These do not count as actual buildings and have no maintenance cost. Tradeoff: Deepening time is slowed by 2x.`;
     attachDynamicInfoTooltip(storageInfo, storageTooltipText);
 
     storageRow.append(storageCheckbox, storageLabel, storageInfo);
@@ -434,8 +434,9 @@ class DeeperMiningProject extends AndroidProject {
 
     // Update deep mining section visibility and state
     if (elements.deepMiningSection) {
-      const isDeepEnough = this.averageDepth >= 5000;
-      elements.deepMiningSection.style.display = isDeepEnough ? '' : 'none';
+      const isDeepEnough = this.averageDepth >= 500;
+      elements.deepMiningSection.style.display = '';
+      elements.deepMiningSection.classList.toggle('deep-mining-locked', !isDeepEnough);
       
       if (elements.geothermalCheckbox) {
         elements.geothermalCheckbox.disabled = !isDeepEnough;
