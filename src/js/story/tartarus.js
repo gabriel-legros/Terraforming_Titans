@@ -192,7 +192,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    title: 'Chapter 32: Hurricane',
+    title: 'Chapter 32: Like Tears in Rain',
     narrative: "Mary : 'Evelyn... do we... do we have a plan for these debris?'  \n Evelyn : 'Are you alright Mary?'  \n Mary : 'Yes.  Please.  What's the plan?'",
     prerequisites: ['tartarus.31.6'],
     objectives: [
