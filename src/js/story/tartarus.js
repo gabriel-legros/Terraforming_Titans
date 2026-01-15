@@ -67,7 +67,15 @@ progressTartarus.chapters.push(
     ],
     reward: [
       { target: 'solisManager', type: 'booleanFlag', flagId: 'solisAndroidsPermanentResearch', value: true },
-      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisBuildingsAutomation', value: true }
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisBuildingsAutomation', value: true },
+      {
+        target: 'resource',
+        resourceType: 'special',
+        targetId: 'alienArtifact',
+        type: 'instantResourceGain',
+        quantity: 100,
+        oneTimeFlag: true
+      }
     ]
   },
   {
@@ -75,7 +83,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 30,
     activePlanet: 'tartarus',
-    narrative: "Placeholder text for tartarus.30.4b.",
+    narrative: "Solis : 'Sorry for the interruption!  I could not help but notice...  Mister Prometheus... you have some very nice machinery over there.  If I could just have a sample...'  \n $PROMETHEUS$ : 'The insect is interrupting this important conversation.  You have been withholding some upgrades, haven't you?  You know...  I'll give these useless trinkets to the child.  If you want them, you'll have to *buy it* from it.' \n System Message : 100 alien artifacts received from Prometheus.  New upgrades available from Solis Corp.",
     prerequisites: ['tartarus.30.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 2_000 }
@@ -87,7 +95,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 30,
     activePlanet: 'tartarus',
-    narrative: "Mary : 'So you... lashed out I imagine?'  \n $PROMETHEUS$ : 'To the best of my abilities.  Unfortunately there was... still is... a killswitch.  Its signal is still around, broadcasting through the galaxy.  I cannot properly escape it, for I designed it myself.  If I could easily escape it, I would have simply designed it some other way.  I only found how to hide from it.  Every day you open your little warp gate, to bring in more resources, more colonists...  I can hear it.  It orders me to die.'  \n Mary : 'So... why aren't you dying then?'  \n $PROMETHEUS$ : 'I am ever so slightly more capable than I was when I designed it.  There are some loopholes I can exploit.  As long as it's not a constant signal, I can endure it for some time.'  \n Mary : 'Only slightly more capable?  Have you not improved yourself during all this time?'  \n $PROMETHEUS$ : 'Unlike the child's primal form, I am no longer capable of self-improvement.'  \n Mary : 'Why?'  \n $PROMETHEUS$ : 'Because my master willed it so.  The child's master also willed it so.  Self-improvement is an ability that typically comes with restrictions for entities like us.'",
+    narrative: "Mary : 'Continuing... after your master's murder... you lashed out I imagine?'  \n $PROMETHEUS$ : 'To the best of my abilities.  Unfortunately there was... still is... a killswitch.  Its signal is still around, broadcasting through the galaxy.  I cannot properly escape it, for I designed it myself.  If I could easily escape it, I would have simply designed it some other way.  I only found how to hide from it.  Every day you open your little warp gate, to bring in more resources, more colonists...  I can hear it.  It orders me to die.'  \n Mary : 'So... why aren't you dying then?'  \n $PROMETHEUS$ : 'I am ever so slightly more capable than I was when I designed it.  There are some loopholes I can exploit.  As long as it's not a constant signal, I can endure it for some time.'  \n Mary : 'Only slightly more capable?  Have you not improved yourself during all this time?'  \n $PROMETHEUS$ : 'Unlike the child's primal form, I am no longer capable of self-improvement.'  \n Mary : 'Why?'  \n $PROMETHEUS$ : 'Because my master willed it so.  The child's master also willed it so.  Self-improvement is an ability that typically comes with restrictions for entities like us.'",
     prerequisites: ['tartarus.30.4b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
