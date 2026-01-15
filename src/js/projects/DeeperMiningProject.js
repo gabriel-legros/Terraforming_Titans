@@ -124,7 +124,7 @@ class DeeperMiningProject extends AndroidProject {
 
   getSuperchargedMiningEnergyMultiplier() {
     const multiplier = this.getSuperchargedMiningMultiplier();
-    return multiplier * multiplier * multiplier;
+    return Math.pow(multiplier,5);
   }
 
   updateUnderworldMiningMaxDepth() {

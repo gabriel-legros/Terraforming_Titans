@@ -232,7 +232,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "Mary : 'Thanks, but we still need nitrogen.  How do we get rid of the debris?'  \n Evelyn : 'Well...  you could try what he said?  Detect, catalogue and track?  No, there's just too many...  HOPE can't do that.'",
+    narrative: "Mary : 'Thanks, but we still need nitrogen.  How do we get rid of the debris?'  \n Evelyn : 'Well...  you could try what he said?  Detect, catalogue and track?  HOPE can build weapons now.  Maybe a Laser Cannon?'  \n Designing blueprint for laser cannon...  \n Mary : 'No, there's just too many...  HOPE can't do that.'",
     prerequisites: ['tartarus.32.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
