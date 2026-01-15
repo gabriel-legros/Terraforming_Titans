@@ -52,13 +52,22 @@ class GalacticMarketProject extends Project {
     const sectionContainer = document.createElement('div');
     sectionContainer.classList.add('project-section-container');
 
-    const selectionGrid = document.createElement('div');
-    selectionGrid.classList.add('cargo-selection-grid', 'galactic-market-grid');
+    const selectionGridContainer = document.createElement('div');
+    selectionGridContainer.classList.add('galactic-market-grid-container');
 
-    const headerRow = document.createElement('div');
-    headerRow.classList.add('cargo-resource-row', 'cargo-grid-header', 'galactic-market-row', 'galactic-market-header');
+    const leftGrid = document.createElement('div');
+    leftGrid.classList.add('cargo-selection-grid', 'galactic-market-grid', 'galactic-market-left-grid');
 
-    const headerConfig = [
+    const rightGrid = document.createElement('div');
+    rightGrid.classList.add('cargo-selection-grid', 'galactic-market-grid', 'galactic-market-right-grid');
+
+    const leftHeaderRow = document.createElement('div');
+    leftHeaderRow.classList.add('cargo-resource-row', 'cargo-grid-header', 'galactic-market-row', 'galactic-market-header', 'galactic-market-left-row', 'galactic-market-left-header');
+
+    const rightHeaderRow = document.createElement('div');
+    rightHeaderRow.classList.add('cargo-resource-row', 'cargo-grid-header', 'galactic-market-row', 'galactic-market-header', 'galactic-market-right-row', 'galactic-market-right-header');
+
+    const leftHeaderConfig = [
       { text: 'Resource' },
       { text: 'Saturation' },
       {
@@ -66,9 +75,13 @@ class GalacticMarketProject extends Project {
         tooltip: 'Sell prices fall as you approach the saturation amount, so higher sell orders lower the payout per unit.',
       },
       { text: 'Sell Amount' },
+    ];
+
+    const rightHeaderConfig = [
       { type: 'controls' },
       { text: 'Buy Amount' },
       { text: 'Buy Price' },
+      { type: 'spacer' },
     ];
 
     const elements = projectElements[this.name] = {
@@ -82,6 +95,8 @@ class GalacticMarketProject extends Project {
       saturationSellSpans: [],
       rowButtons: [],
       rowMeta: [],
+      leftRows: [],
+      rightRows: [],
       increment: this.selectionIncrement,
     };
 
@@ -115,39 +130,48 @@ class GalacticMarketProject extends Project {
     elements.getInputQuantity = getInputQuantity;
     elements.setInputQuantity = setInputQuantity;
 
-    headerConfig.forEach((config) => {
-      if (config.type === 'controls') {
-        const headerControls = document.createElement('div');
-        headerControls.classList.add('cargo-buttons-container', 'galactic-market-controls', 'galactic-market-header-controls');
+    const buildHeaderRow = (headerRow, headerConfig) => {
+      headerConfig.forEach((config) => {
+        if (config.type === 'spacer') {
+          const spacer = document.createElement('span');
+          spacer.classList.add('galactic-market-spacer');
+          headerRow.appendChild(spacer);
+          return;
+        }
+        if (config.type === 'controls') {
+          const headerControls = document.createElement('div');
+          headerControls.classList.add('cargo-buttons-container', 'galactic-market-controls', 'galactic-market-header-controls');
 
-        const createHeaderButton = (label, onClick) => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.classList.add('increment-button');
-          button.textContent = label;
-          button.addEventListener('click', () => {
-            onClick();
+          const createHeaderButton = (label, onClick) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.classList.add('increment-button');
+            button.textContent = label;
+            button.addEventListener('click', () => {
+              onClick();
+            });
+            headerControls.appendChild(button);
+            return button;
+          };
+
+          createHeaderButton('/10', () => {
+            updateIncrement(Math.max(1, Math.floor(elements.increment / 10)));
           });
-          headerControls.appendChild(button);
-          return button;
-        };
 
-        createHeaderButton('/10', () => {
-          updateIncrement(Math.max(1, Math.floor(elements.increment / 10)));
-        });
+          const multiplyButton = createHeaderButton('x10', () => {
+            updateIncrement(elements.increment * 10);
+          });
 
-        const multiplyButton = createHeaderButton('x10', () => {
-          updateIncrement(elements.increment * 10);
-        });
+          const tooltip = document.createElement('span');
+          tooltip.className = 'info-tooltip-icon';
+          tooltip.title = 'Press the - button to shift the increment from buying to selling, increasing the sell amount.';
+          tooltip.innerHTML = '&#9432;';
+          headerControls.insertBefore(tooltip, multiplyButton.nextSibling);
 
-        const tooltip = document.createElement('span');
-        tooltip.className = 'info-tooltip-icon';
-        tooltip.title = 'Press the - button to shift the increment from buying to selling, increasing the sell amount.';
-        tooltip.innerHTML = '&#9432;';
-        headerControls.insertBefore(tooltip, multiplyButton.nextSibling);
+          headerRow.appendChild(headerControls);
+          return;
+        }
 
-        headerRow.appendChild(headerControls);
-      } else {
         const span = document.createElement('span');
         span.textContent = config.text;
         if (config.tooltip) {
@@ -158,19 +182,27 @@ class GalacticMarketProject extends Project {
           span.appendChild(tooltip);
         }
         headerRow.appendChild(span);
-      }
-    });
+      });
+    };
 
-    selectionGrid.appendChild(headerRow);
+    buildHeaderRow(leftHeaderRow, leftHeaderConfig);
+    buildHeaderRow(rightHeaderRow, rightHeaderConfig);
+
+    leftGrid.appendChild(leftHeaderRow);
+    rightGrid.appendChild(rightHeaderRow);
 
     for (const category in this.attributes.resourceChoiceGainCost) {
       const resourcesInCategory = this.attributes.resourceChoiceGainCost[category];
       for (const resourceId in resourcesInCategory) {
         const resourceData = resources[category]?.[resourceId];
-        const resourceRow = document.createElement('div');
-        resourceRow.id = `${this.name}-${category}-${resourceId}-row`;
-        resourceRow.classList.add('cargo-resource-row', 'galactic-market-row');
-        resourceRow.style.display = resourceData && resourceData.unlocked ? '' : 'none';
+        const leftRow = document.createElement('div');
+        leftRow.id = `${this.name}-${category}-${resourceId}-row`;
+        leftRow.classList.add('cargo-resource-row', 'galactic-market-row', 'galactic-market-left-row');
+        leftRow.style.display = resourceData && resourceData.unlocked ? '' : 'none';
+
+        const rightRow = document.createElement('div');
+        rightRow.classList.add('cargo-resource-row', 'galactic-market-row', 'galactic-market-right-row');
+        rightRow.style.display = resourceData && resourceData.unlocked ? '' : 'none';
 
         const rowIndex = elements.rowMeta.length;
 
@@ -308,13 +340,16 @@ class GalacticMarketProject extends Project {
           refreshRow();
         });
 
-        resourceRow.appendChild(label);
-        resourceRow.appendChild(saturationSpan);
-        resourceRow.appendChild(sellPriceSpan);
-        resourceRow.appendChild(sellInput);
-        resourceRow.appendChild(controlsContainer);
-        resourceRow.appendChild(buyInput);
-        resourceRow.appendChild(buyPriceSpan);
+        leftRow.appendChild(label);
+        leftRow.appendChild(saturationSpan);
+        leftRow.appendChild(sellPriceSpan);
+        leftRow.appendChild(sellInput);
+        rightRow.appendChild(controlsContainer);
+        rightRow.appendChild(buyInput);
+        rightRow.appendChild(buyPriceSpan);
+        const rightSpacer = document.createElement('span');
+        rightSpacer.classList.add('galactic-market-spacer');
+        rightRow.appendChild(rightSpacer);
 
         elements.selectionInputs.push(buyInput);
         elements.priceSpans.push(buyPriceSpan);
@@ -325,8 +360,11 @@ class GalacticMarketProject extends Project {
         elements.saturationSellSpans.push(saturationSpan);
         elements.rowButtons.push({ minusButton, plusButton });
         elements.rowMeta.push({ category, resource: resourceId });
+        elements.leftRows.push(leftRow);
+        elements.rightRows.push(rightRow);
 
-        selectionGrid.appendChild(resourceRow);
+        leftGrid.appendChild(leftRow);
+        rightGrid.appendChild(rightRow);
 
         // Ensure initial pricing reflects selections
         this.updateSellPriceSpan(rowIndex);
@@ -343,7 +381,9 @@ class GalacticMarketProject extends Project {
 
     elements.updateIncrementButtons();
 
-    sectionContainer.appendChild(selectionGrid);
+    selectionGridContainer.appendChild(leftGrid);
+    selectionGridContainer.appendChild(rightGrid);
+    sectionContainer.appendChild(selectionGridContainer);
     container.appendChild(sectionContainer);
   }
 
@@ -391,15 +431,27 @@ class GalacticMarketProject extends Project {
     const elements = projectElements[this.name];
     if (!elements) return;
 
-    const { buyInputs = [], sellInputs = [], buyPriceSpans = [], sellPriceSpans = [], saturationSellSpans = [], rowMeta = [] } = elements;
+    const {
+      buyInputs = [],
+      sellInputs = [],
+      buyPriceSpans = [],
+      sellPriceSpans = [],
+      saturationSellSpans = [],
+      rowMeta = [],
+      leftRows = [],
+      rightRows = [],
+    } = elements;
 
     elements.updateIncrementButtons?.();
 
     rowMeta.forEach((meta, index) => {
       const resourceData = resources[meta.category]?.[meta.resource];
-      const row = buyInputs[index]?.closest('.cargo-resource-row');
-      if (row && resourceData) {
-        row.style.display = resourceData.unlocked ? 'grid' : 'none';
+      const leftRow = leftRows[index];
+      const rightRow = rightRows[index];
+      if (resourceData) {
+        const displayValue = resourceData.unlocked ? 'grid' : 'none';
+        if (leftRow) leftRow.style.display = displayValue;
+        if (rightRow) rightRow.style.display = displayValue;
       }
       if (buyPriceSpans[index]) {
         buyPriceSpans[index].textContent = `${formatNumber(this.getBuyPrice(meta.category, meta.resource), true)}`;

@@ -841,15 +841,36 @@
     align-items: center;
 }
 
+.galactic-market-grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 16px;
+}
+
 .galactic-market-grid {
     gap: 12px;
 }
 
-.galactic-market-row {
-    grid-template-columns: 120px 120px 110px minmax(130px, auto) minmax(190px, auto) minmax(130px, auto) 110px 1fr;
+.galactic-market-left-grid {
+    flex: 0 1 auto;
+    width: max-content;
+    max-width: 100%;
 }
 
-.galactic-market-row input[type="number"] {
+.galactic-market-right-grid {
+    flex: 1 1 280px;
+}
+
+.galactic-market-left-row {
+    grid-template-columns: 120px 120px 110px minmax(120px, auto);
+}
+
+.galactic-market-right-row {
+    grid-template-columns: minmax(190px, auto) minmax(130px, auto) 110px minmax(40px, 1fr);
+}
+
+.galactic-market-row input[type="text"] {
     width: 100%;
     max-width: 110px;
 }
@@ -858,18 +879,37 @@
     justify-content: center;
 }
 
-.galactic-market-row > *:nth-child(1),
-.galactic-market-header > *:nth-child(1) {
+.galactic-market-left-row > *:nth-child(1),
+.galactic-market-left-header > *:nth-child(1) {
     justify-self: start;
 }
 
-.galactic-market-row > *:nth-child(n+2) {
+.galactic-market-left-row > *:nth-child(n+2),
+.galactic-market-left-header > *:nth-child(n+2) {
     justify-self: center;
 }
 
-.galactic-market-row:not(.galactic-market-header) > *:nth-child(4),
-.galactic-market-row:not(.galactic-market-header) > *:nth-child(6) {
+.galactic-market-left-row:not(.galactic-market-header) > *:nth-child(4) {
     justify-self: stretch;
+}
+
+.galactic-market-right-row > *,
+.galactic-market-right-header > * {
+    justify-self: center;
+}
+
+.galactic-market-right-row.cargo-resource-row:not(.galactic-market-right-header) > *:nth-child(2) {
+    justify-self: stretch;
+}
+
+.galactic-market-right-row .galactic-market-spacer,
+.galactic-market-right-header .galactic-market-spacer {
+    justify-self: stretch;
+}
+
+.galactic-market-right-header .galactic-market-header-controls {
+    width: 100%;
+    justify-content: center;
 }
 
 .cargo-resource-label {
