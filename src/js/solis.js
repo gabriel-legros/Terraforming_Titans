@@ -435,7 +435,7 @@ class SolisManager extends EffectableEntity {
     } else {
       res.value -= count;
     }
-    this.solisPoints += count * 50;
+    this.solisPoints += count * 25;
     return true;
   }
 
