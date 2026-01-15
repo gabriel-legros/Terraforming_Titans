@@ -190,7 +190,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "Evelyn : 'Well, without spaceships... planetary cores are rich in metal.  If you dig deeper you should be able to get the resources you need.  I am patching you some useful upgrades.'",
+    narrative: "Evelyn : 'Well, without spaceships... planetary cores are rich in metal.  If you dig deeper you should be able to get the resources you need.  I am patching you some useful upgrades.' \n Deeper Mining Project Updated",
     prerequisites: ['tartarus.32.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
