@@ -1240,7 +1240,8 @@ function updateDecreaseButtonText(button, buildCount) {
 }
   
   function updateBuildingDisplay(buildings) {
-    updateStructureDisplay(buildings);
+    const activeCategory = (buildingSubtabManager.getActiveId() || '').replace('-buildings', '');
+    updateStructureDisplay(buildings, activeCategory);
     updateEmptyBuildingMessages();
     updateBuildingSubtabsVisibility();
   }
@@ -1756,9 +1757,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
   }
   
-  function updateStructureDisplay(structures) {
-    const activeId = buildingSubtabManager?.getActiveId?.() || '';
-    const activeCategory = activeId.replace('-buildings', '');
+  function updateStructureDisplay(structures, activeCategory = '') {
     for (const structureName in structures) {
       const structure = structures[structureName];
       if (structure.category && activeCategory && structure.category !== activeCategory) {
