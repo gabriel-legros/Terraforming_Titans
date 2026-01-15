@@ -205,7 +205,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Kane : 'Our children can endure!  Scorching heat, freezing blizzard, smoke and crush!' \n Mary : '*sigh* What he's try to say, HOPE, is that his people will be fine even if you make the world a living hell.  The enemy probably won't be ready for it.'",
+    narrative: "Kane : 'Our children can endure!  Scorching heat, freezing blizzard, smoke and crush!' \n Mary : '*sigh* What he's trying to say, HOPE, is that his people will be fine even if you make the world a living hell.  The enemy probably won't be ready for it.'",
     prerequisites: ['chapter22.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
