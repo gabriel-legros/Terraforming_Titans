@@ -563,28 +563,111 @@
       const bctx = bioCanvas.getContext('2d');
       const bimg = bctx.createImageData(w, h);
       const bdata = bimg.data;
+      const bioSeed = this.hashSeedFromPlanet();
+      const bioSeedVal = Math.floor((bioSeed.x * 65535) ^ (bioSeed.y * 131071)) >>> 0;
+      const bioHash = (x, y) => {
+        const n = Math.sin(x * 12.9898 + y * 78.233 + bioSeedVal * 0.00011) * 43758.5453;
+        return n - Math.floor(n);
+      };
+      const lifeFracs = [
+        Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.life || 0))),
+        Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.life || 0))),
+        Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.life || 0))),
+      ];
+      const lifeNoise = this.getLifeNoiseField(w, h);
+      if (!this._lifeScore || this._lifeScore.length !== w * h) this._lifeScore = new Float32Array(w * h);
+      const lifeScore = this._lifeScore;
+      const lifeZoneHists = [
+        { counts: new Uint32Array(256), total: 0 },
+        { counts: new Uint32Array(256), total: 0 },
+        { counts: new Uint32Array(256), total: 0 },
+      ];
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
         const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
-        const lifeFrac = [
-          Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.life || 0))),
-          Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.life || 0))),
-          Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.life || 0))),
-        ][zi];
         const thr = thrIdx[zi];
         if (thr >= 0) {
           const hbin = Math.max(0, Math.min(255, Math.floor((this.heightMap ? this.heightMap[i] : 1) * 255)));
-          if (hbin <= thr) {
-            continue;
-          }
+          if (hbin <= thr) continue;
         }
         const idx = i * 4;
-        const r = 30, g = 160, b = 80;
+        const waterPresence = odata[idx + 3] / 255;
+        const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+        const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+        let score = lifeNoise[i] * 0.7 + (1 - latAbs) * 0.15 + (1 - hgt) * 0.05 - waterPresence * 0.35;
+        if (score < 0) score = 0; else if (score > 1) score = 1;
+        lifeScore[i] = score;
+        const hist = lifeZoneHists[zi];
+        const bin = Math.max(0, Math.min(255, Math.floor(score * 255)));
+        hist.counts[bin]++;
+        hist.total++;
+      }
+      const zoneThresholds = [0, 0, 0];
+      for (let zi = 0; zi < 3; zi++) {
+        const hist = lifeZoneHists[zi];
+        const target = Math.max(0, Math.min(1, lifeFracs[zi])) * hist.total;
+        if (target <= 0 || hist.total === 0) {
+          zoneThresholds[zi] = -1;
+          continue;
+        }
+        let acc = 0;
+        let thrVal = 0;
+        for (let k = 255; k >= 0; k--) {
+          acc += hist.counts[k];
+          if (acc >= target) {
+            const prev = acc - hist.counts[k];
+            const remain = target - prev;
+            const ratio = hist.counts[k] ? Math.max(0, Math.min(1, remain / hist.counts[k])) : 0;
+            thrVal = (k + (1 - ratio)) / 255;
+            break;
+          }
+        }
+        zoneThresholds[zi] = Math.max(0, Math.min(1, thrVal));
+      }
+      const softness = 0.08;
+      for (let i = 0; i < w * h; i++) {
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
+        const lifeFrac = lifeFracs[zi];
+        if (lifeFrac <= 0) continue;
+        const thr = thrIdx[zi];
+        if (thr >= 0) {
+          const hbin = Math.max(0, Math.min(255, Math.floor((this.heightMap ? this.heightMap[i] : 1) * 255)));
+          if (hbin <= thr) continue;
+        }
+        const idx = i * 4;
+        let alpha = 0;
+        if (lifeFrac >= 1) {
+          alpha = 1;
+        } else {
+          const thresh = zoneThresholds[zi];
+          if (thresh < 0) continue;
+          const lower = Math.max(0, thresh - softness);
+          const upper = Math.min(1, thresh + softness);
+          alpha = smoothstep(lower, upper, lifeScore[i]);
+        }
+        const alphaScale = 0.15 + 0.85 * lifeFrac;
+        alpha = Math.max(0, Math.min(1, alpha * alphaScale));
+        if (alpha < 0.02) continue;
+        let r = 40;
+        let g = 175;
+        let b = 85;
+        if (lifeFrac >= 1) {
+          const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+          const coarse = Math.pow(lifeNoise[i], 1.6);
+          const micro = bioHash(x * 2, y * 2);
+          const tone = Math.max(0, Math.min(1, 0.1 + 0.9 * (0.55 * coarse + 0.25 * (1 - hgt) + 0.2 * micro)));
+          r = Math.floor(50 * (1 - tone) + 18 * tone);
+          g = Math.floor(165 * (1 - tone) + 215 * tone);
+          b = Math.floor(100 * (1 - tone) + 60 * tone);
+          const grain = 0.85 + 0.3 * micro;
+          alpha = Math.max(0, Math.min(1, alpha * grain));
+        }
         bdata[idx] = r;
         bdata[idx + 1] = g;
         bdata[idx + 2] = b;
-        const alpha = (lifeFrac >= 1) ? 255 : Math.floor(Math.max(0, Math.min(1, lifeFrac)) * 200);
-        bdata[idx + 3] = alpha;
+        bdata[idx + 3] = Math.floor(alpha * 255);
       }
       bctx.putImageData(bimg, 0, 0);
       ctx.drawImage(bioCanvas, 0, 0);
@@ -677,6 +760,46 @@
       }
     }
     this._iceNoise = { w, h, data: arr };
+    return arr;
+  };
+
+  PlanetVisualizer.prototype.getLifeNoiseField = function getLifeNoiseField(w, h) {
+    const cached = this._lifeNoise;
+    if (cached?.w === w && cached?.h === h && cached.data) return cached.data;
+    const seed = this.hashSeedFromPlanet();
+    let s = Math.floor((seed.x * 91337) ^ (seed.y * 131543)) >>> 0;
+    const hash = (x, y) => {
+      const n = Math.sin(x * 119.9 + y * 301.1 + s * 0.00013) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    const smooth = (t) => t * t * (3 - 2 * t);
+    const value2 = (x, y) => {
+      const xi = Math.floor(x), yi = Math.floor(y);
+      const xf = x - xi, yf = y - yi;
+      const u = smooth(xf), v = smooth(yf);
+      const a = hash(xi, yi);
+      const b = hash(xi + 1, yi);
+      const c = hash(xi, yi + 1);
+      const d = hash(xi + 1, yi + 1);
+      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    };
+    const fbm = (x, y, oct = 5, lac = 2.2, gain = 0.45) => {
+      let f = 0, amp = 0.5, freq = 1.0;
+      for (let o = 0; o < oct; o++) { f += amp * value2(x * freq, y * freq); freq *= lac; amp *= gain; }
+      return f;
+    };
+    const scale = 3.4;
+    const arr = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const nx = (x / w) * scale;
+        const ny = (y / h) * (scale * 0.6);
+        let v = fbm(nx, ny);
+        v = Math.min(1, Math.max(0, v));
+        arr[y * w + x] = v;
+      }
+    }
+    this._lifeNoise = { w, h, data: arr };
     return arr;
   };
 
