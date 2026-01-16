@@ -349,7 +349,9 @@ function initializeGameState(options = {}) {
     resetColonySliders();
   }
   if (typeof resetMirrorOversightSettings === 'function') {
-    resetMirrorOversightSettings();
+    if (!preserveManagers || !gameSettings.preserveProjectSettingsOnTravel) {
+      resetMirrorOversightSettings();
+    }
   }
 
   celestialParameters = currentPlanetParameters.celestialParameters;

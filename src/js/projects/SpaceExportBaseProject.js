@@ -547,6 +547,22 @@ class SpaceExportBaseProject extends SpaceshipProject {
     };
   }
 
+  saveTravelState() {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return {};
+    }
+    return {
+      selectedDisposalResource: this.selectedDisposalResource,
+    };
+  }
+
+  loadTravelState(state = {}) {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return;
+    }
+    this.selectedDisposalResource = state.selectedDisposalResource || this.selectedDisposalResource;
+  }
+
   loadState(state) {
     super.loadState(state);
     this.disableBelowTemperature = state.disableBelowTemperature || false;

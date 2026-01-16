@@ -67,6 +67,7 @@ function cacheSettingsElements() {
     dayNightToggle: document.getElementById('day-night-toggle'),
     darkModeToggle: document.getElementById('dark-mode-toggle'),
     preserveAutoStartToggle: document.getElementById('preserve-project-auto-start-toggle'),
+    preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
     keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
     autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
     roundBuildingToggle: document.getElementById('round-building-toggle'),
@@ -620,6 +621,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.darkModeToggle.checked = gameSettings.darkMode;
       document.body.classList.toggle('dark-mode', gameSettings.darkMode);
       cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
+      cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
       cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       cachedSettings.roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;

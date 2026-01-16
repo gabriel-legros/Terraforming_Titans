@@ -1967,6 +1967,11 @@ class SpaceMirrorFacilityProject extends Project {
   saveTravelState() {
     this.prepareTravelState();
     const settings = this.mirrorOversightSettings;
+    if (gameSettings.preserveProjectSettingsOnTravel) {
+      return {
+        mirrorOversightSettings: JSON.parse(JSON.stringify(settings)),
+      };
+    }
     return {
       mirrorOversightSettings: {
         targets: { ...settings.targets },
@@ -1980,7 +1985,12 @@ class SpaceMirrorFacilityProject extends Project {
   loadTravelState(state = {}) {
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
-    applyMirrorOversightTravelSettings(this.mirrorOversightSettings, state.mirrorOversightSettings || state);
+    const saved = state.mirrorOversightSettings || state;
+    if (gameSettings.preserveProjectSettingsOnTravel) {
+      applyMirrorOversightSettings(this.mirrorOversightSettings, saved);
+    } else {
+      applyMirrorOversightTravelSettings(this.mirrorOversightSettings, saved);
+    }
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();

@@ -52,6 +52,7 @@ let gameSettings = {
   silenceUnlockAlert: false,
   disableDayNightCycle: false,
   preserveProjectAutoStart: false,
+  preserveProjectSettingsOnTravel: false,
   autobuildAlsoSetsActive: true,
   roundBuildingConstruction: false,
   planetVisualizerDebugEnabled: false,

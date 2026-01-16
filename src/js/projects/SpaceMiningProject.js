@@ -466,6 +466,38 @@ class SpaceMiningProject extends SpaceshipProject {
     this.oxygenPressureUnit = state.oxygenPressureUnit || 'kPa';
   }
 
+  saveTravelState() {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return {};
+    }
+    return {
+      disableAbovePressure: this.disableAbovePressure,
+      disablePressureThreshold: this.disablePressureThreshold,
+      disableAboveOxygenPressure: this.disableAboveOxygenPressure,
+      disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
+      disableAboveWaterCoverage: this.disableAboveWaterCoverage,
+      waterCoverageThreshold: this.waterCoverageThreshold,
+      waterCoverageDisableMode: this.waterCoverageDisableMode,
+      pressureUnit: this.pressureUnit,
+      oxygenPressureUnit: this.oxygenPressureUnit,
+    };
+  }
+
+  loadTravelState(state = {}) {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return;
+    }
+    this.disableAbovePressure = !!state.disableAbovePressure;
+    this.disablePressureThreshold = state.disablePressureThreshold ?? this.disablePressureThreshold;
+    this.disableAboveOxygenPressure = !!state.disableAboveOxygenPressure;
+    this.disableOxygenPressureThreshold = state.disableOxygenPressureThreshold ?? this.disableOxygenPressureThreshold;
+    this.disableAboveWaterCoverage = state.disableAboveWaterCoverage ?? this.disableAboveWaterCoverage;
+    this.waterCoverageThreshold = state.waterCoverageThreshold ?? this.waterCoverageThreshold;
+    this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
+    this.pressureUnit = state.pressureUnit || this.pressureUnit;
+    this.oxygenPressureUnit = state.oxygenPressureUnit || this.oxygenPressureUnit;
+  }
+
   calculateSpaceshipGainPerShip() {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const zones = ['tropical', 'temperate', 'polar'];

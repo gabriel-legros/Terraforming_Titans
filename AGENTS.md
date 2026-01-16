@@ -510,3 +510,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Building UI updates now only refresh visible structures on the active buildings subtab to cut per-tick DOM work.
 - Rogue worlds now hide the sun mesh in the planet visualizer while keeping directional light active.
 - Planet visualizer now adds a blue inert-gas aura that grows with inert pressure up to 80 kPa.
+- Added a Save & Settings toggle to preserve most project settings on travel (import disable limits, Space Mirror Facility oversight, resource disposal selection), with a tooltip note about the stronger World 11 version.
