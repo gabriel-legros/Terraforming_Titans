@@ -1060,15 +1060,15 @@ function updateLifeStatusTable() {
 
         if (result.warning) {
             const reason = result.reason || '';
-            updateStatusCellIcon(cell, '&#x26A0;', reason, '');
+            updateStatusCellIcon(cell, '⚠', reason, '');
         } else if (result.pass) {
-            updateStatusCellIcon(cell, '&#x2705;', '', '');
+            updateStatusCellIcon(cell, '✅', '', '');
         } else {
             const reason = result.reason || 'Failed';
             const reductionText = (isGlobalRadiation && result.reduction > 0)
                 ? ` (-${result.reduction.toFixed(0)}% Growth)`
                 : '';
-            updateStatusCellIcon(cell, '&#x274C;', reason, reductionText);
+            updateStatusCellIcon(cell, '❌', reason, reductionText);
         }
     };
 
@@ -1143,9 +1143,9 @@ function updateLifeStatusTable() {
             let title = daySurvivalStatus.reason || '';
 
             if (!daySurvivalStatus.pass) {
-                symbol = '&#x274C;';
+                symbol = '❌';
             } else if (daySurvivalStatus.warning || dayMult === 0) {
-                symbol = '&#x26A0;';
+                symbol = '⚠';
                 if (daySurvivalStatus.warning && dayMult === 0 && title) {
                     title += '; cannot grow';
                 } else if (daySurvivalStatus.warning) {
@@ -1154,7 +1154,7 @@ function updateLifeStatusTable() {
                     title = 'Survives but cannot grow';
                 }
             } else {
-                symbol = '&#x2705;';
+                symbol = '✅';
                 title = '';
             }
 
@@ -1171,11 +1171,11 @@ function updateLifeStatusTable() {
                 let nightSymbol;
                 let nightTitle = nightSurvivalStatus.reason || '';
                 if (!nightSurvivalStatus.pass) {
-                    nightSymbol = '&#x274C;';
+                    nightSymbol = '❌';
                 } else if (nightSurvivalStatus.warning) {
-                    nightSymbol = '&#x26A0;';
+                    nightSymbol = '⚠';
                 } else {
-                    nightSymbol = '&#x2705;';
+                    nightSymbol = '✅';
                     nightTitle = '';
                 }
                 updateStatusSpan(nightCell, nightSymbol, nightTitle);
@@ -1276,11 +1276,11 @@ function updateLifeStatusTable() {
     if (dayGlobalCell) {
         const global = survivalTempResults.global;
         if (global.warning) {
-            updateStatusSpan(dayGlobalCell, '&#x26A0;', global.reason);
+            updateStatusSpan(dayGlobalCell, '⚠', global.reason);
         } else if (global.pass) {
-            updateStatusSpan(dayGlobalCell, '&#x2705;', '');
+            updateStatusSpan(dayGlobalCell, '✅', '');
         } else {
-            updateStatusSpan(dayGlobalCell, '&#x274C;', global.reason);
+            updateStatusSpan(dayGlobalCell, '❌', global.reason);
         }
     }
     const nightGlobalCell = lifeUICache.cells.nightTemp.global;
@@ -1297,11 +1297,11 @@ function updateLifeStatusTable() {
             } else if (!failReason) failReason = status.reason;
         });
         if (!pass) {
-            updateStatusSpan(nightGlobalCell, '&#x274C;', failReason || 'Fails in all zones');
+            updateStatusSpan(nightGlobalCell, '❌', failReason || 'Fails in all zones');
         } else if (!anySafe && anyWarning) {
-            updateStatusSpan(nightGlobalCell, '&#x26A0;', 'Growth reduced in all zones');
+            updateStatusSpan(nightGlobalCell, '⚠', 'Growth reduced in all zones');
         } else {
-            updateStatusSpan(nightGlobalCell, '&#x2705;', '');
+            updateStatusSpan(nightGlobalCell, '✅', '');
         }
     }
 }
