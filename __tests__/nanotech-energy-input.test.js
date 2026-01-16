@@ -149,6 +149,6 @@ describe('Nanocolony energy allocation input', () => {
     manager.updateUI();
 
     const growthEl = document.getElementById('nanobot-growth-rate');
-    expect(growthEl.textContent).toBe('0.250% -> 0.375%');
+    expect(growthEl.textContent).toBe('0.400% -> 0.600%');
   });
 });

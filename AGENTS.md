@@ -115,6 +115,9 @@ The `nanotechManager` oversees a self-replicating swarm unlocked by **Nanotechno
   - **Maintenance I** reduces metal, glass, and water maintenance by up to 50 % but subtracts up to 0.15 % growth.
   - **Glass Production** yields glass at 1e-20 t/s per bot and also subtracts up to 0.15 % growth.
 - Per-second energy, silicon, maintenance, and glass rates appear beside each slider with brief descriptions.
+- Silica and metal consumption now accept the same allocation limits as energy (percent of production or absolute cap), and they always consume at full intensity unless capped.
+- When recycling is enabled, silica/metal caps use combined junk/scrap production, and artificial worlds clamp production-based caps to actual consumption rates.
+- Glass and components output now require the same silica/metal provided that tick (including junk/scrap), so nanocolony output can never exceed the material consumed.
 - Travel text notes that H.O.P.E. can hide 1e15 nanobots from the Dead Hand Protocol.
 
 # UI refresh requirements

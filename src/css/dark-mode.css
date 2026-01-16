@@ -207,8 +207,8 @@
     color: #ffffff;
 }
 
-.dark-mode #nanocolony-container .nanotech-energy-card .nanotech-energy-limit input,
-.dark-mode #nanocolony-container .nanotech-energy-card .nanotech-energy-limit select {
+.dark-mode #nanocolony-container .nanotech-energy-limit input,
+.dark-mode #nanocolony-container .nanotech-energy-limit select {
     background-color: #121212;
     border: 1px solid #555;
     color: #ffffff;
@@ -233,7 +233,8 @@
 }
 
 .dark-mode #nanocolony-container .nanotech-slider-card .slider-title,
-.dark-mode #nanocolony-container .nanotech-slider-card .slider-values {
+.dark-mode #nanocolony-container .nanotech-slider-card .slider-values,
+.dark-mode #nanocolony-container .nanotech-allocation-header .allocation-title {
     color: #f0f0f0;
 }
 

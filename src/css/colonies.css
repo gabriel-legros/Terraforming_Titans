@@ -320,6 +320,21 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   color: #343a40;
 }
 
+#nanocolony-container .nanotech-allocation-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#nanocolony-container .nanotech-allocation-header .allocation-title {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 #nanocolony-container .nanotech-hint {
   margin: -4px 0 0;
   font-size: 0.85em;
