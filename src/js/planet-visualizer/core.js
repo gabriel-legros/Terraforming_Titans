@@ -467,14 +467,14 @@
         const k = this.viz.kpa;
         return (k.co2 + k.o2 + k.inert + k.h2o + k.ch4);
       }
-      const cel = currentPlanetParameters.celestialParameters;
-      let totalPa = 0;
-      const atm = resources.atmospheric || {};
-      for (const key in atm) {
-        const mass = atm[key]?.value || 0;
-        totalPa += calculateAtmosphericPressure(mass, cel.gravity, cel.radius) || 0;
+      return terraforming.atmosphericPressureCache.totalPressureKPa || 0;
+    }
+
+    computeInertPressureKPa() {
+      if (this.debug.mode === 'debug') {
+        return this.viz.kpa.inert || 0;
       }
-      return totalPa / 1000;
+      return (terraforming.atmosphericPressureCache.pressureByKey.inertGas || 0) / 1000;
     }
   }
 

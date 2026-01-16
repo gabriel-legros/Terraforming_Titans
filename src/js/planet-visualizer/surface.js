@@ -649,20 +649,26 @@
         }
         const alphaScale = 0.15 + 0.85 * lifeFrac;
         alpha = Math.max(0, Math.min(1, alpha * alphaScale));
-        if (alpha < 0.01) continue;
-        let r = 40;
-        let g = 175;
-        let b = 85;
-        if (lifeFrac >= 1) {
-          const hgt = this.heightMap ? this.heightMap[i] : 0.5;
-          const coarse = Math.pow(lifeNoise[i], 1.6);
-          const micro = bioHash(x * 2, y * 2);
-          const tone = Math.max(0, Math.min(1, 0.1 + 0.9 * (0.55 * coarse + 0.25 * (1 - hgt) + 0.2 * micro)));
-          r = Math.floor(50 * (1 - tone) + 18 * tone);
-          g = Math.floor(165 * (1 - tone) + 215 * tone);
-          b = Math.floor(100 * (1 - tone) + 60 * tone);
-          const grain = 0.85 + 0.3 * micro;
-          alpha = Math.max(0, Math.min(1, alpha * grain));
+        if (alpha < 0.00001) continue;
+        const baseR = 40;
+        const baseG = 175;
+        const baseB = 85;
+        const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+        const coarse = Math.pow(lifeNoise[i], 1.6);
+        const micro = bioHash(x * 2, y * 2);
+        const tone = Math.max(0, Math.min(1, 0.1 + 0.9 * (0.55 * coarse + 0.25 * (1 - hgt) + 0.2 * micro)));
+        const messyR = Math.floor(50 * (1 - tone) + 18 * tone);
+        const messyG = Math.floor(165 * (1 - tone) + 215 * tone);
+        const messyB = Math.floor(100 * (1 - tone) + 60 * tone);
+        const messiness = 0.2 + 0.8 * lifeFrac;
+        let r = Math.floor(baseR * (1 - messiness) + messyR * messiness);
+        let g = Math.floor(baseG * (1 - messiness) + messyG * messiness);
+        let b = Math.floor(baseB * (1 - messiness) + messyB * messiness);
+        const grain = 0.9 + 0.25 * micro * messiness;
+        alpha = Math.max(0, Math.min(1, alpha * grain));
+        const iceCover = idata[idx + 3] / 255;
+        if (iceCover > 0) {
+          alpha = Math.max(alpha, iceCover);
         }
         bdata[idx] = r;
         bdata[idx + 1] = g;

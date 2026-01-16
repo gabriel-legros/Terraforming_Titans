@@ -503,3 +503,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added Massive scale glass smelting research to double glass smelter production and consumption.
 - Building UI updates now only refresh visible structures on the active buildings subtab to cut per-tick DOM work.
 - Rogue worlds now hide the sun mesh in the planet visualizer while keeping directional light active.
+- Planet visualizer now adds a blue inert-gas aura that grows with inert pressure up to 80 kPa.
