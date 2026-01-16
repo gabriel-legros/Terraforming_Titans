@@ -280,7 +280,7 @@ function buildKesslerLayout() {
           + 'Atmospheric density depends on total gas in the atmosphere (pressure), the gas mix, '
           + 'temperature, gravity, planet size, and upper-atmosphere heating from solar flux. '
           + 'To push the drag line higher, add atmosphere to raise pressure and warm the air, '
-          + 'or shift the mix toward lighter gases (hydrogen, water) so density falls off more slowly. '
+          + 'or shift the mix toward lighter gases (hydrogen, oxygen, nitrogen) so density falls off more slowly. '
           + 'Cooling the air or removing atmosphere lowers the drag line. '
       );
     } catch (error) {
