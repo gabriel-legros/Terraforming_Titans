@@ -649,7 +649,7 @@
         }
         const alphaScale = 0.15 + 0.85 * lifeFrac;
         alpha = Math.max(0, Math.min(1, alpha * alphaScale));
-        if (alpha < 0.02) continue;
+        if (alpha < 0.01) continue;
         let r = 40;
         let g = 175;
         let b = 85;
