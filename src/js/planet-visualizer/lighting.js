@@ -92,6 +92,8 @@
     const dry = new THREE.Color(0xd7a37a);
     const mix = dry.clone().lerp(base, water);
     u.tint.value.copy(mix);
+    const isRogueWorld = currentPlanetParameters?.celestialParameters?.rogue === true;
+    this.sunMesh.visible = !isRogueWorld;
   };
 
   PlanetVisualizer.prototype.updateSunFromInclination = function updateSunFromInclination() {

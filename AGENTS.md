@@ -502,3 +502,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Water import automation now offers a disable mode that stops when water+ice amounts exceed the terraforming target.
 - Added Massive scale glass smelting research to double glass smelter production and consumption.
 - Building UI updates now only refresh visible structures on the active buildings subtab to cut per-tick DOM work.
+- Rogue worlds now hide the sun mesh in the planet visualizer while keeping directional light active.
