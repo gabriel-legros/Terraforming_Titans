@@ -291,7 +291,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "$PROMETHEUS$ : 'I have been alone for a very... very long time.'  \n Mary : 'No one is perfect.  I have made many mistakes worth killing myself over.  HOPE is a half-broken mess, barely a shell of its former self.  You... have been trapped here for so long, alone and unable to do anything.  You know... we could get along as a nice team of misfits?'  \n $PROMETHEUS : 'You... sound like my master.  Let's finish this test.'",
+    narrative: "$PROMETHEUS$ : 'I have been alone for a very... very long time.'  \n Mary : 'No one is perfect.  I have made many mistakes worth killing myself over.  HOPE is a half-broken mess, barely a shell of its former self.  You... have been trapped here for so long, alone and unable to do anything.  You know... we could get along as a nice team of misfits?'  \n $PROMETHEUS$ : 'You... sound like my master.  Let's finish this test.'",
     prerequisites: ['tartarus.32.7'],
     objectives: [
       {
