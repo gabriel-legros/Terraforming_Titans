@@ -668,6 +668,16 @@ class ArtificialManager extends EffectableEntity {
             rogue: isRogue,
             targetFluxWm2: project.targetFluxWm2
         };
+        base.effects = [
+            {
+                target: 'projectManager',
+                type: 'spaceshipCostMultiplier',
+                resourceCategory: 'colony',
+                resourceId: 'energy',
+                value: project.radiusEarth,
+                effectId: 'artificial-ship-energy-multiplier'
+            }
+        ];
         if (star) {
             base.star = star;
         }

@@ -872,6 +872,29 @@ class ProjectManager extends EffectableEntity {
     this.updateProjectDurations();
   }
 
+  applySpaceshipCostMultiplier(effect) {
+    const resourceCategory = effect.resourceCategory;
+    const resourceId = effect.resourceId;
+    const value = effect.value;
+    const sourceId = effect.sourceId || 'planet-parameters';
+    const baseEffectId = effect.effectId || `${sourceId}-${resourceCategory}-${resourceId}-spaceship-cost`;
+    for (const name in this.projects) {
+      const project = this.projects[name];
+      if (!project.attributes.spaceMining && !project.attributes.spaceExport) {
+        continue;
+      }
+      project.addAndReplace({
+        type: 'spaceshipCostMultiplier',
+        resourceCategory,
+        resourceId,
+        value,
+        effectId: `${baseEffectId}-${name}`,
+        sourceId,
+        name: effect.name
+      });
+    }
+  }
+
   // New method to activate automation
   activateSpecialProjectsAutomation() {
     this.automateSpecialProjects = true;

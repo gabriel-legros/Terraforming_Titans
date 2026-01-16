@@ -468,6 +468,43 @@
   color: var(--space-fg-muted);
 }
 
+.artificial-effects {
+  border-top: 1px dashed var(--space-border-color);
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.artificial-effects h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--space-fg);
+}
+
+.artificial-effects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.artificial-effect-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.artificial-effect-value {
+  font-weight: 700;
+}
+
+.artificial-effect-penalty {
+  color: #ff6b6b;
+}
+
 .artificial-priority {
   display: flex;
   align-items: center;

@@ -728,9 +728,24 @@ function addEffect(effect) {
 function removeEffect(effect) {
   addOrRemoveEffect(effect, 'removeEffect');
 }
+
+function applyPlanetParameterEffects() {
+  const effects = currentPlanetParameters.effects || [];
+  for (let i = 0; i < effects.length; i += 1) {
+    const baseEffect = effects[i];
+    const effectId = baseEffect.effectId || `planet-effect-${i}`;
+    const sourceId = baseEffect.sourceId || 'planet-parameters';
+    addEffect({
+      ...baseEffect,
+      effectId,
+      sourceId
+    });
+  }
+}
 if (typeof globalThis !== "undefined") {
   globalThis.EffectableEntity = EffectableEntity;
 }
 if (typeof module !== "undefined" && module.exports) {
+  EffectableEntity.applyPlanetParameterEffects = applyPlanetParameterEffects;
   module.exports = EffectableEntity;
 }

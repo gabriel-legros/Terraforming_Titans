@@ -96,6 +96,7 @@ const defaultPlanetParameters = {
     habitableZone: { inner: 0.95, outer: 1.4 }
   },
   hazards: {},
+  effects: [],
   celestialParameters : {
     distanceFromSun: 1.52, // Default (Mars)
     gravity: 3.711, // Default (Mars)

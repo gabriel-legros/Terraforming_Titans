@@ -683,6 +683,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       updateBuildingDisplay(buildings);
     }
 
+    applyPlanetParameterEffects();
     if (typeof updateRender === 'function') {
       updateRender(true, { forceAllSubtabs: true });
     }

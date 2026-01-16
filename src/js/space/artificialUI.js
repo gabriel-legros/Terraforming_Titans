@@ -22,6 +22,7 @@ const artificialUICache = {
   gainFleet: null,
   gainDefense: null,
   gainFleetTooltip: null,
+  effectShipEnergy: null,
   sector: null,
   priority: null,
   startBtn: null,
@@ -573,6 +574,26 @@ function ensureArtificialLayout() {
   gainsList.appendChild(defenseRow);
   gainsList.appendChild(fleetRow);
   gains.appendChild(gainsList);
+
+  const effects = document.createElement('div');
+  effects.className = 'artificial-effects';
+  const effectsTitle = document.createElement('h3');
+  effectsTitle.textContent = 'Effects';
+  effects.appendChild(effectsTitle);
+  const effectsList = document.createElement('div');
+  effectsList.className = 'artificial-effects-list';
+  const shipRow = document.createElement('div');
+  shipRow.className = 'artificial-effect-row artificial-effect-penalty';
+  const shipLabel = document.createElement('span');
+  shipLabel.textContent = 'Spaceship energy costs:';
+  const shipValue = document.createElement('span');
+  shipValue.className = 'artificial-effect-value';
+  artificialUICache.effectShipEnergy = shipValue;
+  shipRow.appendChild(shipLabel);
+  shipRow.appendChild(shipValue);
+  effectsList.appendChild(shipRow);
+  effects.appendChild(effectsList);
+  gains.appendChild(effects);
 
   // Sector selection
   const sectorLabel = document.createElement('label');
@@ -1149,6 +1170,13 @@ function renderGains(project, radius, manager) {
   }
 }
 
+function renderEffects(project, radius) {
+  const r = project ? project.radiusEarth : radius;
+  if (artificialUICache.effectShipEnergy) {
+    artificialUICache.effectShipEnergy.textContent = `x${r.toFixed(2)}`;
+  }
+}
+
 function renderStartButton(project, manager, preview) {
   if (!artificialUICache.startBtn) return;
   const btn = artificialUICache.startBtn;
@@ -1328,6 +1356,7 @@ function updateArtificialUI(options = {}) {
   const radius = project ? project.radiusEarth : getRadiusValue();
   const preview = renderCosts(project, radius, manager);
   renderGains(project, radius, manager);
+  renderEffects(project, radius);
   renderStartButton(project, manager, preview);
   renderProgress(project);
   renderStash(project, manager);

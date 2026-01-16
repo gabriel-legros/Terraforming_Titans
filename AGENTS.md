@@ -477,6 +477,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Built a shellworld construction flow with radius-scaled costs, space-storage payments, launch stashes, travel/discard controls, and a persistent construction history.
 - Refined artificial world drafting with RWG-inspired UI, terraformed-world build speed scaling, world naming, larger Super Earth shells, and stash steppers recommending 1B+ starting resources.
 - Artificial world construction now blocks any job that would exceed five hours, and the duration tooltip warns that Humanity will not attempt projects longer than that. UI copy defaults to the broader “artificial world” terminology instead of “shellworld.”
+- Planet parameter overrides can now apply effects on load/travel, and artificial worlds scale spaceship energy costs by radius.
+- Artificial world drafting now shows an Effects section highlighting the spaceship energy cost penalty.
 - Patience spending now also grants advanced research and O'Neill cylinder progress alongside superalloys.
 - Spending patience also fast-forwards Warp Gate Command operations by the same duration in 60-second increments, and the patience preview notes the pending WGC advance.
 - Patience now only grants its daily +3 hours when players save to file or export to clipboard, with the UI showing whether the daily claim is ready or claimed.

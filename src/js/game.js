@@ -488,6 +488,7 @@ function initializeGameState(options = {}) {
     nanotechManager.reapplyEffects();
   }
 
+  applyPlanetParameterEffects();
   hazardManager.ensureCrusaderPresence(terraforming);
 }
 
