@@ -1372,13 +1372,14 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
         projectManager.projects.spaceMirrorFacility &&
         typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
         projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFocusing')))) {
+    const isRogue = terraforming.celestialParameters.rogue === true;
     let focusPower = 0;
     if (mirrorOversightSettings.useFinerControls || mirrorOversightSettings.advancedOversight) {
       distributeAutoAssignments('mirrors');
       distributeAutoAssignments('lanterns');
       const assignM = mirrorOversightSettings.assignments?.mirrors || {};
       const assignL = mirrorOversightSettings.assignments?.lanterns || {};
-      const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
+      const mirrorPowerPer = isRogue ? 0 : terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
       const lantern = buildings?.hyperionLantern;
       const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
       // When applyToLantern is false, lanterns don't contribute to focusing (they're in Any Zone)
@@ -1388,7 +1389,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       const dist = mirrorOversightSettings?.distribution || {};
       const focusPerc = dist.focus || 0;
       if (focusPerc > 0) {
-        const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
+        const mirrorPowerPer = isRogue ? 0 : terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
         const mirrorPowerTotal = mirrorPowerPer * (buildings['spaceMirror']?.active || 0);
         const lantern = buildings?.hyperionLantern;
         const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);

@@ -156,6 +156,7 @@ An advanced oversight mode prepares temperature and water targets, applies bisec
 
 Once the Space Mirror Facility project completes, quick build buttons appear beneath mirror and lantern status cards to streamline construction. Manual slider edits, Any Zone assignments, and the reversible reflect mode all synchronise with advanced controls so assignments persist correctly across saves and travel.
 Companion Mirror advanced research auto-completes the Space Mirror Facility project and grants 1,000 inactive space mirrors per terraformed world.
+Focused melt now ignores mirror power on starless worlds, while lanterns can still concentrate heat.
 
 ## Random World Generator
 The Random World Generator manager builds procedural planets and moons with lockable orbit and type options. Worlds must equilibrate before travel; a progress window tracks simulated time and allows canceling or ending early once the minimum fast-forward is reached. Seeds encode UI selections so players can revisit specific worlds, and the manager prevents travel to terraformed seeds while persisting star luminosity and other parameters through saves. Traveling from a fully terraformed world to a random world awards a skill point on the first visit, and planetary thrusters on these worlds use the host star's mass for orbital calculations.
