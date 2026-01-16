@@ -238,7 +238,7 @@
     container-name: space-storage-card;
 }
 
-@container space-storage-card (max-width: 660px) {
+@container space-storage-card (max-width: 720px) {
     #ss-resource-grid {
         grid-template-columns: repeat(2, minmax(210px, 1fr));
     }
