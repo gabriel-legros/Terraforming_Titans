@@ -562,12 +562,12 @@ class SpaceMiningProject extends SpaceshipProject {
         resources.atmospheric &&
         resources.atmospheric[gas]
       ) {
-        const currentAmount = resources.atmospheric[gas].value || 0;
+        const currentAmount = resources.atmospheric[gas].value + accumulatedChanges.atmospheric[gas] || 0;
         const gSurface = terraforming.celestialParameters.gravity;
         const radius = terraforming.celestialParameters.radius;
         const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
         const limitPa = this.disablePressureThreshold * 1000;
-        const maxMass = (limitPa * surfaceArea) / (1000 * gSurface)*(1 + ATMOSPHERIC_MONITORING_TOLERANCE);
+        const maxMass = (limitPa * surfaceArea) / (1000 * gSurface)*(1);
         const remaining = Math.max(0, maxMass - currentAmount);
         const desired = entry[gas] * fraction * productivity;
         const applied = Math.min(desired, remaining);
