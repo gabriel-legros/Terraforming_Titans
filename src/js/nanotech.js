@@ -457,7 +457,7 @@ class NanotechManager extends EffectableEntity {
                     <span class="energy-value" id="nanotech-silicon-rate">0 ton/s</span>
                   </div>
                 </div>
-                <p class="slider-description">Consumes silicon to boost growth.</p>
+                <p class="slider-description">Consumes silica to boost growth.</p>
               </div>
               <div class="nanotech-slider-card">
                 <div class="slider-header">
@@ -600,7 +600,7 @@ class NanotechManager extends EffectableEntity {
       this.uiState.componentsMax = componentsMax;
     }
 
-    const stage1Warning = hasSand ? '' : '⚠️ No sand deposits; glass capped to silicon.';
+    const stage1Warning = hasSand ? '' : '⚠️ No sand deposits; glass capped to silica.';
     if (C.stage1WarningEl && C.stage1WarningEl.textContent !== stage1Warning) {
       C.stage1WarningEl.textContent = stage1Warning;
       this.uiState.stage1Warning = stage1Warning;
