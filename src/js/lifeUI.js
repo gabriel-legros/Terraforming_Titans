@@ -70,6 +70,74 @@ function ensureDynamicInfoTooltip(iconElement, cachedTooltip, text) {
   return existing;
 }
 
+function attachDynamicInfoTooltipsFromData(container) {
+  const icons = container.querySelectorAll('.info-tooltip-icon[data-tooltip]');
+  icons.forEach(icon => {
+    const text = icon.dataset.tooltip || '';
+    if (text) attachDynamicInfoTooltip(icon, text);
+  });
+}
+
+function ensureStatusCellElements(cell) {
+  if (!cell.statusIcon) {
+    const icon = document.createElement('span');
+    const suffix = document.createElement('span');
+    cell.textContent = '';
+    cell.append(icon, suffix);
+    cell.statusIcon = icon;
+    cell.statusSuffix = suffix;
+    cell.statusTooltip = null;
+  }
+  return cell.statusIcon;
+}
+
+function updateStatusCellIcon(cell, symbol, tooltipText, suffixText) {
+  const icon = ensureStatusCellElements(cell);
+  if (!cell.statusSymbol) {
+    const symbolNode = document.createTextNode(symbol);
+    const firstChild = icon.firstChild;
+    if (firstChild) {
+      icon.insertBefore(symbolNode, firstChild);
+    } else {
+      icon.appendChild(symbolNode);
+    }
+    cell.statusSymbol = symbolNode;
+  } else if (cell.statusSymbol.nodeValue !== symbol) {
+    cell.statusSymbol.nodeValue = symbol;
+  }
+  const nextSuffix = suffixText || '';
+  if (cell.statusSuffix.textContent !== nextSuffix) {
+    cell.statusSuffix.textContent = nextSuffix;
+  }
+  if (tooltipText) {
+    cell.statusTooltip = ensureDynamicInfoTooltip(icon, cell.statusTooltip, tooltipText);
+  } else if (cell.statusTooltip) {
+    cell.statusTooltip.remove();
+    cell.statusTooltip = null;
+  }
+}
+
+function updateStatusSpan(statusEntry, symbol, tooltipText) {
+  if (!statusEntry.symbolNode) {
+    const symbolNode = document.createTextNode(symbol);
+    const firstChild = statusEntry.status.firstChild;
+    if (firstChild) {
+      statusEntry.status.insertBefore(symbolNode, firstChild);
+    } else {
+      statusEntry.status.appendChild(symbolNode);
+    }
+    statusEntry.symbolNode = symbolNode;
+  } else if (statusEntry.symbolNode.nodeValue !== symbol) {
+    statusEntry.symbolNode.nodeValue = symbol;
+  }
+  if (tooltipText) {
+    statusEntry.tooltipEl = ensureDynamicInfoTooltip(statusEntry.status, statusEntry.tooltipEl, tooltipText);
+  } else if (statusEntry.tooltipEl) {
+    statusEntry.tooltipEl.remove();
+    statusEntry.tooltipEl = null;
+  }
+}
+
 var getEcumenopolisLandFraction = getEcumenopolisLandFraction;
 if (typeof module !== 'undefined' && module.exports) {
   ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
@@ -184,15 +252,19 @@ function cacheLifeStatusTableElements() {
   lifeUICache.tempUnits = Array.from(document.querySelectorAll('#life-status-table .temp-unit'));
   const zones = ['global', 'tropical', 'temperate', 'polar'];
   zones.forEach(zone => {
+    const dayCell = document.getElementById(`day-temp-${zone}`);
+    const nightCell = document.getElementById(`night-temp-${zone}`);
     lifeUICache.cells.dayTemp[zone] = {
-      cell: document.getElementById(`day-temp-${zone}`),
-      value: document.querySelector(`#day-temp-${zone} .temp-value`),
-      status: document.querySelector(`#day-temp-${zone} .temp-status`)
+      cell: dayCell,
+      value: dayCell ? dayCell.querySelector('.temp-value') : null,
+      status: dayCell ? dayCell.querySelector('.temp-status') : null,
+      tooltipEl: null
     };
     lifeUICache.cells.nightTemp[zone] = {
-      cell: document.getElementById(`night-temp-${zone}`),
-      value: document.querySelector(`#night-temp-${zone} .temp-value`),
-      status: document.querySelector(`#night-temp-${zone} .temp-status`)
+      cell: nightCell,
+      value: nightCell ? nightCell.querySelector('.temp-value') : null,
+      status: nightCell ? nightCell.querySelector('.temp-status') : null,
+      tooltipEl: null
     };
     lifeUICache.cells.tempMultiplier[zone] = document.getElementById(`temp-multiplier-${zone}-status`);
     lifeUICache.cells.moisture[zone] = document.getElementById(`moisture-${zone}-status`);
@@ -203,7 +275,8 @@ function cacheLifeStatusTableElements() {
     lifeUICache.cells.growthRate[zone] = {
       cell: document.getElementById(`growth-rate-${zone}-status`),
       value: document.getElementById(`growth-rate-${zone}-value`),
-      tooltip: document.getElementById(`growth-rate-${zone}-tooltip`)
+      tooltipIcon: document.getElementById(`growth-rate-${zone}-tooltip`),
+      tooltipEl: null
     };
   });
 }
@@ -313,7 +386,7 @@ function initializeLifeTerraformingDesignerUI() {
                 <th>Attribute</th>
                 <th>Current Design</th>
                 <th id="tentative-design-header" style="display: none;">Tentative Design</th>
-                <th id="modify-header" style="display: none;">Modify</th>
+                <th id="modify-header" style="display: none;">Modify <span id="life-modify-tooltip" class="info-tooltip-icon">&#9432;</span></th>
                 </tr>
             </thead>
             <tbody id="life-attributes-body">
@@ -321,9 +394,9 @@ function initializeLifeTerraformingDesignerUI() {
             </tbody>
             </table>
             <div id="life-point-shop" style="flex: 1; border: 1px solid #ccc; border-radius: 5px; padding: 10px;">
-              <h4>Controls</h4>
+               <h4>Controls</h4>
                <div id="life-points-display" style="margin-top: 5px;">
-                 <p><span title="Total points purchased">Points Available:</span> <span id="life-points-available"></span> / <span id="life-points-remaining-display" style="display: none;" title="Points left to allocate in tentative design">Remaining: <span id="life-points-remaining"></span></span></p>
+                 <p>Points Available <span id="life-points-available-tooltip" class="info-tooltip-icon">&#9432;</span>: <span id="life-points-available"></span> / <span id="life-points-remaining-display" style="display: none;">Remaining <span id="life-points-remaining-tooltip" class="info-tooltip-icon">&#9432;</span>: <span id="life-points-remaining"></span></span></p>
                </div>
                <div style="margin-top: 10px;">
                    <button id="life-new-design-btn">Create New Design</button>
@@ -339,15 +412,15 @@ function initializeLifeTerraformingDesignerUI() {
                  <p>Points from biodomes :
                    <span id="life-biodome-points">0</span>
                    <span id="life-biodome-rate">+0/hour</span>
-                  <span class="info-tooltip-icon" id="life-biodome-tooltip" title="Each active Biodome generates life design points at log10(10 × Active Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.">&#9432;</span>
+                  <span class="info-tooltip-icon" id="life-biodome-tooltip">&#9432;</span>
                 </p>
               </div>
                <hr style="margin: 15px 0;">
                <h3>Point Shop</h3>
                <div id="life-point-quantity-controls" style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
                 <span>Buying <span id="life-point-quantity-display">1</span> at a time</span>
-                <button id="life-point-quantity-divide" title="Buy fewer points each purchase">/10</button>
-                <button id="life-point-quantity-multiply" title="Buy more points each purchase">x10</button>
+                <button id="life-point-quantity-divide">/10</button><span id="life-point-quantity-divide-tooltip" class="info-tooltip-icon">&#9432;</span>
+                <button id="life-point-quantity-multiply">x10</button><span id="life-point-quantity-multiply-tooltip" class="info-tooltip-icon">&#9432;</span>
                </div>
             </div>
         </div>
@@ -358,24 +431,24 @@ function initializeLifeTerraformingDesignerUI() {
             <table id="life-status-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr>
-                        <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Requirement <small>(Hover ❌ for details)</small></th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Requirement <small>(Tap ❌ for details)</small></th>
                         <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Global</th>
                         <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Tropical</th>
                         <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Temperate</th>
-                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Polar <span class="info-tooltip-icon" title="Not required to complete terraforming.  Can be ignored.  Or not.  Tip : keeping a zone colder than others can be good to force more water condensation, a very potent greenhouse gas.">&#9432;</span></th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Polar <span id="life-status-polar-tooltip" class="info-tooltip-icon">&#9432;</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Day Temp (<span class="temp-unit"></span>)</td>
-                        <td id="day-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="day-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-status"></span></td>
                         <td id="day-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                         <td id="day-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                         <td id="day-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                     </tr>
                     <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Night Temp (<span class="temp-unit"></span>)</td>
-                        <td id="night-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
+                        <td id="night-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-status"></span></td>
                         <td id="night-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                         <td id="night-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                         <td id="night-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
@@ -468,9 +541,9 @@ function initializeLifeTerraformingDesignerUI() {
         const convertedValue = getConvertedDisplay(attributeName, attribute);
         const isBioworkforceRow = attributeName === 'bioworkforce';
         const bioworkforceRowHidden = isBioworkforceRow && !isBioworkforceUnlocked();
-        const isMetabolismEfficiency = attributeName === 'photosynthesisEfficiency';
-        const isOptimalGrowthTemperature = attributeName === 'optimalGrowthTemperature';
-        const displayName = isMetabolismEfficiency ? metabolismStrings.displayName : attribute.displayName;
+      const isMetabolismEfficiency = attributeName === 'photosynthesisEfficiency';
+      const isOptimalGrowthTemperature = attributeName === 'optimalGrowthTemperature';
+      const displayName = isMetabolismEfficiency ? metabolismStrings.displayName : attribute.displayName;
         const description = isMetabolismEfficiency
           ? metabolismStrings.description
           : isOptimalGrowthTemperature
@@ -480,7 +553,7 @@ function initializeLifeTerraformingDesignerUI() {
           <tr id="life-attribute-row-${attributeName}"${isBioworkforceRow ? ' data-bioworkforce-ui="true"' : ''}${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
               ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max <span id="${attributeName}-max-upgrades">${attribute.maxUpgrades}</span>)
-              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon" title="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon" title="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon" title="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon" title="Each point assigns ${bioworkersPerBiomassPerPoint} of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>` : ''}`}</div>
+              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Each point assigns ${bioworkersPerBiomassPerPoint} of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>` : ''}`}</div>
             </td>
             <td>
               <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
@@ -491,10 +564,10 @@ function initializeLifeTerraformingDesignerUI() {
               </div>
             </td>
             <td class="modify-buttons-cell" style="display: none;">
-                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10" title="Hold Shift to recover all points.">-10</button>
-                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1" title="Hold Shift to recover all points.">-1</button>
-                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1" title="Hold Shift to spend all points.">+1</button>
-                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10" title="Hold Shift to spend all points.">+10</button>
+                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10">-10</button>
+                 <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1">-1</button>
+                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1">+1</button>
+                 <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10">+10</button>
             </td>
           </tr>
         `;
@@ -639,8 +712,8 @@ function initializeLifeTerraformingDesignerUI() {
           const infoIcon = document.createElement('span');
           infoIcon.classList.add('info-tooltip-icon');
           infoIcon.innerHTML = '&#9432;';
-          infoIcon.title = category.tooltip;
           description.appendChild(infoIcon);
+          attachDynamicInfoTooltip(infoIcon, category.tooltip);
         }
         categoryContainer.appendChild(description);
       
@@ -688,6 +761,19 @@ function initializeLifeTerraformingDesignerUI() {
   // });
 
   // Cache frequently used node lists for hot paths
+  const staticTooltips = [
+    { id: 'life-points-available-tooltip', text: 'Total points purchased.' },
+    { id: 'life-points-remaining-tooltip', text: 'Points left to allocate in a tentative design.' },
+    { id: 'life-biodome-tooltip', text: 'Each active Biodome generates life design points at log10(10 x Active Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.' },
+    { id: 'life-point-quantity-divide-tooltip', text: 'Buy fewer points each purchase.' },
+    { id: 'life-point-quantity-multiply-tooltip', text: 'Buy more points each purchase.' },
+    { id: 'life-status-polar-tooltip', text: 'Not required to complete terraforming. Can be ignored. Or not. Tip: keeping a zone colder than others can be good to force more water condensation, a very potent greenhouse gas.' },
+    { id: 'life-modify-tooltip', text: 'Hold Shift on -/+ to apply the maximum change for that direction.' }
+  ];
+  staticTooltips.forEach(config => {
+    attachDynamicInfoTooltip(document.getElementById(config.id), config.text);
+  });
+  attachDynamicInfoTooltipsFromData(lifeTerraformingDiv);
   cacheLifeModifyButtons();
   cacheLifeTentativeCells();
   cacheLifeAttributeCells();
@@ -776,7 +862,6 @@ function updateLifeUI() {
             applyBtn.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
             applyBtn.disabled = true; // Disable button during deployment
             applyBtn.classList.remove('life-apply-blocked');
-            applyBtn.title = '';
         } else {
             showTentativeDesignCells();
             applyProgressBar.style.width = '0%';
@@ -785,7 +870,6 @@ function updateLifeUI() {
             if (survivable) {
               applyBtn.textContent = `Deploy: Duration ${(lifeDesigner.getTentativeDuration() / 1000).toFixed(2)} seconds`;
               applyBtn.classList.remove('life-apply-blocked');
-              applyBtn.title = '';
             } else {
               const reasonText = survivalReason || 'Life cannot survive anywhere';
               applyBtn.textContent = '';
@@ -797,7 +881,6 @@ function updateLifeUI() {
               reasonLine.textContent = reasonText;
               applyBtn.append(titleLine, reasonLine);
               applyBtn.classList.add('life-apply-blocked');
-              applyBtn.title = reasonText;
             }
             applyBtn.disabled = !survivable; // Disable if design cannot survive
             applyBtn.style.background = ''; // Reset background
@@ -971,25 +1054,21 @@ function updateLifeStatusTable() {
 
         if (typeof result !== 'object' || result === null || typeof result.pass === 'undefined') {
             console.error('Invalid result format:', result);
-            cell.innerHTML = '<span title="Error fetching status">?</span>';
-            cell.title = 'Error fetching status';
+            updateStatusCellIcon(cell, '?', 'Error fetching status', '');
             return;
         }
 
         if (result.warning) {
             const reason = result.reason || '';
-            cell.innerHTML = `<span title="${reason}">&#x26A0;</span>`;
-            cell.title = reason;
+            updateStatusCellIcon(cell, '&#x26A0;', reason, '');
         } else if (result.pass) {
-            cell.innerHTML = '&#x2705;';
-            cell.title = '';
+            updateStatusCellIcon(cell, '&#x2705;', '', '');
         } else {
             const reason = result.reason || 'Failed';
             const reductionText = (isGlobalRadiation && result.reduction > 0)
                 ? ` (-${result.reduction.toFixed(0)}% Growth)`
                 : '';
-            cell.innerHTML = `<span title="${reason}">&#x274C;</span>${reductionText}`;
-            cell.title = reason;
+            updateStatusCellIcon(cell, '&#x274C;', reason, reductionText);
         }
     };
 
@@ -1082,10 +1161,7 @@ function updateLifeStatusTable() {
             if (dayCell?.value) {
                 dayCell.value.textContent = formatNumber(toDisplayTemperature(dayTemp), false, 2);
             }
-            if (dayCell?.status && (dayCell.status.innerHTML !== symbol || dayCell.status.title !== title)) {
-                dayCell.status.innerHTML = symbol;
-                dayCell.status.title = title;
-            }
+            if (dayCell) updateStatusSpan(dayCell, symbol, title);
 
             if (nightCell?.value) {
                 nightCell.value.textContent = formatNumber(toDisplayTemperature(nightTemp), false, 2);
@@ -1102,10 +1178,7 @@ function updateLifeStatusTable() {
                     nightSymbol = '&#x2705;';
                     nightTitle = '';
                 }
-                if (nightCell.status && (nightCell.status.innerHTML !== nightSymbol || nightCell.status.title !== nightTitle)) {
-                    nightCell.status.innerHTML = nightSymbol;
-                    nightCell.status.title = nightTitle;
-                }
+                updateStatusSpan(nightCell, nightSymbol, nightTitle);
             }
         }
         // --- Update Status Checks ---
@@ -1120,7 +1193,6 @@ function updateLifeStatusTable() {
         const maxDensityCell = lifeUICache.cells.maxDensity[zone];
         if (maxDensityCell) {
             maxDensityCell.textContent = formatNumber(maxDensity, false, 2);
-            maxDensityCell.title = '';
         }
 
         const amountCell = lifeUICache.cells.biomassAmount[zone];
@@ -1141,7 +1213,7 @@ function updateLifeStatusTable() {
         const growthObj = lifeUICache.cells.growthRate[zone];
         const growthCell = growthObj?.cell;
         const valueSpan = growthObj?.value;
-        const tooltipSpan = growthObj?.tooltip;
+        const tooltipIcon = growthObj?.tooltipIcon;
         const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface[zone]?.biomass || 0;
         const baseZoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
         const zoneArea = baseZoneArea * landMult;
@@ -1172,7 +1244,7 @@ function updateLifeStatusTable() {
             const otherMult = growthBreakdown.totalMultiplier;
             const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * waterMult * otherMult;
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
-            if (tooltipSpan) {
+            if (tooltipIcon) {
                 const lines = [
                     `Base: ${(baseRate * 100).toFixed(2)}%`,
                     `Temp: x${formatNumber(tempMult, false, 2)}`,
@@ -1195,23 +1267,23 @@ function updateLifeStatusTable() {
                     const landReduction = (1 - landMult) * 100;
                     lines.push(`Ecumenopolis: x${formatNumber(landMult, false, 2)} (-${landReduction.toFixed(2)}%)`);
                 }
-                tooltipSpan.title = lines.join('\n');
+                growthObj.tooltipEl = ensureDynamicInfoTooltip(tooltipIcon, growthObj.tooltipEl, lines.join('\n'));
             }
         }
     });
 
-    const dayGlobalCell = lifeUICache.cells.dayTemp.global?.cell;
+    const dayGlobalCell = lifeUICache.cells.dayTemp.global;
     if (dayGlobalCell) {
         const global = survivalTempResults.global;
         if (global.warning) {
-            dayGlobalCell.innerHTML = `<span title="${global.reason}">&#x26A0;</span>`;
+            updateStatusSpan(dayGlobalCell, '&#x26A0;', global.reason);
         } else if (global.pass) {
-            dayGlobalCell.innerHTML = '&#x2705;';
+            updateStatusSpan(dayGlobalCell, '&#x2705;', '');
         } else {
-            dayGlobalCell.innerHTML = `<span title="${global.reason}">&#x274C;</span>`;
+            updateStatusSpan(dayGlobalCell, '&#x274C;', global.reason);
         }
     }
-    const nightGlobalCell = lifeUICache.cells.nightTemp.global?.cell;
+    const nightGlobalCell = lifeUICache.cells.nightTemp.global;
     if (nightGlobalCell) {
         let pass = false;
         let anySafe = false;
@@ -1225,11 +1297,11 @@ function updateLifeStatusTable() {
             } else if (!failReason) failReason = status.reason;
         });
         if (!pass) {
-            nightGlobalCell.innerHTML = `<span title="${failReason || 'Fails in all zones'}">&#x274C;</span>`;
+            updateStatusSpan(nightGlobalCell, '&#x274C;', failReason || 'Fails in all zones');
         } else if (!anySafe && anyWarning) {
-            nightGlobalCell.innerHTML = '<span title="Growth reduced in all zones">&#x26A0;</span>';
+            updateStatusSpan(nightGlobalCell, '&#x26A0;', 'Growth reduced in all zones');
         } else {
-            nightGlobalCell.innerHTML = '&#x2705;';
+            updateStatusSpan(nightGlobalCell, '&#x2705;', '');
         }
     }
 }
