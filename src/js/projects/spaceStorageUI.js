@@ -246,6 +246,194 @@ function renderSpaceStorageUI(project, container) {
   const expansionRateDisplay = expansionRateRow.querySelector('.expansion-rate');
   const resourceGrid = card.querySelector('#ss-resource-grid');
 
+  const cachedCaps = projectElements[project.name] || {};
+  let capOverlay = cachedCaps.capOverlay;
+  let capWindow = cachedCaps.capWindow;
+  let capResourceValue = cachedCaps.capResourceValue;
+  let capModeSelect = cachedCaps.capModeSelect;
+  let capValueInput = cachedCaps.capValueInput;
+  let capValueLabel = cachedCaps.capValueLabel;
+  let capClose = cachedCaps.capClose;
+
+  let newOverlay = false;
+  if (!capOverlay || !capOverlay.isConnected) {
+    newOverlay = true;
+    capOverlay = document.createElement('div');
+    capOverlay.classList.add('space-storage-settings-overlay');
+    capWindow = document.createElement('div');
+    capWindow.classList.add('space-storage-settings-window');
+
+    const capHeader = document.createElement('div');
+    capHeader.classList.add('space-storage-settings-header');
+    const capTitle = document.createElement('div');
+    capTitle.classList.add('space-storage-settings-title');
+    capTitle.textContent = 'Space Storage Cap';
+    capClose = document.createElement('button');
+    capClose.type = 'button';
+    capClose.classList.add('space-storage-settings-close');
+    capClose.textContent = 'X';
+    capClose.title = 'Close';
+    capHeader.append(capTitle, capClose);
+
+    const capResourceRow = document.createElement('div');
+    capResourceRow.classList.add('space-storage-settings-row');
+    const capResourceLabel = document.createElement('span');
+    capResourceLabel.classList.add('space-storage-settings-label');
+    capResourceLabel.textContent = 'Resource:';
+    capResourceValue = document.createElement('span');
+    capResourceValue.classList.add('space-storage-settings-value');
+    capResourceRow.append(capResourceLabel, capResourceValue);
+
+    const capModeRow = document.createElement('div');
+    capModeRow.classList.add('space-storage-settings-row');
+    const capModeLabel = document.createElement('label');
+    capModeLabel.classList.add('space-storage-settings-label');
+    capModeLabel.textContent = 'Cap type:';
+    capModeSelect = document.createElement('select');
+    capModeSelect.classList.add('space-storage-settings-select');
+    const capModeNone = document.createElement('option');
+    capModeNone.value = 'none';
+    capModeNone.textContent = 'No cap';
+    const capModeAmount = document.createElement('option');
+    capModeAmount.value = 'amount';
+    capModeAmount.textContent = 'Amount';
+    const capModePercent = document.createElement('option');
+    capModePercent.value = 'percent';
+    capModePercent.textContent = '% of max storage';
+    capModeSelect.append(capModeNone, capModeAmount, capModePercent);
+    capModeRow.append(capModeLabel, capModeSelect);
+
+    const capValueRow = document.createElement('div');
+    capValueRow.classList.add('space-storage-settings-row');
+    capValueLabel = document.createElement('label');
+    capValueLabel.classList.add('space-storage-settings-label');
+    capValueLabel.textContent = 'Cap value:';
+    const capValueInfo = document.createElement('span');
+    capValueInfo.classList.add('info-tooltip-icon');
+    capValueInfo.innerHTML = '&#9432;';
+    capValueInfo.title = 'Accepts scientific notation. Percent caps clamp to 0-100.';
+    capValueLabel.appendChild(capValueInfo);
+    capValueInput = document.createElement('input');
+    capValueInput.type = 'text';
+    capValueInput.classList.add('space-storage-settings-input');
+    wireStringNumberInput(capValueInput, {
+      datasetKey: 'spaceStorageCap',
+      parseValue: (value) => {
+        const mode = capModeSelect.value;
+        const parsed = parseFlexibleNumber(value) || 0;
+        if (mode === 'percent') {
+          return Math.max(0, Math.min(100, parsed));
+        }
+        return Math.max(0, parsed);
+      },
+      formatValue: (parsed) => {
+        const mode = capModeSelect.value;
+        if (mode === 'percent') {
+          return String(parsed);
+        }
+        return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+      },
+      onValue: (parsed) => {
+        const mode = capModeSelect.value;
+        if (mode === 'none') return;
+        projectElements[project.name].capDraft = { mode, value: parsed };
+        projectElements[project.name].capDraftDirty = true;
+      },
+    });
+    capValueRow.append(capValueLabel, capValueInput);
+
+    const capFooter = document.createElement('div');
+    capFooter.classList.add('space-storage-settings-footer');
+    const capConfirm = document.createElement('button');
+    capConfirm.type = 'button';
+    capConfirm.classList.add('space-storage-settings-confirm');
+    capConfirm.textContent = 'Confirm';
+    const capCancel = document.createElement('button');
+    capCancel.type = 'button';
+    capCancel.classList.add('space-storage-settings-cancel');
+    capCancel.textContent = 'Cancel';
+    capFooter.append(capCancel, capConfirm);
+
+    capWindow.append(capHeader, capResourceRow, capModeRow, capValueRow, capFooter);
+    capOverlay.appendChild(capWindow);
+    document.body.appendChild(capOverlay);
+
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      capConfirmButton: capConfirm,
+      capCancelButton: capCancel,
+    };
+  }
+
+  const closeCapWindow = () => {
+    capOverlay.classList.remove('is-visible');
+  };
+
+  const updateCapInputState = () => {
+    const mode = capModeSelect.value;
+    capValueInput.disabled = mode === 'none';
+    capValueLabel.firstChild.textContent = mode === 'percent' ? 'Cap %:' : 'Cap value:';
+    if (mode === 'none') {
+      capValueInput.value = '';
+      capValueInput.dataset.spaceStorageCap = '0';
+    }
+  };
+
+  if (!cachedCaps.capHandlersBound || newOverlay) {
+    capClose.addEventListener('click', closeCapWindow);
+    capOverlay.addEventListener('click', (event) => {
+      if (event.target === capOverlay) {
+        closeCapWindow();
+      }
+    });
+    projectElements[project.name].capCancelButton.addEventListener('click', closeCapWindow);
+    projectElements[project.name].capConfirmButton.addEventListener('click', () => {
+      const key = projectElements[project.name].capResourceKey;
+      const draft = projectElements[project.name].capDraft || { mode: 'none', value: 0 };
+      if (draft.mode === 'none') {
+        delete project.resourceCaps[key];
+      } else {
+        project.resourceCaps[key] = { mode: draft.mode, value: draft.value || 0 };
+      }
+      projectElements[project.name].capDraftDirty = false;
+      closeCapWindow();
+      if (typeof updateSpaceStorageUI === 'function') {
+        updateSpaceStorageUI(project);
+      }
+    });
+    capModeSelect.addEventListener('change', () => {
+      const mode = capModeSelect.value;
+      const parsed = parseFlexibleNumber(capValueInput.dataset.spaceStorageCap) || 0;
+      const normalized = mode === 'percent'
+        ? Math.max(0, Math.min(100, parsed))
+        : Math.max(0, parsed);
+      projectElements[project.name].capDraft = mode === 'none'
+        ? { mode: 'none', value: 0 }
+        : { mode, value: normalized };
+      projectElements[project.name].capDraftDirty = true;
+      capValueInput.dataset.spaceStorageCap = String(normalized);
+      capValueInput.value = mode === 'percent'
+        ? String(normalized)
+        : (normalized >= 1e6 ? formatNumber(normalized, true, 3) : String(normalized));
+      updateCapInputState();
+    });
+  }
+
+  const openCapWindow = (resourceKey, label) => {
+    projectElements[project.name].capResourceKey = resourceKey;
+    capResourceValue.textContent = label;
+    const capSetting = project.getResourceCapSetting(resourceKey);
+    projectElements[project.name].capDraft = { mode: capSetting.mode, value: capSetting.value || 0 };
+    projectElements[project.name].capDraftDirty = false;
+    capModeSelect.value = capSetting.mode;
+    capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
+    capValueInput.value = capSetting.value >= 1e6
+      ? formatNumber(capSetting.value, true, 3)
+      : String(capSetting.value || 0);
+    updateCapInputState();
+    capOverlay.classList.add('is-visible');
+  };
+
   storageResourceOptions.forEach(opt => {
     const resourceItem = document.createElement('div');
     resourceItem.classList.add('storage-resource-item');
@@ -283,6 +471,15 @@ function renderSpaceStorageUI(project, container) {
     usage.id = `${project.name}-usage-${opt.resource}`;
     usage.textContent = '0';
 
+    const capButton = document.createElement('button');
+    capButton.type = 'button';
+    capButton.classList.add('storage-cap-button');
+    capButton.innerHTML = '&#9881;&#xFE0E;';
+    capButton.title = 'Space storage cap settings';
+    capButton.addEventListener('click', () => {
+      openCapWindow(opt.resource, opt.label);
+    });
+
     let waterSelect;
     if (opt.resource === 'liquidWater') {
       waterSelect = document.createElement('select');
@@ -309,7 +506,7 @@ function renderSpaceStorageUI(project, container) {
     } else {
       label.append(textSpan, fullIcon);
     }
-    resourceItem.append(checkbox, label, usage);
+    resourceItem.append(checkbox, label, usage, capButton);
     resourceGrid.appendChild(resourceItem);
 
     if (opt.requiresFlag || opt.requiresProjectFlag) {
@@ -331,6 +528,10 @@ function renderSpaceStorageUI(project, container) {
       usageCells: {
         ...(projectElements[project.name]?.usageCells || {}),
         [opt.resource]: usage
+      },
+      capButtons: {
+        ...(projectElements[project.name]?.capButtons || {}),
+        [opt.resource]: capButton
       },
       fullIcons: {
         ...(projectElements[project.name]?.fullIcons || {}),
@@ -414,6 +615,18 @@ function renderSpaceStorageUI(project, container) {
     resourceGrid,
     expansionCostDisplay,
     expansionRateDisplay,
+    capOverlay,
+    capWindow,
+    capResourceValue,
+    capValueLabel,
+    capModeSelect,
+    capValueInput,
+    capClose,
+    capConfirmButton: projectElements[project.name].capConfirmButton,
+    capCancelButton: projectElements[project.name].capCancelButton,
+    capDraft: projectElements[project.name].capDraft,
+    capDraftDirty: projectElements[project.name].capDraftDirty,
+    capHandlersBound: true,
     shipProgressButton,
     withdrawButton,
     storeButton,
@@ -465,7 +678,15 @@ function updateSpaceStorageUI(project) {
       const cell = els.usageCells[opt.resource];
       if (cell) {
         const amount = project.resourceUsage[opt.resource] || 0;
-        cell.textContent = formatNumber(amount, false, 2);
+        const capSetting = project.getResourceCapSetting(opt.resource);
+        if (capSetting.mode === 'amount' || capSetting.mode === 'percent') {
+          const capValue = capSetting.mode === 'amount'
+            ? Math.max(0, capSetting.value || 0)
+            : Math.max(0, (project.maxStorage * (capSetting.value || 0)) / 100);
+          cell.textContent = `${formatNumber(amount, false, 2)}/${formatNumber(capValue, false, 2)}`;
+        } else {
+          cell.textContent = formatNumber(amount, false, 2);
+        }
       }
     });
   }
@@ -535,6 +756,20 @@ function updateSpaceStorageUI(project) {
         ? formatNumber(reserveValue, true, 3)
         : String(reserveValue);
     }
+  }
+  if (els.capOverlay.classList.contains('is-visible')) {
+    const capSetting = els.capDraft || { mode: 'none', value: 0 };
+    if (els.capModeSelect.value !== capSetting.mode) {
+      els.capModeSelect.value = capSetting.mode;
+    }
+    if (els.capValueInput !== document.activeElement) {
+      const capValue = capSetting.value || 0;
+      els.capValueInput.dataset.spaceStorageCap = String(capValue);
+      els.capValueInput.value = capSetting.mode === 'percent'
+        ? String(capValue)
+        : (capValue >= 1e6 ? formatNumber(capValue, true, 3) : String(capValue));
+    }
+    els.capValueInput.disabled = els.capModeSelect.value === 'none';
   }
   if (els.updateModeButtons) {
     els.updateModeButtons();

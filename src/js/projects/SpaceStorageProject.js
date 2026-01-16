@@ -30,6 +30,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationKesslerElapsed = 0;
     this.shipOperationKesslerPending = false;
     this.shipOperationKesslerCost = null;
+    this.resourceCaps = {};
     // Override kesslerDebrisSize to null so expansion doesn't trigger Kessler
     // Only ship operations should generate debris
     this.kesslerDebrisSize = null;
@@ -56,6 +57,27 @@ class SpaceStorageProject extends SpaceshipProject {
 
   get maxStorage() {
     return this.getTotalExpansions() * this.capacityPerCompletion;
+  }
+
+  getResourceCapSetting(resourceKey) {
+    const fallback = { mode: 'none', value: 0 };
+    const setting = this.resourceCaps[resourceKey] || fallback;
+    const mode = setting.mode === 'amount' || setting.mode === 'percent'
+      ? setting.mode
+      : 'none';
+    const value = setting.value || 0;
+    return { mode, value };
+  }
+
+  getResourceCapLimit(resourceKey) {
+    const setting = this.getResourceCapSetting(resourceKey);
+    if (setting.mode === 'amount') {
+      return Math.max(0, setting.value || 0);
+    }
+    if (setting.mode === 'percent') {
+      return Math.max(0, (this.maxStorage * (setting.value || 0)) / 100);
+    }
+    return Infinity;
   }
 
   getBiomassZones() {
@@ -309,14 +331,27 @@ class SpaceStorageProject extends SpaceshipProject {
       let remaining = Math.min(capacity, freeSpace);
       const all = selected.map(({ category, resource }) => {
         const src = resources[category] && resources[category][resource];
+        const stored = this.resourceUsage[resource] || 0;
+        const capLimit = this.getResourceCapLimit(resource);
+        const capRemaining = Math.max(0, capLimit - stored);
         if (resource === 'biomass') {
           const available = resources.surface.biomass?.value || 0;
-          return { category, resource, available, src: resources.surface.biomass };
+          return {
+            category,
+            resource,
+            available: Math.min(available, capRemaining),
+            src: resources.surface.biomass
+          };
         }
         const available = resource === 'liquidWater'
           ? resources.surface.liquidWater.value
           : (src ? src.value : 0);
-        return { category, resource, available, src: resource === 'liquidWater' ? resources.surface.liquidWater : src };
+        return {
+          category,
+          resource,
+          available: Math.min(available, capRemaining),
+          src: resource === 'liquidWater' ? resources.surface.liquidWater : src
+        };
       }).filter(r => r.available > 0);
       let valid = all;
       while (remaining > 0 && valid.length > 0) {
@@ -956,6 +991,7 @@ class SpaceStorageProject extends SpaceshipProject {
       prioritizeMegaOnTravel: this.prioritizeMegaOnTravel,
       strategicReserve: this.strategicReserve,
       waterWithdrawTarget: this.waterWithdrawTarget,
+      resourceCaps: this.resourceCaps,
       shipOperation: {
         remainingTime: this.shipOperationRemainingTime,
         startingDuration: this.shipOperationStartingDuration,
@@ -981,6 +1017,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.prioritizeMegaOnTravel = state.prioritizeMegaOnTravel || false;
     this.strategicReserve = state.strategicReserve || 0;
     this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
+    this.resourceCaps = state.resourceCaps || {};
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
     this.shipOperationStartingDuration = ship.startingDuration || 0;
@@ -1002,6 +1039,7 @@ class SpaceStorageProject extends SpaceshipProject {
       prioritizeMegaProjects: this.prioritizeMegaProjects,
       prioritizeMegaOnTravel: this.prioritizeMegaOnTravel,
       strategicReserve: this.strategicReserve,
+      resourceCaps: this.resourceCaps,
     };
   }
 
@@ -1013,6 +1051,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
     this.prioritizeMegaOnTravel = state.prioritizeMegaOnTravel || false;
     this.strategicReserve = state.strategicReserve || 0;
+    this.resourceCaps = state.resourceCaps || {};
     if (this.prioritizeMegaOnTravel) {
       this.prioritizeMegaProjects = true;
     }

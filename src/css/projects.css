@@ -252,13 +252,117 @@
 
 .storage-resource-item {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr auto auto;
     gap: 5px;
     align-items: center;
 }
 
 .storage-resource-item label {
     white-space: nowrap;
+}
+
+.storage-cap-button {
+    border: 1px solid #cbd3db;
+    background: #f8f9fb;
+    color: #475569;
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.storage-cap-button:hover {
+    background: #e9ecef;
+}
+
+.space-storage-settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2600;
+}
+
+.space-storage-settings-overlay.is-visible {
+    display: flex;
+}
+
+.space-storage-settings-window {
+    background: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    width: min(420px, 90vw);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.space-storage-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.space-storage-settings-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.space-storage-settings-close {
+    border: none;
+    background: #dee2e6;
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+.space-storage-settings-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.space-storage-settings-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.space-storage-settings-confirm,
+.space-storage-settings-cancel {
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.space-storage-settings-confirm {
+    background: #4caf50;
+    color: #fff;
+}
+
+.space-storage-settings-cancel {
+    background: #dee2e6;
+    color: #212529;
+}
+.space-storage-settings-label {
+    font-weight: 500;
+}
+
+.space-storage-settings-select,
+.space-storage-settings-input {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    box-sizing: border-box;
+    min-width: 0;
 }
 /* Mode selection buttons for Space Storage */
 .mode-selection {

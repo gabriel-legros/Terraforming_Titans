@@ -79,7 +79,7 @@
   max-width: min(420px, calc(100vw - 16px));
   width: auto;
   text-align: left;
-  padding: 4px;
+  padding: 3px;
   background-color: rgba(0, 0, 0, 0.9);
   color: #fff;
   max-height: 80vh;

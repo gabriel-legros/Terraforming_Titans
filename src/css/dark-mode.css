@@ -440,6 +440,33 @@
     color: #ffffff;
 }
 
+.dark-mode .space-storage-settings-window {
+    background: #1f2937;
+    color: #f8f9fa;
+}
+
+.dark-mode .space-storage-settings-input,
+.dark-mode .space-storage-settings-select {
+    background: #111827;
+    color: #f8f9fa;
+    border-color: #374151;
+}
+
+.dark-mode .space-storage-settings-close {
+    background: #374151;
+    color: #f8f9fa;
+}
+
+.dark-mode .space-storage-settings-confirm {
+    background: #2f9e44;
+    color: #f8f9fa;
+}
+
+.dark-mode .space-storage-settings-cancel {
+    background: #374151;
+    color: #f8f9fa;
+}
+
 .dark-mode .save-slots table {
     border-color: #444;
 }
