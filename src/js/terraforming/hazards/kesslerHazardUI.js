@@ -154,7 +154,7 @@ const kesslerDensityFallbackModel = {
 
 function getDensityModel(terraformingState) {
   try {
-    return getAtmosphericDensityModel(terraformingState);
+    return getAtmosphericDensityModel(terraformingState, { altitudeCacheStepMeters: 100 });
   } catch (error) {
     return kesslerDensityFallbackModel;
   }
@@ -281,7 +281,7 @@ function buildKesslerLayout() {
           + 'temperature, gravity, planet size, and upper-atmosphere heating from solar flux. '
           + 'To push the drag line higher, add atmosphere to raise pressure and warm the air, '
           + 'or shift the mix toward lighter gases (hydrogen, oxygen, nitrogen) so density falls off more slowly. '
-          + 'Cooling the air or removing atmosphere lowers the drag line. '
+          + 'Cooling the air or removing atmosphere lowers the drag line. \n \n Note : While water vapor is relatively light, it easily condenses and therefore has very limited impact.'
       );
     } catch (error) {
       // ignore missing UI helpers in tests

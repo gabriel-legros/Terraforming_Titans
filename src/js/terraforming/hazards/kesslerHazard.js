@@ -33,7 +33,7 @@ const densityFallbackModel = {
 
 function resolveDensityModel(terraforming) {
   try {
-    return getAtmosphericDensityModel(terraforming);
+    return getAtmosphericDensityModel(terraforming, { altitudeCacheStepMeters: 100 });
   } catch (error) {
     return densityFallbackModel;
   }
@@ -358,12 +358,19 @@ class KesslerHazard {
 
     const altitudes = this.periapsisDistribution.map((entry) => entry.periapsisMeters);
     const densities = densityModel.getDensities(altitudes);
+    let maxAltitude = 0;
+    for (let i = 0; i < altitudes.length; i += 1) {
+      maxAltitude = Math.max(maxAltitude, altitudes[i]);
+    }
+    const dragThresholdHeightMeters = findAltitudeForDensity(
+      densityModel,
+      DEBRIS_DECAY_DENSITY_REFERENCE,
+      Math.max(terraforming.exosphereHeightMeters || 0, DEBRIS_DENSITY_SEARCH_MAX, maxAltitude)
+    );
     let dragMass = 0;
     let decayedTons = 0;
     let densityMin = 0;
     let densityMax = 0;
-    let closestDragMeters = 0;
-    let closestDragDelta = 0;
     this.periapsisDistribution.forEach((entry, index) => {
       const density = densities[index] || 0;
       if (!index || density < densityMin) {
@@ -371,11 +378,6 @@ class KesslerHazard {
       }
       if (density > densityMax) {
         densityMax = density;
-      }
-      const densityDelta = Math.abs(density - DEBRIS_DECAY_DENSITY_REFERENCE);
-      if (!index || densityDelta < closestDragDelta) {
-        closestDragDelta = densityDelta;
-        closestDragMeters = entry.periapsisMeters;
       }
       if (density >= DEBRIS_DECAY_DENSITY_REFERENCE) {
         dragMass += entry.massTons;
@@ -401,7 +403,7 @@ class KesslerHazard {
 
     this.decaySummary = {
       dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,
-      dragThresholdHeightMeters: closestDragMeters,
+      dragThresholdHeightMeters,
       dragFraction: updatedTotal ? (dragMass / updatedTotal) : 0,
       decayTonsPerSecond: decayRate,
       densityMin,
