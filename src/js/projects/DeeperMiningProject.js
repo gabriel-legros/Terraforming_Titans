@@ -14,7 +14,7 @@ class DeeperMiningProject extends AndroidProject {
     
     // Configuration parameters
     this.geothermalDepositsPerMinePerLevel = config.geothermalDepositsPerMinePerLevel || 1000;
-    this.storageDepotsPerMinePerLevel = config.storageDepotsPerMinePerLevel || 1;
+    this.storageDepotsPerMinePerLevel = config.storageDepotsPerMinePerLevel || 1000;
     
     this.updateUnderworldMiningMaxDepth();
   }
@@ -55,9 +55,9 @@ class DeeperMiningProject extends AndroidProject {
 
   applyContinuousProgress(fraction, productivity) {
     const depthGain = (fraction || 0) * (productivity || 0);
-    const currentDepth = this.averageDepth || 1;
+    const currentDepth = Number(this.averageDepth) || 1;
     const newDepth = Math.min(currentDepth + depthGain, this.maxDepth);
-    if (newDepth !== this.averageDepth) {
+    if (newDepth !== currentDepth) {
       this.averageDepth = newDepth;
       this.updateUnderworldMiningMaxDepth();
       this.applySuperchargedMiningEffects();
@@ -172,15 +172,14 @@ class DeeperMiningProject extends AndroidProject {
   applyDeepMiningEffects(oldDepth, newDepth) {
     // Create geothermal deposits for depth changes beyond 500
     if (this.createGeothermalDeposits && newDepth >= 500) {
-      const oldLevels = Math.max(0, Math.floor((oldDepth - 500) / 250));
-      const newLevels = Math.floor((newDepth - 500) / 250);
-      const levelsGained = newLevels - oldLevels;
+      const levelsGained = newDepth - oldDepth;
       
       if (levelsGained > 0) {
         const depositsGained = levelsGained * this.oreMineCount * this.geothermalDepositsPerMinePerLevel;
-        if (buildings.geothermalGenerator) {
-          buildings.geothermalGenerator.deposits = (buildings.geothermalGenerator.deposits || 0) + depositsGained;
-        }
+        const geothermal = resources.underground.geothermal;
+        geothermal.addDeposit(depositsGained);
+        geothermal.baseCap += depositsGained;
+        geothermal.cap += depositsGained;
         this.lastGeothermalDepth = newDepth;
       }
     }
@@ -489,9 +488,10 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   complete() {
-    if (this.averageDepth < this.maxDepth) {
-      const oldDepth = this.averageDepth;
-      this.averageDepth = Math.min(this.averageDepth + 1, this.maxDepth);
+    const currentDepth = Number(this.averageDepth) || 1;
+    if (currentDepth < this.maxDepth) {
+      const oldDepth = currentDepth;
+      this.averageDepth = Math.min(currentDepth + 1, this.maxDepth);
       this.updateUnderworldMiningMaxDepth();
       this.applySuperchargedMiningEffects();
       this.applyDeepMiningEffects(oldDepth, this.averageDepth);

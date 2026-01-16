@@ -201,6 +201,7 @@ Galactic Market selections now render as left/right grids so sell details stay g
 Cargo rockets share unified 0/±1, ÷10, ×10 controls with a global increment selector, persist their increment count across sessions, and remember auto-start cargo choices. Ship price increases and strategic multipliers survive saves, while continuous mode only runs when explicitly toggled on. Space storage records ship-assignment multipliers, clarifies mega-project respect for strategic reserves, and exposes a tooltip explaining scientific notation. Export interfaces report assigned ships, provide stable max-capacity tooltips with info icons, and gate automation behind resource and environmental checks that pause or resume projects as conditions change. Project subclasses own their save/load routines, sustain costs appear as dedicated project consumption, and ongoing jobs validate resource availability one second ahead to prevent mid-tick stalls.
 
 Dyson Swarm management shows collector costs on the project card, continues progress visuals after completion, and feeds generated energy directly into the colony. Receiver projects can finish instantly once unlocked, the solar collector interface stays hidden until the receiver is operational, and collector durations scale with terraformed planet counts. Satellite dashboards split deposits from amounts, add an Auto Max control tied to colonist capacity, and ore/geothermal satellites now scale with worker cap. Planetary thrusters track energy spent, persist configuration, and show escape Δv for moons. ProjectManager applies gains every tick through `applyCostAndGain`, while spaceship projects switch to per-ship continuous flow above 100 craft so large fleets consume and produce smoothly. Project productivity readouts emphasise continuous operations, compute duration multipliers on demand, and keep automation reactive to environment-based pauses.
+Continuous metal and silicon asteroid mining converts 25% of mined output into Kessler debris.
 
 Space disposal tools can automatically disable gas exports below configurable pressure thresholds, pressure automation toggles between kPa and Pa, and resource disposal subtracts zonal surface stores proportionally in both discrete and continuous modes. Metal export projects clarify Earth's purchase limits and keep their tooltips readable by computing them once. Any Zone mirror assignments and reversal mechanics stay in sync with advanced oversight, and idle mirrors respect slider clamping to maintain valid totals.
 
@@ -224,15 +225,16 @@ The planet visualiser has been modularised into files covering core setup, light
 - Tartarus chapter 32.1 now unlocks Underworld mining upgrades for Deeper Mining, adding superalloy drills for speed/max depth plus a Supercharged Mining slider that boosts ore output while cubing energy use.
 - Solis now offers a permanent Android Manufacturing research unlock and a Buildings Automation upgrade gated by the Tartarus 30.4 story flags.
 - Tartarus chapter 30.4 now grants Solis flags for permanent Android research and Buildings Automation, and a new tartarus.30.4b placeholder chapter sits between 30.4 and 30.5.
-- Deeper Mining now includes deep mining settings (depth > 5000) with two configurable options:
-  - **Create geothermal deposits**: Generates geothermal deposits (default 1000 per mine per 250m level beyond 5000m) when enabled during deepening. Tradeoff: doubles components cost.
-  - **Underground Storage**: Provides storage capacity equivalent to storage depots (default 1 per mine per 250m level beyond 5000m) without maintenance cost. Tradeoff: deepening time is slowed by 2x.
-  - Both settings are disabled/greyed out until depth reaches 5000m and their gain rates are configurable via `geothermalDepositsPerMinePerLevel` and `storageDepotsPerMinePerLevel` in project config.
+- Deeper Mining now includes deep mining settings (depth > 500) with two configurable options:
+  - **Create geothermal deposits**: Generates geothermal deposits (default 1000 per mine per 250m level beyond 500m) when enabled during deepening. Tradeoff: doubles components cost.
+  - **Underground Storage**: Provides storage capacity equivalent to storage depots (default 1 per mine per 250m level beyond 500m) without maintenance cost. Tradeoff: deepening time is slowed by 2x.
+  - Both settings are disabled/greyed out until depth reaches 500m and their gain rates are configurable via `geothermalDepositsPerMinePerLevel` and `storageDepotsPerMinePerLevel` in project config.
 - Random World Generator adds the Chthonian archetype with the effect label "Suffering Enjoyment."
 - Biodome consumption/production now mirrors the active life metabolism equation, with water inputs pulled from colony water.
 - Biodome life design points now scale with worker availability while still ignoring other productivity shortages.
 - Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains, showing "Disabled by Kessler" on their progress bars until the debris clears.
 - Spaceship projects and satellites now show Kessler failure risk warnings with live failure percentages based on their project size.
+- Continuous spaceship operations now add Kessler debris for fractional ship losses.
 - Resource Disposal now isolates Kessler risk to spaceship capacity only, letting mass drivers contribute without failure or debris.
 - Added a Laser Cannon energy research gated by Tartarus 32.2 and active Kessler hazard conditions, unlocking a waste-category Laser Cannon that consumes research and energy to clear orbital debris from the lowest periapsis bins.
 - Added an Engineered Nitrogen Fixation research that doubles life growth at 10 kPa of nitrogen pressure.

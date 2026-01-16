@@ -462,6 +462,72 @@ describe('Kessler hazard', () => {
     const addDebris = jest.fn();
     global.hazardManager = {
       kesslerHazard: {
+        getSuccessChance: jest.fn(() => 0.8),
+        addDebris
+      },
+      parameters: {}
+    };
+    global.resources = {
+      colony: {
+        metal: {
+          value: 10000,
+          decrease: jest.fn(function (value) { this.value -= value; }),
+          increase: jest.fn(function (value) { this.value += value; })
+        },
+        energy: {
+          value: 10000,
+          decrease: jest.fn(function (value) { this.value -= value; })
+        }
+      },
+      special: {
+        spaceships: {
+          value: 500
+        }
+      }
+    };
+
+    const { Project } = require(path.join('..', 'src/js/projects.js'));
+    global.Project = Project;
+    const SpaceshipProject = require(path.join('..', 'src/js/projects/SpaceshipProject.js'));
+    const project = new SpaceshipProject({
+      name: 'Metal Asteroid Mining',
+      category: 'resources',
+      cost: {},
+      duration: 100000,
+      description: '',
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      attributes: {
+        spaceMining: true,
+        costPerShip: { colony: { metal: 100, energy: 10 } },
+        resourceGainPerShip: { colony: { metal: 1000 } },
+        kesslerDebrisFromGainFraction: 0.25
+      }
+    }, 'oreSpaceMiningContinuous');
+
+    project.assignSpaceships(200);
+    project.isActive = true;
+    project.applyCostAndGain(1000);
+
+    expect(project.assignedSpaceships).toBe(200);
+    expect(global.resources.colony.metal.value).toBe(11400);
+    expect(global.resources.colony.energy.value).toBe(9980);
+    const debrisCalls = addDebris.mock.calls.map(call => call[0]);
+    const hasCostDebris = debrisCalls.some(value => Math.abs(value - 20) < 1e-6);
+    const hasGainDebris = debrisCalls.some(value => Math.abs(value - 100) < 1e-6);
+    const hasShipDebris = debrisCalls.some(value => Math.abs(value - 1200) < 1e-6);
+    expect(hasCostDebris).toBe(true);
+    expect(hasGainDebris).toBe(true);
+    expect(hasShipDebris).toBe(true);
+  });
+
+  test('adds fractional debris when continuous ship losses are below one', () => {
+    global.EffectableEntity = EffectableEntity;
+    global.shipEfficiency = 1;
+    const addDebris = jest.fn();
+    global.hazardManager = {
+      kesslerHazard: {
         getSuccessChance: jest.fn(() => 0.5),
         addDebris
       },
@@ -503,16 +569,14 @@ describe('Kessler hazard', () => {
         costPerShip: { colony: { metal: 100, energy: 10 } },
         resourceGainPerShip: { colony: { metal: 1000 } }
       }
-    }, 'oreSpaceMiningContinuous');
+    }, 'oreSpaceMiningContinuousFraction');
 
     project.assignSpaceships(200);
     project.isActive = true;
-    project.applyCostAndGain(1000);
+    project.applyCostAndGain(500);
 
-    expect(project.assignedSpaceships).toBe(199);
-    expect(global.resources.colony.metal.value).toBe(10800);
-    expect(global.resources.colony.energy.value).toBe(9980);
-    expect(addDebris).toHaveBeenCalledWith(50);
-    expect(addDebris).toHaveBeenCalledWith(3000);
+    expect(project.assignedSpaceships).toBe(200);
+    expect(addDebris).toHaveBeenCalledWith(25);
+    expect(addDebris).toHaveBeenCalledWith(1500);
   });
 });

@@ -7,6 +7,7 @@ describe('DeeperMiningProject underworld mining upgrades', () => {
     delete global.Project;
     delete global.AndroidProject;
     delete global.buildings;
+    delete global.resources;
     delete global.addEffect;
     delete global.removeEffect;
   };
@@ -77,6 +78,18 @@ describe('DeeperMiningProject underworld mining upgrades', () => {
     global.buildings = {
       oreMine: { count: 0, cost: { colony: { components: 1 } } }
     };
+    global.resources = {
+      underground: {
+        geothermal: {
+          value: 0,
+          baseCap: 0,
+          cap: 0,
+          addDeposit(amount) {
+            this.value += amount;
+          }
+        }
+      }
+    };
     recordedEffects = [];
     global.addEffect = (effect) => {
       recordedEffects.push({ action: 'add', effect });
@@ -145,5 +158,27 @@ describe('DeeperMiningProject underworld mining upgrades', () => {
     expect(project.underworldMiningLevel).toBe(0);
     expect(project.superchargedMiningLevel).toBe(0);
     expect(project.maxDepth).toBe(10000);
+  });
+
+  it('adds geothermal deposits after passing depth 500', () => {
+    const project = new DeeperMiningProject({
+      name: 'Deeper mining',
+      cost: { colony: { components: 100 } },
+      duration: 1000,
+      maxDepth: 2000,
+      geothermalDepositsPerMinePerLevel: 5,
+      attributes: {}
+    }, 'deeperMining');
+
+    project.createGeothermalDeposits = true;
+    project.oreMineCount = 2;
+
+    project.applyDeepMiningEffects(400, 749);
+    expect(global.resources.underground.geothermal.value).toBe(0);
+
+    project.applyDeepMiningEffects(749, 750);
+    expect(global.resources.underground.geothermal.value).toBe(10);
+    expect(global.resources.underground.geothermal.baseCap).toBe(10);
+    expect(global.resources.underground.geothermal.cap).toBe(10);
   });
 });

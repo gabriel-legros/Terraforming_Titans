@@ -233,7 +233,8 @@ const projectParameters = {
       importCapResource: 'metal',
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
-      resourceGainPerShip : {colony: {metal : 500000}}
+      resourceGainPerShip : {colony: {metal : 500000}},
+      kesslerDebrisFromGainFraction: 0.25
     }
   },
   siliconSpaceMining: {
@@ -252,7 +253,8 @@ const projectParameters = {
       importCapResource: 'silicon',
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 100000000000}},
-      resourceGainPerShip : {colony: {silicon : 500000}}
+      resourceGainPerShip : {colony: {silicon : 500000}},
+      kesslerDebrisFromGainFraction: 0.25
     }
   },
   carbonSpaceMining: {

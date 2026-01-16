@@ -118,11 +118,7 @@ class SpaceshipProject extends Project {
       return 0;
     }
     this.kesslerShipLossCarry -= wholeLoss;
-    const lost = this.loseAssignedShips(wholeLoss);
-    if (lost > 0) {
-      this.addKesslerDebris(lost * this.getKesslerShipDebrisPerShip());
-    }
-    return lost;
+    return this.loseAssignedShips(wholeLoss);
   }
 
   resetKesslerShipRoll() {
@@ -1194,13 +1190,28 @@ class SpaceshipProject extends Project {
     }
     const gainFraction = fraction * successChance;
     this.applySpaceshipResourceGain(gain, gainFraction, accumulatedChanges, productivity);
+    const gainDebrisFraction = this.attributes.kesslerDebrisFromGainFraction;
+    if (gainDebrisFraction > 0) {
+      const failedGainFraction = fraction * failureChance;
+      let gainDebris = 0;
+      for (const category in gain) {
+        for (const resource in gain[category]) {
+          gainDebris += gain[category][resource] * failedGainFraction * productivity;
+        }
+      }
+      gainDebris *= gainDebrisFraction;
+      this.addKesslerDebris(gainDebris);
+      this.reportKesslerDebrisRate(gainDebris, seconds);
+    }
     if (failureChance > 0) {
       const costDebris = nonEnergyCost * failureChance * 0.5;
       this.addKesslerDebris(costDebris);
       this.reportKesslerDebrisRate(costDebris, seconds);
-      const lostShips = this.applyKesslerShipLoss(activeShips * fraction * productivity * failureChance);
-      const shipDebris = lostShips * this.getKesslerShipDebrisPerShip();
+      const shipLoss = activeShips * fraction * productivity * failureChance;
+      const shipDebris = shipLoss * this.getKesslerShipDebrisPerShip();
+      this.addKesslerDebris(shipDebris);
       this.reportKesslerDebrisRate(shipDebris, seconds);
+      this.applyKesslerShipLoss(shipLoss);
     }
 
     this.shortfallLastTick = shortfall;

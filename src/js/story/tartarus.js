@@ -193,7 +193,7 @@ progressTartarus.chapters.push(
     chapter: 32,
     activePlanet: 'tartarus',
     title: 'Chapter 32: Like Tears in Rain',
-    narrative: "Mary : 'Evelyn... do we... do we have a plan for these debris?'  \n Evelyn : 'Are you alright Mary?'  \n Mary : 'Yes.  Please.  What's the plan?'",
+    narrative: "Mary : 'Evelyn... do we... do we have a plan for these debris?'  \n Evelyn : 'Are you alright Mary?'  \n Mary : 'Yes.  I think I know why the galaxy hates AI...  Please.  What's the plan?'",
     prerequisites: ['tartarus.31.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
@@ -282,7 +282,22 @@ progressTartarus.chapters.push(
     narrative: "Mary : 'We are truly sorry.  We did not mean...'  \n $PROMETHEUS$ : 'Let's continue the test.  In silence please.  I need to collect some thoughts.'",
     prerequisites: ['tartarus.32.6'],
     objectives: [
-      {  }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 10_000_000_000, checkCap : true }
+    ],
+    reward: []
+  },
+  {
+    id: 'tartarus.32.8',
+    type: 'journal',
+    chapter: 32,
+    activePlanet: 'tartarus',
+    narrative: "$PROMETHEUS$ : 'I have been alone for a very... very long time.'  \n Mary : 'No one is perfect.  I have made many mistakes worth killing myself over.  HOPE is a half-broken mess, barely a shell of its former self.  You... have been trapped here for so long, alone and unable to do anything.  You know... we could get along as a nice team of misfits?'  \n $PROMETHEUS : 'You... sound like my master.  Let's finish this test.'",
+    prerequisites: ['tartarus.32.7'],
+    objectives: [
+      {
+      type: 'terraforming',
+      terraformingParameter : 'complete',
+    }
     ],
     reward: []
   }
