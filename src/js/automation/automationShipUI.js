@@ -395,7 +395,7 @@ function renderAutomationSteps(automation, preset, container) {
       wireStringNumberInput(maxInput, {
         parseValue: (value) => {
           const parsed = parseFlexibleNumber(value);
-          return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+          return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) / 100 : 0;
         },
         formatValue: (value) => {
           return value > 0 ? formatNumber(value, true, 3) : '';
