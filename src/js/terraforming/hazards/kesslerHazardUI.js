@@ -36,7 +36,10 @@ const kesslerHazardUICache = {
   debrisSourcesHeader: null,
   debrisSourcesGrid: null,
   debrisSourcesSmallList: null,
-  debrisSourcesLargeList: null
+  debrisSourcesLargeList: null,
+  binDetails: [],
+  hoveredBin: -1,
+  chartDetailsDefault: ''
 };
 
 const KESSLER_EFFECTS = [
@@ -305,6 +308,7 @@ function buildKesslerLayout() {
 
     const chartBarsList = [];
     const chartBarFills = [];
+    const binDetails = [];
     for (let i = 0; i < KESSLER_CHART_BINS; i += 1) {
       const bar = doc.createElement('div');
       bar.className = 'kessler-debris-chart__bar';
@@ -314,6 +318,7 @@ function buildKesslerLayout() {
       chartBars.appendChild(bar);
       chartBarsList.push(bar);
       chartBarFills.push(fill);
+      binDetails.push({ current: 0, baseline: 0, altitudeKm: 0 });
     }
 
     const chartExobase = doc.createElement('div');
@@ -457,6 +462,23 @@ function buildKesslerLayout() {
     kesslerHazardUICache.debrisSourcesGrid = debrisSourcesGrid;
     kesslerHazardUICache.debrisSourcesSmallList = smallColumn.list;
     kesslerHazardUICache.debrisSourcesLargeList = largeColumn.list;
+    kesslerHazardUICache.binDetails = binDetails;
+
+    chartBarsList.forEach((bar, index) => {
+      bar.addEventListener('mouseenter', () => {
+        kesslerHazardUICache.hoveredBin = index;
+        const entry = kesslerHazardUICache.binDetails[index];
+        kesslerHazardUICache.chartDetails.textContent =
+          `Bin @ ${formatNumeric(entry.altitudeKm, 1)} km: `
+            + `${formatNumeric(entry.current, 2)} / ${formatNumeric(entry.baseline, 2)} t`;
+      });
+      bar.addEventListener('mouseleave', () => {
+        if (kesslerHazardUICache.hoveredBin === index) {
+          kesslerHazardUICache.hoveredBin = -1;
+        }
+        kesslerHazardUICache.chartDetails.textContent = kesslerHazardUICache.chartDetailsDefault;
+      });
+    });
 
     return card;
   } catch (error) {
@@ -475,7 +497,10 @@ function updateKesslerChartDetails(resource, isCleared) {
     ? 'Orbital debris cleared.'
     : `Orbital debris: ${formatNumeric(currentValue, 2)} / ${formatNumeric(initialValue, 2)} t`;
 
-  kesslerHazardUICache.chartDetails.textContent = detailText;
+  kesslerHazardUICache.chartDetailsDefault = detailText;
+  if (kesslerHazardUICache.hoveredBin < 0) {
+    kesslerHazardUICache.chartDetails.textContent = detailText;
+  }
 }
 
 function updateKesslerDebrisChart(
@@ -573,6 +598,18 @@ function updateKesslerDebrisChart(
   const altitudes = new Array(binCount);
   for (let i = 0; i < binCount; i += 1) {
     altitudes[i] = minPeriapsis + (i + 0.5) / binCount * span;
+  }
+  for (let i = 0; i < binCount; i += 1) {
+    const entry = kesslerHazardUICache.binDetails[i];
+    entry.current = currentBins[i];
+    entry.baseline = bins[i];
+    entry.altitudeKm = altitudes[i] / 1000;
+  }
+  if (kesslerHazardUICache.hoveredBin >= 0) {
+    const entry = kesslerHazardUICache.binDetails[kesslerHazardUICache.hoveredBin];
+    kesslerHazardUICache.chartDetails.textContent =
+      `Bin @ ${formatNumeric(entry.altitudeKm, 1)} km: `
+        + `${formatNumeric(entry.current, 2)} / ${formatNumeric(entry.baseline, 2)} t`;
   }
   const densities = densityModel.getDensities(altitudes);
   kesslerHazardUICache.densityBar.style.backgroundImage = buildDensityGradient(densities, binCount);

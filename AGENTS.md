@@ -443,6 +443,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Encapsulated the Import Resources project UI in a dedicated ImportResourcesProjectUI class and delegated specialized rendering logic from projectsUI.
 - Galaxy faction AI now scales defensive fleet reserves with their electronics adoption and UHF doctrine adaptation levels.
 - Galaxy faction AI sector defense now scales with their electronics adoption and UHF doctrine adaptation levels.
+- Kessler hazard chart bins now display current versus initial debris amounts on hover.
 - Population growth now relies on separate starvation, energy, and high-gravity attrition rates while the Colony tab breaks out each contribution alongside base growth.
 - Added a Hazards terraforming subtab managed by HazardManager with hazard.js and hazardUI.js modules.
 - HazardManager now loads per-planet hazard definitions, including Umbra's hazardous biomass preferences.
