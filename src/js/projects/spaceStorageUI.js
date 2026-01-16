@@ -342,26 +342,18 @@ function renderSpaceStorageUI(project, container) {
     });
     capValueRow.append(capValueLabel, capValueInput);
 
-    const capFooter = document.createElement('div');
-    capFooter.classList.add('space-storage-settings-footer');
     const capConfirm = document.createElement('button');
     capConfirm.type = 'button';
     capConfirm.classList.add('space-storage-settings-confirm');
     capConfirm.textContent = 'Confirm';
-    const capCancel = document.createElement('button');
-    capCancel.type = 'button';
-    capCancel.classList.add('space-storage-settings-cancel');
-    capCancel.textContent = 'Cancel';
-    capFooter.append(capCancel, capConfirm);
 
-    capWindow.append(capHeader, capResourceRow, capModeRow, capValueRow, capFooter);
+    capWindow.append(capHeader, capResourceRow, capModeRow, capValueRow, capConfirm);
     capOverlay.appendChild(capWindow);
     document.body.appendChild(capOverlay);
 
     projectElements[project.name] = {
       ...projectElements[project.name],
       capConfirmButton: capConfirm,
-      capCancelButton: capCancel,
     };
   }
 
@@ -386,7 +378,6 @@ function renderSpaceStorageUI(project, container) {
         closeCapWindow();
       }
     });
-    projectElements[project.name].capCancelButton.addEventListener('click', closeCapWindow);
     projectElements[project.name].capConfirmButton.addEventListener('click', () => {
       const key = projectElements[project.name].capResourceKey;
       const draft = projectElements[project.name].capDraft || { mode: 'none', value: 0 };
@@ -623,7 +614,6 @@ function renderSpaceStorageUI(project, container) {
     capValueInput,
     capClose,
     capConfirmButton: projectElements[project.name].capConfirmButton,
-    capCancelButton: projectElements[project.name].capCancelButton,
     capDraft: projectElements[project.name].capDraft,
     capDraftDirty: projectElements[project.name].capDraftDirty,
     capHandlersBound: true,
