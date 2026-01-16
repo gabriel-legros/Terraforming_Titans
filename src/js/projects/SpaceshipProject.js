@@ -89,6 +89,20 @@ class SpaceshipProject extends Project {
     }
   }
 
+  applyContinuousKesslerDebris(nonEnergyCost, shipLoss, seconds, sourceName) {
+    const failureDebris = nonEnergyCost * 0.5;
+    if (failureDebris > 0) {
+      this.addKesslerDebris(failureDebris);
+      this.reportKesslerDebrisRate(failureDebris, seconds, sourceName);
+    }
+    if (shipLoss > 0) {
+      const shipDebris = shipLoss * this.getKesslerShipDebrisPerShip();
+      this.addKesslerDebris(shipDebris);
+      this.reportKesslerDebrisRate(shipDebris, seconds, sourceName);
+      this.applyKesslerShipLoss(shipLoss);
+    }
+  }
+
   loseAssignedShips(count) {
     const loss = Math.min(Math.max(count, 0), this.assignedSpaceships);
     if (!loss) {
@@ -1204,14 +1218,8 @@ class SpaceshipProject extends Project {
       this.reportKesslerDebrisRate(gainDebris, seconds);
     }
     if (failureChance > 0) {
-      const costDebris = nonEnergyCost * failureChance * 0.5;
-      this.addKesslerDebris(costDebris);
-      this.reportKesslerDebrisRate(costDebris, seconds);
       const shipLoss = activeShips * fraction * productivity * failureChance;
-      const shipDebris = shipLoss * this.getKesslerShipDebrisPerShip();
-      this.addKesslerDebris(shipDebris);
-      this.reportKesslerDebrisRate(shipDebris, seconds);
-      this.applyKesslerShipLoss(shipLoss);
+      this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
     }
 
     this.shortfallLastTick = shortfall;

@@ -703,12 +703,8 @@ class SpaceStorageProject extends SpaceshipProject {
     });
 
     if (failureChance > 0) {
-      const costDebris = nonEnergyCost * failureChance * 0.5;
-      this.addKesslerDebris(costDebris);
-      this.reportKesslerDebrisRate(costDebris, seconds);
-      const lostShips = this.applyKesslerShipLoss(this.assignedSpaceships * fraction * failureChance);
-      const shipDebris = lostShips * this.getKesslerShipDebrisPerShip();
-      this.reportKesslerDebrisRate(shipDebris, seconds);
+      const shipLoss = this.assignedSpaceships * fraction * failureChance;
+      this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
     }
     this.shipOperationIsActive = true;
   }
