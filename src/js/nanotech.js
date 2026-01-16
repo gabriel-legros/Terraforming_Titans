@@ -407,7 +407,7 @@ class NanotechManager extends EffectableEntity {
             </div>
 	            <div class="nanotech-summary-card nanotech-energy-card">
 	              <div class="summary-label">
-	                Energy allocation <span class="info-tooltip-icon" title="Percentage of power: Maximum percentage of total energy production the swarm may consume per second. Absolute: Fixed energy limit in watts the swarm may consume per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).">&#9432;</span>
+	                Energy allocation <span class="info-tooltip-icon" id="nanotech-energy-tooltip"></span>
 	              </div>
 	              <div class="nanotech-energy-limit">
 	                <input type="text" id="nanotech-energy-limit" value="${this.maxEnergyPercent}">
@@ -428,7 +428,7 @@ class NanotechManager extends EffectableEntity {
               </div>
             </div>
           </div>
-          <p class="nanotech-hint">The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide <span id="nanotech-travel-cap">${formatNumber(this.getTravelPreserveCap())}</span> nanobots from the Dead Hand Protocol <span class="info-tooltip-icon" title="Each nanocolony stage after Stage I multiplies the preserved amount by 10.">&#9432;</span>.</p>
+          <p class="nanotech-hint">The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide <span id="nanotech-travel-cap">${formatNumber(this.getTravelPreserveCap())}</span> nanobots from the Dead Hand Protocol <span class="info-tooltip-icon" id="nanotech-travel-tooltip"></span>.</p>
           <div class="nanotech-stage">
             <div class="nanotech-stage-header">
               <h4>Stage I <span id="nanotech-stage1-warning" class="nanotech-stage-warning"></span></h4>
@@ -437,7 +437,7 @@ class NanotechManager extends EffectableEntity {
               <div class="nanotech-slider-card">
                 <div class="nanotech-allocation-header">
                   <span class="allocation-title">
-                    Silica allocation <span class="info-tooltip-icon" title="Percentage of silica production: maximum share of silicon production the swarm may consume per second. Absolute: fixed silica limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).">&#9432;</span>
+                    Silica allocation <span class="info-tooltip-icon" id="nanotech-silicon-tooltip"></span>
                   </span>
                 </div>
                 <div class="nanotech-energy-limit">
@@ -501,7 +501,7 @@ class NanotechManager extends EffectableEntity {
               <div class="nanotech-slider-card">
                 <div class="nanotech-allocation-header">
                   <span class="allocation-title">
-                    Metal allocation <span class="info-tooltip-icon" title="Percentage of metal production: maximum share of metal production the swarm may consume per second. Absolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).">&#9432;</span>
+                    Metal allocation <span class="info-tooltip-icon" id="nanotech-metal-tooltip"></span>
                   </span>
                 </div>
                 <div class="nanotech-energy-limit">
@@ -914,6 +914,34 @@ class NanotechManager extends EffectableEntity {
       });
       C.metalMode.dataset.nanotechBound = 'metalMode';
     }
+    if (C.energyTooltipIcon?.dataset?.nanotechBound !== 'energyTooltip') {
+      attachDynamicInfoTooltip(
+        C.energyTooltipIcon,
+        'Percentage of power: Maximum percentage of total energy production the swarm may consume per second.\nAbsolute: Fixed energy limit in watts the swarm may consume per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+      );
+      C.energyTooltipIcon.dataset.nanotechBound = 'energyTooltip';
+    }
+    if (C.travelTooltipIcon?.dataset?.nanotechBound !== 'travelTooltip') {
+      attachDynamicInfoTooltip(
+        C.travelTooltipIcon,
+        'Each nanocolony stage after Stage I multiplies the preserved amount by 10.'
+      );
+      C.travelTooltipIcon.dataset.nanotechBound = 'travelTooltip';
+    }
+    if (C.siliconTooltipIcon?.dataset?.nanotechBound !== 'siliconTooltip') {
+      attachDynamicInfoTooltip(
+        C.siliconTooltipIcon,
+        'Percentage of silica production: maximum share of silicon production the swarm may consume per second.\nAbsolute: fixed silica limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+      );
+      C.siliconTooltipIcon.dataset.nanotechBound = 'siliconTooltip';
+    }
+    if (C.metalTooltipIcon?.dataset?.nanotechBound !== 'metalTooltip') {
+      attachDynamicInfoTooltip(
+        C.metalTooltipIcon,
+        'Percentage of metal production: maximum share of metal production the swarm may consume per second.\nAbsolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+      );
+      C.metalTooltipIcon.dataset.nanotechBound = 'metalTooltip';
+    }
   }
 
   cacheUIRefs(container) {
@@ -936,6 +964,10 @@ class NanotechManager extends EffectableEntity {
       sMode: qs('#nanotech-silicon-limit-mode'),
       metalLimit: qs('#nanotech-metal-limit'),
       metalMode: qs('#nanotech-metal-limit-mode'),
+      energyTooltipIcon: qs('#nanotech-energy-tooltip'),
+      travelTooltipIcon: qs('#nanotech-travel-tooltip'),
+      siliconTooltipIcon: qs('#nanotech-silicon-tooltip'),
+      metalTooltipIcon: qs('#nanotech-metal-tooltip'),
       growthImpactEl: qs('#nanotech-growth-impact'),
       siliconImpactEl: qs('#nanotech-silicon-impact'),
       metalImpactEl: qs('#nanotech-metal-impact'),
