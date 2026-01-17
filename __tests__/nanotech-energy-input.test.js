@@ -50,6 +50,7 @@ describe('Nanocolony energy allocation input', () => {
 
     global.parseFlexibleNumber = require('../src/js/numbers.js').parseFlexibleNumber;
     global.wireStringNumberInput = require('../src/js/ui-utils.js').wireStringNumberInput;
+    global.attachDynamicInfoTooltip = require('../src/js/ui-utils.js').attachDynamicInfoTooltip;
   });
 
   afterEach(() => {

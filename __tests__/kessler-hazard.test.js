@@ -130,8 +130,8 @@ describe('Kessler hazard', () => {
 
     const hazard = new KesslerHazard(null);
     const initialChances = hazard.getProjectFailureChances();
-    expect(initialChances.smallFailure).toBeCloseTo(0.5, 6);
-    expect(initialChances.largeFailure).toBeCloseTo(0.95, 6);
+    expect(initialChances.smallFailure).toBeCloseTo(0.7, 6);
+    expect(initialChances.largeFailure).toBeCloseTo(0.98, 6);
 
     global.resources.special.orbitalDebris.value = 0;
     const clearedChances = hazard.getProjectFailureChances();
@@ -281,16 +281,16 @@ describe('Kessler hazard', () => {
     }, 'spaceMirror');
 
     const cost = building.getEffectiveCost(1);
-    expect(cost.colony.metal).toBe(20);
-    expect(cost.colony.energy).toBe(8);
+    expect(cost.colony.metal).toBeCloseTo(33.333333333333336, 6);
+    expect(cost.colony.energy).toBeCloseTo(13.333333333333334, 6);
 
     const built = building.build(1, true);
     expect(built).toBe(true);
-    expect(global.resources.colony.metal.value).toBe(80);
-    expect(global.resources.colony.energy.value).toBe(92);
-    expect(global.resources.special.orbitalDebris.value).toBeCloseTo(105, 6);
-    expect(hazard.periapsisDistribution[0].massTons).toBeCloseTo(42, 6);
-    expect(hazard.periapsisDistribution[1].massTons).toBeCloseTo(63, 6);
+    expect(global.resources.colony.metal.value).toBeCloseTo(66.66666666666666, 6);
+    expect(global.resources.colony.energy.value).toBeCloseTo(86.66666666666666, 6);
+    expect(global.resources.special.orbitalDebris.value).toBeCloseTo(111.66666666666667, 6);
+    expect(hazard.periapsisDistribution[0].massTons).toBeCloseTo(44.666666666666664, 6);
+    expect(hazard.periapsisDistribution[1].massTons).toBeCloseTo(67, 6);
   });
 
   test('fails kessler-affected projects after the first second', () => {

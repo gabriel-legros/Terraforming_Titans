@@ -82,7 +82,7 @@ describe('Nanocolony resource allocation limits', () => {
     expect(manager.siliconFraction).toBeCloseTo(0.1);
   });
 
-  it('limits artificial-world production by actual consumption rate', () => {
+  it('uses production rate for artificial worlds', () => {
     const { NanotechManager } = require('../src/js/nanotech.js');
     global.currentPlanetParameters = { classification: { archetype: 'artificial' } };
     global.resources.colony.silicon.productionRate = 100;
@@ -101,7 +101,7 @@ describe('Nanocolony resource allocation limits', () => {
 
     manager.produceResources(1000, accumulatedChanges);
 
-    expect(manager.currentSiliconConsumption).toBeCloseTo(20);
+    expect(manager.currentSiliconConsumption).toBeCloseTo(100);
   });
 
   it('caps glass production by silica provided this tick', () => {

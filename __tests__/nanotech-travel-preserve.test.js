@@ -46,6 +46,7 @@ describe('Nanocolony travel preservation', () => {
     };
     global.parseFlexibleNumber = require('../src/js/numbers.js').parseFlexibleNumber;
     global.wireStringNumberInput = require('../src/js/ui-utils.js').wireStringNumberInput;
+    global.attachDynamicInfoTooltip = require('../src/js/ui-utils.js').attachDynamicInfoTooltip;
   };
 
   beforeEach(() => {
@@ -100,8 +101,9 @@ describe('Nanocolony travel preservation', () => {
     expect(travelCap.textContent).toBe('1000000000000000');
 
     const tooltip = document.querySelector('.nanotech-hint .info-tooltip-icon');
+    const tooltipText = tooltip.querySelector('.resource-tooltip');
     expect(tooltip).not.toBeNull();
-    expect(tooltip.title).toContain('Stage I');
+    expect(tooltipText.textContent).toContain('Stage I');
 
     manager.booleanFlags.add('stage2_enabled');
     manager.updateUI();

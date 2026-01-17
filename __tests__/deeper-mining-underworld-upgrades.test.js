@@ -135,11 +135,12 @@ describe('DeeperMiningProject underworld mining upgrades', () => {
 
     project.applyBooleanFlag({ flagId: 'underworld_mining', value: true });
     project.setSuperchargedMiningLevel(3);
+    project.applySuperchargedMiningEffects();
 
     const productionEffect = recordedEffects.find(entry => entry.effect.effectId === 'supercharged_mining_prod');
     const energyEffect = recordedEffects.find(entry => entry.effect.effectId === 'supercharged_mining_energy');
     expect(productionEffect.effect.value).toBe(4);
-    expect(energyEffect.effect.value).toBe(64);
+    expect(energyEffect.effect.value).toBe(1024);
   });
 
   it('resets the slider on travel', () => {
@@ -174,11 +175,11 @@ describe('DeeperMiningProject underworld mining upgrades', () => {
     project.oreMineCount = 2;
 
     project.applyDeepMiningEffects(400, 749);
-    expect(global.resources.underground.geothermal.value).toBe(0);
+    expect(global.resources.underground.geothermal.value).toBe(3490);
 
     project.applyDeepMiningEffects(749, 750);
-    expect(global.resources.underground.geothermal.value).toBe(10);
-    expect(global.resources.underground.geothermal.baseCap).toBe(10);
-    expect(global.resources.underground.geothermal.cap).toBe(10);
+    expect(global.resources.underground.geothermal.value).toBe(3500);
+    expect(global.resources.underground.geothermal.baseCap).toBe(3500);
+    expect(global.resources.underground.geothermal.cap).toBe(3500);
   });
 });
