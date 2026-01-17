@@ -77,21 +77,6 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
-  recyclingFacility: {
-    name: 'Recycling Facility',
-    category: 'resource',
-    description: 'Melts scrap metal back into metal.',
-    cost: { colony: { metal: 1000, components: 50} },
-    consumption: { surface: { scrapMetal : 100} },
-    production: { colony: { metal: 100} },
-    storage: {},
-    dayNightActivity: false,
-    canBeToggled: true,
-    requiresMaintenance: true,
-    requiresWorker: 100,
-    maintenanceFactor: 1,
-    unlocked: false
-  },
   glassSmelter: {
     name: 'Glass Smelter',
     category: 'production',

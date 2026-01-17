@@ -34,7 +34,27 @@ const automationElements = {
   lifeSeedRow: null,
   lifeSeedButton: null,
   lifeDesignEnableCheckbox: null,
-  lifeDeployNowButton: null
+  lifeDeployNowButton: null,
+  buildingsAutomation: null,
+  buildingsAutomationStatus: null,
+  buildingsAutomationDescription: null,
+  buildingsCollapseButton: null,
+  buildingsPanelBody: null,
+  buildingsBuilderPresetSelect: null,
+  buildingsBuilderPresetNameInput: null,
+  buildingsBuilderNewButton: null,
+  buildingsBuilderSaveButton: null,
+  buildingsBuilderDeleteButton: null,
+  buildingsBuilderTypeSelect: null,
+  buildingsBuilderScopeSelect: null,
+  buildingsBuilderCategorySelect: null,
+  buildingsBuilderBuildingSelect: null,
+  buildingsBuilderAddButton: null,
+  buildingsBuilderSelectedList: null,
+  buildingsMasterToggle: null,
+  buildingsApplyList: null,
+  buildingsApplyHint: null,
+  buildingsAddApplyButton: null
 };
 
 function queueAutomationUIRefresh() {
@@ -141,6 +161,66 @@ function cacheAutomationElements() {
   }
   if (!automationElements.lifeDeployNowButton && automationElements.lifeDesign) {
     automationElements.lifeDeployNowButton = automationElements.lifeDesign.querySelector('.life-automation-deploy-now');
+  }
+  if (!automationElements.buildingsAutomation) {
+    automationElements.buildingsAutomation = document.getElementById('automation-buildings');
+  }
+  if (!automationElements.buildingsAutomationStatus) {
+    automationElements.buildingsAutomationStatus = document.getElementById('automation-buildings-status');
+  }
+  if (!automationElements.buildingsAutomationDescription) {
+    automationElements.buildingsAutomationDescription = document.getElementById('automation-buildings-description');
+  }
+  if (!automationElements.buildingsCollapseButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsCollapseButton = automationElements.buildingsAutomation.querySelector('.automation-collapse');
+  }
+  if (!automationElements.buildingsPanelBody && automationElements.buildingsAutomation) {
+    automationElements.buildingsPanelBody = automationElements.buildingsAutomation.querySelector('.automation-body');
+  }
+  if (!automationElements.buildingsBuilderPresetSelect && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderPresetSelect = automationElements.buildingsAutomation.querySelector('.building-automation-builder-select');
+  }
+  if (!automationElements.buildingsBuilderPresetNameInput && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderPresetNameInput = automationElements.buildingsAutomation.querySelector('.building-automation-builder-name');
+  }
+  if (!automationElements.buildingsBuilderNewButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderNewButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-new');
+  }
+  if (!automationElements.buildingsBuilderSaveButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderSaveButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-save');
+  }
+  if (!automationElements.buildingsBuilderDeleteButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderDeleteButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-delete');
+  }
+  if (!automationElements.buildingsBuilderTypeSelect && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderTypeSelect = automationElements.buildingsAutomation.querySelector('.building-automation-builder-type');
+  }
+  if (!automationElements.buildingsBuilderScopeSelect && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderScopeSelect = automationElements.buildingsAutomation.querySelector('.building-automation-builder-scope');
+  }
+  if (!automationElements.buildingsBuilderCategorySelect && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderCategorySelect = automationElements.buildingsAutomation.querySelector('.building-automation-builder-category');
+  }
+  if (!automationElements.buildingsBuilderBuildingSelect && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderBuildingSelect = automationElements.buildingsAutomation.querySelector('.building-automation-builder-building');
+  }
+  if (!automationElements.buildingsBuilderAddButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderAddButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-add');
+  }
+  if (!automationElements.buildingsBuilderSelectedList && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderSelectedList = automationElements.buildingsAutomation.querySelector('.building-automation-builder-list');
+  }
+  if (!automationElements.buildingsMasterToggle && automationElements.buildingsAutomation) {
+    automationElements.buildingsMasterToggle = automationElements.buildingsAutomation.querySelector('.building-automation-master-toggle');
+  }
+  if (!automationElements.buildingsApplyList && automationElements.buildingsAutomation) {
+    automationElements.buildingsApplyList = automationElements.buildingsAutomation.querySelector('.building-automation-apply-list');
+  }
+  if (!automationElements.buildingsApplyHint && automationElements.buildingsAutomation) {
+    automationElements.buildingsApplyHint = automationElements.buildingsAutomation.querySelector('.building-automation-apply-hint');
+  }
+  if (!automationElements.buildingsAddApplyButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsAddApplyButton = automationElements.buildingsAutomation.querySelector('.building-automation-apply-add');
   }
 }
 
@@ -270,6 +350,7 @@ function initializeAutomationUI() {
   cacheAutomationElements();
   buildAutomationShipUI();
   buildAutomationLifeUI();
+  buildAutomationBuildingsUI();
   hideAutomationTab();
   automationUIInitialized = true;
   automationUIStale = true;
@@ -298,6 +379,7 @@ function updateAutomationUI() {
   cacheAutomationElements();
   updateShipAutomationUI();
   updateLifeAutomationUI();
+  updateBuildingsAutomationUI();
 }
 
 if (typeof module !== 'undefined' && module.exports) {

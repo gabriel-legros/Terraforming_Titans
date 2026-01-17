@@ -487,6 +487,174 @@
   margin-top: 10px;
 }
 
+.building-automation-section {
+  border: 1px solid #dbe1ec;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+  box-shadow: 0 1px 0 #e6ebf3 inset;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.building-automation-hint,
+.building-automation-apply-hint {
+  font-size: 12px;
+  color: #51617f;
+}
+
+.building-automation-section-title {
+  font-weight: 600;
+  color: #2f3a4d;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.building-automation-builder-dirty {
+  color: #c13b3b;
+  font-weight: 700;
+}
+
+.building-automation-master-toggle {
+  margin-left: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.building-automation-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.building-automation-row select,
+.building-automation-row input {
+  background: #fff;
+  border: 1px solid #cfd6e5;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.building-automation-section button {
+  border: 1px solid #c4cad7;
+  background: #f1f4f9;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+
+.building-automation-section button:hover {
+  background: #e2e7f2;
+  transform: translateY(-1px);
+}
+
+.building-automation-section .building-automation-master-toggle {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.building-automation-section .building-automation-builder-save,
+.building-automation-section .building-automation-apply-add {
+  background: #2a4db8;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+}
+
+.building-automation-section .building-automation-builder-save:hover,
+.building-automation-section .building-automation-apply-add:hover {
+  background: #1f3fa3;
+}
+
+.building-automation-section .building-automation-builder-save:disabled,
+.building-automation-section .building-automation-apply-add:disabled {
+  background: #c3cad7;
+  cursor: not-allowed;
+}
+
+.building-automation-section .building-automation-apply-toggle {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.building-automation-section .building-automation-apply-toggle:hover {
+  background: transparent;
+  transform: none;
+}
+
+.building-automation-section .building-automation-apply-toggle .ui-toggle__label {
+  display: none;
+}
+
+.building-automation-builder-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.building-automation-builder-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #f8f9fc;
+  border: 1px solid #e1e7f1;
+  border-radius: 999px;
+  color: #2f3a4d;
+}
+
+.building-automation-builder-pill button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+}
+
+.building-automation-apply-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.building-automation-apply-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 2fr) minmax(160px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  background: #f8f9fc;
+  border: 1px solid #e1e7f1;
+  border-radius: 6px;
+}
+
+.building-automation-apply-primary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.building-automation-apply-detail {
+  font-size: 12px;
+  color: #51617f;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.building-automation-apply-controls {
+  display: flex;
+  gap: 4px;
+}
+
 .life-automation-zone-row {
   display: flex;
   flex-wrap: wrap;
@@ -544,6 +712,10 @@
 @media (max-width: 920px) {
   .life-automation-row,
   .life-automation-step-row {
+    grid-template-columns: 1fr;
+  }
+
+  .building-automation-apply-row {
     grid-template-columns: 1fr;
   }
 }

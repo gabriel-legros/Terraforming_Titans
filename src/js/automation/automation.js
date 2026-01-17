@@ -13,6 +13,14 @@ try {
   LifeAutomationRef = LifeAutomationRef || require('./life-automation.js').LifeAutomation;
 } catch (error) {}
 
+let BuildingAutomationRef;
+try {
+  BuildingAutomationRef = BuildingAutomation;
+} catch (error) {}
+try {
+  BuildingAutomationRef = BuildingAutomationRef || require('./building-automation.js').BuildingAutomation;
+} catch (error) {}
+
 class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
@@ -24,6 +32,7 @@ class AutomationManager extends EffectableEntity {
     };
     this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef() : null;
     this.lifeAutomation = LifeAutomationRef ? new LifeAutomationRef() : null;
+    this.buildingsAutomation = BuildingAutomationRef ? new BuildingAutomationRef() : null;
   }
 
   enable() {
@@ -80,7 +89,8 @@ class AutomationManager extends EffectableEntity {
       features: { ...this.features },
       booleanFlags: Array.from(this.booleanFlags),
       spaceshipAutomation: this.spaceshipAutomation ? this.spaceshipAutomation.saveState() : null,
-      lifeAutomation: this.lifeAutomation ? this.lifeAutomation.saveState() : null
+      lifeAutomation: this.lifeAutomation ? this.lifeAutomation.saveState() : null,
+      buildingsAutomation: this.buildingsAutomation ? this.buildingsAutomation.saveState() : null
     };
   }
 
@@ -99,6 +109,9 @@ class AutomationManager extends EffectableEntity {
     if (data.lifeAutomation && this.lifeAutomation) {
       this.lifeAutomation.loadState(data.lifeAutomation);
     }
+    if (data.buildingsAutomation && this.buildingsAutomation) {
+      this.buildingsAutomation.loadState(data.buildingsAutomation);
+    }
     this.reapplyEffects();
   }
 
@@ -108,6 +121,9 @@ class AutomationManager extends EffectableEntity {
     }
     if (this.lifeAutomation) {
       this.lifeAutomation.update(delta || 0);
+    }
+    if (this.buildingsAutomation) {
+      this.buildingsAutomation.update(delta || 0);
     }
   }
 }

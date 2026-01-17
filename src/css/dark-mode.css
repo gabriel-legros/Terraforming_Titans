@@ -882,6 +882,102 @@
     background: #24324a;
 }
 
+.dark-mode .building-automation-section {
+    background: #101826;
+    border-color: #24324a;
+    box-shadow: 0 1px 0 #1b2536 inset;
+}
+
+.dark-mode .building-automation-section-title {
+    color: #e7ecf7;
+}
+
+.dark-mode .building-automation-builder-dirty {
+    color: #ff7b7b;
+}
+
+.dark-mode .building-automation-hint,
+.dark-mode .building-automation-apply-hint {
+    color: #c8d2e2;
+}
+
+.dark-mode .building-automation-row select,
+.dark-mode .building-automation-row input,
+.dark-mode .building-automation-apply-row select {
+    background: #0d1522;
+    border-color: #30405a;
+    color: #e7ecf7;
+}
+
+.dark-mode .building-automation-section button {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-mode .building-automation-section button:hover {
+    background: #24324a;
+}
+
+.dark-mode .building-automation-section .building-automation-builder-save,
+.dark-mode .building-automation-section .building-automation-apply-add {
+    background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
+    border: 1px solid #3f7bf7;
+    color: #ffffff;
+}
+
+.dark-mode .building-automation-section .building-automation-builder-save:hover,
+.dark-mode .building-automation-section .building-automation-apply-add:hover {
+    background: linear-gradient(180deg, #3a6bff 0%, #2344c2 100%);
+}
+
+.dark-mode .building-automation-section .building-automation-builder-save:disabled,
+.dark-mode .building-automation-section .building-automation-apply-add:disabled {
+    background: #1a2335;
+    border-color: #2c3a52;
+    color: #6a778f;
+}
+
+.dark-mode .building-automation-builder-list {
+    background: transparent;
+}
+
+.dark-mode .building-automation-builder-pill {
+    background: #0e1421;
+    border-color: #202d42;
+    color: #cbd4e2;
+}
+
+.dark-mode .building-automation-apply-row {
+    background: #0e1421;
+    border-color: #202d42;
+}
+
+.dark-mode .building-automation-apply-detail {
+    color: #acb6c6;
+}
+
+.dark-mode .building-automation-apply-controls button {
+    background: #1a2538;
+    border-color: #2b3a53;
+    color: #e7ecf7;
+}
+
+.dark-mode .building-automation-apply-controls button:hover {
+    background: #24324a;
+}
+
+.dark-mode .building-automation-section .building-automation-apply-toggle {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.dark-mode .building-automation-section .building-automation-apply-toggle:hover {
+    background: transparent;
+    transform: none;
+}
+
 .dark-mode input[type="range"].pretty-slider::-webkit-slider-runnable-track {
     background: #4d4d4d;
 }
