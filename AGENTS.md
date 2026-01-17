@@ -105,6 +105,12 @@ These controls appear across structures, galaxy, and project panels. They share 
 - Update the step button labels whenever the step changes, and use cached UI element references instead of new selectors.
 - After applying a -/+ change, clamp the target value and refresh the UI so other dependent displays update consistently.
 
+## UI input pattern: toggle switches
+When adding an on/off toggle that should match automation styling:
+- Use `createToggleButton({ onLabel, offLabel, isOn })` from `src/js/ui-utils.js` to build the button markup with the shared `.ui-toggle` styling.
+- Call `setToggleButtonState(toggle, enabled)` when updating UI state; cache the returned toggle element for reuse.
+- Disable the toggle with `toggle.disabled = true` when a feature is locked or unavailable.
+
 ## Nanotechnology
 The `nanotechManager` oversees a self-replicating swarm unlocked by **Nanotechnology Stage I** research. The UI remains hidden until `enable()` is called.
 
@@ -188,6 +194,7 @@ Story delivery gained a `system-pop-up` event type for immediate alerts, and Sav
 Buildings and special project cards feature collapsible headers, letting players hide cost and automation details when managing crowded screens. Structures include a persistent **Set active to target** checkbox, autobuild constructs them inactive by default, and enabling autobuild can auto-toggle target matching so queues fill without immediately raising active counts. The Settings view now uses a three-column layout, the Colony tab separates structure lists from sliders, and nanocolony controls sit directly beneath the primary colony panel. Manual toggles clear auto-targeting, storage capacity displays scale with the selected build quantity, and land usage recalculations on load keep construction requirements honest. Autobuild priorities and auto-active settings persist when travelling between planets so colony automation resumes seamlessly.
 Life Designer automation steps now support a **Max out** mode to spend all available points on the selected attribute in one pass.
 Life automation now offers an **As needed** mode for minimum/maximum temperature tolerance with selectable zones (defaulting to tropical, temperate, and polar), and it can redeploy when freed tolerance points exceed the improve threshold.
+Underworld deep mining options now use reusable toggle switches in a two-column layout once depth unlocks.
 
 The journal now features an index toggle beside its header, presenting a dedicated Primary Directive section with the three directives listed inline plus collapsible world-by-world chapter lists that jump straight to any unlocked entry.
 

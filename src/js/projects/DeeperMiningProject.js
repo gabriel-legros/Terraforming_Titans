@@ -346,49 +346,60 @@ class DeeperMiningProject extends AndroidProject {
     deepMiningTitle.textContent = 'Available with depth > 500';
     deepMiningSection.appendChild(deepMiningTitle);
 
-    // Geothermal deposits checkbox
-    const geothermalRow = document.createElement('div');
-    geothermalRow.classList.add('checkbox-row');
+    const deepMiningOptions = document.createElement('div');
+    deepMiningOptions.classList.add('deep-mining-options');
 
-    const geothermalCheckbox = document.createElement('input');
-    geothermalCheckbox.type = 'checkbox';
-    geothermalCheckbox.id = `${this.name}-geothermal-checkbox`;
-    geothermalCheckbox.checked = this.createGeothermalDeposits;
+    const createDeepMiningOption = (key, labelText, tooltipText, isOn) => {
+      const option = document.createElement('div');
+      option.classList.add('deep-mining-option');
 
-    const geothermalLabel = document.createElement('label');
-    geothermalLabel.htmlFor = `${this.name}-geothermal-checkbox`;
-    geothermalLabel.textContent = 'Create geothermal deposits';
+      const header = document.createElement('div');
+      header.classList.add('deep-mining-option-header');
 
-    const geothermalInfo = document.createElement('span');
-    geothermalInfo.classList.add('info-tooltip-icon');
-    geothermalInfo.innerHTML = '&#9432;';
+      const labelWrap = document.createElement('div');
+      labelWrap.classList.add('deep-mining-option-label');
+
+      const label = document.createElement('span');
+      label.textContent = labelText;
+
+      const info = document.createElement('span');
+      info.classList.add('info-tooltip-icon');
+      info.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(info, tooltipText);
+
+      labelWrap.append(label, info);
+
+      const toggle = createToggleButton({
+        onLabel: 'On',
+        offLabel: 'Off',
+        isOn
+      });
+      toggle.id = `${this.name}-${key}-toggle`;
+
+      header.append(labelWrap, toggle);
+      option.appendChild(header);
+
+      return { option, toggle };
+    };
+
     const geothermalTooltipText = `Generates ${formatNumber(this.geothermalDepositsPerMinePerLevel, true)} geothermal deposits per ore mine for each 250m depth level beyond 500m. Deposits are only created when this setting is enabled during deepening. Tradeoff: Doubles components cost.`;
-    attachDynamicInfoTooltip(geothermalInfo, geothermalTooltipText);
+    const geothermalOption = createDeepMiningOption(
+      'geothermal',
+      'Create geothermal deposits',
+      geothermalTooltipText,
+      this.createGeothermalDeposits
+    );
 
-    geothermalRow.append(geothermalCheckbox, geothermalLabel, geothermalInfo);
-    deepMiningSection.appendChild(geothermalRow);
-
-    // Underground storage checkbox
-    const storageRow = document.createElement('div');
-    storageRow.classList.add('checkbox-row');
-
-    const storageCheckbox = document.createElement('input');
-    storageCheckbox.type = 'checkbox';
-    storageCheckbox.id = `${this.name}-storage-checkbox`;
-    storageCheckbox.checked = this.undergroundStorage;
-
-    const storageLabel = document.createElement('label');
-    storageLabel.htmlFor = `${this.name}-storage-checkbox`;
-    storageLabel.textContent = 'Underground Storage';
-
-    const storageInfo = document.createElement('span');
-    storageInfo.classList.add('info-tooltip-icon');
-    storageInfo.innerHTML = '&#9432;';
     const storageTooltipText = `Provides storage capacity equivalent to ${this.storageDepotsPerMinePerLevel} storage depot${this.storageDepotsPerMinePerLevel !== 1 ? 's' : ''} per ore mine for each 250m depth level beyond 500m. These do not count as actual buildings and have no maintenance cost. Tradeoff: Deepening time is slowed by 2x.`;
-    attachDynamicInfoTooltip(storageInfo, storageTooltipText);
+    const storageOption = createDeepMiningOption(
+      'storage',
+      'Underground Storage',
+      storageTooltipText,
+      this.undergroundStorage
+    );
 
-    storageRow.append(storageCheckbox, storageLabel, storageInfo);
-    deepMiningSection.appendChild(storageRow);
+    deepMiningOptions.append(geothermalOption.option, storageOption.option);
+    deepMiningSection.appendChild(deepMiningOptions);
 
     container.appendChild(deepMiningSection);
 
@@ -402,8 +413,8 @@ class DeeperMiningProject extends AndroidProject {
       superchargedValue: superchargeValue,
       superchargedEffect: superchargeEffect,
       deepMiningSection: deepMiningSection,
-      geothermalCheckbox: geothermalCheckbox,
-      storageCheckbox: storageCheckbox
+      geothermalToggle: geothermalOption.toggle,
+      storageToggle: storageOption.toggle
     };
 
     input.addEventListener('input', () => {
@@ -414,12 +425,14 @@ class DeeperMiningProject extends AndroidProject {
       this.setSuperchargedMiningLevel(Number(superchargeInput.value));
       updateProjectUI(this.name);
     });
-    geothermalCheckbox.addEventListener('change', () => {
-      this.createGeothermalDeposits = geothermalCheckbox.checked;
+    geothermalOption.toggle.addEventListener('click', () => {
+      this.createGeothermalDeposits = !this.createGeothermalDeposits;
+      setToggleButtonState(geothermalOption.toggle, this.createGeothermalDeposits);
       updateProjectUI(this.name);
     });
-    storageCheckbox.addEventListener('change', () => {
-      this.undergroundStorage = storageCheckbox.checked;
+    storageOption.toggle.addEventListener('click', () => {
+      this.undergroundStorage = !this.undergroundStorage;
+      setToggleButtonState(storageOption.toggle, this.undergroundStorage);
       this.adjustActiveDuration();
       updateProjectUI(this.name);
     });
@@ -446,13 +459,13 @@ class DeeperMiningProject extends AndroidProject {
         elements.deepMiningSection.style.display = '';
         elements.deepMiningSection.classList.toggle('deep-mining-locked', !isDeepEnough);
 
-        if (elements.geothermalCheckbox) {
-          elements.geothermalCheckbox.disabled = !isDeepEnough;
-          elements.geothermalCheckbox.checked = this.createGeothermalDeposits;
+        if (elements.geothermalToggle) {
+          elements.geothermalToggle.disabled = !isDeepEnough;
+          setToggleButtonState(elements.geothermalToggle, this.createGeothermalDeposits);
         }
-        if (elements.storageCheckbox) {
-          elements.storageCheckbox.disabled = !isDeepEnough;
-          elements.storageCheckbox.checked = this.undergroundStorage;
+        if (elements.storageToggle) {
+          elements.storageToggle.disabled = !isDeepEnough;
+          setToggleButtonState(elements.storageToggle, this.undergroundStorage);
         }
       }
     }

@@ -89,7 +89,8 @@
   padding: 6px 8px;
 }
 
-.automation-toggle {
+.automation-toggle,
+.ui-toggle {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -101,7 +102,8 @@
   cursor: pointer;
 }
 
-.automation-toggle__track {
+.automation-toggle__track,
+.ui-toggle__track {
   width: 40px;
   height: 20px;
   background-color: #e3e8f3;
@@ -111,7 +113,8 @@
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.automation-toggle__thumb {
+.automation-toggle__thumb,
+.ui-toggle__thumb {
   position: absolute;
   top: 2px;
   left: 2px;
@@ -123,26 +126,36 @@
   transition: transform 0.2s ease;
 }
 
-.automation-toggle__label {
+.automation-toggle__label,
+.ui-toggle__label {
   font-weight: 600;
   color: #2f3a4d;
   min-width: 90px;
   text-align: left;
 }
 
-.automation-toggle.is-on .automation-toggle__track {
+.automation-toggle.is-on .automation-toggle__track,
+.ui-toggle.is-on .ui-toggle__track {
   background-color: #2a4db8;
   border-color: #2a4db8;
   box-shadow: 0 0 6px rgba(42, 77, 184, 0.4);
 }
 
-.automation-toggle.is-on .automation-toggle__thumb {
+.automation-toggle.is-on .automation-toggle__thumb,
+.ui-toggle.is-on .ui-toggle__thumb {
   transform: translateX(20px);
 }
 
-.automation-toggle:focus-visible {
+.automation-toggle:focus-visible,
+.ui-toggle:focus-visible {
   outline: 2px solid #2a4db8;
   outline-offset: 2px;
+}
+
+.automation-toggle:disabled,
+.ui-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .automation-preset-buttons {

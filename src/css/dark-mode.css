@@ -801,32 +801,47 @@
     border-color: #202d42;
 }
 
-.dark-mode .automation-toggle {
+.dark-mode .automation-toggle,
+.dark-mode .ui-toggle {
     background-color: transparent;
     border: none;
 }
 
-.dark-mode .automation-toggle:hover {
+.dark-mode .automation-toggle:hover,
+.dark-mode .ui-toggle:hover {
     background-color: transparent;
 }
 
-.dark-mode .automation-toggle__label {
+.dark-mode .automation-toggle__label,
+.dark-mode .ui-toggle__label {
     color: #e7ecf7;
 }
 
-.dark-mode .automation-toggle__track {
+.dark-mode .automation-toggle__track,
+.dark-mode .ui-toggle__track {
     background-color: transparent;
     border-color: #4a5568;
 }
 
-.dark-mode .automation-toggle.is-on .automation-toggle__track {
+.dark-mode .automation-toggle.is-on .automation-toggle__track,
+.dark-mode .ui-toggle.is-on .ui-toggle__track {
     background-color: #3a66e1;
     border-color: #3a66e1;
     box-shadow: 0 0 6px rgba(58, 102, 225, 0.6);
 }
 
-.dark-mode .automation-toggle__thumb {
+.dark-mode .automation-toggle__thumb,
+.dark-mode .ui-toggle__thumb {
     background-color: #e7ecf7;
+}
+
+.dark-mode .deep-mining-option {
+    background: #0e1421;
+    border-color: #202d42;
+}
+
+.dark-mode .deep-mining-option-label {
+    color: #e7ecf7;
 }
 
 .dark-mode .life-automation-zone-row {

@@ -1061,6 +1061,37 @@
     opacity: 0.6;
 }
 
+.deep-mining-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.deep-mining-option {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #e1e6ef;
+    background: #f7f9fc;
+}
+
+.deep-mining-option-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.deep-mining-option-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #2f3a4d;
+}
+
 .section-title {
     font-size: 1em;
     font-weight: bold;

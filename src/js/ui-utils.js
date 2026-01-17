@@ -235,6 +235,35 @@ function wireStringNumberInput(input, options = {}) {
   return { syncParsedValue };
 }
 
+function createToggleButton(options = {}) {
+  const onLabel = options.onLabel || 'On';
+  const offLabel = options.offLabel || 'Off';
+  const isOn = options.isOn || false;
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.classList.add('ui-toggle');
+  toggle.dataset.onLabel = onLabel;
+  toggle.dataset.offLabel = offLabel;
+  const track = document.createElement('span');
+  track.classList.add('ui-toggle__track');
+  track.setAttribute('aria-hidden', 'true');
+  const thumb = document.createElement('span');
+  thumb.classList.add('ui-toggle__thumb');
+  track.appendChild(thumb);
+  const label = document.createElement('span');
+  label.classList.add('ui-toggle__label');
+  toggle.append(track, label);
+  toggle._toggleLabel = label;
+  setToggleButtonState(toggle, isOn);
+  return toggle;
+}
+
+function setToggleButtonState(toggle, enabled) {
+  toggle.classList.toggle('is-on', !!enabled);
+  toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  toggle._toggleLabel.textContent = enabled ? toggle.dataset.onLabel : toggle.dataset.offLabel;
+}
+
 function makeCollapsibleCard(card) {
   if (!card) return;
   const header = card.querySelector('.card-header');
@@ -262,6 +291,8 @@ if (typeof module !== 'undefined' && module.exports) {
     attachDynamicInfoTooltip,
     subtabScrollPositions,
     makeCollapsibleCard,
-    wireStringNumberInput
+    wireStringNumberInput,
+    createToggleButton,
+    setToggleButtonState
   };
 }
