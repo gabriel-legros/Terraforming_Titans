@@ -17,7 +17,8 @@ progressTartarus.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
     ],
-    reward: []
+    reward: [
+    ]
   },
   {
     id: 'tartarus.30.1',
@@ -343,6 +344,7 @@ progressTartarus.chapters.push(
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'tartarus', value: true },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'brown-dwarf' },
+      { target: 'rwgManager', type: 'allowHazard', targetId: 'kessler' }
     ]
   },
 

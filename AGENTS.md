@@ -344,6 +344,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Round building construction setting that rounds manual building and colony construction up to the selected build count increment while updating cost previews.
 - Autobuild now tracks a prioritized reserve that protects resources earmarked for priority construction targets.
 - Random World Generator hazard selection now uses a Hazards toggle with per-hazard checkboxes, encodes multi-hazard seeds, and unlocks the garbage hazard after Gabbag.
+- Random World Generator now allows the Tartarus Kessler Skies hazard once it is unlocked.
 - Metropolis and Ecumenopolis autobuild controls now include a Max option to push construction to the limit.
 - Added a fullscreen loading overlay that displays while the game or a save file is loading.
 - Added a setting to keep hidden buildings when travelling between worlds; it is off by default so hidden structures reappear unless enabled.

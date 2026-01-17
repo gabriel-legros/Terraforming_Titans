@@ -12,7 +12,10 @@ describe('Artificial world abandonment snapshot', () => {
     global.terraforming = {};
     global.resources = { colony: { colonists: { value: 5 } } };
     global.planetOverrides = {};
-    global.planetParameters = { gabbag: { hazards: { garbage: {} } } };
+    global.planetParameters = {
+      gabbag: { hazards: { garbage: {} } },
+      tartarus: { hazards: { kessler: { orbitalDebrisPerLand: 100 } } }
+    };
     global.ARTIFICIAL_FLEET_CAPACITY_WORLDS = 5;
     global.defaultPlanetParameters = {
       resources: {

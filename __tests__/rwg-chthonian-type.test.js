@@ -11,6 +11,7 @@ describe('RWG chthonian type selection', () => {
     };
     global.planetParameters = {
       gabbag: { hazards: { garbage: {} } },
+      tartarus: { hazards: { kessler: { orbitalDebrisPerLand: 100 } } },
     };
 
     jest.isolateModules(() => {
