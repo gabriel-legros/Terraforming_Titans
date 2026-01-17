@@ -39,7 +39,9 @@ const kesslerHazardUICache = {
   debrisSourcesLargeList: null,
   binDetails: [],
   hoveredBin: -1,
-  chartDetailsDefault: ''
+  chartDetailsDefault: '',
+  wasVisible: false,
+  pendingTransitionReset: false
 };
 
 const KESSLER_EFFECTS = [
@@ -510,10 +512,17 @@ function updateKesslerDebrisChart(
   dragThresholdMeters,
   dragThresholdDensity,
   densityModel,
-  isCleared
+  isCleared,
+  skipTransitions
 ) {
   const bars = kesslerHazardUICache.chartBarsList;
   const fills = kesslerHazardUICache.chartBarFills;
+  if (skipTransitions) {
+    for (let i = 0; i < bars.length; i += 1) {
+      bars[i].style.transition = 'none';
+      fills[i].style.transition = 'none';
+    }
+  }
   const baselineEntries = baselineDistribution.length ? baselineDistribution : currentDistribution;
   const currentEntries = currentDistribution.length ? currentDistribution : baselineDistribution;
   const sortedEntries = baselineEntries.slice().sort((a, b) => a.periapsisMeters - b.periapsisMeters);
@@ -593,6 +602,22 @@ function updateKesslerDebrisChart(
     bars[i].classList.toggle('kessler-debris-chart__bar--above', !inDrag);
   }
 
+  if (skipTransitions) {
+    try {
+      window.requestAnimationFrame(() => {
+        for (let i = 0; i < bars.length; i += 1) {
+          bars[i].style.transition = '';
+          fills[i].style.transition = '';
+        }
+      });
+    } catch (error) {
+      for (let i = 0; i < bars.length; i += 1) {
+        bars[i].style.transition = '';
+        fills[i].style.transition = '';
+      }
+    }
+  }
+
   if (isCleared) {
     kesslerHazardUICache.chartExobase.style.display = 'none';
     kesslerHazardUICache.chartExobaseLabel.style.display = 'none';
@@ -645,6 +670,23 @@ function updateKesslerHazardUI(kesslerParameters) {
     const baseline = manager.kesslerHazard.getPeriapsisBaseline();
     const distribution = manager.kesslerHazard.getPeriapsisDistribution();
     const densityModel = getDensityModel(getTerraforming());
+    const doc = getDocument();
+    let docHidden = false;
+    try {
+      docHidden = doc.hidden;
+    } catch (error) {
+      docHidden = false;
+    }
+    if (docHidden) {
+      kesslerHazardUICache.pendingTransitionReset = true;
+    }
+    const isVisible = !!kesslerParameters;
+    const skipTransitions = (!kesslerHazardUICache.wasVisible && isVisible)
+      || (kesslerHazardUICache.pendingTransitionReset && !docHidden);
+    if (!docHidden) {
+      kesslerHazardUICache.pendingTransitionReset = false;
+    }
+    kesslerHazardUICache.wasVisible = isVisible;
     updateKesslerDebrisChart(
       debris,
       baseline,
@@ -652,7 +694,8 @@ function updateKesslerHazardUI(kesslerParameters) {
       decaySummary.dragThresholdHeightMeters || 0,
       decaySummary.dragThresholdDensity || 0,
       densityModel,
-      isCleared
+      isCleared,
+      skipTransitions
     );
     const failureChances = manager.kesslerHazard.getProjectFailureChances();
     const initialValue = debris.initialValue || 0;
