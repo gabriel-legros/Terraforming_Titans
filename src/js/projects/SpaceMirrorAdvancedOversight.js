@@ -57,6 +57,12 @@ class SpaceMirrorAdvancedOversight {
       const prio = settings.priority || { tropical: 1, temperate: 1, polar: 1, focus: 1 };
       const targets = settings.targets || { tropical: 0, temperate: 0, polar: 0, water: 0 };
 
+      if (!(targets.water > 0)) {
+        assignM.focus = 0;
+        assignL.focus = 0;
+        reverse.focus = false;
+      }
+
       const totalMirrors = Math.max(0, buildings.spaceMirror?.active || 0);
       const totalLanterns = settings.applyToLantern ? Math.max(0, buildings.hyperionLantern?.active || 0) : 0;
 
