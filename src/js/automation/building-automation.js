@@ -48,10 +48,12 @@ class BuildingAutomation {
   constructor() {
     this.presets = [];
     this.assignments = [];
+    this.combinations = [];
     this.collapsed = false;
     this.masterEnabled = true;
     this.nextPresetId = 1;
     this.nextAssignmentId = 1;
+    this.nextCombinationId = 1;
     this.elapsed = 0;
   }
 
@@ -75,6 +77,14 @@ class BuildingAutomation {
     return this.assignments.slice();
   }
 
+  getCombinations() {
+    return this.combinations.slice();
+  }
+
+  getCombinationById(id) {
+    return this.combinations.find(combo => combo.id === id) || null;
+  }
+
   addAssignment(presetId) {
     const preset = this.getPresetById(presetId) || this.presets[0] || null;
     const assignment = {
@@ -84,6 +94,15 @@ class BuildingAutomation {
     };
     this.assignments.push(assignment);
     return assignment.id;
+  }
+
+  setAssignments(assignments) {
+    const next = Array.isArray(assignments) ? assignments : [];
+    this.assignments = next.map(entry => ({
+      id: this.nextAssignmentId++,
+      presetId: entry.presetId,
+      enabled: entry.enabled !== false
+    }));
   }
 
   removeAssignment(assignmentId) {
@@ -112,6 +131,46 @@ class BuildingAutomation {
   setAssignmentEnabled(assignmentId, enabled) {
     const assignment = this.assignments.find(item => item.id === assignmentId);
     assignment.enabled = !!enabled;
+  }
+
+  addCombination(name, assignments) {
+    const id = this.nextCombinationId++;
+    const combo = {
+      id,
+      name: name || `Combination ${id}`,
+      assignments: (assignments || []).map(entry => ({
+        presetId: entry.presetId,
+        enabled: entry.enabled !== false
+      }))
+    };
+    this.combinations.push(combo);
+    return combo.id;
+  }
+
+  updateCombination(id, name, assignments) {
+    const index = this.combinations.findIndex(combo => combo.id === id);
+    if (index < 0) {
+      return false;
+    }
+    const combo = {
+      id,
+      name: name || `Combination ${id}`,
+      assignments: (assignments || []).map(entry => ({
+        presetId: entry.presetId,
+        enabled: entry.enabled !== false
+      }))
+    };
+    this.combinations.splice(index, 1, combo);
+    return true;
+  }
+
+  deleteCombination(id) {
+    this.combinations = this.combinations.filter(combo => combo.id !== id);
+  }
+
+  applyCombination(id) {
+    const combo = this.getCombinationById(id);
+    this.setAssignments(combo.assignments);
   }
 
   addPreset(name, buildingIds, options = {}) {
@@ -408,10 +467,19 @@ class BuildingAutomation {
         )
       })),
       assignments: this.assignments.map(item => ({ ...item })),
+      combinations: this.combinations.map(combo => ({
+        id: combo.id,
+        name: combo.name,
+        assignments: combo.assignments.map(entry => ({
+          presetId: entry.presetId,
+          enabled: entry.enabled !== false
+        }))
+      })),
       collapsed: this.collapsed,
       masterEnabled: this.masterEnabled,
       nextPresetId: this.nextPresetId,
-      nextAssignmentId: this.nextAssignmentId
+      nextAssignmentId: this.nextAssignmentId,
+      nextCombinationId: this.nextCombinationId
     };
   }
 
@@ -429,10 +497,19 @@ class BuildingAutomation {
       presetId: item.presetId,
       enabled: item.enabled !== false
     })) : [];
+    this.combinations = Array.isArray(data.combinations) ? data.combinations.map(combo => ({
+      id: combo.id,
+      name: combo.name || 'Combination',
+      assignments: Array.isArray(combo.assignments) ? combo.assignments.map(entry => ({
+        presetId: entry.presetId,
+        enabled: entry.enabled !== false
+      })) : []
+    })) : [];
     this.collapsed = !!data.collapsed;
     this.masterEnabled = data.masterEnabled !== false;
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.nextAssignmentId = data.nextAssignmentId || this.assignments.length + 1;
+    this.nextCombinationId = data.nextCombinationId || this.combinations.length + 1;
   }
 }
 

@@ -153,6 +153,37 @@ describe('BuildingAutomation presets', () => {
     expect(updateBuildingDisplay).toHaveBeenCalled();
   });
 
+  test('combinations restore assignment lists', () => {
+    const firstId = automation.addPreset('First', ['chemicalReactor'], {
+      includeControl: false,
+      includeAutomation: true
+    });
+    const secondId = automation.addPreset('Second', ['chemicalReactor'], {
+      includeControl: false,
+      includeAutomation: true
+    });
+
+    automation.addAssignment(firstId);
+    const secondAssignmentId = automation.addAssignment(secondId);
+    automation.setAssignmentEnabled(secondAssignmentId, false);
+
+    const comboId = automation.addCombination('Combo', automation.getAssignments());
+    automation.setAssignments([]);
+    automation.applyCombination(comboId);
+
+    const restoredAssignments = automation.getAssignments();
+    expect(restoredAssignments).toHaveLength(2);
+    expect(restoredAssignments[0].presetId).toBe(firstId);
+    expect(restoredAssignments[1].presetId).toBe(secondId);
+    expect(restoredAssignments[1].enabled).toBe(false);
+
+    const state = automation.saveState();
+    const restored = new BuildingAutomation();
+    restored.loadState(state);
+    const combo = restored.getCombinationById(comboId);
+    expect(combo.assignments).toHaveLength(2);
+  });
+
   test('scopeAll persists through save/load', () => {
     const presetId = automation.addPreset('All', ['chemicalReactor'], {
       includeControl: true,

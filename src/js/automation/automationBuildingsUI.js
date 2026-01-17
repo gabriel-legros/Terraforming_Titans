@@ -6,7 +6,10 @@ const buildingAutomationUIState = {
   builderType: 'both',
   builderSelectedBuildings: [],
   builderCategoryValue: 'all',
-  builderBuildingValue: ''
+  builderBuildingValue: '',
+  combinationId: null,
+  combinationSyncedId: null,
+  combinationName: ''
 };
 
 function buildAutomationBuildingsUI() {
@@ -128,6 +131,32 @@ function buildAutomationBuildingsUI() {
   applyHeader.append(applyTitle, applyCombinationButton);
   applySection.appendChild(applyHeader);
 
+  const combinationRow = document.createElement('div');
+  combinationRow.classList.add('building-automation-row');
+  const combinationSelect = document.createElement('select');
+  combinationSelect.classList.add('building-automation-combination-select');
+  const combinationNameInput = document.createElement('input');
+  combinationNameInput.type = 'text';
+  combinationNameInput.placeholder = 'Combination name';
+  combinationNameInput.classList.add('building-automation-combination-name');
+  const combinationNewButton = document.createElement('button');
+  combinationNewButton.textContent = 'New';
+  combinationNewButton.classList.add('building-automation-combination-new');
+  const combinationSaveButton = document.createElement('button');
+  combinationSaveButton.textContent = 'Save';
+  combinationSaveButton.classList.add('building-automation-combination-save');
+  const combinationDeleteButton = document.createElement('button');
+  combinationDeleteButton.textContent = 'Delete';
+  combinationDeleteButton.classList.add('building-automation-combination-delete');
+  combinationRow.append(
+    combinationSelect,
+    combinationNameInput,
+    combinationNewButton,
+    combinationSaveButton,
+    combinationDeleteButton
+  );
+  applySection.appendChild(combinationRow);
+
   const applyList = document.createElement('div');
   applyList.classList.add('building-automation-apply-list');
   applySection.appendChild(applyList);
@@ -161,6 +190,11 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderClearButton = clearButton;
   automationElements.buildingsBuilderSelectedList = selectedList;
   automationElements.buildingsApplyCombinationButton = applyCombinationButton;
+  automationElements.buildingsCombinationSelect = combinationSelect;
+  automationElements.buildingsCombinationNameInput = combinationNameInput;
+  automationElements.buildingsCombinationNewButton = combinationNewButton;
+  automationElements.buildingsCombinationSaveButton = combinationSaveButton;
+  automationElements.buildingsCombinationDeleteButton = combinationDeleteButton;
   automationElements.buildingsApplyList = applyList;
   automationElements.buildingsApplyHint = applyHint;
   automationElements.buildingsAddApplyButton = addApplyButton;
@@ -192,7 +226,12 @@ function updateBuildingsAutomationUI() {
     buildingsApplyList,
     buildingsApplyHint,
     buildingsApplyCombinationButton,
-    buildingsAddApplyButton
+    buildingsAddApplyButton,
+    buildingsCombinationSelect,
+    buildingsCombinationNameInput,
+    buildingsCombinationNewButton,
+    buildingsCombinationSaveButton,
+    buildingsCombinationDeleteButton
   } = automationElements;
   const manager = automationManager;
   const automation = manager.buildingsAutomation;
@@ -210,6 +249,7 @@ function updateBuildingsAutomationUI() {
   buildingsCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
 
   const presets = automation.presets.slice();
+  const combinations = automation.getCombinations();
   const unlockedBuildings = getUnlockedBuildings();
 
   if (document.activeElement !== buildingsBuilderPresetSelect) {
@@ -317,6 +357,42 @@ function updateBuildingsAutomationUI() {
   buildingsBuilderDeleteButton.disabled = !activePreset;
   buildingsBuilderApplyOnceButton.disabled = !activePreset;
   buildingsApplyCombinationButton.disabled = automation.getAssignments().length === 0;
+  buildingsCombinationSaveButton.disabled = automation.getAssignments().length === 0;
+
+  if (document.activeElement !== buildingsCombinationSelect) {
+    buildingsCombinationSelect.textContent = '';
+    const newOption = document.createElement('option');
+    newOption.value = '';
+    newOption.textContent = 'New combination';
+    buildingsCombinationSelect.appendChild(newOption);
+    combinations.forEach(combo => {
+      const option = document.createElement('option');
+      option.value = String(combo.id);
+      option.textContent = combo.name || `Combination ${combo.id}`;
+      buildingsCombinationSelect.appendChild(option);
+    });
+    buildingsCombinationSelect.value = buildingAutomationUIState.combinationId || '';
+  }
+
+  const activeCombinationId = buildingAutomationUIState.combinationId;
+  const activeCombination = activeCombinationId
+    ? automation.getCombinationById(Number(activeCombinationId))
+    : null;
+  if (activeCombination && buildingAutomationUIState.combinationSyncedId !== activeCombinationId) {
+    buildingAutomationUIState.combinationName = activeCombination.name;
+    buildingAutomationUIState.combinationSyncedId = activeCombinationId;
+  }
+  if (!activeCombination && buildingAutomationUIState.combinationSyncedId) {
+    buildingAutomationUIState.combinationSyncedId = null;
+  }
+
+  if (document.activeElement !== buildingsCombinationNameInput) {
+    buildingsCombinationNameInput.value = activeCombination
+      ? activeCombination.name
+      : buildingAutomationUIState.combinationName;
+  }
+
+  buildingsCombinationDeleteButton.disabled = !activeCombination;
 
   const selectedHasFocus = buildingsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';
@@ -495,6 +571,11 @@ function attachBuildingsAutomationHandlers() {
     buildingsBuilderAddCategoryButton,
     buildingsBuilderClearButton,
     buildingsApplyCombinationButton,
+    buildingsCombinationSelect,
+    buildingsCombinationNameInput,
+    buildingsCombinationNewButton,
+    buildingsCombinationSaveButton,
+    buildingsCombinationDeleteButton,
     buildingsAddApplyButton
   } = automationElements;
 
@@ -638,6 +719,70 @@ function attachBuildingsAutomationHandlers() {
 
   buildingsApplyCombinationButton.addEventListener('click', () => {
     automationManager.buildingsAutomation.applyPresets();
+  });
+
+  buildingsCombinationSelect.addEventListener('change', (event) => {
+    const comboId = event.target.value || null;
+    buildingAutomationUIState.combinationId = comboId;
+    buildingAutomationUIState.combinationSyncedId = null;
+    if (comboId) {
+      automationManager.buildingsAutomation.applyCombination(Number(comboId));
+    }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  buildingsCombinationNameInput.addEventListener('input', (event) => {
+    const comboId = buildingAutomationUIState.combinationId;
+    if (!comboId) {
+      buildingAutomationUIState.combinationName = event.target.value || '';
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+      return;
+    }
+    const combo = automationManager.buildingsAutomation.getCombinationById(Number(comboId));
+    combo.name = event.target.value || '';
+  });
+
+  buildingsCombinationNewButton.addEventListener('click', () => {
+    buildingAutomationUIState.combinationId = null;
+    buildingAutomationUIState.combinationSyncedId = null;
+    buildingAutomationUIState.combinationName = '';
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  buildingsCombinationSaveButton.addEventListener('click', () => {
+    const automation = automationManager.buildingsAutomation;
+    const name = buildingsCombinationNameInput.value || buildingAutomationUIState.combinationName || '';
+    const snapshot = automation.getAssignments().map(entry => ({
+      presetId: entry.presetId,
+      enabled: entry.enabled !== false
+    }));
+    const comboId = buildingAutomationUIState.combinationId;
+    if (comboId) {
+      automation.updateCombination(Number(comboId), name, snapshot);
+    } else {
+      const newId = automation.addCombination(name, snapshot);
+      buildingAutomationUIState.combinationId = String(newId);
+      buildingAutomationUIState.combinationSyncedId = null;
+      buildingAutomationUIState.combinationName = '';
+    }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  buildingsCombinationDeleteButton.addEventListener('click', () => {
+    const comboId = buildingAutomationUIState.combinationId;
+    if (!comboId) {
+      return;
+    }
+    automationManager.buildingsAutomation.deleteCombination(Number(comboId));
+    buildingAutomationUIState.combinationId = null;
+    buildingAutomationUIState.combinationSyncedId = null;
+    buildingAutomationUIState.combinationName = '';
+    queueAutomationUIRefresh();
+    updateAutomationUI();
   });
 
   buildingsAddApplyButton.addEventListener('click', () => {

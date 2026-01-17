@@ -57,6 +57,11 @@ const automationElements = {
   buildingsApplyList: null,
   buildingsApplyHint: null,
   buildingsApplyCombinationButton: null,
+  buildingsCombinationSelect: null,
+  buildingsCombinationNameInput: null,
+  buildingsCombinationNewButton: null,
+  buildingsCombinationSaveButton: null,
+  buildingsCombinationDeleteButton: null,
   buildingsAddApplyButton: null
 };
 
@@ -195,6 +200,9 @@ function cacheAutomationElements() {
   if (!automationElements.buildingsBuilderDeleteButton && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderDeleteButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-delete');
   }
+  if (!automationElements.buildingsBuilderApplyOnceButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderApplyOnceButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-apply-once');
+  }
   if (!automationElements.buildingsBuilderTypeSelect && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderTypeSelect = automationElements.buildingsAutomation.querySelector('.building-automation-builder-type');
   }
@@ -210,6 +218,12 @@ function cacheAutomationElements() {
   if (!automationElements.buildingsBuilderAddButton && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderAddButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-add');
   }
+  if (!automationElements.buildingsBuilderAddCategoryButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderAddCategoryButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-add-category');
+  }
+  if (!automationElements.buildingsBuilderClearButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderClearButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-clear');
+  }
   if (!automationElements.buildingsBuilderSelectedList && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderSelectedList = automationElements.buildingsAutomation.querySelector('.building-automation-builder-list');
   }
@@ -221,6 +235,21 @@ function cacheAutomationElements() {
   }
   if (!automationElements.buildingsApplyCombinationButton && automationElements.buildingsAutomation) {
     automationElements.buildingsApplyCombinationButton = automationElements.buildingsAutomation.querySelector('.building-automation-apply-combination');
+  }
+  if (!automationElements.buildingsCombinationSelect && automationElements.buildingsAutomation) {
+    automationElements.buildingsCombinationSelect = automationElements.buildingsAutomation.querySelector('.building-automation-combination-select');
+  }
+  if (!automationElements.buildingsCombinationNameInput && automationElements.buildingsAutomation) {
+    automationElements.buildingsCombinationNameInput = automationElements.buildingsAutomation.querySelector('.building-automation-combination-name');
+  }
+  if (!automationElements.buildingsCombinationNewButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsCombinationNewButton = automationElements.buildingsAutomation.querySelector('.building-automation-combination-new');
+  }
+  if (!automationElements.buildingsCombinationSaveButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsCombinationSaveButton = automationElements.buildingsAutomation.querySelector('.building-automation-combination-save');
+  }
+  if (!automationElements.buildingsCombinationDeleteButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsCombinationDeleteButton = automationElements.buildingsAutomation.querySelector('.building-automation-combination-delete');
   }
   if (!automationElements.buildingsAddApplyButton && automationElements.buildingsAutomation) {
     automationElements.buildingsAddApplyButton = automationElements.buildingsAutomation.querySelector('.building-automation-apply-add');

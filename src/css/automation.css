@@ -548,7 +548,8 @@
 
 .building-automation-section .building-automation-builder-save,
 .building-automation-section .building-automation-apply-add,
-.building-automation-section .building-automation-apply-combination {
+.building-automation-section .building-automation-apply-combination,
+.building-automation-section .building-automation-combination-save {
   background: #2a4db8;
   color: #fff;
   border: none;
@@ -557,13 +558,15 @@
 
 .building-automation-section .building-automation-builder-save:hover,
 .building-automation-section .building-automation-apply-add:hover,
-.building-automation-section .building-automation-apply-combination:hover {
+.building-automation-section .building-automation-apply-combination:hover,
+.building-automation-section .building-automation-combination-save:hover {
   background: #1f3fa3;
 }
 
 .building-automation-section .building-automation-builder-save:disabled,
 .building-automation-section .building-automation-apply-add:disabled,
-.building-automation-section .building-automation-apply-combination:disabled {
+.building-automation-section .building-automation-apply-combination:disabled,
+.building-automation-section .building-automation-combination-save:disabled {
   background: #c3cad7;
   cursor: not-allowed;
 }
