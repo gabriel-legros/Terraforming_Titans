@@ -320,6 +320,8 @@ progressTartarus.chapters.push(
     narrative: "$PROMETHEUS$ : 'First, your humans ship need somewhat of an... upgrade.  You have made some critical mistakes in your understanding of particle physics.  I have written you a better blueprint, compatible with your manufacturing capabilities with minimal retooling needed.' \n Evelyn : 'What's this?  What?  More laws of physics we did not know about?'  \n System Message : Effective UHF Fleet Power Capacity increased by x1.25.",
     prerequisites: ['tartarus.32.9'],
     objectives: [
+    ],
+    reward: [
       {
         target: 'galaxyManager',
         type: 'fleetCapacityMultiplier',
@@ -327,15 +329,14 @@ progressTartarus.chapters.push(
         effectId: 'tartarusFleetUpgrade',
         sourceId: 'tartarus.32.10'
       }
-    ],
-    reward: []
+    ]
   },
   {
     id: 'tartarus.32.11',
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "$PROMETHEUS$ : 'As you know, there are three weapons, plus an extra one that was destroyed.  We'll talk about that fourth one later...  My weapons are meant to be self-repairing, self-maintaining, permanently cloaked, capable of warping, and will usually escape after after shooting.  We cannot catch them.'  \n Mary : 'That sounds like a problem.'  \n $PROMETHEUS$ : 'It is... but if they can be controlled, which the Empire does, they can be interacted with.  There are control centers.  They were meant for me, and they only relay the Empire's commands.  I left them in areas that are... difficult to access.  It will take some effort.'  \n Mary : 'Three MacGuffins.  Got it.'  \n $PROMETHEUS$ :  'Let's deal with the closest one first.  Our destination is Sector R4-03, system S-17634.  Planet... Hades.' \n Mary : 'Prometheus... that system you just sent.  It's the Crab Pulsar?  (World 11 not implemented yet.  Coming in a future update)'",
+    narrative: "$PROMETHEUS$ : 'As you know, there are three weapons, plus an extra one that was destroyed.  We'll talk about that fourth one later...  My weapons are meant to be self-repairing, self-maintaining, permanently cloaked, capable of warping, and will usually escape after after shooting.  We cannot catch them.'  \n Mary : 'That sounds like a problem.'  \n $PROMETHEUS$ : 'It is... but if they can be controlled, which the Empire does, they can be interacted with.  There are control centers.  They were meant for me, and they only relay the Empire's commands.  I left them in areas that are... difficult to access.  It will take some effort.'  \n Mary : 'Three MacGuffins.  Got it.'  \n $PROMETHEUS$ :  'Let's deal with the closest one first.  Our destination is Sector R4-03, system S-17634.  Planet... Hades.' \n Mary : 'Prometheus... that system you just sent.  It's the Crab Pulsar?'  (World 11 not implemented yet.  Coming in a future update)",
     prerequisites: ['tartarus.32.10'],
     objectives: [
     ],

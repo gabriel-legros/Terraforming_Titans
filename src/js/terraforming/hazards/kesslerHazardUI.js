@@ -564,6 +564,11 @@ function updateKesslerDebrisChart(
       currentBins[index] += entry.massTons;
     }
   }
+  if (isCleared) {
+    for (let i = 0; i < currentBins.length; i += 1) {
+      currentBins[i] = 0;
+    }
+  }
   const dragRatio = Math.min(1, Math.max(0, (dragThresholdMeters - minPeriapsis) / span));
 
   let maxMass = 0;
@@ -588,11 +593,18 @@ function updateKesslerDebrisChart(
     bars[i].classList.toggle('kessler-debris-chart__bar--above', !inDrag);
   }
 
-  const dragPercent = formatNumeric(dragRatio * 100, 2);
-  kesslerHazardUICache.chartExobase.style.left = `${dragPercent}%`;
-  kesslerHazardUICache.chartExobaseLabel.style.left = `${dragPercent}%`;
-  kesslerHazardUICache.chartExobaseText.textContent =
-    `Drag ${formatDensityWithUnit(dragThresholdDensity)}`;
+  if (isCleared) {
+    kesslerHazardUICache.chartExobase.style.display = 'none';
+    kesslerHazardUICache.chartExobaseLabel.style.display = 'none';
+  } else {
+    const dragPercent = formatNumeric(dragRatio * 100, 2);
+    kesslerHazardUICache.chartExobase.style.display = '';
+    kesslerHazardUICache.chartExobaseLabel.style.display = '';
+    kesslerHazardUICache.chartExobase.style.left = `${dragPercent}%`;
+    kesslerHazardUICache.chartExobaseLabel.style.left = `${dragPercent}%`;
+    kesslerHazardUICache.chartExobaseText.textContent =
+      `Drag ${formatDensityWithUnit(dragThresholdDensity)}`;
+  }
 
   const binCount = bars.length;
   const altitudes = new Array(binCount);
