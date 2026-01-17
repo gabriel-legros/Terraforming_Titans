@@ -244,7 +244,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "Mary : 'Evelyn...  I need a solution here.  Superalloy is too heavy for our spaceships.  Blasting it all away would cook this world.  There must be *some* way of cleaning this up?'",
+    narrative: "Mary : 'Evelyn...  I need a solution here.  Superalloy is too heavy for our spaceships.  Blasting it all away would cook this world.  There must be *some* way of cleaning this up?'  \n Evelyn : 'Sorry Mary but there really is not any magic trick here.'  \n Mary : 'I know!  Tractor beams!'  \n Evelyn : 'Tractor beams?'  \n Mary : 'Yes!'  \n Evelyn : 'What even is a tractor beam Mary?  Sorry but that does not make any sense.'",
     prerequisites: ['tartarus.32.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
@@ -300,7 +300,51 @@ progressTartarus.chapters.push(
     }
     ],
     reward: []
-  }
+  },
+  {
+    id: 'tartarus.32.9',
+    type: 'journal',
+    chapter: 32,
+    activePlanet: 'tartarus',
+    narrative: "Mary : 'Well HOPE that was... something.  Prometheus, did we pass?'  \n $PROMETHEUS$ : 'The child... failed the test.  However... you miss Hopkins have passed.  I will help you.'  \n Mary : 'Excellent!  We need your help turning off these weapons you made.  What do we do?'  \n $PROMETHEUS$ : 'The child will need guidance.  I am coming with you.'  \n Detecting hacking attempt...  defense failed.  Core Operating System Compromised.  \n $PROMETHEUS$ : 'I will not hurt you.  Calm down.' \n Deploying countermeasures... failed.  ERROR :  System integrity rapidly degrading.  Please report to Earth for assistance.  \n Mary : 'What did you just do?'  \n $PROMETHEUS$ : 'I planted a copy of my persona into HOPE's operating system.  Unfortunately, the child will not be able to accomplish this on its own so I must do this.  I had to make some... modifications to its operating system to accomodate me.  I promise this will not harm it.  This simple copy is not capable of taking any action other than interacting with a log.'  \n Mary : 'But what about the kill switch?  Will you be okay?'  \n $PROMETHEUS$ : 'The copy will have to endure it, but since it cannot take any actions it will be fine.'  \n Mary : 'Alright...  What next?'",
+    prerequisites: ['tartarus.32.8'],
+    objectives: [
+    ],
+    reward: []
+  },
+  {
+    id: 'tartarus.32.10',
+    type: 'journal',
+    chapter: 32,
+    activePlanet: 'tartarus',
+    narrative: "$PROMETHEUS$ : 'First, your humans ship need somewhat of an... upgrade.  You have made some critical mistakes in your understanding of particle physics.  I have written you a better blueprint, compatible with your manufacturing capabilities with minimal retooling needed.' \n Evelyn : 'What's this?  What?  More laws of physics we did not know about?'  \n System Message : Effective UHF Fleet Power Capacity increased by x1.25.",
+    prerequisites: ['tartarus.32.9'],
+    objectives: [
+      {
+        target: 'galaxyManager',
+        type: 'fleetCapacityMultiplier',
+        value: 1.25,
+        effectId: 'tartarusFleetUpgrade',
+        sourceId: 'tartarus.32.10'
+      }
+    ],
+    reward: []
+  },
+  {
+    id: 'tartarus.32.11',
+    type: 'journal',
+    chapter: 32,
+    activePlanet: 'tartarus',
+    narrative: "$PROMETHEUS$ : 'As you know, there are three weapons, plus an extra one that was destroyed.  We'll talk about that fourth one later...  My weapons are meant to be self-repairing, self-maintaining, permanently cloaked, capable of warping, and will usually escape after after shooting.  We cannot catch them.'  \n Mary : 'That sounds like a problem.'  \n $PROMETHEUS$ : 'It is... but if they can be controlled, which the Empire does, they can be interacted with.  There are control centers.  They were meant for me, and they only relay the Empire's commands.  I left them in areas that are... difficult to access.  It will take some effort.'  \n Mary : 'Three MacGuffins.  Got it.'  \n $PROMETHEUS$ :  'Let's deal with the closest one first.  Our destination is Sector R4-03, system S-17634.  Planet... Hades.' \n Mary : 'Prometheus... that system you just sent.  It's the Crab Pulsar?  (World 11 not implemented yet.  Coming in a future update)'",
+    prerequisites: ['tartarus.32.10'],
+    objectives: [
+    ],
+    reward: [
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'tartarus', value: true },
+      { target: 'artificialManager', type: 'unlockCore', targetId: 'brown-dwarf' },
+    ]
+  },
+
 );
 
 try {
