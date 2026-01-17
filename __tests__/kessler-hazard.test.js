@@ -185,7 +185,7 @@ describe('Kessler hazard', () => {
     expect(summary.decayTonsPerSecond).toBeGreaterThan(0);
   });
 
-  test('decay uses the larger of baseline and current mass', () => {
+  test('decay uses current mass regardless of baseline', () => {
     const setupResources = () => ({
       special: {
         orbitalDebris: {

@@ -9,7 +9,7 @@ const DEBRIS_DENSITY_CENTER = 1e-13;
 const DEBRIS_DENSITY_SEARCH_MAX = 500000;
 const DEBRIS_DECAY_DENSITY_REFERENCE = 1e-12;
 const DEBRIS_DECAY_DENSITY_FLOOR = 1e-16;
-const DEBRIS_DECAY_MAX_MULTIPLIER = 6;
+const DEBRIS_DECAY_MAX_MULTIPLIER = 100;
 
 let getAtmosphericDensityModel = null;
 try {
@@ -387,8 +387,7 @@ class KesslerHazard {
       const densityFactor = Math.min(DEBRIS_DECAY_MAX_MULTIPLIER, Math.max(0, densityRatio + 1));
       const decayRate = DEBRIS_DECAY_BASE_RATE * densityFactor;
       const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
-      const baselineMass = Math.max(this.periapsisBaseline[index]?.massTons ?? 0, entry.massTons);
-      const removed = Math.min(entry.massTons, baselineMass * decayFraction);
+      const removed = entry.massTons * decayFraction;
       entry.massTons = Math.max(0, entry.massTons - removed);
       decayedTons += removed;
     });
