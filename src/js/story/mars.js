@@ -668,7 +668,7 @@ var progressMars = {
         id: "chapter2.6",
         type: "journal",
         chapter: 2,
-        narrative: "Objective: Beging spread of life on Mars.",
+        narrative: "Objective: Begin spread of life on Mars.",
         prerequisites: ["chapter2.5"],
         objectives: [{
             type: 'collection',

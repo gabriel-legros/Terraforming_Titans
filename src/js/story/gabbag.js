@@ -385,7 +385,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     narrative: "Acquire Full Control of sector R4-05 to continue.",
-    prerequisites: ['gabbag.29.8'],
+    prerequisites: ['impossible'],
     objectives: [
       { type: 'galaxySectorControl', sectorLabel: 'R4-05' }
     ],
