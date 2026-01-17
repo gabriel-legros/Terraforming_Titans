@@ -846,7 +846,7 @@ const buildingsParameters = {
     category: 'waste',
     description: 'Vaporizes or knock away orbital debris with sustained laser fire.',
     cost: { colony: { metal: 5000, components: 200, electronics: 150, superconductors: 50 } },
-    consumption: { colony: { energy: 1_000_000_000, research: 10 } },
+    consumption: { colony: { energy: 1_000_000_000, research: 100 } },
     production: { special: { orbitalDebris: -1 } },
     alwaysShowProduction: true,
     alwaysShowConsumption: true,
