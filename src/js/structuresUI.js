@@ -511,6 +511,24 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   cardHeader.appendChild(collapseArrow);
   cardHeader.appendChild(headerGrid);
   combinedStructureRow.appendChild(cardHeader);
+
+  if (structure.kesslerDebrisSize) {
+    const warning = document.createElement('div');
+    warning.classList.add('project-kessler-warning');
+    warning.style.display = 'none';
+    const warningIcon = document.createElement('span');
+    warningIcon.classList.add('project-kessler-warning__icon');
+    warningIcon.textContent = '⚠';
+    const warningText = document.createElement('span');
+    const warningIconRight = document.createElement('span');
+    warningIconRight.classList.add('project-kessler-warning__icon');
+    warningIconRight.textContent = '⚠';
+    warning.append(warningIcon, warningText, warningIconRight);
+    combinedStructureRow.appendChild(warning);
+    cached.kesslerWarning = warning;
+    cached.kesslerWarningText = warningText;
+  }
+
   combinedStructureRow.appendChild(cardBody);
 
   let selectedBuildCount = 1;
@@ -1765,6 +1783,27 @@ function updateDecreaseButtonText(button, buildCount) {
       structure.updateResourceStorage(resources);
     }
   }
+
+  function updateStructureKesslerWarning(structure, elements) {
+    try {
+      const warning = elements.kesslerWarning;
+      const warningText = elements.kesslerWarningText;
+      const isCollapsed = elements.combinedRow.classList.contains('collapsed');
+      if (isCollapsed) {
+        warning.style.display = 'none';
+        return;
+      }
+      const multiplier = structure.getKesslerCostMultiplier();
+      if (multiplier <= 1) {
+        warning.style.display = 'none';
+        return;
+      }
+      warningText.textContent = `Extra Cost from Kessler x${formatNumber(multiplier, false, 2)} will create debris`;
+      warning.style.display = 'flex';
+    } catch (error) {
+      // no-op
+    }
+  }
   
   function updateStructureDisplay(structures, activeCategory = '') {
     for (const structureName in structures) {
@@ -1805,6 +1844,8 @@ function updateDecreaseButtonText(button, buildCount) {
       els.headerActive.textContent = structure.canBeToggled
         ? `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`
         : `${formatBuildingCount(structure.count)}`;
+
+      updateStructureKesslerWarning(structure, els);
 
       const incBtn = els.increaseButton || document.getElementById(`${structureName}-increase-button`);
       if (incBtn) {
