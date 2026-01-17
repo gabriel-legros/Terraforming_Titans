@@ -562,7 +562,7 @@ class SpaceMiningProject extends SpaceshipProject {
         resources.atmospheric &&
         resources.atmospheric[gas]
       ) {
-        const currentAmount = resources.atmospheric[gas].value + accumulatedChanges.atmospheric[gas] || 0;
+        const currentAmount = resources.atmospheric[gas].value + accumulatedChanges?.atmospheric[gas] || 0;
         const gSurface = terraforming.celestialParameters.gravity;
         const radius = terraforming.celestialParameters.radius;
         const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
