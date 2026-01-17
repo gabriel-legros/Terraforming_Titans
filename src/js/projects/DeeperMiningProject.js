@@ -438,17 +438,22 @@ class DeeperMiningProject extends AndroidProject {
 
     // Update deep mining section visibility and state
     if (elements.deepMiningSection) {
-      const isDeepEnough = this.averageDepth >= 500;
-      elements.deepMiningSection.style.display = '';
-      elements.deepMiningSection.classList.toggle('deep-mining-locked', !isDeepEnough);
-      
-      if (elements.geothermalCheckbox) {
-        elements.geothermalCheckbox.disabled = !isDeepEnough;
-        elements.geothermalCheckbox.checked = this.createGeothermalDeposits;
-      }
-      if (elements.storageCheckbox) {
-        elements.storageCheckbox.disabled = !isDeepEnough;
-        elements.storageCheckbox.checked = this.undergroundStorage;
+      const hasUnderworldUpgrade = this.isBooleanFlagSet('underworld_mining');
+      if (!hasUnderworldUpgrade) {
+        elements.deepMiningSection.style.display = 'none';
+      } else {
+        const isDeepEnough = this.averageDepth >= 500;
+        elements.deepMiningSection.style.display = '';
+        elements.deepMiningSection.classList.toggle('deep-mining-locked', !isDeepEnough);
+
+        if (elements.geothermalCheckbox) {
+          elements.geothermalCheckbox.disabled = !isDeepEnough;
+          elements.geothermalCheckbox.checked = this.createGeothermalDeposits;
+        }
+        if (elements.storageCheckbox) {
+          elements.storageCheckbox.disabled = !isDeepEnough;
+          elements.storageCheckbox.checked = this.undergroundStorage;
+        }
       }
     }
   }
