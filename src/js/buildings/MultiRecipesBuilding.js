@@ -144,6 +144,8 @@ class MultiRecipesBuilding extends Building {
       cachedElements.recipeSelectContainer = wrapper;
       cachedElements.recipeSelectLabel = label;
       cachedElements.recipeSelect = select;
+      const controlElements = cachedElements.automationControlElements || (cachedElements.automationControlElements = []);
+      controlElements.push(wrapper);
     }
 
     select.addEventListener('change', () => {

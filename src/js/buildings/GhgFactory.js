@@ -469,6 +469,8 @@ class GhgFactory extends Building {
       unitSpan: unitSpan,
       tooltip: tempTooltip
     };
+    const controlElements = cache.automationControlElements || (cache.automationControlElements = []);
+    controlElements.push(tempControl);
   }
 
   updateUI(elements) {

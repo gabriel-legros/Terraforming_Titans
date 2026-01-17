@@ -497,6 +497,12 @@
     gap: 4px;
 }
 
+.automation-control-locked,
+.automation-autobuild-locked {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
 .worker-priority-container {
     margin-left: 5px;
 }

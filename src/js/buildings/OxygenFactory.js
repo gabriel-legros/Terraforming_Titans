@@ -137,6 +137,8 @@ class OxygenFactory extends MultiRecipesBuilding {
       input: pressureInput,
       unitSpan: unitSpan
     };
+    const controlElements = cache.automationControlElements || (cache.automationControlElements = []);
+    controlElements.push(pressureControl);
   }
 
   updateUI(elements) {

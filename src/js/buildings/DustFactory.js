@@ -165,6 +165,8 @@ class DustFactory extends Building {
       checkbox: albedoCheckbox,
       input: albedoInput
     };
+    const controlElements = cache.automationControlElements || (cache.automationControlElements = []);
+    controlElements.push(albedoControl);
   }
 
   updateUI(elements) {

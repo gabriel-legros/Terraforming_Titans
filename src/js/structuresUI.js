@@ -477,6 +477,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   // Initialize and seed per-structure UI cache
   structureUIElements[structure.name] = structureUIElements[structure.name] || {};
   const cached = structureUIElements[structure.name];
+  cached.automationControlElements = [];
+  cached.automationAutobuildElements = [];
   cached.combinedRow = combinedStructureRow;
   cached.row = structureRow;
   cached.collapsed = !!structureDisplayState.collapsed[structure.name];
@@ -669,6 +671,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   headerAuto.appendChild(autoBuildHeaderContainer);
   autoBuildHeaderContainer.style.display = globalEffects.isBooleanFlagSet('automateConstruction') ? 'flex' : 'none';
   cached.autoBuildHeaderContainer = autoBuildHeaderContainer;
+  cached.automationAutobuildElements.push(autoBuildHeaderContainer);
   structureUIElements[structure.name].autoBuildCheckbox = autoBuildCheckbox;
   structureUIElements[structure.name].autoBuildInput = autoBuildInput;
 
@@ -891,6 +894,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const autoBuildControlsRow = document.createElement('div');
   autoBuildControlsRow.classList.add('auto-build-controls-row');
   autoBuildContainer.appendChild(autoBuildControlsRow);
+  cached.automationAutobuildElements.push(autoBuildControlsRow);
 
   const autoBuildInputWrapper = document.createElement('div');
   autoBuildInputWrapper.classList.add('auto-build-input-wrapper');
@@ -921,6 +925,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const autoBuildTargetContainer = document.createElement('div');
   autoBuildTargetContainer.classList.add('auto-build-target-container');
+  cached.automationAutobuildElements.push(autoBuildTargetContainer);
 
   // First row: Target display
   const autoBuildTarget = document.createElement('span');
@@ -1134,6 +1139,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     autoBuildContainer.appendChild(autoUpgradeContainer);
   }
   cached.autoBuildContainer = autoBuildContainer;
+  [autoBuildFillContainer, autoUpgradeContainer].filter(element => element).forEach(element => {
+    cached.automationAutobuildElements.push(element);
+  });
 
   // Reversal toggle button (for buildings that support it)
   const reverseControl = document.createElement('div');
@@ -1806,11 +1814,21 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureDisplay(structures, activeCategory = '') {
+    const buildingAutomation = automationManager.buildingsAutomation;
+    const automationActive = automationManager.enabled
+      && automationManager.hasFeature('automationBuildings')
+      && buildingAutomation.masterEnabled;
+    const resolvedAutomation = automationActive
+      ? buildingAutomation.resolveAssignments()
+      : { control: {}, automation: {} };
+    const automationControlMap = resolvedAutomation.control;
+    const automationAutobuildMap = resolvedAutomation.automation;
     for (const structureName in structures) {
       const structure = structures[structureName];
       if (structure.category && activeCategory && structure.category !== activeCategory) {
         continue;
       }
+      const isColony = structure instanceof Colony;
       const els = structureUIElements[structureName] || (structureUIElements[structureName] = {});
       const combinedStructureRow = els.combinedRow || (function(){
         const btn = document.getElementById(`build-${structureName}`);
@@ -1916,6 +1934,17 @@ function updateDecreaseButtonText(button, buildCount) {
         }
 
         structure.updateUI?.(els);
+      }
+
+      const controlLocked = !isColony && automationControlMap[structure.name];
+      const autobuildLocked = !isColony && automationAutobuildMap[structure.name];
+      const controlTargets = els.automationControlElements || [];
+      for (let index = 0; index < controlTargets.length; index += 1) {
+        controlTargets[index].classList.toggle('automation-control-locked', !!controlLocked);
+      }
+      const autobuildTargets = els.automationAutobuildElements || [];
+      for (let index = 0; index < autobuildTargets.length; index += 1) {
+        autobuildTargets[index].classList.toggle('automation-autobuild-locked', !!autobuildLocked);
       }
   
       const productivityElement = document.getElementById(`${structureName}-productivity`);
