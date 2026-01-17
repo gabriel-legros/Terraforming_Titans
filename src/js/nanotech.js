@@ -80,9 +80,7 @@ class NanotechManager extends EffectableEntity {
     const isArtificialWorld = currentPlanetParameters?.classification?.archetype === 'artificial';
     const getEffectiveProductionRate = (resource) => {
       const production = resource?.productionRate || 0;
-      if (!isArtificialWorld) return production;
-      const consumption = resource?.consumptionRate || 0;
-      return Math.min(production, consumption);
+      return production;  
     };
     const getCombinedProductionRate = (resource, extraResource, useExtra) => {
       const base = getEffectiveProductionRate(resource);
