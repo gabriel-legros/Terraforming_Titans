@@ -251,8 +251,27 @@ class BuildingAutomation {
       return;
     }
     const resolved = this.resolveAssignments();
-    const controlMap = resolved.control;
-    const automationMap = resolved.automation;
+    this.applyResolvedMaps(resolved.control, resolved.automation);
+  }
+
+  applyPresetOnce(presetId) {
+    const preset = this.getPresetById(presetId);
+    const controlMap = {};
+    const automationMap = {};
+    const entries = preset.buildings;
+    for (const buildingId in entries) {
+      const entry = entries[buildingId];
+      if (preset.includeControl && entry.control) {
+        controlMap[buildingId] = entry.control;
+      }
+      if (preset.includeAutomation && entry.automation) {
+        automationMap[buildingId] = entry.automation;
+      }
+    }
+    this.applyResolvedMaps(controlMap, automationMap);
+  }
+
+  applyResolvedMaps(controlMap, automationMap) {
     const buildingList = Object.values(buildings);
     let changed = false;
 

@@ -55,7 +55,10 @@ function buildAutomationBuildingsUI() {
   const deleteButton = document.createElement('button');
   deleteButton.textContent = 'Delete';
   deleteButton.classList.add('building-automation-builder-delete');
-  builderRow.append(presetSelect, presetNameInput, newButton, saveButton, deleteButton);
+  const applyOnceButton = document.createElement('button');
+  applyOnceButton.textContent = 'Apply Once Now';
+  applyOnceButton.classList.add('building-automation-builder-apply-once');
+  builderRow.append(presetSelect, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
   builderSection.appendChild(builderRow);
 
   const builderModeRow = document.createElement('div');
@@ -146,6 +149,7 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderNewButton = newButton;
   automationElements.buildingsBuilderSaveButton = saveButton;
   automationElements.buildingsBuilderDeleteButton = deleteButton;
+  automationElements.buildingsBuilderApplyOnceButton = applyOnceButton;
   automationElements.buildingsBuilderDirty = builderDirty;
   automationElements.buildingsBuilderTypeSelect = typeSelect;
   automationElements.buildingsBuilderScopeSelect = scopeSelect;
@@ -174,6 +178,7 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderNewButton,
     buildingsBuilderSaveButton,
     buildingsBuilderDeleteButton,
+    buildingsBuilderApplyOnceButton,
     buildingsBuilderDirty,
     buildingsBuilderTypeSelect,
     buildingsBuilderScopeSelect,
@@ -310,8 +315,11 @@ function updateBuildingsAutomationUI() {
     || !getUnlockedBuildings().length;
   buildingsBuilderClearButton.disabled = buildingAutomationUIState.builderSelectedBuildings.length === 0;
   buildingsBuilderDeleteButton.disabled = !activePreset;
+  buildingsBuilderApplyOnceButton.disabled = !activePreset;
 
-  if (!buildingsBuilderSelectedList.contains(document.activeElement)) {
+  const selectedHasFocus = buildingsBuilderSelectedList.contains(document.activeElement)
+    && document.activeElement.tagName === 'INPUT';
+  if (!selectedHasFocus) {
     buildingsBuilderSelectedList.textContent = '';
     buildingAutomationUIState.builderSelectedBuildings.forEach(name => {
       const building = buildings[name];
@@ -482,6 +490,7 @@ function attachBuildingsAutomationHandlers() {
     buildingsBuilderCategorySelect,
     buildingsBuilderBuildingSelect,
     buildingsBuilderAddButton,
+    buildingsBuilderApplyOnceButton,
     buildingsBuilderAddCategoryButton,
     buildingsBuilderClearButton,
     buildingsMasterToggle,
@@ -626,6 +635,11 @@ function attachBuildingsAutomationHandlers() {
     buildingAutomationUIState.builderSelectedBuildings = [];
     queueAutomationUIRefresh();
     updateAutomationUI();
+  });
+
+  buildingsBuilderApplyOnceButton.addEventListener('click', () => {
+    const presetId = Number(buildingsBuilderPresetSelect.value);
+    automationManager.buildingsAutomation.applyPresetOnce(presetId);
   });
 
   buildingsAddApplyButton.addEventListener('click', () => {

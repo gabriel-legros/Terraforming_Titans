@@ -144,6 +144,33 @@ describe('BuildingAutomation presets', () => {
     expect(building.autoBuildPercent).toBe(44);
   });
 
+  test('applyPresetOnce applies settings without master toggle', () => {
+    const presetId = automation.addPreset('One Off', ['chemicalReactor'], {
+      includeControl: true,
+      includeAutomation: true
+    });
+
+    building.currentRecipeKey = 'recipe2';
+    building.autoBuildEnabled = true;
+    building.autoBuildPriority = true;
+    building.autoBuildBasis = 'workers';
+    building.autoBuildPercent = 40;
+    building.autoActiveEnabled = true;
+    ChemicalReactor.settings = { autoDisable: false, amount: 2 };
+
+    automation.setMasterEnabled(false);
+    automation.applyPresetOnce(presetId);
+
+    expect(building.currentRecipeKey).toBe('recipe1');
+    expect(building.autoBuildEnabled).toBe(false);
+    expect(building.autoBuildPriority).toBe(false);
+    expect(building.autoBuildBasis).toBe('population');
+    expect(building.autoBuildPercent).toBe(25);
+    expect(building.autoActiveEnabled).toBe(false);
+    expect(ChemicalReactor.settings.autoDisable).toBe(true);
+    expect(updateBuildingDisplay).toHaveBeenCalled();
+  });
+
   test('scopeAll persists through save/load', () => {
     const presetId = automation.addPreset('All', ['chemicalReactor'], {
       includeControl: true,
