@@ -58,6 +58,7 @@ function initializeBuildingTabs() {
         if (typeof markBuildingSubtabViewed === 'function') {
             markBuildingSubtabViewed(id);
         }
+        updateBuildingDisplay(buildings);
     });
     buildingSubtabManager.activate('resource-buildings');
 }
@@ -76,6 +77,7 @@ function activateBuildingSubtab(subtabId) {
         }
         markBuildingSubtabViewed(subtabId);
     }
+    updateBuildingDisplay(buildings);
 }
 
 let buildingTabAlertNeeded = false;
