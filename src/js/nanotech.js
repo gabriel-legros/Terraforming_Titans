@@ -208,19 +208,8 @@ class NanotechManager extends EffectableEntity {
           ? Math.min(glassRate * (deltaTime / 1000), siliconProvided)
           : glassRate * (deltaTime / 1000);
         
-        // Try to consume junk first if recycling is enabled
-        let usedJunk = 0;
-        if (junkRes && accumulatedChanges?.surface && glassAmount > 0) {
-          const junkAvailable = Math.max(junkRes.value + (accumulatedChanges.surface.junk || 0), 0);
-          usedJunk = Math.min(glassAmount, junkAvailable);
-          if (usedJunk > 0) {
-            accumulatedChanges.surface.junk = (accumulatedChanges.surface.junk || 0) - usedJunk;
-            junkRes.modifyRate(-usedJunk / (deltaTime / 1000), 'Nanotech Junk', 'nanotech');
-          }
-        }
-        
         // Produce glass from the remainder (what wasn't covered by junk)
-        const actualGlassProduced = glassAmount - usedJunk;
+        const actualGlassProduced = glassAmount;
         this.currentGlassProduction = actualGlassProduced / (deltaTime / 1000);
         
         if (actualGlassProduced > 0) {
