@@ -920,19 +920,22 @@
 }
 
 .dark-mode .building-automation-section .building-automation-builder-save,
-.dark-mode .building-automation-section .building-automation-apply-add {
+.dark-mode .building-automation-section .building-automation-apply-add,
+.dark-mode .building-automation-section .building-automation-apply-combination {
     background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
     border: 1px solid #3f7bf7;
     color: #ffffff;
 }
 
 .dark-mode .building-automation-section .building-automation-builder-save:hover,
-.dark-mode .building-automation-section .building-automation-apply-add:hover {
+.dark-mode .building-automation-section .building-automation-apply-add:hover,
+.dark-mode .building-automation-section .building-automation-apply-combination:hover {
     background: linear-gradient(180deg, #3a6bff 0%, #2344c2 100%);
 }
 
 .dark-mode .building-automation-section .building-automation-builder-save:disabled,
-.dark-mode .building-automation-section .building-automation-apply-add:disabled {
+.dark-mode .building-automation-section .building-automation-apply-add:disabled,
+.dark-mode .building-automation-section .building-automation-apply-combination:disabled {
     background: #1a2335;
     border-color: #2c3a52;
     color: #6a778f;

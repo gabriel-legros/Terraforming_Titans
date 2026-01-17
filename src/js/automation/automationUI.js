@@ -54,9 +54,9 @@ const automationElements = {
   buildingsBuilderAddCategoryButton: null,
   buildingsBuilderClearButton: null,
   buildingsBuilderSelectedList: null,
-  buildingsMasterToggle: null,
   buildingsApplyList: null,
   buildingsApplyHint: null,
+  buildingsApplyCombinationButton: null,
   buildingsAddApplyButton: null
 };
 
@@ -213,14 +213,14 @@ function cacheAutomationElements() {
   if (!automationElements.buildingsBuilderSelectedList && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderSelectedList = automationElements.buildingsAutomation.querySelector('.building-automation-builder-list');
   }
-  if (!automationElements.buildingsMasterToggle && automationElements.buildingsAutomation) {
-    automationElements.buildingsMasterToggle = automationElements.buildingsAutomation.querySelector('.building-automation-master-toggle');
-  }
   if (!automationElements.buildingsApplyList && automationElements.buildingsAutomation) {
     automationElements.buildingsApplyList = automationElements.buildingsAutomation.querySelector('.building-automation-apply-list');
   }
   if (!automationElements.buildingsApplyHint && automationElements.buildingsAutomation) {
     automationElements.buildingsApplyHint = automationElements.buildingsAutomation.querySelector('.building-automation-apply-hint');
+  }
+  if (!automationElements.buildingsApplyCombinationButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsApplyCombinationButton = automationElements.buildingsAutomation.querySelector('.building-automation-apply-combination');
   }
   if (!automationElements.buildingsAddApplyButton && automationElements.buildingsAutomation) {
     automationElements.buildingsAddApplyButton = automationElements.buildingsAutomation.querySelector('.building-automation-apply-add');

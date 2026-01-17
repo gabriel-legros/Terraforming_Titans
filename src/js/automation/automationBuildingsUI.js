@@ -121,10 +121,11 @@ function buildAutomationBuildingsUI() {
   const applyHeader = document.createElement('div');
   applyHeader.classList.add('building-automation-section-title');
   const applyTitle = document.createElement('span');
-  applyTitle.textContent = 'Preset Application';
-  const masterToggle = createToggleButton({ onLabel: 'Master On', offLabel: 'Master Off', isOn: true });
-  masterToggle.classList.add('building-automation-master-toggle');
-  applyHeader.append(masterToggle, applyTitle);
+  applyTitle.textContent = 'Preset Combination';
+  const applyCombinationButton = document.createElement('button');
+  applyCombinationButton.textContent = 'Apply Combination';
+  applyCombinationButton.classList.add('building-automation-apply-combination');
+  applyHeader.append(applyTitle, applyCombinationButton);
   applySection.appendChild(applyHeader);
 
   const applyList = document.createElement('div');
@@ -159,7 +160,7 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderAddCategoryButton = addCategoryButton;
   automationElements.buildingsBuilderClearButton = clearButton;
   automationElements.buildingsBuilderSelectedList = selectedList;
-  automationElements.buildingsMasterToggle = masterToggle;
+  automationElements.buildingsApplyCombinationButton = applyCombinationButton;
   automationElements.buildingsApplyList = applyList;
   automationElements.buildingsApplyHint = applyHint;
   automationElements.buildingsAddApplyButton = addApplyButton;
@@ -188,9 +189,9 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderAddCategoryButton,
     buildingsBuilderClearButton,
     buildingsBuilderSelectedList,
-    buildingsMasterToggle,
     buildingsApplyList,
     buildingsApplyHint,
+    buildingsApplyCombinationButton,
     buildingsAddApplyButton
   } = automationElements;
   const manager = automationManager;
@@ -207,7 +208,6 @@ function updateBuildingsAutomationUI() {
 
   buildingsPanelBody.style.display = automation.collapsed ? 'none' : 'flex';
   buildingsCollapseButton.textContent = automation.collapsed ? '▶' : '▼';
-  setToggleButtonState(buildingsMasterToggle, automation.masterEnabled);
 
   const presets = automation.presets.slice();
   const unlockedBuildings = getUnlockedBuildings();
@@ -316,6 +316,7 @@ function updateBuildingsAutomationUI() {
   buildingsBuilderClearButton.disabled = buildingAutomationUIState.builderSelectedBuildings.length === 0;
   buildingsBuilderDeleteButton.disabled = !activePreset;
   buildingsBuilderApplyOnceButton.disabled = !activePreset;
+  buildingsApplyCombinationButton.disabled = automation.getAssignments().length === 0;
 
   const selectedHasFocus = buildingsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';
@@ -493,7 +494,7 @@ function attachBuildingsAutomationHandlers() {
     buildingsBuilderApplyOnceButton,
     buildingsBuilderAddCategoryButton,
     buildingsBuilderClearButton,
-    buildingsMasterToggle,
+    buildingsApplyCombinationButton,
     buildingsAddApplyButton
   } = automationElements;
 
@@ -593,13 +594,6 @@ function attachBuildingsAutomationHandlers() {
     updateAutomationUI();
   });
 
-  buildingsMasterToggle.addEventListener('click', () => {
-    const automation = automationManager.buildingsAutomation;
-    automation.setMasterEnabled(!automation.masterEnabled);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
   buildingsBuilderSaveButton.addEventListener('click', () => {
     const automation = automationManager.buildingsAutomation;
     const name = buildingsBuilderPresetNameInput.value || buildingAutomationUIState.builderName || '';
@@ -640,6 +634,10 @@ function attachBuildingsAutomationHandlers() {
   buildingsBuilderApplyOnceButton.addEventListener('click', () => {
     const presetId = Number(buildingsBuilderPresetSelect.value);
     automationManager.buildingsAutomation.applyPresetOnce(presetId);
+  });
+
+  buildingsApplyCombinationButton.addEventListener('click', () => {
+    automationManager.buildingsAutomation.applyPresets();
   });
 
   buildingsAddApplyButton.addEventListener('click', () => {

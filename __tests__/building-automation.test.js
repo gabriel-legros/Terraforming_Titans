@@ -127,24 +127,7 @@ describe('BuildingAutomation presets', () => {
     expect(building.autoBuildPercent).toBe(33);
   });
 
-  test('master toggle disables preset application', () => {
-    const presetId = automation.addPreset('Master Off', ['chemicalReactor'], {
-      includeControl: false,
-      includeAutomation: true
-    });
-
-    building.autoBuildBasis = 'workers';
-    building.autoBuildPercent = 44;
-
-    automation.addAssignment(presetId);
-    automation.setMasterEnabled(false);
-    automation.applyPresets();
-
-    expect(building.autoBuildBasis).toBe('workers');
-    expect(building.autoBuildPercent).toBe(44);
-  });
-
-  test('applyPresetOnce applies settings without master toggle', () => {
+  test('applyPresetOnce applies settings immediately', () => {
     const presetId = automation.addPreset('One Off', ['chemicalReactor'], {
       includeControl: true,
       includeAutomation: true
@@ -158,7 +141,6 @@ describe('BuildingAutomation presets', () => {
     building.autoActiveEnabled = true;
     ChemicalReactor.settings = { autoDisable: false, amount: 2 };
 
-    automation.setMasterEnabled(false);
     automation.applyPresetOnce(presetId);
 
     expect(building.currentRecipeKey).toBe('recipe1');

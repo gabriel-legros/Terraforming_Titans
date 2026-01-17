@@ -322,8 +322,6 @@ class ChemicalReactor extends MultiRecipesBuilding {
       amountInput,
       wire
     };
-    const controlElements = cache.automationControlElements || (cache.automationControlElements = []);
-    controlElements.push(control);
   }
 
   updateUI(elements) {

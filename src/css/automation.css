@@ -517,13 +517,6 @@
   font-weight: 700;
 }
 
-.building-automation-master-toggle {
-  margin-left: 0;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-
 .building-automation-row {
   display: flex;
   flex-wrap: wrap;
@@ -553,15 +546,9 @@
   transform: translateY(-1px);
 }
 
-.building-automation-section .building-automation-master-toggle {
-  background: transparent;
-  border: none;
-  padding: 0;
-  box-shadow: none;
-}
-
 .building-automation-section .building-automation-builder-save,
-.building-automation-section .building-automation-apply-add {
+.building-automation-section .building-automation-apply-add,
+.building-automation-section .building-automation-apply-combination {
   background: #2a4db8;
   color: #fff;
   border: none;
@@ -569,14 +556,20 @@
 }
 
 .building-automation-section .building-automation-builder-save:hover,
-.building-automation-section .building-automation-apply-add:hover {
+.building-automation-section .building-automation-apply-add:hover,
+.building-automation-section .building-automation-apply-combination:hover {
   background: #1f3fa3;
 }
 
 .building-automation-section .building-automation-builder-save:disabled,
-.building-automation-section .building-automation-apply-add:disabled {
+.building-automation-section .building-automation-apply-add:disabled,
+.building-automation-section .building-automation-apply-combination:disabled {
   background: #c3cad7;
   cursor: not-allowed;
+}
+
+.building-automation-apply-combination {
+  padding: 6px 16px;
 }
 
 .building-automation-section .building-automation-apply-toggle {

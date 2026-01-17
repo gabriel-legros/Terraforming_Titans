@@ -247,9 +247,6 @@ class BuildingAutomation {
   }
 
   applyPresets() {
-    if (!this.masterEnabled) {
-      return;
-    }
     const resolved = this.resolveAssignments();
     this.applyResolvedMaps(resolved.control, resolved.automation);
   }
@@ -390,12 +387,6 @@ class BuildingAutomation {
     if (!this.isActive()) {
       return;
     }
-    this.elapsed += delta;
-    if (this.elapsed < 500) {
-      return;
-    }
-    this.elapsed = 0;
-    this.applyPresets();
   }
 
   saveState() {
