@@ -70,6 +70,35 @@
     font-size: 0.9em;
 }
 
+/* --- Project Title Switcher --- */
+.project-title-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.project-title-switch-button {
+    border: none;
+    background: transparent;
+    color: #000;
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 0 4px;
+}
+
+.project-title-switch-button:disabled {
+    cursor: default;
+    color: #868e96;
+    opacity: 0.8;
+}
+
+.project-header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
 /* --- Bioworld Shop --- */
 .bioworld-shop {
     margin-top: 10px;
@@ -112,6 +141,16 @@
     display: grid;
     gap: 10px;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
+.bioworld-shop-empty {
+    grid-column: 1 / -1;
+    padding: 8px;
+    border: 1px dashed #ced4da;
+    border-radius: 6px;
+    color: #6c757d;
+    background: #f8f9fa;
+    font-size: 0.9em;
 }
 
 @media (max-width: 1100px) {
@@ -1363,7 +1402,6 @@
 .reorder-buttons {
     display: flex;
     flex-direction: column;
-    margin-left: auto;
 }
 
 .reorder-buttons button {

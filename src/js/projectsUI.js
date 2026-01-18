@@ -14,6 +14,14 @@ const projectsUICache = {
   listByCategory: {},          // category -> list element ("*-projects-list")
 };
 
+const projectGroupConfig = {
+  specializedWorlds: ['bioworld', 'foundryWorld'],
+};
+
+const projectGroupState = {
+  active: {}
+};
+
 let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
 let projectsSubtabManager = null;
 const projectDisplayState = {
@@ -22,6 +30,54 @@ const projectDisplayState = {
 
 function resetProjectDisplayState() {
   projectDisplayState.collapsed = {};
+}
+
+function resetProjectGroupState() {
+  projectGroupState.active = {};
+}
+
+function getProjectGroupId(project) {
+  return project.attributes.projectGroup;
+}
+
+function getGroupProjectNames(groupId) {
+  return projectGroupConfig[groupId] || [];
+}
+
+function getVisibleGroupProjectNames(groupId) {
+  const groupNames = getGroupProjectNames(groupId);
+  return groupNames.filter((name) => isProjectVisibleForOrder(projectManager.projects[name]));
+}
+
+function ensureGroupActiveProject(groupId) {
+  const groupNames = getGroupProjectNames(groupId);
+  const visibleNames = getVisibleGroupProjectNames(groupId);
+  const fallback = visibleNames[0] || groupNames[0];
+  if (visibleNames.indexOf(projectGroupState.active[groupId]) !== -1) {
+    return;
+  }
+  if (groupNames.indexOf(projectGroupState.active[groupId]) !== -1 && visibleNames.length === 0) {
+    return;
+  }
+  projectGroupState.active[groupId] = fallback;
+}
+
+function getActiveGroupProjectName(groupId) {
+  ensureGroupActiveProject(groupId);
+  return projectGroupState.active[groupId];
+}
+
+function switchProjectGroup(groupId, direction) {
+  const visibleNames = getVisibleGroupProjectNames(groupId);
+  if (visibleNames.length < 2) {
+    return;
+  }
+  const current = getActiveGroupProjectName(groupId);
+  const index = visibleNames.indexOf(current);
+  const baseIndex = index >= 0 ? index : 0;
+  const nextIndex = (baseIndex + direction + visibleNames.length) % visibleNames.length;
+  projectGroupState.active[groupId] = visibleNames[nextIndex];
+  getGroupProjectNames(groupId).forEach((name) => updateProjectUI(name));
 }
 
 function updateProjectCollapsePreference(name, collapsed) {
@@ -74,6 +130,10 @@ function getImportResourcesUI() {
   }
 
   return importResourcesController;
+}
+
+function syncProjectGroupState() {
+  Object.keys(projectGroupConfig).forEach((groupId) => ensureGroupActiveProject(groupId));
 }
 
 function getProjectSubtabContents() {
@@ -152,6 +212,8 @@ function initializeProjectTabs() {
 function renderProjects() {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
 
+  syncProjectGroupState();
+
   // Create all project items initially
   projectsArray.forEach(project => {
     if (!projectElements[project.name]) {
@@ -180,6 +242,7 @@ function initializeProjectsUI() {
     }
   });
   projectElements = {};
+  resetProjectGroupState();
   if (importResourcesController) {
     importResourcesController.reset();
   }
@@ -214,14 +277,9 @@ function createProjectItem(project) {
   nameElement.textContent = project.displayName || project.name;
   nameElement.classList.add('card-title');
 
-  const arrow = document.createElement('span');
-  arrow.classList.add('collapse-arrow');
-  arrow.innerHTML = projectCard.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
-  cardHeader.appendChild(arrow);
-  cardHeader.appendChild(nameElement);
-
-  nameElement.addEventListener('click', () => toggleProjectCollapse(projectCard));
-  arrow.addEventListener('click', () => toggleProjectCollapse(projectCard));
+  const groupId = getProjectGroupId(project);
+  const groupNames = getGroupProjectNames(groupId);
+  let groupNav = null;
 
   const reorderButtons = document.createElement('div');
   reorderButtons.classList.add('reorder-buttons');
@@ -236,7 +294,49 @@ function createProjectItem(project) {
   downButton.addEventListener('click', (e) => moveProject(project.name, 'down', e.shiftKey));
   reorderButtons.appendChild(downButton);
 
-  cardHeader.appendChild(reorderButtons);
+  const headerRight = document.createElement('div');
+  headerRight.classList.add('project-header-right');
+
+  if (groupNames.length > 0) {
+    const titleWrapper = document.createElement('div');
+    titleWrapper.classList.add('project-title-switch');
+    const leftArrow = document.createElement('button');
+    leftArrow.type = 'button';
+    leftArrow.classList.add('project-title-switch-button');
+    leftArrow.innerHTML = '&#9664;';
+    leftArrow.addEventListener('click', (event) => {
+      event.stopPropagation();
+      switchProjectGroup(groupId, -1);
+    });
+    const rightArrow = document.createElement('button');
+    rightArrow.type = 'button';
+    rightArrow.classList.add('project-title-switch-button');
+    rightArrow.innerHTML = '&#9654;';
+    rightArrow.addEventListener('click', (event) => {
+      event.stopPropagation();
+      switchProjectGroup(groupId, 1);
+    });
+    titleWrapper.append(leftArrow, nameElement);
+    headerRight.append(rightArrow, reorderButtons);
+    groupNav = { wrapper: titleWrapper, leftArrow, rightArrow };
+  } else {
+    headerRight.appendChild(reorderButtons);
+  }
+
+  const arrow = document.createElement('span');
+  arrow.classList.add('collapse-arrow');
+  arrow.innerHTML = projectCard.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  cardHeader.appendChild(arrow);
+  if (groupNav) {
+    cardHeader.appendChild(groupNav.wrapper);
+    cardHeader.appendChild(headerRight);
+  } else {
+    cardHeader.appendChild(nameElement);
+    cardHeader.appendChild(headerRight);
+  }
+
+  nameElement.addEventListener('click', () => toggleProjectCollapse(projectCard));
+  arrow.addEventListener('click', () => toggleProjectCollapse(projectCard));
 
   projectCard.appendChild(cardHeader);
 
@@ -479,6 +579,8 @@ function createProjectItem(project) {
     projectItem: projectCard,
     cardBody: cardBody,
     collapseArrow: arrow,
+    groupId: groupId,
+    groupNav: groupNav,
     progressButton: progressButton,
     autoStartCheckbox: autoStartCheckbox,
     autoStartCheckboxContainer: autoStartCheckboxContainer,
@@ -564,6 +666,7 @@ function getCategoryEntries(category) {
   const importSet = new Set(importNames);
   const categoryKey = category || 'general';
   let importEntry = null;
+  const groupEntries = {};
 
   projectManager.projectOrder.forEach((projectName) => {
     const project = projectManager.projects[projectName];
@@ -580,6 +683,21 @@ function getCategoryEntries(category) {
         importEntry.names.push(projectName);
       }
       importEntry.visible = importEntry.visible || visible;
+      return;
+    }
+    const groupId = getProjectGroupId(project);
+    const groupNames = getGroupProjectNames(groupId);
+    if (groupNames.length > 0) {
+      let groupEntry = groupEntries[groupId];
+      if (!groupEntry) {
+        groupEntry = { type: 'group', groupId, names: [], project, visible: false };
+        groupEntries[groupId] = groupEntry;
+        entries.push(groupEntry);
+      }
+      if (!groupEntry.names.includes(projectName)) {
+        groupEntry.names.push(projectName);
+      }
+      groupEntry.visible = groupEntry.visible || visible;
       return;
     }
     entries.push({ type: 'project', name: projectName, project, visible });
@@ -603,6 +721,10 @@ function expandCategoryEntries(entries) {
       orderedNames.push(...names);
       return;
     }
+    if (entry.type === 'group') {
+      orderedNames.push(...entry.names);
+      return;
+    }
     orderedNames.push(entry.name);
   });
 
@@ -615,7 +737,19 @@ function getEntryElements(entry) {
     const headerName = importUI ? importUI.getHeaderProjectName() : null;
     return headerName ? projectElements[headerName] : null;
   }
+  if (entry.type === 'group') {
+    const activeName = getActiveGroupProjectName(entry.groupId);
+    return activeName ? projectElements[activeName] : null;
+  }
   return projectElements[entry.name];
+}
+
+function getEntryCards(entry) {
+  if (entry.type === 'group') {
+    return entry.names.map((name) => projectElements[name]?.projectItem).filter(Boolean);
+  }
+  const elements = getEntryElements(entry);
+  return elements && elements.projectItem ? [elements.projectItem] : [];
 }
 
 function syncCategoryDomOrder(category, entries) {
@@ -623,13 +757,14 @@ function syncCategoryDomOrder(category, entries) {
   const seen = new Set();
 
   entries.forEach((entry) => {
-    const elements = getEntryElements(entry);
-    const card = elements ? elements.projectItem : null;
-    if (!card || seen.has(card)) {
-      return;
-    }
-    seen.add(card);
-    container.appendChild(card);
+    const cards = getEntryCards(entry);
+    cards.forEach((card) => {
+      if (!card || seen.has(card)) {
+        return;
+      }
+      seen.add(card);
+      container.appendChild(card);
+    });
   });
 }
 
@@ -661,7 +796,9 @@ function moveProject(projectName, direction, shiftKey = false) {
   const category = project.category || 'general';
   const entries = getCategoryEntries(category);
   const entry = entries.find(item =>
-    item.type === 'import' ? item.names.includes(projectName) : item.name === projectName
+    item.type === 'import' || item.type === 'group'
+      ? item.names.includes(projectName)
+      : item.name === projectName
   );
   if (!entry) return;
 
@@ -851,6 +988,19 @@ function updateTotalCostDisplay(project) {
   }
 }
 
+function updateProjectGroupNavigation(project, elements) {
+  if (!elements.groupNav) {
+    return;
+  }
+  const groupId = elements.groupId;
+  const visibleNames = getVisibleGroupProjectNames(groupId);
+  const showArrows = visibleNames.length > 1;
+  elements.groupNav.leftArrow.style.display = showArrows ? '' : 'none';
+  elements.groupNav.rightArrow.style.display = showArrows ? '' : 'none';
+  elements.groupNav.leftArrow.disabled = !showArrows;
+  elements.groupNav.rightArrow.disabled = !showArrows;
+}
+
 function updateProjectUI(projectName) {
   const project = projectManager.projects[projectName]; // Use projectManager to get project
   const elements = projectElements[projectName];
@@ -865,6 +1015,8 @@ function updateProjectUI(projectName) {
   // Update the project item's visibility based on project visibility
   const projectItem = elements.projectItem;
   if (projectItem) {
+    const groupId = elements.groupId;
+    const isGroupActive = !groupId || getActiveGroupProjectName(groupId) === project.name;
     const planetOk =
       !project.attributes.planet ||
       (typeof spaceManager !== 'undefined' &&
@@ -873,17 +1025,19 @@ function updateProjectUI(projectName) {
     const visible = !(project.isPermanentlyDisabled?.()) && (typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked);
 
     if (isImportProject && importUI) {
-      const rowVisible = visible && planetOk;
+      const rowVisible = visible && planetOk && isGroupActive;
       if (!importUI.updateVisibility(project, elements, rowVisible)) {
         return;
       }
-    } else if (visible && planetOk) {
+    } else if (visible && planetOk && isGroupActive) {
       projectItem.style.display = 'block';
     } else {
       projectItem.style.display = 'none';
       return;
     }
   }
+
+  updateProjectGroupNavigation(project, elements);
 
   if (project.name === 'galactic_market' || project.name === 'cargo_rocket') {
     project.updateKesslerWarning();

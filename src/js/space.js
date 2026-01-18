@@ -144,6 +144,8 @@ class SpaceManager extends EffectableEntity {
                 orbitalRing: false,
                 departedAt: null,
                 ecumenopolisPercent: 0,
+                foundryWorld: false,
+                specialization: '',
                 rwgLock: false,
                 // Add other statuses later if needed
             };
@@ -971,6 +973,13 @@ class SpaceManager extends EffectableEntity {
         const now = Date.now();
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
         const ecoPercent = getEcumenopolisLandFraction(globalThis.terraforming) * 100;
+        const specialization = terraforming.requirementId;
+        let foundryCompleted = false;
+        try {
+            foundryCompleted = projectManager.projects.foundryWorld.isCompleted;
+        } catch (error) {
+            foundryCompleted = false;
+        }
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
             if (!this.randomWorldStatuses[seed]) {
@@ -982,7 +991,9 @@ class SpaceManager extends EffectableEntity {
                     visited: true,
                     orbitalRing: false,
                     departedAt: null,
-                    ecumenopolisPercent: 0
+                    ecumenopolisPercent: 0,
+                    foundryWorld: false,
+                    specialization: ''
                 };
             }
             const st = this.randomWorldStatuses[seed];
@@ -990,6 +1001,8 @@ class SpaceManager extends EffectableEntity {
             st.colonists = pop;
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
+            st.foundryWorld = foundryCompleted;
+            st.specialization = specialization;
             if (!st.name) st.name = this.currentRandomName || `Seed ${seed}`;
         } else if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
@@ -1007,6 +1020,8 @@ class SpaceManager extends EffectableEntity {
                     orbitalRing: false,
                     departedAt: null,
                     ecumenopolisPercent: 0,
+                    foundryWorld: false,
+                    specialization: '',
                     artificial: true,
                     terraformedValue,
                     fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue })
@@ -1017,6 +1032,8 @@ class SpaceManager extends EffectableEntity {
             st.colonists = pop;
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
+            st.foundryWorld = foundryCompleted;
+            st.specialization = specialization;
             st.abandoned = !this._isCurrentWorldTerraformed();
             if (!st.terraformedValue) {
                 st.terraformedValue = this._deriveArtificialTerraformValue({
@@ -1036,7 +1053,45 @@ class SpaceManager extends EffectableEntity {
             ps.colonists = pop;
             ps.departedAt = now;
             ps.ecumenopolisPercent = ecoPercent;
+            ps.foundryWorld = foundryCompleted;
+            ps.specialization = specialization;
         }
+    }
+
+    getFoundryWorldCount({ excludeCurrent = true } = {}) {
+        let count = 0;
+        const currentSeed = this.currentRandomSeed;
+        const currentArtificial = this.currentArtificialKey;
+        const currentPlanet = this.currentPlanetKey;
+
+        Object.keys(this.planetStatuses).forEach((key) => {
+            if (excludeCurrent && currentSeed === null && currentArtificial === null && key === currentPlanet) {
+                return;
+            }
+            if (this.planetStatuses[key]?.foundryWorld) {
+                count += 1;
+            }
+        });
+
+        Object.keys(this.randomWorldStatuses).forEach((key) => {
+            if (excludeCurrent && currentSeed !== null && String(currentSeed) === key) {
+                return;
+            }
+            if (this.randomWorldStatuses[key]?.foundryWorld) {
+                count += 1;
+            }
+        });
+
+        Object.keys(this.artificialWorldStatuses).forEach((key) => {
+            if (excludeCurrent && currentArtificial !== null && String(currentArtificial) === key) {
+                return;
+            }
+            if (this.artificialWorldStatuses[key]?.foundryWorld) {
+                count += 1;
+            }
+        });
+
+        return count;
     }
 
     _isCurrentWorldTerraformed() {
@@ -1464,6 +1519,12 @@ class SpaceManager extends EffectableEntity {
                     }
                     if (typeof saved.ecumenopolisPercent === 'number') {
                         this.planetStatuses[planetKey].ecumenopolisPercent = saved.ecumenopolisPercent;
+                    }
+                    if (saved.foundryWorld === true || saved.foundryWorld === false) {
+                        this.planetStatuses[planetKey].foundryWorld = saved.foundryWorld;
+                    }
+                    if (saved.specialization) {
+                        this.planetStatuses[planetKey].specialization = saved.specialization;
                     }
                     if (typeof saved.rwgLock === 'boolean') {
                         this.planetStatuses[planetKey].rwgLock = saved.rwgLock;

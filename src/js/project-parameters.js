@@ -662,7 +662,27 @@ const projectParameters = {
     description: 'Cultivate a bioworld-scale ecosystem. Can only start when biomass density exceeds 1 ton/m^2 and fewer than 1,000 Ecumenopolis Districts are constructed. Completion removes all Ecumenopolis Districts and permanently disables new ones. Completed bioworlds grant evolution points when travelling based on total biomass.',
     repeatable: false,
     unlocked: false,
-    attributes: {}
+    attributes: {
+      projectGroup: 'specializedWorlds'
+    }
+  },
+  foundryWorld: {
+    type: 'FoundryWorldProject',
+    name: 'Foundry World',
+    category: 'mega',
+    cost: {
+      colony: {
+        superalloys: 1e17,
+        components: 1e16
+      }
+    },
+    duration: 300000,
+    description: 'Taps into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub. Can only start once deeper mining reaches 50,000 depth. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Completed foundry worlds grant metallurgy points when travelling based on mining depth.',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      projectGroup: 'specializedWorlds'
+    }
   },
   disposeResources : {
     type: 'SpaceDisposalProject',

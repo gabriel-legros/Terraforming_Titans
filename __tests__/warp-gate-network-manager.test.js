@@ -68,6 +68,15 @@ describe('WarpGateNetworkManager', () => {
     expect(manager.getCapForResource('hydrogen')).toBe(Infinity);
   });
 
+  test('adds foundry world bonuses to the metal cap', () => {
+    global.spaceManager = {
+      getFoundryWorldCount: () => 3,
+    };
+    const manager = new window.WarpGateNetworkManager();
+
+    expect(manager.getCapForResource('metal')).toBe(1e9 + 3e12);
+  });
+
   test('uses warp gate cap before galaxy unlock', () => {
     warpGateCommand.enabled = true;
     const manager = new window.WarpGateNetworkManager();

@@ -242,6 +242,10 @@ The planet visualiser has been modularised into files covering core setup, light
 - Buildings Automation now supports named preset combinations that save and restore the apply list.
 - Buildings Automation now applies preset control/automation settings even while a building is hidden or locked, so settings are ready once it unlocks.
 - Buildings Automation now supports applying presets automatically after the next planet travel via a dedicated checkbox.
+- Foundry Worlds advanced research unlocks a new mega project with a shared specialized-worlds switcher and travel points tied to deeper mining depth.
+- Foundry World shop upgrades now boost metal and silica import caps, ore and silica mining output, and deeper mining speed.
+- Foundry worlds now add +1T to the metal mining cap per completed world, excluding the current planet, and permanently disable new Ecumenopolis districts after completion.
+- Departure snapshots now record world specialization across story, random, and artificial worlds.
 - Deeper Mining now includes deep mining settings (depth > 500) with two configurable options:
   - **Create geothermal deposits**: Generates geothermal deposits (default 1000 per mine per 250m level beyond 500m) when enabled during deepening. Tradeoff: doubles components cost.
   - **Underground Storage**: Provides storage capacity equivalent to storage depots (default 1 per mine per 250m level beyond 500m) without maintenance cost. Tradeoff: deepening time is slowed by 2x.

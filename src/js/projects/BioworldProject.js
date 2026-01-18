@@ -106,6 +106,9 @@
       if (this.getBiomassDensity() <= 1) {
         return false;
       }
+      if (projectManager.projects.foundryWorld.isActive || projectManager.projects.foundryWorld.isCompleted) {
+        return false;
+      }
       return colonies.t7_colony.count < 1000;
     }
 

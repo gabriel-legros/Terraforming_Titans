@@ -9,7 +9,7 @@ describe('Artificial world abandonment snapshot', () => {
     global.EffectableEntity = EffectableEntity;
     global.prepareForTravel = jest.fn();
     global.getEcumenopolisLandFraction = () => 0;
-    global.terraforming = {};
+    global.terraforming = { requirementId: 'human' };
     global.resources = { colony: { colonists: { value: 5 } } };
     global.planetOverrides = {};
     global.planetParameters = {
@@ -100,5 +100,6 @@ describe('Artificial world abandonment snapshot', () => {
     expect(status.artificialSnapshot.stockpile.metal).toBe(123);
     expect(status.artificialSnapshot.stockpile.silicon).toBe(456);
     expect(status.artificialSnapshot.radiusEarth).toBeCloseTo(2, 5);
+    expect(status.specialization).toBe('human');
   });
 });

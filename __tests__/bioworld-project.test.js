@@ -24,6 +24,14 @@ const setupGlobals = () => {
     addAndReplace: jest.fn(),
     removeEffect: jest.fn(),
   };
+  global.projectManager = {
+    projects: {
+      foundryWorld: {
+        isActive: false,
+        isCompleted: false,
+      },
+    },
+  };
 };
 
 const createProject = () => {
@@ -57,6 +65,7 @@ describe('BioworldProject', () => {
     delete global.getEcumenopolisLandFraction;
     delete global.lifeDesigner;
     delete global.researchManager;
+    delete global.projectManager;
     jest.resetModules();
   });
 

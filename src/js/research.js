@@ -442,7 +442,7 @@ class Research {
 
     hasKesslerHazard() {
       try {
-        return hazardManager.parameters.kessler;
+        return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
       } catch (error) {
         return false;
       }

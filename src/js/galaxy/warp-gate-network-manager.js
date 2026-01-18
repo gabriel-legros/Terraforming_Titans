@@ -9,6 +9,13 @@ const IMPORT_CAP_RATIOS = {
   silicon: 5,
   water: 10,
 };
+const IMPORT_CAP_MULTIPLIERS = {
+  metal: 1,
+  nitrogen: 1,
+  carbon: 1,
+  silicon: 1,
+  water: 1,
+};
 const IMPORT_CAP_RESOURCES = [
   { key: 'metal', label: 'Metal' },
   { key: 'nitrogen', label: 'Nitrogen' },
@@ -17,7 +24,9 @@ const IMPORT_CAP_RESOURCES = [
   { key: 'water', label: 'Water' },
 ];
 
-const getImportCapRatio = (resourceKey) => IMPORT_CAP_RATIOS[resourceKey] || 1;
+const getImportCapRatio = (resourceKey) => (
+  (IMPORT_CAP_RATIOS[resourceKey] || 1) * (IMPORT_CAP_MULTIPLIERS[resourceKey] || 1)
+);
 
 const formatImportCapList = (baseCap) => (
   IMPORT_CAP_RESOURCES.map(({ key, label }) => {
@@ -143,6 +152,21 @@ class WarpGateNetworkManager extends EffectableEntity {
     }
   }
 
+  applyImportCapMultiplier(effect) {
+    const key = effect.resourceKey;
+    IMPORT_CAP_MULTIPLIERS[key] = effect.value;
+    this.breakdownDirty = true;
+  }
+
+  getFoundryMetalCapBonus() {
+    try {
+      const count = spaceManager.getFoundryWorldCount({ excludeCurrent: true });
+      return { count, bonus: count * 1e12 };
+    } catch (error) {
+      return { count: 0, bonus: 0 };
+    }
+  }
+
   getCapForProject(project) {
     return this.getCapForResource(project.attributes.importCapResource);
   }
@@ -152,13 +176,16 @@ class WarpGateNetworkManager extends EffectableEntity {
     if (resourceKey === 'hydrogen') {
       return Infinity;
     }
+    const foundryBonus = resourceKey === 'metal'
+      ? this.getFoundryMetalCapBonus().bonus
+      : 0;
     if (!this.warpGateUnlocked) {
-      return IMPORT_CAP_BASE * getImportCapRatio(resourceKey);
+      return IMPORT_CAP_BASE * getImportCapRatio(resourceKey) + foundryBonus;
     }
     if (!this.galaxyUnlocked) {
-      return IMPORT_CAP_WARP * getImportCapRatio(resourceKey);
+      return IMPORT_CAP_WARP * getImportCapRatio(resourceKey) + foundryBonus;
     }
-    return this.getGalaxyCap(resourceKey);
+    return this.getGalaxyCap(resourceKey) + foundryBonus;
   }
 
   getGalaxyCap(resourceKey) {
@@ -171,23 +198,31 @@ class WarpGateNetworkManager extends EffectableEntity {
 
   getCapSummaryText() {
     this.syncUnlocks();
+    const foundry = this.getFoundryMetalCapBonus();
+    const foundryLine = foundry.bonus > 0
+      ? ` Foundry worlds add +${formatNumber(foundry.bonus, true)} to the Metal cap.`
+      : '';
     if (!this.warpGateUnlocked) {
-      return `Due to limited deposits, import caps are ${formatImportCapList(IMPORT_CAP_BASE)} ships.`;
+      return `Due to limited deposits, import caps are ${formatImportCapList(IMPORT_CAP_BASE)} ships.${foundryLine}`;
     }
     if (!this.galaxyUnlocked) {
-      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${formatImportCapList(IMPORT_CAP_WARP)} ships.`;
+      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${formatImportCapList(IMPORT_CAP_WARP)} ships.${foundryLine}`;
     }
-    return this.getGalaxyCapText();
+    return `${this.getGalaxyCapText()}${foundryLine}`;
   }
 
   getCapSummaryData() {
     this.syncUnlocks();
+    const foundry = this.getFoundryMetalCapBonus();
+    const foundryRule = foundry.bonus > 0
+      ? `Foundry worlds: +${formatNumber(foundry.bonus, true)} Metal cap (${foundry.count} worlds).`
+      : '';
     if (!this.warpGateUnlocked) {
       return {
         intro: 'Due to limited deposits, imports are limited until Warp Gate Command is unlocked.',
         baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_BASE, true)} ships.`,
         ratiosLine: '',
-        ruleLines: [],
+        ruleLines: foundryRule ? [foundryRule] : [],
         fullControlLine: '',
         caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap'),
         hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
@@ -198,7 +233,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         intro: 'Warp Gate Command expands shipments before galaxy control is available.',
         baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_WARP, true)} ships.`,
         ratiosLine: '',
-        ruleLines: [],
+        ruleLines: foundryRule ? [foundryRule] : [],
         fullControlLine: '',
         caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap'),
         hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
@@ -214,6 +249,7 @@ class WarpGateNetworkManager extends EffectableEntity {
       ruleLines: [
         'Rich sectors add +100% for that resource; poor sectors cut -50%.',
         'Warp Gate Network levels add +10% cap per level.',
+        ...(foundryRule ? [foundryRule] : []),
       ],
       fullControlLine,
       caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap'),

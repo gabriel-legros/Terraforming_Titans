@@ -1957,6 +1957,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'foundry_worlds',
+        name: 'Foundry Worlds',
+        description: 'Planetary cores contain sextillion tons of metal... if we can get to it.',
+        cost: { advancedResearch: 50000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'foundryWorld',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'next_gen_bioengineering',
         name: 'Next-generation bio-engineering',
         description: 'Enables the use of advanced research to permanently increase life design potential',

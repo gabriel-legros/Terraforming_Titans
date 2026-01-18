@@ -246,6 +246,9 @@ class EffectableEntity {
         case 'lifeDesignAttributeMaxBonus':
           this.applyLifeDesignAttributeMaxBonus(effect);
           break;
+        case 'importCapMultiplier':
+          this.applyImportCapMultiplier(effect);
+          break;
         case 'lifeGrowthMultiplier':
           this.applyLifeGrowthMultiplier(effect);
           break;
@@ -555,6 +558,9 @@ class EffectableEntity {
       }
 
       applyLifeDesignAttributeMaxBonus(effect) {
+      }
+
+      applyImportCapMultiplier(effect) {
       }
 
   applyLifeGrowthMultiplier(effect) {
