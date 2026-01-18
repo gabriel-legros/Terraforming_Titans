@@ -71,8 +71,9 @@ function updateAllResearchButtons(researchData) {
             }
 
             const isVisible = visibleIds.has(researchItem.id);
+            const isDisplayable = researchManager.isResearchDisplayable(researchItem);
             const hiddenByDisableFlag = !researchItem.isResearched && hasActiveDisableFlag(researchItem);
-            container.style.display = hiddenByDisableFlag ? 'none' : '';
+            container.style.display = (hiddenByDisableFlag || !isDisplayable) ? 'none' : '';
             updateResearchButtonText(button, researchItem, isVisible);
             if (costEl && descEl) {
                 if (isVisible) {
