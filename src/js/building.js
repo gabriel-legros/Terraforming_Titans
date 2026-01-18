@@ -1063,6 +1063,12 @@ class Building extends EffectableEntity {
         const baseMaintenanceCost = this.maintenanceCost[resource] * this.active;
         const maintenanceCost = baseMaintenanceCost * (deltaTime / 1000) * this.productivity;
         const displayMaintenanceCost = baseMaintenanceCost * (deltaTime / 1000) * displayProductivity;
+        const availableForMaintenance =
+          (resources.colony[resource].value || 0) +
+          (accumulatedChanges.colony?.[resource] || 0);
+        const conversionScale = maintenanceCost > 0
+          ? Math.min(Math.max(availableForMaintenance, 0) / maintenanceCost, 1)
+          : 0;
 
         // Track current maintenance in the building
         this.currentMaintenance[resource] = maintenanceCost;
@@ -1088,8 +1094,8 @@ class Building extends EffectableEntity {
             const conversionValue = resourceData.conversionValue || 1;
 
             // Apply conversion by adding the scaled maintenance cost to the target resource
-            const convertedAmount = maintenanceCost * conversionValue;
-            const displayConvertedAmount = displayMaintenanceCost * conversionValue;
+            const convertedAmount = maintenanceCost * conversionValue * conversionScale;
+            const displayConvertedAmount = displayMaintenanceCost * conversionValue * conversionScale;
 
             if (resources[targetCategory] && resources[targetCategory][targetResourceName]) {
               accumulatedChanges[targetCategory][targetResourceName] = 

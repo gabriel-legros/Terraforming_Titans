@@ -643,9 +643,14 @@ function produceResources(deltaTime, buildings) {
 
   for(const buildingName in buildings){
     const building = buildings[buildingName];
-    // Accumulate production, consumption, and maintenance changes
+    // Accumulate production and consumption changes
     building.produce(accumulatedChanges, deltaTime);
     building.consume(accumulatedChanges, deltaTime);
+  }
+
+  for(const buildingName in buildings){
+    const building = buildings[buildingName];
+    // Apply maintenance after production/consumption so conversions respect availability
     building.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
   }
 
