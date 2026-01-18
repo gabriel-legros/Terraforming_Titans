@@ -40,6 +40,21 @@ function canUnlockSkill(id) {
     return prereqs.every(p => skillManager.skills[p] && skillManager.skills[p].unlocked);
 }
 
+function canPurchaseAnySkill() {
+    if (Object.keys(skillPrereqs).length === 0) {
+        buildSkillPrereqs();
+    }
+    for (const id in skillManager.skills) {
+        const skill = skillManager.skills[id];
+        const cost = skillManager.getUpgradeCost(id);
+        const canAfford = skillManager.skillPoints >= cost;
+        const isMaxRank = skill.rank >= skill.maxRank;
+        const canUnlock = skill.unlocked || canUnlockSkill(id);
+        if (canAfford && !isMaxRank && canUnlock) return true;
+    }
+    return false;
+}
+
 const skillLayout = {
     build_cost: { row: 0, col: 3 },
     research_boost: { row: 1, col: 2 },
@@ -60,6 +75,7 @@ function updateSkillPointDisplay() {
 function notifySkillPointGained(amount = 1) {
     updateSkillTreeUI();
     if (!amount || amount <= 0) return;
+    if (!canPurchaseAnySkill()) return;
 
     awakeningAlertPending = true;
     const awakeningContent = document.getElementById ? document.getElementById('awakening-hope') : null;
