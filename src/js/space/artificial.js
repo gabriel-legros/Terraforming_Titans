@@ -11,7 +11,7 @@ const ARTIFICIAL_CORES = [
     { value: 'ice-giant', label: 'Ice giant', disabled: false, minRadiusEarth: 3.2, maxRadiusEarth: 4.5, allowStar: true, minFlux: 50, maxFlux: 500 },
     { value: 'intermediate-giant', label: 'Intermediate giant', disabled: false, minRadiusEarth: 4.5, maxRadiusEarth: 20, allowStar: true, minFlux: 50, maxFlux: 800 },
     { value: 'gas-giant', label: 'Gas giant', disabled: true, disabledSource : "World 9", minRadiusEarth: 20, maxRadiusEarth: 70, allowStar: true, minFlux: 50, maxFlux: 800 },
-    { value: 'brown-dwarf', label: 'Brown Dwarf', disabled: true, disabledSource : "World 10", minRadiusEarth: 70, maxRadiusEarth: 140, allowStar: false},
+    { value: 'brown-dwarf', label: 'Brown Dwarf', disabled: true, disabledSource : "World 10", minRadiusEarth: 70, maxRadiusEarth: 160, allowStar: false},
     { value: 'white-dwarf', label: 'White Dwarf', disabled: true, disabledSource : "World 12", minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
     { value: 'neutron-star', label: 'Neutron Star', disabled: true, disabledSource : "World 13", minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
     { value: 'stellar-bh', label: 'Stellar Black Hole', disabled: true, disabledSource : "World 14", minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
