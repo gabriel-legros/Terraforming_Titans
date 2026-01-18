@@ -57,6 +57,7 @@ const automationElements = {
   buildingsApplyList: null,
   buildingsApplyHint: null,
   buildingsApplyCombinationButton: null,
+  buildingsApplyNextTravelCheckbox: null,
   buildingsCombinationSelect: null,
   buildingsCombinationNameInput: null,
   buildingsCombinationNewButton: null,
@@ -235,6 +236,9 @@ function cacheAutomationElements() {
   }
   if (!automationElements.buildingsApplyCombinationButton && automationElements.buildingsAutomation) {
     automationElements.buildingsApplyCombinationButton = automationElements.buildingsAutomation.querySelector('.building-automation-apply-combination');
+  }
+  if (!automationElements.buildingsApplyNextTravelCheckbox && automationElements.buildingsAutomation) {
+    automationElements.buildingsApplyNextTravelCheckbox = automationElements.buildingsAutomation.querySelector('.building-automation-apply-next-travel');
   }
   if (!automationElements.buildingsCombinationSelect && automationElements.buildingsAutomation) {
     automationElements.buildingsCombinationSelect = automationElements.buildingsAutomation.querySelector('.building-automation-combination-select');

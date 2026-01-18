@@ -492,6 +492,12 @@ function initializeGameState(options = {}) {
 
   applyPlanetParameterEffects();
   hazardManager.ensureCrusaderPresence(terraforming);
+  if (preserveManagers && automationManager.buildingsAutomation.applyOnNextTravel) {
+    automationManager.buildingsAutomation.applyPresets();
+    automationManager.buildingsAutomation.applyOnNextTravel = false;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  }
 }
 
 function updateLogic(delta) {

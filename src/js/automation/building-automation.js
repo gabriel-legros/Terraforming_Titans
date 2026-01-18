@@ -51,6 +51,7 @@ class BuildingAutomation {
     this.combinations = [];
     this.collapsed = false;
     this.masterEnabled = true;
+    this.applyOnNextTravel = false;
     this.nextPresetId = 1;
     this.nextAssignmentId = 1;
     this.nextCombinationId = 1;
@@ -333,9 +334,6 @@ class BuildingAutomation {
 
     for (let index = 0; index < buildingList.length; index += 1) {
       const building = buildingList[index];
-      if (!building.isVisible()) {
-        continue;
-      }
       const control = controlMap[building.name];
       const automation = automationMap[building.name];
       if (control) {
@@ -477,6 +475,7 @@ class BuildingAutomation {
       })),
       collapsed: this.collapsed,
       masterEnabled: this.masterEnabled,
+      applyOnNextTravel: !!this.applyOnNextTravel,
       nextPresetId: this.nextPresetId,
       nextAssignmentId: this.nextAssignmentId,
       nextCombinationId: this.nextCombinationId
@@ -507,6 +506,7 @@ class BuildingAutomation {
     })) : [];
     this.collapsed = !!data.collapsed;
     this.masterEnabled = data.masterEnabled !== false;
+    this.applyOnNextTravel = !!data.applyOnNextTravel;
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.nextAssignmentId = data.nextAssignmentId || this.assignments.length + 1;
     this.nextCombinationId = data.nextCombinationId || this.combinations.length + 1;

@@ -198,4 +198,14 @@ describe('BuildingAutomation presets', () => {
     const preset = restored.getPresetById(presetId);
     expect(preset.scopeAll).toBe(true);
   });
+
+  test('applyOnNextTravel persists through save/load', () => {
+    automation.applyOnNextTravel = true;
+
+    const state = automation.saveState();
+    const restored = new BuildingAutomation();
+    restored.loadState(state);
+
+    expect(restored.applyOnNextTravel).toBe(true);
+  });
 });
