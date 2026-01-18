@@ -15,7 +15,7 @@ const ARTIFICIAL_CORES = [
     { value: 'white-dwarf', label: 'White Dwarf', disabled: true, disabledSource : "World 12", minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
     { value: 'neutron-star', label: 'Neutron Star', disabled: true, disabledSource : "World 13", minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
     { value: 'stellar-bh', label: 'Stellar Black Hole', disabled: true, disabledSource : "World 14", minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
-    { value: 'smbh', label: 'Supermassive Black Hole', disabled: true, disabledSource : "World 14 & Galactic Conquest", minRadiusEarth: 500000, maxRadiusEarth: 500000, allowStar: false}
+    { value: 'smbh', label: 'Supermassive Black Hole', disabled: true, disabledSource : "World 14 & Galactic Conquest", minRadiusEarth: 1200000, maxRadiusEarth: 1200000, allowStar: false}
 ];
 const ARTIFICIAL_STAR_CONTEXTS = [
     { value: 'with-star', label: 'Star in system', hasStar: true, disabled: false },
