@@ -888,6 +888,7 @@ function initializeLifeUI() {
 class LifeManager extends EffectableEntity {
   constructor() {
     super({description : 'Life Manager'})
+    this.biomassGrowthLimiters = {};
   }
 
   getEngineeredNitrogenFixationInfo() {
@@ -954,6 +955,17 @@ class LifeManager extends EffectableEntity {
         const atmosphericInputsPerBiomass = Object.entries(growthPerBiomass.atmospheric || {})
           .filter(([, coef]) => coef < 0);
 
+        const biomassGrowthLimiters = {};
+        const addBiomassGrowthLimiter = (resourceKey, zoneName, scope) => {
+          const entry = biomassGrowthLimiters[resourceKey] || (biomassGrowthLimiters[resourceKey] = {
+            scope,
+            zones: [],
+          });
+          if (scope === 'surface' && zoneName && !entry.zones.includes(zoneName)) {
+            entry.zones.push(zoneName);
+          }
+        };
+
         let totalPotentialGrowth = 0;
 
         for (const zoneName of zones) {
@@ -995,15 +1007,23 @@ class LifeManager extends EffectableEntity {
           const potentialBiomassIncrease = zonalBiomass * actualGrowthRate * secondsMultiplier;
 
           let maxBySurfaceInputs = potentialBiomassIncrease;
+          let limitingSurfaceKey = '';
+          let limitingSurfaceValue = potentialBiomassIncrease;
           for (const [resourceKey, coef] of surfaceInputsPerBiomass) {
             const requiredPerBiomass = -coef;
-            let available = 0;
-            if (resourceKey === 'liquidWater') {
-              available = terraforming.zonalSurface[zoneName].liquidWater || 0;
-            }
+            const zoneData = terraforming.zonalSurface[zoneName];
+            const available = zoneData[resourceKey] || 0;
             if (requiredPerBiomass > 0) {
-              maxBySurfaceInputs = Math.min(maxBySurfaceInputs, available / requiredPerBiomass);
+              const maxGrowth = available / requiredPerBiomass;
+              maxBySurfaceInputs = Math.min(maxBySurfaceInputs, maxGrowth);
+              if (maxGrowth < limitingSurfaceValue) {
+                limitingSurfaceValue = maxGrowth;
+                limitingSurfaceKey = resourceKey;
+              }
             }
+          }
+          if (limitingSurfaceKey && limitingSurfaceValue < potentialBiomassIncrease) {
+            addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface');
           }
 
           const capped = Math.max(0, maxBySurfaceInputs);
@@ -1012,15 +1032,26 @@ class LifeManager extends EffectableEntity {
         }
 
         let maxByAtmosphericInputs = totalPotentialGrowth;
+        let limitingAtmosphericKey = '';
+        let limitingAtmosphericValue = totalPotentialGrowth;
         for (const [resourceKey, coef] of atmosphericInputsPerBiomass) {
           const requiredPerBiomass = -coef;
           const available = resources.atmospheric[resourceKey].value;
           if (requiredPerBiomass > 0) {
-            maxByAtmosphericInputs = Math.min(maxByAtmosphericInputs, available / requiredPerBiomass);
+            const maxGrowth = available / requiredPerBiomass;
+            maxByAtmosphericInputs = Math.min(maxByAtmosphericInputs, maxGrowth);
+            if (maxGrowth < limitingAtmosphericValue) {
+              limitingAtmosphericValue = maxGrowth;
+              limitingAtmosphericKey = resourceKey;
+            }
           }
+        }
+        if (limitingAtmosphericKey && maxByAtmosphericInputs < totalPotentialGrowth) {
+          addBiomassGrowthLimiter(limitingAtmosphericKey, '', 'atmospheric');
         }
 
         const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs));
+        this.biomassGrowthLimiters = biomassGrowthLimiters;
         const growthAtmosphericDeltas = {};
         const zoneGrowthByZone = { tropical: 0, temperate: 0, polar: 0 };
 

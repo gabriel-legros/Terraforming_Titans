@@ -179,7 +179,7 @@
       geothermal: { name: 'Geo. vent', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false }
     },
     atmospheric: {
-      carbonDioxide: { name: 'Carbon Dioxide', initialValue: 23998810562847.49, unlocked:false , unit: 'ton' },
+      carbonDioxide: { name: 'CO2', initialValue: 23998810562847.49, unlocked:false , unit: 'ton' },
       inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false , unit: 'ton' },
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false , unit: 'ton' },
       atmosphericWater: { name: 'Water Vap.', initialValue:  19100402.066922974, unlocked:false , unit: 'ton' },

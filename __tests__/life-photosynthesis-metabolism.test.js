@@ -109,6 +109,8 @@ describe('LifeManager metabolism-driven photosynthesis', () => {
     const manager = new LifeManager();
     manager.updateLife(10_000_000);
 
+    expect(manager.biomassGrowthLimiters.carbonDioxide.scope).toBe('atmospheric');
+
     const expectedGrowth = 100 / 1.4666666666666666;
     const totalBiomass =
       terraforming.zonalSurface.tropical.biomass +
@@ -132,6 +134,8 @@ describe('LifeManager metabolism-driven photosynthesis', () => {
 
     const manager = new LifeManager();
     manager.updateLife(10_000_000);
+
+    expect(manager.biomassGrowthLimiters.liquidWater.zones).toEqual(['tropical', 'temperate', 'polar']);
 
     expect(terraforming.zonalSurface.tropical.biomass).toBeCloseTo(1010, 3);
     expect(terraforming.zonalSurface.temperate.biomass).toBeCloseTo(1020, 3);

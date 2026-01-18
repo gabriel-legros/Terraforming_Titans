@@ -692,7 +692,7 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Special display for population (colonists) as an integer
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span>${['biomass', 'androids', 'colonists'].includes(resourceName) ? `<span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span><span class="resource-warning" id="${resourceName}-warning"></span></div>
         <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -736,7 +736,7 @@ function createResourceElement(category, resourceObj, resourceName) {
   } else {
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span>${['biomass', 'androids', 'colonists'].includes(resourceName) ? `<span class="resource-warning" id="${resourceName}-warning"></span>` : ''}</div>
+        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span><span class="resource-warning" id="${resourceName}-warning"></span></div>
         <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
@@ -896,6 +896,21 @@ function updateResourceDisplay(resources, deltaSeconds) {
           land.reserved / land.value < 0.99;
         const warningMessage = warn ? 'Android production has reached its current cap.' : '';
         const icon = warn ? '⚠' : '';
+        if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
+        if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
+      }
+
+      if (entry.warningEl && resourceName !== 'biomass' && resourceName !== 'androids' && resourceName !== 'colonists') {
+        const limiter = lifeManager.biomassGrowthLimiters[resourceName];
+        const limiterZones = limiter?.zones || [];
+        const zoneText = limiterZones.length
+          ? ` in the ${limiterZones.map(capitalizeFirstLetter).join(', ')} zone${limiterZones.length > 1 ? 's' : ''}`
+          : '';
+        const scopeSuffix = limiter?.scope === 'atmospheric' ? ' across the atmosphere' : zoneText;
+        const warningMessage = limiter
+          ? `Biomass growth is limited by ${resourceObj.displayName} availability${scopeSuffix}.`
+          : '';
+        const icon = warningMessage ? '⚠' : '';
         if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
         if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
       }
@@ -1209,6 +1224,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       if (androidCapped) {
         warningMessages.push('Android production has reached its current cap.');
       }
+    }
+
+    const limiter = lifeManager?.biomassGrowthLimiters?.[resource.name];
+    if (limiter) {
+      const limiterZones = limiter.zones || [];
+      const zoneText = limiterZones.length
+        ? ` in the ${limiterZones.map(capitalizeFirstLetter).join(', ')} zone${limiterZones.length > 1 ? 's' : ''}`
+        : '';
+      const scopeSuffix = limiter.scope === 'atmospheric' ? ' across the atmosphere' : zoneText;
+      warningMessages.push(`Biomass growth is limited by ${resource.displayName} availability${scopeSuffix}.`);
     }
 
     if (resource.name === 'hydrogen') {
