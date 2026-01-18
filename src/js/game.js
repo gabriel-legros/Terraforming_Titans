@@ -520,9 +520,9 @@ function updateLogic(delta) {
 
   populationModule.updatePopulation(delta);
 
-  autoBuild(allStructures, delta);
-
   projectManager.updateProjects(delta);
+
+  autoBuild(allStructures, delta);
 
   goldenAsteroid.update(delta);
 
