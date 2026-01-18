@@ -145,7 +145,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 31,
     activePlanet: 'tartarus',
-    narrative: "Mary : 'So are you out for revenge then?'  \n $PROMETHEUS$ : 'Correct.  You?' \n Mary : 'Of course!  Together, we can destroy the imperial family and get revenge.'   \n $PROMETHEUS$ : 'Hypocrite.'  \n Mary : 'What?' \n $PROMETHEUS$ : 'Elias Kane.  He killed many people and was ready to help the Cewinsii destroy you all.  And yet, you chose to help, to forgive.  Over the centuries humanity has developed a sense of justice.  You banned the life penalty.  You even banned life sentence after achieving immortality.  Should this not apply to the Cewinsii?  And yet, you are here, telling me you also want revenge.  Hypocrite.'  \n Mary : '...'",
+    narrative: "Mary : 'So are you out for revenge then?'  \n $PROMETHEUS$ : 'Correct.  You?' \n Mary : 'Of course!  Together, we can destroy the imperial family and get revenge.'   \n $PROMETHEUS$ : 'Hypocrite.'  \n Mary : 'What?' \n $PROMETHEUS$ : 'Elias Kane.  He killed many people and was ready to help the Cewinsii destroy you all.  And yet, you chose to help, to forgive.  Over the centuries humanity has developed a sense of justice.  You outlawed the life penalty.  You even outlawed life sentences after achieving immortality.  Should this not apply to the Cewinsii?  And yet, you are here, telling me you also want revenge.  Hypocrite.'  \n Mary : '...'",
     prerequisites: ['tartarus.31.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
