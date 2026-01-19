@@ -508,11 +508,14 @@ function calculateProductionRates(deltaTime, buildings) {
   for (const buildingName in buildings) {
     const building = buildings[buildingName];
     const automationMultiplier = building.getAutomationActivityMultiplier?.() ?? 1;
+    const workerRatio = building.getTotalWorkerNeed() > 0
+      ? populationModule.getWorkerAvailabilityRatio(building.workerPriority)
+      : 1;
 
     // Calculate scaled production rates
     for (const category in building.production) {
       for (const resource in building.production[category]) {
-        const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource) * automationMultiplier;
+        const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource) * automationMultiplier * workerRatio;
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(actualProduction, building.displayName, 'building');
       }
@@ -523,7 +526,7 @@ function calculateProductionRates(deltaTime, buildings) {
       for (const resource in building.consumption[category]) {
         const entry = building.getConsumptionResource ? building.getConsumptionResource(category, resource) : { amount: building.consumption[category][resource] };
         const amount = entry.amount || 0;
-        const actualConsumption = amount * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource) * automationMultiplier;
+        const actualConsumption = amount * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource) * automationMultiplier * workerRatio;
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
       }
