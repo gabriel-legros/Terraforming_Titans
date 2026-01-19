@@ -129,6 +129,7 @@ describe('FoundryWorldProject', () => {
     const project = createProject();
     project.shopPurchases.galacticMetalMiningCap = 2;
     project.shopPurchases.galacticSilicaMiningCap = 3;
+    project.shopPurchases.galacticEverythingElseCap = 4;
     project.shopPurchases.oreMiningOutput = 5;
     project.shopPurchases.silicaMiningOutput = 4;
     project.shopPurchases.deeperMiningSpeed = 3;
@@ -147,6 +148,27 @@ describe('FoundryWorldProject', () => {
       resourceKey: 'silicon',
       value: 1.15,
       effectId: 'foundry-silica-cap',
+      sourceId: 'foundryWorld',
+    });
+    expect(global.warpGateNetworkManager.addAndReplace).toHaveBeenCalledWith({
+      type: 'importCapMultiplier',
+      resourceKey: 'water',
+      value: 1.2,
+      effectId: 'foundry-water-cap',
+      sourceId: 'foundryWorld',
+    });
+    expect(global.warpGateNetworkManager.addAndReplace).toHaveBeenCalledWith({
+      type: 'importCapMultiplier',
+      resourceKey: 'carbon',
+      value: 1.2,
+      effectId: 'foundry-carbon-cap',
+      sourceId: 'foundryWorld',
+    });
+    expect(global.warpGateNetworkManager.addAndReplace).toHaveBeenCalledWith({
+      type: 'importCapMultiplier',
+      resourceKey: 'nitrogen',
+      value: 1.2,
+      effectId: 'foundry-nitrogen-cap',
       sourceId: 'foundryWorld',
     });
     expect(global.addEffect).toHaveBeenCalledWith({

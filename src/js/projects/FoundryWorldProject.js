@@ -23,6 +23,13 @@
       description: 'Increases the galactic silica mining cap by 5%.',
     },
     {
+      id: 'galacticEverythingElseCap',
+      label: 'Galactic Everything Else',
+      cost: 1,
+      maxPurchases: 800,
+      description: 'Increases the galactic water, carbon, and nitrogen import caps by 5%.',
+    },
+    {
       id: 'oreMiningOutput',
       label: 'Planetary Ore Mining Expertise',
       cost: 1,
@@ -188,6 +195,28 @@
         resourceKey: 'silicon',
         value: silicaCapBonus,
         effectId: 'foundry-silica-cap',
+        sourceId: 'foundryWorld',
+      });
+      const everythingElseCapBonus = 1 + (this.getShopPurchaseCount('galacticEverythingElseCap') * 0.05);
+      warpGateNetworkManager.addAndReplace({
+        type: 'importCapMultiplier',
+        resourceKey: 'water',
+        value: everythingElseCapBonus,
+        effectId: 'foundry-water-cap',
+        sourceId: 'foundryWorld',
+      });
+      warpGateNetworkManager.addAndReplace({
+        type: 'importCapMultiplier',
+        resourceKey: 'carbon',
+        value: everythingElseCapBonus,
+        effectId: 'foundry-carbon-cap',
+        sourceId: 'foundryWorld',
+      });
+      warpGateNetworkManager.addAndReplace({
+        type: 'importCapMultiplier',
+        resourceKey: 'nitrogen',
+        value: everythingElseCapBonus,
+        effectId: 'foundry-nitrogen-cap',
         sourceId: 'foundryWorld',
       });
 
