@@ -984,7 +984,7 @@ function updateStatisticsDisplay() {
   const el = cached ? cached.totalPlaytime : null;
   if (!el) return;
   const gameTime = formatPlayTime(totalPlayTimeSeconds);
-  const realTime = formatDuration(totalRealPlayTimeSeconds);
+  const realTime = formatDurationDetailed(totalRealPlayTimeSeconds);
   el.textContent = `${gameTime} (${realTime} real time)`;
 }
 

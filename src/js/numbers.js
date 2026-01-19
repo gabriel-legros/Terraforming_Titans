@@ -129,6 +129,31 @@ function formatDuration(seconds) {
   return `${Math.floor(seconds)}s`;
 }
 
+function formatDurationDetailed(seconds) {
+  const yearSeconds = 365 * 24 * 3600;
+  const years = Math.floor(seconds / yearSeconds);
+  let remaining = seconds - years * yearSeconds;
+  const days = Math.floor(remaining / (24 * 3600));
+  remaining -= days * 24 * 3600;
+  const hours = Math.floor(remaining / 3600);
+  remaining -= hours * 3600;
+  const minutes = Math.floor(remaining / 60);
+  const secs = Math.floor(remaining % 60);
+  if (years > 0) {
+    return `${formatNumber(years, true)} year${years !== 1 ? 's' : ''} ${days}d ${hours}h ${minutes}m ${secs}s`;
+  }
+  if (days > 0) {
+    return `${days}d ${hours}h ${minutes}m ${secs}s`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${secs}s`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${secs}s`;
+  }
+  return `${Math.floor(seconds)}s`;
+}
+
 function formatBuildingCount(value) {
   if (Math.abs(value) > 1e6) {
     return formatNumber(value, false, 3);
@@ -211,5 +236,6 @@ function parseFlexibleNumber(value) {
       getTemperatureUnit,
       formatPlayTime,
       formatDuration,
+      formatDurationDetailed,
     };
   }
