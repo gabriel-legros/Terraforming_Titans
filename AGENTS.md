@@ -540,3 +540,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Bioworld and Foundry World projects now hide their start bars when the other specialization is active or completed.
 - Bioworld and Foundry World projects now remain adjacent in the project list ordering, even after reordering, saving, or travel.
 - Planet visualizer cloud textures now use softer thresholding with density falloff to reduce blocky edges.
+- Artificial worlds now render with a metallic surface texture and skip crater noise in the planet visualizer.

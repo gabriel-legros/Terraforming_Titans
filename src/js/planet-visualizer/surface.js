@@ -114,6 +114,17 @@
       featureMask: 0.85,
       shade: 0.98,
     },
+    artificial: {
+      top: { color: '#e4e8ec', t: 0.42 },
+      bottom: { color: '#5a6167', t: 0.52 },
+      tint: { color: '#9aa5b1', min: 0.1, max: 0.2 },
+      topJitter: 0.03,
+      bottomJitter: 0.03,
+      heightScale: 0.7,
+      heightJitter: 0.02,
+      featureMask: 0,
+      shade: 1.08,
+    },
   };
 
   function resolvePlanetArchetype(context, baseHex) {
@@ -291,6 +302,7 @@
     const seed = this.hashSeedFromPlanet ? this.hashSeedFromPlanet() : { x: 0.137, y: 0.733 };
     const planetType = resolvePlanetArchetype(this, baseHex);
     const palette = PLANET_TYPE_TEXTURES[planetType] || PLANET_TYPE_TEXTURES.default;
+    const isArtificial = planetType === 'artificial';
     const rand = createJitterRandom(seed.x, seed.y);
 
     let gradientBase = baseHex;
@@ -326,8 +338,9 @@
     const featureMask = Math.max(0, palette.featureMask ?? 1);
     const shadeBias = palette.shade ?? 1;
 
-    if (strength > 0) {
-      ctx.globalAlpha = Math.max(0, Math.min(1, strength));
+    const craterStrength = isArtificial ? 0 : strength;
+    if (craterStrength > 0) {
+      ctx.globalAlpha = Math.max(0, Math.min(1, craterStrength));
       ctx.drawImage(this.craterLayer, 0, 0);
       ctx.globalAlpha = 1;
     }
@@ -363,6 +376,10 @@
       const fOffX = Number(feat.offsetX || 0);
       const fOffY = Number(feat.offsetY || 0);
 
+      const stripeScale = 6 + rand() * 2.5;
+      const microScale = 90 + rand() * 40;
+      const stripePhase = rand() * Math.PI * 2;
+      const microPhase = rand() * 10;
       for (let i = 0; i < w * h; i++) {
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const heightMul = (0.85 + 0.3 * Math.pow(hgt, 1.2)) * heightScale;
@@ -386,7 +403,17 @@
         }
 
         const idx = i * 4;
-        const mul = Math.max(0, heightMul * featureMul * shadeBias);
+        let metalMul = 1;
+        if (isArtificial) {
+          const x = i % w;
+          const y = (i - x) / w;
+          const stripe = Math.sin((y / h) * stripeScale * Math.PI * 2 + stripePhase) * 0.06;
+          const micro = (value2((x / w) * microScale + microPhase, (y / h) * microScale + microPhase) - 0.5) * 0.08;
+          metalMul = 1 + stripe + micro;
+          if (metalMul < 0.88) metalMul = 0.88;
+          if (metalMul > 1.18) metalMul = 1.18;
+        }
+        const mul = Math.max(0, heightMul * featureMul * shadeBias * metalMul);
         tdata[idx] = Math.min(255, Math.floor(tdata[idx] * mul));
         tdata[idx + 1] = Math.min(255, Math.floor(tdata[idx + 1] * mul));
         tdata[idx + 2] = Math.min(255, Math.floor(tdata[idx + 2] * mul));
