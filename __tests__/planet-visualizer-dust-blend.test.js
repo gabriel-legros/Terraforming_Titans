@@ -48,7 +48,7 @@ describe('Planet visualizer dust tint', () => {
     expect(setRGB.mock.calls[0][2]).toBeCloseTo(4.5, 3);
   });
 
-  test('resets tint to base when switching custom colors', () => {
+  test('keeps the current tint when switching custom colors', () => {
     const viz = new PlanetVisualizer();
     viz.sphere = { material: { color: { setRGB } } };
     currentPlanetParameters.visualization.baseColor = '#202020';
@@ -63,7 +63,7 @@ describe('Planet visualizer dust tint', () => {
     viz.updateDustTint();
 
     const lastCall = setRGB.mock.calls[setRGB.mock.calls.length - 1];
-    expect(lastCall[0]).toBeCloseTo(5, 5);
+    expect(lastCall[0]).toBeCloseTo(4.5, 5);
     expect(lastCall[1]).toBeCloseTo(0.5, 5);
     expect(lastCall[2]).toBeCloseTo(0.5, 5);
   });

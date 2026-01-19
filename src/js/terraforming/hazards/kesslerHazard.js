@@ -60,10 +60,14 @@ function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters,
   }
 
   const massPerWeight = weightTotal ? totalMass / weightTotal : 0;
-  return entries.map((entry) => ({
-    periapsisMeters: entry.periapsisMeters,
-    massTons: entry.weight * massPerWeight
-  }));
+  return entries.map((entry) => {
+    const massTons = entry.weight * massPerWeight;
+    return {
+      periapsisMeters: entry.periapsisMeters,
+      massTons,
+      maxSinceZero: massTons
+    };
+  });
 }
 
 function findAltitudeForDensity(model, targetDensity, maxMeters) {
@@ -379,6 +383,12 @@ class KesslerHazard {
       if (density > densityMax) {
         densityMax = density;
       }
+      entry.maxSinceZero = entry.maxSinceZero ?? entry.massTons;
+      if (!entry.massTons) {
+        entry.maxSinceZero = 0;
+      } else if (entry.maxSinceZero < entry.massTons) {
+        entry.maxSinceZero = entry.massTons;
+      }
       if (density >= DEBRIS_DECAY_DENSITY_REFERENCE) {
         dragMass += entry.massTons;
       }
@@ -387,8 +397,12 @@ class KesslerHazard {
       const densityFactor = Math.min(DEBRIS_DECAY_MAX_MULTIPLIER, Math.max(0, densityRatio + 1));
       const decayRate = DEBRIS_DECAY_BASE_RATE * densityFactor;
       const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
-      const removed = entry.massTons * decayFraction;
+      const decayBasis = density >= DEBRIS_DECAY_DENSITY_REFERENCE ? entry.maxSinceZero : entry.massTons;
+      const removed = Math.min(entry.massTons, decayBasis * decayFraction);
       entry.massTons = Math.max(0, entry.massTons - removed);
+      if (!entry.massTons) {
+        entry.maxSinceZero = 0;
+      }
       decayedTons += removed;
     });
 
