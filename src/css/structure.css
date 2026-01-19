@@ -354,6 +354,7 @@
 .building-card-automation .ghg-temp-control,
 .building-card-automation .o2-pressure-control,
 .building-card-automation .dust-albedo-control,
+.building-card-automation .dust-color-control,
 .building-card-automation .chem-reactor-control {
     justify-content: flex-start;
 }
@@ -439,6 +440,7 @@
 .ghg-temp-control,
 .o2-pressure-control,
 .dust-albedo-control,
+.dust-color-control,
 .chem-reactor-control {
     display: flex;
     align-items: center;
@@ -514,6 +516,7 @@
 .ghg-temp-control,
 .o2-pressure-control,
 .dust-albedo-control,
+.dust-color-control,
 .chem-reactor-control {
     display: flex;
     align-items: center;
@@ -522,6 +525,14 @@
     flex-wrap: wrap;
     row-gap: 4px;
 }
+
+.dust-color-input {
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: none;
+}
+
 
 .ghg-temp-line-break {
     flex-basis: 100%;

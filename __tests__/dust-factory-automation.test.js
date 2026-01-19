@@ -2,6 +2,7 @@ const EffectableEntity = require('../src/js/effectable-entity');
 
 describe('Dust factory automation', () => {
   let DustFactory;
+  let dustFactorySettings;
 
   const baseConfig = () => ({
     name: 'Black Dust Factory',
@@ -42,7 +43,7 @@ describe('Dust factory automation', () => {
       resources: global.resources,
       calculateGroundAlbedo() {
         const baseAlbedo = this.celestialParameters.albedo;
-        const blackAlbedo = 0.05;
+        const blackAlbedo = dustFactorySettings.dustColorAlbedo;
         const whiteAlbedo = 0.8;
         const surfaceArea = this.celestialParameters.surfaceArea;
         const black = this.resources.special.albedoUpgrades.value;
@@ -71,17 +72,17 @@ describe('Dust factory automation', () => {
     global.resources = {
       colony: {},
       special: {
-        albedoUpgrades: { value: 0 },
+        albedoUpgrades: { value: 0, baseCap: 100 },
         whiteDust: { value: 0 }
       }
     };
     global.researchManager = {
       getResearchById: () => ({ isResearched: true })
     };
-    setTerraforming();
     const { Building } = require('../src/js/building');
     global.Building = Building;
-    ({ DustFactory } = require('../src/js/buildings/DustFactory'));
+    ({ DustFactory, dustFactorySettings } = require('../src/js/buildings/DustFactory'));
+    setTerraforming();
   });
 
   afterEach(() => {
@@ -144,5 +145,57 @@ describe('Dust factory automation', () => {
     expect(factory.currentRecipeKey).toBe('black');
     expect(factory.reverseEnabled).toBe(true);
     expect(factory.productivity).toBeGreaterThan(0);
+  });
+
+  test('maps dust color to albedo range', () => {
+    const blackAlbedo = DustFactory.getDustAlbedoFromColor('#000000');
+    const whiteAlbedo = DustFactory.getDustAlbedoFromColor('#ffffff');
+    const midAlbedo = DustFactory.getDustAlbedoFromColor('#808080');
+
+    expect(blackAlbedo).toBeCloseTo(0.05, 5);
+    expect(whiteAlbedo).toBeCloseTo(0.8, 5);
+    expect(midAlbedo).toBeGreaterThan(0.05);
+    expect(midAlbedo).toBeLessThan(0.8);
+  });
+
+  test('custom dust automation fills to cap', () => {
+    const factory = createFactory();
+    const settings = DustFactory.getAutomationSettings();
+    settings.autoTargetAlbedo = true;
+    settings.dustColor = '#ff4400';
+    settings.dustColorAlbedo = DustFactory.getDustAlbedoFromColor(settings.dustColor);
+    settings.initialized = true;
+
+    factory.updateProductivity(global.resources, 1000);
+
+    expect(factory.currentRecipeKey).toBe('black');
+    expect(factory.reverseEnabled).toBe(false);
+    expect(factory.productivity).toBeGreaterThan(0);
+  });
+
+  test('custom dust automation halts at cap', () => {
+    const factory = createFactory();
+    global.resources.special.albedoUpgrades.value = 100;
+    const settings = DustFactory.getAutomationSettings();
+    settings.autoTargetAlbedo = true;
+    settings.dustColor = '#ff4400';
+    settings.dustColorAlbedo = DustFactory.getDustAlbedoFromColor(settings.dustColor);
+    settings.initialized = true;
+
+    factory.updateProductivity(global.resources, 1000);
+
+    expect(factory.productivity).toBe(0);
+  });
+
+  test('custom dust renames the resource', () => {
+    const factory = createFactory();
+    const settings = DustFactory.getAutomationSettings();
+    settings.dustColor = '#ff4400';
+    settings.dustColorAlbedo = DustFactory.getDustAlbedoFromColor(settings.dustColor);
+    settings.initialized = true;
+
+    factory.updateProductivity(global.resources, 1000);
+
+    expect(global.resources.special.albedoUpgrades.displayName).toBe('Custom Dust');
   });
 });

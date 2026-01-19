@@ -1,6 +1,8 @@
 const DEFAULT_DUST_AUTOMATION_SETTINGS = {
   autoTargetAlbedo: false,
   targetAlbedo: 0.05,
+  dustColor: '#000000',
+  dustColorAlbedo: 0.05,
   hasCustomTarget: false,
   initialized: false
 };
@@ -9,6 +11,30 @@ const DUST_TARGET_ALBEDO = {
   black: 0.05,
   white: 0.8
 };
+
+const DUST_COLOR_ALBEDO_RANGE = {
+  min: 0.05,
+  max: 0.8
+};
+
+function updateDustResourceName(settings) {
+  const name = settings.dustColor === '#000000' ? 'Black Dust' : 'Custom Dust';
+  resources.special.albedoUpgrades.name = name;
+  resources.special.albedoUpgrades.displayName = name;
+}
+
+function clampDustAlbedo(value) {
+  return Math.min(DUST_COLOR_ALBEDO_RANGE.max, Math.max(DUST_COLOR_ALBEDO_RANGE.min, value));
+}
+
+function getDustAlbedoFromColor(color) {
+  const r = parseInt(color.slice(1, 3), 16) / 255;
+  const g = parseInt(color.slice(3, 5), 16) / 255;
+  const b = parseInt(color.slice(5, 7), 16) / 255;
+  const luminance = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+  const span = DUST_COLOR_ALBEDO_RANGE.max - DUST_COLOR_ALBEDO_RANGE.min;
+  return clampDustAlbedo(DUST_COLOR_ALBEDO_RANGE.min + (luminance * span));
+}
 
 class DustFactory extends Building {
   getAutomationSettings() {
@@ -24,6 +50,7 @@ class DustFactory extends Building {
 
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
+    updateDustResourceName(this.getAutomationSettings());
 
     const {
       targetProductivity: baseTarget,
@@ -41,6 +68,24 @@ class DustFactory extends Building {
     const settings = getDustAutomationSettings(this);
 
     if (hasAtmosphericOversight && settings.autoTargetAlbedo) {
+      const isCustomColor = settings.dustColor !== '#000000';
+      if (isCustomColor) {
+        const blackRes = resources.special.albedoUpgrades;
+        const remaining = blackRes.baseCap - blackRes.value;
+        if (remaining <= 0) {
+          this.setAutomationActivityMultiplier(0);
+          this.productivity = 0;
+          return;
+        }
+        if (this.currentRecipeKey !== 'black') {
+          this.currentRecipeKey = 'black';
+          this._applyRecipeMapping();
+        }
+        this.reverseEnabled = false;
+        this.productivity = targetProductivity;
+        return;
+      }
+
       const targetAlbedo = settings.targetAlbedo;
       const currentAlbedo = terraforming.calculateGroundAlbedo();
       const difference = targetAlbedo - currentAlbedo;
@@ -117,6 +162,7 @@ class DustFactory extends Building {
 
   initUI(autoBuildContainer, cache) {
     const settings = getDustAutomationSettings(this);
+    updateDustResourceName(settings);
 
     const albedoControl = document.createElement('div');
     albedoControl.classList.add('dust-albedo-control');
@@ -143,27 +189,52 @@ class DustFactory extends Building {
     albedoInput.min = 0;
     albedoInput.max = 1;
     albedoInput.classList.add('dust-albedo-input');
+    albedoInput.readOnly = true;
     albedoControl.appendChild(albedoInput);
 
+    const colorControl = document.createElement('div');
+    colorControl.classList.add('dust-color-control');
+    colorControl.style.display = this.isBooleanFlagSet('terraformingBureauFeature')
+      ? 'flex'
+      : 'none';
+
+    const colorLabel = document.createElement('span');
+    colorLabel.textContent = 'Dust color:';
+    colorControl.appendChild(colorLabel);
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.classList.add('dust-color-input');
+    colorControl.appendChild(colorInput);
+
     const update = () => {
+      settings.targetAlbedo = settings.dustColorAlbedo;
       if (document.activeElement !== albedoInput) {
-        albedoInput.value = settings.targetAlbedo;
+        albedoInput.value = settings.dustColorAlbedo;
+      }
+      if (document.activeElement !== colorInput) {
+        colorInput.value = settings.dustColor;
       }
     };
     update();
 
-    albedoInput.addEventListener('input', () => {
-      const value = Number(albedoInput.value);
-      settings.targetAlbedo = Math.min(1, Math.max(0, value));
-      settings.hasCustomTarget = true;
+    colorInput.addEventListener('input', () => {
+      settings.dustColor = colorInput.value;
+      settings.dustColorAlbedo = getDustAlbedoFromColor(settings.dustColor);
+      settings.targetAlbedo = settings.dustColorAlbedo;
+      updateDustResourceName(settings);
+      update();
     });
 
     autoBuildContainer.appendChild(albedoControl);
+    autoBuildContainer.appendChild(colorControl);
 
     cache.dust = {
       container: albedoControl,
       checkbox: albedoCheckbox,
-      input: albedoInput
+      input: albedoInput,
+      colorControl,
+      colorInput
     };
   }
 
@@ -171,10 +242,16 @@ class DustFactory extends Building {
     const dustEls = elements.dust;
     const enabled = this.isBooleanFlagSet('terraformingBureauFeature');
     dustEls.container.style.display = enabled ? 'flex' : 'none';
+    dustEls.colorControl.style.display = enabled ? 'flex' : 'none';
     const settings = getDustAutomationSettings(this);
+    updateDustResourceName(settings);
     dustEls.checkbox.checked = settings.autoTargetAlbedo;
+    settings.targetAlbedo = settings.dustColorAlbedo;
     if (document.activeElement !== dustEls.input) {
-      dustEls.input.value = settings.targetAlbedo;
+      dustEls.input.value = settings.dustColorAlbedo;
+    }
+    if (document.activeElement !== dustEls.colorInput) {
+      dustEls.colorInput.value = settings.dustColor;
     }
   }
 
@@ -198,6 +275,8 @@ class DustFactory extends Building {
     return {
       autoTargetAlbedo: !!settings.autoTargetAlbedo,
       targetAlbedo: settings.targetAlbedo,
+      dustColor: settings.dustColor,
+      dustColorAlbedo: settings.dustColorAlbedo,
       hasCustomTarget: !!settings.hasCustomTarget,
       initialized: !!settings.initialized
     };
@@ -211,6 +290,12 @@ class DustFactory extends Building {
     settings.targetAlbedo = 'targetAlbedo' in saved
       ? saved.targetAlbedo
       : DEFAULT_DUST_AUTOMATION_SETTINGS.targetAlbedo;
+    settings.dustColor = 'dustColor' in saved
+      ? saved.dustColor
+      : DEFAULT_DUST_AUTOMATION_SETTINGS.dustColor;
+    settings.dustColorAlbedo = 'dustColorAlbedo' in saved
+      ? saved.dustColorAlbedo
+      : getDustAlbedoFromColor(settings.dustColor);
     settings.hasCustomTarget = 'hasCustomTarget' in saved
       ? !!saved.hasCustomTarget
       : DEFAULT_DUST_AUTOMATION_SETTINGS.hasCustomTarget;
@@ -218,6 +303,10 @@ class DustFactory extends Building {
       ? !!saved.initialized
       : DEFAULT_DUST_AUTOMATION_SETTINGS.initialized;
     return settings;
+  }
+
+  static getDustAlbedoFromColor(color) {
+    return getDustAlbedoFromColor(color);
   }
 }
 
@@ -228,6 +317,8 @@ function getDustAutomationSettings(context) {
 DustFactory.automationSettings = {
   autoTargetAlbedo: DEFAULT_DUST_AUTOMATION_SETTINGS.autoTargetAlbedo,
   targetAlbedo: DEFAULT_DUST_AUTOMATION_SETTINGS.targetAlbedo,
+  dustColor: DEFAULT_DUST_AUTOMATION_SETTINGS.dustColor,
+  dustColorAlbedo: DEFAULT_DUST_AUTOMATION_SETTINGS.dustColorAlbedo,
   hasCustomTarget: DEFAULT_DUST_AUTOMATION_SETTINGS.hasCustomTarget,
   initialized: DEFAULT_DUST_AUTOMATION_SETTINGS.initialized
 };

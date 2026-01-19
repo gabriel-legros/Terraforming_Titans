@@ -147,9 +147,38 @@
       return null;
     }
 
+    mixHexColors(hexA, hexB, t) {
+      const a = this.normalizeHexColor(hexA) || '#8a2a2a';
+      const b = this.normalizeHexColor(hexB) || '#8a2a2a';
+      const amt = Math.max(0, Math.min(1, t));
+      const parse = (hex) => {
+        const value = parseInt(hex.slice(1), 16);
+        return {
+          r: (value >> 16) & 255,
+          g: (value >> 8) & 255,
+          b: value & 255,
+        };
+      };
+      const lerp = (x, y) => Math.round(x + (y - x) * amt);
+      const toHex = (v) => v.toString(16).padStart(2, '0');
+      const aRgb = parse(a);
+      const bRgb = parse(b);
+      const r = lerp(aRgb.r, bRgb.r);
+      const g = lerp(aRgb.g, bRgb.g);
+      const bVal = lerp(aRgb.b, bRgb.b);
+      return `#${toHex(r)}${toHex(g)}${toHex(bVal)}`;
+    }
+
     getGameBaseColor() {
-      if (typeof currentPlanetParameters === 'undefined' || !currentPlanetParameters) return null;
-      return currentPlanetParameters.visualization?.baseColor || null;
+      const base = currentPlanetParameters.visualization?.baseColor || '#8a2a2a';
+      const customColor = dustFactorySettings.dustColor;
+      if (customColor === '#000000') {
+        return base;
+      }
+      const surfaceArea = terraforming.celestialParameters.surfaceArea || currentPlanetParameters.celestialParameters.surfaceArea || 0;
+      const dustAmount = resources.special.albedoUpgrades.value;
+      const ratio = surfaceArea > 0 ? Math.max(0, Math.min(1, dustAmount / surfaceArea)) : 0;
+      return this.mixHexColors(base, customColor, ratio);
     }
 
     setBaseColor(color, opts = {}) {

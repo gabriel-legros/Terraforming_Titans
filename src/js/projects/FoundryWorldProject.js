@@ -88,6 +88,14 @@
       return true;
     }
 
+    shouldHideStartBar() {
+      if (this.isActive || this.isCompleted) {
+        return false;
+      }
+      const bioworld = projectManager.projects.bioworld;
+      return bioworld.isActive || bioworld.isCompleted;
+    }
+
     complete() {
       super.complete();
       this.convertEcumenopolisToMetropolises();

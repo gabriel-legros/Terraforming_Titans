@@ -82,6 +82,18 @@ describe('FoundryWorldProject', () => {
     expect(project.canStart()).toBe(false);
   });
 
+  it('hides the start bar when a bioworld is active or completed', () => {
+    const project = createProject();
+
+    expect(project.shouldHideStartBar()).toBe(false);
+
+    global.projectManager.projects.bioworld.isActive = true;
+    expect(project.shouldHideStartBar()).toBe(true);
+
+    project.isCompleted = true;
+    expect(project.shouldHideStartBar()).toBe(false);
+  });
+
   it('converts ecumenopolis districts into metropolises on completion', () => {
     const project = createProject();
     global.colonies.t7_colony.count = 4;

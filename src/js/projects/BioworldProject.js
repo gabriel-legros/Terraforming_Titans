@@ -112,6 +112,14 @@
       return colonies.t7_colony.count < 1000;
     }
 
+    shouldHideStartBar() {
+      if (this.isActive || this.isCompleted) {
+        return false;
+      }
+      const foundryWorld = projectManager.projects.foundryWorld;
+      return foundryWorld.isActive || foundryWorld.isCompleted;
+    }
+
     complete() {
       super.complete();
       const ecumenopolis = colonies.t7_colony;

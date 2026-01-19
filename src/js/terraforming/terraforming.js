@@ -1163,7 +1163,7 @@ class Terraforming extends EffectableEntity{
 
     calculateGroundAlbedo() {
         const baseAlbedo = this.celestialParameters.albedo;
-        const blackAlbedo = 0.05; // black dust
+        const blackAlbedo = dustFactorySettings.dustColorAlbedo; // black dust
         const whiteAlbedo = 0.8;  // white dust
         const surfaceArea = this.celestialParameters.surfaceArea || 0;
 

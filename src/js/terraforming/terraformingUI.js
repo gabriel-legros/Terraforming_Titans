@@ -1790,11 +1790,12 @@ function updateLifeBox() {
         shareBlack = totalApplied - shareWhite;
       }
 
-      const blackAlbedo = 0.05;
+      const blackAlbedo = dustFactorySettings.dustColorAlbedo;
       const whiteAlbedo = 0.8;
       const lines = [
         `Base: ${base.toFixed(3)}`,
         `Black dust albedo: ${blackAlbedo.toFixed(3)}`,
+        `Black dust color: ${dustFactorySettings.dustColor.toUpperCase()}`,
       ];
       if (shareBlack > 0) {
         lines.push(`Black dust coverage: ${(shareBlack * 100).toFixed(1)}%`);

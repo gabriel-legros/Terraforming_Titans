@@ -175,6 +175,12 @@
   }
 
   PlanetVisualizer.prototype.updateSurfaceTextureFromPressure = function updateSurfaceTextureFromPressure(force = false) {
+    if (this.debug.mode === 'game') {
+      const gameBase = this.getGameBaseColor();
+      if (gameBase !== this.viz.baseColor) {
+        this.setBaseColor(gameBase, { fromGame: true, force: true, skipSurfaceUpdate: true });
+      }
+    }
     const kPa = this.computeTotalPressureKPa();
     const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
     const water = (this.viz.coverage?.water || 0) / 100;

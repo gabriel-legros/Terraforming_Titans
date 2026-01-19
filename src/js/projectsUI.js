@@ -1129,6 +1129,7 @@ function updateProjectUI(projectName) {
       ? project.averageDepth >= project.maxDepth
       : project.repeatable && project.repeatCount >= project.maxRepeatCount;
   const isCompletedAndNotRepeatable = project.isCompleted && !project.repeatable;
+  const shouldHideStartBar = project.shouldHideStartBar();
 
   if (isMaxRepeatReached || isCompletedAndNotRepeatable) {
     // Hide cost and progress button if the project can't be repeated anymore
@@ -1151,115 +1152,119 @@ function updateProjectUI(projectName) {
       elements.costElement.style.display = 'block';
     }
     if (elements.progressButton) {
-      elements.progressButton.style.display = 'block';
+      if (shouldHideStartBar) {
+        elements.progressButton.style.display = 'none';
+      } else {
+        elements.progressButton.style.display = 'block';
 
-      // Update the duration in the progress bar display
-      const isContinuousProject = project.isContinuous();
-      if (!project.isActive && !project.isCompleted && project.isKesslerDisabled()) {
-        const statusText = 'Disabled by Kessler';
-        if (isImportProject && importUI) {
-          importUI.setProgressLabel(elements, project, statusText);
-        } else {
-          elements.progressButton.textContent = statusText;
-        }
-        elements.progressButton.style.background = '#f44336';
-      } else if (isContinuousProject) {
-        const showProductivity = project.attributes?.continuousAsBuilding;
-        const productivity = project.continuousProductivity ?? 1;
-        const productivityLabel = showProductivity
-          ? ` (${Math.round(productivity * 100)}% productivity)`
-          : '';
-        if (project.autoStart && project.isActive && !project.isPaused) {
-          const statusText = `Continuous${productivityLabel}`;
+        // Update the duration in the progress bar display
+        const isContinuousProject = project.isContinuous();
+        if (!project.isActive && !project.isCompleted && project.isKesslerDisabled()) {
+          const statusText = 'Disabled by Kessler';
           if (isImportProject && importUI) {
             importUI.setProgressLabel(elements, project, statusText);
           } else {
             elements.progressButton.textContent = statusText;
-          }
-          elements.progressButton.style.background = '#4caf50';
-        } else {
-          if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, 'Stopped');
-          } else {
-            elements.progressButton.textContent = 'Stopped';
           }
           elements.progressButton.style.background = '#f44336';
-        }
-      } else if (project.isActive) {
-        const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
-        const progressPercent = project.getProgress();
-        if (project.startingDuration < 1000) {
-          const statusText = `In Progress: ${timeRemaining} seconds remaining`;
-          if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, statusText);
+        } else if (isContinuousProject) {
+          const showProductivity = project.attributes?.continuousAsBuilding;
+          const productivity = project.continuousProductivity ?? 1;
+          const productivityLabel = showProductivity
+            ? ` (${Math.round(productivity * 100)}% productivity)`
+            : '';
+          if (project.autoStart && project.isActive && !project.isPaused) {
+            const statusText = `Continuous${productivityLabel}`;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, statusText);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
+            elements.progressButton.style.background = '#4caf50';
           } else {
-            elements.progressButton.textContent = statusText;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, 'Stopped');
+            } else {
+              elements.progressButton.textContent = 'Stopped';
+            }
+            elements.progressButton.style.background = '#f44336';
           }
-          // Avoid flashy gradients for instant projects
+        } else if (project.isActive) {
+          const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+          const progressPercent = project.getProgress();
+          if (project.startingDuration < 1000) {
+            const statusText = `In Progress: ${timeRemaining} seconds remaining`;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, statusText);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
+            // Avoid flashy gradients for instant projects
+            elements.progressButton.style.background = '#4caf50';
+          } else {
+            const statusText = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, statusText);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
+            elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+          }
+        } else if (project.isCompleted) {
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, 'Completed');
+          } else {
+            elements.progressButton.textContent = `Completed: ${project.displayName}`;
+          }
           elements.progressButton.style.background = '#4caf50';
+        } else if (project.isPaused) {
+          const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
+          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+            const statusText = `Resume storage expansion (${timeRemaining}s left)`;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, statusText);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
+          } else {
+            const statusText = `Resume ${project.displayName} (${timeRemaining}s left)`;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, `Resume (${timeRemaining}s left)`);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
+          }
+          elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
         } else {
-          const statusText = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
-          if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, statusText);
+          // Update dynamic duration for spaceMining projects
+          let duration = project.getEffectiveDuration();
+          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+            const statusText = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, statusText);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
           } else {
-            elements.progressButton.textContent = statusText;
+            const statusText = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
           }
-          elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
-        }
-      } else if (project.isCompleted) {
-        if (isImportProject && importUI) {
-          importUI.setProgressLabel(elements, project, 'Completed');
-        } else {
-          elements.progressButton.textContent = `Completed: ${project.displayName}`;
-        }
-        elements.progressButton.style.background = '#4caf50';
-      } else if (project.isPaused) {
-        const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
-        if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-          const statusText = `Resume storage expansion (${timeRemaining}s left)`;
-          if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, statusText);
-          } else {
-            elements.progressButton.textContent = statusText;
-          }
-        } else {
-          const statusText = `Resume ${project.displayName} (${timeRemaining}s left)`;
-          if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, `Resume (${timeRemaining}s left)`);
-          } else {
-            elements.progressButton.textContent = statusText;
-          }
-        }
-        elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
-      } else {
-        // Update dynamic duration for spaceMining projects
-        let duration = project.getEffectiveDuration();
-        if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-          const statusText = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
-          if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, statusText);
-          } else {
-            elements.progressButton.textContent = statusText;
-          }
-        } else {
-          const statusText = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
-          if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`);
-          } else {
-            elements.progressButton.textContent = statusText;
-          }
-        }
 
-        // Set background color based on whether the project can start
-        if (project.canStart()) {
-          elements.progressButton.style.background = '#4caf50'; // Green if it can be started
-        } else {
-          elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+          // Set background color based on whether the project can start
+          if (project.canStart()) {
+            elements.progressButton.style.background = '#4caf50'; // Green if it can be started
+          } else {
+            elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+          }
         }
       }
     }
     // Show the auto-start checkbox if the project can be repeated
-    if (elements.autoStartCheckboxContainer && projectManager.isBooleanFlagSet('automateSpecialProjects')) {
+    if (elements.autoStartCheckboxContainer && projectManager.isBooleanFlagSet('automateSpecialProjects') && !shouldHideStartBar) {
       elements.autoStartCheckboxContainer.style.display = 'flex';
       // Wait capacity visibility handled by project subclass
     }

@@ -1,0 +1,6 @@
+Difficulty settings ideas
+
+Spaceship Energy cost
+Biomass growth
+Pop growth
+Capped RWG effects

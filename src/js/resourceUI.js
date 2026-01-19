@@ -861,6 +861,10 @@ function updateResourceDisplay(resources, deltaSeconds) {
         resourceNameElement.classList.remove('resource-festival');
       }
 
+      if (resourceNameElement && resourceNameElement.textContent !== resourceObj.displayName) {
+        resourceNameElement.textContent = resourceObj.displayName;
+      }
+
       if (autobuildWarningEl) {
         if (resourceObj.autobuildShortage) {
           if (autobuildWarningEl.textContent !== '!') autobuildWarningEl.textContent = '!';

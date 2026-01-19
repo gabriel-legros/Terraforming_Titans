@@ -1244,7 +1244,7 @@ const researchParameters = {
       {
         id: 'dust_factory',
         name: 'Black Dust production',
-        description: 'Unlocks a blueprint for black dust production, which can over a very long time significantly reduce the albedo of the ground to 0.05.',
+        description: 'Unlocks a blueprint for black dust production; dust color sets ground albedo between 0.05 and 0.80 over time.',
         cost: { research: 100 },
         prerequisites: [],
         effects: [

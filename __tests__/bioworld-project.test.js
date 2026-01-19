@@ -84,6 +84,18 @@ describe('BioworldProject', () => {
     expect(project.canStart()).toBe(false);
   });
 
+  it('hides the start bar when a foundry world is active or completed', () => {
+    const project = createProject();
+
+    expect(project.shouldHideStartBar()).toBe(false);
+
+    global.projectManager.projects.foundryWorld.isActive = true;
+    expect(project.shouldHideStartBar()).toBe(true);
+
+    project.isActive = true;
+    expect(project.shouldHideStartBar()).toBe(false);
+  });
+
   it('awards evolution points when travelling after completion', () => {
     const project = createProject();
     project.isCompleted = true;

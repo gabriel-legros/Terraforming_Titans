@@ -532,3 +532,6 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a Save & Settings toggle to preserve most project settings on travel (import disable limits, Space Mirror Facility oversight, resource disposal selection), with a tooltip note about the stronger World 11 version.
 - Buildings now force an immediate UI refresh when switching subtabs so reordering happens without a tick delay.
 - Research entries that require the Kessler hazard now hide entirely when the hazard is absent instead of showing as unknown.
+- Black Dust Factory now lets players pick a dust color to set black dust albedo between 0.05 and 0.80, saving and displaying the selection.
+- Custom dust renames the Black Dust resource, drives planet visualizer rock tint up to full coverage, and makes automation fill to cap.
+- Bioworld and Foundry World projects now hide their start bars when the other specialization is active or completed.

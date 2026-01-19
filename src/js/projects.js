@@ -317,6 +317,10 @@ class Project extends EffectableEntity {
     return true;
   }
 
+  shouldHideStartBar() {
+    return false;
+  }
+
   deductResources(resources) {
     const cost = this.getScaledCost();
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
