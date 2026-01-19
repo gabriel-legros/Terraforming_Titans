@@ -527,7 +527,7 @@
     const popNow = resources.colony.colonists.value || 0;
     r.pop.range.value = String(popNow);
     r.pop.number.value = String(popNow);
-    const shipVal = (resources?.special?.spaceships?.value) ?? (this.viz.ships || 0);
+    const shipVal = (resources?.special?.spaceships?.value || 0) + projectManager.getAssignedSpaceships();
     if (r.ships) { r.ships.range.value = String(shipVal); r.ships.number.value = String(shipVal); }
 
     const toKPa = (massTon) => calculateAtmosphericPressure(massTon || 0, cel.gravity, cel.radius) / 1000;
@@ -613,7 +613,7 @@
       }
       const popNow = resources?.colony?.colonists?.value || 0;
       if (r.pop) { r.pop.range.value = String(popNow); r.pop.number.value = String(popNow); }
-      const shipVal = (resources?.special?.spaceships?.value) ?? (this.viz.ships || 0);
+      const shipVal = (resources?.special?.spaceships?.value || 0) + projectManager.getAssignedSpaceships();
       if (r.ships) { r.ships.range.value = String(shipVal); r.ships.number.value = String(shipVal); }
       const toKPa = (massTon) => (calculateAtmosphericPressure(massTon || 0, cel.gravity, cel.radius) / 1000);
       const clamp100 = (v) => Math.max(0, Math.min(100, v));
