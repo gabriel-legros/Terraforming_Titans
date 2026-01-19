@@ -1167,9 +1167,9 @@ class Terraforming extends EffectableEntity{
         const whiteAlbedo = 0.8;  // white dust
         const surfaceArea = this.celestialParameters.surfaceArea || 0;
 
-        const special = this.resources && this.resources.special ? this.resources.special : {};
-        const black = (special.albedoUpgrades && typeof special.albedoUpgrades.value === 'number') ? special.albedoUpgrades.value : 0;
-        const white = (special.whiteDust && typeof special.whiteDust.value === 'number') ? special.whiteDust.value : 0;
+        const special = this.resources.special;
+        const black = special.albedoUpgrades.value;
+        const white = special.whiteDust.value;
 
         const bRatioRaw = surfaceArea > 0 ? Math.max(0, black / surfaceArea) : 0;
         const wRatioRaw = surfaceArea > 0 ? Math.max(0, white / surfaceArea) : 0;
@@ -1182,8 +1182,18 @@ class Terraforming extends EffectableEntity{
             shareBlack = totalApplied - shareWhite;
         }
         const untouched = Math.max(0, 1 - totalApplied);
+        const blended = (blackAlbedo * shareBlack) + (whiteAlbedo * shareWhite) + (baseAlbedo * untouched);
 
-        return (blackAlbedo * shareBlack) + (whiteAlbedo * shareWhite) + (baseAlbedo * untouched);
+        if (dustFactorySettings.dustAlbedoTransitionActive) {
+            const start = dustFactorySettings.dustAlbedoStart ?? baseAlbedo;
+            const transitioned = (start * (1 - totalApplied)) + (blended * totalApplied);
+            if (totalApplied >= 1) {
+                dustFactorySettings.dustAlbedoTransitionActive = false;
+            }
+            return transitioned;
+        }
+
+        return blended;
     }
 
     calculateZonalSurfaceAlbedo(zone) {

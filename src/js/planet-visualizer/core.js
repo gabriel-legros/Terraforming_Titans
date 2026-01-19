@@ -183,6 +183,11 @@
       };
     }
 
+    rgbToHex({ r, g, b }) {
+      const toHex = (v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
     getGameBaseColor() {
       const base = currentPlanetParameters.visualization?.baseColor || '#8a2a2a';
       return base;
@@ -198,7 +203,14 @@
       if (!this.sphere || !this.sphere.material || !this.sphere.material.color) return;
       const base = this.getGameBaseColor();
       if (dustFactorySettings.dustColorChanged) {
-        this.dustTintStartColor = this.lastDustTintColor || base;
+        const baseRgb = this.hexToRgb(base);
+        const mat = this.sphere.material.color;
+        const currentTint = this.rgbToHex({
+          r: baseRgb.r * mat.r,
+          g: baseRgb.g * mat.g,
+          b: baseRgb.b * mat.b,
+        });
+        this.dustTintStartColor = this.lastDustTintColor || currentTint || base;
         dustFactorySettings.dustColorChanged = false;
       }
       const customColor = dustFactorySettings.dustColor;

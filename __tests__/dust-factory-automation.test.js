@@ -158,6 +158,16 @@ describe('Dust factory automation', () => {
     expect(midAlbedo).toBeLessThan(0.8);
   });
 
+  test('stores the albedo start when changing dust color', () => {
+    const settings = DustFactory.getAutomationSettings();
+    settings.dustColor = '#00ff00';
+
+    DustFactory.applyDustColorChange('#ff0000', settings, 0.42);
+
+    expect(settings.dustAlbedoStart).toBeCloseTo(0.42, 5);
+    expect(settings.dustAlbedoTransitionActive).toBe(true);
+  });
+
   test('custom dust automation fills to cap', () => {
     const factory = createFactory();
     const settings = DustFactory.getAutomationSettings();
