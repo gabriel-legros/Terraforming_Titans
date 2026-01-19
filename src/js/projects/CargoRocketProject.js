@@ -447,6 +447,7 @@ class CargoRocketProject extends Project {
       if (this.selectedResources && this.selectedResources.length > 0) {
         let costPerSecond = 0;
         const tradeScale = this.getKesslerCargoScale(this.selectedResources);
+        const purchases = [];
         this.selectedResources.forEach(({ category, resource, quantity }) => {
           const scaledQuantity = quantity * tradeScale;
           const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
@@ -454,12 +455,26 @@ class CargoRocketProject extends Project {
             ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
             : basePrice * scaledQuantity;
           costPerSecond += perSecCost;
+          purchases.push({ category, resource, scaledQuantity });
+        });
+        const totalCost = costPerSecond * seconds * productivity;
+        const available = resources.colony.funding.value;
+        let fundingScale = 1;
+        if (totalCost > available) {
+          if (available <= 0) {
+            fundingScale = 0;
+          } else {
+            fundingScale = available / totalCost;
+          }
+        }
+        purchases.forEach(({ category, resource, scaledQuantity }) => {
+          const adjustedQuantity = scaledQuantity * fundingScale;
           if (!totals.gain[category]) totals.gain[category] = {};
           totals.gain[category][resource] =
-            (totals.gain[category][resource] || 0) + scaledQuantity * seconds;
+            (totals.gain[category][resource] || 0) + adjustedQuantity * seconds;
           if (applyRates) {
             resources[category][resource].modifyRate(
-              scaledQuantity * (applyRates ? productivity : 1),
+              adjustedQuantity * (applyRates ? productivity : 1),
               'Cargo Rockets',
               'project'
             );
