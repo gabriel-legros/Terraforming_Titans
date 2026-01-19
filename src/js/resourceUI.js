@@ -1039,6 +1039,18 @@ function getDisplayConsumptionRates(resource) {
     }
   }
 
+  if (resource.category === 'colony' && resource.name === 'energy') {
+    const lifters = projectManager?.projects?.lifters;
+    const totalLifterRate = lifters?.lastEnergyPerSecond || 0;
+    const dysonRate = lifters?.lastDysonEnergyPerSecond || 0;
+    const colonyRate = Math.max(totalLifterRate - dysonRate, 0);
+    if (colonyRate > 0) {
+      const current = adjustedBySource.Lifting || 0;
+      adjustedBySource.Lifting = current + colonyRate;
+      total += colonyRate;
+    }
+  }
+
   return { total, bySource: adjustedBySource };
 }
 
