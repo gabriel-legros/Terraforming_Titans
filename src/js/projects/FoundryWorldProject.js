@@ -12,26 +12,26 @@
       id: 'galacticMetalMiningCap',
       label: 'Galactic Metal Mining Expertise',
       cost: 1,
-      maxPurchases: 900,
-      description: 'Increases the galactic metal mining cap by 10%.',
+      maxPurchases: 800,
+      description: 'Increases the galactic metal mining cap by 5%.',
     },
     {
       id: 'galacticSilicaMiningCap',
       label: 'Galactic Silica Mining Expertise',
       cost: 1,
-      maxPurchases: 900,
-      description: 'Increases the galactic silica mining cap by 10%.',
+      maxPurchases: 800,
+      description: 'Increases the galactic silica mining cap by 5%.',
     },
     {
       id: 'oreMiningOutput',
-      label: 'Ore Mining Expertise',
+      label: 'Planetary Ore Mining Expertise',
       cost: 1,
       maxPurchases: 900,
       description: 'Increases ore mine output by 1%.',
     },
     {
       id: 'silicaMiningOutput',
-      label: 'Silica Mining Expertise',
+      label: 'Planetary Silica Mining Expertise',
       cost: 1,
       maxPurchases: 900,
       description: 'Increases silica mining output by 1%.',
@@ -174,7 +174,7 @@
     }
 
     applyFoundryEffects() {
-      const capBonus = 1 + (this.getShopPurchaseCount('galacticMetalMiningCap') * 0.1);
+      const capBonus = 1 + (this.getShopPurchaseCount('galacticMetalMiningCap') * 0.05);
       warpGateNetworkManager.addAndReplace({
         type: 'importCapMultiplier',
         resourceKey: 'metal',
@@ -182,7 +182,7 @@
         effectId: 'foundry-metal-cap',
         sourceId: 'foundryWorld',
       });
-      const silicaCapBonus = 1 + (this.getShopPurchaseCount('galacticSilicaMiningCap') * 0.1);
+      const silicaCapBonus = 1 + (this.getShopPurchaseCount('galacticSilicaMiningCap') * 0.05);
       warpGateNetworkManager.addAndReplace({
         type: 'importCapMultiplier',
         resourceKey: 'silicon',

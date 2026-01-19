@@ -138,14 +138,14 @@ describe('FoundryWorldProject', () => {
     expect(global.warpGateNetworkManager.addAndReplace).toHaveBeenCalledWith({
       type: 'importCapMultiplier',
       resourceKey: 'metal',
-      value: 1.2,
+      value: 1.1,
       effectId: 'foundry-metal-cap',
       sourceId: 'foundryWorld',
     });
     expect(global.warpGateNetworkManager.addAndReplace).toHaveBeenCalledWith({
       type: 'importCapMultiplier',
       resourceKey: 'silicon',
-      value: 1.3,
+      value: 1.15,
       effectId: 'foundry-silica-cap',
       sourceId: 'foundryWorld',
     });
