@@ -14,9 +14,7 @@ const projectsUICache = {
   listByCategory: {},          // category -> list element ("*-projects-list")
 };
 
-const projectGroupConfig = {
-  specializedWorlds: ['bioworld', 'foundryWorld'],
-};
+let projectGroupConfig = null;
 
 const projectGroupState = {
   active: {}
@@ -34,14 +32,47 @@ function resetProjectDisplayState() {
 
 function resetProjectGroupState() {
   projectGroupState.active = {};
+  projectGroupConfig = null;
 }
 
 function getProjectGroupId(project) {
   return project.attributes.projectGroup;
 }
 
+function buildProjectGroupConfig() {
+  const config = {};
+  if (!projectManager || !projectManager.projects) {
+    return config;
+  }
+  const order = Array.isArray(projectManager.projectOrder)
+    ? projectManager.projectOrder
+    : Object.keys(projectManager.projects || {});
+
+  order.forEach((name) => {
+    const project = projectManager.projects[name];
+    if (!project || !project.attributes || !project.attributes.projectGroup) {
+      return;
+    }
+    const groupId = project.attributes.projectGroup;
+    const list = config[groupId] || (config[groupId] = []);
+    if (!list.includes(name)) {
+      list.push(name);
+    }
+  });
+
+  return config;
+}
+
+function getProjectGroupConfig() {
+  if (!projectGroupConfig) {
+    projectGroupConfig = buildProjectGroupConfig();
+  }
+  return projectGroupConfig;
+}
+
 function getGroupProjectNames(groupId) {
-  return projectGroupConfig[groupId] || [];
+  const config = getProjectGroupConfig();
+  return config[groupId] || [];
 }
 
 function getVisibleGroupProjectNames(groupId) {
@@ -133,7 +164,8 @@ function getImportResourcesUI() {
 }
 
 function syncProjectGroupState() {
-  Object.keys(projectGroupConfig).forEach((groupId) => ensureGroupActiveProject(groupId));
+  const config = getProjectGroupConfig();
+  Object.keys(config).forEach((groupId) => ensureGroupActiveProject(groupId));
 }
 
 function getProjectSubtabContents() {
@@ -822,6 +854,7 @@ function moveProject(projectName, direction, shiftKey = false) {
 
   const orderedNames = expandCategoryEntries(entries);
   projectManager.reorderCategoryProjects(category, orderedNames);
+  projectGroupConfig = null;
   syncCategoryDomOrder(category, entries);
   updateCategoryReorderButtons(category, entries);
 
