@@ -44,15 +44,23 @@
     const ctx = canv.getContext('2d');
     const img = ctx.createImageData(w, h);
     const data = img.data;
+    const thrValue = thr >= 0 ? thr / 255 : -1;
+    const edge = 0.06;
+    const smoothstep = (a, b, t) => {
+      const v = Math.max(0, Math.min(1, (t - a) / (b - a)));
+      return v * v * (3 - 2 * v);
+    };
     for (let i = 0; i < w * h; i++) {
       const v = Math.max(0, Math.min(1, this.cloudMap[i] || 0));
-      const bin = Math.max(0, Math.min(255, Math.floor(v * 255)));
-      const on = (thr >= 0) ? (bin <= thr) : false;
+      const alphaBase = thrValue >= 0
+        ? 1 - smoothstep(thrValue - edge, thrValue + edge, v)
+        : 0;
+      const density = 0.45 + 0.55 * (1 - v);
       const idx = i * 4;
       data[idx] = 255;
       data[idx + 1] = 255;
       data[idx + 2] = 255;
-      data[idx + 3] = on ? 225 : 0;
+      data[idx + 3] = Math.max(0, Math.min(255, Math.round(225 * alphaBase * density)));
     }
     ctx.putImageData(img, 0, 0);
     const tex = new THREE.CanvasTexture(canv);

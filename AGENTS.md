@@ -539,3 +539,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Custom dust renames the Black Dust resource, drives planet visualizer rock tint up to full coverage, and makes automation fill to cap.
 - Bioworld and Foundry World projects now hide their start bars when the other specialization is active or completed.
 - Bioworld and Foundry World projects now remain adjacent in the project list ordering, even after reordering, saving, or travel.
+- Planet visualizer cloud textures now use softer thresholding with density falloff to reduce blocky edges.
