@@ -113,6 +113,10 @@
           offsetY: 0.0,  // wrap offset in latitude  (-1..1)
         },
       };
+
+      this.lastDustBlendRatio = -1;
+      this.lastDustBlendBase = '';
+      this.lastDustBlendColor = this.viz.baseColor;
     }
 
     get resources() {
@@ -175,7 +179,16 @@
       const surfaceArea = terraforming.celestialParameters.surfaceArea || currentPlanetParameters.celestialParameters.surfaceArea || 0;
       const dustAmount = resources.special.albedoUpgrades.value;
       const ratio = surfaceArea > 0 ? Math.max(0, Math.min(1, dustAmount / surfaceArea)) : 0;
-      return this.mixHexColors(base, customColor, ratio);
+      const baseChanged = base !== this.lastDustBlendBase;
+      const ratioDelta = Math.abs(ratio - this.lastDustBlendRatio);
+      const shouldUpdate = baseChanged || ratioDelta >= 0.005;
+      if (!shouldUpdate) {
+        return this.lastDustBlendColor;
+      }
+      this.lastDustBlendBase = base;
+      this.lastDustBlendRatio = ratio;
+      this.lastDustBlendColor = this.mixHexColors(base, customColor, ratio);
+      return this.lastDustBlendColor;
     }
 
     setBaseColor(color, opts = {}) {
