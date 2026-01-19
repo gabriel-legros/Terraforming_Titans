@@ -45,7 +45,7 @@
     const img = ctx.createImageData(w, h);
     const data = img.data;
     const thrValue = thr >= 0 ? thr / 255 : -1;
-    const edge = 0.06;
+    const edge = 0.065;
     const smoothstep = (a, b, t) => {
       const v = Math.max(0, Math.min(1, (t - a) / (b - a)));
       return v * v * (3 - 2 * v);
@@ -55,12 +55,12 @@
       const alphaBase = thrValue >= 0
         ? 1 - smoothstep(thrValue - edge, thrValue + edge, v)
         : 0;
-      const density = 0.45 + 0.55 * (1 - v);
+      const density = 0.55 + 0.6 * (1 - v);
       const idx = i * 4;
       data[idx] = 255;
       data[idx + 1] = 255;
       data[idx + 2] = 255;
-      data[idx + 3] = Math.max(0, Math.min(255, Math.round(225 * alphaBase * density)));
+      data[idx + 3] = Math.max(0, Math.min(255, Math.round(245 * alphaBase * density)));
     }
     ctx.putImageData(img, 0, 0);
     const tex = new THREE.CanvasTexture(canv);
@@ -149,7 +149,7 @@
       this.cloudMaterial.map = tex;
       this.cloudMaterial.needsUpdate = true;
     }
-    this.cloudMaterial.opacity = 0.2 + 0.8 * cov;
+    this.cloudMaterial.opacity = Math.min(1, 0.35 + 0.9 * cov);
   };
 
   PlanetVisualizer.prototype.updateCloudUniforms = function updateCloudUniforms() {
@@ -214,6 +214,20 @@
     }
     const span = Math.max(1e-6, maxV - minV);
     for (let i = 0; i < w * h; i++) arr[i] = (arr[i] - minV) / span;
+    const blendWidth = Math.max(2, Math.floor(w * 0.04));
+    for (let y = 0; y < h; y++) {
+      const row = y * w;
+      for (let x = 0; x < blendWidth; x++) {
+        const t = blendWidth > 1 ? x / (blendWidth - 1) : 1;
+        const leftIdx = row + x;
+        const rightIdx = row + (w - blendWidth + x);
+        const a = arr[leftIdx];
+        const b = arr[rightIdx];
+        const mix = b + (a - b) * t;
+        arr[leftIdx] = mix;
+        arr[rightIdx] = mix;
+      }
+    }
     this.cloudMap = arr;
     const hist = { counts: new Uint32Array(256), total: w * h };
     for (let i = 0; i < w * h; i++) {
