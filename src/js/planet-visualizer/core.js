@@ -29,6 +29,7 @@
 
       // Spaceships
       this.shipCapacity = 1000;
+      this.shipsEnabled = false;
       this.shipStates = [];
       this.shipHeads = null;
       this.shipTrails = null;

@@ -52,6 +52,21 @@
   };
 
   PlanetVisualizer.prototype.updateShips = function updateShips() {
+    if (!this.shipsEnabled) {
+      if (this.shipStates.length) this.shipStates.length = 0;
+      if (this.shipHeads) {
+        this.shipHeads.geometry.setDrawRange(0, 0);
+        this.shipHeads.geometry.attributes.position.needsUpdate = true;
+      }
+      if (this.shipTrails) {
+        this.shipTrails.geometry.setDrawRange(0, 0);
+        this.shipTrails.geometry.attributes.position.needsUpdate = true;
+        this.shipTrails.geometry.attributes.color.needsUpdate = true;
+      }
+      this._spawnAcc = 0;
+      this._lastAnimTime = performance.now();
+      return;
+    }
     const now = performance.now();
     const dt = Math.min(0.05, (now - this._lastAnimTime) / 1000);
     this._lastAnimTime = now;
