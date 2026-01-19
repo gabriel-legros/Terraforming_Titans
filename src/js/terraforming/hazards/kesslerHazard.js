@@ -9,7 +9,12 @@ const DEBRIS_DENSITY_CENTER = 1e-13;
 const DEBRIS_DENSITY_SEARCH_MAX = 500000;
 const DEBRIS_DECAY_DENSITY_REFERENCE = 1e-12;
 const DEBRIS_DECAY_DENSITY_FLOOR = 1e-16;
-const DEBRIS_DECAY_MAX_MULTIPLIER = 100;
+const DEBRIS_DECAY_MAX_MULTIPLIER = 1000;
+const KESSLER_DECAY_CONSTANTS = {
+  baseRate: DEBRIS_DECAY_BASE_RATE,
+  densityFloor: DEBRIS_DECAY_DENSITY_FLOOR,
+  maxMultiplier: DEBRIS_DECAY_MAX_MULTIPLIER
+};
 
 let getAtmosphericDensityModel = null;
 try {
@@ -393,7 +398,7 @@ class KesslerHazard {
         dragMass += entry.massTons;
       }
 
-      const densityRatio = Math.log10(Math.max(density, DEBRIS_DECAY_DENSITY_FLOOR) / DEBRIS_DECAY_DENSITY_REFERENCE);
+      const densityRatio = Math.max(density, DEBRIS_DECAY_DENSITY_FLOOR) / DEBRIS_DECAY_DENSITY_REFERENCE;
       const densityFactor = Math.min(DEBRIS_DECAY_MAX_MULTIPLIER, Math.max(0, densityRatio + 1));
       const decayRate = DEBRIS_DECAY_BASE_RATE * densityFactor;
       const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
@@ -427,16 +432,18 @@ class KesslerHazard {
 
 try {
   window.KesslerHazard = KesslerHazard;
+  window.KESSLER_DECAY_CONSTANTS = KESSLER_DECAY_CONSTANTS;
 } catch (error) {
   try {
     global.KesslerHazard = KesslerHazard;
+    global.KESSLER_DECAY_CONSTANTS = KESSLER_DECAY_CONSTANTS;
   } catch (innerError) {
     // no-op
   }
 }
 
 try {
-  module.exports = { KesslerHazard };
+  module.exports = { KesslerHazard, KESSLER_DECAY_CONSTANTS };
 } catch (error) {
   // Module system not available in browser
 }

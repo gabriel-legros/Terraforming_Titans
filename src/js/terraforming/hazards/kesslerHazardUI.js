@@ -51,6 +51,16 @@ const KESSLER_EFFECTS = [
   'Debris decay scales with local atmospheric density at each periapsis bin.'
 ];
 const KESSLER_CHART_BINS = 64;
+let kesslerDecayConstants = null;
+try {
+  ({ KESSLER_DECAY_CONSTANTS: kesslerDecayConstants } = require('./kesslerHazard.js'));
+} catch (error) {
+  try {
+    kesslerDecayConstants = window.KESSLER_DECAY_CONSTANTS;
+  } catch (innerError) {
+    kesslerDecayConstants = null;
+  }
+}
 const KESSLER_DEBRIS_SOURCES = {
   small: [
     'Space Mirror construction.',
@@ -140,6 +150,13 @@ function formatDensityWithUnit(value) {
   const suffix = match ? match[2] : '';
   const unit = suffix ? `${suffix}kg/m^3` : 'kg/m^3';
   return `${numeric} ${unit}`;
+}
+
+function buildKesslerBinDetailText(entry) {
+  return `Bin @ ${formatNumeric(entry.altitudeKm, 1)} km: `
+    + `${formatNumeric(entry.current, 2)} / ${formatNumeric(entry.baseline, 2)} t, `
+    + `${formatNumeric(entry.decayRate, 4)} t/s, `
+    + `${formatDensityWithUnit(entry.density)}`;
 }
 
 function getTerraforming() {
@@ -320,7 +337,7 @@ function buildKesslerLayout() {
       chartBars.appendChild(bar);
       chartBarsList.push(bar);
       chartBarFills.push(fill);
-      binDetails.push({ current: 0, baseline: 0, altitudeKm: 0 });
+      binDetails.push({ current: 0, baseline: 0, altitudeKm: 0, density: 0, decayRate: 0 });
     }
 
     const chartExobase = doc.createElement('div');
@@ -470,9 +487,7 @@ function buildKesslerLayout() {
       bar.addEventListener('mouseenter', () => {
         kesslerHazardUICache.hoveredBin = index;
         const entry = kesslerHazardUICache.binDetails[index];
-        kesslerHazardUICache.chartDetails.textContent =
-          `Bin @ ${formatNumeric(entry.altitudeKm, 1)} km: `
-            + `${formatNumeric(entry.current, 2)} / ${formatNumeric(entry.baseline, 2)} t`;
+        kesslerHazardUICache.chartDetails.textContent = buildKesslerBinDetailText(entry);
       });
       bar.addEventListener('mouseleave', () => {
         if (kesslerHazardUICache.hoveredBin === index) {
@@ -529,6 +544,7 @@ function updateKesslerDebrisChart(
   const sortedCurrentEntries = currentEntries.slice().sort((a, b) => a.periapsisMeters - b.periapsisMeters);
   const bins = new Array(bars.length).fill(0);
   const currentBins = new Array(bars.length).fill(0);
+  const maxSinceZeroBins = new Array(bars.length).fill(0);
 
   let minPeriapsis = 0;
   let maxPeriapsis = 1;
@@ -548,6 +564,7 @@ function updateKesslerDebrisChart(
     for (let i = 0; i < bars.length; i += 1) {
       bins[i] = sortedEntries[i].massTons;
       currentBins[i] = sortedCurrentEntries[i].massTons;
+      maxSinceZeroBins[i] = sortedCurrentEntries[i].maxSinceZero ?? sortedCurrentEntries[i].massTons ?? 0;
     }
   } else {
     for (let i = 0; i < sortedEntries.length; i += 1) {
@@ -571,11 +588,13 @@ function updateKesslerDebrisChart(
         index = 0;
       }
       currentBins[index] += entry.massTons;
+      maxSinceZeroBins[index] += entry.maxSinceZero ?? entry.massTons ?? 0;
     }
   }
   if (isCleared) {
     for (let i = 0; i < currentBins.length; i += 1) {
       currentBins[i] = 0;
+      maxSinceZeroBins[i] = 0;
     }
   }
   const dragRatio = Math.min(1, Math.max(0, (dragThresholdMeters - minPeriapsis) / span));
@@ -642,13 +661,22 @@ function updateKesslerDebrisChart(
     entry.baseline = bins[i];
     entry.altitudeKm = altitudes[i] / 1000;
   }
+  const densities = densityModel.getDensities(altitudes);
+  const densityReference = Math.max(dragThresholdDensity, kesslerDecayConstants.densityFloor);
+  for (let i = 0; i < binCount; i += 1) {
+    const entry = kesslerHazardUICache.binDetails[i];
+    const density = densities[i] || 0;
+    const densityRatio = Math.log10(Math.max(density, kesslerDecayConstants.densityFloor) / densityReference);
+    const densityFactor = Math.min(kesslerDecayConstants.maxMultiplier, Math.max(0, densityRatio + 1));
+    const decayRate = kesslerDecayConstants.baseRate * densityFactor;
+    const decayBasis = density >= densityReference ? maxSinceZeroBins[i] : currentBins[i];
+    entry.density = density;
+    entry.decayRate = decayBasis * decayRate;
+  }
   if (kesslerHazardUICache.hoveredBin >= 0) {
     const entry = kesslerHazardUICache.binDetails[kesslerHazardUICache.hoveredBin];
-    kesslerHazardUICache.chartDetails.textContent =
-      `Bin @ ${formatNumeric(entry.altitudeKm, 1)} km: `
-        + `${formatNumeric(entry.current, 2)} / ${formatNumeric(entry.baseline, 2)} t`;
+    kesslerHazardUICache.chartDetails.textContent = buildKesslerBinDetailText(entry);
   }
-  const densities = densityModel.getDensities(altitudes);
   kesslerHazardUICache.densityBar.style.backgroundImage = buildDensityGradient(densities, binCount);
   kesslerHazardUICache.densityMaxLabel.textContent = `${formatNumeric(maxPeriapsis / 1000, 1)} km`;
   updateKesslerChartDetails(resource, isCleared);
@@ -736,7 +764,8 @@ try {
   module.exports = {
     initializeKesslerHazardUI,
     updateKesslerHazardUI,
-    buildDensityGradient
+    buildDensityGradient,
+    buildKesslerBinDetailText
   };
 } catch (error) {
   // Module system not available in browser
