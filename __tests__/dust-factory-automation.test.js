@@ -210,4 +210,16 @@ describe('Dust factory automation', () => {
 
     expect(global.resources.special.albedoUpgrades.displayName).toBe('Black Dust');
   });
+
+  test('switching to a custom dust resets dust amount', () => {
+    const factory = createFactory();
+    global.resources.special.albedoUpgrades.value = 50;
+    const settings = DustFactory.getAutomationSettings();
+    const previousColor = settings.dustColor;
+    settings.dustColor = '#ff4400';
+    settings.initialized = true;
+    DustFactory.applyDustColorChange(previousColor, settings);
+
+    expect(global.resources.special.albedoUpgrades.value).toBe(0);
+  });
 });

@@ -192,7 +192,7 @@
     },
     special: {
       // Dust caps derive from land area during resource creation
-      albedoUpgrades: {name : 'Black Dust', hasCap: true, initialValue: 0, unlocked: false, hideWhenSmall: true},
+      albedoUpgrades: {name : 'Black Dust', displayName: 'Black Dust', hasCap: true, initialValue: 0, unlocked: false, hideWhenSmall: true},
       whiteDust: { name: 'White Dust', hasCap: true, initialValue: 0, unlocked: false, hideWhenSmall: true },
       orbitalDebris: { name: 'Orbital Debris', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},

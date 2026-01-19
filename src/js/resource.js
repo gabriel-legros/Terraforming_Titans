@@ -55,6 +55,7 @@ class Resource extends EffectableEntity {
 
   // Method to initialize configurable properties
   initializeFromConfig(name, config) {
+    this.name = name;
     if (config.initialValue !== undefined) {
       this.initialValue = config.initialValue;
     }

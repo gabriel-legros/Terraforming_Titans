@@ -47,4 +47,24 @@ describe('Planet visualizer dust tint', () => {
     expect(setRGB.mock.calls[0][1]).toBeCloseTo(4.5, 3);
     expect(setRGB.mock.calls[0][2]).toBeCloseTo(4.5, 3);
   });
+
+  test('keeps current tint when switching custom colors', () => {
+    const viz = new PlanetVisualizer();
+    viz.sphere = { material: { color: { setRGB } } };
+    currentPlanetParameters.visualization.baseColor = '#202020';
+    dustFactorySettings.dustColor = '#ff0000';
+    resources.special.albedoUpgrades.value = 50;
+
+    viz.updateDustTint();
+
+    dustFactorySettings.dustColor = '#00ff00';
+    dustFactorySettings.dustColorChanged = true;
+    resources.special.albedoUpgrades.value = 0;
+    viz.updateDustTint();
+
+    const lastCall = setRGB.mock.calls[setRGB.mock.calls.length - 1];
+    expect(lastCall[0]).toBeCloseTo(1, 5);
+    expect(lastCall[1]).toBeCloseTo(1, 5);
+    expect(lastCall[2]).toBeCloseTo(1, 5);
+  });
 });
