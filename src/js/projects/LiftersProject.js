@@ -166,11 +166,20 @@ class LiftersProject extends TerraformingDurationProject {
 
   getGasModeCapacityLimit() {
     const storage = this.getSpaceStorageProject();
-    if (!storage || storage.maxStorage <= storage.usedStorage) {
+    const freeSpace = Math.max((storage?.maxStorage || 0) - (storage?.usedStorage || 0), 0);
+    if (freeSpace <= 0) {
       this.shortfallReason = storage ? 'Space storage is full' : 'Build space storage';
       return 0;
     }
-    return storage.maxStorage - storage.usedStorage;
+    const recipe = this.getHarvestRecipe();
+    const stored = storage?.resourceUsage?.[recipe.storageKey] || 0;
+    const capLimit = storage?.getResourceCapLimit?.(recipe.storageKey) ?? Infinity;
+    const capRemaining = Math.max(0, capLimit - stored);
+    if (capRemaining <= 0) {
+      this.shortfallReason = 'Storage cap reached';
+      return 0;
+    }
+    return Math.min(freeSpace, capRemaining);
   }
 
   getAtmosphereLimit() {
@@ -213,9 +222,17 @@ class LiftersProject extends TerraformingDurationProject {
       return 0;
     }
     const storage = this.getSpaceStorageProject();
-    const freeSpace = storage ? Math.max(storage.maxStorage - storage.usedStorage, 0) : 0;
-    const stored = Math.min(amount, freeSpace);
-    this.shortfallReason = stored > 0 ? '' : (storage ? 'Space storage is full' : 'Build space storage');
+    const freeSpace = Math.max((storage?.maxStorage || 0) - (storage?.usedStorage || 0), 0);
+    const existing = storage?.resourceUsage?.[resourceKey] || 0;
+    const capLimit = storage?.getResourceCapLimit?.(resourceKey) ?? Infinity;
+    const capRemaining = Math.max(0, capLimit - existing);
+    const availableSpace = Math.min(freeSpace, capRemaining);
+    const stored = Math.min(amount, availableSpace);
+    this.shortfallReason = stored > 0
+      ? ''
+      : (!storage
+        ? 'Build space storage'
+        : (capRemaining <= 0 ? 'Storage cap reached' : 'Space storage is full'));
     if (stored <= 0) {
       return 0;
     }
