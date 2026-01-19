@@ -219,8 +219,8 @@
   };
 
   PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength) {
-    const w = 512;
-    const h = 256;
+    const w = 1024;
+    const h = 512;
 
     if (!this.craterLayer) {
       const craterCanvas = document.createElement('canvas');
@@ -375,6 +375,23 @@
       const fContrast = Math.max(0, Number(feat.contrast || 1.2));
       const fOffX = Number(feat.offsetX || 0);
       const fOffY = Number(feat.offsetY || 0);
+      const useFeatures = fEnabled && fStrength > 0;
+      const mountainStrength = isArtificial ? 0 : 0.35;
+      let mountainThreshold = 1;
+      if (mountainStrength > 0) {
+        const hist0 = this.heightZoneHists[0];
+        const hist1 = this.heightZoneHists[1];
+        const hist2 = this.heightZoneHists[2];
+        const total = hist0.total + hist1.total + hist2.total;
+        const target = total * 0.92;
+        let acc = 0;
+        let thrBin = 255;
+        for (let k = 0; k <= 255; k++) {
+          acc += hist0.counts[k] + hist1.counts[k] + hist2.counts[k];
+          if (acc >= target) { thrBin = k; break; }
+        }
+        mountainThreshold = thrBin / 255;
+      }
 
       const stripeScale = 6 + rand() * 2.5;
       const microScale = 90 + rand() * 40;
@@ -386,9 +403,13 @@
 
         // Large-scale dark regions multiplier
         let featureMul = 1.0;
-        if (fEnabled && fStrength > 0) {
-          const x = i % w;
-          const y = (i - x) / w;
+        let x = 0;
+        let y = 0;
+        if (useFeatures || mountainStrength > 0 || isArtificial) {
+          x = i % w;
+          y = (i - x) / w;
+        }
+        if (useFeatures) {
           const nx = (x / w + fOffX) * fScale;
           const ny = (y / h + fOffY) * (fScale * 0.5);
           let v = fbm(nx, ny, 4, 2.0, 0.5); // 0..1
@@ -405,8 +426,6 @@
         const idx = i * 4;
         let metalMul = 1;
         if (isArtificial) {
-          const x = i % w;
-          const y = (i - x) / w;
           const stripe = Math.sin((y / h) * stripeScale * Math.PI * 2 + stripePhase) * 0.06;
           const micro = (value2((x / w) * microScale + microPhase, (y / h) * microScale + microPhase) - 0.5) * 0.08;
           metalMul = 1 + stripe + micro;
@@ -414,9 +433,32 @@
           if (metalMul > 1.18) metalMul = 1.18;
         }
         const mul = Math.max(0, heightMul * featureMul * shadeBias * metalMul);
-        tdata[idx] = Math.min(255, Math.floor(tdata[idx] * mul));
-        tdata[idx + 1] = Math.min(255, Math.floor(tdata[idx + 1] * mul));
-        tdata[idx + 2] = Math.min(255, Math.floor(tdata[idx + 2] * mul));
+        let r = Math.min(255, Math.floor(tdata[idx] * mul));
+        let g = Math.min(255, Math.floor(tdata[idx + 1] * mul));
+        let b = Math.min(255, Math.floor(tdata[idx + 2] * mul));
+        if (mountainStrength > 0) {
+          const m = smoothstep(mountainThreshold - 0.06, mountainThreshold + 0.03, hgt);
+          if (m > 0) {
+            const row = y * w;
+            const left = this.heightMap[row + (x === 0 ? w - 1 : x - 1)];
+            const right = this.heightMap[row + (x === w - 1 ? 0 : x + 1)];
+            const up = this.heightMap[(y === 0 ? h - 1 : y - 1) * w + x];
+            const down = this.heightMap[(y === h - 1 ? 0 : y + 1) * w + x];
+            const slope = Math.min(1, Math.abs(right - left) + Math.abs(down - up));
+            const ridge = smoothstep(0.02, 0.18, slope);
+            const peakMix = (0.14 + 0.26 * m) * mountainStrength;
+            const ridgeShade = (0.08 + 0.18 * ridge) * m * mountainStrength;
+            r = Math.round(r + (235 - r) * peakMix);
+            g = Math.round(g + (238 - g) * peakMix);
+            b = Math.round(b + (244 - b) * peakMix);
+            r = Math.floor(r * (1 - ridgeShade));
+            g = Math.floor(g * (1 - ridgeShade));
+            b = Math.floor(b * (1 - ridgeShade));
+          }
+        }
+        tdata[idx] = r;
+        tdata[idx + 1] = g;
+        tdata[idx + 2] = b;
       }
       ctx.putImageData(timg, 0, 0);
     } catch (e) {}
@@ -460,16 +502,18 @@
       }
       thrIdx[zi] = k;
     }
+    const waterEdgeSoftness = 0.06;
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
       const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
       const thr = thrIdx[zi];
       let a = 0;
       if (thr >= 0) {
-        const hbin = Math.max(0, Math.min(255, Math.floor((this.heightMap ? this.heightMap[i] : 1) * 255)));
-        if (hbin <= thr) {
-          a = 1.0;
-        }
+        const hgt = this.heightMap ? this.heightMap[i] : 1;
+        const thrVal = thr / 255;
+        const lower = Math.max(0, thrVal - waterEdgeSoftness);
+        const upper = Math.min(1, thrVal + waterEdgeSoftness);
+        a = 1 - smoothstep(lower, upper, hgt);
       }
       const idx = i * 4;
       const r = 10, g = 40, b = 120;
@@ -615,6 +659,21 @@
         { counts: new Uint32Array(256), total: 0 },
         { counts: new Uint32Array(256), total: 0 },
       ];
+      let mountainThreshold = 1;
+      if (!isArtificial) {
+        const hist0 = this.heightZoneHists[0];
+        const hist1 = this.heightZoneHists[1];
+        const hist2 = this.heightZoneHists[2];
+        const total = hist0.total + hist1.total + hist2.total;
+        const target = total * 0.92;
+        let acc = 0;
+        let thrBin = 255;
+        for (let k = 0; k <= 255; k++) {
+          acc += hist0.counts[k] + hist1.counts[k] + hist2.counts[k];
+          if (acc >= target) { thrBin = k; break; }
+        }
+        mountainThreshold = thrBin / 255;
+      }
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
         const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
@@ -699,6 +758,10 @@
         let b = Math.floor(baseB * (1 - messiness) + messyB * messiness);
         const grain = 0.9 + 0.25 * micro * messiness;
         alpha = Math.max(0, Math.min(1, alpha * grain));
+        if (!isArtificial) {
+          const peakMask = smoothstep(mountainThreshold - 0.05, mountainThreshold + 0.02, hgt);
+          alpha *= (1 - 0.7 * peakMask);
+        }
         const iceCover = idata[idx + 3] / 255;
         if (iceCover > 0) {
           alpha = Math.max(alpha, iceCover);

@@ -55,12 +55,10 @@
     const now = performance.now();
     const dt = Math.min(0.05, (now - this._lastAnimTime) / 1000);
     this._lastAnimTime = now;
-    const availableShips = Math.floor(resources?.special?.spaceships?.value || 0);
-    const assignedShips = projectManager.getAssignedSpaceships();
-    const totalShips = availableShips + assignedShips;
+    const runningShips = projectManager.getRunningAssignedSpaceships();
     const desiredShips = (this.debug && this.debug.mode === 'debug')
       ? (this.viz?.ships || 0)
-      : totalShips;
+      : runningShips;
     const target = Math.max(0, Math.min(this.shipCapacity, Math.floor(desiredShips)));
     if (this.shipStates.length < target) {
       const missing = target - this.shipStates.length;

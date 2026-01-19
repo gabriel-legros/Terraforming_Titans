@@ -541,3 +541,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Bioworld and Foundry World projects now remain adjacent in the project list ordering, even after reordering, saving, or travel.
 - Planet visualizer cloud textures now use softer thresholding with density falloff to reduce blocky edges.
 - Artificial worlds now render with a metallic surface texture and skip crater noise in the planet visualizer.
+- Planet visualizer terrain now highlights the top height-map band as mountain ridges.
+- Biomass overlay now fades on high peaks so mountains stay visible through vegetation.
+- Ocean masks now use a softened shoreline blend instead of a hard height cutoff.
+- Planet surface textures now render at higher resolution to reduce pixelated coastlines.
