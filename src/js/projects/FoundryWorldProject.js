@@ -67,8 +67,8 @@
     }
 
     getFoundryPointGain(depth) {
-      const normalized = Math.max(depth, 1);
-      return Math.log10(normalized) * 5;
+      const normalized = Math.max(depth, 0);
+      return Math.floor(normalized / 10000);
     }
 
     getDeepMiningDepth() {
@@ -238,7 +238,7 @@
       const info = document.createElement('span');
       info.classList.add('info-tooltip-icon');
       info.innerHTML = '&#9432;';
-      info.title = 'You gain metallurgy points when travelling after completing this project: 5*log10(deeper mining depth).';
+      info.title = 'You gain 1 metallurgy point per 10,000 deeper mining depth when travelling after completing this project.';
       titleGroup.append(title, info);
 
       const pointsGroup = document.createElement('div');

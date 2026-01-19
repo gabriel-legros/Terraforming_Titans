@@ -245,6 +245,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Foundry Worlds advanced research unlocks a new mega project with a shared specialized-worlds switcher and travel points tied to deeper mining depth.
 - Foundry World shop upgrades now boost metal and silica import caps, ore and silica mining output, and deeper mining speed.
 - Foundry worlds now add +1T to the metal mining cap per completed world, excluding the current planet, and permanently disable new Ecumenopolis districts after completion.
+- Foundry World metallurgy travel points now award 1 point per 10,000 deeper mining depth.
 - Departure snapshots now record world specialization across story, random, and artificial worlds.
 - Deeper Mining now includes deep mining settings (depth > 500) with two configurable options:
   - **Create geothermal deposits**: Generates geothermal deposits (default 1000 per mine per 250m level beyond 500m) when enabled during deepening. Tradeoff: doubles components cost.

@@ -122,7 +122,7 @@ describe('FoundryWorldProject', () => {
 
     project.prepareTravelState();
 
-    expect(project.foundryPoints).toBeCloseTo(20, 5);
+    expect(project.foundryPoints).toBe(1);
   });
 
   it('applies foundry shop bonuses to mining caps, ore output, and deeper mining speed', () => {
