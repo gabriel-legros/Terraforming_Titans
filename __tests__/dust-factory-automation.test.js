@@ -214,6 +214,7 @@ describe('Dust factory automation', () => {
   test('switching to a custom dust resets dust amount', () => {
     const factory = createFactory();
     global.resources.special.albedoUpgrades.value = 50;
+    global.currentPlanetParameters = { visualization: { baseColor: '#202020' } };
     const settings = DustFactory.getAutomationSettings();
     const previousColor = settings.dustColor;
     settings.dustColor = '#ff4400';

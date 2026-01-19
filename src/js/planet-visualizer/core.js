@@ -114,9 +114,9 @@
         },
       };
 
-      this.dustTintBaseColor = '';
+      this.dustTintStartColor = '';
       this.lastDustTintColor = '';
-      this.lastGameBaseColor = '';
+
     }
 
     get resources() {
@@ -197,25 +197,26 @@
     updateDustTint() {
       if (!this.sphere || !this.sphere.material || !this.sphere.material.color) return;
       const base = this.getGameBaseColor();
-      if (this.lastGameBaseColor !== base && this.getDustTintRatio() === 0) {
-        this.dustTintBaseColor = '';
-      }
-      this.lastGameBaseColor = base;
       if (dustFactorySettings.dustColorChanged) {
-        this.dustTintBaseColor = this.lastDustTintColor || base;
+        this.dustTintStartColor = this.lastDustTintColor || base;
         dustFactorySettings.dustColorChanged = false;
       }
-      const baseForBlend = this.dustTintBaseColor || base;
       const customColor = dustFactorySettings.dustColor;
       const ratio = this.getDustTintRatio();
-      const target = this.mixHexColors(baseForBlend, customColor, ratio);
-      const baseRgb = this.hexToRgb(baseForBlend);
-      const targetRgb = this.hexToRgb(target);
+      const targetTint = this.mixHexColors(base, customColor, ratio);
+      const finalTint = this.dustTintStartColor
+        ? this.mixHexColors(this.dustTintStartColor, targetTint, ratio)
+        : targetTint;
+      const baseRgb = this.hexToRgb(base);
+      const targetRgb = this.hexToRgb(finalTint);
       const r = baseRgb.r > 0 ? targetRgb.r / baseRgb.r : 1;
       const g = baseRgb.g > 0 ? targetRgb.g / baseRgb.g : 1;
       const b = baseRgb.b > 0 ? targetRgb.b / baseRgb.b : 1;
       this.sphere.material.color.setRGB(r, g, b);
-      this.lastDustTintColor = target;
+      this.lastDustTintColor = finalTint;
+      if (ratio >= 1) {
+        this.dustTintStartColor = '';
+      }
     }
 
     setBaseColor(color, opts = {}) {
