@@ -78,7 +78,7 @@ body.journal-collapsed .terraforming-subtabs,
 body.journal-collapsed .hope-subtabs,
 body.journal-collapsed .space-subtabs
 {
-    margin-right: 25px; /* Original 25px + 60px for show button space */
+    margin-right: 0px; /* Original 25px + 60px for show button space */
 }
 
 .tab,
