@@ -1,5 +1,6 @@
-describe('Planet visualizer dust blend threshold', () => {
+describe('Planet visualizer dust tint', () => {
   let PlanetVisualizer;
+  let setRGB;
 
   beforeEach(() => {
     jest.resetModules();
@@ -21,6 +22,7 @@ describe('Planet visualizer dust blend threshold', () => {
     PlanetVisualizer.prototype.syncSlidersFromGame = function syncSlidersFromGame() {};
     PlanetVisualizer.prototype.updateSliderValueLabels = function updateSliderValueLabels() {};
     PlanetVisualizer.prototype.refreshGameModeSliderDisplays = function refreshGameModeSliderDisplays() {};
+    setRGB = jest.fn();
   });
 
   afterEach(() => {
@@ -31,22 +33,18 @@ describe('Planet visualizer dust blend threshold', () => {
     global.dustFactorySettings = null;
   });
 
-  test('does not update base color below threshold', () => {
+  test('tints toward the dust color based on coverage', () => {
     const viz = new PlanetVisualizer();
-    const initial = viz.getGameBaseColor();
-    resources.special.albedoUpgrades.value = 0.4;
-    const next = viz.getGameBaseColor();
+    viz.sphere = { material: { color: { setRGB } } };
+    currentPlanetParameters.visualization.baseColor = '#202020';
+    resources.special.albedoUpgrades.value = 50;
+    dustFactorySettings.dustColor = '#ffffff';
 
-    expect(initial).toBe('#000000');
-    expect(next).toBe(initial);
-  });
+    viz.updateDustTint();
 
-  test('updates base color at threshold', () => {
-    const viz = new PlanetVisualizer();
-    viz.getGameBaseColor();
-    resources.special.albedoUpgrades.value = 1;
-    const next = viz.getGameBaseColor();
-
-    expect(next).toBe(viz.mixHexColors('#000000', '#ffffff', 0.01));
+    expect(setRGB).toHaveBeenCalledTimes(1);
+    expect(setRGB.mock.calls[0][0]).toBeCloseTo(4.5, 3);
+    expect(setRGB.mock.calls[0][1]).toBeCloseTo(4.5, 3);
+    expect(setRGB.mock.calls[0][2]).toBeCloseTo(4.5, 3);
   });
 });

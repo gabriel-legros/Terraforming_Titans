@@ -113,10 +113,6 @@
           offsetY: 0.0,  // wrap offset in latitude  (-1..1)
         },
       };
-
-      this.lastDustBlendRatio = -1;
-      this.lastDustBlendBase = '';
-      this.lastDustBlendColor = this.viz.baseColor;
     }
 
     get resources() {
@@ -173,22 +169,39 @@
       return `#${toHex(r)}${toHex(g)}${toHex(bVal)}`;
     }
 
+    hexToRgb(hex) {
+      const normalized = this.normalizeHexColor(hex) || '#8a2a2a';
+      const value = parseInt(normalized.slice(1), 16);
+      return {
+        r: (value >> 16) & 255,
+        g: (value >> 8) & 255,
+        b: value & 255,
+      };
+    }
+
     getGameBaseColor() {
       const base = currentPlanetParameters.visualization?.baseColor || '#8a2a2a';
-      const customColor = dustFactorySettings.dustColor;
+      return base;
+    }
+
+    getDustTintRatio() {
       const surfaceArea = terraforming.celestialParameters.surfaceArea || currentPlanetParameters.celestialParameters.surfaceArea || 0;
       const dustAmount = resources.special.albedoUpgrades.value;
-      const ratio = surfaceArea > 0 ? Math.max(0, Math.min(1, dustAmount / surfaceArea)) : 0;
-      const baseChanged = base !== this.lastDustBlendBase;
-      const ratioDelta = Math.abs(ratio - this.lastDustBlendRatio);
-      const shouldUpdate = baseChanged || ratioDelta >= 0.005;
-      if (!shouldUpdate) {
-        return this.lastDustBlendColor;
-      }
-      this.lastDustBlendBase = base;
-      this.lastDustBlendRatio = ratio;
-      this.lastDustBlendColor = this.mixHexColors(base, customColor, ratio);
-      return this.lastDustBlendColor;
+      return surfaceArea > 0 ? Math.max(0, Math.min(1, dustAmount / surfaceArea)) : 0;
+    }
+
+    updateDustTint() {
+      if (!this.sphere || !this.sphere.material || !this.sphere.material.color) return;
+      const base = this.getGameBaseColor();
+      const customColor = dustFactorySettings.dustColor;
+      const ratio = this.getDustTintRatio();
+      const target = this.mixHexColors(base, customColor, ratio);
+      const baseRgb = this.hexToRgb(base);
+      const targetRgb = this.hexToRgb(target);
+      const r = baseRgb.r > 0 ? targetRgb.r / baseRgb.r : 1;
+      const g = baseRgb.g > 0 ? targetRgb.g / baseRgb.g : 1;
+      const b = baseRgb.b > 0 ? targetRgb.b / baseRgb.b : 1;
+      this.sphere.material.color.setRGB(r, g, b);
     }
 
     setBaseColor(color, opts = {}) {
@@ -414,6 +427,7 @@
       if (this.debug && this.debug.mode === 'game') {
         this.updateZonalCoverageFromGameSafe();
       }
+      this.updateDustTint();
       this.updateSurfaceTextureFromPressure();
       this.updateCityLights();
       this.updateAtmosphereUniforms();
