@@ -117,6 +117,9 @@ class ImportResourcesProjectUI {
     arrow.addEventListener('click', () => this.toggleProjectCollapse?.(card));
     nameElement.addEventListener('click', () => this.toggleProjectCollapse?.(card));
 
+    const headerRight = document.createElement('div');
+    headerRight.classList.add('project-header-right');
+
     const reorderButtons = document.createElement('div');
     reorderButtons.classList.add('reorder-buttons');
 
@@ -134,10 +137,11 @@ class ImportResourcesProjectUI {
 
     reorderButtons.appendChild(upButton);
     reorderButtons.appendChild(downButton);
+    headerRight.appendChild(reorderButtons);
 
     cardHeader.appendChild(arrow);
     cardHeader.appendChild(nameElement);
-    cardHeader.appendChild(reorderButtons);
+    cardHeader.appendChild(headerRight);
 
     const cardBody = document.createElement('div');
     cardBody.classList.add('card-body');

@@ -13,14 +13,14 @@
       label: 'Galactic Metal Mining Expertise',
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases the metal mining cap by 10%.',
+      description: 'Increases the galactic metal mining cap by 10%.',
     },
     {
       id: 'galacticSilicaMiningCap',
       label: 'Galactic Silica Mining Expertise',
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases the silica mining cap by 10%.',
+      description: 'Increases the galactic silica mining cap by 10%.',
     },
     {
       id: 'oreMiningOutput',
