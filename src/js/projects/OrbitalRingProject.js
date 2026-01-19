@@ -123,7 +123,7 @@ class OrbitalRingProject extends TerraformingDurationProject {
     const terraformedWorlds = spaceManager.getUnmodifiedTerraformedWorldCount({
       countArtificial: false
     });
-    let maxPrepay = terraformedWorlds - this.ringCount;
+    let maxPrepay = terraformedWorlds - this.ringCount - this.prepaidRings;
     if (this.isActive) {
       maxPrepay -= 1;
     }
