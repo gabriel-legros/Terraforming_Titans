@@ -201,7 +201,7 @@ function updateLiftersUI(project) {
     return;
   }
 
-  elements.liftersCountElement.textContent = formatNumber(project.repeatCount, false, 0);
+  elements.liftersCountElement.textContent = formatNumber(project.repeatCount, false, 2);
   elements.liftersCapacityLabel.textContent = project.getCapacityLabel();
   elements.liftersCapacityElement.textContent = formatNumber(project.getCapacityPerLifter(), true);
   elements.liftersEnergyUnitElement.textContent = formatNumber(project.energyPerUnit, true);
