@@ -545,3 +545,6 @@ The planet visualiser has been modularised into files covering core setup, light
 - Biomass overlay now fades on high peaks so mountains stay visible through vegetation.
 - Ocean masks now use a softened shoreline blend instead of a hard height cutoff.
 - Planet surface textures now render at higher resolution to reduce pixelated coastlines.
+- Planet visualizer clouds now copy edge pixels to eliminate the 360-degree seam.
+- Cloud map generation now uses tileable noise so cloud textures wrap cleanly on the sphere.
+- Cloud generation now samples 3D noise on the sphere for smoother, cloud-like coverage without seams.

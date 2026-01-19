@@ -53,6 +53,7 @@
     makeRow('bTemp', 'Biomass Temp (%)', 0, 100, 0.1);
     makeRow('bPol', 'Biomass Polar (%)', 0, 100, 0.1);
     makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
+    makeRow('cloudWind', 'Cloud Wind', 0, 0.05, 0.0005);
 
     // Large-scale surface feature controls
     const makeCheckbox = (id, label) => {
@@ -261,6 +262,7 @@
     setVal('h2o', Number(r.h2o.range.value));
     setVal('ch4', Number(r.ch4.range.value));
     setVal('cloudCov', Number(r.cloudCov?.range?.value || 0));
+    if (r.cloudWind) setVal('cloudWind', Number(r.cloudWind.range.value));
     const sv = (id) => { if (r[id]) setVal(id, Number(r[id].range.value)); };
     ['wTrop', 'wTemp', 'wPol', 'iTrop', 'iTemp', 'iPol', 'bTrop', 'bTemp', 'bPol'].forEach(sv);
     if (r.featStrength) setVal('featStrength', Number(r.featStrength.range.value));
@@ -316,6 +318,7 @@
     this.viz.coverage.water = ((wT + wM + wP) / 3) * 100;
     this.viz.coverage.life = ((bT + bM + bP) / 3) * 100;
     if (r.cloudCov) this.viz.coverage.cloud = clampFrom(r.cloudCov);
+    if (r.cloudWind) this.cloudDriftSpeed = clampFrom(r.cloudWind);
 
     // Apply surface feature params
     const f = this.viz.surfaceFeatures || (this.viz.surfaceFeatures = {});
@@ -561,6 +564,10 @@
       const s = String(avgWater.toFixed(2));
       r.cloudCov.range.value = s; r.cloudCov.number.value = s;
     }
+    if (r.cloudWind) {
+      const s = String(this.cloudDriftSpeed);
+      r.cloudWind.range.value = s; r.cloudWind.number.value = s;
+    }
 
     // Sync surface feature params from viz
     const f = this.viz.surfaceFeatures || {};
@@ -637,6 +644,10 @@
       setPct(r.bTemp, (zc.temperate?.life || 0) * 100);
       setPct(r.bPol, (zc.polar?.life || 0) * 100);
       if (r.cloudCov) setPct(r.cloudCov, this.viz.coverage?.cloud || 0);
+      if (r.cloudWind) {
+        r.cloudWind.range.value = String(this.cloudDriftSpeed);
+        r.cloudWind.number.value = String(this.cloudDriftSpeed);
+      }
     } catch (e) {
     }
   };

@@ -62,6 +62,15 @@
       data[idx + 2] = 255;
       data[idx + 3] = Math.max(0, Math.min(255, Math.round(245 * alphaBase * density)));
     }
+    for (let y = 0; y < h; y++) {
+      const row = y * w * 4;
+      const first = row;
+      const last = row + (w - 1) * 4;
+      data[last] = data[first];
+      data[last + 1] = data[first + 1];
+      data[last + 2] = data[first + 2];
+      data[last + 3] = data[first + 3];
+    }
     ctx.putImageData(img, 0, 0);
     const tex = new THREE.CanvasTexture(canv);
     if (THREE && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
@@ -165,27 +174,47 @@
   PlanetVisualizer.prototype.generateCloudMap = function generateCloudMap(w, h) {
     const seed = this.hashSeedFromPlanet();
     let s = Math.floor((seed.x * 131071) ^ (seed.y * 524287)) >>> 0;
-    const rand = () => { s = (1664525 * s + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000; };
     const hash = (x, y) => {
       const n = Math.sin(x * 157.31 + y * 113.97 + s * 0.000137) * 43758.5453;
       return n - Math.floor(n);
     };
     const smooth = (t) => t * t * (3 - 2 * t);
-    const value2 = (x, y) => {
-      const xi = Math.floor(x), yi = Math.floor(y);
-      const xf = x - xi, yf = y - yi; const u = smooth(xf), v = smooth(yf);
-      const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
-      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    const hash3 = (x, y, z) => {
+      const n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7 + s * 0.000137) * 43758.5453;
+      return n - Math.floor(n);
     };
-    const fbm = (x, y, oct = 8, lac = 2.2, gain = 0.5) => {
-      let f = 0, amp = 0.5, freq = 0.9;
-      for (let o = 0; o < oct; o++) { f += amp * value2(x * freq, y * freq); freq *= lac; amp *= gain; }
+    const value3 = (x, y, z) => {
+      const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+      const xf = x - xi, yf = y - yi, zf = z - zi;
+      const u = smooth(xf), v = smooth(yf), wv = smooth(zf);
+      const a = hash3(xi, yi, zi);
+      const b = hash3(xi + 1, yi, zi);
+      const c = hash3(xi, yi + 1, zi);
+      const d = hash3(xi + 1, yi + 1, zi);
+      const e = hash3(xi, yi, zi + 1);
+      const f = hash3(xi + 1, yi, zi + 1);
+      const g = hash3(xi, yi + 1, zi + 1);
+      const h = hash3(xi + 1, yi + 1, zi + 1);
+      const x1 = a * (1 - u) + b * u;
+      const x2 = c * (1 - u) + d * u;
+      const y1 = x1 * (1 - v) + x2 * v;
+      const x3 = e * (1 - u) + f * u;
+      const x4 = g * (1 - u) + h * u;
+      const y2 = x3 * (1 - v) + x4 * v;
+      return y1 * (1 - wv) + y2 * wv;
+    };
+    const fbm3 = (x, y, z, oct, lac = 2.0, gain = 0.5) => {
+      let f = 0, amp = 0.5, freq = 1;
+      for (let o = 0; o < oct; o++) {
+        f += amp * value3(x * freq, y * freq, z * freq);
+        freq *= lac; amp *= gain;
+      }
       return f;
     };
-    const billow = (x, y, oct = 5, lac = 2.6, gain = 0.52) => {
-      let f = 0, amp = 0.6, freq = 1.2;
+    const billow3 = (x, y, z, oct, lac = 2.0, gain = 0.5) => {
+      let f = 0, amp = 0.6, freq = 1;
       for (let o = 0; o < oct; o++) {
-        const n = value2(x * freq, y * freq);
+        const n = value3(x * freq, y * freq, z * freq);
         const b = 1.0 - Math.abs(2.0 * n - 1.0);
         f += amp * (b * b);
         freq *= lac; amp *= gain;
@@ -196,38 +225,31 @@
     let minV = Infinity, maxV = -Infinity;
     for (let y = 0; y < h; y++) {
       const vy = y / h;
+      const lat = (vy - 0.5) * Math.PI;
+      const cosLat = Math.cos(lat);
+      const sinLat = Math.sin(lat);
       for (let x = 0; x < w; x++) {
         const vx = x / w;
-        const wx = fbm(vx * 0.9 + 7.13, vy * 0.7 + 3.71);
-        const wy = fbm(vx * 0.7 - 2.19, vy * 0.9 - 5.28);
-        const ux = vx * 2.6 + (wx - 0.5) * 0.9;
-        const uy = vy * 2.0 + (wy - 0.5) * 0.7;
-        const cumulus = fbm(ux, uy, 7, 2.15, 0.5);
-        const cirrus = Math.pow(fbm(ux * 3.4, uy * 0.7, 5, 2.7, 0.58), 1.5);
-        const cracks1 = billow(ux * 6.0, uy * 6.2, 4, 2.8, 0.55);
-        const cracks2 = billow(ux * 12.0, uy * 11.5, 3, 2.9, 0.6);
+        const lon = vx * Math.PI * 2;
+        const nx = Math.cos(lon) * cosLat;
+        const ny = sinLat;
+        const nz = Math.sin(lon) * cosLat;
+        const warp = fbm3(nx * 1.7 + 7.3, ny * 1.7 - 3.1, nz * 1.7 + 5.9, 3, 2.1, 0.55);
+        const ux = nx * 2.4 + (warp - 0.5) * 1.1;
+        const uy = ny * 2.4 + (warp - 0.5) * 0.9;
+        const uz = nz * 2.4 + (warp - 0.5) * 1.0;
+        const cumulus = fbm3(ux, uy, uz, 6, 2.0, 0.5);
+        const cirrus = Math.pow(fbm3(ux * 2.4, uy * 1.1, uz * 2.4, 4, 2.1, 0.6), 1.4);
+        const cracks1 = billow3(ux * 3.2, uy * 3.2, uz * 3.2, 4, 2.0, 0.55);
+        const cracks2 = billow3(ux * 6.4, uy * 6.4, uz * 6.4, 3, 2.0, 0.6);
         let v = 0.65 * cumulus + 0.35 * cirrus;
-        v = v - 0.35 * cracks1 - 0.18 * cracks2;
+        v = v - 0.32 * cracks1 - 0.16 * cracks2;
         minV = Math.min(minV, v); maxV = Math.max(maxV, v);
         arr[y * w + x] = v;
       }
     }
     const span = Math.max(1e-6, maxV - minV);
     for (let i = 0; i < w * h; i++) arr[i] = (arr[i] - minV) / span;
-    const blendWidth = Math.max(2, Math.floor(w * 0.04));
-    for (let y = 0; y < h; y++) {
-      const row = y * w;
-      for (let x = 0; x < blendWidth; x++) {
-        const t = blendWidth > 1 ? x / (blendWidth - 1) : 1;
-        const leftIdx = row + x;
-        const rightIdx = row + (w - blendWidth + x);
-        const a = arr[leftIdx];
-        const b = arr[rightIdx];
-        const mix = b + (a - b) * t;
-        arr[leftIdx] = mix;
-        arr[rightIdx] = mix;
-      }
-    }
     this.cloudMap = arr;
     const hist = { counts: new Uint32Array(256), total: w * h };
     for (let i = 0; i < w * h; i++) {
