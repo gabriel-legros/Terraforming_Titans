@@ -74,7 +74,7 @@ describe('WarpGateNetworkManager', () => {
     };
     const manager = new window.WarpGateNetworkManager();
 
-    expect(manager.getCapForResource('metal')).toBe(1e9 + 3e12);
+    expect(manager.getCapForResource('metal')).toBe(1e9 + 3e10);
   });
 
   test('uses warp gate cap before galaxy unlock', () => {

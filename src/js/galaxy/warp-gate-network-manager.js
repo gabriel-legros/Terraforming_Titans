@@ -161,7 +161,7 @@ class WarpGateNetworkManager extends EffectableEntity {
   getFoundryMetalCapBonus() {
     try {
       const count = spaceManager.getFoundryWorldCount({ excludeCurrent: true });
-      return { count, bonus: count * 1e12 };
+      return { count, bonus: count * 1e10 };
     } catch (error) {
       return { count: 0, bonus: 0 };
     }
