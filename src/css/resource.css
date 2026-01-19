@@ -81,7 +81,7 @@
     font-weight: 700;
     font-size: 11px;
     line-height: 1;
-    min-width: 12px;
+    min-width: 0px;
     height: 12px;
     justify-content: center;
   }
