@@ -535,3 +535,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Black Dust Factory now lets players pick a dust color to set black dust albedo between 0.05 and 0.80, saving and displaying the selection.
 - Custom dust renames the Black Dust resource, drives planet visualizer rock tint up to full coverage, and makes automation fill to cap.
 - Bioworld and Foundry World projects now hide their start bars when the other specialization is active or completed.
+- Bioworld and Foundry World projects now remain adjacent in the project list ordering, even after reordering, saving, or travel.

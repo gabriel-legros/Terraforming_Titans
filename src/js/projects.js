@@ -934,6 +934,7 @@ class ProjectManager extends EffectableEntity {
 
     this.projectOrder = storyProjects.reverse().concat(otherProjects);
     this.normalizeImportProjectOrder();
+    this.normalizeGroupedProjectOrder();
   }
 
   startProject(projectName) {
@@ -1054,6 +1055,71 @@ class ProjectManager extends EffectableEntity {
     return merged;
   }
 
+  normalizeGroupedProjectOrder(order = this.projectOrder) {
+    if (!Array.isArray(order) || order.length === 0) {
+      return order;
+    }
+
+    const groupMap = new Map();
+    order.forEach((name) => {
+      const project = this.projects[name];
+      if (!project) {
+        return;
+      }
+      const groupId = project.attributes && project.attributes.projectGroup;
+      if (!groupId) {
+        return;
+      }
+      const category = project.category || 'general';
+      const key = `${category}:${groupId}`;
+      let entry = groupMap.get(key);
+      if (!entry) {
+        entry = { names: [], seen: new Set() };
+        groupMap.set(key, entry);
+      }
+      if (!entry.seen.has(name)) {
+        entry.seen.add(name);
+        entry.names.push(name);
+      }
+    });
+
+    if (groupMap.size === 0) {
+      return order;
+    }
+
+    const inserted = new Set();
+    const newOrder = [];
+    order.forEach((name) => {
+      const project = this.projects[name];
+      if (!project) {
+        return;
+      }
+      const groupId = project.attributes && project.attributes.projectGroup;
+      if (!groupId) {
+        newOrder.push(name);
+        return;
+      }
+      const category = project.category || 'general';
+      const key = `${category}:${groupId}`;
+      if (inserted.has(key)) {
+        return;
+      }
+      const entry = groupMap.get(key);
+      if (!entry) {
+        newOrder.push(name);
+        return;
+      }
+      newOrder.push(...entry.names);
+      inserted.add(key);
+    });
+
+    if (order === this.projectOrder) {
+      this.projectOrder = newOrder;
+    }
+
+    return newOrder;
+  }
+
   reorderCategoryProjects(category, orderedNames) {
     const categoryKey = category || 'general';
     const targetNames = Array.isArray(orderedNames) ? orderedNames : [];
@@ -1075,6 +1141,7 @@ class ProjectManager extends EffectableEntity {
 
     this.projectOrder = newOrder;
     this.normalizeImportProjectOrder();
+    this.normalizeGroupedProjectOrder();
   }
 
   reorderProject(fromIndex, toIndex, category) {
@@ -1192,6 +1259,7 @@ class ProjectManager extends EffectableEntity {
   // Save the state of all projects
   saveState() {
     this.normalizeImportProjectOrder();
+    this.normalizeGroupedProjectOrder();
     const projectState = {};
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
@@ -1220,6 +1288,7 @@ class ProjectManager extends EffectableEntity {
       }
     });
     this.normalizeImportProjectOrder();
+    this.normalizeGroupedProjectOrder();
 
     for (const projectName in projectState) {
       const savedProject = projectState[projectName];
@@ -1298,6 +1367,7 @@ class ProjectManager extends EffectableEntity {
       });
     }
     this.normalizeImportProjectOrder();
+    this.normalizeGroupedProjectOrder();
     for (const name in travelState) {
       const project = this.projects[name];
       if (!project) continue;

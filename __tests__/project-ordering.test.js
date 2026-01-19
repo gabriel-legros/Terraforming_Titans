@@ -27,6 +27,29 @@ const createManager = () => {
   return manager;
 };
 
+const createGroupedManager = () => {
+  global.EffectableEntity = EffectableEntity;
+  const { ProjectManager } = require('../src/js/projects.js');
+  const manager = new ProjectManager();
+  const baseProject = (name, attributes = {}) => ({
+    name,
+    category: 'mega',
+    cost: { colony: { metal: 1 } },
+    duration: 1000,
+    description: '',
+    repeatable: false,
+    unlocked: true,
+    attributes,
+  });
+  manager.initializeProjects({
+    alpha: baseProject('Alpha'),
+    bioworld: baseProject('Bioworld', { projectGroup: 'specializedWorlds' }),
+    beta: baseProject('Beta'),
+    foundryWorld: baseProject('Foundry World', { projectGroup: 'specializedWorlds' }),
+  });
+  return manager;
+};
+
 describe('Project order normalization', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -99,5 +122,26 @@ describe('Project order normalization', () => {
       'gamma',
       'epsilon',
     ]);
+  });
+
+  it('keeps grouped projects adjacent when saving state', () => {
+    const manager = createGroupedManager();
+    manager.projectOrder = ['alpha', 'bioworld', 'beta', 'foundryWorld'];
+
+    const saved = manager.saveState();
+
+    expect(saved.order).toEqual(['alpha', 'bioworld', 'foundryWorld', 'beta']);
+    expect(manager.projectOrder).toEqual(saved.order);
+  });
+
+  it('restores grouped projects when loading travel state', () => {
+    const manager = createGroupedManager();
+    const travelState = {
+      _order: ['alpha', 'bioworld', 'beta', 'foundryWorld'],
+    };
+
+    manager.loadTravelState(travelState);
+
+    expect(manager.projectOrder).toEqual(['alpha', 'bioworld', 'foundryWorld', 'beta']);
   });
 });
