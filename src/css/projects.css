@@ -745,8 +745,8 @@
 /* Quick Build controls (used inside info cards) */
 .quick-build-row {
     display: grid;
-    /* label | build (fixed) | spacer | x10 | /10 | cost */
-    grid-template-columns: auto 220px 8px 50px 50px minmax(0, 1fr);
+    /* label | build (fixed) | spacer | x10 | /10 | 0 | Max | cost */
+    grid-template-columns: auto 220px 8px 50px 50px 50px 50px minmax(0, 1fr);
     align-items: center;
     gap: 8px;
     margin-top: 8px;

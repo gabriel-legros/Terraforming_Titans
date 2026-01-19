@@ -1632,6 +1632,14 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorDiv.classList.add('increment-button', 'qb-inc');
     mirrorDiv.textContent = '/10';
     mirrorQuick.appendChild(mirrorDiv);
+    const mirrorZero = document.createElement('button');
+    mirrorZero.classList.add('increment-button', 'qb-inc');
+    mirrorZero.textContent = '0';
+    mirrorQuick.appendChild(mirrorZero);
+    const mirrorMax = document.createElement('button');
+    mirrorMax.classList.add('increment-button', 'qb-inc');
+    mirrorMax.textContent = 'Max';
+    mirrorQuick.appendChild(mirrorMax);
     const mirrorCost = document.createElement('span');
     mirrorCost.classList.add('quick-build-cost');
     mirrorQuick.appendChild(mirrorCost);
@@ -1701,6 +1709,14 @@ class SpaceMirrorFacilityProject extends Project {
     lanternDiv.classList.add('increment-button', 'qb-inc');
     lanternDiv.textContent = '/10';
     lanternQuick.appendChild(lanternDiv);
+    const lanternZero = document.createElement('button');
+    lanternZero.classList.add('increment-button', 'qb-inc');
+    lanternZero.textContent = '0';
+    lanternQuick.appendChild(lanternZero);
+    const lanternMax = document.createElement('button');
+    lanternMax.classList.add('increment-button', 'qb-inc');
+    lanternMax.textContent = 'Max';
+    lanternQuick.appendChild(lanternMax);
     const lanternCost = document.createElement('span');
     lanternCost.classList.add('quick-build-cost');
     lanternQuick.appendChild(lanternCost);
@@ -1739,6 +1755,8 @@ class SpaceMirrorFacilityProject extends Project {
           button: mirrorQuickButton,
           mul: mirrorMul,
           div: mirrorDiv,
+          zero: mirrorZero,
+          max: mirrorMax,
           cost: mirrorCost,
           count: 1,
         },
@@ -1747,6 +1765,8 @@ class SpaceMirrorFacilityProject extends Project {
           button: lanternQuickButton,
           mul: lanternMul,
           div: lanternDiv,
+          zero: lanternZero,
+          max: lanternMax,
           cost: lanternCost,
           count: 1,
         },
@@ -1773,6 +1793,18 @@ class SpaceMirrorFacilityProject extends Project {
       els.quickBuild.mirror.count = nextCount;
       this.updateUI();
     });
+    els.quickBuild.mirror.zero.addEventListener('click', () => {
+      const building = buildings.spaceMirror;
+      adjustStructureActivation(building, -building.active);
+      updateBuildingDisplay(buildings);
+      this.updateUI();
+    });
+    els.quickBuild.mirror.max.addEventListener('click', () => {
+      const building = buildings.spaceMirror;
+      adjustStructureActivation(building, building.count - building.active);
+      updateBuildingDisplay(buildings);
+      this.updateUI();
+    });
     els.quickBuild.lantern.button.addEventListener('click', () => {
       if (buildings.hyperionLantern) {
         const buildCount = getQuickBuildCount(buildings.hyperionLantern, els.quickBuild.lantern.count);
@@ -1790,6 +1822,18 @@ class SpaceMirrorFacilityProject extends Project {
       const nextCount = divideByTen(selectedBuildCounts.hyperionLantern || els.quickBuild.lantern.count);
       selectedBuildCounts.hyperionLantern = nextCount;
       els.quickBuild.lantern.count = nextCount;
+      this.updateUI();
+    });
+    els.quickBuild.lantern.zero.addEventListener('click', () => {
+      const building = buildings.hyperionLantern;
+      adjustStructureActivation(building, -building.active);
+      updateBuildingDisplay(buildings);
+      this.updateUI();
+    });
+    els.quickBuild.lantern.max.addEventListener('click', () => {
+      const building = buildings.hyperionLantern;
+      adjustStructureActivation(building, building.count - building.active);
+      updateBuildingDisplay(buildings);
       this.updateUI();
     });
     
