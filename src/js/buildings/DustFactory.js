@@ -17,8 +17,12 @@ const DUST_COLOR_ALBEDO_RANGE = {
   max: 0.8
 };
 
+function isCustomDustColor(color) {
+  return color !== '#000000' && color !== '#ffffff';
+}
+
 function updateDustResourceName(settings) {
-  const name = settings.dustColor === '#000000' ? 'Black Dust' : 'Custom Dust';
+  const name = isCustomDustColor(settings.dustColor) ? 'Custom Dust' : 'Black Dust';
   resources.special.albedoUpgrades.name = name;
   resources.special.albedoUpgrades.displayName = name;
 }
@@ -68,7 +72,7 @@ class DustFactory extends Building {
     const settings = getDustAutomationSettings(this);
 
     if (hasAtmosphericOversight && settings.autoTargetAlbedo) {
-      const isCustomColor = settings.dustColor !== '#000000';
+      const isCustomColor = isCustomDustColor(settings.dustColor);
       if (isCustomColor) {
         const blackRes = resources.special.albedoUpgrades;
         const remaining = blackRes.baseCap - blackRes.value;

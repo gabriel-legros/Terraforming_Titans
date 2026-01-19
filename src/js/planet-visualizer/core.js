@@ -172,7 +172,7 @@
     getGameBaseColor() {
       const base = currentPlanetParameters.visualization?.baseColor || '#8a2a2a';
       const customColor = dustFactorySettings.dustColor;
-      if (customColor === '#000000') {
+      if (customColor === '#000000' || customColor === '#ffffff') {
         return base;
       }
       const surfaceArea = terraforming.celestialParameters.surfaceArea || currentPlanetParameters.celestialParameters.surfaceArea || 0;
