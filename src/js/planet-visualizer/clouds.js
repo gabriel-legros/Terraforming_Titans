@@ -234,16 +234,17 @@
         const nx = Math.cos(lon) * cosLat;
         const ny = sinLat;
         const nz = Math.sin(lon) * cosLat;
-        const warp = fbm3(nx * 1.7 + 7.3, ny * 1.7 - 3.1, nz * 1.7 + 5.9, 3, 2.1, 0.55);
-        const ux = nx * 2.4 + (warp - 0.5) * 1.1;
-        const uy = ny * 2.4 + (warp - 0.5) * 0.9;
-        const uz = nz * 2.4 + (warp - 0.5) * 1.0;
-        const cumulus = fbm3(ux, uy, uz, 6, 2.0, 0.5);
-        const cirrus = Math.pow(fbm3(ux * 2.4, uy * 1.1, uz * 2.4, 4, 2.1, 0.6), 1.4);
-        const cracks1 = billow3(ux * 3.2, uy * 3.2, uz * 3.2, 4, 2.0, 0.55);
-        const cracks2 = billow3(ux * 6.4, uy * 6.4, uz * 6.4, 3, 2.0, 0.6);
-        let v = 0.65 * cumulus + 0.35 * cirrus;
-        v = v - 0.32 * cracks1 - 0.16 * cracks2;
+        const warp = fbm3(nx * 1.45 + 7.3, ny * 1.45 - 3.1, nz * 1.45 + 5.9, 3, 2.05, 0.55);
+        const ux = nx * 2.05 + (warp - 0.5) * 0.95;
+        const uy = ny * 2.05 + (warp - 0.5) * 0.8;
+        const uz = nz * 2.05 + (warp - 0.5) * 0.95;
+        const cumulus = fbm3(ux, uy, uz, 6, 1.9, 0.5);
+        const cirrus = Math.pow(fbm3(ux * 2.15, uy * 1.05, uz * 2.15, 4, 2.0, 0.6), 1.35);
+        const cracks1 = billow3(ux * 2.8, uy * 2.8, uz * 2.8, 4, 1.95, 0.55);
+        const cracks2 = billow3(ux * 5.2, uy * 5.2, uz * 5.2, 2, 2.0, 0.6);
+        let v = 0.69 * cumulus + 0.31 * cirrus;
+        v = v - 0.24 * cracks1 - 0.1 * cracks2;
+        v *= 0.85 + 0.15 * (1 - Math.abs(sinLat));
         minV = Math.min(minV, v); maxV = Math.max(maxV, v);
         arr[y * w + x] = v;
       }
