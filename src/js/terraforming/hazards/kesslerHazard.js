@@ -8,7 +8,7 @@ const DEBRIS_DECAY_BASE_RATE = 1/(3.6e3);
 const DEBRIS_DENSITY_CENTER = 1e-13;
 const DEBRIS_DENSITY_SEARCH_MAX = 500000;
 const DEBRIS_DECAY_DENSITY_REFERENCE = 1e-12;
-const DEBRIS_DECAY_DENSITY_FLOOR = 1e-16;
+const DEBRIS_DECAY_DENSITY_FLOOR = 1e-20;
 const DEBRIS_DECAY_MAX_MULTIPLIER = 100;
 const KESSLER_DECAY_CONSTANTS = {
   baseRate: DEBRIS_DECAY_BASE_RATE,
@@ -399,7 +399,7 @@ class KesslerHazard {
       }
 
       const densityRatio = Math.max(density, DEBRIS_DECAY_DENSITY_FLOOR) / DEBRIS_DECAY_DENSITY_REFERENCE;
-      const densityFactor = Math.min(DEBRIS_DECAY_MAX_MULTIPLIER, Math.max(0, densityRatio + 1));
+      const densityFactor = Math.min(DEBRIS_DECAY_MAX_MULTIPLIER, Math.max(0, densityRatio));
       const decayRate = DEBRIS_DECAY_BASE_RATE * densityFactor;
       const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
       const decayBasis = density >= DEBRIS_DECAY_DENSITY_REFERENCE ? entry.maxSinceZero : entry.massTons;
