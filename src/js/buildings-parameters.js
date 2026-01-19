@@ -820,6 +820,7 @@ const buildingsParameters = {
     dayNightActivity: false,
     canBeToggled: true,
     snapProductivity: true,
+    displayConsumptionAtMaxProductivity: true,
     ignoreResourceForProductivityResourceDisplay: { surface: { radioactiveWaste: true } },
     requiresMaintenance: true,
     maintenanceFactor: 1,
