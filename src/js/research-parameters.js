@@ -2006,6 +2006,7 @@ const researchParameters = {
         description: 'Enables incinerators to handle hazardous biomass safely.',
         cost: { advancedResearch: 2_500_000 },
         prerequisites: [],
+        requiredFlags: ['gabbagWasteProcessing'],
         effects: [
           {
             target: 'building',

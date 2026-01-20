@@ -42,7 +42,7 @@ describe("O'Neill cylinders advanced research", () => {
     expect(manager.getTerraformedPlanetCount()).toBeCloseTo(4, 5);
   });
 
-  it('clears cylinder progress when no sectors are secured', () => {
+  it('keeps cylinder progress with minimum sector capacity when no sectors are secured', () => {
     const manager = new SpaceManager({ mars: {} });
     manager.setOneillCylinderCount(5);
     manager.applyEffect({ type: 'booleanFlag', flagId: 'oneillCylinders', value: true });
@@ -50,7 +50,7 @@ describe("O'Neill cylinders advanced research", () => {
 
     oneillModule.updateOneillCylinders(1000, { space: manager, galaxy });
 
-    expect(manager.getOneillCylinderCount()).toBe(0);
+    expect(manager.getOneillCylinderCount()).toBe(5);
   });
 
   it('reveals the stats column with formatted values once unlocked', () => {

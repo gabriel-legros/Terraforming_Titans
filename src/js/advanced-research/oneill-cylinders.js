@@ -58,10 +58,8 @@ function getUhfControlledSectorCount(galaxy) {
 
 function getOneillCylinderCapacity(galaxy) {
   const sectors = getUhfControlledSectorCount(galaxy);
-  if (sectors <= 0) {
-    return 0;
-  }
-  return sectors * ONEILL_CAPACITY_PER_SECTOR;
+  const effectiveSectors = sectors > 0 ? sectors : 1;
+  return effectiveSectors * ONEILL_CAPACITY_PER_SECTOR;
 }
 
 function formatCylinderCount(value) {
@@ -151,7 +149,7 @@ function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
   }
   if (tooltip) {
     const capacityText = formatCapacity(capacity);
-    tooltip.title = `Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their ${capacityText} capacity (1000 per fully controlled sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.`;
+    tooltip.title = `Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their ${capacityText} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.`;
   }
 }
 
