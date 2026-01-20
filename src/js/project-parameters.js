@@ -39,6 +39,7 @@ const projectParameters = {
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
+      continuousAsBuilding: true,
       resourceChoiceGainCost: {
         colony: {
           metal: 2,

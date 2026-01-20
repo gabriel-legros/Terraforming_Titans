@@ -553,6 +553,11 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
     return {
       selectedDisposalResource: this.selectedDisposalResource,
+      disableBelowTemperature: this.disableBelowTemperature,
+      disableTemperatureThreshold: this.disableTemperatureThreshold,
+      disableBelowPressure: this.disableBelowPressure,
+      disablePressureThreshold: this.disablePressureThreshold,
+      pressureUnit: this.pressureUnit,
     };
   }
 
@@ -561,6 +566,11 @@ class SpaceExportBaseProject extends SpaceshipProject {
       return;
     }
     this.selectedDisposalResource = state.selectedDisposalResource || this.selectedDisposalResource;
+    this.disableBelowTemperature = state.disableBelowTemperature ?? this.disableBelowTemperature;
+    this.disableTemperatureThreshold = state.disableTemperatureThreshold ?? this.disableTemperatureThreshold;
+    this.disableBelowPressure = state.disableBelowPressure ?? this.disableBelowPressure;
+    this.disablePressureThreshold = state.disablePressureThreshold ?? this.disablePressureThreshold;
+    this.pressureUnit = state.pressureUnit || this.pressureUnit;
   }
 
   loadState(state) {

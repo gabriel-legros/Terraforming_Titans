@@ -62,6 +62,11 @@ describe('Project setting travel preservation', () => {
   it('keeps resource disposal selections when enabled', () => {
     const project = new SpaceExportBaseProject({ attributes: {} }, 'spaceDisposal');
     project.selectedDisposalResource = { category: 'surface', resource: 'ice' };
+    project.disableBelowTemperature = true;
+    project.disableTemperatureThreshold = 240;
+    project.disableBelowPressure = true;
+    project.disablePressureThreshold = 12.5;
+    project.pressureUnit = 'Pa';
 
     const travelState = project.saveTravelState();
 
@@ -69,5 +74,10 @@ describe('Project setting travel preservation', () => {
     afterTravel.loadTravelState(travelState);
 
     expect(afterTravel.selectedDisposalResource).toEqual({ category: 'surface', resource: 'ice' });
+    expect(afterTravel.disableBelowTemperature).toBe(true);
+    expect(afterTravel.disableTemperatureThreshold).toBe(240);
+    expect(afterTravel.disableBelowPressure).toBe(true);
+    expect(afterTravel.disablePressureThreshold).toBe(12.5);
+    expect(afterTravel.pressureUnit).toBe('Pa');
   });
 });
