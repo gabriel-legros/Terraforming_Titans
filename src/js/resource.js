@@ -747,6 +747,38 @@ function produceResources(deltaTime, buildings) {
       }
     }
   }
+  if (projectManager) {
+    for (const [, data] of projectEntries) {
+      const { project } = data;
+      if (!project.isContinuous() || !project.attributes?.continuousAsBuilding) {
+        continue;
+      }
+      const productivity = project.continuousProductivity;
+      if (project.autoStart === false) {
+        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+        continue;
+      }
+      project.estimateCostAndGain(deltaTime, true, productivity);
+      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+    }
+    for (const [, data] of projectEntries) {
+      const { project } = data;
+      if (project.attributes?.continuousAsBuilding && project.isContinuous()) {
+        continue;
+      }
+//      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
+      if (project.autoStart === false) {
+        project.applyCostAndGain(deltaTime, accumulatedChanges);
+        continue;
+      }
+      project.estimateCostAndGain(deltaTime, true);
+      project.applyCostAndGain(deltaTime, accumulatedChanges);
+    }
+  }
+
+  if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.produceResources === 'function') {
+    nanotechManager.produceResources(deltaTime, accumulatedChanges);
+  }
 
   // Apply funding rate to the accumulated changes
   if (fundingModule) {
@@ -796,38 +828,6 @@ function produceResources(deltaTime, buildings) {
     produceAntimatterHelper(deltaTime, resources, accumulatedChanges);
   }
 
-  if (projectManager) {
-    for (const [, data] of projectEntries) {
-      const { project } = data;
-      if (!project.isContinuous() || !project.attributes?.continuousAsBuilding) {
-        continue;
-      }
-      const productivity = project.continuousProductivity;
-      if (project.autoStart === false) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
-        continue;
-      }
-      project.estimateCostAndGain(deltaTime, true, productivity);
-      project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
-    }
-    for (const [, data] of projectEntries) {
-      const { project } = data;
-      if (project.attributes?.continuousAsBuilding && project.isContinuous()) {
-        continue;
-      }
-//      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
-      if (project.autoStart === false) {
-        project.applyCostAndGain(deltaTime, accumulatedChanges);
-        continue;
-      }
-      project.estimateCostAndGain(deltaTime, true);
-      project.applyCostAndGain(deltaTime, accumulatedChanges);
-    }
-  }
-
-  if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.produceResources === 'function') {
-    nanotechManager.produceResources(deltaTime, accumulatedChanges);
-  }
 
   // Apply accumulated changes to resources
   for (const category in resources) {
