@@ -639,12 +639,6 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
-  calculateProductionRates(deltaTime, buildings, {
-    useProductivity: true,
-    keepProjected: true,
-    productivityMap
-  });
-
   for (const buildingName in buildings) {
     const building = buildings[buildingName];
 
