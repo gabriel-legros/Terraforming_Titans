@@ -39,7 +39,7 @@ describe('Kessler hazard decay', () => {
 
     const baseRate = 1 / 3600;
     const lowerDecayFraction = 1 - Math.exp(-baseRate * 1000);
-    const upperDensityFactor = Math.log10(5e-13 / 1e-12) + 1;
+    const upperDensityFactor = 5e-13 / 1e-12;
     const upperDecayFraction = 1 - Math.exp(-(baseRate * upperDensityFactor) * 1000);
 
     hazard.update(1000, terraforming, { orbitalDebrisPerLand: 100 });

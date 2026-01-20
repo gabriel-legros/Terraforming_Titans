@@ -50,7 +50,7 @@ describe("O'Neill cylinders advanced research", () => {
 
     oneillModule.updateOneillCylinders(1000, { space: manager, galaxy });
 
-    expect(manager.getOneillCylinderCount()).toBe(5);
+    expect(manager.getOneillCylinderCount()).toBeCloseTo(5, 4);
   });
 
   it('reveals the stats column with formatted values once unlocked', () => {

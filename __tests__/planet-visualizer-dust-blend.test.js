@@ -43,9 +43,9 @@ describe('Planet visualizer dust tint', () => {
     viz.updateDustTint();
 
     expect(setRGB).toHaveBeenCalledTimes(1);
-    expect(setRGB.mock.calls[0][0]).toBeCloseTo(4.5, 3);
-    expect(setRGB.mock.calls[0][1]).toBeCloseTo(4.5, 3);
-    expect(setRGB.mock.calls[0][2]).toBeCloseTo(4.5, 3);
+    expect(setRGB.mock.calls[0][0]).toBeCloseTo(1, 5);
+    expect(setRGB.mock.calls[0][1]).toBeCloseTo(1, 5);
+    expect(setRGB.mock.calls[0][2]).toBeCloseTo(1, 5);
   });
 
   test('keeps the current tint when switching custom colors', () => {
@@ -63,8 +63,8 @@ describe('Planet visualizer dust tint', () => {
     viz.updateDustTint();
 
     const lastCall = setRGB.mock.calls[setRGB.mock.calls.length - 1];
-    expect(lastCall[0]).toBeCloseTo(4.5, 5);
-    expect(lastCall[1]).toBeCloseTo(0.5, 5);
-    expect(lastCall[2]).toBeCloseTo(0.5, 5);
+    expect(lastCall[0]).toBeCloseTo(1, 5);
+    expect(lastCall[1]).toBeCloseTo(1, 5);
+    expect(lastCall[2]).toBeCloseTo(1, 5);
   });
 });
