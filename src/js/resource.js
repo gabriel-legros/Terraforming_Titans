@@ -591,6 +591,9 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
 
 function produceResources(deltaTime, buildings) {
   const isDay = dayNightCycle.isDay();
+  let projectProductivityRates = null;
+  let projectEntries = [];
+  let projectProductivityMap = {};
 
   reconcileLandResourceValue();
 
@@ -649,6 +652,46 @@ function produceResources(deltaTime, buildings) {
     } else {
       // Otherwise, update productivity as usual
       building.updateProductivity(resources, deltaTime);
+    }
+  }
+
+  calculateProductionRates(deltaTime, buildings, {
+    useProductivity: true,
+    keepProjected: true
+  });
+
+  projectProductivityRates = {};
+  for (const category in resources) {
+    projectProductivityRates[category] = {};
+    for (const resourceName in resources[category]) {
+      const resource = resources[category][resourceName];
+      const netRate = resource.productionRate - resource.consumptionRate;
+      projectProductivityRates[category][resourceName] = netRate;
+    }
+  }
+
+  if (projectManager) {
+    const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
+    const projectData = {};
+    for (const name of names) {
+      const project = projectManager.projects?.[name];
+      if (!project || project.treatAsBuilding) continue;
+      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
+        continue;
+      }
+      const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
+      projectData[name] = { project, cost, gain };
+    }
+    projectProductivityMap = calculateProjectProductivities(
+      resources,
+      projectProductivityRates,
+      deltaTime,
+      projectData
+    );
+    projectEntries = Object.entries(projectData);
+    for (const [name, data] of projectEntries) {
+      const productivity = projectProductivityMap[name] ?? 1;
+      data.project.continuousProductivity = data.project.isContinuous() ? productivity : 1;
     }
   }
 
@@ -754,23 +797,6 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (projectManager) {
-    const names = projectManager.projectOrder || Object.keys(projectManager.projects || {});
-    const projectData = {};
-    for (const name of names) {
-      const project = projectManager.projects?.[name];
-      if (!project || project.treatAsBuilding) continue;
-      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
-        continue;
-      }
-      const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
-      projectData[name] = { project, cost, gain };
-    }
-    const productivityMap = calculateProjectProductivities(resources, accumulatedChanges, projectData);
-    const projectEntries = Object.entries(projectData);
-    for (const [name, data] of projectEntries) {
-      const productivity = productivityMap[name] ?? 1;
-      data.project.continuousProductivity = data.project.isContinuous() ? productivity : 1;
-    }
     for (const [, data] of projectEntries) {
       const { project } = data;
       if (!project.isContinuous() || !project.attributes?.continuousAsBuilding) {
@@ -875,12 +901,12 @@ function produceResources(deltaTime, buildings) {
   recalculateTotalRates();
 }
 
-function calculateProjectProductivities(resources, accumulatedChanges, projectData = {}) {
+function calculateProjectProductivities(resources, productivityRates, deltaTime, projectData = {}) {
   const totalNet = {};
   const production = {};
   for (const name in projectData) {
     const project = projectData[name].project;
-    if (!project.isContinuous()) {
+    if (!(project.isContinuous() && project.attributes?.continuousAsBuilding)) {
       continue;
     }
     const { cost = {}, gain = {} } = projectData[name];
@@ -913,10 +939,11 @@ function calculateProjectProductivities(resources, accumulatedChanges, projectDa
   const ratios = {};
   for (const category in totalNet) {
     for (const resource in totalNet[category]) {
+      const projectedRate = productivityRates[category]?.[resource] || 0;
       const available =
         (resources[category]?.[resource]?.value || 0) +
         (production[category]?.[resource] || 0) +
-        (accumulatedChanges[category]?.[resource] || 0);
+        (projectedRate * deltaTime / 1000);
       const net = totalNet[category][resource];
       const ratio = net > 0 ? Math.min(available / net, 1) : 1;
       if (!ratios[category]) ratios[category] = {};
