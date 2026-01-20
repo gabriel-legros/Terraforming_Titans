@@ -355,7 +355,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 29,
     activePlanet: 'gabbag',
-    narrative: "Mavion : 'First, I am forwarding you official manuals and textbooks on Cewinsii military doctrine.  This will be certainly be helpful to you.'  \n Mary : 'Thank you.  (to herself) That's nice but I wouldn't call it repaying the debt.' \n Effective UHF Fleet Capacity increased by x1.25 \n Mavion : 'This is nothing.  To defeat the empire and free us all from their tyranny, you must disable their superweapons.  For that, you must meet the Architect.  It is a forbidden thing to do, but I shall break all taboo and guide you there.' \n Mary : *whistles* (World 10 not implemented yet, coming in a future update)",
+    narrative: "Mavion : 'First, I am forwarding you official manuals and textbooks on Cewinsii military doctrine.  This will be certainly be helpful to you.'  \n Mary : 'Thank you.  (to herself) That's nice but I wouldn't call it repaying the debt.' \n Effective UHF Fleet Capacity increased by x1.25 \n Mavion : 'This is nothing.  To defeat the empire and free us all from their tyranny, you must disable their superweapons.  For that, you must meet the Architect.  It is a forbidden thing to do, but I shall break all taboo and guide you there.' \n Mary : *whistles*",
     prerequisites: ['gabbag.29.7'],
     objectives: [
     ],

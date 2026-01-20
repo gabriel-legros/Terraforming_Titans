@@ -956,7 +956,7 @@ function renderSelectedSectorDetails() {
         warpGateInfo.innerHTML = '&#9432;';
         const warpGateTooltip = attachDynamicInfoTooltip(
             warpGateInfo,
-            'Unlocked by Warp Gate Fabrication.\nEach terraformed world in this fully controlled sector adds 1 progress per hour.\nProgress to the next level requires Level + 1.'
+            'Unlocked by Warp Gate Fabrication.\nEach terraformed world in this fully controlled sector adds 1 progress per hour.\nProgress to the next level requires Level + 1.  Higher Warp Gate Network levels increase import caps for space resources.'
         );
         doc.body.appendChild(warpGateTooltip);
         warpGateLabel.appendChild(doc.createTextNode(' '));
