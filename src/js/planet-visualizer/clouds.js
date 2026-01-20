@@ -45,7 +45,7 @@
     const img = ctx.createImageData(w, h);
     const data = img.data;
     const thrValue = thr >= 0 ? thr / 255 : -1;
-    const edge = 0.065;
+    const edge = 0.05;
     const smoothstep = (a, b, t) => {
       const v = Math.max(0, Math.min(1, (t - a) / (b - a)));
       return v * v * (3 - 2 * v);
