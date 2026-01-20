@@ -155,8 +155,10 @@ class GoldenAsteroid {
               const height = this.element.height;
               const containerWidth = this.gameContainer.clientWidth;
               const containerHeight = Math.min(this.gameContainer.clientHeight, 800);
-              const x = Math.random() * (containerWidth - width);
-              const y = Math.random() * (containerHeight - height);
+              const maxX = Math.max(0, containerWidth - width);
+              const maxY = Math.max(0, containerHeight - height);
+              const x = Math.random() * maxX;
+              const y = Math.random() * maxY;
               this.element.style.left = `${x}px`;
               this.element.style.top = `${y}px`;
             };
