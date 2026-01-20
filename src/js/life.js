@@ -989,7 +989,7 @@ class LifeManager extends EffectableEntity {
           const densityMultiplier = 1 + design.spaceEfficiency.value;
           const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
 
-          if (maxBiomassForZone > 0 && zonalBiomass > maxBiomassForZone) {
+          if (zonalBiomass > maxBiomassForZone) {
             const overflowDecay = Math.min(zonalBiomass, zonalBiomass * 0.01 * secondsMultiplier);
             terraforming.zonalSurface[zoneName].biomass -= overflowDecay;
             netBiomassChangeByZone[zoneName] -= overflowDecay;
