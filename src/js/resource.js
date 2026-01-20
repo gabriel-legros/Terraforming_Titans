@@ -906,7 +906,7 @@ function calculateProjectProductivities(resources, productivityRates, deltaTime,
   const production = {};
   for (const name in projectData) {
     const project = projectData[name].project;
-    if (!(project.isContinuous() && project.attributes?.continuousAsBuilding)) {
+    if (! shouldTreatProjectAsBuilding(project)) {
       continue;
     }
     const { cost = {}, gain = {} } = projectData[name];
