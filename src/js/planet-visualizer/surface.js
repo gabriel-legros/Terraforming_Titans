@@ -202,23 +202,24 @@
       .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
+    const dustBaseColor = this.normalizeHexColor(this.dustTintColor) || baseColorKey;
     // Include planet type in cache key so palette changes (archetype) update texture
     let typeKey = 'default';
     try { typeKey = resolvePlanetArchetype(this, baseColorKey) || 'default'; } catch (e) {}
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${baseColorKey}|${typeKey}|${fKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${cloud.toFixed(2)}|${zKey}|${dustBaseColor}|${typeKey}|${fKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
-    const tex = this.generateCraterTexture(factor);
+    const tex = this.generateCraterTexture(factor, dustBaseColor);
     if (this.sphere && this.sphere.material) {
       this.sphere.material.map = tex;
       this.sphere.material.needsUpdate = true;
     }
   };
 
-  PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength) {
+  PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength, surfaceBaseHex) {
     const w = 1024;
     const h = 512;
 
@@ -298,9 +299,9 @@
       return t * t * (3 - 2 * t);
     };
     const waterT = (this.viz.coverage?.water || 0) / 100;
-    const baseHex = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
+    const baseHex = this.normalizeHexColor(surfaceBaseHex) || this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const seed = this.hashSeedFromPlanet ? this.hashSeedFromPlanet() : { x: 0.137, y: 0.733 };
-    const planetType = resolvePlanetArchetype(this, baseHex);
+    const planetType = resolvePlanetArchetype(this, this.normalizeHexColor(this.viz.baseColor) || baseHex);
     const palette = PLANET_TYPE_TEXTURES[planetType] || PLANET_TYPE_TEXTURES.default;
     const isArtificial = planetType === 'artificial';
     const rand = createJitterRandom(seed.x, seed.y);

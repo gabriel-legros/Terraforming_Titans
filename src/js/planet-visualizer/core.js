@@ -117,6 +117,7 @@
 
       this.dustTintStartColor = '';
       this.lastDustTintColor = '';
+      this.dustTintColor = '';
 
     }
 
@@ -204,14 +205,8 @@
       if (!this.sphere || !this.sphere.material || !this.sphere.material.color) return;
       const base = this.getGameBaseColor();
       if (dustFactorySettings.dustColorChanged) {
-        const baseRgb = this.hexToRgb(base);
-        const mat = this.sphere.material.color;
-        const currentTint = this.rgbToHex({
-          r: baseRgb.r * mat.r,
-          g: baseRgb.g * mat.g,
-          b: baseRgb.b * mat.b,
-        });
-        this.dustTintStartColor = this.lastDustTintColor || currentTint || base;
+        const currentTint = this.lastDustTintColor || this.dustTintColor || base;
+        this.dustTintStartColor = currentTint || base;
         dustFactorySettings.dustColorChanged = false;
       }
       const customColor = dustFactorySettings.dustColor;
@@ -220,12 +215,8 @@
       const finalTint = this.dustTintStartColor
         ? this.mixHexColors(this.dustTintStartColor, targetTint, ratio)
         : targetTint;
-      const baseRgb = this.hexToRgb(base);
-      const targetRgb = this.hexToRgb(finalTint);
-      const r = baseRgb.r > 0 ? targetRgb.r / baseRgb.r : 1;
-      const g = baseRgb.g > 0 ? targetRgb.g / baseRgb.g : 1;
-      const b = baseRgb.b > 0 ? targetRgb.b / baseRgb.b : 1;
-      this.sphere.material.color.setRGB(r, g, b);
+      this.dustTintColor = finalTint;
+      this.sphere.material.color.setRGB(1, 1, 1);
       this.lastDustTintColor = finalTint;
       if (ratio >= 1) {
         this.dustTintStartColor = '';
