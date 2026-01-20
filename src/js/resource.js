@@ -587,8 +587,6 @@ function produceResources(deltaTime, buildings) {
 
   reconcileLandResourceValue();
 
-  calculateProductionRates(deltaTime, buildings);
-
   if (updateAntimatterStorageCapHelper) {
     updateAntimatterStorageCapHelper(resources);
   }
@@ -610,6 +608,8 @@ function produceResources(deltaTime, buildings) {
       building.update(deltaTime);
     }
   }
+
+  calculateProductionRates(deltaTime, buildings);
 
   const productivityIterations = 3;
   for (let iteration = 0; iteration < productivityIterations; iteration++) {

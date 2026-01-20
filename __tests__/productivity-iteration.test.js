@@ -14,7 +14,7 @@ describe('productivity iteration', () => {
     global.lifeManager = null;
     global.researchManager = null;
     global.projectManager = null;
-    global.nanotechManager = null;
+    global.nanotechManager = undefined;
     global.spaceManager = null;
     global.globalEffects = {};
   });
@@ -30,7 +30,7 @@ describe('productivity iteration', () => {
     global.lifeManager = null;
     global.researchManager = null;
     global.projectManager = null;
-    global.nanotechManager = null;
+    global.nanotechManager = undefined;
     global.spaceManager = null;
     global.globalEffects = null;
   });
