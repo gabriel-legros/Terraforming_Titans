@@ -496,7 +496,11 @@ const shouldTreatProjectAsBuilding = (project) =>
   (project?.isContinuous() && project?.attributes?.continuousAsBuilding);
 
 function calculateProductionRates(deltaTime, buildings, options = {}) {
-  const { useProductivity = false, keepProjected = false } = options;
+  const {
+    useProductivity = false,
+    keepProjected = false,
+    productivityMap = {}
+  } = options;
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
   // Reset rates using the new method
@@ -512,8 +516,11 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     const workerRatio = building.getTotalWorkerNeed() > 0
       ? populationModule.getWorkerAvailabilityRatio(building.workerPriority)
       : 1;
+    const productivityValue = useProductivity
+      ? (productivityMap[buildingName] ?? building.productivity)
+      : 1;
     const productivityScale = useProductivity
-      ? building.productivity / (workerRatio || 1)
+      ? productivityValue / (workerRatio || 1)
       : 1;
 
     // Calculate scaled production rates
@@ -541,7 +548,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     for (const resource in maintenanceCost) {
       const sourceData = resources.colony[resource];
       if (!sourceData || !sourceData.maintenanceConversion) continue;
-      const base = maintenanceCost[resource] * building.active * automationMultiplier * (useProductivity ? building.productivity : 1);
+      const base = maintenanceCost[resource] * building.active * automationMultiplier * (useProductivity ? productivityValue : 1);
       const conversionValue = sourceData.conversionValue || 1;
       for (const targetCategory in sourceData.maintenanceConversion) {
         const targetResource = sourceData.maintenanceConversion[targetCategory];
@@ -612,25 +619,42 @@ function produceResources(deltaTime, buildings) {
   calculateProductionRates(deltaTime, buildings);
 
   const productivityIterations = 3;
+  const productivityMap = {};
   for (let iteration = 0; iteration < productivityIterations; iteration++) {
     for (const buildingName in buildings) {
       const building = buildings[buildingName];
-
-      // Set productivity to 0 if it's nighttime and the building is inactive during the night
+      let targetProductivity = building.getTargetProductivity(resources, deltaTime);
       if (!isDay && building.dayNightActivity) {
-        building.productivity = 0;
-        building.displayProductivity = 0;
-      } else {
-        // Otherwise, update productivity as usual
-        building.updateProductivity(resources, deltaTime);
+        targetProductivity = 0;
       }
+      productivityMap[buildingName] = targetProductivity;
     }
 
     if (iteration < productivityIterations - 1) {
       calculateProductionRates(deltaTime, buildings, {
         useProductivity: true,
-        keepProjected: true
+        keepProjected: true,
+        productivityMap
       });
+    }
+  }
+
+  calculateProductionRates(deltaTime, buildings, {
+    useProductivity: true,
+    keepProjected: true,
+    productivityMap
+  });
+
+  for (const buildingName in buildings) {
+    const building = buildings[buildingName];
+
+    // Set productivity to 0 if it's nighttime and the building is inactive during the night
+    if (!isDay && building.dayNightActivity) {
+      building.productivity = 0;
+      building.displayProductivity = 0;
+    } else {
+      // Otherwise, update productivity as usual
+      building.updateProductivity(resources, deltaTime);
     }
   }
 

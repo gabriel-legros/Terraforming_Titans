@@ -88,4 +88,54 @@ describe('productivity iteration', () => {
     expect(smelter.productivity).toBe(0);
     expect(press.productivity).toBe(0);
   });
+
+  test('uses target productivity when iterating production rates', () => {
+    const ore = new Resource({ name: 'ore', category: 'colony', initialValue: 0 });
+    const metal = new Resource({ name: 'metal', category: 'colony', initialValue: 0 });
+
+    global.resources = { colony: { ore, metal } };
+
+    const mine = new Building({
+      name: 'Ore Mine',
+      category: 'colony',
+      description: '',
+      cost: {},
+      consumption: {},
+      production: { colony: { ore: 10 } },
+      storage: {},
+      dayNightActivity: false,
+      canBeToggled: true,
+      requiresMaintenance: false,
+      requiresWorker: 0,
+      maintenanceFactor: 1,
+      unlocked: true,
+    }, 'mine');
+
+    const smelter = new Building({
+      name: 'Ore Smelter',
+      category: 'colony',
+      description: '',
+      cost: {},
+      consumption: { colony: { ore: 10 } },
+      production: { colony: { metal: 10 } },
+      storage: {},
+      dayNightActivity: false,
+      canBeToggled: true,
+      requiresMaintenance: false,
+      requiresWorker: 0,
+      maintenanceFactor: 1,
+      unlocked: true,
+    }, 'smelter');
+
+    mine.active = 1;
+    smelter.active = 1;
+
+    const buildings = { mine, smelter };
+    global.buildings = buildings;
+    global.structures = buildings;
+
+    produceResources(1000, buildings);
+
+    expect(smelter.productivity).toBeGreaterThan(0);
+  });
 });

@@ -901,6 +901,17 @@ class Building extends EffectableEntity {
     return current + dampingFactor * (target - current);
   }
 
+  getTargetProductivity(resources, deltaTime) {
+    if (this.active === 0) {
+      return 0;
+    }
+
+    const baseRatio = this.calculateBaseMinRatio(resources, deltaTime);
+    const consumptionRatio = this.getConsumptionRatio();
+    const minRatio = Math.min(baseRatio, consumptionRatio);
+    return Math.max(0, Math.min(1, minRatio));
+  }
+
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
 
