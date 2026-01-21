@@ -124,6 +124,7 @@
       }
       metropolis.count += totalCount;
       metropolis.active += activeCount;
+      metropolis.isHidden = false;
       ecumenopolis.count = 0;
       ecumenopolis.active = 0;
       ecumenopolis.updateResourceStorage();
@@ -157,6 +158,8 @@
     prepareTravelState() {
       if (this.isCompleted) {
         this.foundryPoints += this.getFoundryPointGain(terraforming.initialLand);
+        this.ecumenopolisDisabled = false;
+        researchManager.removeEffect({ sourceId: 'foundryWorld' });
       }
     }
 
