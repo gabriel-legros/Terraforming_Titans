@@ -568,7 +568,7 @@ class SpaceMiningProject extends SpaceshipProject {
         const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
         const limitPa = this.disablePressureThreshold * 1000;
         const maxMass = (limitPa * surfaceArea) / (1000 * gSurface)*(1);
-        const remaining = Math.max(0, maxMass - currentAmount);
+        const remaining = Math.max(0, maxMass - currentAmount) + 1;
         const desired = entry[gas] * fraction * productivity;
         const applied = Math.min(desired, remaining);
         if (applied < desired) {
