@@ -991,6 +991,17 @@ function renderSelectedSectorDetails() {
         lockText.className = 'galaxy-sector-panel__lock-label';
         lockText.textContent = 'Restrict RWG here';
 
+        const lockInfo = doc.createElement('span');
+        lockInfo.className = 'info-tooltip-icon';
+        lockInfo.innerHTML = '&#9432;';
+        const lockTooltip = attachDynamicInfoTooltip(
+            lockInfo,
+            'When checked, all Random World Generator worlds will be generated in this sector.'
+        );
+        doc.body.appendChild(lockTooltip);
+        lockText.appendChild(doc.createTextNode(' '));
+        lockText.appendChild(lockInfo);
+
         lockOption.appendChild(lockInput);
         lockOption.appendChild(lockText);
 

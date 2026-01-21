@@ -173,6 +173,7 @@ The Random World Generator manager builds procedural planets and moons with lock
 World archetypes now provide tangible bonuses: Titan-like planets shorten nitrogen harvesting, carbon worlds accelerate Carbon Asteroid Mining, icy moons hasten Ice and Water importation, Mars-like colonies gain a global 1 % population bonus, desert worlds boost ore production, desiccated deserts enhance sand quarries, ammonia-rich worlds grant a life design point, and Super-Earths reduce non-spaceship project duration by 1% each. Type dropdowns display friendly names matching these effects. Orbit presets include a new **Very Cold** range (10–100 W/m²), and completing Vega‑2 unlocks hot orbits along with a travel warning that must be acknowledged before departure. The generator logs visited seeds with their parameters and re-renders after travel to respect new locks or story progress.
 The Random World Effects card can collapse to hide the bonus table when players need a cleaner view of other space systems.
 - Random World Generator travel controls now include a Dominion selector (Human/Gabbagian) that applies the chosen terraforming requirement without affecting the seed.
+- Galaxy sector panels now include a tooltip on "Restrict RWG here" to explain that Random World Generator results stay in the selected sector.
 
 When adding new generation to the Random World Generator, place the new generation at the end.  This is to ensure older seeds are still compatible.
 
