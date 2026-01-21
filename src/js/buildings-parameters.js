@@ -142,7 +142,7 @@ const buildingsParameters = {
   grapheneFactory: {
     name: 'Graphene Factory',
     category: 'production',
-    description: 'Refines surface graphite into metal using intense energy.  Graphite serves as a metal substitute.',
+    description: 'Refines surface graphite into graphene using intense energy.  Graphene can be used as a metal substitute.',
     cost: { colony: { metal: 1500, glass: 500, components: 150, electronics: 75 } },
     consumption: { colony: { energy: 40_000_000 }, surface: { graphite: 1 } },
     production: { colony: { metal: 1 } },
