@@ -396,7 +396,7 @@ class PlanetaryThrustersProject extends Project{
     this.el.hillRow.style.display = "block";
     this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
     this.el.parentName.textContent = parent.name || "Parent";
-    this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
+    this.el.parentRad.textContent = fmt((parent.orbitRadius||1_000_000), false, 0) + " km";
     const energyRem = p.mass * escArrival / this.getThrustPowerRatio();
     this.el.distE.textContent = formatEnergy(energyRem);
     this.setBurnTime(this.el.distBurn, energyRem);
@@ -482,7 +482,7 @@ class PlanetaryThrustersProject extends Project{
         const r_hill_m = hillRadiusMeters(p, p.parentBody, starM);
         this.escapeTargetRkm = r_hill_m / 1e3; // store km
         // Use **arrival** cost so UI and threshold match; keep for progress bars if desired
-        this.dVreq = dvToCircularAtRadius(G*p.parentBody.mass, p.parentBody.orbitRadius*1e3, r_hill_m);
+        this.dVreq = dvToCircularAtRadius(G*p.parentBody.mass, (p.parentBody.orbitRadius||1_000_000)*1e3, r_hill_m);
       }else{
         this.escapePhase=false;
         if(resetDV || this.startAU===null) this.startAU=p.distanceFromSun;
@@ -552,7 +552,7 @@ class PlanetaryThrustersProject extends Project{
 
         // Compute **remaining** Δv from current parent radius to Hill/L1
         const mu = G*parent.mass;
-        const r_now_m = parent.orbitRadius*1e3;
+        const r_now_m = (parent.orbitRadius || 1_000_000) *1e3;
         const dvRemaining = dvToCircularAtRadius(mu, r_now_m, r_hill_m);
 
         this.el.escRow.style.display = "block";
@@ -562,7 +562,7 @@ class PlanetaryThrustersProject extends Project{
         this.el.hillRow.style.display = "block";
         this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
         this.el.parentName.textContent = parent.name || "Parent";
-        this.el.parentRad.textContent = fmt(parent.orbitRadius, false, 0) + " km";
+        this.el.parentRad.textContent = fmt(parent.orbitRadius || 1_000_000, false, 0) + " km";
 
         // Energy cost reflects **remaining** Δv (not job bookkeeping)
         const energyRem = p.mass * dvRemaining / this.getThrustPowerRatio();
@@ -741,9 +741,10 @@ class PlanetaryThrustersProject extends Project{
         const parent = p.parentBody;
         const mu = G * parent.mass;
         const starM = getStarMassKgFromCurrent();
-        let r = parent.orbitRadius * 1e3;
+        let r = (parent.orbitRadius || 1_000_000) * 1e3;
         const v = Math.sqrt(mu / r);
         let E = -mu / (2 * r) + v * dvTick;
+        E = Math.min(E, -0.000001);
         const rL1 = (this.escapeTargetRkm ?? (hillRadiusMeters(p, parent, starM) / 1e3)) * 1e3;
         const a_new = -mu / (2 * E);
         parent.orbitRadius = a_new / 1e3;
