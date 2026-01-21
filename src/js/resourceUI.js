@@ -606,6 +606,48 @@ function updateAndroidAssignments(assignmentsDiv) {
   updateAssignmentTable(tableContainer, entries);
 }
 
+function updateSpaceshipAssignments(assignmentsDiv) {
+  const available = Math.floor(resources.special.spaceships.value || 0);
+  const assignments = [];
+  let assignedTotal = 0;
+  const projects = Object.values(projectManager.projects || {});
+  for (let index = 0; index < projects.length; index += 1) {
+    const project = projects[index];
+    if (!(project instanceof SpaceshipProject)) continue;
+    const assigned = Math.floor(project.assignedSpaceships || 0);
+    if (assigned <= 0) continue;
+    assignments.push([project.displayName || project.name, assigned]);
+    assignedTotal += assigned;
+  }
+  assignments.sort((a, b) => b[1] - a[1]);
+
+  let totalDiv = assignmentsDiv._totalDiv;
+  if (!totalDiv) {
+    totalDiv = document.createElement('div');
+    assignmentsDiv.appendChild(totalDiv);
+    assignmentsDiv._totalDiv = totalDiv;
+  }
+  const totalText = `Total ${formatNumber(available + assignedTotal, true)}`;
+  if (totalDiv.textContent !== totalText) totalDiv.textContent = totalText;
+
+  let unassignedDiv = assignmentsDiv._unassignedDiv;
+  if (!unassignedDiv) {
+    unassignedDiv = document.createElement('div');
+    assignmentsDiv.appendChild(unassignedDiv);
+    assignmentsDiv._unassignedDiv = unassignedDiv;
+  }
+  const unassignedText = `Unassigned ${formatNumber(available, true)}`;
+  if (unassignedDiv.textContent !== unassignedText) unassignedDiv.textContent = unassignedText;
+
+  let tableContainer = assignmentsDiv._tableContainer;
+  if (!tableContainer) {
+    tableContainer = document.createElement('div');
+    assignmentsDiv.appendChild(tableContainer);
+    assignmentsDiv._tableContainer = tableContainer;
+  }
+  updateAssignmentTable(tableContainer, assignments);
+}
+
 function getAerostatLiftAlert() {
   const colonyCollection =
     typeof colonies !== 'undefined' ? colonies : globalThis.colonies;
@@ -1214,6 +1256,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       updateLandAssignments(assignmentsDiv);
     } else if (resource.name === 'androids') {
       updateAndroidAssignments(assignmentsDiv);
+    } else if (resource.name === 'spaceships') {
+      updateSpaceshipAssignments(assignmentsDiv);
     } else {
       clearElement(assignmentsDiv);
     }
@@ -1531,7 +1575,7 @@ function invalidateResourceUICache() {
 }
 
 try {
-  module.exports = { getDisplayConsumptionRates };
+  module.exports = { getDisplayConsumptionRates, updateSpaceshipAssignments };
 } catch (err) {
   // Browser environment: no module exports.
 }
