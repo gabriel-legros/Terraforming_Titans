@@ -372,7 +372,7 @@ function createProjectItem(project) {
 
   projectCard.appendChild(cardHeader);
 
-  if (project.name === 'galactic_market' || project.name === 'cargo_rocket') {
+  if (project.name === 'galactic_market' || project.name === 'cargo_rocket' || project.name === 'import_colonists_1') {
     const warning = document.createElement('div');
     warning.classList.add('project-kessler-warning');
     warning.style.display = 'none';
@@ -380,7 +380,9 @@ function createProjectItem(project) {
     warningIcon.classList.add('project-kessler-warning__icon');
     warningIcon.textContent = '⚠';
     const warningText = document.createElement('span');
-    warningText.textContent = 'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.';
+    warningText.textContent = project.name === 'import_colonists_1'
+      ? 'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.'
+      : 'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.';
     const warningIconRight = document.createElement('span');
     warningIconRight.classList.add('project-kessler-warning__icon');
     warningIconRight.textContent = '⚠';

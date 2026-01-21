@@ -111,6 +111,7 @@ class ImportColonistsProject extends Project {
     const target = this.getImportTarget();
     const amount = this.getImportAmountFromGain(gain, target);
     amountSpan.textContent = formatNumber(amount, true);
+    this.updateKesslerWarning();
   }
 
   applyResourceGain() {
@@ -134,10 +135,13 @@ class ImportColonistsProject extends Project {
   }
 
   getImportAmountFromGain(gain, target = this.getImportTarget()) {
+    const limit = this.getKesslerImportLimit();
     if (target === 'crusaders') {
-      return gain.special?.crusaders ?? 0;
+      const amount = gain.special?.crusaders ?? 0;
+      return amount > limit ? limit : amount;
     }
-    return gain.colony?.colonists ?? 0;
+    const amount = gain.colony?.colonists ?? 0;
+    return amount > limit ? limit : amount;
   }
 
   getEffectiveResourceGain() {
@@ -166,6 +170,34 @@ class ImportColonistsProject extends Project {
     }
     adjustedGain.special.crusaders = crusaderGain;
     return adjustedGain;
+  }
+
+  getKesslerImportLimit() {
+    let limit = Infinity;
+    try {
+      limit = hazardManager.getKesslerTradeLimitPerSecond();
+    } catch (error) {
+      limit = Infinity;
+    }
+    return limit;
+  }
+
+  updateKesslerWarning() {
+    let hazardActive = false;
+    try {
+      hazardActive = hazardManager.getKesslerTradeLimitPerSecond() !== Infinity;
+    } catch (error) {
+      hazardActive = false;
+    }
+    const elements = projectElements[this.name];
+    const warning = elements.kesslerWarning;
+    let isCollapsed = false;
+    try {
+      isCollapsed = elements.projectItem.classList.contains('collapsed');
+    } catch (error) {
+      isCollapsed = false;
+    }
+    warning.style.display = hazardActive && !isCollapsed ? 'flex' : 'none';
   }
 
   saveState() {
