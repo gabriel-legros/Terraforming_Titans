@@ -19,8 +19,7 @@
 - Save test output to a file so you don't have to rerun it just to read the results.
 - Do not commit `test.log`; it is for local reference only and is ignored via `.gitignore`.
 - Run tests **once** in non-watch mode with `CI=true npm test` and report how many passed or failed. Pipe the command to `tee` (e.g., `CI=true npm test 2>&1 | tee test.log`) so the results are both displayed and stored.
-- Write tests for any new feature.
-- Avoid asserting on exact story text; check IDs or prerequisites instead.
+- Do not write tests for new features unless prompted.
 
 # Overview of code
 This repository contains a browser-based incremental game written in JavaScript. The
