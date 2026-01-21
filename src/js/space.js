@@ -145,6 +145,7 @@ class SpaceManager extends EffectableEntity {
                 departedAt: null,
                 ecumenopolisPercent: 0,
                 foundryWorld: false,
+                foundryLandFactor: 0,
                 specialization: '',
                 rwgLock: false,
                 // Add other statuses later if needed
@@ -551,6 +552,26 @@ class SpaceManager extends EffectableEntity {
 
     _getCurrentWorldLandHa() {
         return getLandFromParams(currentPlanetParameters);
+    }
+
+    _getFoundryLandValue(status, planetKey) {
+        return status?.cachedLandHa
+            || status?.landHa
+            || status?.original?.landHa
+            || getLandFromParams(status?.original?.merged)
+            || getLandFromParams(status?.original?.override)
+            || getLandFromParams(status?.original)
+            || getLandFromParams(status?.merged)
+            || getLandFromParams(status?.override)
+            || getLandFromParams(this.allPlanetsData[planetKey])
+            || 0;
+    }
+
+    _syncFoundryLandFactor(status, planetKey) {
+        if (!status || !status.foundryWorld || status.foundryLandFactor) {
+            return;
+        }
+        status.foundryLandFactor = this._getFoundryLandFactor(this._getFoundryLandValue(status, planetKey));
     }
 
     getOneillCylinderCount() {
@@ -980,6 +1001,9 @@ class SpaceManager extends EffectableEntity {
         } catch (error) {
             foundryCompleted = false;
         }
+        const foundryLandFactor = foundryCompleted
+            ? this._getFoundryLandFactor(terraforming.initialLand)
+            : 0;
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
             if (!this.randomWorldStatuses[seed]) {
@@ -993,6 +1017,7 @@ class SpaceManager extends EffectableEntity {
                     departedAt: null,
                     ecumenopolisPercent: 0,
                     foundryWorld: false,
+                    foundryLandFactor: 0,
                     specialization: ''
                 };
             }
@@ -1002,6 +1027,7 @@ class SpaceManager extends EffectableEntity {
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
             st.foundryWorld = foundryCompleted;
+            st.foundryLandFactor = foundryLandFactor;
             st.specialization = specialization;
             if (!st.name) st.name = this.currentRandomName || `Seed ${seed}`;
         } else if (this.currentArtificialKey !== null) {
@@ -1021,6 +1047,7 @@ class SpaceManager extends EffectableEntity {
                     departedAt: null,
                     ecumenopolisPercent: 0,
                     foundryWorld: false,
+                    foundryLandFactor: 0,
                     specialization: '',
                     artificial: true,
                     terraformedValue,
@@ -1033,6 +1060,7 @@ class SpaceManager extends EffectableEntity {
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
             st.foundryWorld = foundryCompleted;
+            st.foundryLandFactor = foundryLandFactor;
             st.specialization = specialization;
             st.abandoned = !this._isCurrentWorldTerraformed();
             if (!st.terraformedValue) {
@@ -1054,12 +1082,23 @@ class SpaceManager extends EffectableEntity {
             ps.departedAt = now;
             ps.ecumenopolisPercent = ecoPercent;
             ps.foundryWorld = foundryCompleted;
+            ps.foundryLandFactor = foundryLandFactor;
             ps.specialization = specialization;
         }
     }
 
     getFoundryWorldCount({ excludeCurrent = true } = {}) {
+        return this.getFoundryWorldBonusData({ excludeCurrent }).count;
+    }
+
+    _getFoundryLandFactor(initialLand) {
+        const normalized = Math.max(initialLand, 0);
+        return Math.sqrt(normalized / 50000000000);
+    }
+
+    getFoundryWorldBonusData({ excludeCurrent = true } = {}) {
         let count = 0;
+        let bonus = 0;
         const currentSeed = this.currentRandomSeed;
         const currentArtificial = this.currentArtificialKey;
         const currentPlanet = this.currentPlanetKey;
@@ -1068,8 +1107,10 @@ class SpaceManager extends EffectableEntity {
             if (excludeCurrent && currentSeed === null && currentArtificial === null && key === currentPlanet) {
                 return;
             }
-            if (this.planetStatuses[key]?.foundryWorld) {
+            const status = this.planetStatuses[key];
+            if (status?.foundryWorld) {
                 count += 1;
+                bonus += (status.foundryLandFactor || 0) * 1e11;
             }
         });
 
@@ -1077,8 +1118,10 @@ class SpaceManager extends EffectableEntity {
             if (excludeCurrent && currentSeed !== null && String(currentSeed) === key) {
                 return;
             }
-            if (this.randomWorldStatuses[key]?.foundryWorld) {
+            const status = this.randomWorldStatuses[key];
+            if (status?.foundryWorld) {
                 count += 1;
+                bonus += (status.foundryLandFactor || 0) * 1e11;
             }
         });
 
@@ -1086,12 +1129,14 @@ class SpaceManager extends EffectableEntity {
             if (excludeCurrent && currentArtificial !== null && String(currentArtificial) === key) {
                 return;
             }
-            if (this.artificialWorldStatuses[key]?.foundryWorld) {
+            const status = this.artificialWorldStatuses[key];
+            if (status?.foundryWorld) {
                 count += 1;
+                bonus += (status.foundryLandFactor || 0) * 1e11;
             }
         });
 
-        return count;
+        return { count, bonus };
     }
 
     _isCurrentWorldTerraformed() {
@@ -1523,6 +1568,7 @@ class SpaceManager extends EffectableEntity {
                     if (saved.foundryWorld === true || saved.foundryWorld === false) {
                         this.planetStatuses[planetKey].foundryWorld = saved.foundryWorld;
                     }
+                    this.planetStatuses[planetKey].foundryLandFactor = saved.foundryLandFactor || 0;
                     if (saved.specialization) {
                         this.planetStatuses[planetKey].specialization = saved.specialization;
                     }
@@ -1552,6 +1598,7 @@ class SpaceManager extends EffectableEntity {
                 if (!Number.isFinite(entry.fleetCapacityValue) || entry.fleetCapacityValue <= 0) {
                     entry.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(entry);
                 }
+                entry.foundryLandFactor = entry.foundryLandFactor || 0;
                 assignSector(entry);
                 sanitizeCachedHazards(entry);
             });
@@ -1562,6 +1609,7 @@ class SpaceManager extends EffectableEntity {
             Object.values(this.randomWorldStatuses)
                 .filter(Boolean)
                 .forEach((entry) => {
+                    entry.foundryLandFactor = entry.foundryLandFactor || 0;
                     assignSector(entry);
                     sanitizeCachedHazards(entry);
                 });
@@ -1607,6 +1655,16 @@ class SpaceManager extends EffectableEntity {
                 }
             });
         }
+
+        Object.keys(this.planetStatuses).forEach((planetKey) => {
+            this._syncFoundryLandFactor(this.planetStatuses[planetKey], planetKey);
+        });
+        Object.keys(this.randomWorldStatuses).forEach((key) => {
+            this._syncFoundryLandFactor(this.randomWorldStatuses[key], key);
+        });
+        Object.keys(this.artificialWorldStatuses).forEach((key) => {
+            this._syncFoundryLandFactor(this.artificialWorldStatuses[key], key);
+        });
 
         if (savedData && Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLock')) {
             const hasManualFlag = Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLockManual');

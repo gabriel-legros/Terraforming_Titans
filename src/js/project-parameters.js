@@ -678,7 +678,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Taps into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub on a fully terraformed world. Can only start once deeper mining reaches 50,000 depth. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world add +100B to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
+    description: 'Taps into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub on a fully terraformed world. Can only start once deeper mining reaches 50,000 depth. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(initial land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
     repeatable: false,
     unlocked: false,
     attributes: {
