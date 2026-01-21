@@ -461,6 +461,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Mega Heat Sink completions now provide additional cooling power whenever zonal temperatures exceed their trend targets.
 - Added a Mega Heat Sink project summary card that reports completed heat sinks and their current cooling rate.
 - Mega Heat Sink projects now use worker batch capacity controls matching satellites and require 1 billion worker cap per heat sink.
+- Mega Heat Sink controls now include a cooling on/off toggle, and manual amount buttons disable Auto Max.
 
 - Particle Accelerator mega project now lets players set a custom radius with controls, scales material costs by circumference,
   and records the largest completed accelerator.

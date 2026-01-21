@@ -26,10 +26,12 @@
       super(config, name);
       this.summaryElements = null;
       this.workersPerCompletion = WORKERS_PER_HEAT_SINK;
+      this.heatSinksActive = true;
     }
 
     renderUI(container) {
       this.renderWorkerCapacityControls(container, {
+        amountTitle: 'Build Amount',
         tooltip: 'Worker capacity lets us build heat sinks in parallel. One heat sink can be produced per 1,000,000,000 worker cap.',
         layoutClass: 'scanner-layout worker-capacity-layout',
       });
@@ -64,11 +66,19 @@
         content.appendChild(value);
         box.append(label, content);
         summaryGrid.appendChild(box);
-        return value;
+        return { value, content };
       };
 
-      const countValue = createSummaryBox('Heat Sinks Built');
-      const coolingValue = createSummaryBox('Cooling per Second');
+      const countElements = createSummaryBox('Heat Sinks Built');
+      const coolingElements = createSummaryBox('Cooling per Second');
+      const controlElements = createSummaryBox('Control');
+      const coolingToggle = createToggleButton({
+        onLabel: 'On',
+        offLabel: 'Off',
+        isOn: this.heatSinksActive
+      });
+      coolingToggle.id = `${this.name}-cooling-toggle`;
+      controlElements.content.appendChild(coolingToggle);
 
       body.appendChild(summaryGrid);
       card.appendChild(body);
@@ -76,9 +86,16 @@
 
       this.summaryElements = {
         card,
-        countValue,
-        coolingValue
+        countValue: countElements.value,
+        coolingValue: coolingElements.value,
+        coolingToggle
       };
+
+      coolingToggle.addEventListener('click', () => {
+        this.heatSinksActive = !this.heatSinksActive;
+        setToggleButtonState(coolingToggle, this.heatSinksActive);
+        updateProjectUI(this.name);
+      });
 
       this.updateUI();
     }
@@ -110,7 +127,11 @@
       elements.countValue.textContent = formatValue(heatSinkCount, true);
 
       const coolingPerSecond = this.calculateCoolingPerSecond();
-      if (Number.isFinite(coolingPerSecond) && coolingPerSecond > 0) {
+      const coolingActive = this.heatSinksActive;
+      setToggleButtonState(elements.coolingToggle, coolingActive);
+      if (!coolingActive) {
+        elements.coolingValue.textContent = 'Off';
+      } else if (Number.isFinite(coolingPerSecond) && coolingPerSecond > 0) {
         elements.coolingValue.textContent = `${formatValue(coolingPerSecond, false, 2)} K/s`;
       } else {
         elements.coolingValue.textContent = '—';
@@ -200,6 +221,18 @@
     complete() {
       super.complete();
       this.updateUI();
+    }
+
+    saveState() {
+      return {
+        ...super.saveState(),
+        heatSinksActive: this.heatSinksActive
+      };
+    }
+
+    loadState(state) {
+      super.loadState(state);
+      this.heatSinksActive = state.heatSinksActive ?? true;
     }
   }
 

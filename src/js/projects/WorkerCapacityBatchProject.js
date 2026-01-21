@@ -243,10 +243,12 @@ class WorkerCapacityBatchProject extends Project {
     };
 
     bPlus.addEventListener('click', () => {
+      this.autoMax = false;
       this.adjustBuildCount(this.getWorkerCapacityStep());
       refresh();
     });
     bMinus.addEventListener('click', () => {
+      this.autoMax = false;
       this.adjustBuildCount(-this.getWorkerCapacityStep());
       refresh();
     });
@@ -259,10 +261,12 @@ class WorkerCapacityBatchProject extends Project {
       refresh();
     });
     bMin.addEventListener('click', () => {
+      this.autoMax = false;
       this.setBuildCount(1);
       refresh();
     });
     bMax.addEventListener('click', () => {
+      this.autoMax = false;
       this.setMaxBuildCount();
       refresh();
     });

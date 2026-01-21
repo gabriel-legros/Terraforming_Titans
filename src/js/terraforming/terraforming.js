@@ -876,8 +876,11 @@ class Terraforming extends EffectableEntity{
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
     const greenhouseFactor = 1 + 0.75 * tau;
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     const megaHeatSinkCount =
-        projectManager?.projects?.megaHeatSink?.repeatCount ?? 0;
+        megaHeatSinkProject?.heatSinksActive === false
+          ? 0
+          : (megaHeatSinkProject?.repeatCount ?? 0);
     const allowAvailableHeating =
         !!(mirrorOversightSettings?.advancedOversight) &&
         mirrorOversightSettings.allowAvailableToHeat !== false;
