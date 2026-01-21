@@ -57,6 +57,10 @@ class Project extends EffectableEntity {
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
   }
 
+  ignoreProductivityCostForResource(category, resource) {
+    return false;
+  }
+
   getKesslerSuccessChance() {
     if (!this.kesslerDebrisSize) {
       return 1;

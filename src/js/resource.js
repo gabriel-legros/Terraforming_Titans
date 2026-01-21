@@ -913,6 +913,9 @@ function calculateProjectProductivities(resources, productivityRates, deltaTime,
     let hasCost = false;
     for (const category in cost) {
       for (const resource in cost[category]) {
+        if (project.ignoreProductivityCostForResource(category, resource)) {
+          continue;
+        }
         const required = cost[category][resource] || 0;
         const produced = gain[category]?.[resource] || 0;
         const net = Math.max(required - produced, 0);
@@ -960,6 +963,9 @@ function calculateProjectProductivities(resources, productivityRates, deltaTime,
     let productivity = 1;
     for (const category in cost) {
       for (const resource in cost[category]) {
+        if (project.ignoreProductivityCostForResource(category, resource)) {
+          continue;
+        }
         const required = cost[category][resource] || 0;
         const produced = gain[category]?.[resource] || 0;
         const net = Math.max(required - produced, 0);
