@@ -131,7 +131,7 @@ const PatienceUI = {
 
         const timerMeta = document.createElement('div');
         timerMeta.className = 'patience-card-meta';
-        timerMeta.textContent = 'Next reset in --:--:-- (UTC)';
+        timerMeta.textContent = 'Next reset in --:--:--';
         timerCard.appendChild(timerMeta);
         statsRow.appendChild(timerCard);
 
@@ -391,7 +391,7 @@ const PatienceUI = {
 
         if (this.timerMetaEl) {
             const msRemaining = patienceManager.getMillisecondsUntilNextDaily();
-            this.timerMetaEl.textContent = `Next reset in ${this.formatTimeRemaining(msRemaining)} (UTC)`;
+            this.timerMetaEl.textContent = `Next reset in ${this.formatTimeRemaining(msRemaining)}`;
         }
 
         // Update spend button state

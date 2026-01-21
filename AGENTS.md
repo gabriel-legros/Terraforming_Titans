@@ -269,6 +269,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Kessler debris decay now uses the max-since-zero bin mass for decay at or below the drag line while higher orbits keep exponential decay on current mass.
 - Kessler hazard bin hover text now includes per-bin decay rate and atmospheric density alongside debris amounts.
 - Space storage resources now support per-resource caps set via gear settings (amount or % of max), display amount/cap values, and ship transfers honor the caps across saves and travel.
+- Space storage cap menus now include a delete-over-cap action to clamp stored resources to the configured cap.
 - Added a Laser Cannon energy research gated by Tartarus 32.2 and active Kessler hazard conditions, unlocking a waste-category Laser Cannon that consumes research and energy to clear orbital debris from the lowest periapsis bins.
 - Added an Engineered Nitrogen Fixation research that doubles life growth at 10 kPa of nitrogen pressure.
 - Gabbag chapter 29.8 now unlocks ammonia visibility and new chemical reactor recipes for Haber-Bosch and ammonia combustion.

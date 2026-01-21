@@ -367,6 +367,26 @@
     align-items: center;
 }
 
+.space-storage-settings-button-row {
+    grid-template-columns: 1fr;
+    justify-items: center;
+}
+
+.space-storage-settings-clamp {
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    background: #f44336;
+    color: #fff;
+    width: min(280px, 100%);
+    justify-self: center;
+}
+
+.space-storage-settings-clamp:hover {
+    background: #d32f2f;
+}
+
 .space-storage-settings-confirm {
     border: none;
     border-radius: 4px;

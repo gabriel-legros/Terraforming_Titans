@@ -80,6 +80,19 @@ class SpaceStorageProject extends SpaceshipProject {
     return Infinity;
   }
 
+  clampStoredResourceToLimit(resourceKey, capLimit) {
+    if (capLimit === Infinity) return;
+    const stored = this.resourceUsage[resourceKey] || 0;
+    const clamped = Math.max(0, Math.min(stored, capLimit));
+    if (clamped === stored) return;
+    if (clamped > 0) {
+      this.resourceUsage[resourceKey] = clamped;
+    } else {
+      delete this.resourceUsage[resourceKey];
+    }
+    this.usedStorage = Math.max(0, this.usedStorage - (stored - clamped));
+  }
+
   getBiomassZones() {
     const zones = ['tropical', 'temperate', 'polar'];
     const entries = zones.map(zone => ({

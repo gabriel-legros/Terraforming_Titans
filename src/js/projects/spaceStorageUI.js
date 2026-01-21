@@ -254,6 +254,7 @@ function renderSpaceStorageUI(project, container) {
   let capValueInput = cachedCaps.capValueInput;
   let capValueLabel = cachedCaps.capValueLabel;
   let capClose = cachedCaps.capClose;
+  let capClampButton = cachedCaps.capClampButton;
 
   let newOverlay = false;
   if (!capOverlay || !capOverlay.isConnected) {
@@ -342,18 +343,27 @@ function renderSpaceStorageUI(project, container) {
     });
     capValueRow.append(capValueLabel, capValueInput);
 
+    const capClampRow = document.createElement('div');
+    capClampRow.classList.add('space-storage-settings-row', 'space-storage-settings-button-row');
+    capClampButton = document.createElement('button');
+    capClampButton.type = 'button';
+    capClampButton.classList.add('space-storage-settings-clamp');
+    capClampButton.textContent = 'Delete Current Resources above Cap';
+    capClampRow.appendChild(capClampButton);
+
     const capConfirm = document.createElement('button');
     capConfirm.type = 'button';
     capConfirm.classList.add('space-storage-settings-confirm');
     capConfirm.textContent = 'Confirm';
 
-    capWindow.append(capHeader, capResourceRow, capModeRow, capValueRow, capConfirm);
+    capWindow.append(capHeader, capResourceRow, capModeRow, capValueRow, capClampRow, capConfirm);
     capOverlay.appendChild(capWindow);
     document.body.appendChild(capOverlay);
 
     projectElements[project.name] = {
       ...projectElements[project.name],
       capConfirmButton: capConfirm,
+      capClampButton,
     };
   }
 
@@ -391,6 +401,20 @@ function renderSpaceStorageUI(project, container) {
       if (typeof updateSpaceStorageUI === 'function') {
         updateSpaceStorageUI(project);
       }
+    });
+    projectElements[project.name].capClampButton.addEventListener('click', () => {
+      const key = projectElements[project.name].capResourceKey;
+      const mode = capModeSelect.value;
+      if (mode === 'none') return;
+      const parsed = parseFlexibleNumber(capValueInput.dataset.spaceStorageCap) || 0;
+      const normalized = mode === 'percent'
+        ? Math.max(0, Math.min(100, parsed))
+        : Math.max(0, parsed);
+      const capLimit = mode === 'percent'
+        ? Math.max(0, (project.maxStorage * normalized) / 100)
+        : normalized;
+      project.clampStoredResourceToLimit(key, capLimit);
+      updateSpaceStorageUI(project);
     });
     capModeSelect.addEventListener('change', () => {
       const mode = capModeSelect.value;
@@ -613,6 +637,7 @@ function renderSpaceStorageUI(project, container) {
     capModeSelect,
     capValueInput,
     capClose,
+    capClampButton,
     capConfirmButton: projectElements[project.name].capConfirmButton,
     capDraft: projectElements[project.name].capDraft,
     capDraftDirty: projectElements[project.name].capDraftDirty,
