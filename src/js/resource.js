@@ -1,13 +1,3 @@
-let produceAntimatterHelper = globalThis.produceAntimatter || null;
-let updateAntimatterStorageCapHelper = globalThis.updateAntimatterStorageCap || null;
-
-if (typeof module !== 'undefined' && module.exports) {
-  ({
-    produceAntimatter: produceAntimatterHelper,
-    updateAntimatterStorageCap: updateAntimatterStorageCapHelper,
-  } = require('./special/antimatter.js'));
-}
-
 // Resource Class and Core Logic
 class Resource extends EffectableEntity {
   constructor(resourceData) {
@@ -591,15 +581,11 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
 
 function produceResources(deltaTime, buildings) {
   const isDay = dayNightCycle.isDay();
-  let projectProductivityRates = null;
   let projectEntries = [];
   let projectProductivityMap = {};
 
   reconcileLandResourceValue();
-
-  if (updateAntimatterStorageCapHelper) {
-    updateAntimatterStorageCapHelper(resources);
-  }
+  updateAntimatterStorageCap(resources);
 
   // Update storage cap for all resources except workers
   for (const category in resources) {
@@ -620,6 +606,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   calculateProductionRates(deltaTime, buildings);
+  updateResourceAvailabilityRatios(resources, deltaTime);
 
   const productivityIterations = 3;
   const productivityMap = {};
@@ -639,6 +626,7 @@ function produceResources(deltaTime, buildings) {
         keepProjected: true,
         productivityMap
       });
+      updateResourceAvailabilityRatios(resources, deltaTime);
     }
   }
 
@@ -652,21 +640,6 @@ function produceResources(deltaTime, buildings) {
     } else {
       // Otherwise, update productivity as usual
       building.updateProductivity(resources, deltaTime);
-    }
-  }
-
-  calculateProductionRates(deltaTime, buildings, {
-    useProductivity: true,
-    keepProjected: true
-  });
-
-  projectProductivityRates = {};
-  for (const category in resources) {
-    projectProductivityRates[category] = {};
-    for (const resourceName in resources[category]) {
-      const resource = resources[category][resourceName];
-      const netRate = resource.productionRate - resource.consumptionRate;
-      projectProductivityRates[category][resourceName] = netRate;
     }
   }
 
@@ -684,7 +657,6 @@ function produceResources(deltaTime, buildings) {
     }
     projectProductivityMap = calculateProjectProductivities(
       resources,
-      projectProductivityRates,
       deltaTime,
       projectData
     );
@@ -824,8 +796,8 @@ function produceResources(deltaTime, buildings) {
     });
   }
 
-  if (produceAntimatterHelper) {
-    produceAntimatterHelper(deltaTime, resources, accumulatedChanges);
+  if (produceAntimatter) {
+    produceAntimatter(deltaTime, resources, accumulatedChanges);
   }
 
 
@@ -901,76 +873,22 @@ function produceResources(deltaTime, buildings) {
   recalculateTotalRates();
 }
 
-function calculateProjectProductivities(resources, productivityRates, deltaTime, projectData = {}) {
-  const totalNet = {};
-  const production = {};
-  for (const name in projectData) {
-    const project = projectData[name].project;
-    if (! shouldTreatProjectAsBuilding(project)) {
-      continue;
-    }
-    const { cost = {}, gain = {} } = projectData[name];
-    let hasCost = false;
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        if (project.ignoreProductivityCostForResource(category, resource)) {
-          continue;
-        }
-        const required = cost[category][resource] || 0;
-        const produced = gain[category]?.[resource] || 0;
-        const net = Math.max(required - produced, 0);
-        if (net > 0) {
-          hasCost = true;
-          if (!totalNet[category]) totalNet[category] = {};
-          totalNet[category][resource] = (totalNet[category][resource] || 0) + net;
-        }
-      }
-    }
-    if (hasCost) {
-      for (const category in gain) {
-        for (const resource in gain[category]) {
-          const produced = gain[category]?.[resource] || 0;
-          if (produced > 0) {
-            if (!production[category]) production[category] = {};
-            production[category][resource] = (production[category][resource] || 0) + produced;
-          }
-        }
-      }
-    }
-  }
-
-  const ratios = {};
-  for (const category in totalNet) {
-    for (const resource in totalNet[category]) {
-      const projectedRate = productivityRates[category]?.[resource] || 0;
-      const available =
-        (resources[category]?.[resource]?.value || 0) +
-        (production[category]?.[resource] || 0) +
-        (projectedRate * deltaTime / 1000);
-      const net = totalNet[category][resource];
-      const ratio = net > 0 ? Math.min(available / net, 1) : 1;
-      if (!ratios[category]) ratios[category] = {};
-      ratios[category][resource] = Math.max(0, ratio);
-    }
-  }
-
+function calculateProjectProductivities(resources, deltaTime, projectData = {}) {
   const productivityMap = {};
   for (const name in projectData) {
-    const { cost = {}, gain = {}, project } = projectData[name];
+    const { cost = {}, project } = projectData[name];
     if (!project.isContinuous()) {
+      continue;
+    }
+    if (!shouldTreatProjectAsBuilding(project)) {
       continue;
     }
     let productivity = 1;
     for (const category in cost) {
       for (const resource in cost[category]) {
-        if (project.ignoreProductivityCostForResource(category, resource)) {
-          continue;
-        }
         const required = cost[category][resource] || 0;
-        const produced = gain[category]?.[resource] || 0;
-        const net = Math.max(required - produced, 0);
-        if (net > 0) {
-          const ratio = ratios[category]?.[resource] ?? 1;
+        if (required > 0) {
+          const ratio = getResourceAvailabilityRatio(resources[category][resource]);
           productivity = Math.min(productivity, ratio);
         }
       }
@@ -990,15 +908,49 @@ function recalculateTotalRates(){
   }
 }
 
+function calculateResourceAvailabilityRatio(resource, deltaTime) {
+  const seconds = deltaTime / 1000;
+  const requiredAmount = resource.consumptionRate * seconds;
+  if (requiredAmount <= 0) {
+    return 1;
+  }
+  const availableAmount = resource.value + resource.productionRate * seconds;
+  return Math.max(0, Math.min(availableAmount / requiredAmount, 1));
+}
+
+function updateResourceAvailabilityRatios(resources, deltaTime) {
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      const resource = resources[category][resourceName];
+      resource.availabilityRatio = calculateResourceAvailabilityRatio(resource, deltaTime);
+    }
+  }
+}
+
+function getResourceAvailabilityRatio(resource) {
+  return resource.availabilityRatio;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     Resource,
     checkResourceAvailability,
     createResources,
     produceResources,
+    calculateResourceAvailabilityRatio,
+    updateResourceAvailabilityRatios,
+    getResourceAvailabilityRatio,
     calculateProjectProductivities,
     recalculateTotalRates,
     reconcileLandResourceValue,
   };
+}
+
+try {
+  window.calculateResourceAvailabilityRatio = calculateResourceAvailabilityRatio;
+  window.updateResourceAvailabilityRatios = updateResourceAvailabilityRatios;
+  window.getResourceAvailabilityRatio = getResourceAvailabilityRatio;
+} catch (error) {
+  // window is not available
 }
 

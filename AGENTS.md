@@ -262,7 +262,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Spaceship projects and satellites now show Kessler failure risk warnings with live failure percentages based on their project size.
 - Continuous spaceship operations now add Kessler debris for fractional ship losses.
 - Resource Disposal now isolates Kessler risk to spaceship capacity only, letting mass drivers contribute without failure or debris.
-- Resource Disposal now ignores the selected disposal resource when calculating continuous productivity.
+- Project productivity now uses available storage plus production only (no consumption offsets), matching building productivity calculations.
+- Project and building productivity now share a resource availability ratio precomputed each tick from overall production/consumption rates.
 - Kessler debris decay now uses the max-since-zero bin mass for decay at or below the drag line while higher orbits keep exponential decay on current mass.
 - Kessler hazard bin hover text now includes per-bin decay rate and atmospheric density alongside debris amounts.
 - Space storage resources now support per-resource caps set via gear settings (amount or % of max), display amount/cap values, and ship transfers honor the caps across saves and travel.

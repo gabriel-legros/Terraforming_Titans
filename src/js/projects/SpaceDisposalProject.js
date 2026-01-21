@@ -15,11 +15,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return super.getAutomationTemperatureReading();
   }
 
-  ignoreProductivityCostForResource(category, resource) {
-    const selected = this.selectedDisposalResource || {};
-    return selected.category === category && selected.resource === resource;
-  }
-
   getExportRateLabel(baseLabel) {
     return 'Resource Disposal';
   }

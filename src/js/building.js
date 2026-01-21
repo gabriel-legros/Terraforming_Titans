@@ -1,4 +1,3 @@
-
 // Building Class (Core Game Logic)
 class Building extends EffectableEntity {
   constructor(config, buildingName) {
@@ -829,14 +828,8 @@ class Building extends EffectableEntity {
         if (ignoreCategory[resource]) {
           continue;
         }
-        const requiredAmount = resources[category][resource].consumptionRate * (deltaTime / 1000);
-        if (requiredAmount === 0) continue;
-        const availableAmount = resources[category][resource].value + resources[category][resource].productionRate * (deltaTime / 1000);
-        if (availableAmount < requiredAmount) {
-          minRatio = Math.min(minRatio, Math.max(availableAmount / requiredAmount, 0));
-        } else {
-          minRatio = Math.min(minRatio, 1);
-        }
+        const ratio = getResourceAvailabilityRatio(resources[category][resource]);
+        minRatio = Math.min(minRatio, ratio);
       }
     }
 

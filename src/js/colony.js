@@ -364,27 +364,8 @@ class Colony extends Building {
                   continue;
               }
 
-              // Original logic from Building class for non-luxury resources
-              const requiredAmount = resources[category][resource].consumptionRate * (deltaTime / 1000);
-              if (requiredAmount === 0) continue;
-              // Use available value directly, production rate during the tick shouldn't affect availability *for* consumption in the same tick
-              const availableAmount = resources[category][resource].value;
-              if (availableAmount < requiredAmount) {
-                  // If consumption rate is zero (e.g., due to other shortages), ratio is effectively infinite (or 1 if available > 0)
-                  // Avoid division by zero or negative rates.
-                  const consumptionRate = resources[category][resource].consumptionRate;
-                  if (consumptionRate <= 0) {
-                     minRatio = Math.min(minRatio, 1); // Can't be limited by zero or negative consumption
-                  } else {
-                     // Calculate ratio based on production vs consumption *rates* if available amount is insufficient
-                     const productionRate = resources[category][resource].productionRate;
-                     const ratio = productionRate / consumptionRate;
-                     minRatio = Math.min(minRatio, Math.max(ratio, 0)); // Ensure ratio isn't negative
-                  }
-
-              } else {
-                  minRatio = Math.min(minRatio, 1); // Not limited by this resource
-              }
+              const ratio = getResourceAvailabilityRatio(resources[category][resource]);
+              minRatio = Math.min(minRatio, ratio);
           }
       }
 
