@@ -123,6 +123,7 @@ class SpaceManager extends EffectableEntity {
         this.oneillCylinders = 0;
         this.dominionTerraformRewards = {};
         this.dominionTerraformRewardCount = 0;
+        this.foundryWorldBonusCache = { count: 0, bonus: 0 };
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
@@ -572,6 +573,37 @@ class SpaceManager extends EffectableEntity {
             return;
         }
         status.foundryLandFactor = this._getFoundryLandFactor(this._getFoundryLandValue(status, planetKey));
+    }
+
+    _getCurrentFoundryStatus() {
+        if (this.currentRandomSeed !== null) {
+            return this.randomWorldStatuses[String(this.currentRandomSeed)] || { foundryWorld: false, foundryLandFactor: 0 };
+        }
+        if (this.currentArtificialKey !== null) {
+            return this.artificialWorldStatuses[String(this.currentArtificialKey)] || { foundryWorld: false, foundryLandFactor: 0 };
+        }
+        return this.planetStatuses[this.currentPlanetKey] || { foundryWorld: false, foundryLandFactor: 0 };
+    }
+
+    _refreshFoundryWorldBonusCache() {
+        let count = 0;
+        let bonus = 0;
+        Object.values(this.planetStatuses).forEach((status) => {
+            if (!status?.foundryWorld) return;
+            count += 1;
+            bonus += (status.foundryLandFactor || 0) * 1e11;
+        });
+        Object.values(this.randomWorldStatuses).forEach((status) => {
+            if (!status?.foundryWorld) return;
+            count += 1;
+            bonus += (status.foundryLandFactor || 0) * 1e11;
+        });
+        Object.values(this.artificialWorldStatuses).forEach((status) => {
+            if (!status?.foundryWorld) return;
+            count += 1;
+            bonus += (status.foundryLandFactor || 0) * 1e11;
+        });
+        this.foundryWorldBonusCache = { count, bonus };
     }
 
     getOneillCylinderCount() {
@@ -1085,6 +1117,7 @@ class SpaceManager extends EffectableEntity {
             ps.foundryLandFactor = foundryLandFactor;
             ps.specialization = specialization;
         }
+        this._refreshFoundryWorldBonusCache();
     }
 
     getFoundryWorldCount({ excludeCurrent = true } = {}) {
@@ -1097,46 +1130,19 @@ class SpaceManager extends EffectableEntity {
     }
 
     getFoundryWorldBonusData({ excludeCurrent = true } = {}) {
-        let count = 0;
-        let bonus = 0;
-        const currentSeed = this.currentRandomSeed;
-        const currentArtificial = this.currentArtificialKey;
-        const currentPlanet = this.currentPlanetKey;
-
-        Object.keys(this.planetStatuses).forEach((key) => {
-            if (excludeCurrent && currentSeed === null && currentArtificial === null && key === currentPlanet) {
-                return;
-            }
-            const status = this.planetStatuses[key];
-            if (status?.foundryWorld) {
-                count += 1;
-                bonus += (status.foundryLandFactor || 0) * 1e11;
-            }
-        });
-
-        Object.keys(this.randomWorldStatuses).forEach((key) => {
-            if (excludeCurrent && currentSeed !== null && String(currentSeed) === key) {
-                return;
-            }
-            const status = this.randomWorldStatuses[key];
-            if (status?.foundryWorld) {
-                count += 1;
-                bonus += (status.foundryLandFactor || 0) * 1e11;
-            }
-        });
-
-        Object.keys(this.artificialWorldStatuses).forEach((key) => {
-            if (excludeCurrent && currentArtificial !== null && String(currentArtificial) === key) {
-                return;
-            }
-            const status = this.artificialWorldStatuses[key];
-            if (status?.foundryWorld) {
-                count += 1;
-                bonus += (status.foundryLandFactor || 0) * 1e11;
-            }
-        });
-
-        return { count, bonus };
+        const cached = this.foundryWorldBonusCache;
+        if (!excludeCurrent) {
+            return { count: cached.count, bonus: cached.bonus };
+        }
+        const currentStatus = this._getCurrentFoundryStatus();
+        if (!currentStatus.foundryWorld) {
+            return { count: cached.count, bonus: cached.bonus };
+        }
+        const currentBonus = (currentStatus.foundryLandFactor || 0) * 1e11;
+        return {
+            count: Math.max(0, cached.count - 1),
+            bonus: Math.max(0, cached.bonus - currentBonus)
+        };
     }
 
     _isCurrentWorldTerraformed() {
@@ -1665,6 +1671,7 @@ class SpaceManager extends EffectableEntity {
         Object.keys(this.artificialWorldStatuses).forEach((key) => {
             this._syncFoundryLandFactor(this.artificialWorldStatuses[key], key);
         });
+        this._refreshFoundryWorldBonusCache();
 
         if (savedData && Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLock')) {
             const hasManualFlag = Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLockManual');
