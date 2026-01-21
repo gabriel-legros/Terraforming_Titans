@@ -249,6 +249,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Foundry World shops now include Galactic Everything Else to boost water/ice, carbon, and nitrogen import caps.
 - Foundry worlds now add +100B to the metal mining cap per completed world, excluding the current planet, and permanently disable new Ecumenopolis districts after completion.
 - Foundry World metallurgy travel points now award 10 points times sqrt(initial land / 50B).
+- Bioworld and Foundry World mega projects now require the current world to be fully terraformed before starting.
 - Departure snapshots now record world specialization across story, random, and artificial worlds.
 - Deeper Mining now includes deep mining settings (depth > 500) with two configurable options:
   - **Create geothermal deposits**: Generates geothermal deposits (default 1000 per mine per 250m level beyond 500m) when enabled during deepening. Tradeoff: doubles components cost.

@@ -103,6 +103,9 @@
       if (!super.canStart()) {
         return false;
       }
+      if (!spaceManager.isCurrentWorldTerraformed()) {
+        return false;
+      }
       if (this.getBiomassDensity() <= 1) {
         return false;
       }

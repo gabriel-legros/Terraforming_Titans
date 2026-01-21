@@ -660,7 +660,7 @@ const projectParameters = {
     category: 'mega',
     cost: {},
     duration: 300000,
-    description: 'Cultivate a bioworld-scale ecosystem. Can only start when biomass density exceeds 1 ton/m^2 and fewer than 1,000 Ecumenopolis Districts are constructed. Completion removes all Ecumenopolis Districts and permanently disables new ones. Completed bioworlds grant evolution points when travelling based on total biomass.',
+    description: 'Cultivate a bioworld-scale ecosystem on a fully terraformed world. Can only start when biomass density exceeds 1 ton/m^2 and fewer than 1,000 Ecumenopolis Districts are constructed. Completion removes all Ecumenopolis Districts and permanently disables new ones. Completed bioworlds grant evolution points when travelling based on total biomass.',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -678,7 +678,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Taps into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub. Can only start once deeper mining reaches 50,000 depth. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world add +100B to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
+    description: 'Taps into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub on a fully terraformed world. Can only start once deeper mining reaches 50,000 depth. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world add +100B to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
     repeatable: false,
     unlocked: false,
     attributes: {

@@ -86,6 +86,9 @@
       if (!super.canStart()) {
         return false;
       }
+      if (!spaceManager.isCurrentWorldTerraformed()) {
+        return false;
+      }
       if (this.getDeepMiningDepth() < 50000) {
         return false;
       }
