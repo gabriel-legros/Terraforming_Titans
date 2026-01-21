@@ -73,9 +73,9 @@
       }, {});
     }
 
-    getFoundryPointGain(depth) {
-      const normalized = Math.max(depth, 0);
-      return Math.floor(normalized / 10000);
+    getFoundryPointGain(initialLand) {
+      const normalized = Math.max(initialLand, 0);
+      return Math.sqrt(normalized / 50000000000) * 10;
     }
 
     getDeepMiningDepth() {
@@ -153,7 +153,7 @@
 
     prepareTravelState() {
       if (this.isCompleted) {
-        this.foundryPoints += this.getFoundryPointGain(this.getDeepMiningDepth());
+        this.foundryPoints += this.getFoundryPointGain(terraforming.initialLand);
       }
     }
 
@@ -267,7 +267,7 @@
       const info = document.createElement('span');
       info.classList.add('info-tooltip-icon');
       info.innerHTML = '&#9432;';
-      info.title = 'You gain 1 metallurgy point per 10,000 deeper mining depth when travelling after completing this project.';
+      info.title = 'You gain 10 metallurgy points times sqrt(initial land / 50B) when travelling after completing this project.';
       titleGroup.append(title, info);
 
       const pointsGroup = document.createElement('div');
