@@ -168,6 +168,9 @@ class EffectableEntity {
             this.setSolisTabAlert(effect.value);
           }
           break;
+        case 'spaceTabAlert':
+          this.setSpaceTabAlert(effect);
+          break;
         case 'triggerGoldenAsteroidEffect':
           goldenAsteroid?.removeEffects?.();
           goldenAsteroid?.addEffects?.();

@@ -140,6 +140,16 @@ const tabParameters = {
         tabContentElement.classList.add('active');
       }
     }
+
+    setSpaceTabAlert(effect) {
+      const research = researchManager.getResearchById(effect.sourceId);
+      const alreadyAlerted = research.alertedSpaceTab === true;
+      if (alreadyAlerted) {
+        return;
+      }
+      research.alertedSpaceTab = true;
+      setSpaceTabUnlockAlert(effect);
+    }
   }
 
 function extractTabId(tabString) {

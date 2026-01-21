@@ -2126,6 +2126,12 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'oneillCylinders',
             value: true
+          },
+          {
+            target: 'tab',
+            type: 'spaceTabAlert',
+            value: true,
+            onLoad: false
           }
         ]
       },

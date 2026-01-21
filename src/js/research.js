@@ -22,6 +22,7 @@ class Research {
       this.timesResearched = 0;
       this.isResearched = false;
       this.alertedWhenUnlocked = extra.alertedWhenUnlocked || false;
+      this.alertedSpaceTab = extra.alertedSpaceTab || false;
     }
 }
 
@@ -333,6 +334,7 @@ class Research {
           isResearched: research.isResearched,
           timesResearched: research.timesResearched,
           alertedWhenUnlocked: research.alertedWhenUnlocked,
+          alertedSpaceTab: research.alertedSpaceTab,
         }));
       }
       return {
@@ -369,6 +371,7 @@ class Research {
             research.timesResearched = savedTimes;
             research.isResearched = savedResearch.isResearched || savedTimes > 0;
             research.alertedWhenUnlocked = savedResearch.alertedWhenUnlocked || false;
+            research.alertedSpaceTab = savedResearch.alertedSpaceTab || savedResearch.isResearched || false;
             this.updateRepeatableResearchCost(research);
             if (research.isResearched && this.getRepeatCount(research) > 0) {
               this.applyResearchEffects(research); // Reapply effects if research is completed
@@ -560,7 +563,6 @@ class Research {
 
           research.isResearched = true;
           research.timesResearched = (research.timesResearched || 0) + 1;
-
           console.log(`Research "${research.name}" has been completed.`);
           this.applyResearchEffects(research); // Apply the effects of the research
           this.updateRepeatableResearchCost(research);

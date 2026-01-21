@@ -30,7 +30,9 @@ let spaceStatOneillTooltipEl = null;
 let spaceStatOneillRateEl = null;
 
 const galaxyTabElements = { button: null, content: null };
-const spaceTabAlertElements = { button: null, warning: null };
+const spaceTabAlertElements = { button: null, warning: null, alert: null, storyAlert: null };
+let spaceTabAlertNeeded = false;
+let spaceStoryAlertNeeded = false;
 
 // Cached travel warning popup elements
 let travelWarningOverlay = null;
@@ -108,6 +110,30 @@ function cacheSpaceTabWarningElements(doc) {
         spaceTabAlertElements.warning = doc.getElementById('space-attack-warning');
     }
     return spaceTabAlertElements;
+}
+
+function updateSpaceAlertUI() {
+    const displayTab = (!gameSettings.silenceUnlockAlert && spaceTabAlertNeeded) ? 'inline' : 'none';
+    const displayStory = (!gameSettings.silenceUnlockAlert && spaceStoryAlertNeeded) ? 'inline' : 'none';
+    spaceTabAlertElements.alert.style.display = displayTab;
+    spaceTabAlertElements.storyAlert.style.display = displayStory;
+}
+
+function setSpaceTabUnlockAlert(effect) {
+    const enabled = effect.value !== false;
+    spaceTabAlertNeeded = enabled;
+    spaceStoryAlertNeeded = enabled;
+    updateSpaceAlertUI();
+}
+
+function markSpaceTabAlertViewed() {
+    spaceTabAlertNeeded = false;
+    updateSpaceAlertUI();
+}
+
+function markSpaceStoryAlertViewed() {
+    spaceStoryAlertNeeded = false;
+    updateSpaceAlertUI();
 }
 
 function setSpaceIncomingAttackWarning(isActive) {
@@ -291,12 +317,18 @@ function initializeSpaceTabs() {
         if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
             updateGalaxyUI({ force: true });
         }
+        if (id === 'space-story') {
+            markSpaceStoryAlertViewed();
+        }
     });
 }
 
 function activateSpaceSubtab(subtabId) {
     if (spaceSubtabManager) {
         spaceSubtabManager.activate(subtabId);
+    }
+    if (subtabId === 'space-story') {
+        markSpaceStoryAlertViewed();
     }
 }
 
@@ -326,6 +358,9 @@ function initializeSpaceUI(spaceManager) {
         updateArtificialUI({ force: true });
     }
     cacheSpaceTabWarningElements(document);
+    spaceTabAlertElements.alert = document.getElementById('space-tab-alert');
+    spaceTabAlertElements.storyAlert = document.getElementById('space-story-alert');
+    updateSpaceAlertUI();
     setSpaceIncomingAttackWarning(false);
     if (typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled) {
         showSpaceGalaxyTab();
@@ -441,6 +476,7 @@ function updateSpaceUI() {
     updateSpaceRandomVisibility();
     updateCurrentWorldUI();
     updateSpaceStatsUI();
+    updateSpaceAlertUI();
 
     const statusContainer = document.getElementById('travel-status');
     const allPlanetData = typeof planetParameters !== 'undefined' ? planetParameters : null;

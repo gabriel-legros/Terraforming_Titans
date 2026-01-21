@@ -259,7 +259,7 @@
     <div class="tab hidden" id="research-tab" data-tab="research">Research<span id="research-alert" class="unlock-alert">!</span></div>
     <div class="tab" id="terraforming-tab" data-tab="terraforming">Terraforming<span id="terraforming-alert" class="milestone-alert">!</span></div>
     <!-- *** NEW SPACE TAB BUTTON *** -->
-    <div class="tab hidden" id="space-tab" data-tab="space">Space<span id="space-attack-warning" class="space-tab-warning" aria-hidden="true">🔺</span></div>
+    <div class="tab hidden" id="space-tab" data-tab="space">Space<span id="space-tab-alert" class="unlock-alert">!</span><span id="space-attack-warning" class="space-tab-warning" aria-hidden="true">🔺</span></div>
     <!-- *************************** -->
     <!-- *** NEW HOPE TAB BUTTON *** -->
     <div class="tab hidden" id="hope-tab" data-tab="hope">H.O.P.E.<span id="hope-alert" class="hope-alert">!</span></div>
@@ -444,7 +444,7 @@
     <div id="space" class="tab-content">
         <div class="container space-container"> <!-- Add specific class if needed -->
                 <div class="space-subtabs">
-                    <div class="space-subtab active" data-subtab="space-story">Story</div>
+                    <div class="space-subtab active" data-subtab="space-story">Story<span id="space-story-alert" class="unlock-alert">!</span></div>
                     <div class="space-subtab hidden" data-subtab="space-random">Random</div>
                     <div class="space-subtab hidden" data-subtab="space-artificial">Artificial</div>
                     <div class="space-subtab hidden" data-subtab="space-galaxy">Galaxy</div>
@@ -845,6 +845,9 @@
                   }
                   if (this.dataset.tab === 'terraforming') {
                       markTerraformingMilestonesIfActive?.();
+                  }
+                  if (this.dataset.tab === 'space') {
+                      markSpaceTabAlertViewed();
                   }
             } else {
                  console.log(`Tab ${this.dataset.tab} is hidden and cannot be clicked.`);
