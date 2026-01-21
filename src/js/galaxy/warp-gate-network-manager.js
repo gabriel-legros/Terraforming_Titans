@@ -5,7 +5,7 @@ const WARP_GATE_MAX_LEVEL = 1000000;
 const IMPORT_CAP_RATIOS = {
   metal: 1,
   nitrogen: 1,
-  carbon: 2,
+  carbon: 5,
   silicon: 5,
   water: 10,
 };

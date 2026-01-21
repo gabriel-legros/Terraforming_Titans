@@ -588,6 +588,21 @@ const researchParameters = {
           },
         ],
       },
+      {
+        id: 'graphene_factory',
+        name: 'Graphene Factory',
+        description: 'Enables factories that refine surface graphite into metal substitutes.',
+        cost: { research: 10_000_000 },
+        prerequisites: [],
+        requiredFlags: ['grapheneMasteryUnlocked'],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'grapheneFactory',
+            type: 'enable'
+          }
+        ],
+      },
       //{
       //  id: 'recycling',
       //  name: 'Recycling',
@@ -2208,6 +2223,21 @@ const researchParameters = {
             target: 'researchManager',
             type: 'booleanFlag',
             flagId: 'selfReplicatingShipsUnlocked',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'graphene_mastery',
+        name: 'Graphene Mastery',
+        description: 'Unlocks advanced graphene processing techniques for industrial use.',
+        cost: { advancedResearch: 9_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'researchManager',
+            type: 'booleanFlag',
+            flagId: 'grapheneMasteryUnlocked',
             value: true
           }
         ]

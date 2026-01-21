@@ -168,6 +168,7 @@
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
       },
+      graphite: { name: 'Graphite', initialValue: 0, unlocked: true, unit: 'ton', hideWhenSmall: true },
       scrapMetal : {name : 'Scrap Metal', initialValue : 0, unlocked: false, unit: 'ton', marginTop:10, reverseColor: true },
       garbage: { name: 'Garbage', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       trash: { name: 'Trash', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },

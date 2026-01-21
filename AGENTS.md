@@ -240,6 +240,8 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Updates
 - O'Neill Cylinders now fires a one-time Space tab and Story subtab alert via a TabManager effect.
+- Graphite is now a surface resource (hidden when small), and Bosch Reaction produces it alongside water.
+- Graphene Mastery advanced research unlocks the Graphene Factory research and building to convert graphite into metal substitutes.
 - Resource productivity now iterates multiple passes per tick so upstream shortages propagate through production chains.
 - Tartarus chapter 32.1 now unlocks Underworld mining upgrades for Deeper Mining, adding superalloy drills for speed/max depth plus a Supercharged Mining slider that boosts ore output while cubing energy use.
 - Solis now offers a permanent Android Manufacturing research unlock and a Buildings Automation upgrade gated by the Tartarus 30.4 story flags.

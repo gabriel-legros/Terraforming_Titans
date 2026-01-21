@@ -139,6 +139,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  grapheneFactory: {
+    name: 'Graphene Factory',
+    category: 'production',
+    description: 'Refines surface graphite into metal using intense energy.  Graphite serves as a metal substitute.',
+    cost: { colony: { metal: 1500, glass: 500, components: 150, electronics: 75 } },
+    consumption: { colony: { energy: 40_000_000 }, surface: { graphite: 1 } },
+    production: { colony: { metal: 1 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 100,
+    maintenanceFactor: 1,
+    unlocked: false
+  },
   superconductorFactory: {
     name: 'Superconductor Factory',
     category: 'production',
@@ -639,7 +654,7 @@ const buildingsParameters = {
           colony: { energy: 100_000 },
           atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
         },
-        production: { colony: { water: 81.82 } }
+        production: { colony: { water: 81.82 }, surface: { graphite: 27.27 } }
       },
       recipe2: {
         shortName: 'Water Synthesis',

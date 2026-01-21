@@ -1144,6 +1144,7 @@ const constructors = {
   dustFactory: 'DustFactory',
   ghgFactory: 'GhgFactory',
   oxygenFactory: 'OxygenFactory',
+  grapheneFactory: 'GrapheneFactory',
   massDriver: 'MassDriver',
   biodome: 'Biodome',
   dysonReceiver: 'dysonReceiver',
