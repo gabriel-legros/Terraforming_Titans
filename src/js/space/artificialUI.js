@@ -131,8 +131,19 @@ function buildHistoryRow(entry) {
   const row = document.createElement('div');
   row.className = 'artificial-history-row';
   const name = document.createElement('span');
-  name.textContent = entry.name;
-  name.title = entry.seed || '';
+  name.className = 'artificial-history-name';
+  const nameText = document.createElement('span');
+  nameText.className = 'artificial-history-name-text';
+  nameText.textContent = entry.name;
+  nameText.title = entry.seed || '';
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.className = 'artificial-history-edit-btn';
+  editBtn.textContent = '';
+  editBtn.title = 'Rename this artificial world';
+  editBtn.setAttribute('aria-label', 'Rename this artificial world');
+  name.appendChild(nameText);
+  name.appendChild(editBtn);
   const type = document.createElement('span');
   const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
   type.textContent = typeLabel;
@@ -168,6 +179,36 @@ function buildHistoryRow(entry) {
     });
     status.appendChild(travelBtn);
   }
+  editBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (name.dataset.editing === 'true') return;
+    name.dataset.editing = 'true';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'artificial-history-name-input';
+    input.value = entry.name;
+    input.title = nameText.title;
+    name.replaceChild(input, nameText);
+    editBtn.disabled = true;
+    input.focus();
+    input.select();
+    input.addEventListener('keydown', (keyEvent) => {
+      if (keyEvent.key === 'Enter') {
+        input.blur();
+      }
+      if (keyEvent.key === 'Escape') {
+        input.value = entry.name;
+        input.blur();
+      }
+    });
+    input.addEventListener('blur', () => {
+      name.dataset.editing = '';
+      editBtn.disabled = false;
+      artificialManager?.setWorldNameById(entry.id, input.value);
+      nameText.textContent = (String(input.value || '').trim()) || `Artificial ${entry.id}`;
+      name.replaceChild(nameText, input);
+    });
+  });
   row.appendChild(name);
   row.appendChild(type);
   row.appendChild(land);
@@ -816,6 +857,12 @@ function ensureArtificialLayout() {
     setRadiusFields(value, true);
     updateArtificialUI();
   });
+  nameInput.addEventListener('input', () => {
+    artificialManager?.setActiveProjectName(nameInput.value);
+  });
+  nameInput.addEventListener('blur', () => {
+    artificialManager?.setActiveProjectName(nameInput.value);
+  });
   priorityCheckbox.addEventListener('change', () => {
     if (artificialManager) {
       artificialManager.setPrioritizeSpaceStorage(priorityCheckbox.checked);
@@ -1271,8 +1318,10 @@ function updateArtificialUI(options = {}) {
   }
   if (artificialUICache.nameInput) {
     if (project) {
-      artificialUICache.nameInput.value = project.name;
-      artificialUICache.nameInput.disabled = true;
+      if (document.activeElement !== artificialUICache.nameInput) {
+        artificialUICache.nameInput.value = project.name;
+      }
+      artificialUICache.nameInput.disabled = false;
     } else {
       artificialUICache.nameInput.disabled = false;
       if (!artificialUICache.nameInput.value) {

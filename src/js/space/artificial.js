@@ -771,6 +771,54 @@ class ArtificialManager extends EffectableEntity {
         };
     }
 
+    setWorldNameById(id, name) {
+        const key = String(id);
+        const nextName = (String(name || '').trim()) || `Artificial ${key}`;
+        const project = this.activeProject;
+        if (project && String(project.id) === key) {
+            project.name = nextName;
+            project.override = null;
+        }
+        if (spaceManager && spaceManager.artificialWorldStatuses && spaceManager.artificialWorldStatuses[key]) {
+            const status = spaceManager.artificialWorldStatuses[key];
+            status.name = nextName;
+            if (status.original && status.original.merged) {
+                status.original.merged.name = nextName;
+            }
+            if (status.artificialSnapshot) {
+                status.artificialSnapshot.name = nextName;
+            }
+        }
+        if (spaceManager && spaceManager.currentArtificialKey !== null && String(spaceManager.currentArtificialKey) === key) {
+            spaceManager.currentRandomName = nextName;
+            if (currentPlanetParameters) {
+                currentPlanetParameters.name = nextName;
+            }
+        }
+        if (this.history && this.history.length) {
+            this.history.forEach((entry) => {
+                if (String(entry.id) === key) {
+                    entry.name = nextName;
+                }
+            });
+        }
+        if (this.travelHistory && this.travelHistory.length) {
+            this.travelHistory.forEach((entry) => {
+                if (String(entry.id) === key) {
+                    entry.name = nextName;
+                }
+            });
+        }
+        this.updateUI(true);
+        return true;
+    }
+
+    setActiveProjectName(name) {
+        const project = this.activeProject;
+        if (!project) return false;
+        return this.setWorldNameById(project.id, name);
+    }
+
     travelToConstructedWorld() {
         if (!this.activeProject || this.activeProject.status !== 'completed') return false;
         const override = this.buildOverride(this.activeProject);
