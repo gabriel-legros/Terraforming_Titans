@@ -507,7 +507,7 @@
     }
 
     getGameIllumination() {
-      const flux = this.terraforming?.luminosity?.modifiedSolarFlux;
+      const flux = terraforming?.luminosity?.modifiedSolarFlux;
       if (typeof flux === 'number' && Number.isFinite(flux)) {
         return Math.max(0, flux) / 250;
       }
