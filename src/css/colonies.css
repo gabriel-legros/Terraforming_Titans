@@ -335,6 +335,20 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   gap: 4px;
 }
 
+#nanocolony-container .nanotech-recycling-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #495057;
+  white-space: nowrap;
+}
+
+#nanocolony-container .nanotech-recycling-toggle input {
+  margin: 0;
+}
+
 #nanocolony-container .nanotech-hint {
   margin: -4px 0 0;
   font-size: 0.85em;

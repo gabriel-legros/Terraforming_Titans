@@ -124,6 +124,7 @@ The `nanotechManager` oversees a self-replicating swarm unlocked by **Nanotechno
 - Silica and metal consumption now accept the same allocation limits as energy (percent of production or absolute cap), and they always consume at full intensity unless capped.
 - When recycling is enabled, silica/metal caps use combined junk/scrap production, and artificial worlds clamp production-based caps to actual consumption rates.
 - Glass and components output now require the same silica/metal provided that tick (including junk/scrap), so nanocolony output can never exceed the material consumed.
+- Nanocolony recycling now includes Only Junk/Only Scrap toggles to restrict silica/metal consumption to recycled inputs, and allocation limit selectors include an uncapped option.
 - Travel text notes that H.O.P.E. can hide 1e15 nanobots from the Dead Hand Protocol.
 
 # UI refresh requirements
