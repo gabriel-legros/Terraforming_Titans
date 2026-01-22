@@ -1,4 +1,9 @@
 class WindTurbine extends Building {
+  getBuildLimit() {
+    const initialLand = terraforming.initialLand || 0;
+    return Math.floor(initialLand / 50);
+  }
+
   build(buildCount = 1, activate = true) {
     let initialLand = 0;
     try {

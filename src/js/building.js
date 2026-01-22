@@ -128,6 +128,14 @@ class Building extends EffectableEntity {
       this.updateResourceStorage();
     }
 
+  getBuildLimit() {
+    return Infinity;
+  }
+
+  getBuildLimitRemaining() {
+    return Math.max(this.getBuildLimit() - this.count, 0);
+  }
+
   getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
     let maxBuildable = this.maxBuildable(reservePercent, additionalReserves);
 
@@ -759,6 +767,8 @@ class Building extends EffectableEntity {
         }
       }
     }
+
+    maxByResource = Math.min(maxByResource, this.getBuildLimitRemaining());
 
     return Math.max(maxByResource, 0); // Ensure non-negative result
   }

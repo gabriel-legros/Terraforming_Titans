@@ -1,4 +1,9 @@
 class SolarPanel extends Building {
+  getBuildLimit() {
+    const initialLand = terraforming.initialLand || 0;
+    return initialLand * 10;
+  }
+
   build(buildCount = 1, activate = true) {
     const initialLand = (typeof terraforming !== 'undefined' && terraforming.initialLand) ? terraforming.initialLand : 0;
     const cap = initialLand * 10;

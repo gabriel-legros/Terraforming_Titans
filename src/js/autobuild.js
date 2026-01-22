@@ -682,9 +682,10 @@ function autoBuild(buildings, delta = 0) {
             let buildCount = 0;
             const reserve = constructionOfficeState.strategicReserve;
             const extraReserves = building.autoBuildPriority ? null : prioritizedReserve;
+            const maxCount = resolveAutoBuildMaxCount(building, reserve, extraReserves);
             const desiredAmount = maxMode
-                ? resolveAutoBuildMaxCount(building, reserve, extraReserves)
-                : requiredAmount;
+                ? maxCount
+                : Math.min(requiredAmount, maxCount);
             if (desiredAmount <= 0) {
                 return;
             }
@@ -698,7 +699,7 @@ function autoBuild(buildings, delta = 0) {
             } else {
                 const fallback = maxMode
                     ? desiredAmount
-                    : resolveAutoBuildMaxCount(building, reserve, extraReserves);
+                    : maxCount;
 
                 if (fallback > 0) {
                     buildCount = fallback;
