@@ -118,6 +118,12 @@ function addSettingsListeners() {
     });
   }
 
+  const colonyUpgradeUncheckAutobuildToggle = document.getElementById('colony-upgrade-uncheck-autobuild-toggle');
+  colonyUpgradeUncheckAutobuildToggle.checked = gameSettings.colonyUpgradeUnchecksAutobuild;
+  colonyUpgradeUncheckAutobuildToggle.addEventListener('change', () => {
+    gameSettings.colonyUpgradeUnchecksAutobuild = colonyUpgradeUncheckAutobuildToggle.checked;
+  });
+
   const roundBuildingToggle = document.getElementById('round-building-toggle');
   roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
   roundBuildingToggle.addEventListener('change', () => {

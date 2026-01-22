@@ -1059,6 +1059,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     autoUpgradeCheckbox.classList.add('auto-upgrade-checkbox');
     autoUpgradeCheckbox.addEventListener('change', () => {
       structure.autoUpgradeEnabled = autoUpgradeCheckbox.checked;
+      if (autoUpgradeCheckbox.checked && gameSettings.colonyUpgradeUnchecksAutobuild) {
+        autoBuildCheckbox.checked = false;
+        structure.autoBuildEnabled = false;
+      }
     });
 
     autoUpgradeContainer.appendChild(autoUpgradeCheckbox);

@@ -239,6 +239,7 @@ The atmosphere model now handles methane–oxygen combustion, calcite aerosol de
 The planet visualiser has been modularised into files covering core setup, lighting, surfaces, clouds, ships, environments, and debug controls. This separation keeps rendering responsibilities focused and simplifies future extensions.
 
 ## Updates
+- Added a setting to uncheck colony autobuild when auto-upgrade is enabled.
 - O'Neill Cylinders now fires a one-time Space tab and Story subtab alert via a TabManager effect.
 - Graphite is now a surface resource (hidden when small), and Bosch Reaction produces it alongside water.
 - Graphene Mastery advanced research unlocks the Graphene Factory research and building to convert graphite into metal substitutes.

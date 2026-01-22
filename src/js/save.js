@@ -70,6 +70,7 @@ function cacheSettingsElements() {
     preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
     keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
     autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
+    colonyUpgradeUncheckAutobuildToggle: document.getElementById('colony-upgrade-uncheck-autobuild-toggle'),
     roundBuildingToggle: document.getElementById('round-building-toggle'),
     scientificNotationThresholdInput: document.getElementById('scientific-notation-threshold-input'),
     simplifyGoldenAsteroidToggle: document.getElementById('simplify-golden-asteroid-toggle'),
@@ -624,6 +625,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
       cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
+      cachedSettings.colonyUpgradeUncheckAutobuildToggle.checked = gameSettings.colonyUpgradeUnchecksAutobuild;
       cachedSettings.roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
       cachedSettings.scientificNotationThresholdInput.value = formatScientific(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.scientificNotationThresholdInput.dataset.scientificNotationThreshold = String(gameSettings.scientificNotationThreshold ?? 1e30);
