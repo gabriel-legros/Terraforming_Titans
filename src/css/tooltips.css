@@ -16,6 +16,14 @@
   display: none;
 }
 
+.resource-tooltip-time {
+  min-height: 1.2em;
+}
+
+.resource-tooltip-net-line {
+  min-height: 1.2em;
+}
+
 /* Dark mode tooltip override */
 .dark-mode .resource-tooltip {
   background-color: rgba(255, 255, 255, 0.8);

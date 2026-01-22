@@ -73,6 +73,7 @@ function createTooltipElement(resourceName) {
 
   const timeDiv = document.createElement('div');
   timeDiv.id = `${resourceName}-tooltip-time`;
+  timeDiv.classList.add('resource-tooltip-time');
 
   let noteDiv;
   let wasteNoteDiv;
@@ -112,6 +113,14 @@ function createTooltipElement(resourceName) {
 
   const netDiv = document.createElement('div');
   netDiv.id = `${resourceName}-tooltip-net`;
+  const netAutoLine = document.createElement('div');
+  netAutoLine.classList.add('resource-tooltip-net-line');
+  const netBaseLine = document.createElement('div');
+  netBaseLine.classList.add('resource-tooltip-net-line');
+  netDiv.appendChild(netAutoLine);
+  netDiv.appendChild(netBaseLine);
+  netDiv._lineAuto = netAutoLine;
+  netDiv._lineBase = netBaseLine;
 
   const limitDiv = document.createElement('div');
   limitDiv.id = `${resourceName}-tooltip-limit`;
@@ -1222,6 +1231,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   if (timeDiv) {
     if (resource.name !== 'land') {
       let showDefaultTime = true;
+      const unstableTimer = resourceUICache.unstableTimers[resource.name] || 0;
+      const rateUnstable = unstableTimer > 0;
       if (resource.name === terraforming.liquidCoverageKey && netRate > 0) {
         const targetAmount = getLiquidCoverageTargetAmount(terraforming, terraforming.waterTarget);
         const remaining = targetAmount - resource.value;
@@ -1234,7 +1245,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
         showDefaultTime = false;
       }
       if (showDefaultTime) {
-        if (netRate > 0 && resource.hasCap) {
+        if (rateUnstable) {
+          timeDiv.textContent = 'Time to full : unstable.';
+        } else if (netRate > 0 && resource.hasCap) {
           const time = (resource.cap - resource.value) / netRate;
           timeDiv.textContent = `Time to full: ${formatDuration(Math.max(time, 0))}`;
         } else if (netRate < 0) {
@@ -1426,14 +1439,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     ? autobuildCostTracker.getAverageCost(resource.category, resource.name)
     : 0;
   if (netDiv) {
-    let text;
-    if (resource.category === 'colony') {
-      const netIncAuto = netRate - autobuildAvg;
-      text = `Net Change (including autobuild): ${formatNumber(netIncAuto, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-    } else {
-      text = `Net Change: ${formatNumber(netRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-    }
-    if (netDiv.textContent !== text) netDiv.textContent = text;
+    const autoLine = netDiv._lineAuto || netDiv.firstChild;
+    const baseLine = netDiv._lineBase || netDiv.lastChild;
+    const displayNetRate = Math.abs(netRate) < 1e-6 ? 0 : netRate;
+    const baseText = `${formatNumber(displayNetRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+    const autoText = resource.category === 'colony' ? 'Net Change (including autobuild):' : '';
+    if (autoLine && autoLine.textContent !== autoText) autoLine.textContent = autoText;
+    if (baseLine && baseLine.textContent !== baseText) baseLine.textContent = baseText;
   }
 
   if (limitDiv) {

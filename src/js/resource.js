@@ -730,7 +730,7 @@ function produceResources(deltaTime, buildings) {
         project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
         continue;
       }
-      project.estimateCostAndGain(deltaTime, true, productivity);
+      project.estimateCostAndGain(deltaTime, true, productivity, accumulatedChanges);
       project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
     }
     for (const [, data] of projectEntries) {
@@ -739,11 +739,12 @@ function produceResources(deltaTime, buildings) {
         continue;
       }
 //      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
-      if (project.autoStart === false) {
+      const shouldEstimate = project.autoStart !== false || project.autoDeployCollectors;
+      if (!shouldEstimate) {
         project.applyCostAndGain(deltaTime, accumulatedChanges);
         continue;
       }
-      project.estimateCostAndGain(deltaTime, true);
+      project.estimateCostAndGain(deltaTime, true, 1, accumulatedChanges);
       project.applyCostAndGain(deltaTime, accumulatedChanges);
     }
   }

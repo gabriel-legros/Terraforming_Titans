@@ -139,7 +139,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     }
   }
 
-  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     
     // Only estimate if in continuous mode and auto-deploying
@@ -164,7 +164,8 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
         const baseCost = this.collectorCost[category][resource];
         const tickAmount = baseCost * fraction * (applyRates ? productivity : 1);
         if (applyRates && resources[category]?.[resource]) {
-          const colonyAvailable = resources[category][resource].value;
+          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+          const colonyAvailable = resources[category][resource].value + pending;
           let colonyPortion = tickAmount;
           if (storageProj) {
             const key = resource === 'water' ? 'liquidWater' : resource;
@@ -179,7 +180,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
           if (colonyRate > 0) {
             resources[category][resource].modifyRate(
               -colonyRate,
-              'Dyson Swarm Collectors',
+              'Dyson Collector',
               'project'
             );
           }
@@ -253,7 +254,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
               }
             }
           } else {
-            const fromColony = Math.min(resources[category][resource].value, remaining);
+            const fromColony = Math.min(resources[category][resource].value + accumulatedChanges[category][resource], remaining);
             if (fromColony > 0) {
               if (accumulatedChanges) {
                 if (!accumulatedChanges[category]) accumulatedChanges[category] = {};

@@ -628,7 +628,7 @@ class Project extends EffectableEntity {
     this.complete();
   }
 
-  usesSpaceStorageForResource(category, resource, amount) {
+  usesSpaceStorageForResource(category, resource, amount, accumulatedChanges = null) {
     if (!this.attributes.canUseSpaceStorage) return false;
     const storageProj = projectManager?.projects?.spaceStorage;
     if (!storageProj) return false;
@@ -637,14 +637,15 @@ class Project extends EffectableEntity {
     if (storageProj.prioritizeMegaProjects) {
       return usable >= amount;
     }
-    const colonyAvailable = resources[category]?.[resource]?.value || 0;
+    const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+    const colonyAvailable = (resources[category]?.[resource]?.value || 0) + pending;
     if (colonyAvailable >= amount) return false;
     return usable >= amount - colonyAvailable;
   }
 
 
 
-  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     if (this.isActive) {
       const duration = this.getEffectiveDuration();
@@ -656,7 +657,12 @@ class Project extends EffectableEntity {
         if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
           const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
-          const usingStorage = this.usesSpaceStorageForResource(category, resource, cost[category][resource]);
+          const usingStorage = this.usesSpaceStorageForResource(
+            category,
+            resource,
+            cost[category][resource],
+            accumulatedChanges
+          );
           if (applyRates && resources[category] && resources[category][resource] && !usingStorage && this.showsInResourcesRate()) {
             resources[category][resource].modifyRate(
               -rateValue,
@@ -691,8 +697,8 @@ class Project extends EffectableEntity {
     return totals;
   }
 
-  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
-    return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
   }
 
   applyCostAndGain(deltaTime = 1000) {}

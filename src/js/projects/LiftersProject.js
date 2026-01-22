@@ -427,7 +427,8 @@ class LiftersProject extends TerraformingDurationProject {
       for (const resource in cost[category]) {
         const res = resources[category][resource];
         const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const availableTotal = res.value + storageState.getAvailableStoredResource(storageKey);
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const availableTotal = res.value + pending + storageState.getAvailableStoredResource(storageKey);
         if (availableTotal < cost[category][resource]) {
           canAffordBaseCost = false;
         }
@@ -475,7 +476,8 @@ class LiftersProject extends TerraformingDurationProject {
         const res = resources[category][resource];
         const storageKey = resource === 'water' ? 'liquidWater' : resource;
         const availableFromStorage = storageState.getAvailableStoredResource(storageKey);
-        const availableTotal = res.value + availableFromStorage;
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const availableTotal = res.value + pending + availableFromStorage;
         if (availableTotal < amount) {
           shortfall = true;
         }
@@ -488,7 +490,9 @@ class LiftersProject extends TerraformingDurationProject {
             applyColonyChange(category, resource, remaining);
           }
         } else {
-          const fromColony = Math.min(remaining, res.value);
+          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+          const colonyAvailable = Math.max(res.value + pending, 0);
+          const fromColony = Math.min(remaining, colonyAvailable);
           if (fromColony > 0) {
             applyColonyChange(category, resource, fromColony);
             remaining -= fromColony;
@@ -611,7 +615,7 @@ class LiftersProject extends TerraformingDurationProject {
     this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
   }
 
-  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
       getAvailableStoredResource: () => 0,
@@ -635,8 +639,10 @@ class LiftersProject extends TerraformingDurationProject {
       for (const category in cost) {
         for (const resource in cost[category]) {
           const storageKey = resource === 'water' ? 'liquidWater' : resource;
+          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
           const availableTotal =
             (resources?.[category]?.[resource]?.value || 0) +
+            pending +
             storageState.getAvailableStoredResource(storageKey);
           if (checkBaseCost && availableTotal < cost[category][resource]) {
             canAffordBaseCost = false;
@@ -654,7 +660,8 @@ class LiftersProject extends TerraformingDurationProject {
             const res = resources?.[category]?.[resource];
             const storageKey = resource === 'water' ? 'liquidWater' : resource;
             const storageAvailable = storageState.getAvailableStoredResource(storageKey);
-            const colonyAvailable = res?.value || 0;
+            const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+            const colonyAvailable = (res?.value || 0) + pending;
             const colonyPortion = storageState.prioritizeMegaProjects
               ? Math.max(tickAmount - storageAvailable, 0)
               : Math.min(colonyAvailable, tickAmount);
