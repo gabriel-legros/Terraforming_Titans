@@ -391,11 +391,12 @@ function renderAutomationSteps(automation, preset, container) {
       workerOpt.textContent = '% Workers';
       maxMode.append(absoluteOpt, populationOpt, workerOpt);
       maxMode.value = entry.maxMode || 'absolute';
+      const getMaxPrecision = () => (maxMode.value === 'population' || maxMode.value === 'workers' ? 5 : 3);
       const maxInput = document.createElement('input');
       maxInput.type = 'text';
       maxInput.min = '0';
       maxInput.placeholder = 'Max';
-      maxInput.value = entry.max === null || entry.max === undefined ? '' : formatNumber(entry.max, true, 3);
+      maxInput.value = entry.max === null || entry.max === undefined ? '' : formatNumber(entry.max, true, getMaxPrecision());
       maxMode.addEventListener('change', (event) => {
         automation.updateEntry(preset.id, step.id, entry.projectId, { maxMode: event.target.value });
         queueAutomationUIRefresh();
@@ -404,10 +405,12 @@ function renderAutomationSteps(automation, preset, container) {
       wireStringNumberInput(maxInput, {
         parseValue: (value) => {
           const parsed = parseFlexibleNumber(value);
-          return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) / 100 : 0;
+          const precision = getMaxPrecision();
+          const scale = Math.pow(10, precision);
+          return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * scale) / scale : 0;
         },
         formatValue: (value) => {
-          return value > 0 ? formatNumber(value, true, 3) : '';
+          return value > 0 ? formatNumber(value, true, getMaxPrecision()) : '';
         },
         onValue: (parsed) => {
           automation.updateEntry(preset.id, step.id, entry.projectId, { max: parsed > 0 ? parsed : null });
