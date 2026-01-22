@@ -198,6 +198,7 @@ Buildings and special project cards feature collapsible headers, letting players
 Buildings automation now supports saving control/autobuild presets and applying them in a prioritized list, letting lower entries override higher presets per building and setting type.
 Life Designer automation steps now support a **Max out** mode to spend all available points on the selected attribute in one pass.
 Life automation now offers an **As needed** mode for minimum/maximum temperature tolerance with selectable zones (defaulting to tropical, temperate, and polar), and it can redeploy when freed tolerance points exceed the improve threshold.
+Ship assignment automation steps now include a **Capped by largest max** limit mode alongside the smallest-cap option.
 Underworld deep mining options now use reusable toggle switches in a two-column layout once depth unlocks.
 Kessler-affected buildings now surface a warning under their headers showing the extra cost multiplier that generates debris.
 

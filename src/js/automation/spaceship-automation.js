@@ -137,12 +137,12 @@ class SpaceshipAutomation {
     if (!preset) return;
     const step = preset.steps.find(item => item.id === stepId);
     if (!step) return;
-    if (mode === 'cappedMin') {
-      step.mode = 'cappedMin';
+    if (mode === 'cappedMin' || mode === 'cappedMax') {
+      step.mode = mode;
       step.limit = null;
-    } else {
-      step.mode = 'fill';
+      return;
     }
+    step.mode = 'fill';
   }
 
   addEntry(presetId, stepId, projectId) {
@@ -357,11 +357,28 @@ class SpaceshipAutomation {
     for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
       const step = preset.steps[stepIndex];
       if (remainingTotal <= 0) break;
-      const isCappedStep = step.mode === 'cappedMin';
-      const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
-      const stepLimit = isCappedStep ? remainingTotal : (limitValue === null ? remainingTotal : Math.min(limitValue, remainingTotal));
-      let stepRemaining = stepLimit;
       const entries = step.entries;
+      const isCappedMin = step.mode === 'cappedMin';
+      const isCappedMax = step.mode === 'cappedMax';
+      const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
+      let stepLimit = isCappedMin ? remainingTotal : (limitValue === null ? remainingTotal : Math.min(limitValue, remainingTotal));
+      if (isCappedMax) {
+        let largestMax = 0;
+        for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+          const entry = entries[entryIndex];
+          const project = targets.find(item => item.name === entry.projectId);
+          const maxForEntry = this.computeEntryMax(entry, project);
+          if (maxForEntry === Infinity) {
+            largestMax = Infinity;
+            break;
+          }
+          if (maxForEntry > largestMax) {
+            largestMax = maxForEntry;
+          }
+        }
+        stepLimit = largestMax === Infinity ? remainingTotal : Math.min(stepLimit, largestMax);
+      }
+      let stepRemaining = stepLimit;
       if (entries.length === 0) continue;
 
       while (stepRemaining > 0) {
