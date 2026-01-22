@@ -24,6 +24,7 @@ const artificialUICache = {
   gainFleetTooltip: null,
   effectShipEnergy: null,
   sector: null,
+  sectorFilter: null,
   priority: null,
   startBtn: null,
   travelBtn: null,
@@ -65,18 +66,38 @@ function formatArtificialSectorResourceLabel(resourceKey) {
   return label || (normalized ? `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}` : 'Unknown');
 }
 
+function getArtificialSectorRichResource(sector) {
+  return sector?.getRichResource?.() || sector?.richResource || '';
+}
+
 function getArtificialSectorDisplayName(sector) {
   return sector?.getDisplayName?.() || sector?.key || `${sector.q},${sector.r}`;
 }
 
 function buildArtificialSectorResourceSuffix(sector) {
-  const richResource = sector?.getRichResource?.() || sector?.richResource || '';
+  const richResource = getArtificialSectorRichResource(sector);
   const poorResources = sector?.getPoorResources?.() || sector?.poorResources || [];
   const poorList = Array.isArray(poorResources) ? poorResources : [];
   const richLabel = richResource ? `+${formatArtificialSectorResourceLabel(richResource)}` : '';
   const poorLabels = poorList.map(resource => `-${formatArtificialSectorResourceLabel(resource)}`);
   const summary = [richLabel, ...poorLabels].filter(Boolean).join(', ');
   return summary ? ` (${summary})` : '';
+}
+
+function buildArtificialSectorFilterOptions(sectors) {
+  const list = Array.isArray(sectors) ? sectors : [];
+  const resources = new Set();
+  list.forEach(sector => {
+    const richResource = getArtificialSectorRichResource(sector);
+    if (richResource) {
+      resources.add(richResource);
+    }
+  });
+  return Array.from(resources).sort((left, right) => {
+    const leftLabel = formatArtificialSectorResourceLabel(left);
+    const rightLabel = formatArtificialSectorResourceLabel(right);
+    return leftLabel.localeCompare(rightLabel);
+  });
 }
 
 function buildArtificialSectorWorldCountSuffix(manager, sector) {
@@ -647,6 +668,15 @@ function ensureArtificialLayout() {
   artificialUICache.sector = sectorSelect;
   gains.appendChild(sectorLabel);
 
+  const sectorFilterLabel = document.createElement('label');
+  sectorFilterLabel.className = 'artificial-field';
+  sectorFilterLabel.textContent = 'Filter +Resource';
+  const sectorFilterSelect = document.createElement('select');
+  sectorFilterSelect.className = 'artificial-select';
+  sectorFilterLabel.appendChild(sectorFilterSelect);
+  artificialUICache.sectorFilter = sectorFilterSelect;
+  gains.appendChild(sectorFilterLabel);
+
   costs.appendChild(gains);
 
   grid.appendChild(costs);
@@ -884,6 +914,10 @@ function ensureArtificialLayout() {
     applyRadiusBounds();
     applyStarContextBounds();
     updateArtificialUI();
+  });
+  sectorFilterSelect.addEventListener('change', () => {
+    artificialUICache.sector.value = 'auto';
+    updateArtificialUI({ force: true });
   });
   stopBtn.addEventListener('click', () => {
     const manager = artificialManager;
@@ -1261,8 +1295,8 @@ function updateArtificialUI(options = {}) {
     const manager = galaxyManager;
     const sectors = Array.isArray(manager?.getSectors?.())
       ? manager.getSectors().filter(sector => {
-          const controlValue = sector.getControlValue ? sector.getControlValue('uhf') : 0;
-          return controlValue > 0;
+      const controlValue = sector.getControlValue ? sector.getControlValue('uhf') : 0;
+      return controlValue > 0;
         })
       : [];
     const sortedSectors = sectors.slice().sort((left, right) => {
@@ -1273,20 +1307,51 @@ function updateArtificialUI(options = {}) {
       const rightKey = right.key || `${right.q},${right.r}`;
       return nameCompare !== 0 ? nameCompare : leftKey.localeCompare(rightKey);
     });
-    const sectorSig = JSON.stringify(sortedSectors.map(sector => ({
-      name: getArtificialSectorDisplayName(sector),
-      key: sector.key || `${sector.q},${sector.r}`,
-      rich: sector.getRichResource?.() || sector.richResource || null,
-      poor: sector.getPoorResources?.() || sector.poorResources || [],
-      worlds: manager?.getTerraformedWorldCountForSector?.(sector) || 0
-    })));
+
+    const filterResources = buildArtificialSectorFilterOptions(sortedSectors);
+    const filterSig = JSON.stringify(filterResources);
+    if (artificialUICache.sectorFilter.dataset.lastFilterList !== filterSig) {
+      const filterFrag = document.createDocumentFragment();
+      const allOpt = document.createElement('option');
+      allOpt.value = 'all';
+      allOpt.textContent = 'All resources';
+      filterFrag.appendChild(allOpt);
+      filterResources.forEach(resource => {
+        const opt = document.createElement('option');
+        opt.value = resource;
+        opt.textContent = `+${formatArtificialSectorResourceLabel(resource)}`;
+        filterFrag.appendChild(opt);
+      });
+      artificialUICache.sectorFilter.innerHTML = '';
+      artificialUICache.sectorFilter.appendChild(filterFrag);
+      artificialUICache.sectorFilter.dataset.lastFilterList = filterSig;
+    }
+    if (!artificialUICache.sectorFilter.value) {
+      artificialUICache.sectorFilter.value = 'all';
+    }
+
+    const filterValue = project ? 'all' : artificialUICache.sectorFilter.value;
+    const filteredSectors = filterValue === 'all'
+      ? sortedSectors
+      : sortedSectors.filter(sector => getArtificialSectorRichResource(sector) === filterValue);
+
+    const sectorSig = JSON.stringify({
+      filter: filterValue,
+      sectors: filteredSectors.map(sector => ({
+        name: getArtificialSectorDisplayName(sector),
+        key: sector.key || `${sector.q},${sector.r}`,
+        rich: getArtificialSectorRichResource(sector) || null,
+        poor: sector.getPoorResources?.() || sector.poorResources || [],
+        worlds: manager?.getTerraformedWorldCountForSector?.(sector) || 0
+      }))
+    });
     if (artificialUICache.sector.dataset.lastSectorList !== sectorSig) {
       const frag = document.createDocumentFragment();
       const autoOpt = document.createElement('option');
       autoOpt.value = 'auto';
       autoOpt.textContent = 'Auto';
       frag.appendChild(autoOpt);
-      sortedSectors.forEach(sector => {
+      filteredSectors.forEach(sector => {
         const sectorName = getArtificialSectorDisplayName(sector);
         const resourceSuffix = buildArtificialSectorResourceSuffix(sector);
         const worldsSuffix = buildArtificialSectorWorldCountSuffix(manager, sector);
@@ -1304,8 +1369,11 @@ function updateArtificialUI(options = {}) {
       artificialUICache.sector.value = project.sector;
     } else if (!artificialUICache.sector.value) {
       artificialUICache.sector.value = 'auto';
+    } else if (!Array.from(artificialUICache.sector.options).some(option => option.value === artificialUICache.sector.value)) {
+      artificialUICache.sector.value = 'auto';
     }
     artificialUICache.sector.disabled = !!project;
+    artificialUICache.sectorFilter.disabled = !!project;
   }
 
   if (artificialUICache.status) {
@@ -1388,6 +1456,7 @@ function updateArtificialUI(options = {}) {
     artificialUICache.core.disabled = false;
     artificialUICache.type.disabled = false;
     artificialUICache.sector.disabled = false;
+    artificialUICache.sectorFilter.disabled = false;
     if (!artificialRadiusEditing) {
       const clamped = getRadiusValue();
       setRadiusFields(clamped);
@@ -1399,6 +1468,7 @@ function updateArtificialUI(options = {}) {
     artificialUICache.core.disabled = true;
     artificialUICache.type.disabled = true;
     artificialUICache.sector.disabled = true;
+    artificialUICache.sectorFilter.disabled = true;
     setRadiusFields(project.radiusEarth, true);
   }
 
