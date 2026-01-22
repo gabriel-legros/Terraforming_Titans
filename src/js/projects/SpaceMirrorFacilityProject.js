@@ -609,6 +609,7 @@ function initializeMirrorOversightUI(container) {
       <div id="mirror-oversight-lantern-div" class="control-group">
         <input type="checkbox" id="mirror-oversight-lantern">
         <label for="mirror-oversight-lantern">Apply Oversight to Hyperion Lantern</label>
+        <span class="info-tooltip-icon" title="Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.">&#9432;</span>
       </div>
     </div>
   `;
