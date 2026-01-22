@@ -1352,14 +1352,27 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       }
     }
 
+    const warningTimers = resourceUICache.warningTimers || (resourceUICache.warningTimers = {});
+    const warningTextCache = resourceUICache.warningTextCache || (resourceUICache.warningTextCache = {});
+    let warningTimer = warningTimers[resource.name] || 0;
+    let cachedText = warningTextCache[resource.name] || { text: '', title: '' };
     if (warningMessages.length > 0) {
-      const joinedText = warningMessages.join(' ');
+      warningTimer = 1;
+      cachedText = { text: warningMessages.join(' '), title: warningMessages.join('\n') };
+      warningTextCache[resource.name] = cachedText;
+    } else if (warningTimer > 0) {
+      warningTimer = Math.max(0, warningTimer - frameDelta);
+    }
+    warningTimers[resource.name] = warningTimer;
+
+    if (warningMessages.length > 0 || warningTimer > 0) {
+      const joinedText = warningMessages.length > 0 ? warningMessages.join(' ') : cachedText.text;
       if (warningDiv.style.display !== 'flex') warningDiv.style.display = 'flex';
       if (warningInfo.text && warningInfo.text.textContent !== joinedText) {
         warningInfo.text.textContent = joinedText;
       }
       if (warningInfo.icon) {
-        const joinedTitle = warningMessages.join('\n');
+        const joinedTitle = warningMessages.length > 0 ? warningMessages.join('\n') : cachedText.title;
         if (warningInfo.icon.title !== joinedTitle) warningInfo.icon.title = joinedTitle;
       }
     } else {
@@ -1526,6 +1539,8 @@ const resourceUICache = {
   resources: {},  // { [resourceName]: { container, nameEl, autobuildWarningEl, warningEl, valueEl, capEl, ppsEl, availableEl, totalEl, scanEl, tooltip: {...} } }
   smallValueTimers: {},
   unstableTimers: {},
+  warningTimers: {},
+  warningTextCache: {},
 };
 
 function cacheResourceCategory(category) {
@@ -1583,6 +1598,8 @@ function invalidateResourceUICache() {
   resourceUICache.resources = {};
   resourceUICache.smallValueTimers = {};
   resourceUICache.unstableTimers = {};
+  resourceUICache.warningTimers = {};
+  resourceUICache.warningTextCache = {};
   updateResourceDisplay.lastTimestamp = undefined;
 }
 
