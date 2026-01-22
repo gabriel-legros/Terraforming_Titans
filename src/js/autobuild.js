@@ -134,20 +134,6 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
     return population;
 }
 
-function resolveAutoBuildMaxCount(structure, reservePercent, additionalReserves) {
-    const getter = structure?.getAutoBuildMaxCount;
-    if (getter?.call) {
-        return getter.call(structure, reservePercent, additionalReserves);
-    }
-
-    let maxBuildable = structure.maxBuildable(reservePercent, additionalReserves);
-    if (structure.requiresLand && typeof structure.landAffordCount === 'function') {
-        maxBuildable = Math.min(maxBuildable, structure.landAffordCount());
-    }
-
-    return Math.max(maxBuildable, 0);
-}
-
 function getAutoBuildFillData(structure) {
     const storage = structure.storage || {};
     const multiplier = structure.getEffectiveStorageMultiplier?.() || 1;
@@ -682,10 +668,11 @@ function autoBuild(buildings, delta = 0) {
             let buildCount = 0;
             const reserve = constructionOfficeState.strategicReserve;
             const extraReserves = building.autoBuildPriority ? null : prioritizedReserve;
-            const maxCount = resolveAutoBuildMaxCount(building, reserve, extraReserves);
+            const maxCount = building.getAutoBuildMaxCount(reserve, extraReserves);
+            const buildLimit = building.getBuildLimit() || Infinity;
             const desiredAmount = maxMode
                 ? maxCount
-                : Math.min(requiredAmount, maxCount);
+                : Math.min(requiredAmount, buildLimit);
             if (desiredAmount <= 0) {
                 return;
             }
@@ -694,17 +681,7 @@ function autoBuild(buildings, delta = 0) {
                 building.autoBuildPartial = true;
                 markAutoBuildShortages(building, desiredAmount, reserve, extraReserves);
             }
-            if (canBuildFull) {
-                buildCount = desiredAmount;
-            } else {
-                const fallback = maxMode
-                    ? desiredAmount
-                    : maxCount;
-
-                if (fallback > 0) {
-                    buildCount = fallback;
-                }
-            }
+            buildCount = canBuildFull ? desiredAmount : maxCount;
 
             if (maxMode && buildCount > 0 && buildCount < desiredAmount) {
                 building.autoBuildPartial = true;

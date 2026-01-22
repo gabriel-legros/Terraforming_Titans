@@ -14,21 +14,23 @@ class DysonReceiver extends Building {
     };
   }
 
-  getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
-    const base = super.getAutoBuildMaxCount(reservePercent, additionalReserves);
+  getBuildLimit() {
     const perBuilding = this.production?.colony?.energy || 0;
-
     if (perBuilding <= 0) {
       return 0;
     }
 
     const { totalEnergy } = this.getCollectorTotals();
-
     if (totalEnergy <= 0) {
       return 0;
     }
 
-    const cap = Math.floor(totalEnergy / perBuilding);
+    return Math.max(Math.floor(totalEnergy / perBuilding), 0);
+  }
+
+  getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
+    const base = super.getAutoBuildMaxCount(reservePercent, additionalReserves);
+    const cap = this.getBuildLimit();
     if (cap <= 0) {
       return 0;
     }
