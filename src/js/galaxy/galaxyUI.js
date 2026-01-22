@@ -1156,7 +1156,9 @@ function renderSelectedSectorDetails() {
         }
         details.enemy.sectorValue.textContent = formatDefenseInteger(enemyDefense.base);
         details.enemy.fleetValue.textContent = formatDefenseInteger(enemyDefense.fleet);
-        details.enemy.totalValue.textContent = enemyTotalDefense > 0 ? formatDefenseInteger(enemyTotalDefense) : '0';
+        details.enemy.totalValue.textContent = enemyTotalDefense > 0
+            ? formatNumber(enemyTotalDefense, false, 2)
+            : '0';
     } else if (details.enemySection?.isConnected) {
         details.enemySection.remove();
     }
@@ -1194,7 +1196,7 @@ function renderSelectedSectorDetails() {
             ? `${baseWorlds}+${rewardDisplay}`
             : String(baseWorlds);
         details.management.fleetDefenseValue.textContent = formatDefenseInteger(fleetDefense);
-        details.management.totalDefenseValue.textContent = formatDefenseInteger(totalDefense);
+        details.management.totalDefenseValue.textContent = formatNumber(totalDefense, false, 2);
     } else {
         details.management.worldsValue.textContent = '0';
         details.management.fleetDefenseValue.textContent = '0';
