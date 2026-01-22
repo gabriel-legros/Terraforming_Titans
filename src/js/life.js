@@ -927,326 +927,431 @@ class LifeManager extends EffectableEntity {
     return this.getLifeGrowthMultiplierBreakdown().totalMultiplier;
   }
 
-    // Method to update life growth/decay based on zonal environmental conditions
-    // Now uses global atmospheric resources instead of zonal atmosphere
-    updateLife(deltaTime) {
-        const design = lifeDesigner.currentDesign;
-        const baseGrowthRate = Number(design.getBaseGrowthRate());
-        const requirements = getActiveLifeDesignRequirements();
-        const process = getActiveLifeMetabolismProcess();
-        const growthPerBiomass = process.growth.perBiomass;
-        const decayPerBiomass = process.decay.perBiomass;
-        const processName = process.displayName || 'Photosynthesis';
-        const growthReason = processName;
-        const decayReason = `${processName} Decay`;
-        const usesLuminosity = process.growth.usesLuminosity === true;
+  buildAtmosphericPlan(deltaTime) {
+    const design = lifeDesigner.currentDesign;
+    const baseGrowthRate = Number(design.getBaseGrowthRate());
+    const requirements = getActiveLifeDesignRequirements();
+    const process = getActiveLifeMetabolismProcess();
+    const growthPerBiomass = process.growth.perBiomass;
+    const decayPerBiomass = process.decay.perBiomass;
+    const processName = process.displayName || 'Photosynthesis';
+    const growthReason = processName;
+    const decayReason = `${processName} Decay`;
+    const usesLuminosity = process.growth.usesLuminosity === true;
+    const secondsMultiplier = deltaTime / 1000;
+    const landMultiplier = Math.max(0, 1 - getEcumenopolisLandFraction(terraforming));
+    const zones = ['tropical', 'temperate', 'polar'];
 
-        const secondsMultiplier = deltaTime / 1000;
-        terraforming.biomassDyingZones = terraforming.biomassDyingZones || { tropical: false, temperate: false, polar: false };
+    const biomassByZone = {};
+    const waterByZone = {};
+    const overflowDecayByZone = {};
+    zones.forEach(zoneName => {
+      biomassByZone[zoneName] = terraforming.zonalSurface[zoneName].biomass || 0;
+      waterByZone[zoneName] = terraforming.zonalSurface[zoneName].liquidWater || 0;
+      overflowDecayByZone[zoneName] = 0;
+    });
 
-        const landMultiplier = Math.max(0, 1 - getEcumenopolisLandFraction(terraforming));
-        const zones = ['tropical', 'temperate', 'polar'];
+    const surfaceInputsPerBiomass = Object.entries(growthPerBiomass.surface || {})
+      .filter(([, coef]) => coef < 0);
+    const atmosphericInputsPerBiomass = Object.entries(growthPerBiomass.atmospheric || {})
+      .filter(([, coef]) => coef < 0);
 
-        const netBiomassChangeByZone = { tropical: 0, temperate: 0, polar: 0 };
-        const potentialGrowthByZone = { tropical: 0, temperate: 0, polar: 0 };
+    const biomassGrowthLimiters = {};
+    const addBiomassGrowthLimiter = (resourceKey, zoneName, scope) => {
+      const entry = biomassGrowthLimiters[resourceKey] || (biomassGrowthLimiters[resourceKey] = {
+        scope,
+        zones: [],
+      });
+      if (scope === 'surface' && zoneName && !entry.zones.includes(zoneName)) {
+        entry.zones.push(zoneName);
+      }
+    };
 
-        const surfaceInputsPerBiomass = Object.entries(growthPerBiomass.surface || {})
-          .filter(([, coef]) => coef < 0);
-        const atmosphericInputsPerBiomass = Object.entries(growthPerBiomass.atmospheric || {})
-          .filter(([, coef]) => coef < 0);
+    const potentialGrowthByZone = { tropical: 0, temperate: 0, polar: 0 };
+    let totalPotentialGrowth = 0;
 
-        const biomassGrowthLimiters = {};
-        const addBiomassGrowthLimiter = (resourceKey, zoneName, scope) => {
-          const entry = biomassGrowthLimiters[resourceKey] || (biomassGrowthLimiters[resourceKey] = {
-            scope,
-            zones: [],
-          });
-          if (scope === 'surface' && zoneName && !entry.zones.includes(zoneName)) {
-            entry.zones.push(zoneName);
-          }
-        };
+    zones.forEach(zoneName => {
+      let zonalBiomass = biomassByZone[zoneName];
+      if (zonalBiomass <= 0) return;
 
-        let totalPotentialGrowth = 0;
+      const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
+      const growthFactor = 1 - penaltyFraction;
+      const moisturePass = design.moistureCheckZone(zoneName).pass;
+      if (!moisturePass || growthFactor <= 0) return;
 
-        for (const zoneName of zones) {
-          terraforming.biomassDyingZones[zoneName] = false;
-          let zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
-          if (zonalBiomass <= 0) continue;
+      let zonalMaxGrowthRate = baseGrowthRate;
+      const radMitigation = design.getRadiationMitigationRatio();
+      const radPenalty = terraforming.getMagnetosphereStatus()
+        ? 0
+        : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
+      zonalMaxGrowthRate *= (1 - radPenalty);
+      zonalMaxGrowthRate *= usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
+      zonalMaxGrowthRate *= this.getEffectiveLifeGrowthMultiplier();
 
-          const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
-          const growthFactor = 1 - penaltyFraction;
-          const moisturePass = design.moistureCheckZone(zoneName).pass;
+      const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
+      const baseMaxDensity = requirements.baseMaxBiomassDensityTPerM2;
+      const densityMultiplier = 1 + design.spaceEfficiency.value;
+      const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
 
-          let zonalMaxGrowthRate = baseGrowthRate;
-          const radMitigation = design.getRadiationMitigationRatio();
-          const radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
-          zonalMaxGrowthRate *= (1 - radPenalty);
-          zonalMaxGrowthRate *= usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
-          zonalMaxGrowthRate *= this.getEffectiveLifeGrowthMultiplier();
-
-          const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
-          const baseMaxDensity = requirements.baseMaxBiomassDensityTPerM2;
-          const densityMultiplier = 1 + design.spaceEfficiency.value;
-          const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
-
-          if (zonalBiomass > maxBiomassForZone) {
-            const overflowDecay = Math.min(zonalBiomass, zonalBiomass * 0.01 * secondsMultiplier);
-            terraforming.zonalSurface[zoneName].biomass -= overflowDecay;
-            netBiomassChangeByZone[zoneName] -= overflowDecay;
-            if (secondsMultiplier > 0 && overflowDecay > 1e-9) {
-              resources.surface.biomass.modifyRate(-overflowDecay / secondsMultiplier, 'Life Density Decay', 'life');
-            }
-            zonalBiomass -= overflowDecay;
-          }
-
-          if (!moisturePass || growthFactor <= 0 || zonalBiomass <= 0) continue;
-
-          const logisticFactor = maxBiomassForZone > 0 ? Math.max(0, 1 - zonalBiomass / maxBiomassForZone) : 0;
-          const tempMultiplier = design.temperatureGrowthMultiplierZone(zoneName);
-          const actualGrowthRate = zonalMaxGrowthRate * logisticFactor * tempMultiplier * growthFactor;
-          const potentialBiomassIncrease = zonalBiomass * actualGrowthRate * secondsMultiplier;
-
-          let maxBySurfaceInputs = potentialBiomassIncrease;
-          let limitingSurfaceKey = '';
-          let limitingSurfaceValue = potentialBiomassIncrease;
-          for (const [resourceKey, coef] of surfaceInputsPerBiomass) {
-            const requiredPerBiomass = -coef;
-            const zoneData = terraforming.zonalSurface[zoneName];
-            const available = zoneData[resourceKey] || 0;
-            if (requiredPerBiomass > 0) {
-              const maxGrowth = available / requiredPerBiomass;
-              maxBySurfaceInputs = Math.min(maxBySurfaceInputs, maxGrowth);
-              if (maxGrowth < limitingSurfaceValue) {
-                limitingSurfaceValue = maxGrowth;
-                limitingSurfaceKey = resourceKey;
-              }
-            }
-          }
-          if (limitingSurfaceKey && limitingSurfaceValue < potentialBiomassIncrease) {
-            addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface');
-          }
-
-          const capped = Math.max(0, maxBySurfaceInputs);
-          potentialGrowthByZone[zoneName] = capped;
-          totalPotentialGrowth += capped;
-        }
-
-        let maxByAtmosphericInputs = totalPotentialGrowth;
-        let limitingAtmosphericKey = '';
-        let limitingAtmosphericValue = totalPotentialGrowth;
-        for (const [resourceKey, coef] of atmosphericInputsPerBiomass) {
-          const requiredPerBiomass = -coef;
-          const available = resources.atmospheric[resourceKey].value;
-          if (requiredPerBiomass > 0) {
-            const maxGrowth = available / requiredPerBiomass;
-            maxByAtmosphericInputs = Math.min(maxByAtmosphericInputs, maxGrowth);
-            if (maxGrowth < limitingAtmosphericValue) {
-              limitingAtmosphericValue = maxGrowth;
-              limitingAtmosphericKey = resourceKey;
-            }
-          }
-        }
-        if (limitingAtmosphericKey && maxByAtmosphericInputs < totalPotentialGrowth) {
-          addBiomassGrowthLimiter(limitingAtmosphericKey, '', 'atmospheric');
-        }
-
-        const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs));
-        this.biomassGrowthLimiters = biomassGrowthLimiters;
-        const growthAtmosphericDeltas = {};
-        const zoneGrowthByZone = { tropical: 0, temperate: 0, polar: 0 };
-
-        for (const zoneName of zones) {
-          const zonePotential = potentialGrowthByZone[zoneName];
-          if (zonePotential <= 0) continue;
-          zoneGrowthByZone[zoneName] = totalPotentialGrowth > 0
-            ? totalGrowthBiomass * (zonePotential / totalPotentialGrowth)
-            : 0;
-        }
-
-        const seedTargets = zones.filter(zoneName => {
-          const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
-          return zonalBiomass > 0 && zonalBiomass < 1 && potentialGrowthByZone[zoneName] > 0;
-        });
-        const seedDonors = zones.filter(zoneName => !seedTargets.includes(zoneName));
-
-        for (const targetZone of seedTargets) {
-          let availableGrowth = 0;
-          for (const donorZone of seedDonors) {
-            availableGrowth += zoneGrowthByZone[donorZone];
-          }
-          if (availableGrowth <= 0) continue;
-
-          const seedAmount = Math.min(1, availableGrowth);
-          zoneGrowthByZone[targetZone] += seedAmount;
-
-          for (const donorZone of seedDonors) {
-            const donorGrowth = zoneGrowthByZone[donorZone];
-            if (donorGrowth <= 0) continue;
-            const share = donorGrowth / availableGrowth;
-            zoneGrowthByZone[donorZone] = donorGrowth - seedAmount * share;
-          }
-        }
-
-        for (const zoneName of zones) {
-          const zoneGrowth = zoneGrowthByZone[zoneName];
-          if (zoneGrowth <= 0) continue;
-
-          terraforming.zonalSurface[zoneName].biomass += zoneGrowth;
-          netBiomassChangeByZone[zoneName] += zoneGrowth;
-          resources.surface.biomass.modifyRate(zoneGrowth / secondsMultiplier, growthReason, 'life');
-
-          const waterDelta = zoneGrowth * (growthPerBiomass.surface.liquidWater || 0);
-          if (waterDelta) {
-            terraforming.zonalSurface[zoneName].liquidWater += waterDelta;
-            terraforming.zonalSurface[zoneName].liquidWater = Math.max(0, terraforming.zonalSurface[zoneName].liquidWater);
-            resources.surface.liquidWater.modifyRate(waterDelta / secondsMultiplier, growthReason, 'life');
-          }
-
-          for (const [resourceKey, coef] of Object.entries(growthPerBiomass.atmospheric || {})) {
-            growthAtmosphericDeltas[resourceKey] = (growthAtmosphericDeltas[resourceKey] || 0) + zoneGrowth * coef;
-          }
-        }
-
-        for (const [resourceKey, delta] of Object.entries(growthAtmosphericDeltas)) {
-          if (!delta) continue;
-          resources.atmospheric[resourceKey].modifyRate(delta / secondsMultiplier, growthReason, 'life');
-          resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
-        }
-
-        const decayTargetsByZone = { tropical: 0, temperate: 0, polar: 0 };
-        let totalDecayTarget = 0;
-        for (const zoneName of zones) {
-          const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
-          if (zonalBiomass <= 0) continue;
-
-          const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
-          if (penaltyFraction <= 0) continue;
-
-          const decayFactor = 0.01 * penaltyFraction;
-          const percentDecayAmount = zonalBiomass * decayFactor * secondsMultiplier;
-          const minDecayAmount = requirements.minimumBiomassDecayRateTPerS * secondsMultiplier * penaltyFraction;
-          const targetDecay = Math.min(zonalBiomass, Math.max(percentDecayAmount, minDecayAmount));
-          decayTargetsByZone[zoneName] = targetDecay;
-          totalDecayTarget += targetDecay;
-        }
-
-        const decaySurfaceInputsPerBiomass = Object.entries(decayPerBiomass.surface || {})
-          .filter(([resourceKey, coef]) => resourceKey !== 'biomass' && coef < 0);
-        const decayAtmosphericInputsPerBiomass = Object.entries(decayPerBiomass.atmospheric || {})
-          .filter(([, coef]) => coef < 0);
-
-        const potentialDecayByZone = { tropical: 0, temperate: 0, polar: 0 };
-        let totalPotentialDecay = 0;
-        for (const zoneName of zones) {
-          const targetDecay = decayTargetsByZone[zoneName];
-          if (targetDecay <= 0) continue;
-
-          let maxBySurfaceInputs = targetDecay;
-          for (const [resourceKey, coef] of decaySurfaceInputsPerBiomass) {
-            const requiredPerBiomass = -coef;
-            let available = 0;
-            if (resourceKey === 'liquidWater') {
-              available = terraforming.zonalSurface[zoneName].liquidWater || 0;
-            }
-            if (requiredPerBiomass > 0) {
-              maxBySurfaceInputs = Math.min(maxBySurfaceInputs, available / requiredPerBiomass);
-            }
-          }
-
-          const capped = Math.max(0, maxBySurfaceInputs);
-          potentialDecayByZone[zoneName] = capped;
-          totalPotentialDecay += capped;
-        }
-
-        let maxSupportedDecayByAtmosphere = totalPotentialDecay;
-        for (const [resourceKey, coef] of decayAtmosphericInputsPerBiomass) {
-          const requiredPerBiomass = -coef;
-          const available = resources.atmospheric[resourceKey].value;
-          if (requiredPerBiomass > 0) {
-            maxSupportedDecayByAtmosphere = Math.min(maxSupportedDecayByAtmosphere, available / requiredPerBiomass);
-          }
-        }
-        const supportedDecayTotal = Math.max(0, Math.min(totalPotentialDecay, maxSupportedDecayByAtmosphere));
-
-        const decayAtmosphericDeltas = {};
-
-        for (const zoneName of zones) {
-          const targetDecay = decayTargetsByZone[zoneName];
-          if (targetDecay <= 0) continue;
-
-          const supportedDecay = totalPotentialDecay > 0
-            ? supportedDecayTotal * (potentialDecayByZone[zoneName] / totalPotentialDecay)
-            : 0;
-
-          terraforming.zonalSurface[zoneName].biomass -= targetDecay;
-          terraforming.zonalSurface[zoneName].biomass = Math.max(0, terraforming.zonalSurface[zoneName].biomass);
-          netBiomassChangeByZone[zoneName] -= targetDecay;
-          resources.surface.biomass.modifyRate(-targetDecay / secondsMultiplier, decayReason, 'life');
-
-          for (const [resourceKey, coef] of Object.entries(decayPerBiomass.atmospheric || {})) {
-            decayAtmosphericDeltas[resourceKey] = (decayAtmosphericDeltas[resourceKey] || 0) + supportedDecay * coef;
-          }
-        }
-
-        for (const [resourceKey, delta] of Object.entries(decayAtmosphericDeltas)) {
-          if (!delta) continue;
-          resources.atmospheric[resourceKey].modifyRate(delta / secondsMultiplier, decayReason, 'life');
-          resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
-        }
-
-        for (const zoneName of zones) {
-          if (netBiomassChangeByZone[zoneName] < -1e-9) {
-            terraforming.biomassDyingZones[zoneName] = true;
-          }
-          if (terraforming.zonalSurface[zoneName].biomass < 1e-5) {
-            terraforming.zonalSurface[zoneName].biomass = 0;
-          }
-        }
-
-      // Global resource object amounts are updated directly, modifyRate updates UI tracking.
-
-      // --- Geological Burial Step (after growth/decay) ---
-      const burialValue = design.geologicalBurial.value;
-      if (burialValue > 0 && secondsMultiplier > 0) {
-          // Base burial rate is 0.01% per point per day
-          let burialRatePerDay = burialValue * 0.0001;
-          // If CO2 has run out, slow burial drastically as life recycles more efficiently
-          const co2Amount = resources.atmospheric['carbonDioxide']?.value || 0;
-          if (co2Amount <= 1) {
-              burialRatePerDay = 0; // 10,000 times slower without CO2
-          }
-
-          for (const zoneName of ['tropical', 'temperate', 'polar']) {
-              let currentZonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
-              if (currentZonalBiomass > 0) {
-                  let burialAmount = currentZonalBiomass * burialRatePerDay * secondsMultiplier;
-                  burialAmount = Math.min(burialAmount, currentZonalBiomass); // Cannot bury more than exists
-
-                  if (burialAmount > 1e-9) { // Only apply if significant
-                      terraforming.zonalSurface[zoneName].biomass -= burialAmount;
-                      // Update rate tracking for biomass resource
-                      if (resources.surface.biomass) {
-                          resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, 'Geological Burial', 'life');
-                      }
-                  }
-              }
-          }
+      if (zonalBiomass > maxBiomassForZone) {
+        const overflowDecay = Math.min(zonalBiomass, zonalBiomass * 0.01 * secondsMultiplier);
+        overflowDecayByZone[zoneName] = overflowDecay;
+        zonalBiomass = Math.max(0, zonalBiomass - overflowDecay);
+        biomassByZone[zoneName] = zonalBiomass;
       }
 
-      if (this.isBooleanFlagSet('surfaceFoodProduction')) {
-          const biomassResource = resources.surface?.biomass;
-          const foodResource = resources.colony?.food;
-          const biomassAmount = biomassResource?.value || 0;
+      const logisticFactor = maxBiomassForZone > 0
+        ? Math.max(0, 1 - zonalBiomass / maxBiomassForZone)
+        : 0;
+      const tempMultiplier = design.temperatureGrowthMultiplierZone(zoneName);
+      const actualGrowthRate = zonalMaxGrowthRate * logisticFactor * tempMultiplier * growthFactor;
+      const potentialBiomassIncrease = zonalBiomass * actualGrowthRate * secondsMultiplier;
 
-          if (foodResource && biomassAmount > 0) {
-              const foodPerSecond = biomassAmount * 0.01;
-              foodResource.modifyRate(foodPerSecond, 'Surface Biomass', 'life');
-
-              if (secondsMultiplier > 0) {
-                  foodResource.increase(foodPerSecond * secondsMultiplier);
-              }
+      let maxBySurfaceInputs = potentialBiomassIncrease;
+      let limitingSurfaceKey = '';
+      let limitingSurfaceValue = potentialBiomassIncrease;
+      surfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
+        const requiredPerBiomass = -coef;
+        let available = 0;
+        if (resourceKey === 'liquidWater') {
+          available = waterByZone[zoneName];
+        } else {
+          available = terraforming.zonalSurface[zoneName][resourceKey] || 0;
+        }
+        if (requiredPerBiomass > 0) {
+          const maxGrowth = available / requiredPerBiomass;
+          maxBySurfaceInputs = Math.min(maxBySurfaceInputs, maxGrowth);
+          if (maxGrowth < limitingSurfaceValue) {
+            limitingSurfaceValue = maxGrowth;
+            limitingSurfaceKey = resourceKey;
           }
+        }
+      });
+      if (limitingSurfaceKey && limitingSurfaceValue < potentialBiomassIncrease) {
+        addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface');
       }
+
+      const capped = Math.max(0, maxBySurfaceInputs);
+      potentialGrowthByZone[zoneName] = capped;
+      totalPotentialGrowth += capped;
+    });
+
+    let maxByAtmosphericInputs = totalPotentialGrowth;
+    let limitingAtmosphericKey = '';
+    let limitingAtmosphericValue = totalPotentialGrowth;
+    atmosphericInputsPerBiomass.forEach(([resourceKey, coef]) => {
+      const requiredPerBiomass = -coef;
+      const available = resources.atmospheric[resourceKey].value;
+      if (requiredPerBiomass > 0) {
+        const maxGrowth = available / requiredPerBiomass;
+        maxByAtmosphericInputs = Math.min(maxByAtmosphericInputs, maxGrowth);
+        if (maxGrowth < limitingAtmosphericValue) {
+          limitingAtmosphericValue = maxGrowth;
+          limitingAtmosphericKey = resourceKey;
+        }
+      }
+    });
+    if (limitingAtmosphericKey && maxByAtmosphericInputs < totalPotentialGrowth) {
+      addBiomassGrowthLimiter(limitingAtmosphericKey, '', 'atmospheric');
+    }
+
+    const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs));
+    const zoneGrowthByZone = { tropical: 0, temperate: 0, polar: 0 };
+    zones.forEach(zoneName => {
+      const zonePotential = potentialGrowthByZone[zoneName];
+      if (zonePotential <= 0) return;
+      zoneGrowthByZone[zoneName] = totalPotentialGrowth > 0
+        ? totalGrowthBiomass * (zonePotential / totalPotentialGrowth)
+        : 0;
+    });
+
+    const seedTargets = zones.filter(zoneName => {
+      const zonalBiomass = biomassByZone[zoneName];
+      return zonalBiomass > 0 && zonalBiomass < 1 && potentialGrowthByZone[zoneName] > 0;
+    });
+    const seedDonors = zones.filter(zoneName => !seedTargets.includes(zoneName));
+
+    seedTargets.forEach(targetZone => {
+      let availableGrowth = 0;
+      seedDonors.forEach(donorZone => {
+        availableGrowth += zoneGrowthByZone[donorZone];
+      });
+      if (availableGrowth <= 0) return;
+      const seedAmount = Math.min(1, availableGrowth);
+      zoneGrowthByZone[targetZone] += seedAmount;
+      seedDonors.forEach(donorZone => {
+        const donorGrowth = zoneGrowthByZone[donorZone];
+        if (donorGrowth <= 0) return;
+        const share = donorGrowth / availableGrowth;
+        zoneGrowthByZone[donorZone] = donorGrowth - seedAmount * share;
+      });
+    });
+
+    const growthAtmosphericDeltas = {};
+    const waterDeltaByZone = { tropical: 0, temperate: 0, polar: 0 };
+    zones.forEach(zoneName => {
+      const zoneGrowth = zoneGrowthByZone[zoneName];
+      if (zoneGrowth <= 0) return;
+      biomassByZone[zoneName] += zoneGrowth;
+      const waterDelta = zoneGrowth * (growthPerBiomass.surface.liquidWater || 0);
+      if (waterDelta) {
+        waterDeltaByZone[zoneName] = waterDelta;
+        waterByZone[zoneName] = Math.max(0, waterByZone[zoneName] + waterDelta);
+      }
+      Object.entries(growthPerBiomass.atmospheric || {}).forEach(([resourceKey, coef]) => {
+        growthAtmosphericDeltas[resourceKey] =
+          (growthAtmosphericDeltas[resourceKey] || 0) + zoneGrowth * coef;
+      });
+    });
+
+    const decayTargetsByZone = { tropical: 0, temperate: 0, polar: 0 };
+    let totalDecayTarget = 0;
+    zones.forEach(zoneName => {
+      const zonalBiomass = biomassByZone[zoneName];
+      if (zonalBiomass <= 0) return;
+      const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
+      if (penaltyFraction <= 0) return;
+      const decayFactor = 0.01 * penaltyFraction;
+      const percentDecayAmount = zonalBiomass * decayFactor * secondsMultiplier;
+      const minDecayAmount = requirements.minimumBiomassDecayRateTPerS * secondsMultiplier * penaltyFraction;
+      const targetDecay = Math.min(zonalBiomass, Math.max(percentDecayAmount, minDecayAmount));
+      decayTargetsByZone[zoneName] = targetDecay;
+      totalDecayTarget += targetDecay;
+    });
+
+    const decaySurfaceInputsPerBiomass = Object.entries(decayPerBiomass.surface || {})
+      .filter(([resourceKey, coef]) => resourceKey !== 'biomass' && coef < 0);
+    const decayAtmosphericInputsPerBiomass = Object.entries(decayPerBiomass.atmospheric || {})
+      .filter(([, coef]) => coef < 0);
+
+    const potentialDecayByZone = { tropical: 0, temperate: 0, polar: 0 };
+    let totalPotentialDecay = 0;
+    zones.forEach(zoneName => {
+      const targetDecay = decayTargetsByZone[zoneName];
+      if (targetDecay <= 0) return;
+      let maxBySurfaceInputs = targetDecay;
+      decaySurfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
+        const requiredPerBiomass = -coef;
+        let available = 0;
+        if (resourceKey === 'liquidWater') {
+          available = waterByZone[zoneName];
+        }
+        if (requiredPerBiomass > 0) {
+          maxBySurfaceInputs = Math.min(maxBySurfaceInputs, available / requiredPerBiomass);
+        }
+      });
+      const capped = Math.max(0, maxBySurfaceInputs);
+      potentialDecayByZone[zoneName] = capped;
+      totalPotentialDecay += capped;
+    });
+
+    let maxSupportedDecayByAtmosphere = totalPotentialDecay;
+    decayAtmosphericInputsPerBiomass.forEach(([resourceKey, coef]) => {
+      const requiredPerBiomass = -coef;
+      const available = resources.atmospheric[resourceKey].value;
+      if (requiredPerBiomass > 0) {
+        maxSupportedDecayByAtmosphere = Math.min(maxSupportedDecayByAtmosphere, available / requiredPerBiomass);
+      }
+    });
+
+    const supportedDecayTotal = Math.max(0, Math.min(totalPotentialDecay, maxSupportedDecayByAtmosphere));
+    const decayAtmosphericDeltas = {};
+    zones.forEach(zoneName => {
+      const targetDecay = decayTargetsByZone[zoneName];
+      if (targetDecay <= 0) return;
+      const supportedDecay = totalPotentialDecay > 0
+        ? supportedDecayTotal * (potentialDecayByZone[zoneName] / totalPotentialDecay)
+        : 0;
+      Object.entries(decayPerBiomass.atmospheric || {}).forEach(([resourceKey, coef]) => {
+        decayAtmosphericDeltas[resourceKey] =
+          (decayAtmosphericDeltas[resourceKey] || 0) + supportedDecay * coef;
+      });
+    });
+
+    return {
+      design,
+      requirements,
+      process,
+      growthPerBiomass,
+      decayPerBiomass,
+      growthReason,
+      decayReason,
+      usesLuminosity,
+      secondsMultiplier,
+      zones,
+      biomassByZone,
+      waterByZone,
+      overflowDecayByZone,
+      biomassGrowthLimiters,
+      potentialGrowthByZone,
+      totalPotentialGrowth,
+      zoneGrowthByZone,
+      waterDeltaByZone,
+      decayTargetsByZone,
+      growthAtmosphericDeltas,
+      decayAtmosphericDeltas,
+    };
+  }
+
+  estimateAtmosphericConsumption(deltaTime) {
+    const secondsMultiplier = deltaTime / 1000;
+    if (secondsMultiplier <= 0) {
+      return {};
+    }
+    const deltas = this.calculateAtmosphericDeltas(deltaTime);
+    const consumption = {};
+    Object.entries(deltas).forEach(([resourceKey, delta]) => {
+      if (delta < 0) {
+        consumption[resourceKey] = -delta;
+      }
+    });
+    return consumption;
+  }
+
+  calculateAtmosphericDeltas(deltaTime) {
+    const secondsMultiplier = deltaTime / 1000;
+    if (secondsMultiplier <= 0) {
+      return {};
+    }
+    const plan = this.buildAtmosphericPlan(deltaTime);
+    const netAtmosphericDeltas = {};
+    Object.entries(plan.growthAtmosphericDeltas).forEach(([resourceKey, delta]) => {
+      if (!delta) return;
+      netAtmosphericDeltas[resourceKey] = (netAtmosphericDeltas[resourceKey] || 0) + delta;
+    });
+    Object.entries(plan.decayAtmosphericDeltas).forEach(([resourceKey, delta]) => {
+      if (!delta) return;
+      netAtmosphericDeltas[resourceKey] = (netAtmosphericDeltas[resourceKey] || 0) + delta;
+    });
+
+    return netAtmosphericDeltas;
+  }
+  // Method to update life growth/decay based on zonal environmental conditions
+  // Now uses global atmospheric resources instead of zonal atmosphere
+  updateLife(deltaTime) {
+    const plan = this.buildAtmosphericPlan(deltaTime);
+    const {
+      design,
+      growthReason,
+      decayReason,
+      secondsMultiplier,
+      zones,
+      overflowDecayByZone,
+      biomassGrowthLimiters,
+      zoneGrowthByZone,
+      waterDeltaByZone,
+      decayTargetsByZone,
+      growthAtmosphericDeltas,
+      decayAtmosphericDeltas,
+    } = plan;
+
+    terraforming.biomassDyingZones = terraforming.biomassDyingZones || { tropical: false, temperate: false, polar: false };
+
+    const netBiomassChangeByZone = { tropical: 0, temperate: 0, polar: 0 };
+
+    zones.forEach(zoneName => {
+      terraforming.biomassDyingZones[zoneName] = false;
+      const overflowDecay = overflowDecayByZone[zoneName] || 0;
+      if (overflowDecay <= 0) return;
+      terraforming.zonalSurface[zoneName].biomass -= overflowDecay;
+      netBiomassChangeByZone[zoneName] -= overflowDecay;
+      if (secondsMultiplier > 0 && overflowDecay > 1e-9) {
+        resources.surface.biomass.modifyRate(-overflowDecay / secondsMultiplier, 'Life Density Decay', 'life');
+      }
+    });
+
+    this.biomassGrowthLimiters = biomassGrowthLimiters;
+
+    zones.forEach(zoneName => {
+      const zoneGrowth = zoneGrowthByZone[zoneName];
+      if (zoneGrowth <= 0) return;
+
+      terraforming.zonalSurface[zoneName].biomass += zoneGrowth;
+      netBiomassChangeByZone[zoneName] += zoneGrowth;
+      resources.surface.biomass.modifyRate(zoneGrowth / secondsMultiplier, growthReason, 'life');
+
+      const waterDelta = waterDeltaByZone[zoneName] || 0;
+      if (waterDelta) {
+        terraforming.zonalSurface[zoneName].liquidWater += waterDelta;
+        terraforming.zonalSurface[zoneName].liquidWater = Math.max(0, terraforming.zonalSurface[zoneName].liquidWater);
+        resources.surface.liquidWater.modifyRate(waterDelta / secondsMultiplier, growthReason, 'life');
+      }
+    });
+
+    Object.entries(growthAtmosphericDeltas).forEach(([resourceKey, delta]) => {
+      if (!delta) return;
+      resources.atmospheric[resourceKey].modifyRate(delta / secondsMultiplier, growthReason, 'life');
+      resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
+    });
+
+    zones.forEach(zoneName => {
+      const targetDecay = decayTargetsByZone[zoneName];
+      if (targetDecay <= 0) return;
+
+      terraforming.zonalSurface[zoneName].biomass -= targetDecay;
+      terraforming.zonalSurface[zoneName].biomass = Math.max(0, terraforming.zonalSurface[zoneName].biomass);
+      netBiomassChangeByZone[zoneName] -= targetDecay;
+      resources.surface.biomass.modifyRate(-targetDecay / secondsMultiplier, decayReason, 'life');
+    });
+
+    Object.entries(decayAtmosphericDeltas).forEach(([resourceKey, delta]) => {
+      if (!delta) return;
+      resources.atmospheric[resourceKey].modifyRate(delta / secondsMultiplier, decayReason, 'life');
+      resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
+    });
+
+    zones.forEach(zoneName => {
+      if (netBiomassChangeByZone[zoneName] < -1e-9) {
+        terraforming.biomassDyingZones[zoneName] = true;
+      }
+      if (terraforming.zonalSurface[zoneName].biomass < 1e-5) {
+        terraforming.zonalSurface[zoneName].biomass = 0;
+      }
+    });
+
+    // Global resource object amounts are updated directly, modifyRate updates UI tracking.
+
+    // --- Geological Burial Step (after growth/decay) ---
+    const burialValue = design.geologicalBurial.value;
+    if (burialValue > 0 && secondsMultiplier > 0) {
+      // Base burial rate is 0.01% per point per day
+      let burialRatePerDay = burialValue * 0.0001;
+      // If CO2 has run out, slow burial drastically as life recycles more efficiently
+    const co2Amount = resources.atmospheric['carbonDioxide']?.value || 0;
+      if (co2Amount <= 1) {
+        burialRatePerDay = 0; // 10,000 times slower without CO2
+      }
+
+      zones.forEach(zoneName => {
+        let currentZonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
+        if (currentZonalBiomass > 0) {
+          let burialAmount = currentZonalBiomass * burialRatePerDay * secondsMultiplier;
+          burialAmount = Math.min(burialAmount, currentZonalBiomass); // Cannot bury more than exists
+
+          if (burialAmount > 1e-9) { // Only apply if significant
+            terraforming.zonalSurface[zoneName].biomass -= burialAmount;
+            if (resources.surface.biomass) {
+              resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, 'Geological Burial', 'life');
+            }
+          }
+        }
+      });
+    }
+
+    if (this.isBooleanFlagSet('surfaceFoodProduction')) {
+      const biomassResource = resources.surface?.biomass;
+      const foodResource = resources.colony?.food;
+      const biomassAmount = biomassResource?.value || 0;
+
+      if (foodResource && biomassAmount > 0) {
+        const foodPerSecond = biomassAmount * 0.01;
+        foodResource.modifyRate(foodPerSecond, 'Surface Biomass', 'life');
+
+        if (secondsMultiplier > 0) {
+          foodResource.increase(foodPerSecond * secondsMultiplier);
+        }
+      }
+    }
   }
 
 

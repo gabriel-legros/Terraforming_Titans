@@ -1112,6 +1112,7 @@ class SpaceshipProject extends Project {
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
     this.shortfallLastTick = false;
+    this.currentTickDeltaTime = deltaTime;
     if (typeof this.shouldAutomationDisable === 'function' && this.shouldAutomationDisable()) {
       this.isActive = false;
       return;
