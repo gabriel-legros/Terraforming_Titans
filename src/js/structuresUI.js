@@ -981,14 +981,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setTargetButton.classList.add('auto-build-setactive-button');
   setTargetButton.textContent = 'Set Target to Active';
 
-  const setTargetTooltipIcon = document.createElement('span');
-  setTargetTooltipIcon.classList.add('info-tooltip-icon');
-  setTargetTooltipIcon.innerHTML = '&#9432;';
-  const tooltipText = 'Calculates the percentage needed for the target to match the current active count, using the minimal precision (up to 6 decimal places) that achieves an exact match.';
-  attachDynamicInfoTooltip(setTargetTooltipIcon, tooltipText);
-
   setTargetButtonContainer.appendChild(setTargetButton);
-  setTargetButtonContainer.appendChild(setTargetTooltipIcon);
 
   setTargetButton.addEventListener('click', () => {
     const pop = resources.colony.colonists.value;
