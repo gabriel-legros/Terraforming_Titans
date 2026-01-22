@@ -575,7 +575,7 @@ function autoUpgradeColonies(buildings) {
         if (!structure.getNextTierName || !structure.canAffordUpgrade || !structure.upgrade) continue;
         const nextName = structure.getNextTierName();
         if (!nextName) continue;
-        const next = colonies[nextName];
+        const next = buildings[nextName];
         if (!next || !next.unlocked || next.isHidden) continue;
 
         while (structure.count >= 10) {
@@ -583,12 +583,17 @@ function autoUpgradeColonies(buildings) {
             if (maxByCount <= 0) break;
             const upgradeCount = getAffordableUpgradeCount(structure, maxByCount);
             if (!upgradeCount) break;
+            const cost = structure.getUpgradeCost(upgradeCount);
             if (!structure.upgrade(upgradeCount)) break;
+            if (cost) autobuildCostTracker.recordCost(structure.displayName, cost);
         }
 
         if (structure.count > 0) {
             const upgradeCount = getAffordableUpgradeCount(structure, 1);
-            if (upgradeCount && !structure.upgrade(upgradeCount)) continue;
+            if (!upgradeCount) continue;
+            const cost = structure.getUpgradeCost(upgradeCount);
+            if (!structure.upgrade(upgradeCount)) continue;
+            if (cost) autobuildCostTracker.recordCost(structure.displayName, cost);
         }
     }
 }

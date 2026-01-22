@@ -23,6 +23,7 @@ class Building extends EffectableEntity {
     this.workerPriority = 0; // -1 low, 0 normal, 1 high
     this.autoActiveEnabled = false;
     this.autoBuildPartial = false;
+    this.autoUpgradeEnabled = false;
 
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
@@ -193,6 +194,7 @@ class Building extends EffectableEntity {
       workerPriority: this.workerPriority,
       autoActiveEnabled: this.autoActiveEnabled,
       autoBuildPartial: this.autoBuildPartial,
+      autoUpgradeEnabled: this.autoUpgradeEnabled,
       reversalAvailable: this.reversalAvailable,
       reverseEnabled: this.reverseEnabled,
       autoReverse: this.autoReverse,
@@ -243,6 +245,7 @@ class Building extends EffectableEntity {
     if ('workerPriority' in state) this.workerPriority = state.workerPriority;
     if ('autoActiveEnabled' in state) this.autoActiveEnabled = state.autoActiveEnabled;
     if ('autoBuildPartial' in state) this.autoBuildPartial = state.autoBuildPartial;
+    this.autoUpgradeEnabled = state.autoUpgradeEnabled || false;
     if ('reversalAvailable' in state) this.reversalAvailable = state.reversalAvailable;
     if ('reverseEnabled' in state) this.reverseEnabled = state.reverseEnabled;
     if ('autoReverse' in state) this.autoReverse = state.autoReverse;
@@ -1148,6 +1151,12 @@ class Building extends EffectableEntity {
   }
 }
 
+const buildingConstructorRegistry = {};
+
+function registerBuildingConstructor(name, ctor) {
+  buildingConstructorRegistry[name] = ctor;
+}
+
 const constructors = {
   oreMine: 'OreMine',
   sandQuarry: 'SandQuarry',
@@ -1166,10 +1175,13 @@ const constructors = {
   spaceMirror: 'SpaceMirror',
   hyperionLantern: 'HyperionLantern',
   trashIncinerator: 'MultiRecipesBuilding',
+  fusionPowerPlant: 'FusionPowerPlant',
   laserCannon: 'LaserCannon'
 };
 
 function loadConstructor(name) {
+  const registered = buildingConstructorRegistry[name];
+  if (registered) return registered;
   const ctorName = constructors[name];
   if (!ctorName) return Building;
   if (typeof globalThis !== 'undefined' && globalThis[ctorName]) {
@@ -1199,7 +1211,7 @@ function initializeBuildings(buildingsParameters) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { Building, initializeBuildings };
+  module.exports = { Building, initializeBuildings, registerBuildingConstructor };
 } else if (typeof globalThis !== 'undefined') {
   globalThis.Building = Building;
   globalThis.initializeBuildings = initializeBuildings;

@@ -250,6 +250,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Solis now offers a permanent Android Manufacturing research unlock and a Buildings Automation upgrade gated by the Tartarus 30.4 story flags.
 - Tartarus chapter 30.4 now grants Solis flags for permanent Android research and Buildings Automation, and a new tartarus.30.4b placeholder chapter sits between 30.4 and 30.5.
 - Buildings Automation presets now apply on demand via the Preset Combination button instead of running continuously.
+- Fusion Power Plants can upgrade 10:1 into Superalloy Fusion Reactors at half cost (superalloys paid in full), with manual and auto-upgrade controls.
 - Buildings Automation now supports named preset combinations that save and restore the apply list.
 - Buildings Automation now applies preset control/automation settings even while a building is hidden or locked, so settings are ready once it unlocks.
 - Buildings Automation now supports applying presets automatically after the next planet travel via a dedicated checkbox.

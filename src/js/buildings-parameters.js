@@ -313,23 +313,6 @@ const buildingsParameters = {
     aerostatReduction: 0.1,
     unlocked: false
   },
-  fusionPowerPlant: {
-    name: 'Fusion Reactor',
-    category: 'energy',
-    description: 'Produces energy from almost nothing.',
-    cost: { colony: { metal: 50000, components: 1000, electronics : 1000, superconductors : 500 } },
-    consumption: { colony: { water: 0.1 } },
-    production: { colony: { energy: 5_000_000_000 }},
-    storage: {},
-    dayNightActivity: false,
-    canBeToggled: true,
-    requiresMaintenance: true,
-    requiresWorker: 0,
-    maintenanceFactor: 1,
-    aerostatReduction: 0.002,
-    automationBuildingsDropDown: ['superconductorFactory'],
-    unlocked: false
-  },
   dysonReceiver: {
     name: 'Dyson Receiver',
     category: 'energy',
@@ -347,6 +330,23 @@ const buildingsParameters = {
     autoBuildMaxOption: true,
     temperatureMaintenanceImmune: true,
     kesslerDebrisSize: 'large'
+  },
+  fusionPowerPlant: {
+    name: 'Fusion Reactor',
+    category: 'energy',
+    description: 'Produces energy from almost nothing.',
+    cost: { colony: { metal: 50000, components: 1000, electronics : 1000, superconductors : 500 } },
+    consumption: { colony: { water: 0.1 } },
+    production: { colony: { energy: 5_000_000_000 }},
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 0,
+    maintenanceFactor: 1,
+    aerostatReduction: 0.002,
+    automationBuildingsDropDown: ['superconductorFactory'],
+    unlocked: false
   },
   superalloyFusionReactor: {
     name: 'Superalloy Fusion Reactor',

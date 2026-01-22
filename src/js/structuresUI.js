@@ -544,7 +544,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     updateStructureButtonText(button, structure, refreshedBuildCount);
     updateStructureCostDisplay(costElement, structure, refreshedBuildCount);
     updateProductionConsumptionDetails(structure, productionConsumptionDetails, refreshedBuildCount);
-    if (isColony && upgradeButton) {
+  if (upgradeButton) {
       updateUpgradeButton(upgradeButton, structure);
     }
   });
@@ -564,7 +564,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
     }
-    if (isColony && upgradeButton) {
+    if (upgradeButton) {
       updateUpgradeButton(upgradeButton, structure);
     }
   });
@@ -582,7 +582,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
     }
-    if (isColony && upgradeButton) {
+    if (upgradeButton) {
       updateUpgradeButton(upgradeButton, structure);
     }
   });
@@ -715,14 +715,19 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   cached.hideButton = hideButton;
 
   let upgradeButton = null;
-  if (isColony) {
+  const supportsUpgrade = !!structure.getNextTierName;
+  if (supportsUpgrade) {
     upgradeButton = document.createElement('button');
     upgradeButton.id = `${structure.name}-upgrade-button`;
     upgradeButton.classList.add('upgrade-button');
     upgradeButton.addEventListener('click', function () {
       const upgrades = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
-      if (structure.upgrade && structure.upgrade(upgrades)) {
+      if (structure.upgrade(upgrades)) {
+        if (isColony) {
         updateStructureDisplay(colonies);
+        } else {
+          updateBuildingDisplay(buildings);
+        }
       }
     });
     controlActionRow.appendChild(upgradeButton);
@@ -1042,7 +1047,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildContainer.appendChild(autoBuildTargetContainer);
 
   let autoUpgradeContainer = null;
-  if (isColony) {
+  if (supportsUpgrade) {
     autoUpgradeContainer = document.createElement('label');
     autoUpgradeContainer.classList.add('auto-upgrade-container');
     autoUpgradeContainer.style.display = 'none';
@@ -1052,7 +1057,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     autoUpgradeCheckbox.classList.add('auto-upgrade-checkbox');
     autoUpgradeCheckbox.addEventListener('change', () => {
       structure.autoUpgradeEnabled = autoUpgradeCheckbox.checked;
-      if (autoUpgradeCheckbox.checked && gameSettings.colonyUpgradeUnchecksAutobuild) {
+      if (autoUpgradeCheckbox.checked && isColony && gameSettings.colonyUpgradeUnchecksAutobuild) {
         autoBuildCheckbox.checked = false;
         structure.autoBuildEnabled = false;
       }
@@ -1181,12 +1186,10 @@ function disableStructureAutomations(structure, isColony) {
   }
   structure.autoBuildEnabled = false;
 
-  if (isColony) {
-    if (els.autoUpgradeCheckbox) {
-      els.autoUpgradeCheckbox.checked = false;
-    }
-    structure.autoUpgradeEnabled = false;
+  if (els.autoUpgradeCheckbox) {
+    els.autoUpgradeCheckbox.checked = false;
   }
+  structure.autoUpgradeEnabled = false;
 }
 
 // Create structure controls for buildings and colonies
@@ -1294,20 +1297,19 @@ function updateDecreaseButtonText(button, buildCount) {
     }
   }
 
-  function updateUpgradeButton(button, colony) {
-    if (!button || !(colony instanceof Colony)) return;
-
-    const nextName = colony.getNextTierName();
-    const next = nextName ? colonies[nextName] : null;
+  function updateUpgradeButton(button, structure) {
+    const nextName = structure.getNextTierName();
+    const isColony = structure instanceof Colony;
+    const next = nextName ? (isColony ? colonies[nextName] : buildings[nextName]) : null;
 
     if (!next || !next.unlocked) {
       button.style.display = 'none';
       return;
     }
 
-    const upgradeCount = Math.max(1, selectedBuildCounts[colony.name] / 10 || 1);
-    const amount = Math.min(upgradeCount * 10, colony.count);
-    const cost = colony.getUpgradeCost(upgradeCount);
+    const upgradeCount = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
+    const amount = Math.min(upgradeCount * 10, structure.count);
+    const cost = structure.getUpgradeCost(upgradeCount);
     if (!cost) {
       button.style.display = 'none';
       return;
@@ -1363,7 +1365,7 @@ function updateDecreaseButtonText(button, buildCount) {
       }
     });
 
-    const canAfford = colony.canAffordUpgrade(upgradeCount);
+    const canAfford = structure.canAffordUpgrade(upgradeCount);
     button.disabled = !canAfford;
     button.style.display = 'inline-block';
     button.style.color = '';
@@ -1821,6 +1823,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const countActiveElement = document.getElementById(`${structureName}-count-active`);
       const selectedBuildCount = selectedBuildCounts[structureName];
       const manualBuildCount = getManualBuildCount(structure, selectedBuildCount);
+      const isColony = structure instanceof Colony;
   
       // Update visibility based on unlocked state
       const isVisible = typeof structure.isVisible === 'function'
@@ -1903,7 +1906,7 @@ function updateDecreaseButtonText(button, buildCount) {
         const autoUpgradeContainer = els.autoUpgradeContainer;
         if (autoUpgradeContainer) {
           const nextName = structure.getNextTierName?.();
-          const next = nextName ? colonies[nextName] : null;
+          const next = nextName ? (isColony ? colonies[nextName] : buildings[nextName]) : null;
           const showAutoUpgrade = !!(next && next.unlocked);
           autoUpgradeContainer.style.display = showAutoUpgrade ? 'flex' : 'none';
           const checkbox = els.autoUpgradeCheckbox;
