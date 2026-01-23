@@ -386,7 +386,7 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
     case 'summary-terraforming':
       updatePlayTimeDisplay();
       updateTemperatureBox();
-      updateAtmosphereBox();
+      updateAtmosphereBox(deltaSeconds);
       updateWaterBox();
       updateLuminosityBox();
       updateLifeBox();
@@ -957,13 +957,15 @@ function createTemperatureBox(row) {
     }
   }
 
-  function updateAtmosphereBox() {
+  function updateAtmosphereBox(deltaSeconds) {
     const els = terraformingUICache.atmosphere;
     const atmosphereBox = els.box;
     if (!atmosphereBox) return;
     atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? 'green' : 'red';
     const gasTargets = terraforming.gasTargets;
     const gasBody = els.gasBody;
+    const frameDelta = deltaSeconds > 0 ? Math.min(1, deltaSeconds) : 0;
+    const gasHideTimers = els.gasHideTimers || (els.gasHideTimers = {});
 
     const addGasRow = (gas) => {
       if (!gasBody) return;
@@ -988,6 +990,7 @@ function createTemperatureBox(row) {
         status: row.querySelector(`#${gas}-status`),
         row,
       };
+      gasHideTimers[gas] = 0;
     };
 
     Object.keys(gasTargets || {}).forEach((gas) => {
@@ -1101,7 +1104,15 @@ function createTemperatureBox(row) {
         const target = gasTargets[gas];
         const outsideTarget = target
           && (currentGlobalPressurePa < target.min || currentGlobalPressurePa > target.max);
-        const shouldShow = !hideSmall || currentAmount > 0 || outsideTarget;
+        const shouldShowBase = !hideSmall || currentAmount > 0 || outsideTarget;
+        let timer = gasHideTimers[gas] || 0;
+        if (shouldShowBase) {
+          timer = 1;
+        } else if (timer > 0) {
+          timer = Math.max(0, timer - frameDelta);
+        }
+        gasHideTimers[gas] = timer;
+        const shouldShow = shouldShowBase || timer > 0;
         if (gasEls && gasEls.row) {
             gasEls.row.style.display = shouldShow ? '' : 'none';
         }
