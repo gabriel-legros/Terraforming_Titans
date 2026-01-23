@@ -1711,10 +1711,7 @@ class Terraforming extends EffectableEntity{
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty();
       const colonyCostPenalty = this.calculateColonyPressureCostPenalty();
       const maintenancePenalty = this.calculateMaintenancePenalty();
-      const aerostatMitigationDetails =
-        typeof getAerostatMaintenanceMitigationHelper === 'function'
-          ? getAerostatMaintenanceMitigationHelper()
-          : null;
+      const aerostatMitigationDetails = getAerostatMaintenanceMitigation();
       const factoryPenaltyReduction =
         aerostatMitigationDetails &&
         Number.isFinite(aerostatMitigationDetails.workerShare)

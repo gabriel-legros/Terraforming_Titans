@@ -723,12 +723,12 @@ function mapSourcesToText(sources) {
 }
 
 function initializeJournalUI() {
-  journalEntriesContainer = document.getElementById('journal-entries');
-  journalIndexContainer = document.getElementById('journal-index');
-  journalIndexIcon = document.getElementById('journal-index-icon');
-  journalObjectiveContainer = document.getElementById('current-objective');
-  journalNavContainerElement = document.getElementById('journal-nav-container');
-  journalContainerElement = document.getElementById('journal');
+  journalEntriesContainer = document.getElementById('journal-entries') || journalEntriesContainer || document.createElement('div');
+  journalIndexContainer = document.getElementById('journal-index') || journalIndexContainer || document.createElement('div');
+  journalIndexIcon = document.getElementById('journal-index-icon') || journalIndexIcon;
+  journalObjectiveContainer = document.getElementById('current-objective') || journalObjectiveContainer || document.createElement('div');
+  journalNavContainerElement = document.getElementById('journal-nav-container') || journalNavContainerElement || document.createElement('div');
+  journalContainerElement = document.getElementById('journal') || journalContainerElement || document.createElement('div');
   if (journalIndexIcon) {
     journalIndexIcon.addEventListener('click', toggleJournalIndex);
   }
@@ -774,3 +774,8 @@ function initializeJournalUI() {
 }
 
 initializeJournalUI();
+
+document.addEventListener('DOMContentLoaded', () => {
+  initializeJournalUI();
+  loadJournalEntries(journalEntriesData, journalHistoryData, journalEntrySources, journalHistorySources);
+});
