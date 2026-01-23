@@ -614,7 +614,7 @@ function autoBuild(buildings, delta = 0) {
     // Step 1: Calculate ratios and populate buildableBuildings with required info
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
-        if (!building || building.isHidden) continue;
+        if (!building || building.isHidden || !building.unlocked) continue;
         if (building.autoBuildEnabled || building.autoActiveEnabled) {
             const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
             if (usesFillMode) {
