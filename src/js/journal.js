@@ -722,7 +722,7 @@ function mapSourcesToText(sources) {
   return (sources || []).map(getJournalTextFromSource);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initializeJournalUI() {
   journalEntriesContainer = document.getElementById('journal-entries');
   journalIndexContainer = document.getElementById('journal-index');
   journalIndexIcon = document.getElementById('journal-index-icon');
@@ -771,4 +771,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (journalCollapsed) {
     document.body.classList.add('journal-collapsed');
   }
-});
+}
+
+initializeJournalUI();
