@@ -168,6 +168,12 @@ function buildHistoryRow(entry) {
   const type = document.createElement('span');
   const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
   type.textContent = typeLabel;
+  const sector = document.createElement('span');
+  const sectorValue = entry.sector || '';
+  const sectorLabel = sectorValue && sectorValue.getDisplayName
+    ? sectorValue.getDisplayName()
+    : (sectorValue && sectorValue.key ? sectorValue.key : (sectorValue || '—'));
+  sector.textContent = sectorLabel;
   const land = document.createElement('span');
   const landValue = entry.landHa !== undefined ? entry.landHa : (entry.radiusEarth && artificialManager ? artificialManager.calculateAreaHectares(entry.radiusEarth) : undefined);
   land.textContent = landValue !== undefined ? (formatNumber ? formatNumber(landValue, false, 2) : landValue) : '—';
@@ -232,6 +238,7 @@ function buildHistoryRow(entry) {
   });
   row.appendChild(name);
   row.appendChild(type);
+  row.appendChild(sector);
   row.appendChild(land);
   row.appendChild(effective);
   row.appendChild(status);
@@ -241,7 +248,7 @@ function buildHistoryRow(entry) {
 function buildHistoryHeader() {
   const header = document.createElement('div');
   header.className = 'artificial-history-row artificial-history-header-row';
-  ['Name', 'Type', 'Land', 'Value', 'Status'].forEach((label) => {
+  ['Name', 'Type', 'Sector', 'Land', 'Value', 'Status'].forEach((label) => {
     const cell = document.createElement('span');
     cell.textContent = label;
     header.appendChild(cell);
