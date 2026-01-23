@@ -286,6 +286,83 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return totalResourceGain;
   }
 
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    if (!this.isActive) {
+      return { cost: {}, gain: {} };
+    }
+
+    if (!this.isContinuous()) {
+      return super.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+    }
+
+    const totals = { cost: {}, gain: {} };
+    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
+    const factor = 1000 / duration;
+    const fraction = deltaTime / duration;
+    const shipCount = this.getSpaceshipOnlyCount();
+    const massDriverCount = this.getMassDriverContribution();
+    const activeShips = shipCount + massDriverCount;
+    const successChance = shipCount > 0 ? this.getKesslerSuccessChance() : 1;
+
+    const costPerShip = this.calculateSpaceshipCost();
+    for (const category in costPerShip) {
+      if (!totals.cost[category]) totals.cost[category] = {};
+      for (const resource in costPerShip[category]) {
+        let ignoreCost = false;
+        try {
+          ignoreCost = this.ignoreCostForResource(category, resource);
+        } catch (error) {
+          ignoreCost = false;
+        }
+        if (ignoreCost) continue;
+        const rateValue = costPerShip[category][resource] * shipCount * factor * (applyRates ? productivity : 1);
+        if (applyRates) {
+          resources[category][resource].modifyRate(
+            -rateValue,
+            this.getCostRateLabel(),
+            'project'
+          );
+        }
+        totals.cost[category][resource] =
+          (totals.cost[category][resource] || 0) + costPerShip[category][resource] * shipCount * fraction;
+      }
+    }
+
+    const capacity = this.getShipCapacity();
+    if (capacity && this.selectedDisposalResource) {
+      const { category, resource } = this.selectedDisposalResource;
+      const exportLabel = this.getExportRateLabel('Spaceship Export');
+      const rateValue = capacity * activeShips * factor * (applyRates ? productivity : 1);
+      if (applyRates) {
+        resources[category][resource].modifyRate(
+          -rateValue,
+          exportLabel,
+          'project'
+        );
+      }
+      if (!totals.cost[category]) totals.cost[category] = {};
+      totals.cost[category][resource] =
+        (totals.cost[category][resource] || 0) + capacity * activeShips * fraction;
+      const fundingGainAmount = this.attributes.fundingGainAmount || 0;
+      if (fundingGainAmount > 0) {
+        const fundingRate = capacity * (massDriverCount + shipCount * successChance) * factor * fundingGainAmount * (applyRates ? productivity : 1);
+        if (applyRates) {
+          resources.colony.funding.modifyRate(
+            fundingRate,
+            exportLabel,
+            'project'
+          );
+        }
+        if (!totals.gain.colony) totals.gain.colony = {};
+        totals.gain.colony.funding =
+          (totals.gain.colony.funding || 0) +
+          capacity * (massDriverCount + shipCount * successChance) * fraction * fundingGainAmount;
+      }
+    }
+
+    return totals;
+  }
+
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
     this.shortfallLastTick = false;
