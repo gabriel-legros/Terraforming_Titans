@@ -407,7 +407,7 @@ class BuildingAutomation {
       building.autoBuildPercent = automation.autoBuildPercent;
       changed = true;
     }
-    if (building.autoBuildFixed !== automation.autoBuildFixed) {
+    if ('autoBuildFixed' in automation && building.autoBuildFixed !== automation.autoBuildFixed) {
       building.autoBuildFixed = automation.autoBuildFixed;
       changed = true;
     }
