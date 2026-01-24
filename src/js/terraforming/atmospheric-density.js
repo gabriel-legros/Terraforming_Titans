@@ -15,15 +15,6 @@
   approximation with a small number of isothermal layers and heuristic
   thermosphere/exosphere temperatures.
 
-  ✅ H2O handling (condensable)
-  ----------------------------
-  Water vapor is treated as a *condensable* species, not well-mixed to orbit.
-  - We compute a surface H2O partial pressure from inventory (mole fraction).
-  - We cap H2O by saturation vapor pressure *and* a cold-trap cap aloft.
-
-  This captures the “2 kPa H2O on cold Mars mostly condenses and does not
-  reach debris altitudes” intuition without a full weather model.
-
   Design goals
   ------------
   - “Decent enough” density falloff for Earth / Mars / Venus / Titan.
@@ -40,17 +31,14 @@
       model.getDensities(altitudeMetersArray) -> number[]
       model.getDebug() -> object (useful for tuning)
 
-  Options (new)
-  ------------
-  - relativeHumidity: 0..1 (default 0.7)  // troposphere-ish
-  - coldTrapRelativeHumidity: 0..1 (default 0.1) // stratosphere-ish dryness cap
-  - enableWaterCondensation: boolean (default true)
-  - adjustSurfacePressureForWaterCondensation: boolean (default auto)
-      If surface pressure comes from mass-based inference (fallback), we subtract
-      any “excess” H2O above saturation from total surface pressure.
-
-      If surface pressure comes from terraforming.calculateTotalPressure(), we
-      assume your terraforming system already decided what is vapor vs condensed.
+  Notes
+  -----
+  1) This model uses *surface pressure inferred from total atmospheric mass*.
+     If your pressure model differs, you can swap getSurfacePressurePa().
+  2) Exobase height here is computed from a mean-free-path style estimate.
+     It is used only to pick “reasonable” layer boundaries.
+  3) Density is computed from a hydrostatic pressure profile with inverse-square
+     gravity (analytic, fast), and ideal gas law.
 */
 
 (function () {
@@ -107,7 +95,9 @@
     calciteAerosol: 100.0869
   };
 
-  const MW_H2O_G = MOLECULAR_WEIGHT_G_PER_MOL.atmosphericWater;
+  // Treat these as heavy / aerosol / trace species that should not control upper-atmosphere scale height.
+  const HEAVY_TRACE_KEYS = ['greenhouseGas', 'sulfuricAcid', 'calciteAerosol'];
+
 
   function getAtmosphericMassBreakdownTons(atmosphericResources) {
     const byKey = {};
@@ -128,7 +118,7 @@
     return { totalTons, byKey };
   }
 
-  function estimateMeanMolecularWeightGmol(atmosphericResources, excludeKeysSet) {
+  function estimateMeanMolecularWeightGmol(atmosphericResources) {
     const { totalTons, byKey } = getAtmosphericMassBreakdownTons(atmosphericResources);
     if (totalTons <= 0) return 0;
 
@@ -137,7 +127,6 @@
     let totalMoles = 0;
 
     for (const [key, tons] of Object.entries(byKey)) {
-      if (excludeKeysSet && excludeKeysSet.has(key)) continue;
       const mw = MOLECULAR_WEIGHT_G_PER_MOL[key] ?? MOLECULAR_WEIGHT_G_PER_MOL.inertGas;
       const massG = tons * 1e6;
       totalMassG += massG;
@@ -148,56 +137,50 @@
     return totalMassG / totalMoles;
   }
 
-  function fadeSF6Fraction(zMeters, zHomopauseMeters, scaleHeightMeters) {
-    if (!(zMeters > zHomopauseMeters)) return 1;
-    const dz = zMeters - zHomopauseMeters;
-    const H = scaleHeightMeters > 0 ? scaleHeightMeters : 1;
-    return Math.exp(-dz / H);
-  }
-
-  function estimateMoleFractions(atmosphericResources) {
-    // Returns mole fractions by key (sums to 1), based on mass inventory.
+  function estimateMeanMolecularWeightGmolExcluding(atmosphericResources, excludedKeys) {
+    const excluded = new Set(Array.isArray(excludedKeys) ? excludedKeys : []);
     const { totalTons, byKey } = getAtmosphericMassBreakdownTons(atmosphericResources);
-    if (totalTons <= 0) return { totalMoles: 0, byKey: {}, xByKey: {} };
+    if (totalTons <= 0) return 0;
 
+    let totalMassG = 0;
     let totalMoles = 0;
-    const molesByKey = {};
+
     for (const [key, tons] of Object.entries(byKey)) {
+      if (excluded.has(key)) continue;
       const mw = MOLECULAR_WEIGHT_G_PER_MOL[key] ?? MOLECULAR_WEIGHT_G_PER_MOL.inertGas;
       const massG = tons * 1e6;
-      const moles = massG / mw;
-      if (moles > 0) {
-        molesByKey[key] = moles;
-        totalMoles += moles;
-      }
+      totalMassG += massG;
+      totalMoles += massG / mw;
     }
-    const xByKey = {};
-    if (totalMoles > 0) {
-      for (const [key, moles] of Object.entries(molesByKey)) {
-        xByKey[key] = moles / totalMoles;
-      }
-    }
-    return { totalMoles, byKey, xByKey };
+
+    if (totalMoles <= 0) return 0;
+    return totalMassG / totalMoles;
   }
 
-  function getMassFractions(atmosphericResources, excludeKeysSet) {
+  function getMassFractions(atmosphericResources) {
     const { totalTons, byKey } = getAtmosphericMassBreakdownTons(atmosphericResources);
-    let total = totalTons > 0 ? totalTons : 0;
-
-    if (excludeKeysSet) {
-      total = 0;
-      for (const [k, v] of Object.entries(byKey)) {
-        if (excludeKeysSet.has(k)) continue;
-        total += v;
-      }
-    }
-
-    const getFrac = (key) => {
-      if (!(total > 0)) return 0;
-      const v = byKey[key] || 0;
-      if (excludeKeysSet && excludeKeysSet.has(key)) return 0;
-      return v / total;
+    const total = totalTons > 0 ? totalTons : 0;
+    const getFrac = (key) => (total > 0 ? (byKey[key] || 0) / total : 0);
+    return {
+      totalTons,
+      co2: getFrac('carbonDioxide'),
+      ch4: getFrac('atmosphericMethane'),
+      h2: getFrac('hydrogen'),
+      h2o: getFrac('atmosphericWater'),
+      so4: getFrac('sulfuricAcid'),
+      sf6: getFrac('greenhouseGas')
     };
+  }
+
+  function getMassFractionsExcludingKeys(atmosphericResources, excludedKeys) {
+    const excluded = new Set(Array.isArray(excludedKeys) ? excludedKeys : []);
+    const { totalTons, byKey } = getAtmosphericMassBreakdownTons(atmosphericResources);
+
+    let total = 0;
+    for (const [k, v] of Object.entries(byKey)) {
+      if (!excluded.has(k) && v > 0) total += v;
+    }
+    const getFrac = (key) => (total > 0 ? ((excluded.has(key) ? 0 : (byKey[key] || 0)) / total) : 0);
 
     return {
       totalTons: total,
@@ -291,55 +274,33 @@
     return Math.max(0, totalTons) * 1000;
   }
 
-  function getSurfacePressurePaWithSource(terraforming, resources, celestialParameters) {
+  function getSurfacePressurePa(terraforming, resources, celestialParameters) {
     // Best: use terraforming's own pressure calc if available.
     if (terraforming && typeof terraforming.calculateTotalPressure === 'function') {
       const kPa = terraforming.calculateTotalPressure();
-      if (isFiniteNumber(kPa) && kPa >= 0) return { pressurePa: kPa * 1000, source: 'terraforming' };
+      if (isFiniteNumber(kPa) && kPa >= 0) return kPa * 1000;
     }
 
     // Next: use atmospheric-utils if it was loaded and exposed globally.
     const getTotalSurfacePressureKPa = getGlobal('getTotalSurfacePressureKPa');
     if (typeof getTotalSurfacePressureKPa === 'function') {
       const kPa = getTotalSurfacePressureKPa(resources?.atmospheric, celestialParameters?.gravity, celestialParameters?.radius);
-      if (isFiniteNumber(kPa) && kPa >= 0) return { pressurePa: kPa * 1000, source: 'atmospheric-utils' };
+      if (isFiniteNumber(kPa) && kPa >= 0) return kPa * 1000;
     }
 
     // Fallback: P = (totalMass * g) / surfaceArea.
     const totalMassKg = getTotalAtmosphericMassKg(resources);
     const g = getSurfaceGravity(celestialParameters);
     const area = getSurfaceAreaM2(celestialParameters);
-    if (!(area > 0) || !(g > 0) || !(totalMassKg > 0)) return { pressurePa: 0, source: 'none' };
-    return { pressurePa: (totalMassKg * g) / area, source: 'mass' };
+    if (!(area > 0) || !(g > 0) || !(totalMassKg > 0)) return 0;
+    return (totalMassKg * g) / area;
   }
 
-  // ---------- Water vapor: saturation + cold-trap (cheap) ----------
-  function saturationVaporPressurePa(Tk) {
-    // Magnus-Tetens style approximation.
-    // Good enough for gameplay; we mostly need “drops off a cliff when cold” behavior.
-    const T = clamp(Tk, 60, 400);
-    const Tc = T - 273.15;
-
-    // Over liquid water vs over ice.
-    if (Tc >= 0) {
-      const a = 17.625;
-      const b = 243.04;
-      return 610.94 * Math.exp((a * Tc) / (Tc + b));
-    } else {
-      const a = 22.587;
-      const b = 273.86;
-      return 610.94 * Math.exp((a * Tc) / (Tc + b));
-    }
-  }
-
-  function clampPartialPressure(pa, totalPa) {
-    if (!(pa > 0)) return 0;
-    if (!(totalPa > 0)) return pa;
-    return clamp(pa, 0, totalPa);
-  }
-
-  // ---------- Temperature heuristics ----------
+  // ---------- Temperature heuristics (key to “Earth/Mars/Venus/Titan-ish”) ----------
   function estimateColdPointTemperatureK(surfaceTemperatureK, co2MassFraction, surfacePressurePa) {
+    // Generic “mesopause-ish” cold point.
+    // - Scales weakly with surface temperature.
+    // - CO2-rich *and* high-pressure atmospheres get cooler upper layers (strong IR cooling).
     const pBar = surfacePressurePa / 1e5;
 
     let T = 160 + 0.18 * (surfaceTemperatureK - 200);
@@ -351,6 +312,11 @@
   }
 
   function estimateExosphereTemperatureK(solarFluxWm2, surfaceTemperatureK, co2MassFraction, ch4MassFraction, surfacePressurePa, meanMolecularWeightGmol) {
+    // Heuristic thermosphere/exosphere temperature.
+    // Key behaviors we want:
+    // - Earth: ~900–1200 K (solar-cycle dependent; we don't model cycles here)
+    // - Mars/Venus: ~200–350 K (CO2 radiative cooling dominates)
+    // - Titan: ~120–200 K (low solar flux, some CH4 haze cooling)
     const pBar = surfacePressurePa / 1e5;
     const s = Math.max(0, solarFluxWm2);
     const sRatio = s / SOLAR_FLUX_EARTH;
@@ -361,11 +327,17 @@
 
     let T;
     if (isCO2Dominant) {
+      // CO2-dominated: keep exosphere relatively cool even at high insolation.
       T = 180 + 160 * Math.sqrt(Math.max(sRatio, 0));
+      // Very thick CO2 atmospheres cool more efficiently aloft.
       T *= 1 / (1 + 0.2 * safeLog10(1 + pBar));
+      // Very hot surfaces do not necessarily imply a hot exosphere; keep coupling weak.
       T += 0.01 * (surfaceTemperatureK - 250);
     } else {
+      // N2/O2-ish: strong EUV heating -> hot thermosphere.
+      // This saturating form behaves well from Titan-like flux to Earth-like flux.
       T = 150 + 1300 * (s / (s + 700));
+      // Methane/haze: mild cooling (important for Titan-ish atmospheres).
       T *= 1 / (1 + 2.0 * ch4);
       T += 0.02 * (surfaceTemperatureK - 250);
     }
@@ -373,7 +345,7 @@
     return clamp(T, 60, 2000);
   }
 
-  // ---------- Exobase height estimate ----------
+  // ---------- Exobase height estimate (used to place layer boundaries) ----------
   function estimateExobaseHeightMeters(options) {
     const {
       totalMassKg,
@@ -399,17 +371,23 @@
     const logTerm = columnNumberPerM2 * sigma;
     if (!(logTerm > 1)) return 0;
 
+    // Clamp the log to keep things sane under extreme terraforming.
     const logValue = Math.log(clamp(logTerm, 1 + 1e-12, 1e40));
     return clamp(scaleHeight * logValue, 0, 5_000_000);
   }
 
   // ---------- Hydrostatic integration with inverse-square gravity (analytic) ----------
   function pressureRatioBetweenRadii(rStart, rEnd, molarMassKgPerMol, GM, temperatureK) {
+    // Hydrostatic equilibrium for an isothermal layer:
+    //   dP/P = -(M g(r) / (R T)) dr
+    // with g(r)=GM/r^2 -> integral gives:
+    //   P_end = P_start * exp(-(M*GM/(R*T)) * (1/rStart - 1/rEnd))
     if (!(rStart > 0) || !(rEnd > 0) || !(temperatureK > 0) || !(molarMassKgPerMol > 0) || !(GM > 0)) {
       return 1;
     }
     const K = (molarMassKgPerMol * GM) / (R_UNIVERSAL * temperatureK);
     const exponent = -K * (1 / rStart - 1 / rEnd);
+    // Avoid NaNs from overflow; exp(-large) underflows cleanly to 0.
     if (!isFiniteNumber(exponent)) {
       return exponent < 0 ? 0 : 1;
     }
@@ -428,11 +406,6 @@
 
       this._altitudeCache = new Map();
 
-      // Water options
-      this._enableWaterCondensation = (options.enableWaterCondensation !== false);
-      this._RH = clamp(isFiniteNumber(options.relativeHumidity) ? options.relativeHumidity : 0.7, 0, 1);
-      this._RHColdTrap = clamp(isFiniteNumber(options.coldTrapRelativeHumidity) ? options.coldTrapRelativeHumidity : 0.1, 0, 1);
-
       this._buildLayers();
     }
 
@@ -441,17 +414,14 @@
         planetRadiusM,
         gravity,
         surfacePressurePa,
-        surfacePressureSource,
         surfaceTemperatureK,
         solarFluxWm2,
-      meanMolecularWeightGmol,
-      meanMolecularWeightDryGmol,
-      meanMolecularWeightDryNoSF6Gmol,
-      massFractions,
-      massFractionsDry,
-      xH2O_inventory,
-      totalAtmosphericMassKg,
-      surfaceAreaM2,
+        meanMolecularWeightGmol,
+        meanMolecularWeightForHydrostaticsGmol,
+        massFractions,
+        massFractionsBulk,
+        totalAtmosphericMassKg,
+        surfaceAreaM2,
         collisionSigmaM2
       } = this._inputs;
 
@@ -459,45 +429,49 @@
         planetRadiusM,
         gravity,
         surfacePressurePa,
-        surfacePressureSource,
         surfaceTemperatureK,
         solarFluxWm2,
         meanMolecularWeightGmol,
-        meanMolecularWeightDryGmol,
-        meanMolecularWeightDryNoSF6Gmol,
+        meanMolecularWeightForHydrostaticsGmol,
         massFractions: { ...massFractions },
-        massFractionsDry: { ...massFractionsDry },
-        xH2O_inventory,
+        massFractionsBulk: { ...(massFractionsBulk || {}) },
         totalAtmosphericMassKg,
         surfaceAreaM2,
-        collisionSigmaM2,
-        waterOptions: {
-          enableWaterCondensation: this._enableWaterCondensation,
-          relativeHumidity: this._RH,
-          coldTrapRelativeHumidity: this._RHColdTrap
-        }
+        collisionSigmaM2
       };
 
       // Handle vacuum quickly.
-      if (!(surfacePressurePa > 0) || !(meanMolecularWeightDryGmol > 0) || !(surfaceTemperatureK > 0)) {
+      if (!(surfacePressurePa > 0) || !(meanMolecularWeightGmol > 0) || !(surfaceTemperatureK > 0)) {
         this._layers = [];
         this._debug.vacuum = true;
         return;
       }
 
-      // --- temperatures (use DRY fractions for CO2/CH4 heuristics) ---
-      const Tcold = estimateColdPointTemperatureK(surfaceTemperatureK, massFractionsDry.co2, surfacePressurePa);
+      const meanMW_Hydro_Gmol = (isFiniteNumber(meanMolecularWeightForHydrostaticsGmol) && meanMolecularWeightForHydrostaticsGmol > 0)
+        ? meanMolecularWeightForHydrostaticsGmol
+        : meanMolecularWeightGmol;
+
+      const frac_Hydro = (massFractionsBulk && typeof massFractionsBulk === 'object')
+        ? massFractionsBulk
+        : massFractions;
+
+
+
+      const Tcold = estimateColdPointTemperatureK(surfaceTemperatureK, frac_Hydro.co2, surfacePressurePa);
       const Texo = estimateExosphereTemperatureK(
         solarFluxWm2,
         surfaceTemperatureK,
-        massFractionsDry.co2,
-        massFractionsDry.ch4,
+        frac_Hydro.co2,
+        frac_Hydro.ch4,
         surfacePressurePa,
-        meanMolecularWeightDryGmol
+        meanMW_Hydro_Gmol
       );
 
+      // A “lower atmosphere effective T” (average-ish over the first tens of km).
+      // Weighted blend avoids the Venus failure mode where a hard cap makes densities too low at 50 km.
       const Tlower = clamp(0.6 * surfaceTemperatureK + 0.4 * Tcold, 60, 800);
 
+      // Column mass from total mass / area (consistent with P ≈ mcol*g).
       const columnMassKgPerM2 = (totalAtmosphericMassKg > 0 && surfaceAreaM2 > 0)
         ? totalAtmosphericMassKg / surfaceAreaM2
         : (surfacePressurePa / gravity);
@@ -509,14 +483,17 @@
         totalMassKg: totalAtmosphericMassKg,
         surfaceAreaM2,
         gravity,
-        meanMolecularWeightGmol: meanMolecularWeightDryGmol,
+        meanMolecularWeightGmol,
         exobaseTemperatureK: Texobase,
         collisionSigmaM2
       });
 
-      const M0dry = meanMolecularWeightDryGmol / 1000;
-      const Hsurf = (R_UNIVERSAL * surfaceTemperatureK) / (M0dry * gravity);
+      // Base scale height at the surface (for boundary heuristics).
+      const M0 = meanMW_Hydro_Gmol / 1000;
+      const Hsurf = (R_UNIVERSAL * surfaceTemperatureK) / (M0 * gravity);
 
+      // Layer boundaries (meters). We pick Earth/Mars/Venus/Titan-ish values by
+      // combining scale height heuristics with the exobase estimate.
       const z1Base = clamp(5 * Hsurf, 25_000, 120_000);
       const z2Base = clamp(12 * Hsurf, z1Base + 10_000, 250_000);
 
@@ -527,121 +504,67 @@
       z3 = clamp(z3, z2 + 1_000, zExoSafe - 5_000);
       const z4 = zExoSafe;
 
-      const Tthermo = Tcold + 0.9 * (Texo - Tcold);
-
-      // Upper-atmosphere molar mass reduction for DRY air.
-      const meanDryNoSF6 = meanMolecularWeightDryNoSF6Gmol > 0
-        ? meanMolecularWeightDryNoSF6Gmol
-        : meanMolecularWeightDryGmol;
-
+      // Upper-atmosphere molecular weight reduction (diffusive separation / dissociation heuristic).
+      // This is important for getting “reasonable” densities around 400–1200 km on Earth-like planets.
       let MUpperG;
-      if (meanDryNoSF6 > 40 || massFractionsDry.co2 > 0.5) {
-        MUpperG = clamp(meanDryNoSF6 * 0.60, 16, 32);
+      if (meanMW_Hydro_Gmol > 40 || frac_Hydro.co2 > 0.5) {
+        // CO2-dominated: upper atmosphere tends toward CO/O mixtures.
+        MUpperG = clamp(meanMolecularWeightGmol * 0.60, 16, 32);
       } else {
-        MUpperG = clamp(meanDryNoSF6 * 0.42, 4, 28);
+        // N2/O2-ish: upper atmosphere becomes O/He/H-enriched.
+        MUpperG = clamp(meanMolecularWeightGmol * 0.42, 4, 28);
       }
-      if (massFractionsDry.h2 > 0.05) {
+      // If the atmosphere is actually H2-rich, allow it to get even lighter.
+      if (massFractions.h2 > 0.05) {
         MUpperG = Math.max(2.5, MUpperG * 0.7);
       }
-      const MTransG = 0.5 * (meanDryNoSF6 + MUpperG);
+      const MTransG = 0.5 * (meanMolecularWeightGmol + MUpperG);
 
+      // Thermosphere “effective” temperature for the mixed region.
+      const Tthermo = Tcold + 0.9 * (Texo - Tcold);
+
+      // Precompute GM (m^3/s^2) from g0 and radius.
       const GM = gravity * planetRadiusM * planetRadiusM;
 
-      // ---- Water vapor at surface (inventory-derived) ----
-      const pH2O_raw0 = clampPartialPressure(xH2O_inventory * surfacePressurePa, surfacePressurePa);
-      const eSat0 = saturationVaporPressurePa(surfaceTemperatureK);
-      const pH2O_sat0 = clampPartialPressure(this._RH * eSat0, surfacePressurePa);
-
-      let pH2O0 = pH2O_raw0;
-      let pSurfaceEffective = surfacePressurePa;
-      let appliedSurfaceCondensation = 0;
-
-      if (this._enableWaterCondensation) {
-        pH2O0 = Math.min(pH2O_raw0, pH2O_sat0);
-
-        const opt = this._options || {};
-        const adjustOpt = opt.adjustSurfacePressureForWaterCondensation;
-        const shouldAutoAdjust = (surfacePressureSource !== 'terraforming');
-        const shouldAdjust = (adjustOpt === true) || (adjustOpt === undefined && shouldAutoAdjust);
-
-        if (shouldAdjust) {
-          const excess = Math.max(0, pH2O_raw0 - pH2O0);
-          pSurfaceEffective = Math.max(0, surfacePressurePa - excess);
-          appliedSurfaceCondensation = excess;
-        }
-      }
-
-      const pDry0 = Math.max(0, pSurfaceEffective - pH2O0);
-
-      this._debug.waterSurface = {
-        xH2O_inventory,
-        eSat0Pa: eSat0,
-        pH2O_raw0Pa: pH2O_raw0,
-        pH2O_capped0Pa: pH2O0,
-        pDry0Pa: pDry0,
-        pSurfaceEffectivePa: pSurfaceEffective,
-        appliedSurfaceCondensationPa: appliedSurfaceCondensation
-      };
-
-      this._pSurfaceEffective = pSurfaceEffective;
-      this._pDry0 = pDry0;
-      this._pH2O0 = pH2O0;
-      this._coldTrapZ = z2;
-      this._coldTrapTempK = Tcold;
-      this._pColdTrapCap = this._enableWaterCondensation
-        ? (this._RHColdTrap * saturationVaporPressurePa(Tcold))
-        : Infinity;
-
-      const sf6Fraction = clamp(massFractionsDry.sf6 || 0, 0, 1);
-      const zHomopause = z1;
-      const sf6ScaleHeight = Math.max(1, Hsurf);
-
-      const adjustDryMolarMassAt = (zMeters) => {
-        if (!(sf6Fraction > 0)) return meanMolecularWeightDryGmol;
-        const mixFactor = fadeSF6Fraction(zMeters, zHomopause, sf6ScaleHeight);
-        return meanDryNoSF6 + (meanMolecularWeightDryGmol - meanDryNoSF6) * mixFactor;
-      };
-
-      // Build layers for DRY pressure profile.
       this._layers = [
-        { name: 'lower', zStart: 0,  zEnd: z1, T: Tlower,  molarMassDryG: adjustDryMolarMassAt(0.5 * z1) },
-        { name: 'cold',  zStart: z1, zEnd: z2, T: Tcold,   molarMassDryG: adjustDryMolarMassAt(0.5 * (z1 + z2)) },
-        { name: 'thermo',zStart: z2, zEnd: z3, T: Tthermo, molarMassDryG: adjustDryMolarMassAt(0.5 * (z2 + z3)) },
-        { name: 'upper', zStart: z3, zEnd: z4, T: Texo,    molarMassDryG: adjustDryMolarMassAt(0.5 * (z3 + z4)) },
-        { name: 'exo',   zStart: z4, zEnd: Infinity, T: Texo, molarMassDryG: adjustDryMolarMassAt(z4 + sf6ScaleHeight) }
+        { name: 'lower', zStart: 0,  zEnd: z1, T: Tlower,  molarMassG: meanMW_Hydro_Gmol },
+        { name: 'cold',  zStart: z1, zEnd: z2, T: Tcold,   molarMassG: meanMW_Hydro_Gmol },
+        { name: 'thermo',zStart: z2, zEnd: z3, T: Tthermo, molarMassG: meanMW_Hydro_Gmol },
+        { name: 'upper', zStart: z3, zEnd: z4, T: Texo,    molarMassG: MTransG },
+        { name: 'exo',   zStart: z4, zEnd: Infinity, T: Texo, molarMassG: MUpperG }
       ];
 
-      // Compute DRY pressure at each layer start.
-      let Pdry = pDry0;
-      this._layers[0].PdryStart = Pdry;
+      // Compute pressure at each layer start.
+      let P = surfacePressurePa;
+      this._layers[0].PStart = P;
 
       for (let i = 0; i < this._layers.length; i += 1) {
         const layer = this._layers[i];
         if (i > 0) {
-          layer.PdryStart = Pdry;
+          layer.PStart = P;
         }
         if (!isFiniteNumber(layer.zEnd)) {
           continue;
         }
         const rStart = planetRadiusM + layer.zStart;
         const rEnd = planetRadiusM + layer.zEnd;
-        const Mkg = (layer.molarMassDryG / 1000);
+        const Mkg = (layer.molarMassG / 1000);
         const ratio = pressureRatioBetweenRadii(rStart, rEnd, Mkg, GM, layer.T);
-        Pdry = Pdry * ratio;
+        P = P * ratio;
       }
 
+      // Surface density (for debugging).
       this._debug.temperaturesK = { lower: Tlower, cold: Tcold, thermo: Tthermo, exo: Texo, exobase: Texobase };
-      this._debug.molarMassG = { surfaceDry: meanMolecularWeightDryGmol, transitionDry: MTransG, upperDry: MUpperG, dryNoSF6: meanDryNoSF6 };
-      this._debug.heightsM = { z1, z2, z3, z4, exobase: zExoSafe, coldTrapZ: this._coldTrapZ };
+      this._debug.molarMassG = { surface: meanMolecularWeightGmol, transition: MTransG, upper: MUpperG };
+      this._debug.heightsM = { z1, z2, z3, z4, exobase: zExoSafe };
       this._debug.surfaceScaleHeightM = Hsurf;
       this._debug.columnMassKgPerM2 = columnMassKgPerM2;
-      this._debug.waterAloft = { coldTrapCapPa: this._pColdTrapCap };
-      this._debug.sf6 = { fraction: sf6Fraction, homopauseM: zHomopause, scaleHeightM: sf6ScaleHeight };
     }
 
     _findLayerIndex(zMeters) {
       const layers = this._layers;
       if (!layers || layers.length === 0) return -1;
+      // Layers are in ascending order.
       for (let i = 0; i < layers.length; i += 1) {
         const L = layers[i];
         if (zMeters >= L.zStart && (zMeters < L.zEnd || !isFiniteNumber(L.zEnd))) {
@@ -651,80 +574,39 @@
       return layers.length - 1;
     }
 
-    _computeDryPressureAt(zMeters, layerIdx) {
-      const layers = this._layers;
-      const { planetRadiusM, gravity } = this._inputs;
-      const layer = layers[layerIdx];
-
-      const rStart = planetRadiusM + layer.zStart;
-      const rZ = planetRadiusM + zMeters;
-      const Mkg = layer.molarMassDryG / 1000;
-
-      const GM = gravity * planetRadiusM * planetRadiusM;
-      const ratio = pressureRatioBetweenRadii(rStart, rZ, Mkg, GM, layer.T);
-      return layer.PdryStart * ratio;
-    }
-
-    _computeWaterVaporPressureAt(zMeters, Pdry, layerT) {
-      // Cheap condensable model:
-      // - Constant mixing ratio relative to DRY air up to cold trap.
-      // - Local saturation cap (RH * e_sat(T)).
-      // - Above cold trap, cap to cold-trap value (RHColdTrap * e_sat(Tcold)).
-      if (!this._enableWaterCondensation) {
-        if (!(this._pDry0 > 0) || !(this._pH2O0 > 0)) return 0;
-        const scaled = this._pH2O0 * (Pdry / this._pDry0);
-        return clampPartialPressure(scaled, Pdry + scaled);
-      }
-
-      if (!(this._pDry0 > 0) || !(this._pH2O0 > 0) || !(Pdry > 0)) return 0;
-
-      const pRaw = this._pH2O0 * (Pdry / this._pDry0);
-      const pSatLocal = this._RH * saturationVaporPressurePa(layerT);
-      let p = Math.min(pRaw, pSatLocal);
-
-      if (zMeters >= this._coldTrapZ) {
-        p = Math.min(p, this._pColdTrapCap);
-      }
-
-      return clampPartialPressure(p, Pdry + pRaw);
-    }
-
     _computeDensityAtAltitude(zMeters) {
       const layers = this._layers;
       if (!layers || layers.length === 0) return 0;
 
-      const surfaceT = this._inputs.surfaceTemperatureK;
+      const {
+        planetRadiusM,
+        gravity
+      } = this._inputs;
 
-      // z <= 0: use surface effective dry + capped vapor.
+      // For z <= 0, return ideal-gas density at the surface.
       if (!(zMeters > 0)) {
-        const Pdry0 = this._pDry0;
-        const pH2O0 = this._pH2O0;
-        const P0 = Pdry0 + pH2O0;
-        if (!(P0 > 0) || !(surfaceT > 0)) return 0;
-
-        const Mdry = this._inputs.meanMolecularWeightDryGmol / 1000;
-        const Mh2o = MW_H2O_G / 1000;
-        const Mmix = (Pdry0 * Mdry + pH2O0 * Mh2o) / P0;
-
-        return (P0 * Mmix) / (R_UNIVERSAL * surfaceT);
+        const P0 = this._inputs.surfacePressurePa;
+        const M0 = (this._inputs.meanMolecularWeightGmol / 1000);
+        const T0 = this._inputs.surfaceTemperatureK;
+        if (!(P0 > 0) || !(M0 > 0) || !(T0 > 0)) return 0;
+        return (P0 * M0) / (R_UNIVERSAL * T0);
       }
 
       const idx = this._findLayerIndex(zMeters);
       if (idx < 0) return 0;
-
       const layer = layers[idx];
-      const Pdry = this._computeDryPressureAt(zMeters, idx);
-      if (!(Pdry > 0)) return 0;
 
-      const pH2O = this._computeWaterVaporPressureAt(zMeters, Pdry, layer.T);
-      const P = Pdry + pH2O;
-      if (!(P > 0)) return 0;
+      const rStart = planetRadiusM + layer.zStart;
+      const rZ = planetRadiusM + zMeters;
+      const Mkg = layer.molarMassG / 1000;
 
-      const Mdry = layer.molarMassDryG / 1000;
-      const Mh2o = MW_H2O_G / 1000;
-      const Mmix = (Pdry * Mdry + pH2O * Mh2o) / P;
+      // GM from surface gravity.
+      const GM = gravity * planetRadiusM * planetRadiusM;
+      const ratio = pressureRatioBetweenRadii(rStart, rZ, Mkg, GM, layer.T);
+      const Pz = layer.PStart * ratio;
+      if (!(Pz > 0)) return 0;
 
-      return (P * Mmix) / (R_UNIVERSAL * layer.T);
+      return (Pz * Mkg) / (R_UNIVERSAL * layer.T);
     }
 
     getDensity(altitudeMeters) {
@@ -759,29 +641,22 @@
   // ---------- Model caching (per terraforming instance) ----------
   const _MODEL_CACHE = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;
 
-  function buildModelSignature(inputs, options) {
-    const pKey = Math.round((inputs.surfacePressurePa || 0) / 50);
-    const tKey = Math.round(inputs.surfaceTemperatureK || 0);
-    const mwKey = Math.round((inputs.meanMolecularWeightDryGmol || 0) * 10) / 10;
-    const sKey = Math.round(inputs.solarFluxWm2 || 0);
+  function buildModelSignature(inputs) {
+    // Round inputs to avoid rebuilds from tiny numerical drift.
+    const pKey = Math.round((inputs.surfacePressurePa || 0) / 50);      // 50 Pa
+    const tKey = Math.round(inputs.surfaceTemperatureK || 0);           // 1 K
+    const mwKey = Math.round((inputs.meanMolecularWeightGmol || 0) * 10) / 10; // 0.1 g/mol
+    const mwHydKey = Math.round((inputs.meanMolecularWeightForHydrostaticsGmol || 0) * 10) / 10; // 0.1 g/mol
+    const sKey = Math.round(inputs.solarFluxWm2 || 0);                  // 1 W/m^2
     const gKey = Math.round((inputs.gravity || 0) * 1000) / 1000;
     const rKey = Math.round(inputs.planetRadiusM || 0);
-    const mKey = Math.round((inputs.totalAtmosphericMassKg || 0) / 1e9);
+    const mKey = Math.round((inputs.totalAtmosphericMassKg || 0) / 1e9); // 1e9 kg
 
-    const co2Key = Math.round((inputs.massFractionsDry?.co2 || 0) * 1000) / 1000;
-    const ch4Key = Math.round((inputs.massFractionsDry?.ch4 || 0) * 1000) / 1000;
-    const h2oKey = Math.round((inputs.xH2O_inventory || 0) * 10000) / 10000;
-
-    const rhKey = Math.round((isFiniteNumber(options?.relativeHumidity) ? options.relativeHumidity : 0.7) * 100) / 100;
-    const rhcKey = Math.round((isFiniteNumber(options?.coldTrapRelativeHumidity) ? options.coldTrapRelativeHumidity : 0.1) * 100) / 100;
-    const wcKey = (options?.enableWaterCondensation === false) ? 0 : 1;
-    const adjKey = (options?.adjustSurfacePressureForWaterCondensation === true) ? 2
-      : (options?.adjustSurfacePressureForWaterCondensation === false) ? 0
-      : 1;
-
-    const srcKey = inputs.surfacePressureSource || 'none';
-
-    return `${pKey}|${tKey}|${mwKey}|${sKey}|${gKey}|${rKey}|${mKey}|${co2Key}|${ch4Key}|${h2oKey}|${rhKey}|${rhcKey}|${wcKey}|${adjKey}|${srcKey}`;
+    // Include dominant composition proxies.
+    const co2Key = Math.round((inputs.massFractions?.co2 || 0) * 1000) / 1000;
+    const ch4Key = Math.round((inputs.massFractions?.ch4 || 0) * 1000) / 1000;
+    const sf6Key = Math.round(((inputs.massFractionsBulk?.sf6 ?? inputs.massFractions?.sf6) || 0) * 1000) / 1000;
+    return `${pKey}|${tKey}|${mwKey}|${mwHydKey}|${sKey}|${gKey}|${rKey}|${mKey}|${co2Key}|${ch4Key}|${sf6Key}`;
   }
 
   function buildDensityInputs(terraforming, options = {}) {
@@ -796,25 +671,25 @@
     const solarFluxWm2 = getSolarFluxWm2(terraforming, celestial);
 
     const totalAtmosphericMassKg = getTotalAtmosphericMassKg(resources);
+    const surfacePressurePa = getSurfacePressurePa(terraforming, resources, celestial);
 
-    const pObj = getSurfacePressurePaWithSource(terraforming, resources, celestial);
-    const surfacePressurePa = pObj.pressurePa;
-    const surfacePressureSource = pObj.source;
+    const meanMolecularWeightGmol = estimateMeanMolecularWeightGmol(resources?.atmospheric);
 
-    const atmospheric = resources?.atmospheric;
+    // Heavy trace species (e.g., SF6) can unrealistically “compress” the whole atmosphere in a simple
+    // single-mean-molar-mass hydrostatic model. For gameplay (and for real atmospheres above the homopause),
+    // they should not control upper-atmosphere scale height. We therefore compute a “hydrostatic/bulk” mean
+    // that excludes heavy trace species, and use it for the pressure profile by default.
+    const meanMolecularWeightBulkGmol = estimateMeanMolecularWeightGmolExcluding(resources?.atmospheric, HEAVY_TRACE_KEYS) || meanMolecularWeightGmol;
 
-    const meanMolecularWeightGmol = estimateMeanMolecularWeightGmol(atmospheric);
+    const treatHeavyTraceAsLowerAtmosphere = (options.treatHeavyTraceAsLowerAtmosphere !== false);
+    const meanMolecularWeightForHydrostaticsGmol = treatHeavyTraceAsLowerAtmosphere
+      ? meanMolecularWeightBulkGmol
+      : meanMolecularWeightGmol;
 
-    const excludeWater = new Set(['atmosphericWater']);
-    const meanMolecularWeightDryGmol = estimateMeanMolecularWeightGmol(atmospheric, excludeWater) || meanMolecularWeightGmol;
-    const excludeWaterAndSF6 = new Set(['atmosphericWater', 'greenhouseGas']);
-    const meanMolecularWeightDryNoSF6Gmol = estimateMeanMolecularWeightGmol(atmospheric, excludeWaterAndSF6) || meanMolecularWeightDryGmol;
-
-    const massFractions = getMassFractions(atmospheric);
-    const massFractionsDry = getMassFractions(atmospheric, excludeWater);
-
-    const mole = estimateMoleFractions(atmospheric);
-    const xH2O_inventory = clamp(mole.xByKey?.atmosphericWater || 0, 0, 1);
+    // Mass fractions for temperature heuristics should also ignore heavy trace species so they don't
+    // make a planet look artificially “CO2-dominant”.
+    const massFractions = getMassFractions(resources?.atmospheric);
+    const massFractionsBulk = getMassFractionsExcludingKeys(resources?.atmospheric, HEAVY_TRACE_KEYS);
 
     const collisionSigmaM2 = isFiniteNumber(options.collisionSigmaM2)
       ? options.collisionSigmaM2
@@ -825,16 +700,13 @@
       surfaceAreaM2,
       gravity,
       surfacePressurePa,
-      surfacePressureSource,
       surfaceTemperatureK,
       solarFluxWm2,
       totalAtmosphericMassKg,
       meanMolecularWeightGmol,
-      meanMolecularWeightDryGmol,
-      meanMolecularWeightDryNoSF6Gmol,
+      meanMolecularWeightForHydrostaticsGmol,
       massFractions,
-      massFractionsDry,
-      xH2O_inventory,
+      massFractionsBulk,
       collisionSigmaM2
     };
   }
@@ -842,10 +714,11 @@
   function getAtmosphericDensityModel(explicitTerraforming, options = {}) {
     const terraforming = getTerraformingState(explicitTerraforming);
 
+    // If we can't key by terraforming (null), fall back to a single global cache bucket.
     const cacheKey = terraforming || getGlobal('currentPlanetParameters') || getGlobal('resources') || {};
 
     const inputs = buildDensityInputs(terraforming, options);
-    const signature = buildModelSignature(inputs, options);
+    const signature = buildModelSignature(inputs);
 
     if (_MODEL_CACHE) {
       const cached = _MODEL_CACHE.get(cacheKey);
@@ -857,6 +730,7 @@
       return model;
     }
 
+    // WeakMap unavailable: just rebuild.
     return new AtmosphericDensityModel(inputs, options);
   }
 
@@ -873,6 +747,7 @@
 
   // ---------- Exports / globals ----------
   try {
+    // Browser globals
     window.getAtmosphericDensityModel = getAtmosphericDensityModel;
     window.estimateAtmosphericDensityKgPerM3 = estimateAtmosphericDensityKgPerM3;
     window.estimateAtmosphericDensitiesKgPerM3 = estimateAtmosphericDensitiesKgPerM3;
@@ -881,18 +756,20 @@
   }
 
   try {
+    // Node / tests
     if (isNode) {
       module.exports = {
         AtmosphericDensityModel,
         getAtmosphericDensityModel,
         estimateAtmosphericDensityKgPerM3,
         estimateAtmosphericDensitiesKgPerM3,
+        // Expose internals for tuning/tests.
         _internals: {
           estimateMeanMolecularWeightGmol,
+          estimateMeanMolecularWeightGmolExcluding,
           estimateColdPointTemperatureK,
           estimateExosphereTemperatureK,
-          estimateExobaseHeightMeters,
-          saturationVaporPressurePa
+          estimateExobaseHeightMeters
         }
       };
     }
