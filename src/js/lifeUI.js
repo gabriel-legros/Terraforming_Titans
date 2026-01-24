@@ -1274,13 +1274,23 @@ function updateLifeStatusTable() {
 
     const dayGlobalCell = lifeUICache.cells.dayTemp.global;
     if (dayGlobalCell) {
-        const global = survivalTempResults.global;
-        if (global.warning) {
-            updateStatusSpan(dayGlobalCell, '⚠', global.reason);
-        } else if (global.pass) {
-            updateStatusSpan(dayGlobalCell, '✅', '');
+        let pass = false;
+        let anySafe = false;
+        let anyWarning = false;
+        let failReason = null;
+        ['tropical', 'temperate', 'polar'].forEach(z => {
+            const status = designToCheck.daytimeTemperatureSurvivalCheckZone(z);
+            if (status.pass) {
+                pass = true;
+                if (status.warning) anyWarning = true; else anySafe = true;
+            } else if (!failReason) failReason = status.reason;
+        });
+        if (!pass) {
+            updateStatusSpan(dayGlobalCell, '❌', failReason || 'Fails in all zones');
+        } else if (!anySafe && anyWarning) {
+            updateStatusSpan(dayGlobalCell, '⚠', 'Growth reduced in all zones');
         } else {
-            updateStatusSpan(dayGlobalCell, '❌', global.reason);
+            updateStatusSpan(dayGlobalCell, '✅', '');
         }
     }
     const nightGlobalCell = lifeUICache.cells.nightTemp.global;

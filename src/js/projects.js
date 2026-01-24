@@ -57,6 +57,8 @@ class Project extends EffectableEntity {
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
   }
 
+  applyEffects() {}
+
 
   getKesslerSuccessChance() {
     if (!this.kesslerDebrisSize) {
@@ -881,6 +883,15 @@ class ProjectManager extends EffectableEntity {
   applyActiveEffects(firstTime = true) {
     super.applyActiveEffects(firstTime);
     this.updateProjectDurations();
+  }
+
+  applyEffects() {
+    for (const name in this.projects) {
+      const project = this.projects[name];
+      if (project && project.applyEffects) {
+        project.applyEffects();
+      }
+    }
   }
 
   applySpaceshipCostMultiplier(effect) {

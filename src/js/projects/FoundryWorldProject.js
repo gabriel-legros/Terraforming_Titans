@@ -260,6 +260,10 @@
       }
     }
 
+    applyEffects() {
+      this.applyFoundryEffects();
+    }
+
     renderUI(container) {
       const wrapper = document.createElement('div');
       wrapper.classList.add('bioworld-shop');

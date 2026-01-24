@@ -535,7 +535,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       // Restore research progress
       if (gameState.research) {
           researchManager.loadState(gameState.research);
-          projectManager.projects.bioworld.applyEvolutionEffects();
+          projectManager.applyEffects();
           updateAllResearchButtons(researchManager.researches);
       }
       if (typeof updateAdvancedResearchVisibility === 'function') {

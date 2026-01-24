@@ -337,7 +337,7 @@ function initializeGameState(options = {}) {
       researchManager.reapplyEffects();
     }
   }
-  projectManager.projects.bioworld.applyEvolutionEffects();
+  projectManager.applyEffects();
   applyCompanionResearchTravelRewards();
   if (!preserveManagers || !skillManager) {
     skillManager = new SkillManager(skillParameters);

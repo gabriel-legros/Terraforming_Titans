@@ -262,6 +262,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Foundry worlds now add +100B to the metal mining cap per completed world, excluding the current planet, and permanently disable new Ecumenopolis districts after completion.
 - Foundry World metallurgy travel points now award 10 points times sqrt(initial land / 50B).
 - Bioworld and Foundry World mega projects now require the current world to be fully terraformed before starting.
+- Projects now expose an apply-effects hook so project-specific bonuses can be re-applied in a single pass after load or travel.
 - Departure snapshots now record world specialization across story, random, and artificial worlds.
 - Android Housing productivity now scales with used android storage after subtracting free and Solis-granted base capacity.
 - Ecumenopolis District productivity now uses the higher of colonist or android fill ratios, with android housing capacity taking priority over ecumenopolis storage.

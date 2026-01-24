@@ -205,6 +205,10 @@
       }
     }
 
+    applyEffects() {
+      this.applyEvolutionEffects();
+    }
+
     applyEcumenopolisDisable() {
       researchManager.addAndReplace({
         type: 'booleanFlag',
