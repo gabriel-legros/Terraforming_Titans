@@ -115,14 +115,41 @@ function formatAutoBuildStepValue(step) {
   return Number(normalized.toFixed(decimals)).toString();
 }
 
+function formatAutoBuildFixedValue(value) {
+  const numeric = Math.max(0, Math.floor(value || 0));
+  if (numeric >= 1e6) return formatNumber(numeric, true, 3);
+  return String(numeric);
+}
+
 function isAutoBuildFillMode(structure) {
   return structure.autoBuildFillEnabled && structure.autoBuildBasis === 'fill';
+}
+
+function getAutoBuildStepValue(structure) {
+  const normalized = sanitizeAutoBuildStep(structure.autoBuildStep);
+  if (structure.autoBuildBasis === 'fixed') {
+    return Math.max(1, Math.round(normalized));
+  }
+  return normalized;
+}
+
+function getAutoBuildInputValue(structure) {
+  if (structure.autoBuildBasis === 'fixed') {
+    return formatAutoBuildFixedValue(structure.autoBuildFixed);
+  }
+  if (isAutoBuildFillMode(structure)) {
+    return `${structure.autoBuildFillPercent || 0}`;
+  }
+  return `${structure.autoBuildPercent || 0}`;
 }
 
 function updateAutoBuildStepButtonLabels(structure, incrementBtn, decrementBtn) {
   if (!structure) return;
   structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
-  const label = formatAutoBuildStepValue(structure.autoBuildStep);
+  const stepValue = getAutoBuildStepValue(structure);
+  const label = structure.autoBuildBasis === 'fixed'
+    ? formatNumber(stepValue, true)
+    : formatAutoBuildStepValue(stepValue);
   if (incrementBtn) incrementBtn.textContent = `+${label}`;
   if (decrementBtn) decrementBtn.textContent = `-${label}`;
 }
@@ -136,10 +163,16 @@ function refreshAutoBuildTarget(structure) {
   const collection = typeof buildings !== 'undefined' ? buildings : undefined;
   const autoBuildUsesFill = isAutoBuildFillMode(structure);
   const autoBuildUsesMax = structure.autoBuildBasis === 'max';
-  const base = autoBuildUsesMax || autoBuildUsesFill ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, collection);
-  const targetCount = autoBuildUsesMax || autoBuildUsesFill
+  const autoBuildUsesFixed = structure.autoBuildBasis === 'fixed';
+  const fixedTarget = Math.max(0, Math.floor(structure.autoBuildFixed || 0));
+  const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed
+    ? 0
+    : getAutoBuildBaseValue(structure, pop, workerCap, collection);
+  const targetCount = autoBuildUsesMax
     ? Infinity
-    : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+    : autoBuildUsesFixed
+      ? fixedTarget
+      : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
 
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesFill
@@ -159,12 +192,17 @@ function refreshAutoBuildTarget(structure) {
   if (els.autoBuildInput) {
     els.autoBuildInput.disabled = autoBuildUsesMax;
     if (document.activeElement !== els.autoBuildInput) {
-      const value = autoBuildUsesFill ? (structure.autoBuildFillPercent || 0) : structure.autoBuildPercent;
-      const newValue = `${value}`;
+      const newValue = getAutoBuildInputValue(structure);
       if (els.autoBuildInput.value !== newValue) {
         els.autoBuildInput.value = newValue;
       }
     }
+    const datasetValue = autoBuildUsesFixed
+      ? fixedTarget
+      : autoBuildUsesFill
+        ? (structure.autoBuildFillPercent || 0)
+        : (structure.autoBuildPercent || 0);
+    els.autoBuildInput.dataset.autoBuildValue = `${datasetValue}`;
   }
 
   if (els.setActiveButton) {
@@ -206,16 +244,19 @@ function refreshAllAutoBuildTargets() {
 
 function applyAutoBuildDelta(structure, input, delta) {
   if (!structure || !input || !Number.isFinite(delta)) return;
-  structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
-  const parsed = parseFloat(input.value);
-  const current = Number.isFinite(parsed) ? parsed : 0;
+  const autoBuildUsesFixed = structure.autoBuildBasis === 'fixed';
+  const current = autoBuildUsesFixed ? (parseFlexibleNumber(input.value) || 0) : (parseFloat(input.value) || 0);
   const next = Math.max(0, current + delta);
-  const normalized = Number(next.toFixed(6));
-  if (isAutoBuildFillMode(structure)) {
-    const clamped = Math.min(100, normalized);
-    structure.autoBuildFillPercent = clamped;
-    input.value = `${clamped}`;
+  if (autoBuildUsesFixed) {
+    const normalized = Math.max(0, Math.round(next));
+    structure.autoBuildFixed = normalized;
+    input.value = formatAutoBuildFixedValue(normalized);
+  } else if (isAutoBuildFillMode(structure)) {
+    const normalized = Math.min(100, Number(next.toFixed(6)));
+    structure.autoBuildFillPercent = normalized;
+    input.value = `${normalized}`;
   } else {
+    const normalized = Number(next.toFixed(6));
     structure.autoBuildPercent = normalized;
     input.value = `${normalized}`;
   }
@@ -253,11 +294,11 @@ function createAutoBuildStepControls(structure, autoBuildInput) {
   updateAutoBuildStepButtonLabels(structure, incrementButton, decrementButton);
 
   incrementButton.addEventListener('click', () => {
-    applyAutoBuildDelta(structure, autoBuildInput, structure.autoBuildStep);
+    applyAutoBuildDelta(structure, autoBuildInput, getAutoBuildStepValue(structure));
   });
 
   decrementButton.addEventListener('click', () => {
-    applyAutoBuildDelta(structure, autoBuildInput, -structure.autoBuildStep);
+    applyAutoBuildDelta(structure, autoBuildInput, -getAutoBuildStepValue(structure));
   });
 
   multiplyButton.addEventListener('click', () => {
@@ -614,22 +655,43 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoBuildHeaderContainer.appendChild(autoBuildHeaderLabel);
 
   const autoBuildInput = document.createElement('input');
-  autoBuildInput.type = 'number';
-  autoBuildInput.value = isAutoBuildFillMode(structure) ? structure.autoBuildFillPercent : structure.autoBuildPercent;
-  autoBuildInput.step = 0.01; // Allow 0.01 steps for finer control
+  autoBuildInput.type = 'text';
+  autoBuildInput.inputMode = 'decimal';
+  autoBuildInput.value = getAutoBuildInputValue(structure);
   autoBuildInput.classList.add('auto-build-input', 'auto-build-header-input');
 
-  autoBuildInput.addEventListener('input', () => {
-    const autoBuildPercent = parseFloat(autoBuildInput.value);
-    const nextValue = Math.max(0, autoBuildPercent || 0);
-    if (isAutoBuildFillMode(structure)) {
-      const normalized = Math.min(100, nextValue);
-      structure.autoBuildFillPercent = normalized;
-    } else {
-      structure.autoBuildPercent = nextValue;
+  const autoBuildWire = wireStringNumberInput(autoBuildInput, {
+    datasetKey: 'autoBuildValue',
+    parseValue: (value) => {
+      if (structure.autoBuildBasis === 'fixed') {
+        const numeric = parseFlexibleNumber(value) || 0;
+        return Math.max(0, Math.round(numeric));
+      }
+      const numeric = Number(value) || 0;
+      const normalized = Math.max(0, numeric);
+      if (isAutoBuildFillMode(structure)) {
+        return Math.min(100, normalized);
+      }
+      return normalized;
+    },
+    formatValue: (parsed) => {
+      if (structure.autoBuildBasis === 'fixed') {
+        return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+      }
+      return String(parsed);
+    },
+    onValue: (parsed) => {
+      if (structure.autoBuildBasis === 'fixed') {
+        structure.autoBuildFixed = parsed;
+      } else if (isAutoBuildFillMode(structure)) {
+        structure.autoBuildFillPercent = parsed;
+      } else {
+        structure.autoBuildPercent = parsed;
+      }
+      refreshAutoBuildTarget(structure);
     }
-    refreshAutoBuildTarget(structure);
   });
+  cached.autoBuildWire = autoBuildWire;
 
   const autoBuildBasisSelect = document.createElement('select');
   autoBuildBasisSelect.classList.add('auto-build-basis');
@@ -647,6 +709,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   workerOption.value = 'workers';
   workerOption.textContent = '% of workers';
   autoBuildBasisSelect.appendChild(workerOption);
+  const fixedOption = document.createElement('option');
+  fixedOption.value = 'fixed';
+  fixedOption.textContent = 'Fixed';
+  autoBuildBasisSelect.appendChild(fixedOption);
   if (Array.isArray(structure.automationBuildingsDropDown)) {
     structure.automationBuildingsDropDown.forEach(name => {
       const option = document.createElement('option');
@@ -915,9 +981,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     structure.autoBuildBasis = autoBuildBasisSelect.value;
     updateAutoBuildInputState(structure, autoBuildBasisSelect, autoBuildInput);
     if (document.activeElement !== autoBuildInput) {
-      autoBuildInput.value = isAutoBuildFillMode(structure)
-        ? `${structure.autoBuildFillPercent || 0}`
-        : `${structure.autoBuildPercent || 0}`;
+      autoBuildInput.value = getAutoBuildInputValue(structure);
     }
     refreshAutoBuildTarget(structure);
   });
@@ -963,10 +1027,18 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const workerCap = resources.colony.workers?.cap || 0;
     const baseCollection = typeof buildings !== 'undefined' ? buildings : undefined;
     const usesFillMode = isAutoBuildFillMode(structure);
-    const base = usesFillMode ? 0 : getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
+    const usesMaxMode = structure.autoBuildBasis === 'max';
+    const usesFixedMode = structure.autoBuildBasis === 'fixed';
+    const base = (usesFillMode || usesMaxMode || usesFixedMode)
+      ? 0
+      : getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
     const targetCount = usesFillMode
       ? structure.count
-      : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+      : usesMaxMode
+        ? structure.count
+        : usesFixedMode
+          ? Math.max(0, Math.floor(structure.autoBuildFixed || 0))
+          : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
     adjustStructureActivation(structure, change);
@@ -994,9 +1066,19 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const baseCollection = typeof buildings !== 'undefined' ? buildings : undefined;
     const usesFillMode = isAutoBuildFillMode(structure);
     const usesMaxMode = structure.autoBuildBasis === 'max';
+    const usesFixedMode = structure.autoBuildBasis === 'fixed';
     
     // Only works for % of worker/pop modes
     if (usesFillMode || usesMaxMode) {
+      return;
+    }
+
+    if (usesFixedMode) {
+      structure.autoBuildFixed = Math.max(0, Math.floor(structure.active || 0));
+      if (cached.autoBuildInput) {
+        cached.autoBuildInput.value = formatAutoBuildFixedValue(structure.autoBuildFixed);
+      }
+      refreshAutoBuildTarget(structure);
       return;
     }
     

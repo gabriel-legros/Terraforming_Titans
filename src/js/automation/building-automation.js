@@ -271,6 +271,7 @@ class BuildingAutomation {
       autoBuildPriority: building.autoBuildPriority,
       autoBuildBasis: building.autoBuildBasis,
       autoBuildPercent: building.autoBuildPercent,
+      autoBuildFixed: building.autoBuildFixed,
       autoBuildFillPercent: building.autoBuildFillPercent,
       autoBuildFillResourcePrimary: building.autoBuildFillResourcePrimary,
       autoBuildFillResourceSecondary: building.autoBuildFillResourceSecondary,
@@ -404,6 +405,10 @@ class BuildingAutomation {
     }
     if (building.autoBuildPercent !== automation.autoBuildPercent) {
       building.autoBuildPercent = automation.autoBuildPercent;
+      changed = true;
+    }
+    if (building.autoBuildFixed !== automation.autoBuildFixed) {
+      building.autoBuildFixed = automation.autoBuildFixed;
       changed = true;
     }
     if (building.autoBuildFillPercent !== automation.autoBuildFillPercent) {

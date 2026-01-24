@@ -507,6 +507,7 @@ function captureAutoBuildSettings(structures) {
             autoActive: s.autoActiveEnabled,
             autoUpgrade: s.autoUpgradeEnabled,
             step: s.autoBuildStep,
+            fixed: s.autoBuildFixed,
             fillPercent: s.autoBuildFillPercent,
             fillPrimary: s.autoBuildFillResourcePrimary,
             fillSecondary: s.autoBuildFillResourceSecondary,
@@ -525,6 +526,9 @@ function restoreAutoBuildSettings(structures) {
                 ? savedAutoBuildSettings[name].autoActive
                 : true;
             s.autoUpgradeEnabled = !!savedAutoBuildSettings[name].autoUpgrade;
+            if (savedAutoBuildSettings[name].fixed !== undefined) {
+                s.autoBuildFixed = Math.max(0, Math.floor(savedAutoBuildSettings[name].fixed || 0));
+            }
             if (savedAutoBuildSettings[name].fillPercent !== undefined) {
                 s.autoBuildFillPercent = savedAutoBuildSettings[name].fillPercent;
             }
@@ -632,13 +636,19 @@ function autoBuild(buildings, delta = 0) {
                 continue;
             }
             const usesMaxBasis = building.autoBuildBasis === 'max';
-            const base = usesMaxBasis ? 0 : resolveAutoBuildBase(building, population, workerCap, buildings);
-            const targetCount = usesMaxBasis ? Infinity : Math.ceil(((building.autoBuildPercent || 0)* base) / 100);
+            const usesFixedBasis = building.autoBuildBasis === 'fixed';
+            const fixedTarget = usesFixedBasis ? Math.max(0, Math.floor(building.autoBuildFixed || 0)) : 0;
+            const base = usesMaxBasis || usesFixedBasis ? 0 : resolveAutoBuildBase(building, population, workerCap, buildings);
+            const targetCount = usesMaxBasis
+                ? Infinity
+                : usesFixedBasis
+                    ? fixedTarget
+                    : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
 
             buildingInfos.push({ building, targetCount });
 
             if (building.autoBuildEnabled) {
-                const currentRatio = usesMaxBasis ? 0 : building.count / targetCount;
+                const currentRatio = usesMaxBasis ? 0 : (targetCount > 0 ? building.count / targetCount : 0);
                 const requiredAmount = usesMaxBasis ? 1 : targetCount - building.count;
 
                 if (requiredAmount > 0) {
