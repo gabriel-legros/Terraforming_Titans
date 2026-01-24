@@ -340,6 +340,13 @@ function createProjectItem(project) {
       event.stopPropagation();
       switchProjectGroup(groupId, -1);
     });
+    const titleSelect = document.createElement('select');
+    titleSelect.classList.add('project-title-select');
+    titleSelect.addEventListener('change', (event) => {
+      event.stopPropagation();
+      projectGroupState.active[groupId] = event.target.value;
+      getGroupProjectNames(groupId).forEach((name) => updateProjectUI(name));
+    });
     const rightArrow = document.createElement('button');
     rightArrow.type = 'button';
     rightArrow.classList.add('project-title-switch-button');
@@ -348,9 +355,16 @@ function createProjectItem(project) {
       event.stopPropagation();
       switchProjectGroup(groupId, 1);
     });
-    titleWrapper.append(leftArrow, nameElement);
+    titleWrapper.append(leftArrow, nameElement, titleSelect);
     headerRight.append(rightArrow, reorderButtons);
-    groupNav = { wrapper: titleWrapper, leftArrow, rightArrow };
+    groupNav = {
+      wrapper: titleWrapper,
+      nameElement: nameElement,
+      select: titleSelect,
+      leftArrow: leftArrow,
+      rightArrow: rightArrow,
+      optionNames: [],
+    };
   } else {
     headerRight.appendChild(reorderButtons);
   }
@@ -1029,11 +1043,37 @@ function updateProjectGroupNavigation(project, elements) {
   }
   const groupId = elements.groupId;
   const visibleNames = getVisibleGroupProjectNames(groupId);
-  const showArrows = visibleNames.length > 1;
-  elements.groupNav.leftArrow.style.display = showArrows ? '' : 'none';
-  elements.groupNav.rightArrow.style.display = showArrows ? '' : 'none';
-  elements.groupNav.leftArrow.disabled = !showArrows;
-  elements.groupNav.rightArrow.disabled = !showArrows;
+  const showSelect = visibleNames.length > 1;
+  const activeName = getActiveGroupProjectName(groupId);
+  const groupNav = elements.groupNav;
+  const projectEntry = projectManager.projects[activeName];
+  const activeLabel = projectEntry && projectEntry.displayName ? projectEntry.displayName : activeName;
+  groupNav.nameElement.textContent = activeLabel;
+  groupNav.nameElement.style.display = showSelect ? 'none' : '';
+  groupNav.select.style.display = showSelect ? '' : 'none';
+  groupNav.select.disabled = !showSelect;
+  groupNav.leftArrow.style.display = showSelect ? '' : 'none';
+  groupNav.rightArrow.style.display = showSelect ? '' : 'none';
+  groupNav.leftArrow.disabled = !showSelect;
+  groupNav.rightArrow.disabled = !showSelect;
+
+  const optionNames = visibleNames.length ? visibleNames : getGroupProjectNames(groupId);
+  const needsOptions =
+    optionNames.length !== groupNav.optionNames.length ||
+    optionNames.some((name, index) => name !== groupNav.optionNames[index]);
+  if (needsOptions) {
+    groupNav.select.textContent = '';
+    optionNames.forEach((name) => {
+      const optionProject = projectManager.projects[name];
+      const optionLabel = optionProject && optionProject.displayName ? optionProject.displayName : name;
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = optionLabel;
+      groupNav.select.appendChild(option);
+    });
+    groupNav.optionNames = optionNames.slice();
+  }
+  groupNav.select.value = activeName;
 }
 
 function updateProjectUI(projectName) {
