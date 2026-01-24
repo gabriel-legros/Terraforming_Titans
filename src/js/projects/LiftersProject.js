@@ -26,6 +26,7 @@ class LiftersProject extends TerraformingDurationProject {
     this.energyPerUnit = this.attributes.lifterEnergyPerUnit || 10_000_000;
     this.harvestRecipes = this.attributes?.lifterHarvestRecipes || DEFAULT_LIFTER_RECIPES;
     this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+    this.pendingHarvestRecipeKey = '';
     this.mode = LIFTER_MODES.GAS_HARVEST;
     this.isRunning = false;
     this.lastUnitsPerSecond = 0;
@@ -81,6 +82,7 @@ class LiftersProject extends TerraformingDurationProject {
   }
 
   getHarvestRecipe() {
+    this.applyPendingHarvestRecipe();
     const available = this.getAvailableHarvestRecipeKeys();
     const nextKey = available.includes(this.harvestRecipeKey)
       ? this.harvestRecipeKey
@@ -120,8 +122,22 @@ class LiftersProject extends TerraformingDurationProject {
     const next = available.includes(value) ? value : this.getDefaultHarvestRecipeKey();
     if (this.harvestRecipeKey !== next) {
       this.harvestRecipeKey = next;
+      this.pendingHarvestRecipeKey = '';
       this.updateUI();
     }
+  }
+
+  applyPendingHarvestRecipe() {
+    const pendingKey = this.pendingHarvestRecipeKey;
+    if (!pendingKey) {
+      return;
+    }
+    const available = this.getAvailableHarvestRecipeKeys();
+    if (!available.includes(pendingKey)) {
+      return;
+    }
+    this.pendingHarvestRecipeKey = '';
+    this.harvestRecipeKey = pendingKey;
   }
 
   getUnitsPerSecond(productivity = 1) {
@@ -714,6 +730,12 @@ class LiftersProject extends TerraformingDurationProject {
     }
   }
 
+  applyBooleanFlag(effect) {
+    super.applyBooleanFlag(effect);
+    this.applyPendingHarvestRecipe();
+    this.updateUI();
+  }
+
   saveState() {
     return {
       ...super.saveState(),
@@ -729,7 +751,9 @@ class LiftersProject extends TerraformingDurationProject {
     this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
     this.isRunning = state.isRunning || false;
     this.expansionProgress = state.expansionProgress || 0;
-    this.harvestRecipeKey = state.harvestRecipeKey || this.getDefaultHarvestRecipeKey();
+    this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
+    this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+    this.applyPendingHarvestRecipe();
     this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
     if (!this.isRunning) {
       this.setLastTickStats();
@@ -759,7 +783,9 @@ class LiftersProject extends TerraformingDurationProject {
     this.repeatCount = state.repeatCount || 0;
     this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
     this.expansionProgress = state.expansionProgress || 0;
-    this.harvestRecipeKey = state.harvestRecipeKey || this.getDefaultHarvestRecipeKey();
+    this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
+    this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+    this.applyPendingHarvestRecipe();
     this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
     this.isRunning = false;
     this.isCompleted = false;
