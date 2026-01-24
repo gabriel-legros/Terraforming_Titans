@@ -330,9 +330,9 @@ class KesslerHazard {
       return;
     }
     if (totalMass < distributionTotal) {
-      // Remove debris starting from the lowest periapsis bins.
+      // Remove debris starting from the highest periapsis bins.
       let remaining = distributionTotal - totalMass;
-      for (let i = 0; i < this.periapsisDistribution.length && remaining > 0; i += 1) {
+      for (let i = this.periapsisDistribution.length - 1; i >= 0 && remaining > 0; i -= 1) {
         const entry = this.periapsisDistribution[i];
         const removed = Math.min(entry.massTons, remaining);
         entry.massTons -= removed;
