@@ -119,12 +119,19 @@ function getResources() {
   }
 }
 
-function formatNumeric(value, decimals = 2) {
+function formatNumeric(value, decimals = 2, allowSmall = false) {
   let formatted = null;
   try {
-    formatted = formatNumber(value, false, decimals);
+    formatted = formatNumber(value, false, decimals, allowSmall);
   } catch (error) {
     formatted = null;
+  }
+  if (formatted === 0 && value !== 0) {
+    try {
+      return formatScientific(value, decimals);
+    } catch (error) {
+      return Number(value || 0).toExponential(decimals);
+    }
   }
   return formatted || Number(value || 0).toFixed(decimals);
 }
@@ -162,7 +169,7 @@ function formatDensityWithUnit(value) {
 function buildKesslerBinDetailText(entry) {
   return `Bin @ ${formatNumeric(entry.altitudeKm, 1)} km: `
     + `${formatNumeric(entry.current, 2)} / ${formatNumeric(entry.baseline, 2)} t, `
-    + `${formatNumeric(entry.decayRate, 4)} t/s, `
+    + `${formatNumeric(entry.decayRate, 2, true)} t/s, `
     + `${formatDensityWithUnit(entry.density)}`;
 }
 
@@ -673,8 +680,8 @@ function updateKesslerDebrisChart(
   for (let i = 0; i < binCount; i += 1) {
     const entry = kesslerHazardUICache.binDetails[i];
     const density = densities[i] || 0;
-    const densityRatio = Math.log10(Math.max(density, kesslerDecayConstants.densityFloor) / densityReference);
-    const densityFactor = Math.min(kesslerDecayConstants.maxMultiplier, Math.max(0, densityRatio + 1));
+    const densityRatio = Math.max(density, kesslerDecayConstants.densityFloor) / densityReference;
+    const densityFactor = Math.min(kesslerDecayConstants.maxMultiplier, Math.max(0, densityRatio));
     const decayRate = kesslerDecayConstants.baseRate * densityFactor;
     const decayBasis = density >= densityReference ? maxSinceZeroBins[i] : currentBins[i];
     entry.density = density;
@@ -754,7 +761,7 @@ function updateKesslerHazardUI(kesslerParameters) {
     kesslerHazardUICache.summaryCenterBody.textContent =
       `Small projects: ${formatPercent(failureChances.smallFailure)} failure\nLarge projects: ${formatPercent(failureChances.largeFailure)} failure`;
     kesslerHazardUICache.summaryRightBody.textContent =
-      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDrag line: ${formatDensityWithUnit(dragDensity)} @ ${formatNumeric(dragKm, 1)} km\nDecay: ${formatNumeric(decayRate, 4)} t/s`;
+      `${isCleared ? 'Status: Cleared' : 'Status: Active'}\nDrag line: ${formatDensityWithUnit(dragDensity)} @ ${formatNumeric(dragKm, 1)} km\nDecay: ${formatNumeric(decayRate, 2, true)} t/s`;
   } catch (error) {
     // ignore missing UI helpers in tests
   }
