@@ -7,7 +7,8 @@ const luxuryResources = {
 };
 
 const colonyConstructors = {
-  aerostat_colony: { className: 'Aerostat', file: 'aerostat.js' }
+  aerostat_colony: { className: 'Aerostat', file: 'aerostat.js' },
+  t7_colony: { className: 'Ecumenopolis', file: 'Ecumenopolis.js' }
 };
 
 function loadColonyConstructor(name) {

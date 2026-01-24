@@ -262,6 +262,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Foundry World metallurgy travel points now award 10 points times sqrt(initial land / 50B).
 - Bioworld and Foundry World mega projects now require the current world to be fully terraformed before starting.
 - Departure snapshots now record world specialization across story, random, and artificial worlds.
+- Android Housing productivity now scales with used android storage after subtracting free and Solis-granted base capacity.
+- Ecumenopolis District productivity now uses the higher of colonist or android fill ratios, with android housing capacity taking priority over ecumenopolis storage.
 - Deeper Mining now includes deep mining settings (depth > 500) with two configurable options:
   - **Create geothermal deposits**: Generates geothermal deposits (default 1000 per mine per 250m level beyond 500m) when enabled during deepening. Tradeoff: doubles components cost.
   - **Underground Storage**: Provides storage capacity equivalent to storage depots (default 1 per mine per 250m level beyond 500m) without maintenance cost. Tradeoff: deepening time is slowed by 2x.

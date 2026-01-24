@@ -1173,6 +1173,7 @@ const constructors = {
   waterTank: 'WaterTank',
   antimatterBattery: 'AntimatterBattery',
   spaceMirror: 'SpaceMirror',
+  androidHousing: 'AndroidHousing',
   hyperionLantern: 'HyperionLantern',
   trashIncinerator: 'MultiRecipesBuilding',
   fusionPowerPlant: 'FusionPowerPlant',
