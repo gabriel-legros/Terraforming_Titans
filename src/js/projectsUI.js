@@ -1205,21 +1205,38 @@ function updateProjectUI(projectName) {
       : project.repeatable && project.repeatCount >= project.maxRepeatCount;
   const isCompletedAndNotRepeatable = project.isCompleted && !project.repeatable;
   const shouldHideStartBar = project.shouldHideStartBar();
+  const keepStartBarVisible = project.name === 'deeperMining';
 
   if (isMaxRepeatReached || isCompletedAndNotRepeatable) {
     // Hide cost and progress button if the project can't be repeated anymore
     if (elements.costElement) {
-      elements.costElement.style.display = 'none';
+      if (keepStartBarVisible) {
+        elements.costElement.style.display = 'block';
+        elements.costElement.style.color = '#f44336';
+      } else {
+        elements.costElement.style.display = 'none';
+      }
     }
     if (elements.progressButton) {
-      elements.progressButton.style.display = 'none';
+      if (keepStartBarVisible) {
+        const statusText = isMaxRepeatReached ? 'Max depth reached' : 'Completed';
+        if (isImportProject && importUI) {
+          importUI.setProgressLabel(elements, project, statusText);
+        } else {
+          elements.progressButton.textContent = statusText;
+        }
+        elements.progressButton.style.display = 'block';
+        elements.progressButton.style.background = '#f44336';
+      } else {
+        elements.progressButton.style.display = 'none';
+      }
     }
     // Hide the auto-start checkbox container if the project can't be repeated anymore
     if (elements.autoStartCheckboxContainer) {
-      elements.autoStartCheckboxContainer.style.display = 'none';
+      elements.autoStartCheckboxContainer.style.display = keepStartBarVisible ? 'flex' : 'none';
     }
     if (elements.automationSettingsContainer) {
-      elements.automationSettingsContainer.style.display = 'none';
+      elements.automationSettingsContainer.style.display = keepStartBarVisible ? 'flex' : 'none';
     }
   } else {
     // If the project can still be repeated or started, show the relevant UI elements
@@ -1370,7 +1387,7 @@ function updateProjectUI(projectName) {
     let hasVisibleAutomationItems = false;
 
     if (automationSettingsContainer) {
-      const shouldHideAutomation = isMaxRepeatReached || isCompletedAndNotRepeatable;
+      const shouldHideAutomation = (isMaxRepeatReached || isCompletedAndNotRepeatable) && !keepStartBarVisible;
       const items = elements.cachedAutomationItems?.length
         ? elements.cachedAutomationItems
         : Array.from(automationSettingsContainer.children || []);
