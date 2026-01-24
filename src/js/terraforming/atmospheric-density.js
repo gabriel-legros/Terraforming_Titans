@@ -148,6 +148,13 @@
     return totalMassG / totalMoles;
   }
 
+  function fadeSF6Fraction(zMeters, zHomopauseMeters, scaleHeightMeters) {
+    if (!(zMeters > zHomopauseMeters)) return 1;
+    const dz = zMeters - zHomopauseMeters;
+    const H = scaleHeightMeters > 0 ? scaleHeightMeters : 1;
+    return Math.exp(-dz / H);
+  }
+
   function estimateMoleFractions(atmosphericResources) {
     // Returns mole fractions by key (sums to 1), based on mass inventory.
     const { totalTons, byKey } = getAtmosphericMassBreakdownTons(atmosphericResources);
@@ -437,13 +444,14 @@
         surfacePressureSource,
         surfaceTemperatureK,
         solarFluxWm2,
-        meanMolecularWeightGmol,
-        meanMolecularWeightDryGmol,
-        massFractions,
-        massFractionsDry,
-        xH2O_inventory,
-        totalAtmosphericMassKg,
-        surfaceAreaM2,
+      meanMolecularWeightGmol,
+      meanMolecularWeightDryGmol,
+      meanMolecularWeightDryNoSF6Gmol,
+      massFractions,
+      massFractionsDry,
+      xH2O_inventory,
+      totalAtmosphericMassKg,
+      surfaceAreaM2,
         collisionSigmaM2
       } = this._inputs;
 
@@ -456,6 +464,7 @@
         solarFluxWm2,
         meanMolecularWeightGmol,
         meanMolecularWeightDryGmol,
+        meanMolecularWeightDryNoSF6Gmol,
         massFractions: { ...massFractions },
         massFractionsDry: { ...massFractionsDry },
         xH2O_inventory,
@@ -521,16 +530,20 @@
       const Tthermo = Tcold + 0.9 * (Texo - Tcold);
 
       // Upper-atmosphere molar mass reduction for DRY air.
+      const meanDryNoSF6 = meanMolecularWeightDryNoSF6Gmol > 0
+        ? meanMolecularWeightDryNoSF6Gmol
+        : meanMolecularWeightDryGmol;
+
       let MUpperG;
-      if (meanMolecularWeightDryGmol > 40 || massFractionsDry.co2 > 0.5) {
-        MUpperG = clamp(meanMolecularWeightDryGmol * 0.60, 16, 32);
+      if (meanDryNoSF6 > 40 || massFractionsDry.co2 > 0.5) {
+        MUpperG = clamp(meanDryNoSF6 * 0.60, 16, 32);
       } else {
-        MUpperG = clamp(meanMolecularWeightDryGmol * 0.42, 4, 28);
+        MUpperG = clamp(meanDryNoSF6 * 0.42, 4, 28);
       }
       if (massFractionsDry.h2 > 0.05) {
         MUpperG = Math.max(2.5, MUpperG * 0.7);
       }
-      const MTransG = 0.5 * (meanMolecularWeightDryGmol + MUpperG);
+      const MTransG = 0.5 * (meanDryNoSF6 + MUpperG);
 
       const GM = gravity * planetRadiusM * planetRadiusM;
 
@@ -579,13 +592,23 @@
         ? (this._RHColdTrap * saturationVaporPressurePa(Tcold))
         : Infinity;
 
+      const sf6Fraction = clamp(massFractionsDry.sf6 || 0, 0, 1);
+      const zHomopause = z1;
+      const sf6ScaleHeight = Math.max(1, Hsurf);
+
+      const adjustDryMolarMassAt = (zMeters) => {
+        if (!(sf6Fraction > 0)) return meanMolecularWeightDryGmol;
+        const mixFactor = fadeSF6Fraction(zMeters, zHomopause, sf6ScaleHeight);
+        return meanDryNoSF6 + (meanMolecularWeightDryGmol - meanDryNoSF6) * mixFactor;
+      };
+
       // Build layers for DRY pressure profile.
       this._layers = [
-        { name: 'lower', zStart: 0,  zEnd: z1, T: Tlower,  molarMassDryG: meanMolecularWeightDryGmol },
-        { name: 'cold',  zStart: z1, zEnd: z2, T: Tcold,   molarMassDryG: meanMolecularWeightDryGmol },
-        { name: 'thermo',zStart: z2, zEnd: z3, T: Tthermo, molarMassDryG: meanMolecularWeightDryGmol },
-        { name: 'upper', zStart: z3, zEnd: z4, T: Texo,    molarMassDryG: MTransG },
-        { name: 'exo',   zStart: z4, zEnd: Infinity, T: Texo, molarMassDryG: MUpperG }
+        { name: 'lower', zStart: 0,  zEnd: z1, T: Tlower,  molarMassDryG: adjustDryMolarMassAt(0.5 * z1) },
+        { name: 'cold',  zStart: z1, zEnd: z2, T: Tcold,   molarMassDryG: adjustDryMolarMassAt(0.5 * (z1 + z2)) },
+        { name: 'thermo',zStart: z2, zEnd: z3, T: Tthermo, molarMassDryG: adjustDryMolarMassAt(0.5 * (z2 + z3)) },
+        { name: 'upper', zStart: z3, zEnd: z4, T: Texo,    molarMassDryG: adjustDryMolarMassAt(0.5 * (z3 + z4)) },
+        { name: 'exo',   zStart: z4, zEnd: Infinity, T: Texo, molarMassDryG: adjustDryMolarMassAt(z4 + sf6ScaleHeight) }
       ];
 
       // Compute DRY pressure at each layer start.
@@ -608,11 +631,12 @@
       }
 
       this._debug.temperaturesK = { lower: Tlower, cold: Tcold, thermo: Tthermo, exo: Texo, exobase: Texobase };
-      this._debug.molarMassG = { surfaceDry: meanMolecularWeightDryGmol, transitionDry: MTransG, upperDry: MUpperG };
+      this._debug.molarMassG = { surfaceDry: meanMolecularWeightDryGmol, transitionDry: MTransG, upperDry: MUpperG, dryNoSF6: meanDryNoSF6 };
       this._debug.heightsM = { z1, z2, z3, z4, exobase: zExoSafe, coldTrapZ: this._coldTrapZ };
       this._debug.surfaceScaleHeightM = Hsurf;
       this._debug.columnMassKgPerM2 = columnMassKgPerM2;
       this._debug.waterAloft = { coldTrapCapPa: this._pColdTrapCap };
+      this._debug.sf6 = { fraction: sf6Fraction, homopauseM: zHomopause, scaleHeightM: sf6ScaleHeight };
     }
 
     _findLayerIndex(zMeters) {
@@ -783,6 +807,8 @@
 
     const excludeWater = new Set(['atmosphericWater']);
     const meanMolecularWeightDryGmol = estimateMeanMolecularWeightGmol(atmospheric, excludeWater) || meanMolecularWeightGmol;
+    const excludeWaterAndSF6 = new Set(['atmosphericWater', 'greenhouseGas']);
+    const meanMolecularWeightDryNoSF6Gmol = estimateMeanMolecularWeightGmol(atmospheric, excludeWaterAndSF6) || meanMolecularWeightDryGmol;
 
     const massFractions = getMassFractions(atmospheric);
     const massFractionsDry = getMassFractions(atmospheric, excludeWater);
@@ -805,6 +831,7 @@
       totalAtmosphericMassKg,
       meanMolecularWeightGmol,
       meanMolecularWeightDryGmol,
+      meanMolecularWeightDryNoSF6Gmol,
       massFractions,
       massFractionsDry,
       xH2O_inventory,
