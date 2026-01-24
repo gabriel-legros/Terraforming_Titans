@@ -148,7 +148,14 @@ function formatDensityWithUnit(value) {
   const match = formatted.match(/^(-?\d+(?:\.\d+)?)([a-zµ]+)?$/i);
   const numeric = match ? match[1] : formatted;
   const suffix = match ? match[2] : '';
-  const unit = suffix ? `${suffix}kg/m^3` : 'kg/m^3';
+  const normalizedSuffix = suffix ? suffix.toLowerCase() : '';
+  const unit = normalizedSuffix === 'p'
+    ? 'ng/m^3'
+    : normalizedSuffix === 'f'
+      ? 'pg/m^3'
+      : suffix
+        ? `${suffix}kg/m^3`
+        : 'kg/m^3';
   return `${numeric} ${unit}`;
 }
 
