@@ -216,7 +216,7 @@ class DustFactory extends Building {
 
     const colorControl = document.createElement('div');
     colorControl.classList.add('dust-color-control');
-    colorControl.style.display = this.isBooleanFlagSet('terraformingBureauFeature')
+    colorControl.style.display = this.isBooleanFlagSet('terraformingBureauFeature') && this.reversalAvailable
       ? 'flex'
       : 'none';
 
@@ -266,7 +266,7 @@ class DustFactory extends Building {
     const dustEls = elements.dust;
     const enabled = this.isBooleanFlagSet('terraformingBureauFeature');
     dustEls.container.style.display = enabled ? 'flex' : 'none';
-    dustEls.colorControl.style.display = enabled ? 'flex' : 'none';
+    dustEls.colorControl.style.display = enabled && this.reversalAvailable ? 'flex' : 'none';
     const settings = getDustAutomationSettings(this);
     updateDustResourceName(settings);
     dustEls.checkbox.checked = settings.autoTargetAlbedo;
