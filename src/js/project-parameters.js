@@ -190,6 +190,7 @@ const projectParameters = {
     attributes : {
       costOreMineScaling : true,
       effectScaling : true,
+      keepStartBarVisible: true,
       completionEffect: [
         {
           target: 'building',

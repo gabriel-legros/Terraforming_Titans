@@ -1205,7 +1205,7 @@ function updateProjectUI(projectName) {
       : project.repeatable && project.repeatCount >= project.maxRepeatCount;
   const isCompletedAndNotRepeatable = project.isCompleted && !project.repeatable;
   const shouldHideStartBar = project.shouldHideStartBar();
-  const keepStartBarVisible = project.name === 'deeperMining';
+  const keepStartBarVisible = project.attributes?.keepStartBarVisible === true;
 
   if (isMaxRepeatReached || isCompletedAndNotRepeatable) {
     // Hide cost and progress button if the project can't be repeated anymore
