@@ -459,7 +459,7 @@ class SpaceMirrorAdvancedOversight {
           const wantMore = baseMelt < waterTarget * (1 - WATER_REL_TOL);
           if (wantMore) {
             if (mirrorsLeft() > 0) {
-              const k = MIRROR_PROBE_MIN;
+              const k = 1;
               const score = withTempChange(() => { assignM.focus = (assignM.focus) + k; }, () => objective(passLevel));
               const dPerUnit = (baseScore - score) / k;
               const meltAfter = withTempChange(() => { assignM.focus = (assignM.focus) + k; }, () => computeFocusMeltRate());
@@ -471,7 +471,7 @@ class SpaceMirrorAdvancedOversight {
               if (step > 0) cands.push({ kind:'mirror', zone:'focus', reverse:false, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
             }
             if (lanternsLeft() > 0) {
-              const k = LANTERN_PROBE_MIN;
+              const k = 1;
               const score = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => objective(passLevel));
               const dPerUnit = (baseScore - score) / k;
               const meltAfter = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => computeFocusMeltRate());
@@ -487,7 +487,7 @@ class SpaceMirrorAdvancedOversight {
           if (wantLess) {
             if ((assignM.focus || 0) > 0) {
               const current = assignM.focus || 0;
-              const k = MIRROR_PROBE_MIN;
+              const k = 1;
               const score = withTempChange(() => { assignM.focus = current - k; }, () => objective(passLevel));
               const dPerUnit = (baseScore - score) / k;
               const meltAfter = withTempChange(() => { assignM.focus = current - k; }, () => computeFocusMeltRate());
@@ -502,7 +502,7 @@ class SpaceMirrorAdvancedOversight {
             }
             if ((assignL.focus || 0) > 0) {
               const current = assignL.focus || 0;
-              const k = LANTERN_PROBE_MIN;
+              const k = 1;
               const score = withTempChange(() => { assignL.focus = current - k; }, () => objective(passLevel));
               const dPerUnit = (baseScore - score) / k;
               const meltAfter = withTempChange(() => { assignL.focus = current - k; }, () => computeFocusMeltRate());
