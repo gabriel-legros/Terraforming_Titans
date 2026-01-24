@@ -146,7 +146,11 @@ class ImportColonistsProject extends Project {
 
   getEffectiveResourceGain() {
     const gain = super.getEffectiveResourceGain();
+    const limit = this.getKesslerImportLimit();
     if (!this.canImportCrusaders() || this.getImportTarget() !== 'crusaders') {
+      if (limit !== Infinity && gain.colony.colonists > limit) {
+        gain.colony.colonists = limit;
+      }
       return gain;
     }
 
@@ -168,7 +172,9 @@ class ImportColonistsProject extends Project {
     if (!adjustedGain.special) {
       adjustedGain.special = {};
     }
-    adjustedGain.special.crusaders = crusaderGain;
+    adjustedGain.special.crusaders = limit !== Infinity && crusaderGain > limit
+      ? limit
+      : crusaderGain;
     return adjustedGain;
   }
 
