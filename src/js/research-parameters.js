@@ -826,8 +826,7 @@ const researchParameters = {
         prerequisites: [],
         requiredFlags: ['superalloyResearchUnlocked'],
         effects: [
-          { target: 'building', targetId: 'superalloyFoundry', type: 'enable' },
-          { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
+          { target: 'building', targetId: 'superalloyFoundry', type: 'enable' }
         ]
       },
       {
@@ -1858,7 +1857,8 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'superalloyResearchUnlocked',
             value: true
-          }
+          },
+          { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
         ]
       },
       {
