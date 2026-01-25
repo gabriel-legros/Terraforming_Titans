@@ -256,8 +256,8 @@ class KesslerHazard {
   }
 
   getCostMultiplier(isLarge) {
-    const successChance = this.getSuccessChance(isLarge);
-    const multiplier = successChance > 0 ? 1 / successChance : 1;
+    const successChance = Math.max(this.getSuccessChance(isLarge), 1e-10);
+    const multiplier = 1 / successChance;
     return Math.min(multiplier, 1e10);
   }
 
