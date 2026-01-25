@@ -1472,15 +1472,17 @@ function updateLifeBox() {
     const magTooltip = attachDynamicInfoTooltip(magInfo, magTooltipText);
 
     const protectedText = 'The planet is sufficiently protected, providing a 50% boost to life growth';
+    const hasMagnetosphere = terraforming.celestialParameters.hasNaturalMagnetosphere
+      || projectManager.isBooleanFlagSet('terraforming', 'magneticShield');
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
       ? `Natural magnetosphere: ${protectedText}`
       : projectManager.isBooleanFlagSet('terraforming', 'magneticShield')
         ? `Artificial magnetosphere: ${protectedText}`
         : 'No magnetosphere';
 
-      const orbRad = typeof terraforming.orbitalRadiation === 'number' ? terraforming.orbitalRadiation : 0;
-      const rad = typeof terraforming.surfaceRadiation === 'number' ? terraforming.surfaceRadiation : 0;
-      const radPenalty = typeof terraforming.radiationPenalty === 'number' ? terraforming.radiationPenalty : 0;
+      const orbRad = terraforming.orbitalRadiation || 0;
+      const rad = terraforming.surfaceRadiation || 0;
+      const radPenalty = hasMagnetosphere ? 0 : (terraforming.radiationPenalty || 0);
       const gravityValue = Number.isFinite(terraforming.celestialParameters.gravity)
         ? terraforming.celestialParameters.gravity
         : 0;
@@ -1508,7 +1510,7 @@ function updateLifeBox() {
         <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>Equatorial gravity<span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
         <p id="gravity-penalty-row">Gravity penalty<span class="info-tooltip-icon" title="${GRAVITY_PENALTY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
       `;
-    if ((radPenalty || 0) < 0.0001) {
+    if (!hasMagnetosphere && (radPenalty || 0) < 0.0001) {
       const penaltyRow = magnetosphereBox.querySelector('#radiation-penalty-row');
       if (penaltyRow) penaltyRow.style.display = 'none';
     }
@@ -1554,6 +1556,8 @@ function updateLifeBox() {
     const gravityPenaltyValue = els.gravityPenaltyValue;
 
     // Update status based on natural or artificial magnetosphere
+    const hasMagnetosphere = terraforming.celestialParameters.hasNaturalMagnetosphere
+      || terraforming.isBooleanFlagSet('magneticShield');
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
       ? 'Natural magnetosphere'
       : terraforming.isBooleanFlagSet('magneticShield')
@@ -1572,8 +1576,8 @@ function updateLifeBox() {
     }
     if (surfaceRadiationPenalty) {
       const penaltyRow = surfaceRadiationPenalty.parentElement;
-      const penaltyValue = terraforming.radiationPenalty || 0;
-      if (penaltyValue < 0.0001) {
+      const penaltyValue = hasMagnetosphere ? 0 : (terraforming.radiationPenalty || 0);
+      if (!hasMagnetosphere && penaltyValue < 0.0001) {
         penaltyRow.style.display = 'none';
       } else {
         penaltyRow.style.display = '';

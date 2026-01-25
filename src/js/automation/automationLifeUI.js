@@ -508,11 +508,12 @@ function renderLifeAutomationSteps(automation, preset, container) {
       isTempTolerance = isTempToleranceAttribute;
       updateSubtitle(isTempTolerance);
       const attribute = lifeDesigner.currentDesign[attributeName];
-      const maxUpgrades = attribute.maxUpgrades;
-      const optimal = attributeName === 'optimalGrowthTemperature';
-      amountInput.min = optimal ? `-${maxUpgrades}` : '0';
+      maxUpgrades = attribute.maxUpgrades;
+      isOptimal = attributeName === 'optimalGrowthTemperature';
+      amountInput.min = isOptimal ? `-${maxUpgrades}` : '0';
       amountInput.max = `${maxUpgrades}`;
       amountInput.value = step.amount;
+      minButton.style.display = isOptimal ? '' : 'none';
       if (isTempTolerance) {
         if (neededOpt.parentElement !== modeSelect) {
           modeSelect.insertBefore(neededOpt, remainingOpt);
@@ -524,9 +525,11 @@ function renderLifeAutomationSteps(automation, preset, container) {
         modeSelect.value = 'fixed';
       }
       amountInput.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
-        && !optimal;
+        && !isOptimal;
+      minButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
+        && !isOptimal;
       maxButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
-        && !optimal;
+        && !isOptimal;
       if (amountInput.disabled) {
         const updatedSpends = automation.getDesignStepSpends(preset);
         amountInput.value = updatedSpends[step.id] ?? 0;
@@ -543,12 +546,21 @@ function renderLifeAutomationSteps(automation, preset, container) {
     amountText.textContent = 'Points';
     const amountInput = document.createElement('input');
     amountInput.type = 'number';
-    const isOptimal = step.attribute === 'optimalGrowthTemperature';
+    let isOptimal = step.attribute === 'optimalGrowthTemperature';
     const attribute = lifeDesigner.currentDesign[step.attribute];
-    const maxUpgrades = attribute.maxUpgrades;
+    let maxUpgrades = attribute.maxUpgrades;
     amountInput.min = isOptimal ? `-${maxUpgrades}` : '0';
     amountInput.max = `${maxUpgrades}`;
     amountInput.value = step.amount;
+    const minButton = document.createElement('button');
+    minButton.classList.add('life-automation-max-button');
+    minButton.textContent = 'Min';
+    minButton.style.display = isOptimal ? '' : 'none';
+    minButton.addEventListener('click', () => {
+      automation.updateDesignStep(preset.id, step.id, { amount: -maxUpgrades });
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
     const maxButton = document.createElement('button');
     maxButton.classList.add('life-automation-max-button');
     maxButton.textContent = 'Max';
@@ -557,7 +569,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
-    amountLabel.append(amountText, amountInput, maxButton);
+    amountLabel.append(amountText, amountInput, minButton, maxButton);
     row.appendChild(amountLabel);
 
     const modeLabel = document.createElement('label');
@@ -594,6 +606,8 @@ function renderLifeAutomationSteps(automation, preset, container) {
     row.appendChild(modeLabel);
 
     amountInput.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
+      && !isOptimal;
+    minButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
       && !isOptimal;
     maxButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
       && !isOptimal;
