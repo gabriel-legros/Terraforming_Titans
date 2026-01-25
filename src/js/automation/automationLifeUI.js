@@ -418,13 +418,17 @@ function renderLifeAutomationSteps(automation, preset, container) {
     title.textContent = `Step ${index + 1}`;
     const subtitle = document.createElement('span');
     subtitle.classList.add('automation-step-subtitle');
-    subtitle.textContent = step.mode === 'remaining' && isLast
-      ? 'Spend all remaining points'
-      : step.mode === 'max'
-        ? 'Max out attribute'
-        : step.mode === 'needed'
-          ? 'As needed for selected zones'
-          : 'Spend fixed points';
+    const updateSubtitle = (isTempTolerance) => {
+      subtitle.textContent = step.mode === 'remaining' && isLast
+        ? 'Spend all remaining points'
+        : step.mode === 'max'
+          ? 'Max out attribute'
+          : step.mode === 'needed' && isTempTolerance
+            ? 'As needed for selected zones'
+            : 'Spend fixed points';
+    };
+    let isTempTolerance = step.attribute === 'minTemperatureTolerance' || step.attribute === 'maxTemperatureTolerance';
+    updateSubtitle(isTempTolerance);
     heading.append(title, subtitle);
     header.appendChild(heading);
 
@@ -497,7 +501,37 @@ function renderLifeAutomationSteps(automation, preset, container) {
       attributeSelect.appendChild(option);
     });
     attributeSelect.addEventListener('change', (event) => {
-      automation.updateDesignStep(preset.id, step.id, { attribute: event.target.value });
+      const attributeName = event.target.value;
+      const isTempToleranceAttribute = attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance';
+      const mode = !isTempToleranceAttribute && step.mode === 'needed' ? 'fixed' : step.mode;
+      automation.updateDesignStep(preset.id, step.id, { attribute: attributeName, mode });
+      isTempTolerance = isTempToleranceAttribute;
+      updateSubtitle(isTempTolerance);
+      const attribute = lifeDesigner.currentDesign[attributeName];
+      const maxUpgrades = attribute.maxUpgrades;
+      const optimal = attributeName === 'optimalGrowthTemperature';
+      amountInput.min = optimal ? `-${maxUpgrades}` : '0';
+      amountInput.max = `${maxUpgrades}`;
+      amountInput.value = step.amount;
+      if (isTempTolerance) {
+        if (neededOpt.parentElement !== modeSelect) {
+          modeSelect.insertBefore(neededOpt, remainingOpt);
+        }
+      } else if (neededOpt.parentElement === modeSelect) {
+        modeSelect.removeChild(neededOpt);
+      }
+      if (!isTempTolerance && modeSelect.value === 'needed') {
+        modeSelect.value = 'fixed';
+      }
+      amountInput.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
+        && !optimal;
+      maxButton.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
+        && !optimal;
+      if (amountInput.disabled) {
+        const updatedSpends = automation.getDesignStepSpends(preset);
+        amountInput.value = updatedSpends[step.id] ?? 0;
+      }
+      zoneRow.style.display = modeSelect.value === 'needed' && isTempTolerance ? '' : 'none';
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
@@ -510,7 +544,6 @@ function renderLifeAutomationSteps(automation, preset, container) {
     const amountInput = document.createElement('input');
     amountInput.type = 'number';
     const isOptimal = step.attribute === 'optimalGrowthTemperature';
-    const isTempTolerance = step.attribute === 'minTemperatureTolerance' || step.attribute === 'maxTemperatureTolerance';
     const attribute = lifeDesigner.currentDesign[step.attribute];
     const maxUpgrades = attribute.maxUpgrades;
     amountInput.min = isOptimal ? `-${maxUpgrades}` : '0';
@@ -538,14 +571,14 @@ function renderLifeAutomationSteps(automation, preset, container) {
     const maxOpt = document.createElement('option');
     maxOpt.value = 'max';
     maxOpt.textContent = 'Max out';
+    const neededOpt = document.createElement('option');
+    neededOpt.value = 'needed';
+    neededOpt.textContent = 'As needed';
     const remainingOpt = document.createElement('option');
     remainingOpt.value = 'remaining';
     remainingOpt.textContent = 'All remaining';
     remainingOpt.disabled = !isLast;
     if (isTempTolerance) {
-      const neededOpt = document.createElement('option');
-      neededOpt.value = 'needed';
-      neededOpt.textContent = 'As needed';
       modeSelect.append(fixedOpt, maxOpt, neededOpt, remainingOpt);
     } else {
       modeSelect.append(fixedOpt, maxOpt, remainingOpt);
@@ -580,35 +613,34 @@ function renderLifeAutomationSteps(automation, preset, container) {
     });
 
     stepCard.appendChild(row);
-    if (modeSelect.value === 'needed' && isTempTolerance) {
-      const zoneRow = document.createElement('div');
-      zoneRow.classList.add('life-automation-zone-row');
-      const zoneLabel = document.createElement('span');
-      zoneLabel.textContent = 'Include zones';
-      zoneRow.appendChild(zoneLabel);
-      const zoneOptions = [
-        { key: 'tropical', label: 'Tropical' },
-        { key: 'temperate', label: 'Temperate' },
-        { key: 'polar', label: 'Polar' }
-      ];
-      zoneOptions.forEach(option => {
-        const label = document.createElement('label');
-        label.classList.add('life-automation-zone-option');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = !!step.zones[option.key];
-        const text = document.createElement('span');
-        text.textContent = option.label;
-        label.append(checkbox, text);
-        checkbox.addEventListener('change', (event) => {
-          automation.setDesignStepZone(preset.id, step.id, option.key, event.target.checked);
-          queueAutomationUIRefresh();
-          updateAutomationUI();
-        });
-        zoneRow.appendChild(label);
+    const zoneRow = document.createElement('div');
+    zoneRow.classList.add('life-automation-zone-row');
+    const zoneLabel = document.createElement('span');
+    zoneLabel.textContent = 'Include zones';
+    zoneRow.appendChild(zoneLabel);
+    const zoneOptions = [
+      { key: 'tropical', label: 'Tropical' },
+      { key: 'temperate', label: 'Temperate' },
+      { key: 'polar', label: 'Polar' }
+    ];
+    zoneOptions.forEach(option => {
+      const label = document.createElement('label');
+      label.classList.add('life-automation-zone-option');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = !!step.zones[option.key];
+      const text = document.createElement('span');
+      text.textContent = option.label;
+      label.append(checkbox, text);
+      checkbox.addEventListener('change', (event) => {
+        automation.setDesignStepZone(preset.id, step.id, option.key, event.target.checked);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
       });
-      stepCard.appendChild(zoneRow);
-    }
+      zoneRow.appendChild(label);
+    });
+    zoneRow.style.display = modeSelect.value === 'needed' && isTempTolerance ? '' : 'none';
+    stepCard.appendChild(zoneRow);
     container.appendChild(stepCard);
   }
 }
