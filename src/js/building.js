@@ -849,10 +849,17 @@ class Building extends EffectableEntity {
 
     // Calculate minRatio based on resource consumption
     const consumption = this.getConsumption();
+    const consumptionMultiplier = this.getEffectiveConsumptionMultiplier();
     for (const category in consumption) {
       const ignoreCategory = ignore[category] || {};
       for (const resource in consumption[category]) {
         if (ignoreCategory[resource]) {
+          continue;
+        }
+        const { amount } = this.getConsumptionResource(category, resource);
+        const resourceMultiplier = this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const effectiveAmount = amount * consumptionMultiplier * resourceMultiplier;
+        if (effectiveAmount <= 0) {
           continue;
         }
         const ratio = getResourceAvailabilityRatio(resources[category][resource]);
