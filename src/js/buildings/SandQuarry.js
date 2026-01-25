@@ -12,6 +12,14 @@ class SandQuarry extends Building {
     return this.hasSandAvailable() && super.isVisible();
   }
 
+  getBuildLimit() {
+    if (!this.hasSandAvailable()) {
+      return 0;
+    }
+
+    return super.getBuildLimit();
+  }
+
   maxBuildable(reservePercent = 0, additionalReserves = null) {
     if (!this.hasSandAvailable()) {
       return 0;
