@@ -208,10 +208,9 @@ class DustFactory extends Building {
     const albedoInput = document.createElement('input');
     albedoInput.type = 'number';
     albedoInput.step = 0.01;
-    albedoInput.min = 0;
-    albedoInput.max = 1;
+    albedoInput.min = DUST_COLOR_ALBEDO_RANGE.min;
+    albedoInput.max = DUST_COLOR_ALBEDO_RANGE.max;
     albedoInput.classList.add('dust-albedo-input');
-    albedoInput.readOnly = true;
     albedoControl.appendChild(albedoInput);
 
     const colorControl = document.createElement('div');
@@ -229,10 +228,23 @@ class DustFactory extends Building {
     colorInput.classList.add('dust-color-input');
     colorControl.appendChild(colorInput);
 
+    albedoInput.addEventListener('input', () => {
+      if (isCustomDustColor(settings.dustColor)) {
+        return;
+      }
+      settings.targetAlbedo = clampDustAlbedo(Number(albedoInput.value));
+      settings.hasCustomTarget = true;
+    });
+
     const update = () => {
-      settings.targetAlbedo = settings.dustColorAlbedo;
+      const isCustomColor = isCustomDustColor(settings.dustColor);
+      if (isCustomColor) {
+        settings.targetAlbedo = settings.dustColorAlbedo;
+        settings.hasCustomTarget = false;
+      }
+      albedoInput.readOnly = isCustomColor;
       if (document.activeElement !== albedoInput) {
-        albedoInput.value = settings.dustColorAlbedo;
+        albedoInput.value = isCustomColor ? settings.dustColorAlbedo : settings.targetAlbedo;
       }
       if (document.activeElement !== colorInput) {
         colorInput.value = settings.dustColor;
@@ -245,7 +257,10 @@ class DustFactory extends Building {
       const previousColor = settings.dustColor;
       settings.dustColor = colorInput.value;
       settings.dustColorAlbedo = getDustAlbedoFromColor(settings.dustColor);
-      settings.targetAlbedo = settings.dustColorAlbedo;
+      if (isCustomDustColor(settings.dustColor)) {
+        settings.targetAlbedo = settings.dustColorAlbedo;
+        settings.hasCustomTarget = false;
+      }
       applyDustColorChange(previousColor, settings, previousAlbedo);
       update();
     });
@@ -270,9 +285,15 @@ class DustFactory extends Building {
     const settings = getDustAutomationSettings(this);
     updateDustResourceName(settings);
     dustEls.checkbox.checked = settings.autoTargetAlbedo;
-    settings.targetAlbedo = settings.dustColorAlbedo;
+    if (isCustomDustColor(settings.dustColor)) {
+      settings.targetAlbedo = settings.dustColorAlbedo;
+      settings.hasCustomTarget = false;
+    }
+    dustEls.input.readOnly = isCustomDustColor(settings.dustColor);
     if (document.activeElement !== dustEls.input) {
-      dustEls.input.value = settings.dustColorAlbedo;
+      dustEls.input.value = isCustomDustColor(settings.dustColor)
+        ? settings.dustColorAlbedo
+        : settings.targetAlbedo;
     }
     if (document.activeElement !== dustEls.colorInput) {
       dustEls.colorInput.value = settings.dustColor;

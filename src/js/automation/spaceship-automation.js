@@ -121,6 +121,10 @@ class SpaceshipAutomation {
     if (!step) return;
     const isLast = preset.steps[preset.steps.length - 1] === step;
     if (value === null || value === undefined || value === '') {
+      if (step.mode === 'cappedMin' || step.mode === 'cappedMax') {
+        step.limit = null;
+        return;
+      }
       step.limit = isLast ? null : 0;
       return;
     }
@@ -363,20 +367,19 @@ class SpaceshipAutomation {
       const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
       let stepLimit = isCappedMin ? remainingTotal : (limitValue === null ? remainingTotal : Math.min(limitValue, remainingTotal));
       if (isCappedMax) {
-        let largestMax = 0;
+        let totalNeeded = 0;
         for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
           const entry = entries[entryIndex];
           const project = targets.find(item => item.name === entry.projectId);
+          const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
           const maxForEntry = this.computeEntryMax(entry, project);
           if (maxForEntry === Infinity) {
-            largestMax = Infinity;
+            totalNeeded = Infinity;
             break;
           }
-          if (maxForEntry > largestMax) {
-            largestMax = maxForEntry;
-          }
+          totalNeeded += Math.max(0, maxForEntry - currentTarget);
         }
-        stepLimit = largestMax === Infinity ? remainingTotal : Math.min(stepLimit, largestMax);
+        stepLimit = totalNeeded === Infinity ? remainingTotal : Math.min(stepLimit, totalNeeded);
       }
       let stepRemaining = stepLimit;
       if (entries.length === 0) continue;
