@@ -1454,7 +1454,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   if (netDiv) {
     const autoLine = netDiv._lineAuto || netDiv.firstChild;
     const baseLine = netDiv._lineBase || netDiv.lastChild;
-    const displayNetRate = Math.abs(netRate) < 1e-6 ? 0 : netRate;
+    const netRateWithAutobuild = netRate - autobuildAvg;
+    const displayNetRate = Math.abs(netRateWithAutobuild) < 1e-6 ? 0 : netRateWithAutobuild;
     const baseText = `${formatNumber(displayNetRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
     const autoText = resource.category === 'colony' ? 'Net Change (including autobuild):' : '';
     if (autoLine && autoLine.textContent !== autoText) autoLine.textContent = autoText;
