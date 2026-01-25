@@ -380,7 +380,7 @@ function refreshHazardSelect() {
       if (id === 'kessler') {
         const info = document.createElement('span');
         info.className = 'info-tooltip-icon';
-        info.title = 'Kessler Skies will not generate on planets with surface gravity below 3 m/s^2.';
+        info.title = 'Due to model limitations, Kessler Skies will not generate on planets with surface gravity below 3 m/s^2.';
         info.innerHTML = '&#9432;';
         row.appendChild(info);
       }
