@@ -164,15 +164,18 @@ function refreshAutoBuildTarget(structure) {
   const autoBuildUsesFill = isAutoBuildFillMode(structure);
   const autoBuildUsesMax = structure.autoBuildBasis === 'max';
   const autoBuildUsesFixed = structure.autoBuildBasis === 'fixed';
+  const autoBuildUsesWorkerShare = structure.autoBuildBasis === 'workerShare';
   const fixedTarget = Math.max(0, Math.floor(structure.autoBuildFixed || 0));
-  const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed
+  const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed || autoBuildUsesWorkerShare
     ? 0
     : getAutoBuildBaseValue(structure, pop, workerCap, collection);
   const targetCount = autoBuildUsesMax
     ? Infinity
     : autoBuildUsesFixed
       ? fixedTarget
-      : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+      : autoBuildUsesWorkerShare
+        ? structure.getWorkerShareTarget(workerCap)
+        : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
 
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesFill
@@ -709,6 +712,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   workerOption.value = 'workers';
   workerOption.textContent = '% of workers';
   autoBuildBasisSelect.appendChild(workerOption);
+  if (structure.requiresWorker > 0) {
+    const shareOption = document.createElement('option');
+    shareOption.value = 'workerShare';
+    shareOption.textContent = '% worker share';
+    autoBuildBasisSelect.appendChild(shareOption);
+  }
   const fixedOption = document.createElement('option');
   fixedOption.value = 'fixed';
   fixedOption.textContent = 'Fixed';
@@ -1029,7 +1038,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const usesFillMode = isAutoBuildFillMode(structure);
     const usesMaxMode = structure.autoBuildBasis === 'max';
     const usesFixedMode = structure.autoBuildBasis === 'fixed';
-    const base = (usesFillMode || usesMaxMode || usesFixedMode)
+    const usesWorkerShareMode = structure.autoBuildBasis === 'workerShare';
+    const base = (usesFillMode || usesMaxMode || usesFixedMode || usesWorkerShareMode)
       ? 0
       : getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
     const targetCount = usesFillMode
@@ -1038,7 +1048,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
         ? structure.count
         : usesFixedMode
           ? Math.max(0, Math.floor(structure.autoBuildFixed || 0))
-          : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+          : usesWorkerShareMode
+            ? structure.getWorkerShareTarget(workerCap)
+            : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
     adjustStructureActivation(structure, change);
@@ -1067,6 +1079,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const usesFillMode = isAutoBuildFillMode(structure);
     const usesMaxMode = structure.autoBuildBasis === 'max';
     const usesFixedMode = structure.autoBuildBasis === 'fixed';
+    const usesWorkerShareMode = structure.autoBuildBasis === 'workerShare';
     
     // Only works for % of worker/pop modes
     if (usesFillMode || usesMaxMode) {
@@ -1082,6 +1095,40 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       return;
     }
     
+    if (usesWorkerShareMode) {
+      const perBuildingNeed = structure.getTotalWorkerNeed() * structure.getEffectiveWorkerMultiplier();
+      if (perBuildingNeed <= 0 || workerCap <= 0) {
+        return;
+      }
+      const activeCount = structure.active;
+      const rawPercent = (activeCount * perBuildingNeed * 100) / workerCap;
+      const targetFromPercent = (percent) => {
+        const shareWorkers = (percent * workerCap) / 100;
+        return Math.floor(shareWorkers / perBuildingNeed);
+      };
+      let bestPercent = Math.ceil(rawPercent * 1000000) / 1000000;
+      for (let decimals = 5; decimals >= 0; decimals--) {
+        const factor = Math.pow(10, decimals);
+        const floorCandidate = Math.floor(rawPercent * factor) / factor;
+        const ceilCandidate = Math.ceil(rawPercent * factor) / factor;
+        const floorTarget = targetFromPercent(floorCandidate);
+        const ceilTarget = targetFromPercent(ceilCandidate);
+        if (floorTarget === activeCount) {
+          bestPercent = floorCandidate;
+        } else if (ceilTarget === activeCount) {
+          bestPercent = ceilCandidate;
+        } else {
+          break;
+        }
+      }
+      structure.autoBuildPercent = bestPercent;
+      if (cached.autoBuildInput) {
+        cached.autoBuildInput.value = `${bestPercent}`;
+      }
+      refreshAutoBuildTarget(structure);
+      return;
+    }
+
     const base = getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
     if (base <= 0) {
       return;

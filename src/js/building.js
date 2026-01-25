@@ -161,6 +161,15 @@ class Building extends EffectableEntity {
     return population;
   }
 
+  getWorkerShareTarget(workerCap) {
+    const perBuildingNeed = this.getTotalWorkerNeed() * this.getEffectiveWorkerMultiplier();
+    const maxWorkers = Math.max(0, (this.autoBuildPercent || 0) * workerCap / 100);
+    if (perBuildingNeed <= 0) {
+      return 0;
+    }
+    return Math.floor(maxWorkers / perBuildingNeed);
+  }
+
   // Internal: apply production/displayName for the active recipe (if configured)
   _applyRecipeMapping() {
     if (!this.recipes || !this.currentRecipeKey) return;

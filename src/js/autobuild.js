@@ -637,13 +637,18 @@ function autoBuild(buildings, delta = 0) {
             }
             const usesMaxBasis = building.autoBuildBasis === 'max';
             const usesFixedBasis = building.autoBuildBasis === 'fixed';
+            const usesWorkerShareBasis = building.autoBuildBasis === 'workerShare';
             const fixedTarget = usesFixedBasis ? Math.max(0, Math.floor(building.autoBuildFixed || 0)) : 0;
-            const base = usesMaxBasis || usesFixedBasis ? 0 : resolveAutoBuildBase(building, population, workerCap, buildings);
+            const base = usesMaxBasis || usesFixedBasis || usesWorkerShareBasis
+                ? 0
+                : resolveAutoBuildBase(building, population, workerCap, buildings);
             const targetCount = usesMaxBasis
                 ? Infinity
                 : usesFixedBasis
                     ? fixedTarget
-                    : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
+                    : usesWorkerShareBasis
+                        ? building.getWorkerShareTarget(workerCap)
+                        : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
 
             buildingInfos.push({ building, targetCount });
 
