@@ -19,11 +19,31 @@ const ROGUE_STAR = {
     habitableZone: { inner: 0, outer: 0 }
 };
 
-const SPACE_HAZARD_KEYS = ['hazardousBiomass', 'garbage'];
+const SPACE_HAZARD_KEYS = buildSpaceHazardKeys();
 const SPACE_HAZARD_KEY_SET = new Set(SPACE_HAZARD_KEYS);
 
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
+
+function buildSpaceHazardKeys() {
+    const keys = new Set();
+    const addKeys = (hazards) => {
+        Object.keys(hazards || {}).forEach((key) => {
+            const resolved = String(key);
+            if (resolved && resolved !== 'none') keys.add(resolved);
+        });
+    };
+    addKeys(defaultPlanetParameters?.hazards);
+    Object.values(planetParameters || {}).forEach((entry) => addKeys(entry?.hazards));
+    try {
+        const rwgKeys = RWG_HAZARD_ORDER || [];
+        rwgKeys.forEach((key) => {
+            const resolved = String(key);
+            if (resolved && resolved !== 'none') keys.add(resolved);
+        });
+    } catch (err) { }
+    return Array.from(keys);
+}
 
 function normalizeSectorLabel(value) {
     const text = value == null ? '' : String(value).trim();

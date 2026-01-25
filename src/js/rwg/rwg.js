@@ -1543,3 +1543,7 @@ if (typeof module !== 'undefined' && module.exports) {
     RwgManager
   };
 }
+
+try {
+  window.RWG_HAZARD_ORDER = RWG_HAZARD_ORDER;
+} catch (err) { }
