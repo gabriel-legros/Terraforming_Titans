@@ -1268,7 +1268,6 @@ class WarpGateCommand extends EffectableEntity {
       })),
       teamOperationCounts: this.teamOperationCounts.slice(),
       teamNextOperationNumber: this.teamNextOperationNumber.slice(),
-      logs: this.logs.map(l => l.slice()),
       totalOperations: this.totalOperations,
       totalArtifacts: this.totalArtifacts,
       highestDifficulty: this.highestDifficulty,
@@ -1349,10 +1348,7 @@ class WarpGateCommand extends EffectableEntity {
     const nextOpData = Array.isArray(data.teamNextOperationNumber) ? data.teamNextOperationNumber.slice(0, MAX_TEAMS) : [];
     this.teamNextOperationNumber = Array.from({ length: MAX_TEAMS }, (_, i) => nextOpData[i] || 1);
 
-    const logData = Array.isArray(data.logs) ? data.logs.slice(0, MAX_TEAMS) : [];
-    this.logs = Array.from({ length: MAX_TEAMS }, (_, i) =>
-      Array.isArray(logData[i]) ? logData[i].slice(-100) : []
-    );
+    this.logs = Array.from({ length: MAX_TEAMS }, () => []);
 
     if (Array.isArray(data.teamNames)) {
       const names = data.teamNames.slice(0, MAX_TEAMS);

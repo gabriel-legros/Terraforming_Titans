@@ -153,6 +153,7 @@ second time they speak in a chapter to help clarify who is talking.
 
 ## Warp Gate Command
 Warp Gate Command provides a dedicated subtab for managing teams that embark on timed operations through the warp gate. Players recruit custom-named members with classes and skills, track their health, and choose operation difficulty. Operations grant experience and Alien artifacts, while R&D and Facilities menus offer equipment and training upgrades. Statistics and logs persist across planets so progress carries over between worlds.
+- WGC operation logs are no longer saved into the savefile, so logs reset when loading to keep saves lean.
 
 ## Space Mirror Facility
 Space mirrors are overseen through sliders that distribute units across surface zones. Completing the Space Mirror Focusing research reveals an additional control that concentrates mirrors to melt surface ice into liquid water in the warmest zone with ice. The facility now handles zonal flux and melting calculations internally and the display shows both average and day temperatures for each zone. Column headers track the active Celsius or Kelvin setting so readouts stay consistent.
