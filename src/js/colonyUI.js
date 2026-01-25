@@ -354,6 +354,49 @@ function getNeedColor(value, isDarkMode) {
     }
   }
 
+let colonyTabAlertNeeded = false;
+const colonyAlertElements = { tab: null, content: null };
+
+function cacheColonyAlertElements() {
+  colonyAlertElements.tab = colonyAlertElements.tab || document.getElementById('colonies-alert');
+  colonyAlertElements.content = colonyAlertElements.content || document.getElementById('colonies');
+}
+
+function updateColonyAlert() {
+  cacheColonyAlertElements();
+  const display = (!gameSettings.silenceUnlockAlert && colonyTabAlertNeeded) ? 'inline' : 'none';
+  colonyAlertElements.tab && (colonyAlertElements.tab.style.display = display);
+}
+
+function markColoniesViewed() {
+  colonyTabAlertNeeded = false;
+  for (const name in colonies) {
+    const colony = colonies[name];
+    if (colony.unlocked) {
+      colony.alertedWhenUnlocked = true;
+    }
+  }
+  updateColonyAlert();
+}
+
+function registerColonyUnlockAlert() {
+  colonyTabAlertNeeded = true;
+  updateColonyAlert();
+  const isActive = colonyAlertElements.content && colonyAlertElements.content.classList.contains('active');
+  isActive && markColoniesViewed();
+}
+
+function initializeColonyAlerts() {
+  colonyTabAlertNeeded = false;
+  for (const name in colonies) {
+    const colony = colonies[name];
+    if (colony.unlocked && !colony.alertedWhenUnlocked) {
+      colonyTabAlertNeeded = true;
+    }
+  }
+  updateColonyAlert();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const unhideButton = document.getElementById('unhide-obsolete-button');
   if (unhideButton) {

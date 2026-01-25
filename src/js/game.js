@@ -84,6 +84,7 @@ function initializeDefaultGlobals(){
 
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
+  initializeColonyAlerts();
   // Initialize colony slider settings with clean state
   colonySliderSettings = new ColonySlidersManager();
   initializeColonySlidersUI();
@@ -436,6 +437,7 @@ function initializeGameState(options = {}) {
     initializeBuildingAlerts();
   }
   createColonyButtons(colonies);
+  initializeColonyAlerts();
     initializeProjectsUI();
     renderProjects();
     if (typeof initializeProjectAlerts === 'function') {
@@ -576,6 +578,7 @@ function updateRender(force = false, options = {}) {
   updateWarnings();                  // Global warnings
   // Always keep alert badges in sync regardless of active tab
   if (typeof updateBuildingAlert === 'function') updateBuildingAlert();
+  updateColonyAlert();
   if (typeof updateProjectAlert === 'function') updateProjectAlert();
   if (typeof updateResearchAlert === 'function') updateResearchAlert();
   if (typeof updateHopeAlert === 'function') updateHopeAlert();

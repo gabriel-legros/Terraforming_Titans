@@ -459,6 +459,7 @@ function loadGame(slotOrCustomString, recreate = true) {
         }
       applyStructureDisplayPreferences(colonies);
       createColonyButtons(colonies);
+      initializeColonyAlerts();
       recalculateLandUsage();
 
       if (gameState.selectedBuildCounts) {

@@ -259,7 +259,7 @@
   <div class="tabs">
     <div class="tab hidden" id="buildings-tab" data-tab="buildings">Buildings<span id="buildings-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects<span id="projects-alert" class="unlock-alert">!</span></div>
-    <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony</div>
+    <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony<span id="colonies-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="research-tab" data-tab="research">Research<span id="research-alert" class="unlock-alert">!</span></div>
     <div class="tab" id="terraforming-tab" data-tab="terraforming">Terraforming<span id="terraforming-alert" class="milestone-alert">!</span></div>
     <!-- *** NEW SPACE TAB BUTTON *** -->
@@ -843,6 +843,9 @@
                   activateTab(this.dataset.tab);
                   if (this.dataset.tab === 'buildings' && typeof markBuildingsViewed === 'function') {
                       markBuildingsViewed();
+                  }
+                  if (this.dataset.tab === 'colonies') {
+                      markColoniesViewed();
                   }
                   if (this.dataset.tab === 'special-projects' && typeof markProjectsViewed === 'function') {
                       markProjectsViewed();

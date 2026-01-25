@@ -485,14 +485,18 @@ class Colony extends Building {
 
   enable(tierName){
     if (this.name === 'aerostat_colony'){
+      const firstUnlock = !this.unlocked;
       this.unlocked = true;
+      firstUnlock && registerColonyUnlockAlert();
       return;
     }
 
     const tiers = ['t1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
     // Unlock the new tier
+    const firstUnlock = !colonies[tierName].unlocked;
     colonies[tierName].unlocked = true;
+    firstUnlock && registerColonyUnlockAlert();
 
     if (tierName === 'aerostat_colony') return;
 
