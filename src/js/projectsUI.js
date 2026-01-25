@@ -911,8 +911,11 @@ function updateCostDisplay(project) {
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
         item.textContent = `${prefix}${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
-        const highlight = availableAmount < requiredAmount &&
-          !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
+        const continuous = project.isContinuous();
+        const highlight = continuous
+          ? project.shortfallLastTick && !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource))
+          : availableAmount < requiredAmount &&
+            !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
         item.style.color = highlight ? 'red' : '';
         item.style.display = '';
       } else {
@@ -1251,6 +1254,7 @@ function updateProjectUI(projectName) {
     // If the project can still be repeated or started, show the relevant UI elements
     if (elements.costElement) {
       elements.costElement.style.display = 'block';
+      elements.costElement.style.color = '';
     }
     if (elements.progressButton) {
       if (shouldHideStartBar) {
