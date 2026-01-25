@@ -244,6 +244,7 @@ The planet visualiser has been modularised into files covering core setup, light
 
 ## Updates
 - Added a setting to uncheck colony autobuild when auto-upgrade is enabled.
+- Galactic Market ignores project productivity when applying cost and gains so trades always run at base rate.
 - O'Neill Cylinders now fires a one-time Space tab and Story subtab alert via a TabManager effect.
 - Graphite is now a surface resource (hidden when small), and Bosch Reaction produces it alongside water.
 - Graphene Mastery advanced research unlocks the Graphene Factory research and building to convert graphite into metal substitutes.

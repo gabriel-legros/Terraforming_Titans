@@ -767,6 +767,7 @@ class GalacticMarketProject extends Project {
 
     const effectiveDeltaTime = manualRunActive ? Math.min(deltaTime, this.manualRunRemainingTime) : deltaTime;
     const seconds = effectiveDeltaTime / 1000;
+    const effectiveProductivity = 1;
     const tradeScale = this.getKesslerTradeScale();
     const buyTransactions = [];
     let buyCostPerSecond = 0;
@@ -788,7 +789,7 @@ class GalacticMarketProject extends Project {
       sellTransactions.push({ category, resource, quantity: scaledQuantity });
     });
 
-    let totalBuyCost = buyCostPerSecond * seconds * productivity;
+    let totalBuyCost = buyCostPerSecond * seconds * effectiveProductivity;
     const availableFunding = resources.colony.funding.value;
 
     if (totalBuyCost > availableFunding && totalBuyCost > 0) {
@@ -812,7 +813,7 @@ class GalacticMarketProject extends Project {
     sellTransactions.forEach((transaction) => {
       const resourceObject = resources[transaction.category]?.[transaction.resource];
       const availableAmount = resourceObject ? resourceObject.value : 0;
-      const requiredAmount = transaction.quantity * seconds * productivity;
+      const requiredAmount = transaction.quantity * seconds * effectiveProductivity;
       if (requiredAmount > availableAmount) {
         this.shortfallLastTick = this.shortfallLastTick || requiredAmount > 0;
         if (availableAmount <= 0) {
@@ -830,7 +831,7 @@ class GalacticMarketProject extends Project {
       totalSellRevenuePerSecond += transaction.perSecondRevenue;
     });
 
-    const totalSellRevenue = totalSellRevenuePerSecond * seconds * productivity;
+    const totalSellRevenue = totalSellRevenuePerSecond * seconds * effectiveProductivity;
 
     const netFundingChange = totalSellRevenue - totalBuyCost;
 
@@ -846,7 +847,7 @@ class GalacticMarketProject extends Project {
     }
 
     buyTransactions.forEach((transaction) => {
-      const amount = transaction.quantity * seconds * productivity;
+      const amount = transaction.quantity * seconds * effectiveProductivity;
       if (amount <= 0) return;
       if (accumulatedChanges) {
         if (!accumulatedChanges[transaction.category]) accumulatedChanges[transaction.category] = {};
@@ -861,7 +862,7 @@ class GalacticMarketProject extends Project {
     });
 
     sellTransactions.forEach((transaction) => {
-      const amount = transaction.quantity * seconds * productivity;
+      const amount = transaction.quantity * seconds * effectiveProductivity;
       if (amount <= 0) return;
       const resourceObject = resources[transaction.category]?.[transaction.resource];
       if (accumulatedChanges) {
