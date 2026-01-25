@@ -1,44 +1,50 @@
+
 /*
-  atmospheric-density.js
+  atmospheric-density.js  (v2)
 
   Purpose
   -------
-  Fast-ish, game-friendly estimate of average atmospheric density (kg/m^3)
-  versus altitude, using *only* the information your game already tracks:
+  Game-friendly estimate of average atmospheric density (kg/m^3) versus
+  altitude, based on:
   - atmospheric mass by species (resources.atmospheric.*.value)
   - surface temperature (terraforming.temperature.value)
   - surface gravity + radius (terraforming.celestialParameters)
   - solar flux / luminosity (terraforming.luminosity.*)
 
-  This is NOT a scientific atmosphere model (no full radiative-convective
-  profile, no chemistry, no winds). It is a hydrostatic + ideal-gas
-  approximation with a small number of isothermal layers and heuristic
-  thermosphere/exosphere temperatures.
+  This is NOT a full scientific atmosphere model. It is a hydrostatic +
+  ideal-gas approximation with a few isothermal layers, plus heuristics
+  for thermosphere/exosphere temperature.
 
-  Design goals
-  ------------
-  - “Decent enough” density falloff for Earth / Mars / Venus / Titan.
-  - Stable behavior under terraforming (pressure/composition/temperature changes).
-  - O(1) density queries after a one-time per-tick model build.
-  - Optional bin-level memoization for your debris altitude bins.
+  v2 fixes two common “puffy low‑g” failure modes in v1:
+  1) Layer boundary clamps were Earth-centric (e.g. z2 <= 250 km). On low-g
+     worlds the *scale height is larger*, so those clamps forced the hot
+     thermosphere to begin at too-high pressure, producing unrealistically
+     large densities at 500–2000 km.
+     -> v2 places boundaries mainly in *multiples of the surface scale height*,
+        only clamped against the estimated exobase.
+  2) A purely hydrostatic isothermal exosphere with inverse-square gravity
+     has a non-zero asymptote as r -> infinity (Boltzmann in a finite potential).
+     -> v2 uses a constant-g "escape tail" above the exobase that always decays
+        to ~0, with an optional Jeans-parameter-based tightening on very low-g
+        / light-gas cases.
 
-  API
-  ---
-  - estimateAtmosphericDensityKgPerM3(altitudeMeters, terraforming?) -> number
-  - estimateAtmosphericDensitiesKgPerM3(altitudeMetersArray, terraforming?) -> number[]
+  API (unchanged)
+  ---------------
+  - estimateAtmosphericDensityKgPerM3(altitudeMeters, terraforming?, options?) -> number
+  - estimateAtmosphericDensitiesKgPerM3(altitudeMetersArray, terraforming?, options?) -> number[]
   - getAtmosphericDensityModel(terraforming?, options?) -> model
       model.getDensity(altitudeMeters) -> number
       model.getDensities(altitudeMetersArray) -> number[]
-      model.getDebug() -> object (useful for tuning)
+      model.getDebug() -> object
 
-  Notes
-  -----
-  1) This model uses *surface pressure inferred from total atmospheric mass*.
-     If your pressure model differs, you can swap getSurfacePressurePa().
-  2) Exobase height here is computed from a mean-free-path style estimate.
-     It is used only to pick “reasonable” layer boundaries.
-  3) Density is computed from a hydrostatic pressure profile with inverse-square
-     gravity (analytic, fast), and ideal gas law.
+  Options (new, all optional)
+  ---------------------------
+  - altitudeCacheStepMeters (default 1000)
+  - treatHeavyTraceAsLowerAtmosphere (default true)  // as before
+  - collisionSigmaM2 (default 2e-19)
+  - enableEscapeTail (default true)                  // use constant-g exosphere that decays to zero
+  - jeansLambdaTarget (default 30)                   // lower => puffier; higher => tighter upper tail
+  - minEscapeScaleFactor (default 0.02)              // minimum multiplier on exosphere scale height
 */
 
 (function () {
@@ -61,7 +67,6 @@
   }
 
   function safeLog10(x) {
-    // log10(<=0) is invalid; clamp to small positive.
     const v = x > 1e-30 ? x : 1e-30;
     return Math.log(v) / Math.LN10;
   }
@@ -95,17 +100,14 @@
     calciteAerosol: 100.0869
   };
 
-  // Treat these as heavy / aerosol / trace species that should not control upper-atmosphere scale height.
+  // Heavy / aerosol / trace species that should not control upper-atmosphere scale height.
   const HEAVY_TRACE_KEYS = ['greenhouseGas', 'sulfuricAcid', 'calciteAerosol'];
-
 
   function getAtmosphericMassBreakdownTons(atmosphericResources) {
     const byKey = {};
     let totalTons = 0;
 
-    if (!atmosphericResources) {
-      return { totalTons: 0, byKey };
-    }
+    if (!atmosphericResources) return { totalTons: 0, byKey };
 
     for (const key of Object.keys(atmosphericResources)) {
       const tons = extractTons(atmosphericResources[key]);
@@ -122,7 +124,7 @@
     const { totalTons, byKey } = getAtmosphericMassBreakdownTons(atmosphericResources);
     if (totalTons <= 0) return 0;
 
-    // Convert: 1 ton = 1e6 grams.
+    // 1 ton = 1e6 grams
     let totalMassG = 0;
     let totalMoles = 0;
 
@@ -199,7 +201,6 @@
   }
 
   function getResources(terraforming) {
-    // Prefer terraforming.resources, fall back to global resources.
     return terraforming?.resources || getGlobal('resources') || null;
   }
 
@@ -248,15 +249,12 @@
   }
 
   function getSolarFluxWm2(terraforming, celestialParameters) {
-    // Prefer unpenalized modified flux (mirrors/lanterns included, clouds/haze penalty excluded).
     const unpenalized = terraforming?.luminosity?.modifiedSolarFluxUnpenalized;
     if (isFiniteNumber(unpenalized) && unpenalized > 0) return unpenalized;
 
-    // Next: base orbital flux.
     const base = terraforming?.luminosity?.solarFlux;
     if (isFiniteNumber(base) && base > 0) return base;
 
-    // Fallback: scale from Earth constant using AU + starLuminosity (in solar units).
     const dAu = celestialParameters?.distanceFromSun;
     const L = celestialParameters?.starLuminosity;
     const d = isFiniteNumber(dAu) && dAu > 0 ? dAu : 1;
@@ -271,24 +269,22 @@
     for (const key of Object.keys(atmospheric)) {
       totalTons += extractTons(atmospheric[key]);
     }
+    // 1 (metric) ton = 1000 kg
     return Math.max(0, totalTons) * 1000;
   }
 
   function getSurfacePressurePa(terraforming, resources, celestialParameters) {
-    // Best: use terraforming's own pressure calc if available.
     if (terraforming && typeof terraforming.calculateTotalPressure === 'function') {
       const kPa = terraforming.calculateTotalPressure();
       if (isFiniteNumber(kPa) && kPa >= 0) return kPa * 1000;
     }
 
-    // Next: use atmospheric-utils if it was loaded and exposed globally.
     const getTotalSurfacePressureKPa = getGlobal('getTotalSurfacePressureKPa');
     if (typeof getTotalSurfacePressureKPa === 'function') {
       const kPa = getTotalSurfacePressureKPa(resources?.atmospheric, celestialParameters?.gravity, celestialParameters?.radius);
       if (isFiniteNumber(kPa) && kPa >= 0) return kPa * 1000;
     }
 
-    // Fallback: P = (totalMass * g) / surfaceArea.
     const totalMassKg = getTotalAtmosphericMassKg(resources);
     const g = getSurfaceGravity(celestialParameters);
     const area = getSurfaceAreaM2(celestialParameters);
@@ -296,11 +292,8 @@
     return (totalMassKg * g) / area;
   }
 
-  // ---------- Temperature heuristics (key to “Earth/Mars/Venus/Titan-ish”) ----------
+  // ---------- Temperature heuristics ----------
   function estimateColdPointTemperatureK(surfaceTemperatureK, co2MassFraction, surfacePressurePa) {
-    // Generic “mesopause-ish” cold point.
-    // - Scales weakly with surface temperature.
-    // - CO2-rich *and* high-pressure atmospheres get cooler upper layers (strong IR cooling).
     const pBar = surfacePressurePa / 1e5;
 
     let T = 160 + 0.18 * (surfaceTemperatureK - 200);
@@ -312,11 +305,6 @@
   }
 
   function estimateExosphereTemperatureK(solarFluxWm2, surfaceTemperatureK, co2MassFraction, ch4MassFraction, surfacePressurePa, meanMolecularWeightGmol) {
-    // Heuristic thermosphere/exosphere temperature.
-    // Key behaviors we want:
-    // - Earth: ~900–1200 K (solar-cycle dependent; we don't model cycles here)
-    // - Mars/Venus: ~200–350 K (CO2 radiative cooling dominates)
-    // - Titan: ~120–200 K (low solar flux, some CH4 haze cooling)
     const pBar = surfacePressurePa / 1e5;
     const s = Math.max(0, solarFluxWm2);
     const sRatio = s / SOLAR_FLUX_EARTH;
@@ -327,17 +315,11 @@
 
     let T;
     if (isCO2Dominant) {
-      // CO2-dominated: keep exosphere relatively cool even at high insolation.
       T = 180 + 160 * Math.sqrt(Math.max(sRatio, 0));
-      // Very thick CO2 atmospheres cool more efficiently aloft.
       T *= 1 / (1 + 0.2 * safeLog10(1 + pBar));
-      // Very hot surfaces do not necessarily imply a hot exosphere; keep coupling weak.
       T += 0.01 * (surfaceTemperatureK - 250);
     } else {
-      // N2/O2-ish: strong EUV heating -> hot thermosphere.
-      // This saturating form behaves well from Titan-like flux to Earth-like flux.
       T = 150 + 1300 * (s / (s + 700));
-      // Methane/haze: mild cooling (important for Titan-ish atmospheres).
       T *= 1 / (1 + 2.0 * ch4);
       T += 0.02 * (surfaceTemperatureK - 250);
     }
@@ -345,7 +327,7 @@
     return clamp(T, 60, 2000);
   }
 
-  // ---------- Exobase height estimate (used to place layer boundaries) ----------
+  // ---------- Exobase height estimate ----------
   function estimateExobaseHeightMeters(options) {
     const {
       totalMassKg,
@@ -371,27 +353,36 @@
     const logTerm = columnNumberPerM2 * sigma;
     if (!(logTerm > 1)) return 0;
 
-    // Clamp the log to keep things sane under extreme terraforming.
     const logValue = Math.log(clamp(logTerm, 1 + 1e-12, 1e40));
+    // Still clamp hard to avoid pathological terraforming extremes.
     return clamp(scaleHeight * logValue, 0, 5_000_000);
   }
 
-  // ---------- Hydrostatic integration with inverse-square gravity (analytic) ----------
-  function pressureRatioBetweenRadii(rStart, rEnd, molarMassKgPerMol, GM, temperatureK) {
-    // Hydrostatic equilibrium for an isothermal layer:
-    //   dP/P = -(M g(r) / (R T)) dr
-    // with g(r)=GM/r^2 -> integral gives:
-    //   P_end = P_start * exp(-(M*GM/(R*T)) * (1/rStart - 1/rEnd))
+  // ---------- Hydrostatic pressure ratios ----------
+  function pressureRatioInverseSquare(rStart, rEnd, molarMassKgPerMol, GM, temperatureK) {
+    // P_end = P_start * exp(-(M*GM/(R*T)) * (1/rStart - 1/rEnd))
     if (!(rStart > 0) || !(rEnd > 0) || !(temperatureK > 0) || !(molarMassKgPerMol > 0) || !(GM > 0)) {
       return 1;
     }
     const K = (molarMassKgPerMol * GM) / (R_UNIVERSAL * temperatureK);
     const exponent = -K * (1 / rStart - 1 / rEnd);
-    // Avoid NaNs from overflow; exp(-large) underflows cleanly to 0.
-    if (!isFiniteNumber(exponent)) {
-      return exponent < 0 ? 0 : 1;
-    }
+    if (!isFiniteNumber(exponent)) return exponent < 0 ? 0 : 1;
     return Math.exp(exponent);
+  }
+
+  function pressureRatioConstantG(deltaZ, molarMassKgPerMol, gConst, temperatureK) {
+    // P_end = P_start * exp(-(M*g*Δz)/(R*T))
+    if (!(deltaZ >= 0) || !(temperatureK > 0) || !(molarMassKgPerMol > 0) || !(gConst > 0)) return 1;
+    const exponent = -(molarMassKgPerMol * gConst * deltaZ) / (R_UNIVERSAL * temperatureK);
+    if (!isFiniteNumber(exponent)) return exponent < 0 ? 0 : 1;
+    return Math.exp(exponent);
+  }
+
+  function jeansLambda(GM, rMeters, molarMassKgPerMol, temperatureK) {
+    // λ = GM*m/(k*T*r), m = M/Na
+    if (!(GM > 0) || !(rMeters > 0) || !(molarMassKgPerMol > 0) || !(temperatureK > 0)) return 0;
+    const mParticle = (molarMassKgPerMol / AVOGADRO);
+    return (GM * mParticle) / (BOLTZMANN * temperatureK * rMeters);
   }
 
   // ---------- Model builder ----------
@@ -425,6 +416,10 @@
         collisionSigmaM2
       } = this._inputs;
 
+      const enableEscapeTail = (this._options.enableEscapeTail !== false);
+      const jeansLambdaTarget = isFiniteNumber(this._options.jeansLambdaTarget) ? this._options.jeansLambdaTarget : 30;
+      const minEscapeScaleFactor = isFiniteNumber(this._options.minEscapeScaleFactor) ? this._options.minEscapeScaleFactor : 0.02;
+
       this._debug = {
         planetRadiusM,
         gravity,
@@ -437,10 +432,15 @@
         massFractionsBulk: { ...(massFractionsBulk || {}) },
         totalAtmosphericMassKg,
         surfaceAreaM2,
-        collisionSigmaM2
+        collisionSigmaM2,
+        options: {
+          enableEscapeTail,
+          jeansLambdaTarget,
+          minEscapeScaleFactor,
+          altitudeCacheStepMeters: this._altitudeCacheStepMeters
+        }
       };
 
-      // Handle vacuum quickly.
       if (!(surfacePressurePa > 0) || !(meanMolecularWeightGmol > 0) || !(surfaceTemperatureK > 0)) {
         this._layers = [];
         this._debug.vacuum = true;
@@ -455,8 +455,6 @@
         ? massFractionsBulk
         : massFractions;
 
-
-
       const Tcold = estimateColdPointTemperatureK(surfaceTemperatureK, frac_Hydro.co2, surfacePressurePa);
       const Texo = estimateExosphereTemperatureK(
         solarFluxWm2,
@@ -467,11 +465,8 @@
         meanMW_Hydro_Gmol
       );
 
-      // A “lower atmosphere effective T” (average-ish over the first tens of km).
-      // Weighted blend avoids the Venus failure mode where a hard cap makes densities too low at 50 km.
       const Tlower = clamp(0.6 * surfaceTemperatureK + 0.4 * Tcold, 60, 800);
 
-      // Column mass from total mass / area (consistent with P ≈ mcol*g).
       const columnMassKgPerM2 = (totalAtmosphericMassKg > 0 && surfaceAreaM2 > 0)
         ? totalAtmosphericMassKg / surfaceAreaM2
         : (surfacePressurePa / gravity);
@@ -479,92 +474,136 @@
       const blend = columnMassKgPerM2 / (columnMassKgPerM2 + 2000);
       const Texobase = Tlower + (Texo - Tlower) * blend;
 
+      // Exobase height estimate: use hydrostatic/bulk MW (not heavy trace).
       const zExo = estimateExobaseHeightMeters({
         totalMassKg: totalAtmosphericMassKg,
         surfaceAreaM2,
         gravity,
-        meanMolecularWeightGmol,
+        meanMolecularWeightGmol: meanMW_Hydro_Gmol,
         exobaseTemperatureK: Texobase,
         collisionSigmaM2
       });
 
-      // Base scale height at the surface (for boundary heuristics).
+      // Surface scale height (m).
       const M0 = meanMW_Hydro_Gmol / 1000;
       const Hsurf = (R_UNIVERSAL * surfaceTemperatureK) / (M0 * gravity);
 
-      // Layer boundaries (meters). We pick Earth/Mars/Venus/Titan-ish values by
-      // combining scale height heuristics with the exobase estimate.
-      const z1Base = clamp(5 * Hsurf, 25_000, 120_000);
-      const z2Base = clamp(12 * Hsurf, z1Base + 10_000, 250_000);
-
+      // v2: Layer boundaries in multiples of Hsurf, only bounded by exobase.
       const zExoSafe = zExo > 0 ? zExo : Math.max(200_000, 30 * Hsurf);
-      const z1 = clamp(Math.min(z1Base, 0.35 * zExoSafe), 0, 0.6 * zExoSafe);
-      const z2 = clamp(Math.min(z2Base, 0.70 * zExoSafe), z1 + 5_000, 0.85 * zExoSafe);
-      let z3 = Math.max(z2 + 10_000, 0.60 * zExoSafe);
+
+      const z1Base = 5 * Hsurf;
+      const z2Base = 12 * Hsurf;
+      const z3Base = 25 * Hsurf;
+
+      const z1 = clamp(z1Base, 10_000, 0.35 * zExoSafe);
+      const z2 = clamp(z2Base, z1 + 10_000, 0.70 * zExoSafe);
+
+      let z3 = clamp(z3Base, z2 + 10_000, 0.90 * zExoSafe);
       z3 = clamp(z3, z2 + 1_000, zExoSafe - 5_000);
+
       const z4 = zExoSafe;
 
-      // Upper-atmosphere molecular weight reduction (diffusive separation / dissociation heuristic).
-      // This is important for getting “reasonable” densities around 400–1200 km on Earth-like planets.
+      // Upper-atmosphere MW reduction heuristic.
       let MUpperG;
       if (meanMW_Hydro_Gmol > 40 || frac_Hydro.co2 > 0.5) {
-        // CO2-dominated: upper atmosphere tends toward CO/O mixtures.
         MUpperG = clamp(meanMolecularWeightGmol * 0.60, 16, 32);
       } else {
-        // N2/O2-ish: upper atmosphere becomes O/He/H-enriched.
         MUpperG = clamp(meanMolecularWeightGmol * 0.42, 4, 28);
       }
-      // If the atmosphere is actually H2-rich, allow it to get even lighter.
       if (massFractions.h2 > 0.05) {
         MUpperG = Math.max(2.5, MUpperG * 0.7);
       }
       const MTransG = 0.5 * (meanMolecularWeightGmol + MUpperG);
 
-      // Thermosphere “effective” temperature for the mixed region.
       const Tthermo = Tcold + 0.9 * (Texo - Tcold);
 
-      // Precompute GM (m^3/s^2) from g0 and radius.
+      // GM (m^3/s^2) from g0 and radius.
       const GM = gravity * planetRadiusM * planetRadiusM;
 
+      // Exosphere tail parameters (constant g at exobase, optionally tightened by Jeans λ).
+      const rExo = planetRadiusM + z4;
+      const gExo = GM / (rExo * rExo);
+      const MExoKgPerMol = (MUpperG / 1000);
+      const HExoBase = (R_UNIVERSAL * Texo) / (MExoKgPerMol * gExo);
+
+      const lambdaExo = jeansLambda(GM, rExo, MExoKgPerMol, Texo);
+      // If λ is small (weakly bound), shrink the effective scale height so densities
+      // don't stay huge out to thousands of km on low-g / light-gas worlds.
+      const escapeScaleFactor = enableEscapeTail
+        ? clamp(lambdaExo / Math.max(1e-6, jeansLambdaTarget), minEscapeScaleFactor, 1)
+        : 1;
+
+      const HExoEffective = HExoBase * escapeScaleFactor;
+
       this._layers = [
-        { name: 'lower', zStart: 0,  zEnd: z1, T: Tlower,  molarMassG: meanMW_Hydro_Gmol },
-        { name: 'cold',  zStart: z1, zEnd: z2, T: Tcold,   molarMassG: meanMW_Hydro_Gmol },
-        { name: 'thermo',zStart: z2, zEnd: z3, T: Tthermo, molarMassG: meanMW_Hydro_Gmol },
-        { name: 'upper', zStart: z3, zEnd: z4, T: Texo,    molarMassG: MTransG },
-        { name: 'exo',   zStart: z4, zEnd: Infinity, T: Texo, molarMassG: MUpperG }
+        { name: 'lower', zStart: 0,  zEnd: z1, T: Tlower,  molarMassG: meanMW_Hydro_Gmol, mode: 'inverseSquare' },
+        { name: 'cold',  zStart: z1, zEnd: z2, T: Tcold,   molarMassG: meanMW_Hydro_Gmol, mode: 'inverseSquare' },
+        { name: 'thermo',zStart: z2, zEnd: z3, T: Tthermo, molarMassG: meanMW_Hydro_Gmol, mode: 'inverseSquare' },
+        { name: 'upper', zStart: z3, zEnd: z4, T: Texo,    molarMassG: MTransG,           mode: 'inverseSquare' },
+        {
+          name: 'exo',
+          zStart: z4,
+          zEnd: Infinity,
+          T: Texo,
+          molarMassG: MUpperG,
+          mode: enableEscapeTail ? 'escapeTail' : 'inverseSquare',
+          // escapeTail parameters:
+          gConst: gExo,
+          scaleHeightM: HExoEffective
+        }
       ];
 
-      // Compute pressure at each layer start.
+      // Pressure at each layer start.
       let P = surfacePressurePa;
       this._layers[0].PStart = P;
 
       for (let i = 0; i < this._layers.length; i += 1) {
         const layer = this._layers[i];
-        if (i > 0) {
-          layer.PStart = P;
-        }
-        if (!isFiniteNumber(layer.zEnd)) {
-          continue;
-        }
-        const rStart = planetRadiusM + layer.zStart;
-        const rEnd = planetRadiusM + layer.zEnd;
+        if (i > 0) layer.PStart = P;
+
+        if (!isFiniteNumber(layer.zEnd)) continue;
+
         const Mkg = (layer.molarMassG / 1000);
-        const ratio = pressureRatioBetweenRadii(rStart, rEnd, Mkg, GM, layer.T);
+
+        let ratio = 1;
+        if (layer.mode === 'inverseSquare') {
+          const rStart = planetRadiusM + layer.zStart;
+          const rEnd = planetRadiusM + layer.zEnd;
+          ratio = pressureRatioInverseSquare(rStart, rEnd, Mkg, GM, layer.T);
+        } else if (layer.mode === 'escapeTail') {
+          const dz = Math.max(0, layer.zEnd - layer.zStart);
+          // constant-g exponential using precomputed effective scale height.
+          ratio = Math.exp(-dz / Math.max(1, layer.scaleHeightM));
+        } else {
+          // Fallback to inverseSquare.
+          const rStart = planetRadiusM + layer.zStart;
+          const rEnd = planetRadiusM + layer.zEnd;
+          ratio = pressureRatioInverseSquare(rStart, rEnd, Mkg, GM, layer.T);
+        }
+
         P = P * ratio;
       }
 
-      // Surface density (for debugging).
       this._debug.temperaturesK = { lower: Tlower, cold: Tcold, thermo: Tthermo, exo: Texo, exobase: Texobase };
-      this._debug.molarMassG = { surface: meanMolecularWeightGmol, transition: MTransG, upper: MUpperG };
+      this._debug.molarMassG = { surface: meanMolecularWeightGmol, hydro: meanMW_Hydro_Gmol, transition: MTransG, upper: MUpperG };
       this._debug.heightsM = { z1, z2, z3, z4, exobase: zExoSafe };
       this._debug.surfaceScaleHeightM = Hsurf;
       this._debug.columnMassKgPerM2 = columnMassKgPerM2;
+      this._debug.escape = {
+        enableEscapeTail,
+        rExo,
+        gExo,
+        jeansLambdaAtExobase: lambdaExo,
+        jeansLambdaTarget,
+        escapeScaleFactor,
+        exoScaleHeightM: HExoBase,
+        exoScaleHeightEffectiveM: HExoEffective
+      };
     }
 
     _findLayerIndex(zMeters) {
       const layers = this._layers;
       if (!layers || layers.length === 0) return -1;
-      // Layers are in ascending order.
       for (let i = 0; i < layers.length; i += 1) {
         const L = layers[i];
         if (zMeters >= L.zStart && (zMeters < L.zEnd || !isFiniteNumber(L.zEnd))) {
@@ -583,7 +622,7 @@
         gravity
       } = this._inputs;
 
-      // For z <= 0, return ideal-gas density at the surface.
+      // Surface / below surface: ideal gas at surface.
       if (!(zMeters > 0)) {
         const P0 = this._inputs.surfacePressurePa;
         const M0 = (this._inputs.meanMolecularWeightGmol / 1000);
@@ -596,16 +635,28 @@
       if (idx < 0) return 0;
       const layer = layers[idx];
 
-      const rStart = planetRadiusM + layer.zStart;
-      const rZ = planetRadiusM + zMeters;
+      const GM = gravity * planetRadiusM * planetRadiusM;
       const Mkg = layer.molarMassG / 1000;
 
-      // GM from surface gravity.
-      const GM = gravity * planetRadiusM * planetRadiusM;
-      const ratio = pressureRatioBetweenRadii(rStart, rZ, Mkg, GM, layer.T);
-      const Pz = layer.PStart * ratio;
-      if (!(Pz > 0)) return 0;
+      let Pz;
+      if (layer.mode === 'inverseSquare') {
+        const rStart = planetRadiusM + layer.zStart;
+        const rZ = planetRadiusM + zMeters;
+        const ratio = pressureRatioInverseSquare(rStart, rZ, Mkg, GM, layer.T);
+        Pz = layer.PStart * ratio;
+      } else if (layer.mode === 'escapeTail') {
+        const dz = Math.max(0, zMeters - layer.zStart);
+        const ratio = Math.exp(-dz / Math.max(1, layer.scaleHeightM));
+        Pz = layer.PStart * ratio;
+      } else {
+        // Fallback
+        const rStart = planetRadiusM + layer.zStart;
+        const rZ = planetRadiusM + zMeters;
+        const ratio = pressureRatioInverseSquare(rStart, rZ, Mkg, GM, layer.T);
+        Pz = layer.PStart * ratio;
+      }
 
+      if (!(Pz > 0)) return 0;
       return (Pz * Mkg) / (R_UNIVERSAL * layer.T);
     }
 
@@ -638,25 +689,28 @@
     }
   }
 
-  // ---------- Model caching (per terraforming instance) ----------
+  // ---------- Model caching ----------
   const _MODEL_CACHE = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;
 
-  function buildModelSignature(inputs) {
-    // Round inputs to avoid rebuilds from tiny numerical drift.
-    const pKey = Math.round((inputs.surfacePressurePa || 0) / 50);      // 50 Pa
-    const tKey = Math.round(inputs.surfaceTemperatureK || 0);           // 1 K
-    const mwKey = Math.round((inputs.meanMolecularWeightGmol || 0) * 10) / 10; // 0.1 g/mol
-    const mwHydKey = Math.round((inputs.meanMolecularWeightForHydrostaticsGmol || 0) * 10) / 10; // 0.1 g/mol
-    const sKey = Math.round(inputs.solarFluxWm2 || 0);                  // 1 W/m^2
+  function buildModelSignature(inputs, options = {}) {
+    const pKey = Math.round((inputs.surfacePressurePa || 0) / 50);
+    const tKey = Math.round(inputs.surfaceTemperatureK || 0);
+    const mwKey = Math.round((inputs.meanMolecularWeightGmol || 0) * 10) / 10;
+    const mwHydKey = Math.round((inputs.meanMolecularWeightForHydrostaticsGmol || 0) * 10) / 10;
+    const sKey = Math.round(inputs.solarFluxWm2 || 0);
     const gKey = Math.round((inputs.gravity || 0) * 1000) / 1000;
     const rKey = Math.round(inputs.planetRadiusM || 0);
-    const mKey = Math.round((inputs.totalAtmosphericMassKg || 0) / 1e9); // 1e9 kg
+    const mKey = Math.round((inputs.totalAtmosphericMassKg || 0) / 1e9);
 
-    // Include dominant composition proxies.
     const co2Key = Math.round((inputs.massFractions?.co2 || 0) * 1000) / 1000;
     const ch4Key = Math.round((inputs.massFractions?.ch4 || 0) * 1000) / 1000;
     const sf6Key = Math.round(((inputs.massFractionsBulk?.sf6 ?? inputs.massFractions?.sf6) || 0) * 1000) / 1000;
-    return `${pKey}|${tKey}|${mwKey}|${mwHydKey}|${sKey}|${gKey}|${rKey}|${mKey}|${co2Key}|${ch4Key}|${sf6Key}`;
+
+    const escapeKey = (options.enableEscapeTail !== false) ? 1 : 0;
+    const jlKey = Math.round((options.jeansLambdaTarget ?? 30) * 100) / 100;
+    const mefKey = Math.round((options.minEscapeScaleFactor ?? 0.02) * 1000) / 1000;
+
+    return `${pKey}|${tKey}|${mwKey}|${mwHydKey}|${sKey}|${gKey}|${rKey}|${mKey}|${co2Key}|${ch4Key}|${sf6Key}|${escapeKey}|${jlKey}|${mefKey}`;
   }
 
   function buildDensityInputs(terraforming, options = {}) {
@@ -675,10 +729,6 @@
 
     const meanMolecularWeightGmol = estimateMeanMolecularWeightGmol(resources?.atmospheric);
 
-    // Heavy trace species (e.g., SF6) can unrealistically “compress” the whole atmosphere in a simple
-    // single-mean-molar-mass hydrostatic model. For gameplay (and for real atmospheres above the homopause),
-    // they should not control upper-atmosphere scale height. We therefore compute a “hydrostatic/bulk” mean
-    // that excludes heavy trace species, and use it for the pressure profile by default.
     const meanMolecularWeightBulkGmol = estimateMeanMolecularWeightGmolExcluding(resources?.atmospheric, HEAVY_TRACE_KEYS) || meanMolecularWeightGmol;
 
     const treatHeavyTraceAsLowerAtmosphere = (options.treatHeavyTraceAsLowerAtmosphere !== false);
@@ -686,8 +736,6 @@
       ? meanMolecularWeightBulkGmol
       : meanMolecularWeightGmol;
 
-    // Mass fractions for temperature heuristics should also ignore heavy trace species so they don't
-    // make a planet look artificially “CO2-dominant”.
     const massFractions = getMassFractions(resources?.atmospheric);
     const massFractionsBulk = getMassFractionsExcludingKeys(resources?.atmospheric, HEAVY_TRACE_KEYS);
 
@@ -714,11 +762,10 @@
   function getAtmosphericDensityModel(explicitTerraforming, options = {}) {
     const terraforming = getTerraformingState(explicitTerraforming);
 
-    // If we can't key by terraforming (null), fall back to a single global cache bucket.
     const cacheKey = terraforming || getGlobal('currentPlanetParameters') || getGlobal('resources') || {};
 
     const inputs = buildDensityInputs(terraforming, options);
-    const signature = buildModelSignature(inputs);
+    const signature = buildModelSignature(inputs, options);
 
     if (_MODEL_CACHE) {
       const cached = _MODEL_CACHE.get(cacheKey);
@@ -730,11 +777,10 @@
       return model;
     }
 
-    // WeakMap unavailable: just rebuild.
     return new AtmosphericDensityModel(inputs, options);
   }
 
-  // ---------- Convenience functions (single/batch) ----------
+  // ---------- Convenience functions ----------
   function estimateAtmosphericDensityKgPerM3(altitudeMeters, explicitTerraforming, options = {}) {
     const model = getAtmosphericDensityModel(explicitTerraforming, options);
     return model.getDensity(altitudeMeters);
@@ -747,7 +793,6 @@
 
   // ---------- Exports / globals ----------
   try {
-    // Browser globals
     window.getAtmosphericDensityModel = getAtmosphericDensityModel;
     window.estimateAtmosphericDensityKgPerM3 = estimateAtmosphericDensityKgPerM3;
     window.estimateAtmosphericDensitiesKgPerM3 = estimateAtmosphericDensitiesKgPerM3;
@@ -756,20 +801,19 @@
   }
 
   try {
-    // Node / tests
     if (isNode) {
       module.exports = {
         AtmosphericDensityModel,
         getAtmosphericDensityModel,
         estimateAtmosphericDensityKgPerM3,
         estimateAtmosphericDensitiesKgPerM3,
-        // Expose internals for tuning/tests.
         _internals: {
           estimateMeanMolecularWeightGmol,
           estimateMeanMolecularWeightGmolExcluding,
           estimateColdPointTemperatureK,
           estimateExosphereTemperatureK,
-          estimateExobaseHeightMeters
+          estimateExobaseHeightMeters,
+          jeansLambda
         }
       };
     }

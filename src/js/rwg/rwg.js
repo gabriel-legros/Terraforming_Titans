@@ -1037,6 +1037,11 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   }
   let type = classification.type;
   const bulk = sampleBulk(rng, type, params);
+  const allowedHazards = Array.isArray(forcedHazards) ? forcedHazards.slice() : [];
+  if (bulk.gravity < 3) {
+    const kesslerIndex = allowedHazards.indexOf('kessler');
+    if (kesslerIndex !== -1) allowedHazards.splice(kesslerIndex, 1);
+  }
   const landHa = surfaceAreaHa(bulk.radius_km);
   const { areaTotal } = depositsFromLandHa(landHa, params);
   if (!params.atmosphere.templates[type]) {
@@ -1052,7 +1057,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const rotationPeriod = isRogueWorld ? 24 : rotation;
   const albedo = classification.albedo;
   const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng, params);
-  const hazardOverride = applyHazardPresets(forcedHazards, {
+  const hazardOverride = applyHazardPresets(allowedHazards, {
     landHa,
     params,
     surface,
@@ -1191,8 +1196,8 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     visualization: { baseColor },
     rwgMeta: {
       generatorSeedInt: seed,
-      selectedHazards: Array.isArray(forcedHazards) ? forcedHazards.slice() : [],
-      selectedHazard: Array.isArray(forcedHazards) && forcedHazards.length === 1 ? forcedHazards[0] : null
+      selectedHazards: allowedHazards.slice(),
+      selectedHazard: allowedHazards.length === 1 ? allowedHazards[0] : null
     }
   };
   return normalizeZonalSurfaceOverride(overrides);
@@ -1465,6 +1470,8 @@ class RwgManager extends EffectableEntity {
 
     // Generate the rest using S directly
     const override = buildPlanetOverride({ seed: S ^ 0xBEEF, star, aAU, isMoon, forcedType, forcedHazards }, P);
+    const selectedHazards = override?.rwgMeta?.selectedHazards ?? forcedHazards;
+    forcedHazards = Array.isArray(selectedHazards) ? selectedHazards : [];
 
     // Canonical seed string (positional), always returned
     const canonicalSeed = buildSeedSpec(S, {

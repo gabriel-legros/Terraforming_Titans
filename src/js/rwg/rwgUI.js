@@ -377,6 +377,13 @@ function refreshHazardSelect() {
       text.textContent = hazardDisplayNames[id] || id;
       row.appendChild(input);
       row.appendChild(text);
+      if (id === 'kessler') {
+        const info = document.createElement('span');
+        info.className = 'info-tooltip-icon';
+        info.title = 'Kessler Skies will not generate on planets with surface gravity below 3 m/s^2.';
+        info.innerHTML = '&#9432;';
+        row.appendChild(info);
+      }
       rwgHazardItemsEl.appendChild(row);
       rwgHazardItems[id] = { input, label: text };
     });
@@ -792,8 +799,10 @@ function drawSingle(seed, options) {
     hazards: normalizedHazards
   });
   const appliedHazards = normalizeHazardList(res?.hazards ?? res?.hazard ?? normalizedHazards);
-  hazardSelect.value = appliedHazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
-  setSelectedHazards(appliedHazards);
+  hazardSelect.value = normalizedHazards.length ? HAZARD_MODE_ENABLED : HAZARD_MODE_NONE;
+  if (normalizedHazards.length) {
+    setSelectedHazards(normalizedHazards);
+  }
   updateHazardListVisibility();
   syncEnabledHazards();
   const seedKey = encodeSeedOptions(sStr, { ...resolvedOptions, hazards: appliedHazards });

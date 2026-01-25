@@ -278,6 +278,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Spaceship projects and satellites now show Kessler failure risk warnings with live failure percentages based on their project size.
 - Continuous spaceship operations now add Kessler debris for fractional ship losses.
 - Resource Disposal now isolates Kessler risk to spaceship capacity only, letting mass drivers contribute without failure or debris.
+- Kessler building cost multipliers now cap at 1e10.
+- Atmospheric density calculations now clamp gravity to a minimum of 0.2g.
 - Project productivity now uses available storage plus production only (no consumption offsets), matching building productivity calculations.
 - Project and building productivity now share a resource availability ratio precomputed each tick from overall production/consumption rates.
 - Kessler debris decay now uses the max-since-zero bin mass for decay at or below the drag line while higher orbits keep exponential decay on current mass.
@@ -293,6 +295,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Random World Generator dominions now include lore blurbs with a dedicated Lore window beside the dominion selector.
 - Fritizian dominion unlocks once the galaxy has 5 fully controlled sectors, and the RWG dropdown shows the requirement while locked.
 - RWG dominion requirements now read from terraforming requirement metadata so new dominions can define their own unlock rules.
+- Random World Generator now skips the Kessler hazard on worlds below 3 m/s^2 gravity and notes the restriction in the hazard tooltip.
 - Completing terraforming now awards alien artifacts once per non-Human dominion, scaling across dominions at 500 per completion (Human and Gabbagian are excluded).
 - Original world properties no longer show the dominion selector or lore display.
 - Added an ammonia-based terraforming requirement with NH3/H2 atmosphere targets, high luminosity range, and an ammonia photosynthesis metabolism profile.

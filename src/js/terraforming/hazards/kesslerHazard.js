@@ -6,7 +6,7 @@ const LARGE_PROJECT_BASE_SUCCESS = 0.02;
 const PERIAPSIS_SAMPLE_COUNT = 64;
 const DEBRIS_DECAY_BASE_RATE = 1/(3.6e3);
 const DEBRIS_DENSITY_CENTER = 1e-13;
-const DEBRIS_DENSITY_SEARCH_MAX = 500000;
+const DEBRIS_DENSITY_SEARCH_MAX = 5000000;
 const DEBRIS_DECAY_DENSITY_REFERENCE = 1e-12;
 const DEBRIS_DECAY_DENSITY_FLOOR = 1e-20;
 const DEBRIS_DECAY_MAX_MULTIPLIER = 100;
@@ -257,7 +257,8 @@ class KesslerHazard {
 
   getCostMultiplier(isLarge) {
     const successChance = this.getSuccessChance(isLarge);
-    return successChance > 0 ? 1 / successChance : 1;
+    const multiplier = successChance > 0 ? 1 / successChance : 1;
+    return Math.min(multiplier, 1e10);
   }
 
   addDebris(addedTons) {
