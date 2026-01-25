@@ -729,7 +729,7 @@ function autoBuild(buildings, delta = 0) {
                     }
                     if (kesslerDebris > 0) {
                         cost.special = cost.special || {};
-                        cost.special.orbitalDebris = (cost.special.orbitalDebris || 0) + kesslerDebris;
+                        cost.special.orbitalDebris = (cost.special.orbitalDebris || 0) - kesslerDebris;
                     }
 
                     autobuildCostTracker.recordCost(building.displayName, cost);

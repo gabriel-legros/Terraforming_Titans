@@ -1506,7 +1506,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   if (autobuildDiv) {
     if (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource)) {
       const avgCost = autobuildAvg;
-      if (avgCost > 0) {
+      if (avgCost !== 0) {
         autobuildDiv.style.display = 'block';
         autobuildDiv._info.value.textContent = `${formatNumber(avgCost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
         const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
