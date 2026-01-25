@@ -96,7 +96,8 @@ var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMulti
 var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
 const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage', kessler: 'Kessler Skies' };
-const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian' };
+const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', random: 'Random' };
+const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
 
@@ -171,10 +172,18 @@ function refreshDominionSelect() {
       };
     })
     .filter((entry) => entry.show);
+  entries.push({
+    id: RWG_DOMINION_RANDOM,
+    unlocked: true,
+    requirementLabel: '',
+    show: true
+  });
   const signature = entries
     .map((entry) => `${entry.id}:${entry.unlocked ? 'open' : 'locked'}`)
     .join(',');
-  const selected = dominions.includes(rwgSelectedDominion) ? rwgSelectedDominion : dominions[0];
+  const selected = dominions.includes(rwgSelectedDominion) || rwgSelectedDominion === RWG_DOMINION_RANDOM
+    ? rwgSelectedDominion
+    : dominions[0];
   rwgSelectedDominion = selected;
   if (rwgDominionEl.dataset.lastDominionList !== signature) {
     const frag = document.createDocumentFragment();
@@ -318,8 +327,12 @@ function applyDominionSelection(res) {
   const override = res.override || (res.override = {});
   const special = override.specialAttributes || {};
   override.specialAttributes = special;
-  special.terraformingRequirementId = rwgSelectedDominion;
-  res.merged.specialAttributes.terraformingRequirementId = rwgSelectedDominion;
+  const dominions = rwgManager.getAvailableDominions();
+  const selection = rwgSelectedDominion === RWG_DOMINION_RANDOM
+    ? dominions[Math.floor(Math.random() * dominions.length)]
+    : rwgSelectedDominion;
+  special.terraformingRequirementId = selection;
+  res.merged.specialAttributes.terraformingRequirementId = selection;
 }
 
 function updateHazardListVisibility() {

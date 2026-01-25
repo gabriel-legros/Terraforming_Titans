@@ -59,6 +59,28 @@ function getDustAlbedoFromColor(color) {
 }
 
 class DustFactory extends Building {
+  enforceBlackOnly(settings) {
+    if (this.reversalAvailable) {
+      return;
+    }
+
+    const previousColor = settings.dustColor;
+    if (previousColor !== '#000000') {
+      const previousAlbedo = terraforming.calculateGroundAlbedo();
+      settings.dustColor = '#000000';
+      settings.dustColorAlbedo = DUST_TARGET_ALBEDO.black;
+      settings.targetAlbedo = DUST_TARGET_ALBEDO.black;
+      settings.hasCustomTarget = false;
+      applyDustColorChange(previousColor, settings, previousAlbedo);
+    }
+
+    this.reverseEnabled = false;
+    if (this.currentRecipeKey !== 'black') {
+      this.currentRecipeKey = 'black';
+      this._applyRecipeMapping();
+    }
+  }
+
   getAutomationSettings() {
     const settings = DustFactory.getAutomationSettings();
     if (!settings.initialized) {
@@ -88,6 +110,7 @@ class DustFactory extends Building {
     let targetProductivity = baseTarget;
     const settings = getDustAutomationSettings(this);
     updateDustResourceName(settings);
+    this.enforceBlackOnly(settings);
 
     if (hasAtmosphericOversight && settings.autoTargetAlbedo) {
       const isCustomColor = isCustomDustColor(settings.dustColor);
@@ -122,6 +145,11 @@ class DustFactory extends Building {
       const blackRes = resources.special.albedoUpgrades;
       const whiteRes = resources.special.whiteDust;
       const needHigher = difference > 0;
+      if (needHigher && !this.reversalAvailable) {
+        this.setAutomationActivityMultiplier(0);
+        this.productivity = 0;
+        return;
+      }
 
       let recipeKey = needHigher ? 'white' : 'black';
       let reverse = false;
@@ -284,6 +312,7 @@ class DustFactory extends Building {
     dustEls.colorControl.style.display = enabled && this.reversalAvailable ? 'flex' : 'none';
     const settings = getDustAutomationSettings(this);
     updateDustResourceName(settings);
+    this.enforceBlackOnly(settings);
     dustEls.checkbox.checked = settings.autoTargetAlbedo;
     if (isCustomDustColor(settings.dustColor)) {
       settings.targetAlbedo = settings.dustColorAlbedo;

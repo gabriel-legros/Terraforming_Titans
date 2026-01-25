@@ -256,6 +256,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Buildings Automation now supports named preset combinations that save and restore the apply list.
 - Buildings Automation now applies preset control/automation settings even while a building is hidden or locked, so settings are ready once it unlocks.
 - Buildings Automation now supports applying presets automatically after the next planet travel via a dedicated checkbox.
+- Random World Generator dominion selection now includes a Random option that rolls a requirement on travel.
 - Foundry Worlds advanced research unlocks a new mega project with a shared specialized-worlds switcher and travel points tied to deeper mining depth.
 - Foundry World shop upgrades now boost metal and silica import caps, ore and silica mining output, and deeper mining speed.
 - Foundry World shops now include Galactic Everything Else to boost water/ice, carbon, and nitrogen import caps.
