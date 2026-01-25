@@ -8,7 +8,7 @@ const METHANE_T_TRIPLE = 90.694;          // K  (≈ 90.67 ± 0.03 K)
 const METHANE_P_TRIPLE = 0.11696e6;       // Pa (≈ 0.1169 ± 0.0006 bar)
 const METHANE_T_CRIT   = 190.564;         // K  (≈ 190.6 ± 0.3 K)
 const METHANE_P_CRIT   = 4.5992e6;        // Pa (≈ 46.1 ± 0.3 bar)
-var DEFAULT_EQUILIBRIUM_METHANE_CONDENSATION_PARAMETER = 0.002;
+var DEFAULT_EQUILIBRIUM_METHANE_CONDENSATION_PARAMETER = 0.0015;
 
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;

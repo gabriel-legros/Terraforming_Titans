@@ -85,7 +85,7 @@ const BETA  = 0.55;              // was 0.6 in old pressure law
 const GAMMA = {
   h2o           : 8,
   co2           : 10.0,
-  ch4           : 20.0,
+  ch4           : 22.0,
   greenhousegas : 2500.0
 };
 
