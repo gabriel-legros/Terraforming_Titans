@@ -712,8 +712,11 @@ function autoBuild(buildings, delta = 0) {
                 }
                 const actualBuilt = built ? Math.max(0, building.count - previousCount) : 0;
                 if (built && actualBuilt > 0) {
-                    const baseCost = building.getEffectiveCost ? building.getEffectiveCost(actualBuilt) : {};
-                    const cost = cloneCostObject(baseCost);
+                    const effectiveCost = building.getEffectiveCost(actualBuilt);
+                    const cost = cloneCostObject(effectiveCost);
+                    const kesslerMultiplier = building.getKesslerCostMultiplier();
+                    const kesslerBaseCost = building.getBaseEffectiveCost(actualBuilt);
+                    const kesslerDebris = building._getKesslerDebrisFromCost(kesslerBaseCost, kesslerMultiplier);
                     if (building.requiresDeposit) {
                         for (const dep in building.requiresDeposit.underground) {
                             cost.underground = cost.underground || {};
@@ -724,10 +727,14 @@ function autoBuild(buildings, delta = 0) {
                         cost.surface = cost.surface || {};
                         cost.surface.land = (cost.surface.land || 0) + building.requiresLand * actualBuilt;
                     }
+                    if (kesslerDebris > 0) {
+                        cost.special = cost.special || {};
+                        cost.special.orbitalDebris = (cost.special.orbitalDebris || 0) + kesslerDebris;
+                    }
 
                     autobuildCostTracker.recordCost(building.displayName, cost);
                     if (building.autoBuildPriority) {
-                        subtractCostFromPrioritizedReserve(prioritizedReserve, baseCost);
+                        subtractCostFromPrioritizedReserve(prioritizedReserve, effectiveCost);
                     }
                 }
             }

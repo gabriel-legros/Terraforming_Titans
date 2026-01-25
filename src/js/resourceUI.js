@@ -339,6 +339,11 @@ function updateRateTable(container, entries, formatter) {
   });
 }
 
+function isAutobuildTrackedResource(resource) {
+  return resource.category === 'colony'
+    || (resource.category === 'special' && resource.name === 'orbitalDebris');
+}
+
 function setResourceTooltipColumns(tooltip, cols) {
   if (!tooltip || !tooltip._columnsInfo) return;
   const { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
@@ -1448,7 +1453,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   } else if (zonesDiv) {
     zonesDiv.style.display = 'none';
   }
-  const autobuildAvg = (typeof autobuildCostTracker !== 'undefined' && resource.category === 'colony')
+  const autobuildAvg = (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource))
     ? autobuildCostTracker.getAverageCost(resource.category, resource.name)
     : 0;
   if (netDiv) {
@@ -1457,7 +1462,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     const netRateWithAutobuild = netRate - autobuildAvg;
     const displayNetRate = Math.abs(netRateWithAutobuild) < 1e-6 ? 0 : netRateWithAutobuild;
     const baseText = `${formatNumber(displayNetRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-    const autoText = resource.category === 'colony' ? 'Net Change (including autobuild):' : '';
+    const autoText = isAutobuildTrackedResource(resource) ? 'Net Change (including autobuild):' : '';
     if (autoLine && autoLine.textContent !== autoText) autoLine.textContent = autoText;
     if (baseLine && baseLine.textContent !== baseText) baseLine.textContent = baseText;
   }
@@ -1499,7 +1504,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   }
 
   if (autobuildDiv) {
-    if (typeof autobuildCostTracker !== 'undefined' && resource.category === 'colony') {
+    if (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource)) {
       const avgCost = autobuildAvg;
       if (avgCost > 0) {
         autobuildDiv.style.display = 'block';
