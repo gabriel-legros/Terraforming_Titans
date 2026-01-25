@@ -377,13 +377,6 @@ function refreshHazardSelect() {
       text.textContent = hazardDisplayNames[id] || id;
       row.appendChild(input);
       row.appendChild(text);
-      if (id === 'kessler') {
-        const info = document.createElement('span');
-        info.className = 'info-tooltip-icon';
-        info.title = 'Due to model limitations, Kessler Skies will not generate on planets with surface gravity below 3 m/s^2.';
-        info.innerHTML = '&#9432;';
-        row.appendChild(info);
-      }
       rwgHazardItemsEl.appendChild(row);
       rwgHazardItems[id] = { input, label: text };
     });

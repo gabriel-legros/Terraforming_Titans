@@ -295,7 +295,6 @@ The planet visualiser has been modularised into files covering core setup, light
 - Random World Generator dominions now include lore blurbs with a dedicated Lore window beside the dominion selector.
 - Fritizian dominion unlocks once the galaxy has 5 fully controlled sectors, and the RWG dropdown shows the requirement while locked.
 - RWG dominion requirements now read from terraforming requirement metadata so new dominions can define their own unlock rules.
-- Random World Generator now skips the Kessler hazard on worlds below 3 m/s^2 gravity and notes the restriction in the hazard tooltip.
 - Completing terraforming now awards alien artifacts once per non-Human dominion, scaling across dominions at 500 per completion (Human and Gabbagian are excluded).
 - Original world properties no longer show the dominion selector or lore display.
 - Added an ammonia-based terraforming requirement with NH3/H2 atmosphere targets, high luminosity range, and an ammonia photosynthesis metabolism profile.
