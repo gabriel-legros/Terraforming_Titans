@@ -353,6 +353,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Warp Gate Command operations now draw their ten-step event queues from `assets/wgc_ops/operation_stories.js` and log each story line before the existing roll summaries so the narrative plays out alongside the results.
 - Autobuild options for Solar Panels and Wind Turbines now include the Max target mode.
 - Unified zonal surface storage into a single `zonalSurface` map keyed by resource type, with legacy zonal data folded in during initialization and load.
+- Wind mixing now applies a weighted three-zone blend per tick instead of pairwise passes for smoother temperature equalization.
 - Warp Gate Command Teams card gained a Hide Story toggle that suppresses narrative log entries when enabled and remembers the setting between sessions.
 - Warp Gate Command Teams header now includes a clipboard button that copies every team's roster, stats, and health to JSON on click.
 - Editing a Warp Gate Command member now spends stat points immediately while Cancel restores the original stats to avoid conflicts with Auto allocation.

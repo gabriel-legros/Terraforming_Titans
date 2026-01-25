@@ -1008,9 +1008,6 @@ class Terraforming extends EffectableEntity{
     let mixFrac = massBoost * rotFactor * liquidFactor;
     mixFrac = Math.max(0, Math.min(0.95, mixFrac));
 
-    // Stronger mixing → a few passes of pairwise exchange
-    const passes = Math.max(1, Math.min(5, Math.round(1 + 4 * mixFrac)));
-
     // Weights are energy capacities (J/K) so updates conserve energy
     const W = {};
     const T = {};
@@ -1018,22 +1015,17 @@ class Terraforming extends EffectableEntity{
         W[zone] = (z[zone].capacityPerArea || 0) * (z[zone].area || 0);
         T[zone] = z[zone].mean;
     }
-
-    function mixPair(a, b, f) {
-        const Wa = W[a], Wb = W[b];
-        const denom = Wa + Wb;
-        if (denom <= 0 || f <= 0) return;
-        const dT = T[a] - T[b];
-        // Move fraction 'f' toward equalization, conserving energy
-        const deltaA = -f * (Wb / denom) * dT;
-        const deltaB =  f * (Wa / denom) * dT;
-        T[a] += deltaA;
-        T[b] += deltaB;
+    let totalWeight = 0;
+    let weightedMean = 0;
+    for (const zone of ORDER) {
+        totalWeight += W[zone];
+        weightedMean += T[zone] * W[zone];
     }
-
-    for (let p = 0; p < passes; p++) {
-        mixPair('tropical', 'temperate', mixFrac);
-        mixPair('temperate', 'polar',    mixFrac);
+    if (totalWeight > 0 && mixFrac > 0) {
+        weightedMean /= totalWeight;
+        for (const zone of ORDER) {
+            T[zone] += (weightedMean - T[zone]) * mixFrac;
+        }
     }
 
     const heatWeights = {};
