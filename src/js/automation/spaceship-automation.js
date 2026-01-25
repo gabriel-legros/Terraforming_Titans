@@ -570,10 +570,11 @@ class SpaceshipAutomation {
       enabled: !!preset.enabled,
       steps: Array.isArray(preset.steps) ? preset.steps.map(step => {
         const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(Number(step.limit));
+        const stepMode = step.mode || 'fill';
         return {
           id: step.id,
-          limit: limitValue,
-          mode: step.mode || 'fill',
+          limit: (stepMode === 'cappedMin' || stepMode === 'cappedMax') ? null : limitValue,
+          mode: stepMode,
           entries: Array.isArray(step.entries) ? step.entries.map(entry => {
             const weight = Number(entry.weight);
             const max = Number(entry.max);
