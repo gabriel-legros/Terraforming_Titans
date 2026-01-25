@@ -1036,6 +1036,19 @@ class Terraforming extends EffectableEntity{
         mixPair('temperate', 'polar',    mixFrac);
     }
 
+    const heatWeights = {};
+    let totalHeatWeight = 0;
+    if (availableAdvancedHeatingPower > 0) {
+        for (const zone of ORDER) {
+            const previousMean = this.temperature.zones[zone].value;
+            const desiredDelta = T[zone] - previousMean;
+            const zoneArea = z[zone].area || 0;
+            const weight = desiredDelta > 0 ? desiredDelta * zoneArea : 0;
+            heatWeights[zone] = weight;
+            totalHeatWeight += weight;
+        }
+    }
+
     // --- Write back temperatures; shift day/night by mean offset ------
     for (const zone of ORDER) {
         const zoneFlux = this.luminosity.zonalFluxes[zone];
@@ -1086,8 +1099,10 @@ class Terraforming extends EffectableEntity{
             }
             if (desiredDelta > 0 && availableAdvancedHeatingPower > 0) {
               const zoneArea = z[zone].area || 0;
-              if (zoneArea > 0) {
-                const heatingFlux = (availableAdvancedHeatingPower * pct) / zoneArea;
+              const heatWeight = heatWeights[zone] || 0;
+              if (zoneArea > 0 && totalHeatWeight > 0 && heatWeight > 0) {
+                const heatingPower = availableAdvancedHeatingPower * (heatWeight / totalHeatWeight);
+                const heatingFlux = heatingPower / zoneArea;
                 combinedFlux += heatingFlux;
               }
             }

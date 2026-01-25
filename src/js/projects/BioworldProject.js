@@ -116,11 +116,18 @@
     }
 
     shouldHideStartBar() {
-      if (this.isActive || this.isCompleted) {
-        return false;
+      return false;
+    }
+
+    getSpecializationLockedText() {
+      if (this.isCompleted) {
+        return '';
       }
       const foundryWorld = projectManager.projects.foundryWorld;
-      return foundryWorld.isActive || foundryWorld.isCompleted;
+      if (foundryWorld.isCompleted) {
+        return 'Another Specialization has been completed';
+      }
+      return '';
     }
 
     complete() {

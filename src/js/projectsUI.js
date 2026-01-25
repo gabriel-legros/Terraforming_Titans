@@ -112,12 +112,18 @@ function switchProjectGroup(groupId, direction) {
 }
 
 function updateProjectCollapsePreference(name, collapsed) {
-  if (!name) return;
+  const project = projectManager.projects[name];
+  const collapseKey = getProjectCollapseKey(project);
   if (collapsed) {
-    projectDisplayState.collapsed[name] = true;
+    projectDisplayState.collapsed[collapseKey] = true;
     return;
   }
-  delete projectDisplayState.collapsed[name];
+  delete projectDisplayState.collapsed[collapseKey];
+}
+
+function getProjectCollapseKey(project) {
+  const groupId = project.attributes && project.attributes.projectGroup;
+  return groupId ? `group:${groupId}` : project.name;
 }
 
 const existingImportResourcesProjectUI =
@@ -297,7 +303,8 @@ function createProjectItem(project) {
   const projectCard = document.createElement('div');
   projectCard.classList.add('project-card');
   projectCard.dataset.projectName = project.name;
-  if (projectDisplayState.collapsed[project.name]) {
+  const collapseKey = getProjectCollapseKey(project);
+  if (projectDisplayState.collapsed[collapseKey]) {
     projectCard.classList.add('collapsed');
   }
 
@@ -1206,6 +1213,7 @@ function updateProjectUI(projectName) {
   const isCompletedAndNotRepeatable = project.isCompleted && !project.repeatable;
   const shouldHideStartBar = project.shouldHideStartBar();
   const keepStartBarVisible = project.attributes?.keepStartBarVisible === true;
+  const specializationLockedText = project.getSpecializationLockedText();
 
   if (isMaxRepeatReached || isCompletedAndNotRepeatable) {
     // Hide cost and progress button if the project can't be repeated anymore
@@ -1220,13 +1228,14 @@ function updateProjectUI(projectName) {
     if (elements.progressButton) {
       if (keepStartBarVisible) {
         const statusText = isMaxRepeatReached ? 'Max depth reached' : 'Completed';
+        const statusColor = isMaxRepeatReached ? '#f44336' : '#4caf50';
         if (isImportProject && importUI) {
           importUI.setProgressLabel(elements, project, statusText);
         } else {
           elements.progressButton.textContent = statusText;
         }
         elements.progressButton.style.display = 'block';
-        elements.progressButton.style.background = '#f44336';
+        elements.progressButton.style.background = statusColor;
       } else {
         elements.progressButton.style.display = 'none';
       }
@@ -1251,7 +1260,14 @@ function updateProjectUI(projectName) {
 
         // Update the duration in the progress bar display
         const isContinuousProject = project.isContinuous();
-        if (!project.isActive && !project.isCompleted && project.isKesslerDisabled()) {
+        if (specializationLockedText) {
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, specializationLockedText);
+          } else {
+            elements.progressButton.textContent = specializationLockedText;
+          }
+          elements.progressButton.style.background = '#f44336';
+        } else if (!project.isActive && !project.isCompleted && project.isKesslerDisabled()) {
           const statusText = 'Disabled by Kessler';
           if (isImportProject && importUI) {
             importUI.setProgressLabel(elements, project, statusText);
@@ -1696,12 +1712,19 @@ if (typeof module !== 'undefined' && module.exports) {
 
 
 function toggleProjectCollapse(projectCard) {
-  projectCard.classList.toggle('collapsed');
-  // Use cached arrow element via projectElements to avoid querying
-  const name = projectCard && projectCard.dataset ? projectCard.dataset.projectName : null;
-  const arrow = name && projectElements[name] ? projectElements[name].collapseArrow : null;
-  if (arrow) {
-    arrow.innerHTML = projectCard.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
-  }
-  updateProjectCollapsePreference(name, projectCard.classList.contains('collapsed'));
+  const name = projectCard.dataset.projectName;
+  const collapsed = !projectCard.classList.contains('collapsed');
+  const groupId = projectElements[name]?.groupId;
+  const groupNames = getGroupProjectNames(groupId);
+  const targetNames = groupNames.length ? groupNames : [name];
+
+  targetNames.forEach((projectName) => {
+    const elements = projectElements[projectName];
+    const card = elements?.projectItem;
+    const arrow = elements?.collapseArrow;
+    card?.classList.toggle('collapsed', collapsed);
+    arrow && (arrow.innerHTML = collapsed ? '&#9654;' : '&#9660;');
+  });
+
+  updateProjectCollapsePreference(name, collapsed);
 }

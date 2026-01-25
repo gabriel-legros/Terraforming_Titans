@@ -665,7 +665,8 @@ const projectParameters = {
     repeatable: false,
     unlocked: false,
     attributes: {
-      projectGroup: 'specializedWorlds'
+      projectGroup: 'specializedWorlds',
+      keepStartBarVisible: true
     }
   },
   foundryWorld: {
@@ -683,7 +684,8 @@ const projectParameters = {
     repeatable: false,
     unlocked: false,
     attributes: {
-      projectGroup: 'specializedWorlds'
+      projectGroup: 'specializedWorlds',
+      keepStartBarVisible: true
     }
   },
   disposeResources : {

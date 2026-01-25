@@ -99,11 +99,18 @@
     }
 
     shouldHideStartBar() {
-      if (this.isActive || this.isCompleted) {
-        return false;
+      return false;
+    }
+
+    getSpecializationLockedText() {
+      if (this.isCompleted) {
+        return '';
       }
       const bioworld = projectManager.projects.bioworld;
-      return bioworld.isActive || bioworld.isCompleted;
+      if (bioworld.isCompleted) {
+        return 'Another Specialization has been completed';
+      }
+      return '';
     }
 
     complete() {
