@@ -192,6 +192,11 @@
         this.setBaseColor(gameBase, { fromGame: true, force: true, skipSurfaceUpdate: true });
       }
     }
+    if (!force) {
+      const now = performance.now();
+      if (now - (this._lastSurfaceTextureUpdate || 0) < 5000) return;
+      this._lastSurfaceTextureUpdate = now;
+    }
     const kPa = this.computeTotalPressureKPa();
     const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
     const water = (this.viz.coverage?.water || 0) / 100;
