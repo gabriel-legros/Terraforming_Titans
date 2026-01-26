@@ -985,7 +985,7 @@ const GalaxyOperationUI = (() => {
             ? manager.getSectorDefensePower(selection.key, uhfFactionId, targetFactionId)
             : 0;
         const autoThresholdValue = getAutoLaunchThreshold();
-        const requiredThreshold = sectorPower > 0 ? sectorPower * autoThresholdValue : 0;
+        const requiredThreshold = Math.max(100, sectorPower * autoThresholdValue);
         if (operationsTargetRow) {
             operationsTargetRow.classList.remove('is-hidden');
         }

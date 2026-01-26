@@ -1019,7 +1019,7 @@ class GalaxyOperationManager {
             const sectorDefense = this.manager.getSectorDefensePower
                 ? this.manager.getSectorDefensePower(sectorKey, this.uhfFactionId, targetFactionId)
                 : 0;
-            const requiredPower = sectorDefense > 0 ? sectorDefense * threshold : 0;
+            const requiredPower = Math.max(100, sectorDefense * threshold);
             const normalizedPower = Math.round(requiredPower * 100) / 100;
             if (!(normalizedPower > 0) || normalizedPower > availablePower) {
                 return;
