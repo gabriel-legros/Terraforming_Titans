@@ -1,4 +1,8 @@
 class AndroidHousing extends Building {
+  getConsumptionRatio() {
+    return this.getUsageProductivity(resources);
+  }
+
   getUsageProductivity(resources) {
     const androidsResource = resources.colony.androids;
     const baseBonus = (androidsResource.activeEffects || [])

@@ -1,4 +1,6 @@
 // Resource Class and Core Logic
+var debug_production = {};
+var debug_consumption = {};
 class Resource extends EffectableEntity {
   constructor(resourceData) {
     super(resourceData);
@@ -494,6 +496,18 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
   // Reset production and consumption rates for all resources
   // Reset rates using the new method
+  const localProduction = {};
+  const localConsumption = {};
+  const trackDebugRate = (target, category, resource, source, amount) => {
+    if (!target[category]) {
+      target[category] = {};
+    }
+    if (!target[category][resource]) {
+      target[category][resource] = {};
+    }
+    target[category][resource][source] = (target[category][resource][source] || 0) + amount;
+  };
+
   for (const category in resources) {
     for (const resourceName in resources[category]) {
       resources[category][resourceName].resetRates({ keepProjected });
@@ -519,6 +533,9 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
         const actualProduction = (building.production[category][resource] || 0) * building.active * building.getProductionRatio() * building.getEffectiveProductionMultiplier() * building.getEffectiveResourceProductionMultiplier(category, resource) * automationMultiplier * workerRatio * productivityScale;
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(actualProduction, building.displayName, 'building');
+        if (actualProduction) {
+          trackDebugRate(localProduction, category, resource, building.displayName, actualProduction);
+        }
       }
     }
 
@@ -530,6 +547,9 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
         const actualConsumption = amount * building.active * building.getConsumptionRatio() * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(category, resource) * automationMultiplier * workerRatio;
         // Specify 'building' as the rateType
         resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
+        if (actualConsumption) {
+          trackDebugRate(localConsumption, category, resource, building.displayName, actualConsumption);
+        }
       }
     }
 
@@ -542,11 +562,15 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       const conversionValue = sourceData.conversionValue || 1;
       for (const targetCategory in sourceData.maintenanceConversion) {
         const targetResource = sourceData.maintenanceConversion[targetCategory];
+        const conversionRate = base * conversionValue;
         resources[targetCategory][targetResource].modifyRate(
-          base * conversionValue,
+          conversionRate,
           building.displayName,
           'building'
         );
+        if (conversionRate) {
+          trackDebugRate(localProduction, targetCategory, targetResource, `${building.displayName} maintenance`, conversionRate);
+        }
       }
     }
   }
@@ -568,6 +592,9 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
     // Specify 'funding' as the rateType
     resources.colony.funding.modifyRate(fundingIncreaseRate, 'Funding', 'funding'); // Update funding production rate
+    if (fundingIncreaseRate) {
+      trackDebugRate(localProduction, 'colony', 'funding', 'Funding', fundingIncreaseRate);
+    }
   }
 
   if (!keepProjected) {
@@ -577,6 +604,9 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       }
     }
   }
+
+  debug_production = localProduction;
+  debug_consumption = localConsumption;
 }
 
 function produceResources(deltaTime, buildings) {
