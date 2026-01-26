@@ -224,6 +224,11 @@
     }
   };
 
+  PlanetVisualizer.prototype.resetSurfaceTextureThrottle = function resetSurfaceTextureThrottle() {
+    this._lastSurfaceTextureUpdate = 0;
+    this.lastCraterFactorKey = null;
+  };
+
   PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength, surfaceBaseHex) {
     const w = 1024;
     const h = 512;

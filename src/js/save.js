@@ -693,6 +693,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       updateRender(true, { forceAllSubtabs: true });
     }
     const pv = planetVisualizer;
+    pv.resetSurfaceTextureThrottle();
     pv.updateSurfaceTextureFromPressure(true);
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
