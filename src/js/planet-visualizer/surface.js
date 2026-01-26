@@ -739,7 +739,7 @@
         }
         zoneThresholds[zi] = Math.max(0, Math.min(1, thrVal));
       }
-      const softness = 0.08;
+      const softness = 0.1;
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
         const x = i - y * w;
@@ -756,7 +756,7 @@
         if (lifeFrac >= 1) {
           alpha = 1;
         } else {
-          const thresh = zoneThresholds[zi];
+          const thresh = Math.max(0, zoneThresholds[zi] - 0.02);
           if (thresh < 0) continue;
           const lower = Math.max(0, thresh - softness);
           const upper = Math.min(1, thresh + softness);
@@ -780,7 +780,13 @@
         let g = Math.floor(baseG * (1 - messiness) + messyG * messiness);
         let b = Math.floor(baseB * (1 - messiness) + messyB * messiness);
         const grain = 0.88 + 0.18 * micro * messiness;
-        alpha = Math.max(0, Math.min(1, alpha * grain));
+        const densityNoise = 0.55 * coarse + 0.45 * patchNoise(x + 61.7, y - 38.4);
+        const density = Math.max(0, Math.min(1, 0.2 + 0.8 * Math.pow(densityNoise, 1.5)));
+        alpha = Math.max(0, Math.min(0.75, alpha * grain));
+        const shade = 0.6 + 0.4 * density;
+        r = Math.floor(r * shade);
+        g = Math.floor(g * shade);
+        b = Math.floor(b * shade);
         if (!isArtificial) {
           const peakMask = smoothstep(mountainThreshold - 0.05, mountainThreshold + 0.02, hgt);
           alpha *= (1 - 0.7 * peakMask);
