@@ -647,6 +647,22 @@
         const n = Math.sin(x * 12.9898 + y * 78.233 + bioSeedVal * 0.00011) * 43758.5453;
         return n - Math.floor(n);
       };
+      const patchNoise = (x, y) => {
+        const scale = 0.07;
+        const px = x * scale;
+        const py = y * scale;
+        const xi = Math.floor(px);
+        const yi = Math.floor(py);
+        const xf = px - xi;
+        const yf = py - yi;
+        const u = xf * xf * (3 - 2 * xf);
+        const v = yf * yf * (3 - 2 * yf);
+        const a = bioHash(xi, yi);
+        const b = bioHash(xi + 1, yi);
+        const c = bioHash(xi, yi + 1);
+        const d = bioHash(xi + 1, yi + 1);
+        return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+      };
       const lifeFracs = [
         Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.life || 0))),
         Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.life || 0))),
@@ -677,6 +693,7 @@
       }
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
+        const x = i - y * w;
         const zi = this._zoneRowIndex ? this._zoneRowIndex[y] : 0;
         const thr = thrIdx[zi];
         if (thr >= 0) {
@@ -687,7 +704,8 @@
         const waterPresence = odata[idx + 3] / 255;
         const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
-        let score = lifeNoise[i] * 0.7 + (1 - latAbs) * 0.15 + (1 - hgt) * 0.05 - waterPresence * 0.35;
+        const patch = patchNoise(x, y);
+        let score = lifeNoise[i] * 0.55 + patch * 0.25 + (1 - latAbs) * 0.1 + (1 - hgt) * 0.05 - waterPresence * 0.35;
         if (score < 0) score = 0; else if (score > 1) score = 1;
         lifeScore[i] = score;
         const hist = lifeZoneHists[zi];
@@ -743,16 +761,16 @@
         const alphaScale = 0.15 + 0.85 * lifeFrac;
         alpha = Math.max(0, Math.min(1, alpha * alphaScale));
         if (alpha < 0.00001) continue;
-        const baseR = 40;
-        const baseG = 175;
-        const baseB = 85;
+        const baseR = 24;
+        const baseG = 105;
+        const baseB = 58;
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const coarse = Math.pow(lifeNoise[i], 1.6);
         const micro = bioHash(x * 2, y * 2);
         const tone = Math.max(0, Math.min(1, 0.1 + 0.9 * (0.55 * coarse + 0.25 * (1 - hgt) + 0.2 * micro)));
-        const messyR = Math.floor(50 * (1 - tone) + 18 * tone);
-        const messyG = Math.floor(165 * (1 - tone) + 215 * tone);
-        const messyB = Math.floor(100 * (1 - tone) + 60 * tone);
+        const messyR = Math.floor(34 * (1 - tone) + 12 * tone);
+        const messyG = Math.floor(110 * (1 - tone) + 150 * tone);
+        const messyB = Math.floor(78 * (1 - tone) + 44 * tone);
         const messiness = 0.2 + 0.8 * lifeFrac;
         let r = Math.floor(baseR * (1 - messiness) + messyR * messiness);
         let g = Math.floor(baseG * (1 - messiness) + messyG * messiness);
