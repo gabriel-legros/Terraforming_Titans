@@ -692,6 +692,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     if (typeof updateRender === 'function') {
       updateRender(true, { forceAllSubtabs: true });
     }
+    try { window.planetVisualizer && window.planetVisualizer.resetSurfaceTextureThrottle(); } catch (e) {}
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
   } finally {

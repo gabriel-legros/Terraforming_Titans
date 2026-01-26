@@ -170,8 +170,12 @@
     const dry = new THREE.Color(0xd7a37a);
     const mix = dry.clone().lerp(base, water);
     u.tint.value.copy(mix);
-    const isRogueWorld = currentPlanetParameters?.celestialParameters?.rogue === true;
-    this.sunMesh.visible = !isRogueWorld;
+    const illum = Math.max(0, Math.min(3, this.getGameIllumination()));
+    if (this.sunLight) this.sunLight.intensity = illum;
+    if (this.sunMesh) {
+      this.sunMesh.visible = illum >= 0.01;
+      this.sunMesh.scale.setScalar(illum);
+    }
     const inertKpa = this.computeInertPressureKPa();
     const auraStrength = Math.max(0, Math.min(1, inertKpa / 80));
     this.inertAuraInnerMaterial.uniforms.auraStrength.value = auraStrength;
