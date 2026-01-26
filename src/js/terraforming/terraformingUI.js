@@ -421,7 +421,25 @@ function handleTerraformingSubtabActivated(subtabId, deltaSeconds) {
   if (subtabId === 'milestone-terraforming' && typeof markMilestonesViewed === 'function') {
     markMilestonesViewed();
   }
+  if (subtabId === 'world-terraforming') {
+    forceWorldSurfaceRefresh();
+  }
   updateTerraformingSubtabUI(subtabId, deltaSeconds);
+}
+
+function handleTerraformingTabActivated() {
+  if (!isTerraformingWorldSubtabActive()) {
+    return;
+  }
+  forceWorldSurfaceRefresh();
+}
+
+function forceWorldSurfaceRefresh() {
+  try {
+    const viz = window.planetVisualizer;
+    viz.resetSurfaceTextureThrottle();
+    viz.updateSurfaceTextureFromPressure(true);
+  } catch (e) {}
 }
 
 function markTerraformingMilestonesIfActive() {
@@ -2125,5 +2143,6 @@ function updateLifeBox() {
 if (typeof window !== 'undefined') {
   window.getTerraformingSubtabManager = getTerraformingSubtabManager;
   window.isTerraformingWorldSubtabActive = isTerraformingWorldSubtabActive;
+  window.handleTerraformingTabActivated = handleTerraformingTabActivated;
 }
 

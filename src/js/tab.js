@@ -139,6 +139,9 @@ const tabParameters = {
         tabElement.classList.add('active');
         tabContentElement.classList.add('active');
       }
+      if (tabId === 'terraforming') {
+        try { window.handleTerraformingTabActivated(); } catch (e) {}
+      }
     }
 
     setSpaceTabAlert(effect) {
