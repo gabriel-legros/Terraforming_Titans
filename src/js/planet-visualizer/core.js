@@ -486,7 +486,7 @@
         }
         z[zone].water = Math.max(0, Math.min(1, Number(w) || 0));
         z[zone].ice = Math.max(0, Math.min(1, Number(i) || 0));
-        z[zone].life = Math.max(0, Math.min(1, Number(b) || 0));
+        z[zone].life = Math.max(0, Math.min(0.5, Number(b) || 0));
       }
       const avg = (a, b, c) => (a + b + c) / 3;
       const avgWater = avg(z.tropical.water, z.temperate.water, z.polar.water);
@@ -495,7 +495,7 @@
         ? Math.max(0, Math.min(1, t.luminosity.cloudFraction))
         : avgWater;
       this.viz.coverage.water = avgWater * 100;
-      this.viz.coverage.life = avgLife * 100;
+      this.viz.coverage.life = Math.min(0.5, avgLife) * 100;
       this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
     }
 
