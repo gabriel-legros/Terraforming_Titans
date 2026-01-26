@@ -904,7 +904,7 @@ function createTemperatureBox(row) {
     innerHTML += `
         </tbody>
       </table>
-      <p class="no-margin">Optical depth: <span id="optical-depth"></span> <span id="optical-depth-info" class="info-tooltip-icon">&#9432;<span id="optical-depth-tooltip" class="resource-tooltip"></span></span></p>
+      <p class="no-margin">Optical depth: <span id="optical-depth"></span><span id="optical-depth-warning" class="optical-depth-warning"></span> <span id="optical-depth-info" class="info-tooltip-icon">&#9432;<span id="optical-depth-tooltip" class="resource-tooltip"></span></span></p>
       <p class="no-margin">Wind turbine multiplier: <span id="wind-turbine-multiplier">${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}</span>%</p>
     `;
   
@@ -941,6 +941,7 @@ function createTemperatureBox(row) {
       pressureTargetStatus: atmosphereBox.querySelector('#atmosphere-target-status'),
       gasBody: atmosphereBox.querySelector('#atmosphere-gas-body'),
       opticalDepth: atmosphereBox.querySelector('#optical-depth'),
+      opticalDepthWarning: atmosphereBox.querySelector('#optical-depth-warning'),
       opticalDepthInfo: atmosphereBox.querySelector('#optical-depth-info'),
       opticalDepthTooltip: atmosphereBox.querySelector('#optical-depth-tooltip'),
       windMultiplier: atmosphereBox.querySelector('#wind-turbine-multiplier'),
@@ -1050,11 +1051,17 @@ function createTemperatureBox(row) {
     }
 
     if (els.opticalDepth) {
-      els.opticalDepth.textContent = terraforming.temperature.opticalDepth.toFixed(3);
+      const opticalDepthValue = terraforming.temperature.opticalDepth;
+      const isDefaultRequirement = terraforming.requirementId === DEFAULT_TERRAFORMING_REQUIREMENT_ID;
+      const warningSuffix = isDefaultRequirement && opticalDepthValue > 3 ? '\u26A0' : '';
+      els.opticalDepth.textContent = opticalDepthValue.toFixed(3);
+      if (els.opticalDepthWarning) {
+        els.opticalDepthWarning.textContent = warningSuffix;
+      }
     }
     if (els.opticalDepthInfo) {
       const contributions = terraforming.temperature.opticalDepthContributions || {};
-      const intro = 'Measures the Greenhouse Gas Effect. Higher value means more heat trapped. To achieve both temperature and luminosity target, it is usually recommended to keep this value below 3.';
+      const intro = 'Measures the Greenhouse Gas Effect. Higher value means more heat trapped. To achieve both temperature and luminosity target, it is usually recommended (but not required) to keep this value below 3.';
       const lines = Object.entries(contributions)
         .map(([gas, val]) => {
           const mapping = {
