@@ -649,8 +649,10 @@
       };
       const patchNoise = (x, y) => {
         const scale = 0.07;
-        const px = x * scale;
-        const py = y * scale;
+        const warp = (bioHash(x * 0.18, y * 0.18) - 0.5) * 1.2;
+        const warp2 = (bioHash(x * 0.18 + 41.7, y * 0.18 - 19.3) - 0.5) * 1.2;
+        const px = (x + warp) * scale;
+        const py = (y + warp2) * scale;
         const xi = Math.floor(px);
         const yi = Math.floor(py);
         const xf = px - xi;
@@ -661,7 +663,9 @@
         const b = bioHash(xi + 1, yi);
         const c = bioHash(xi, yi + 1);
         const d = bioHash(xi + 1, yi + 1);
-        return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+        const base = (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+        const detail = bioHash(x * 0.38 + base * 5.2, y * 0.38 - base * 4.1);
+        return Math.max(0, Math.min(1, base * 0.9 + detail * 0.1));
       };
       const lifeFracs = [
         Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.life || 0))),
@@ -775,7 +779,7 @@
         let r = Math.floor(baseR * (1 - messiness) + messyR * messiness);
         let g = Math.floor(baseG * (1 - messiness) + messyG * messiness);
         let b = Math.floor(baseB * (1 - messiness) + messyB * messiness);
-        const grain = 0.9 + 0.25 * micro * messiness;
+        const grain = 0.88 + 0.18 * micro * messiness;
         alpha = Math.max(0, Math.min(1, alpha * grain));
         if (!isArtificial) {
           const peakMask = smoothstep(mountainThreshold - 0.05, mountainThreshold + 0.02, hgt);
