@@ -309,7 +309,7 @@ function buildKesslerLayout() {
     try {
       attachDynamicInfoTooltip(
         summaryRightInfoIcon,
-        'Drag line marks the altitude where the air density reaches about 1e-12 kg/m^3. '
+        'Drag line marks the altitude where the air density reaches about 1 ng/m^3. '
           + 'Atmospheric density depends on total gas in the atmosphere (pressure), the gas mix, '
           + 'temperature, gravity, planet size, and upper-atmosphere heating from solar flux. '
           + 'To push the drag line higher, add atmosphere to raise pressure and warm the air, '
