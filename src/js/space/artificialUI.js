@@ -309,6 +309,16 @@ function getRingOrbitBoundsAU() {
   return { min: 0.03, max: 0.25 };
 }
 
+function getRingWidthBoundsKm() {
+  const options = getRingStarCoreOptions();
+  const fallback = options[0] || {};
+  const coreValue = artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : fallback.value;
+  const core = options.find((entry) => entry.value === coreValue) || fallback;
+  const min = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min;
+  const max = Math.max(core?.maxWidthKm || ARTIFICIAL_RING_WIDTH_BOUNDS_KM.max, min);
+  return { min, max };
+}
+
 function clampRadiusValue(value) {
   const bounds = getRadiusBounds();
   return Math.min(Math.max(value, bounds.min), bounds.max);
@@ -321,8 +331,9 @@ function clampRingOrbitValue(value) {
 }
 
 function clampRingWidthValue(value) {
+  const bounds = getRingWidthBoundsKm();
   const next = Math.max(0, Number(value) || 0);
-  return Math.min(Math.max(next, ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min), ARTIFICIAL_RING_WIDTH_BOUNDS_KM.max);
+  return Math.min(Math.max(next, bounds.min), bounds.max);
 }
 
 function isRadiusFieldActive() {
@@ -413,17 +424,18 @@ function applyRingBounds() {
     artificialUICache.ringOrbitInput.value = clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitInput.value) || orbit.min);
   }
 
-  artificialUICache.ringWidthRange.min = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min;
-  artificialUICache.ringWidthRange.max = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.max;
+  const widthBounds = getRingWidthBoundsKm();
+  artificialUICache.ringWidthRange.min = widthBounds.min;
+  artificialUICache.ringWidthRange.max = widthBounds.max;
   artificialUICache.ringWidthRange.step = '1000';
-  artificialUICache.ringWidthInput.min = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min;
-  artificialUICache.ringWidthInput.max = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.max;
+  artificialUICache.ringWidthInput.min = widthBounds.min;
+  artificialUICache.ringWidthInput.max = widthBounds.max;
   artificialUICache.ringWidthInput.step = '1000';
   if (!isRingWidthFieldActive() && !artificialRingWidthEditing) {
-    artificialUICache.ringWidthRange.value = clampRingWidthValue(parseFloat(artificialUICache.ringWidthRange.value) || ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min);
+    artificialUICache.ringWidthRange.value = clampRingWidthValue(parseFloat(artificialUICache.ringWidthRange.value) || widthBounds.min);
   }
   if (!artificialRingWidthEditing && document.activeElement !== artificialUICache.ringWidthInput) {
-    artificialUICache.ringWidthInput.value = clampRingWidthValue(parseFloat(artificialUICache.ringWidthInput.value) || ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min);
+    artificialUICache.ringWidthInput.value = clampRingWidthValue(parseFloat(artificialUICache.ringWidthInput.value) || widthBounds.min);
   }
 }
 
