@@ -43,6 +43,11 @@ function sphericalSegmentArea(phi1, phi2) {
   const polarSurfaceArea = 2 * sphericalSegmentArea(phiPolar, Math.PI / 2);
 
   const totalSurfaceArea = tropicalSurfaceArea + temperateSurfaceArea + polarSurfaceArea;
+  const zoneSurfaceAreas = {
+    tropical: tropicalSurfaceArea,
+    temperate: temperateSurfaceArea,
+    polar: polarSurfaceArea
+  };
   
   // Disk areas
   const tropicalDiskArea = diskSegmentArea(-phiTropic, phiTropic);
@@ -53,6 +58,14 @@ function sphericalSegmentArea(phi1, phi2) {
   const tropicalRatio = tropicalDiskArea / tropicalSurfaceArea;
   const temperateRatio = temperateDiskArea / temperateSurfaceArea;
   const polarRatio = polarDiskArea / polarSurfaceArea;
+
+  function getZones() {
+    const ringworld = currentPlanetParameters?.classification?.type === 'ring';
+    const custom = currentPlanetParameters?.specialAttributes?.zoneKeys;
+    return ringworld
+      ? ['tropical']
+      : (Array.isArray(custom) && custom.length ? custom : ZONES);
+  }
 
   function getZoneRatio(zone) {
     switch (zone) {
@@ -68,19 +81,18 @@ function sphericalSegmentArea(phi1, phi2) {
   }
 
   function getZonePercentage(zone) {
-    switch (zone) {
-        case 'global': // Added case for global
-            return 1.0;
-        case 'tropical':
-          return tropicalSurfaceArea / totalSurfaceArea;
-        case 'temperate':
-          return temperateSurfaceArea / totalSurfaceArea;
-        case 'polar':
-          return polarSurfaceArea / totalSurfaceArea;
-        default:
-          console.warn(`Invalid zone requested for percentage: ${zone}. Returning 0.`); // Changed error to warning
-          return 0; // Return 0 instead of throwing error
+    if (zone === 'global') {
+      return 1.0;
     }
+    const area = zoneSurfaceAreas[zone];
+    if (area === undefined) {
+      console.warn(`Invalid zone requested for percentage: ${zone}. Returning 0.`);
+      return 0;
+    }
+    const zones = getZones();
+    const total = zones.reduce((sum, key) => sum + (zoneSurfaceAreas[key] || 0), 0);
+    const normalizedTotal = total > 0 ? total : totalSurfaceArea;
+    return zones.includes(zone) ? (area / normalizedTotal) : 0;
   }
 
 /**
@@ -142,15 +154,17 @@ function estimateAmountForCoverage(coverage, zoneArea, scale = 0.0001) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     ZONES,
+    getZones,
     getZoneRatio,
     getZonePercentage,
     estimateCoverage,
     estimateAmountForCoverage,
   };
 } else {
-  globalThis.ZONES             = ZONES;
-  globalThis.getZoneRatio      = getZoneRatio;
-  globalThis.getZonePercentage = getZonePercentage;
-  globalThis.estimateCoverage  = estimateCoverage;
+  window.ZONES             = ZONES;
+  window.getZones          = getZones;
+  window.getZoneRatio      = getZoneRatio;
+  window.getZonePercentage = getZonePercentage;
+  window.estimateCoverage  = estimateCoverage;
 }
 

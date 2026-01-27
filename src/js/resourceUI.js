@@ -14,7 +14,7 @@ function swapResourceRateColor(resource, color) {
 function getLiquidCoverageTargetAmount(terraformingState, targetCoverage) {
   const surfaceArea = terraformingState.celestialParameters.surfaceArea;
   let total = 0;
-  for (const zone of ZONES) {
+  for (const zone of getZones()) {
     const zoneArea = surfaceArea * getZonePercentage(zone);
     total += estimateAmountForCoverage(targetCoverage, zoneArea);
   }
@@ -105,7 +105,7 @@ function createTooltipElement(resourceName) {
   zonesDiv.appendChild(zonesHeader);
   zonesDiv.appendChild(document.createElement('br'));
   zonesDiv._info = { lines: new Map() };
-  ['tropical', 'temperate', 'polar'].forEach(zone => {
+  getZones().forEach(zone => {
     const line = document.createElement('div');
     zonesDiv.appendChild(line);
     zonesDiv._info.lines.set(zone, line);
@@ -732,7 +732,7 @@ function getAerostatLiftAlert() {
 }
 
 function getBiomassWarningMessage(zones) {
-  const dyingZones = ['tropical', 'temperate', 'polar'].filter(zone => zones[zone]);
+  const dyingZones = getZones().filter(zone => zones[zone]);
   if (dyingZones.length === 0) return '';
   const zoneText = dyingZones.map(zone => capitalizeFirstLetter(zone)).join(', ');
   return `Biomass is dying in the ${zoneText} zone${dyingZones.length > 1 ? 's' : ''}.`;
@@ -1390,7 +1390,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   if (zonesDiv && typeof terraforming !== 'undefined') {
     const zoneValues = {};
     const zoneBuried = {};
-    ['tropical', 'temperate', 'polar'].forEach(zone => {
+    getZones().forEach(zone => {
       let val;
       switch (resource.name) {
         case 'liquidWater':
@@ -1435,7 +1435,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     zonesDiv.style.display = hasZones ? 'block' : 'none';
     if (hasZones) {
       const info = zonesDiv._info;
-      ['tropical', 'temperate', 'polar'].forEach(zone => {
+      getZones().forEach(zone => {
         const line = info.lines.get(zone);
         if (zoneValues[zone] !== undefined) {
           let text = `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}`;

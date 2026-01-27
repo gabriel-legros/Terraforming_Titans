@@ -99,7 +99,7 @@ function penmanRate({
  }
 
 function redistributePrecipitation(terraforming, substance, zonalChanges, zonalTemperatures) {
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = getZones();
     const WIND_WEIGHT = 0.05;
     const LIQUID_BIAS_WEIGHT = 0.60;
     const REMAIN_WEIGHT = 0.35; // 1.0 - WIND_WEIGHT - LIQUID_BIAS_WEIGHT

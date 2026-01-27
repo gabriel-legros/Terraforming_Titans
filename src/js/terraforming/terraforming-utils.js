@@ -34,14 +34,19 @@ function calculateAverageCoverage(terraforming, resourceType) {
   };
   const mapping = coverageMap[resourceType];
   let weightedAverageCoverage = 0;
-  for (const zone of ZONES_LIST) {
+  const zones = (terraforming && Array.isArray(terraforming.zoneKeys) && terraforming.zoneKeys.length)
+    ? terraforming.zoneKeys
+    : ZONES_LIST;
+  for (const zone of zones) {
     let cov = 0;
     if (mapping?.cycle && typeof mapping.cycle.getCoverage === 'function') {
       cov = mapping.cycle.getCoverage(zone, terraforming.zonalCoverageCache)[mapping.key] ?? 0;
     } else if (mapping) {
       cov = terraforming.zonalCoverageCache[zone]?.[mapping.key] ?? 0;
     }
-    const zonePct = getZonePercentageFn(zone);
+    const zonePct = terraforming && terraforming.getZoneWeight
+      ? terraforming.getZoneWeight(zone)
+      : getZonePercentageFn(zone);
     weightedAverageCoverage += cov * zonePct;
   }
   return Math.max(0, Math.min(weightedAverageCoverage, 1.0));

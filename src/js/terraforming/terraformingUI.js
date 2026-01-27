@@ -771,11 +771,13 @@ function createTemperatureBox(row) {
       temperateDelta: temperatureBox.querySelector('#temperate-delta'),
       temperateDay: temperatureBox.querySelector('#temperate-day'),
       temperateNight: temperatureBox.querySelector('#temperate-night'),
+      temperateRow: temperatureBox.querySelector('#temperate-temp')?.closest('tr'),
       polarTemp: temperatureBox.querySelector('#polar-temp'),
       polarTrendTemp: temperatureBox.querySelector('#polar-trend-temp'),
       polarDelta: temperatureBox.querySelector('#polar-delta'),
       polarDay: temperatureBox.querySelector('#polar-day'),
       polarNight: temperatureBox.querySelector('#polar-night'),
+      polarRow: temperatureBox.querySelector('#polar-temp')?.closest('tr'),
       energyPenalty: temperatureBox.querySelector('#temperature-energy-penalty'),
       maintenancePenalty: temperatureBox.querySelector('#temperature-maintenance-penalty'),
       maintenancePenaltyValue: temperatureBox.querySelector('#temperature-maintenance-penalty-value'),
@@ -789,6 +791,12 @@ function createTemperatureBox(row) {
     const els = terraformingUICache.temperature;
     const temperatureBox = els.box;
     if (!temperatureBox) return;
+
+    const zoneKeys = getZones();
+    const showTemperate = zoneKeys.includes('temperate');
+    const showPolar = zoneKeys.includes('polar');
+    if (els.temperateRow) els.temperateRow.style.display = showTemperate ? '' : 'none';
+    if (els.polarRow) els.polarRow.style.display = showPolar ? '' : 'none';
 
     const unit = getTemperatureUnit();
     els.tempUnits.forEach(el => el.textContent = unit);
@@ -1279,7 +1287,7 @@ function createWaterBox(row) {
   function getWaterTargetAmount(terraformingState, targetCoverage) {
     const surfaceArea = terraformingState.celestialParameters.surfaceArea;
     let total = 0;
-    for (const zone of ZONES) {
+    for (const zone of getZones()) {
       const zoneArea = surfaceArea * getZonePercentage(zone);
       total += estimateAmountForCoverage(targetCoverage, zoneArea);
     }
@@ -1290,7 +1298,7 @@ function createWaterBox(row) {
     const els = terraformingUICache.water;
     const waterBox = els.box;
     if (!waterBox) return;
-    const zones = ZONES;
+    const zones = getZones();
     const surfaceArea = terraforming.celestialParameters.surfaceArea;
 
     // Totals are no longer calculated here; they are read from terraforming object
@@ -1349,10 +1357,12 @@ function createWaterBox(row) {
     lifeBox.id = 'life-box';
     const lifeInfo = document.createElement('span');
     lifeInfo.classList.add('info-tooltip-icon');
-    const tropPct = (getZonePercentage('tropical') * 100).toFixed(1);
-    const tempPct = (getZonePercentage('temperate') * 100).toFixed(1);
-    const polPct  = (getZonePercentage('polar') * 100).toFixed(1);
-    const lifeTooltipText = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.\n\nSurface distribution:\n- Tropical: ' + tropPct + '%\n- Temperate: ' + tempPct + '%\n- Polar: ' + polPct + '%';
+    const zoneLines = getZones().map(zone => {
+      const pct = (getZonePercentage(zone) * 100).toFixed(1);
+      const label = zone.charAt(0).toUpperCase() + zone.slice(1);
+      return `- ${label}: ${pct}%`;
+    });
+    const lifeTooltipText = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.\n\nSurface distribution:\n' + zoneLines.join('\n');
     const lifeTooltip = attachDynamicInfoTooltip(lifeInfo, lifeTooltipText);
     // Use static text/placeholders, values will be filled by updateLifeBox
     lifeBox.innerHTML = `
@@ -1367,9 +1377,9 @@ function createWaterBox(row) {
         </thead>
         <tbody>
           <tr><td>Overall</td><td id="life-coverage-overall">0.00</td><td id="life-photo-overall">-</td></tr>
-          <tr><td>Polar</td><td id="life-coverage-polar">0.00</td><td id="life-photo-polar">0.00</td></tr>
-          <tr><td>Temperate</td><td id="life-coverage-temperate">0.00</td><td id="life-photo-temperate">0.00</td></tr>
-          <tr><td>Tropical</td><td id="life-coverage-tropical">0.00</td><td id="life-photo-tropical">0.00</td></tr>
+          <tr data-zone-row="polar"><td>Polar</td><td id="life-coverage-polar">0.00</td><td id="life-photo-polar">0.00</td></tr>
+          <tr data-zone-row="temperate"><td>Temperate</td><td id="life-coverage-temperate">0.00</td><td id="life-photo-temperate">0.00</td></tr>
+          <tr data-zone-row="tropical"><td>Tropical</td><td id="life-coverage-tropical">0.00</td><td id="life-photo-tropical">0.00</td></tr>
         </tbody>
       </table>
       `;
@@ -1392,13 +1402,22 @@ function createWaterBox(row) {
       box: lifeBox,
       target: targetSpan,
       coverageOverall: lifeBox.querySelector('#life-coverage-overall'),
-      coveragePolar: lifeBox.querySelector('#life-coverage-polar'),
-      coverageTemperate: lifeBox.querySelector('#life-coverage-temperate'),
-      coverageTropical: lifeBox.querySelector('#life-coverage-tropical'),
       photoOverall: lifeBox.querySelector('#life-photo-overall'),
-      photoPolar: lifeBox.querySelector('#life-photo-polar'),
-      photoTemperate: lifeBox.querySelector('#life-photo-temperate'),
-      photoTropical: lifeBox.querySelector('#life-photo-tropical'),
+      zoneRows: {
+        tropical: lifeBox.querySelector('tr[data-zone-row="tropical"]'),
+        temperate: lifeBox.querySelector('tr[data-zone-row="temperate"]'),
+        polar: lifeBox.querySelector('tr[data-zone-row="polar"]')
+      },
+      coverageByZone: {
+        tropical: lifeBox.querySelector('#life-coverage-tropical'),
+        temperate: lifeBox.querySelector('#life-coverage-temperate'),
+        polar: lifeBox.querySelector('#life-coverage-polar')
+      },
+      photoByZone: {
+        tropical: lifeBox.querySelector('#life-photo-tropical'),
+        temperate: lifeBox.querySelector('#life-photo-temperate'),
+        polar: lifeBox.querySelector('#life-photo-polar')
+      }
     };
 }
 
@@ -1406,7 +1425,12 @@ function updateLifeBox() {
     const els = terraformingUICache.life;
     const lifeBox = els.box;
     if (!lifeBox) return;
-    const zones = ZONES;
+    const zones = getZones();
+    const knownZones = ['tropical', 'temperate', 'polar'];
+    knownZones.forEach(zone => {
+      const row = els.zoneRows[zone];
+      row.style.display = zones.includes(zone) ? '' : 'none';
+    });
 
     // Calculate total biomass from zonal data
     let totalBiomass = 0;
@@ -1426,15 +1450,25 @@ function updateLifeBox() {
     lifeBox.style.borderColor = lifeTargetMet ? 'green' : 'red';
     if (els.target) els.target.textContent = `Target : Life coverage above ${(effectiveTarget * 100).toFixed(0)}%.`;
 
-    const hazardPolar = terraforming.zonalSurface.polar?.hazardousBiomass || 0;
-    const hazardTemperate = terraforming.zonalSurface.temperate?.hazardousBiomass || 0;
-    const hazardTropical = terraforming.zonalSurface.tropical?.hazardousBiomass || 0;
-    const hazardTotal = hazardPolar + hazardTemperate + hazardTropical;
+    const zoneLines = zones.map(zone => {
+      const pct = (getZonePercentage(zone) * 100).toFixed(1);
+      const label = zone.charAt(0).toUpperCase() + zone.slice(1);
+      return `- ${label}: ${pct}%`;
+    });
+    const tooltipText = 'Life is the pinnacle of the terraforming process. It is introduced via the Life Designer and its success depends on environmental conditions.\n\n- Environmental Tolerance: Each lifeform has specific temperature and moisture ranges required for survival and growth. It can only spread in zones where these conditions are met.\n- Atmospheric Interaction: Life can significantly alter the atmosphere through processes like photosynthesis (consuming CO2, producing O2) and respiration.\n- Terraforming Goal: Achieving a high percentage of biomass coverage is a key objective for completing the terraforming of a planet.\n\nSurface distribution:\n' + zoneLines.join('\n');
+    els.infoTooltip.textContent = tooltipText;
+
+    const hazardByZone = {
+      tropical: terraforming.zonalSurface.tropical?.hazardousBiomass || 0,
+      temperate: terraforming.zonalSurface.temperate?.hazardousBiomass || 0,
+      polar: terraforming.zonalSurface.polar?.hazardousBiomass || 0
+    };
+    const hazardTotal = zones.reduce((sum, zone) => sum + (hazardByZone[zone] || 0), 0);
     const hazardEntries = [
       [els.hazardOverall, hazardTotal],
-      [els.hazardPolar, hazardPolar],
-      [els.hazardTemperate, hazardTemperate],
-      [els.hazardTropical, hazardTropical]
+      [els.hazardPolar, hazardByZone.polar],
+      [els.hazardTemperate, hazardByZone.temperate],
+      [els.hazardTropical, hazardByZone.tropical]
     ];
     hazardEntries.forEach(([node, value]) => {
       if (!node) return;
@@ -1456,19 +1490,18 @@ function updateLifeBox() {
     }
 
     // Calculate zonal coverage percentages
-    const polarCov = terraforming.zonalCoverageCache['polar']?.biomass ?? 0;
-    const temperateCov = terraforming.zonalCoverageCache['temperate']?.biomass ?? 0;
-    const tropicalCov = terraforming.zonalCoverageCache['tropical']?.biomass ?? 0;
+    const zoneCoverage = {
+      tropical: terraforming.zonalCoverageCache['tropical']?.biomass ?? 0,
+      temperate: terraforming.zonalCoverageCache['temperate']?.biomass ?? 0,
+      polar: terraforming.zonalCoverageCache['polar']?.biomass ?? 0
+    };
 
     // Update life coverage display
     if (els.coverageOverall) els.coverageOverall.textContent = (avgBiomassCoverage * 100).toFixed(2);
-    if (els.coveragePolar) els.coveragePolar.textContent = (polarCov * 100).toFixed(2);
-    if (els.coverageTemperate) els.coverageTemperate.textContent = (temperateCov * 100).toFixed(2);
-    if (els.coverageTropical) els.coverageTropical.textContent = (tropicalCov * 100).toFixed(2);
-
-    if (els.photoTropical) els.photoTropical.textContent = (terraforming.calculateZonalSolarPanelMultiplier('tropical')*100).toFixed(2);
-    if (els.photoTemperate) els.photoTemperate.textContent = (terraforming.calculateZonalSolarPanelMultiplier('temperate')*100).toFixed(2);
-    if (els.photoPolar) els.photoPolar.textContent = (terraforming.calculateZonalSolarPanelMultiplier('polar')*100).toFixed(2);
+    zones.forEach(zone => {
+      els.coverageByZone[zone].textContent = (zoneCoverage[zone] * 100).toFixed(2);
+      els.photoByZone[zone].textContent = (terraforming.calculateZonalSolarPanelMultiplier(zone) * 100).toFixed(2);
+    });
   }
 
   function formatRadiation(value){
@@ -1862,7 +1895,7 @@ function updateLifeBox() {
       const pct = v => (v * 100).toFixed(1);
       const isZeroPct = v => Math.abs(v * 100) < 0.05; // hide values that would display as 0.0%
 
-      for (const z of ZONES) {
+      for (const z of getZones()) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
         const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.ammonia + fr.ammoniaIce + fr.biomass), 0);
         const name = z.charAt(0).toUpperCase() + z.slice(1);
@@ -1887,7 +1920,7 @@ function updateLifeBox() {
 
       // Append resulting surface albedo per zone
       const zoneAlbLines = [];
-      for (const z of ZONES) {
+      for (const z of getZones()) {
         try {
           const zSurf = (typeof terraforming.calculateZonalSurfaceAlbedo === 'function')
             ? terraforming.calculateZonalSurfaceAlbedo(z)
@@ -1938,18 +1971,17 @@ function updateLifeBox() {
 
     if (els.solarFluxTooltip && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
-      const t = (z.tropical / 4).toFixed(1);
-      const m = (z.temperate / 4).toFixed(1);
-      const p = (z.polar / 4).toFixed(1);
-      const lines = [
-        'Average Solar Flux by zone',
-        `Tropical: ${t}`,
-        `Temperate: ${m}`,
-        `Polar: ${p}`,
+      const lines = ['Average Solar Flux by zone'];
+      getZones().forEach(zone => {
+        const flux = (z[zone] || 0) / 4;
+        const label = zone.charAt(0).toUpperCase() + zone.slice(1);
+        lines.push(`${label}: ${flux.toFixed(1)}`);
+      });
+      lines.push(
         '',
         'Modified solar flux is 4× the average across all zones.',
         'Surface Solar Flux is the solar energy that reaches the ground.  It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.'
-      ];
+      );
       setTooltipText(els.solarFluxTooltip, lines.join('\n'), els.tooltips, 'solarFlux');
     }
 
@@ -2024,7 +2056,7 @@ function updateLifeBox() {
       }
 
       const zoneLines = [];
-      for (const z of ZONES) {
+      for (const z of getZones()) {
         try {
           const zSurf = (typeof terraforming.calculateZonalSurfaceAlbedo === 'function')
             ? terraforming.calculateZonalSurfaceAlbedo(z)

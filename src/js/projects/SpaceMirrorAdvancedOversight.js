@@ -27,7 +27,7 @@ class SpaceMirrorAdvancedOversight {
       const REALLOC_MIN = 1;           // At least this many units in a reallocation probe (mirrors/lanterns)
 
       // ---------------- Capability / flags ----------------
-      const ZONES = ['tropical', 'temperate', 'polar'];
+      const ZONES = getZones();
 
       const FOCUS_FLAG =
         (typeof projectManager !== 'undefined') &&

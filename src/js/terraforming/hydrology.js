@@ -50,7 +50,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     let totalGasMelt = 0;
     let totalFreezeOut = 0;
 
-    const zones = (typeof ZONES !== 'undefined') ? ZONES : ['tropical', 'temperate', 'polar'];
+    const zones = getZones();
     const defaultElevations = { tropical: 0, temperate: 0, polar: 0 };
     const zoneElevations = zoneElevationsInput || (typeof ZONE_ELEVATIONS !== 'undefined' ? ZONE_ELEVATIONS : defaultElevations);
     const getZonePercentageFn = (typeof getZonePercentage !== 'undefined') ? getZonePercentage : (zonesModHydro && zonesModHydro.getZonePercentage);

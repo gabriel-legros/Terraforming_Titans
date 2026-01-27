@@ -386,7 +386,8 @@ class LifeDesign {
       let globalPass = false;
       let anySafe = false;
       let anyWarning = false;
-      for (const zoneName of ['tropical', 'temperate', 'polar']) {
+      const zones = getZones();
+      for (const zoneName of zones) {
           const res = this.temperatureSurvivalCheckZone(zoneName);
           results[zoneName] = res;
           if (res.pass) {
@@ -465,7 +466,8 @@ class LifeDesign {
       let closestZone = null;
       let closestDistance = Infinity;
 
-      ['tropical', 'temperate', 'polar'].forEach(zoneName => {
+      const zones = getZones();
+      zones.forEach(zoneName => {
           if (!tempResults[zoneName] || tempResults[zoneName].pass) {
               return;
           }
@@ -493,7 +495,8 @@ class LifeDesign {
       const survivalTempResults = this.temperatureSurvivalCheck();
       const growableZones = [];
 
-      for (const zoneName of ['tropical', 'temperate', 'polar']) {
+      const zones = getZones();
+      for (const zoneName of zones) {
           if (survivalTempResults[zoneName]?.pass && this.moistureCheckZone(zoneName).pass) {
               growableZones.push(zoneName);
           }
@@ -521,7 +524,8 @@ class LifeDesign {
       const results = {};
       // Global pass requires ANY zone to pass
       let globalPass = false;
-      for (const zoneName of ['tropical', 'temperate', 'polar']) {
+      const zones = getZones();
+      for (const zoneName of zones) {
           results[zoneName] = this.moistureCheckZone(zoneName);
           if (results[zoneName].pass) globalPass = true; // If any zone passes, global passes
       }
@@ -546,7 +550,8 @@ class LifeDesign {
   temperatureGrowthCheck() {
       const results = {};
       let globalMultiplier = 0;
-      for (const zoneName of ['tropical', 'temperate', 'polar']) {
+      const zones = getZones();
+      for (const zoneName of zones) {
           const mult = this.temperatureGrowthMultiplierZone(zoneName);
           results[zoneName] = { pass: true, reason: null, multiplier: mult };
           if (mult > globalMultiplier) globalMultiplier = mult;
@@ -940,7 +945,7 @@ class LifeManager extends EffectableEntity {
     const usesLuminosity = process.growth.usesLuminosity === true;
     const secondsMultiplier = deltaTime / 1000;
     const landMultiplier = Math.max(0, 1 - getEcumenopolisLandFraction(terraforming));
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = getZones();
 
     const biomassByZone = {};
     const waterByZone = {};
@@ -967,7 +972,10 @@ class LifeManager extends EffectableEntity {
       }
     };
 
-    const potentialGrowthByZone = { tropical: 0, temperate: 0, polar: 0 };
+    const potentialGrowthByZone = {};
+    zones.forEach(zoneName => {
+      potentialGrowthByZone[zoneName] = 0;
+    });
     let totalPotentialGrowth = 0;
 
     zones.forEach(zoneName => {
@@ -1056,7 +1064,10 @@ class LifeManager extends EffectableEntity {
     }
 
     const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs));
-    const zoneGrowthByZone = { tropical: 0, temperate: 0, polar: 0 };
+    const zoneGrowthByZone = {};
+    zones.forEach(zoneName => {
+      zoneGrowthByZone[zoneName] = 0;
+    });
     zones.forEach(zoneName => {
       const zonePotential = potentialGrowthByZone[zoneName];
       if (zonePotential <= 0) return;
@@ -1088,7 +1099,10 @@ class LifeManager extends EffectableEntity {
     });
 
     const growthAtmosphericDeltas = {};
-    const waterDeltaByZone = { tropical: 0, temperate: 0, polar: 0 };
+    const waterDeltaByZone = {};
+    zones.forEach(zoneName => {
+      waterDeltaByZone[zoneName] = 0;
+    });
     zones.forEach(zoneName => {
       const zoneGrowth = zoneGrowthByZone[zoneName];
       if (zoneGrowth <= 0) return;
@@ -1104,7 +1118,10 @@ class LifeManager extends EffectableEntity {
       });
     });
 
-    const decayTargetsByZone = { tropical: 0, temperate: 0, polar: 0 };
+    const decayTargetsByZone = {};
+    zones.forEach(zoneName => {
+      decayTargetsByZone[zoneName] = 0;
+    });
     let totalDecayTarget = 0;
     zones.forEach(zoneName => {
       const zonalBiomass = biomassByZone[zoneName];
@@ -1124,7 +1141,10 @@ class LifeManager extends EffectableEntity {
     const decayAtmosphericInputsPerBiomass = Object.entries(decayPerBiomass.atmospheric || {})
       .filter(([, coef]) => coef < 0);
 
-    const potentialDecayByZone = { tropical: 0, temperate: 0, polar: 0 };
+    const potentialDecayByZone = {};
+    zones.forEach(zoneName => {
+      potentialDecayByZone[zoneName] = 0;
+    });
     let totalPotentialDecay = 0;
     zones.forEach(zoneName => {
       const targetDecay = decayTargetsByZone[zoneName];
@@ -1245,12 +1265,14 @@ class LifeManager extends EffectableEntity {
       decayAtmosphericDeltas,
     } = plan;
 
-    terraforming.biomassDyingZones = terraforming.biomassDyingZones || { tropical: false, temperate: false, polar: false };
-
-    const netBiomassChangeByZone = { tropical: 0, temperate: 0, polar: 0 };
-
+    terraforming.biomassDyingZones = {};
+    const netBiomassChangeByZone = {};
     zones.forEach(zoneName => {
       terraforming.biomassDyingZones[zoneName] = false;
+      netBiomassChangeByZone[zoneName] = 0;
+    });
+
+    zones.forEach(zoneName => {
       const overflowDecay = overflowDecayByZone[zoneName] || 0;
       if (overflowDecay <= 0) return;
       terraforming.zonalSurface[zoneName].biomass -= overflowDecay;

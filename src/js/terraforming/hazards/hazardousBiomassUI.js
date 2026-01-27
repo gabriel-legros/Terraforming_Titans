@@ -228,28 +228,6 @@ function getResources() {
   }
 }
 
-function getZones(terraformingState) {
-  if (terraformingState && terraformingState.zonalSurface) {
-    const keys = Object.keys(terraformingState.zonalSurface);
-    if (keys.length) {
-      return keys;
-    }
-  }
-
-  let candidate = null;
-  try {
-    candidate = ZONES;
-  } catch (error) {
-    candidate = null;
-  }
-
-  if (Array.isArray(candidate) && candidate.length) {
-    return candidate;
-  }
-
-  return HAZARD_FALLBACK_ZONES;
-}
-
 function createInfoIcon(text) {
   const doc = getDocument();
   const icon = doc.createElement('span');

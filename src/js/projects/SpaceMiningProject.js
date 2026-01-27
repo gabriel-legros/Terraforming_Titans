@@ -334,7 +334,7 @@ class SpaceMiningProject extends SpaceshipProject {
   getWaterTargetAmount() {
     const surfaceArea = terraforming.celestialParameters.surfaceArea;
     let total = 0;
-    for (const zone of ZONES) {
+    for (const zone of getZones()) {
       const zoneArea = surfaceArea * getZonePercentage(zone);
       total += estimateAmountForCoverage(terraforming.waterTarget, zoneArea);
     }
@@ -343,7 +343,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getWaterIceTotalAmount() {
     let total = 0;
-    for (const zone of ZONES) {
+    for (const zone of getZones()) {
       const zoneSurface = terraforming.zonalSurface[zone];
       total += (zoneSurface.liquidWater || 0) + (zoneSurface.ice || 0);
     }
@@ -496,7 +496,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
   calculateSpaceshipGainPerShip() {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
-      const zones = ['tropical', 'temperate', 'polar'];
+      const zones = getZones();
       const allBelow = zones.every(z => (terraforming?.temperature?.zones?.[z]?.value || 0) <= 273.15);
       const resource = allBelow ? 'ice' : 'liquidWater';
       const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
@@ -527,19 +527,19 @@ class SpaceMiningProject extends SpaceshipProject {
         return;
       }
       const amount = entry[resourceName] * fraction * productivity;
-      const zones = ['tropical', 'temperate', 'polar'];
+      const zones = getZones();
       const temps = terraforming?.temperature?.zones || {};
       const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
       if (allBelow || resourceName === 'ice') {
         zones.forEach(zone => {
-          const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
+          const pct = getZonePercentage(zone);
           terraforming.zonalSurface[zone].ice += amount * pct;
         });
       } else {
         const eligible = zones.filter(z => (temps[z]?.value || 0) > 273.15);
-        const totalPct = eligible.reduce((s, z) => s + ((typeof getZonePercentage === 'function') ? getZonePercentage(z) : 1 / zones.length), 0);
+        const totalPct = eligible.reduce((s, z) => s + getZonePercentage(z), 0);
         eligible.forEach(zone => {
-          const pct = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / eligible.length;
+          const pct = getZonePercentage(zone);
           terraforming.zonalSurface[zone].liquidWater += amount * (pct / totalPct);
         });
       }

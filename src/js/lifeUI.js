@@ -279,6 +279,11 @@ function cacheLifeStatusTableElements() {
       tooltipEl: null
     };
   });
+  lifeUICache.cells.headers = {
+    tropical: document.getElementById('life-status-header-tropical'),
+    temperate: document.getElementById('life-status-header-temperate'),
+    polar: document.getElementById('life-status-header-polar'),
+  };
 }
 
 function invalidateLifeDesignCaches() {
@@ -433,9 +438,9 @@ function initializeLifeTerraformingDesignerUI() {
                     <tr>
                         <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Requirement <small>(Tap ❌ for details)</small></th>
                         <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Global</th>
-                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Tropical</th>
-                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Temperate</th>
-                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Polar <span id="life-status-polar-tooltip" class="info-tooltip-icon">&#9432;</span></th>
+                        <th id="life-status-header-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;">Tropical</th>
+                        <th id="life-status-header-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;">Temperate</th>
+                        <th id="life-status-header-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;">Polar <span id="life-status-polar-tooltip" class="info-tooltip-icon">&#9432;</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1047,26 +1052,49 @@ function updateLifeStatusTable() {
         return;
     }
 
-    const zones = ['global', 'tropical', 'temperate', 'polar'];
+    const zoneList = getZones();
+    const zones = ['global', ...zoneList];
+
+    const toggleZoneColumn = (zone, isVisible) => {
+        const header = lifeUICache.cells.headers?.[zone];
+        if (header) header.style.display = isVisible ? '' : 'none';
+        const dayCell = lifeUICache.cells.dayTemp?.[zone]?.cell;
+        const nightCell = lifeUICache.cells.nightTemp?.[zone]?.cell;
+        if (dayCell) dayCell.style.display = isVisible ? '' : 'none';
+        if (nightCell) nightCell.style.display = isVisible ? '' : 'none';
+        const cells = [
+            lifeUICache.cells.tempMultiplier?.[zone],
+            lifeUICache.cells.moisture?.[zone],
+            lifeUICache.cells.radiation?.[zone],
+            lifeUICache.cells.maxDensity?.[zone],
+            lifeUICache.cells.biomassAmount?.[zone],
+            lifeUICache.cells.biomassDensity?.[zone],
+            lifeUICache.cells.growthRate?.[zone]?.cell,
+        ];
+        cells.forEach(cell => {
+            if (cell) cell.style.display = isVisible ? '' : 'none';
+        });
+    };
+    ['tropical', 'temperate', 'polar'].forEach(zone => {
+        toggleZoneColumn(zone, zoneList.includes(zone));
+    });
 
     const updateStatusCell = (cell, result, isGlobalRadiation = false) => {
-        if (!cell) return;
-
-        if (typeof result !== 'object' || result === null || typeof result.pass === 'undefined') {
-            console.error('Invalid result format:', result);
-            updateStatusCellIcon(cell, '?', 'Error fetching status', '');
+        const status = result || { pass: false, warning: false, reason: 'Status unavailable', reduction: 0, missing: true };
+        if (status.missing) {
+            updateStatusCellIcon(cell, '?', status.reason, '');
             return;
         }
 
-        if (result.warning) {
-            const reason = result.reason || '';
+        if (status.warning) {
+            const reason = status.reason || '';
             updateStatusCellIcon(cell, '⚠', reason, '');
-        } else if (result.pass) {
+        } else if (status.pass) {
             updateStatusCellIcon(cell, '✅', '', '');
         } else {
-            const reason = result.reason || 'Failed';
-            const reductionText = (isGlobalRadiation && result.reduction > 0)
-                ? ` (-${result.reduction.toFixed(0)}% Growth)`
+            const reason = status.reason || 'Failed';
+            const reductionText = (isGlobalRadiation && status.reduction > 0)
+                ? ` (-${status.reduction.toFixed(0)}% Growth)`
                 : '';
             updateStatusCellIcon(cell, '❌', reason, reductionText);
         }
@@ -1088,35 +1116,25 @@ function updateLifeStatusTable() {
     const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
     const globalDensity = totalSurfaceArea > 0 ? totalBiomass / totalSurfaceArea : 0;
 
-    const ecoFraction = typeof getEcumenopolisLandFraction === 'function'
-        ? getEcumenopolisLandFraction(terraforming)
-        : 0;
+    const ecoFraction = getEcumenopolisLandFraction(terraforming);
     const landMult = Math.max(0, 1 - ecoFraction);
 
     // Precompute day and night temperatures
-    const zonePerc = {
-        tropical: getZonePercentage('tropical'),
-        temperate: getZonePercentage('temperate'),
-        polar: getZonePercentage('polar')
-    };
-    const globalDayTemp = terraforming.temperature.zones.tropical.day * zonePerc.tropical +
-        terraforming.temperature.zones.temperate.day * zonePerc.temperate +
-        terraforming.temperature.zones.polar.day * zonePerc.polar;
-    const globalNightTemp = terraforming.temperature.zones.tropical.night * zonePerc.tropical +
-        terraforming.temperature.zones.temperate.night * zonePerc.temperate +
-        terraforming.temperature.zones.polar.night * zonePerc.polar;
-    const dayTemps = {
-        global: globalDayTemp,
-        tropical: terraforming.temperature.zones.tropical.day,
-        temperate: terraforming.temperature.zones.temperate.day,
-        polar: terraforming.temperature.zones.polar.day
-    };
-    const nightTemps = {
-        global: globalNightTemp,
-        tropical: terraforming.temperature.zones.tropical.night,
-        temperate: terraforming.temperature.zones.temperate.night,
-        polar: terraforming.temperature.zones.polar.night
-    };
+    const zonePerc = {};
+    let globalDayTemp = 0;
+    let globalNightTemp = 0;
+    zoneList.forEach(zone => {
+        const pct = getZonePercentage(zone);
+        zonePerc[zone] = pct;
+        globalDayTemp += (terraforming.temperature.zones[zone]?.day || 0) * pct;
+        globalNightTemp += (terraforming.temperature.zones[zone]?.night || 0) * pct;
+    });
+    const dayTemps = { global: globalDayTemp };
+    const nightTemps = { global: globalNightTemp };
+    zoneList.forEach(zone => {
+        dayTemps[zone] = terraforming.temperature.zones[zone]?.day || 0;
+        nightTemps[zone] = terraforming.temperature.zones[zone]?.night || 0;
+    });
     const unit = getTemperatureUnit();
     lifeUICache.tempUnits.forEach(el => el.textContent = unit);
 
@@ -1278,7 +1296,8 @@ function updateLifeStatusTable() {
         let anySafe = false;
         let anyWarning = false;
         let failReason = null;
-        ['tropical', 'temperate', 'polar'].forEach(z => {
+        const zones = getZones();
+        zones.forEach(z => {
             const status = designToCheck.daytimeTemperatureSurvivalCheckZone(z);
             if (status.pass) {
                 pass = true;
@@ -1299,7 +1318,8 @@ function updateLifeStatusTable() {
         let anySafe = false;
         let anyWarning = false;
         let failReason = null;
-        ['tropical', 'temperate', 'polar'].forEach(z => {
+        const zones = getZones();
+        zones.forEach(z => {
             const status = designToCheck.nighttimeTemperatureSurvivalCheckZone(z);
             if (status.pass) {
                 pass = true;

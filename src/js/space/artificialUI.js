@@ -4,17 +4,32 @@ const artificialUICache = {
   status: null,
   state: null,
   type: null,
+  typeField: null,
   core: null,
+  coreField: null,
   radiusRange: null,
   radiusInput: null,
   radiusAuto: null,
+  radiusBox: null,
   radiusLabel: null,
   areaLabel: null,
   gravityValue: null,
   nameInput: null,
   costMetal: null,
+  costMetalRow: null,
   costSuperalloy: null,
   starContext: null,
+  starContextField: null,
+  ringStarCore: null,
+  ringStarCoreField: null,
+  ringOrbitRange: null,
+  ringOrbitInput: null,
+  ringOrbitBox: null,
+  ringOrbitLabel: null,
+  ringWidthRange: null,
+  ringWidthInput: null,
+  ringWidthBox: null,
+  ringWidthLabel: null,
   durationValue: null,
   durationTooltip: null,
   gainEffective: null,
@@ -23,6 +38,7 @@ const artificialUICache = {
   gainDefense: null,
   gainFleetTooltip: null,
   effectShipEnergy: null,
+  effectShipEnergyRow: null,
   sector: null,
   sectorFilter: null,
   priority: null,
@@ -50,6 +66,8 @@ const artificialStashMultipliers = {
   silicon: 1_000_000_000
 };
 let artificialRadiusEditing = false;
+let artificialRingOrbitEditing = false;
+let artificialRingWidthEditing = false;
 let artificialHistorySig = '';
 const ARTIFICIAL_SECTOR_RESOURCE_LABELS = {
   metal: 'Metal',
@@ -265,6 +283,13 @@ function createProgressBar() {
   return { wrap, fill };
 }
 
+const ARTIFICIAL_RING_WIDTH_BOUNDS_KM = { min: 1_000, max: 1_000_000 };
+const ARTIFICIAL_AU_TO_EARTH_RADII = 23_481.07;
+
+function getSelectedArtificialType(project) {
+  return project?.type || (artificialUICache.type ? artificialUICache.type.value : 'shell') || 'shell';
+}
+
 function getRadiusBounds() {
   if (typeof getArtificialCoreBounds === 'function' && artificialUICache.core) {
     return getArtificialCoreBounds(artificialUICache.core.value);
@@ -272,15 +297,50 @@ function getRadiusBounds() {
   return { min: 2, max: 8 };
 }
 
+function getRingStarCoreOptions() {
+  const fn = typeof window !== 'undefined' ? window.getRingStarCores : null;
+  return fn ? fn() : [];
+}
+
+function getRingOrbitBoundsAU() {
+  if (typeof getRingStarCoreBounds === 'function' && artificialUICache.ringStarCore) {
+    return getRingStarCoreBounds(artificialUICache.ringStarCore.value);
+  }
+  return { min: 0.03, max: 0.25 };
+}
+
 function clampRadiusValue(value) {
   const bounds = getRadiusBounds();
   return Math.min(Math.max(value, bounds.min), bounds.max);
+}
+
+function clampRingOrbitValue(value) {
+  const bounds = getRingOrbitBoundsAU();
+  const next = Math.max(0, Number(value) || 0);
+  return Math.min(Math.max(next, bounds.min), bounds.max);
+}
+
+function clampRingWidthValue(value) {
+  const next = Math.max(0, Number(value) || 0);
+  return Math.min(Math.max(next, ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min), ARTIFICIAL_RING_WIDTH_BOUNDS_KM.max);
 }
 
 function isRadiusFieldActive() {
   if (typeof document === 'undefined') return false;
   return document.activeElement === artificialUICache.radiusInput
     || document.activeElement === artificialUICache.radiusRange;
+}
+
+function isRingOrbitFieldActive() {
+  if (typeof document === 'undefined') return false;
+  return document.activeElement === artificialUICache.ringOrbitInput
+    || document.activeElement === artificialUICache.ringOrbitRange;
+}
+
+function isRingWidthFieldActive() {
+  if (typeof document === 'undefined') return false;
+  return document.activeElement === artificialUICache.ringWidthInput
+    || document.activeElement === artificialUICache.ringWidthRange;
 }
 
 function setRadiusFields(value, force = false) {
@@ -293,6 +353,26 @@ function setRadiusFields(value, force = false) {
   }
 }
 
+function setRingOrbitFields(value, force = false) {
+  const next = clampRingOrbitValue(value);
+  if (artificialUICache.ringOrbitRange && (force || (!isRingOrbitFieldActive() && !artificialRingOrbitEditing))) {
+    artificialUICache.ringOrbitRange.value = next;
+  }
+  if (artificialUICache.ringOrbitInput && (force || (!artificialRingOrbitEditing && document.activeElement !== artificialUICache.ringOrbitInput))) {
+    artificialUICache.ringOrbitInput.value = next;
+  }
+}
+
+function setRingWidthFields(value, force = false) {
+  const next = clampRingWidthValue(value);
+  if (artificialUICache.ringWidthRange && (force || (!isRingWidthFieldActive() && !artificialRingWidthEditing))) {
+    artificialUICache.ringWidthRange.value = next;
+  }
+  if (artificialUICache.ringWidthInput && (force || (!artificialRingWidthEditing && document.activeElement !== artificialUICache.ringWidthInput))) {
+    artificialUICache.ringWidthInput.value = Math.round(next);
+  }
+}
+
 function getAutoRadiusValue() {
   const bounds = getRadiusBounds();
   const manager = artificialManager;
@@ -300,6 +380,7 @@ function getAutoRadiusValue() {
 }
 
 function applyRadiusBounds() {
+  if (getSelectedArtificialType(null) !== 'shell') return;
   const bounds = getRadiusBounds();
   if (artificialUICache.radiusRange) {
     artificialUICache.radiusRange.min = bounds.min;
@@ -317,8 +398,38 @@ function applyRadiusBounds() {
   }
 }
 
+function applyRingBounds() {
+  if (!artificialUICache.ringOrbitRange || !artificialUICache.ringOrbitInput || !artificialUICache.ringWidthRange || !artificialUICache.ringWidthInput) return;
+
+  const orbit = getRingOrbitBoundsAU();
+  artificialUICache.ringOrbitRange.min = orbit.min;
+  artificialUICache.ringOrbitRange.max = orbit.max;
+  artificialUICache.ringOrbitInput.min = orbit.min;
+  artificialUICache.ringOrbitInput.max = orbit.max;
+  if (!isRingOrbitFieldActive() && !artificialRingOrbitEditing) {
+    artificialUICache.ringOrbitRange.value = clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitRange.value) || orbit.min);
+  }
+  if (!artificialRingOrbitEditing && document.activeElement !== artificialUICache.ringOrbitInput) {
+    artificialUICache.ringOrbitInput.value = clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitInput.value) || orbit.min);
+  }
+
+  artificialUICache.ringWidthRange.min = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min;
+  artificialUICache.ringWidthRange.max = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.max;
+  artificialUICache.ringWidthRange.step = '1000';
+  artificialUICache.ringWidthInput.min = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min;
+  artificialUICache.ringWidthInput.max = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.max;
+  artificialUICache.ringWidthInput.step = '1000';
+  if (!isRingWidthFieldActive() && !artificialRingWidthEditing) {
+    artificialUICache.ringWidthRange.value = clampRingWidthValue(parseFloat(artificialUICache.ringWidthRange.value) || ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min);
+  }
+  if (!artificialRingWidthEditing && document.activeElement !== artificialUICache.ringWidthInput) {
+    artificialUICache.ringWidthInput.value = clampRingWidthValue(parseFloat(artificialUICache.ringWidthInput.value) || ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min);
+  }
+}
+
 function applyStarContextBounds() {
   if (!artificialUICache.starContext) return;
+  if (getSelectedArtificialType(null) !== 'shell') return;
   const coreValue = artificialUICache.core ? artificialUICache.core.value : null;
   const coreConfig = typeof getArtificialCoreConfig === 'function' ? getArtificialCoreConfig(coreValue) : null;
   const allowStar = coreConfig ? coreConfig.allowStar !== false : true;
@@ -432,6 +543,7 @@ function ensureArtificialLayout() {
   typeLabel.appendChild(typeSelect);
   blueprint.appendChild(typeLabel);
   artificialUICache.type = typeSelect;
+  artificialUICache.typeField = typeLabel;
 
   const coreLabel = document.createElement('label');
   coreLabel.className = 'artificial-field';
@@ -447,6 +559,7 @@ function ensureArtificialLayout() {
   coreLabel.appendChild(coreSelect);
   blueprint.appendChild(coreLabel);
   artificialUICache.core = coreSelect;
+  artificialUICache.coreField = coreLabel;
 
   const starLabel = document.createElement('label');
   starLabel.className = 'artificial-field';
@@ -462,7 +575,24 @@ function ensureArtificialLayout() {
   starLabel.appendChild(starSelect);
   blueprint.appendChild(starLabel);
   artificialUICache.starContext = starSelect;
+  artificialUICache.starContextField = starLabel;
   applyStarContextBounds();
+
+  const ringStarCoreLabel = document.createElement('label');
+  ringStarCoreLabel.className = 'artificial-field';
+  ringStarCoreLabel.textContent = 'Star core';
+  const ringStarCoreSelect = document.createElement('select');
+  ringStarCoreSelect.className = 'artificial-select';
+  const ringCoreOptions = getRingStarCoreOptions();
+  ringCoreOptions.forEach((option) => {
+    ringStarCoreSelect.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
+  });
+  const defaultRingCore = ringCoreOptions.find((entry) => !entry.disabled) || ringCoreOptions[0];
+  ringStarCoreSelect.value = defaultRingCore ? defaultRingCore.value : '';
+  ringStarCoreLabel.appendChild(ringStarCoreSelect);
+  blueprint.appendChild(ringStarCoreLabel);
+  artificialUICache.ringStarCore = ringStarCoreSelect;
+  artificialUICache.ringStarCoreField = ringStarCoreLabel;
 
   const gravityRow = document.createElement('div');
   gravityRow.className = 'artificial-gravity-row';
@@ -530,7 +660,90 @@ function ensureArtificialLayout() {
   radiusLabel.appendChild(surfaceBox);
 
   blueprint.appendChild(radiusLabel);
+  artificialUICache.radiusBox = radiusLabel;
   applyRadiusBounds();
+
+  const ringOrbitBox = document.createElement('div');
+  ringOrbitBox.className = 'artificial-radius artificial-ring-orbit';
+  const ringOrbitTop = document.createElement('div');
+  ringOrbitTop.className = 'artificial-radius-row';
+  const ringOrbitText = document.createElement('span');
+  ringOrbitText.textContent = 'Orbital radius (AU)';
+  const ringOrbitInfo = document.createElement('span');
+  ringOrbitInfo.className = 'info-tooltip-icon';
+  ringOrbitInfo.innerHTML = '&#9432;';
+  ringOrbitInfo.title = 'Ring orbital distance from the system star.';
+  ringOrbitText.appendChild(document.createTextNode(' '));
+  ringOrbitText.appendChild(ringOrbitInfo);
+  const ringOrbitValue = document.createElement('span');
+  ringOrbitValue.className = 'artificial-radius-value';
+  ringOrbitTop.appendChild(ringOrbitText);
+  ringOrbitTop.appendChild(ringOrbitValue);
+  ringOrbitBox.appendChild(ringOrbitTop);
+  artificialUICache.ringOrbitLabel = ringOrbitValue;
+
+  const ringOrbitControls = document.createElement('div');
+  ringOrbitControls.className = 'artificial-radius-controls';
+  const ringOrbitRange = document.createElement('input');
+  ringOrbitRange.type = 'range';
+  ringOrbitRange.step = '0.001';
+  ringOrbitRange.value = '0.1';
+  ringOrbitRange.className = 'artificial-radius-range';
+  artificialUICache.ringOrbitRange = ringOrbitRange;
+  ringOrbitControls.appendChild(ringOrbitRange);
+
+  const ringOrbitInput = document.createElement('input');
+  ringOrbitInput.type = 'number';
+  ringOrbitInput.step = '0.001';
+  ringOrbitInput.value = '0.1';
+  ringOrbitInput.className = 'artificial-radius-input';
+  artificialUICache.ringOrbitInput = ringOrbitInput;
+  ringOrbitControls.appendChild(ringOrbitInput);
+  ringOrbitBox.appendChild(ringOrbitControls);
+  blueprint.appendChild(ringOrbitBox);
+  artificialUICache.ringOrbitBox = ringOrbitBox;
+
+  const ringWidthBox = document.createElement('div');
+  ringWidthBox.className = 'artificial-radius artificial-ring-width';
+  const ringWidthTop = document.createElement('div');
+  ringWidthTop.className = 'artificial-radius-row';
+  const ringWidthText = document.createElement('span');
+  ringWidthText.textContent = 'Width (km)';
+  const ringWidthInfo = document.createElement('span');
+  ringWidthInfo.className = 'info-tooltip-icon';
+  ringWidthInfo.innerHTML = '&#9432;';
+  ringWidthInfo.title = 'Usable surface width for the ring band (1000 km to 1,000,000 km).';
+  ringWidthText.appendChild(document.createTextNode(' '));
+  ringWidthText.appendChild(ringWidthInfo);
+  const ringWidthValue = document.createElement('span');
+  ringWidthValue.className = 'artificial-radius-value';
+  ringWidthTop.appendChild(ringWidthText);
+  ringWidthTop.appendChild(ringWidthValue);
+  ringWidthBox.appendChild(ringWidthTop);
+  artificialUICache.ringWidthLabel = ringWidthValue;
+
+  const ringWidthControls = document.createElement('div');
+  ringWidthControls.className = 'artificial-radius-controls';
+  const ringWidthRange = document.createElement('input');
+  ringWidthRange.type = 'range';
+  ringWidthRange.step = '1000';
+  ringWidthRange.value = '10000';
+  ringWidthRange.className = 'artificial-radius-range';
+  artificialUICache.ringWidthRange = ringWidthRange;
+  ringWidthControls.appendChild(ringWidthRange);
+
+  const ringWidthInput = document.createElement('input');
+  ringWidthInput.type = 'number';
+  ringWidthInput.step = '1000';
+  ringWidthInput.value = '10000';
+  ringWidthInput.className = 'artificial-radius-input';
+  artificialUICache.ringWidthInput = ringWidthInput;
+  ringWidthControls.appendChild(ringWidthInput);
+  ringWidthBox.appendChild(ringWidthControls);
+  blueprint.appendChild(ringWidthBox);
+  artificialUICache.ringWidthBox = ringWidthBox;
+
+  applyRingBounds();
 
   grid.appendChild(blueprint);
 
@@ -544,6 +757,7 @@ function ensureArtificialLayout() {
   const { row: metalRow, valueEl: metalValue } = buildCostRow('Metal', 'artificial-cost-metal');
   const { row: superRow, valueEl: superValue } = buildCostRow('Superalloys', 'artificial-cost-super');
   artificialUICache.costMetal = metalValue;
+  artificialUICache.costMetalRow = metalRow;
   artificialUICache.costSuperalloy = superValue;
 
   const costList = document.createElement('div');
@@ -658,6 +872,7 @@ function ensureArtificialLayout() {
   const shipValue = document.createElement('span');
   shipValue.className = 'artificial-effect-value';
   artificialUICache.effectShipEnergy = shipValue;
+  artificialUICache.effectShipEnergyRow = shipRow;
   shipRow.appendChild(shipLabel);
   shipRow.appendChild(shipValue);
   effectsList.appendChild(shipRow);
@@ -866,6 +1081,13 @@ function ensureArtificialLayout() {
   content.dataset.rendered = 'true';
 
   // Bind events
+  typeSelect.addEventListener('change', () => {
+    applyRadiusBounds();
+    applyStarContextBounds();
+    applyRingBounds();
+    updateArtificialUI({ force: true });
+  });
+
   radiusRange.addEventListener('input', () => {
     const value = clampRadiusValue(parseFloat(radiusRange.value) || 0);
     radiusRange.value = value;
@@ -894,6 +1116,54 @@ function ensureArtificialLayout() {
     setRadiusFields(value, true);
     updateArtificialUI();
   });
+
+  ringStarCoreSelect.addEventListener('change', () => {
+    applyRingBounds();
+    updateArtificialUI();
+  });
+  ringOrbitRange.addEventListener('input', () => {
+    const value = clampRingOrbitValue(parseFloat(ringOrbitRange.value) || 0);
+    ringOrbitRange.value = value;
+    ringOrbitInput.value = value;
+    updateArtificialUI();
+  });
+  ringOrbitInput.addEventListener('input', () => {
+    if (artificialUICache.ringOrbitRange) {
+      const value = parseFloat(ringOrbitInput.value) || 0;
+      artificialUICache.ringOrbitRange.value = clampRingOrbitValue(value);
+    }
+  });
+  ringOrbitInput.addEventListener('focus', () => {
+    artificialRingOrbitEditing = true;
+  });
+  ringOrbitInput.addEventListener('blur', () => {
+    artificialRingOrbitEditing = false;
+    const value = clampRingOrbitValue(parseFloat(ringOrbitInput.value) || 0);
+    setRingOrbitFields(value, true);
+    updateArtificialUI();
+  });
+  ringWidthRange.addEventListener('input', () => {
+    const value = clampRingWidthValue(parseFloat(ringWidthRange.value) || 0);
+    ringWidthRange.value = value;
+    ringWidthInput.value = value;
+    updateArtificialUI();
+  });
+  ringWidthInput.addEventListener('input', () => {
+    if (artificialUICache.ringWidthRange) {
+      const value = parseFloat(ringWidthInput.value) || 0;
+      artificialUICache.ringWidthRange.value = clampRingWidthValue(value);
+    }
+  });
+  ringWidthInput.addEventListener('focus', () => {
+    artificialRingWidthEditing = true;
+  });
+  ringWidthInput.addEventListener('blur', () => {
+    artificialRingWidthEditing = false;
+    const value = clampRingWidthValue(parseFloat(ringWidthInput.value) || 0);
+    setRingWidthFields(value, true);
+    updateArtificialUI();
+  });
+
   nameInput.addEventListener('input', () => {
     artificialManager?.setActiveProjectName(nameInput.value);
   });
@@ -908,14 +1178,26 @@ function ensureArtificialLayout() {
   });
   startBtn.addEventListener('click', () => {
     if (!artificialManager) return;
-    if (artificialUICache.type.value !== 'shell') return;
-    artificialManager.startShellConstruction({
-      radiusEarth: clampRadiusValue(parseFloat(radiusRange.value) || 1),
-      core: artificialUICache.core.value,
-      starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
-      name: artificialUICache.nameInput ? artificialUICache.nameInput.value : '',
-      sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
-    });
+    const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
+    if (type === 'shell') {
+      artificialManager.startShellConstruction({
+        radiusEarth: clampRadiusValue(parseFloat(radiusRange.value) || 1),
+        core: artificialUICache.core.value,
+        starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
+        name: artificialUICache.nameInput ? artificialUICache.nameInput.value : '',
+        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
+      });
+      return;
+    }
+    if (type === 'ring') {
+      artificialManager.startRingConstruction({
+        starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
+        orbitRadiusAU: clampRingOrbitValue(parseFloat(ringOrbitRange.value) || 0.1),
+        widthKm: clampRingWidthValue(parseFloat(ringWidthRange.value) || 10_000),
+        name: artificialUICache.nameInput ? artificialUICache.nameInput.value : '',
+        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
+      });
+    }
   });
   coreSelect.addEventListener('change', () => {
     applyRadiusBounds();
@@ -1025,6 +1307,22 @@ function getRadiusValue() {
     return clampRadiusValue(parseFloat(artificialUICache.radiusInput.value) || 1);
   }
   return clampRadiusValue(parseFloat(artificialUICache.radiusRange.value) || 1);
+}
+
+function getRingOrbitRadiusAUValue() {
+  if (!artificialUICache.ringOrbitRange) return 0.1;
+  if (artificialRingOrbitEditing || document.activeElement === artificialUICache.ringOrbitInput) {
+    return clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitInput.value) || 0.1);
+  }
+  return clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitRange.value) || 0.1);
+}
+
+function getRingWidthKmValue() {
+  if (!artificialUICache.ringWidthRange) return 10_000;
+  if (artificialRingWidthEditing || document.activeElement === artificialUICache.ringWidthInput) {
+    return clampRingWidthValue(parseFloat(artificialUICache.ringWidthInput.value) || 10_000);
+  }
+  return clampRingWidthValue(parseFloat(artificialUICache.ringWidthRange.value) || 10_000);
 }
 
 function renderArtificialHistory(force = false) {
@@ -1199,23 +1497,40 @@ function renderBailout(project, manager) {
   }
 }
 
-function renderCosts(project, radius, manager) {
-  const r = project ? project.radiusEarth : radius;
-  const area = project ? project.areaHa : manager.calculateAreaHectares(r);
-  const cost = project ? project.cost : manager.calculateCost(r);
+function renderCosts(project, selection, manager) {
+  const type = project?.type || selection?.type || 'shell';
+  const r = project ? project.radiusEarth : selection.radiusEarth;
+  const area = project ? (project.areaHa || project.landHa) : manager.calculateAreaHectares(r);
+  const baseCost = project ? project.cost : manager.calculateCost(r);
+  const cost = type === 'ring'
+    ? { superalloys: baseCost.superalloys }
+    : baseCost;
   const durationContext = project
     ? { durationMs: project.durationMs, worldCount: project.worldDivisor || 1 }
     : manager.getDurationContext(r);
 
   const fmt = formatNumber || ((n) => n);
-  if (artificialUICache.radiusLabel) {
+  if (artificialUICache.costMetalRow) {
+    artificialUICache.costMetalRow.classList.toggle('hidden', type === 'ring');
+  }
+  if (type === 'ring') {
+    const orbitAU = project?.orbitRadiusAU || selection?.orbitRadiusAU || project?.distanceFromStarAU || 0.1;
+    const widthKm = project?.widthKm || selection?.widthKm || project?.ringWidthKm || 10_000;
+    if (artificialUICache.ringOrbitLabel) {
+      const earthRadii = orbitAU * ARTIFICIAL_AU_TO_EARTH_RADII;
+      artificialUICache.ringOrbitLabel.textContent = `${orbitAU.toFixed(3)} AU (${fmt(earthRadii, false, 0)} R⊕)`;
+    }
+    if (artificialUICache.ringWidthLabel) {
+      artificialUICache.ringWidthLabel.textContent = `${fmt(widthKm, false, 0)} km`;
+    }
+  } else if (artificialUICache.radiusLabel) {
     artificialUICache.radiusLabel.textContent = `${r.toFixed(2)} Rₑ`;
   }
   if (artificialUICache.areaLabel) {
     artificialUICache.areaLabel.textContent = `${fmt(area, false, 2)} land`;
   }
   if (artificialUICache.costMetal) {
-    artificialUICache.costMetal.textContent = `${fmt(cost.metal, false, 2)}`;
+    artificialUICache.costMetal.textContent = type === 'ring' ? '—' : `${fmt(cost.metal, false, 2)}`;
   }
   if (artificialUICache.costSuperalloy) {
     artificialUICache.costSuperalloy.textContent = `${fmt(cost.superalloys, false, 2)}`;
@@ -1228,11 +1543,11 @@ function renderCosts(project, radius, manager) {
     artificialUICache.durationTooltip.title = `Construction time is divided by terraformed worlds (currently ${fmt(durationContext.worldCount, false, 2)}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.`;
   }
   const exceedsLimit = manager.exceedsDurationLimit(durationContext.durationMs);
-  return { cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount, exceedsLimit };
+  return { type, cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount, exceedsLimit };
 }
 
-function renderGains(project, radius, manager) {
-  const r = project ? project.radiusEarth : radius;
+function renderGains(project, selection, manager) {
+  const r = project ? project.radiusEarth : selection.radiusEarth;
   const effective = project?.terraformedValue || manager.calculateTerraformWorldValue(r);
   const defense = effective;
   const fleet = manager.calculateFleetCapacityWorldValue
@@ -1258,10 +1573,14 @@ function renderGains(project, radius, manager) {
   }
 }
 
-function renderEffects(project, radius) {
-  const r = project ? project.radiusEarth : radius;
+function renderEffects(project, selection) {
+  const type = project?.type || selection?.type || 'shell';
+  const r = project ? project.radiusEarth : selection.radiusEarth;
+  if (artificialUICache.effectShipEnergyRow) {
+    artificialUICache.effectShipEnergyRow.classList.toggle('hidden', type === 'ring');
+  }
   if (artificialUICache.effectShipEnergy) {
-    artificialUICache.effectShipEnergy.textContent = `x${r.toFixed(2)}`;
+    artificialUICache.effectShipEnergy.textContent = type === 'ring' ? '' : `x${r.toFixed(2)}`;
   }
 }
 
@@ -1277,13 +1596,26 @@ function renderStartButton(project, manager, preview) {
   const { cost } = preview;
   const canAfford = manager.canCoverCost(cost);
   const durationBlocked = preview.exceedsLimit;
-  btn.disabled = durationBlocked || !canAfford || artificialUICache.type.value !== 'shell';
+  const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
+  const supported = type === 'shell' || type === 'ring';
+  btn.disabled = durationBlocked || !canAfford || !supported;
   if (durationBlocked) {
     btn.textContent = 'Exceeds 5-hour limit';
     btn.title = 'Reduce size or gain more terraformed worlds to shorten construction below 5 hours.';
   } else {
-    btn.textContent = canAfford ? 'Start Artificial World' : 'Insufficient materials';
-    btn.title = '';
+    if (!supported) {
+      btn.textContent = 'Coming soon';
+      btn.title = '';
+    } else if (!canAfford) {
+      btn.textContent = 'Insufficient materials';
+      btn.title = '';
+    } else if (type === 'ring') {
+      btn.textContent = 'Start Ringworld';
+      btn.title = '';
+    } else {
+      btn.textContent = 'Start Artificial World';
+      btn.title = '';
+    }
   }
 }
 
@@ -1407,6 +1739,22 @@ function updateArtificialUI(options = {}) {
   if (artificialUICache.type) {
     const options = getArtificialTypes();
     const fallback = options.find((entry) => !entry.disabled) || options[0];
+    const signature = JSON.stringify(options.map((option) => ({
+      value: option.value,
+      disabled: !!option.disabled,
+      label: option.label,
+      source: option.disabledSource || ''
+    })));
+    if (artificialUICache.type.dataset.optionSignature !== signature) {
+      const currentValue = artificialUICache.type.value;
+      artificialUICache.type.innerHTML = '';
+      options.forEach((option) => {
+        artificialUICache.type.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
+      });
+      artificialUICache.type.dataset.optionSignature = signature;
+      const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
+      artificialUICache.type.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');
+    }
     if (project && project.type) {
       artificialUICache.type.value = project.type;
     } else if (!artificialUICache.type.value && fallback) {
@@ -1450,39 +1798,135 @@ function updateArtificialUI(options = {}) {
     }
     artificialUICache.starContext.disabled = !!project;
   }
+
+  if (artificialUICache.ringStarCore) {
+    const options = getRingStarCoreOptions();
+    const fallback = options.find((entry) => !entry.disabled) || options[0];
+    const signature = JSON.stringify(options.map((option) => ({
+      value: option.value,
+      disabled: !!option.disabled,
+      label: option.label,
+      source: option.disabledSource || ''
+    })));
+    if (artificialUICache.ringStarCore.dataset.optionSignature !== signature) {
+      const currentValue = artificialUICache.ringStarCore.value;
+      artificialUICache.ringStarCore.innerHTML = '';
+      options.forEach((option) => {
+        artificialUICache.ringStarCore.appendChild(buildOption(option.value, option.label, !!option.disabled, option.disabledSource));
+      });
+      artificialUICache.ringStarCore.dataset.optionSignature = signature;
+      const hasCurrent = options.some((entry) => entry.value === currentValue && !entry.disabled);
+      artificialUICache.ringStarCore.value = hasCurrent ? currentValue : (fallback ? fallback.value : '');
+    }
+    if (project && project.type === 'ring') {
+      artificialUICache.ringStarCore.value = project.starCore || project.core || artificialUICache.ringStarCore.value;
+    } else if (!artificialUICache.ringStarCore.value && fallback) {
+      artificialUICache.ringStarCore.value = fallback.value;
+    }
+    artificialUICache.ringStarCore.disabled = !!project;
+  }
+
+  const selectedType = getSelectedArtificialType(project);
+  const isShell = selectedType === 'shell';
+  const isRing = selectedType === 'ring';
+  if (artificialUICache.coreField) {
+    artificialUICache.coreField.classList.toggle('hidden', !isShell);
+    artificialUICache.coreField.style.display = isShell ? '' : 'none';
+  }
+  if (artificialUICache.starContextField) {
+    artificialUICache.starContextField.classList.toggle('hidden', !isShell);
+    artificialUICache.starContextField.style.display = isShell ? '' : 'none';
+  }
+  if (artificialUICache.radiusBox) {
+    artificialUICache.radiusBox.classList.toggle('hidden', !isShell);
+    artificialUICache.radiusBox.style.display = isShell ? '' : 'none';
+  }
+  if (artificialUICache.ringStarCoreField) {
+    artificialUICache.ringStarCoreField.classList.toggle('hidden', !isRing);
+    artificialUICache.ringStarCoreField.style.display = isRing ? '' : 'none';
+  }
+  if (artificialUICache.ringOrbitBox) {
+    artificialUICache.ringOrbitBox.classList.toggle('hidden', !isRing);
+    artificialUICache.ringOrbitBox.style.display = isRing ? '' : 'none';
+  }
+  if (artificialUICache.ringWidthBox) {
+    artificialUICache.ringWidthBox.classList.toggle('hidden', !isRing);
+    artificialUICache.ringWidthBox.style.display = isRing ? '' : 'none';
+  }
+
   applyStarContextBounds();
   applyRadiusBounds();
+  applyRingBounds();
   if (artificialUICache.priority) {
     artificialUICache.priority.checked = manager.getPrioritizeSpaceStorage();
   }
 
   if (!project) {
-    artificialUICache.radiusRange.disabled = false;
-    artificialUICache.radiusInput.disabled = false;
-    artificialUICache.radiusAuto.disabled = false;
-    artificialUICache.core.disabled = false;
     artificialUICache.type.disabled = false;
+    if (artificialUICache.core) artificialUICache.core.disabled = !isShell;
+    if (artificialUICache.starContext) artificialUICache.starContext.disabled = !isShell;
+    if (artificialUICache.radiusRange) artificialUICache.radiusRange.disabled = !isShell;
+    if (artificialUICache.radiusInput) artificialUICache.radiusInput.disabled = !isShell;
+    if (artificialUICache.radiusAuto) artificialUICache.radiusAuto.disabled = !isShell;
+    if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = !isRing;
+    if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = !isRing;
+    if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = !isRing;
+    if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = !isRing;
+    if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = !isRing;
     artificialUICache.sector.disabled = false;
     artificialUICache.sectorFilter.disabled = false;
     if (!artificialRadiusEditing) {
       const clamped = getRadiusValue();
       setRadiusFields(clamped);
     }
+    if (!artificialRingOrbitEditing) {
+      setRingOrbitFields(getRingOrbitRadiusAUValue());
+    }
+    if (!artificialRingWidthEditing) {
+      setRingWidthFields(getRingWidthKmValue());
+    }
   } else {
-    artificialUICache.radiusRange.disabled = true;
-    artificialUICache.radiusInput.disabled = true;
-    artificialUICache.radiusAuto.disabled = true;
-    artificialUICache.core.disabled = true;
     artificialUICache.type.disabled = true;
+    if (artificialUICache.core) artificialUICache.core.disabled = true;
+    if (artificialUICache.starContext) artificialUICache.starContext.disabled = true;
+    if (artificialUICache.radiusRange) artificialUICache.radiusRange.disabled = true;
+    if (artificialUICache.radiusInput) artificialUICache.radiusInput.disabled = true;
+    if (artificialUICache.radiusAuto) artificialUICache.radiusAuto.disabled = true;
+    if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = true;
+    if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = true;
+    if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = true;
+    if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = true;
+    if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = true;
     artificialUICache.sector.disabled = true;
     artificialUICache.sectorFilter.disabled = true;
     setRadiusFields(project.radiusEarth, true);
+    setRingOrbitFields(project.orbitRadiusAU || project.distanceFromStarAU || 0.1, true);
+    setRingWidthFields(project.widthKm || project.ringWidthKm || 10_000, true);
   }
 
-  const radius = project ? project.radiusEarth : getRadiusValue();
-  const preview = renderCosts(project, radius, manager);
-  renderGains(project, radius, manager);
-  renderEffects(project, radius);
+  const selection = project
+    ? {
+        type: project.type || 'shell',
+        radiusEarth: project.radiusEarth,
+        orbitRadiusAU: project.orbitRadiusAU || project.distanceFromStarAU,
+        widthKm: project.widthKm || project.ringWidthKm,
+        starCore: project.starCore || project.core
+      }
+    : (() => {
+        const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
+        if (type === 'ring') {
+          const orbitRadiusAU = getRingOrbitRadiusAUValue();
+          const widthKm = getRingWidthKmValue();
+          const landHa = manager.calculateRingWorldAreaHectares(orbitRadiusAU, widthKm);
+          const radiusEarth = manager.calculateRadiusEarthFromLandHectares(landHa);
+          return { type, radiusEarth, orbitRadiusAU, widthKm, starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : '' };
+        }
+        return { type, radiusEarth: getRadiusValue() };
+      })();
+
+  const preview = renderCosts(project, selection, manager);
+  renderGains(project, selection, manager);
+  renderEffects(project, selection);
   renderStartButton(project, manager, preview);
   renderProgress(project);
   renderStash(project, manager);

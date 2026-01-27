@@ -20,7 +20,8 @@ var resourcePhaseGroups;
 
 function createEmptyZonalSurface() {
   const zonalSurface = {};
-  for (const zone of ZONES) {
+  const zones = getZones();
+  for (const zone of zones) {
     const zoneStore = {};
     for (const key of ZONAL_SURFACE_RESOURCE_KEYS) {
       zoneStore[key] = 0;
@@ -32,7 +33,8 @@ function createEmptyZonalSurface() {
 
 function applyLegacyZonalSurface(target, source, mapping) {
   const data = source || {};
-  for (const zone of ZONES) {
+  const zones = getZones();
+  for (const zone of zones) {
     const zoneSource = data[zone] || {};
     const zoneTarget = target[zone];
     for (const [fromKey, toKey] of Object.entries(mapping)) {
@@ -43,7 +45,8 @@ function applyLegacyZonalSurface(target, source, mapping) {
 
 function applyZonalSurfaceOverrides(target, overrides) {
   const data = overrides || {};
-  for (const zone of ZONES) {
+  const zones = getZones();
+  for (const zone of zones) {
     const zoneSource = data[zone] || {};
     const zoneTarget = target[zone];
     for (const key of ZONAL_SURFACE_RESOURCE_KEYS) {
@@ -255,6 +258,20 @@ class Terraforming extends EffectableEntity{
     this.hazardsUnlocked = false;
     this.initialLand = resources.surface?.land?.value || 0;
     this.zonalSurfaceResourceConfigs = buildZonalSurfaceResourceConfigs();
+    this.zoneKeys = getZones();
+    this.zoneWeights = {};
+    let zoneWeightTotal = 0;
+    for (let index = 0; index < this.zoneKeys.length; index += 1) {
+      zoneWeightTotal += getZonePercentage(this.zoneKeys[index]);
+    }
+    zoneWeightTotal = zoneWeightTotal > 0 ? zoneWeightTotal : 1;
+    for (let index = 0; index < ZONES.length; index += 1) {
+      this.zoneWeights[ZONES[index]] = 0;
+    }
+    for (let index = 0; index < this.zoneKeys.length; index += 1) {
+      const zone = this.zoneKeys[index];
+      this.zoneWeights[zone] = getZonePercentage(zone) / zoneWeightTotal;
+    }
 
     // Clone so config values remain immutable
     this.celestialParameters = structuredClone(celestialParameters);
@@ -426,6 +443,12 @@ class Terraforming extends EffectableEntity{
 
   }
 
+  getZoneWeight(zone) {
+    const weight = this.zoneWeights ? this.zoneWeights[zone] : undefined;
+    if (weight !== undefined) return weight;
+    return getZonePercentage(zone);
+  }
+
   getMagnetosphereStatus() {
     if (this.magnetosphere.value >= this.magnetosphere.target) {
       return true;
@@ -441,7 +464,7 @@ class Terraforming extends EffectableEntity{
   }
 
   setTemperatureValuesToTrend() {
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = getZones();
     const globalTrend = this.temperature.trendValue;
     zones.forEach(zone => {
       const trend = this.temperature.zones[zone].trendValue;
@@ -499,7 +522,7 @@ class Terraforming extends EffectableEntity{
       // Fall back to direct hazardous biomass checks when hazard manager is unavailable.
     }
     const tolerance = 1e-6;
-    for (const zone of ZONES) {
+    for (const zone of getZones()) {
       if ((this.zonalSurface[zone]?.hazardousBiomass || 0) > tolerance) {
         return false;
       }
@@ -521,7 +544,7 @@ class Terraforming extends EffectableEntity{
 
 
   calculateInitialValues(planetParameters = currentPlanetParameters) {
-      const zones = ZONES;
+      const zones = getZones();
       const zonalTemperatureDefaults = planetParameters.zonalTemperatures;
       const hasZonalTemperatureDefaults = !!zonalTemperatureDefaults;
 
@@ -538,23 +561,30 @@ class Terraforming extends EffectableEntity{
       const initialBiomass = planetParameters.resources.surface.biomass?.initialValue || 0;
       const initialLiquidCO2 = planetParameters.resources.surface.liquidCO2?.initialValue || 0;
 
-      const iceZoneDistribution = { tropical: 0.01, temperate: 0.09, polar: 0.90 };
-      const buriedFractions = { tropical: 1, temperate: 1, polar: 0.3 };
+      const singleZone = zones.length === 1;
+      const iceZoneDistribution = singleZone ? null : { tropical: 0.01, temperate: 0.09, polar: 0.90 };
+      const buriedFractions = singleZone ? null : { tropical: 1, temperate: 1, polar: 0.3 };
 
       zones.forEach(zone => {
-          const zoneRatio = getZonePercentage(zone);
+          const zoneRatio = this.getZoneWeight(zone);
           // Distribute Liquid Water and Biomass proportionally
           this.zonalSurface[zone].liquidWater = initialLiquidWater * zoneRatio;
           this.zonalSurface[zone].biomass = initialBiomass * zoneRatio;
           this.zonalSurface[zone].liquidCO2 = initialLiquidCO2 * zoneRatio;
 
-          const zoneIce = initialIce * (iceZoneDistribution[zone] || 0);
-          const buriedFraction = buriedFractions[zone] || 0;
-          this.zonalSurface[zone].ice = zoneIce * (1 - buriedFraction);
-          this.zonalSurface[zone].buriedIce = zoneIce * buriedFraction;
+          if (singleZone) {
+            this.zonalSurface[zone].ice = initialIce;
+            this.zonalSurface[zone].buriedIce = 0;
+            this.zonalSurface[zone].dryIce = initialDryIce;
+          } else {
+            const zoneIce = initialIce * (iceZoneDistribution[zone] || 0);
+            const buriedFraction = buriedFractions[zone] || 0;
+            this.zonalSurface[zone].ice = zoneIce * (1 - buriedFraction);
+            this.zonalSurface[zone].buriedIce = zoneIce * buriedFraction;
 
-          // Allocate Dry Ice only to Polar zone (assuming CO2 ice is less stable at lower latitudes initially)
-          this.zonalSurface[zone].dryIce = (zone === 'polar') ? initialDryIce : 0;
+            // Allocate Dry Ice only to Polar zone (assuming CO2 ice is less stable at lower latitudes initially)
+            this.zonalSurface[zone].dryIce = (zone === 'polar') ? initialDryIce : 0;
+          }
   
           const initialLiquidMethane = planetParameters.resources.surface.liquidMethane?.initialValue || 0;
           const initialHydrocarbonIce = planetParameters.resources.surface.hydrocarbonIce?.initialValue || 0;
@@ -602,7 +632,7 @@ class Terraforming extends EffectableEntity{
               this.temperature.zones[zone].night = nightValue;
               this.temperature.zones[zone].trendValue = meanValue;
 
-              weightedTemperature += meanValue * getZonePercentage(zone);
+              weightedTemperature += meanValue * this.getZoneWeight(zone);
           });
           this.temperature.value = weightedTemperature;
           this.temperature.equilibriumTemperature = weightedTemperature;
@@ -632,7 +662,7 @@ class Terraforming extends EffectableEntity{
         if (durationSeconds <= 0) return;
 
 
-        const zones = ZONES;
+        const zones = getZones();
         const gravity = this.celestialParameters.gravity;
         const {
             totalPressure: globalTotalPressurePa,
@@ -870,7 +900,7 @@ class Terraforming extends EffectableEntity{
             aerosolsSW
         };
 
-    const ORDER = ['tropical', 'temperate', 'polar'];
+    const ORDER = getZones();
     const z = {}; // per-zone working data
 
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
@@ -927,7 +957,10 @@ class Terraforming extends EffectableEntity{
         ? calculateZonalSurfaceFractions(this, zone)
         : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, biomass: 0 };
 
-        const pct = getZonePercentage(zone);
+        const pct = this.getZoneWeight(zone);
+        if (pct <= 0) {
+            continue;
+        }
         const zoneArea = (this.celestialParameters.surfaceArea || 0) * pct;
         const slabOptions = {
             ...baseSlabOptions,
@@ -1044,7 +1077,10 @@ class Terraforming extends EffectableEntity{
     // --- Write back temperatures; shift day/night by mean offset ------
     for (const zone of ORDER) {
         const zoneFlux = this.luminosity.zonalFluxes[zone];
-        const pct = getZonePercentage(zone);
+        const pct = this.getZoneWeight(zone);
+        if (pct <= 0) {
+          continue;
+        }
         const dMean = z[zone].day - z[zone].mean;
 
         this.temperature.zones[zone].trendValue = T[zone];
@@ -1216,9 +1252,9 @@ class Terraforming extends EffectableEntity{
 
     calculateSurfaceAlbedo() {
         let weighted = 0;
-        for (const zone of ZONES) {
+        for (const zone of getZones()) {
             const alb = this.calculateZonalSurfaceAlbedo(zone);
-            const pct = getZonePercentage(zone);
+            const pct = this.getZoneWeight(zone);
             weighted += alb * pct;
         }
         return weighted;
@@ -1265,8 +1301,8 @@ class Terraforming extends EffectableEntity{
 
     _updateZonalCoverageCache() {
         const configs = this.zonalSurfaceResourceConfigs;
-        for (const zone of ZONES) {
-            const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
+        for (const zone of getZones()) {
+            const zoneArea = this.celestialParameters.surfaceArea * this.getZoneWeight(zone);
             const zoneData = this.zonalSurface[zone] || {};
             const cacheEntry = { zoneArea };
             for (const config of configs) {
@@ -1889,7 +1925,7 @@ class Terraforming extends EffectableEntity{
 // Distributes net changes from global resources (caused by buildings/other non-zonal processes)
 // proportionally into the zonal data structures before zonal simulation runs.
 distributeGlobalChangesToZones(deltaTime) {
-    const zones = ZONES;
+    const zones = getZones();
     const secondsMultiplier = deltaTime / 1000;
     const configs = this.zonalSurfaceResourceConfigs;
 
@@ -1958,7 +1994,7 @@ distributeGlobalChangesToZones(deltaTime) {
             }
         } else if (distributionMode === 'targetZoneArea') {
             for (const zone of targetZones) {
-                totalDistributionFactor += this.celestialParameters.surfaceArea * getZonePercentage(zone);
+                totalDistributionFactor += this.celestialParameters.surfaceArea * this.getZoneWeight(zone);
             }
             if (totalDistributionFactor < 1e-9) {
                 distributionMode = 'area';
@@ -1979,13 +2015,13 @@ distributeGlobalChangesToZones(deltaTime) {
                     const currentAmount = this.zonalSurface[zone][config.distributionKey] || 0;
                     proportion = currentAmount / totalDistributionFactor;
                 } else if (distributionMode === 'targetZoneArea' && isTargetZone) {
-                    const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
+                    const zoneArea = this.celestialParameters.surfaceArea * this.getZoneWeight(zone);
                     proportion = zoneArea / totalDistributionFactor;
                 } else if (distributionMode === 'area') {
-                    proportion = getZonePercentage(zone);
+                    proportion = this.getZoneWeight(zone);
                 }
             } else if (netChangeAmount > 0 && distributionMode !== 'currentAmount') {
-                proportion = getZonePercentage(zone);
+                proportion = this.getZoneWeight(zone);
             }
 
             const zonalChange = netChangeAmount * proportion;
@@ -1998,7 +2034,7 @@ distributeGlobalChangesToZones(deltaTime) {
 // Updates the global SURFACE resources object based on summed zonal surface/water data.
 // Atmospheric resources are now updated directly in updateResources.
 synchronizeGlobalResources() {
-    const zones = ZONES;
+    const zones = getZones();
     const configs = this.zonalSurfaceResourceConfigs;
     const totals = {};
 

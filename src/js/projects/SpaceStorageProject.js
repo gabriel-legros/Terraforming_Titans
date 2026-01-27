@@ -94,11 +94,11 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getBiomassZones() {
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = getZones();
     const entries = zones.map(zone => ({
       zone,
       amount: (terraforming?.zonalSurface?.[zone]?.biomass) || 0,
-      percentage: (typeof getZonePercentage === 'function' ? getZonePercentage(zone) : 0) || 0
+      percentage: getZonePercentage(zone) || 0
     }));
     const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
     return { entries, total };
@@ -123,7 +123,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   addBiomassToZones(amount) {
     if (!terraforming || amount <= 0) return 0;
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = getZones();
     const design = lifeDesigner?.currentDesign;
     let growZones = [];
     let surviveZones = [];
@@ -137,10 +137,10 @@ class SpaceStorageProject extends SpaceshipProject {
       growZones = Object.keys(terraforming.biomassDyingZones).filter(zone => !terraforming.biomassDyingZones[zone]);
     }
     const targets = growZones.length ? growZones : (surviveZones.length ? surviveZones : zones);
-    const totalPercent = targets.reduce((sum, zone) => sum + ((typeof getZonePercentage === 'function' ? getZonePercentage(zone) : 0) || 0), 0) || targets.length;
+    const totalPercent = targets.reduce((sum, zone) => sum + (getZonePercentage(zone) || 0), 0) || targets.length;
 
     targets.forEach(zone => {
-      const percent = (typeof getZonePercentage === 'function' ? getZonePercentage(zone) : 1) || 1;
+      const percent = getZonePercentage(zone) || 1;
       const add = amount * (percent / totalPercent);
       const zoneData = terraforming.zonalSurface?.[zone];
       if (zoneData) {
@@ -152,7 +152,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getLiquidWaterZones() {
-    const zones = ZONES;
+    const zones = getZones();
     const entries = zones.map(zone => ({
       zone,
       amount: terraforming.zonalSurface[zone].liquidWater || 0,
@@ -179,7 +179,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   addLiquidWaterToZones(amount) {
     if (amount <= 0) return 0;
-    const zones = ZONES;
+    const zones = getZones();
     const weights = zones.map(zone => getZonePercentage(zone) || 0);
     const totalWeight = weights.reduce((sum, value) => sum + value, 0) || zones.length;
     zones.forEach((zone, index) => {

@@ -716,10 +716,7 @@ class SpaceshipProject extends Project {
     }
 
     const { container, key } = descriptor;
-    const zoneNames =
-      (typeof ZONES !== 'undefined' && Array.isArray(ZONES) && ZONES.length > 0)
-        ? ZONES
-        : Object.keys(container);
+    const zoneNames = getZones();
 
     const entries = zoneNames.map(zone => ({
       zone,

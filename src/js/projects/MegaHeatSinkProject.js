@@ -3,7 +3,7 @@
   const MEGA_HEAT_SINK_MIN_CAPACITY = 100;
   const WORKERS_PER_HEAT_SINK = 1_000_000_000;
   const SECONDS_PER_DAY = 86_400;
-  const ORDERED_ZONES = ['tropical', 'temperate', 'polar'];
+  const getOrderedZones = () => getZones();
 
   let WorkerCapacityBatchProjectBase;
 
@@ -165,7 +165,7 @@
 
       const baseSlabOptions = { atmosphereCapacity: atmosphericHeatCapacity };
 
-      const zonePercentage = globalThis?.getZonePercentage || (() => 1 / ORDERED_ZONES.length);
+      const zonePercentage = getZonePercentage;
       const fractionCalculator = globalThis?.calculateZonalSurfaceFractions
         ? (zone) => globalThis.calculateZonalSurfaceFractions(terra, zone)
         : () => ({ ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, biomass: 0 });
@@ -175,7 +175,8 @@
       let weightedCooling = 0;
       let totalWeight = 0;
 
-      for (const zone of ORDERED_ZONES) {
+      const zones = getOrderedZones();
+      for (const zone of zones) {
         const pct = zonePercentage(zone);
         if (!Number.isFinite(pct) || pct <= 0) {
           continue;

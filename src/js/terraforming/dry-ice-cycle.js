@@ -200,7 +200,6 @@ class CO2Cycle extends ResourceCycleClass {
     const surfaceFlowFn = (terraforming, durationSeconds, tempMap) => {
       // Provide hook if a CO2 surface flow routine exists.
       if (typeof simulateSurfaceCO2Flow === 'function'
-          && typeof ZONES !== 'undefined'
           && terraforming && terraforming.zonalSurface) {
         const flow = simulateSurfaceCO2Flow(terraforming, durationSeconds, tempMap, undefined, {
           triplePressure: CO2_P_TRIPLE,

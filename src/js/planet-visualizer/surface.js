@@ -644,7 +644,8 @@
     ictx.putImageData(iimg, 0, 0);
     ctx.drawImage(iceCanvas, 0, 0);
 
-    const bAny = (this.viz.zonalCoverage.tropical.life + this.viz.zonalCoverage.temperate.life + this.viz.zonalCoverage.polar.life) > 0;
+    const zcLife = this.viz.zonalCoverage || {};
+    const bAny = ((zcLife.tropical?.life || 0) + (zcLife.temperate?.life || 0) + (zcLife.polar?.life || 0)) > 0;
     if (bAny) {
       const bioCanvas = document.createElement('canvas');
       bioCanvas.width = w; bioCanvas.height = h;
@@ -678,9 +679,9 @@
         return Math.max(0, Math.min(1, base * 0.9 + detail * 0.1));
       };
       const lifeFracs = [
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.tropical?.life || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.temperate?.life || 0))),
-        Math.max(0, Math.min(1, (this.viz.zonalCoverage.polar?.life || 0))),
+        Math.max(0, Math.min(1, (zcLife.tropical?.life || 0))),
+        Math.max(0, Math.min(1, (zcLife.temperate?.life || 0))),
+        Math.max(0, Math.min(1, (zcLife.polar?.life || 0))),
       ];
       const lifeNoise = this.getLifeNoiseField(w, h);
       if (!this._lifeScore || this._lifeScore.length !== w * h) this._lifeScore = new Float32Array(w * h);

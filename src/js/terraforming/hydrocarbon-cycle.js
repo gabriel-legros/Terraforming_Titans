@@ -189,7 +189,6 @@ class MethaneCycle extends ResourceCycleClass {
     const surfaceKeyMap = resourcePhaseGroups.methane.surfaceKeys;
     const surfaceFlowFn = (terraforming, durationSeconds, tempMap) => {
       if (typeof simulateSurfaceHydrocarbonFlow === 'function'
-        && typeof ZONES !== 'undefined'
         && terraforming && terraforming.zonalSurface) {
         const flow = simulateSurfaceHydrocarbonFlow(terraforming, durationSeconds, tempMap, undefined, {
           triplePressure: METHANE_P_TRIPLE,

@@ -9,6 +9,30 @@
   } catch (e) {}
 }
 
+function getMirrorZones() {
+  return getZones();
+}
+
+function getMirrorZonesWithFocus() {
+  return getZones().concat(['focus']);
+}
+
+function getMirrorZonesWithAny() {
+  return getZones().concat(['any']);
+}
+
+function getMirrorZonesWithFocusUnassigned() {
+  return getZones().concat(['focus', 'unassigned']);
+}
+
+function getMirrorZonesWithFocusAny() {
+  return getZones().concat(['focus', 'any']);
+}
+
+function getMirrorZonesWithFocusAnyUnassigned() {
+  return getZones().concat(['focus', 'unassigned', 'any']);
+}
+
 // Mirror oversight controls
 function createDefaultMirrorOversightSettings() {
   return {
@@ -33,7 +57,7 @@ function createDefaultMirrorOversightSettings() {
 
 function applyMirrorOversightSettings(settings, saved = {}) {
   const savedDistribution = saved.distribution || {};
-  ['tropical', 'temperate', 'polar', 'focus', 'unassigned'].forEach(zone => {
+  getMirrorZonesWithFocusUnassigned().forEach(zone => {
     const v = Number(savedDistribution[zone]);
     settings.distribution[zone] = Number.isFinite(v) ? v : settings.distribution[zone];
   });
@@ -55,39 +79,39 @@ function applyMirrorOversightSettings(settings, saved = {}) {
   settings.waterMultiplier = multiplier > 0 ? multiplier : 1000;
 
   const savedTargets = saved.targets || {};
-  ['tropical', 'temperate', 'polar', 'water'].forEach(key => {
+  getZones().concat(['water']).forEach(key => {
     const v = Number(savedTargets[key]);
     settings.targets[key] = Number.isFinite(v) ? v : settings.targets[key];
   });
 
   const savedTempMode = saved.tempMode || {};
-  ['tropical', 'temperate', 'polar'].forEach(zone => {
+  getZones().forEach(zone => {
     const mode = savedTempMode[zone];
     settings.tempMode[zone] = mode === 'day' || mode === 'night' ? mode : 'average';
   });
 
   const savedPriority = saved.priority || {};
-  ['tropical', 'temperate', 'polar', 'focus'].forEach(zone => {
+  getMirrorZonesWithFocus().forEach(zone => {
     const val = parseInt(savedPriority[zone], 10);
     settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
   });
 
   const savedAuto = saved.autoAssign || {};
-  ['tropical', 'temperate', 'polar', 'focus', 'any'].forEach(zone => {
+  getMirrorZonesWithFocusAny().forEach(zone => {
     settings.autoAssign[zone] = !!savedAuto[zone];
   });
 
   const savedAssignments = saved.assignments || {};
   const savedMirrors = savedAssignments.mirrors || {};
   const savedLanterns = savedAssignments.lanterns || {};
-  ['tropical', 'temperate', 'polar', 'focus', 'unassigned', 'any'].forEach(zone => {
+  getMirrorZonesWithFocusAnyUnassigned().forEach(zone => {
     const mv = Number(savedMirrors[zone]);
     const lv = Number(savedLanterns[zone]);
     settings.assignments.mirrors[zone] = Number.isFinite(mv) ? mv : settings.assignments.mirrors[zone];
     settings.assignments.lanterns[zone] = Number.isFinite(lv) ? lv : settings.assignments.lanterns[zone];
   });
   const savedReversal = savedAssignments.reversalMode || {};
-  ['tropical', 'temperate', 'polar', 'focus', 'any'].forEach(zone => {
+  getMirrorZonesWithFocusAny().forEach(zone => {
     settings.assignments.reversalMode[zone] = !!savedReversal[zone];
   });
 
@@ -96,19 +120,19 @@ function applyMirrorOversightSettings(settings, saved = {}) {
 
 function applyMirrorOversightTravelSettings(settings, saved = {}) {
   const savedTargets = saved.targets || {};
-  ['tropical', 'temperate', 'polar', 'water'].forEach(key => {
+  getZones().concat(['water']).forEach(key => {
     const v = Number(savedTargets[key]);
     settings.targets[key] = Number.isFinite(v) ? v : settings.targets[key];
   });
 
   const savedTempMode = saved.tempMode || {};
-  ['tropical', 'temperate', 'polar'].forEach(zone => {
+  getZones().forEach(zone => {
     const mode = savedTempMode[zone];
     settings.tempMode[zone] = mode === 'day' || mode === 'night' ? mode : 'average';
   });
 
   const savedPriority = saved.priority || {};
-  ['tropical', 'temperate', 'polar', 'focus'].forEach(zone => {
+  getMirrorZonesWithFocus().forEach(zone => {
     const val = parseInt(savedPriority[zone], 10);
     settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
   });
@@ -240,7 +264,7 @@ function setMirrorDistribution(zone, value) {
   const dist = mirrorOversightSettings.distribution;
   const v = Math.max(0, Math.min(100, Math.round(Number(value) || 0))) / 100;
 
-  const explicitZones = ['tropical', 'temperate', 'polar', 'focus', 'unassigned'];
+  const explicitZones = getMirrorZonesWithFocusUnassigned();
   const clamp01 = (n) => Math.max(0, Math.min(1, n));
   const sumExplicit = () => explicitZones.reduce((s, z) => s + (dist[z] || 0), 0);
 
@@ -263,13 +287,13 @@ function setMirrorDistribution(zone, value) {
 
     if (desiredExplicitSum < currentExplicitSum) {
       const toRemove = currentExplicitSum - desiredExplicitSum;
-      const zonal = ['tropical', 'temperate', 'polar']
+      const zonal = getZones()
         .slice()
         .sort((a, b) => (dist[b] || 0) - (dist[a] || 0));
       reduceExplicit(['unassigned', 'focus', ...zonal], toRemove);
     } else if (desiredExplicitSum > currentExplicitSum) {
       const toAdd = desiredExplicitSum - currentExplicitSum;
-      const committed = ['tropical', 'temperate', 'polar', 'focus'];
+      const committed = getMirrorZonesWithFocus();
       const committedSum = committed.reduce((s, z) => s + (dist[z] || 0), 0);
       if (committedSum > 0) {
         committed.forEach(z => {
@@ -285,7 +309,7 @@ function setMirrorDistribution(zone, value) {
     const total = sumExplicit();
     if (total > 1) {
       const excess = total - 1;
-      const zonalDonors = ['tropical', 'temperate', 'polar']
+      const zonalDonors = getZones()
         .filter(z => z !== zone)
         .sort((a, b) => (dist[b] || 0) - (dist[a] || 0));
       const donors = [];
@@ -304,7 +328,7 @@ function setMirrorDistribution(zone, value) {
   const total = sumExplicit();
   if (total > 1) {
     const excess = total - 1;
-    const zonal = ['tropical', 'temperate', 'polar']
+    const zonal = getZones()
       .slice()
       .sort((a, b) => (dist[b] || 0) - (dist[a] || 0));
     reduceExplicit(['unassigned', ...zonal, 'focus'], excess);
@@ -341,7 +365,7 @@ function distributeAssignmentsFromSliders(type) {
   const total = type === 'mirrors'
     ? (buildings.spaceMirror?.active || 0)
     : (buildings.hyperionLantern?.active || 0);
-  const zones = ['tropical', 'temperate', 'polar', 'focus', 'unassigned'];
+  const zones = getMirrorZonesWithFocusUnassigned();
   const raw = zones.map(z => ({ zone: z, value: total * Math.max(0, dist[z] || 0) }));
   if (!mirrorOversightSettings.advancedOversight) {
     const usedPerc = zones.reduce((s, z) => s + (dist[z] || 0), 0);
@@ -368,7 +392,7 @@ function distributeAssignmentsFromSliders(type) {
 
 function distributeAutoAssignments(type) {
   if (typeof buildings === 'undefined') return;
-  const zones = ['tropical', 'temperate', 'polar', 'focus'];
+  const zones = getMirrorZonesWithFocus();
   if (!mirrorOversightSettings.advancedOversight) zones.push('any');
   const total = type === 'mirrors'
     ? (buildings.spaceMirror?.active || 0)
@@ -422,7 +446,7 @@ function toggleFinerControls(enabled) {
 
 function sanitizeMirrorDistribution() {
   const dist = mirrorOversightSettings.distribution;
-  const zones = ['tropical', 'temperate', 'polar', 'focus', 'unassigned'];
+  const zones = getMirrorZonesWithFocusUnassigned();
   let total = 0;
   let changed = false;
 
@@ -473,7 +497,7 @@ function sanitizeMirrorDistribution() {
 
 function updateAssignmentDisplays() {
   const types = ['mirrors', 'lanterns'];
-  const zones = ['tropical', 'temperate', 'polar', 'focus', 'any'];
+  const zones = getMirrorZonesWithFocusAny();
   types.forEach(type => {
     zones.forEach(zone => {
       const el = document.getElementById(`${type}-assign-${zone}`);
@@ -686,10 +710,10 @@ function initializeMirrorOversightUI(container) {
   advancedControls.innerHTML = `
     <div class="control-group">
       <span class="control-label" style="font-weight:600;">Targets & Priority</span>
-      <span class="info-tooltip-icon" title="Set temperature targets for Tropical, Temperate, and Polar zones using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.">&#9432;</span>
+      <span class="info-tooltip-icon" title="Set temperature targets for each zone using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.">&#9432;</span>
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
-      <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
+      <div class="stat-item" data-zone="tropical" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-tropical">Trop.</label>
         <input type="number" id="adv-target-tropical" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
         <select id="adv-timing-tropical" class="stat-value mirror-oversight-select-small mirror-oversight-select-timing">
@@ -701,7 +725,7 @@ function initializeMirrorOversightUI(container) {
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
-      <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
+      <div class="stat-item" data-zone="temperate" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-temperate">Temp.</label>
         <input type="number" id="adv-target-temperate" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
         <select id="adv-timing-temperate" class="stat-value mirror-oversight-select-small mirror-oversight-select-timing">
@@ -713,7 +737,7 @@ function initializeMirrorOversightUI(container) {
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
-      <div class="stat-item" style="display:flex; gap:8px; align-items:center;">
+      <div class="stat-item" data-zone="polar" style="display:flex; gap:8px; align-items:center;">
         <label class="stat-label" for="adv-target-polar">Polar</label>
         <input type="number" id="adv-target-polar" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
         <select id="adv-timing-polar" class="stat-value mirror-oversight-select-small mirror-oversight-select-timing">
@@ -875,9 +899,9 @@ function initializeMirrorOversightUI(container) {
       <tr><th>Zone</th><th>Average Solar Flux (W/m^2)</th><th>Temperature (${tempUnit}) Current / Trend</th><th>Day Temperature (${tempUnit}) Current / Trend</th></tr>
     </thead>
     <tbody>
-      <tr><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0 / 0</td><td id="mirror-day-temp-tropical">0 / 0</td></tr>
-      <tr><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0 / 0</td><td id="mirror-day-temp-temperate">0 / 0</td></tr>
-      <tr><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0 / 0</td><td id="mirror-day-temp-polar">0 / 0</td></tr>
+      <tr data-zone="tropical"><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0 / 0</td><td id="mirror-day-temp-tropical">0 / 0</td></tr>
+      <tr data-zone="temperate"><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0 / 0</td><td id="mirror-day-temp-temperate">0 / 0</td></tr>
+      <tr data-zone="polar"><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0 / 0</td><td id="mirror-day-temp-polar">0 / 0</td></tr>
     </tbody>
   `;
   cardBody.appendChild(fluxTable);
@@ -928,7 +952,7 @@ function initializeMirrorOversightUI(container) {
       <div class="grid-reversal-cell"></div>
       <div class="grid-auto-cell"></div>
 
-      ${['tropical', 'temperate', 'polar', 'any'].map(zone => `
+      ${getMirrorZonesWithAny().map(zone => `
         <div class="grid-zone-label" data-zone="${zone}">${zone === 'any' ? 'Any Zone' : zone.charAt(0).toUpperCase() + zone.slice(1)}</div>
         <div class="assign-cell" data-type="mirrors" data-zone="${zone}">
           <button class="assign-zero" data-type="mirrors" data-zone="${zone}">0</button>
@@ -1069,6 +1093,32 @@ function rebuildMirrorOversightCache() {
   if (typeof document === 'undefined') return;
   const container = document.getElementById('mirror-oversight-container');
   if (!container) { mirrorOversightCache = null; return; }
+  const zoneKeys = ['tropical', 'temperate', 'polar'];
+  const sliderZoneElements = {};
+  zoneKeys.forEach(zone => {
+    const elements = [
+      container.querySelector(`label[for="mirror-oversight-${zone}"]`),
+      container.querySelector(`#mirror-oversight-${zone}`),
+      container.querySelector(`#mirror-oversight-${zone}-value`),
+      container.querySelector(`#mirror-oversight-${zone}-reverse`),
+      container.querySelector(`label[for="mirror-oversight-${zone}-reverse"]`)
+    ].filter(Boolean);
+    sliderZoneElements[zone] = elements;
+  });
+  const advancedZoneRows = {};
+  Array.from(container.querySelectorAll('#advanced-oversight-controls .stat-item[data-zone]'))
+    .forEach(row => { advancedZoneRows[row.dataset.zone] = row; });
+  const fluxZoneRows = {};
+  Array.from(container.querySelectorAll('#mirror-flux-table tbody tr[data-zone]'))
+    .forEach(row => { fluxZoneRows[row.dataset.zone] = row; });
+  const fluxCells = {};
+  zoneKeys.forEach(zone => {
+    fluxCells[zone] = {
+      flux: container.querySelector(`#mirror-flux-${zone}`),
+      temp: container.querySelector(`#mirror-temp-${zone}`),
+      dayTemp: container.querySelector(`#mirror-day-temp-${zone}`)
+    };
+  });
   mirrorOversightCache = {
     container,
     lanternHeader: document.querySelector('#assignment-grid .grid-header:nth-child(3)') || null,
@@ -1081,6 +1131,10 @@ function rebuildMirrorOversightCache() {
     focusZoneCells: Array.from(document.querySelectorAll('#assignment-grid > div[data-zone="focus"]')),
     fluxTempHeader: document.querySelector('#mirror-flux-table thead tr th:nth-child(3)') || null,
     dayTempHeader: document.querySelector('#mirror-flux-table thead tr th:nth-child(4)') || null,
+    fluxZoneRows,
+    fluxCells,
+    sliderZoneElements,
+    advancedZoneRows,
     sliderReverseBoxes: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reversal-checkbox')),
     sliderReverseLabels: Array.from(document.querySelectorAll('#mirror-oversight-sliders .slider-reverse-label')),
     lanternStepControls: document.querySelector('.lantern-step-controls') || null,
@@ -1095,11 +1149,24 @@ function ensureMirrorOversightCache() {
   }
 }
 
+function applyMirrorZoneVisibility() {
+  const C = mirrorOversightCache;
+  const activeZones = getZones();
+  const zoneKeys = ['tropical', 'temperate', 'polar'];
+  zoneKeys.forEach(zone => {
+    const isVisible = activeZones.includes(zone);
+    C.sliderZoneElements[zone].forEach(el => { el.style.display = isVisible ? '' : 'none'; });
+    C.advancedZoneRows[zone].style.display = isVisible ? 'flex' : 'none';
+    C.fluxZoneRows[zone].style.display = isVisible ? '' : 'none';
+  });
+}
+
 function updateMirrorOversightUI() {
   if (typeof document === 'undefined') return;
   const container = document.getElementById('mirror-oversight-container');
   if (!container) return;
   ensureMirrorOversightCache();
+  applyMirrorZoneVisibility();
   let enabled = false;
   if (typeof projectManager !== 'undefined') {
     if (projectManager.isBooleanFlagSet &&
@@ -1137,7 +1204,7 @@ function updateMirrorOversightUI() {
   }
   if (focusGroup) focusGroup.style.display = focusEnabled ? 'flex' : 'none';
 
-  ['tropical','temperate','polar','focus','unassigned','any'].forEach(zone => {
+  getMirrorZonesWithFocusAnyUnassigned().forEach(zone => {
     const slider = document.getElementById(`mirror-oversight-${zone}`);
     const span = document.getElementById(`mirror-oversight-${zone}-value`);
     const val = zone === 'any' ? anyVal : vals[zone];
@@ -1241,7 +1308,7 @@ function updateMirrorOversightUI() {
   }
 
   const useFiner = mirrorOversightSettings.useFinerControls;
-  ['tropical','temperate','polar','focus','any','unassigned'].forEach(zone => {
+  getMirrorZonesWithFocusAnyUnassigned().forEach(zone => {
     const slider = document.getElementById(`mirror-oversight-${zone}`);
     if (slider) slider.disabled = useFiner;
   });
@@ -1306,15 +1373,16 @@ function updateZonalFluxTable() {
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   ensureMirrorOversightCache();
   const C = mirrorOversightCache || {};
-  const header = C.fluxTempHeader || document.querySelector('#mirror-flux-table thead tr th:nth-child(3)');
+  const header = C.fluxTempHeader;
   if (header) header.textContent = `Temperature (${tempUnit}) Current / Trend`;
-  const dayHeader = C.dayTempHeader || document.querySelector('#mirror-flux-table thead tr th:nth-child(4)');
+  const dayHeader = C.dayTempHeader;
   if (dayHeader) dayHeader.textContent = `Day Temperature (${tempUnit}) Current / Trend`;
-  const zones = ['tropical', 'temperate', 'polar'];
+  const zones = getZones();
   zones.forEach(zone => {
-    const fluxCell = document.getElementById(`mirror-flux-${zone}`);
-    const tempCell = document.getElementById(`mirror-temp-${zone}`);
-    const dayTempCell = document.getElementById(`mirror-day-temp-${zone}`);
+    const cells = C.fluxCells[zone];
+    const fluxCell = cells.flux;
+    const tempCell = cells.temp;
+    const dayTempCell = cells.dayTemp;
     let flux = 0;
     if (typeof terraforming.calculateZoneSolarFlux === 'function') {
       flux = terraforming.calculateZoneSolarFlux(zone) / 4;

@@ -23,7 +23,7 @@ class MirrorLanternBuilding extends MirrorBase {
   }
 
   _isEveryZoneAboveTrend() {
-    const zones = ['tropical', 'temperate', 'polar'];
+    const zones = getZones();
     if (!terraforming?.temperature?.zones) return false;
     return zones.every(zone => {
       const data = terraforming.temperature.zones[zone] || {};
@@ -59,12 +59,9 @@ class MirrorLanternBuilding extends MirrorBase {
         assignedCount = total;
       } else {
         const assigned = settings.assignments?.[typeKey] || {};
-        assignedCount =
-          (assigned.tropical || 0) +
-          (assigned.temperate || 0) +
-          (assigned.polar || 0) +
-          (assigned.focus || 0) +
-          (assigned.any || 0);
+        assignedCount = getZones().reduce((sum, zone) => sum + (assigned[zone] || 0), 0)
+          + (assigned.focus || 0)
+          + (assigned.any || 0);
       }
     } else {
       const dist = settings.distribution || {};

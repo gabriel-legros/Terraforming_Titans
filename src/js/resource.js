@@ -853,11 +853,11 @@ function produceResources(deltaTime, buildings) {
       resource.value = Math.max(finalValue, 0); // Ensure non-negative
 
       if (overflow > 0 && category === 'colony' && resourceName === 'water' && terraforming && terraforming.zonalSurface) {
-        const zones = ['tropical', 'temperate', 'polar'];
+        const zones = getZones();
         const zoneTemp = zone => terraforming.temperature?.zones?.[zone]?.value ?? 0;
         const warmZones = zones.filter(zone => zoneTemp(zone) > 273.15);
         const targetZones = warmZones.length > 0 ? warmZones : zones;
-        const warmArea = warmZones.reduce((sum, zone) => sum + ((typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length), 0) || 1;
+        const warmArea = warmZones.reduce((sum, zone) => sum + getZonePercentage(zone), 0) || 1;
         const seconds = deltaTime / 1000;
         const rate = seconds > 0 ? overflow / seconds : 0;
         const allZonesHot = zones.every(zone => zoneTemp(zone) > 373.15);
@@ -870,7 +870,7 @@ function produceResources(deltaTime, buildings) {
           atmosphericRate = rate;
         } else {
           targetZones.forEach(zone => {
-            const zoneArea = (typeof getZonePercentage === 'function') ? getZonePercentage(zone) : 1 / zones.length;
+            const zoneArea = getZonePercentage(zone);
             const proportion = warmZones.length > 0 ? zoneArea / warmArea : zoneArea; // ensure proportions sum to 1 among warm zones
             const amount = overflow * proportion;
 

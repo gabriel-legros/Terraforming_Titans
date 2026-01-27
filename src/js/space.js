@@ -773,7 +773,7 @@ class SpaceManager extends EffectableEntity {
         if (!base) return null;
         const override = typeof planetOverrides !== 'undefined' ? planetOverrides[this.currentPlanetKey] : null;
         const merged = JSON.parse(JSON.stringify(base));
-        const zones = ['tropical', 'temperate', 'polar'];
+        const zones = getZones();
         let totalLiquidWater = 0, totalIce = 0, totalDryIce = 0,
             totalBiomass = 0, totalLiquidCO2 = 0, totalLiquidMethane = 0, totalHydrocarbonIce = 0;
 

@@ -10,8 +10,6 @@ const LIFE_AUTOMATION_ATTRIBUTES = [
   'geologicalBurial',
   'bioworkforce'
 ];
-const LIFE_AUTOMATION_TEMPERATURE_ZONES = ['tropical', 'temperate', 'polar'];
-
 class LifeAutomation {
   constructor() {
     this.presets = [];
@@ -37,11 +35,12 @@ class LifeAutomation {
   }
 
   createTemperatureZoneSettings() {
-    return {
-      tropical: true,
-      temperate: true,
-      polar: true
-    };
+    const zones = getZones();
+    const settings = {};
+    zones.forEach((zone) => {
+      settings[zone] = true;
+    });
+    return settings;
   }
 
   isTemperatureToleranceAttribute(attributeName) {
@@ -50,7 +49,7 @@ class LifeAutomation {
 
   getTemperatureZoneNames(step) {
     const zones = step.zones || this.createTemperatureZoneSettings();
-    return LIFE_AUTOMATION_TEMPERATURE_ZONES.filter(zoneName => zones[zoneName]);
+    return getZones().filter(zoneName => zones[zoneName]);
   }
 
   getTemperatureToleranceTarget(attributeName, zoneNames) {

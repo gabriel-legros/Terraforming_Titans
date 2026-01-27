@@ -67,15 +67,10 @@ class WaterTank extends Building {
   }
 
   distributeToZones(totalAmount) {
-    const zoneList = Array.isArray(globalThis.ZONES) && globalThis.ZONES.length > 0
-      ? globalThis.ZONES
-      : ['tropical', 'temperate', 'polar'];
+    const zoneList = getZones();
     const weights = zoneList.map(zone => {
-      if (globalThis.getZonePercentage) {
-        const weight = globalThis.getZonePercentage(zone);
-        return Number.isFinite(weight) && weight > 0 ? weight : 0;
-      }
-      return 1;
+      const weight = getZonePercentage(zone);
+      return Number.isFinite(weight) && weight > 0 ? weight : 0;
     });
     const totalWeight = weights.reduce((sum, value) => sum + value, 0) || zoneList.length;
 

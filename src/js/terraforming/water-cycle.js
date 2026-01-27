@@ -176,7 +176,6 @@ class WaterCycle extends ResourceCycleClass {
       precipitationKeys,
       surfaceFlowFn: (terraforming, durationSeconds, tempMap) => {
         if (typeof simulateSurfaceWaterFlow === 'function'
-          && typeof ZONES !== 'undefined'
           && terraforming && terraforming.zonalSurface) {
           const flow = simulateSurfaceWaterFlow(terraforming, durationSeconds, tempMap, undefined, {
             triplePressure: WATER_TRIPLE_P,

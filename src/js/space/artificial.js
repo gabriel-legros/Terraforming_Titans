@@ -3,7 +3,7 @@ const EARTH_AREA_HA = Math.round(4 * Math.PI * (EARTH_RADIUS_KM * 1000) * (EARTH
 const DEFAULT_RADIUS_BOUNDS = { min: 2, max: 8 };
 const ARTIFICIAL_TYPES = [
     { value: 'shell', label: 'Shellworld', disabled: false },
-    { value: 'ring', label: 'Ringworld (Locked by World 10)', disabled: true },
+    { value: 'ring', label: 'Ringworld', disabled: true, disabledSource: 'World 10' },
     { value: 'disk', label: 'Artificial disk (coming not so soon)', disabled: true }
 ];
 const ARTIFICIAL_CORES = [
@@ -22,6 +22,19 @@ const ARTIFICIAL_STAR_CONTEXTS = [
     { value: 'starless', label: 'Starless deep space', hasStar: false, disabled: false }
 ];
 const SOLAR_CONSTANT_WM2 = 1361;
+const AU_IN_KM = 149_597_870.7;
+const AU_TO_EARTH_RADII = 23_481.07;
+const RINGWORLD_WIDTH_BOUNDS_KM = { min: 1_000, max: 1_000_000 };
+const RINGWORLD_TARGET_FLUX_WM2 = 1_300;
+const RINGWORLD_STAR_CORES = [
+    { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49 },
+    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: false, minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03 },
+    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: true, disabledSource: 'Ringworld progression', minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36 },
+    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: true, disabledSource: 'Ringworld progression', minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56 },
+    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: 'Ringworld progression', minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40 },
+    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: 'Ringworld progression', minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39 },
+    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: 'Ringworld progression', minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01 }
+];
 const ARTIFICIAL_STAR_SYLLABLES = [
     'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'
 ];
@@ -171,6 +184,76 @@ function buildArtificialStarContext({ seed, hasStar, minFlux, maxFlux }) {
         isRogue: false
     };
 }
+
+function getRingStarCores() {
+    return RINGWORLD_STAR_CORES;
+}
+
+function getRingStarCoreConfig(value) {
+    const fallback = RINGWORLD_STAR_CORES[0];
+    return RINGWORLD_STAR_CORES.find((entry) => entry.value === value) || fallback;
+}
+
+function getRingRadiusBoundsAU(coreValue) {
+    const core = getRingStarCoreConfig(coreValue);
+    const min = Math.max(core?.minRadiusAU || 0.03, 0.01);
+    const max = Math.max(core?.maxRadiusAU || min, min);
+    return { min, max };
+}
+
+function clampRingWidthKm(value) {
+    const next = Math.max(0, Number(value) || 0);
+    return Math.min(Math.max(next, RINGWORLD_WIDTH_BOUNDS_KM.min), RINGWORLD_WIDTH_BOUNDS_KM.max);
+}
+
+function clampRingOrbitRadiusAU(value, bounds) {
+    const next = Math.max(0, Number(value) || 0);
+    return Math.min(Math.max(next, bounds.min), bounds.max);
+}
+
+function estimateRingRotationPeriodHours(orbitRadiusAU) {
+    const radiusMeters = (Math.max(orbitRadiusAU || 0, 0) * AU_IN_KM) * 1000;
+    const gravity = 9.81;
+    if (!radiusMeters) return 24;
+    const omega = Math.sqrt(gravity / radiusMeters);
+    const seconds = (2 * Math.PI) / omega;
+    return Math.max(0.1, seconds / 3600);
+}
+
+function generateRingStar({ seed, spectralType, orbitRadiusAU, targetFluxWm2 }) {
+    const rng = mulberry32(seed >>> 0);
+    const spec = spectralType || 'G';
+    const distanceAU = Math.max(orbitRadiusAU || 1, 0.01);
+    const desiredLuminositySolar = Math.max(0.0005, (Math.max(targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2, 0) / SOLAR_CONSTANT_WM2) * (distanceAU * distanceAU));
+    const range = ARTIFICIAL_STAR_MASS_RANGES[spec] || ARTIFICIAL_STAR_MASS_RANGES.M;
+    const massFromLuminosity = Math.pow(desiredLuminositySolar, 1 / 3.5);
+    const mass = Math.min(Math.max(massFromLuminosity, range[0]), range[1]);
+    const radius = radiusFromMassSolar(mass);
+    const buildSegment = () => {
+        const index = Math.floor(rng() * ARTIFICIAL_STAR_SYLLABLES.length);
+        return ARTIFICIAL_STAR_SYLLABLES[index] || 'sol';
+    };
+    const core = `${buildSegment()}${buildSegment()}${buildSegment()}`;
+    const name = `${core.charAt(0).toUpperCase()}${core.slice(1)}-${String((seed >>> 0) % 1000).padStart(3, '0')}`;
+    const temperatureK = calculateStarTemperatureK(desiredLuminositySolar, radius);
+    return {
+        name,
+        spectralType: spec,
+        luminositySolar: desiredLuminositySolar,
+        massSolar: mass,
+        radiusSolar: radius,
+        temperatureK,
+        habitableZone: buildHabitableZone(desiredLuminositySolar)
+    };
+}
+
+function calculateRingLandHectares(orbitRadiusAU, widthKm) {
+    const radiusKm = Math.max(orbitRadiusAU || 0, 0) * AU_IN_KM;
+    const width = Math.max(widthKm || 0, 0);
+    const circumferenceKm = 2 * Math.PI * radiusKm;
+    const areaKm2 = circumferenceKm * width;
+    return Math.max(0, areaKm2 * 100);
+}
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
 const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 5;
 class ArtificialManager extends EffectableEntity {
@@ -198,8 +281,24 @@ class ArtificialManager extends EffectableEntity {
         this.updateUI(true);
     }
 
+    enableRingworld() {
+        const entry = ARTIFICIAL_TYPES.find((type) => type.value === 'ring');
+        if (!entry || !entry.disabled) return;
+        entry.disabled = false;
+        entry.disabledSource = null;
+        this.updateUI(true);
+    }
+
     unlockCore(coreId) {
         const entry = ARTIFICIAL_CORES.find((core) => core.value === coreId);
+        if (!entry || !entry.disabled) return;
+        entry.disabled = false;
+        entry.disabledSource = null;
+        this.updateUI(true);
+    }
+
+    unlockRingStarCore(coreId) {
+        const entry = RINGWORLD_STAR_CORES.find((core) => core.value === coreId);
         if (!entry || !entry.disabled) return;
         entry.disabled = false;
         entry.disabledSource = null;
@@ -244,6 +343,16 @@ class ArtificialManager extends EffectableEntity {
             superalloys: BASE_SHELL_COST.superalloys * factor,
             metal: BASE_SHELL_COST.metal * factor
         };
+    }
+
+    calculateRingWorldAreaHectares(orbitRadiusAU, widthKm) {
+        return calculateRingLandHectares(orbitRadiusAU, widthKm);
+    }
+
+    calculateRadiusEarthFromLandHectares(landHa) {
+        const land = Math.max(landHa || 0, 0);
+        if (!land) return DEFAULT_RADIUS_BOUNDS.min;
+        return Math.sqrt(land / EARTH_AREA_HA);
     }
 
     calculateTerraformWorldValue(radiusEarth) {
@@ -505,6 +614,89 @@ class ArtificialManager extends EffectableEntity {
       return true;
     }
 
+    startRingConstruction(options) {
+      if (!this.enabled || this.activeProject) return false;
+
+      const starCore = options?.starCore || RINGWORLD_STAR_CORES[0].value;
+      const starCoreConfig = getRingStarCoreConfig(starCore);
+      if (starCoreConfig.disabled) return false;
+
+      const bounds = getRingRadiusBoundsAU(starCore);
+      const orbitRadiusAU = clampRingOrbitRadiusAU(options?.orbitRadiusAU, bounds);
+      const widthKm = clampRingWidthKm(options?.widthKm);
+      const landHa = this.calculateRingWorldAreaHectares(orbitRadiusAU, widthKm);
+      const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
+
+      const chosenName = (options?.name && String(options.name).trim()) || 'Artificial World';
+      const baseCost = this.calculateCost(radiusEarth);
+      const cost = { superalloys: baseCost.superalloys };
+      const durationContext = this.getDurationContext(radiusEarth);
+      if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
+      if (!this.canCoverCost(cost)) return false;
+      const deduction = this.pullResources(cost);
+      if (!deduction) return false;
+
+      const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
+      const { durationMs, worldCount } = durationContext;
+
+      let sector = options?.sector || 'auto';
+      if (sector === 'auto') {
+        sector = (spaceManager && spaceManager.getCurrentWorldOriginal)
+          ? spaceManager.getCurrentWorldOriginal()?.merged?.celestialParameters?.sector || null
+          : null;
+      }
+
+      const now = Date.now();
+      const generationSeed = (this.nextId * 0x517cc1b7) >>> 0;
+      const targetFluxWm2 = RINGWORLD_TARGET_FLUX_WM2 + ((mulberry32(generationSeed ^ 0xabc)() - 0.5) * 120);
+      const star = generateRingStar({
+        seed: generationSeed,
+        spectralType: starCoreConfig.spectralType,
+        orbitRadiusAU,
+        targetFluxWm2
+      });
+      const fluxWm2 = (SOLAR_CONSTANT_WM2 * star.luminositySolar) / (orbitRadiusAU * orbitRadiusAU);
+
+      this.activeProject = {
+          id: this.nextId,
+          seed: this.createSeed(),
+          name: chosenName,
+          type: 'ring',
+          core: starCore,
+          starCore,
+          spectralType: starCoreConfig.spectralType,
+          orbitRadiusAU,
+          orbitRadiusEarth: orbitRadiusAU * AU_TO_EARTH_RADII,
+          widthKm,
+          radiusEarth,
+          areaHa: landHa,
+          landHa,
+          durationMs,
+          remainingMs: durationMs,
+          status: 'building',
+          startedAt: now,
+          completedAt: null,
+          cost,
+          terraformedValue,
+          fleetCapacityValue: this.calculateFleetCapacityWorldValue(radiusEarth, terraformedValue),
+          distanceFromStarAU: orbitRadiusAU,
+          targetFluxWm2: fluxWm2,
+          isRogue: false,
+          hasStar: true,
+          allowStar: true,
+          starContext: ARTIFICIAL_STAR_CONTEXTS[0].value,
+          sector,
+          star,
+          stockpile: { metal: 0, silicon: 0 },
+          builtFrom: spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : 'unknown',
+          worldDivisor: worldCount
+      };
+
+      this.nextId += 1;
+      this.updateUI(true);
+      return true;
+    }
+
     cancelConstruction() {
         if (!this.activeProject || this.activeProject.status !== 'building') return false;
         this.recordHistoryEntry('cancelled');
@@ -609,14 +801,15 @@ class ArtificialManager extends EffectableEntity {
         const landHa = params.resources.surface.land.initialValue
             || params.resources.surface.land.baseCap
             || this.calculateAreaHectares(radiusEarth);
-        const core = params.classification?.core || 'super-earth';
-        const coreConfig = getArtificialCoreConfig(core);
+        const type = params.classification?.type || 'shell';
+        const core = params.classification?.core || (type === 'ring' ? RINGWORLD_STAR_CORES[0].value : 'super-earth');
+        const coreConfig = type === 'ring' ? null : getArtificialCoreConfig(core);
         const isRogue = params.celestialParameters.rogue === true;
-        const allowStar = coreConfig.allowStar !== false;
-        const hasStar = allowStar && !isRogue;
+        const allowStar = type === 'ring' ? true : coreConfig.allowStar !== false;
+        const hasStar = type === 'ring' ? true : (allowStar && !isRogue);
         return {
             name: params.name,
-            type: params.classification?.type || 'shell',
+            type,
             core,
             radiusEarth,
             landHa,
@@ -627,6 +820,8 @@ class ArtificialManager extends EffectableEntity {
             isRogue,
             allowStar,
             hasStar,
+            orbitRadiusAU: params.celestialParameters?.distanceFromSun,
+            widthKm: params.specialAttributes?.ringWidthKm || params.specialAttributes?.ring?.widthKm || undefined,
             stockpile: {
                 metal: params.resources.colony.metal?.initialValue || 0,
                 silicon: params.resources.colony.silicon?.initialValue || 0
@@ -636,48 +831,59 @@ class ArtificialManager extends EffectableEntity {
 
     buildOverride(project) {
         if (!project) return null;
-        const radiusKm = project.radiusEarth * EARTH_RADIUS_KM;
         const gravity = 9.81;
         const sector = project.sector || currentPlanetParameters?.celestialParameters?.sector || 'R5-07';
-        const allowStar = project.hasStar !== false && project.allowStar !== false;
+        const isRing = project.type === 'ring';
+        const radiusKm = (project.radiusEarth || 1) * EARTH_RADIUS_KM;
+        const allowStar = isRing ? true : (project.hasStar !== false && project.allowStar !== false);
         const star = project.star ? JSON.parse(JSON.stringify(project.star)) : null;
         const stockpileMetal = project.stockpile?.metal || project.initialDeposit?.metal || 0;
         const stockpileSilicon = project.stockpile?.silicon || project.initialDeposit?.silicon || 0;
-        const isRogue = project.isRogue === true || !allowStar;
-        const distanceFromStarAU = isRogue ? 0 : (project.distanceFromStarAU || 1);
+        const isRogue = isRing ? false : (project.isRogue === true || !allowStar);
+        const distanceFromStarAU = isRogue ? 0 : (isRing ? (project.orbitRadiusAU || project.distanceFromStarAU || 1) : (project.distanceFromStarAU || 1));
         const starLuminosity = star ? star.luminositySolar : 0;
 
         const base = JSON.parse(JSON.stringify(defaultPlanetParameters || {}));
         this.resetInitialResources(base.resources);
         base.name = project.name;
         base.specialAttributes = { ...(base.specialAttributes || {}), hasSand: false };
+        if (isRing) {
+            base.specialAttributes.zoneKeys = ['tropical'];
+            base.specialAttributes.ringOrbitRadiusAU = project.orbitRadiusAU || distanceFromStarAU;
+            base.specialAttributes.ringWidthKm = project.widthKm || project.ringWidthKm || 0;
+        }
         base.classification = {
             archetype: 'artificial',
             type: project.type,
             core: project.core
         };
+        const rotationPeriod = isRing
+            ? estimateRingRotationPeriodHours(project.orbitRadiusAU || distanceFromStarAU)
+            : 24;
         base.celestialParameters = {
             ...base.celestialParameters,
             gravity,
             radius: radiusKm,
-            rotationPeriod: 24,
-            spinPeriod: isRogue ? 0 : 24, // Rogue worlds have no spin, others match rotation
+            rotationPeriod,
+            spinPeriod: isRogue ? 0 : rotationPeriod, // Rogue worlds have no spin, others match rotation
             starLuminosity: isRogue ? 0 : starLuminosity,
             sector,
             distanceFromSun: distanceFromStarAU,
             rogue: isRogue,
             targetFluxWm2: project.targetFluxWm2
         };
-        base.effects = [
-            {
-                target: 'projectManager',
-                type: 'spaceshipCostMultiplier',
-                resourceCategory: 'colony',
-                resourceId: 'energy',
-                value: project.radiusEarth,
-                effectId: 'artificial-ship-energy-multiplier'
-            }
-        ];
+        base.effects = isRing
+            ? []
+            : [
+                {
+                    target: 'projectManager',
+                    type: 'spaceshipCostMultiplier',
+                    resourceCategory: 'colony',
+                    resourceId: 'energy',
+                    value: project.radiusEarth,
+                    effectId: 'artificial-ship-energy-multiplier'
+                }
+            ];
         if (star) {
             base.star = star;
         }
@@ -1045,47 +1251,81 @@ class ArtificialManager extends EffectableEntity {
                     ? this.activeProject.fleetCapacityValue
                     : terraformedValue
             );
+            const isRing = this.activeProject.type === 'ring';
             if (this.activeProject.hasStar === undefined) {
                 this.activeProject.hasStar = true;
             }
             if (!this.activeProject.starContext) {
                 this.activeProject.starContext = ARTIFICIAL_STAR_CONTEXTS[0].value;
             }
-            if (this.activeProject.allowStar === undefined) {
-                const cfg = getArtificialCoreConfig(this.activeProject.core);
-                this.activeProject.allowStar = cfg.allowStar !== false;
-            }
-            if (this.activeProject.minFlux === undefined || this.activeProject.maxFlux === undefined) {
-                const cfg = getArtificialCoreConfig(this.activeProject.core);
-                this.activeProject.minFlux = cfg.minFlux;
-                this.activeProject.maxFlux = cfg.maxFlux;
-            }
-            if (this.activeProject.isRogue === undefined) {
-                this.activeProject.isRogue = this.activeProject.hasStar === false || this.activeProject.allowStar === false;
-            }
-            if (!this.activeProject.star) {
-                const seed = (this.activeProject.id || this.nextId || 1) * 0x9e3779b9;
-                const context = buildArtificialStarContext({
-                    seed,
-                    hasStar: !this.activeProject.isRogue,
-                    minFlux: this.activeProject.minFlux,
-                    maxFlux: this.activeProject.maxFlux
-                });
-                this.activeProject.star = context.star;
-                this.activeProject.distanceFromStarAU = context.distanceFromStarAU;
-                this.activeProject.targetFluxWm2 = context.fluxWm2;
-                this.activeProject.isRogue = context.isRogue;
-            }
-            if (!this.activeProject.distanceFromStarAU && this.activeProject.star && !this.activeProject.isRogue) {
-                const flux = this.activeProject.targetFluxWm2 || this.activeProject.minFlux || SOLAR_CONSTANT_WM2;
-                this.activeProject.distanceFromStarAU = calculateOrbitFromFlux(this.activeProject.star.luminositySolar, flux);
-            }
-            if (this.activeProject.targetFluxWm2 === undefined) {
-                if (this.activeProject.isRogue) {
-                    this.activeProject.targetFluxWm2 = 0;
-                } else if (this.activeProject.star) {
+            if (isRing) {
+                if (this.activeProject.orbitRadiusAU === undefined) {
+                    this.activeProject.orbitRadiusAU = this.activeProject.distanceFromStarAU || 1;
+                }
+                if (this.activeProject.widthKm === undefined) {
+                    this.activeProject.widthKm = this.activeProject.ringWidthKm || 10_000;
+                }
+                if (!this.activeProject.landHa) {
+                    this.activeProject.landHa = this.activeProject.areaHa || this.calculateRingWorldAreaHectares(this.activeProject.orbitRadiusAU, this.activeProject.widthKm);
+                }
+                if (!this.activeProject.radiusEarth) {
+                    this.activeProject.radiusEarth = this.calculateRadiusEarthFromLandHectares(this.activeProject.landHa);
+                }
+                if (!this.activeProject.star) {
+                    const seed = (this.activeProject.id || this.nextId || 1) * 0x517cc1b7;
+                    const ringCore = getRingStarCoreConfig(this.activeProject.starCore || this.activeProject.core);
+                    const star = generateRingStar({
+                        seed,
+                        spectralType: ringCore.spectralType,
+                        orbitRadiusAU: this.activeProject.orbitRadiusAU,
+                        targetFluxWm2: this.activeProject.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2
+                    });
+                    this.activeProject.star = star;
+                }
+                this.activeProject.distanceFromStarAU = this.activeProject.orbitRadiusAU;
+                if (this.activeProject.targetFluxWm2 === undefined) {
                     const dist = this.activeProject.distanceFromStarAU || 1;
                     this.activeProject.targetFluxWm2 = (SOLAR_CONSTANT_WM2 * this.activeProject.star.luminositySolar) / (dist * dist);
+                }
+                this.activeProject.isRogue = false;
+                this.activeProject.allowStar = true;
+            } else {
+                if (this.activeProject.allowStar === undefined) {
+                    const cfg = getArtificialCoreConfig(this.activeProject.core);
+                    this.activeProject.allowStar = cfg.allowStar !== false;
+                }
+                if (this.activeProject.minFlux === undefined || this.activeProject.maxFlux === undefined) {
+                    const cfg = getArtificialCoreConfig(this.activeProject.core);
+                    this.activeProject.minFlux = cfg.minFlux;
+                    this.activeProject.maxFlux = cfg.maxFlux;
+                }
+                if (this.activeProject.isRogue === undefined) {
+                    this.activeProject.isRogue = this.activeProject.hasStar === false || this.activeProject.allowStar === false;
+                }
+                if (!this.activeProject.star) {
+                    const seed = (this.activeProject.id || this.nextId || 1) * 0x9e3779b9;
+                    const context = buildArtificialStarContext({
+                        seed,
+                        hasStar: !this.activeProject.isRogue,
+                        minFlux: this.activeProject.minFlux,
+                        maxFlux: this.activeProject.maxFlux
+                    });
+                    this.activeProject.star = context.star;
+                    this.activeProject.distanceFromStarAU = context.distanceFromStarAU;
+                    this.activeProject.targetFluxWm2 = context.fluxWm2;
+                    this.activeProject.isRogue = context.isRogue;
+                }
+                if (!this.activeProject.distanceFromStarAU && this.activeProject.star && !this.activeProject.isRogue) {
+                    const flux = this.activeProject.targetFluxWm2 || this.activeProject.minFlux || SOLAR_CONSTANT_WM2;
+                    this.activeProject.distanceFromStarAU = calculateOrbitFromFlux(this.activeProject.star.luminositySolar, flux);
+                }
+                if (this.activeProject.targetFluxWm2 === undefined) {
+                    if (this.activeProject.isRogue) {
+                        this.activeProject.targetFluxWm2 = 0;
+                    } else if (this.activeProject.star) {
+                        const dist = this.activeProject.distanceFromStarAU || 1;
+                        this.activeProject.targetFluxWm2 = (SOLAR_CONSTANT_WM2 * this.activeProject.star.luminositySolar) / (dist * dist);
+                    }
                 }
             }
         }
@@ -1118,6 +1358,10 @@ function getArtificialTypes() {
 
 function getArtificialCores() {
     return ARTIFICIAL_CORES;
+}
+
+function getRingStarCoreBounds(coreValue) {
+    return getRingRadiusBoundsAU(coreValue);
 }
 
 function getArtificialCoreConfig(coreValue) {
@@ -1156,6 +1400,8 @@ if (typeof window !== 'undefined') {
     window.setArtificialManager = setArtificialManager;
     window.getArtificialTypes = getArtificialTypes;
     window.getArtificialCores = getArtificialCores;
+    window.getRingStarCores = getRingStarCores;
+    window.getRingStarCoreBounds = getRingStarCoreBounds;
     window.getArtificialStarContexts = getArtificialStarContexts;
     window.getArtificialCoreBounds = getArtificialCoreBounds;
     window.getArtificialCoreConfig = getArtificialCoreConfig;
@@ -1166,6 +1412,8 @@ if (typeof window !== 'undefined') {
         setArtificialManager,
         getArtificialTypes,
         getArtificialCores,
+        getRingStarCores,
+        getRingStarCoreBounds,
         getArtificialStarContexts,
         getArtificialCoreBounds,
         getArtificialCoreConfig,
