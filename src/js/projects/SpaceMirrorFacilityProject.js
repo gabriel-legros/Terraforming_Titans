@@ -929,8 +929,8 @@ function initializeMirrorOversightUI(container) {
     </div>
     <div id="assignment-grid">
       <div class="grid-header">Zone</div>
-      <div class="grid-header">Mirrors</div>
-      <div class="grid-header">Reverse</div>
+      <div class="grid-header grid-header-mirror">Mirrors</div>
+      <div class="grid-header grid-header-reverse">Reverse</div>
       <div class="grid-header">Lanterns</div>
       <div class="grid-header">Auto</div>
 
@@ -1297,6 +1297,7 @@ function updateMirrorOversightUI() {
 
   const assignmentGrid = document.getElementById('assignment-grid');
   if (assignmentGrid) {
+    assignmentGrid.classList.toggle('reversal-available', reversalAvailable);
     if (lanternUnlocked && reversalAvailable) {
       assignmentGrid.style.gridTemplateColumns = '100px 1fr 80px 1fr 50px';
     } else if (lanternUnlocked) {

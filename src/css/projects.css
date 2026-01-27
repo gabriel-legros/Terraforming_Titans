@@ -1610,6 +1610,7 @@
     text-align: center;
     padding-bottom: 4px;
     border-bottom: 1px solid #dee2e6;
+    position: relative;
 }
 
 .grid-zone-label {
@@ -1646,6 +1647,15 @@
     align-items: center;
     justify-content: center;
     text-align: center;
+}
+
+#assignment-grid.reversal-available .grid-header-mirror::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    bottom: -1px;
+    width: 8px;
+    border-bottom: 1px solid #dee2e6;
 }
 
 /* Available rows use hidden placeholders for the first and last slots,
