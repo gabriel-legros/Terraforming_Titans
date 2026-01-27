@@ -895,6 +895,12 @@ class ArtificialManager extends EffectableEntity {
                     type: 'permanentProjectDisable',
                     value: true,
                     effectId: 'ringworld-disable-planetary-thrusters'
+                },
+                {
+                    target: 'project',
+                    targetId: 'ringworldTerraforming',
+                    type: 'enable',
+                    effectId: 'ringworld-enable-terraforming-protocol'
                 }
             ]
             : [

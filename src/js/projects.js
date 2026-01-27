@@ -968,6 +968,7 @@ class ProjectManager extends EffectableEntity {
   }
 
   updateProjects(deltaTime) {
+    this.applyEffects();
     for (const projectName in this.projects) {
       const project = this.projects[projectName];
 

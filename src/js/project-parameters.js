@@ -173,6 +173,22 @@ const projectParameters = {
       ]
     }
   },
+  ringworldTerraforming: {
+    type: 'RingworldTerraformingProject',
+    name: 'Ringworld Terraforming',
+    category: 'infrastructure',
+    cost: {},
+    duration: 0,
+    description: "This project keeps track of the Ringworld's spin and its effects.",
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      energyRequired: 1e21,
+      shipEnergyMultiplier: 0.1,
+      power: 0,
+      powerStep: 1
+    }
+  },
   deeperMining: {
     type: 'DeeperMiningProject',
     name: "Deeper mining",

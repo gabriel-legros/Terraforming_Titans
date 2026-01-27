@@ -193,6 +193,20 @@
     color: #ffffff;
 }
 
+.dark-mode .ringworld-terraforming-panel {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+.dark-mode .ringworld-terraforming-progress-bar {
+    background-color: #333;
+}
+
+.dark-mode .ringworld-terraforming-progress-label,
+.dark-mode .ringworld-terraforming-notes {
+    color: #bbbbbb;
+}
+
 .dark-mode #nanocolony-container .nanotech-summary-card,
 .dark-mode #nanocolony-container .nanotech-slider-card {
     background-color: #1e1e1e;

@@ -488,6 +488,97 @@
     max-width: 100%;
 }
 
+.ringworld-terraforming {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ringworld-terraforming-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ringworld-terraforming-panel {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.ringworld-section-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.ringworld-terraforming-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.ringworld-terraforming-progress-label {
+    font-size: 0.85em;
+    color: #6c757d;
+}
+
+.ringworld-terraforming-progress-bar {
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background-color: #e9ecef;
+}
+
+.ringworld-terraforming-progress-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #4caf50, #7acb5a);
+    transition: width 0.2s ease-out;
+}
+
+.ringworld-terraforming-notes {
+    margin: 0;
+    padding-left: 18px;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.ringworld-terraforming-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.ringworld-terraforming-power {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9em;
+}
+
+.ringworld-terraforming-power-value {
+    font-weight: 600;
+}
+
+.ringworld-terraforming-power-controls .main-buttons button,
+.ringworld-terraforming-power-controls .multiplier-container button {
+    min-width: 44px;
+}
+
+.ringworld-terraforming-power-controls {
+    margin-left: 0;
+}
+
+@media (max-width: 900px) {
+    .ringworld-terraforming-layout {
+        flex-direction: column;
+    }
+}
+
 .project-summary-grid {
     margin-bottom: 12px;
 }
