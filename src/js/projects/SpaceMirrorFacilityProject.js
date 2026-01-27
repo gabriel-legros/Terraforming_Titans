@@ -930,8 +930,8 @@ function initializeMirrorOversightUI(container) {
     <div id="assignment-grid">
       <div class="grid-header">Zone</div>
       <div class="grid-header">Mirrors</div>
+      <div class="grid-header">Reverse</div>
       <div class="grid-header">Lanterns</div>
-      <div class="grid-header">Reversal</div>
       <div class="grid-header">Auto</div>
 
       <div class="grid-zone-label">Available</div>
@@ -942,6 +942,7 @@ function initializeMirrorOversightUI(container) {
         <button class="assignment-mul10" data-type="mirrors">x10</button>
         <button class="assign-max" style="visibility: hidden;">Max</button>
       </div>
+      <div class="grid-reversal-cell"></div>
       <div class="assign-cell available-lantern-cell" data-type="lanterns">
         <button class="assign-zero" style="visibility: hidden;">0</button>
         <button class="assignment-div10" data-type="lanterns">/10</button>
@@ -949,7 +950,6 @@ function initializeMirrorOversightUI(container) {
         <button class="assignment-mul10" data-type="lanterns">x10</button>
         <button class="assign-max" style="visibility: hidden;">Max</button>
       </div>
-      <div class="grid-reversal-cell"></div>
       <div class="grid-auto-cell"></div>
 
       ${getMirrorZonesWithAny().map(zone => `
@@ -961,15 +961,15 @@ function initializeMirrorOversightUI(container) {
           <button class="assign-plus" data-type="mirrors" data-zone="${zone}">+1</button>
           <button class="assign-max" data-type="mirrors" data-zone="${zone}">Max</button>
         </div>
+        <div class="grid-reversal-cell reversal-cell-with-checkbox">
+          <input type="checkbox" class="reversal-checkbox" data-zone="${zone}">
+        </div>
         <div class="assign-cell" data-type="lanterns" data-zone="${zone}">
           <button class="assign-zero" data-type="lanterns" data-zone="${zone}">0</button>
           <button class="assign-minus" data-type="lanterns" data-zone="${zone}">-1</button>
           <span id="lanterns-assign-${zone}">0</span>
           <button class="assign-plus" data-type="lanterns" data-zone="${zone}">+1</button>
           <button class="assign-max" data-type="lanterns" data-zone="${zone}">Max</button>
-        </div>
-        <div class="grid-reversal-cell reversal-cell-with-checkbox">
-          <input type="checkbox" class="reversal-checkbox" data-zone="${zone}">
         </div>
         <div class="grid-auto-cell">
           <input type="checkbox" class="auto-assign" data-zone="${zone}">
@@ -983,15 +983,15 @@ function initializeMirrorOversightUI(container) {
         <button class="assign-plus" data-type="mirrors" data-zone="focus">+1</button>
         <button class="assign-max" data-type="mirrors" data-zone="focus">Max</button>
       </div>
+      <div class="grid-reversal-cell reversal-cell-with-checkbox" data-zone="focus" style="display:none;">
+        <input type="checkbox" class="reversal-checkbox" data-zone="focus" style="visibility:hidden;">
+      </div>
       <div class="assign-cell" data-type="lanterns" data-zone="focus" style="display:none;">
         <button class="assign-zero" data-type="lanterns" data-zone="focus">0</button>
         <button class="assign-minus" data-type="lanterns" data-zone="focus">-1</button>
         <span id="lanterns-assign-focus">0</span>
         <button class="assign-plus" data-type="lanterns" data-zone="focus">+1</button>
         <button class="assign-max" data-type="lanterns" data-zone="focus">Max</button>
-      </div>
-      <div class="grid-reversal-cell reversal-cell-with-checkbox" data-zone="focus" style="display:none;">
-        <input type="checkbox" class="reversal-checkbox" data-zone="focus" style="visibility:hidden;">
       </div>
       <div class="grid-auto-cell" data-zone="focus" style="display:none;">
         <input type="checkbox" class="auto-assign" data-zone="focus">
@@ -1120,10 +1120,10 @@ function rebuildMirrorOversightCache() {
   });
   mirrorOversightCache = {
     container,
-    lanternHeader: document.querySelector('#assignment-grid .grid-header:nth-child(3)') || null,
+    lanternHeader: document.querySelector('#assignment-grid .grid-header:nth-child(4)') || null,
     lanternCells: Array.from(document.querySelectorAll('#assignment-grid .assign-cell[data-type="lanterns"]')),
     availableLanternCells: Array.from(document.querySelectorAll('.available-lantern-cell')),
-    reversalHeader: document.querySelector('#assignment-grid .grid-header:nth-child(4)') || null,
+    reversalHeader: document.querySelector('#assignment-grid .grid-header:nth-child(3)') || null,
     reversalCells: Array.from(document.querySelectorAll('#assignment-grid .grid-reversal-cell')),
     autoAssignBoxes: Array.from(document.querySelectorAll('#assignment-grid .auto-assign')),
     assignmentControls: Array.from(document.querySelectorAll('#mirror-finer-content button, #mirror-finer-content input[type="checkbox"]:not(#mirror-use-finer)')),
@@ -1298,7 +1298,7 @@ function updateMirrorOversightUI() {
   const assignmentGrid = document.getElementById('assignment-grid');
   if (assignmentGrid) {
     if (lanternUnlocked && reversalAvailable) {
-      assignmentGrid.style.gridTemplateColumns = '100px 1fr 1fr 80px 50px';
+      assignmentGrid.style.gridTemplateColumns = '100px 1fr 80px 1fr 50px';
     } else if (lanternUnlocked) {
       assignmentGrid.style.gridTemplateColumns = '100px 1fr 1fr 50px';
     } else if (reversalAvailable) {

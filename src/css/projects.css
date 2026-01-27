@@ -1599,7 +1599,7 @@
 /* Finer Controls Grid */
 #assignment-grid {
     display: grid;
-    grid-template-columns: 100px 1fr 1fr 50px;
+    grid-template-columns: 100px 1fr 80px 1fr 50px;
     gap: 8px;
     align-items: center;
     font-size: 0.9em;
@@ -1638,6 +1638,13 @@
 }
 
 .grid-auto-cell {
+    text-align: center;
+}
+
+.grid-reversal-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
 }
 
