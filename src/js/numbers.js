@@ -1,3 +1,7 @@
+function isNearlyWhole(value, epsilon = 1e-9) {
+  return Math.abs(value - Math.round(value)) < epsilon;
+}
+
 function formatNumber(value, integer = false, precision = 1, allowSmall = false) {
     const absValue = Math.abs(value);
     let formatted;
@@ -14,31 +18,44 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false)
     }
 
     if (absValue >= 1e39 - 1e36) {
-      formatted = integer && absValue % 1e39 === 0 ? (absValue / 1e39) + 'Dd' : (absValue / 1e39).toFixed(precision) + 'Dd';
+      const scaled = absValue / 1e39;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Dd' : scaled.toFixed(precision) + 'Dd';
     } else if (absValue >= 1e36 - 1e33) {
-      formatted = integer && absValue % 1e36 === 0 ? (absValue / 1e36) + 'Ud' : (absValue / 1e36).toFixed(precision) + 'Ud';
+      const scaled = absValue / 1e36;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Ud' : scaled.toFixed(precision) + 'Ud';
     } else if (absValue >= 1e33 - 1e30) {
-      formatted = integer && absValue % 1e33 === 0 ? (absValue / 1e33) + 'De' : (absValue / 1e33).toFixed(precision) + 'Dc';
+      const scaled = absValue / 1e33;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'De' : scaled.toFixed(precision) + 'Dc';
     } else if (absValue >= 1e30 - 1e27) {
-      formatted = integer && absValue % 1e30 === 0 ? (absValue / 1e30) + 'No' : (absValue / 1e30).toFixed(precision) + 'No';
+      const scaled = absValue / 1e30;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'No' : scaled.toFixed(precision) + 'No';
     } else if (absValue >= 1e27 - 1e24) {
-      formatted = integer && absValue % 1e27 === 0 ? (absValue / 1e27) + 'Oc' : (absValue / 1e27).toFixed(precision) + 'Oc';
+      const scaled = absValue / 1e27;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Oc' : scaled.toFixed(precision) + 'Oc';
     } else if (absValue >= 1e24 - 1e21) {
-      formatted = integer && absValue % 1e24 === 0 ? (absValue / 1e24) + 'Sp' : (absValue / 1e24).toFixed(precision) + 'Sp';
+      const scaled = absValue / 1e24;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Sp' : scaled.toFixed(precision) + 'Sp';
     } else if (absValue >= 1e21 - 1e18) {
-      formatted = integer && absValue % 1e21 === 0 ? (absValue / 1e21) + 'Sx' : (absValue / 1e21).toFixed(precision) + 'Sx';
+      const scaled = absValue / 1e21;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Sx' : scaled.toFixed(precision) + 'Sx';
     } else if (absValue >= 1e18 - 1e15) {
-      formatted = integer && absValue % 1e18 === 0 ? (absValue / 1e18) + 'Qi' : (absValue / 1e18).toFixed(precision) + 'Qi';
+      const scaled = absValue / 1e18;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Qi' : scaled.toFixed(precision) + 'Qi';
     } else if (absValue >= 1e15 - 1e12) {
-      formatted = integer && absValue % 1e15 === 0 ? (absValue / 1e15) + 'Q' : (absValue / 1e15).toFixed(precision) + 'Q';
+      const scaled = absValue / 1e15;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Q' : scaled.toFixed(precision) + 'Q';
     } else if (absValue >= 1e12 - 1e9) {
-      formatted = integer && absValue % 1e12 === 0 ? (absValue / 1e12) + 'T' : (absValue / 1e12).toFixed(precision) + 'T';
+      const scaled = absValue / 1e12;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'T' : scaled.toFixed(precision) + 'T';
     } else if (absValue >= 1e9 - 1e6) {
-      formatted = integer && absValue % 1e9 === 0 ? (absValue / 1e9) + 'B' : (absValue / 1e9).toFixed(precision) + 'B';
+      const scaled = absValue / 1e9;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'B' : scaled.toFixed(precision) + 'B';
     } else if (absValue >= 1e6 - 1e3) {
-      formatted = integer && absValue % 1e6 === 0 ? (absValue / 1e6) + 'M' : (absValue / 1e6).toFixed(precision) + 'M';
+      const scaled = absValue / 1e6;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'M' : scaled.toFixed(precision) + 'M';
     } else if (absValue >= 1e3 - 1) {
-      formatted = integer && absValue % 1e3 === 0 ? (absValue / 1e3) + 'k' : (absValue / 1e3).toFixed(precision) + 'k';
+      const scaled = absValue / 1e3;
+      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'k' : scaled.toFixed(precision) + 'k';
     } else if (absValue >= 1e-2) {
       formatted = integer && absValue % 1 === 0 ? absValue.toFixed(0) : absValue.toFixed(precision);
     } else if (absValue >= 1e-3 - 1e-6) {

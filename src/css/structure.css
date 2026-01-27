@@ -6,7 +6,7 @@
 
 .building-card-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(170px, 170px) minmax(250px, 250px);
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 180px) minmax(250px, 250px);
     gap: 6px 6px;
     align-items: start;
 }
@@ -227,7 +227,7 @@
 
 .building-controls button {
     font-size: 12px;
-    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .building-display {
