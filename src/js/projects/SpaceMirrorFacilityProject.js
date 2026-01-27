@@ -1081,9 +1081,9 @@ function initializeMirrorOversightUI(container) {
 
   container.appendChild(div);
 
-  updateZonalFluxTable();
   // Build cache of frequently used nodes inside the oversight UI
   rebuildMirrorOversightCache();
+  updateZonalFluxTable();
   updateMirrorOversightUI();
 }
 
@@ -1091,8 +1091,7 @@ let mirrorOversightCache = null;
 
 function rebuildMirrorOversightCache() {
   if (typeof document === 'undefined') return;
-  const container = document.getElementById('mirror-oversight-container');
-  if (!container) { mirrorOversightCache = null; return; }
+  const container = document.getElementById('mirror-oversight-container') || document.createElement('div');
   const zoneKeys = ['tropical', 'temperate', 'polar'];
   const sliderZoneElements = {};
   zoneKeys.forEach(zone => {
@@ -1143,7 +1142,9 @@ function rebuildMirrorOversightCache() {
 }
 
 function ensureMirrorOversightCache() {
-  const container = typeof document !== 'undefined' ? document.getElementById('mirror-oversight-container') : null;
+  const container = typeof document !== 'undefined'
+    ? (document.getElementById('mirror-oversight-container') || document.createElement('div'))
+    : null;
   if (!mirrorOversightCache || mirrorOversightCache.container !== container) {
     rebuildMirrorOversightCache();
   }
