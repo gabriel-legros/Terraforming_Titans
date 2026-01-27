@@ -155,7 +155,9 @@
   };
 
   PlanetVisualizer.prototype.updateAtmosphereUniforms = function updateAtmosphereUniforms() {
-    const illum = Math.max(0, Math.min(3, this.getGameIllumination()));
+    const useDebugIllum = this.debug && this.debug.mode === 'debug';
+    const illumSource = useDebugIllum ? this.viz?.illum : this.getGameIllumination();
+    const illum = Math.max(0, Math.min(3, Number(illumSource) || 0));
     if (this.sunLight) this.sunLight.intensity = illum;
     if (this.sunMesh) {
       if (this.isRingWorld()) {

@@ -3,8 +3,14 @@
   if (!PlanetVisualizer) return;
 
   PlanetVisualizer.prototype.createCloudSphere = function createCloudSphere() {
-    const cloudRadius = 1.022;
-    const geo = new THREE.SphereGeometry(cloudRadius, 64, 48);
+    const isRing = this.isRingWorld();
+    const ringRadius = this.ringRadius || 1;
+    const ringHeight = this.ringHeight || 0.23625;
+    const cloudRadius = isRing ? Math.max(0.2, ringRadius - 0.015) : 1.022;
+    const cloudHeight = ringHeight;
+    const geo = isRing
+      ? new THREE.CylinderGeometry(cloudRadius, cloudRadius, cloudHeight, 96, 1, true)
+      : new THREE.SphereGeometry(cloudRadius, 64, 48);
     const mat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
@@ -12,7 +18,7 @@
       depthWrite: false,
       depthTest: true,
       blending: THREE.NormalBlending,
-      side: THREE.FrontSide,
+      side: isRing ? THREE.BackSide : THREE.FrontSide,
     });
     this.cloudMaterial = mat;
     this.cloudMesh = new THREE.Mesh(geo, mat);
@@ -21,9 +27,22 @@
     this.updateCloudMeshTexture();
   };
 
+  PlanetVisualizer.prototype.getCloudTextureSize = function getCloudTextureSize() {
+    if (this.isRingWorld()) {
+      const aspect = this.getRingUvAspect();
+      const w = 2048;
+      let h = Math.round(w / aspect);
+      if (h < 256) h = 256;
+      if (h > 1024) h = 1024;
+      return { w, h };
+    }
+    return { w: 512, h: 256 };
+  };
+
   PlanetVisualizer.prototype.updateCloudMeshTexture = function updateCloudMeshTexture() {
-    const w = 512;
-    const h = 256;
+    const size = this.getCloudTextureSize();
+    const w = size.w;
+    const h = size.h;
     if (!this.cloudMap || !this.cloudHist || this.cloudMap.length !== w * h) {
       this.generateCloudMap(w, h);
     }
@@ -46,6 +65,7 @@
     const data = img.data;
     const thrValue = thr >= 0 ? thr / 255 : -1;
     const edge = 0.05;
+    const isRing = this.isRingWorld();
     const smoothstep = (a, b, t) => {
       const v = Math.max(0, Math.min(1, (t - a) / (b - a)));
       return v * v * (3 - 2 * v);
@@ -56,11 +76,18 @@
         ? 1 - smoothstep(thrValue - edge, thrValue + edge, v)
         : 0;
       const density = 0.55 + 0.6 * (1 - v);
+      let bandMask = 1;
+      if (isRing) {
+        const y = Math.floor(i / w);
+        const vy = y / (h - 1);
+        const dist = Math.abs(vy - 0.5);
+        bandMask = 1 - smoothstep(0.47, 0.5, dist);
+      }
       const idx = i * 4;
       data[idx] = 255;
       data[idx + 1] = 255;
       data[idx + 2] = 255;
-      data[idx + 3] = Math.max(0, Math.min(255, Math.round(245 * alphaBase * density)));
+      data[idx + 3] = Math.max(0, Math.min(255, Math.round(215 * alphaBase * density * bandMask)));
     }
     for (let y = 0; y < h; y++) {
       const row = y * w * 4;
@@ -172,6 +199,74 @@
   };
 
   PlanetVisualizer.prototype.generateCloudMap = function generateCloudMap(w, h) {
+    if (this.isRingWorld()) {
+      const ringAspect = this.getRingUvAspect();
+      const seed = this.hashSeedFromPlanet();
+      let s = Math.floor((seed.x * 131071) ^ (seed.y * 524287)) >>> 0;
+      const hash = (x, y) => {
+        const n = Math.sin(x * 157.31 + y * 113.97 + s * 0.000137) * 43758.5453;
+        return n - Math.floor(n);
+      };
+      const smooth = (t) => t * t * (3 - 2 * t);
+      const wrapIndex = (idx, period) => {
+        const p = Math.max(1, Math.round(period));
+        let v = idx % p;
+        if (v < 0) v += p;
+        return v;
+      };
+      const value2Periodic = (x, y, period) => {
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const xf = x - xi, yf = y - yi;
+        const u = smooth(xf), v = smooth(yf);
+        const x0 = wrapIndex(xi, period);
+        const x1 = wrapIndex(xi + 1, period);
+        const a = hash(x0, yi), b = hash(x1, yi);
+        const c = hash(x0, yi + 1), d = hash(x1, yi + 1);
+        return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+      };
+      const fbm = (x, y, oct = 5, lac = 2.0, gain = 0.5, periodBase = 0) => {
+        let f = 0, amp = 0.5, freq = 1;
+        for (let o = 0; o < oct; o++) {
+          const px = x * freq;
+          const py = y * freq;
+          const period = periodBase ? periodBase * freq : 0;
+          f += amp * value2Periodic(px, py, period);
+          freq *= lac; amp *= gain;
+        }
+        return f;
+      };
+      const arr = new Float32Array(w * h);
+      let minV = Infinity, maxV = -Infinity;
+      const scale = 4.4;
+      const nyScale = scale * 1.2;
+      const periodBase = scale * ringAspect;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const nx = (x / w) * scale * ringAspect;
+          const ny = (y / h) * nyScale;
+          const base = fbm(nx, ny, 3, 2.0, 0.5, periodBase);
+          const detail = fbm(nx * 3.6, ny * 3.6, 4, 2.2, 0.55, periodBase * 3.6);
+          const crack1 = fbm(nx * 5.8, ny * 5.8, 3, 2.2, 0.55, periodBase * 5.8);
+          const crack2 = fbm(nx * 10.2, ny * 10.2, 2, 2.0, 0.6, periodBase * 10.2);
+          const carve = 0.55 * (1 - Math.abs(2 * crack1 - 1)) + 0.45 * (1 - Math.abs(2 * crack2 - 1));
+          let v = 0.5 * base + 0.5 * detail;
+          v = v - 0.22 * carve;
+          v = Math.max(0, Math.min(1, v));
+          minV = Math.min(minV, v); maxV = Math.max(maxV, v);
+          arr[y * w + x] = v;
+        }
+      }
+      const span = Math.max(1e-6, maxV - minV);
+      for (let i = 0; i < w * h; i++) arr[i] = (arr[i] - minV) / span;
+      this.cloudMap = arr;
+      const hist = { counts: new Uint32Array(256), total: w * h };
+      for (let i = 0; i < w * h; i++) {
+        const bin = Math.max(0, Math.min(255, Math.floor(arr[i] * 255)));
+        hist.counts[bin]++;
+      }
+      this.cloudHist = hist;
+      return;
+    }
     const seed = this.hashSeedFromPlanet();
     let s = Math.floor((seed.x * 131071) ^ (seed.y * 524287)) >>> 0;
     const hash = (x, y) => {

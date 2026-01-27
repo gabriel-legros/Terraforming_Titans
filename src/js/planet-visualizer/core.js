@@ -344,7 +344,7 @@
       });
       if (isRing) {
         const ringRadius = 1;
-        const ringHeight = 0.315;
+        const ringHeight = 0.23625;
         const geometry = new THREE.CylinderGeometry(ringRadius, ringRadius, ringHeight, 96, 1, true);
         this.ringMesh = new THREE.Mesh(geometry, material);
         this.scene.add(this.ringMesh);
@@ -438,8 +438,8 @@
       if (!isRing) {
         this.createCityLights();
         this.createAtmosphere();
-        this.createCloudSphere();
       }
+      this.createCloudSphere();
       this.createShipSystem();
 
       window.addEventListener('resize', this.onResize);

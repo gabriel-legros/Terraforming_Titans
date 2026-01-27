@@ -392,15 +392,36 @@
         return n - Math.floor(n);
       };
       const smooth = (t) => t * t * (3 - 2 * t);
+      const usePeriodic = this.isRingWorld();
+      const wrapIndex = (idx, period) => {
+        const p = Math.max(1, Math.round(period));
+        let v = idx % p;
+        if (v < 0) v += p;
+        return v;
+      };
       const value2 = (x, y) => {
         const xi = Math.floor(x), yi = Math.floor(y);
         const xf = x - xi, yf = y - yi; const u = smooth(xf), v = smooth(yf);
         const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
         return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
       };
-      const fbm = (x, y, oct = 4, lac = 2.0, gain = 0.5) => {
+      const value2Periodic = (x, y, period) => {
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const xf = x - xi, yf = y - yi; const u = smooth(xf), v = smooth(yf);
+        const x0 = wrapIndex(xi, period);
+        const x1 = wrapIndex(xi + 1, period);
+        const a = hash(x0, yi), b = hash(x1, yi), c = hash(x0, yi + 1), d = hash(x1, yi + 1);
+        return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+      };
+      const fbm = (x, y, oct = 4, lac = 2.0, gain = 0.5, periodBase = 0) => {
         let f = 0, amp = 0.5, freq = 1.0;
-        for (let o = 0; o < oct; o++) { f += amp * value2(x * freq, y * freq); freq *= lac; amp *= gain; }
+        for (let o = 0; o < oct; o++) {
+          const px = x * freq;
+          const py = y * freq;
+          const period = periodBase ? periodBase * freq : 0;
+          f += amp * (usePeriodic && period ? value2Periodic(px, py, period) : value2(px, py));
+          freq *= lac; amp *= gain;
+        }
         return f;
       };
       const feat = this.viz.surfaceFeatures || {};
@@ -432,6 +453,8 @@
       const microScale = 90 + rand() * 40;
       const stripePhase = rand() * Math.PI * 2;
       const microPhase = rand() * 10;
+      const featurePeriod = ringAspect * fScale;
+      const microPeriod = ringAspect * microScale;
       for (let i = 0; i < w * h; i++) {
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const heightMul = (0.85 + 0.3 * Math.pow(hgt, 1.2)) * heightScale;
@@ -447,7 +470,7 @@
         if (useFeatures) {
           const nx = ((x / w) * ringAspect + fOffX) * fScale;
           const ny = (y / h + fOffY) * (fScale * 0.5);
-          let v = fbm(nx, ny, 4, 2.0, 0.5); // 0..1
+          let v = fbm(nx, ny, 4, 2.0, 0.5, featurePeriod); // 0..1
           v = Math.max(0, Math.min(1, v));
           // Stronger, broader mask: shift and scale before contrast
           let level = (v - 0.1) / 0.5; // maps 0.1->0 and 0.6->1
@@ -462,8 +485,13 @@
         let metalMul = 1;
         if (isArtificial) {
           const stripe = Math.sin((y / h) * stripeScale * Math.PI * 2 + stripePhase) * 0.06;
-          const micro = (value2((x / w) * microScale * ringAspect + microPhase, (y / h) * microScale + microPhase) - 0.5) * 0.08;
-          metalMul = 1 + stripe + micro;
+          const mx = (x / w) * microScale * ringAspect + microPhase;
+          const my = (y / h) * microScale + microPhase;
+          const micro = ((usePeriodic && microPeriod)
+            ? value2Periodic(mx, my, microPeriod)
+            : value2(mx, my)) - 0.5;
+          const microScaled = micro * 0.08;
+          metalMul = 1 + stripe + microScaled;
           if (metalMul < 0.88) metalMul = 0.88;
           if (metalMul > 1.18) metalMul = 1.18;
         }
@@ -844,11 +872,18 @@
   PlanetVisualizer.prototype.generateWaterMask = function generateWaterMask(w, h) {
     const seed = this.hashSeedFromPlanet();
     const ringAspect = this.getRingUvAspect();
+    const usePeriodic = this.isRingWorld();
     let s = Math.floor((seed.x * 65535) ^ (seed.y * 131071)) >>> 0;
     const rand = () => { s = (1664525 * s + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000; };
     const hash = (x, y) => {
       const n = Math.sin(x * 127.1 + y * 311.7 + s * 0.0001) * 43758.5453;
       return n - Math.floor(n);
+    };
+    const wrapIndex = (idx, period) => {
+      const p = Math.max(1, Math.round(period));
+      let v = idx % p;
+      if (v < 0) v += p;
+      return v;
     };
     const noise2 = (x, y) => {
       const xi = Math.floor(x), yi = Math.floor(y);
@@ -859,18 +894,36 @@
       const c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
       return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
     };
-    const fbm = (x, y) => {
+    const noise2Periodic = (x, y, period) => {
+      const xi = Math.floor(x), yi = Math.floor(y);
+      const xf = x - xi, yf = y - yi;
+      const u = xf * xf * (3 - 2 * xf);
+      const v = yf * yf * (3 - 2 * yf);
+      const x0 = wrapIndex(xi, period);
+      const x1 = wrapIndex(xi + 1, period);
+      const a = hash(x0, yi), b = hash(x1, yi);
+      const c = hash(x0, yi + 1), d = hash(x1, yi + 1);
+      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    };
+    const fbm = (x, y, periodBase = 0) => {
       let f = 0, amp = 0.5, freq = 1.0;
-      for (let o = 0; o < 5; o++) { f += amp * noise2(x * freq, y * freq); freq *= 2; amp *= 0.5; }
+      for (let o = 0; o < 5; o++) {
+        const px = x * freq;
+        const py = y * freq;
+        const period = periodBase ? periodBase * freq : 0;
+        f += amp * (usePeriodic && period ? noise2Periodic(px, py, period) : noise2(px, py));
+        freq *= 2; amp *= 0.5;
+      }
       return f;
     };
     const scale = 3.0;
+    const periodBase = scale * ringAspect;
     const arr = new Float32Array(w * h);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const nx = (x / w) * scale * ringAspect;
         const ny = (y / h) * (scale * 0.5);
-        let v = fbm(nx, ny);
+        let v = fbm(nx, ny, periodBase);
         v = Math.min(1, Math.max(0, v));
         arr[y * w + x] = v;
       }
@@ -883,12 +936,19 @@
     if (cached?.w === w && cached?.h === h && cached.data) return cached.data;
     const seed = this.hashSeedFromPlanet();
     const ringAspect = this.getRingUvAspect();
+    const usePeriodic = this.isRingWorld();
     let s = Math.floor((seed.x * 131071) ^ (seed.y * 524287)) >>> 0;
     const hash = (x, y) => {
       const n = Math.sin(x * 157.3 + y * 289.1 + s * 0.00017) * 43758.5453;
       return n - Math.floor(n);
     };
     const smooth = (t) => t * t * (3 - 2 * t);
+    const wrapIndex = (idx, period) => {
+      const p = Math.max(1, Math.round(period));
+      let v = idx % p;
+      if (v < 0) v += p;
+      return v;
+    };
     const value2 = (x, y) => {
       const xi = Math.floor(x), yi = Math.floor(y);
       const xf = x - xi, yf = y - yi;
@@ -899,10 +959,25 @@
       const d = hash(xi + 1, yi + 1);
       return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
     };
-    const fbm = (x, y, oct = 4, lac = 2.15, gain = 0.45) => {
+    const value2Periodic = (x, y, period) => {
+      const xi = Math.floor(x), yi = Math.floor(y);
+      const xf = x - xi, yf = y - yi;
+      const u = smooth(xf), v = smooth(yf);
+      const x0 = wrapIndex(xi, period);
+      const x1 = wrapIndex(xi + 1, period);
+      const a = hash(x0, yi);
+      const b = hash(x1, yi);
+      const c = hash(x0, yi + 1);
+      const d = hash(x1, yi + 1);
+      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    };
+    const fbm = (x, y, oct = 4, lac = 2.15, gain = 0.45, periodBase = 0) => {
       let f = 0, amp = 0.5, freq = 1.0;
       for (let o = 0; o < oct; o++) {
-        f += amp * value2(x * freq, y * freq);
+        const px = x * freq;
+        const py = y * freq;
+        const period = periodBase ? periodBase * freq : 0;
+        f += amp * (usePeriodic && period ? value2Periodic(px, py, period) : value2(px, py));
         freq *= lac;
         amp *= gain;
       }
@@ -911,10 +986,11 @@
     const arr = new Float32Array(w * h);
     for (let y = 0; y < h; y++) {
       const lat = Math.abs((y / (h - 1)) - 0.5) * 0.6;
+      const periodBase = ringAspect * (2.6 + lat * 0.8);
       for (let x = 0; x < w; x++) {
         const nx = (x / w) * (2.6 + lat * 0.8) * ringAspect;
         const ny = (y / h) * (1.3 + lat * 1.6);
-        let v = fbm(nx + lat * 0.5, ny, 4, 2.1, 0.45);
+        let v = fbm(nx + lat * 0.5, ny, 4, 2.1, 0.45, periodBase);
         if (v < 0) v = 0; else if (v > 1) v = 1;
         arr[y * w + x] = v;
       }
@@ -928,12 +1004,19 @@
     if (cached?.w === w && cached?.h === h && cached.data) return cached.data;
     const seed = this.hashSeedFromPlanet();
     const ringAspect = this.getRingUvAspect();
+    const usePeriodic = this.isRingWorld();
     let s = Math.floor((seed.x * 91337) ^ (seed.y * 131543)) >>> 0;
     const hash = (x, y) => {
       const n = Math.sin(x * 119.9 + y * 301.1 + s * 0.00013) * 43758.5453;
       return n - Math.floor(n);
     };
     const smooth = (t) => t * t * (3 - 2 * t);
+    const wrapIndex = (idx, period) => {
+      const p = Math.max(1, Math.round(period));
+      let v = idx % p;
+      if (v < 0) v += p;
+      return v;
+    };
     const value2 = (x, y) => {
       const xi = Math.floor(x), yi = Math.floor(y);
       const xf = x - xi, yf = y - yi;
@@ -944,18 +1027,37 @@
       const d = hash(xi + 1, yi + 1);
       return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
     };
-    const fbm = (x, y, oct = 5, lac = 2.2, gain = 0.45) => {
+    const value2Periodic = (x, y, period) => {
+      const xi = Math.floor(x), yi = Math.floor(y);
+      const xf = x - xi, yf = y - yi;
+      const u = smooth(xf), v = smooth(yf);
+      const x0 = wrapIndex(xi, period);
+      const x1 = wrapIndex(xi + 1, period);
+      const a = hash(x0, yi);
+      const b = hash(x1, yi);
+      const c = hash(x0, yi + 1);
+      const d = hash(x1, yi + 1);
+      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    };
+    const fbm = (x, y, oct = 5, lac = 2.2, gain = 0.45, periodBase = 0) => {
       let f = 0, amp = 0.5, freq = 1.0;
-      for (let o = 0; o < oct; o++) { f += amp * value2(x * freq, y * freq); freq *= lac; amp *= gain; }
+      for (let o = 0; o < oct; o++) {
+        const px = x * freq;
+        const py = y * freq;
+        const period = periodBase ? periodBase * freq : 0;
+        f += amp * (usePeriodic && period ? value2Periodic(px, py, period) : value2(px, py));
+        freq *= lac; amp *= gain;
+      }
       return f;
     };
     const scale = 3.4;
+    const periodBase = scale * ringAspect;
     const arr = new Float32Array(w * h);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const nx = (x / w) * scale * ringAspect;
         const ny = (y / h) * (scale * 0.6);
-        let v = fbm(nx, ny);
+        let v = fbm(nx, ny, 5, 2.2, 0.45, periodBase);
         v = Math.min(1, Math.max(0, v));
         arr[y * w + x] = v;
       }
@@ -967,6 +1069,7 @@
   PlanetVisualizer.prototype.generateHeightMap = function generateHeightMap(w, h) {
     const seed = this.hashSeedFromPlanet();
     const ringAspect = this.getRingUvAspect();
+    const usePeriodic = this.isRingWorld();
     let s = Math.floor((seed.x * 65535) ^ (seed.y * 131071)) >>> 0;
     const rand = () => { s = (1664525 * s + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000; };
     const hash = (x, y) => {
@@ -975,21 +1078,44 @@
     };
     const lerp = (a, b, t) => a + (b - a) * t;
     const smooth = (t) => t * t * (3 - 2 * t);
+    const wrapIndex = (idx, period) => {
+      const p = Math.max(1, Math.round(period));
+      let v = idx % p;
+      if (v < 0) v += p;
+      return v;
+    };
     const value2 = (x, y) => {
       const xi = Math.floor(x), yi = Math.floor(y);
       const xf = x - xi, yf = y - yi; const u = smooth(xf), v = smooth(yf);
       const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
       return lerp(lerp(a, b, u), lerp(c, d, u), v);
     };
-    const fbm = (x, y, oct = 5, lac = 2.0, gain = 0.5) => {
+    const value2Periodic = (x, y, period) => {
+      const xi = Math.floor(x), yi = Math.floor(y);
+      const xf = x - xi, yf = y - yi; const u = smooth(xf), v = smooth(yf);
+      const x0 = wrapIndex(xi, period);
+      const x1 = wrapIndex(xi + 1, period);
+      const a = hash(x0, yi), b = hash(x1, yi), c = hash(x0, yi + 1), d = hash(x1, yi + 1);
+      return lerp(lerp(a, b, u), lerp(c, d, u), v);
+    };
+    const fbm = (x, y, oct = 5, lac = 2.0, gain = 0.5, periodBase = 0) => {
       let f = 0, amp = 0.5, freq = 1.0;
-      for (let o = 0; o < oct; o++) { f += amp * value2(x * freq, y * freq); freq *= lac; amp *= gain; }
+      for (let o = 0; o < oct; o++) {
+        const px = x * freq;
+        const py = y * freq;
+        const period = periodBase ? periodBase * freq : 0;
+        f += amp * (usePeriodic && period ? value2Periodic(px, py, period) : value2(px, py));
+        freq *= lac; amp *= gain;
+      }
       return f;
     };
-    const ridged = (x, y, oct = 5, lac = 2.0, gain = 0.5) => {
+    const ridged = (x, y, oct = 5, lac = 2.0, gain = 0.5, periodBase = 0) => {
       let f = 0, amp = 0.5, freq = 1.5;
       for (let o = 0; o < oct; o++) {
-        const n = value2(x * freq, y * freq);
+        const px = x * freq;
+        const py = y * freq;
+        const period = periodBase ? periodBase * freq : 0;
+        const n = (usePeriodic && period) ? value2Periodic(px, py, period) : value2(px, py);
         const r = 1.0 - Math.abs(2 * n - 1);
         f += amp * (r * r);
         freq *= lac; amp *= gain;
@@ -997,9 +1123,13 @@
       return f;
     };
 
-    const scaleBase = 1.6;
-    const scaleWarp = 0.8;
-    const scaleRidge = 7.0;
+    const isRing = this.isRingWorld();
+    const scaleBase = isRing ? 1.1 : 1.6;
+    const scaleWarp = isRing ? 0.45 : 0.8;
+    const scaleRidge = isRing ? 4.2 : 7.0;
+    const periodWarp = ringAspect * scaleWarp;
+    const periodBase = ringAspect * scaleBase;
+    const periodRidge = ringAspect * scaleRidge;
     const arr = new Float32Array(w * h);
     let minH = Infinity, maxH = -Infinity;
     for (let y = 0; y < h; y++) {
@@ -1007,13 +1137,15 @@
       for (let x = 0; x < w; x++) {
         const vx = x / w;
         const vxs = vx * ringAspect;
-        const wx = fbm(vxs * scaleWarp + 11.3, vy * scaleWarp + 5.7);
-        const wy = fbm(vxs * scaleWarp - 7.2, vy * scaleWarp - 3.9);
+        const wx = fbm(vxs * scaleWarp + 11.3, vy * scaleWarp + 5.7, 5, 2.0, 0.5, periodWarp);
+        const wy = fbm(vxs * scaleWarp - 7.2, vy * scaleWarp - 3.9, 5, 2.0, 0.5, periodWarp);
         const ux = vxs * scaleBase + (wx - 0.5) * 0.8;
         const uy = vy * scaleBase + (wy - 0.5) * 0.4;
-        const cont = fbm(ux, uy, 5, 2.0, 0.5);
-        const mont = ridged(ux * scaleRidge, uy * scaleRidge, 5, 2.0, 0.5);
-        let hgt = cont * 0.75 + mont * 0.5 - 0.25;
+        const cont = fbm(ux, uy, 5, 2.0, 0.5, periodBase);
+        const mont = ridged(ux * scaleRidge, uy * scaleRidge, 5, 2.0, 0.5, periodRidge);
+        const contWeight = isRing ? 0.9 : 0.75;
+        const ridgeWeight = isRing ? 0.3 : 0.5;
+        let hgt = cont * contWeight + mont * ridgeWeight - 0.25;
         const lat = Math.abs(0.5 - vy) * 2;
         hgt += (0.15 * (0.5 - Math.abs(lat - 0.5)));
         minH = Math.min(minH, hgt); maxH = Math.max(maxH, hgt);
@@ -1022,6 +1154,7 @@
     }
     const span = Math.max(1e-6, (maxH - minH));
     for (let i = 0; i < w * h; i++) arr[i] = (arr[i] - minH) / span;
+
     this.heightMap = arr;
 
     if (!this._zoneRowIndex) {

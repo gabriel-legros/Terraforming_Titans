@@ -249,6 +249,10 @@ The planet visualiser has been modularised into files covering core setup, light
 - Planet visualizer now shows a sun on rogue worlds, scaling size/illumination with modified solar flux (hidden below 0.01, capped at 3x).
 - Ringworlds now render in the planet visualizer as an interior band view aligned to their single tropical zone.
 - Ringworld visualizer lighting now originates from the ring center and uses higher-resolution textures for crisper interior bands.
+- Ringworld surface noise now wraps periodically around the ring to remove seam artifacts.
+- Ringworld clouds now render as an interior band so cloud cover is visible inside the ring.
+- Ringworld clouds now use periodic 2D noise so they sit evenly across the ring band.
+- Ringworld cloud textures now render at higher resolution with a tighter edge fade.
 - Magnetosphere panel now shows 0% radiation penalty when a natural or artificial shield is present.
 - Galactic Market ignores project productivity when applying cost and gains so trades always run at base rate.
 - O'Neill Cylinders now fires a one-time Space tab and Story subtab alert via a TabManager effect.

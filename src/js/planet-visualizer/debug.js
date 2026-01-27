@@ -560,8 +560,9 @@
     if (r.bTemp) { const s = fmt(z.temperate.life); r.bTemp.range.value = s; r.bTemp.number.value = s; }
     if (r.bPol) { const s = fmt(z.polar.life); r.bPol.range.value = s; r.bPol.number.value = s; }
     const avgWater = ((z.tropical.water + z.temperate.water + z.polar.water) / 3) * 100;
+    const cloudGame = Number.isFinite(this.viz.coverage?.cloud) ? this.viz.coverage.cloud : avgWater;
     if (r.cloudCov) {
-      const s = String(avgWater.toFixed(2));
+      const s = String(Math.max(0, Math.min(100, cloudGame)).toFixed(2));
       r.cloudCov.range.value = s; r.cloudCov.number.value = s;
     }
     if (r.cloudWind) {
@@ -600,10 +601,12 @@
     this.viz.coverage = {
       water: avg(z.tropical.water, z.temperate.water, z.polar.water) * 100,
       life: avg(z.tropical.life, z.temperate.life, z.polar.life) * 100,
-      cloud: Number(r.cloudCov ? r.cloudCov.range.value : avgWater),
+      cloud: cloudGame,
     };
     this.viz.ships = Number(r.ships ? r.ships.range.value : 0);
-    if (this.sunLight) this.sunLight.intensity = this.viz.illum;
+    if (this.debug && this.debug.mode === 'debug' && this.sunLight) {
+      this.sunLight.intensity = this.viz.illum;
+    }
   };
 
   PlanetVisualizer.prototype.refreshGameModeSliderDisplays = function refreshGameModeSliderDisplays() {
