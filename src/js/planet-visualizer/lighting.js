@@ -155,6 +155,16 @@
   };
 
   PlanetVisualizer.prototype.updateAtmosphereUniforms = function updateAtmosphereUniforms() {
+    const illum = Math.max(0, Math.min(3, this.getGameIllumination()));
+    if (this.sunLight) this.sunLight.intensity = illum;
+    if (this.sunMesh) {
+      if (this.isRingWorld()) {
+        this.sunMesh.visible = false;
+      } else {
+        this.sunMesh.visible = illum >= 0.01;
+        this.sunMesh.scale.setScalar(illum);
+      }
+    }
     if (!this.atmoMaterial) return;
     const kPa = this.computeTotalPressureKPa();
     const pr = Math.max(0, Math.min(1, kPa / 100));
@@ -170,12 +180,6 @@
     const dry = new THREE.Color(0xd7a37a);
     const mix = dry.clone().lerp(base, water);
     u.tint.value.copy(mix);
-    const illum = Math.max(0, Math.min(3, this.getGameIllumination()));
-    if (this.sunLight) this.sunLight.intensity = illum;
-    if (this.sunMesh) {
-      this.sunMesh.visible = illum >= 0.01;
-      this.sunMesh.scale.setScalar(illum);
-    }
     const inertKpa = this.computeInertPressureKPa();
     const auraStrength = Math.max(0, Math.min(1, inertKpa / 80));
     this.inertAuraInnerMaterial.uniforms.auraStrength.value = auraStrength;
@@ -184,6 +188,11 @@
 
   PlanetVisualizer.prototype.updateSunFromInclination = function updateSunFromInclination() {
     if (!this.sunLight) return;
+    if (this.isRingWorld()) {
+      this.sunLight.position.set(0, 0, 0);
+      this.sunMesh.visible = false;
+      return;
+    }
     const deg = (this.viz?.inclinationDeg ?? 15);
     const elev = deg * Math.PI / 180;
     const az = Math.atan2(2, 5);
@@ -192,6 +201,9 @@
     const y = r * Math.sin(elev);
     const z = r * Math.cos(elev) * Math.sin(az);
     this.sunLight.position.set(x, y, z);
-    if (this.sunMesh) this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);
+    if (this.sunMesh) {
+      this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);
+      this.sunMesh.visible = true;
+    }
   };
 })();

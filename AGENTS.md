@@ -247,6 +247,8 @@ The planet visualiser has been modularised into files covering core setup, light
 ## Updates
 - Added a setting to uncheck colony autobuild when auto-upgrade is enabled.
 - Planet visualizer now shows a sun on rogue worlds, scaling size/illumination with modified solar flux (hidden below 0.01, capped at 3x).
+- Ringworlds now render in the planet visualizer as an interior band view aligned to their single tropical zone.
+- Ringworld visualizer lighting now originates from the ring center and uses higher-resolution textures for crisper interior bands.
 - Magnetosphere panel now shows 0% radiation penalty when a natural or artificial shield is present.
 - Galactic Market ignores project productivity when applying cost and gains so trades always run at base rate.
 - O'Neill Cylinders now fires a one-time Space tab and Story subtab alert via a TabManager effect.

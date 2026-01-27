@@ -185,6 +185,39 @@
     return `#${toHex(r)}${toHex(g)}${toHex(bl)}`;
   }
 
+  PlanetVisualizer.prototype.buildZoneRowIndex = function buildZoneRowIndex(h) {
+    const rows = new Uint8Array(h);
+    if (this.isRingWorld()) return rows;
+    const zoneForV = (v) => {
+      const latRad = (0.5 - v) * Math.PI;
+      const absDeg = Math.abs(latRad * (180 / Math.PI));
+      if (absDeg >= 66.5) return 2;
+      if (absDeg >= 23.5) return 1;
+      return 0;
+    };
+    for (let y = 0; y < h; y++) {
+      rows[y] = zoneForV(y / (h - 1));
+    }
+    return rows;
+  };
+
+  PlanetVisualizer.prototype.getSurfaceTextureSize = function getSurfaceTextureSize() {
+    if (this.isRingWorld()) {
+      const aspect = this.getRingUvAspect();
+      const w = 2048;
+      const h = Math.max(64, Math.round(w / aspect));
+      return { w, h };
+    }
+    return { w: 1024, h: 512 };
+  };
+
+  PlanetVisualizer.prototype.getRingUvAspect = function getRingUvAspect() {
+    if (!this.isRingWorld()) return 1;
+    const height = Math.max(0.05, this.ringHeight || 0.315);
+    const radius = Math.max(0.1, this.ringRadius || 1);
+    return (Math.PI * 2 * radius) / height;
+  };
+
   PlanetVisualizer.prototype.updateSurfaceTextureFromPressure = function updateSurfaceTextureFromPressure(force = false) {
     if (this.debug.mode === 'game') {
       const gameBase = this.getGameBaseColor();
@@ -218,9 +251,10 @@
     this.lastCraterFactorKey = key;
 
     const tex = this.generateCraterTexture(factor, dustBaseColor);
-    if (this.sphere && this.sphere.material) {
-      this.sphere.material.map = tex;
-      this.sphere.material.needsUpdate = true;
+    const surface = this.surfaceMesh || this.sphere;
+    if (surface && surface.material) {
+      surface.material.map = tex;
+      surface.material.needsUpdate = true;
     }
   };
 
@@ -230,8 +264,8 @@
   };
 
   PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength, surfaceBaseHex) {
-    const w = 1024;
-    const h = 512;
+    const { w, h } = this.getSurfaceTextureSize();
+    const ringAspect = this.getRingUvAspect();
 
     if (!this.craterLayer) {
       const craterCanvas = document.createElement('canvas');
@@ -262,17 +296,7 @@
       const img = cctx.getImageData(0, 0, w, h);
       const data = img.data;
       this.craterAlphaData = new Float32Array(w * h);
-      const zoneForV = (v) => {
-        const latRad = (0.5 - v) * Math.PI;
-        const absDeg = Math.abs(latRad * (180 / Math.PI));
-        if (absDeg >= 66.5) return 2;
-        if (absDeg >= 23.5) return 1;
-        return 0;
-      };
-      this._zoneRowIndex = new Uint8Array(h);
-      for (let y = 0; y < h; y++) {
-        this._zoneRowIndex[y] = zoneForV(y / (h - 1));
-      }
+      this._zoneRowIndex = this.buildZoneRowIndex(h);
       this.craterZoneHists = {
         0: { counts: new Uint32Array(256), total: 0 },
         1: { counts: new Uint32Array(256), total: 0 },
@@ -421,7 +445,7 @@
           y = (i - x) / w;
         }
         if (useFeatures) {
-          const nx = (x / w + fOffX) * fScale;
+          const nx = ((x / w) * ringAspect + fOffX) * fScale;
           const ny = (y / h + fOffY) * (fScale * 0.5);
           let v = fbm(nx, ny, 4, 2.0, 0.5); // 0..1
           v = Math.max(0, Math.min(1, v));
@@ -438,7 +462,7 @@
         let metalMul = 1;
         if (isArtificial) {
           const stripe = Math.sin((y / h) * stripeScale * Math.PI * 2 + stripePhase) * 0.06;
-          const micro = (value2((x / w) * microScale + microPhase, (y / h) * microScale + microPhase) - 0.5) * 0.08;
+          const micro = (value2((x / w) * microScale * ringAspect + microPhase, (y / h) * microScale + microPhase) - 0.5) * 0.08;
           metalMul = 1 + stripe + micro;
           if (metalMul < 0.88) metalMul = 0.88;
           if (metalMul > 1.18) metalMul = 1.18;
@@ -476,15 +500,7 @@
 
     if (!this.heightMap || !this.heightZoneHists || !this._zoneRowIndex) {
       if (!this._zoneRowIndex) {
-        const zoneForV = (v) => {
-          const latRad = (0.5 - v) * Math.PI;
-          const absDeg = Math.abs(latRad * (180 / Math.PI));
-          if (absDeg >= 66.5) return 2;
-          if (absDeg >= 23.5) return 1;
-          return 0;
-        };
-        this._zoneRowIndex = new Uint8Array(h);
-        for (let y = 0; y < h; y++) this._zoneRowIndex[y] = zoneForV(y / (h - 1));
+        this._zoneRowIndex = this.buildZoneRowIndex(h);
       }
       if (!this.heightMap) this.generateHeightMap(w, h);
     }
@@ -827,6 +843,7 @@
 
   PlanetVisualizer.prototype.generateWaterMask = function generateWaterMask(w, h) {
     const seed = this.hashSeedFromPlanet();
+    const ringAspect = this.getRingUvAspect();
     let s = Math.floor((seed.x * 65535) ^ (seed.y * 131071)) >>> 0;
     const rand = () => { s = (1664525 * s + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000; };
     const hash = (x, y) => {
@@ -851,7 +868,7 @@
     const arr = new Float32Array(w * h);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        const nx = (x / w) * scale;
+        const nx = (x / w) * scale * ringAspect;
         const ny = (y / h) * (scale * 0.5);
         let v = fbm(nx, ny);
         v = Math.min(1, Math.max(0, v));
@@ -865,6 +882,7 @@
     const cached = this._iceNoise;
     if (cached?.w === w && cached?.h === h && cached.data) return cached.data;
     const seed = this.hashSeedFromPlanet();
+    const ringAspect = this.getRingUvAspect();
     let s = Math.floor((seed.x * 131071) ^ (seed.y * 524287)) >>> 0;
     const hash = (x, y) => {
       const n = Math.sin(x * 157.3 + y * 289.1 + s * 0.00017) * 43758.5453;
@@ -894,7 +912,7 @@
     for (let y = 0; y < h; y++) {
       const lat = Math.abs((y / (h - 1)) - 0.5) * 0.6;
       for (let x = 0; x < w; x++) {
-        const nx = (x / w) * (2.6 + lat * 0.8);
+        const nx = (x / w) * (2.6 + lat * 0.8) * ringAspect;
         const ny = (y / h) * (1.3 + lat * 1.6);
         let v = fbm(nx + lat * 0.5, ny, 4, 2.1, 0.45);
         if (v < 0) v = 0; else if (v > 1) v = 1;
@@ -909,6 +927,7 @@
     const cached = this._lifeNoise;
     if (cached?.w === w && cached?.h === h && cached.data) return cached.data;
     const seed = this.hashSeedFromPlanet();
+    const ringAspect = this.getRingUvAspect();
     let s = Math.floor((seed.x * 91337) ^ (seed.y * 131543)) >>> 0;
     const hash = (x, y) => {
       const n = Math.sin(x * 119.9 + y * 301.1 + s * 0.00013) * 43758.5453;
@@ -934,7 +953,7 @@
     const arr = new Float32Array(w * h);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        const nx = (x / w) * scale;
+        const nx = (x / w) * scale * ringAspect;
         const ny = (y / h) * (scale * 0.6);
         let v = fbm(nx, ny);
         v = Math.min(1, Math.max(0, v));
@@ -947,6 +966,7 @@
 
   PlanetVisualizer.prototype.generateHeightMap = function generateHeightMap(w, h) {
     const seed = this.hashSeedFromPlanet();
+    const ringAspect = this.getRingUvAspect();
     let s = Math.floor((seed.x * 65535) ^ (seed.y * 131071)) >>> 0;
     const rand = () => { s = (1664525 * s + 1013904223) >>> 0; return (s & 0xffffffff) / 0x100000000; };
     const hash = (x, y) => {
@@ -986,9 +1006,10 @@
       const vy = y / h;
       for (let x = 0; x < w; x++) {
         const vx = x / w;
-        const wx = fbm(vx * scaleWarp + 11.3, vy * scaleWarp + 5.7);
-        const wy = fbm(vx * scaleWarp - 7.2, vy * scaleWarp - 3.9);
-        const ux = vx * scaleBase + (wx - 0.5) * 0.8;
+        const vxs = vx * ringAspect;
+        const wx = fbm(vxs * scaleWarp + 11.3, vy * scaleWarp + 5.7);
+        const wy = fbm(vxs * scaleWarp - 7.2, vy * scaleWarp - 3.9);
+        const ux = vxs * scaleBase + (wx - 0.5) * 0.8;
         const uy = vy * scaleBase + (wy - 0.5) * 0.4;
         const cont = fbm(ux, uy, 5, 2.0, 0.5);
         const mont = ridged(ux * scaleRidge, uy * scaleRidge, 5, 2.0, 0.5);
@@ -1004,12 +1025,7 @@
     this.heightMap = arr;
 
     if (!this._zoneRowIndex) {
-      this._zoneRowIndex = new Uint8Array(h);
-      const zoneForV = (v) => {
-        const latRad = (0.5 - v) * Math.PI; const absDeg = Math.abs(latRad * (180 / Math.PI));
-        if (absDeg >= 66.5) return 2; if (absDeg >= 23.5) return 1; return 0;
-      };
-      for (let y = 0; y < h; y++) this._zoneRowIndex[y] = zoneForV(y / (h - 1));
+      this._zoneRowIndex = this.buildZoneRowIndex(h);
     }
     this.heightZoneHists = {
       0: { counts: new Uint32Array(256), total: 0 },

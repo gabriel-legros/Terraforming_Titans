@@ -12,6 +12,8 @@
       this.scene = null;
       this.camera = null;
       this.sphere = null;
+      this.ringMesh = null;
+      this.surfaceMesh = null;
 
       // Lighting and atmosphere
       this.sunLight = null;
@@ -130,6 +132,15 @@
       return window.terraformingManager || window.terraforming || null;
     }
 
+    isRingWorld() {
+      return currentPlanetParameters?.classification?.type === 'ring';
+    }
+
+    getZoneKeys() {
+      const zones = this.terraforming?.zoneKeys;
+      return (Array.isArray(zones) && zones.length) ? zones : ['tropical', 'temperate', 'polar'];
+    }
+
     normalizeHexColor(value) {
       if (typeof value !== 'string') return null;
       let hex = value.trim();
@@ -202,7 +213,8 @@
     }
 
     updateDustTint() {
-      if (!this.sphere || !this.sphere.material || !this.sphere.material.color) return;
+      const surface = this.surfaceMesh;
+      if (!surface || !surface.material || !surface.material.color) return;
       const base = this.getGameBaseColor();
       if (dustFactorySettings.dustColorChanged) {
         const currentTint = this.lastDustTintColor || this.dustTintColor || base;
@@ -216,7 +228,7 @@
         ? this.mixHexColors(this.dustTintStartColor, targetTint, ratio)
         : targetTint;
       this.dustTintColor = finalTint;
-      this.sphere.material.color.setRGB(1, 1, 1);
+      surface.material.color.setRGB(1, 1, 1);
       this.lastDustTintColor = finalTint;
       if (ratio >= 1) {
         this.dustTintStartColor = '';
@@ -322,6 +334,35 @@
       return this.debug.enabled;
     }
 
+    createSurfaceMesh() {
+      const isRing = this.isRingWorld();
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: isRing ? 0.85 : 0.9,
+        metalness: 0.0,
+        side: isRing ? THREE.BackSide : THREE.FrontSide,
+      });
+      if (isRing) {
+        const ringRadius = 1;
+        const ringHeight = 0.315;
+        const geometry = new THREE.CylinderGeometry(ringRadius, ringRadius, ringHeight, 96, 1, true);
+        this.ringMesh = new THREE.Mesh(geometry, material);
+        this.scene.add(this.ringMesh);
+        this.surfaceMesh = this.ringMesh;
+        this.sphere = null;
+        this.ringHeight = ringHeight;
+        this.ringRadius = ringRadius;
+      } else {
+        const geometry = new THREE.SphereGeometry(1, 32, 32);
+        this.sphere = new THREE.Mesh(geometry, material);
+        this.scene.add(this.sphere);
+        this.surfaceMesh = this.sphere;
+        this.ringMesh = null;
+        this.ringHeight = 0;
+        this.ringRadius = 1;
+      }
+    }
+
     init() {
       const container = document.getElementById('planet-visualizer');
       const overlay = document.getElementById('planet-visualizer-overlay');
@@ -342,6 +383,14 @@
 
       this.scene = new THREE.Scene();
       this.createStarField();
+      const isRing = this.isRingWorld();
+      if (isRing) {
+        this.cameraDistance = 0;
+        this.cameraHeight = 0;
+      } else {
+        this.cameraDistance = 3.5;
+        this.cameraHeight = 0.0;
+      }
       this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
       this.camera.position.z = this.cameraDistance;
       this.camera.position.y = this.cameraHeight;
@@ -366,8 +415,13 @@
         f.scale = 12;      // default scale 12 for visibility/detail
         f.contrast = 2.0;  // higher contrast for visibility
       }
-      this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
-      this.sunLight.position.set(5, 3, 2);
+      if (isRing) {
+        this.sunLight = new THREE.PointLight(0xffffff, initialIllum, 0, 2);
+        this.sunLight.position.set(0, 0, 0);
+      } else {
+        this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
+        this.sunLight.position.set(5, 3, 2);
+      }
       this.scene.add(this.sunLight);
       // Keep nightside visible with subtle ambient fill
       this.ambientLight = new THREE.AmbientLight(0xffffff, 0.06);
@@ -380,14 +434,12 @@
       this.scene.add(this.sunMesh);
       this.updateSunFromInclination();
 
-      const geometry = new THREE.SphereGeometry(1, 32, 32);
-      const material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0.0 });
-      this.sphere = new THREE.Mesh(geometry, material);
-      this.scene.add(this.sphere);
-
-      this.createCityLights();
-      this.createAtmosphere();
-      this.createCloudSphere();
+      this.createSurfaceMesh();
+      if (!isRing) {
+        this.createCityLights();
+        this.createAtmosphere();
+        this.createCloudSphere();
+      }
       this.createShipSystem();
 
       window.addEventListener('resize', this.onResize);
@@ -423,8 +475,8 @@
         angle = this.planetAngle;
       }
       this.planetAngle = angle;
-      if (this.sphere) {
-        this.sphere.rotation.y = angle;
+      if (this.surfaceMesh) {
+        this.surfaceMesh.rotation.y = angle;
       }
       if (this.cloudMesh) {
         const now = performance.now();
@@ -434,13 +486,19 @@
         this.cloudDrift = (this.cloudDrift || 0) + (this.cloudDriftSpeed || 0.005) * dt;
         this.cloudMesh.rotation.y = angle + this.cloudDrift;
       }
-      const ang = angle;
-      this.camera.position.set(
-        Math.sin(ang) * this.cameraDistance,
-        this.cameraHeight,
-        Math.cos(ang) * this.cameraDistance
-      );
-      this.camera.lookAt(0, 0, 0);
+      const isRing = this.isRingWorld();
+      if (isRing) {
+        this.camera.position.set(0, this.cameraHeight, 0);
+        this.camera.lookAt(1, 0, 0);
+      } else {
+        const ang = angle;
+        this.camera.position.set(
+          Math.sin(ang) * this.cameraDistance,
+          this.cameraHeight,
+          Math.cos(ang) * this.cameraDistance
+        );
+        this.camera.lookAt(0, 0, 0);
+      }
 
       this.updateOverlayText();
       if (this.debug && this.debug.mode === 'game') {
@@ -470,8 +528,11 @@
 
     updateZonalCoverageFromGame() {
       const t = terraforming;
-      const zones = ['tropical', 'temperate', 'polar'];
+      const zones = this.getZoneKeys();
       const z = this.viz.zonalCoverage;
+      let waterSum = 0;
+      let lifeSum = 0;
+      let weightSum = 0;
       for (const zone of zones) {
         let w, i, b;
         if (t && t.zonalCoverageCache && t.zonalCoverageCache[zone]) {
@@ -487,10 +548,14 @@
         z[zone].water = Math.max(0, Math.min(1, Number(w) || 0));
         z[zone].ice = Math.max(0, Math.min(1, Number(i) || 0));
         z[zone].life = Math.max(0, Math.min(0.5, Number(b) || 0));
+        const weight = t?.getZoneWeight ? t.getZoneWeight(zone) : 1;
+        waterSum += z[zone].water * weight;
+        lifeSum += z[zone].life * weight;
+        weightSum += weight;
       }
-      const avg = (a, b, c) => (a + b + c) / 3;
-      const avgWater = avg(z.tropical.water, z.temperate.water, z.polar.water);
-      const avgLife = avg(z.tropical.life, z.temperate.life, z.polar.life);
+      const norm = weightSum > 0 ? weightSum : zones.length;
+      const avgWater = norm > 0 ? (waterSum / norm) : 0;
+      const avgLife = norm > 0 ? (lifeSum / norm) : 0;
       const cloudFraction = Number.isFinite(t?.luminosity?.cloudFraction)
         ? Math.max(0, Math.min(1, t.luminosity.cloudFraction))
         : avgWater;
