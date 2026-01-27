@@ -458,6 +458,10 @@ class Research {
       return currentPlanetParameters?.classification?.archetype === 'artificial';
     }
 
+    isRingWorld() {
+      return currentPlanetParameters?.classification?.type === 'ring';
+    }
+
     isResearchDisplayable(research) {
       if (research.disabled) {
         return false;
@@ -483,6 +487,9 @@ class Research {
         return false;
       }
       if (research.artificialAllowed === false && this.isArtificialWorld()) {
+        return false;
+      }
+      if (research.ringworldAllowed === false && this.isRingWorld()) {
         return false;
       }
       if (research.requiredFlags && !research.requiredFlags.every(f => this.isBooleanFlagSet(f))) {

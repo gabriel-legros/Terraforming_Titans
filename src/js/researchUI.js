@@ -285,6 +285,8 @@ function loadResearchCategory(category) {
         return currentPlanetParameters?.classification?.archetype === 'artificial';
     };
 
+    const planetIsRingWorld = () => researchManager.isRingWorld();
+
     researches.forEach((research) => {
         if (research.disabled) {
             return;
@@ -296,6 +298,9 @@ function loadResearchCategory(category) {
             return;
         }
         if (research.artificialAllowed === false && planetIsArtificial()) {
+            return;
+        }
+        if (research.ringworldAllowed === false && planetIsRingWorld()) {
             return;
         }
         if (research.requiredFlags && !research.requiredFlags.every(f => researchManager.isBooleanFlagSet(f))) {

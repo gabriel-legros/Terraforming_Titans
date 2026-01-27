@@ -1432,6 +1432,7 @@ const researchParameters = {
         description: 'Unlocks a special project to launch the space mirror facility, which allows the deployment of space mirrors to increase the effective solar luminosity.',
         cost: { research: 10000 },
         prerequisites: [],
+        ringworldAllowed: false,
         effects: [
           {
             target: 'project',

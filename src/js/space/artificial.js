@@ -881,7 +881,22 @@ class ArtificialManager extends EffectableEntity {
             targetFluxWm2: project.targetFluxWm2
         };
         base.effects = isRing
-            ? []
+            ? [
+                {
+                    target: 'project',
+                    targetId: 'spaceMirrorFacility',
+                    type: 'permanentProjectDisable',
+                    value: true,
+                    effectId: 'ringworld-disable-space-mirror-facility'
+                },
+                {
+                    target: 'project',
+                    targetId: 'planetaryThruster',
+                    type: 'permanentProjectDisable',
+                    value: true,
+                    effectId: 'ringworld-disable-planetary-thrusters'
+                }
+            ]
             : [
                 {
                     target: 'projectManager',
