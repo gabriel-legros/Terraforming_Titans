@@ -1,7 +1,13 @@
 const RINGWORLD_TERRAFORM_ENERGY_REQUIRED = 1e21;
 const RINGWORLD_SHIP_ENERGY_MULTIPLIER = 0.1;
 const RINGWORLD_POWER_STEP_MIN = 1;
-const RINGWORLD_POWER_STEP_MAX = 1e18;
+const RINGWORLD_POWER_STEP_MAX = 1e100;
+const RINGWORLD_GRAVITY = 9.81;
+const RINGWORLD_AU_METERS = 1.496e11;
+const RINGWORLD_WATT_DAY_SECONDS = 86400;
+const RINGWORLD_TON_KG = 1000;
+const RINGWORLD_EDGE_VELOCITY_TARGET = 5000;
+const RINGWORLD_MIN_SHIP_MULTIPLIER = 0.1;
 
 function createRingworldStat(labelText) {
   const wrapper = document.createElement('div');
@@ -15,6 +21,10 @@ function createRingworldStat(labelText) {
   return { wrapper, value };
 }
 
+function formatWattDays(value) {
+  return `${formatNumber(value, true)} W-day`;
+}
+
 class RingworldTerraformingProject extends Project {
   constructor(config, name) {
     super(config, name);
@@ -26,6 +36,9 @@ class RingworldTerraformingProject extends Project {
     this.investing = false;
     this.shortfallLastTick = false;
     this.actualInvestRate = 0;
+    this.currentMassTons = 0;
+    this.lastMassTons = 0;
+    this.currentShipEnergyMultiplier = this.shipEnergyMultiplier;
     this.shipEnergyEffect = {
       target: 'projectManager',
       type: 'spaceshipCostMultiplier',
@@ -41,6 +54,93 @@ class RingworldTerraformingProject extends Project {
 
   shouldHideStartBar() {
     return true;
+  }
+
+  getRingOrbitRadiusAU() {
+    return currentPlanetParameters.specialAttributes.ringOrbitRadiusAU
+      || currentPlanetParameters.celestialParameters.distanceFromSun
+      || 1;
+  }
+
+  getRingWidthKm() {
+    return currentPlanetParameters.specialAttributes.ringWidthKm || 0;
+  }
+
+  getConstructionMassTons() {
+    const storedCost = currentPlanetParameters.specialAttributes.ringConstructionCostTons || 0;
+    if (storedCost > 0) {
+      return storedCost;
+    }
+    const landHa = calculateRingLandHectares(this.getRingOrbitRadiusAU(), this.getRingWidthKm());
+    const radiusEarth = artificialManager.calculateRadiusEarthFromLandHectares(landHa);
+    const cost = artificialManager.calculateCost(radiusEarth);
+    return cost.superalloys || 0;
+  }
+
+  getResourceMassTons(category) {
+    let total = 0;
+    const pool = resources[category];
+    for (const key in pool) {
+      const resource = pool[key];
+      if (resource.unit === 'ton') {
+        total += resource.value || 0;
+      }
+    }
+    return total;
+  }
+
+  getTotalRingworldMassTons() {
+    return this.getConstructionMassTons()
+      + this.getResourceMassTons('surface')
+      + this.getResourceMassTons('atmospheric')
+      + this.getResourceMassTons('colony');
+  }
+
+  getSpinEnergyRequirementWattDays(massTons, radiusMeters) {
+    const massKg = Math.max(massTons, 0) * RINGWORLD_TON_KG;
+    const radius = Math.max(radiusMeters, 0);
+    const energyJ = 0.5 * massKg * RINGWORLD_GRAVITY * radius;
+    return energyJ / RINGWORLD_WATT_DAY_SECONDS;
+  }
+
+  refreshMassAndEnergyRequirement() {
+    const massTons = this.getTotalRingworldMassTons();
+    const radiusMeters = this.getRingOrbitRadiusAU() * RINGWORLD_AU_METERS;
+    const previousRequired = this.energyRequired || 0;
+    const requiredEnergy = this.getSpinEnergyRequirementWattDays(massTons, radiusMeters);
+    const progressRatio = previousRequired > 0
+      ? Math.min(this.energyInvested / previousRequired, 1)
+      : 0;
+    const energyDelta = requiredEnergy - previousRequired;
+    const massDelta = massTons - this.lastMassTons;
+    if (!this.isCompleted && this.lastMassTons > 0 && massDelta > 0 && energyDelta > 0) {
+      this.energyInvested += progressRatio * energyDelta;
+    }
+    this.energyRequired = requiredEnergy;
+    this.currentMassTons = massTons;
+    this.lastMassTons = massTons;
+    if (this.isCompleted) {
+      this.energyInvested = this.energyRequired;
+    }
+    if (this.energyInvested > this.energyRequired) {
+      this.energyInvested = this.energyRequired;
+    }
+  }
+
+  getSurfaceGravityRatio() {
+    return this.energyRequired > 0 ? Math.min(this.energyInvested / this.energyRequired, 1) : 0;
+  }
+
+  getEdgeVelocityMetersPerSecond() {
+    const gravityRatio = this.getSurfaceGravityRatio();
+    const radiusMeters = this.getRingOrbitRadiusAU() * RINGWORLD_AU_METERS;
+    return Math.sqrt(Math.max(0, gravityRatio * RINGWORLD_GRAVITY * radiusMeters));
+  }
+
+  getShipEnergyMultiplier() {
+    const edgeVelocity = this.getEdgeVelocityMetersPerSecond();
+    const scaled = edgeVelocity / RINGWORLD_EDGE_VELOCITY_TARGET;
+    return Math.min(1, Math.max(RINGWORLD_MIN_SHIP_MULTIPLIER, scaled));
   }
 
   renderUI(container) {
@@ -70,18 +170,20 @@ class RingworldTerraformingProject extends Project {
     statusPanel.appendChild(progressBlock);
 
     const stats = document.createElement('div');
-    stats.className = 'stats-grid four-col ringworld-terraforming-stats';
+    stats.className = 'stats-grid five-col ringworld-terraforming-stats';
 
     const surfaceGravity = createRingworldStat('Surface Gravity:');
     const rate = createRingworldStat('Invest Rate:');
     const status = createRingworldStat('Status:');
     const shipMultiplier = createRingworldStat('Ship Energy Multiplier:');
+    const massTotal = createRingworldStat('Ringworld Mass:');
 
     stats.append(
       surfaceGravity.wrapper,
       rate.wrapper,
       status.wrapper,
-      shipMultiplier.wrapper
+      shipMultiplier.wrapper,
+      massTotal.wrapper
     );
     statusPanel.appendChild(stats);
 
@@ -161,6 +263,7 @@ class RingworldTerraformingProject extends Project {
       rate: rate.value,
       status: status.value,
       shipMultiplier: shipMultiplier.value,
+      massTotal: massTotal.value,
       progressLabel,
       progressFill,
       investToggle,
@@ -206,8 +309,10 @@ class RingworldTerraformingProject extends Project {
   }
 
   updateUI() {
+    this.refreshMassAndEnergyRequirement();
     const investedValue = Math.min(this.energyInvested, this.energyRequired);
-    const surfaceGravity = 0;
+    const gravityRatio = this.getSurfaceGravityRatio();
+    const surfaceGravity = gravityRatio;
     const statusLabel = this.isCompleted
       ? 'Completed'
       : (this.investing ? (this.shortfallLastTick ? 'Starved' : 'Investing') : 'Idle');
@@ -219,10 +324,11 @@ class RingworldTerraformingProject extends Project {
     const displayRate = this.investing ? this.actualInvestRate : 0;
     this.el.rate.textContent = `${formatNumber(displayRate, true)} W`;
     this.el.status.textContent = statusLabel;
-    this.el.shipMultiplier.textContent = `${formatNumber(this.shipEnergyMultiplier, true, 2)}x`;
-    this.el.progressLabel.textContent = `${formatNumber(investedValue)} / ${formatNumber(this.energyRequired)} (${formatNumber(progressPercent, true, 1)}%)`;
+    this.el.shipMultiplier.textContent = `${formatNumber(this.currentShipEnergyMultiplier, true, 2)}x`;
+    this.el.progressLabel.textContent = `${formatWattDays(investedValue)} / ${formatWattDays(this.energyRequired)} (${formatNumber(progressPercent, true, 1)}%)`;
     this.el.progressFill.style.width = `${progressPercent}%`;
     this.el.powerValue.textContent = `${formatNumber(this.power, true)} W`;
+    this.el.massTotal.textContent = `${formatNumber(this.currentMassTons, true)} t`;
 
     this.el.investToggle.checked = this.investing;
     this.el.investToggle.disabled = this.isCompleted;
@@ -283,7 +389,7 @@ class RingworldTerraformingProject extends Project {
     accumulatedChanges.colony.energy = pendingEnergy - used;
     this.energyInvested += used;
     this.shortfallLastTick = used < requested;
-    this.actualInvestRate = seconds > 0 ? (used / seconds) : 0;
+    this.actualInvestRate = requested > 0 ? (this.power * (used / requested)) : 0;
 
     if (this.energyInvested >= this.energyRequired) {
       this.complete();
@@ -295,15 +401,14 @@ class RingworldTerraformingProject extends Project {
   }
 
   applyEffects() {
-    if (!this.unlocked || this.permanentlyDisabled || currentPlanetParameters.classification.type !== 'ring') {
-      projectManager.removeEffect(this.shipEnergyEffect);
-      return;
-    }
-    this.shipEnergyEffect.value = this.shipEnergyMultiplier;
+    this.refreshMassAndEnergyRequirement();
+    this.currentShipEnergyMultiplier = this.getShipEnergyMultiplier();
+    this.shipEnergyEffect.value = this.currentShipEnergyMultiplier;
     projectManager.addAndReplace(this.shipEnergyEffect);
   }
 
   update() {
+    this.applyEffects();
     if (!this.investing || this.isCompleted) {
       return;
     }
@@ -316,6 +421,8 @@ class RingworldTerraformingProject extends Project {
       power: this.power,
       step: this.step,
       investing: this.investing,
+      currentMassTons: this.currentMassTons,
+      lastMassTons: this.lastMassTons,
     };
   }
 
@@ -326,6 +433,8 @@ class RingworldTerraformingProject extends Project {
     this.step = state.step || RINGWORLD_POWER_STEP_MIN;
     this.investing = state.investing === true;
     this.isActive = this.investing;
+    this.currentMassTons = state.currentMassTons || 0;
+    this.lastMassTons = state.lastMassTons || 0;
   }
 }
 

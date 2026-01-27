@@ -183,6 +183,7 @@ When adding new generation to the Random World Generator, place the new generati
 - ArtificialManager powers the Space > Artificial subtab, letting players pick shell/ring/disk archetypes (future-ready), core type, star context, and radius within per-core bounds; it seeds a star/flux when allowed.
 - Ringworlds are now implemented behind `ArtificialManager.enableRingworld()`: they use a star-core selector (M/K unlocked by default), an orbital radius slider (AU), and a width slider (km). Ring construction currently costs **only superalloys** (shellworld scaling for now) and applies a ringworld-specific spaceship energy multiplier (0.1×).
 - Ringworlds unlock a dedicated Ringworld Terraforming Protocol infrastructure project that tracks energy investment for spin-up with a sustained energy draw.
+- Ringworld Terraforming Protocol now derives spin energy requirements from total ringworld mass (construction cost + surface/atmosphere/colony tons), displays the mass, and credits partial investment when mass increases mid-spin.
 - Shellworld costs scale with radius³ from a 50B ha calibration and can pull payments from space storage first; launch stashes for metal/silicon cap at land area (1 per ha) and support Solis Bailout injections.
 - Build time scales with terraformed world count, hard-blocks any project that would exceed five hours, and the duration tooltip explains the limit.
 - The radius input now includes an Auto button that snaps to a 5-hour construction time to hit the maximum allowed build duration.

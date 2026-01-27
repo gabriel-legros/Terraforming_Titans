@@ -859,6 +859,7 @@ class ArtificialManager extends EffectableEntity {
             base.specialAttributes.zoneKeys = ['tropical'];
             base.specialAttributes.ringOrbitRadiusAU = project.orbitRadiusAU || distanceFromStarAU;
             base.specialAttributes.ringWidthKm = project.widthKm || project.ringWidthKm || 0;
+            base.specialAttributes.ringConstructionCostTons = project.cost?.superalloys || 0;
         }
         base.classification = {
             archetype: 'artificial',

@@ -612,8 +612,6 @@ class EffectableEntity {
           applyDayNightSettingEffects();
         }
       }
-
-      console.log(`Boolean flag "${flagId}" set to ${value} for ${this.name}.`);
     }
 
     // Method to check if a boolean flag is set
