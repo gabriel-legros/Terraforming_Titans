@@ -1897,16 +1897,25 @@ function updateDecreaseButtonText(button, buildCount) {
       return;
     }
 
+    const oldActive = structure.active;
     const newActive = Math.max(
       0,
-      Math.min(structure.active + desiredChange, structure.count)
+      Math.min(oldActive + desiredChange, structure.count)
     );
 
-    if (newActive === structure.active) {
+    if (newActive === oldActive) {
       return;
     }
 
     structure.active = newActive;
+    if (newActive === 0) {
+      structure.productivity = 0;
+      structure.displayProductivity = 0;
+    } else if (newActive > oldActive) {
+      const ratio = oldActive > 0 ? oldActive / newActive : 0;
+      structure.productivity *= ratio;
+      structure.displayProductivity *= ratio;
+    }
     if (typeof structure.updateResourceStorage === 'function') {
       structure.updateResourceStorage(resources);
     }

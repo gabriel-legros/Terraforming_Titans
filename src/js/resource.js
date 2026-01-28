@@ -943,7 +943,7 @@ function calculateResourceAvailabilityRatio(resource, deltaTime) {
   const seconds = deltaTime / 1000;
   const requiredAmount = resource.consumptionRate * seconds;
   if (requiredAmount <= 0) {
-    return 1;
+    return 0;
   }
   const availableAmount = resource.value + resource.productionRate * seconds;
   return Math.max(0, Math.min(availableAmount / requiredAmount, 1));
