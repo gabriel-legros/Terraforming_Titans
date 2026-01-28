@@ -85,6 +85,7 @@ class GoldenAsteroid {
         this.buttonElement = null;
         this.imageElement = null;
         this.clickHandler = this.onClick.bind(this);
+        this.pendingImagePosition = false;
         this.active = false;
         this.duration = 0;
         this.spawnTime = 0;
@@ -136,17 +137,27 @@ class GoldenAsteroid {
       this.imageElement ??= document.createElement('img');
       this.imageElement.id = 'golden-asteroid-image';
       this.imageElement.className = 'golden-asteroid';
-      this.imageElement.src = 'assets/images/asteroid.png';
+      this.imageElement.src.includes('assets/images/asteroid.png') || (this.imageElement.src = 'assets/images/asteroid.png');
       this.imageElement.draggable = false;
       this.imageElement.onmousedown = this.clickHandler;
       this.imageElement.ontouchstart = this.clickHandler;
       this.imageElement.ondragstart = this.clickHandler;
-      this.imageElement.onload = this.positionImage.bind(this);
+      this.imageElement.onload = this.handleImageLoad.bind(this);
       if (this.imageElement.parentElement !== this.gameContainer) {
         this.gameContainer.appendChild(this.imageElement);
       }
       this.imageElement.style.display = 'block';
-      this.imageElement.complete && this.positionImage();
+      if (this.pendingImagePosition && this.imageElement.complete) {
+        this.positionImage();
+        this.pendingImagePosition = false;
+      }
+    }
+
+    handleImageLoad() {
+      if (this.pendingImagePosition) {
+        this.positionImage();
+        this.pendingImagePosition = false;
+      }
     }
 
     positionImage() {
@@ -190,6 +201,7 @@ class GoldenAsteroid {
               return;
             }
             this.buttonElement?.style && (this.buttonElement.style.display = 'none');
+            this.pendingImagePosition = true;
             this.ensureImageElement();
           }
     }
