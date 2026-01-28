@@ -444,6 +444,44 @@ class DeeperMiningProject extends AndroidProject {
     super.update(deltaTime);
   }
 
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    if (!this.isContinuous() || !this.isActive) return;
+    if (!this.canContinue()) {
+      this.isActive = false;
+      return;
+    }
+
+    this.shortfallLastTick = false;
+    const duration = this.getEffectiveDuration();
+    const fraction = deltaTime / duration;
+    const cost = this.getScaledCost();
+
+    let shortfall = false;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const amount = cost[category][resource] * fraction * productivity;
+        const available = resources[category][resource].value + accumulatedChanges[category][resource];
+        if (available < amount) {
+          shortfall = true;
+        }
+      }
+    }
+
+    if (shortfall) {
+      this.shortfallLastTick = true;
+      return;
+    }
+
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const amount = cost[category][resource] * fraction * productivity;
+        accumulatedChanges[category][resource] -= amount;
+      }
+    }
+
+    this.applyContinuousProgress(fraction, productivity);
+  }
+
   updateUI() {
     super.updateUI();
     const elements = projectElements[this.name];
