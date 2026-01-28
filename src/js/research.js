@@ -318,6 +318,9 @@ class Research {
       if (!research) {
         return;
       }
+      if (research.disabled) {
+        return;
+      }
       // Mark the research as disabled so it won't show in the UI
       research.disabled = true;
       // Force a UI refresh

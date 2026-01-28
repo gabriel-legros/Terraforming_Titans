@@ -599,10 +599,6 @@ class EffectableEntity {
         this[flagId] = value;
       }
 
-      if (typeof this.sortAllResearches === 'function') {
-        this.sortAllResearches();
-      }
-
       if (flagId === 'dayNightActivity' && prevValue !== value) {
         if (typeof applyGameEffects === 'function') {
           applyGameEffects();
