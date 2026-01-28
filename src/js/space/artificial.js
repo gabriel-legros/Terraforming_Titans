@@ -994,6 +994,20 @@ class ArtificialManager extends EffectableEntity {
                     effectId: 'ringworld-disable-space-mirror-facility'
                 },
                 {
+                    target: 'building',
+                    targetId: 'spaceMirror',
+                    type: 'permanentBuildingDisable',
+                    value: true,
+                    effectId: 'ringworld-disable-space-mirrors'
+                },
+                {
+                    target: 'building',
+                    targetId: 'hyperionLantern',
+                    type: 'permanentBuildingDisable',
+                    value: true,
+                    effectId: 'ringworld-disable-hyperion-lanterns'
+                },
+                {
                     target: 'project',
                     targetId: 'planetaryThruster',
                     type: 'permanentProjectDisable',

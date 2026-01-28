@@ -132,6 +132,9 @@ class EffectableEntity {
         case 'permanentProjectDisable':
           this.applyPermanentProjectDisable?.(effect);
           break;
+        case 'permanentBuildingDisable':
+          this.applyPermanentBuildingDisable(effect);
+          break;
         case 'activateTab':
           this.activateTab(effect.targetId)
           break;

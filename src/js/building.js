@@ -13,6 +13,7 @@ class Building extends EffectableEntity {
     this.productivity = 0;
     this.displayProductivity = 0;
     this.isHidden = false; // track whether the building is hidden in the UI
+    this.permanentlyDisabled = false;
     this.alertedWhenUnlocked = this.unlocked ? true : false;
 
     this.autoBuildEnabled = false;
@@ -46,7 +47,7 @@ class Building extends EffectableEntity {
   }
 
   isVisible() {
-    return this.unlocked && !this.isHidden;
+    return this.unlocked && !this.isHidden && !this.permanentlyDisabled;
   }
 
   shouldDeactivateOnReverseEmpty() {
@@ -1162,12 +1163,28 @@ class Building extends EffectableEntity {
   }
 
   enable() {
+    if (this.permanentlyDisabled) {
+      return;
+    }
     const first = !this.unlocked;
     this.unlocked = true;
     if (first && !this.alertedWhenUnlocked) {
       if (typeof registerBuildingUnlockAlert === 'function') {
         registerBuildingUnlockAlert(`${this.category}-buildings`);
       }
+    }
+  }
+
+  applyPermanentBuildingDisable(effect) {
+    const shouldDisable = effect.value !== false;
+    this.permanentlyDisabled = shouldDisable;
+    if (shouldDisable) {
+      this.unlocked = false;
+      this.isHidden = true;
+      this.count = 0;
+      this.active = 0;
+      this.productivity = 0;
+      this.displayProductivity = 0;
     }
   }
 }
