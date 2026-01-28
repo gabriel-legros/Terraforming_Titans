@@ -338,6 +338,7 @@
     const planetType = resolvePlanetArchetype(this, this.normalizeHexColor(this.viz.baseColor) || baseHex);
     const palette = PLANET_TYPE_TEXTURES[planetType] || PLANET_TYPE_TEXTURES.default;
     const isArtificial = planetType === 'artificial';
+    const isRing = this.isRingWorld();
     const rand = createJitterRandom(seed.x, seed.y);
 
     let gradientBase = baseHex;
@@ -610,7 +611,7 @@
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
       const zi = zoneRowIndex ? zoneRowIndex[y] : 0;
-      const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+      const latAbs = isRing ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
       const latTerm = startFromPoles ? (1 - latAbs) : latAbs;
       const latBias = Math.max(0, Math.min(1, Math.pow(latTerm, 0.85)));
       const idx = i * 4;
@@ -652,19 +653,24 @@
     const softness = 0.08;
     for (let i = 0; i < w * h; i++) {
       const y = Math.floor(i / w);
-      const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
-      let w0 = 1 - smoothstep(tropicalEdge - zoneBlend, tropicalEdge + zoneBlend, latAbs);
-      let w2 = smoothstep(polarEdge - zoneBlend, polarEdge + zoneBlend, latAbs);
-      let w1 = 1 - w0 - w2;
-      if (w1 < 0) w1 = 0;
-      const sum = w0 + w1 + w2;
-      if (sum > 0) {
-        const inv = 1 / sum;
-        w0 *= inv; w1 *= inv; w2 *= inv;
+      let weights = null;
+      if (isRing) {
+        weights = [1, 0, 0];
+      } else {
+        const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+        let w0 = 1 - smoothstep(tropicalEdge - zoneBlend, tropicalEdge + zoneBlend, latAbs);
+        let w2 = smoothstep(polarEdge - zoneBlend, polarEdge + zoneBlend, latAbs);
+        let w1 = 1 - w0 - w2;
+        if (w1 < 0) w1 = 0;
+        const sum = w0 + w1 + w2;
+        if (sum > 0) {
+          const inv = 1 / sum;
+          w0 *= inv; w1 *= inv; w2 *= inv;
+        }
+        weights = [w0, w1, w2];
       }
       let alphaSum = 0;
       let weightSum = 0;
-      const weights = [w0, w1, w2];
       for (let zi = 0; zi < 3; zi++) {
         const thr = zoneThresholds[zi];
         const weight = weights[zi];
@@ -761,7 +767,7 @@
         }
         const idx = i * 4;
         const waterPresence = odata[idx + 3] / 255;
-        const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+        const latAbs = isRing ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const patch = patchNoise(x, y);
         let score = lifeNoise[i] * 0.55 + patch * 0.25 + (1 - latAbs) * 0.1 + (1 - hgt) * 0.05 - waterPresence * 0.35;
