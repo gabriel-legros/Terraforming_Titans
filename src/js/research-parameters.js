@@ -2114,7 +2114,7 @@ const researchParameters = {
       {
         id: 'ship_smelting',
         name: 'Ship smelting',
-        description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silicon.',
+        description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silicon. Water imports can now prioritize colony storage.',
         cost: { advancedResearch: 200000 },
         prerequisites: [],
         effects: [
@@ -2129,6 +2129,13 @@ const researchParameters = {
             targetId: 'siliconSpaceMining',
             type: 'shipCapacityMultiplier',
             value: 2
+          },
+          {
+            target: 'project',
+            targetId: 'waterSpaceMining',
+            type: 'booleanFlag',
+            flagId: 'waterImportTargeting',
+            value: true
           }
         ]
       },

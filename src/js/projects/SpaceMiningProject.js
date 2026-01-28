@@ -13,6 +13,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.hasOxygenPressureControl = false;
     this.pressureUnit = 'kPa';
     this.oxygenPressureUnit = 'kPa';
+    this.waterImportTarget = 'surface';
     const maxPressure = config.attributes?.maxPressure;
     if (Number.isFinite(maxPressure)) {
       this.disablePressureThreshold = maxPressure;
@@ -244,6 +245,43 @@ class SpaceMiningProject extends SpaceshipProject {
     return control;
   }
 
+  createWaterImportTargetControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'water-import-target-control');
+    control.id = `${this.name}-water-import-target-control`;
+    control.style.display = this.isBooleanFlagSet('waterImportTargeting') ? 'flex' : 'none';
+
+    const label = document.createElement('label');
+    label.textContent = 'Target ';
+    control.appendChild(label);
+
+    const select = document.createElement('select');
+    select.classList.add('water-import-target-select');
+    [
+      { value: 'surface', text: 'Surface' },
+      { value: 'colony', text: 'Colony' }
+    ].forEach(optionData => {
+      const option = document.createElement('option');
+      option.value = optionData.value;
+      option.textContent = optionData.text;
+      select.appendChild(option);
+    });
+    select.value = this.waterImportTarget;
+    select.addEventListener('change', () => {
+      this.waterImportTarget = select.value === 'colony' ? 'colony' : 'surface';
+    });
+    control.appendChild(select);
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      waterImportTargetControl: control,
+      waterImportTargetLabel: label,
+      waterImportTargetSelect: select,
+    };
+
+    return control;
+  }
+
   renderAutomationUI(container) {
     if (!projectElements[this.name]?.pressureControl) {
       const gas = this.getTargetAtmosphericResource();
@@ -251,6 +289,9 @@ class SpaceMiningProject extends SpaceshipProject {
       if (pressureControl) {
         container.appendChild(pressureControl);
       }
+    }
+    if (this.attributes.dynamicWaterImport && !projectElements[this.name]?.waterImportTargetControl) {
+      container.appendChild(this.createWaterImportTargetControl());
     }
     if (this.attributes.dynamicWaterImport && !projectElements[this.name]?.waterCoverageControl) {
       container.appendChild(this.createWaterCoverageControl());
@@ -298,6 +339,12 @@ class SpaceMiningProject extends SpaceshipProject {
       const showInput = this.waterCoverageDisableMode === 'coverage';
       elements.waterCoverageInput.style.display = showInput ? '' : 'none';
       elements.waterCoveragePercent.style.display = showInput ? '' : 'none';
+    }
+    if (elements.waterImportTargetControl) {
+      elements.waterImportTargetControl.style.display = this.isBooleanFlagSet('waterImportTargeting') ? 'flex' : 'none';
+    }
+    if (elements.waterImportTargetSelect) {
+      elements.waterImportTargetSelect.value = this.waterImportTarget;
     }
     if (elements.oxygenPressureControl) {
       elements.oxygenPressureControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
@@ -444,6 +491,7 @@ class SpaceMiningProject extends SpaceshipProject {
       waterCoverageDisableMode: this.waterCoverageDisableMode,
       pressureUnit: this.pressureUnit,
       oxygenPressureUnit: this.oxygenPressureUnit,
+      waterImportTarget: this.waterImportTarget,
     };
   }
 
@@ -460,6 +508,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
     this.pressureUnit = state.pressureUnit || 'kPa';
     this.oxygenPressureUnit = state.oxygenPressureUnit || 'kPa';
+    this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
   }
 
   saveTravelState() {
@@ -476,6 +525,7 @@ class SpaceMiningProject extends SpaceshipProject {
       waterCoverageDisableMode: this.waterCoverageDisableMode,
       pressureUnit: this.pressureUnit,
       oxygenPressureUnit: this.oxygenPressureUnit,
+      waterImportTarget: this.waterImportTarget,
     };
   }
 
@@ -492,14 +542,18 @@ class SpaceMiningProject extends SpaceshipProject {
     this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
     this.pressureUnit = state.pressureUnit || this.pressureUnit;
     this.oxygenPressureUnit = state.oxygenPressureUnit || this.oxygenPressureUnit;
+    this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
   }
 
   calculateSpaceshipGainPerShip() {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
+      const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
+      if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony') {
+        return { colony: { water: capacity } };
+      }
       const zones = getZones();
       const allBelow = zones.every(z => (terraforming?.temperature?.zones?.[z]?.value || 0) <= 273.15);
       const resource = allBelow ? 'ice' : 'liquidWater';
-      const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
       return { surface: { [resource]: capacity } };
     }
     return super.calculateSpaceshipGainPerShip();
@@ -508,33 +562,65 @@ class SpaceMiningProject extends SpaceshipProject {
   calculateSpaceshipTotalResourceGain(perSecond = false) {
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const gainPerShip = this.calculateSpaceshipGainPerShip();
-      const resource = Object.keys(gainPerShip.surface)[0];
+      const category = gainPerShip.colony ? 'colony' : 'surface';
+      const resource = Object.keys(gainPerShip[category])[0];
       const multiplier = perSecond
         ? this.getActiveShipCount() * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration()))
         : 1;
-      return { surface: { [resource]: gainPerShip.surface[resource] * multiplier } };
+      return { [category]: { [resource]: gainPerShip[category][resource] * multiplier } };
     }
     return super.calculateSpaceshipTotalResourceGain(perSecond);
   }
 
+  applyWaterImportToColony(amount, accumulatedChanges = null) {
+    const resource = resources.colony.water;
+    const pending = accumulatedChanges?.colony?.water || 0;
+    const current = resource.value + pending;
+    const limit = resource.hasCap
+      ? (current >= resource.cap ? current : resource.cap)
+      : current + amount;
+    const available = Math.max(0, limit - current);
+    const toColony = Math.min(amount, available);
+    if (toColony > 0) {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
+        accumulatedChanges.colony.water = (accumulatedChanges.colony.water || 0) + toColony;
+      } else {
+        resource.value += toColony;
+      }
+    }
+    return amount - toColony;
+  }
+
   applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
-    if (this.attributes.dynamicWaterImport && gain.surface) {
-      const entry = gain.surface;
+    if (this.attributes.dynamicWaterImport && (gain.surface || gain.colony)) {
+      const entry = gain.colony || gain.surface;
       const resourceName = Object.keys(entry)[0];
-      if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
-        resources.surface[resourceName].automationLimited = true;
-        return;
-      }
-      const amount = entry[resourceName] * fraction * productivity;
       const zones = getZones();
       const temps = terraforming?.temperature?.zones || {};
       const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
+      if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
+        const surfaceResource = allBelow ? 'ice' : 'liquidWater';
+        resources.surface[surfaceResource].automationLimited = true;
+        return;
+      }
+      let amount = entry[resourceName] * fraction * productivity;
+      if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony') {
+        amount = this.applyWaterImportToColony(amount, accumulatedChanges);
+        if (amount <= 0) {
+          return;
+        }
+      }
+      const seconds = this.currentTickDeltaTime ? this.currentTickDeltaTime / 1000 : 0;
       if (allBelow || resourceName === 'ice') {
         zones.forEach(zone => {
           const pct = getZonePercentage(zone);
           terraforming.zonalSurface[zone].ice += amount * pct;
         });
+        if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony' && seconds > 0) {
+          resources.surface?.ice?.modifyRate?.(amount / seconds, 'Spaceship Mining', 'project');
+        }
       } else {
         const eligible = zones.filter(z => (temps[z]?.value || 0) > 273.15);
         const totalPct = eligible.reduce((s, z) => s + getZonePercentage(z), 0);
@@ -542,6 +628,9 @@ class SpaceMiningProject extends SpaceshipProject {
           const pct = getZonePercentage(zone);
           terraforming.zonalSurface[zone].liquidWater += amount * (pct / totalPct);
         });
+        if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony' && seconds > 0) {
+          resources.surface?.liquidWater?.modifyRate?.(amount / seconds, 'Spaceship Mining', 'project');
+        }
       }
       if (typeof terraforming.synchronizeGlobalResources === 'function') {
         terraforming.synchronizeGlobalResources();
