@@ -676,7 +676,7 @@ class ArtificialManager extends EffectableEntity {
 
       const chosenName = (options?.name && String(options.name).trim()) || 'Artificial World';
       const baseCost = this.calculateCost(radiusEarth);
-      const cost = { superalloys: baseCost.superalloys };
+      const cost = { superalloys: baseCost.superalloys * 2 };
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
       if (!this.canCoverCost(cost)) return false;
