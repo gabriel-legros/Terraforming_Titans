@@ -31,6 +31,10 @@ const artificialUICache = {
   ringWidthInput: null,
   ringWidthBox: null,
   ringWidthLabel: null,
+  ringFluxRange: null,
+  ringFluxInput: null,
+  ringFluxBox: null,
+  ringFluxLabel: null,
   durationValue: null,
   durationTooltip: null,
   gainEffective: null,
@@ -70,6 +74,7 @@ const artificialStashMultipliers = {
 let artificialRadiusEditing = false;
 let artificialRingOrbitEditing = false;
 let artificialRingWidthEditing = false;
+let artificialRingFluxEditing = false;
 let artificialHistorySig = '';
 const ARTIFICIAL_SECTOR_RESOURCE_LABELS = {
   metal: 'Metal',
@@ -79,6 +84,9 @@ const ARTIFICIAL_SECTOR_RESOURCE_LABELS = {
   nitrogen: 'Nitrogen',
   oxygen: 'Oxygen'
 };
+
+const ARTIFICIAL_RING_FLUX_BOUNDS_WM2 = { min: 1_200, max: 1_500 };
+const ARTIFICIAL_RING_FLUX_DEFAULT_WM2 = 1_300;
 
 function formatArtificialSectorResourceLabel(resourceKey) {
   const label = ARTIFICIAL_SECTOR_RESOURCE_LABELS[resourceKey];
@@ -338,6 +346,11 @@ function clampRingWidthValue(value) {
   return Math.min(Math.max(next, bounds.min), bounds.max);
 }
 
+function clampRingFluxValue(value) {
+  const next = Math.max(0, Number(value) || 0);
+  return Math.min(Math.max(next, ARTIFICIAL_RING_FLUX_BOUNDS_WM2.min), ARTIFICIAL_RING_FLUX_BOUNDS_WM2.max);
+}
+
 function isRadiusFieldActive() {
   if (typeof document === 'undefined') return false;
   return document.activeElement === artificialUICache.radiusInput
@@ -354,6 +367,11 @@ function isRingWidthFieldActive() {
   if (typeof document === 'undefined') return false;
   return document.activeElement === artificialUICache.ringWidthInput
     || document.activeElement === artificialUICache.ringWidthRange;
+}
+
+function isRingFluxFieldActive() {
+  return document.activeElement === artificialUICache.ringFluxInput
+    || document.activeElement === artificialUICache.ringFluxRange;
 }
 
 function setRadiusFields(value, force = false) {
@@ -383,6 +401,16 @@ function setRingWidthFields(value, force = false) {
   }
   if (artificialUICache.ringWidthInput && (force || (!artificialRingWidthEditing && document.activeElement !== artificialUICache.ringWidthInput))) {
     artificialUICache.ringWidthInput.value = Math.round(next);
+  }
+}
+
+function setRingFluxFields(value, force = false) {
+  const next = clampRingFluxValue(value);
+  if (force || (!isRingFluxFieldActive() && !artificialRingFluxEditing)) {
+    artificialUICache.ringFluxRange.value = next;
+  }
+  if (force || (!artificialRingFluxEditing && document.activeElement !== artificialUICache.ringFluxInput)) {
+    artificialUICache.ringFluxInput.value = Math.round(next);
   }
 }
 
@@ -444,6 +472,19 @@ function applyRingBounds() {
   }
   if (!artificialRingWidthEditing && document.activeElement !== artificialUICache.ringWidthInput) {
     artificialUICache.ringWidthInput.value = clampRingWidthValue(parseFloat(artificialUICache.ringWidthInput.value) || widthBounds.min);
+  }
+
+  artificialUICache.ringFluxRange.min = ARTIFICIAL_RING_FLUX_BOUNDS_WM2.min;
+  artificialUICache.ringFluxRange.max = ARTIFICIAL_RING_FLUX_BOUNDS_WM2.max;
+  artificialUICache.ringFluxRange.step = '1';
+  artificialUICache.ringFluxInput.min = ARTIFICIAL_RING_FLUX_BOUNDS_WM2.min;
+  artificialUICache.ringFluxInput.max = ARTIFICIAL_RING_FLUX_BOUNDS_WM2.max;
+  artificialUICache.ringFluxInput.step = '1';
+  if (!isRingFluxFieldActive() && !artificialRingFluxEditing) {
+    artificialUICache.ringFluxRange.value = clampRingFluxValue(parseFloat(artificialUICache.ringFluxRange.value) || ARTIFICIAL_RING_FLUX_DEFAULT_WM2);
+  }
+  if (!artificialRingFluxEditing && document.activeElement !== artificialUICache.ringFluxInput) {
+    artificialUICache.ringFluxInput.value = clampRingFluxValue(parseFloat(artificialUICache.ringFluxInput.value) || ARTIFICIAL_RING_FLUX_DEFAULT_WM2);
   }
 }
 
@@ -770,6 +811,46 @@ function ensureArtificialLayout() {
   ringWidthBox.appendChild(ringWidthControls);
   blueprint.appendChild(ringWidthBox);
   artificialUICache.ringWidthBox = ringWidthBox;
+
+  const ringFluxBox = document.createElement('div');
+  ringFluxBox.className = 'artificial-radius artificial-ring-flux';
+  const ringFluxTop = document.createElement('div');
+  ringFluxTop.className = 'artificial-radius-row';
+  const ringFluxText = document.createElement('span');
+  ringFluxText.textContent = 'Target flux (W/m²)';
+  const ringFluxInfo = document.createElement('span');
+  ringFluxInfo.className = 'info-tooltip-icon';
+  ringFluxInfo.innerHTML = '&#9432;';
+  ringFluxInfo.title = 'Stellar flux at the ringworld orbit (1200–1500 W/m²).';
+  ringFluxText.appendChild(document.createTextNode(' '));
+  ringFluxText.appendChild(ringFluxInfo);
+  const ringFluxValue = document.createElement('span');
+  ringFluxValue.className = 'artificial-radius-value';
+  ringFluxTop.appendChild(ringFluxText);
+  ringFluxTop.appendChild(ringFluxValue);
+  ringFluxBox.appendChild(ringFluxTop);
+  artificialUICache.ringFluxLabel = ringFluxValue;
+
+  const ringFluxControls = document.createElement('div');
+  ringFluxControls.className = 'artificial-radius-controls';
+  const ringFluxRange = document.createElement('input');
+  ringFluxRange.type = 'range';
+  ringFluxRange.step = '1';
+  ringFluxRange.value = String(ARTIFICIAL_RING_FLUX_DEFAULT_WM2);
+  ringFluxRange.className = 'artificial-radius-range';
+  artificialUICache.ringFluxRange = ringFluxRange;
+  ringFluxControls.appendChild(ringFluxRange);
+
+  const ringFluxInput = document.createElement('input');
+  ringFluxInput.type = 'number';
+  ringFluxInput.step = '1';
+  ringFluxInput.value = String(ARTIFICIAL_RING_FLUX_DEFAULT_WM2);
+  ringFluxInput.className = 'artificial-radius-input';
+  artificialUICache.ringFluxInput = ringFluxInput;
+  ringFluxControls.appendChild(ringFluxInput);
+  ringFluxBox.appendChild(ringFluxControls);
+  blueprint.appendChild(ringFluxBox);
+  artificialUICache.ringFluxBox = ringFluxBox;
 
   applyRingBounds();
 
@@ -1202,6 +1283,25 @@ function ensureArtificialLayout() {
     setRingWidthFields(value, true);
     updateArtificialUI();
   });
+  ringFluxRange.addEventListener('input', () => {
+    const value = clampRingFluxValue(parseFloat(ringFluxRange.value) || 0);
+    ringFluxRange.value = value;
+    ringFluxInput.value = value;
+    updateArtificialUI();
+  });
+  ringFluxInput.addEventListener('input', () => {
+    const value = parseFloat(ringFluxInput.value) || 0;
+    artificialUICache.ringFluxRange.value = clampRingFluxValue(value);
+  });
+  ringFluxInput.addEventListener('focus', () => {
+    artificialRingFluxEditing = true;
+  });
+  ringFluxInput.addEventListener('blur', () => {
+    artificialRingFluxEditing = false;
+    const value = clampRingFluxValue(parseFloat(ringFluxInput.value) || 0);
+    setRingFluxFields(value, true);
+    updateArtificialUI();
+  });
 
   nameInput.addEventListener('input', () => {
     artificialManager?.setActiveProjectName(nameInput.value);
@@ -1233,6 +1333,7 @@ function ensureArtificialLayout() {
         starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
         orbitRadiusAU: clampRingOrbitValue(parseFloat(ringOrbitRange.value) || 0.1),
         widthKm: clampRingWidthValue(parseFloat(ringWidthRange.value) || 10_000),
+        targetFluxWm2: clampRingFluxValue(parseFloat(ringFluxRange.value) || ARTIFICIAL_RING_FLUX_DEFAULT_WM2),
         name: artificialUICache.nameInput ? artificialUICache.nameInput.value : '',
         sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
       });
@@ -1362,6 +1463,13 @@ function getRingWidthKmValue() {
     return clampRingWidthValue(parseFloat(artificialUICache.ringWidthInput.value) || 10_000);
   }
   return clampRingWidthValue(parseFloat(artificialUICache.ringWidthRange.value) || 10_000);
+}
+
+function getRingFluxWm2Value() {
+  if (artificialRingFluxEditing || document.activeElement === artificialUICache.ringFluxInput) {
+    return clampRingFluxValue(parseFloat(artificialUICache.ringFluxInput.value) || ARTIFICIAL_RING_FLUX_DEFAULT_WM2);
+  }
+  return clampRingFluxValue(parseFloat(artificialUICache.ringFluxRange.value) || ARTIFICIAL_RING_FLUX_DEFAULT_WM2);
 }
 
 function renderArtificialHistory(force = false) {
@@ -1542,7 +1650,7 @@ function renderCosts(project, selection, manager) {
   const area = project ? (project.areaHa || project.landHa) : manager.calculateAreaHectares(r);
   const baseCost = project ? project.cost : manager.calculateCost(r);
   const cost = type === 'ring'
-    ? { superalloys: project ? baseCost.superalloys : baseCost.superalloys * 2 }
+    ? { superalloys: project ? baseCost.superalloys : baseCost.superalloys * 5 }
     : baseCost;
   const durationContext = project
     ? { durationMs: project.durationMs, worldCount: project.worldDivisor || 1 }
@@ -1555,6 +1663,7 @@ function renderCosts(project, selection, manager) {
   if (type === 'ring') {
     const orbitAU = project?.orbitRadiusAU || selection?.orbitRadiusAU || project?.distanceFromStarAU || 0.1;
     const widthKm = project?.widthKm || selection?.widthKm || project?.ringWidthKm || 10_000;
+    const targetFluxWm2 = project?.targetFluxWm2 || selection?.targetFluxWm2 || ARTIFICIAL_RING_FLUX_DEFAULT_WM2;
     if (artificialUICache.ringOrbitLabel) {
       const earthRadii = orbitAU * ARTIFICIAL_AU_TO_EARTH_RADII;
       artificialUICache.ringOrbitLabel.textContent = `${orbitAU.toFixed(3)} AU (${fmt(earthRadii, false, 0)} R⊕)`;
@@ -1562,6 +1671,7 @@ function renderCosts(project, selection, manager) {
     if (artificialUICache.ringWidthLabel) {
       artificialUICache.ringWidthLabel.textContent = `${fmt(widthKm, false, 0)} km`;
     }
+    artificialUICache.ringFluxLabel.textContent = `${fmt(targetFluxWm2, false, 3)} W/m²`;
   } else if (artificialUICache.radiusLabel) {
     artificialUICache.radiusLabel.textContent = `${r.toFixed(2)} Rₑ`;
   }
@@ -1897,6 +2007,8 @@ function updateArtificialUI(options = {}) {
     artificialUICache.ringWidthBox.classList.toggle('hidden', !isRing);
     artificialUICache.ringWidthBox.style.display = isRing ? '' : 'none';
   }
+  artificialUICache.ringFluxBox.classList.toggle('hidden', !isRing);
+  artificialUICache.ringFluxBox.style.display = isRing ? '' : 'none';
 
   applyStarContextBounds();
   applyRadiusBounds();
@@ -1917,6 +2029,8 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = !isRing;
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = !isRing;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = !isRing;
+    artificialUICache.ringFluxRange.disabled = !isRing;
+    artificialUICache.ringFluxInput.disabled = !isRing;
     artificialUICache.ringAuto.disabled = !isRing;
     artificialUICache.sector.disabled = false;
     artificialUICache.sectorFilter.disabled = false;
@@ -1930,6 +2044,9 @@ function updateArtificialUI(options = {}) {
     if (!artificialRingWidthEditing) {
       setRingWidthFields(getRingWidthKmValue());
     }
+    if (!artificialRingFluxEditing) {
+      setRingFluxFields(getRingFluxWm2Value());
+    }
   } else {
     artificialUICache.type.disabled = true;
     if (artificialUICache.core) artificialUICache.core.disabled = true;
@@ -1942,12 +2059,15 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = true;
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = true;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = true;
+    artificialUICache.ringFluxRange.disabled = true;
+    artificialUICache.ringFluxInput.disabled = true;
     artificialUICache.ringAuto.disabled = true;
     artificialUICache.sector.disabled = true;
     artificialUICache.sectorFilter.disabled = true;
     setRadiusFields(project.radiusEarth, true);
     setRingOrbitFields(project.orbitRadiusAU || project.distanceFromStarAU || 0.1, true);
     setRingWidthFields(project.widthKm || project.ringWidthKm || 10_000, true);
+    setRingFluxFields(project.targetFluxWm2 || ARTIFICIAL_RING_FLUX_DEFAULT_WM2, true);
   }
 
   const selection = project
@@ -1956,16 +2076,18 @@ function updateArtificialUI(options = {}) {
         radiusEarth: project.radiusEarth,
         orbitRadiusAU: project.orbitRadiusAU || project.distanceFromStarAU,
         widthKm: project.widthKm || project.ringWidthKm,
-        starCore: project.starCore || project.core
+        starCore: project.starCore || project.core,
+        targetFluxWm2: project.targetFluxWm2
       }
     : (() => {
         const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
         if (type === 'ring') {
           const orbitRadiusAU = getRingOrbitRadiusAUValue();
           const widthKm = getRingWidthKmValue();
+          const targetFluxWm2 = getRingFluxWm2Value();
           const landHa = manager.calculateRingWorldAreaHectares(orbitRadiusAU, widthKm);
           const radiusEarth = manager.calculateRadiusEarthFromLandHectares(landHa);
-          return { type, radiusEarth, orbitRadiusAU, widthKm, starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : '' };
+          return { type, radiusEarth, orbitRadiusAU, widthKm, targetFluxWm2, starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : '' };
         }
         return { type, radiusEarth: getRadiusValue() };
       })();

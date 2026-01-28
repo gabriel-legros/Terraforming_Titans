@@ -1319,8 +1319,8 @@ function createWaterBox(row) {
 
     // Calculate average coverage percentages using the centralized helper function
 
-    const avgLiquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater');
-    const avgIceCoverage = calculateAverageCoverage(terraforming, 'ice');
+    const avgLiquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
+    const avgIceCoverage = calculateAverageCoverage(terraforming, 'ice') || 0;
 
     // Update border based on average liquid coverage vs target
     waterBox.style.borderColor = avgLiquidCoverage >= terraforming.waterTarget ? 'green' : 'red';
@@ -1330,25 +1330,25 @@ function createWaterBox(row) {
 
     if (els.target) {
       const waterTargetPercent = terraforming.waterTarget * 100;
-      const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget);
+      const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget) || 0;
       const targetAmountText = formatNumber(targetAmount, false, 1);
       els.target.textContent = `Target : Water coverage >= ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
     }
 
-    els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate);
-    els.sublimationRate.textContent = formatWaterRate(terraforming.totalWaterSublimationRate);
-    els.rainfallRate.textContent = formatWaterRate(terraforming.totalRainfallRate);
-    els.snowfallRate.textContent = formatWaterRate(terraforming.totalSnowfallRate);
-    els.meltingRate.textContent = formatWaterRate(terraforming.totalMeltRate);
-    els.freezingRate.textContent = formatWaterRate(terraforming.totalFreezeRate);
+    els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate || 0);
+    els.sublimationRate.textContent = formatWaterRate(terraforming.totalWaterSublimationRate || 0);
+    els.rainfallRate.textContent = formatWaterRate(terraforming.totalRainfallRate || 0);
+    els.snowfallRate.textContent = formatWaterRate(terraforming.totalSnowfallRate || 0);
+    els.meltingRate.textContent = formatWaterRate(terraforming.totalMeltRate || 0);
+    els.freezingRate.textContent = formatWaterRate(terraforming.totalFreezeRate || 0);
 
     const safeSurfaceArea = surfaceArea > 0 ? surfaceArea : 1;
-    els.evaporationRateKg.textContent = formatWaterRate(terraforming.totalEvaporationRate * 1000 / safeSurfaceArea);
-    els.sublimationRateKg.textContent = formatWaterRate(terraforming.totalWaterSublimationRate * 1000 / safeSurfaceArea);
-    els.rainfallRateKg.textContent = formatWaterRate(terraforming.totalRainfallRate * 1000 / safeSurfaceArea);
-    els.snowfallRateKg.textContent = formatWaterRate(terraforming.totalSnowfallRate * 1000 / safeSurfaceArea);
-    els.meltingRateKg.textContent = formatWaterRate(terraforming.totalMeltRate * 1000 / safeSurfaceArea);
-    els.freezingRateKg.textContent = formatWaterRate(terraforming.totalFreezeRate * 1000 / safeSurfaceArea);
+    els.evaporationRateKg.textContent = formatWaterRate((terraforming.totalEvaporationRate || 0) * 1000 / safeSurfaceArea);
+    els.sublimationRateKg.textContent = formatWaterRate((terraforming.totalWaterSublimationRate || 0) * 1000 / safeSurfaceArea);
+    els.rainfallRateKg.textContent = formatWaterRate((terraforming.totalRainfallRate || 0) * 1000 / safeSurfaceArea);
+    els.snowfallRateKg.textContent = formatWaterRate((terraforming.totalSnowfallRate || 0) * 1000 / safeSurfaceArea);
+    els.meltingRateKg.textContent = formatWaterRate((terraforming.totalMeltRate || 0) * 1000 / safeSurfaceArea);
+    els.freezingRateKg.textContent = formatWaterRate((terraforming.totalFreezeRate || 0) * 1000 / safeSurfaceArea);
   }
 
   function createLifeBox(row) {

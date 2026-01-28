@@ -26,6 +26,7 @@ const AU_IN_KM = 149_597_870.7;
 const AU_TO_EARTH_RADII = 23_481.07;
 const RINGWORLD_WIDTH_BOUNDS_KM = { min: 1_000, max: 1_000_000 };
 const RINGWORLD_TARGET_FLUX_WM2 = 1_300;
+const RINGWORLD_FLUX_BOUNDS_WM2 = { min: 1_200, max: 1_500 };
 const RINGWORLD_STAR_CORES = [
     { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 60_000 },
     { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: true, disabledSource: "World 11", minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 60_000 },
@@ -220,6 +221,11 @@ function clampRingOrbitRadiusAU(value, bounds) {
     return Math.min(Math.max(next, bounds.min), bounds.max);
 }
 
+function clampRingTargetFluxWm2(value) {
+    const next = Math.max(0, Number(value) || 0);
+    return Math.min(Math.max(next, RINGWORLD_FLUX_BOUNDS_WM2.min), RINGWORLD_FLUX_BOUNDS_WM2.max);
+}
+
 function estimateRingRotationPeriodHours(orbitRadiusAU) {
     const radiusMeters = (Math.max(orbitRadiusAU || 0, 0) * AU_IN_KM) * 1000;
     const gravity = 9.81;
@@ -331,6 +337,10 @@ class ArtificialManager extends EffectableEntity {
         if (!effect) return;
         if (effect.type === 'enable') {
             this.enable(effect.targetId);
+            return;
+        }
+        if (effect.type === 'enableRingworld') {
+            this.enableRingworld();
             return;
         }
         if (effect.type === 'unlockCore') {
@@ -676,7 +686,7 @@ class ArtificialManager extends EffectableEntity {
 
       const chosenName = (options?.name && String(options.name).trim()) || 'Artificial World';
       const baseCost = this.calculateCost(radiusEarth);
-      const cost = { superalloys: baseCost.superalloys * 2 };
+      const cost = { superalloys: baseCost.superalloys * 5 };
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
       if (!this.canCoverCost(cost)) return false;
@@ -695,7 +705,7 @@ class ArtificialManager extends EffectableEntity {
 
       const now = Date.now();
       const generationSeed = (this.nextId * 0x517cc1b7) >>> 0;
-      const targetFluxWm2 = RINGWORLD_TARGET_FLUX_WM2 + ((mulberry32(generationSeed ^ 0xabc)() - 0.5) * 120);
+      const targetFluxWm2 = clampRingTargetFluxWm2(options?.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2);
       const star = generateRingStar({
         seed: generationSeed,
         spectralType: starCoreConfig.spectralType,
@@ -883,11 +893,24 @@ class ArtificialManager extends EffectableEntity {
         const isRing = project.type === 'ring';
         const radiusKm = (project.radiusEarth || 1) * EARTH_RADIUS_KM;
         const allowStar = isRing ? true : (project.hasStar !== false && project.allowStar !== false);
-        const star = project.star ? JSON.parse(JSON.stringify(project.star)) : null;
+        let star = project.star ? JSON.parse(JSON.stringify(project.star)) : null;
         const stockpileMetal = project.stockpile?.metal || project.initialDeposit?.metal || 0;
         const stockpileSilicon = project.stockpile?.silicon || project.initialDeposit?.silicon || 0;
         const isRogue = isRing ? false : (project.isRogue === true || !allowStar);
         const distanceFromStarAU = isRogue ? 0 : (isRing ? (project.orbitRadiusAU || project.distanceFromStarAU || 1) : (project.distanceFromStarAU || 1));
+        const targetFluxWm2 = isRing
+            ? clampRingTargetFluxWm2(project.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2)
+            : project.targetFluxWm2;
+        if (isRing) {
+            const ringCore = getRingStarCoreConfig(project.starCore || project.core);
+            const seed = (project.id || 1) * 0x517cc1b7;
+            star = generateRingStar({
+                seed,
+                spectralType: ringCore.spectralType,
+                orbitRadiusAU: distanceFromStarAU,
+                targetFluxWm2
+            });
+        }
         const starLuminosity = star ? star.luminositySolar : 0;
         const spaceElevatorEffects = projectParameters.spaceElevator.attributes.completionEffect;
 
@@ -919,7 +942,7 @@ class ArtificialManager extends EffectableEntity {
             sector,
             distanceFromSun: distanceFromStarAU,
             rogue: isRogue,
-            targetFluxWm2: project.targetFluxWm2
+            targetFluxWm2
         };
         base.effects = isRing
             ? [
@@ -1356,7 +1379,7 @@ class ArtificialManager extends EffectableEntity {
                         seed,
                         spectralType: ringCore.spectralType,
                         orbitRadiusAU: this.activeProject.orbitRadiusAU,
-                        targetFluxWm2: this.activeProject.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2
+                        targetFluxWm2: clampRingTargetFluxWm2(this.activeProject.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2)
                     });
                     this.activeProject.star = star;
                 }

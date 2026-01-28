@@ -329,6 +329,11 @@ progressTartarus.chapters.push(
         value: 1.25,
         effectId: 'tartarusFleetUpgrade',
         sourceId: 'tartarus.32.10'
+      },
+      {
+        target: 'artificialManager',
+        type: 'enableRingworld',
+        sourceId: 'tartarus.32.10'
       }
     ]
   },
