@@ -281,7 +281,13 @@ class SpaceshipProject extends Project {
         const multiplier = this.getEffectiveCostMultiplier(category, resource) *
           this.getEffectiveSpaceshipCostMultiplier(category, resource);
         const efficiencyMultiplier = resource === 'energy' ? shipEfficiency : 1;
-        const adjustedCost = baseCost * multiplier * efficiencyMultiplier;
+        let adjustedCost = baseCost * multiplier * efficiencyMultiplier;
+        if (resource === 'energy') {
+          const perTonCost = this.getEffectiveSpaceshipCostPerTon(category, resource);
+          if (perTonCost > 0) {
+            adjustedCost += perTonCost * this.getSpaceshipEnergyCostTonnage();
+          }
+        }
         if (adjustedCost > 0) {
           totalCost[category][resource] = adjustedCost;
         }
@@ -291,6 +297,23 @@ class SpaceshipProject extends Project {
       }
     }
     return totalCost;
+  }
+
+  getSpaceshipEnergyCostTonnage() {
+    if (this.attributes.spaceExport) {
+      return this.getShipCapacity(this.attributes.disposalAmount);
+    }
+    if (this.attributes.spaceMining) {
+      const gains = this.attributes.resourceGainPerShip || {};
+      let total = 0;
+      for (const category in gains) {
+        for (const resource in gains[category]) {
+          total += this.getShipCapacity(gains[category][resource]);
+        }
+      }
+      return total;
+    }
+    return 0;
   }
 
   calculateSpaceshipGainPerShip() {

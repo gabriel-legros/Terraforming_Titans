@@ -1,6 +1,5 @@
 const RINGWORLD_TERRAFORM_ENERGY_REQUIRED = 1e21;
 const RINGWORLD_SHIP_ENERGY_MULTIPLIER = 0.1;
-const RINGWORLD_SHIP_BASE_ENERGY_PER_TON = 10000;
 const RINGWORLD_POWER_STEP_MIN = 1;
 const RINGWORLD_POWER_STEP_MAX = 1e100;
 const RINGWORLD_GRAVITY = 9.81;
@@ -38,14 +37,24 @@ class RingworldTerraformingProject extends Project {
     this.actualInvestRate = 0;
     this.currentMassTons = 0;
     this.lastMassTons = 0;
-    this.currentShipEnergyMultiplier = this.shipEnergyMultiplier;
-    this.shipEnergyEffect = {
+    this.currentShipSpinEnergyPerTon = 0;
+    this.shipEnergyMultiplierEffect = {
       target: 'projectManager',
       type: 'spaceshipCostMultiplier',
       resourceCategory: 'colony',
       resourceId: 'energy',
       value: this.shipEnergyMultiplier,
       effectId: `${this.name}-ship-energy-multiplier`,
+      sourceId: this.name,
+      name: this.displayName
+    };
+    this.shipEnergyPerTonEffect = {
+      target: 'projectManager',
+      type: 'spaceshipCostPerTon',
+      resourceCategory: 'colony',
+      resourceId: 'energy',
+      value: 0,
+      effectId: `${this.name}-ship-energy-per-ton`,
       sourceId: this.name,
       name: this.displayName
     };
@@ -147,12 +156,10 @@ class RingworldTerraformingProject extends Project {
     return this.energyRequired > 0 ? Math.min(this.energyInvested / this.energyRequired, 1) : 0;
   }
 
-  getShipEnergyMultiplier() {
+  getShipSpinEnergyPerTon() {
     const gravityRatio = this.getSurfaceGravityRatio();
     const radiusMeters = this.getRingOrbitRadiusAU() * RINGWORLD_AU_METERS;
-    const spinEnergyPerTon = this.getSpinEnergyRequirementWattDays(1, radiusMeters) * gravityRatio;
-    const basePerTon = RINGWORLD_SHIP_BASE_ENERGY_PER_TON;
-    return (basePerTon * RINGWORLD_SHIP_ENERGY_MULTIPLIER + spinEnergyPerTon) / basePerTon;
+    return this.getSpinEnergyRequirementWattDays(1, radiusMeters) * gravityRatio;
   }
 
   renderUI(container) {
@@ -188,6 +195,7 @@ class RingworldTerraformingProject extends Project {
     const rate = createRingworldStat('Invest Rate:');
     const status = createRingworldStat('Status:');
     const shipMultiplier = createRingworldStat('Ship Energy Multiplier:');
+    const spinEnergy = createRingworldStat('Spin Energy per Ton:');
     const massTotal = createRingworldStat('Ringworld Mass:');
 
     stats.append(
@@ -195,6 +203,7 @@ class RingworldTerraformingProject extends Project {
       rate.wrapper,
       status.wrapper,
       shipMultiplier.wrapper,
+      spinEnergy.wrapper,
       massTotal.wrapper
     );
     statusPanel.appendChild(stats);
@@ -257,7 +266,7 @@ class RingworldTerraformingProject extends Project {
       'You must completely spin the ringworld to complete its terraforming.',
       'Atmospheric and surface resources are stored until surface gravity reaches 0.1g.',
       'Life will not grow on its own until surface gravity reaches 0.1g.',
-      'Faster spin increases spaceship energy costs.',
+      'Spaceships have a base energy multiplier of 0.1, but faster spin adds a flat penalty per ton.',
       'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.',
       'The total energy required to import resources then spin, or spin then import is meant to be equivalent.'
     ];
@@ -277,6 +286,7 @@ class RingworldTerraformingProject extends Project {
       rate: rate.value,
       status: status.value,
       shipMultiplier: shipMultiplier.value,
+      spinEnergy: spinEnergy.value,
       massTotal: massTotal.value,
       progressLabel,
       progressFill,
@@ -338,7 +348,8 @@ class RingworldTerraformingProject extends Project {
     const displayRate = this.investing ? this.actualInvestRate : 0;
     this.el.rate.textContent = `${formatNumber(displayRate, true)} W`;
     this.el.status.textContent = statusLabel;
-    this.el.shipMultiplier.textContent = `${formatNumber(this.currentShipEnergyMultiplier, true, 2)}`;
+    this.el.shipMultiplier.textContent = `${formatNumber(this.shipEnergyMultiplier, true, 2)}`;
+    this.el.spinEnergy.textContent = `${formatNumber(this.currentShipSpinEnergyPerTon, true)} /ton`;
     this.el.progressLabel.textContent = `${formatWattDays(investedValue)} / ${formatWattDays(this.energyRequired)} (${formatNumber(progressPercent, true, 1)}%)`;
     this.el.progressFill.style.width = `${progressPercent}%`;
     this.el.powerValue.textContent = `${formatNumber(this.power, true)} W`;
@@ -416,9 +427,11 @@ class RingworldTerraformingProject extends Project {
 
   applyEffects() {
     this.refreshMassAndEnergyRequirement();
-    this.currentShipEnergyMultiplier = this.getShipEnergyMultiplier();
-    this.shipEnergyEffect.value = this.currentShipEnergyMultiplier;
-    projectManager.addAndReplace(this.shipEnergyEffect);
+    this.currentShipSpinEnergyPerTon = this.getShipSpinEnergyPerTon();
+    this.shipEnergyMultiplierEffect.value = this.shipEnergyMultiplier;
+    this.shipEnergyPerTonEffect.value = this.currentShipSpinEnergyPerTon;
+    projectManager.addAndReplace(this.shipEnergyMultiplierEffect);
+    projectManager.addAndReplace(this.shipEnergyPerTonEffect);
     const gravityRatio = this.getSurfaceGravityRatio();
     if (gravityRatio < RINGWORLD_MIN_GRAVITY_RATIO) {
       addEffect(this.lowGravityTerraformingEffect);
