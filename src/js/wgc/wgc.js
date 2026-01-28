@@ -157,6 +157,7 @@ class WarpGateCommand extends EffectableEntity {
       superconductorEfficiency: { purchases: 0, max: 400 },
       androidsEfficiency: { purchases: 0, max: 400 },
       superalloyEfficiency: { purchases: 0, max: 999, enabled: false },
+      superalloyFusionEfficiency: { purchases: 0, max: 9900, enabled: false },
       foodProduction: { purchases: 0, max: 400 },
     };
     this.facilities = {
@@ -731,7 +732,7 @@ class WarpGateCommand extends EffectableEntity {
   purchaseUpgrade(key) {
     const up = this.rdUpgrades[key];
     if (!up) return false;
-    if (key === 'superalloyEfficiency') {
+    if (key === 'superalloyEfficiency' || key === 'superalloyFusionEfficiency') {
       if (!researchManager || typeof researchManager.isBooleanFlagSet !== 'function' || !researchManager.isBooleanFlagSet('superalloyResearchUnlocked')) {
         return false;
       }
@@ -772,6 +773,7 @@ class WarpGateCommand extends EffectableEntity {
       superconductorEfficiency: 'superconductorFactory',
       androidsEfficiency: 'androidFactory',
       superalloyEfficiency: 'superalloyFoundry',
+      superalloyFusionEfficiency: 'superalloyFusionReactor',
       foodProduction: 'hydroponicFarm',
     };
     if (mapping[key]) {

@@ -113,6 +113,7 @@ const rdItems = {
   superconductorEfficiency: 'Superconductor production efficiency',
   androidsEfficiency: 'Androids production efficiency',
   superalloyEfficiency: 'Superalloy production efficiency',
+  superalloyFusionEfficiency: 'Superalloy Fusion Efficiency',
   foodProduction: 'Food production efficiency'
 };
 const rdDescriptions = {
@@ -1282,7 +1283,9 @@ function updateWGCUI() {
   for (const key in rdElements) {
     const el = rdElements[key];
     if (!el) continue;
-    if (key === 'superalloyEfficiency' && warpGateCommand.rdUpgrades && warpGateCommand.rdUpgrades.superalloyEfficiency) {
+    if ((key === 'superalloyEfficiency' || key === 'superalloyFusionEfficiency')
+      && warpGateCommand.rdUpgrades
+      && warpGateCommand.rdUpgrades.superalloyEfficiency) {
       const hasResearch = typeof researchManager === 'undefined'
         || (typeof researchManager.isBooleanFlagSet === 'function'
           && researchManager.isBooleanFlagSet('superalloyResearchUnlocked'));

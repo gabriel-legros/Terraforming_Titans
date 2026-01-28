@@ -408,6 +408,9 @@ class RingworldTerraformingProject extends Project {
   }
 
   update() {
+    if(!this.enabled){
+      return;
+    }
     this.applyEffects();
     if (!this.investing || this.isCompleted) {
       return;
