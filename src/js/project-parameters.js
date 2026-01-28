@@ -186,7 +186,7 @@ const projectParameters = {
       energyRequired: 1e21,
       shipEnergyMultiplier: 0.1,
       power: 0,
-      powerStep: 1
+      powerStep: 1e21
     }
   },
   deeperMining: {

@@ -28,12 +28,12 @@ const RINGWORLD_WIDTH_BOUNDS_KM = { min: 1_000, max: 1_000_000 };
 const RINGWORLD_TARGET_FLUX_WM2 = 1_300;
 const RINGWORLD_STAR_CORES = [
     { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 60_000 },
-    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: true, disabledSource: "World 11", minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 300_000 },
-    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: true, disabledSource: "World 12", minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36, maxWidthKm: 400_000 },
-    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: true, disabledSource: "World 13", minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 500_000 },
-    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: "World 14", minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 650_000 },
-    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 800_000 },
-    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 1_000_000 }
+    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: true, disabledSource: "World 11", minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 60_000 },
+    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: true, disabledSource: "World 12", minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36, maxWidthKm: 60_000 },
+    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: true, disabledSource: "World 13", minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 60_000 },
+    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: "World 14", minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 60_000 },
+    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 60_000 },
+    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 60_000 }
 ];
 const ARTIFICIAL_STAR_SYLLABLES = [
     'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'
@@ -64,6 +64,7 @@ const CONSTRUCTION_HOURS_PER_50B = 10;
 const MAX_SHELL_DURATION_MS = 5 * 3_600_000;
 const AUTO_RADIUS_STEP = 0.01;
 const AUTO_RADIUS_ITERATIONS = 32;
+const AUTO_RING_ORBIT_STEP = 0.001;
 const BASE_SHELL_COST = (() => {
     const radiusAtCalibration = Math.sqrt(SHELL_COST_CALIBRATION.landHa / EARTH_AREA_HA);
     const superalloyBase = SHELL_COST_CALIBRATION.superalloys / (radiusAtCalibration ** 3);
@@ -441,6 +442,44 @@ class ArtificialManager extends EffectableEntity {
         while (durationMs > targetMs && snapped > bounds.min) {
             snapped = Math.round((snapped - AUTO_RADIUS_STEP) / AUTO_RADIUS_STEP) * AUTO_RADIUS_STEP;
             durationMs = this.getDurationContext(snapped).durationMs;
+        }
+        return Math.min(Math.max(snapped, bounds.min), bounds.max);
+    }
+
+    getAutoRingOrbit(bounds, widthKm) {
+        const targetMs = MAX_SHELL_DURATION_MS;
+        const width = Math.max(widthKm || 0, 0);
+        const getDuration = (orbitRadiusAU) => {
+            const landHa = calculateRingLandHectares(orbitRadiusAU, width);
+            const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
+            return this.getDurationContext(radiusEarth).durationMs;
+        };
+        let low = bounds.min;
+        let high = bounds.max;
+        const lowDuration = getDuration(low);
+        const highDuration = getDuration(high);
+        let candidate = high;
+        if (lowDuration >= targetMs) {
+            candidate = low;
+        } else if (highDuration <= targetMs) {
+            candidate = high;
+        } else {
+            for (let i = 0; i < AUTO_RADIUS_ITERATIONS; i += 1) {
+                const mid = (low + high) / 2;
+                const midDuration = getDuration(mid);
+                if (midDuration > targetMs) {
+                    high = mid;
+                } else {
+                    low = mid;
+                }
+            }
+            candidate = high;
+        }
+        let snapped = Math.round(candidate / AUTO_RING_ORBIT_STEP) * AUTO_RING_ORBIT_STEP;
+        let durationMs = getDuration(snapped);
+        while (durationMs > targetMs && snapped > bounds.min) {
+            snapped = Math.round((snapped - AUTO_RING_ORBIT_STEP) / AUTO_RING_ORBIT_STEP) * AUTO_RING_ORBIT_STEP;
+            durationMs = getDuration(snapped);
         }
         return Math.min(Math.max(snapped, bounds.min), bounds.max);
     }

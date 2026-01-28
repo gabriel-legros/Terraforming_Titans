@@ -24,6 +24,7 @@ const artificialUICache = {
   ringStarCoreField: null,
   ringOrbitRange: null,
   ringOrbitInput: null,
+  ringAuto: null,
   ringOrbitBox: null,
   ringOrbitLabel: null,
   ringWidthRange: null,
@@ -390,6 +391,12 @@ function getAutoRadiusValue() {
   return manager.getAutoRadius(bounds);
 }
 
+function getAutoRingOrbitValue(widthKm) {
+  const bounds = getRingOrbitBoundsAU();
+  const manager = artificialManager;
+  return manager.getAutoRingOrbit(bounds, widthKm);
+}
+
 function applyRadiusBounds() {
   if (getSelectedArtificialType(null) !== 'shell') return;
   const bounds = getRadiusBounds();
@@ -711,6 +718,14 @@ function ensureArtificialLayout() {
   ringOrbitInput.className = 'artificial-radius-input';
   artificialUICache.ringOrbitInput = ringOrbitInput;
   ringOrbitControls.appendChild(ringOrbitInput);
+
+  const ringAuto = document.createElement('button');
+  ringAuto.type = 'button';
+  ringAuto.className = 'artificial-secondary artificial-radius-auto';
+  ringAuto.textContent = 'Auto';
+  ringAuto.title = 'Max out width and set orbit for a 5 hour construction time.';
+  artificialUICache.ringAuto = ringAuto;
+  ringOrbitControls.appendChild(ringAuto);
   ringOrbitBox.appendChild(ringOrbitControls);
   blueprint.appendChild(ringOrbitBox);
   artificialUICache.ringOrbitBox = ringOrbitBox;
@@ -1152,6 +1167,16 @@ function ensureArtificialLayout() {
     artificialRingOrbitEditing = false;
     const value = clampRingOrbitValue(parseFloat(ringOrbitInput.value) || 0);
     setRingOrbitFields(value, true);
+    updateArtificialUI();
+  });
+  ringAuto.addEventListener('click', () => {
+    artificialRingOrbitEditing = false;
+    artificialRingWidthEditing = false;
+    const widthBounds = getRingWidthBoundsKm();
+    const widthValue = widthBounds.max;
+    setRingWidthFields(widthValue, true);
+    const orbitValue = getAutoRingOrbitValue(widthValue);
+    setRingOrbitFields(orbitValue, true);
     updateArtificialUI();
   });
   ringWidthRange.addEventListener('input', () => {
@@ -1885,6 +1910,7 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = !isRing;
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = !isRing;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = !isRing;
+    artificialUICache.ringAuto.disabled = !isRing;
     artificialUICache.sector.disabled = false;
     artificialUICache.sectorFilter.disabled = false;
     if (!artificialRadiusEditing) {
@@ -1909,6 +1935,7 @@ function updateArtificialUI(options = {}) {
     if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = true;
     if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = true;
     if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = true;
+    artificialUICache.ringAuto.disabled = true;
     artificialUICache.sector.disabled = true;
     artificialUICache.sectorFilter.disabled = true;
     setRadiusFields(project.radiusEarth, true);

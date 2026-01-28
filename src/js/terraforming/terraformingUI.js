@@ -2134,6 +2134,18 @@ function updateLifeBox() {
 
     if (!button) return;
 
+  const isRingworld = currentPlanetParameters.classification.type === 'ring';
+  if (isRingworld) {
+      const ringProject = projectManager.projects.ringworldTerraforming;
+      if (!ringProject.isCompleted) {
+          button.textContent = 'Spin Ringworld first';
+          button.style.backgroundColor = 'red';
+          button.style.cursor = 'not-allowed';
+          button.disabled = true;
+          return;
+      }
+  }
+
   const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
     ? terraforming.getHazardClearanceStatus()
     : true;
