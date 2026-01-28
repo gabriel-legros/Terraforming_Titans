@@ -82,7 +82,9 @@ const goldenEffects = [
 
 class GoldenAsteroid {
     constructor() {
-        this.element = null;
+        this.buttonElement = null;
+        this.imageElement = null;
+        this.clickHandler = this.onClick.bind(this);
         this.active = false;
         this.duration = 0;
         this.spawnTime = 0;
@@ -98,6 +100,7 @@ class GoldenAsteroid {
         this.countdownStartTime = 0;
         this.countdownActive = false; // New flag to track countdown state
         this.cacheContainers();
+        this.cacheElements();
         }
 
     cacheContainers() {
@@ -108,6 +111,61 @@ class GoldenAsteroid {
         this.countdownContainer = document.getElementById('gold-asteroid-container');
       }
     }
+
+    cacheElements() {
+      this.imageElement = this.imageElement?.isConnected ? this.imageElement : document.getElementById('golden-asteroid-image');
+      this.buttonElement = this.buttonElement?.isConnected ? this.buttonElement : document.getElementById('golden-asteroid-button');
+    }
+
+    ensureButtonElement() {
+      this.cacheElements();
+      this.buttonElement ??= document.createElement('button');
+      this.buttonElement.id = 'golden-asteroid-button';
+      this.buttonElement.className = 'golden-asteroid-button';
+      this.buttonElement.textContent = 'Golden Asteroid!';
+      this.buttonElement.onmousedown = this.clickHandler;
+      this.buttonElement.ontouchstart = this.clickHandler;
+      if (this.buttonElement.parentElement !== this.countdownContainer) {
+        this.countdownContainer.appendChild(this.buttonElement);
+      }
+      this.buttonElement.style.display = 'inline-block';
+    }
+
+    ensureImageElement() {
+      this.cacheElements();
+      this.imageElement ??= document.createElement('img');
+      this.imageElement.id = 'golden-asteroid-image';
+      this.imageElement.className = 'golden-asteroid';
+      this.imageElement.src = 'assets/images/asteroid.png';
+      this.imageElement.draggable = false;
+      this.imageElement.onmousedown = this.clickHandler;
+      this.imageElement.ontouchstart = this.clickHandler;
+      this.imageElement.ondragstart = this.clickHandler;
+      this.imageElement.onload = this.positionImage.bind(this);
+      if (this.imageElement.parentElement !== this.gameContainer) {
+        this.gameContainer.appendChild(this.imageElement);
+      }
+      this.imageElement.style.display = 'block';
+      this.imageElement.complete && this.positionImage();
+    }
+
+    positionImage() {
+      const width = this.imageElement.width;
+      const height = this.imageElement.height;
+      const containerWidth = this.gameContainer.clientWidth;
+      const containerHeight = Math.min(this.gameContainer.clientHeight, 800);
+      const maxX = Math.max(0, containerWidth - width);
+      const maxY = Math.max(0, containerHeight - height);
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+      this.imageElement.style.left = `${x}px`;
+      this.imageElement.style.top = `${y}px`;
+    }
+
+    hideAsteroidElements() {
+      this.buttonElement?.style && (this.buttonElement.style.display = 'none');
+      this.imageElement?.style && (this.imageElement.style.display = 'none');
+    }
   
     spawn(duration = 5000) {
         if (!this.active) {
@@ -115,6 +173,7 @@ class GoldenAsteroid {
           this.duration = duration;
           this.spawnTime = Date.now();
           this.cacheContainers();
+          this.cacheElements();
           
           if (gameSettings.simplifyGoldenAsteroid) {
             // Create a button in the countdown container
@@ -122,48 +181,16 @@ class GoldenAsteroid {
               this.active = false;
               return;
             }
-            
-            this.element = document.createElement('button');
-            this.element.className = 'golden-asteroid-button';
-            this.element.textContent = 'Golden Asteroid!';
-            
-            const clickHandler = this.onClick.bind(this);
-            this.element.addEventListener('mousedown', clickHandler);
-            this.element.addEventListener('touchstart', clickHandler);
-            
-            this.countdownContainer.appendChild(this.element);
+            this.imageElement?.style && (this.imageElement.style.display = 'none');
+            this.ensureButtonElement();
           } else {
             // Original image-based asteroid
             if (!this.gameContainer) {
               this.active = false;
               return;
             }
-
-            this.element = document.createElement('img');
-            this.element.className = 'golden-asteroid';
-            this.element.src = 'assets/images/asteroid.png';
-            this.element.draggable = false;
-
-            const clickHandler = this.onClick.bind(this);
-            this.element.addEventListener('mousedown', clickHandler);
-            this.element.addEventListener('touchstart', clickHandler);
-            this.element.addEventListener('dragstart', clickHandler);
-
-            this.element.onload = () => {
-              if (!this.element) return;
-              const width = this.element.width;
-              const height = this.element.height;
-              const containerWidth = this.gameContainer.clientWidth;
-              const containerHeight = Math.min(this.gameContainer.clientHeight, 800);
-              const maxX = Math.max(0, containerWidth - width);
-              const maxY = Math.max(0, containerHeight - height);
-              const x = Math.random() * maxX;
-              const y = Math.random() * maxY;
-              this.element.style.left = `${x}px`;
-              this.element.style.top = `${y}px`;
-            };
-
-            this.gameContainer.appendChild(this.element);
+            this.buttonElement?.style && (this.buttonElement.style.display = 'none');
+            this.ensureImageElement();
           }
     }
   }
@@ -202,10 +229,7 @@ class GoldenAsteroid {
   
     despawn() {
       this.active = false;
-      if (this.element) {
-        this.element.remove();
-        this.element = null;
-      }
+      this.hideAsteroidElements();
     }
 
     removeCountdownDisplay() {
@@ -291,19 +315,8 @@ class GoldenAsteroid {
 
       // Remove any leftover DOM elements from previous instances
       this.cacheContainers();
-      if (this.countdownContainer) {
-        const staleCountdown = this.countdownContainer.querySelector('.gold-asteroid-countdown');
-        if (staleCountdown && staleCountdown !== this.countdownElement) {
-          staleCountdown.remove();
-        }
-      }
-
-      if (this.gameContainer) {
-        const staleAsteroid = this.gameContainer.querySelector('.golden-asteroid');
-        if (staleAsteroid) {
-          staleAsteroid.remove();
-        }
-      }
+      this.cacheElements();
+      this.hideAsteroidElements();
 
       this.active = data.active;
       this.duration = data.duration;

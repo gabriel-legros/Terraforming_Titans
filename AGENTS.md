@@ -40,6 +40,9 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - **solis.js** and **solisUI.js** provide a shop and quest system.
 - The ResearchManager persists between planets so only advanced research remains after travel.
 
+# Recent updates
+- Golden asteroid visuals now stay loaded and hide between spawns to prevent image load failures.
+
 ## Prestige systems
 Two reset layers control long term progression:
 
