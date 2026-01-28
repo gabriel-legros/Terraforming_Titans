@@ -364,6 +364,14 @@ class ArtificialManager extends EffectableEntity {
         };
     }
 
+    calculateRingworldCost(landHa, widthKm) {
+        const land = Math.max(landHa || 0, 0);
+        const width = Math.max(widthKm || 0, 0);
+        const widthFactor = Math.max(width / 10_000, 0) ** 2;
+        const superalloysPerHa = SHELL_COST_CALIBRATION.superalloys / SHELL_COST_CALIBRATION.landHa;
+        return { superalloys: superalloysPerHa * land * 5 * widthFactor };
+    }
+
     calculateRingWorldAreaHectares(orbitRadiusAU, widthKm) {
         return calculateRingLandHectares(orbitRadiusAU, widthKm);
     }
@@ -685,8 +693,7 @@ class ArtificialManager extends EffectableEntity {
       const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
 
       const chosenName = (options?.name && String(options.name).trim()) || 'Artificial World';
-      const baseCost = this.calculateCost(radiusEarth);
-      const cost = { superalloys: baseCost.superalloys * 5 };
+      const cost = this.calculateRingworldCost(landHa, widthKm);
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
       if (!this.canCoverCost(cost)) return false;

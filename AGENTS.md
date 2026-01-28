@@ -44,6 +44,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Golden asteroid visuals now stay loaded and hide between spawns to prevent image load failures.
 - Ringworld setup now includes a target flux slider (1200–1500 W/m²).
 - Tartarus chapter 32 now enables ringworld construction in the Artificial Manager.
+- Ringworld construction cost now scales linearly with ringworld land area.
 
 ## Prestige systems
 Two reset layers control long term progression:

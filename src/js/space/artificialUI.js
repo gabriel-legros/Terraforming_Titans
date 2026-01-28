@@ -1660,10 +1660,10 @@ function renderCosts(project, selection, manager) {
   const type = project?.type || selection?.type || 'shell';
   const r = project ? project.radiusEarth : selection.radiusEarth;
   const area = project ? (project.areaHa || project.landHa) : manager.calculateAreaHectares(r);
-  const baseCost = project ? project.cost : manager.calculateCost(r);
+  const widthKm = selection?.widthKm || project?.widthKm || project?.ringWidthKm;
   const cost = type === 'ring'
-    ? { superalloys: project ? baseCost.superalloys : baseCost.superalloys * 5 }
-    : baseCost;
+    ? (project ? project.cost : manager.calculateRingworldCost(area, widthKm))
+    : (project ? project.cost : manager.calculateCost(r));
   const durationContext = project
     ? { durationMs: project.durationMs, worldCount: project.worldDivisor || 1 }
     : manager.getDurationContext(r);
