@@ -40,6 +40,7 @@ const artificialUICache = {
   gainFleetTooltip: null,
   effectShipEnergy: null,
   effectShipEnergyRow: null,
+  effectShipEnergyLabel: null,
   sector: null,
   sectorFilter: null,
   priority: null,
@@ -900,6 +901,7 @@ function ensureArtificialLayout() {
   shipValue.className = 'artificial-effect-value';
   artificialUICache.effectShipEnergy = shipValue;
   artificialUICache.effectShipEnergyRow = shipRow;
+  artificialUICache.effectShipEnergyLabel = shipLabel;
   shipRow.appendChild(shipLabel);
   shipRow.appendChild(shipValue);
   effectsList.appendChild(shipRow);
@@ -1540,7 +1542,7 @@ function renderCosts(project, selection, manager) {
   const area = project ? (project.areaHa || project.landHa) : manager.calculateAreaHectares(r);
   const baseCost = project ? project.cost : manager.calculateCost(r);
   const cost = type === 'ring'
-    ? { superalloys: baseCost.superalloys }
+    ? { superalloys: project ? baseCost.superalloys : baseCost.superalloys * 2 }
     : baseCost;
   const durationContext = project
     ? { durationMs: project.durationMs, worldCount: project.worldDivisor || 1 }
@@ -1614,7 +1616,12 @@ function renderEffects(project, selection) {
   const type = project?.type || selection?.type || 'shell';
   const r = project ? project.radiusEarth : selection.radiusEarth;
   if (artificialUICache.effectShipEnergyRow) {
-    artificialUICache.effectShipEnergyRow.classList.toggle('hidden', type === 'ring');
+    artificialUICache.effectShipEnergyRow.classList.toggle('hidden', false);
+  }
+  if (artificialUICache.effectShipEnergyLabel) {
+    artificialUICache.effectShipEnergyLabel.textContent = type === 'ring'
+      ? 'You will have to spin the Ringworld'
+      : 'Spaceship energy costs:';
   }
   if (artificialUICache.effectShipEnergy) {
     artificialUICache.effectShipEnergy.textContent = type === 'ring' ? '' : `x${r.toFixed(2)}`;
