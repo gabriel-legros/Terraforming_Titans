@@ -74,6 +74,7 @@
       super(config, name);
       this.evolutionPoints = 0;
       this.ecumenopolisDisabled = false;
+      this.biocortexIntegration = false;
       this.shopPurchases = this.createEmptyShopPurchases();
       this.shopElements = null;
     }
@@ -214,6 +215,15 @@
 
     applyEffects() {
       this.applyEvolutionEffects();
+      if (this.isCompleted && this.isBooleanFlagSet('biocortexIntegration')) {
+        addEffect({
+          target: 'global',
+          type: 'globalResearchBoost',
+          value: 9,
+          effectId: 'bioworld-biocortex-research',
+          sourceId: 'bioworld-biocortex',
+        });
+      }
     }
 
     applyEcumenopolisDisable() {
@@ -318,6 +328,11 @@
         shopRows,
       };
       this.updateUI();
+    }
+
+    update(deltaTime) {
+      super.update(deltaTime);
+      this.applyEffects();
     }
 
     updateUI() {

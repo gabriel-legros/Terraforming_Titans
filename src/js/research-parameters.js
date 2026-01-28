@@ -1973,6 +1973,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'biocortex_integration',
+        name: 'Biocortex-human integration',
+        description: 'Bioworlds and humans can work together to produce 10x more research.',
+        cost: { advancedResearch: 200000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'bioworld',
+            type: 'booleanFlag',
+            flagId: 'biocortexIntegration',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'foundry_worlds',
         name: 'Foundry Worlds',
         description: 'Planetary cores contain sextillion tons of metal... if we can get to it.',

@@ -515,6 +515,7 @@ The planet visualiser has been modularised into files covering core setup, light
   and records the largest completed accelerator.
 - Added a Mega Heat Sink advanced research that unlocks a repeatable mega project for accelerated planetary cooling.
 - Introduced a Bioworkforce advanced research that unlocks a lifeManager flag for future bioworkforce integration.
+- Added a Biocortex-human integration advanced research that grants a 10x global research multiplier once a Bioworld is complete.
 - Added a Nanotechnology Stage II advanced research that enables the nanotech manager's stage2 flag.
 - Nanocolony Stage II now adds metal consumption growth, a Maintenance II slider that cuts components and superconductor upkeep, and a components fabrication option.
 - Galaxy sectors now advertise conquest rewards, with default Habitable World payouts configured in sector parameters.
