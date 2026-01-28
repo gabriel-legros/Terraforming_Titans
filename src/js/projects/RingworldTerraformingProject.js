@@ -264,11 +264,11 @@ class RingworldTerraformingProject extends Project {
     notes.className = 'ringworld-terraforming-notes';
     const noteEntries = [
       'You must completely spin the ringworld to complete its terraforming.',
-      'Atmospheric and surface resources are stored until surface gravity reaches 0.1g.',
-      'Life will not grow on its own until surface gravity reaches 0.1g.',
+      'Atmospheric and surface resources are stored inside the ringworld until surface gravity reaches 0.1g.',
+      'Life will not grow on its own until surface gravity reaches 0.1g due to the atmosphere not being present.',
       'Spaceships have a base energy multiplier of 0.1, but faster spin adds a flat penalty per ton.',
       'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.  If planning on building another artificial world, it may be wise to do so before spinning the current one, to remain as light as possible.',
-      'The total energy required to import resources then spin, or spin then import is meant to be equivalent.'
+      'The total energy required to import resources then spin, or spin then import should be the same.'
     ];
     noteEntries.forEach((text) => {
       const item = document.createElement('li');

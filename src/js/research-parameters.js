@@ -1975,7 +1975,7 @@ const researchParameters = {
       {
         id: 'biocortex_integration',
         name: 'Biocortex-human integration',
-        description: 'Bioworlds and humans can work together.  Provides a x10 research multiplier on bioworld completion.',
+        description: 'Bioworlds can work together with humans and androids.  Provides a x10 research multiplier on bioworld completion.',
         cost: { advancedResearch: 200000000 },
         prerequisites: [],
         effects: [
