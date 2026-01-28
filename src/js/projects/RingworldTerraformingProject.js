@@ -263,7 +263,8 @@ class RingworldTerraformingProject extends Project {
       'Atmospheric and surface resources are stored until surface gravity reaches 0.1g.',
       'Life will not grow on its own until surface gravity reaches 0.1g.',
       'Faster spin increases spaceship energy costs.',
-      'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.'
+      'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.',
+      'The total energy required to import resources then spin, or spin then import is not exactly the same but it is on the same scale.'
     ];
     noteEntries.forEach((text) => {
       const item = document.createElement('li');
