@@ -157,7 +157,7 @@ class RingworldTerraformingProject extends Project {
   getShipEnergyMultiplier() {
     const edgeVelocity = this.getEdgeVelocityMetersPerSecond();
     const scaled = edgeVelocity / RINGWORLD_EDGE_VELOCITY_TARGET;
-    return Math.min(1, Math.max(RINGWORLD_MIN_SHIP_MULTIPLIER, scaled));
+    return Math.max(RINGWORLD_MIN_SHIP_MULTIPLIER, scaled);
   }
 
   renderUI(container) {
@@ -433,7 +433,7 @@ class RingworldTerraformingProject extends Project {
   }
 
   update() {
-    if (!this.enabled) {
+    if (!this.unlocked) {
       removeEffect(this.lowGravityTerraformingEffect);
       removeEffect(this.lowGravityLifeEffect);
       return;
