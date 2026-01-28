@@ -156,7 +156,7 @@ class RingworldTerraformingProject extends Project {
 
   getShipEnergyMultiplier() {
     const edgeVelocity = this.getEdgeVelocityMetersPerSecond();
-    const scaled = edgeVelocity / RINGWORLD_EDGE_VELOCITY_TARGET;
+    const scaled = Math.pow(edgeVelocity / RINGWORLD_EDGE_VELOCITY_TARGET,2);
     return Math.max(RINGWORLD_MIN_SHIP_MULTIPLIER, scaled);
   }
 
@@ -262,7 +262,8 @@ class RingworldTerraformingProject extends Project {
       'You must completely spin the ringworld to complete its terraforming.',
       'Atmospheric and surface resources are stored until surface gravity reaches 0.1g.',
       'Life will not grow on its own until surface gravity reaches 0.1g.',
-      'Faster spin increases spaceship energy costs.'
+      'Faster spin increases spaceship energy costs.',
+      'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.'
     ];
     noteEntries.forEach((text) => {
       const item = document.createElement('li');
@@ -341,7 +342,7 @@ class RingworldTerraformingProject extends Project {
     const displayRate = this.investing ? this.actualInvestRate : 0;
     this.el.rate.textContent = `${formatNumber(displayRate, true)} W`;
     this.el.status.textContent = statusLabel;
-    this.el.shipMultiplier.textContent = `${formatNumber(this.currentShipEnergyMultiplier, true, 2)}x`;
+    this.el.shipMultiplier.textContent = `${formatNumber(this.currentShipEnergyMultiplier, true, 2)}`;
     this.el.progressLabel.textContent = `${formatWattDays(investedValue)} / ${formatWattDays(this.energyRequired)} (${formatNumber(progressPercent, true, 1)}%)`;
     this.el.progressFill.style.width = `${progressPercent}%`;
     this.el.powerValue.textContent = `${formatNumber(this.power, true)} W`;
