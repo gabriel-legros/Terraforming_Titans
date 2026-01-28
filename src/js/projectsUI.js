@@ -912,8 +912,9 @@ function updateCostDisplay(project) {
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
         item.textContent = `${prefix}${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
         const continuous = project.isContinuous();
+        const costShortfall = project.costShortfallLastTick ?? project.shortfallLastTick;
         const highlight = continuous
-          ? project.shortfallLastTick && !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource))
+          ? costShortfall && !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource))
           : availableAmount < requiredAmount &&
             !(project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
         item.style.color = highlight ? 'red' : '';

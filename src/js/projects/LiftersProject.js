@@ -38,6 +38,7 @@ class LiftersProject extends TerraformingDurationProject {
     this.lastDysonEnergyPerSecond = 0;
     this.statusText = 'Idle';
     this.shortfallLastTick = false;
+    this.costShortfallLastTick = false;
     this.expansionShortfallLastTick = false;
     this.expansionProgress = 0;
     this.continuousThreshold = 1000;
@@ -392,6 +393,7 @@ class LiftersProject extends TerraformingDurationProject {
   }
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.costShortfallLastTick = false;
     if(!this.autoStart){
       return;
     }
@@ -452,6 +454,7 @@ class LiftersProject extends TerraformingDurationProject {
     }
     if (!canAffordBaseCost) {
       this.expansionShortfallLastTick = true;
+      this.costShortfallLastTick = true;
       return;
     }
 
@@ -535,6 +538,7 @@ class LiftersProject extends TerraformingDurationProject {
     }
 
     this.expansionShortfallLastTick = shortfall;
+    this.costShortfallLastTick = this.expansionShortfallLastTick;
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
