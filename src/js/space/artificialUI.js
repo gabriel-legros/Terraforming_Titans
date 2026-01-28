@@ -767,7 +767,7 @@ function ensureArtificialLayout() {
   ringAuto.type = 'button';
   ringAuto.className = 'artificial-secondary artificial-radius-auto';
   ringAuto.textContent = 'Auto';
-  ringAuto.title = 'Max out width and set orbit for a 5 hour construction time.';
+  ringAuto.title = 'Find the cheapest ring that still builds just under 5 hours.';
   artificialUICache.ringAuto = ringAuto;
   ringOrbitControls.appendChild(ringAuto);
   ringOrbitBox.appendChild(ringOrbitControls);
@@ -1268,10 +1268,10 @@ function ensureArtificialLayout() {
     artificialRingOrbitEditing = false;
     artificialRingWidthEditing = false;
     const widthBounds = getRingWidthBoundsKm();
-    const widthValue = widthBounds.max;
-    setRingWidthFields(widthValue, true);
-    const orbitValue = getAutoRingOrbitValue(widthValue);
-    setRingOrbitFields(orbitValue, true);
+    const orbitBounds = getRingOrbitBoundsAU();
+    const selection = artificialManager.getAutoRingSelection(orbitBounds, widthBounds);
+    setRingWidthFields(selection.widthKm, true);
+    setRingOrbitFields(selection.orbitRadiusAU, true);
     updateArtificialUI();
   });
   ringWidthRange.addEventListener('input', () => {

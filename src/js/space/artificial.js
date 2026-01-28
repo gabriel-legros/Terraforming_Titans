@@ -502,6 +502,39 @@ class ArtificialManager extends EffectableEntity {
         return Math.min(Math.max(snapped, bounds.min), bounds.max);
     }
 
+    getAutoRingSelection(bounds, widthBounds) {
+        const targetMs = MAX_SHELL_DURATION_MS;
+        const worldCount = this.getDurationContext(DEFAULT_RADIUS_BOUNDS.min).worldCount;
+        const batches = (targetMs * worldCount) / (this.constructionHoursPer50B * 3_600_000);
+        const targetLand = batches * 50_000_000_000;
+        const landFactor = 2 * Math.PI * AU_IN_KM * 100;
+        const widthStep = 1000;
+
+        const minWidth = Math.max(widthBounds.min, 0);
+        const maxWidth = Math.max(widthBounds.max, minWidth);
+        const minOrbit = Math.max(bounds.min, 0.01);
+        const maxOrbit = Math.max(bounds.max, minOrbit);
+
+        const widthForMaxOrbit = targetLand / (landFactor * maxOrbit);
+        const widthForMinOrbit = targetLand / (landFactor * minOrbit);
+
+        const feasibleMin = Math.max(minWidth, widthForMaxOrbit);
+        const feasibleMax = Math.min(maxWidth, widthForMinOrbit);
+
+        let widthKm = feasibleMin;
+        if (feasibleMin > feasibleMax) {
+            widthKm = Math.min(Math.max(minWidth, widthForMinOrbit), maxWidth);
+        }
+
+        widthKm = Math.floor(widthKm / widthStep) * widthStep;
+        widthKm = Math.min(Math.max(widthKm, minWidth), maxWidth);
+
+        let orbitRadiusAU = targetLand / (landFactor * widthKm);
+        orbitRadiusAU = Math.min(Math.max(orbitRadiusAU, minOrbit), maxOrbit);
+
+        return { orbitRadiusAU, widthKm };
+    }
+
     exceedsDurationLimit(durationMs) {
         return Math.max(durationMs || 0, 0) > MAX_SHELL_DURATION_MS;
     }
