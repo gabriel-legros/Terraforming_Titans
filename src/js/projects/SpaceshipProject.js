@@ -280,7 +280,8 @@ class SpaceshipProject extends Project {
         const baseCost = costPerShip[category][resource];
         const multiplier = this.getEffectiveCostMultiplier(category, resource) *
           this.getEffectiveSpaceshipCostMultiplier(category, resource);
-        const adjustedCost = baseCost * multiplier;
+        const efficiencyMultiplier = resource === 'energy' ? shipEfficiency : 1;
+        const adjustedCost = baseCost * multiplier * efficiencyMultiplier;
         if (adjustedCost > 0) {
           totalCost[category][resource] = adjustedCost;
         }

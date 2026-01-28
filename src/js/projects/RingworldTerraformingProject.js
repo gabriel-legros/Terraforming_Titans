@@ -1,13 +1,12 @@
 const RINGWORLD_TERRAFORM_ENERGY_REQUIRED = 1e21;
 const RINGWORLD_SHIP_ENERGY_MULTIPLIER = 0.1;
+const RINGWORLD_SHIP_BASE_ENERGY_PER_TON = 10000;
 const RINGWORLD_POWER_STEP_MIN = 1;
 const RINGWORLD_POWER_STEP_MAX = 1e100;
 const RINGWORLD_GRAVITY = 9.81;
 const RINGWORLD_AU_METERS = 1.496e11;
 const RINGWORLD_WATT_DAY_SECONDS = 86400;
 const RINGWORLD_TON_KG = 1000;
-const RINGWORLD_EDGE_VELOCITY_TARGET = 5000;
-const RINGWORLD_MIN_SHIP_MULTIPLIER = 0.1;
 const RINGWORLD_MIN_GRAVITY_RATIO = 0.1;
 
 function createRingworldStat(labelText) {
@@ -148,16 +147,12 @@ class RingworldTerraformingProject extends Project {
     return this.energyRequired > 0 ? Math.min(this.energyInvested / this.energyRequired, 1) : 0;
   }
 
-  getEdgeVelocityMetersPerSecond() {
+  getShipEnergyMultiplier() {
     const gravityRatio = this.getSurfaceGravityRatio();
     const radiusMeters = this.getRingOrbitRadiusAU() * RINGWORLD_AU_METERS;
-    return Math.sqrt(Math.max(0, gravityRatio * RINGWORLD_GRAVITY * radiusMeters));
-  }
-
-  getShipEnergyMultiplier() {
-    const edgeVelocity = this.getEdgeVelocityMetersPerSecond();
-    const scaled = Math.pow(edgeVelocity / RINGWORLD_EDGE_VELOCITY_TARGET,2);
-    return Math.max(RINGWORLD_MIN_SHIP_MULTIPLIER, scaled);
+    const spinEnergyPerTon = this.getSpinEnergyRequirementWattDays(1, radiusMeters) * gravityRatio;
+    const basePerTon = RINGWORLD_SHIP_BASE_ENERGY_PER_TON;
+    return (basePerTon * RINGWORLD_SHIP_ENERGY_MULTIPLIER + spinEnergyPerTon) / basePerTon;
   }
 
   renderUI(container) {

@@ -182,7 +182,7 @@ When adding new generation to the Random World Generator, place the new generati
 
 ## Artificial worlds
 - ArtificialManager powers the Space > Artificial subtab, letting players pick shell/ring/disk archetypes (future-ready), core type, star context, and radius within per-core bounds; it seeds a star/flux when allowed.
-- Ringworlds are now implemented behind `ArtificialManager.enableRingworld()`: they use a star-core selector (M/K unlocked by default), an orbital radius slider (AU), and a width slider (km). Ring construction currently costs **only superalloys** (shellworld scaling for now) and applies a ringworld-specific spaceship energy multiplier (0.1×).
+- Ringworlds are now implemented behind `ArtificialManager.enableRingworld()`: they use a star-core selector (M/K unlocked by default), an orbital radius slider (AU), and a width slider (km). Ring construction currently costs **only superalloys** (shellworld scaling for now) and applies a ringworld-specific spaceship energy multiplier that starts at 0.1 (1000 energy/ton) plus the per-ton spin energy for the current gravity level.
 - Ringworlds unlock a dedicated Ringworld Terraforming Protocol infrastructure project that tracks energy investment for spin-up with a sustained energy draw.
 - Ringworld Terraforming Protocol now derives spin energy requirements from total ringworld mass (construction cost + surface/atmosphere/colony tons), displays the mass, and credits partial investment when mass increases mid-spin.
 - Ringworld Terraforming Protocol applies a low-gravity lock below 0.1g that pauses terraforming resource updates and life growth until spin-up completes enough gravity.

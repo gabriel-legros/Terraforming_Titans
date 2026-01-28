@@ -90,7 +90,7 @@ const skillParameters = {
   ship_efficiency: {
     id: 'ship_efficiency',
     name: 'Advanced Logistics',
-    description: 'Ships import and export 20% more per rank and trade caps increase by 20% per rank',
+    description: 'Ships import and export 20% more per rank, energy use rises by 20% per rank, and trade caps increase by 20% per rank',
     cost: 1,
     maxRank: 5,
     effects: [

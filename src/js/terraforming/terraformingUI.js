@@ -2134,7 +2134,7 @@ function updateLifeBox() {
 
     if (!button) return;
 
-  const isRingworld = currentPlanetParameters.classification.type === 'ring';
+  const isRingworld = currentPlanetParameters.classification?.type === 'ring';
   if (isRingworld) {
       const ringProject = projectManager.projects.ringworldTerraforming;
       if (!ringProject.isCompleted) {
