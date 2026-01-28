@@ -28,13 +28,13 @@ const RINGWORLD_WIDTH_BOUNDS_KM = { min: 1_000, max: 1_000_000 };
 const RINGWORLD_TARGET_FLUX_WM2 = 1_300;
 const RINGWORLD_FLUX_BOUNDS_WM2 = { min: 1_200, max: 1_500 };
 const RINGWORLD_STAR_CORES = [
-    { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 60_000 },
-    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: true, disabledSource: "World 11", minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 60_000 },
-    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: true, disabledSource: "World 12", minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36, maxWidthKm: 60_000 },
-    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: true, disabledSource: "World 13", minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 60_000 },
-    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: "World 14", minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 60_000 },
-    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 60_000 },
-    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 60_000 }
+    { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 80_000 },
+    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: true, disabledSource: "World 11", minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 100_000 },
+    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: true, disabledSource: "World 12", minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36, maxWidthKm: 120_000 },
+    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: true, disabledSource: "World 13", minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 150_000 },
+    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: "World 14", minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 200_000 },
+    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 300_000 },
+    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 400_000 }
 ];
 const ARTIFICIAL_STAR_SYLLABLES = [
     'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'
