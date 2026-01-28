@@ -773,7 +773,9 @@ function resolveTypeOrbitLock({ forcedType, seedBase, star, params, currentPrese
   const presetSalt = normalizedEntry.presetSalt ?? 0x07734;
   const pickSeed = ((seedBase >>> 0) ^ (presetSalt >>> 0)) >>> 0;
   const rng = mulberry32(pickSeed);
-  const lockedPreset = presetList.length ? presetList[Math.floor(rng() * presetList.length)] : undefined;
+  const lockedPreset = presetList.length
+    ? (presetList.includes(currentPreset) ? currentPreset : presetList[Math.floor(rng() * presetList.length)])
+    : undefined;
   const presetAfterLock = lockedPreset || currentPreset;
   const fluxKeyOverride = normalizedEntry.fluxRangeKey;
   const fluxKey = fluxKeyOverride || fluxRangeKeyForPreset(lockedPreset) || fluxRangeKeyForPreset(presetAfterLock);
