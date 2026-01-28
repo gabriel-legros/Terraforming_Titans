@@ -20,6 +20,24 @@ class GhgFactory extends Building {
     return GhgFactory.getAutomationSettings();
   }
 
+  setReverseEnabled(value) {
+    if (this.count === 0) {
+      this._toggleRecipe();
+      return;
+    }
+    const enable = !!value;
+    if (!this.reverseEnabled && enable) {
+      const recipeKey = this.currentRecipeKey || 'ghg';
+      const resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
+      const available = resources.atmospheric[resourceName].value || 0;
+      if (available <= 0) {
+        this._toggleRecipe();
+        return;
+      }
+    }
+    this.reverseEnabled = enable;
+  }
+
   shouldDeactivateOnReverseEmpty() {
     const settings = getGhgAutomationSettings(this);
     return !settings.autoDisableAboveTemp;
