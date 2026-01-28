@@ -35,6 +35,8 @@ const artificialUICache = {
   ringFluxInput: null,
   ringFluxBox: null,
   ringFluxLabel: null,
+  ringAreaBox: null,
+  ringAreaLabel: null,
   durationValue: null,
   durationTooltip: null,
   gainEffective: null,
@@ -851,6 +853,16 @@ function ensureArtificialLayout() {
   ringFluxBox.appendChild(ringFluxControls);
   blueprint.appendChild(ringFluxBox);
   artificialUICache.ringFluxBox = ringFluxBox;
+
+  const ringAreaBox = document.createElement('div');
+  ringAreaBox.className = 'artificial-surface-box artificial-ring-area';
+  const ringAreaLabel = document.createElement('div');
+  ringAreaLabel.className = 'artificial-area';
+  ringAreaLabel.textContent = 'Land area ready for plating.';
+  ringAreaBox.appendChild(ringAreaLabel);
+  blueprint.appendChild(ringAreaBox);
+  artificialUICache.ringAreaBox = ringAreaBox;
+  artificialUICache.ringAreaLabel = ringAreaLabel;
 
   applyRingBounds();
 
@@ -1678,6 +1690,9 @@ function renderCosts(project, selection, manager) {
   if (artificialUICache.areaLabel) {
     artificialUICache.areaLabel.textContent = `${fmt(area, false, 2)} land`;
   }
+  if (type === 'ring' && artificialUICache.ringAreaLabel) {
+    artificialUICache.ringAreaLabel.textContent = `${fmt(area, false, 2)} land`;
+  }
   if (artificialUICache.costMetal) {
     artificialUICache.costMetal.textContent = type === 'ring' ? '—' : `${fmt(cost.metal, false, 2)}`;
   }
@@ -2009,6 +2024,10 @@ function updateArtificialUI(options = {}) {
   }
   artificialUICache.ringFluxBox.classList.toggle('hidden', !isRing);
   artificialUICache.ringFluxBox.style.display = isRing ? '' : 'none';
+  if (artificialUICache.ringAreaBox) {
+    artificialUICache.ringAreaBox.classList.toggle('hidden', !isRing);
+    artificialUICache.ringAreaBox.style.display = isRing ? '' : 'none';
+  }
 
   applyStarContextBounds();
   applyRadiusBounds();
