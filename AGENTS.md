@@ -45,6 +45,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Ringworld setup now includes a target flux slider (1200–1500 W/m²).
 - Tartarus chapter 32 now enables ringworld construction in the Artificial Manager.
 - Ringworld construction cost now scales linearly with ringworld land area.
+- Ringworld construction cost now scales linearly with radius and quadratically with width.
 - Ringworld Auto now targets the cheapest build that finishes just under 5 hours.
 
 ## Prestige systems
