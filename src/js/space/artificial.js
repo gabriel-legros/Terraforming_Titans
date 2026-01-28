@@ -889,6 +889,7 @@ class ArtificialManager extends EffectableEntity {
         const isRogue = isRing ? false : (project.isRogue === true || !allowStar);
         const distanceFromStarAU = isRogue ? 0 : (isRing ? (project.orbitRadiusAU || project.distanceFromStarAU || 1) : (project.distanceFromStarAU || 1));
         const starLuminosity = star ? star.luminositySolar : 0;
+        const spaceElevatorEffects = projectParameters.spaceElevator.attributes.completionEffect;
 
         const base = JSON.parse(JSON.stringify(defaultPlanetParameters || {}));
         this.resetInitialResources(base.resources);
@@ -937,11 +938,18 @@ class ArtificialManager extends EffectableEntity {
                     effectId: 'ringworld-disable-planetary-thrusters'
                 },
                 {
+                    target: 'researchManager',
+                    targetId: 'space_elevator',
+                    type: 'researchDisable',
+                    effectId: 'ringworld-disable-space-elevator-research'
+                },
+                {
                     target: 'project',
                     targetId: 'ringworldTerraforming',
                     type: 'enable',
                     effectId: 'ringworld-enable-terraforming-protocol'
-                }
+                },
+                ...spaceElevatorEffects
             ]
             : [
                 {

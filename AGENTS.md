@@ -200,6 +200,7 @@ When adding new generation to the Random World Generator, place the new generati
 - Leaving unfinished artificial worlds now records an Abandoned status with a resume Travel button plus enough snapshot data (including initial metal/silicon stockpiles) to rebuild their override on return.
 - Traveling from an artificial world to a story world is allowed even before terraforming the artificial world.
 - Artificial sector selection now sorts alphabetically and shows rich/poor resource bonuses in the dropdown.
+- Ringworlds now disable the Space Elevator research and inherit its completion effects as permanent world effects.
 
 # Story and System Utilities
 Story delivery gained a `system-pop-up` event type for immediate alerts, and Save & Settings now includes a Statistics panel that tracks total playtime across every planet. Designers can accelerate local testing with the `setGameSpeed` console command while Vega‑2 travel triggers a confirmation warning before the trip begins. Story projects are locked to their intended worlds and journal reconstruction fills in `$WGC_TEAM_LEADER$` placeholders when loading saves so narrative logs stay accurate. Journal reconstruction also restores story project step entries for completed chapters even if the live project state has moved on.

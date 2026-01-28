@@ -267,7 +267,7 @@ class RingworldTerraformingProject extends Project {
       'Atmospheric and surface resources are stored until surface gravity reaches 0.1g.',
       'Life will not grow on its own until surface gravity reaches 0.1g.',
       'Spaceships have a base energy multiplier of 0.1, but faster spin adds a flat penalty per ton.',
-      'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.',
+      'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.  If planning on building another artificial world, it may be wise to do so before spinning the current one, to remain as light as possible.',
       'The total energy required to import resources then spin, or spin then import is meant to be equivalent.'
     ];
     noteEntries.forEach((text) => {
