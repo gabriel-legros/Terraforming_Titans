@@ -745,6 +745,8 @@ function saveGameToSlot(slot) {
 }
 
 function saveGameToFile() {
+  patienceManager.claimDailyPatience();
+  updatePatienceUI();
   const gameState = getGameState();
 
   const saveData = JSON.stringify(gameState);
@@ -760,13 +762,13 @@ function saveGameToFile() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   a.download = `${safeWorldName}_${timestamp}.json`;
   a.click();
-  patienceManager.claimDailyPatience();
-  updatePatienceUI();
 
   URL.revokeObjectURL(url);
 }
 
 function saveGameToClipboard() {
+  patienceManager.claimDailyPatience();
+  updatePatienceUI();
   const saveData = JSON.stringify(getGameState());
   const clipboard = navigator?.clipboard;
   if (!clipboard || !clipboard.writeText) {
