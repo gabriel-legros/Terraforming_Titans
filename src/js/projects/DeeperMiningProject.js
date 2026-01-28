@@ -567,6 +567,15 @@ class DeeperMiningProject extends AndroidProject {
     this.updateUnderworldMiningMaxDepth();
     this.adjustActiveDuration();
   }
+
+  applyBooleanFlag(effect) {
+    super.applyBooleanFlag(effect);
+    if (effect.flagId === 'underworld_mining') {
+      this.updateUnderworldMiningMaxDepth();
+      this.adjustActiveDuration();
+      updateProjectUI?.(this.name);
+    }
+  }
 }
 
 try {
