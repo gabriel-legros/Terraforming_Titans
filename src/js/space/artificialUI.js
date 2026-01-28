@@ -1620,7 +1620,7 @@ function renderEffects(project, selection) {
   }
   if (artificialUICache.effectShipEnergyLabel) {
     artificialUICache.effectShipEnergyLabel.textContent = type === 'ring'
-      ? 'You will have to spin the Ringworld'
+      ? 'You will have to spin the Ringworld via an infrastructure special project.'
       : 'Spaceship energy costs:';
   }
   if (artificialUICache.effectShipEnergy) {
