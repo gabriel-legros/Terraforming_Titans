@@ -1249,6 +1249,9 @@ class LifeManager extends EffectableEntity {
   // Method to update life growth/decay based on zonal environmental conditions
   // Now uses global atmospheric resources instead of zonal atmosphere
   updateLife(deltaTime) {
+    if (this.isBooleanFlagSet('ringworldLowGravityLife')) {
+      return;
+    }
     const plan = this.buildAtmosphericPlan(deltaTime);
     const {
       design,

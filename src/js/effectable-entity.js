@@ -36,10 +36,7 @@ class EffectableEntity {
       // Identify effects to be removed
       const effectsToRemove = this.activeEffects.filter(effect => effect.sourceId === sourceId);
     
-      if (effectsToRemove.length === 0) {
-        console.log(`No effects found for source: ${sourceId}`);
-      } else {
-        console.log(`Removed effects from source: ${sourceId} on ${this.name}`);
+      if (effectsToRemove.length != 0) {
         
         // Remove boolean flags associated with the effects
         effectsToRemove.forEach(effect => {
@@ -53,12 +50,6 @@ class EffectableEntity {
     
         // Update the active effects array
         this.activeEffects = this.activeEffects.filter(effect => effect.sourceId !== sourceId);
-      }
-    
-      try {
-        this.applyActiveEffects();
-      } catch (error) {
-        console.error("Error applying active effects:", error);
       }
     
       return this; // Enables chaining

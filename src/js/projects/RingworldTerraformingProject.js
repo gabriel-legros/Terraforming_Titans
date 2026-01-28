@@ -8,6 +8,7 @@ const RINGWORLD_WATT_DAY_SECONDS = 86400;
 const RINGWORLD_TON_KG = 1000;
 const RINGWORLD_EDGE_VELOCITY_TARGET = 5000;
 const RINGWORLD_MIN_SHIP_MULTIPLIER = 0.1;
+const RINGWORLD_MIN_GRAVITY_RATIO = 0.1;
 
 function createRingworldStat(labelText) {
   const wrapper = document.createElement('div');
@@ -48,6 +49,22 @@ class RingworldTerraformingProject extends Project {
       effectId: `${this.name}-ship-energy-multiplier`,
       sourceId: this.name,
       name: this.displayName
+    };
+    this.lowGravityTerraformingEffect = {
+      target: 'terraforming',
+      type: 'booleanFlag',
+      flagId: 'ringworldLowGravityTerraforming',
+      value: true,
+      effectId: `${this.name}-low-gravity-terraforming`,
+      sourceId: this.name
+    };
+    this.lowGravityLifeEffect = {
+      target: 'lifeManager',
+      type: 'booleanFlag',
+      flagId: 'ringworldLowGravityLife',
+      value: true,
+      effectId: `${this.name}-low-gravity-life`,
+      sourceId: this.name
     };
     this.el = {};
   }
@@ -405,10 +422,20 @@ class RingworldTerraformingProject extends Project {
     this.currentShipEnergyMultiplier = this.getShipEnergyMultiplier();
     this.shipEnergyEffect.value = this.currentShipEnergyMultiplier;
     projectManager.addAndReplace(this.shipEnergyEffect);
+    const gravityRatio = this.getSurfaceGravityRatio();
+    if (gravityRatio < RINGWORLD_MIN_GRAVITY_RATIO) {
+      addEffect(this.lowGravityTerraformingEffect);
+      addEffect(this.lowGravityLifeEffect);
+    } else {
+      removeEffect(this.lowGravityTerraformingEffect);
+      removeEffect(this.lowGravityLifeEffect);
+    }
   }
 
   update() {
-    if(!this.enabled){
+    if (!this.enabled) {
+      removeEffect(this.lowGravityTerraformingEffect);
+      removeEffect(this.lowGravityLifeEffect);
       return;
     }
     this.applyEffects();

@@ -660,6 +660,7 @@ class Terraforming extends EffectableEntity{
         const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
         const realSeconds = deltaTime / 1000;
         if (durationSeconds <= 0) return;
+        if (this.isBooleanFlagSet('ringworldLowGravityTerraforming')) return;
 
 
         const zones = getZones();
@@ -878,8 +879,13 @@ class Terraforming extends EffectableEntity{
         );
         const surfacePressureBar = surfacePressurePa / 1e5;
 
-        const { emissivity, tau, contributions } =
+        const { emissivity, tau: computedTau, contributions: computedContributions } =
             calculateEmissivity(composition, surfacePressureBar, gSurface);
+        const ignoreLowGravityAtmosphere = options?.ignoreLowGravityAtmosphere === true;
+        const tau = this.isBooleanFlagSet('ringworldLowGravityTerraforming') && !ignoreLowGravityAtmosphere
+          ? 0
+          : computedTau;
+        const contributions = tau === 0 ? {} : computedContributions;
         this.temperature.emissivity = emissivity;
         this.temperature.opticalDepth = tau;
         this.temperature.opticalDepthContributions = contributions;

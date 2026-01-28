@@ -41,7 +41,7 @@ class GhgFactory extends Building {
     const restoreTempState = terraforming?.restoreTemperatureState?.bind(terraforming);
     const applyTempUpdate = () => {
       if (terraforming?.updateSurfaceTemperature) {
-        terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+        terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true, ignoreLowGravityAtmosphere: true });
       }
     };
     const readTrendTemperature = () => {
