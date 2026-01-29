@@ -62,7 +62,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
   }
 
   getAssignmentKeys() {
-    return [this.getActiveDysonKey(), 'spaceStorage', 'lifters', this.name];
+    return [this.getActiveDysonKey(), 'spaceStorage', 'lifters'];
   }
 
   normalizeAssignments() {
@@ -212,7 +212,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
 
   applyYardEffects() {
     this.normalizeAssignments();
-    const targets = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', this.name];
+    const targets = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters'];
 
     targets.forEach((key) => {
       const assigned = this.yardAssignments[key] || 0;
@@ -552,7 +552,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
       };
     };
 
-    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', this.name];
+    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters'];
     assignmentKeys.forEach((key) => {
       const project = projectManager.projects[key];
       const labelText = project.displayName;
@@ -592,7 +592,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     }
 
     const activeDyson = this.getActiveDysonKey();
-    const keys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', this.name];
+    const keys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters'];
     keys.forEach((key) => {
       const row = elements.rowElements[key];
       const current = this.yardAssignments[key] || 0;
