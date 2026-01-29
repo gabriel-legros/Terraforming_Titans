@@ -201,6 +201,16 @@ class Project extends EffectableEntity {
     return multiplier;
   }
 
+  getWorldBonus() {
+    let bonus = 0;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'effectiveTerraformedWorlds') {
+        bonus += effect.value || 0;
+      }
+    }
+    return bonus;
+  }
+
   updateDurationFromEffects() {
     const base = this.getBaseDuration();
     const newDuration = base * this.getDurationMultiplier();

@@ -543,6 +543,23 @@ const projectParameters = {
     unlocked: false,
     attributes: { canUseSpaceStorage: true, preserveProgressOnTravel: true }
   },
+  hephaestusMegaconstruction: {
+    type: 'HephaestusMegaconstructionProject',
+    name: 'Hephaestus Megaconstruction Yard',
+    category: 'giga',
+    cost: {
+      colony: {
+        superalloys: 500_000_000_000,
+        components: 5_000_000_000_000
+      }
+    },
+    duration: 18_000_000,
+    description: 'Assemble a legendary construction yard that accelerates repeatable mega and giga projects. Each completion adds a yard that can be assigned, counting as an extra world.  Project duration scales with terraformed worlds.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: { canUseSpaceStorage: true, preserveProgressOnTravel: true }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: 'Orbital Ring',

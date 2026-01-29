@@ -41,14 +41,9 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getDurationWithTerraformBonus(baseDuration) {
-    if (
-      typeof spaceManager === 'undefined' ||
-      typeof spaceManager.getTerraformedPlanetCountIncludingCurrent !== 'function'
-    ) {
-      return baseDuration;
-    }
     const count = spaceManager.getTerraformedPlanetCountIncludingCurrent();
-    return baseDuration / count;
+    const total = Math.max(1, count + this.getWorldBonus());
+    return baseDuration / total;
   }
 
   getTotalExpansions() {

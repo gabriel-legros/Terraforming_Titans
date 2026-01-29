@@ -698,7 +698,7 @@ const researchParameters = {
     {
       id: 'self_replicating_ships',
       name: 'Self Replicating Ships',
-      description: 'Unused spaceships duplicate themselves over time.',
+      description: 'Unused spaceships duplicate themselves over time from unused metal mining cap.',
       cost: { research: 10000000000 },
       prerequisites: [],
       disabled: true,
@@ -2320,6 +2320,20 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'methaneAmmoniaLifting',
             value: true
+          }
+        ]
+      },
+      {
+        id: 'hephaestus_megaconstruction',
+        name: 'Hephaestus Megaconstruction Yard',
+        description: 'Unlocks a giga-scale construction yard that accelerates repeatable mega and giga projects.',
+        cost: { advancedResearch: 40_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'hephaestusMegaconstruction',
+            type: 'enable'
           }
         ]
       },

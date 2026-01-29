@@ -583,6 +583,10 @@
     margin-bottom: 12px;
 }
 
+.project-summary-grid.four-col {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .project-summary-box {
     display: flex;
     flex-direction: column;
@@ -594,6 +598,64 @@
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+.hephaestus-weight-header {
+    text-align: center;
+}
+
+.hephaestus-assignment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hephaestus-assignment-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 1.2fr) minmax(60px, 0.4fr) 340px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 10px;
+}
+
+.hephaestus-assignment-controls {
+    display: grid;
+    grid-template-columns: 260px 48px;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.hephaestus-control-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 260px;
+}
+
+.hephaestus-step-header {
+    justify-content: flex-start;
+}
+
+.hephaestus-assignment-row .stat-value {
+    font-weight: 600;
+}
+
+.hephaestus-auto-assign {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9em;
+    flex: 1 1 auto;
+}
+
+.hephaestus-weight-input {
+    width: 48px;
+    min-width: 48px;
+    padding: 2px 4px;
 }
 
 /* --- Import Resources Card --- */

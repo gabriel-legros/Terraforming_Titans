@@ -545,6 +545,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Added a depletion progress objective type that completes when resources are at or below the target amount.
 - Added a Crusader Final Push story project on Umbra that unlocks after chapter 21.6b and awards alien artifacts for crusader deployments.
 - Added a Lifting advanced research that unlocks repeatable Lifters mega projects which persist across planets and draw on space storage.
+- Added the Hephaestus Megaconstruction Yard advanced research and giga project, with assignable yards that count as extra terraformed worlds for Dyson Swarm/Sphere, Space Storage, Lifters, and the yard itself (persisting across travel with step-button assignments).
 - Lifters gained a Dyson-style control card with a Run toggle, gas giant hydrogen harvesting, atmosphere stripping, per-lifter capacity readouts, and explicit use of unused Dyson Swarm energy.
 - Lifters now provide an automation toggle to permit colony energy usage when Dyson overflow energy cannot sustain operations.
 - Random worlds that include hazards now grant double RWG effects when terraformed, and the RWG UI displays the hazard bonus as an added count.
