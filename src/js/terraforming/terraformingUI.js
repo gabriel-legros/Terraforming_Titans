@@ -1971,15 +1971,20 @@ function updateLifeBox() {
 
     if (els.solarFluxTooltip && terraforming.luminosity.zonalFluxes) {
       const z = terraforming.luminosity.zonalFluxes;
+      const isRingworld = currentPlanetParameters?.classification?.type === 'ring';
       const lines = ['Average Solar Flux by zone'];
       getZones().forEach(zone => {
-        const flux = (z[zone] || 0) / 4;
+        const flux = isRingworld
+          ? (z[zone] || 0) * getZoneRatio(zone)
+          : (z[zone] || 0) / 4;
         const label = zone.charAt(0).toUpperCase() + zone.slice(1);
         lines.push(`${label}: ${flux.toFixed(1)}`);
       });
       lines.push(
         '',
-        'Modified solar flux is 4× the average across all zones.',
+        isRingworld
+          ? 'Modified solar flux uses the tropical zone flux multiplied by its day ratio.'
+          : 'Modified solar flux is 4× the average across all zones.',
         'Surface Solar Flux is the solar energy that reaches the ground.  It is calculated from modified solar flux and then reduced by Cloud & Haze penalty.'
       );
       setTooltipText(els.solarFluxTooltip, lines.join('\n'), els.tooltips, 'solarFlux');

@@ -1167,7 +1167,12 @@ class Terraforming extends EffectableEntity{
         this.temperature.trendValue = weightedTrendTemp;
         this.temperature.equilibriumTemperature = weightedEqTemp;
 
-        this.luminosity.modifiedSolarFluxUnpenalized = weightedFluxUnpenalized;
+        const isRingworld = currentPlanetParameters?.classification?.type === 'ring';
+        const averageFlux = weightedFluxUnpenalized / 4;
+        const ringworldFlux = this.luminosity.solarFlux;
+        this.luminosity.modifiedSolarFluxUnpenalized = isRingworld
+          ? ringworldFlux
+          : (averageFlux * 4);
         const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
         this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
 

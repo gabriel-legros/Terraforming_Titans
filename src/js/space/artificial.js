@@ -26,7 +26,7 @@ const AU_IN_KM = 149_597_870.7;
 const AU_TO_EARTH_RADII = 23_481.07;
 const RINGWORLD_WIDTH_BOUNDS_KM = { min: 1_000, max: 1_000_000 };
 const RINGWORLD_TARGET_FLUX_WM2 = 1_300;
-const RINGWORLD_FLUX_BOUNDS_WM2 = { min: 1_200, max: 1_500 };
+const RINGWORLD_FLUX_BOUNDS_WM2 = { min: 1_000, max: 1_400 };
 const RINGWORLD_STAR_CORES = [
     { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 80_000 },
     { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: true, disabledSource: "World 11", minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 100_000 },

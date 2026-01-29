@@ -69,7 +69,7 @@ function sphericalSegmentArea(phi1, phi2) {
 
   function getZoneRatio(zone) {
     if (currentPlanetParameters?.classification?.type === 'ring') {
-      return 0.25;
+      return 0.35;
     }
     switch (zone) {
       case 'tropical':

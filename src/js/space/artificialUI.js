@@ -87,7 +87,7 @@ const ARTIFICIAL_SECTOR_RESOURCE_LABELS = {
   oxygen: 'Oxygen'
 };
 
-const ARTIFICIAL_RING_FLUX_BOUNDS_WM2 = { min: 1_200, max: 1_500 };
+const ARTIFICIAL_RING_FLUX_BOUNDS_WM2 = { min: 1_200, max: 1_400 };
 const ARTIFICIAL_RING_FLUX_DEFAULT_WM2 = 1_300;
 
 function formatArtificialSectorResourceLabel(resourceKey) {
