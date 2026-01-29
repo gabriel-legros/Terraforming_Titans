@@ -624,7 +624,7 @@ class Project extends EffectableEntity {
   }
 
   showsInResourcesRate() {
-    return this.attributes?.showInResourcesRate !== false;
+    return this.repeatable && this.attributes?.showInResourcesRate !== false;
   }
 
   applyCompleteProject(effect) {
