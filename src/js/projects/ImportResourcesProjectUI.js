@@ -643,12 +643,14 @@ class ImportResourcesProjectUI {
     buttonRow.appendChild(plusButton);
     buttonRow.appendChild(maxButton);
 
+    const assignmentButtons = [zeroButton, minusButton, plusButton, maxButton];
+
     assignmentCell.appendChild(assignmentInfo);
     assignmentCell.appendChild(buttonRow);
 
     const autoAssignCell = document.createElement('div');
     autoAssignCell.classList.add('import-resources-cell', 'import-auto-assign-cell');
-    const autoAssignContainer = project.createAutoAssignSpaceshipsCheckbox();
+    const autoAssignContainer = project.createAutoAssignSpaceshipsCheckbox(assignmentButtons, assignmentCell);
     autoAssignCell.appendChild(autoAssignContainer);
 
     const totalGainCell = document.createElement('div');
@@ -724,6 +726,8 @@ class ImportResourcesProjectUI {
       minusButton,
       plusButton,
       autoAssignContainer,
+      assignmentButtons,
+      assignmentContainer: assignmentCell,
     };
 
     this.updateAssignmentButtons();
