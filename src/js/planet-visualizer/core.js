@@ -14,6 +14,10 @@
       this.sphere = null;
       this.ringMesh = null;
       this.surfaceMesh = null;
+      this.ringShadeMesh = null;
+      this.ringShadeMaterial = null;
+      this.ringShadeOffset = 0;
+      this.ringShadeDriftSpeed = 0.006;
 
       // Lighting and atmosphere
       this.sunLight = null;
@@ -440,6 +444,9 @@
         this.createAtmosphere();
       }
       this.createCloudSphere();
+      if (isRing) {
+        this.createRingShadePanels();
+      }
       this.createShipSystem();
 
       window.addEventListener('resize', this.onResize);
@@ -490,6 +497,7 @@
       if (isRing) {
         this.camera.position.set(0, this.cameraHeight, 0);
         this.camera.lookAt(1, 0, 0);
+        this.updateRingShadePanels(angle);
       } else {
         const ang = angle;
         this.camera.position.set(

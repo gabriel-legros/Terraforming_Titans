@@ -47,6 +47,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Ringworld construction cost now scales linearly with ringworld land area.
 - Ringworld construction cost now scales linearly with radius and quadratically with width.
 - Ringworld Auto now targets the cheapest build that finishes just under 5 hours.
+- Ringworld planet visualizer now renders metallic shade panels that cover half the ring and drift to create a moving day-night band over clouds.
 
 ## Prestige systems
 Two reset layers control long term progression:
