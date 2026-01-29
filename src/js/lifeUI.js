@@ -571,6 +571,7 @@ function initializeLifeTerraformingDesignerUI() {
             <td class="modify-buttons-cell" style="display: none;">
                  <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-10">-10</button>
                  <button class="life-tentative-btn life-tentative-minus" data-attribute="${attributeName}" data-change="-1">-1</button>
+                 <button class="life-tentative-btn life-tentative-zero" data-attribute="${attributeName}" data-change="0">0</button>
                  <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="1">+1</button>
                  <button class="life-tentative-btn life-tentative-plus" data-attribute="${attributeName}" data-change="10">+10</button>
             </td>
@@ -632,7 +633,9 @@ function initializeLifeTerraformingDesignerUI() {
           }
 
           let newValue;
-          if (event.shiftKey) {
+          if (changeAmount === 0) {
+              newValue = 0;
+          } else if (event.shiftKey) {
               if (changeAmount > 0) {
                   if (attributeName === 'optimalGrowthTemperature') {
                       newValue = Math.min(maxUpgrades, available);
