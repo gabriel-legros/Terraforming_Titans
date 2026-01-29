@@ -1098,7 +1098,7 @@ class Terraforming extends EffectableEntity{
         const previousMean = this.temperature.zones[zone].value;
         const capacity = z[zone].capacityPerArea;
 
-        const absorbedFlux = (1 - z[zone].albedo) * zoneFlux * 0.25;
+        const absorbedFlux = (1 - z[zone].albedo) * zoneFlux * (currentPlanetParameters?.classification?.type === 'ring' ? 1 : 0.25);
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
             : 0;

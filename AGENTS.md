@@ -49,6 +49,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Ringworld Auto now targets the cheapest build that finishes just under 5 hours.
 - Ringworld planet visualizer now renders metallic shade panels that cover half the ring and drift to create a moving day-night band over clouds.
 - Ringworld terraforming adds Shading Controls with a configurable strength slider and tropical flux readout, preserving the setting on travel when project settings are saved.
+- Ringworld terraforming now includes Auto Shade targeting (average/day/night trend) with a temperature goal and travel persistence.
 - Building production entries now show tooltips with base output and named multiplier sources.
 - Ship automation now locks Import Resources assignment buttons while automation is active.
 

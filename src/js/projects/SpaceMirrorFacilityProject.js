@@ -1513,7 +1513,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
 function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = false) {
   let ratio = 0;
   if (currentPlanetParameters?.classification?.type === 'ring') {
-    ratio = getZoneRatio();
+    ratio = getZoneRatio('tropical');
   }
   else {
     ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);

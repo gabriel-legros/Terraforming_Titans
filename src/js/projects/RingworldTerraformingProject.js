@@ -10,6 +10,7 @@ const RINGWORLD_MIN_GRAVITY_RATIO = 0.1;
 const RINGWORLD_SHADING_MIN = 0.25;
 const RINGWORLD_SHADING_MAX = 0.75;
 const RINGWORLD_SHADING_DEFAULT = 0.65;
+const RINGWORLD_SHADE_TARGET_DEFAULT = 293.15;
 
 function createRingworldStat(labelText) {
   const wrapper = document.createElement('div');
@@ -36,6 +37,9 @@ class RingworldTerraformingProject extends Project {
     this.power = config.attributes?.power || 0;
     this.step = config.attributes?.powerStep || RINGWORLD_POWER_STEP_MIN;
     this.shadingStrength = RINGWORLD_SHADING_DEFAULT;
+    this.autoShadeEnabled = false;
+    this.autoShadeMode = 'average';
+    this.autoShadeTarget = RINGWORLD_SHADE_TARGET_DEFAULT;
     this.investing = false;
     this.shortfallLastTick = false;
     this.actualInvestRate = 0;
@@ -199,10 +203,38 @@ class RingworldTerraformingProject extends Project {
     shadingPanel.appendChild(shadingControls);
 
     const shadingStats = document.createElement('div');
-    shadingStats.className = 'stats-grid two-col ringworld-terraforming-stats';
+    shadingStats.className = 'stats-grid three-col ringworld-terraforming-stats';
     const shadingStrength = createRingworldStat('Shading:');
     const tropicsFlux = createRingworldStat('Avg Tropics Flux:');
-    shadingStats.append(shadingStrength.wrapper, tropicsFlux.wrapper);
+    const autoShade = document.createElement('div');
+    autoShade.className = 'stat-item ringworld-stat ringworld-terraforming-auto-shade';
+    const autoShadeLabel = document.createElement('span');
+    autoShadeLabel.className = 'stat-label';
+    autoShadeLabel.textContent = 'Auto Shade:';
+    const autoShadeValue = document.createElement('span');
+    autoShadeValue.className = 'stat-value ringworld-terraforming-auto-shade-value';
+    const autoShadeToggle = document.createElement('input');
+    autoShadeToggle.type = 'checkbox';
+    autoShadeToggle.className = 'ringworld-terraforming-auto-shade-toggle';
+    const autoShadeMode = document.createElement('select');
+    autoShadeMode.className = 'ringworld-terraforming-auto-shade-mode';
+    [
+      { value: 'average', label: 'Average' },
+      { value: 'day', label: 'Day' },
+      { value: 'night', label: 'Night' }
+    ].forEach(optionData => {
+      const opt = document.createElement('option');
+      opt.value = optionData.value;
+      opt.textContent = optionData.label;
+      autoShadeMode.appendChild(opt);
+    });
+    const autoShadeTarget = document.createElement('input');
+    autoShadeTarget.type = 'number';
+    autoShadeTarget.className = 'ringworld-terraforming-auto-shade-target';
+    autoShadeTarget.step = '0.1';
+    autoShadeValue.append(autoShadeToggle, autoShadeMode, autoShadeTarget);
+    autoShade.append(autoShadeLabel, autoShadeValue);
+    shadingStats.append(shadingStrength.wrapper, tropicsFlux.wrapper, autoShade);
     shadingPanel.appendChild(shadingStats);
 
     const statusPanel = document.createElement('div');
@@ -321,6 +353,9 @@ class RingworldTerraformingProject extends Project {
       shadingStrength: shadingStrength.value,
       shadingFlux: tropicsFlux.value,
       shadingSlider,
+      autoShadeToggle,
+      autoShadeMode,
+      autoShadeTarget,
       surfaceGravity: surfaceGravity.value,
       rate: rate.value,
       status: status.value,
@@ -340,6 +375,22 @@ class RingworldTerraformingProject extends Project {
 
     shadingSlider.addEventListener('input', () => {
       this.setShadingStrength(parseFloat(shadingSlider.value));
+      this.updateUI();
+    });
+
+    autoShadeToggle.addEventListener('change', () => {
+      this.autoShadeEnabled = autoShadeToggle.checked;
+      this.updateUI();
+    });
+
+    autoShadeMode.addEventListener('change', () => {
+      this.autoShadeMode = autoShadeMode.value;
+      this.updateUI();
+    });
+
+    autoShadeTarget.addEventListener('change', () => {
+      const parsed = parseFloat(autoShadeTarget.value);
+      this.autoShadeTarget = gameSettings.useCelsius ? parsed + 273.15 : parsed;
       this.updateUI();
     });
 
@@ -404,6 +455,14 @@ class RingworldTerraformingProject extends Project {
     const shadedFlux = baseFlux * (1 - this.shadingStrength);
     this.el.shadingFlux.textContent = `${formatNumber(shadedFlux, false, 1)} W/m²`;
     this.el.shadingSlider.value = `${this.shadingStrength}`;
+    this.el.shadingSlider.disabled = this.autoShadeEnabled;
+
+    this.el.autoShadeToggle.checked = this.autoShadeEnabled;
+    this.el.autoShadeMode.value = this.autoShadeMode;
+    if (document.activeElement !== this.el.autoShadeTarget) {
+      const displayTarget = gameSettings.useCelsius ? (this.autoShadeTarget - 273.15) : this.autoShadeTarget;
+      this.el.autoShadeTarget.value = formatNumber(displayTarget, false, 2);
+    }
 
     this.el.investToggle.checked = this.investing;
     this.el.investToggle.disabled = this.isCompleted;
@@ -438,6 +497,80 @@ class RingworldTerraformingProject extends Project {
   setShadingStrength(value) {
     const next = Math.min(Math.max(value, RINGWORLD_SHADING_MIN), RINGWORLD_SHADING_MAX);
     this.shadingStrength = next;
+  }
+
+  getAutoShadeTrend(shadingStrength) {
+    const groundAlbedo = terraforming.luminosity.groundAlbedo;
+    const rotationPeriodH = Math.abs(terraforming.celestialParameters.rotationPeriod) || 24;
+    const gSurface = terraforming.celestialParameters.gravity || 9.81;
+    const compositionData = terraforming.calculateAtmosphericComposition();
+    const composition = compositionData.composition || {};
+    const surfacePressurePa = calculateAtmosphericPressure(
+      (compositionData.totalMass || 0) / 1000,
+      gSurface,
+      terraforming.celestialParameters.radius
+    );
+    const surfacePressureBar = surfacePressurePa / 1e5;
+    const aerosolsSW = {};
+    const area_m2 = 4 * Math.PI * Math.pow((terraforming.celestialParameters.radius || 1) * 1000, 2);
+    const calciteAerosol = terraforming.resources.atmospheric.calciteAerosol;
+    const mass_ton = calciteAerosol.value || 0;
+    aerosolsSW.calcite = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
+
+    const pct = terraforming.getZoneWeight('tropical');
+    const zoneArea = (terraforming.celestialParameters.surfaceArea || 0) * pct;
+    const zoneLiquidWater = terraforming.zonalSurface.tropical.liquidWater || 0;
+    const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(terraforming.resources.atmospheric, surfacePressurePa, gSurface);
+    const zoneFractions = calculateZonalSurfaceFractions(terraforming, 'tropical');
+    const flux = terraforming.luminosity.solarFlux * (1 - shadingStrength);
+
+    const temps = dayNightTemperaturesModel({
+      groundAlbedo,
+      flux,
+      rotationPeriodH,
+      surfacePressureBar,
+      composition,
+      gSurface,
+      aerosolsSW,
+      surfaceFractions: zoneFractions,
+      autoSlabOptions: {
+        atmosphereCapacity: atmosphericHeatCapacity,
+        zoneArea,
+        zoneLiquidWater
+      }
+    });
+
+    return temps;
+  }
+
+  roundToSigFigs(value, sigFigs) {
+    if (value === 0) {
+      return 0;
+    }
+    const exp = Math.ceil(Math.log10(Math.abs(value)));
+    const scale = Math.pow(10, sigFigs - exp);
+    return Math.round(value * scale) / scale;
+  }
+
+  applyAutoShade() {
+    const target = this.autoShadeTarget;
+    let low = RINGWORLD_SHADING_MIN;
+    let high = RINGWORLD_SHADING_MAX;
+    let mid = this.shadingStrength;
+    for (let i = 0; i < 24; i++) {
+      mid = (low + high) / 2;
+      const temps = this.getAutoShadeTrend(mid);
+      const value = this.autoShadeMode === 'day'
+        ? temps.day
+        : (this.autoShadeMode === 'night' ? temps.night : temps.mean);
+      if (value > target) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    const rounded = this.roundToSigFigs(mid, 6);
+    this.setShadingStrength(rounded);
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
@@ -503,6 +636,9 @@ class RingworldTerraformingProject extends Project {
       removeEffect(this.lowGravityLifeEffect);
       return;
     }
+    if (this.autoShadeEnabled) {
+      this.applyAutoShade();
+    }
     this.applyEffects();
     if (!this.investing || this.isCompleted) {
       return;
@@ -519,6 +655,9 @@ class RingworldTerraformingProject extends Project {
       currentMassTons: this.currentMassTons,
       lastMassTons: this.lastMassTons,
       shadingStrength: this.shadingStrength,
+      autoShadeEnabled: this.autoShadeEnabled,
+      autoShadeMode: this.autoShadeMode,
+      autoShadeTarget: this.autoShadeTarget,
     };
   }
 
@@ -532,6 +671,9 @@ class RingworldTerraformingProject extends Project {
     this.currentMassTons = state.currentMassTons || 0;
     this.lastMassTons = state.lastMassTons || 0;
     this.setShadingStrength(state.shadingStrength ?? this.shadingStrength);
+    this.autoShadeEnabled = state.autoShadeEnabled === true;
+    this.autoShadeMode = state.autoShadeMode || this.autoShadeMode;
+    this.autoShadeTarget = state.autoShadeTarget || this.autoShadeTarget;
   }
 
   saveTravelState() {
@@ -540,6 +682,9 @@ class RingworldTerraformingProject extends Project {
     }
     return {
       shadingStrength: this.shadingStrength,
+      autoShadeEnabled: this.autoShadeEnabled,
+      autoShadeMode: this.autoShadeMode,
+      autoShadeTarget: this.autoShadeTarget,
     };
   }
 
@@ -548,6 +693,9 @@ class RingworldTerraformingProject extends Project {
       return;
     }
     this.setShadingStrength(state.shadingStrength ?? this.shadingStrength);
+    this.autoShadeEnabled = state.autoShadeEnabled === true;
+    this.autoShadeMode = state.autoShadeMode || this.autoShadeMode;
+    this.autoShadeTarget = state.autoShadeTarget || this.autoShadeTarget;
   }
 }
 
