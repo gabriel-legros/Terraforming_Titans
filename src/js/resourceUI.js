@@ -339,6 +339,115 @@ function updateRateTable(container, entries, formatter) {
   });
 }
 
+function updateRateTableWithCooldown(container, entries, formatter, frameDelta) {
+  if (!container) return false;
+  const info = container._info;
+  let cooldown = container._cooldown;
+  if (!cooldown) {
+    cooldown = { timers: {}, lastValues: {}, lastTotal: 0, totalTimer: 0 };
+    container._cooldown = cooldown;
+  }
+  const activeEntries = [];
+  const activeSet = new Set();
+  entries.forEach(([name, val]) => {
+    if (Math.abs(val) >= 1e-12) {
+      activeEntries.push([name, val]);
+      activeSet.add(name);
+      cooldown.timers[name] = 1;
+      cooldown.lastValues[name] = val;
+    }
+  });
+
+  const displayEntries = [];
+  activeEntries.forEach(([name, val]) => {
+    displayEntries.push([name, val, 0]);
+  });
+
+  const timers = cooldown.timers;
+  const lastValues = cooldown.lastValues;
+  for (const name in timers) {
+    if (activeSet.has(name)) continue;
+    let timer = timers[name] || 0;
+    if (timer > 0) {
+      timer = Math.max(0, timer - frameDelta);
+    }
+    if (timer > 0) {
+      timers[name] = timer;
+      const last = lastValues[name] || 0;
+      displayEntries.push([name, 0, last]);
+    } else {
+      delete timers[name];
+      delete lastValues[name];
+    }
+  }
+
+  const total = activeEntries.reduce((sum, [, val]) => sum + val, 0);
+  let totalTimer = cooldown.totalTimer || 0;
+  if (Math.abs(total) >= 1e-12) {
+    cooldown.lastTotal = total;
+    totalTimer = 1;
+  } else if (totalTimer > 0) {
+    totalTimer = Math.max(0, totalTimer - frameDelta);
+  }
+  cooldown.totalTimer = totalTimer;
+
+  if (info.totalRight) {
+    if (Math.abs(total) >= 1e-12) {
+      info.totalRight.textContent = formatter(total);
+      info.totalRow.style.display = 'table-row';
+    } else if (totalTimer > 0) {
+      info.totalRight.textContent = `${formatter(0)} (${formatter(cooldown.lastTotal)})`;
+      info.totalRow.style.display = 'table-row';
+    } else {
+      info.totalRow.style.display = 'none';
+    }
+  }
+
+  const used = new Set();
+  displayEntries.sort((a, b) => {
+    const aVal = a[1] !== 0 ? a[1] : a[2];
+    const bVal = b[1] !== 0 ? b[1] : b[2];
+    return bVal - aVal;
+  }).forEach(([name, val, last]) => {
+    let rowInfo = info.rows.get(name);
+    if (!rowInfo) {
+      const row = document.createElement('div');
+      row.style.display = 'table-row';
+      const left = document.createElement('div');
+      left.style.display = 'table-cell';
+      left.style.textAlign = 'left';
+      left.style.paddingRight = '10px';
+      const right = document.createElement('div');
+      right.style.display = 'table-cell';
+      right.style.textAlign = 'right';
+      right.style.minWidth = '90px';
+      right.style.whiteSpace = 'nowrap';
+      row.appendChild(left);
+      row.appendChild(right);
+      info.table.appendChild(row);
+      rowInfo = { row, left, right };
+      info.rows.set(name, rowInfo);
+    }
+    const text = (last && Math.abs(last) >= 1e-12)
+      ? `${formatter(val)} (${formatter(last)})`
+      : formatter(val);
+    if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
+    if (rowInfo.right.textContent !== text) rowInfo.right.textContent = text;
+    rowInfo.row.style.display = 'table-row';
+    info.table.appendChild(rowInfo.row);
+    used.add(name);
+  });
+
+  info.rows.forEach((rowInfo, name) => {
+    if (!used.has(name)) {
+      if (rowInfo.row.parentNode) rowInfo.row.parentNode.removeChild(rowInfo.row);
+      info.rows.delete(name);
+    }
+  });
+
+  return displayEntries.length > 0 || totalTimer > 0;
+}
+
 function isAutobuildTrackedResource(resource) {
   return resource.category === 'colony'
     || (resource.category === 'special' && resource.name === 'orbitalDebris');
@@ -1481,15 +1590,25 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   if (productionDiv) {
     const productionEntries = Object.entries(resource.productionRateBySource)
       .filter(([source, rate]) => rate !== 0 && source !== 'Overflow' && source !== 'Overflow (not summed)');
-    updateRateTable(productionDiv, productionEntries, r => `${formatNumber(r, false, 2)}/s`);
-    productionDiv.style.display = productionEntries.length > 0 ? 'block' : 'none';
+    const showProduction = updateRateTableWithCooldown(
+      productionDiv,
+      productionEntries,
+      r => `${formatNumber(r, false, 2)}/s`,
+      frameDelta
+    );
+    productionDiv.style.display = showProduction ? 'block' : 'none';
   }
 
   if (consumptionDiv) {
     const consumptionEntries = Object.entries(consumptionDisplay.bySource)
       .filter(([source, rate]) => rate !== 0 && source !== 'Overflow (not summed)');
-    updateRateTable(consumptionDiv, consumptionEntries, r => `${formatNumber(r, false, 2)}/s`);
-    consumptionDiv.style.display = consumptionEntries.length > 0 ? 'block' : 'none';
+    const showConsumption = updateRateTableWithCooldown(
+      consumptionDiv,
+      consumptionEntries,
+      r => `${formatNumber(r, false, 2)}/s`,
+      frameDelta
+    );
+    consumptionDiv.style.display = showConsumption ? 'block' : 'none';
   }
 
   if (overflowDiv) {
