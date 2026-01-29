@@ -69,7 +69,8 @@ function sphericalSegmentArea(phi1, phi2) {
 
   function getZoneRatio(zone) {
     if (currentPlanetParameters?.classification?.type === 'ring') {
-      return 0.35;
+      const shadingStrength = projectManager?.projects?.ringworldTerraforming?.shadingStrength ?? 0.65;
+      return 1 - shadingStrength;
     }
     switch (zone) {
       case 'tropical':
@@ -170,4 +171,3 @@ if (typeof module !== "undefined" && module.exports) {
   window.getZonePercentage = getZonePercentage;
   window.estimateCoverage  = estimateCoverage;
 }
-

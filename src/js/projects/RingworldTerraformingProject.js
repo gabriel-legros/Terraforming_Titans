@@ -7,6 +7,9 @@ const RINGWORLD_AU_METERS = 1.496e11;
 const RINGWORLD_WATT_DAY_SECONDS = 86400;
 const RINGWORLD_TON_KG = 1000;
 const RINGWORLD_MIN_GRAVITY_RATIO = 0.1;
+const RINGWORLD_SHADING_MIN = 0.25;
+const RINGWORLD_SHADING_MAX = 0.75;
+const RINGWORLD_SHADING_DEFAULT = 0.65;
 
 function createRingworldStat(labelText) {
   const wrapper = document.createElement('div');
@@ -32,6 +35,7 @@ class RingworldTerraformingProject extends Project {
     this.energyInvested = 0;
     this.power = config.attributes?.power || 0;
     this.step = config.attributes?.powerStep || RINGWORLD_POWER_STEP_MIN;
+    this.shadingStrength = RINGWORLD_SHADING_DEFAULT;
     this.investing = false;
     this.shortfallLastTick = false;
     this.actualInvestRate = 0;
@@ -75,6 +79,7 @@ class RingworldTerraformingProject extends Project {
       sourceId: this.name
     };
     this.el = {};
+    this.setShadingStrength(config.attributes?.shadingStrength ?? RINGWORLD_SHADING_DEFAULT);
   }
 
   shouldHideStartBar() {
@@ -168,6 +173,37 @@ class RingworldTerraformingProject extends Project {
 
     const layout = document.createElement('div');
     layout.className = 'ringworld-terraforming-layout';
+
+    const shadingPanel = document.createElement('div');
+    shadingPanel.className = 'ringworld-terraforming-panel ringworld-terraforming-shading';
+    const shadingTitle = document.createElement('div');
+    shadingTitle.className = 'ringworld-section-title';
+    shadingTitle.textContent = 'Shading Controls';
+    shadingPanel.appendChild(shadingTitle);
+
+    const shadingText = document.createElement('div');
+    shadingText.className = 'ringworld-terraforming-shading-text';
+    shadingText.textContent = 'Ringworlds solar flux is perfect, but too much exposure would lead to overheating.  Shades can be used to control this.';
+    shadingPanel.appendChild(shadingText);
+
+    const shadingControls = document.createElement('div');
+    shadingControls.className = 'ringworld-terraforming-shading-controls';
+    const shadingSlider = document.createElement('input');
+    shadingSlider.type = 'range';
+    shadingSlider.min = `${RINGWORLD_SHADING_MIN}`;
+    shadingSlider.max = `${RINGWORLD_SHADING_MAX}`;
+    shadingSlider.step = '0.01';
+    shadingSlider.value = `${this.shadingStrength}`;
+    shadingSlider.style.width = '100%';
+    shadingControls.append(shadingSlider);
+    shadingPanel.appendChild(shadingControls);
+
+    const shadingStats = document.createElement('div');
+    shadingStats.className = 'stats-grid two-col ringworld-terraforming-stats';
+    const shadingStrength = createRingworldStat('Shading:');
+    const tropicsFlux = createRingworldStat('Avg Tropics Flux:');
+    shadingStats.append(shadingStrength.wrapper, tropicsFlux.wrapper);
+    shadingPanel.appendChild(shadingStats);
 
     const statusPanel = document.createElement('div');
     statusPanel.className = 'ringworld-terraforming-panel';
@@ -277,11 +313,14 @@ class RingworldTerraformingProject extends Project {
     });
     notesPanel.appendChild(notes);
 
-    layout.append(statusPanel, notesPanel);
+    layout.append(shadingPanel, statusPanel, notesPanel);
     wrapper.appendChild(layout);
     container.appendChild(wrapper);
 
     this.el = {
+      shadingStrength: shadingStrength.value,
+      shadingFlux: tropicsFlux.value,
+      shadingSlider,
       surfaceGravity: surfaceGravity.value,
       rate: rate.value,
       status: status.value,
@@ -298,6 +337,11 @@ class RingworldTerraformingProject extends Project {
       stepDown,
       stepUp
     };
+
+    shadingSlider.addEventListener('input', () => {
+      this.setShadingStrength(parseFloat(shadingSlider.value));
+      this.updateUI();
+    });
 
     investToggle.addEventListener('change', () => {
       this.setInvesting(investToggle.checked);
@@ -355,6 +399,12 @@ class RingworldTerraformingProject extends Project {
     this.el.powerValue.textContent = `${formatNumber(this.power, true)} W`;
     this.el.massTotal.textContent = `${formatNumber(this.currentMassTons, true)} t`;
 
+    this.el.shadingStrength.textContent = `${formatNumber(this.shadingStrength, false, 2)}`;
+    const baseFlux = terraforming?.luminosity?.solarFlux || 0;
+    const shadedFlux = baseFlux * (1 - this.shadingStrength);
+    this.el.shadingFlux.textContent = `${formatNumber(shadedFlux, false, 1)} W/m²`;
+    this.el.shadingSlider.value = `${this.shadingStrength}`;
+
     this.el.investToggle.checked = this.investing;
     this.el.investToggle.disabled = this.isCompleted;
     this.el.powerZero.disabled = this.isCompleted;
@@ -383,6 +433,11 @@ class RingworldTerraformingProject extends Project {
   adjustStep(multiplier) {
     const next = Math.round(this.step * multiplier);
     this.step = Math.min(Math.max(next, RINGWORLD_POWER_STEP_MIN), RINGWORLD_POWER_STEP_MAX);
+  }
+
+  setShadingStrength(value) {
+    const next = Math.min(Math.max(value, RINGWORLD_SHADING_MIN), RINGWORLD_SHADING_MAX);
+    this.shadingStrength = next;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
@@ -463,6 +518,7 @@ class RingworldTerraformingProject extends Project {
       investing: this.investing,
       currentMassTons: this.currentMassTons,
       lastMassTons: this.lastMassTons,
+      shadingStrength: this.shadingStrength,
     };
   }
 
@@ -475,6 +531,23 @@ class RingworldTerraformingProject extends Project {
     this.isActive = this.investing;
     this.currentMassTons = state.currentMassTons || 0;
     this.lastMassTons = state.lastMassTons || 0;
+    this.setShadingStrength(state.shadingStrength ?? this.shadingStrength);
+  }
+
+  saveTravelState() {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return {};
+    }
+    return {
+      shadingStrength: this.shadingStrength,
+    };
+  }
+
+  loadTravelState(state = {}) {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return;
+    }
+    this.setShadingStrength(state.shadingStrength ?? this.shadingStrength);
   }
 }
 
