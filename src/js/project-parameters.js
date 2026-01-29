@@ -199,7 +199,7 @@ const projectParameters = {
       }
     },
     duration: 120000,
-    description: "Deepens all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.",
+    description: "Deepen all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.",
     repeatable: true,
     maxDepth: 10000,
     unlocked : false,
@@ -696,7 +696,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Taps into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub on a fully terraformed world. Can only start once deeper mining reaches 50,000 depth. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(initial land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
+    description: 'Tap into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub on a fully terraformed world. Can only start once deeper mining reaches 50,000 depth. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(initial land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
     repeatable: false,
     unlocked: false,
     attributes: {
