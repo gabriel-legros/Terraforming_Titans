@@ -1975,7 +1975,7 @@ function updateLifeBox() {
       const lines = ['Average Solar Flux by zone'];
       getZones().forEach(zone => {
         const flux = isRingworld
-          ? (z[zone] || 0) * getZoneRatio(zone)
+          ? terraforming.luminosity.solarFlux * getZoneRatio(zone)
           : (z[zone] || 0) / 4;
         const label = zone.charAt(0).toUpperCase() + zone.slice(1);
         lines.push(`${label}: ${flux.toFixed(1)}`);

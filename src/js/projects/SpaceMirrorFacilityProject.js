@@ -1511,7 +1511,13 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
 }
 
 function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = false) {
-  const ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
+  let ratio = 0;
+  if (currentPlanetParameters?.classification?.type === 'ring') {
+    ratio = getZoneRatio();
+  }
+  else {
+    ratio = angleAdjusted ? getZoneRatio(zone) : (getZoneRatio(zone) / 0.25);
+  }
   const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
   const baseSolar = terraforming.luminosity.solarFlux; // W/m^²
 
