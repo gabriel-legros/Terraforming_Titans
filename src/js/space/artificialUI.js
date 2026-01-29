@@ -1670,7 +1670,7 @@ function renderCosts(project, selection, manager) {
 
   const fmt = formatNumber || ((n) => n);
   if (artificialUICache.costMetalRow) {
-    artificialUICache.costMetalRow.classList.toggle('hidden', type === 'ring');
+    artificialUICache.costMetalRow.classList.remove('hidden');
   }
   if (type === 'ring') {
     const orbitAU = project?.orbitRadiusAU || selection?.orbitRadiusAU || project?.distanceFromStarAU || 0.1;
@@ -1694,7 +1694,7 @@ function renderCosts(project, selection, manager) {
     artificialUICache.ringAreaLabel.textContent = `${fmt(area, false, 2)} land`;
   }
   if (artificialUICache.costMetal) {
-    artificialUICache.costMetal.textContent = type === 'ring' ? '—' : `${fmt(cost.metal, false, 2)}`;
+    artificialUICache.costMetal.textContent = `${fmt(cost.metal, false, 2)}`;
   }
   if (artificialUICache.costSuperalloy) {
     artificialUICache.costSuperalloy.textContent = `${fmt(cost.superalloys, false, 2)}`;

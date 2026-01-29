@@ -369,7 +369,8 @@ class ArtificialManager extends EffectableEntity {
         const width = Math.max(widthKm || 0, 0);
         const widthFactor = Math.max(width / 10_000, 0);
         const superalloysPerHa = SHELL_COST_CALIBRATION.superalloys / SHELL_COST_CALIBRATION.landHa;
-        return { superalloys: superalloysPerHa * land * 100 * widthFactor };
+        const superalloys = superalloysPerHa * land * 100 * widthFactor;
+        return { superalloys, metal: superalloys };
     }
 
     calculateRingWorldAreaHectares(orbitRadiusAU, widthKm) {
