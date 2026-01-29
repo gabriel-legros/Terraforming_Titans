@@ -400,7 +400,7 @@ const buildingsParameters = {
   storageDepot: {
     name: 'Storage Depot',
     category: 'storage',
-    description: 'A facility for storing large quantities of essential resources like metal, water, and food.',
+    description: 'A facility for storing large quantities of essential resources like metal and food.',
     cost: { colony: { metal: 100 } },
     consumption: {},
     production: {},

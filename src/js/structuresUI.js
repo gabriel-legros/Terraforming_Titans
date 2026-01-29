@@ -1509,6 +1509,9 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function resolveCostMultiplierSourceName(effect) {
+    if (effect.sourceId === 'wgcRD') {
+      return 'Warp Gate Command R&D';
+    }
     const rwgName = formatRwgMultiplierSource(effect.sourceId);
     const skillName = skillManager?.skills?.[effect.sourceId]?.name;
     const awakeningName = skillName ? `Awakening: ${skillName}` : null;
@@ -1609,6 +1612,43 @@ function updateDecreaseButtonText(button, buildCount) {
         value: resourceMultiplier
       });
     }
+
+    if (multipliers.length) {
+      lines.push('Multipliers:');
+      multipliers.forEach(multiplier => {
+        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+      });
+    } else {
+      lines.push('Multipliers: none');
+    }
+
+    return lines.join('\n');
+  }
+
+  function buildStructureProductionTooltip(structure, category, resource, buildCount) {
+    const baseProduction = structure.production?.[category]?.[resource] ?? 0;
+    const totalBaseProduction = baseProduction * buildCount;
+    const lines = [`Base production: ${formatNumber(totalBaseProduction, true, 2)}`];
+    const multipliers = [];
+
+    structure.activeEffects.forEach(effect => {
+      if (effect.type === 'productionMultiplier') {
+        if (effect.value === 1) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+        return;
+      }
+      if (effect.type === 'resourceProductionMultiplier') {
+        if (effect.resourceCategory !== category || effect.resourceTarget !== resource) return;
+        if (effect.value === 1) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+      }
+    });
 
     if (multipliers.length) {
       lines.push('Multipliers:');
@@ -2180,6 +2220,13 @@ function updateDecreaseButtonText(button, buildCount) {
               resource,
               buildCount
             };
+          } else if (sec.key === 'production') {
+            span._productionTooltipContext = {
+              structure,
+              category,
+              resource,
+              buildCount
+            };
           }
           if (resObj) {
             const netRate = (resObj.productionRate || 0) - (resObj.consumptionRate || 0);
@@ -2349,7 +2396,7 @@ function updateDecreaseButtonText(button, buildCount) {
       } else {
         sec.keys.forEach((key, i) => {
           const span = document.createElement('span');
-          if (sec.key === 'maintenance') {
+          if (sec.key === 'maintenance' || sec.key === 'production') {
             const textSpan = document.createElement('span');
             span.classList.add('info-tooltip-icon');
             span.style.fontFamily = 'inherit';
@@ -2357,20 +2404,38 @@ function updateDecreaseButtonText(button, buildCount) {
             span._textSpan = textSpan;
 
             const tooltip = attachDynamicInfoTooltip(span, '');
-            span._maintenanceTooltip = tooltip;
-            span._maintenanceTooltipCache = {};
-            span._updateMaintenanceTooltip = () => {
-              const context = span._maintenanceTooltipContext;
-              const text = buildStructureMaintenanceTooltip(
-                context.structure,
-                context.resource,
-                context.buildCount
-              );
-              setTooltipText(tooltip, text, span._maintenanceTooltipCache, 'text');
-            };
-            span.addEventListener('mouseenter', span._updateMaintenanceTooltip);
-            span.addEventListener('focusin', span._updateMaintenanceTooltip);
-            span.addEventListener('pointerdown', span._updateMaintenanceTooltip);
+            if (sec.key === 'maintenance') {
+              span._maintenanceTooltip = tooltip;
+              span._maintenanceTooltipCache = {};
+              span._updateMaintenanceTooltip = () => {
+                const context = span._maintenanceTooltipContext;
+                const text = buildStructureMaintenanceTooltip(
+                  context.structure,
+                  context.resource,
+                  context.buildCount
+                );
+                setTooltipText(tooltip, text, span._maintenanceTooltipCache, 'text');
+              };
+              span.addEventListener('mouseenter', span._updateMaintenanceTooltip);
+              span.addEventListener('focusin', span._updateMaintenanceTooltip);
+              span.addEventListener('pointerdown', span._updateMaintenanceTooltip);
+            } else {
+              span._productionTooltip = tooltip;
+              span._productionTooltipCache = {};
+              span._updateProductionTooltip = () => {
+                const context = span._productionTooltipContext;
+                const text = buildStructureProductionTooltip(
+                  context.structure,
+                  context.category,
+                  context.resource,
+                  context.buildCount
+                );
+                setTooltipText(tooltip, text, span._productionTooltipCache, 'text');
+              };
+              span.addEventListener('mouseenter', span._updateProductionTooltip);
+              span.addEventListener('focusin', span._updateProductionTooltip);
+              span.addEventListener('pointerdown', span._updateProductionTooltip);
+            }
           }
           info.spans.set(key, span);
           list.appendChild(span);
