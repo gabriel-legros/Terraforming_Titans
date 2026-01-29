@@ -53,6 +53,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Ringworld terraforming now includes Auto Shade targeting (average/day/night trend) with a temperature goal and travel persistence.
 - Building production entries now show tooltips with base output and named multiplier sources.
 - Ship automation now locks Import Resources assignment buttons while automation is active.
+- Research concept unlocks now enable specific research entries directly instead of relying on research manager boolean flags.
 
 ## Prestige systems
 Two reset layers control long term progression:

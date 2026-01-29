@@ -195,7 +195,7 @@ const researchParameters = {
         description: 'Allows construction of generators burning methane and oxygen for power.',
         cost: { research: 10000 },
         prerequisites: [],
-        requiredFlags: ['hydrocarbonResearchUnlocked'],
+        disabled: true,
         requiresMethane: true,
         effects: [
           {
@@ -211,7 +211,7 @@ const researchParameters = {
         description: 'Enables construction of a receiver for orbital solar collectors.',
         cost: { research: 100_000 },
         prerequisites: [],
-        requiredFlags: ['dysonSwarmUnlocked'],
+        disabled: true,
         effects: [
           { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' },
           { target: 'building', targetId: 'dysonReceiver', type: 'enable' }
@@ -223,7 +223,7 @@ const researchParameters = {
         description: 'Unlocks a massive fusion reactor that requires superalloys.',
         cost: { research: 500000000000 },
         prerequisites: [],
-        requiredFlags: ['superalloyResearchUnlocked'],
+        disabled: true,
         effects: [
           { target: 'building', targetId: 'superalloyFusionReactor', type: 'enable' }
         ]
@@ -234,7 +234,7 @@ const researchParameters = {
         description: 'Doubles superalloy fusion reactor energy output.',
         cost: { research: 100000000000000 },
         prerequisites: [],
-        requiredFlags: ['superalloyResearchUnlocked'],
+        disabled: true,
         effects: [
           {
             target: 'building',
@@ -281,7 +281,7 @@ const researchParameters = {
         description: 'HOPE will tune superalloy fusion reactors to unleash their potential, providing a 25% output boost per level.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
-        requiredFlags: ['repeatableAiResearchUnlocked'],
+        disabled: true,
         repeatable: true,
         repeatableCostMultiplier: 10,
         effects: [
@@ -551,7 +551,7 @@ const researchParameters = {
         cost: { research: 2000000 },
         prerequisites: ['android_factory'],
         artificialAllowed: false,
-        requiredFlags: ['undergroundHabitatsResearchUnlocked'],
+        disabled: true,
         effects: [
           {
             target: 'project',
@@ -594,7 +594,7 @@ const researchParameters = {
         description: 'Enables factories that refine surface graphite into metal substitutes.',
         cost: { research: 10_000_000 },
         prerequisites: [],
-        requiredFlags: ['grapheneMasteryUnlocked'],
+        disabled: true,
         effects: [
           {
             target: 'building',
@@ -701,7 +701,7 @@ const researchParameters = {
       description: 'Unused spaceships duplicate themselves over time.',
       cost: { research: 10000000000 },
       prerequisites: [],
-      requiredFlags: ['selfReplicatingShipsUnlocked'],
+      disabled: true,
       effects: [
         {
           target: 'global',
@@ -824,7 +824,7 @@ const researchParameters = {
         description: 'Enables production of superalloys at great energy cost.',
         cost: { research: 500000000000 },
         prerequisites: [],
-        requiredFlags: ['superalloyResearchUnlocked'],
+        disabled: true,
         effects: [
           { target: 'building', targetId: 'superalloyFoundry', type: 'enable' }
         ]
@@ -835,7 +835,7 @@ const researchParameters = {
         description: 'HOPE will integrate itself further into each factory, reducing worker requirements by 10% per level.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
-        requiredFlags: ['repeatableAiResearchUnlocked'],
+        disabled: true,
         repeatable: true,
         repeatableCostMultiplier: 10,
         effects: [
@@ -906,7 +906,7 @@ const researchParameters = {
         description: 'Unlocks cloning facilities that consume massive energy to grow colonists.',
         cost: { research: 1000 },
         prerequisites: [],
-        requiredFlags: ['cloningResearchUnlocked'],
+        disabled: true,
         effects: [
           {
             target: 'building',
@@ -1114,7 +1114,7 @@ const researchParameters = {
         cost: { research: 500000000000 },
         prerequisites: [],
         disableFlag: 'ecumenopolisDisabled',
-        requiredFlags: ['superalloyResearchUnlocked'],
+        disabled: true,
         effects: [
           { target: 'colony', targetId: 't7_colony', type: 'enable' },
           { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
@@ -1223,7 +1223,7 @@ const researchParameters = {
         description: 'HOPE will optimize architecture, transit and utilities, enabling 10% more space per level for people and androids.',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
-        requiredFlags: ['repeatableAiResearchUnlocked'],
+        disabled: true,
         repeatable: true,
         repeatableCostMultiplier: 10,
         effects: [
@@ -1739,9 +1739,8 @@ const researchParameters = {
         effects: [
           {
             target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'hydrocarbonResearchUnlocked',
-            value: true
+            type: 'enableResearch',
+            targetId: 'hydrocarbon_generator'
           }
         ]
       },
@@ -1770,9 +1769,8 @@ const researchParameters = {
         effects: [
           {
             target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'dysonSwarmUnlocked',
-            value: true
+            type: 'enableResearch',
+            targetId: 'dyson_swarm_receiver'
           }
         ]
       },
@@ -1794,9 +1792,8 @@ const researchParameters = {
         effects: [
           {
             target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'cloningResearchUnlocked',
-            value: true
+            type: 'enableResearch',
+            targetId: 'cloning_facilities'
           }
         ]
       },
@@ -1809,9 +1806,8 @@ const researchParameters = {
         effects: [
           {
             target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'undergroundHabitatsResearchUnlocked',
-            value: true
+            type: 'enableResearch',
+            targetId: 'underground_land_expansion'
           }
         ]
       },
@@ -1859,6 +1855,10 @@ const researchParameters = {
             flagId: 'superalloyResearchUnlocked',
             value: true
           },
+          { target: 'researchManager', type: 'enableResearch', targetId: 'superalloy_fusion_reactor' },
+          { target: 'researchManager', type: 'enableResearch', targetId: 'next_generation_fusion' },
+          { target: 'researchManager', type: 'enableResearch', targetId: 'superalloy_foundry' },
+          { target: 'researchManager', type: 'enableResearch', targetId: 't7_colony' },
           { target: 'resource', resourceType: 'colony', targetId: 'superalloys', type: 'enable' }
         ]
       },
@@ -2024,12 +2024,9 @@ const researchParameters = {
         cost: { advancedResearch: 2_000_000 },
         prerequisites: [],
         effects: [
-          {
-            target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'repeatableAiResearchUnlocked',
-            value: true
-          }
+          { target: 'researchManager', type: 'enableResearch', targetId: 'ai_reactor_overclocking' },
+          { target: 'researchManager', type: 'enableResearch', targetId: 'ai_industrial_coordination' },
+          { target: 'researchManager', type: 'enableResearch', targetId: 'ai_ecumenopolis_expansion' }
         ]
       },
       {
@@ -2245,9 +2242,8 @@ const researchParameters = {
         effects: [
           {
             target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'selfReplicatingShipsUnlocked',
-            value: true
+            type: 'enableResearch',
+            targetId: 'self_replicating_ships'
           }
         ]
       },
@@ -2260,9 +2256,8 @@ const researchParameters = {
         effects: [
           {
             target: 'researchManager',
-            type: 'booleanFlag',
-            flagId: 'grapheneMasteryUnlocked',
-            value: true
+            type: 'enableResearch',
+            targetId: 'graphene_factory'
           }
         ]
       },

@@ -15,6 +15,8 @@ class Research {
         baseValue: Number.isFinite(effect.baseValue) ? effect.baseValue : effect.value
       }));
       Object.assign(this, extra);
+      this.baseDisabled = !!extra.disabled;
+      this.disabled = this.baseDisabled;
       this.repeatable = !!extra.repeatable;
       this.repeatableCostMultiplier = Number.isFinite(extra.repeatableCostMultiplier)
         ? extra.repeatableCostMultiplier
@@ -310,6 +312,10 @@ class Research {
         this.applyResearchDisable(effect);
         return;
       }
+      if (effect.type === 'enableResearch') {
+        this.applyEnableResearch(effect);
+        return;
+      }
       super.applyEffect(effect);
     }
 
@@ -326,6 +332,31 @@ class Research {
       // Force a UI refresh
       if (typeof invalidateResearchUICache === 'function') {
         invalidateResearchUICache();
+      }
+    }
+
+    applyEnableResearch(effect) {
+      const research = this.getResearchById(effect.targetId);
+      if (!research) {
+        return;
+      }
+      const wasDisabled = research.disabled;
+      research.disabled = false;
+      if (!wasDisabled) {
+        return;
+      }
+      this.sortAllResearches();
+      if (typeof registerResearchUnlockAlert === 'function') {
+        if (!research.isResearched &&
+            !research.alertedWhenUnlocked &&
+            this.isResearchDisplayable(research) &&
+            this.isResearchAvailable(research.id)) {
+          registerResearchUnlockAlert(`${research.category}-research`);
+        }
+        return;
+      }
+      if (typeof initializeResearchAlerts === 'function') {
+        initializeResearchAlerts();
       }
     }
 
@@ -702,7 +733,7 @@ class Research {
           research.isResearched = false;
         }
         research.timesResearched = 0;
-        research.disabled = false;
+        research.disabled = research.baseDisabled;
         this.updateRepeatableResearchCost(research);
       });
     }

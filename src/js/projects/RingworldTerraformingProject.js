@@ -205,7 +205,7 @@ class RingworldTerraformingProject extends Project {
     const shadingStats = document.createElement('div');
     shadingStats.className = 'stats-grid three-col ringworld-terraforming-stats';
     const shadingStrength = createRingworldStat('Shading:');
-    const tropicsFlux = createRingworldStat('Avg Tropics Flux:');
+    const tropicsFlux = createRingworldStat('Avg Tropical Flux:');
     const autoShade = document.createElement('div');
     autoShade.className = 'stat-item ringworld-stat ringworld-terraforming-auto-shade';
     const autoShadeLabel = document.createElement('span');
