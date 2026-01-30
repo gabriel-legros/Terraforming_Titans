@@ -152,6 +152,18 @@ const teamRulesTooltip = [
   '- Science challenges never deal damage on failure.',
   '- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.'
 ].join('\n');
+const wgcHazardousBiomassTooltip = [
+  'Neutral: No modifiers.',
+  'Negotiation: Social science checks about 10% easier, combat about 10% tougher.',
+  'Aggressive: Social science checks roughly 25% harder, combat about 15% easier.',
+  'Recon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures add 60 seconds to next step.'
+].join('\n');
+const wgcArtifactStanceTooltip = [
+  'Neutral: Standard artifact chances and timing.',
+  'Careful: Doubles Natural Science artifact chance but delays the next event by triple time.',
+  'Rapid Extraction: Halves downtime but reduces artifact finds by 75%.'
+].join('\n');
+const wgcDifficultyTooltip = 'Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.';
 const wgcFirstNamePool = [
   'Aiden','Amelia','Andrew','Aria','Benjamin','Brielle','Caleb','Chloe','Daniel','Delilah',
   'Elijah','Emery','Ethan','Evelyn','Felix','Fiona','Gabriel','Gianna','Harper','Henry',
@@ -293,13 +305,13 @@ function generateWGCTeamCards() {
       <div class="wgc-team-card" data-team="${tIdx}">
         <div class="wgc-team-body">
           <div class="team-main">
-            <div class="team-header">Team <span class="team-name" data-team="${tIdx}">${name}</span><button class="rename-team-icon" data-team="${tIdx}" title="Rename Team">&#9998;</button></div>
+            <div class="team-header">Team <span class="team-name" data-team="${tIdx}">${name}</span><button class="rename-team-icon" data-team="${tIdx}">&#9998;</button></div>
             <div class="team-slots">${slotMarkup}</div>
           </div>
           <div class="team-controls">
             <div class="team-controls-left">
               <div class="team-stance">
-                <label>Hazardous Biomass <span class="info-tooltip-icon" title="Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures add 60 seconds to next step.">&#9432;</span></label>
+                <label>Hazardous Biomass <span class="info-tooltip-icon wgc-hbi-tooltip">&#9432;</span></label>
                 <select class="hbi-select" data-team="${tIdx}">
                   <option value="Neutral"${stanceVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
                   <option value="Negotiation"${stanceVal === 'Negotiation' ? ' selected' : ''}>Negotiation</option>
@@ -308,7 +320,7 @@ function generateWGCTeamCards() {
                 </select>
               </div>
               <div class="team-stance">
-                <label>Scientific Artifact <span class="info-tooltip-icon" title="Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves downtime but reduces artifact finds by 75%.">&#9432;</span></label>
+                <label>Scientific Artifact <span class="info-tooltip-icon wgc-artifact-tooltip">&#9432;</span></label>
                 <select class="artifact-select" data-team="${tIdx}">
                   <option value="Neutral"${artVal === 'Neutral' ? ' selected' : ''}>Neutral</option>
                   <option value="Careful"${artVal === 'Careful' ? ' selected' : ''}>Careful</option>
@@ -320,7 +332,7 @@ function generateWGCTeamCards() {
               <div class="difficulty-container">
                 <div class="difficulty-label">
                   <span>Difficulty</span>
-                  <span class="info-tooltip-icon" title="Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.">&#9432;</span>
+                  <span class="info-tooltip-icon wgc-difficulty-tooltip">&#9432;</span>
                 </div>
                 <div class="difficulty-control">
                   <input type="text" class="difficulty-input" data-team="${tIdx}" value="${op.difficulty || 0}" inputmode="numeric" />
@@ -383,6 +395,9 @@ function invalidateWGCTeamCache() {
       diffMinusBtn: card.querySelector('.difficulty-step-minus'),
       stanceSelect: card.querySelector('.hbi-select'),
       artSelect: card.querySelector('.artifact-select'),
+      hazardInfo: card.querySelector('.wgc-hbi-tooltip'),
+      artifactInfo: card.querySelector('.wgc-artifact-tooltip'),
+      difficultyInfo: card.querySelector('.wgc-difficulty-tooltip'),
       renameBtn: card.querySelector('.rename-team-icon'),
       progressContainer: card.querySelector('.operation-progress'),
       progressSegments: Array.from(card.querySelectorAll('.operation-progress-segment')),
@@ -399,6 +414,12 @@ function invalidateWGCTeamCache() {
       slots
     };
     teamElements[tIdx] = entry;
+    if (isNewCard) {
+      attachDynamicInfoTooltip(entry.hazardInfo, wgcHazardousBiomassTooltip);
+      attachDynamicInfoTooltip(entry.artifactInfo, wgcArtifactStanceTooltip);
+      attachDynamicInfoTooltip(entry.difficultyInfo, wgcDifficultyTooltip);
+      attachDynamicInfoTooltip(entry.renameBtn, 'Rename Team', false);
+    }
     if (logContainer) {
       logContainer.dataset.teamIndex = `${tIdx}`;
       if (!logContainer._wgcScrollHandler) {
@@ -426,7 +447,7 @@ function createRDItem(key, label) {
     const icon = document.createElement('span');
     icon.classList.add('info-tooltip-icon');
     icon.innerHTML = '&#9432;';
-    icon.title = rdDescriptions[key];
+    attachDynamicInfoTooltip(icon, rdDescriptions[key]);
     nameSpan.appendChild(icon);
   }
   div.appendChild(nameSpan);
@@ -435,14 +456,27 @@ function createRDItem(key, label) {
   button.id = `wgc-${key}-button`;
   button.classList.add('wgc-rd-wide-button');
   button.textContent = 'Buy';
-  button.addEventListener('click', () => {
-    warpGateCommand.purchaseUpgrade(key);
+  button.addEventListener('click', (event) => {
+    const bulkCount = event.shiftKey ? getMaxBulkUpgradePurchases(key) : 1;
+    for (let i = 0; i < bulkCount; i += 1) {
+      const purchased = warpGateCommand.purchaseUpgrade(key);
+      if (!purchased) break;
+    }
     updateWGCUI();
   });
   div.appendChild(button);
 
   rdElements[key] = { button, container: div };
   return div;
+}
+
+function getMaxBulkUpgradePurchases(key) {
+  const up = warpGateCommand.rdUpgrades[key];
+  const available = resources.special.alienArtifact.value;
+  const remaining = up.max ? (up.max - up.purchases) : Number.POSITIVE_INFINITY;
+  const base = 2 * up.purchases + 1;
+  const purchases = Math.floor((Math.sqrt(base * base + 8 * available) - base) / 2);
+  return Math.max(0, Math.min(remaining, purchases));
 }
 
 function createRDHeader() {
@@ -455,7 +489,12 @@ function createRDHeader() {
   div.appendChild(label);
 
   const purchase = document.createElement('span');
-  purchase.textContent = 'Purchase';
+  purchase.textContent = 'Purchase ';
+  const info = document.createElement('span');
+  info.classList.add('info-tooltip-icon');
+  info.innerHTML = '&#9432;';
+  attachDynamicInfoTooltip(info, 'Hold shift and click to buy as many as possible');
+  purchase.appendChild(info);
   div.appendChild(purchase);
 
   return div;
@@ -509,7 +548,7 @@ function createFacilityItem(key, label) {
   const info = document.createElement('span');
   info.classList.add('info-tooltip-icon');
   info.innerHTML = '&#9432;';
-  info.title = facilityDescriptions[key];
+  attachDynamicInfoTooltip(info, facilityDescriptions[key]);
   name.appendChild(info);
   div.appendChild(name);
 
@@ -628,7 +667,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   rollButton.type = 'button';
   rollButton.classList.add('wgc-roll-name-button');
   rollButton.textContent = 'Roll';
-  rollButton.title = 'Roll random names';
+  attachDynamicInfoTooltip(rollButton, 'Roll random names', false);
   const assignRandomFirst = (focus = true) => {
     firstNameField.value = getRandomFromPool(wgcFirstNamePool);
     if (focus) {
@@ -708,7 +747,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
     const respecButton = document.createElement('button');
     respecButton.textContent = 'Respec';
     respecButton.classList.add('wgc-respec-button');
-    respecButton.title = 'Refund all allocated skill points.';
+    attachDynamicInfoTooltip(respecButton, 'Refund all allocated skill points.', false);
     respecButton.addEventListener('click', () => {
       member.respec();
       baseStats = WGCTeamMember.getBaseStats(member.classType);
@@ -785,7 +824,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const autoInfo = document.createElement('span');
   autoInfo.className = 'info-tooltip-icon';
   autoInfo.innerHTML = '&#9432;';
-  autoInfo.title = 'Automatically assigns points each update to match the ratios below. Ratios set to 0 are ignored.';
+  attachDynamicInfoTooltip(autoInfo, 'Automatically assigns points each update to match the ratios below. Ratios set to 0 are ignored.');
   autoToggle.appendChild(autoInfo);
   const autoCheckbox = document.createElement('input');
   autoCheckbox.type = 'checkbox';
@@ -971,7 +1010,7 @@ function generateWGCLayout() {
             <div class="wgc-card-header">
               <div class="wgc-card-title">
                 <h3>Teams <span id="wgc-team-rules-info" class="info-tooltip-icon">&#9432;</span></h3>
-                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" title="Copy Team Stats to Clipboard" aria-label="Copy Team Stats to Clipboard"></span>
+                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="Copy Team Stats to Clipboard"></span>
               </div>
               <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
                 <span class="wgc-story-toggle__track" aria-hidden="true">
@@ -1018,6 +1057,7 @@ function initializeWGCUI() {
     }
     wgcCopyStatsButton = container.querySelector('#wgc-copy-team-stats');
     if (wgcCopyStatsButton) {
+      attachDynamicInfoTooltip(wgcCopyStatsButton, 'Copy Team Stats to Clipboard', false);
       const triggerCopy = () => {
         copyWGCTeamStatsToClipboard();
       };
