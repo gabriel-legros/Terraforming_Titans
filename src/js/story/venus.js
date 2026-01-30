@@ -380,15 +380,13 @@ progressVenus.chapters.push(
     reward: [
       {
         target: 'researchManager',
-        type: 'booleanFlag',
-        flagId: 'importHydrogenUnlocked',
-        value: true
+        type: 'enableResearch',
+        targetId: 'hydrogenImport'
       },
       {
         target: 'researchManager',
-        type: 'booleanFlag',
-        flagId: 'boschReactorUnlocked',
-        value: true
+        type: 'enableResearch',
+        targetId: 'chemical_reactor'
       }
     ]
   },
@@ -420,9 +418,8 @@ progressVenus.chapters.push(
     reward: [
       {
         target: 'researchManager',
-        type: 'booleanFlag',
-        flagId: 'massDriverUnlocked',
-        value: true
+        type: 'enableResearch',
+        targetId: 'mass_driver'
       }
     ]
   },
@@ -687,9 +684,8 @@ progressVenus.chapters.push(
       },
       {
         target: 'researchManager',
-        type: 'booleanFlag',
-        flagId: 'antimatterUnlocked',
-        value: true
+        type: 'enableResearch',
+        targetId: 'antimatter_containment'
       }
     ]
   },

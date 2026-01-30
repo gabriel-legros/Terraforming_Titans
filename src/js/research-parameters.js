@@ -251,7 +251,7 @@ const researchParameters = {
         description: 'Unlocks antimatter farms and antimatter batteries.',
         cost: { research: 100000000000 },
         prerequisites: [],
-        requiredFlags: ['antimatterUnlocked'],
+        disabled: true,
         effects: [
           { target: 'building', targetId: 'antimatterFarm', type: 'enable' },
           { target: 'building', targetId: 'antimatterBattery', type: 'enable' },
@@ -269,7 +269,7 @@ const researchParameters = {
         description: 'Enables clearing orbital debris using laser cannons.',
         cost: { research: 5_000_000_000 },
         prerequisites: [],
-        requiredFlags: ['laserCannonUnlocked'],
+        disabled: true,
         requiresKesslerHazard: true,
         effects: [
           { target: 'building', targetId: 'laserCannon', type: 'enable' }
@@ -1476,7 +1476,7 @@ const researchParameters = {
         description: 'Unlocks configurable reactors to perform various reactions.',
         cost: { research: 500_000 },
         prerequisites: [],
-        requiredFlags: ['boschReactorUnlocked'],
+        disabled: true,
         effects: [
           {
             target: 'building',
@@ -1491,7 +1491,7 @@ const researchParameters = {
         description: 'Unlocks the mass driver launcher network and integrates surface disposal with orbital infrastructure.',
         cost: { research: 1_000_000_000 },
         prerequisites: [],
-        requiredFlags: ['massDriverUnlocked'],
+        disabled: true,
         effects: [
           {
             target: 'building',
@@ -1638,7 +1638,7 @@ const researchParameters = {
         description: 'Import hydrogen to stockpile a reducing gas for industry and fuel.',
         cost: { research: 50_000_000 },
         prerequisites: [],
-        requiredFlags: ['importHydrogenUnlocked'],
+        disabled: true,
         effects: [
           {target : 'project',
             targetId : 'hydrogenSpaceMining',

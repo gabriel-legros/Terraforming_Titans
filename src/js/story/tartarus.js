@@ -222,9 +222,8 @@ progressTartarus.chapters.push(
     reward: [
       {
         target: 'researchManager',
-        type: 'booleanFlag',
-        flagId: 'laserCannonUnlocked',
-        value: true
+        type: 'enableResearch',
+        targetId: 'laser_cannon'
       }
     ]
   },
