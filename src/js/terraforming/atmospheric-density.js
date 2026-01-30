@@ -504,16 +504,18 @@
       const z4 = zExoSafe;
 
       // Upper-atmosphere MW reduction heuristic.
+      // Use the hydrostatic/bulk MW as the basis so heavy trace species (e.g. SF6/aerosols)
+      // don't unrealistically "thicken" the thermosphere/exosphere.
       let MUpperG;
       if (meanMW_Hydro_Gmol > 40 || frac_Hydro.co2 > 0.5) {
-        MUpperG = clamp(meanMolecularWeightGmol * 0.60, 16, 32);
+        MUpperG = clamp(meanMW_Hydro_Gmol * 0.60, 16, 32);
       } else {
-        MUpperG = clamp(meanMolecularWeightGmol * 0.42, 4, 28);
+        MUpperG = clamp(meanMW_Hydro_Gmol * 0.42, 4, 28);
       }
       if (massFractions.h2 > 0.05) {
         MUpperG = Math.max(2.5, MUpperG * 0.7);
       }
-      const MTransG = 0.5 * (meanMolecularWeightGmol + MUpperG);
+      const MTransG = 0.5 * (meanMW_Hydro_Gmol + MUpperG);
 
       const Tthermo = Tcold + 0.9 * (Texo - Tcold);
 

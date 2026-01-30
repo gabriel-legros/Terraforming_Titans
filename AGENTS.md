@@ -54,6 +54,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Building production entries now show tooltips with base output and named multiplier sources.
 - Ship automation now locks Import Resources assignment buttons while automation is active.
 - Research concept unlocks now enable specific research entries directly instead of relying on research manager boolean flags.
+- Atmospheric density upper-atmosphere molar-mass heuristics now use bulk/hydrostatic mean molecular weight (excluding heavy trace like SF6/aerosols) to avoid unrealistically dense thermosphere/exosphere behavior from adding GHG.
 
 ## Prestige systems
 Two reset layers control long term progression:
