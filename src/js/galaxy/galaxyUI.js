@@ -472,6 +472,9 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     hex.galaxyKey = key;
     hex.galaxyCenterX = centerX;
     hex.galaxyCenterY = centerY;
+    hex.dataset.controlSignature = '';
+    hex.dataset.storySignature = '';
+    hex.dataset.defenseSignature = '';
 
     const storyIcon = doc.createElement('span');
     storyIcon.className = 'galaxy-hex__story is-hidden';
@@ -1546,6 +1549,9 @@ function clearHexControlStyles(hex) {
     hex.dataset.controllerName = '';
     hex.dataset.secondaryController = '';
     hex.dataset.secondaryControllerName = '';
+    hex.dataset.controlSignature = '';
+    hex.dataset.storySignature = '';
+    hex.dataset.defenseSignature = '';
     if (hex.galaxyDefenseElement) {
         hex.galaxyDefenseElement.textContent = '';
     }
@@ -1573,22 +1579,7 @@ function formatDefenseDisplayValue(value) {
     return rounded.toFixed(2);
 }
 
-function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
-    const defenseNode = hex?.galaxyDefenseElement;
-    if (!defenseNode) {
-        return;
-    }
-    const doc = defenseNode.ownerDocument || globalThis.document;
-    if (!doc) {
-        return;
-    }
-
-    defenseNode.replaceChildren();
-
-    if (!sector || !manager) {
-        return;
-    }
-
+function getHexDefenseEntries(sector, manager, uhfFaction) {
     const entries = [];
     const uhfControl = Number(sector?.getControlValue?.(UHF_FACTION_KEY)) || 0;
     const totalControl = Number(sector?.getTotalControlValue?.()) || 0;
@@ -1596,9 +1587,6 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
     const contestedWithUhf = isUhfControlled && (totalControl - uhfControl) > GALAXY_CONTROL_EPSILON;
 
     const hasEnemyNeighbor = (() => {
-        if (!manager || typeof manager.getSector !== 'function') {
-            return false;
-        }
         for (let index = 0; index < HEX_NEIGHBOR_OFFSETS.length; index += 1) {
             const offset = HEX_NEIGHBOR_OFFSETS[index];
             const neighbor = manager.getSector(sector.q + offset.q, sector.r + offset.r);
@@ -1624,7 +1612,7 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
     const shouldShowUhf = isUhfControlled && (contestedWithUhf || hasEnemyNeighbor || hasManualDefense);
 
     let uhfTotalDefense = 0;
-    if (typeof manager.getSectorDefenseSummary === 'function') {
+    if (manager.getSectorDefenseSummary) {
         const combinedSummary = manager.getSectorDefenseSummary(sector);
         const uhfEntry = combinedSummary?.contributions?.find?.((entry) => entry.factionId === UHF_FACTION_KEY);
         if (uhfEntry && uhfEntry.totalPower > 0) {
@@ -1632,7 +1620,7 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
         }
     }
     if (shouldShowUhf) {
-        if (!(uhfTotalDefense > 0) && uhfFaction && typeof uhfFaction.getSectorDefense === 'function') {
+        if (!(uhfTotalDefense > 0) && uhfFaction && uhfFaction.getSectorDefense) {
             const defenseValue = Number(uhfFaction.getSectorDefense(sector, manager)) || 0;
             uhfTotalDefense = Math.max(0, defenseValue);
         }
@@ -1641,10 +1629,10 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
         }
     }
 
-    const bordersUhf = typeof manager.hasUhfNeighboringStronghold === 'function'
+    const bordersUhf = manager.hasUhfNeighboringStronghold
         && manager.hasUhfNeighboringStronghold(sector.q, sector.r);
     let enemyTotalDefense = 0;
-    if (typeof manager.getSectorDefenseSummary === 'function') {
+    if (manager.getSectorDefenseSummary) {
         const enemySummary = manager.getSectorDefenseSummary(sector, UHF_FACTION_KEY);
         if (enemySummary && enemySummary.totalPower > 0) {
             enemyTotalDefense = enemySummary.totalPower;
@@ -1676,10 +1664,26 @@ function updateHexDefenseDisplay(hex, sector, manager, uhfFaction) {
         }
     }
 
+    return entries;
+}
+
+function buildDefenseSignature(entries) {
+    if (!entries.length) {
+        return '';
+    }
+    return entries.map(({ icon, total, modifier }) => {
+        const displayValue = formatDefenseInteger(total);
+        return `${icon}:${displayValue}:${modifier || ''}`;
+    }).join('|');
+}
+
+function updateHexDefenseDisplay(hex, entries) {
+    const defenseNode = hex.galaxyDefenseElement;
+    const doc = defenseNode.ownerDocument;
+    defenseNode.replaceChildren();
     if (!entries.length) {
         return;
     }
-
     entries.forEach(({ icon, total, modifier }) => {
         const entryNode = doc.createElement('span');
         entryNode.className = 'galaxy-hex__defense-entry';
@@ -1709,57 +1713,89 @@ function updateGalaxyHexControlColors(manager, cache) {
             return;
         }
         const sector = manager.getSector(q, r);
-        updateHexStoryRequirement(hex, sector);
         if (!sector) {
-            clearHexControlStyles(hex);
-            updateHexDefenseDisplay(hex, null, manager, uhfFaction);
+            if (hex.dataset.controlSignature !== '') {
+                clearHexControlStyles(hex);
+            }
+            if (hex.dataset.defenseSignature !== '') {
+                updateHexDefenseDisplay(hex, []);
+                hex.dataset.defenseSignature = '';
+            }
             return;
         }
         const leaders = sector.getControlLeaders ? sector.getControlLeaders(2) : [];
         if (!leaders.length) {
-            clearHexControlStyles(hex);
-            updateHexDefenseDisplay(hex, null, manager, uhfFaction);
+            if (hex.dataset.controlSignature !== '') {
+                clearHexControlStyles(hex);
+            }
+            if (hex.dataset.defenseSignature !== '') {
+                updateHexDefenseDisplay(hex, []);
+                hex.dataset.defenseSignature = '';
+            }
             return;
         }
         const primaryEntry = leaders[0];
         const primaryFaction = manager.getFaction(primaryEntry.factionId);
         if (!primaryFaction) {
-            clearHexControlStyles(hex);
-            updateHexDefenseDisplay(hex, null, manager, uhfFaction);
+            if (hex.dataset.controlSignature !== '') {
+                clearHexControlStyles(hex);
+            }
+            if (hex.dataset.defenseSignature !== '') {
+                updateHexDefenseDisplay(hex, []);
+                hex.dataset.defenseSignature = '';
+            }
             return;
         }
         const secondaryEntry = leaders.length > 1 ? leaders[1] : null;
         const hasSecondary = secondaryEntry && secondaryEntry.value > 0;
         const secondaryFaction = hasSecondary ? manager.getFaction(secondaryEntry.factionId) : null;
 
-        if (hasSecondary && secondaryFaction) {
-            const stripeStyles = createFactionStripeStyles(primaryFaction.color, secondaryFaction.color, primaryEntry.value, secondaryEntry.value);
-            if (stripeStyles) {
-                hex.style.setProperty('--galaxy-hex-background', stripeStyles.background);
-                hex.style.setProperty('--galaxy-hex-background-hover', stripeStyles.hoverBackground);
-                hex.style.setProperty('--galaxy-hex-border', stripeStyles.borderColor || primaryFaction.getBorderColor());
+        const controlSignature = `${primaryFaction.id}|${primaryEntry.value}|${secondaryFaction ? secondaryFaction.id : ''}|${hasSecondary ? secondaryEntry.value : 0}`;
+        if (hex.dataset.controlSignature !== controlSignature) {
+            if (hasSecondary && secondaryFaction) {
+                const stripeStyles = createFactionStripeStyles(primaryFaction.color, secondaryFaction.color, primaryEntry.value, secondaryEntry.value);
+                if (stripeStyles) {
+                    hex.style.setProperty('--galaxy-hex-background', stripeStyles.background);
+                    hex.style.setProperty('--galaxy-hex-background-hover', stripeStyles.hoverBackground);
+                    hex.style.setProperty('--galaxy-hex-border', stripeStyles.borderColor || primaryFaction.getBorderColor());
+                } else {
+                    hex.style.setProperty('--galaxy-hex-background', primaryFaction.getMapBackground());
+                    hex.style.setProperty('--galaxy-hex-background-hover', primaryFaction.getHoverBackground());
+                    hex.style.setProperty('--galaxy-hex-border', primaryFaction.getBorderColor());
+                }
             } else {
                 hex.style.setProperty('--galaxy-hex-background', primaryFaction.getMapBackground());
                 hex.style.setProperty('--galaxy-hex-background-hover', primaryFaction.getHoverBackground());
                 hex.style.setProperty('--galaxy-hex-border', primaryFaction.getBorderColor());
             }
-        } else {
-            hex.style.setProperty('--galaxy-hex-background', primaryFaction.getMapBackground());
-            hex.style.setProperty('--galaxy-hex-background-hover', primaryFaction.getHoverBackground());
-            hex.style.setProperty('--galaxy-hex-border', primaryFaction.getBorderColor());
+
+            hex.classList.add('is-controlled');
+            hex.dataset.controller = primaryFaction.id;
+            hex.dataset.controllerName = primaryFaction.name;
+            if (secondaryFaction && hasSecondary) {
+                hex.dataset.secondaryController = secondaryFaction.id;
+                hex.dataset.secondaryControllerName = secondaryFaction.name;
+            } else {
+                hex.dataset.secondaryController = '';
+                hex.dataset.secondaryControllerName = '';
+            }
+            hex.dataset.controlSignature = controlSignature;
         }
 
-        hex.classList.add('is-controlled');
-        hex.dataset.controller = primaryFaction.id;
-        hex.dataset.controllerName = primaryFaction.name;
-        if (secondaryFaction && hasSecondary) {
-            hex.dataset.secondaryController = secondaryFaction.id;
-            hex.dataset.secondaryControllerName = secondaryFaction.name;
-        } else {
-            hex.dataset.secondaryController = '';
-            hex.dataset.secondaryControllerName = '';
+        const requiredWorld = getSectorStoryRequirementWorld(sector);
+        const uhfFullControl = isUhfFullControlSector(sector);
+        const storySignature = `${requiredWorld || 0}|${uhfFullControl ? 1 : 0}`;
+        if (hex.dataset.storySignature !== storySignature) {
+            updateHexStoryRequirement(hex, sector);
+            hex.dataset.storySignature = storySignature;
         }
-        updateHexDefenseDisplay(hex, sector, manager, uhfFaction);
+
+        const defenseEntries = getHexDefenseEntries(sector, manager, uhfFaction);
+        const defenseSignature = buildDefenseSignature(defenseEntries);
+        if (hex.dataset.defenseSignature !== defenseSignature) {
+            updateHexDefenseDisplay(hex, defenseEntries);
+            hex.dataset.defenseSignature = defenseSignature;
+        }
     });
 }
 
