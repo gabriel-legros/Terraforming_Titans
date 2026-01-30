@@ -980,7 +980,7 @@ function createTemperatureBox(row) {
     };
     const els = terraformingUICache.atmosphere;
     if (typeof addTooltipHover === 'function') {
-      addTooltipHover(els.opticalDepthInfo, els.opticalDepthTooltip);
+      addTooltipHover(els.opticalDepthInfo, els.opticalDepthTooltip, { clickToPin: true });
     }
   }
 
@@ -1819,10 +1819,10 @@ function updateLifeBox() {
     };
     const els = terraformingUICache.luminosity;
     if (typeof addTooltipHover === 'function') {
-      addTooltipHover(els.groundAlbedoInfo, els.groundAlbedoTooltip);
-      addTooltipHover(els.surfaceAlbedoInfo, els.surfaceAlbedoTooltip);
-      addTooltipHover(els.actualAlbedoInfo, els.actualAlbedoTooltip);
-      addTooltipHover(els.solarFluxInfo, els.solarFluxTooltip);
+      addTooltipHover(els.groundAlbedoInfo, els.groundAlbedoTooltip, { clickToPin: true });
+      addTooltipHover(els.surfaceAlbedoInfo, els.surfaceAlbedoTooltip, { clickToPin: true });
+      addTooltipHover(els.actualAlbedoInfo, els.actualAlbedoTooltip, { clickToPin: true });
+      addTooltipHover(els.solarFluxInfo, els.solarFluxTooltip, { clickToPin: true });
     }
   }
   
