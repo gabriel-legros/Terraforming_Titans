@@ -160,13 +160,15 @@ function refreshAutoBuildTarget(structure) {
   if (!els) return;
   const pop = resources.colony.colonists?.value || 0;
   const workerCap = resources.colony.workers?.cap || 0;
+  const totalLand = resources.surface.land.value;
   const collection = typeof buildings !== 'undefined' ? buildings : undefined;
   const autoBuildUsesFill = isAutoBuildFillMode(structure);
   const autoBuildUsesMax = structure.autoBuildBasis === 'max';
   const autoBuildUsesFixed = structure.autoBuildBasis === 'fixed';
   const autoBuildUsesWorkerShare = structure.autoBuildBasis === 'workerShare';
+  const autoBuildUsesLandShare = structure.autoBuildBasis === 'landShare';
   const fixedTarget = Math.max(0, Math.floor(structure.autoBuildFixed || 0));
-  const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed || autoBuildUsesWorkerShare
+  const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed || autoBuildUsesWorkerShare || autoBuildUsesLandShare
     ? 0
     : getAutoBuildBaseValue(structure, pop, workerCap, collection);
   const targetCount = autoBuildUsesMax
@@ -175,7 +177,9 @@ function refreshAutoBuildTarget(structure) {
       ? fixedTarget
       : autoBuildUsesWorkerShare
         ? structure.getWorkerShareTarget(workerCap)
-        : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+        : autoBuildUsesLandShare
+          ? structure.getLandShareTarget(totalLand)
+          : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
 
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesFill
@@ -718,6 +722,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     shareOption.textContent = '% worker share';
     autoBuildBasisSelect.appendChild(shareOption);
   }
+  if (structure.requiresLand > 0) {
+    const landOption = document.createElement('option');
+    landOption.value = 'landShare';
+    landOption.textContent = '% land share';
+    autoBuildBasisSelect.appendChild(landOption);
+  }
   const fixedOption = document.createElement('option');
   fixedOption.value = 'fixed';
   fixedOption.textContent = 'Fixed';
@@ -1034,12 +1044,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setActiveButton.addEventListener('click', () => {
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
+    const totalLand = resources.surface.land.value;
     const baseCollection = typeof buildings !== 'undefined' ? buildings : undefined;
     const usesFillMode = isAutoBuildFillMode(structure);
     const usesMaxMode = structure.autoBuildBasis === 'max';
     const usesFixedMode = structure.autoBuildBasis === 'fixed';
     const usesWorkerShareMode = structure.autoBuildBasis === 'workerShare';
-    const base = (usesFillMode || usesMaxMode || usesFixedMode || usesWorkerShareMode)
+    const usesLandShareMode = structure.autoBuildBasis === 'landShare';
+    const base = (usesFillMode || usesMaxMode || usesFixedMode || usesWorkerShareMode || usesLandShareMode)
       ? 0
       : getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
     const targetCount = usesFillMode
@@ -1050,7 +1062,9 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
           ? Math.max(0, Math.floor(structure.autoBuildFixed || 0))
           : usesWorkerShareMode
             ? structure.getWorkerShareTarget(workerCap)
-            : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
+            : usesLandShareMode
+              ? structure.getLandShareTarget(totalLand)
+              : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
     adjustStructureActivation(structure, change);
@@ -1075,11 +1089,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setTargetButton.addEventListener('click', () => {
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
+    const totalLand = resources.surface.land.value;
     const baseCollection = typeof buildings !== 'undefined' ? buildings : undefined;
     const usesFillMode = isAutoBuildFillMode(structure);
     const usesMaxMode = structure.autoBuildBasis === 'max';
     const usesFixedMode = structure.autoBuildBasis === 'fixed';
     const usesWorkerShareMode = structure.autoBuildBasis === 'workerShare';
+    const usesLandShareMode = structure.autoBuildBasis === 'landShare';
     
     // Only works for % of worker/pop modes
     if (usesFillMode || usesMaxMode) {
@@ -1105,6 +1121,40 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       const targetFromPercent = (percent) => {
         const shareWorkers = (percent * workerCap) / 100;
         return Math.floor(shareWorkers / perBuildingNeed);
+      };
+      let bestPercent = Math.ceil(rawPercent * 1000000) / 1000000;
+      for (let decimals = 5; decimals >= 0; decimals--) {
+        const factor = Math.pow(10, decimals);
+        const floorCandidate = Math.floor(rawPercent * factor) / factor;
+        const ceilCandidate = Math.ceil(rawPercent * factor) / factor;
+        const floorTarget = targetFromPercent(floorCandidate);
+        const ceilTarget = targetFromPercent(ceilCandidate);
+        if (floorTarget === activeCount) {
+          bestPercent = floorCandidate;
+        } else if (ceilTarget === activeCount) {
+          bestPercent = ceilCandidate;
+        } else {
+          break;
+        }
+      }
+      structure.autoBuildPercent = bestPercent;
+      if (cached.autoBuildInput) {
+        cached.autoBuildInput.value = `${bestPercent}`;
+      }
+      refreshAutoBuildTarget(structure);
+      return;
+    }
+
+    if (usesLandShareMode) {
+      const perBuildingLand = structure.requiresLand || 0;
+      if (perBuildingLand <= 0 || totalLand <= 0) {
+        return;
+      }
+      const activeCount = structure.active;
+      const rawPercent = (activeCount * perBuildingLand * 100) / totalLand;
+      const targetFromPercent = (percent) => {
+        const landBudget = (percent * totalLand) / 100;
+        return Math.floor(landBudget / perBuildingLand);
       };
       let bestPercent = Math.ceil(rawPercent * 1000000) / 1000000;
       for (let decimals = 5; decimals >= 0; decimals--) {

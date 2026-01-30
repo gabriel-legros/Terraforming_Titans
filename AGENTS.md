@@ -55,6 +55,8 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Ship automation now locks Import Resources assignment buttons while automation is active.
 - Research concept unlocks now enable specific research entries directly instead of relying on research manager boolean flags.
 - Atmospheric density upper-atmosphere molar-mass heuristics now use bulk/hydrostatic mean molecular weight (excluding heavy trace like SF6/aerosols) to avoid unrealistically dense thermosphere/exosphere behavior from adding GHG.
+- Underworld mining no longer creates geothermal deposits on worlds without geothermal activity.
+- Autobuild now supports % land share targets for structures that consume land.
 
 ## Prestige systems
 Two reset layers control long term progression:

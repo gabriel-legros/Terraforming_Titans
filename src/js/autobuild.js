@@ -612,6 +612,7 @@ function autoBuild(buildings, delta = 0) {
     }
     const population = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
+    const totalLand = resources.surface.land.value;
     const buildableBuildings = [];
     const buildingInfos = [];
 
@@ -638,8 +639,9 @@ function autoBuild(buildings, delta = 0) {
             const usesMaxBasis = building.autoBuildBasis === 'max';
             const usesFixedBasis = building.autoBuildBasis === 'fixed';
             const usesWorkerShareBasis = building.autoBuildBasis === 'workerShare';
+            const usesLandShareBasis = building.autoBuildBasis === 'landShare';
             const fixedTarget = usesFixedBasis ? Math.max(0, Math.floor(building.autoBuildFixed || 0)) : 0;
-            const base = usesMaxBasis || usesFixedBasis || usesWorkerShareBasis
+            const base = usesMaxBasis || usesFixedBasis || usesWorkerShareBasis || usesLandShareBasis
                 ? 0
                 : resolveAutoBuildBase(building, population, workerCap, buildings);
             const targetCount = usesMaxBasis
@@ -648,7 +650,9 @@ function autoBuild(buildings, delta = 0) {
                     ? fixedTarget
                     : usesWorkerShareBasis
                         ? building.getWorkerShareTarget(workerCap)
-                        : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
+                        : usesLandShareBasis
+                            ? building.getLandShareTarget(totalLand)
+                            : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
 
             buildingInfos.push({ building, targetCount });
 

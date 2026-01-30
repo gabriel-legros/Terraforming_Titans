@@ -42,6 +42,11 @@ class DeeperMiningProject extends AndroidProject {
     }
   }
 
+  planetAllowsGeothermalCreation() {
+    const geothermal = currentPlanetParameters?.resources?.underground?.geothermal;
+    return (geothermal?.maxDeposits || 0) > 0;
+  }
+
   canStart() {
     if (this.averageDepth >= this.maxDepth) {
       return false;
@@ -170,7 +175,7 @@ class DeeperMiningProject extends AndroidProject {
   applyDeepMiningEffects(oldDepth, newDepth) {
     const levelsGained = newDepth - oldDepth;
     // Create geothermal deposits for depth changes beyond 500
-    if (this.createGeothermalDeposits && newDepth >= 500) {
+    if (this.createGeothermalDeposits && this.planetAllowsGeothermalCreation() && newDepth >= 500) {
       
       if (levelsGained > 0) {
         const depositsGained = levelsGained * this.oreMineCount * this.geothermalDepositsPerMinePerLevel;
@@ -498,7 +503,11 @@ class DeeperMiningProject extends AndroidProject {
         elements.deepMiningSection.classList.toggle('deep-mining-locked', !isDeepEnough);
 
         if (elements.geothermalToggle) {
-          elements.geothermalToggle.disabled = !isDeepEnough;
+          const geothermalAllowed = this.planetAllowsGeothermalCreation();
+          elements.geothermalToggle.disabled = !isDeepEnough || !geothermalAllowed;
+          if (!geothermalAllowed) {
+            this.createGeothermalDeposits = false;
+          }
           setToggleButtonState(elements.geothermalToggle, this.createGeothermalDeposits);
         }
         if (elements.storageToggle) {
@@ -613,6 +622,10 @@ class DeeperMiningProject extends AndroidProject {
       this.adjustActiveDuration();
       updateProjectUI?.(this.name);
     }
+  }
+
+  getSpecializationLockedText() {
+    return '';
   }
 }
 

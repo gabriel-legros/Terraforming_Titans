@@ -171,6 +171,15 @@ class Building extends EffectableEntity {
     return Math.floor(maxWorkers / perBuildingNeed);
   }
 
+  getLandShareTarget(totalLand) {
+    const perBuildingLand = this.requiresLand || 0;
+    if (perBuildingLand <= 0) {
+      return 0;
+    }
+    const landBudget = Math.max(0, (this.autoBuildPercent || 0) * totalLand / 100);
+    return Math.floor(landBudget / perBuildingLand);
+  }
+
   // Internal: apply production/displayName for the active recipe (if configured)
   _applyRecipeMapping() {
     if (!this.recipes || !this.currentRecipeKey) return;
