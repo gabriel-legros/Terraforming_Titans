@@ -3,6 +3,7 @@ class AndroidProject extends Project {
     super(config, name);
     this.assignedAndroids = 0;
     this.autoAssignAndroids = false;
+    this.autoAssignAndroidPercent = 100;
     this.assignmentMultiplier = 1;
     this.continuousThreshold = config.continuousThreshold || 1000; // Duration threshold in ms below which project becomes continuous
     this.shortfallLastTick = false;
@@ -218,9 +219,11 @@ class AndroidProject extends Project {
     androidHeader.textContent = 'Androids';
     const controlsHeader = document.createElement('div');
     controlsHeader.textContent = 'Controls';
+    const autoHeader = document.createElement('div');
+    autoHeader.textContent = 'Auto';
     const speedHeader = document.createElement('div');
     speedHeader.textContent = this.getAndroidSpeedLabelText();
-    headerRow.append(androidHeader, controlsHeader, speedHeader);
+    headerRow.append(androidHeader, controlsHeader, autoHeader, speedHeader);
     sectionContainer.appendChild(headerRow);
 
     const assignmentContainer = document.createElement('div');
@@ -285,6 +288,26 @@ class AndroidProject extends Project {
       plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
     }, multiplierContainer);
 
+    const autoAssignContainer = document.createElement('div');
+    autoAssignContainer.classList.add('android-auto-assign-container');
+    const autoAssignCheckbox = document.createElement('input');
+    autoAssignCheckbox.type = 'checkbox';
+    autoAssignCheckbox.id = `${this.name}-auto-assign-androids`;
+    autoAssignCheckbox.checked = this.autoAssignAndroids;
+    const autoAssignLabel = document.createElement('label');
+    autoAssignLabel.htmlFor = autoAssignCheckbox.id;
+    autoAssignLabel.textContent = 'Auto';
+    const autoAssignInput = document.createElement('input');
+    autoAssignInput.type = 'number';
+    autoAssignInput.min = '0';
+    autoAssignInput.max = '100';
+    autoAssignInput.step = '1';
+    autoAssignInput.value = String(this.autoAssignAndroidPercent);
+    autoAssignInput.classList.add('android-auto-assign-input');
+    const autoAssignSuffix = document.createElement('span');
+    autoAssignSuffix.textContent = '% of androids';
+    autoAssignContainer.append(autoAssignCheckbox, autoAssignLabel, autoAssignInput, autoAssignSuffix);
+
     const speedContainer = document.createElement('div');
     speedContainer.classList.add('android-speed-container');
     const speedRow = document.createElement('div');
@@ -296,7 +319,7 @@ class AndroidProject extends Project {
     speedRow.append(speedDisplay);
     speedContainer.append(speedRow);
 
-    assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer, speedContainer);
+    assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer, autoAssignContainer, speedContainer);
     sectionContainer.appendChild(assignmentContainer);
     sectionContainer.id = `${this.name}-android-assignment`;
     sectionContainer.style.display = this.isBooleanFlagSet('androidAssist') ? 'block' : 'none';
@@ -307,8 +330,25 @@ class AndroidProject extends Project {
       assignedAndroidsDisplay: assignedDisplay,
       availableAndroidsDisplay: availableDisplay,
       androidAssignmentContainer: sectionContainer,
+      autoAssignAndroidCheckbox: autoAssignCheckbox,
+      autoAssignAndroidInput: autoAssignInput,
       androidSpeedDisplay: speedDisplay,
     };
+
+    autoAssignCheckbox.addEventListener('change', () => {
+      this.autoAssignAndroids = autoAssignCheckbox.checked;
+      this.autoAssign();
+      updateProjectUI(this.name);
+    });
+    autoAssignInput.addEventListener('input', () => {
+      const normalized = Math.min(100, Math.max(0, Math.round(Number(autoAssignInput.value) || 0)));
+      this.autoAssignAndroidPercent = normalized;
+      autoAssignInput.value = String(normalized);
+      if (this.autoAssignAndroids) {
+        this.autoAssign();
+      }
+      updateProjectUI(this.name);
+    });
   }
 
   renderUI(container) {
@@ -321,24 +361,26 @@ class AndroidProject extends Project {
     if (elements.androidAssignmentContainer) {
       elements.androidAssignmentContainer.style.display = this.isBooleanFlagSet('androidAssist') ? 'block' : 'none';
     }
-    if (elements.assignedAndroidsDisplay) {
-      elements.assignedAndroidsDisplay.textContent = formatNumber(this.assignedAndroids, true);
+    elements.assignedAndroidsDisplay.textContent = formatNumber(this.assignedAndroids, true);
+    const avail = Math.floor(resources.colony.androids.value - projectManager.getAssignedAndroids());
+    elements.availableAndroidsDisplay.textContent = formatNumber(avail, true);
+    elements.autoAssignAndroidCheckbox.checked = this.autoAssignAndroids;
+    if (document.activeElement !== elements.autoAssignAndroidInput) {
+      elements.autoAssignAndroidInput.value = String(this.autoAssignAndroidPercent);
     }
-    if (elements.availableAndroidsDisplay) {
-      const avail = Math.floor(resources.colony.androids.value - projectManager.getAssignedAndroids());
-      elements.availableAndroidsDisplay.textContent = formatNumber(avail, true);
-    }
-    if (elements.androidSpeedDisplay) {
-      elements.androidSpeedDisplay.title = this.getAndroidSpeedTooltip();
-      elements.androidSpeedDisplay.textContent = this.getAndroidSpeedDisplayText();
-    }
+    elements.androidSpeedDisplay.title = this.getAndroidSpeedTooltip();
+    elements.androidSpeedDisplay.textContent = this.getAndroidSpeedDisplayText();
   }
 
   autoAssign() {
     if (!this.autoAssignAndroids) return;
-    const max = Math.floor(resources.colony.androids.value - ((typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0));
-    if (max > 0) {
-      this.assignAndroids(max);
+    const total = Math.floor(resources.colony.androids.value);
+    const assignedOther = projectManager.getAssignedAndroids(this);
+    const maxForThisProject = Math.max(0, total - assignedOther);
+    const target = Math.min(Math.floor(total * (this.autoAssignAndroidPercent / 100)), maxForThisProject);
+    const delta = target - this.assignedAndroids;
+    if (delta) {
+      this.assignAndroids(delta);
     }
   }
 
@@ -347,6 +389,7 @@ class AndroidProject extends Project {
       ...super.saveState(),
       assignedAndroids: this.assignedAndroids,
       autoAssignAndroids: this.autoAssignAndroids,
+      autoAssignAndroidPercent: this.autoAssignAndroidPercent,
     };
   }
 
@@ -354,6 +397,7 @@ class AndroidProject extends Project {
     super.loadState(state);
     this.assignedAndroids = state.assignedAndroids || 0;
     this.autoAssignAndroids = state.autoAssignAndroids || 0;
+    this.autoAssignAndroidPercent = Number(state.autoAssignAndroidPercent ?? 100) || 0;
   }
 
   getAndroidSpeedDisplayText() {

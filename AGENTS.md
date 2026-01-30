@@ -61,6 +61,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Underworld mining no longer creates geothermal deposits on worlds without geothermal activity.
 - Autobuild now supports % land share targets for structures that consume land.
 - Info tooltips created via `attachDynamicInfoTooltip` are now click-pinnable by default (click icon to keep open; click elsewhere to close).
+- Deeper Mining and Underground Expansion now support auto-assigning androids by percentage.
 
 ## Prestige systems
 Two reset layers control long term progression:

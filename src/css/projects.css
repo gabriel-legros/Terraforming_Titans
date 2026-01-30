@@ -1344,7 +1344,7 @@
 .android-assignment-container {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     grid-template-rows: auto;
-    grid-template-areas: "ships-info controls speed";
+    grid-template-areas: "ships-info controls auto speed";
     align-items: stretch;
 }
 
@@ -1390,6 +1390,19 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+.android-auto-assign-container {
+    grid-area: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 0.85em;
+}
+
+.android-auto-assign-input {
+    width: 64px;
 }
 
 .android-assignment-container .buttons-container {
