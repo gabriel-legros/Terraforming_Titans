@@ -349,7 +349,7 @@ const researchParameters = {
         description: 'Unlocks waste sorting and recycling facilities.  Researching this does not enable any penalty.',
         cost: { research: 2000 },
         prerequisites: [],
-        requiredFlags: ['gabbagWasteProcessing'],
+        disabled: true,
         effects: [
           {
             target: 'building',
@@ -402,7 +402,7 @@ const researchParameters = {
         description: 'Automates material handling to reduce waste facility worker requirements by 20%.',
         cost: { research: 200000 },
         prerequisites: ['waste_processing'],
-        requiredFlags: ['gabbagWasteProcessing'],
+        disabled: true,
         effects: [
           {
             target: 'building',
@@ -2035,7 +2035,7 @@ const researchParameters = {
         description: 'Enables incinerators to handle hazardous biomass safely.',
         cost: { advancedResearch: 2_500_000 },
         prerequisites: [],
-        requiredFlags: ['gabbagWasteProcessing'],
+        disabled: true,
         effects: [
           {
             target: 'building',
