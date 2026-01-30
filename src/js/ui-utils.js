@@ -33,25 +33,45 @@ function addTooltipHover(anchor, tooltip, options = {}) {
   const tooltipEl = tooltip || anchor.querySelector && anchor.querySelector('.resource-tooltip');
   if (!tooltipEl) return;
   const dynamicPlacement = options.dynamicPlacement || tooltipEl.classList.contains('dynamic-tooltip');
+  const clickToPin = options.clickToPin === undefined ? false : !!options.clickToPin;
 
   let pointerActive = false;
+  let clickPinned = false;
+  let documentListenerActive = false;
 
   const handleDocumentPointerDown = (event) => {
-    if (!pointerActive) return;
+    if (!pointerActive && !clickPinned) return;
     if (anchor.contains(event.target) || tooltipEl.contains(event.target)) return;
-    setPointerActive(false);
+    if (pointerActive) setPointerActive(false);
+    if (clickPinned) setClickPinned(false);
     hideTooltip();
+  };
+
+  const syncTooltipActiveState = () => {
+    const active = pointerActive || clickPinned;
+    if (active) {
+      anchor.classList.add('tooltip-active');
+      if (!documentListenerActive) {
+        documentListenerActive = true;
+        document.addEventListener('pointerdown', handleDocumentPointerDown, true);
+      }
+    } else {
+      anchor.classList.remove('tooltip-active');
+      if (documentListenerActive) {
+        documentListenerActive = false;
+        document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
+      }
+    }
   };
 
   const setPointerActive = (active) => {
     pointerActive = active;
-    if (active) {
-      anchor.classList.add('tooltip-active');
-      document.addEventListener('pointerdown', handleDocumentPointerDown, true);
-    } else {
-      anchor.classList.remove('tooltip-active');
-      document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
-    }
+    syncTooltipActiveState();
+  };
+
+  const setClickPinned = (active) => {
+    clickPinned = active;
+    syncTooltipActiveState();
   };
 
   const showTooltip = () => {
@@ -165,19 +185,29 @@ function addTooltipHover(anchor, tooltip, options = {}) {
     showTooltip();
   });
   anchor.addEventListener('mouseleave', () => {
-    if (pointerActive) return;
+    if (pointerActive || clickPinned) return;
     hideTooltip();
   });
   anchor.addEventListener('focusin', () => {
     showTooltip();
   });
   anchor.addEventListener('focusout', () => {
-    if (pointerActive) return;
+    if (pointerActive || clickPinned) return;
     hideTooltip();
   });
   anchor.addEventListener('pointerdown', (event) => {
     const type = event.pointerType;
-    if (type && type === 'mouse') return;
+    if (type && type === 'mouse') {
+      if (!clickToPin) return;
+      if (!clickPinned) {
+        setClickPinned(true);
+        showTooltip();
+      } else {
+        setClickPinned(false);
+        hideTooltip();
+      }
+      return;
+    }
     if (!pointerActive) {
       setPointerActive(true);
       showTooltip();
@@ -197,7 +227,7 @@ function setTooltipText(node, text, cache, key) {
   if (currentCache) currentCache[key] = text;
 }
 
-function attachDynamicInfoTooltip(iconElement, text) {
+function attachDynamicInfoTooltip(iconElement, text, clickToPin = true) {
   if (!iconElement) return null;
   const tooltip = document.createElement('span');
   tooltip.classList.add('resource-tooltip', 'dynamic-tooltip');
@@ -205,7 +235,7 @@ function attachDynamicInfoTooltip(iconElement, text) {
   iconElement.removeAttribute('title');
   if (!iconElement.innerHTML) iconElement.innerHTML = '&#9432;';
   if (!tooltip.parentNode) iconElement.appendChild(tooltip);
-  addTooltipHover(iconElement, tooltip, { dynamicPlacement: true });
+  addTooltipHover(iconElement, tooltip, { dynamicPlacement: true, clickToPin });
   return tooltip;
 }
 

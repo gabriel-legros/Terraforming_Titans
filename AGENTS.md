@@ -59,6 +59,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Atmospheric density layer boundaries now use exobase-relative heights to keep the Kessler drag line monotonic in surface temperature for fixed composition/pressure.
 - Underworld mining no longer creates geothermal deposits on worlds without geothermal activity.
 - Autobuild now supports % land share targets for structures that consume land.
+- Info tooltips created via `attachDynamicInfoTooltip` are now click-pinnable by default (click icon to keep open; click elsewhere to close).
 
 ## Prestige systems
 Two reset layers control long term progression:

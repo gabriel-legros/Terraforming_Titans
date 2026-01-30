@@ -195,25 +195,48 @@ function parseFlexibleNumber(value) {
   text = text.replace(/[,_\s]/g, '');
 
   const suffixMap = new Map([
+    ['Dd', 1e39],
     ['dd', 1e39],
+    ['Ud', 1e36],
     ['ud', 1e36],
+    ['De', 1e33],
     ['de', 1e33],
+    ['Dc', 1e33],
     ['dc', 1e33],
+    ['No', 1e30],
     ['no', 1e30],
+    ['Oc', 1e27],
     ['oc', 1e27],
+    ['Sp', 1e24],
     ['sp', 1e24],
+    ['Sx', 1e21],
     ['sx', 1e21],
+    ['Qi', 1e18],
     ['qi', 1e18],
+    ['Q', 1e15],
     ['q', 1e15],
+    ['T', 1e12],
     ['t', 1e12],
+    ['B', 1e9],
     ['b', 1e9],
-    ['m', 1e6],
+    ['M', 1e6],
+    ['K', 1e3],
     ['k', 1e3],
+    ['m', 1e-3], // Milli
+    ['µ', 1e-6], // Micro
+    ['u', 1e-6],
+    ['U', 1e-6],
+    ['n', 1e-9], // Nano
+    ['N', 1e-9],
+    ['p', 1e-12], // Pico
+    ['P', 1e-12],
+    ['f', 1e-15], // Femto
+    ['F', 1e-15],
   ]);
 
   const numberMatch = text.match(/^[+-]?(?:\d+\.?\d*|\d*\.?\d+)(?:e[+-]?\d+)?/i);
   const numericText = numberMatch ? numberMatch[0] : '';
-  const suffixText = text.slice(numericText.length).toLowerCase();
+  const suffixText = text.slice(numericText.length);
 
   if (numericText === '') return NaN;
 
