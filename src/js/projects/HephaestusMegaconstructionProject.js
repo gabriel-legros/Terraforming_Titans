@@ -446,6 +446,9 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     headerSpacer.classList.add('hephaestus-row-spacer');
     headerRow.append(headerName, headerValue, headerControls, headerSpacer);
     assignmentGrid.appendChild(headerRow);
+    const headerDivider = document.createElement('div');
+    headerDivider.classList.add('hephaestus-header-divider');
+    assignmentGrid.appendChild(headerDivider);
 
     const rowElements = {};
 
