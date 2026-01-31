@@ -614,20 +614,10 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       const seconds = this.currentTickDeltaTime ? this.currentTickDeltaTime / 1000 : 0;
       if (allBelow || resourceName === 'ice') {
-        zones.forEach(zone => {
-          const pct = getZonePercentage(zone);
-          terraforming.zonalSurface[zone].ice += amount * pct;
-        });
         if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony' && seconds > 0) {
           resources.surface?.ice?.modifyRate?.(amount / seconds, 'Spaceship Mining', 'project');
         }
       } else {
-        const eligible = zones.filter(z => (temps[z]?.value || 0) > 273.15);
-        const totalPct = eligible.reduce((s, z) => s + getZonePercentage(z), 0);
-        eligible.forEach(zone => {
-          const pct = getZonePercentage(zone);
-          terraforming.zonalSurface[zone].liquidWater += amount * (pct / totalPct);
-        });
         if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony' && seconds > 0) {
           resources.surface?.liquidWater?.modifyRate?.(amount / seconds, 'Spaceship Mining', 'project');
         }
