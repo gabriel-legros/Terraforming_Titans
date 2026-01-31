@@ -80,6 +80,9 @@
     }
 
     getTravelPointGain() {
+      if (spaceManager.currentArtificialKey !== null) {
+        return 0;
+      }
       return this.getFoundryPointGain(terraforming.initialLand);
     }
 

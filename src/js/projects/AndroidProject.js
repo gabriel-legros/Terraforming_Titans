@@ -412,6 +412,26 @@ class AndroidProject extends Project {
     this.autoAssignAndroidPercent = Number(state.autoAssignAndroidPercent ?? 100) || 0;
   }
 
+  saveTravelState() {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return {};
+    }
+    return {
+      autoAssignAndroids: this.autoAssignAndroids,
+      autoAssignAndroidPercent: this.autoAssignAndroidPercent,
+      assignmentMultiplier: this.assignmentMultiplier,
+    };
+  }
+
+  loadTravelState(state = {}) {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return;
+    }
+    this.autoAssignAndroids = state.autoAssignAndroids === true;
+    this.autoAssignAndroidPercent = state.autoAssignAndroidPercent ?? this.autoAssignAndroidPercent;
+    this.assignmentMultiplier = state.assignmentMultiplier ?? this.assignmentMultiplier;
+  }
+
   getAndroidSpeedDisplayText() {
     const mult = this.getAndroidSpeedMultiplier();
     return `x${formatNumber(mult, true)}`;

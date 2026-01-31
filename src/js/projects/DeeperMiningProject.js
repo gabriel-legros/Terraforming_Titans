@@ -586,6 +586,19 @@ class DeeperMiningProject extends AndroidProject {
     };
   }
 
+  saveTravelState() {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return {};
+    }
+    return {
+      ...super.saveTravelState(),
+      underworldMiningLevel: this.underworldMiningLevel,
+      superchargedMiningLevel: this.superchargedMiningLevel,
+      createGeothermalDeposits: this.createGeothermalDeposits,
+      undergroundStorage: this.undergroundStorage,
+    };
+  }
+
   loadState(state) {
     super.loadState(state);
     const built = buildings.oreMine.count;
@@ -604,7 +617,27 @@ class DeeperMiningProject extends AndroidProject {
     this.adjustActiveDuration();
   }
 
+  loadTravelState(state = {}) {
+    if (!gameSettings.preserveProjectSettingsOnTravel) {
+      return;
+    }
+    super.loadTravelState(state);
+    this.underworldMiningLevel = state.underworldMiningLevel ?? this.underworldMiningLevel;
+    this.superchargedMiningLevel = state.superchargedMiningLevel ?? this.superchargedMiningLevel;
+    this.createGeothermalDeposits = state.createGeothermalDeposits === true;
+    this.undergroundStorage = state.undergroundStorage === true;
+    this.oreMineCount = buildings.oreMine.count;
+    this.updateUnderworldMiningMaxDepth();
+    if (this.attributes?.completionEffect) {
+      this.applyCompletionEffect();
+    }
+    this.adjustActiveDuration();
+  }
+
   prepareTravelState() {
+    if (gameSettings.preserveProjectSettingsOnTravel) {
+      return;
+    }
     this.underworldMiningLevel = 0;
     this.superchargedMiningLevel = 0;
     this.createGeothermalDeposits = false;
