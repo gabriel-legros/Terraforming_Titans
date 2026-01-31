@@ -20,8 +20,10 @@
      worlds the *scale height is larger*, so those clamps forced the hot
      thermosphere to begin at too-high pressure, producing unrealistically
      large densities at 500–2000 km.
-     -> v2 places boundaries mainly in *multiples of the surface scale height*,
-        only clamped against the estimated exobase.
+     -> v2 places boundaries as *fractions of the estimated exobase height*,
+        which still scales naturally with planet parameters but avoids boundaries
+        shifting aggressively with surface temperature (keeping the drag line
+        monotonic in surface temperature for fixed composition/pressure).
   2) A purely hydrostatic isothermal exosphere with inverse-square gravity
      has a non-zero asymptote as r -> infinity (Boltzmann in a finite potential).
      -> v2 uses a constant-g "escape tail" above the exobase that always decays
@@ -273,6 +275,18 @@
     return Math.max(0, totalTons) * 1000;
   }
 
+  function getTotalAtmosphericMassKgExcluding(resources, excludedKeys) {
+    const atmospheric = resources?.atmospheric;
+    if (!atmospheric) return 0;
+    const excluded = new Set(Array.isArray(excludedKeys) ? excludedKeys : []);
+    let totalTons = 0;
+    for (const key of Object.keys(atmospheric)) {
+      if (excluded.has(key)) continue;
+      totalTons += extractTons(atmospheric[key]);
+    }
+    return Math.max(0, totalTons) * 1000;
+  }
+
   function getSurfacePressurePa(terraforming, resources, celestialParameters) {
     if (terraforming && typeof terraforming.calculateTotalPressure === 'function') {
       const kPa = terraforming.calculateTotalPressure();
@@ -405,6 +419,7 @@
         planetRadiusM,
         gravity,
         surfacePressurePa,
+        surfacePressurePaBulk,
         surfaceTemperatureK,
         solarFluxWm2,
         meanMolecularWeightGmol,
@@ -412,6 +427,7 @@
         massFractions,
         massFractionsBulk,
         totalAtmosphericMassKg,
+        totalAtmosphericMassKgBulk,
         surfaceAreaM2,
         collisionSigmaM2
       } = this._inputs;
@@ -424,6 +440,7 @@
         planetRadiusM,
         gravity,
         surfacePressurePa,
+        surfacePressurePaBulk,
         surfaceTemperatureK,
         solarFluxWm2,
         meanMolecularWeightGmol,
@@ -431,6 +448,7 @@
         massFractions: { ...massFractions },
         massFractionsBulk: { ...(massFractionsBulk || {}) },
         totalAtmosphericMassKg,
+        totalAtmosphericMassKgBulk,
         surfaceAreaM2,
         collisionSigmaM2,
         options: {
@@ -451,36 +469,47 @@
         ? meanMolecularWeightForHydrostaticsGmol
         : meanMolecularWeightGmol;
 
+      const upperPressurePa = (isFiniteNumber(surfacePressurePaBulk) && surfacePressurePaBulk > 0)
+        ? surfacePressurePaBulk
+        : surfacePressurePa;
+      const upperTotalMassKg = (isFiniteNumber(totalAtmosphericMassKgBulk) && totalAtmosphericMassKgBulk > 0)
+        ? totalAtmosphericMassKgBulk
+        : totalAtmosphericMassKg;
+
       const frac_Hydro = (massFractionsBulk && typeof massFractionsBulk === 'object')
         ? massFractionsBulk
         : massFractions;
 
-      const Tcold = estimateColdPointTemperatureK(surfaceTemperatureK, frac_Hydro.co2, surfacePressurePa);
+      const Tcold = estimateColdPointTemperatureK(surfaceTemperatureK, frac_Hydro.co2, upperPressurePa);
       const Texo = estimateExosphereTemperatureK(
         solarFluxWm2,
         surfaceTemperatureK,
         frac_Hydro.co2,
         frac_Hydro.ch4,
-        surfacePressurePa,
+        upperPressurePa,
         meanMW_Hydro_Gmol
       );
 
       const Tlower = clamp(0.6 * surfaceTemperatureK + 0.4 * Tcold, 60, 800);
 
-      const columnMassKgPerM2 = (totalAtmosphericMassKg > 0 && surfaceAreaM2 > 0)
-        ? totalAtmosphericMassKg / surfaceAreaM2
-        : (surfacePressurePa / gravity);
+      const columnMassKgPerM2 = (upperTotalMassKg > 0 && surfaceAreaM2 > 0)
+        ? upperTotalMassKg / surfaceAreaM2
+        : (upperPressurePa / gravity);
 
       const blend = columnMassKgPerM2 / (columnMassKgPerM2 + 2000);
       const Texobase = Tlower + (Texo - Tlower) * blend;
 
       // Exobase height estimate: use hydrostatic/bulk MW (not heavy trace).
+      // Note: Tie the exobase temperature to the upper-atmosphere heating estimate (Texo),
+      // not the surface-driven Texobase blend. This keeps the drag-line altitude monotonic
+      // in surface temperature for fixed pressure/composition by preventing the exobase
+      // boundary from "running away" as the surface warms while Texo stays nearly fixed.
       const zExo = estimateExobaseHeightMeters({
-        totalMassKg: totalAtmosphericMassKg,
+        totalMassKg: upperTotalMassKg,
         surfaceAreaM2,
         gravity,
         meanMolecularWeightGmol: meanMW_Hydro_Gmol,
-        exobaseTemperatureK: Texobase,
+        exobaseTemperatureK: Texo,
         collisionSigmaM2
       });
 
@@ -491,14 +520,13 @@
       // v2: Layer boundaries in multiples of Hsurf, only bounded by exobase.
       const zExoSafe = zExo > 0 ? zExo : Math.max(200_000, 30 * Hsurf);
 
-      const z1Base = 5 * Hsurf;
-      const z2Base = 12 * Hsurf;
-      const z3Base = 25 * Hsurf;
+      // Layer boundaries should not shift aggressively with surface temperature.
+      // Using exobase-relative fractions makes the drag-line altitude monotonic in surface temperature
+      // for fixed composition/pressure while still scaling naturally on low-g worlds.
+      const z1 = clamp(0.20 * zExoSafe, 10_000, 0.35 * zExoSafe);
+      const z2 = clamp(0.50 * zExoSafe, z1 + 10_000, 0.70 * zExoSafe);
 
-      const z1 = clamp(z1Base, 10_000, 0.35 * zExoSafe);
-      const z2 = clamp(z2Base, z1 + 10_000, 0.70 * zExoSafe);
-
-      let z3 = clamp(z3Base, z2 + 10_000, 0.90 * zExoSafe);
+      let z3 = clamp(0.80 * zExoSafe, z2 + 10_000, 0.90 * zExoSafe);
       z3 = clamp(z3, z2 + 1_000, zExoSafe - 5_000);
 
       const z4 = zExoSafe;
@@ -729,6 +757,11 @@
     const totalAtmosphericMassKg = getTotalAtmosphericMassKg(resources);
     const surfacePressurePa = getSurfacePressurePa(terraforming, resources, celestial);
 
+    const totalAtmosphericMassKgBulk = getTotalAtmosphericMassKgExcluding(resources, HEAVY_TRACE_KEYS);
+    const surfacePressurePaBulk = (totalAtmosphericMassKgBulk > 0 && surfaceAreaM2 > 0 && gravity > 0)
+      ? (totalAtmosphericMassKgBulk * gravity) / surfaceAreaM2
+      : surfacePressurePa;
+
     const meanMolecularWeightGmol = estimateMeanMolecularWeightGmol(resources?.atmospheric);
 
     const meanMolecularWeightBulkGmol = estimateMeanMolecularWeightGmolExcluding(resources?.atmospheric, HEAVY_TRACE_KEYS) || meanMolecularWeightGmol;
@@ -750,9 +783,11 @@
       surfaceAreaM2,
       gravity,
       surfacePressurePa,
+      surfacePressurePaBulk,
       surfaceTemperatureK,
       solarFluxWm2,
       totalAtmosphericMassKg,
+      totalAtmosphericMassKgBulk,
       meanMolecularWeightGmol,
       meanMolecularWeightForHydrostaticsGmol,
       massFractions,
