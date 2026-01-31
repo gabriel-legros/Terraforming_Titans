@@ -1341,7 +1341,7 @@
 
 .spaceship-assignment-container {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 170px 1fr;
     grid-template-rows: auto auto;
     grid-template-areas:
         "ships-info buttons"
@@ -1355,6 +1355,10 @@
     grid-template-rows: auto;
     grid-template-areas: "ships-info controls auto speed";
     align-items: stretch;
+}
+
+.mass-driver-assignment-container {
+    grid-template-columns: 230px 1fr;
 }
 
 .assigned-and-available-container {
@@ -1378,8 +1382,23 @@
 }
 
 .assigned-ships-container, .available-ships-container {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
     font-weight: bold;
     font-size: 0.9em;
+}
+
+.assigned-ships-container span:first-child,
+.available-ships-container span:first-child {
+    display: inline-block;
+    min-width: 72px;
+    text-align: right;
+}
+
+.mass-driver-assignment-container .assigned-ships-container span:first-child,
+.mass-driver-assignment-container .available-ships-container span:first-child {
+    min-width: 150px;
 }
 
 .android-speed-row {
@@ -1676,7 +1695,7 @@
 
 .colony-slider {
     display: grid;
-    grid-template-columns: 150px 100px 1fr 100px;
+    grid-template-columns: 150px 100px 1fr 110px;
     align-items: center;
     gap: 10px;
     margin-bottom: 8px;

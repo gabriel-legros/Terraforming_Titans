@@ -65,7 +65,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
       const activeLabel = document.createElement('span');
       activeLabel.classList.add('mass-driver-label');
-      activeLabel.textContent = 'Active Mass Drivers: ';
+      activeLabel.textContent = 'Active: ';
       const activeValue = document.createElement('span');
       activeValue.id = `${this.name}-active-mass-drivers`;
       activeValue.classList.add('mass-driver-count');
@@ -118,8 +118,41 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
       const maxButton = createButton('Max', () => {
         const structure = this.getMassDriverStructure();
+        if (structure.autoActiveEnabled) {
+          this.setMassDriverActive(structure.count);
+          updateBuildingDisplay(buildings);
+          this.updateUI();
+          return;
+        }
         applyManualMassDriverChange(() => this.setMassDriverActive(structure.count));
       }, mainButtons);
+
+      const autoContainer = document.createElement('label');
+      autoContainer.classList.add('auto-active-container');
+
+      const maxAutoActiveCheckbox = document.createElement('input');
+      maxAutoActiveCheckbox.type = 'checkbox';
+      maxAutoActiveCheckbox.classList.add('auto-active-checkbox');
+      maxAutoActiveCheckbox.checked = this.getMassDriverStructure().autoActiveEnabled;
+      maxAutoActiveCheckbox.addEventListener('change', (event) => {
+        event.stopPropagation();
+        const structure = this.getMassDriverStructure();
+        structure.autoActiveEnabled = maxAutoActiveCheckbox.checked;
+        if (structure.autoActiveEnabled) {
+          this.setMassDriverActive(structure.count);
+          updateBuildingDisplay(buildings);
+        }
+        this.updateUI();
+      });
+      maxAutoActiveCheckbox.addEventListener('click', (event) => {
+        event.stopPropagation();
+      });
+
+      const autoLabel = document.createElement('span');
+      autoLabel.textContent = 'Auto';
+
+      autoContainer.append(maxAutoActiveCheckbox, autoLabel);
+      mainButtons.appendChild(autoContainer);
 
       const multiplierContainer = document.createElement('div');
       multiplierContainer.classList.add('multiplier-container');
@@ -157,6 +190,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         massDriverDecreaseButton: decreaseButton,
         massDriverIncreaseButton: increaseButton,
         massDriverMaxButton: maxButton,
+        massDriverMaxAutoActiveCheckbox: maxAutoActiveCheckbox,
         massDriverDivideButton: divideButton,
         massDriverMultiplyButton: multiplyButton,
         massDriverInfoNoteElement: infoNote,
@@ -256,13 +290,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const totalCost = {};
     const costPerShip = this.calculateSpaceshipCost();
     const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
-    const activeShips = this.getSpaceshipOnlyCount();
-    const multiplier = perSecond
-      ? activeShips * (1000 / duration)
-      : 1;
+    const shipCount = this.getSpaceshipOnlyCount();
+    const massDriverCount = this.getMassDriverContribution();
+    const perSecondMultiplier = perSecond ? (1000 / duration) : 1;
+    const shipMultiplier = perSecond ? shipCount * perSecondMultiplier : 1;
+    const energyMultiplier = perSecond ? (shipCount + massDriverCount) * perSecondMultiplier : 1;
     for (const category in costPerShip) {
       totalCost[category] = {};
       for (const resource in costPerShip[category]) {
+        const multiplier = resource === 'energy' ? energyMultiplier : shipMultiplier;
         totalCost[category][resource] = costPerShip[category][resource] * multiplier;
       }
     }
@@ -315,7 +351,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
           ignoreCost = false;
         }
         if (ignoreCost) continue;
-        const rateValue = costPerShip[category][resource] * shipCount * factor * (applyRates ? productivity : 1);
+        const costCount = resource === 'energy' ? shipCount + massDriverCount : shipCount;
+        const rateValue = costPerShip[category][resource] * costCount * factor * (applyRates ? productivity : 1);
         if (applyRates) {
           resources[category][resource].modifyRate(
             -rateValue,
@@ -324,7 +361,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
           );
         }
         totals.cost[category][resource] =
-          (totals.cost[category][resource] || 0) + costPerShip[category][resource] * shipCount * fraction;
+          (totals.cost[category][resource] || 0) + costPerShip[category][resource] * costCount * fraction;
       }
     }
 
@@ -397,7 +434,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
           ignoreCost = false;
         }
         if (ignoreCost) continue;
-        const amount = costPerShip[category][resource] * shipCount * fraction * productivity;
+        const costCount = resource === 'energy' ? shipCount + massDriverCount : shipCount;
+        const amount = costPerShip[category][resource] * costCount * fraction * productivity;
         const available = resources[category][resource].value || 0;
         if (available < amount) {
           shortfall = shortfall || amount > 0;
@@ -507,6 +545,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         }
         if (elements.massDriverBuiltElement) {
           elements.massDriverBuiltElement.textContent = formatBuildingCount(structure.count);
+        }
+        if (elements.massDriverMaxAutoActiveCheckbox) {
+          elements.massDriverMaxAutoActiveCheckbox.checked = structure.autoActiveEnabled;
         }
         elements.massDriverInfoSection.style.display = 'block';
         this.updateMassDriverButtonLabels();
