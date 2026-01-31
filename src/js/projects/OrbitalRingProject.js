@@ -67,14 +67,10 @@ class OrbitalRingProject extends TerraformingDurationProject {
     for (const category in cost) {
       for (const resource in cost[category]) {
         const required = cost[category][resource];
-        if (storageProj) {
-          const key = resource === 'water' ? 'liquidWater' : resource;
-          const usable = storageProj.getAvailableStoredResource(key);
-          const available = resources[category][resource].value + usable;
-          if (available < required) {
-            return false;
-          }
-        } else if (resources[category][resource].value < required) {
+        const key = resource === 'water' ? 'liquidWater' : resource;
+        const colonyAvailable = resources[category][resource].value;
+        const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
+        if (available < required) {
           return false;
         }
       }
@@ -140,14 +136,10 @@ class OrbitalRingProject extends TerraformingDurationProject {
     for (const category in cost) {
       for (const resource in cost[category]) {
         const required = cost[category][resource];
-        if (storageProj) {
-          const key = resource === 'water' ? 'liquidWater' : resource;
-          const usable = storageProj.getAvailableStoredResource(key);
-          const available = resources[category][resource].value + usable;
-          if (available < required) {
-            return false;
-          }
-        } else if (resources[category][resource].value < required) {
+        const key = resource === 'water' ? 'liquidWater' : resource;
+        const colonyAvailable = resources[category][resource].value;
+        const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
+        if (available < required) {
           return false;
         }
       }

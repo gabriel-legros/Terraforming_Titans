@@ -22,8 +22,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationStartingDuration = 0;
     this.shipWithdrawMode = false;
     this.pendingTransfers = [];
-    this.prioritizeMegaProjects = false;
-    this.prioritizeMegaOnTravel = false;
+    this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     this.waterWithdrawTarget = 'colony';
     this.strategicReserve = 0;
     this.usedStorageResyncTimer = 0;
@@ -555,13 +554,12 @@ class SpaceStorageProject extends SpaceshipProject {
 
     const cost = this.getScaledCost();
     const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
-    const storageState = storageProj || { getAvailableStoredResource: () => 0 };
     let canAffordBaseCost = true;
     for (const category in cost) {
       for (const resource in cost[category]) {
         const res = resources[category][resource];
         const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const availableTotal = res.value + storageState.getAvailableStoredResource(storageKey);
+        const availableTotal = getMegaProjectResourceAvailability(storageProj, storageKey, res.value);
         if (availableTotal < cost[category][resource]) {
           canAffordBaseCost = false;
         }
@@ -604,32 +602,18 @@ class SpaceStorageProject extends SpaceshipProject {
         const amount = cost[category][resource] * progress;
         const res = resources[category][resource];
         const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const availableFromStorage = storageProj ? storageProj.getAvailableStoredResource(storageKey) : 0;
-        const availableTotal = res.value + availableFromStorage;
+        const availableTotal = getMegaProjectResourceAvailability(storageProj, storageKey, res.value);
         if (availableTotal < amount) {
           shortfall = true;
         }
 
-        let remaining = amount;
-        if (storageProj) {
-          if (storageProj.prioritizeMegaProjects) {
-            const fromStorage = spendFromStorage(storageKey, remaining);
-            remaining -= fromStorage;
-            if (remaining > 0) {
-              applyColonyChange(category, resource, remaining);
-            }
-          } else {
-            const fromColony = Math.min(remaining, res.value);
-            if (fromColony > 0) {
-              applyColonyChange(category, resource, fromColony);
-              remaining -= fromColony;
-            }
-            if (remaining > 0) {
-              spendFromStorage(storageKey, remaining);
-            }
-          }
-        } else {
-          applyColonyChange(category, resource, remaining);
+        const colonyAvailable = res.value;
+        const allocation = getMegaProjectResourceAllocation(storageProj, storageKey, amount, colonyAvailable);
+        if (allocation.fromStorage > 0) {
+          spendFromStorage(storageKey, allocation.fromStorage);
+        }
+        if (allocation.fromColony > 0) {
+          applyColonyChange(category, resource, allocation.fromColony);
         }
       }
     }
@@ -795,12 +779,11 @@ class SpaceStorageProject extends SpaceshipProject {
       let canAffordBaseCost = true;
       if (this.isContinuous()) {
         const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
-        const storageState = storageProj || { getAvailableStoredResource: () => 0 };
         for (const category in cost) {
           for (const resource in cost[category]) {
             const res = resources[category][resource];
             const storageKey = resource === 'water' ? 'liquidWater' : resource;
-            const availableTotal = res.value + storageState.getAvailableStoredResource(storageKey);
+            const availableTotal = getMegaProjectResourceAvailability(storageProj, storageKey, res.value);
             if (availableTotal < cost[category][resource]) {
               canAffordBaseCost = false;
             }
@@ -995,8 +978,7 @@ class SpaceStorageProject extends SpaceshipProject {
       selectedResources: this.selectedResources,
       resourceUsage: this.resourceUsage,
       pendingTransfers: this.pendingTransfers,
-      prioritizeMegaProjects: this.prioritizeMegaProjects,
-      prioritizeMegaOnTravel: this.prioritizeMegaOnTravel,
+      megaProjectResourceMode: this.megaProjectResourceMode,
       strategicReserve: this.strategicReserve,
       waterWithdrawTarget: this.waterWithdrawTarget,
       resourceCaps: this.resourceCaps,
@@ -1021,8 +1003,15 @@ class SpaceStorageProject extends SpaceshipProject {
     this.selectedResources = state.selectedResources || [];
     this.resourceUsage = state.resourceUsage || {};
     this.pendingTransfers = state.pendingTransfers || [];
-    this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
-    this.prioritizeMegaOnTravel = state.prioritizeMegaOnTravel || false;
+    if (MEGA_PROJECT_RESOURCE_MODE_MAP[state.megaProjectResourceMode]) {
+      this.megaProjectResourceMode = state.megaProjectResourceMode;
+    } else if (state.prioritizeMegaProjects === false) {
+      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST;
+    } else if (state.prioritizeMegaProjects === true) {
+      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
+    } else {
+      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
+    }
     this.strategicReserve = state.strategicReserve || 0;
     this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
     this.resourceCaps = state.resourceCaps || {};
@@ -1044,8 +1033,7 @@ class SpaceStorageProject extends SpaceshipProject {
       expansionProgress: this.expansionProgress,
       usedStorage: this.usedStorage,
       resourceUsage: this.resourceUsage,
-      prioritizeMegaProjects: this.prioritizeMegaProjects,
-      prioritizeMegaOnTravel: this.prioritizeMegaOnTravel,
+      megaProjectResourceMode: this.megaProjectResourceMode,
       strategicReserve: this.strategicReserve,
       resourceCaps: this.resourceCaps,
     };
@@ -1056,12 +1044,14 @@ class SpaceStorageProject extends SpaceshipProject {
     this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
     this.resourceUsage = state.resourceUsage || {};
-    this.prioritizeMegaProjects = state.prioritizeMegaProjects || false;
-    this.prioritizeMegaOnTravel = state.prioritizeMegaOnTravel || false;
     this.strategicReserve = state.strategicReserve || 0;
     this.resourceCaps = state.resourceCaps || {};
-    if (this.prioritizeMegaOnTravel) {
-      this.prioritizeMegaProjects = true;
+    if (MEGA_PROJECT_RESOURCE_MODE_MAP[state.megaProjectResourceMode]) {
+      this.megaProjectResourceMode = state.megaProjectResourceMode;
+    } else if (state.prioritizeMegaProjects === false) {
+      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST;
+    } else if (state.prioritizeMegaProjects === true) {
+      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     }
   }
 }

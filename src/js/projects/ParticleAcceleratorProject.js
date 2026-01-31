@@ -261,10 +261,7 @@ class ParticleAcceleratorProject extends Project {
 
   getAvailableMaterialAmount(resourceKey, storage) {
     const colonyAmount = resources?.colony?.[resourceKey]?.value ?? 0;
-    if (!storage) {
-      return colonyAmount;
-    }
-    return colonyAmount + storage.getAvailableStoredResource(resourceKey);
+    return getMegaProjectResourceAvailability(storage, resourceKey, colonyAmount);
   }
 
   alignRadiusToStep(radius) {

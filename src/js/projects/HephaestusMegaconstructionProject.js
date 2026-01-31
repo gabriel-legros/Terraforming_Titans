@@ -305,9 +305,9 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     for (const category in cost) {
       for (const resource in cost[category]) {
         const amount = cost[category][resource] * fraction;
-        let available = resources[category][resource].value;
         const key = resource === 'water' ? 'liquidWater' : resource;
-        available += storageProj.getAvailableStoredResource(key);
+        const colonyAvailable = resources[category][resource].value;
+        const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
         if (available < amount) {
           shortfall = true;
         }
@@ -321,45 +321,22 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
 
     for (const category in cost) {
       for (const resource in cost[category]) {
-        let remaining = cost[category][resource] * fraction;
+        const amount = cost[category][resource] * fraction;
         const key = resource === 'water' ? 'liquidWater' : resource;
-        if (storageProj.prioritizeMegaProjects) {
-          const fromStorage = Math.min(storageProj.getAvailableStoredResource(key), remaining);
-          if (fromStorage > 0) {
-            storageProj.resourceUsage[key] -= fromStorage;
-            storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
-            if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
-            remaining -= fromStorage;
+        const colonyAvailable = resources[category][resource].value;
+        const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+        if (allocation.fromColony > 0) {
+          if (accumulatedChanges) {
+            accumulatedChanges[category] ||= {};
+            accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - allocation.fromColony;
+          } else {
+            resources[category][resource].decrease(allocation.fromColony);
           }
-          if (remaining > 0) {
-            if (accumulatedChanges) {
-              accumulatedChanges[category] ||= {};
-              accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - remaining;
-            } else {
-              resources[category][resource].decrease(remaining);
-            }
-          }
-        } else {
-          const availableColony = resources[category][resource].value;
-          const fromColony = Math.min(availableColony, remaining);
-          if (fromColony > 0) {
-            if (accumulatedChanges) {
-              accumulatedChanges[category] ||= {};
-              accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - fromColony;
-            } else {
-              resources[category][resource].decrease(fromColony);
-            }
-            remaining -= fromColony;
-          }
-          if (remaining > 0) {
-            const fromStorage = Math.min(storageProj.getAvailableStoredResource(key), remaining);
-            if (fromStorage > 0) {
-              storageProj.resourceUsage[key] -= fromStorage;
-              storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
-              if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
-              remaining -= fromStorage;
-            }
-          }
+        }
+        if (allocation.fromStorage > 0) {
+          storageProj.resourceUsage[key] -= allocation.fromStorage;
+          storageProj.usedStorage = Math.max(0, storageProj.usedStorage - allocation.fromStorage);
+          if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
         }
       }
     }

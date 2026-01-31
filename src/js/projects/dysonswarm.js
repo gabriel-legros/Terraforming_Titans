@@ -49,14 +49,10 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     for (const cat in this.collectorCost) {
       for (const res in this.collectorCost[cat]) {
         const required = this.collectorCost[cat][res];
-        if (storageProj) {
-          const key = res === 'water' ? 'liquidWater' : res;
-          const usable = storageProj.getAvailableStoredResource(key);
-          const available = resources[cat][res].value + usable;
-          if (available < required) return false;
-        } else if (resources[cat][res].value < required) {
-          return false;
-        }
+        const key = res === 'water' ? 'liquidWater' : res;
+        const colonyAvailable = resources[cat][res].value;
+        const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
+        if (available < required) return false;
       }
     }
     return true;
@@ -66,38 +62,21 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     for (const cat in this.collectorCost) {
       for (const res in this.collectorCost[cat]) {
-        let remaining = this.collectorCost[cat][res];
+        const amount = this.collectorCost[cat][res];
         if (storageProj) {
           const key = res === 'water' ? 'liquidWater' : res;
-          if (storageProj.prioritizeMegaProjects) {
-            const fromStorage = Math.min(storageProj.getAvailableStoredResource(key), remaining);
-            if (fromStorage > 0) {
-              storageProj.resourceUsage[key] -= fromStorage;
-              storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
-              if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
-              remaining -= fromStorage;
-            }
-            if (remaining > 0) {
-              resources[cat][res].decrease(remaining);
-            }
-          } else {
-            const fromColony = Math.min(resources[cat][res].value, remaining);
-            if (fromColony > 0) {
-              resources[cat][res].decrease(fromColony);
-              remaining -= fromColony;
-            }
-            if (remaining > 0) {
-              const fromStorage = Math.min(storageProj.getAvailableStoredResource(key), remaining);
-              if (fromStorage > 0) {
-                storageProj.resourceUsage[key] -= fromStorage;
-                storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
-                if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
-                remaining -= fromStorage;
-              }
-            }
+          const colonyAvailable = resources[cat][res].value;
+          const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+          if (allocation.fromColony > 0) {
+            resources[cat][res].decrease(allocation.fromColony);
+          }
+          if (allocation.fromStorage > 0) {
+            storageProj.resourceUsage[key] -= allocation.fromStorage;
+            storageProj.usedStorage = Math.max(0, storageProj.usedStorage - allocation.fromStorage);
+            if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
           }
         } else {
-          resources[cat][res].decrease(remaining);
+          resources[cat][res].decrease(amount);
         }
       }
     }
@@ -166,16 +145,14 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
         if (applyRates && resources[category]?.[resource]) {
           const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
           const colonyAvailable = resources[category][resource].value + pending;
-          let colonyPortion = tickAmount;
-          if (storageProj) {
-            const key = resource === 'water' ? 'liquidWater' : resource;
-            if (storageProj.prioritizeMegaProjects) {
-              const storageAvailable = storageProj.getAvailableStoredResource(key);
-              colonyPortion = Math.max(tickAmount - storageAvailable, 0);
-            } else {
-              colonyPortion = Math.min(colonyAvailable, tickAmount);
-            }
-          }
+          const key = resource === 'water' ? 'liquidWater' : resource;
+          const allocation = getMegaProjectResourceAllocation(
+            storageProj,
+            key,
+            tickAmount,
+            Math.max(colonyAvailable, 0)
+          );
+          const colonyPortion = allocation.fromColony;
           const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
           if (colonyRate > 0) {
             resources[category][resource].modifyRate(
@@ -216,11 +193,9 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     for (const category in this.collectorCost) {
       for (const resource in this.collectorCost[category]) {
         const amount = this.collectorCost[category][resource] * fraction * productivity;
-        let available = resources[category]?.[resource]?.value || 0;
-        if (storageProj) {
-          const key = resource === 'water' ? 'liquidWater' : resource;
-          available += storageProj.getAvailableStoredResource(key);
-        }
+        const colonyAvailable = resources[category]?.[resource]?.value || 0;
+        const key = resource === 'water' ? 'liquidWater' : resource;
+        const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
         if (available < amount) {
           shortfall = true;
         }
@@ -230,51 +205,28 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     // Deduct resources proportionally
     for (const category in this.collectorCost) {
       for (const resource in this.collectorCost[category]) {
-        let remaining = this.collectorCost[category][resource] * fraction * productivity;
+        const amount = this.collectorCost[category][resource] * fraction * productivity;
         
         if (storageProj) {
           const key = resource === 'water' ? 'liquidWater' : resource;
-          if (storageProj.prioritizeMegaProjects) {
-            const fromStorage = Math.min(storageProj.getAvailableStoredResource(key), remaining);
-            if (fromStorage > 0) {
-              storageProj.resourceUsage[key] -= fromStorage;
-              storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
-              if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
-              remaining -= fromStorage;
-            }
-            if (remaining > 0) {
-              if (accumulatedChanges) {
-                if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
-                if (accumulatedChanges[category][resource] === undefined) {
-                  accumulatedChanges[category][resource] = 0;
-                }
-                accumulatedChanges[category][resource] -= remaining;
-              } else {
-                resources[category][resource].decrease(remaining);
+          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+          const colonyAvailable = Math.max(resources[category][resource].value + pending, 0);
+          const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+          if (allocation.fromColony > 0) {
+            if (accumulatedChanges) {
+              if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
+              if (accumulatedChanges[category][resource] === undefined) {
+                accumulatedChanges[category][resource] = 0;
               }
+              accumulatedChanges[category][resource] -= allocation.fromColony;
+            } else {
+              resources[category][resource].decrease(allocation.fromColony);
             }
-          } else {
-            const fromColony = Math.min(resources[category][resource].value + accumulatedChanges[category][resource], remaining);
-            if (fromColony > 0) {
-              if (accumulatedChanges) {
-                if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
-                if (accumulatedChanges[category][resource] === undefined) {
-                  accumulatedChanges[category][resource] = 0;
-                }
-                accumulatedChanges[category][resource] -= fromColony;
-              } else {
-                resources[category][resource].decrease(fromColony);
-              }
-              remaining -= fromColony;
-            }
-            if (remaining > 0) {
-              const fromStorage = Math.min(storageProj.getAvailableStoredResource(key), remaining);
-              if (fromStorage > 0) {
-                storageProj.resourceUsage[key] -= fromStorage;
-                storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
-                if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
-              }
-            }
+          }
+          if (allocation.fromStorage > 0) {
+            storageProj.resourceUsage[key] -= allocation.fromStorage;
+            storageProj.usedStorage = Math.max(0, storageProj.usedStorage - allocation.fromStorage);
+            if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
           }
         } else {
           if (accumulatedChanges) {
@@ -282,9 +234,9 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
             if (accumulatedChanges[category][resource] === undefined) {
               accumulatedChanges[category][resource] = 0;
             }
-            accumulatedChanges[category][resource] -= remaining;
+            accumulatedChanges[category][resource] -= amount;
           } else {
-            resources[category][resource].decrease(remaining);
+            resources[category][resource].decrease(amount);
           }
         }
       }

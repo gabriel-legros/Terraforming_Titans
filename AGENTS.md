@@ -566,6 +566,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Colony unlocks now raise the same tab alert badge as buildings, respecting the Disable unlock alerts setting.
 - Building production/consumption summaries now skip hidden or locked resources unless a structure sets always-show flags, which waste buildings now use to keep their output visible.
 - Special project ordering now treats all import resource missions as one card, ignores hidden projects when showing arrows, and saves the grouped order across travel and saves.
+- Space storage now uses a mega/giga project resource priority dropdown (prioritize or restrict to space/colony), and mega/giga spending respects the selection.
 - Autobuild target counts now always display in compact k/M/B formatting; removed the related settings toggle.
 - Spaceship, android, and Import Resources assignment cards now use compact k/M/B formatting for available/assigned counts.
 - Added Solis Prime as a rogue story planet that relies on background radiation for luminosity.

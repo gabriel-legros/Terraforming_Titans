@@ -9,6 +9,77 @@ const IMPORT_RESOURCE_PROJECT_NAMES = [
   'hydrogenSpaceMining',
 ];
 
+const MEGA_PROJECT_RESOURCE_MODES = {
+  SPACE_FIRST: 'space-first',
+  COLONY_FIRST: 'colony-first',
+  SPACE_ONLY: 'space-only',
+  COLONY_ONLY: 'colony-only',
+};
+
+const MEGA_PROJECT_RESOURCE_MODE_OPTIONS = [
+  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: 'Prioritize space resources for mega/giga projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: 'Prioritize colony resources for mega/giga projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY, label: 'Only use space resources for mega/giga projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY, label: 'Only use colony resources for mega/giga projects' },
+];
+
+const MEGA_PROJECT_RESOURCE_MODE_MAP = {
+  [MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST]: true,
+  [MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST]: true,
+  [MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY]: true,
+  [MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY]: true,
+};
+
+function resolveMegaProjectResourceMode(storageProj) {
+  const mode = storageProj?.megaProjectResourceMode;
+  if (MEGA_PROJECT_RESOURCE_MODE_MAP[mode]) {
+    return mode;
+  }
+  const legacy = storageProj?.prioritizeMegaProjects;
+  if (legacy === false) {
+    return MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST;
+  }
+  if (legacy === true) {
+    return MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
+  }
+  return MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
+}
+
+function getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable) {
+  const storageAvailable = storageProj?.getAvailableStoredResource?.(storageKey) || 0;
+  const mode = storageProj ? resolveMegaProjectResourceMode(storageProj) : MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY;
+  if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY) {
+    return storageAvailable;
+  }
+  if (mode === MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY) {
+    return colonyAvailable;
+  }
+  return colonyAvailable + storageAvailable;
+}
+
+function getMegaProjectResourceAllocation(storageProj, storageKey, amount, colonyAvailable) {
+  const storageAvailable = storageProj?.getAvailableStoredResource?.(storageKey) || 0;
+  const mode = storageProj ? resolveMegaProjectResourceMode(storageProj) : MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY;
+  let fromStorage = 0;
+  let fromColony = 0;
+  if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY) {
+    fromStorage = Math.min(storageAvailable, amount);
+    return { fromStorage, fromColony };
+  }
+  if (mode === MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY) {
+    fromColony = Math.min(colonyAvailable, amount);
+    return { fromStorage, fromColony };
+  }
+  if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST) {
+    fromStorage = Math.min(storageAvailable, amount);
+    fromColony = amount - fromStorage;
+    return { fromStorage, fromColony };
+  }
+  fromColony = Math.min(colonyAvailable, amount);
+  fromStorage = amount - fromColony;
+  return { fromStorage, fromColony };
+}
+
 class Project extends EffectableEntity {
   constructor(config, name) {
     super(config); // Call the base class constructor
@@ -314,14 +385,10 @@ class Project extends EffectableEntity {
     for (const category in cost) {
       for (const resource in cost[category]) {
         const required = cost[category][resource];
-        if (storageProj) {
-          const key = resource === 'water' ? 'liquidWater' : resource;
-          const usable = storageProj.getAvailableStoredResource(key);
-          const available = resources[category][resource].value + usable;
-          if (available < required) {
-            return false;
-          }
-        } else if (resources[category][resource].value < required) {
+        const key = resource === 'water' ? 'liquidWater' : resource;
+        const colonyAvailable = resources[category][resource].value;
+        const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
+        if (available < required) {
           return false;
         }
       }
@@ -344,39 +411,21 @@ class Project extends EffectableEntity {
 
     for (const category in cost) {
       for (const resource in cost[category]) {
-        let remaining = cost[category][resource];
+        const amount = cost[category][resource];
         if (storageProj) {
           const key = resource === 'water' ? 'liquidWater' : resource;
-          const availableFromStorage = storageProj.getAvailableStoredResource(key);
-          if (storageProj.prioritizeMegaProjects) {
-            const fromStorage = Math.min(availableFromStorage, remaining);
-            if (fromStorage > 0) {
-              storageProj.resourceUsage[key] -= fromStorage;
-              storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
-              if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
-              remaining -= fromStorage;
-            }
-            if (remaining > 0) {
-              resources[category][resource].decrease(remaining);
-            }
-          } else {
-            const fromColony = Math.min(resources[category][resource].value, remaining);
-            if (fromColony > 0) {
-              resources[category][resource].decrease(fromColony);
-              remaining -= fromColony;
-            }
-            if (remaining > 0) {
-              const fromStorage = Math.min(availableFromStorage, remaining);
-              if (fromStorage > 0) {
-                storageProj.resourceUsage[key] -= fromStorage;
-                storageProj.usedStorage = Math.max(0, storageProj.usedStorage - fromStorage);
-                if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
-                remaining -= fromStorage;
-              }
-            }
+          const colonyAvailable = resources[category][resource].value;
+          const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+          if (allocation.fromColony > 0) {
+            resources[category][resource].decrease(allocation.fromColony);
+          }
+          if (allocation.fromStorage > 0) {
+            storageProj.resourceUsage[key] -= allocation.fromStorage;
+            storageProj.usedStorage = Math.max(0, storageProj.usedStorage - allocation.fromStorage);
+            if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
           }
         } else {
-          resources[category][resource].decrease(remaining);
+          resources[category][resource].decrease(amount);
         }
       }
     }
@@ -650,7 +699,14 @@ class Project extends EffectableEntity {
     if (!storageProj) return false;
     const key = resource === 'water' ? 'liquidWater' : resource;
     const usable = storageProj.getAvailableStoredResource(key);
-    if (storageProj.prioritizeMegaProjects) {
+    const mode = resolveMegaProjectResourceMode(storageProj);
+    if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY) {
+      return usable >= amount;
+    }
+    if (mode === MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY) {
+      return false;
+    }
+    if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST) {
       return usable >= amount;
     }
     const pending = accumulatedChanges?.[category]?.[resource] ?? 0;

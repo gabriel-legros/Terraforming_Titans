@@ -543,12 +543,19 @@ class ArtificialManager extends EffectableEntity {
     setPrioritizeSpaceStorage(value) {
         const checked = !!value;
         const storageProj = projectManager?.projects?.spaceStorage;
-        storageProj && (storageProj.prioritizeMegaProjects = checked);
+        storageProj && (storageProj.megaProjectResourceMode = checked
+            ? MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
+            : MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST);
         this.prioritizeSpaceStorage = checked;
     }
 
     getPrioritizeSpaceStorage() {
-        return projectManager?.projects?.spaceStorage?.prioritizeMegaProjects ?? this.prioritizeSpaceStorage;
+        const mode = projectManager?.projects?.spaceStorage?.megaProjectResourceMode;
+        if (MEGA_PROJECT_RESOURCE_MODE_MAP[mode]) {
+            return mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
+                || mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
+        }
+        return this.prioritizeSpaceStorage;
     }
 
     createSeed() {
@@ -556,19 +563,15 @@ class ArtificialManager extends EffectableEntity {
         return `A-${id}`;
     }
 
-    canCoverCost(cost, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
+    canCoverCost(cost) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
-        const useStorage = !!storageProj;
         for (const key of Object.keys(cost)) {
             const required = Math.max(cost[key] || 0, 0);
             if (!required) continue;
             const colonyRes = resources.colony[key];
             const colonyAvailable = colonyRes ? colonyRes.value : 0;
             const storageKey = key === 'water' ? 'liquidWater' : key;
-            const storageAvailable = useStorage && storageProj.getAvailableStoredResource
-                ? storageProj.getAvailableStoredResource(storageKey)
-                : 0;
-            const total = prioritizeStorage ? storageAvailable + colonyAvailable : colonyAvailable + storageAvailable;
+            const total = getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable);
             if (total < required) {
                 return false;
             }
@@ -576,7 +579,7 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
-    pullResources(cost, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
+    pullResources(cost) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const useStorage = !!storageProj;
         const plan = {};
@@ -587,20 +590,17 @@ class ArtificialManager extends EffectableEntity {
             const colonyRes = resources.colony[key];
             const colonyAvailable = colonyRes ? colonyRes.value : 0;
             const storageKey = key === 'water' ? 'liquidWater' : key;
-            const storageAvailable = useStorage && storageProj.getAvailableStoredResource
-                ? storageProj.getAvailableStoredResource(storageKey)
-                : 0;
-            const total = colonyAvailable + storageAvailable;
+            const total = getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable);
             if (total < required) {
                 return null;
             }
 
-            if (prioritizeStorage && useStorage) {
-                const fromStorage = Math.min(storageAvailable, required);
-                plan[key] = { colony: required - fromStorage, storage: fromStorage, storageKey };
+            if (useStorage) {
+                const allocation = getMegaProjectResourceAllocation(storageProj, storageKey, required, colonyAvailable);
+                plan[key] = { colony: allocation.fromColony, storage: allocation.fromStorage, storageKey };
             } else {
                 const fromColony = Math.min(colonyAvailable, required);
-                plan[key] = { colony: fromColony, storage: required - fromColony, storageKey };
+                plan[key] = { colony: fromColony, storage: 0, storageKey };
             }
         }
 
