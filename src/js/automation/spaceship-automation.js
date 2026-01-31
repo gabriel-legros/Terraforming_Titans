@@ -367,19 +367,37 @@ class SpaceshipAutomation {
       const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
       let stepLimit = isCappedMin ? remainingTotal : (limitValue === null ? remainingTotal : Math.min(limitValue, remainingTotal));
       if (isCappedMax) {
-        let totalNeeded = 0;
+        let totalWeight = 0;
         for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
           const entry = entries[entryIndex];
-          const project = targets.find(item => item.name === entry.projectId);
-          const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
-          const maxForEntry = this.computeEntryMax(entry, project);
-          if (maxForEntry === Infinity) {
-            totalNeeded = Infinity;
-            break;
+          if (entry.weight > 0) {
+            totalWeight += entry.weight;
           }
-          totalNeeded += Math.max(0, maxForEntry - currentTarget);
         }
-        stepLimit = totalNeeded === Infinity ? remainingTotal : Math.min(stepLimit, totalNeeded);
+        if (totalWeight > 0) {
+          let maxWeightedFactor = 0;
+          let hasInfinite = false;
+          for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+            const entry = entries[entryIndex];
+            if (entry.weight <= 0) continue;
+            const project = targets.find(item => item.name === entry.projectId);
+            const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
+            const maxForEntry = this.computeEntryMax(entry, project);
+            if (maxForEntry === Infinity) {
+              hasInfinite = true;
+              break;
+            }
+            const remainingCapacity = Math.max(0, maxForEntry - currentTarget);
+            const weightedFactor = remainingCapacity / entry.weight;
+            if (weightedFactor > maxWeightedFactor) {
+              maxWeightedFactor = weightedFactor;
+            }
+          }
+          if (!hasInfinite) {
+            const weightedLimit = Math.floor(maxWeightedFactor * totalWeight);
+            stepLimit = Math.min(stepLimit, weightedLimit);
+          }
+        }
       }
       let stepRemaining = stepLimit;
       if (entries.length === 0) continue;

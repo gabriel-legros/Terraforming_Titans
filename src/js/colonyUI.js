@@ -33,10 +33,8 @@ function createGrowthRateDisplay(){
   const capInfo = document.createElement('span');
   capInfo.classList.add('info-tooltip-icon');
   capInfo.innerHTML = '&#9432;';
-  growthRateDisplayCache.tooltips.capacity = attachDynamicInfoTooltip(
-    capInfo,
-    'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.'
-  );
+  const capacityText = 'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.';
+  growthRateDisplayCache.tooltips.capacity = attachDynamicInfoTooltip(capInfo, capacityText);
   capLine.appendChild(capInfo);
   body.appendChild(capLine);
   growthRateDisplayCache.capacityValue = capValue;

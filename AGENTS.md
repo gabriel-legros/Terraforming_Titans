@@ -62,6 +62,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Autobuild now supports % land share targets for structures that consume land.
 - Info tooltips created via `attachDynamicInfoTooltip` are now click-pinnable by default (click icon to keep open; click elsewhere to close).
 - Deeper Mining and Underground Expansion now support auto-assigning androids by percentage.
+- Android project auto-assign inputs now accept two-decimal percentages.
 
 ## Prestige systems
 Two reset layers control long term progression:

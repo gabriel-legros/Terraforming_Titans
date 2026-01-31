@@ -298,11 +298,13 @@ class AndroidProject extends Project {
     autoAssignLabel.htmlFor = autoAssignCheckbox.id;
     autoAssignLabel.textContent = 'Auto';
     const autoAssignInput = document.createElement('input');
-    autoAssignInput.type = 'number';
+    autoAssignInput.type = 'text';
+    autoAssignInput.inputMode = 'decimal';
     autoAssignInput.min = '0';
     autoAssignInput.max = '100';
-    autoAssignInput.step = '1';
-    autoAssignInput.value = String(this.autoAssignAndroidPercent);
+    autoAssignInput.step = '0.01';
+    const initialAutoAssign = this.autoAssignAndroidPercent || 0;
+    autoAssignInput.value = String(initialAutoAssign);
     autoAssignInput.classList.add('android-auto-assign-input');
     const autoAssignSuffix = document.createElement('span');
     autoAssignSuffix.textContent = '% of androids';
@@ -340,15 +342,23 @@ class AndroidProject extends Project {
       this.autoAssign();
       updateProjectUI(this.name);
     });
-    autoAssignInput.addEventListener('input', () => {
-      const normalized = Math.min(100, Math.max(0, Math.round(Number(autoAssignInput.value) || 0)));
-      this.autoAssignAndroidPercent = normalized;
-      autoAssignInput.value = String(normalized);
-      if (this.autoAssignAndroids) {
-        this.autoAssign();
-      }
-      updateProjectUI(this.name);
+    wireStringNumberInput(autoAssignInput, {
+      datasetKey: 'autoAssignAndroidPercent',
+      parseValue: (value) => {
+        const numeric = parseFlexibleNumber(value) || 0;
+        const clamped = Math.min(100, Math.max(0, numeric));
+        return Math.round(clamped * 100) / 100;
+      },
+      formatValue: (parsed) => String(parsed),
+      onValue: (parsed) => {
+        this.autoAssignAndroidPercent = parsed;
+        if (this.autoAssignAndroids) {
+          this.autoAssign();
+        }
+        updateProjectUI(this.name);
+      },
     });
+    autoAssignInput.dataset.autoAssignAndroidPercent = String(initialAutoAssign);
   }
 
   renderUI(container) {
@@ -365,8 +375,10 @@ class AndroidProject extends Project {
     const avail = Math.floor(resources.colony.androids.value - projectManager.getAssignedAndroids());
     elements.availableAndroidsDisplay.textContent = formatNumber(avail, true);
     elements.autoAssignAndroidCheckbox.checked = this.autoAssignAndroids;
+    const percent = this.autoAssignAndroidPercent || 0;
+    elements.autoAssignAndroidInput.dataset.autoAssignAndroidPercent = String(percent);
     if (document.activeElement !== elements.autoAssignAndroidInput) {
-      elements.autoAssignAndroidInput.value = String(this.autoAssignAndroidPercent);
+      elements.autoAssignAndroidInput.value = String(percent);
     }
     elements.androidSpeedDisplay.title = this.getAndroidSpeedTooltip();
     elements.androidSpeedDisplay.textContent = this.getAndroidSpeedDisplayText();

@@ -76,10 +76,17 @@
 
 .info-tooltip-icon .resource-tooltip {
   text-align: left;
+  font-family: Arial, sans-serif;
+  font-weight: 400;
   /* Ensure albedo/info tooltips render above subtabs and neighboring UI */
   z-index: 2500;
   /* Let the cursor leave the icon without staying hovered on the tooltip */
   pointer-events: none;
+}
+
+.growth-rate-line .info-tooltip-icon .resource-tooltip {
+  color: #fff;
+  font-weight: 400;
 }
 
 .resource-tooltip.dynamic-tooltip {

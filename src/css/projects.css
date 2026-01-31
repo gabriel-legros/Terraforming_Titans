@@ -1189,6 +1189,10 @@
     grid-template-columns: minmax(190px, auto) minmax(110px, auto) 100px minmax(40px, 1fr);
 }
 
+.galactic-market-header {
+    min-height: 30px;
+}
+
 .galactic-market-row input[type="text"] {
     width: 100%;
     max-width: 90px;
@@ -1229,6 +1233,7 @@
 .galactic-market-right-header .galactic-market-header-controls {
     width: 100%;
     justify-content: center;
+    align-items: center;
 }
 
 .cargo-resource-label {
