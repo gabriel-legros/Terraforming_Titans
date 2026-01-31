@@ -1193,6 +1193,10 @@
     min-height: 30px;
 }
 
+.galactic-market-row {
+    min-height: 25px;
+}
+
 .galactic-market-row input[type="text"] {
     width: 100%;
     max-width: 90px;
