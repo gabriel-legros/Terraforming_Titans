@@ -125,6 +125,9 @@ function resolveAutoBuildBase(structure, population, workerCap, collection) {
     if (basis === 'workers') {
         return workerCap;
     }
+    if (basis === 'initialLand') {
+        return terraforming?.initialLand || 0;
+    }
 
     if (basis.startsWith('building:')) {
         const target = collection?.[basis.slice(9)];

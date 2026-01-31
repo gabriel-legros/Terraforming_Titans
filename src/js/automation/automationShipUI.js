@@ -197,7 +197,6 @@ function renderAutomationSteps(automation, preset, container) {
 
   for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
     const step = preset.steps[stepIndex];
-    const isLastStep = stepIndex === preset.steps.length - 1;
     const stepCard = document.createElement('div');
     stepCard.classList.add('automation-step');
 
@@ -210,8 +209,6 @@ function renderAutomationSteps(automation, preset, container) {
     title.textContent = `Step ${stepIndex + 1}`;
     const subtitle = document.createElement('span');
     subtitle.classList.add('automation-step-subtitle');
-    const usingAllRemaining = isLastStep && (step.limit === null || step.limit === undefined)
-      && step.mode !== 'cappedMin' && step.mode !== 'cappedMax';
     const usingCappedMin = step.mode === 'cappedMin';
     const usingCappedMax = step.mode === 'cappedMax';
     const usingCapped = usingCappedMin || usingCappedMax;
@@ -219,8 +216,6 @@ function renderAutomationSteps(automation, preset, container) {
       subtitle.textContent = 'Balance ships with the smallest max';
     } else if (usingCappedMax) {
       subtitle.textContent = 'Balance ships with the largest max';
-    } else if (usingAllRemaining) {
-      subtitle.textContent = 'Use every remaining ship';
     } else if (step.limit !== null && step.limit !== undefined) {
       const limitText = Number(step.limit || 0).toLocaleString();
       subtitle.textContent = `Assign up to ${limitText} ships`;
@@ -245,30 +240,20 @@ function renderAutomationSteps(automation, preset, container) {
     cappedMaxOpt.value = 'cappedMax';
     cappedMaxOpt.textContent = 'Capped by largest max';
     limitMode.appendChild(cappedMaxOpt);
-    const remainingOpt = document.createElement('option');
-    remainingOpt.value = 'all';
-    remainingOpt.textContent = 'All Remaining';
-    remainingOpt.disabled = !isLastStep;
-    limitMode.appendChild(remainingOpt);
-    limitMode.value = usingAllRemaining ? 'all' : usingCappedMin ? 'cappedMin' : usingCappedMax ? 'cappedMax' : 'fixed';
+    limitMode.value = usingCappedMin ? 'cappedMin' : usingCappedMax ? 'cappedMax' : 'fixed';
     const limitInput = document.createElement('input');
     limitInput.type = 'text';
     limitInput.min = '0';
     limitInput.placeholder = 'Amount';
-    if (!usingAllRemaining && step.limit !== null && step.limit !== undefined && !usingCapped) {
+    if (step.limit !== null && step.limit !== undefined && !usingCapped) {
       limitInput.value = formatNumber(step.limit, true, 3);
     } else {
       limitInput.value = '';
     }
-    limitInput.disabled = limitMode.value === 'all' || limitMode.value === 'cappedMin' || limitMode.value === 'cappedMax';
+    limitInput.disabled = limitMode.value === 'cappedMin' || limitMode.value === 'cappedMax';
     limitMode.addEventListener('change', (event) => {
       const mode = event.target.value;
-      if (mode === 'all') {
-        automation.setStepMode(preset.id, step.id, 'fill');
-        automation.setStepLimit(preset.id, step.id, null);
-        limitInput.disabled = true;
-        limitInput.value = '';
-      } else if (mode === 'cappedMin' || mode === 'cappedMax') {
+      if (mode === 'cappedMin' || mode === 'cappedMax') {
         automation.setStepMode(preset.id, step.id, mode);
         automation.setStepLimit(preset.id, step.id, null);
         limitInput.disabled = true;
@@ -295,10 +280,6 @@ function renderAutomationSteps(automation, preset, container) {
         queueAutomationUIRefresh();
       }
     });
-    if (!isLastStep) {
-      limitMode.value = usingCappedMin ? 'cappedMin' : usingCappedMax ? 'cappedMax' : 'fixed';
-      remainingOpt.disabled = true;
-    }
     limitRow.append(limitMode, limitInput);
     const controlWrap = document.createElement('div');
     controlWrap.classList.add('automation-step-controls');

@@ -154,6 +154,9 @@ class Building extends EffectableEntity {
     if (basis === 'workers') {
       return workerCap;
     }
+    if (basis === 'initialLand') {
+      return terraforming?.initialLand || 0;
+    }
     if (basis.startsWith('building:')) {
       const targetCollection = collection || {};
       const target = targetCollection[basis.slice(9)];

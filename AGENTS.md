@@ -569,6 +569,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Special project ordering now treats all import resource missions as one card, ignores hidden projects when showing arrows, and saves the grouped order across travel and saves.
 - Space storage now uses a mega/giga project resource priority dropdown (prioritize or restrict to space/colony), and mega/giga spending respects the selection.
 - Autobuild target counts now always display in compact k/M/B formatting; removed the related settings toggle.
+- Autobuild basis dropdowns now include a % initial land option that targets terraforming.initialLand.
 - Spaceship, android, and Import Resources assignment cards now use compact k/M/B formatting for available/assigned counts.
 - Added Solis Prime as a rogue story planet that relies on background radiation for luminosity.
 - Galaxy map sectors that block story progress now show a journal icon until conquered and explain the required world milestone in the sector details.

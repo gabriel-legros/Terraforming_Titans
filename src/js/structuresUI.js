@@ -359,6 +359,9 @@ function getAutoBuildBaseValue(structure, population, workerCap, collection) {
   if (basis === 'workers') {
     return workerCap;
   }
+  if (basis === 'initialLand') {
+    return terraforming?.initialLand || 0;
+  }
 
   if (basis.startsWith('building:')) {
     const target = collection?.[basis.slice(9)];
@@ -728,6 +731,10 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     landOption.textContent = '% land share';
     autoBuildBasisSelect.appendChild(landOption);
   }
+  const initialLandOption = document.createElement('option');
+  initialLandOption.value = 'initialLand';
+  initialLandOption.textContent = '% initial land';
+  autoBuildBasisSelect.appendChild(initialLandOption);
   const fixedOption = document.createElement('option');
   fixedOption.value = 'fixed';
   fixedOption.textContent = 'Fixed';
