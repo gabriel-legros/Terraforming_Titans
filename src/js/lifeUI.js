@@ -401,7 +401,7 @@ function initializeLifeTerraformingDesignerUI() {
             <div id="life-point-shop" style="flex: 1; border: 1px solid #ccc; border-radius: 5px; padding: 10px;">
                <h4>Controls</h4>
                <div id="life-points-display" style="margin-top: 5px;">
-                 <p>Points Available <span id="life-points-available-tooltip" class="info-tooltip-icon">&#9432;</span>: <span id="life-points-available"></span> / <span id="life-points-remaining-display" style="display: none;">Remaining <span id="life-points-remaining-tooltip" class="info-tooltip-icon">&#9432;</span>: <span id="life-points-remaining"></span></span></p>
+                 <p>Points Available: <span id="life-points-available"></span> / <span id="life-points-remaining-display" style="display: none;">Remaining: <span id="life-points-remaining"></span></span></p>
                </div>
                <div style="margin-top: 10px;">
                    <button id="life-new-design-btn">Create New Design</button>
@@ -770,8 +770,6 @@ function initializeLifeTerraformingDesignerUI() {
 
   // Cache frequently used node lists for hot paths
   const staticTooltips = [
-    { id: 'life-points-available-tooltip', text: 'Total points purchased.' },
-    { id: 'life-points-remaining-tooltip', text: 'Points left to allocate in a tentative design.' },
     { id: 'life-biodome-tooltip', text: 'Each active Biodome generates life design points at log10(10 x Active Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.' },
     { id: 'life-point-quantity-divide-tooltip', text: 'Buy fewer points each purchase.' },
     { id: 'life-point-quantity-multiply-tooltip', text: 'Buy more points each purchase.' },
