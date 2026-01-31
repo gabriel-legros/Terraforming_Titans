@@ -113,7 +113,7 @@ const rdItems = {
   superconductorEfficiency: 'Superconductor production efficiency',
   androidsEfficiency: 'Androids production efficiency',
   superalloyEfficiency: 'Superalloy production efficiency',
-  superalloyFusionEfficiency: 'Superalloy Fusion Efficiency',
+  superalloyFusionEfficiency: 'Superalloy Fusion efficiency',
   foodProduction: 'Food production efficiency'
 };
 const rdDescriptions = {
