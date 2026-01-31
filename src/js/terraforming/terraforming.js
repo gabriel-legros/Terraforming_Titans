@@ -1980,6 +1980,8 @@ distributeGlobalChangesToZones(deltaTime) {
         let distributionMode = initialMode;
         let totalDistributionFactor = 0;
         let targetZones = zones;
+        const iceUsesBuried = config.distributionKey === 'ice' && config.keys.includes('buriedIce');
+        let useBuriedDistribution = false;
 
         if (distributionMode === 'biomassGrowth') {
             const design = lifeDesigner.currentDesign;
@@ -1999,9 +2001,23 @@ distributeGlobalChangesToZones(deltaTime) {
             }
         }
 
+        if (iceUsesBuried && netChangeAmount < 0 && distributionMode === 'currentAmount') {
+            let totalSurfaceIce = 0;
+            for (const zone of zones) {
+                totalSurfaceIce += this.zonalSurface[zone].ice || 0;
+            }
+            if (totalSurfaceIce <= 0) {
+                useBuriedDistribution = true;
+            }
+        }
+
         if (distributionMode === 'currentAmount') {
             for (const zone of zones) {
-                totalDistributionFactor += this.zonalSurface[zone][config.distributionKey] || 0;
+                if (useBuriedDistribution) {
+                    totalDistributionFactor += this.zonalSurface[zone].buriedIce || 0;
+                } else {
+                    totalDistributionFactor += this.zonalSurface[zone][config.distributionKey] || 0;
+                }
             }
         } else if (distributionMode === 'targetZoneArea') {
             for (const zone of targetZones) {
@@ -2023,7 +2039,9 @@ distributeGlobalChangesToZones(deltaTime) {
 
             if (totalDistributionFactor > 1e-9) {
                 if (distributionMode === 'currentAmount') {
-                    const currentAmount = this.zonalSurface[zone][config.distributionKey] || 0;
+                    const currentAmount = useBuriedDistribution
+                        ? (this.zonalSurface[zone].buriedIce || 0)
+                        : (this.zonalSurface[zone][config.distributionKey] || 0);
                     proportion = currentAmount / totalDistributionFactor;
                 } else if (distributionMode === 'targetZoneArea' && isTargetZone) {
                     const zoneArea = this.celestialParameters.surfaceArea * this.getZoneWeight(zone);
@@ -2036,8 +2054,25 @@ distributeGlobalChangesToZones(deltaTime) {
             }
 
             const zonalChange = netChangeAmount * proportion;
-            const currentValue = this.zonalSurface[zone][config.distributionKey] || 0;
-            this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentValue + zonalChange);
+            if (iceUsesBuried && zonalChange < 0) {
+                let remaining = zonalChange;
+                const currentIce = this.zonalSurface[zone].ice || 0;
+                const nextIce = currentIce + remaining;
+                if (nextIce < 0) {
+                    this.zonalSurface[zone].ice = 0;
+                    remaining = nextIce;
+                } else {
+                    this.zonalSurface[zone].ice = nextIce;
+                    remaining = 0;
+                }
+                if (remaining < 0) {
+                    const currentBuried = this.zonalSurface[zone].buriedIce || 0;
+                    this.zonalSurface[zone].buriedIce = Math.max(0, currentBuried + remaining);
+                }
+            } else {
+                const currentValue = this.zonalSurface[zone][config.distributionKey] || 0;
+                this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentValue + zonalChange);
+            }
         }
     }
 }
