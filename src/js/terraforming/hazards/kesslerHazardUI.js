@@ -314,7 +314,7 @@ function buildKesslerLayout() {
           + 'temperature, gravity, planet size, and upper-atmosphere heating from solar flux. '
           + 'To push the drag line higher, add atmosphere to raise pressure, warm the air, increase solar flux '
           + 'or shift the mix toward lighter gases (especially hydrogen) so density falls off more slowly. '
-          + 'Cooling the air or removing atmosphere lowers the drag line. \n \n Note : While water vapor is relatively light, it easily condenses and therefore has very limited impact.'
+          + 'Cooling the air, adding heavy gases or removing atmosphere lowers the drag line. \n \n Note : While water vapor is relatively light, it easily condenses and therefore has very limited impact.'
       );
     } catch (error) {
       // ignore missing UI helpers in tests
