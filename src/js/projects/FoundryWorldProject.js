@@ -364,7 +364,7 @@
       FOUNDRY_SHOP_ITEMS.forEach((item) => {
         const row = elements.shopRows[item.id];
         const purchases = this.getShopPurchaseCount(item.id);
-        row.cost.textContent = `${formatNumber(item.cost, true)} FP`;
+        row.cost.textContent = `${formatNumber(item.cost, true)} MP`;
         row.count.textContent = `${purchases}/${item.maxPurchases}`;
         row.button.disabled = !this.canPurchaseUpgrade(item);
         row.button.textContent = purchases >= item.maxPurchases ? 'Maxed' : 'Buy';
