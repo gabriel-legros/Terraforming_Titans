@@ -98,18 +98,6 @@ class HazardousBiomassHazard {
     return HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER;
   }
 
-  getZoneKeys(terraforming) {
-    if (Array.isArray(zonesList) && zonesList.length) {
-      return zonesList;
-    }
-
-    if (terraforming && terraforming.zonalSurface) {
-      return Object.keys(terraforming.zonalSurface);
-    }
-
-    return [];
-  }
-
   hasHazard(terraforming) {
     let resourcesState = null;
     try {
@@ -119,7 +107,7 @@ class HazardousBiomassHazard {
     }
 
     if (terraforming && terraforming.zonalSurface) {
-      const zoneKeys = this.getZoneKeys(terraforming);
+      const zoneKeys = getZones();
       for (let index = 0; index < zoneKeys.length; index += 1) {
         const zone = zoneKeys[index];
         const biomass = terraforming.zonalSurface[zone]?.hazardousBiomass;
@@ -183,7 +171,7 @@ class HazardousBiomassHazard {
     let totalBiomass = 0;
 
     if (terraforming && terraforming.zonalSurface) {
-      const zoneKeys = this.getZoneKeys(terraforming);
+      const zoneKeys = getZones();
       zoneKeys.forEach((zone) => {
         const zoneData = terraforming.zonalSurface[zone];
         if (!zoneData) {
@@ -242,7 +230,7 @@ class HazardousBiomassHazard {
     let growthDelta = 0;
     let crusaderDelta = 0;
     const growth = hazardParameters && hazardParameters.baseGrowth;
-    const zoneKeys = this.getZoneKeys(terraforming);
+    const zoneKeys = getZones();
     const zoneEntries = zoneKeys
       .map((zone) => ({ zone, data: terraforming?.zonalSurface?.[zone] }))
       .filter((entry) => entry.data);

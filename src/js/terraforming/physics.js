@@ -327,7 +327,7 @@ function autoSlabHeatCapacity(
 }
 
 function effectiveTemp(albedo, flux) {
-  const adjustment = currentPlanetParameters?.classification?.type === 'ring' ? 1 : 4;
+  const adjustment = isRingWorld() ? 1 : 4;
   return Math.pow((1 - albedo) * flux / (adjustment * SIGMA), 0.25);
 }
 

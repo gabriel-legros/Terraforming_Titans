@@ -95,6 +95,22 @@
 
   const ZONE_KEYS = ['tropical', 'temperate', 'polar'];
 
+  function ensureEquilibrationZones(terra) {
+    const zonalSurface = terra.zonalSurface || (terra.zonalSurface = {});
+    const resourceKeys = new Set();
+    (terra.zonalSurfaceResourceConfigs || []).forEach((config) => {
+      (config.keys || []).forEach((key) => resourceKeys.add(key));
+    });
+    ZONE_KEYS.forEach((zone) => {
+      const zoneStore = zonalSurface[zone] || (zonalSurface[zone] = {});
+      resourceKeys.forEach((key) => {
+        if (zoneStore[key] === undefined) {
+          zoneStore[key] = 0;
+        }
+      });
+    });
+  }
+
   function buildSandboxResourcesFromOverride(overrideResources) {
     const res = {};
     for (const cat of Object.keys(overrideResources)) {
@@ -224,8 +240,10 @@
     return new Promise((resolve, reject) => {
       const prevLum = typeof getStarLuminosity === 'function' ? getStarLuminosity() : 1;
       try {
+        isEquilibrating = true;
         const TF = TerraformingCtor || (typeof Terraforming === 'function' ? Terraforming : undefined);
-        if (typeof TF !== 'function') {
+        if (typeof TF !== 'function') {G
+          isEquilibrating = false;
           reject(new Error('Terraforming module unavailable'));
           return;
         }
@@ -244,6 +262,7 @@
         const terra = new TF(sandboxResources, fullParams.celestialParameters || {});
         if (typeof terra.calculateInitialValues === 'function') {
           terra.calculateInitialValues(fullParams);
+          ensureEquilibrationZones(terra);
         }
 
         let stepIdx = 0;
@@ -283,6 +302,7 @@
           if (!ok) return;
           const outOverride = copyBackToOverrideFromSandbox(fullParams, sandboxResources, terra);
           applyPostEquilibrationHazardTuning(outOverride, terra);
+          isEquilibrating = false;
           console.log('Equilibration finished. Final terraforming object:', terra);
           resolve({ override: outOverride, steps: stepIdx });
         }
@@ -378,6 +398,7 @@
 
         if (options.sync) loopChunk(); else setTimeout(loopChunk, 0);
       } catch (e) {
+        isEquilibrating = false;
         if (typeof setStarLuminosity === 'function') {
           setStarLuminosity(prevLum);
         }

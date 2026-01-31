@@ -59,16 +59,25 @@ function sphericalSegmentArea(phi1, phi2) {
   const temperateRatio = temperateDiskArea / temperateSurfaceArea;
   const polarRatio = polarDiskArea / polarSurfaceArea;
 
-  function getZones() {
-    const ringworld = currentPlanetParameters?.classification?.type === 'ring';
+  function isRingWorld() {
+    if (isEquilibrating) {
+      return false;
+    }
+    return currentPlanetParameters?.classification?.type === 'ring';
+  }
+
+  function getZones(context) {
     const custom = currentPlanetParameters?.specialAttributes?.zoneKeys;
-    return ringworld
+    if (isEquilibrating) {
+      return ZONES;
+    }
+    return isRingWorld()
       ? ['tropical']
       : (Array.isArray(custom) && custom.length ? custom : ZONES);
   }
 
   function getZoneRatio(zone) {
-    if (currentPlanetParameters?.classification?.type === 'ring') {
+    if (isRingWorld()) {
       const shadingStrength = projectManager?.projects?.ringworldTerraforming?.shadingStrength ?? 0.65;
       return 1 - shadingStrength;
     }
@@ -158,6 +167,7 @@ function estimateAmountForCoverage(coverage, zoneArea, scale = 0.0001) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     ZONES,
+    isRingWorld,
     getZones,
     getZoneRatio,
     getZonePercentage,
@@ -166,6 +176,7 @@ if (typeof module !== "undefined" && module.exports) {
   };
 } else {
   window.ZONES             = ZONES;
+  window.isRingWorld       = isRingWorld;
   window.getZones          = getZones;
   window.getZoneRatio      = getZoneRatio;
   window.getZonePercentage = getZonePercentage;

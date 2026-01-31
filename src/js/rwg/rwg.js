@@ -893,8 +893,6 @@ function buildVolatiles(archetype, Teq, landHa, rng, params) {
   return surface;
 }
 function getZoneFractionsSafe(params) {
-  try { if (typeof getZonePercentage === "function") return { tropical: getZonePercentage("tropical"), temperate: getZonePercentage("temperate"), polar: getZonePercentage("polar") }; }
-  catch (_) {}
   return params.zonal.defaultZoneFractions;
 }
 function estimateCoverage(amount, zoneArea, scale = 0.0001) {

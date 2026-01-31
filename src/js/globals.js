@@ -40,6 +40,7 @@ let spaceManager;
 let automationManager;
 let artificialManager;
 let warpGateNetworkManager;
+let isEquilibrating = false;
 
 let gameSettings = {
   disableAutosave: false,
@@ -97,5 +98,11 @@ Object.defineProperty(globalThis, 'galaxyManager', {
 Object.defineProperty(globalThis, 'artificialManager', {
   get: () => artificialManager,
   set: (value) => { artificialManager = value; },
+  configurable: true,
+});
+
+Object.defineProperty(globalThis, 'isEquilibrating', {
+  get: () => isEquilibrating,
+  set: (value) => { isEquilibrating = !!value; },
   configurable: true,
 });

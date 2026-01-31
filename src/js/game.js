@@ -503,6 +503,10 @@ function initializeGameState(options = {}) {
 }
 
 function updateLogic(delta) {
+  if(isEquilibrating){
+    return;
+  }
+
   const increment = delta / 1000;
   playTimeSeconds += increment;
   totalPlayTimeSeconds += increment;
