@@ -1,4 +1,5 @@
 let showObsoleteBuildings = false;
+const growthRateDisplayCache = { tooltips: {}, tooltipCache: {} };
 
 function createGrowthRateDisplay(){
   const controlsContainer = document.getElementById('colony-controls-container');
@@ -22,21 +23,38 @@ function createGrowthRateDisplay(){
   // Capacity multiplier line
   const capLine = document.createElement('div');
   capLine.classList.add('growth-rate-line');
-  capLine.innerHTML = '<span>Capacity:</span> <span id="growth-capacity-value">0%</span>';
+  const capLabel = document.createElement('span');
+  capLabel.textContent = 'Capacity:';
+  const capValue = document.createElement('span');
+  capValue.id = 'growth-capacity-value';
+  capValue.textContent = '0%';
+  capLine.appendChild(capLabel);
+  capLine.appendChild(capValue);
   const capInfo = document.createElement('span');
   capInfo.classList.add('info-tooltip-icon');
-  capInfo.title = 'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.';
   capInfo.innerHTML = '&#9432;';
+  growthRateDisplayCache.tooltips.capacity = attachDynamicInfoTooltip(
+    capInfo,
+    'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.'
+  );
   capLine.appendChild(capInfo);
   body.appendChild(capLine);
+  growthRateDisplayCache.capacityValue = capValue;
 
   // Base rate line
   const baseLine = document.createElement('div');
   baseLine.classList.add('growth-rate-line');
-  baseLine.innerHTML = '<span>Base rate:</span> <span id="growth-base-value">0%/s</span>';
+  const baseLabel = document.createElement('span');
+  baseLabel.textContent = 'Base rate:';
+  const baseValue = document.createElement('span');
+  baseValue.id = 'growth-base-value';
+  baseValue.textContent = '0%/s';
+  baseLine.appendChild(baseLabel);
+  baseLine.appendChild(baseValue);
   const baseInfo = document.createElement('span');
   baseInfo.classList.add('info-tooltip-icon');
-  baseInfo.title = [
+  baseInfo.innerHTML = '&#9432;';
+  const baseText = [
     'Base growth rate derived from happiness: max((happiness - 50%) / 300, 0).',
     '- Food and energy each grant up to +25 happiness when satisfied.',
     '- Comfort adds 20× its rating.',
@@ -44,41 +62,72 @@ function createGrowthRateDisplay(){
     '- Milestones ready to claim or claimed add +0.5 happiness each.',
     '- Happiness below 50% pauses growth.'
   ].join('\n');
-  baseInfo.innerHTML = '&#9432;';
+  growthRateDisplayCache.tooltips.base = attachDynamicInfoTooltip(baseInfo, baseText);
   baseLine.appendChild(baseInfo);
   body.appendChild(baseLine);
+  growthRateDisplayCache.baseValue = baseValue;
 
   // Other multipliers line
   const otherLine = document.createElement('div');
   otherLine.classList.add('growth-rate-line');
-  otherLine.innerHTML = '<span>Other multipliers:</span> <span id="growth-other-value">1x</span>';
+  const otherLabel = document.createElement('span');
+  otherLabel.textContent = 'Other multipliers:';
+  const otherValue = document.createElement('span');
+  otherValue.id = 'growth-other-value';
+  otherValue.textContent = '1x';
+  otherLine.appendChild(otherLabel);
+  otherLine.appendChild(otherValue);
   const otherInfo = document.createElement('span');
   otherInfo.classList.add('info-tooltip-icon');
-  otherInfo.title = 'Multipliers from colony sliders, and other effects.';
   otherInfo.innerHTML = '&#9432;';
+  growthRateDisplayCache.tooltips.other = attachDynamicInfoTooltip(
+    otherInfo,
+    'Multipliers from colony sliders, and other effects.'
+  );
   otherLine.appendChild(otherInfo);
   body.appendChild(otherLine);
+  growthRateDisplayCache.otherValue = otherValue;
 
   const decayLine = document.createElement('div');
   decayLine.classList.add('growth-rate-line');
-  decayLine.innerHTML = '<span>Decay:</span> <span id="growth-decay-value">0%/s</span>';
+  const decayLabel = document.createElement('span');
+  decayLabel.textContent = 'Decay:';
+  const decayValue = document.createElement('span');
+  decayValue.id = 'growth-decay-value';
+  decayValue.textContent = '0%/s';
+  decayLine.appendChild(decayLabel);
+  decayLine.appendChild(decayValue);
   const decayInfo = document.createElement('span');
   decayInfo.classList.add('info-tooltip-icon');
-  decayInfo.title = 'Combined population loss from shortages and high gravity.';
   decayInfo.innerHTML = '&#9432;';
+  growthRateDisplayCache.tooltips.decay = attachDynamicInfoTooltip(
+    decayInfo,
+    'Combined population loss from shortages and high gravity.'
+  );
   decayLine.appendChild(decayInfo);
   body.appendChild(decayLine);
+  growthRateDisplayCache.decayValue = decayValue;
 
   // Final growth line
   const growthLine = document.createElement('div');
   growthLine.classList.add('growth-rate-line');
-  growthLine.innerHTML = '<span>Growth:</span> <span id="growth-rate-value">0%/s</span>';
+  const growthLabel = document.createElement('span');
+  growthLabel.textContent = 'Growth:';
+  const growthValue = document.createElement('span');
+  growthValue.id = 'growth-rate-value';
+  growthValue.textContent = '0%/s';
+  growthLine.appendChild(growthLabel);
+  growthLine.appendChild(growthValue);
   const growthInfo = document.createElement('span');
   growthInfo.classList.add('info-tooltip-icon');
-  growthInfo.title = 'Final growth rate after applying logistic growth minus starvation, energy, and gravity decay.';
   growthInfo.innerHTML = '&#9432;';
+  growthRateDisplayCache.tooltips.growth = attachDynamicInfoTooltip(
+    growthInfo,
+    'Final growth rate after applying logistic growth minus starvation, energy, and gravity decay.'
+  );
   growthLine.appendChild(growthInfo);
   body.appendChild(growthLine);
+  growthRateDisplayCache.growthValue = growthValue;
 
   card.appendChild(body);
 
@@ -119,11 +168,11 @@ function getGrowthMultiplierBreakdown(){
 
 function updateGrowthRateDisplay(){
   if(!populationModule) return;
-  const growthEl = document.getElementById('growth-rate-value');
-  const baseEl = document.getElementById('growth-base-value');
-  const otherEl = document.getElementById('growth-other-value');
-  const capEl = document.getElementById('growth-capacity-value');
-  const decayEl = document.getElementById('growth-decay-value');
+  const growthEl = growthRateDisplayCache.growthValue;
+  const baseEl = growthRateDisplayCache.baseValue;
+  const otherEl = growthRateDisplayCache.otherValue;
+  const capEl = growthRateDisplayCache.capacityValue;
+  const decayEl = growthRateDisplayCache.decayValue;
   if(!growthEl || !baseEl || !capEl || !otherEl) return;
 
   const rate = populationModule.getCurrentGrowthPercent();
@@ -135,14 +184,14 @@ function updateGrowthRateDisplay(){
   const otherMult = populationModule.getEffectiveGrowthMultiplier();
   otherEl.textContent = `${formatNumber(otherMult, false, 3)}x`;
 
-  const otherInfo = otherEl.parentElement.querySelector('.info-tooltip-icon');
-  if(otherInfo){
+  const otherTooltip = growthRateDisplayCache.tooltips.other;
+  if(otherTooltip){
     const breakdown = getGrowthMultiplierBreakdown();
     let title = 'Multipliers from colony sliders, and other effects.';
     if(breakdown.length > 0){
       title += '\n' + breakdown.join('\n');
     }
-    otherInfo.title = title;
+    setTooltipText(otherTooltip, title, growthRateDisplayCache.tooltipCache, 'other');
   }
 
   const pop = populationModule.populationResource.value;
@@ -159,18 +208,19 @@ function updateGrowthRateDisplay(){
     const gravityRate = populationModule.gravityDecayRate * 100;
     const totalDecay = starvationRate + energyRate + gravityRate;
     decayEl.textContent = totalDecay === 0 ? '0%/s' : `-${formatNumber(totalDecay, false, 3)}%/s`;
-    const decayInfo = decayEl.parentElement.querySelector('.info-tooltip-icon');
-    if (decayInfo) {
+    const decayTooltip = growthRateDisplayCache.tooltips.decay;
+    if (decayTooltip) {
       const starvingPercent = populationModule.starvationShortage * 100;
       const withoutPower = populationModule.energyShortage * 100;
       const gravity = terraforming?.celestialParameters?.gravity ?? 0;
       const aboveTwenty = Math.max(0, gravity - 20);
-      decayInfo.title = [
+      const text = [
         'Combined population loss from shortages and high gravity.',
         `• Starvation: ${formatNumber(starvationRate, false, 3)}%/s (${formatNumber(starvingPercent, false, 1)}% starving; 100% per 360 s).`,
         `• Energy: ${formatNumber(energyRate, false, 3)}%/s (${formatNumber(withoutPower, false, 1)}% without power; 100% per 90 s).`,
         `• Gravity: ${formatNumber(gravityRate, false, 4)}%/s (gravity ${formatNumber(gravity, false, 2)} m/s²; ${formatNumber(aboveTwenty, false, 2)} above 20).`
       ].join('\n');
+      setTooltipText(decayTooltip, text, growthRateDisplayCache.tooltipCache, 'decay');
     }
   }
 }
