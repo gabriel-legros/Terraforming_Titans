@@ -100,7 +100,7 @@ class SpaceshipAutomation {
     if (!preset || preset.steps.length >= 10) return null;
     const step = {
       id: Date.now() + Math.floor(Math.random() * 1000),
-      limit: null,
+      limit: 0,
       entries: [],
       mode: 'fill'
     };
@@ -114,25 +114,37 @@ class SpaceshipAutomation {
     preset.steps = preset.steps.filter(step => step.id !== stepId);
   }
 
+  moveStep(presetId, stepId, direction) {
+    const preset = this.presets.find(item => item.id === presetId);
+    if (!preset) return;
+    const steps = preset.steps;
+    const index = steps.findIndex(step => step.id === stepId);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= steps.length) {
+      return;
+    }
+    const [step] = steps.splice(index, 1);
+    steps.splice(nextIndex, 0, step);
+  }
+
   setStepLimit(presetId, stepId, value) {
     const preset = this.presets.find(item => item.id === presetId);
     if (!preset) return;
     const step = preset.steps.find(item => item.id === stepId);
     if (!step) return;
-    const isLast = preset.steps[preset.steps.length - 1] === step;
     if (value === null || value === undefined || value === '') {
       if (step.mode === 'cappedMin' || step.mode === 'cappedMax') {
         step.limit = null;
         return;
       }
-      step.limit = isLast ? null : 0;
+      step.limit = 0;
       return;
     }
     const parsed = Math.floor(Number(value));
     if (Number.isFinite(parsed) && parsed >= 0) {
       step.limit = parsed;
     } else {
-      step.limit = isLast ? null : 0;
+      step.limit = 0;
     }
   }
 
@@ -365,7 +377,10 @@ class SpaceshipAutomation {
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
       const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
-      let stepLimit = isCappedMin ? remainingTotal : (limitValue === null ? remainingTotal : Math.min(limitValue, remainingTotal));
+      let stepLimit = remainingTotal;
+      if (!isCappedMin && !isCappedMax) {
+        stepLimit = limitValue === null ? 0 : Math.min(limitValue, remainingTotal);
+      }
       if (isCappedMax) {
         let totalWeight = 0;
         for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
@@ -588,7 +603,10 @@ class SpaceshipAutomation {
       enabled: !!preset.enabled,
       steps: Array.isArray(preset.steps) ? preset.steps.map(step => {
         const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(Number(step.limit));
-        const stepMode = step.mode || 'fill';
+        let stepMode = step.mode || 'fill';
+        if (stepMode !== 'cappedMin' && stepMode !== 'cappedMax' && limitValue === null) {
+          stepMode = 'cappedMax';
+        }
         return {
           id: step.id,
           limit: (stepMode === 'cappedMin' || stepMode === 'cappedMax') ? null : limitValue,

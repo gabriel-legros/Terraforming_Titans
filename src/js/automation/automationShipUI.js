@@ -227,6 +227,10 @@ function renderAutomationSteps(automation, preset, container) {
 
     const limitRow = document.createElement('div');
     limitRow.classList.add('automation-limit-row');
+    const limitInfo = document.createElement('span');
+    limitInfo.className = 'info-tooltip-icon';
+    limitInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(limitInfo, 'Assign Amount: distribute up to the entered ship count by weight. Capped by smallest max: balance by weight until the smallest max is reached. Capped by largest max: balance by weight until the largest max is reached; if no largest max is reached (infinite/unset caps), it uses every remaining ship.');
     const limitMode = document.createElement('select');
     const fixedOpt = document.createElement('option');
     fixedOpt.value = 'fixed';
@@ -280,10 +284,32 @@ function renderAutomationSteps(automation, preset, container) {
         queueAutomationUIRefresh();
       }
     });
-    limitRow.append(limitMode, limitInput);
+    limitRow.append(limitInfo, limitMode, limitInput);
     const controlWrap = document.createElement('div');
     controlWrap.classList.add('automation-step-controls');
     controlWrap.append(limitRow);
+    const orderWrap = document.createElement('div');
+    orderWrap.classList.add('automation-step-order');
+    const moveUp = document.createElement('button');
+    moveUp.textContent = '↑';
+    moveUp.title = 'Move step up';
+    moveUp.disabled = stepIndex === 0;
+    moveUp.addEventListener('click', () => {
+      automation.moveStep(preset.id, step.id, -1);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+    const moveDown = document.createElement('button');
+    moveDown.textContent = '↓';
+    moveDown.title = 'Move step down';
+    moveDown.disabled = stepIndex === preset.steps.length - 1;
+    moveDown.addEventListener('click', () => {
+      automation.moveStep(preset.id, step.id, 1);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+    orderWrap.append(moveUp, moveDown);
+    controlWrap.appendChild(orderWrap);
 
     const removeStep = document.createElement('button');
     removeStep.textContent = '✕';

@@ -53,6 +53,8 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Ringworld terraforming now includes Auto Shade targeting (average/day/night trend) with a temperature goal and travel persistence.
 - Building production entries now show tooltips with base output and named multiplier sources.
 - Ship automation now locks Import Resources assignment buttons while automation is active.
+- Ship automation no longer offers All Remaining steps; legacy saves migrate them to Capped by largest max.
+- Ship automation steps can now be reordered with up/down arrows.
 - Research concept unlocks now enable specific research entries directly instead of relying on research manager boolean flags.
 - Story-gated research unlocks now enable their research entries directly instead of using requiredFlags.
 - Atmospheric density upper-atmosphere molar-mass heuristics now use bulk/hydrostatic mean molecular weight (excluding heavy trace like SF6/aerosols), and upper-atmosphere temperature/column-mass heuristics now use bulk (non-heavy-trace) pressure/mass so adding safe GHG can’t lower the Kessler drag line via thermosphere cooling heuristics.
