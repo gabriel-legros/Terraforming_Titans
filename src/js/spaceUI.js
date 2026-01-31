@@ -299,6 +299,25 @@ function showTravelWarningPopup(warningData, onConfirm) {
     travelWarningOverlay.style.display = 'flex';
 }
 
+function getActiveSpecializationProject() {
+    const bioworld = projectManager.projects.bioworld;
+    if (bioworld.isActive && !bioworld.isCompleted) {
+        return bioworld;
+    }
+    const foundry = projectManager.projects.foundryWorld;
+    if (foundry.isActive && !foundry.isCompleted) {
+        return foundry;
+    }
+    return null;
+}
+
+function handleSpecializationTravelWarning(onConfirm) {
+    const project = getActiveSpecializationProject();
+    return project && (showTravelWarningPopup({
+        message: `${project.displayName} is still in progress. Leaving now will abandon its progress.`,
+    }, onConfirm), true);
+}
+
 function updateSpaceRandomVisibility() {
     if (!_spaceManagerInstance) return;
     if (_spaceManagerInstance.randomTabEnabled) {
@@ -572,9 +591,12 @@ document.addEventListener('click', function(evt){
  * Select a planet and reset the game state for it.
  * @param {string} planetKey
  */
-function selectPlanet(planetKey, force){
+function selectPlanet(planetKey, force, skipSpecialization){
     if(!_spaceManagerInstance) {
         console.error('SpaceManager not initialized');
+        return;
+    }
+    if (!force && !skipSpecialization && handleSpecializationTravelWarning(() => selectPlanet(planetKey, false, true))) {
         return;
     }
     if(!force && planetParameters[planetKey]?.travelWarning){

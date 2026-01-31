@@ -617,6 +617,9 @@ The planet visualiser has been modularised into files covering core setup, light
 - Custom dust renames the Black Dust resource, drives planet visualizer rock tint up to full coverage, and makes automation fill to cap.
 - Bioworld and Foundry World projects now hide their start bars when the other specialization is active or completed.
 - Bioworld and Foundry World projects now remain adjacent in the project list ordering, even after reordering, saving, or travel.
+- Bioworld and Foundry World specialization projects now share a common SpecializationProject base for shop UI, point accrual, and ecumenopolis disable logic.
+- Travel now warns first when a Bioworld or Foundry World specialization is in progress before proceeding to story, random world, or artificial travel warnings.
+- Bioworld and Foundry World projects now include the Uncheck on travelling automation option.
 - Planet visualizer cloud textures now use softer thresholding with density falloff to reduce blocky edges.
 - Artificial worlds now render with a metallic surface texture and skip crater noise in the planet visualizer.
 - Planet visualizer terrain now highlights the top height-map band as mountain ridges.

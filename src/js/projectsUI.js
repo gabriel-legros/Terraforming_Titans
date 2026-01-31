@@ -581,7 +581,8 @@ function createProjectItem(project) {
 
   const showTravelReset = project.name !== 'dysonSwarmReceiver' &&
     (project.attributes?.spaceStorage ||
-    project.attributes?.canUseSpaceStorage);
+    project.attributes?.canUseSpaceStorage ||
+    project.attributes?.projectGroup === 'specializedWorlds');
   let autoStartTravelResetCheckbox = null;
   let autoStartTravelResetLabel = null;
   if (showTravelReset) {

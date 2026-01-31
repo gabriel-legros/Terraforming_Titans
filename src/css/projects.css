@@ -120,11 +120,10 @@
 }
 
 .bioworld-shop-header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 8px 10px;
     border: 1px solid #dee2e6;
     border-radius: 6px;
@@ -136,16 +135,29 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    justify-self: start;
 }
 
 .bioworld-shop-meta {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    justify-self: center;
 }
 
 .bioworld-shop-points {
     font-weight: 700;
+}
+
+@media (max-width: 720px) {
+    .bioworld-shop-header {
+        grid-template-columns: 1fr;
+        justify-items: start;
+    }
+
+    .bioworld-shop-meta {
+        justify-self: start;
+    }
 }
 
 .bioworld-shop-items {

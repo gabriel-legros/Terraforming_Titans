@@ -1,10 +1,10 @@
 (function () {
-  let ProjectBase;
+  let SpecializationBase;
   try {
-    ProjectBase = Project;
+    SpecializationBase = SpecializationProject;
   } catch (error) {}
   try {
-    ({ Project: ProjectBase } = require('../projects.js'));
+    ({ SpecializationProject: SpecializationBase } = require('./SpecializationProject.js'));
   } catch (error) {}
 
   const FOUNDRY_SHOP_ITEMS = [
@@ -57,25 +57,30 @@
     return acc;
   }, {});
 
-  class FoundryWorldProject extends ProjectBase {
+  class FoundryWorldProject extends SpecializationBase {
     constructor(config, name) {
-      super(config, name);
-      this.foundryPoints = 0;
-      this.ecumenopolisDisabled = false;
-      this.shopPurchases = this.createEmptyShopPurchases();
-      this.shopElements = null;
-    }
-
-    createEmptyShopPurchases() {
-      return FOUNDRY_SHOP_ITEMS.reduce((acc, item) => {
-        acc[item.id] = 0;
-        return acc;
-      }, {});
+      super(config, name, {
+        pointsKey: 'foundryPoints',
+        pointsLabel: 'Metallurgy Points:',
+        pointsUnit: 'MP',
+        shopTitle: 'Metallurgy Shop',
+        shopTooltip: 'You gain 10 metallurgy points times sqrt(initial land / 50B) when travelling after completing this project.',
+        emptyShopText: 'No foundry upgrades available yet.',
+        shopItems: FOUNDRY_SHOP_ITEMS,
+        shopItemMap: FOUNDRY_SHOP_ITEM_MAP,
+        specializationSourceId: 'foundryWorld',
+        otherSpecializationId: 'bioworld',
+        ecumenopolisEffectPrefix: 'foundry',
+      });
     }
 
     getFoundryPointGain(initialLand) {
       const normalized = Math.max(initialLand, 0);
       return Math.sqrt(normalized / 50000000000) * 10;
+    }
+
+    getTravelPointGain() {
+      return this.getFoundryPointGain(terraforming.initialLand);
     }
 
     getDeepMiningDepth() {
@@ -96,21 +101,6 @@
         return false;
       }
       return true;
-    }
-
-    shouldHideStartBar() {
-      return false;
-    }
-
-    getSpecializationLockedText() {
-      if (this.isCompleted) {
-        return '';
-      }
-      const bioworld = projectManager.projects.bioworld;
-      if (bioworld.isCompleted) {
-        return 'Another Specialization has been completed';
-      }
-      return '';
     }
 
     complete() {
@@ -138,62 +128,7 @@
       metropolis.updateResourceStorage();
     }
 
-    applyEcumenopolisDisable() {
-      researchManager.addAndReplace({
-        type: 'booleanFlag',
-        flagId: 'ecumenopolisDisabled',
-        value: true,
-        effectId: 'foundry-ecumenopolis-disable',
-        sourceId: 'foundryWorld',
-      });
-      researchManager.addAndReplace({
-        type: 'researchDisable',
-        targetId: 'ai_ecumenopolis_expansion',
-        effectId: 'foundry-ecumenopolis-research-disable',
-        sourceId: 'foundryWorld',
-      });
-      const ecumenopolis = colonies.t7_colony;
-      if (ecumenopolis.active > 0) {
-        ecumenopolis.adjustLand(-ecumenopolis.active);
-      }
-      ecumenopolis.count = 0;
-      ecumenopolis.active = 0;
-      ecumenopolis.unlocked = false;
-      ecumenopolis.updateResourceStorage();
-    }
-
-    prepareTravelState() {
-      if (this.isCompleted) {
-        this.foundryPoints += this.getFoundryPointGain(terraforming.initialLand);
-        this.ecumenopolisDisabled = false;
-        researchManager.removeEffect({ sourceId: 'foundryWorld' });
-      }
-    }
-
-    getShopPurchaseCount(id) {
-      return this.shopPurchases[id] || 0;
-    }
-
-    canPurchaseUpgrade(item) {
-      const purchases = this.getShopPurchaseCount(item.id);
-      if (purchases >= item.maxPurchases) {
-        return false;
-      }
-      return this.foundryPoints >= item.cost;
-    }
-
-    purchaseUpgrade(id) {
-      const item = FOUNDRY_SHOP_ITEM_MAP[id];
-      if (!this.canPurchaseUpgrade(item)) {
-        return;
-      }
-      this.foundryPoints -= item.cost;
-      this.shopPurchases[id] = this.getShopPurchaseCount(id) + 1;
-      this.applyFoundryEffects();
-      this.updateUI();
-    }
-
-    applyFoundryEffects() {
+    applySpecializationEffects() {
       const capBonus = 1 + (this.getShopPurchaseCount('galacticMetalMiningCap') * 0.05);
       warpGateNetworkManager.addAndReplace({
         type: 'importCapMultiplier',
@@ -267,146 +202,14 @@
       }
     }
 
-    applyEffects() {
-      this.applyFoundryEffects();
-    }
-
-    renderUI(container) {
-      const wrapper = document.createElement('div');
-      wrapper.classList.add('bioworld-shop');
-
-      const header = document.createElement('div');
-      header.classList.add('bioworld-shop-header');
-      const titleGroup = document.createElement('div');
-      titleGroup.classList.add('bioworld-shop-title');
-      const title = document.createElement('span');
-      title.textContent = 'Metallurgy Shop';
-      const info = document.createElement('span');
-      info.classList.add('info-tooltip-icon');
-      info.innerHTML = '&#9432;';
-      info.title = 'You gain 10 metallurgy points times sqrt(initial land / 50B) when travelling after completing this project.';
-      titleGroup.append(title, info);
-
-      const pointsGroup = document.createElement('div');
-      pointsGroup.classList.add('bioworld-shop-meta');
-      const pointsLabel = document.createElement('span');
-      pointsLabel.textContent = 'Metallurgy Points:';
-      const pointsValue = document.createElement('span');
-      pointsValue.classList.add('bioworld-shop-points');
-      pointsGroup.append(pointsLabel, pointsValue);
-
-      header.append(titleGroup, pointsGroup);
-      wrapper.appendChild(header);
-
-      const items = document.createElement('div');
-      items.classList.add('bioworld-shop-items');
-
-      const shopRows = {};
-      if (FOUNDRY_SHOP_ITEMS.length === 0) {
-        const empty = document.createElement('div');
-        empty.classList.add('bioworld-shop-empty');
-        empty.textContent = 'No foundry upgrades available yet.';
-        items.appendChild(empty);
-      }
-
-      FOUNDRY_SHOP_ITEMS.forEach((item) => {
-        const row = document.createElement('div');
-        row.classList.add('bioworld-shop-item');
-
-        const labelRow = document.createElement('div');
-        labelRow.classList.add('bioworld-shop-item-label');
-        const labelText = document.createElement('span');
-        labelText.textContent = item.label;
-        const detail = document.createElement('span');
-        detail.classList.add('info-tooltip-icon');
-        detail.innerHTML = '&#9432;';
-        detail.title = item.description;
-        labelRow.append(labelText, detail);
-
-        const cost = document.createElement('span');
-        cost.classList.add('bioworld-shop-cost');
-
-        const count = document.createElement('span');
-        count.classList.add('bioworld-shop-count');
-
-        const button = document.createElement('button');
-        button.classList.add('bioworld-shop-button');
-        button.textContent = 'Buy';
-        button.addEventListener('click', () => this.purchaseUpgrade(item.id));
-
-        const metaRow = document.createElement('div');
-        metaRow.classList.add('bioworld-shop-item-meta');
-        const metaGroup = document.createElement('div');
-        metaGroup.classList.add('bioworld-shop-item-costs');
-        metaGroup.append(cost, count);
-        metaRow.append(metaGroup, button);
-
-        row.append(labelRow, metaRow);
-        items.appendChild(row);
-
-        shopRows[item.id] = { cost, count, button };
-      });
-
-      wrapper.appendChild(items);
-      container.appendChild(wrapper);
-
-      this.shopElements = {
-        wrapper,
-        pointsValue,
-        shopRows,
-      };
-      this.updateUI();
-    }
-
-    updateUI() {
-      const elements = this.shopElements;
-      elements.pointsValue.textContent = formatNumber(this.foundryPoints, true, 2);
-      FOUNDRY_SHOP_ITEMS.forEach((item) => {
-        const row = elements.shopRows[item.id];
-        const purchases = this.getShopPurchaseCount(item.id);
-        row.cost.textContent = `${formatNumber(item.cost, true)} MP`;
-        row.count.textContent = `${purchases}/${item.maxPurchases}`;
-        row.button.disabled = !this.canPurchaseUpgrade(item);
-        row.button.textContent = purchases >= item.maxPurchases ? 'Maxed' : 'Buy';
-      });
-    }
-
-    saveState() {
-      return {
-        ...super.saveState(),
-        foundryPoints: this.foundryPoints,
-        ecumenopolisDisabled: this.ecumenopolisDisabled,
-        shopPurchases: { ...this.shopPurchases },
-      };
-    }
-
     loadState(state = {}) {
       super.loadState(state);
-      this.foundryPoints = state.foundryPoints || 0;
       this.ecumenopolisDisabled = this.isCompleted || false;
       if (state.ecumenopolisDisabled) {
         this.ecumenopolisDisabled = true;
       }
-      this.shopPurchases = {
-        ...this.createEmptyShopPurchases(),
-        ...(state.shopPurchases || {}),
-      };
-      this.applyFoundryEffects();
-    }
-
-    saveTravelState() {
-      return {
-        foundryPoints: this.foundryPoints,
-        shopPurchases: { ...this.shopPurchases },
-      };
-    }
-
-    loadTravelState(state = {}) {
-      this.foundryPoints = state.foundryPoints || 0;
-      this.shopPurchases = {
-        ...this.createEmptyShopPurchases(),
-        ...(state.shopPurchases || {}),
-      };
+      this.loadSpecializationState(state);
+      this.applySpecializationEffects();
     }
   }
 

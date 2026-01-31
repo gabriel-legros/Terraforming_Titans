@@ -232,6 +232,9 @@ function buildHistoryRow(entry) {
     travelBtn.title = 'Travel to this artificial world';
     travelBtn.addEventListener('click', (event) => {
       event.stopPropagation();
+      if (handleSpecializationTravelWarning(() => artificialManager.travelToStoredWorld(entry.id))) {
+        return;
+      }
       artificialManager.travelToStoredWorld(entry.id);
     });
     status.appendChild(travelBtn);
@@ -1373,6 +1376,9 @@ function ensureArtificialLayout() {
   });
   travelBtn.addEventListener('click', () => {
     if (!artificialManager) return;
+    if (handleSpecializationTravelWarning(() => artificialManager.travelToConstructedWorld())) {
+      return;
+    }
     const warning = artificialManager.getTravelWarning?.();
     if (warning) {
       showTravelWarningPopup(warning, () => artificialManager.travelToConstructedWorld());

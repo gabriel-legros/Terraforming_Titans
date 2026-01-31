@@ -739,27 +739,33 @@ function attachTravelHandler(res, sStr) {
   rwgTravelBtnEl = travelBtn || rwgTravelBtnEl;
   if (!travelBtn) return;
   travelBtn.onclick = () => {
-    const canonical = res?.seedString || sStr;
-    if (!equilibratedWorlds.has(sStr) && !equilibratedWorlds.has(canonical)) return;
-    if (spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
-    if (spaceManager?.travelToRandomWorld) {
-      applyDominionSelection(res);
-      const travelled = spaceManager.travelToRandomWorld(res, sStr);
-      if (travelled) {
-        const box = document.getElementById('rwg-result');
-        if (box) {
-          box.innerHTML = renderWorldDetail(res, sStr);
-          try {
-            box.dataset.seedUsed = sStr;
-            if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
-          } catch(_){}
-          cacheResultControls();
-          attachEquilibrateHandler(res, sStr, undefined, box);
-          attachTravelHandler(res, sStr);
+    const attemptTravel = () => {
+      const canonical = res?.seedString || sStr;
+      if (!equilibratedWorlds.has(sStr) && !equilibratedWorlds.has(canonical)) return;
+      if (spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
+      if (spaceManager?.travelToRandomWorld) {
+        applyDominionSelection(res);
+        const travelled = spaceManager.travelToRandomWorld(res, sStr);
+        if (travelled) {
+          const box = document.getElementById('rwg-result');
+          if (box) {
+            box.innerHTML = renderWorldDetail(res, sStr);
+            try {
+              box.dataset.seedUsed = sStr;
+              if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
+            } catch(_){}
+            cacheResultControls();
+            attachEquilibrateHandler(res, sStr, undefined, box);
+            attachTravelHandler(res, sStr);
+          }
+          updateRandomWorldUI();
         }
-        updateRandomWorldUI();
       }
+    };
+    if (handleSpecializationTravelWarning(() => attemptTravel())) {
+      return;
     }
+    attemptTravel();
   };
 }
 
