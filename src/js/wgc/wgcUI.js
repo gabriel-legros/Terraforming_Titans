@@ -120,6 +120,8 @@ const rdDescriptions = {
   wgtEquipment: 'Each purchase increases artifact chance by 0.1% up to a +90% bonus (100% total).'
 };
 const rdElements = {};
+const wgcTooltipCache = {};
+var wgcRDPurchaseTooltip = null;
 const facilityItems = {
   infirmary: 'Infirmary',
   barracks: 'Barracks',
@@ -493,11 +495,30 @@ function createRDHeader() {
   const info = document.createElement('span');
   info.classList.add('info-tooltip-icon');
   info.innerHTML = '&#9432;';
-  attachDynamicInfoTooltip(info, 'Hold shift and click to buy as many as possible');
+  wgcRDPurchaseTooltip = attachDynamicInfoTooltip(info, buildWGCRDPurchaseTooltipText());
   purchase.appendChild(info);
   div.appendChild(purchase);
 
   return div;
+}
+
+function buildWGCRDPurchaseTooltipText() {
+  const upgrades = [];
+  const hasSuperalloyResearch = researchManager.isBooleanFlagSet('superalloyResearchUnlocked');
+  for (const key in rdItems) {
+    if ((key === 'superalloyEfficiency' || key === 'superalloyFusionEfficiency') && !hasSuperalloyResearch) {
+      continue;
+    }
+    const up = warpGateCommand.rdUpgrades[key];
+    const maxText = formatNumber(up.max);
+    upgrades.push(`- ${rdItems[key]} (Max ${maxText})`);
+  }
+  return [
+    'Hold shift and click to buy as many as possible.',
+    '',
+    'Available R&D upgrades (max level):',
+    ...upgrades
+  ].join('\n');
 }
 
 function getRDUpgradeCurrentAndNext(key, purchases, max) {
@@ -1286,6 +1307,7 @@ function updateOperationProgressSegments(op, refs) {
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   updateWGCStoryToggleButton();
+  setTooltipText(wgcRDPurchaseTooltip, buildWGCRDPurchaseTooltipText(), wgcTooltipCache, 'wgcRDPurchase');
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
     opEl.textContent = `Operations Completed: ${warpGateCommand.totalOperations}`;

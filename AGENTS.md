@@ -65,6 +65,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Info tooltips created via `attachDynamicInfoTooltip` are now click-pinnable by default (click icon to keep open; click elsewhere to close).
 - Deeper Mining and Underground Expansion now support auto-assigning androids by percentage.
 - Android project auto-assign inputs now accept two-decimal percentages.
+- Warp Gate Command R&D purchase tooltip now lists available upgrades with their max levels.
 
 ## Prestige systems
 Two reset layers control long term progression:
