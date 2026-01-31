@@ -1700,11 +1700,6 @@
     font-size: 0.9em;
 }
 
-.growth-rate-line span:first-child {
-    font-weight: 600;
-    color: #495057;
-}
-
 .colony-slider {
     display: grid;
     grid-template-columns: 150px 100px 1fr 110px;
