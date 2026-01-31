@@ -1353,13 +1353,14 @@
 
 .spaceship-assignment-container {
     display: grid;
-    grid-template-columns: 170px 1fr;
+    grid-template-columns: 150px 1fr;
     grid-template-rows: auto auto;
     grid-template-areas:
         "ships-info buttons"
         "auto-assign auto-assign";
     gap: 10px;
     align-items: start;
+    min-width:340px;
 }
 
 .android-assignment-container {
