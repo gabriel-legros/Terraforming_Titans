@@ -1332,13 +1332,16 @@ function ensureArtificialLayout() {
   });
   startBtn.addEventListener('click', () => {
     if (!artificialManager) return;
+    const rawName = artificialUICache.nameInput ? artificialUICache.nameInput.value.trim() : '';
+    const isLegacyDefaultName = /^Artificial World(?: \\d+)?$/.test(rawName);
+    const chosenName = rawName && !isLegacyDefaultName ? rawName : '';
     const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
     if (type === 'shell') {
       artificialManager.startShellConstruction({
         radiusEarth: clampRadiusValue(parseFloat(radiusRange.value) || 1),
         core: artificialUICache.core.value,
         starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
-        name: artificialUICache.nameInput ? artificialUICache.nameInput.value : '',
+        name: chosenName,
         sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
       });
       return;
@@ -1349,7 +1352,7 @@ function ensureArtificialLayout() {
         orbitRadiusAU: clampRingOrbitValue(parseFloat(ringOrbitRange.value) || 0.1),
         widthKm: clampRingWidthValue(parseFloat(ringWidthRange.value) || 10_000),
         targetFluxWm2: clampRingFluxValue(parseFloat(ringFluxRange.value) || ARTIFICIAL_RING_FLUX_DEFAULT_WM2),
-        name: artificialUICache.nameInput ? artificialUICache.nameInput.value : '',
+        name: chosenName,
         sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
       });
     }
@@ -1903,11 +1906,20 @@ function updateArtificialUI(options = {}) {
       if (document.activeElement !== artificialUICache.nameInput) {
         artificialUICache.nameInput.value = project.name;
       }
+      artificialUICache.nameInput.dataset.lastProjectId = String(project.id);
       artificialUICache.nameInput.disabled = false;
     } else {
       artificialUICache.nameInput.disabled = false;
+      if (artificialUICache.nameInput.dataset.lastProjectId) {
+        if (document.activeElement !== artificialUICache.nameInput) {
+          artificialUICache.nameInput.value = '';
+          artificialUICache.nameInput.dataset.lastProjectId = '';
+        }
+      }
       if (!artificialUICache.nameInput.value) {
-        artificialUICache.nameInput.placeholder = `Artificial World ${manager.nextId}`;
+        const typeValue = artificialUICache.type ? artificialUICache.type.value : 'shell';
+        const defaultName = manager?.getDefaultWorldName(typeValue === 'ring' ? 'ring' : 'shell');
+        artificialUICache.nameInput.placeholder = defaultName || `Artificial World ${manager.nextId}`;
       }
     }
   }

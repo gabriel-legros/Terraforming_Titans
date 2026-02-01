@@ -563,6 +563,20 @@ class ArtificialManager extends EffectableEntity {
         return `A-${id}`;
     }
 
+    getDefaultWorldName(type) {
+        const baseName = type === 'ring' ? 'Ringworld' : 'Shellworld';
+        const pattern = new RegExp(`^${baseName} \\d+$`);
+        const statuses = spaceManager?.artificialWorldStatuses || {};
+        const count = Object.values(statuses).reduce((total, status) => {
+            const name = status?.name
+                || status?.original?.merged?.name
+                || status?.artificialSnapshot?.name
+                || '';
+            return pattern.test(name) ? total + 1 : total;
+        }, 0);
+        return `${baseName} ${count + 1}`;
+    }
+
     canCoverCost(cost) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         for (const key of Object.keys(cost)) {
@@ -642,7 +656,7 @@ class ArtificialManager extends EffectableEntity {
         : (ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.hasStar === false)?.value || starOption.value);
       const requestedRadius = options?.radiusEarth || bounds.min;
       const radiusEarth = Math.min(Math.max(requestedRadius, bounds.min), bounds.max);
-      const chosenName = (options?.name && String(options.name).trim()) || 'Artificial World';
+      const chosenName = (options?.name && String(options.name).trim()) || this.getDefaultWorldName('shell');
       const cost = this.calculateCost(radiusEarth);
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) {
@@ -726,7 +740,7 @@ class ArtificialManager extends EffectableEntity {
       const landHa = this.calculateRingWorldAreaHectares(orbitRadiusAU, widthKm);
       const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
 
-      const chosenName = (options?.name && String(options.name).trim()) || 'Artificial World';
+      const chosenName = (options?.name && String(options.name).trim()) || this.getDefaultWorldName('ring');
       const cost = this.calculateRingworldCost(landHa, widthKm);
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
