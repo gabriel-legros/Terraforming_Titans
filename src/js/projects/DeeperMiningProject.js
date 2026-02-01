@@ -6,6 +6,8 @@ class DeeperMiningProject extends AndroidProject {
     this.baseMaxDepth = config.maxDepth || Infinity;
     this.underworldMiningLevel = 0;
     this.superchargedMiningLevel = 0;
+    this.activeUnderworldMiningLevel = -1;
+    this.isContinuousRun = false;
     
     // Deep mining settings (depth > 500)
     this.createGeothermalDeposits = false;
@@ -115,7 +117,10 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   getUnderworldMiningSpeedMultiplier() {
-    return 1 + this.getUnderworldMiningLevel();
+    const level = (this.isActive && !this.isContinuousRun && this.activeUnderworldMiningLevel >= 0)
+      ? this.activeUnderworldMiningLevel
+      : this.getUnderworldMiningLevel();
+    return 1 + level;
   }
 
   getSuperchargedMiningLevel() {
@@ -449,6 +454,15 @@ class DeeperMiningProject extends AndroidProject {
     super.update(deltaTime);
   }
 
+  start(resources) {
+    const started = super.start(resources);
+    if (started) {
+      this.isContinuousRun = this.isContinuous();
+      this.activeUnderworldMiningLevel = this.isContinuousRun ? -1 : this.underworldMiningLevel;
+    }
+    return started;
+  }
+
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
     if (!this.canContinue()) {
@@ -565,10 +579,12 @@ class DeeperMiningProject extends AndroidProject {
       this.updateUnderworldMiningMaxDepth();
       this.applyDeepMiningEffects(oldDepth, this.averageDepth);
       super.complete();
-      if (this.averageDepth >= this.maxDepth) {
-        this.isCompleted = true;
-      }
+    if (this.averageDepth >= this.maxDepth) {
+      this.isCompleted = true;
     }
+    }
+    this.activeUnderworldMiningLevel = -1;
+    this.isContinuousRun = false;
   }
 
 
@@ -610,6 +626,10 @@ class DeeperMiningProject extends AndroidProject {
     this.undergroundStorage = state.undergroundStorage || false;
     this.lastGeothermalDepth = state.lastGeothermalDepth || 0;
     this.undergroundStorageLevels = state.undergroundStorageLevels || 0;
+    this.activeUnderworldMiningLevel = (this.isActive && this.remainingTime !== Infinity)
+      ? this.underworldMiningLevel
+      : -1;
+    this.isContinuousRun = this.isActive && this.remainingTime === Infinity;
     this.updateUnderworldMiningMaxDepth();
     if (this.attributes?.completionEffect) {
       this.applyCompletionEffect();
@@ -627,6 +647,10 @@ class DeeperMiningProject extends AndroidProject {
     this.createGeothermalDeposits = state.createGeothermalDeposits === true;
     this.undergroundStorage = state.undergroundStorage === true;
     this.oreMineCount = buildings.oreMine.count;
+    this.activeUnderworldMiningLevel = (this.isActive && this.remainingTime !== Infinity)
+      ? this.underworldMiningLevel
+      : -1;
+    this.isContinuousRun = this.isActive && this.remainingTime === Infinity;
     this.updateUnderworldMiningMaxDepth();
     if (this.attributes?.completionEffect) {
       this.applyCompletionEffect();
@@ -644,6 +668,8 @@ class DeeperMiningProject extends AndroidProject {
     this.undergroundStorage = false;
     this.lastGeothermalDepth = 0;
     this.undergroundStorageLevels = 0;
+    this.activeUnderworldMiningLevel = -1;
+    this.isContinuousRun = false;
     this.updateUnderworldMiningMaxDepth();
     this.adjustActiveDuration();
   }

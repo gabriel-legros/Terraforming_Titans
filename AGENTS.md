@@ -42,6 +42,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 
 # Recent updates
 - Golden asteroid visuals now stay loaded and hide between spawns to prevent image load failures.
+- Golden asteroid save loading now clears any lingering countdown notifications before restoring the saved timer.
 - Ringworld setup now includes a target flux slider (1200–1500 W/m²).
 - Tartarus chapter 32 now enables ringworld construction in the Artificial Manager.
 - Ringworld construction cost now scales linearly with ringworld land area.
@@ -65,6 +66,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Info tooltips created via `attachDynamicInfoTooltip` are now click-pinnable by default (click icon to keep open; click elsewhere to close).
 - Deeper Mining and Underground Expansion now support auto-assigning androids by percentage.
 - Android project auto-assign inputs now accept two-decimal percentages.
+- Deeper Mining superalloy drill speed now locks per run in non-continuous mode, so slider changes apply to the next deepening cycle.
 - Warp Gate Command R&D purchase tooltip now lists available upgrades with their max levels.
 - Kessler Skies now caps Solis storage bonuses at 1,000 per resource.
 

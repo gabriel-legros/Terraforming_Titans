@@ -116,6 +116,7 @@ class GoldenAsteroid {
     cacheElements() {
       this.imageElement = this.imageElement?.isConnected ? this.imageElement : document.getElementById('golden-asteroid-image');
       this.buttonElement = this.buttonElement?.isConnected ? this.buttonElement : document.getElementById('golden-asteroid-button');
+      this.countdownElement = this.countdownElement?.isConnected ? this.countdownElement : document.getElementById('gold-asteroid-countdown');
     }
 
     ensureButtonElement() {
@@ -231,6 +232,7 @@ class GoldenAsteroid {
       }
       if (!this.countdownElement) {
         this.countdownElement = document.createElement('div');
+        this.countdownElement.id = 'gold-asteroid-countdown';
         this.countdownElement.className = 'gold-asteroid-countdown';
         this.countdownContainer.appendChild(this.countdownElement);
       } else if (this.countdownElement.parentElement !== this.countdownContainer) {
@@ -245,6 +247,7 @@ class GoldenAsteroid {
     }
 
     removeCountdownDisplay() {
+      this.cacheElements();
       if (this.countdownElement && this.countdownElement.parentElement) {
         this.countdownElement.remove();
       }
@@ -324,6 +327,10 @@ class GoldenAsteroid {
     loadState(data) {
       this.despawn();
       this.removeEffects();
+      this.countdownActive = false;
+      this.countdownRemainingTime = 0;
+      this.cacheElements();
+      this.removeCountdownDisplay();
 
       // Remove any leftover DOM elements from previous instances
       this.cacheContainers();
