@@ -33,6 +33,12 @@ function getMirrorZonesWithFocusAnyUnassigned() {
   return getZones().concat(['focus', 'unassigned', 'any']);
 }
 
+function mergeSettingKeys(primary, secondary) {
+  const keys = new Set(Object.keys(primary || {}));
+  Object.keys(secondary || {}).forEach(key => keys.add(key));
+  return Array.from(keys);
+}
+
 // Mirror oversight controls
 function createDefaultMirrorOversightSettings() {
   return {
@@ -57,7 +63,7 @@ function createDefaultMirrorOversightSettings() {
 
 function applyMirrorOversightSettings(settings, saved = {}) {
   const savedDistribution = saved.distribution || {};
-  getMirrorZonesWithFocusUnassigned().forEach(zone => {
+  mergeSettingKeys(settings.distribution, savedDistribution).forEach(zone => {
     const v = Number(savedDistribution[zone]);
     settings.distribution[zone] = Number.isFinite(v) ? v : settings.distribution[zone];
   });
@@ -79,39 +85,41 @@ function applyMirrorOversightSettings(settings, saved = {}) {
   settings.waterMultiplier = multiplier > 0 ? multiplier : 1000;
 
   const savedTargets = saved.targets || {};
-  getZones().concat(['water']).forEach(key => {
+  mergeSettingKeys(settings.targets, savedTargets).forEach(key => {
     const v = Number(savedTargets[key]);
     settings.targets[key] = Number.isFinite(v) ? v : settings.targets[key];
   });
 
   const savedTempMode = saved.tempMode || {};
-  getZones().forEach(zone => {
+  mergeSettingKeys(settings.tempMode, savedTempMode).forEach(zone => {
     const mode = savedTempMode[zone];
     settings.tempMode[zone] = mode === 'day' || mode === 'night' ? mode : 'average';
   });
 
   const savedPriority = saved.priority || {};
-  getMirrorZonesWithFocus().forEach(zone => {
+  mergeSettingKeys(settings.priority, savedPriority).forEach(zone => {
     const val = parseInt(savedPriority[zone], 10);
     settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
   });
 
   const savedAuto = saved.autoAssign || {};
-  getMirrorZonesWithFocusAny().forEach(zone => {
+  mergeSettingKeys(settings.autoAssign, savedAuto).forEach(zone => {
     settings.autoAssign[zone] = !!savedAuto[zone];
   });
 
   const savedAssignments = saved.assignments || {};
   const savedMirrors = savedAssignments.mirrors || {};
   const savedLanterns = savedAssignments.lanterns || {};
-  getMirrorZonesWithFocusAnyUnassigned().forEach(zone => {
+  mergeSettingKeys(settings.assignments.mirrors, savedMirrors).forEach(zone => {
     const mv = Number(savedMirrors[zone]);
-    const lv = Number(savedLanterns[zone]);
     settings.assignments.mirrors[zone] = Number.isFinite(mv) ? mv : settings.assignments.mirrors[zone];
+  });
+  mergeSettingKeys(settings.assignments.lanterns, savedLanterns).forEach(zone => {
+    const lv = Number(savedLanterns[zone]);
     settings.assignments.lanterns[zone] = Number.isFinite(lv) ? lv : settings.assignments.lanterns[zone];
   });
   const savedReversal = savedAssignments.reversalMode || {};
-  getMirrorZonesWithFocusAny().forEach(zone => {
+  mergeSettingKeys(settings.assignments.reversalMode, savedReversal).forEach(zone => {
     settings.assignments.reversalMode[zone] = !!savedReversal[zone];
   });
 
@@ -120,19 +128,19 @@ function applyMirrorOversightSettings(settings, saved = {}) {
 
 function applyMirrorOversightTravelSettings(settings, saved = {}) {
   const savedTargets = saved.targets || {};
-  getZones().concat(['water']).forEach(key => {
+  mergeSettingKeys(settings.targets, savedTargets).forEach(key => {
     const v = Number(savedTargets[key]);
     settings.targets[key] = Number.isFinite(v) ? v : settings.targets[key];
   });
 
   const savedTempMode = saved.tempMode || {};
-  getZones().forEach(zone => {
+  mergeSettingKeys(settings.tempMode, savedTempMode).forEach(zone => {
     const mode = savedTempMode[zone];
     settings.tempMode[zone] = mode === 'day' || mode === 'night' ? mode : 'average';
   });
 
   const savedPriority = saved.priority || {};
-  getMirrorZonesWithFocus().forEach(zone => {
+  mergeSettingKeys(settings.priority, savedPriority).forEach(zone => {
     const val = parseInt(savedPriority[zone], 10);
     settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
   });
