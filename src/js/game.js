@@ -20,6 +20,7 @@ const game = new Phaser.Game(config);
 if (typeof globalThis !== 'undefined') {
   globalThis.game = game;
 }
+let lastFrameTimeMs = 0;
 
 function preload() {
   // Load assets (images, sounds, etc.) here
@@ -27,6 +28,7 @@ function preload() {
 
 function create() {
   initializeDefaultGlobals();
+  lastFrameTimeMs = performance.now();
 
   // Initialize the Planet Visualizer (Terraforming -> World subtab)
   window.initializePlanetVisualizerUI();
@@ -698,9 +700,12 @@ function updateRender(force = false, options = {}) {
 }
 
 function update(time, delta) {
-  const speed = (typeof gameSpeed !== 'undefined') ? gameSpeed : 1;
-  const scaledDelta = delta * speed;
-  const realIncrement = delta / 1000;
+  const now = performance.now();
+  let deltaMs = now - lastFrameTimeMs;
+  if (deltaMs > 1000) deltaMs = 1000;
+  lastFrameTimeMs = now;
+  const scaledDelta = deltaMs * gameSpeed;
+  const realIncrement = deltaMs / 1000;
   realPlayTimeSeconds += realIncrement;
   totalRealPlayTimeSeconds += realIncrement;
   updateLogic(scaledDelta);   // Update game state

@@ -69,6 +69,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Deeper Mining superalloy drill speed now locks per run in non-continuous mode, so slider changes apply to the next deepening cycle.
 - Warp Gate Command R&D purchase tooltip now lists available upgrades with their max levels.
 - Kessler Skies now caps Solis storage bonuses at 1,000 per resource.
+- Game loop now derives delta time from performance.now(), clamped to 1s, instead of Phaser’s provided delta.
 
 ## Prestige systems
 Two reset layers control long term progression:
