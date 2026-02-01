@@ -153,7 +153,8 @@ class ColonySlidersManager extends EffectableEntity {
         resourceTarget: 'research',
         value: researchMultiplier,
         effectId: 'researchSlider',
-        sourceId: 'researchSlider'
+        sourceId: 'researchSlider',
+        name: 'Colony sliders'
       });
     });
   }
