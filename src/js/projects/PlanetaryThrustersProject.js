@@ -454,8 +454,6 @@ class PlanetaryThrustersProject extends Project{
       .forEach(params => { delete params.star; });
     setStarLuminosity?.(0);
     terraforming?.updateLuminosity?.();
-    updateSpaceUI?.();
-    updateProjectUI?.(this.name);
   }
 
 /* ---------- job preparation ------------------------------------------ */
