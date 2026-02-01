@@ -477,6 +477,10 @@ class Research {
       return (geo?.maxDeposits || 0) > 0;
     }
 
+    planetHasNaturalMagnetosphere() {
+      return currentPlanetParameters.celestialParameters.hasNaturalMagnetosphere;
+    }
+
     hasKesslerHazard() {
       try {
         return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
@@ -515,6 +519,9 @@ class Research {
         return false;
       }
       if (research.requiresGeothermal && !this.planetHasGeothermalDeposits()) {
+        return false;
+      }
+      if (research.requiresNoNaturalMagnetosphere && this.planetHasNaturalMagnetosphere()) {
         return false;
       }
       if (research.requiresKesslerHazard && !this.hasKesslerHazard()) {

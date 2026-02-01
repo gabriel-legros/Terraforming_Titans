@@ -72,6 +72,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Kessler Skies now caps Solis storage bonuses at 1,000 per resource.
 - Game loop now derives delta time from performance.now(), clamped to 1s, instead of Phaser’s provided delta.
 - Life automation auto-purchase thresholds now accept two-decimal percentages from 0–100%.
+- Magnetic Shield research now hides on worlds with a natural magnetosphere.
 
 ## Prestige systems
 Two reset layers control long term progression:

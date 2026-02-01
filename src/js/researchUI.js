@@ -278,6 +278,8 @@ function loadResearchCategory(category) {
         return (geo?.maxDeposits || 0) > 0;
     };
 
+    const planetHasNaturalMagnetosphere = () => currentPlanetParameters.celestialParameters.hasNaturalMagnetosphere;
+
     const planetIsArtificial = () => {
         if (researchManager.isArtificialWorld) {
             return researchManager.isArtificialWorld();
@@ -295,6 +297,9 @@ function loadResearchCategory(category) {
             return;
         }
         if (research.requiresGeothermal && !planetHasGeothermal()) {
+            return;
+        }
+        if (research.requiresNoNaturalMagnetosphere && planetHasNaturalMagnetosphere()) {
             return;
         }
         if (research.artificialAllowed === false && planetIsArtificial()) {

@@ -1652,6 +1652,7 @@ const researchParameters = {
         description: 'Design for an equatorial wide superconductor wire that will carry a very large current around the planet.',
         cost: { research: 1000000000000 },
         prerequisites: [],
+        requiresNoNaturalMagnetosphere: true,
         effects: [
           {target : 'project',
             targetId : 'magneticShield',
