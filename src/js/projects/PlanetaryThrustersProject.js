@@ -456,7 +456,6 @@ class PlanetaryThrustersProject extends Project{
     terraforming?.updateLuminosity?.();
     updateSpaceUI?.();
     updateProjectUI?.(this.name);
-    this.updateUI();
   }
 
 /* ---------- job preparation ------------------------------------------ */
@@ -731,7 +730,6 @@ class PlanetaryThrustersProject extends Project{
           dayNightCycle.rotationTime = progress * dayNightCycle.dayDuration;
         }
       }
-      this.updateUI();
       this.lastActiveTime = 0;
       return;
     }
@@ -760,7 +758,6 @@ class PlanetaryThrustersProject extends Project{
           const starM2 = getStarMassKgFromCurrent();
           this.dVreq = spiralDeltaV(this.startAU, this.tgtAU, G*starM2);
           this.calcMotionCost();
-          this.updateUI();
           this.lastActiveTime = 0;
           return;
         }
@@ -779,7 +776,6 @@ class PlanetaryThrustersProject extends Project{
           this.motionInvest=false;this.dVreq=this.dVdone=0;this.activeMode=null;
         }
       }
-      this.updateUI();
     }
     this.lastActiveTime = 0;
   }
@@ -834,7 +830,6 @@ class PlanetaryThrustersProject extends Project{
       if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
       if(this.el.rotTarget) this.el.rotTarget.value = this.tgtDays;
       if(this.el.distTarget) this.el.distTarget.value = this.tgtAU;
-      this.updateUI();
     }
   }
 }
