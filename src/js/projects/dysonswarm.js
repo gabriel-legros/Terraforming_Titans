@@ -247,9 +247,10 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     this.fractionalCollectors += collectorGain;
     
     // Convert fractional collectors to whole collectors
-    while (this.fractionalCollectors >= 1) {
-      this.fractionalCollectors -= 1;
-      this.collectors += 1;
+    const wholeCollectors = Math.floor(this.fractionalCollectors);
+    if (wholeCollectors > 0) {
+      this.fractionalCollectors -= wholeCollectors;
+      this.collectors += wholeCollectors;
     }
 
     this.collectorShortfallLastTick = shortfall;
