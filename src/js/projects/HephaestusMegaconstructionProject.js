@@ -560,8 +560,8 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     const total = this.getTotalYards();
     const assigned = this.getAssignedTotal();
     const available = Math.max(0, total - assigned);
-    elements.totalValue.textContent = formatNumber(total, true);
-    elements.freeValue.textContent = formatNumber(available, true);
+    elements.totalValue.textContent = formatNumber(total, true, 2);
+    elements.freeValue.textContent = formatNumber(available, true, 2);
     const step = this.assignmentStep;
     if (elements.expansionRateValue) {
       const rate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
