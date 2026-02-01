@@ -1114,7 +1114,6 @@ function updateProjectUI(projectName) {
   const isImportProject = !!(importUI && importUI.isImportProject(projectName));
 
   if (!elements) {
-    console.error(`UI elements for project "${projectName}" are undefined.`);
     return;
   }
 
