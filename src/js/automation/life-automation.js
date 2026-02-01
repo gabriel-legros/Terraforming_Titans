@@ -163,8 +163,7 @@ class LifeAutomation {
   setPurchaseThreshold(presetId, category, value) {
     const preset = this.presets.find(item => item.id === presetId) || this.presets[0];
     const settings = preset.purchaseSettings[category];
-    const parsed = Math.floor(Number(value) || 0);
-    settings.threshold = Math.max(1, parsed);
+    settings.threshold = this.normalizePurchaseThreshold(value);
   }
 
   setPurchaseMaxCost(presetId, category, value) {
@@ -401,8 +400,11 @@ class LifeAutomation {
         continue;
       }
       const cost = lifeDesigner.getTotalPointCost(category.name, 1);
-      const threshold = Math.max(1, Math.floor(Number(settings.threshold) || 0));
+      const threshold = this.normalizePurchaseThreshold(settings.threshold);
       const maxCost = Number(settings.maxCost) || 0;
+      if (threshold <= 0) {
+        continue;
+      }
       const required = cost * (100 / threshold);
       if (maxCost > 0 && cost > maxCost) {
         continue;
@@ -660,11 +662,13 @@ class LifeAutomation {
       const savedSettings = preset.purchaseSettings || {};
       Object.keys(purchaseSettings).forEach(category => {
         const setting = savedSettings[category] || {};
-        const threshold = Math.floor(Number(setting.threshold) || purchaseSettings[category].threshold);
+        const threshold = this.normalizePurchaseThreshold(
+          Number(setting.threshold) || purchaseSettings[category].threshold
+        );
         const maxCost = Number(setting.maxCost) || 0;
         purchaseSettings[category] = {
           enabled: !!setting.enabled,
-          threshold: Math.max(1, threshold),
+          threshold,
           maxCost: maxCost > 0 ? maxCost : null
         };
       });
@@ -706,6 +710,12 @@ class LifeAutomation {
     this.collapsed = !!data.collapsed;
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.ensureDefaultPreset();
+  }
+
+  normalizePurchaseThreshold(value) {
+    const parsed = Number(value) || 0;
+    const rounded = Math.round(parsed * 100) / 100;
+    return Math.max(0, Math.min(100, rounded));
   }
 }
 

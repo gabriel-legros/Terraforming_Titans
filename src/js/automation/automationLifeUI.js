@@ -349,8 +349,10 @@ function renderLifeAutomationPurchases(automation, preset, container) {
     thresholdText.textContent = 'Spend at';
     const thresholdInput = document.createElement('input');
     thresholdInput.type = 'number';
-    thresholdInput.min = '1';
+    thresholdInput.min = '0';
     thresholdInput.max = '100';
+    thresholdInput.step = '0.01';
+    thresholdInput.inputMode = 'decimal';
     thresholdInput.value = settings.threshold;
     const thresholdSuffix = document.createElement('span');
     thresholdSuffix.textContent = '%';
