@@ -224,11 +224,29 @@ class Resource extends EffectableEntity {
   // Method to update the storage cap based on active structures
   updateStorageCap() {
     let newCap = this.baseCap; // Start with the base capacity
-    const bonus = this.activeEffects
-      ? this.activeEffects
-          .filter(e => e.type === 'baseStorageBonus')
-          .reduce((sum, e) => sum + e.value, 0)
-      : 0;
+    const effects = this.activeEffects || [];
+    let bonus = 0;
+    let solisBonus = 0;
+    for (let i = 0; i < effects.length; i += 1) {
+      const effect = effects[i];
+      if (effect.type !== 'baseStorageBonus') continue;
+      const effectId = effect.effectId || '';
+      if (effectId.indexOf('solisStorage-') === 0) {
+        solisBonus += effect.value;
+      } else {
+        bonus += effect.value;
+      }
+    }
+    let kesslerActive = false;
+    try {
+      kesslerActive = hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+    } catch (error) {
+      kesslerActive = false;
+    }
+    if (kesslerActive) {
+      solisBonus = Math.min(solisBonus, 1000);
+    }
+    bonus += solisBonus;
     newCap += bonus;
 
     for (const structureName in structures) {

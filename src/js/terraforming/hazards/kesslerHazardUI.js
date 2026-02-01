@@ -45,7 +45,7 @@ const kesslerHazardUICache = {
 };
 
 const KESSLER_EFFECTS = [
-  'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected).',
+  'Solis drop: keep 1,000 water in the colony, spill the rest onto the surface with no storage bonus; other supplies cap at 1,000 (metal and research unaffected). Solis storage bonuses cap at 1,000 per resource.',
   'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.',
   'Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains.',
   'Debris decay scales with local atmospheric density at each periapsis bin.'

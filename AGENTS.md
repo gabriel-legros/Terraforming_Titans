@@ -66,6 +66,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Deeper Mining and Underground Expansion now support auto-assigning androids by percentage.
 - Android project auto-assign inputs now accept two-decimal percentages.
 - Warp Gate Command R&D purchase tooltip now lists available upgrades with their max levels.
+- Kessler Skies now caps Solis storage bonuses at 1,000 per resource.
 
 ## Prestige systems
 Two reset layers control long term progression:
