@@ -1640,7 +1640,12 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateZonalSolarPanelMultiplier(zone){
-      if(this.luminosity.zonalFluxes && typeof this.luminosity.zonalFluxes[zone] === 'number'){
+      if (isRingWorld && isRingWorld()) {
+        const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+        const baseFlux = this.luminosity.zonalFluxes?.tropical ?? this.luminosity.solarFlux;
+        return (baseFlux * 4 * (1 - penalty)) / SOLAR_PANEL_BASE_LUMINOSITY;
+      }
+      if (this.luminosity.zonalFluxes && Number.isFinite(this.luminosity.zonalFluxes[zone])) {
         const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
         return (this.luminosity.zonalFluxes[zone] * (1 - penalty)) / SOLAR_PANEL_BASE_LUMINOSITY;
       }
