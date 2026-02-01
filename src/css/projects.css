@@ -1293,7 +1293,7 @@
 /* --- Spaceship Project --- */
 .project-top-section {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
     padding-bottom: 10px;
 }
@@ -1364,7 +1364,7 @@
         "auto-assign auto-assign";
     gap: 10px;
     align-items: start;
-    min-width:340px;
+    min-width:300px;
 }
 
 .android-assignment-container {
