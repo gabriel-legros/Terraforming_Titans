@@ -242,7 +242,7 @@
 }
 
 .dyson-progress-container {
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
 .progress-button {
@@ -1599,8 +1599,8 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 15px;
-    margin-top: 10px;
-    padding-top: 10px;
+    margin-top: 5px;
+    padding-top: 5px;
     border-top: 1px solid #dee2e6;
 }
 
