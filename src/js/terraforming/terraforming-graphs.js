@@ -518,7 +518,7 @@ class TerraformingGraphsManager {
     for (let i = 0; i < gasKeys.length; i += 1) {
       const key = gasKeys[i];
       const resource = resources.atmospheric[key];
-      const label = (resource && resource.name) || key;
+      const label = (resource && resource.displayName) || (resource && resource.name) || key;
       series.push({
         label,
         values: gases[key],

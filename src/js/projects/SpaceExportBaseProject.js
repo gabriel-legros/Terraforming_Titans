@@ -67,6 +67,29 @@ class SpaceExportBaseProject extends SpaceshipProject {
       }
     });
 
+    const storageDepotOptions = [];
+    const storageDepotStorage = buildings.storageDepot.storage;
+    Object.entries(storageDepotStorage).forEach(([category, storageResources]) => {
+      Object.keys(storageResources).forEach((resource) => {
+        const displayName = resources[category][resource].displayName || resource;
+        storageDepotOptions.push({
+          category,
+          resource,
+          label: displayName,
+        });
+        resourceGroupLookup[`${category}:${resource}`] = 'storageDepotResource';
+      });
+    });
+    if (storageDepotOptions.length) {
+      const entry = {
+        key: 'storageDepotResource',
+        label: 'Storage Depot Resource',
+        options: storageDepotOptions,
+      };
+      groupList.push(entry);
+      groupMap.storageDepotResource = entry;
+    }
+
     Object.entries(disposable).forEach(([category, resourceList]) => {
       resourceList.forEach((resource) => {
         const resourceKey = `${category}:${resource}`;
@@ -100,6 +123,10 @@ class SpaceExportBaseProject extends SpaceshipProject {
         elements.disposalPhaseSelect.appendChild(option);
       });
       elements.activeDisposalGroupKey = groupKey;
+    }
+    if (elements.disposalPhaseLabel) {
+      elements.disposalPhaseLabel.textContent =
+        groupKey === 'storageDepotResource' ? 'Which one : ' : 'Phase:';
     }
 
     const preferredKey = resourceKey || `${options[0].category}:${options[0].resource}`;
@@ -230,6 +257,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       ...projectElements[this.name],
       disposalTypeSelect,
       disposalPhaseSelect,
+      disposalPhaseLabel: phaseLabel,
       disposalGroups: disposalGroupData.groupList,
       disposalGroupMap: disposalGroupData.groupMap,
       disposalResourceGroupLookup: disposalGroupData.resourceGroupLookup,
