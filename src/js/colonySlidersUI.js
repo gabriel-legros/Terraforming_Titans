@@ -453,7 +453,6 @@ function initializeColonySlidersUI() {
   warpnetLabel.textContent = 'Warpnet ';
   const warpnetInfoIcon = document.createElement('span');
   warpnetInfoIcon.classList.add('info-tooltip-icon');
-  warpnetInfoIcon.title = 'Warpnet funnels instant communication to coordinate research output.';
   warpnetInfoIcon.innerHTML = '&#9432;';
   warpnetLabel.appendChild(warpnetInfoIcon);
   warpnetRow.appendChild(warpnetLabel);
@@ -502,7 +501,10 @@ function initializeColonySlidersUI() {
   warpnetRow.style.display = colonySliderSettings.isBooleanFlagSet('warpnet') ? 'grid' : 'none';
   body.appendChild(warpnetRow);
 
-  warpnetInfo = warpnetInfoIcon;
+  warpnetInfo = attachDynamicInfoTooltip(
+    warpnetInfoIcon,
+    'Warpnet funnels instant communication to coordinate research output.'
+  );
   warpnetEffect = warpnetEffectSpan;
   warpnetValue = warpnetValueSpan;
   warpnetInput = warpnetRange;
@@ -528,14 +530,16 @@ function initializeColonySlidersUI() {
     if (warpnetEffect) {
       warpnetEffect.textContent = `Research: +${percent}%`;
     }
-    if (warpnetInfo) {
-      warpnetInfo.title = [
+    setTooltipText(
+      warpnetInfo,
+      [
         'Warpnet funnels instant communication to coordinate research output.',
         `Left value multiplies colony and android housing energy upkeep: ${label}.`,
         `Right value adds a global research boost: +${percent}%`,
-        'Energy cost scales steeply with Warpnet intensity.'
-      ].join('\n');
-    }
+        'Energy cost scales steeply with Warpnet intensity.',
+        'Note: Solis pays for starting androids.'
+      ].join('\n')
+    );
   };
 
   warpnetRefresh = refreshWarpnetDetails;
