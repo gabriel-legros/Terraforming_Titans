@@ -181,6 +181,19 @@ function getProjectSubtabContents() {
   return cachedProjectSubtabContents;
 }
 
+function getActiveProjectSubtabId() {
+  const managerId = projectsSubtabManager && projectsSubtabManager.getActiveId && projectsSubtabManager.getActiveId();
+  const activeContent = managerId
+    ? null
+    : getProjectSubtabContents().find(content => content && content.classList && content.classList.contains('active'));
+  return managerId || (activeContent && activeContent.id) || null;
+}
+
+function getProjectSubtabIdForProject(project) {
+  const category = project.category || 'resources';
+  return `${category}-projects`;
+}
+
 function getContentWrapper() {
   if (!projectsUICache.contentWrapper) {
     projectsUICache.contentWrapper = document.getElementsByClassName('projects-subtab-content-wrapper')[0] || null;
@@ -242,29 +255,35 @@ function initializeProjectTabs() {
       if (typeof markProjectSubtabViewed === 'function') {
         markProjectSubtabViewed(id);
       }
+      renderProjects(id);
     });
   }
   cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
 }
 
-function renderProjects() {
+function renderProjects(activeSubtabId) {
   const projectsArray = projectManager.getProjectStatuses(); // Get projects through projectManager
+  const activeId = activeSubtabId || getActiveProjectSubtabId();
 
   syncProjectGroupState();
 
   // Create all project items initially
   projectsArray.forEach(project => {
-    if (!projectElements[project.name]) {
+    const isActive = !activeId || getProjectSubtabIdForProject(project) === activeId;
+    if (isActive && !projectElements[project.name]) {
       createProjectItem(project);
     }
   });
 
   // Update the UI for each project
   projectsArray.forEach(project => {
-    updateProjectUI(project.name);
+    const isActive = !activeId || getProjectSubtabIdForProject(project) === activeId;
+    if (isActive) {
+      updateProjectUI(project.name);
+    }
   });
 
-  updateEmptyProjectMessages();
+  updateEmptyProjectMessages(activeId);
   updateStoryProjectsVisibility();
   updateMegaProjectsVisibility();
   updateGigaProjectsVisibility();
@@ -1513,8 +1532,11 @@ function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
   return `Total Gain: ${gainArray.join(', ')}`;
 }
 
-function updateEmptyProjectMessages() {
-  getProjectSubtabContents().forEach(container => {
+function updateEmptyProjectMessages(activeSubtabId) {
+  const containers = activeSubtabId
+    ? getProjectSubtabContents().filter(container => container && container.id === activeSubtabId)
+    : getProjectSubtabContents();
+  containers.forEach(container => {
     const messageId = `${container.id}-empty-message`;
     let message = document.getElementById(messageId);
 
@@ -1623,6 +1645,7 @@ function activateProjectSubtab(subtabId) {
   if (typeof markProjectSubtabViewed === 'function') {
     markProjectSubtabViewed(subtabId);
   }
+  renderProjects(subtabId);
 }
 
 let projectTabAlertNeeded = false;
