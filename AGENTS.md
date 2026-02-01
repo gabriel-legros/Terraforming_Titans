@@ -498,6 +498,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Planetary Thrusters motion controls now include a Go Rogue button that unlocks at 10000 AU to strip the star, flag the world as rogue, and remove the thrusters project.
 - Introduced a Galactic Market Concordat advanced research that unlocks the Galactic Market project while permanently retiring cargo rockets and metal exports.
 - Space storage now supports silicon and hydrogen stockpiles.
+- Space storage transfer controls now support per-resource store/withdraw toggles plus a Mixed mode that splits shipments.
 - Forbidden-melt rapid sublimation now blends linearly over 1 Pa near the triple pressure threshold instead of switching instantly.
 - UHF fleet auto-defense now applies leftover power to border sectors and counts toward map and sector effective defense totals.
 - Import resource assignments now honor an import cap manager that scales from 1B/10B caps to per-sector limits (with rich/poor modifiers) once the galaxy unlocks, and the Import Resources card includes a collapsible cap breakdown.

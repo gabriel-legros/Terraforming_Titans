@@ -232,6 +232,10 @@ function renderSpaceStorageUI(project, container) {
   const expansionRateDisplay = expansionRateRow.querySelector('.expansion-rate');
   const resourceGrid = card.querySelector('#ss-resource-grid');
 
+  const getVisibleResourceKeys = () => storageResourceOptions
+    .filter(opt => project.isResourceUnlocked(opt.resource, opt.requiresFlag, opt.requiresProjectFlag))
+    .map(opt => opt.resource);
+
   const cachedCaps = projectElements[project.name] || {};
   let capOverlay = cachedCaps.capOverlay;
   let capWindow = cachedCaps.capWindow;
@@ -472,6 +476,21 @@ function renderSpaceStorageUI(project, container) {
     usage.id = `${project.name}-usage-${opt.resource}`;
     usage.textContent = '0';
 
+    const transferButton = document.createElement('button');
+    transferButton.type = 'button';
+    transferButton.classList.add('storage-transfer-toggle');
+    const transferIcon = document.createElement('span');
+    transferIcon.classList.add('storage-transfer-icon');
+    transferButton.appendChild(transferIcon);
+    const transferTooltip = attachDynamicInfoTooltip(transferButton, 'Store in space storage');
+    transferButton.addEventListener('click', () => {
+      const current = project.getResourceTransferMode(opt.resource);
+      const next = current === 'withdraw' ? 'store' : 'withdraw';
+      project.setResourceTransferMode(opt.resource, next);
+      project.updateShipTransferModeFromResources(getVisibleResourceKeys());
+      updateSpaceStorageUI(project);
+    });
+
     const capButton = document.createElement('button');
     capButton.type = 'button';
     capButton.classList.add('storage-cap-button');
@@ -507,7 +526,7 @@ function renderSpaceStorageUI(project, container) {
     } else {
       label.append(textSpan, fullIcon);
     }
-    resourceItem.append(checkbox, label, usage, capButton);
+    resourceItem.append(checkbox, label, usage, transferButton, capButton);
     resourceGrid.appendChild(resourceItem);
 
     if (opt.requiresFlag || opt.requiresProjectFlag) {
@@ -529,6 +548,18 @@ function renderSpaceStorageUI(project, container) {
       usageCells: {
         ...(projectElements[project.name]?.usageCells || {}),
         [opt.resource]: usage
+      },
+      transferButtons: {
+        ...(projectElements[project.name]?.transferButtons || {}),
+        [opt.resource]: transferButton
+      },
+      transferIcons: {
+        ...(projectElements[project.name]?.transferIcons || {}),
+        [opt.resource]: transferIcon
+      },
+      transferTooltips: {
+        ...(projectElements[project.name]?.transferTooltips || {}),
+        [opt.resource]: transferTooltip
       },
       capButtons: {
         ...(projectElements[project.name]?.capButtons || {}),
@@ -572,36 +603,53 @@ function renderSpaceStorageUI(project, container) {
   const withdrawButton = document.createElement('button');
   withdrawButton.textContent = 'Withdraw';
   withdrawButton.classList.add('mode-button');
+  const mixedButton = document.createElement('button');
+  mixedButton.textContent = 'Mixed';
+  mixedButton.classList.add('mode-button');
   const storeButton = document.createElement('button');
   storeButton.textContent = 'Store';
   storeButton.classList.add('mode-button');
 
   const updateModeButtons = () => {
-    if (project.shipWithdrawMode) {
+    if (project.shipTransferMode === 'withdraw') {
       withdrawButton.classList.add('selected');
+      mixedButton.classList.remove('selected');
+      storeButton.classList.remove('selected');
+    } else if (project.shipTransferMode === 'mixed') {
+      mixedButton.classList.add('selected');
+      withdrawButton.classList.remove('selected');
       storeButton.classList.remove('selected');
     } else {
       storeButton.classList.add('selected');
       withdrawButton.classList.remove('selected');
+      mixedButton.classList.remove('selected');
     }
   };
 
   withdrawButton.addEventListener('click', () => {
-    project.shipWithdrawMode = true;
+    project.setShipTransferMode('withdraw');
+    updateModeButtons();
+    if (typeof updateSpaceStorageUI === 'function') {
+      updateSpaceStorageUI(project);
+    }
+  });
+  mixedButton.addEventListener('click', () => {
+    project.setShipTransferMode('mixed');
+    project.updateShipTransferModeFromResources(getVisibleResourceKeys());
     updateModeButtons();
     if (typeof updateSpaceStorageUI === 'function') {
       updateSpaceStorageUI(project);
     }
   });
   storeButton.addEventListener('click', () => {
-    project.shipWithdrawMode = false;
+    project.setShipTransferMode('store');
     updateModeButtons();
     if (typeof updateSpaceStorageUI === 'function') {
       updateSpaceStorageUI(project);
     }
   });
 
-  modeContainer.append(modeLabel, withdrawButton, storeButton);
+  modeContainer.append(modeLabel, withdrawButton, mixedButton, storeButton);
   shipFooter.appendChild(modeContainer);
 
   updateModeButtons();
@@ -630,6 +678,7 @@ function renderSpaceStorageUI(project, container) {
     capHandlersBound: true,
     shipProgressButton,
     withdrawButton,
+    mixedButton,
     storeButton,
     updateModeButtons
   };
@@ -719,14 +768,35 @@ function updateSpaceStorageUI(project) {
   }
   if (els.waterDestinationSelect) {
     els.waterDestinationSelect.value = project.waterWithdrawTarget || 'colony';
-    els.waterDestinationSelect.style.display = project.shipWithdrawMode ? '' : 'none';
+    els.waterDestinationSelect.style.display =
+      project.getResourceTransferMode('liquidWater') === 'withdraw' ? '' : 'none';
+  }
+  if (els.transferButtons) {
+    storageResourceOptions.forEach(opt => {
+      const button = els.transferButtons[opt.resource];
+      const icon = els.transferIcons[opt.resource];
+      const tooltip = els.transferTooltips[opt.resource];
+      const mode = project.getResourceTransferMode(opt.resource);
+      if (mode === 'withdraw') {
+        icon.innerHTML = '&#8595;&#xFE0E;';
+        button.classList.add('withdraw');
+        button.classList.remove('store');
+        tooltip.textContent = 'Withdraw from space storage';
+      } else {
+        icon.innerHTML = '&#8593;&#xFE0E;';
+        button.classList.add('store');
+        button.classList.remove('withdraw');
+        tooltip.textContent = 'Store in space storage';
+      }
+    });
   }
   if (els.fullIcons) {
     storageResourceOptions.forEach(opt => {
       const icon = els.fullIcons[opt.resource];
       let res = resources[opt.category]?.[opt.resource];
       if (icon) {
-        if (opt.resource === 'liquidWater' && project.shipWithdrawMode) {
+        const mode = project.getResourceTransferMode(opt.resource);
+        if (opt.resource === 'liquidWater' && mode === 'withdraw') {
           res = project.waterWithdrawTarget === 'surface'
             ? resources.surface.liquidWater
             : resources.colony.water;
@@ -734,7 +804,7 @@ function updateSpaceStorageUI(project) {
             ? 'Surface storage full'
             : 'Colony storage full';
         }
-        if (project.shipWithdrawMode && res && res.hasCap && res.value >= res.cap) {
+        if (mode === 'withdraw' && res && res.hasCap && res.value >= res.cap) {
           icon.style.visibility = 'visible';
         } else {
           icon.style.visibility = 'hidden';
