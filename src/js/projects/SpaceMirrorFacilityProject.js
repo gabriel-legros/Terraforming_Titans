@@ -256,6 +256,12 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
   });
 }
 
+function applyFacilityActivationChange(building, delta) {
+  adjustStructureActivation(building, delta);
+  disableAutoActive(building);
+  updateBuildingDisplay(buildings);
+}
+
 var SpaceMirrorAdvancedOversightModule = (typeof globalThis !== 'undefined' && globalThis.SpaceMirrorAdvancedOversight)
   ? globalThis.SpaceMirrorAdvancedOversight
   : null;
@@ -1880,14 +1886,12 @@ class SpaceMirrorFacilityProject extends Project {
     });
     els.quickBuild.mirror.zero.addEventListener('click', () => {
       const building = buildings.spaceMirror;
-      adjustStructureActivation(building, -building.active);
-      updateBuildingDisplay(buildings);
+      applyFacilityActivationChange(building, -building.active);
       this.updateUI();
     });
     els.quickBuild.mirror.max.addEventListener('click', () => {
       const building = buildings.spaceMirror;
-      adjustStructureActivation(building, building.count - building.active);
-      updateBuildingDisplay(buildings);
+      applyFacilityActivationChange(building, building.count - building.active);
       this.updateUI();
     });
     els.quickBuild.lantern.button.addEventListener('click', () => {
@@ -1911,14 +1915,12 @@ class SpaceMirrorFacilityProject extends Project {
     });
     els.quickBuild.lantern.zero.addEventListener('click', () => {
       const building = buildings.hyperionLantern;
-      adjustStructureActivation(building, -building.active);
-      updateBuildingDisplay(buildings);
+      applyFacilityActivationChange(building, -building.active);
       this.updateUI();
     });
     els.quickBuild.lantern.max.addEventListener('click', () => {
       const building = buildings.hyperionLantern;
-      adjustStructureActivation(building, building.count - building.active);
-      updateBuildingDisplay(buildings);
+      applyFacilityActivationChange(building, building.count - building.active);
       this.updateUI();
     });
     
