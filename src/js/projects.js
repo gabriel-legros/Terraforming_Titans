@@ -701,7 +701,7 @@ class Project extends EffectableEntity {
     const usable = storageProj.getAvailableStoredResource(key);
     const mode = resolveMegaProjectResourceMode(storageProj);
     if (mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY) {
-      return usable >= amount;
+      return true;
     }
     if (mode === MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY) {
       return false;
@@ -729,10 +729,11 @@ class Project extends EffectableEntity {
         if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
           const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
+          const amountThisTick = cost[category][resource] * timeFraction * (applyRates ? productivity : 1);
           const usingStorage = this.usesSpaceStorageForResource(
             category,
             resource,
-            cost[category][resource],
+            amountThisTick,
             accumulatedChanges
           );
           if (applyRates && resources[category] && resources[category][resource] && !usingStorage && this.showsInResourcesRate()) {
