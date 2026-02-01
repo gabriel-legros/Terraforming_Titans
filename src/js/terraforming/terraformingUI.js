@@ -244,6 +244,7 @@ function getTemperatureMaintenanceImmuneTooltip() {
 
 function resetTerraformingUI() {
   temperatureInfographicOverlay?.classList.remove('is-visible');
+  terraformingGraphsManager.hide();
   const summaryContent = terraformingTabElements.summaryContent || document.getElementById('summary-terraforming');
   if (summaryContent) {
     summaryContent.textContent = '';
@@ -589,9 +590,14 @@ function createTerraformingSummaryUI() {
 
   const playTimeDisplay = document.createElement('div');
   playTimeDisplay.id = 'play-time-display';
-  playTimeDisplay.textContent = '0 days';
+  const playTimeText = document.createElement('span');
+  playTimeText.classList.add('play-time-text');
+  playTimeText.textContent = 'Time since awakening : 0 days';
+  playTimeDisplay.appendChild(playTimeText);
+  terraformingGraphsManager.attachSummaryButton(playTimeDisplay);
   terraformingContainer.appendChild(playTimeDisplay);
   summaryCache.playTimeDisplay = playTimeDisplay;
+  summaryCache.playTimeText = playTimeText;
 
   const grid = document.createElement('div');
   grid.classList.add('terraforming-grid');
@@ -626,9 +632,7 @@ function updateTerraformingUI(deltaSeconds, options = {}) {
 
   function updatePlayTimeDisplay() {
     const summaryCache = terraformingUICache.summary;
-    const el = summaryCache ? summaryCache.playTimeDisplay : null;
-    if (!el) return;
-    el.textContent = `Time since awakening : ${formatPlayTime(playTimeSeconds)}`;
+    summaryCache.playTimeText.textContent = `Time since awakening : ${formatPlayTime(playTimeSeconds)}`;
   }
 
 // Functions to create and update each terraforming aspect box

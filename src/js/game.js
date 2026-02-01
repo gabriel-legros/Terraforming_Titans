@@ -118,6 +118,7 @@ function initializeDefaultGlobals(){
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
+  terraformingGraphsManager.reset();
   // Expose a stable reference for UI modules (avoid DOM id 'terraforming' collisions)
   if (typeof window !== 'undefined') {
     window.terraformingManager = terraforming;
@@ -358,6 +359,7 @@ function initializeGameState(options = {}) {
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
+  terraformingGraphsManager.reset();
 
   // Rebuild the Planet Visualizer with fresh references (resources/terraforming)
   if (typeof window !== 'undefined') {
@@ -568,6 +570,7 @@ function updateLogic(delta) {
 
 
   patienceManager.update();
+  terraformingGraphsManager.update(delta);
 }
 
 function updateRender(force = false, options = {}) {

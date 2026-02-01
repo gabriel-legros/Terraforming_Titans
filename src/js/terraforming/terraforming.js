@@ -2113,6 +2113,7 @@ synchronizeGlobalResources() {
       celestialParameters: this.celestialParameters,
       initialCelestialParameters: this.initialCelestialParameters,
       temperature: this.temperature,
+      graphHistory: terraformingGraphsManager.saveState(),
       // atmosphere: this.atmosphere, // REMOVED - No longer saving internal atmosphere state
       completed: this.completed,
       // zonalAtmosphere: this.zonalAtmosphere, // REMOVED - No longer saving internal zonal atmosphere state
@@ -2216,6 +2217,7 @@ synchronizeGlobalResources() {
       }
 
       this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
+      terraformingGraphsManager.loadState(terraformingState.graphHistory);
 
   } // End loadState
 

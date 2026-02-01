@@ -374,6 +374,70 @@
     color: #9ac4ff;
 }
 
+.dark-mode .terraforming-graphs-button {
+    background: linear-gradient(180deg, #303030 0%, #242424 100%);
+    border-color: #555;
+    color: #9ac4ff;
+}
+
+.dark-mode .terraforming-graphs-button:hover,
+.dark-mode .terraforming-graphs-button:focus {
+    background-color: #3a3a3a;
+    border-color: #6a6a6a;
+}
+
+.dark-mode .terraforming-graphs-overlay {
+    background: rgba(0, 0, 0, 0.72);
+}
+
+.dark-mode .terraforming-graphs-window {
+    background: #1e1e1e;
+}
+
+.dark-mode .terraforming-graphs-header {
+    background: #2a2a2a;
+    border-bottom-color: #444;
+    color: #f0f0f0;
+}
+
+.dark-mode .terraforming-graphs-close {
+    background: #333333;
+    border-color: #555;
+    color: #f0f0f0;
+}
+
+.dark-mode .terraforming-graphs-close:hover,
+.dark-mode .terraforming-graphs-close:focus {
+    background: #3f3f3f;
+}
+
+.dark-mode .terraforming-graphs-menu {
+    background: #232323;
+    border-right-color: #444;
+    border-bottom-color: #444;
+}
+
+.dark-mode .terraforming-graphs-menu-button {
+    background: #2b2b2b;
+    border-color: #444;
+    color: #dcdcdc;
+}
+
+.dark-mode .terraforming-graphs-menu-button.active {
+    background: #1b6ac9;
+    border-color: #1b6ac9;
+    color: #ffffff;
+}
+
+.dark-mode .terraforming-graphs-canvas {
+    background: #151515;
+    border-color: #444;
+}
+
+.dark-mode .terraforming-graphs-note {
+    color: #aaaaaa;
+}
+
 
 .dark-mode .scanning-progress {
     color: #aaa;

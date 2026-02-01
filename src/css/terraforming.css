@@ -91,8 +91,15 @@
 
   #play-time-display {
     text-align: center;
-    font-weight: bold;
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  #play-time-display .play-time-text {
+    font-weight: bold;
   }
 
   .status-check {
@@ -196,4 +203,177 @@
   .terraforming-infographic-close:focus {
     outline: 2px solid #fff;
     outline-offset: 2px;
+  }
+
+  .terraforming-graphs-button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #bdbdbd;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #f7f7f7 0%, #e7e7e7 100%);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1b6ac9;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .terraforming-graphs-button:hover,
+  .terraforming-graphs-button:focus {
+    background-color: #e3e3e3;
+    border-color: #9db6d6;
+  }
+
+  .terraforming-graphs-button:focus {
+    outline: 2px solid #1b6ac9;
+    outline-offset: 2px;
+  }
+
+  .terraforming-graphs-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  .terraforming-graphs-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13, 16, 20, 0.6);
+    z-index: 1250;
+    padding: 16px;
+  }
+
+  .terraforming-graphs-overlay.is-visible {
+    display: flex;
+  }
+
+  .terraforming-graphs-window {
+    width: min(1080px, 96vw);
+    max-height: 92vh;
+    background: #f7f3ed;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .terraforming-graphs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(120deg, #f0e7dd 0%, #f8f6f2 100%);
+    border-bottom: 1px solid #d5ccc1;
+  }
+
+  .terraforming-graphs-title {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .terraforming-graphs-close {
+    border: 1px solid #bdbdbd;
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+
+  .terraforming-graphs-close:hover,
+  .terraforming-graphs-close:focus {
+    background: #f0f0f0;
+  }
+
+  .terraforming-graphs-body {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: 360px;
+  }
+
+  .terraforming-graphs-menu {
+    background: #f1ebe4;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-right: 1px solid #d5ccc1;
+  }
+
+  .terraforming-graphs-menu-button {
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #c8bfb4;
+    background: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    color: #2c2c2c;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .terraforming-graphs-menu-button.active {
+    background: #1b6ac9;
+    border-color: #1b6ac9;
+    color: #ffffff;
+  }
+
+  .terraforming-graphs-chart {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .terraforming-graphs-canvas {
+    width: 100%;
+    height: 320px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #d0d0d0;
+  }
+
+  .terraforming-graphs-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+  }
+
+  .terraforming-graphs-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .terraforming-graphs-legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  .terraforming-graphs-note {
+    font-size: 12px;
+    color: #555555;
+  }
+
+  @media (max-width: 760px) {
+    .terraforming-graphs-body {
+      grid-template-columns: 1fr;
+    }
+
+    .terraforming-graphs-menu {
+      flex-direction: row;
+      flex-wrap: wrap;
+      border-right: none;
+      border-bottom: 1px solid #d5ccc1;
+    }
+
+    .terraforming-graphs-canvas {
+      height: 260px;
+    }
   }
