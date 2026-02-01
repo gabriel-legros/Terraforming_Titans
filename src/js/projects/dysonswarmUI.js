@@ -32,7 +32,7 @@ function renderDysonSwarmUI(project, container) {
           <span id="ds-expansion-rate"></span>
         </div>
       </div>
-      <div class="progress-button-container"><button id="ds-start" class="progress-button"></button></div>
+      <div class="progress-button-container dyson-progress-container"><button id="ds-start" class="progress-button"></button></div>
       <div class="checkbox-container">
         <input type="checkbox" id="ds-auto">
         <label for="ds-auto">Auto start</label>

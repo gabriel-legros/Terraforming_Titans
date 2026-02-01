@@ -1746,7 +1746,8 @@ class Terraforming extends EffectableEntity{
         target: 'building',
         targetId: 'solarPanel',
         type: 'productionMultiplier',
-        value: solarPanelMultiplier
+        value: solarPanelMultiplier,
+        name: 'Luminosity'
       }
       addEffect(solarPanelEffect);
 
@@ -1755,7 +1756,8 @@ class Terraforming extends EffectableEntity{
         target: 'building',
         targetId: 'windTurbine',
         type: 'productionMultiplier',
-        value: windTurbineMultiplier
+        value: windTurbineMultiplier,
+        name: 'Atmospheric pressure'
       }
       addEffect(windTurbineEffect);
 

@@ -33,7 +33,7 @@ function renderDysonSphereUI(project, container) {
           <span id="dsph-expansion-rate"></span>
         </div>
       </div>
-      <div class="progress-button-container"><button id="dsph-start" class="progress-button"></button></div>
+      <div class="progress-button-container dyson-progress-container"><button id="dsph-start" class="progress-button"></button></div>
       <div class="checkbox-container">
         <input type="checkbox" id="dsph-auto">
         <label for="dsph-auto">Auto start</label>

@@ -241,6 +241,10 @@
     width: 100%;
 }
 
+.dyson-progress-container {
+    margin-bottom: 6px;
+}
+
 .progress-button {
     width: 100%;
     padding: 8px;
