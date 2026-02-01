@@ -344,9 +344,6 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     updateSpaceStorageUI(storageProj);
 
     const completed = this.applyContinuousProgress(fraction);
-    if (completed > 0) {
-      this.updateUI();
-    }
   }
 
   renderUI(container) {

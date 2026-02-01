@@ -215,12 +215,6 @@ class ImportColonistsProject extends Project {
   loadState(state) {
     super.loadState(state);
     this.setImportTarget(state?.importTarget);
-    const elements = projectElements?.[this.name];
-    if (elements?.importTargetSelect) {
-      this.updateUI();
-      return;
-    }
-    updateProjectUI?.(this.name);
   }
 }
 

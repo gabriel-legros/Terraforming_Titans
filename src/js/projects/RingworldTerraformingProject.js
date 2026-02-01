@@ -609,7 +609,6 @@ class RingworldTerraformingProject extends Project {
       this.investing = false;
       this.isActive = false;
       this.actualInvestRate = 0;
-      this.updateUI();
     }
   }
 

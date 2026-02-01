@@ -221,7 +221,6 @@
 
     complete() {
       super.complete();
-      this.updateUI();
     }
 
     saveState() {

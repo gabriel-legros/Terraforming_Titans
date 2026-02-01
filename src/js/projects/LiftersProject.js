@@ -739,7 +739,6 @@ class LiftersProject extends TerraformingDurationProject {
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
     this.applyPendingHarvestRecipe();
-    this.updateUI();
   }
 
   saveState() {

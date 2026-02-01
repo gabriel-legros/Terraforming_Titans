@@ -298,7 +298,6 @@ class ParticleAcceleratorProject extends Project {
       this.bestRadiusMeters = this.selectedRadiusMeters;
     }
     this.applyResearchBoostEffect();
-    this.updateUI();
     this.refreshProjectUI();
   }
 
@@ -322,7 +321,6 @@ class ParticleAcceleratorProject extends Project {
       this.selectedRadiusMeters = this.defaultRadiusMeters;
       this.bestRadiusMeters = 0;
       this.radiusStepMeters = this.defaultStepMeters;
-      this.updateUI();
       this.applyResearchBoostEffect();
       return;
     }
@@ -346,7 +344,6 @@ class ParticleAcceleratorProject extends Project {
     this.radiusStepMeters = savedStepMeters && savedStepMeters >= MINIMUM_STEP_METERS
       ? savedStepMeters
       : this.defaultStepMeters;
-    this.updateUI();
     this.applyResearchBoostEffect();
   }
 
@@ -393,7 +390,6 @@ class ParticleAcceleratorProject extends Project {
       this.remainingTime = state.remainingTime ?? this.remainingTime;
       this.startingDuration = state.startingDuration ?? this.getEffectiveDuration();
     }
-    this.updateUI();
     this.applyResearchBoostEffect();
   }
 
