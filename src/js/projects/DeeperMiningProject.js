@@ -112,8 +112,12 @@ class DeeperMiningProject extends AndroidProject {
     return 'Deepening speed boost';
   }
 
+  hasUnderworldUpgrade() {
+    return this.unlocked && this.isBooleanFlagSet('underworld_mining');
+  }
+
   getUnderworldMiningLevel() {
-    return this.isBooleanFlagSet('underworld_mining') ? this.underworldMiningLevel : 0;
+    return this.hasUnderworldUpgrade() ? this.underworldMiningLevel : 0;
   }
 
   getUnderworldMiningSpeedMultiplier() {
@@ -124,7 +128,7 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   getSuperchargedMiningLevel() {
-    return this.isBooleanFlagSet('underworld_mining') ? this.superchargedMiningLevel : 0;
+    return this.hasUnderworldUpgrade() ? this.superchargedMiningLevel : 0;
   }
 
   getSuperchargedMiningMultiplier() {
@@ -153,7 +157,7 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   applySuperchargedMiningEffects() {
-    if (this.isBooleanFlagSet('underworld_mining')) {
+    if (this.hasUnderworldUpgrade()) {
       const multiplier = this.getSuperchargedMiningMultiplier();
       addEffect({
         target: 'building',
@@ -449,8 +453,10 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   update(deltaTime) {
-    this.applySuperchargedMiningEffects();
-    this.applyUndergroundStorageEffects();
+    if (this.unlocked) {
+      this.applySuperchargedMiningEffects();
+      this.applyUndergroundStorageEffects();
+    }
     super.update(deltaTime);
   }
 
@@ -533,6 +539,9 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   applyCompletionEffect() {
+    if (!this.unlocked) {
+      return;
+    }
     this.attributes.completionEffect.forEach((effect) => {
       const baseValue = effect.value;
       const depth = this.attributes.effectScaling ? (this.averageDepth || 1) : 1;
