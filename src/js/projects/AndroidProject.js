@@ -14,6 +14,18 @@ class AndroidProject extends Project {
     return baseDuration < this.continuousThreshold && this.assignedAndroids > 0;
   }
 
+  canAssignAndroids() {
+    return this.unlocked && this.isBooleanFlagSet('androidAssist');
+  }
+
+  releaseAndroidAssignments() {
+    if (!this.assignedAndroids) return;
+    this.assignedAndroids = 0;
+    this.adjustActiveDuration();
+    populationModule.updateWorkerCap();
+    updateProjectUI(this.name);
+  }
+
   adjustActiveDuration() {
     const wasContinuous = this.remainingTime === Infinity;
     const nowContinuous = this.isContinuous();
@@ -53,6 +65,10 @@ class AndroidProject extends Project {
   }
 
   assignAndroids(count) {
+    if (!this.canAssignAndroids()) {
+      this.releaseAndroidAssignments();
+      return;
+    }
     const total = Math.floor(resources.colony.androids.value);
     const assignedOther = (typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0;
     const maxForThisProject = total - assignedOther;
@@ -385,6 +401,10 @@ class AndroidProject extends Project {
   }
 
   autoAssign() {
+    if (!this.canAssignAndroids()) {
+      this.releaseAndroidAssignments();
+      return;
+    }
     if (!this.autoAssignAndroids) return;
     const total = Math.floor(resources.colony.androids.value);
     const assignedOther = projectManager.getAssignedAndroids(this);
