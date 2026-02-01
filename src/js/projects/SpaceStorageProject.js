@@ -53,6 +53,10 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.getTotalExpansions() * this.capacityPerCompletion;
   }
 
+  reconcileUsedStorage() {
+    this.usedStorage = Object.values(this.resourceUsage).reduce((sum, amount) => sum + amount, 0);
+  }
+
   getResourceCapSetting(resourceKey) {
     const fallback = { mode: 'none', value: 0 };
     const setting = this.resourceCaps[resourceKey] || fallback;
@@ -76,6 +80,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   clampStoredResourceToLimit(resourceKey, capLimit) {
     if (capLimit === Infinity) return;
+    this.reconcileUsedStorage();
     const stored = this.resourceUsage[resourceKey] || 0;
     const clamped = Math.max(0, Math.min(stored, capLimit));
     if (clamped === stored) return;
@@ -279,6 +284,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   calculateTransferPlan(simulate = false, capacityOverride = null, selections = null) {
+    this.reconcileUsedStorage();
     const transfers = [];
     let total = 0;
     const selected = selections ?? this.getUnlockedSelectedResources();
@@ -636,6 +642,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   applyContinuousShipOperation(deltaTime) {
+    this.reconcileUsedStorage();
     this.shipOperationKesslerPending = false;
     this.shipOperationKesslerElapsed = 0;
     this.shipOperationKesslerCost = null;
@@ -955,7 +962,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.usedStorageResyncTimer += deltaTime;
     while (this.usedStorageResyncTimer >= 1000) {
       this.usedStorageResyncTimer -= 1000;
-      this.usedStorage = Object.values(this.resourceUsage).reduce((sum, amount) => sum + amount, 0);
+      this.reconcileUsedStorage();
     }
     if (this.isShipOperationContinuous()) {
       if (this.shipOperationAutoStart) {

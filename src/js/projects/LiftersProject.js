@@ -183,6 +183,7 @@ class LiftersProject extends TerraformingDurationProject {
 
   getGasModeCapacityLimit() {
     const storage = this.getSpaceStorageProject();
+    storage?.reconcileUsedStorage();
     const freeSpace = Math.max((storage?.maxStorage || 0) - (storage?.usedStorage || 0), 0);
     if (freeSpace <= 0) {
       this.shortfallReason = storage ? 'Space storage is full' : 'Build space storage';
@@ -239,6 +240,7 @@ class LiftersProject extends TerraformingDurationProject {
       return 0;
     }
     const storage = this.getSpaceStorageProject();
+    storage?.reconcileUsedStorage();
     const freeSpace = Math.max((storage?.maxStorage || 0) - (storage?.usedStorage || 0), 0);
     const existing = storage?.resourceUsage?.[resourceKey] || 0;
     const capLimit = storage?.getResourceCapLimit?.(resourceKey) ?? Infinity;

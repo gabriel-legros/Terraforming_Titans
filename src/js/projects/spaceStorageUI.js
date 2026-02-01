@@ -636,6 +636,7 @@ function renderSpaceStorageUI(project, container) {
 }
 
 function updateSpaceStorageUI(project) {
+  project.reconcileUsedStorage();
   const els = projectElements[project.name];
   if (!els) return;
   if (els.autoStartLabel) {
