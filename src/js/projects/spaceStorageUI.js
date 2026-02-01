@@ -482,7 +482,7 @@ function renderSpaceStorageUI(project, container) {
     const transferIcon = document.createElement('span');
     transferIcon.classList.add('storage-transfer-icon');
     transferButton.appendChild(transferIcon);
-    const transferTooltip = attachDynamicInfoTooltip(transferButton, 'Store in space storage');
+    const transferTooltip = attachDynamicInfoTooltip(transferButton, 'Store in space storage', false);
     transferButton.addEventListener('click', () => {
       const current = project.getResourceTransferMode(opt.resource);
       const next = current === 'withdraw' ? 'store' : 'withdraw';

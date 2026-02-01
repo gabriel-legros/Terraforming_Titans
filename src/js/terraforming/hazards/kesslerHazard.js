@@ -225,7 +225,13 @@ class KesslerHazard {
     const debris = resources.special.orbitalDebris;
     const initialAmount = debris.initialValue || 0;
     const currentAmount = debris.value || 0;
-    const ratio = initialAmount ? currentAmount / initialAmount : 0;
+    return this.getProjectFailureChancesForDebris(initialAmount ? currentAmount : 0);
+  }
+
+  getProjectFailureChancesForDebris(totalDebris) {
+    const debris = resources.special.orbitalDebris;
+    const initialAmount = debris.initialValue || 0;
+    const ratio = initialAmount ? totalDebris / initialAmount : 0;
     const smallSuccess = Math.pow(SMALL_PROJECT_BASE_SUCCESS, ratio);
     const largeSuccess = Math.pow(LARGE_PROJECT_BASE_SUCCESS, ratio);
     return {
@@ -234,6 +240,21 @@ class KesslerHazard {
       smallSuccess,
       largeSuccess
     };
+  }
+
+  getSuccessChanceForDebris(totalDebris, isLarge) {
+    const active = this.manager.parameters.kessler && !this.isCleared();
+    if (!active) {
+      return 1;
+    }
+    const chances = this.getProjectFailureChancesForDebris(totalDebris);
+    return isLarge ? chances.largeSuccess : chances.smallSuccess;
+  }
+
+  getCostMultiplierForDebris(totalDebris, isLarge) {
+    const successChance = Math.max(this.getSuccessChanceForDebris(totalDebris, isLarge), 1e-10);
+    const multiplier = 1 / successChance;
+    return Math.min(multiplier, 1e10);
   }
 
   getDecaySummary() {

@@ -568,16 +568,17 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     warning.classList.add('project-kessler-warning');
     warning.style.display = 'none';
     const warningIcon = document.createElement('span');
-    warningIcon.classList.add('project-kessler-warning__icon');
+    warningIcon.classList.add('project-kessler-warning__icon', 'info-tooltip-icon');
     warningIcon.textContent = '⚠';
+    warningIcon.style.color = '#f0d85c';
+    const warningTooltip = attachDynamicInfoTooltip(warningIcon, '');
     const warningText = document.createElement('span');
-    const warningIconRight = document.createElement('span');
-    warningIconRight.classList.add('project-kessler-warning__icon');
-    warningIconRight.textContent = '⚠';
-    warning.append(warningIcon, warningText, warningIconRight);
+    warning.append(warningIcon, warningText);
     combinedStructureRow.appendChild(warning);
     cached.kesslerWarning = warning;
     cached.kesslerWarningText = warningText;
+    cached.kesslerWarningTooltip = warningTooltip;
+    cached.kesslerWarningTooltipCache = {};
   }
 
   combinedStructureRow.appendChild(cardBody);
@@ -2018,7 +2019,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
   }
 
-  function updateStructureKesslerWarning(structure, elements) {
+  function updateStructureKesslerWarning(structure, elements, buildCount = 1) {
     try {
       const warning = elements.kesslerWarning;
       const warningText = elements.kesslerWarningText;
@@ -2033,6 +2034,22 @@ function updateDecreaseButtonText(button, buildCount) {
         return;
       }
       warningText.textContent = `Extra Cost from Kessler x${formatNumber(multiplier, false, 2)} will create debris`;
+      const tooltip = elements.kesslerWarningTooltip;
+      const baseCost = structure.getBaseEffectiveCost(buildCount);
+      const debrisAdded = structure._getKesslerDebrisFromCost(baseCost, multiplier);
+      const currentDebris = resources.special.orbitalDebris.value || 0;
+      const totalDebris = currentDebris + debrisAdded;
+      const isLarge = structure.kesslerDebrisSize === 'large';
+      const nextMultiplier = hazardManager.kesslerHazard.getCostMultiplierForDebris(totalDebris, isLarge);
+      const currentChances = hazardManager.kesslerHazard.getProjectFailureChances();
+      const nextChances = hazardManager.kesslerHazard.getProjectFailureChancesForDebris(totalDebris);
+      const tooltipText = [
+        `Debris from this build: +${formatNumber(debrisAdded, true)} t`,
+        `Cost multiplier: ${formatNumber(multiplier, false, 2)}x -> ${formatNumber(nextMultiplier, false, 2)}x`,
+        `Small project failure: ${formatNumber(currentChances.smallFailure * 100, false, 2)}% -> ${formatNumber(nextChances.smallFailure * 100, false, 2)}%`,
+        `Large project failure: ${formatNumber(currentChances.largeFailure * 100, false, 2)}% -> ${formatNumber(nextChances.largeFailure * 100, false, 2)}%`
+      ].join('\n');
+      setTooltipText(tooltip, tooltipText, elements.kesslerWarningTooltipCache, 'text');
       warning.style.display = 'flex';
     } catch (error) {
       // no-op
@@ -2080,7 +2097,7 @@ function updateDecreaseButtonText(button, buildCount) {
         ? `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`
         : `${formatBuildingCount(structure.count)}`;
 
-      updateStructureKesslerWarning(structure, els);
+      updateStructureKesslerWarning(structure, els, manualBuildCount);
 
       const incBtn = els.increaseButton || document.getElementById(`${structureName}-increase-button`);
       if (incBtn) {
