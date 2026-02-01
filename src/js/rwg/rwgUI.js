@@ -818,6 +818,8 @@ function drawSingle(seed, options) {
   updateHazardListVisibility();
   syncEnabledHazards();
   const seedKey = encodeSeedOptions(sStr, { ...resolvedOptions, hazards: appliedHazards });
+  equilibratedWorlds.delete(seedKey);
+  equilibratedWorlds.delete(res.seedString);
   let archetype = res.archetype;
   const box = document.getElementById('rwg-result');
   if (!box) return;

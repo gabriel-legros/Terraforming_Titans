@@ -45,6 +45,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Golden asteroid save loading now clears any lingering countdown notifications before restoring the saved timer.
 - Ringworld setup now includes a target flux slider (1200–1500 W/m²).
 - Tartarus chapter 32 now enables ringworld construction in the Artificial Manager.
+- Random World Generator now clears the equilibration flag whenever a world is regenerated so the Equilibrate step is required again before travel.
 - Ringworld construction cost now scales linearly with ringworld land area.
 - Ringworld construction cost now scales linearly with radius and quadratically with width.
 - Ringworld construction now requires metal equal to the superalloy cost.
