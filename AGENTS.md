@@ -64,6 +64,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Atmospheric density upper-atmosphere molar-mass heuristics now use bulk/hydrostatic mean molecular weight (excluding heavy trace like SF6/aerosols), and upper-atmosphere temperature/column-mass heuristics now use bulk (non-heavy-trace) pressure/mass so adding safe GHG can’t lower the Kessler drag line via thermosphere cooling heuristics.
 - Exobase height estimation for atmospheric density now uses bulk (non-heavy-trace) atmospheric mass so heavy trace additions don’t shift upper-atmosphere layer boundaries.
 - Atmospheric density layer boundaries now use exobase-relative heights to keep the Kessler drag line monotonic in surface temperature for fixed composition/pressure.
+- Atmospheric density now reduces effective surface pressure when water vapor exceeds saturation to penalize condensation, and cold-traps water so it doesn't inflate the upper-atmosphere drag line on cold worlds.
 - Underworld mining no longer creates geothermal deposits on worlds without geothermal activity.
 - Autobuild now supports % land share targets for structures that consume land.
 - Info tooltips created via `attachDynamicInfoTooltip` are now click-pinnable by default (click icon to keep open; click elsewhere to close).

@@ -47,6 +47,12 @@
   - enableEscapeTail (default true)                  // use constant-g exosphere that decays to zero
   - jeansLambdaTarget (default 30)                   // lower => puffier; higher => tighter upper tail
   - minEscapeScaleFactor (default 0.02)              // minimum multiplier on exosphere scale height
+  - enableWaterCondensation (default true)           // cap H2O by saturation at surface
+  - relativeHumidity (default 0.7)                   // used for surface saturation cap
+  - coldTrapRelativeHumidity (default 0.1)           // used for upper-atmosphere dryness (cold trap)
+  - adjustSurfacePressureForWaterCondensation (default auto)
+      If surface pressure comes from mass-based inference, subtract excess H2O
+      above saturation from the effective surface pressure.
 */
 
 (function () {
@@ -288,22 +294,113 @@
   }
 
   function getSurfacePressurePa(terraforming, resources, celestialParameters) {
-    if (terraforming && typeof terraforming.calculateTotalPressure === 'function') {
-      const kPa = terraforming.calculateTotalPressure();
-      if (isFiniteNumber(kPa) && kPa >= 0) return kPa * 1000;
-    }
+    const terraformKPa = terraforming?.calculateTotalPressure?.();
+    if (isFiniteNumber(terraformKPa) && terraformKPa >= 0) return { pressurePa: terraformKPa * 1000, source: 'terraforming' };
 
     const getTotalSurfacePressureKPa = getGlobal('getTotalSurfacePressureKPa');
-    if (typeof getTotalSurfacePressureKPa === 'function') {
-      const kPa = getTotalSurfacePressureKPa(resources?.atmospheric, celestialParameters?.gravity, celestialParameters?.radius);
-      if (isFiniteNumber(kPa) && kPa >= 0) return kPa * 1000;
-    }
+    const utilKPa = getTotalSurfacePressureKPa?.(resources?.atmospheric, celestialParameters?.gravity, celestialParameters?.radius);
+    if (isFiniteNumber(utilKPa) && utilKPa >= 0) return { pressurePa: utilKPa * 1000, source: 'atmospheric-utils' };
 
     const totalMassKg = getTotalAtmosphericMassKg(resources);
     const g = getSurfaceGravity(celestialParameters);
     const area = getSurfaceAreaM2(celestialParameters);
-    if (!(area > 0) || !(g > 0) || !(totalMassKg > 0)) return 0;
-    return (totalMassKg * g) / area;
+    if (!(area > 0) || !(g > 0) || !(totalMassKg > 0)) return { pressurePa: 0, source: 'none' };
+    return { pressurePa: (totalMassKg * g) / area, source: 'mass' };
+  }
+
+  // ---------- Water vapor: surface saturation cap ----------
+  function saturationVaporPressurePa(Tk) {
+    const T = clamp(Tk, 60, 400);
+    const Tc = T - 273.15;
+
+    if (Tc >= 0) {
+      const a = 17.625;
+      const b = 243.04;
+      return 610.94 * Math.exp((a * Tc) / (Tc + b));
+    }
+    const a = 22.587;
+    const b = 273.86;
+    return 610.94 * Math.exp((a * Tc) / (Tc + b));
+  }
+
+  function clampPartialPressure(pa, totalPa) {
+    if (!(pa > 0)) return 0;
+    if (!(totalPa > 0)) return pa;
+    return clamp(pa, 0, totalPa);
+  }
+
+  function getWaterPressureFraction(atmosphericResources) {
+    // This game derives per-gas pressure from mass inventory (weight/area), not mole fraction.
+    // Use mass share as the surface pressure share so light gases (H2/H2O) don't get over-weighted.
+    const atmospheric = atmosphericResources || {};
+    let totalTons = 0;
+    let waterTons = 0;
+
+    for (const key of Object.keys(atmospheric)) {
+      const tons = extractTons(atmospheric[key]);
+      if (!(tons > 0)) continue;
+      totalTons += tons;
+      if (key === 'atmosphericWater') waterTons += tons;
+    }
+
+    return totalTons > 0 ? waterTons / totalTons : 0;
+  }
+
+  function applyWaterCondensationPenalty(surfacePressurePa, surfaceTemperatureK, atmosphericResources, surfacePressureSource, options = {}) {
+    const enableWaterCondensation = (options.enableWaterCondensation !== false);
+    const relativeHumidity = clamp(isFiniteNumber(options.relativeHumidity) ? options.relativeHumidity : 0.7, 0, 1);
+
+    if (!(enableWaterCondensation && surfacePressurePa > 0 && surfaceTemperatureK > 0)) {
+      return {
+        surfacePressurePa,
+        surfacePressureSource,
+        relativeHumidity,
+        xH2O_inventory: 0,
+        pH2O_raw0Pa: 0,
+        pH2O_capped0Pa: 0,
+        eSat0Pa: 0,
+        appliedCondensationPa: 0,
+        adjusted: false
+      };
+    }
+
+    const waterPressureFraction = getWaterPressureFraction(atmosphericResources);
+    if (!(waterPressureFraction > 0)) {
+      return {
+        surfacePressurePa,
+        surfacePressureSource,
+        relativeHumidity,
+        xH2O_inventory: 0,
+        pH2O_raw0Pa: 0,
+        pH2O_capped0Pa: 0,
+        eSat0Pa: 0,
+        appliedCondensationPa: 0,
+        adjusted: false
+      };
+    }
+
+    const pH2O_raw0 = clampPartialPressure(waterPressureFraction * surfacePressurePa, surfacePressurePa);
+    const eSat0 = saturationVaporPressurePa(surfaceTemperatureK);
+    const pH2O_sat0 = clampPartialPressure(relativeHumidity * eSat0, surfacePressurePa);
+    const pH2O0 = Math.min(pH2O_raw0, pH2O_sat0);
+    const excess = Math.max(0, pH2O_raw0 - pH2O0);
+
+    const adjustOpt = options.adjustSurfacePressureForWaterCondensation;
+    const shouldAutoAdjust = surfacePressureSource !== 'terraforming';
+    const shouldAdjust = (adjustOpt === true) || (adjustOpt === undefined && shouldAutoAdjust);
+    const adjustedSurfacePressurePa = shouldAdjust ? Math.max(0, surfacePressurePa - excess) : surfacePressurePa;
+
+    return {
+      surfacePressurePa: adjustedSurfacePressurePa,
+      surfacePressureSource,
+      relativeHumidity,
+      xH2O_inventory: waterPressureFraction,
+      pH2O_raw0Pa: pH2O_raw0,
+      pH2O_capped0Pa: pH2O0,
+      eSat0Pa: eSat0,
+      appliedCondensationPa: shouldAdjust ? excess : 0,
+      adjusted: shouldAdjust
+    };
   }
 
   // ---------- Temperature heuristics ----------
@@ -424,17 +521,30 @@
         solarFluxWm2,
         meanMolecularWeightGmol,
         meanMolecularWeightForHydrostaticsGmol,
+        meanMolecularWeightDryBulkGmol,
         massFractions,
         massFractionsBulk,
+        massFractionsDryBulk,
         totalAtmosphericMassKg,
         totalAtmosphericMassKgBulk,
         surfaceAreaM2,
-        collisionSigmaM2
+        collisionSigmaM2,
+        waterCondensation,
+        atmosphericWaterMassKg
       } = this._inputs;
 
       const enableEscapeTail = (this._options.enableEscapeTail !== false);
       const jeansLambdaTarget = isFiniteNumber(this._options.jeansLambdaTarget) ? this._options.jeansLambdaTarget : 30;
       const minEscapeScaleFactor = isFiniteNumber(this._options.minEscapeScaleFactor) ? this._options.minEscapeScaleFactor : 0.02;
+
+      const enableWaterCondensation = (this._options.enableWaterCondensation !== false);
+      const coldTrapRelativeHumidity = clamp(
+        isFiniteNumber(this._options.coldTrapRelativeHumidity) ? this._options.coldTrapRelativeHumidity : 0.1,
+        0,
+        1
+      );
+      const waterSurfacePa = waterCondensation?.pH2O_capped0Pa || 0;
+      const waterMassKg = atmosphericWaterMassKg || 0;
 
       this._debug = {
         planetRadiusM,
@@ -445,17 +555,23 @@
         solarFluxWm2,
         meanMolecularWeightGmol,
         meanMolecularWeightForHydrostaticsGmol,
+        meanMolecularWeightDryBulkGmol,
         massFractions: { ...massFractions },
         massFractionsBulk: { ...(massFractionsBulk || {}) },
+        massFractionsDryBulk: { ...(massFractionsDryBulk || {}) },
         totalAtmosphericMassKg,
         totalAtmosphericMassKgBulk,
         surfaceAreaM2,
         collisionSigmaM2,
+        waterCondensation: { ...waterCondensation },
+        atmosphericWaterMassKg: waterMassKg,
         options: {
           enableEscapeTail,
           jeansLambdaTarget,
           minEscapeScaleFactor,
-          altitudeCacheStepMeters: this._altitudeCacheStepMeters
+          altitudeCacheStepMeters: this._altitudeCacheStepMeters,
+          enableWaterCondensation,
+          coldTrapRelativeHumidity
         }
       };
 
@@ -465,27 +581,54 @@
         return;
       }
 
-      const meanMW_Hydro_Gmol = (isFiniteNumber(meanMolecularWeightForHydrostaticsGmol) && meanMolecularWeightForHydrostaticsGmol > 0)
+      const meanMW_Hydro_BaseGmol = (isFiniteNumber(meanMolecularWeightForHydrostaticsGmol) && meanMolecularWeightForHydrostaticsGmol > 0)
         ? meanMolecularWeightForHydrostaticsGmol
         : meanMolecularWeightGmol;
 
-      const upperPressurePa = (isFiniteNumber(surfacePressurePaBulk) && surfacePressurePaBulk > 0)
+      const upperPressurePaBase = (isFiniteNumber(surfacePressurePaBulk) && surfacePressurePaBulk > 0)
         ? surfacePressurePaBulk
         : surfacePressurePa;
-      const upperTotalMassKg = (isFiniteNumber(totalAtmosphericMassKgBulk) && totalAtmosphericMassKgBulk > 0)
+      const upperTotalMassKgBase = (isFiniteNumber(totalAtmosphericMassKgBulk) && totalAtmosphericMassKgBulk > 0)
         ? totalAtmosphericMassKgBulk
         : totalAtmosphericMassKg;
 
-      const frac_Hydro = (massFractionsBulk && typeof massFractionsBulk === 'object')
-        ? massFractionsBulk
-        : massFractions;
+      const frac_Dry = massFractionsDryBulk || massFractionsBulk || massFractions;
+      const meanMW_DryBulkGmol = (isFiniteNumber(meanMolecularWeightDryBulkGmol) && meanMolecularWeightDryBulkGmol > 0)
+        ? meanMolecularWeightDryBulkGmol
+        : meanMW_Hydro_BaseGmol;
 
-      const Tcold = estimateColdPointTemperatureK(surfaceTemperatureK, frac_Hydro.co2, upperPressurePa);
+      const upperPressureDryPa = enableWaterCondensation ? Math.max(0, upperPressurePaBase - waterSurfacePa) : upperPressurePaBase;
+      const upperMassDryKg = enableWaterCondensation ? Math.max(0, upperTotalMassKgBase - waterMassKg) : upperTotalMassKgBase;
+
+      // Two-pass cold trap: Tcold depends on pressure; pressure depends weakly on cold-trap H2O.
+      let Tcold = estimateColdPointTemperatureK(surfaceTemperatureK, frac_Dry.co2, upperPressurePaBase);
+      let coldTrapCapPa = enableWaterCondensation ? (coldTrapRelativeHumidity * saturationVaporPressurePa(Tcold)) : Infinity;
+      let waterUpperPa = enableWaterCondensation ? Math.min(waterSurfacePa, coldTrapCapPa) : waterSurfacePa;
+      let effectiveWaterMassKg = (enableWaterCondensation && waterSurfacePa > 0)
+        ? (waterMassKg * (waterUpperPa / waterSurfacePa))
+        : (enableWaterCondensation ? 0 : waterMassKg);
+
+      let upperPressurePa = enableWaterCondensation ? (upperPressureDryPa + waterUpperPa) : upperPressurePaBase;
+      let upperTotalMassKg = enableWaterCondensation ? (upperMassDryKg + effectiveWaterMassKg) : upperTotalMassKgBase;
+
+      Tcold = estimateColdPointTemperatureK(surfaceTemperatureK, frac_Dry.co2, upperPressurePa);
+      if (enableWaterCondensation) {
+        coldTrapCapPa = coldTrapRelativeHumidity * saturationVaporPressurePa(Tcold);
+        waterUpperPa = Math.min(waterSurfacePa, coldTrapCapPa);
+        effectiveWaterMassKg = (waterSurfacePa > 0) ? (waterMassKg * (waterUpperPa / waterSurfacePa)) : 0;
+        upperPressurePa = upperPressureDryPa + waterUpperPa;
+        upperTotalMassKg = upperMassDryKg + effectiveWaterMassKg;
+      }
+
+      const meanMW_Hydro_Gmol = (enableWaterCondensation && upperPressurePa > 0)
+        ? ((upperPressureDryPa * meanMW_DryBulkGmol) + (waterUpperPa * MOLECULAR_WEIGHT_G_PER_MOL.atmosphericWater)) / upperPressurePa
+        : (enableWaterCondensation ? meanMW_DryBulkGmol : meanMW_Hydro_BaseGmol);
+
       const Texo = estimateExosphereTemperatureK(
         solarFluxWm2,
         surfaceTemperatureK,
-        frac_Hydro.co2,
-        frac_Hydro.ch4,
+        frac_Dry.co2,
+        frac_Dry.ch4,
         upperPressurePa,
         meanMW_Hydro_Gmol
       );
@@ -535,7 +678,7 @@
       // Use the hydrostatic/bulk MW as the basis so heavy trace species (e.g. SF6/aerosols)
       // don't unrealistically "thicken" the thermosphere/exosphere.
       let MUpperG;
-      if (meanMW_Hydro_Gmol > 40 || frac_Hydro.co2 > 0.5) {
+      if (meanMW_Hydro_Gmol > 40 || frac_Dry.co2 > 0.5) {
         MUpperG = clamp(meanMW_Hydro_Gmol * 0.60, 16, 32);
       } else {
         MUpperG = clamp(meanMW_Hydro_Gmol * 0.42, 4, 28);
@@ -584,7 +727,11 @@
       ];
 
       // Pressure at each layer start.
-      let P = surfacePressurePa;
+      const surfacePressurePaHydro = enableWaterCondensation
+        ? Math.max(0, surfacePressurePa - Math.max(0, waterSurfacePa - waterUpperPa))
+        : surfacePressurePa;
+
+      let P = surfacePressurePaHydro;
       this._layers[0].PStart = P;
 
       for (let i = 0; i < this._layers.length; i += 1) {
@@ -619,6 +766,19 @@
       this._debug.heightsM = { z1, z2, z3, z4, exobase: zExoSafe };
       this._debug.surfaceScaleHeightM = Hsurf;
       this._debug.columnMassKgPerM2 = columnMassKgPerM2;
+      this._debug.waterColdTrap = {
+        enableWaterCondensation,
+        waterSurfacePa,
+        waterUpperPa,
+        coldTrapCapPa,
+        surfacePressurePaHydro,
+        upperPressurePa,
+        upperPressureDryPa,
+        upperTotalMassKg,
+        upperMassDryKg,
+        effectiveWaterMassKg,
+        meanMW_DryBulkGmol
+      };
       this._debug.escape = {
         enableEscapeTail,
         rExo,
@@ -739,8 +899,15 @@
     const escapeKey = (options.enableEscapeTail !== false) ? 1 : 0;
     const jlKey = Math.round((options.jeansLambdaTarget ?? 30) * 100) / 100;
     const mefKey = Math.round((options.minEscapeScaleFactor ?? 0.02) * 1000) / 1000;
+    const waterKey = (options.enableWaterCondensation === false) ? 0 : 1;
+    const rhKey = Math.round((isFiniteNumber(options.relativeHumidity) ? options.relativeHumidity : 0.7) * 100) / 100;
+    const rhColdKey = Math.round((isFiniteNumber(options.coldTrapRelativeHumidity) ? options.coldTrapRelativeHumidity : 0.1) * 100) / 100;
+    const adjustKey = (options.adjustSurfacePressureForWaterCondensation === true)
+      ? 2
+      : (options.adjustSurfacePressureForWaterCondensation === false) ? 0 : 1;
+    const h2oPKey = Math.round((inputs.waterCondensation?.pH2O_capped0Pa || 0));
 
-    return `${pKey}|${tKey}|${mwKey}|${mwHydKey}|${sKey}|${gKey}|${rKey}|${mKey}|${co2Key}|${ch4Key}|${sf6Key}|${escapeKey}|${jlKey}|${mefKey}`;
+    return `${pKey}|${tKey}|${mwKey}|${mwHydKey}|${sKey}|${gKey}|${rKey}|${mKey}|${co2Key}|${ch4Key}|${sf6Key}|${escapeKey}|${jlKey}|${mefKey}|${waterKey}|${rhKey}|${rhColdKey}|${adjustKey}|${h2oPKey}`;
   }
 
   function buildDensityInputs(terraforming, options = {}) {
@@ -755,10 +922,11 @@
     const solarFluxWm2 = getSolarFluxWm2(terraforming, celestial);
 
     const totalAtmosphericMassKg = getTotalAtmosphericMassKg(resources);
-    const surfacePressurePa = getSurfacePressurePa(terraforming, resources, celestial);
+    const surfacePressureResult = getSurfacePressurePa(terraforming, resources, celestial);
+    let surfacePressurePa = surfacePressureResult.pressurePa;
 
     const totalAtmosphericMassKgBulk = getTotalAtmosphericMassKgExcluding(resources, HEAVY_TRACE_KEYS);
-    const surfacePressurePaBulk = (totalAtmosphericMassKgBulk > 0 && surfaceAreaM2 > 0 && gravity > 0)
+    let surfacePressurePaBulk = (totalAtmosphericMassKgBulk > 0 && surfaceAreaM2 > 0 && gravity > 0)
       ? (totalAtmosphericMassKgBulk * gravity) / surfaceAreaM2
       : surfacePressurePa;
 
@@ -773,6 +941,22 @@
 
     const massFractions = getMassFractions(resources?.atmospheric);
     const massFractionsBulk = getMassFractionsExcludingKeys(resources?.atmospheric, HEAVY_TRACE_KEYS);
+    const massFractionsDryBulk = getMassFractionsExcludingKeys(resources?.atmospheric, HEAVY_TRACE_KEYS.concat(['atmosphericWater']));
+    const meanMolecularWeightDryBulkGmol = estimateMeanMolecularWeightGmolExcluding(resources?.atmospheric, HEAVY_TRACE_KEYS.concat(['atmosphericWater'])) || meanMolecularWeightBulkGmol;
+    const atmosphericWaterMassKg = Math.max(0, extractTons(resources?.atmospheric?.atmosphericWater)) * 1000;
+
+    const waterCondensation = applyWaterCondensationPenalty(
+      surfacePressurePa,
+      surfaceTemperatureK,
+      resources?.atmospheric,
+      surfacePressureResult.source,
+      options
+    );
+
+    surfacePressurePa = waterCondensation.surfacePressurePa;
+    if (waterCondensation.appliedCondensationPa > 0) {
+      surfacePressurePaBulk = Math.max(0, surfacePressurePaBulk - waterCondensation.appliedCondensationPa);
+    }
 
     const collisionSigmaM2 = isFiniteNumber(options.collisionSigmaM2)
       ? options.collisionSigmaM2
@@ -790,9 +974,13 @@
       totalAtmosphericMassKgBulk,
       meanMolecularWeightGmol,
       meanMolecularWeightForHydrostaticsGmol,
+      meanMolecularWeightDryBulkGmol,
       massFractions,
       massFractionsBulk,
-      collisionSigmaM2
+      massFractionsDryBulk,
+      collisionSigmaM2,
+      waterCondensation,
+      atmosphericWaterMassKg
     };
   }
 
