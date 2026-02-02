@@ -585,6 +585,8 @@ The planet visualiser has been modularised into files covering core setup, light
 - Autobuild target counts now always display in compact k/M/B formatting; removed the related settings toggle.
 - Autobuild basis dropdowns now include a % initial land option that targets terraforming.initialLand.
 - Spaceship, android, and Import Resources assignment cards now use compact k/M/B formatting for available/assigned counts.
+- Galactic Market controls now include -Max/+Max quick actions based on current net resource surplus, with an attached tooltip explaining the shortcuts.
+- Galactic Market now has an "Enable extra settings" checkbox beside Run that shows or hides the -Max/+Max buttons and persists across saves and travel.
 - Added Solis Prime as a rogue story planet that relies on background radiation for luminosity.
 - Galaxy map sectors that block story progress now show a journal icon until conquered and explain the required world milestone in the sector details.
 - Added an Artificial space subtab managed by a new ArtificialManager and UI that only appears when the manager is enabled.

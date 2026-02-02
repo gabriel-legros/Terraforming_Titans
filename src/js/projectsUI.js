@@ -598,6 +598,27 @@ function createProjectItem(project) {
   autoStartCheckboxContainer.appendChild(autoStartLabel);
   automationSettingsContainer.appendChild(autoStartCheckboxContainer);
 
+  let extraSettingsCheckbox = null;
+  let extraSettingsContainer = null;
+  if (project.name === 'galactic_market') {
+    extraSettingsContainer = document.createElement('div');
+    extraSettingsContainer.classList.add('checkbox-container');
+    extraSettingsCheckbox = document.createElement('input');
+    extraSettingsCheckbox.type = 'checkbox';
+    extraSettingsCheckbox.id = `${project.name}-extra-settings`;
+    extraSettingsCheckbox.checked = project.extraSettingsEnabled === true;
+    extraSettingsCheckbox.addEventListener('change', (event) => {
+      project.extraSettingsEnabled = event.target.checked;
+      project.updateExtraSettingsUI();
+    });
+    const extraSettingsLabel = document.createElement('label');
+    extraSettingsLabel.htmlFor = extraSettingsCheckbox.id;
+    extraSettingsLabel.textContent = 'Enable extra settings';
+    extraSettingsContainer.appendChild(extraSettingsCheckbox);
+    extraSettingsContainer.appendChild(extraSettingsLabel);
+    automationSettingsContainer.appendChild(extraSettingsContainer);
+  }
+
   const showTravelReset = project.name !== 'dysonSwarmReceiver' &&
     (project.attributes?.spaceStorage ||
     project.attributes?.canUseSpaceStorage ||
@@ -660,6 +681,8 @@ function createProjectItem(project) {
     autoStartCheckbox: autoStartCheckbox,
     autoStartCheckboxContainer: autoStartCheckboxContainer,
     autoStartLabel: autoStartLabel,
+    extraSettingsCheckbox,
+    extraSettingsContainer,
     autoStartTravelResetCheckbox: autoStartTravelResetCheckbox,
     autoStartTravelResetLabel: autoStartTravelResetLabel,
     automationSettingsContainer: automationSettingsContainer,
@@ -1183,6 +1206,9 @@ function updateProjectUI(projectName) {
   // Set the auto-start checkbox state based on the project data
   if (elements.autoStartCheckbox) {
     elements.autoStartCheckbox.checked = project.autoStart || false;
+  }
+  if (elements.extraSettingsCheckbox) {
+    elements.extraSettingsCheckbox.checked = project.extraSettingsEnabled === true;
   }
   if (elements.autoStartTravelResetCheckbox) {
     elements.autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;

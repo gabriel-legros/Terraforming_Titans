@@ -11,6 +11,7 @@ class GalacticMarketProject extends Project {
     this.manualRunRemainingTime = 0;
     this.tradeSaturationMultiplier = 1;
     this.kesslerCapped = false;
+    this.extraSettingsEnabled = false;
   }
 
   isContinuous() {
@@ -94,6 +95,9 @@ class GalacticMarketProject extends Project {
       sellPriceSpans: [],
       saturationSellSpans: [],
       rowButtons: [],
+      extraButtons: [],
+      controlContainers: [],
+      headerControls: null,
       rowMeta: [],
       leftRows: [],
       rightRows: [],
@@ -104,6 +108,28 @@ class GalacticMarketProject extends Project {
       const parsed = parseSelectionQuantity(input.value);
       input.dataset.quantity = String(parsed);
       return parsed;
+    };
+
+    const getResourceNetRate = (category, resourceId) => {
+      const resourceData = resources[category][resourceId];
+      return resourceData.productionRate - resourceData.consumptionRate;
+    };
+
+    const getTotalCostFromInputs = () => {
+      let totalCost = 0;
+      (elements.rowMeta || []).forEach((meta, index) => {
+        const buyInput = elements.buyInputs?.[index];
+        const sellInput = elements.sellInputs?.[index];
+        const storedBuy = buyInput ? Number(buyInput.dataset.quantity) : NaN;
+        const storedSell = sellInput ? Number(sellInput.dataset.quantity) : NaN;
+        const buyQuantity = Number.isFinite(storedBuy) ? storedBuy : (buyInput ? syncQuantityFromText(buyInput) : 0);
+        const sellQuantity = Number.isFinite(storedSell) ? storedSell : (sellInput ? syncQuantityFromText(sellInput) : 0);
+        const buyPrice = this.getBuyPrice(meta.category, meta.resource);
+        const sellPrice = this.getSellPrice(meta.category, meta.resource, sellQuantity);
+        totalCost += buyQuantity * buyPrice;
+        totalCost -= sellQuantity * sellPrice;
+      });
+      return totalCost;
     };
 
     const getInputQuantity = (input) => {
@@ -164,11 +190,15 @@ class GalacticMarketProject extends Project {
 
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
-          tooltip.title = 'Press the - button to shift the increment from buying to selling, increasing the sell amount.';
           tooltip.innerHTML = '&#9432;';
+          attachDynamicInfoTooltip(
+            tooltip,
+            'Use -/+ to shift the current step between sell and buy. -Max sells the current surplus (production minus consumption). +Max buys enough to spend a positive surplus down to zero.'
+          );
           headerControls.insertBefore(tooltip, multiplyButton.nextSibling);
 
           headerRow.appendChild(headerControls);
+          elements.headerControls = headerControls;
           return;
         }
 
@@ -331,8 +361,22 @@ class GalacticMarketProject extends Project {
         };
 
         createButton('0', () => applyShift('reset'));
+        const minusMaxButton = createButton('-Max', () => {
+          const surplus = Math.max(0, Math.floor(getResourceNetRate(category, resourceId)));
+          setInputQuantity(buyInput, 0, true);
+          setInputQuantity(sellInput, surplus, true);
+        });
         const minusButton = createButton('', () => applyShift('toSell'));
         const plusButton = createButton('', () => applyShift('toBuy'));
+        const plusMaxButton = createButton('+Max', () => {
+          const totalCost = getTotalCostFromInputs();
+          if (totalCost >= 0) return;
+          const buyPrice = this.getBuyPrice(category, resourceId);
+          if (buyPrice <= 0) return;
+          const currentBuy = getInputQuantity(buyInput);
+          const needed = Math.floor((-totalCost) / buyPrice);
+          setInputQuantity(buyInput, currentBuy + needed, true);
+        });
         createButton('Sat', () => {
           const saturation = this.getSaturationSellAmount(category, resourceId);
           setInputQuantity(buyInput, 0, true);
@@ -359,6 +403,8 @@ class GalacticMarketProject extends Project {
         elements.sellPriceSpans.push(sellPriceSpan);
         elements.saturationSellSpans.push(saturationSpan);
         elements.rowButtons.push({ minusButton, plusButton });
+        elements.extraButtons.push([minusMaxButton, plusMaxButton]);
+        elements.controlContainers.push(controlsContainer);
         elements.rowMeta.push({ category, resource: resourceId });
         elements.leftRows.push(leftRow);
         elements.rightRows.push(rightRow);
@@ -380,6 +426,8 @@ class GalacticMarketProject extends Project {
     };
 
     elements.updateIncrementButtons();
+    this.updateControlsHeaderWidth();
+    this.updateExtraSettingsUI();
 
     selectionGridContainer.appendChild(leftGrid);
     selectionGridContainer.appendChild(rightGrid);
@@ -443,6 +491,8 @@ class GalacticMarketProject extends Project {
     } = elements;
 
     elements.updateIncrementButtons?.();
+    this.updateExtraSettingsUI();
+    this.updateControlsHeaderWidth();
 
     rowMeta.forEach((meta, index) => {
       const resourceData = resources[meta.category]?.[meta.resource];
@@ -547,6 +597,34 @@ class GalacticMarketProject extends Project {
     const quantity = Number.isFinite(stored) ? stored : parseSelectionQuantity(sellInput.value);
     const price = this.getSellPrice(meta.category, meta.resource, quantity);
     span.textContent = `${formatNumber(price, true)}`;
+  }
+
+  updateExtraSettingsUI() {
+    const elements = projectElements[this.name];
+    if (!elements) return;
+    const showExtras = this.extraSettingsEnabled === true;
+    (elements.extraButtons || []).forEach((pair) => {
+      pair.forEach((button) => {
+        if (button) button.style.display = showExtras ? '' : 'none';
+      });
+    });
+    this.updateControlsHeaderWidth();
+  }
+
+  updateControlsHeaderWidth() {
+    const elements = projectElements[this.name];
+    if (!elements) return;
+    const headerControls = elements.headerControls;
+    const containers = elements.controlContainers || [];
+    if (!headerControls || !containers.length) return;
+    let maxWidth = 0;
+    containers.forEach((container) => {
+      const width = container.offsetWidth || 0;
+      if (width > maxWidth) maxWidth = width;
+    });
+    if (maxWidth > 0) {
+      headerControls.style.minWidth = `${maxWidth}px`;
+    }
   }
 
   updateKesslerWarning() {
@@ -898,6 +976,7 @@ class GalacticMarketProject extends Project {
     state.selectedResources = this.buySelections;
     state.spaceshipPriceIncrease = this.spaceshipPriceIncrease;
     state.selectionIncrement = this.selectionIncrement;
+    state.extraSettingsEnabled = this.extraSettingsEnabled === true;
     return state;
   }
 
@@ -905,6 +984,7 @@ class GalacticMarketProject extends Project {
     super.loadState(state);
     this.selectionIncrement = state.selectionIncrement || 1;
     this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
+    this.extraSettingsEnabled = state.extraSettingsEnabled === true;
     const savedBuys = state.buySelections || state.selectedResources || [];
     const savedSells = state.sellSelections || [];
     this.buySelections = normalizeSelectionEntries(savedBuys);
@@ -917,15 +997,21 @@ class GalacticMarketProject extends Project {
     }
     this.applySelectionsToInputs();
     this.updateSelectedResources();
+    this.updateExtraSettingsUI();
     updateTotalCostDisplay(this);
   }
 
   saveTravelState() {
-    return { spaceshipPriceIncrease: this.spaceshipPriceIncrease };
+    return {
+      spaceshipPriceIncrease: this.spaceshipPriceIncrease,
+      extraSettingsEnabled: this.extraSettingsEnabled === true
+    };
   }
 
   loadTravelState(state = {}) {
     this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
+    this.extraSettingsEnabled = state.extraSettingsEnabled === true;
+    this.updateExtraSettingsUI();
   }
 }
 
