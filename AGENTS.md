@@ -77,6 +77,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Game loop now derives delta time from performance.now(), clamped to 1s, instead of Phaser’s provided delta.
 - Life automation auto-purchase thresholds now accept two-decimal percentages from 0–100%.
 - Magnetic Shield research now hides on worlds with a natural magnetosphere.
+- Patience now banks at 2 seconds per second per world from arrival, is claimed on terraform completion, continues earning until a 3-hour world cap, and the Patience UI shows a dedicated terraforming patience card.
 
 ## Prestige systems
 Two reset layers control long term progression:

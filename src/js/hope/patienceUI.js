@@ -17,6 +17,8 @@ const PatienceUI = {
     gainValueEl: null,
     gainMetaEl: null,
     timerMetaEl: null,
+    worldValueEl: null,
+    worldMetaEl: null,
     saveFileButtonEl: null,
     saveClipboardButtonEl: null,
 
@@ -62,13 +64,13 @@ const PatienceUI = {
 
         const tooltip = document.createElement('span');
         tooltip.className = 'info-tooltip-icon';
-        tooltip.title = 'Save to file or export to clipboard once per day to claim patience, plus gain a bonus when terraforming a world, then spend it for equivalent hours of production of net metal, superalloy, superconductor, advanced research, O\'Neill cylinder growth, and Warp Gate progress.';
+        tooltip.title = 'Save to file or export to clipboard once per day to claim patience. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.';
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
         const subtitle = document.createElement('p');
         subtitle.className = 'patience-subtitle';
-        subtitle.textContent = 'Claim daily patience by saving or exporting and gain bonus patience each time a world is terraformed.  Use patience to gain equivalent hours of production for various things.';
+        subtitle.textContent = 'Claim daily patience by saving or exporting. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.';
         header.appendChild(subtitle);
         shell.appendChild(header);
 
@@ -134,6 +136,33 @@ const PatienceUI = {
         timerMeta.textContent = 'Next reset in --:--:--';
         timerCard.appendChild(timerMeta);
         statsRow.appendChild(timerCard);
+
+        const worldCard = document.createElement('div');
+        worldCard.className = 'patience-card';
+
+        const worldLabel = document.createElement('div');
+        worldLabel.className = 'patience-card-label';
+        worldLabel.textContent = 'Terraforming patience';
+
+        const worldInfo = document.createElement('span');
+        worldInfo.className = 'info-tooltip-icon';
+        worldLabel.appendChild(worldInfo);
+        attachDynamicInfoTooltip(worldInfo, 'Bank patience at 2 seconds per second from world start. Completing terraforming claims the bank and keeps earning until the world cap (3 hours) is reached.');
+
+        worldCard.appendChild(worldLabel);
+
+        const worldValue = document.createElement('div');
+        worldValue.id = 'patience-world-value';
+        worldValue.className = 'patience-card-value';
+        worldValue.textContent = '0.00h banked';
+        worldCard.appendChild(worldValue);
+
+        const worldMeta = document.createElement('div');
+        worldMeta.className = 'patience-card-meta';
+        worldMeta.textContent = 'Banking 0.00 / 3.00h';
+        worldCard.appendChild(worldMeta);
+
+        statsRow.appendChild(worldCard);
 
         shell.appendChild(statsRow);
 
@@ -212,6 +241,8 @@ const PatienceUI = {
         this.meterFillEl = meterFill;
         this.gainValueEl = gainValue;
         this.gainMetaEl = gainMeta;
+        this.worldValueEl = worldValue;
+        this.worldMetaEl = worldMeta;
         this.saveFileButtonEl = saveFileButton;
         this.saveClipboardButtonEl = saveClipboardButton;
         this.updateSpendPreview();
@@ -392,6 +423,24 @@ const PatienceUI = {
         if (this.timerMetaEl) {
             const msRemaining = patienceManager.getMillisecondsUntilNextDaily();
             this.timerMetaEl.textContent = `Next reset in ${this.formatTimeRemaining(msRemaining)}`;
+        }
+
+        if (this.worldValueEl && this.worldMetaEl) {
+            const cap = patienceManager.worldPatienceCapHours;
+            const earned = patienceManager.getWorldPatienceTotalEarnedHours();
+            const remaining = patienceManager.getWorldPatienceRemainingHours();
+            if (patienceManager.worldTerraformingCompleted) {
+                if (remaining > 0) {
+                    this.worldValueEl.textContent = `${earned.toFixed(2)}h earned`;
+                    this.worldMetaEl.textContent = `Earning +2s/s until ${cap.toFixed(2)}h cap`;
+                } else {
+                    this.worldValueEl.textContent = `${cap.toFixed(2)}h earned`;
+                    this.worldMetaEl.textContent = 'World cap reached';
+                }
+            } else {
+                this.worldValueEl.textContent = `${earned.toFixed(2)}h banked`;
+                this.worldMetaEl.textContent = `Banking ${earned.toFixed(2)} / ${cap.toFixed(2)}h (complete terraforming to claim)`;
+            }
         }
 
         // Update spend button state

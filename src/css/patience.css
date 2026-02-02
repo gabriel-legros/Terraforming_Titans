@@ -1,5 +1,5 @@
 .patience-shell {
-    max-width: 780px;
+    max-width: 980px;
     margin: 0 auto;
     padding: 18px 20px 20px;
     background: linear-gradient(135deg, #0f1c2e 0%, #162a3e 50%, #1f3a56 100%);
@@ -36,7 +36,7 @@
 
 .patience-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 12px;
 }
 
@@ -180,5 +180,5 @@
 }
 
 .patience-shell .info-tooltip-icon {
-    color: #9fb6d5;
+    color: #53c5ff;
 }

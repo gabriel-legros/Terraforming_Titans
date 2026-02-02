@@ -259,6 +259,7 @@ function initializeGameState(options = {}) {
 
   playTimeSeconds = 0;
   realPlayTimeSeconds = 0;
+  patienceManager.resetWorldPatience();
 
   const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const dayDurationData = rotationPeriodToDuration(rotation);
@@ -571,7 +572,7 @@ function updateLogic(delta) {
   recalculateTotalRates();
 
 
-  patienceManager.update();
+  patienceManager.update(delta);
   terraformingGraphsManager.update(delta);
 }
 

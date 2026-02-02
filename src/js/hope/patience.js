@@ -10,6 +10,11 @@ class PatienceManager extends EffectableEntity {
         this.currentHours = 6;
         this.maxHours = 12;
         this.lastDailyClaimDate = null;
+        this.worldSecondsElapsed = 0;
+        this.worldPatienceGranted = 0;
+        this.worldPatienceCapHours = 3;
+        this.worldPatienceRateSeconds = 2;
+        this.worldTerraformingCompleted = false;
     }
 
     /**
@@ -26,6 +31,9 @@ class PatienceManager extends EffectableEntity {
         this.enabled = false;
         this.currentHours = 0;
         this.lastDailyClaimDate = null;
+        this.worldSecondsElapsed = 0;
+        this.worldPatienceGranted = 0;
+        this.worldTerraformingCompleted = false;
         this.activeEffects = [];
         this.booleanFlags = new Set();
     }
@@ -36,6 +44,41 @@ class PatienceManager extends EffectableEntity {
      */
     addPatience(hours) {
         this.currentHours = Math.min(this.currentHours + hours, this.maxHours);
+    }
+
+    resetWorldPatience() {
+        this.worldSecondsElapsed = 0;
+        this.worldPatienceGranted = 0;
+        this.worldTerraformingCompleted = false;
+    }
+
+    getWorldPatienceTotalEarnedHours() {
+        const earned = (this.worldSecondsElapsed * this.worldPatienceRateSeconds) / 3600;
+        return earned > this.worldPatienceCapHours ? this.worldPatienceCapHours : earned;
+    }
+
+    getWorldPatienceBankedHours() {
+        if (this.worldTerraformingCompleted) {
+            return 0;
+        }
+        const earned = this.getWorldPatienceTotalEarnedHours();
+        const pending = earned - this.worldPatienceGranted;
+        return pending > 0 ? pending : 0;
+    }
+
+    getWorldPatienceRemainingHours() {
+        const remaining = this.worldPatienceCapHours - this.getWorldPatienceTotalEarnedHours();
+        return remaining > 0 ? remaining : 0;
+    }
+
+    grantWorldPatience() {
+        const earned = this.getWorldPatienceTotalEarnedHours();
+        const pending = earned - this.worldPatienceGranted;
+        if (pending <= 0) {
+            return;
+        }
+        this.addPatience(pending);
+        this.worldPatienceGranted += pending;
     }
 
     /**
@@ -238,8 +281,8 @@ class PatienceManager extends EffectableEntity {
         if (!this.enabled) {
             return;
         }
-
-        this.addPatience(3);
+        this.worldTerraformingCompleted = true;
+        this.grantWorldPatience();
     }
 
     /**
@@ -260,8 +303,18 @@ class PatienceManager extends EffectableEntity {
     /**
      * Update called each tick
      */
-    update() {
-        return;
+    update(delta = 0) {
+        if (!this.enabled) {
+            return;
+        }
+        const deltaSeconds = delta / 1000;
+        if (deltaSeconds <= 0) {
+            return;
+        }
+        this.worldSecondsElapsed += deltaSeconds;
+        if (this.worldTerraformingCompleted) {
+            this.grantWorldPatience();
+        }
     }
 
     /**
@@ -271,7 +324,10 @@ class PatienceManager extends EffectableEntity {
     saveState() {
         return {
             currentHours: this.currentHours,
-            lastDailyClaimDate: this.lastDailyClaimDate
+            lastDailyClaimDate: this.lastDailyClaimDate,
+            worldSecondsElapsed: this.worldSecondsElapsed,
+            worldPatienceGranted: this.worldPatienceGranted,
+            worldTerraformingCompleted: this.worldTerraformingCompleted
         };
     }
 
@@ -285,6 +341,15 @@ class PatienceManager extends EffectableEntity {
         }
         if (data.lastDailyClaimDate !== undefined) {
             this.lastDailyClaimDate = data.lastDailyClaimDate;
+        }
+        if (data.worldSecondsElapsed !== undefined) {
+            this.worldSecondsElapsed = data.worldSecondsElapsed;
+        }
+        if (data.worldPatienceGranted !== undefined) {
+            this.worldPatienceGranted = data.worldPatienceGranted;
+        }
+        if (data.worldTerraformingCompleted !== undefined) {
+            this.worldTerraformingCompleted = data.worldTerraformingCompleted;
         }
     }
 
