@@ -387,6 +387,20 @@ progressVenus.chapters.push(
         target: 'researchManager',
         type: 'enableResearch',
         targetId: 'chemical_reactor'
+      },
+      {
+        target: 'building',
+        type: 'booleanFlag',
+        targetId: 'fusionPowerPlant',
+        flagId: 'hydrogenFusionRecipe',
+        value: true
+      },
+      {
+        target: 'building',
+        type: 'booleanFlag',
+        targetId: 'superalloyFusionReactor',
+        flagId: 'hydrogenFusionRecipe',
+        value: true
       }
     ]
   },

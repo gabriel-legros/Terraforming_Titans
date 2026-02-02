@@ -1,4 +1,4 @@
-class FusionPowerPlant extends Building {
+class FusionPowerPlant extends MultiRecipesBuilding {
   getNextTierName() {
     return 'superalloyFusionReactor';
   }

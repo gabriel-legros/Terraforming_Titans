@@ -1227,6 +1227,7 @@ const constructors = {
   hyperionLantern: 'HyperionLantern',
   trashIncinerator: 'MultiRecipesBuilding',
   fusionPowerPlant: 'FusionPowerPlant',
+  superalloyFusionReactor: 'SuperalloyFusionReactor',
   laserCannon: 'LaserCannon'
 };
 

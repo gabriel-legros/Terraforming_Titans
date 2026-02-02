@@ -55,6 +55,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Ringworld terraforming now includes Auto Shade targeting (average/day/night trend) with a temperature goal and travel persistence.
 - Magnetic Shield and Space Elevator costs now scale by world size using radius (minimum 1x at Earth radius).
 - Building production entries now show tooltips with base output and named multiplier sources.
+- Fusion Reactor and Superalloy Fusion Reactor now support water and hydrogen fuel recipes, with the hydrogen option unlocked in Venus chapter 19.4.
 - Ship automation now locks Import Resources assignment buttons while automation is active.
 - Ship automation no longer offers All Remaining steps; legacy saves migrate them to Capped by largest max.
 - Ship automation steps can now be reordered with up/down arrows.

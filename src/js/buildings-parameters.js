@@ -346,7 +346,21 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     aerostatReduction: 0.002,
     automationBuildingsDropDown: ['superconductorFactory'],
-    unlocked: false
+    unlocked: false,
+    defaultRecipe: 'water',
+    recipes: {
+      water: {
+        shortName: 'Water -> Energy',
+        consumption: { colony: { water: 0.1 } },
+        production: { colony: { energy: 5_000_000_000 } }
+      },
+      hydrogen: {
+        shortName: 'Hydrogen -> Energy',
+        requiresBuildingFlag: 'hydrogenFusionRecipe',
+        consumption: { atmospheric: { hydrogen: 0.1 } },
+        production: { colony: { energy: 5_000_000_000 } }
+      }
+    }
   },
   superalloyFusionReactor: {
     name: 'Superalloy Fusion Reactor',
@@ -361,7 +375,21 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    defaultRecipe: 'water',
+    recipes: {
+      water: {
+        shortName: 'Water -> Energy',
+        consumption: { colony: { water: 1 } },
+        production: { colony: { energy: 500_000_000_000 } }
+      },
+      hydrogen: {
+        shortName: 'Hydrogen -> Energy',
+        requiresBuildingFlag: 'hydrogenFusionRecipe',
+        consumption: { atmospheric: { hydrogen: 1 } },
+        production: { colony: { energy: 500_000_000_000 } }
+      }
+    }
   },
   antimatterFarm: {
     name: 'Antimatter Farm',
