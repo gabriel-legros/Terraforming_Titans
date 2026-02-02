@@ -16,6 +16,30 @@ class SpaceExportProject extends SpaceExportBaseProject {
     return 1000000000 * (this.tradeSaturationMultiplier || 1);
   }
 
+  buildDisposalGroupData() {
+    const disposable = this.attributes.disposable || {};
+    const groupList = [];
+    const groupMap = {};
+    const resourceGroupLookup = {};
+
+    Object.entries(disposable).forEach(([category, resourceList]) => {
+      resourceList.forEach((resource) => {
+        const displayName = resources[category][resource].displayName || resource;
+        const key = `${category}:${resource}`;
+        const entry = {
+          key,
+          label: displayName,
+          options: [{ category, resource, label: displayName }],
+        };
+        groupList.push(entry);
+        groupMap[key] = entry;
+        resourceGroupLookup[key] = key;
+      });
+    });
+
+    return { groupList, groupMap, resourceGroupLookup };
+  }
+
   getMaxAssignableShips() {
     const capacity = this.getShipCapacity() || 1;
     const baseDuration = this.isBooleanFlagSet('instantDuration') ? 1000 : this.duration;

@@ -128,6 +128,9 @@ class SpaceExportBaseProject extends SpaceshipProject {
       elements.disposalPhaseLabel.textContent =
         groupKey === 'storageDepotResource' ? 'Which one : ' : 'Phase:';
     }
+    if (elements.disposalPhaseContainer) {
+      elements.disposalPhaseContainer.style.display = options.length > 1 ? 'flex' : 'none';
+    }
 
     const preferredKey = resourceKey || `${options[0].category}:${options[0].resource}`;
     const selectedOption =
@@ -257,6 +260,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       ...projectElements[this.name],
       disposalTypeSelect,
       disposalPhaseSelect,
+      disposalPhaseContainer: phaseSelectContainer,
       disposalPhaseLabel: phaseLabel,
       disposalGroups: disposalGroupData.groupList,
       disposalGroupMap: disposalGroupData.groupMap,
