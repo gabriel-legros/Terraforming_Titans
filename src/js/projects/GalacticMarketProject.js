@@ -111,8 +111,7 @@ class GalacticMarketProject extends Project {
     };
 
     const getResourceNetRate = (category, resourceId) => {
-      const resourceData = resources[category][resourceId];
-      return resourceData.productionRate - resourceData.consumptionRate;
+      return this.getNetRateWithoutMarket(category, resourceId);
     };
 
     const getTotalCostFromInputs = () => {
@@ -597,6 +596,28 @@ class GalacticMarketProject extends Project {
     const quantity = Number.isFinite(stored) ? stored : parseSelectionQuantity(sellInput.value);
     const price = this.getSellPrice(meta.category, meta.resource, quantity);
     span.textContent = `${formatNumber(price, true)}`;
+  }
+
+  getMarketNetRateForResource(category, resourceId) {
+    if (!this.isActive || this.autoStart === false) return 0;
+    let net = 0;
+    this.buySelections.forEach((entry) => {
+      if (entry.category === category && entry.resource === resourceId) {
+        net += entry.quantity;
+      }
+    });
+    this.sellSelections.forEach((entry) => {
+      if (entry.category === category && entry.resource === resourceId) {
+        net -= entry.quantity;
+      }
+    });
+    return net;
+  }
+
+  getNetRateWithoutMarket(category, resourceId) {
+    const resourceData = resources[category][resourceId];
+    const baseNet = resourceData.productionRate - resourceData.consumptionRate;
+    return baseNet - this.getMarketNetRateForResource(category, resourceId);
   }
 
   updateExtraSettingsUI() {
