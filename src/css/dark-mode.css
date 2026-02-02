@@ -519,6 +519,12 @@
     background-color: #4d4d4d;
     color: #ffffff;
 }
+
+.dark-mode .research-hide-toggle {
+    background-color: #3a3a3a;
+    color: #f0f0f0;
+    border-color: #666;
+}
 .dark-mode .settings-container h2 {
     color: #ffffff;
 }

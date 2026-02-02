@@ -25,6 +25,7 @@ class Research {
       this.isResearched = false;
       this.alertedWhenUnlocked = extra.alertedWhenUnlocked || false;
       this.alertedSpaceTab = extra.alertedSpaceTab || false;
+      this.hiddenByUser = false;
     }
 }
 

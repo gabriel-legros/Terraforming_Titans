@@ -24,6 +24,41 @@ const researchElementCache = new Map();
 let cachedToggleButtons = [];
 // Flag to rebuild caches when invalidated
 let researchUICacheInvalidated = true;
+let hiddenResearchIds = [];
+
+function ensureHiddenResearchIds() {
+    if (!Array.isArray(gameSettings.hiddenResearchIds)) {
+        gameSettings.hiddenResearchIds = [];
+    }
+    hiddenResearchIds = gameSettings.hiddenResearchIds;
+}
+
+function applyHiddenResearchFlags() {
+    ensureHiddenResearchIds();
+    const hiddenSet = new Set(hiddenResearchIds);
+    for (const category in researchManager.researches) {
+        researchManager.researches[category].forEach(r => {
+            r.hiddenByUser = hiddenSet.has(r.id);
+        });
+    }
+}
+
+function setResearchHiddenByUser(researchItem, hidden) {
+    ensureHiddenResearchIds();
+    researchItem.hiddenByUser = hidden;
+    const index = hiddenResearchIds.indexOf(researchItem.id);
+    if (hidden && index === -1) {
+        hiddenResearchIds.push(researchItem.id);
+    }
+    if (!hidden && index !== -1) {
+        hiddenResearchIds.splice(index, 1);
+    }
+}
+
+function isResearchHidden(researchItem) {
+    const isCompleted = researchItem.isResearched && !researchItem.repeatable;
+    return isCompleted || researchItem.hiddenByUser;
+}
 
 function hasActiveDisableFlag(researchItem) {
     if (!researchItem || !researchItem.disableFlag) {
@@ -51,6 +86,7 @@ function formatResearchCost(cost) {
 }
 
 function updateAllResearchButtons(researchData) {
+    applyHiddenResearchFlags();
     const researchTabs = ['energy', 'industry', 'colonization', 'terraforming', 'advanced'];
     researchTabs.forEach((tab) => {
         const visibleIds = researchManager.getVisibleResearchIdsByCategory
@@ -59,22 +95,25 @@ function updateAllResearchButtons(researchData) {
         researchData[tab].forEach((researchItem) => {
             const elements = researchElementCache.get(researchItem.id);
             if (!elements) return;
-            const { button, costEl, descEl, container, autoCheckbox, autoLabel, autoPrioritySelect } = elements;
+            const { button, costEl, descEl, container, autoCheckbox, autoLabel, autoPrioritySelect, hideToggle } = elements;
 
             const markCompleted = researchItem.isResearched && !researchItem.repeatable;
             if (markCompleted) {
                 container.classList.add('completed-research');
-                container.classList.toggle('hidden', completedResearchHidden);
             } else {
                 container.classList.remove('completed-research');
-                container.classList.remove('hidden');
             }
+            const hideForUser = completedResearchHidden && isResearchHidden(researchItem);
+            container.classList.toggle('hidden', hideForUser);
 
             const isVisible = visibleIds.has(researchItem.id);
             const isDisplayable = researchManager.isResearchDisplayable(researchItem);
             const hiddenByDisableFlag = !researchItem.isResearched && hasActiveDisableFlag(researchItem);
             container.style.display = (hiddenByDisableFlag || !isDisplayable) ? 'none' : '';
             updateResearchButtonText(button, researchItem, isVisible);
+            if (hideToggle) {
+                hideToggle.textContent = researchItem.hiddenByUser ? 'Unhide' : 'Hide';
+            }
             if (costEl && descEl) {
                 if (isVisible) {
                     costEl.textContent = `Cost: ${formatResearchCost(researchItem.cost)}`;
@@ -229,6 +268,7 @@ function initializeResearchTabs() {
         button.onclick = toggleCompletedResearch;
     });
 
+    applyHiddenResearchFlags();
     rebuildResearchCaches();
     updateAllResearchButtons(researchManager.researches);
     updateCompletedResearchVisibility();
@@ -325,6 +365,17 @@ function loadResearchCategory(category) {
             updateResearchUI();
         });
 
+        const hideToggle = document.createElement('button');
+        hideToggle.type = 'button';
+        hideToggle.classList.add('research-hide-toggle');
+        hideToggle.textContent = research.hiddenByUser ? 'Unhide' : 'Hide';
+        hideToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            setResearchHiddenByUser(research, !research.hiddenByUser);
+            updateAllResearchButtons(researchManager.researches);
+            updateCompletedResearchVisibility();
+        });
+
         const researchDescription = document.createElement('p');
         researchDescription.classList.add('research-description');
         if (isVisible) {
@@ -401,10 +452,14 @@ function loadResearchCategory(category) {
             });
             autoPrioritySelect.style.display = unlocked ? '' : 'none';
 
+            const autoRow = document.createElement('div');
+            autoRow.classList.add('research-auto-row');
+            autoRow.appendChild(autoLabel);
+            autoRow.appendChild(autoPrioritySelect);
+
             const autoControls = document.createElement('div');
             autoControls.classList.add('research-auto-controls');
-            autoControls.appendChild(autoLabel);
-            autoControls.appendChild(autoPrioritySelect);
+            autoControls.appendChild(autoRow);
             researchContainer.appendChild(autoControls);
         }
 
@@ -412,6 +467,7 @@ function loadResearchCategory(category) {
         researchContainer.appendChild(researchButton);
         researchContainer.appendChild(researchCost);
         researchContainer.appendChild(researchDescription);
+        researchContainer.appendChild(hideToggle);
 
         // Append the research container to the research list
         researchListContainer.appendChild(researchContainer);
@@ -421,6 +477,7 @@ function loadResearchCategory(category) {
             button: researchButton,
             costEl: researchCost,
             descEl: researchDescription,
+            hideToggle,
             autoCheckbox,
             autoLabel,
             autoPrioritySelect,
@@ -443,14 +500,14 @@ function updateCompletedResearchVisibility() {
         cachedToggleButtons = Array.from(document.querySelectorAll('.toggle-completed-button'));
     }
     const allResearches = Object.values(researchManager.researches).flat();
-    const completedResearch = allResearches.filter((research) => research.isResearched && !research.repeatable);
+    const hiddenResearch = allResearches.filter((research) => isResearchHidden(research));
 
     cachedToggleButtons.forEach((toggleButton) => {
-        if (completedResearch.length === 0) {
+        if (hiddenResearch.length === 0) {
             toggleButton.style.display = 'none';
         } else {
             toggleButton.style.display = 'inline-block';
-            toggleButton.textContent = completedResearchHidden ? 'Show Completed' : 'Hide Completed';
+            toggleButton.textContent = completedResearchHidden ? 'Show Hidden' : 'Hide Hidden';
         }
     });
 }
@@ -490,6 +547,7 @@ function invalidateResearchUICache() {
 
 function updateResearchUI() {
     if (researchManager.orderDirty || researchUICacheInvalidated) {
+        applyHiddenResearchFlags();
         rebuildResearchCaches();
         researchManager.orderDirty = false;
     }

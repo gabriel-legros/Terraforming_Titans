@@ -48,6 +48,7 @@ let gameSettings = {
   darkMode: false,
   keepTabRunningAudio: false,
   hideCompletedResearch: false,
+  hiddenResearchIds: [],
   silenceSolisAlert: false,
   silenceMilestoneAlert: false,
   silenceUnlockAlert: false,
