@@ -381,7 +381,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
 
     const totalValue = createSummaryBox('Total Yards').value;
     const freeValue = createSummaryBox('Unassigned').value;
-    const expansionRateValue = createSummaryBox('Expansions / s').value;
+    const expansionRateValue = createSummaryBox('Expansion').value;
 
     const assignmentGrid = document.createElement('div');
     assignmentGrid.classList.add('hephaestus-assignment-list');
@@ -565,7 +565,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     const step = this.assignmentStep;
     if (elements.expansionRateValue) {
       const rate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
-      elements.expansionRateValue.textContent = `${formatNumber(rate, true, 3)} expansions/s`;
+      elements.expansionRateValue.textContent = `${formatNumber(rate, true, 3)} yards/s`;
     }
 
     const activeDyson = this.getActiveDysonKey();
