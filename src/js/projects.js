@@ -16,6 +16,8 @@ const MEGA_PROJECT_RESOURCE_MODES = {
   COLONY_ONLY: 'colony-only',
 };
 
+const EARTH_RADIUS_KM = 6371;
+
 const MEGA_PROJECT_RESOURCE_MODE_OPTIONS = [
   { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: 'Prioritize space resources for mega/giga projects' },
   { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: 'Prioritize colony resources for mega/giga projects' },
@@ -330,8 +332,8 @@ class Project extends EffectableEntity {
       multiplier *= this.repeatCount + 1;
     }
     if (this.attributes.landCostScaling) {
-      const initialLand = terraforming.initialLand || 0;
-      multiplier *= Math.max(initialLand / 50000000000, 1);
+      const radiusKm = terraforming.celestialParameters.radius || 0;
+      multiplier *= Math.max(radiusKm / EARTH_RADIUS_KM, 1);
     }
     if (multiplier === 1) {
       return cost;

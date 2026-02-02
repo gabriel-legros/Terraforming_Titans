@@ -1,4 +1,3 @@
-const EARTH_RADIUS_KM = 6_371;
 const EARTH_AREA_HA = Math.round(4 * Math.PI * (EARTH_RADIUS_KM * 1000) * (EARTH_RADIUS_KM * 1000) / 10_000);
 const DEFAULT_RADIUS_BOUNDS = { min: 2, max: 8 };
 const ARTIFICIAL_TYPES = [
