@@ -385,6 +385,7 @@ class GhgFactory extends Building {
 
     const tempCheckbox = document.createElement('input');
     tempCheckbox.type = 'checkbox';
+    tempCheckbox.id = `${this.name}-ghg-temp-checkbox`;
     tempCheckbox.classList.add('ghg-temp-checkbox');
     tempCheckbox.checked = settings.autoDisableAboveTemp;
     tempCheckbox.addEventListener('change', () => {
@@ -392,7 +393,8 @@ class GhgFactory extends Building {
     });
     tempControl.appendChild(tempCheckbox);
 
-    const tempLabel = document.createElement('span');
+    const tempLabel = document.createElement('label');
+    tempLabel.htmlFor = tempCheckbox.id;
     tempControl.appendChild(tempLabel);
 
     const lineBreak = document.createElement('span');

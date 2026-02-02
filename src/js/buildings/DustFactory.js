@@ -222,6 +222,7 @@ class DustFactory extends Building {
 
     const albedoCheckbox = document.createElement('input');
     albedoCheckbox.type = 'checkbox';
+    albedoCheckbox.id = `${this.name}-dust-albedo-checkbox`;
     albedoCheckbox.classList.add('dust-albedo-checkbox');
     albedoCheckbox.checked = settings.autoTargetAlbedo;
     albedoCheckbox.addEventListener('change', () => {
@@ -229,7 +230,8 @@ class DustFactory extends Building {
     });
     albedoControl.appendChild(albedoCheckbox);
 
-    const albedoLabel = document.createElement('span');
+    const albedoLabel = document.createElement('label');
+    albedoLabel.htmlFor = albedoCheckbox.id;
     albedoLabel.textContent = 'Target ground albedo:';
     albedoControl.appendChild(albedoLabel);
 

@@ -82,6 +82,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-${key}-checkbox`;
     checkbox.classList.add(`${key}-checkbox`);
     checkbox.checked = this[checkedProp];
     checkbox.addEventListener('change', () => {
@@ -92,6 +93,7 @@ class SpaceMiningProject extends SpaceshipProject {
     const label = document.createElement('label');
     const gasLabel = this.getGasAbbreviation(gas);
     label.textContent = `Disable if ${gasLabel} pressure above: `;
+    label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const input = document.createElement('input');
@@ -163,6 +165,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-water-coverage-checkbox`;
     checkbox.classList.add('water-coverage-checkbox');
     checkbox.checked = this.disableAboveWaterCoverage;
     checkbox.addEventListener('change', () => {
@@ -172,6 +175,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const label = document.createElement('label');
     label.textContent = 'Disable if ';
+    label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const modeSelect = document.createElement('select');
@@ -186,7 +190,7 @@ class SpaceMiningProject extends SpaceshipProject {
       modeSelect.appendChild(option);
     });
     modeSelect.value = this.waterCoverageDisableMode;
-    label.appendChild(modeSelect);
+    control.appendChild(modeSelect);
 
     const input = document.createElement('input');
     input.type = 'number';

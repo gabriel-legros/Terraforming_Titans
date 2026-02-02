@@ -190,6 +190,7 @@ class ChemicalReactor extends MultiRecipesBuilding {
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-chem-reactor-checkbox`;
     checkbox.classList.add('chem-reactor-checkbox');
     checkbox.checked = settings.autoDisable;
     checkbox.addEventListener('change', () => {
@@ -197,7 +198,8 @@ class ChemicalReactor extends MultiRecipesBuilding {
     });
     control.appendChild(checkbox);
 
-    const label = document.createElement('span');
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
     label.textContent = 'Disable if';
     control.appendChild(label);
 

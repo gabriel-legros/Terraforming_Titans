@@ -95,6 +95,7 @@ class OxygenFactory extends MultiRecipesBuilding {
 
     const pressureCheckbox = document.createElement('input');
     pressureCheckbox.type = 'checkbox';
+    pressureCheckbox.id = `${this.name}-o2-disable-checkbox`;
     pressureCheckbox.classList.add('o2-pressure-checkbox');
     pressureCheckbox.checked = settings.autoDisableAbovePressure;
     pressureCheckbox.addEventListener('change', () => {
@@ -102,7 +103,8 @@ class OxygenFactory extends MultiRecipesBuilding {
     });
     pressureControl.appendChild(pressureCheckbox);
 
-    const pressureLabel = document.createElement('span');
+    const pressureLabel = document.createElement('label');
+    pressureLabel.htmlFor = pressureCheckbox.id;
     pressureLabel.textContent = 'Disable if O2 P > ';
     pressureControl.appendChild(pressureLabel);
 

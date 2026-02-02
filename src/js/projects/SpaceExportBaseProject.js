@@ -296,6 +296,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-pressure-checkbox`;
     checkbox.classList.add('pressure-checkbox');
     checkbox.checked = this.disableBelowPressure;
     checkbox.addEventListener('change', () => {
@@ -305,6 +306,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
 
     const label = document.createElement('label');
     label.textContent = 'Disable if pressure below: ';
+    label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const input = document.createElement('input');
@@ -354,6 +356,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-temperature-checkbox`;
     checkbox.classList.add('temperature-checkbox');
     checkbox.checked = this.disableBelowTemperature;
     checkbox.addEventListener('change', () => {
@@ -363,6 +366,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
 
     const label = document.createElement('label');
     label.textContent = 'Disable if temperature below: ';
+    label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const input = document.createElement('input');
