@@ -321,31 +321,30 @@ class Project extends EffectableEntity {
   // Method to calculate scaled cost if costScaling is enabled
   getScaledCost() {
     const cost = this.getEffectiveCost();
+    let multiplier = 1;
+
     if (this.attributes.costDoubling) {
-      const multiplier = Math.pow(2, this.repeatCount);
-      const scaledCost = {};
-      for (const resourceCategory in cost) {
-        scaledCost[resourceCategory] = {};
-        for (const resource in cost[resourceCategory]) {
-          scaledCost[resourceCategory][resource] = cost[resourceCategory][resource] * multiplier;
-        }
-      }
-      return scaledCost;
+      multiplier *= Math.pow(2, this.repeatCount);
     }
     if (this.attributes.costScaling) {
-      const multiplier = this.repeatCount + 1;
-      const scaledCost = {};
-
-      for (const resourceCategory in cost) {
-        scaledCost[resourceCategory] = {};
-        for (const resource in cost[resourceCategory]) {
-          scaledCost[resourceCategory][resource] = cost[resourceCategory][resource] * multiplier;
-        }
-      }
-
-      return scaledCost;
+      multiplier *= this.repeatCount + 1;
     }
-    return cost;
+    if (this.attributes.landCostScaling) {
+      const initialLand = terraforming.initialLand || 0;
+      multiplier *= Math.max(initialLand / 50000000000, 1);
+    }
+    if (multiplier === 1) {
+      return cost;
+    }
+
+    const scaledCost = {};
+    for (const resourceCategory in cost) {
+      scaledCost[resourceCategory] = {};
+      for (const resource in cost[resourceCategory]) {
+        scaledCost[resourceCategory][resource] = cost[resourceCategory][resource] * multiplier;
+      }
+    }
+    return scaledCost;
   }
 
   canStart() {

@@ -374,6 +374,7 @@ const projectParameters = {
     unlocked : false,
     attributes : {
       disableWhenKessler: true,
+      landCostScaling: true,
       completionEffect: [
         {
           target : 'building',
@@ -476,6 +477,7 @@ const projectParameters = {
     repeatable: false,
     unlocked : false,
     attributes : {
+      landCostScaling: true,
       completionEffect: [
         {
           type: 'booleanFlag',
