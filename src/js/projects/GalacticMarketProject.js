@@ -359,13 +359,19 @@ class GalacticMarketProject extends Project {
           }
         };
 
-        createButton('0', () => applyShift('reset'));
+        createButton('Sat', () => {
+          const saturation = this.getSaturationSellAmount(category, resourceId);
+          setInputQuantity(buyInput, 0, true);
+          setInputQuantity(sellInput, saturation, true);
+          refreshRow();
+        });
         const minusMaxButton = createButton('-Max', () => {
           const surplus = Math.max(0, Math.floor(getResourceNetRate(category, resourceId)));
           setInputQuantity(buyInput, 0, true);
           setInputQuantity(sellInput, surplus, true);
         });
         const minusButton = createButton('', () => applyShift('toSell'));
+        createButton('0', () => applyShift('reset'));
         const plusButton = createButton('', () => applyShift('toBuy'));
         const plusMaxButton = createButton('+Max', () => {
           const totalCost = getTotalCostFromInputs();
@@ -375,12 +381,6 @@ class GalacticMarketProject extends Project {
           const currentBuy = getInputQuantity(buyInput);
           const needed = Math.floor((-totalCost) / buyPrice);
           setInputQuantity(buyInput, currentBuy + needed, true);
-        });
-        createButton('Sat', () => {
-          const saturation = this.getSaturationSellAmount(category, resourceId);
-          setInputQuantity(buyInput, 0, true);
-          setInputQuantity(sellInput, saturation, true);
-          refreshRow();
         });
 
         leftRow.appendChild(label);
