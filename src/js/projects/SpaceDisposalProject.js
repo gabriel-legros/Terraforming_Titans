@@ -118,12 +118,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
       const maxButton = createButton('Max', () => {
         const structure = this.getMassDriverStructure();
-        if (structure.autoActiveEnabled) {
-          this.setMassDriverActive(structure.count);
-          updateBuildingDisplay(buildings);
-          this.updateUI();
-          return;
-        }
         applyManualMassDriverChange(() => this.setMassDriverActive(structure.count));
       }, mainButtons);
 
@@ -149,7 +143,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       });
 
       const autoLabel = document.createElement('span');
-      autoLabel.textContent = 'Auto';
+      autoLabel.textContent = 'Set active to target';
 
       autoContainer.append(maxAutoActiveCheckbox, autoLabel);
       mainButtons.appendChild(autoContainer);
@@ -159,11 +153,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       buttonsContainer.appendChild(multiplierContainer);
 
       const divideButton = createButton('/10', () => {
+        disableAutoActive(this.getMassDriverStructure());
         this.shiftMassDriverStep(false);
         this.updateUI();
       }, multiplierContainer);
 
       const multiplyButton = createButton('x10', () => {
+        disableAutoActive(this.getMassDriverStructure());
         this.shiftMassDriverStep(true);
         this.updateUI();
       }, multiplierContainer);
