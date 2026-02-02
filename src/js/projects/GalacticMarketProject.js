@@ -192,7 +192,7 @@ class GalacticMarketProject extends Project {
           tooltip.innerHTML = '&#9432;';
           attachDynamicInfoTooltip(
             tooltip,
-            'Use -/+ to shift the current step between sell and buy. -Max sells the current surplus (production minus consumption). +Max buys enough to spend a positive surplus down to zero.'
+            'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max buys enough to spend a positive funding gain down to zero.'
           );
           headerControls.insertBefore(tooltip, multiplyButton.nextSibling);
 
