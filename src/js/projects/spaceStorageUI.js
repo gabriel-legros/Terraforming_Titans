@@ -59,7 +59,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
     container.classList.add('checkbox-container');
     const label = document.createElement('label');
     label.htmlFor = `${this.name}-mega-project-mode`;
-    label.textContent = 'Mega/giga project resources';
+    label.textContent = '';
     const select = document.createElement('select');
     select.id = `${this.name}-mega-project-mode`;
     select.classList.add('space-storage-priority-select');
@@ -81,6 +81,28 @@ if (typeof SpaceStorageProject !== 'undefined') {
       ...projectElements[this.name],
       megaProjectModeSelect: select,
       megaProjectModeContainer: container,
+    };
+    return container;
+  };
+
+  SpaceStorageProject.prototype.createMegaProjectTravelModeCheckbox = function () {
+    const container = document.createElement('div');
+    container.classList.add('checkbox-container');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-mega-project-mode-travel-space-only`;
+    checkbox.checked = this.megaProjectSpaceOnlyOnTravel === true;
+    checkbox.addEventListener('change', (e) => {
+      this.megaProjectSpaceOnlyOnTravel = e.target.checked;
+    });
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = 'Set to Space Only on travel';
+    container.append(checkbox, label);
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      megaProjectTravelModeCheckbox: checkbox,
+      megaProjectTravelModeContainer: container,
     };
     return container;
   };
@@ -140,6 +162,8 @@ if (typeof SpaceStorageProject !== 'undefined') {
       delete els.shipAutoStartContainer;
       delete els.megaProjectModeSelect;
       delete els.megaProjectModeContainer;
+      delete els.megaProjectTravelModeCheckbox;
+      delete els.megaProjectTravelModeContainer;
       delete els.prioritizeRowContainer;
       delete els.strategicReserveInput;
       delete els.strategicReserveContainer;
@@ -150,7 +174,8 @@ if (typeof SpaceStorageProject !== 'undefined') {
       const prioritizeRow = document.createElement('div');
       prioritizeRow.classList.add('checkbox-row-container');
       const prioritize = this.createMegaProjectModeSelect();
-      prioritizeRow.append(prioritize);
+      const travelMode = this.createMegaProjectTravelModeCheckbox();
+      prioritizeRow.append(prioritize, travelMode);
       const reserve = this.createStrategicReserveInput();
       projectElements[this.name] = {
         ...projectElements[this.name],
@@ -820,6 +845,7 @@ function updateSpaceStorageUI(project) {
       ? project.megaProjectResourceMode
       : MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     els.megaProjectModeSelect.value = mode;
+    els.megaProjectTravelModeCheckbox.checked = project.megaProjectSpaceOnlyOnTravel === true;
   }
   if (els.strategicReserveInput) {
     const activeElement = document.activeElement;

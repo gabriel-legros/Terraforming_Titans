@@ -19,10 +19,10 @@ const MEGA_PROJECT_RESOURCE_MODES = {
 const EARTH_RADIUS_KM = 6371;
 
 const MEGA_PROJECT_RESOURCE_MODE_OPTIONS = [
-  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: 'Prioritize space resources for mega/giga projects' },
-  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: 'Prioritize colony resources for mega/giga projects' },
-  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY, label: 'Only use space resources for mega/giga projects' },
-  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY, label: 'Only use colony resources for mega/giga projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: 'Prioritize space resources for mega+ projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: 'Prioritize colony resources for mega+ projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY, label: 'Only use space resources for mega+ projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY, label: 'Only use colony resources for mega+ projects' },
 ];
 
 const MEGA_PROJECT_RESOURCE_MODE_MAP = {

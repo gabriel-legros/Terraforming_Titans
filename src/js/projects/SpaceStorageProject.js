@@ -25,6 +25,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceTransferModes = {};
     this.pendingTransfers = [];
     this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
+    this.megaProjectSpaceOnlyOnTravel = false;
     this.waterWithdrawTarget = 'colony';
     this.strategicReserve = 0;
     this.usedStorageResyncTimer = 0;
@@ -1003,6 +1004,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceUsage: this.resourceUsage,
       pendingTransfers: this.pendingTransfers,
       megaProjectResourceMode: this.megaProjectResourceMode,
+      megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
       strategicReserve: this.strategicReserve,
       waterWithdrawTarget: this.waterWithdrawTarget,
       resourceCaps: this.resourceCaps,
@@ -1041,6 +1043,7 @@ class SpaceStorageProject extends SpaceshipProject {
     } else {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     }
+    this.megaProjectSpaceOnlyOnTravel = state.megaProjectSpaceOnlyOnTravel === true;
     this.strategicReserve = state.strategicReserve || 0;
     this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
     this.resourceCaps = state.resourceCaps || {};
@@ -1073,6 +1076,7 @@ class SpaceStorageProject extends SpaceshipProject {
       usedStorage: this.usedStorage,
       resourceUsage: this.resourceUsage,
       megaProjectResourceMode: this.megaProjectResourceMode,
+      megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
       strategicReserve: this.strategicReserve,
       resourceCaps: this.resourceCaps,
       shipTransferMode: this.shipTransferMode,
@@ -1101,6 +1105,10 @@ class SpaceStorageProject extends SpaceshipProject {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST;
     } else if (state.prioritizeMegaProjects === true) {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
+    }
+    this.megaProjectSpaceOnlyOnTravel = state.megaProjectSpaceOnlyOnTravel === true;
+    if (this.megaProjectSpaceOnlyOnTravel) {
+      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
     }
   }
 }
