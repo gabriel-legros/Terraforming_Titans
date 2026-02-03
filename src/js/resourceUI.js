@@ -1233,8 +1233,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       const cap = resource.cap || 0;
       const freePercent = cap > 0 ? (resource.value / cap) * 100 : 0;
       ppsElement.textContent = `${freePercent >= 0 ? '+' : ''}${formatNumber(freePercent, false, 2)}%`;
-      const ppsColor = freePercent < 0 ? 'red' : '';
-      ppsElement.style.color = swapResourceRateColor(resource, ppsColor);
+      ppsElement.style.color = swapResourceRateColor(resource, '');
     } else {
       const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
       const consumptionDisplay = getDisplayConsumptionRates(resource);
