@@ -1368,6 +1368,28 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
         }
         showDefaultTime = false;
       }
+      if (showDefaultTime && resource.category === 'atmospheric' && netRate > 0) {
+        const target = terraforming.gasTargets[resource.name] || { min: 0, max: 0 };
+        if (target.min > 0) {
+          const currentPressurePa = calculateAtmosphericPressure(
+            resource.value || 0,
+            terraforming.celestialParameters.gravity,
+            terraforming.celestialParameters.radius
+          );
+          if (currentPressurePa < target.min) {
+            const targetMass = (target.min * terraforming.celestialParameters.surfaceArea)
+              / (terraforming.celestialParameters.gravity * 1000);
+            const remaining = targetMass - resource.value;
+            if (remaining > 0) {
+              const time = remaining / netRate;
+              timeDiv.textContent = `Time to target pressure: ${formatDuration(Math.max(time, 0))}`;
+            } else {
+              timeDiv.textContent = 'Terraforming target reached.';
+            }
+            showDefaultTime = false;
+          }
+        }
+      }
       if (showDefaultTime) {
         if (rateUnstable) {
           timeDiv.textContent = 'Time to full : unstable.';
