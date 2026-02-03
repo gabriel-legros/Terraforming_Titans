@@ -78,6 +78,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Life automation auto-purchase thresholds now accept two-decimal percentages from 0–100%.
 - Magnetic Shield research now hides on worlds with a natural magnetosphere.
 - Patience now banks at 2 seconds per second per world from arrival, is claimed on terraform completion, continues earning until a 3-hour world cap, and the Patience UI shows a dedicated terraforming patience card.
+- GHG factory automation now offers an avg T vs optical depth target selector, and optical depth mode ignores calcite while clearing it before building up GHG.
 - Research cards now include per-item Hide/Unhide controls, and the completed toggle now shows or hides hidden entries.
 - Workers now display percent of free workers in the resource rate slot.
 - Atmospheric resource tooltips now estimate time to reach target pressure when below the minimum target.

@@ -2,6 +2,7 @@ const DEFAULT_GHG_AUTOMATION_SETTINGS = {
   autoDisableAboveTemp: false,
   disableTempThreshold: 283.15, // Kelvin
   reverseTempThreshold: 283.15,
+  targetMode: 'temperature'
 };
 
 function sanitizeNumber(value, fallback) {
@@ -63,15 +64,12 @@ class GhgFactory extends Building {
       }
     };
     const readTrendTemperature = () => {
-      const tempState = terraforming?.temperature;
-      if (!tempState) {
-        return NaN;
-      }
-      if (Number.isFinite(tempState.trendValue)) {
-        return tempState.trendValue;
-      }
-      const actual = tempState.value;
-      return Number.isFinite(actual) ? actual : NaN;
+      const tempState = terraforming.temperature;
+      return tempState.trendValue ?? tempState.value ?? 0;
+    };
+    const readOpticalDepth = () => {
+      const tempState = terraforming.temperature;
+      return tempState.opticalDepth ?? 0;
     };
     const evaluateTemperature = (applyChange, evaluate, revertChange) => {
       const snapshot = saveTempState ? saveTempState() : null;
@@ -133,26 +131,59 @@ class GhgFactory extends Building {
       settings.autoDisableAboveTemp &&
       terraforming && terraforming.temperature
     ) {
+      const isOpticalDepthTarget = settings.targetMode === 'opticalDepth';
+      const minGap = isOpticalDepthTarget ? 0.1 : 1;
       const A = settings.disableTempThreshold;
-      let B = settings.reverseTempThreshold ?? A + 5;
-      if (B - A < 1) {
-        B = A + 1;
+      let B = settings.reverseTempThreshold ?? (A + (isOpticalDepthTarget ? 0.5 : 5));
+      if (B - A < minGap) {
+        B = A + minGap;
         settings.reverseTempThreshold = B;
       }
       const M = (A + B) / 2; // Midpoint target when correcting
-      const currentTemp = readTrendTemperature();
+      const currentValue = isOpticalDepthTarget ? readOpticalDepth() : readTrendTemperature();
       let recipeKey = this.currentRecipeKey || 'ghg';
       let resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
 
+      if (isOpticalDepthTarget && recipeKey !== 'ghg') {
+        this._toggleRecipe();
+        recipeKey = this.currentRecipeKey || 'ghg';
+        resourceName = 'greenhouseGas';
+      }
+
       if (!this.reversalAvailable) {
+        if (isOpticalDepthTarget) {
+          if (currentValue >= A) {
+            this.setAutomationActivityMultiplier(0);
+            this.productivity = 0;
+            return;
+          }
+
+          const maxProduction = computeMaxProduction('atmospheric', 'greenhouseGas');
+          if (maxProduction > 0) {
+            const res = resources.atmospheric.greenhouseGas;
+            const originalAmount = res.value;
+            const required = solveRequiredAmount((added) => (
+              evaluateTemperature(
+                () => { res.value = originalAmount + added; },
+                () => readOpticalDepth() - A,
+                () => { res.value = originalAmount; }
+              )
+            ), maxProduction, originalAmount);
+            this.reverseEnabled = false;
+            this.productivity = required > 0
+              ? applySolverProductivity(required, maxProduction)
+              : targetProductivity;
+            return;
+          }
+        }
         // No reversal available: only push in the forward direction.
         // Early disable checks that do not require resource access.
-        if (recipeKey === 'ghg' && currentTemp >= A) {
+        if (recipeKey === 'ghg' && currentValue >= A) {
           this.setAutomationActivityMultiplier(0);
           this.productivity = 0;
           return;
         }
-        if (recipeKey === 'calcite' && currentTemp <= A) {
+        if (recipeKey === 'calcite' && currentValue <= A) {
           this.setAutomationActivityMultiplier(0);
           this.productivity = 0;
           return;
@@ -171,7 +202,7 @@ class GhgFactory extends Building {
 
             if (recipeKey === 'calcite') {
               // Too hot: produce toward midpoint
-              if (currentTemp >= B) {
+              if (currentValue >= B) {
                 const required = solveRequiredAmount((added) => (
                   evaluateTemperature(
                     () => { res.value = originalAmount + added; },
@@ -194,7 +225,7 @@ class GhgFactory extends Building {
               // Estimate midpoint calcite mass by probing both add/remove directions with a larger search window
               const searchWindow = Math.max(maxProduction * 50, originalAmount * 0.5, 1);
               let midMass = originalAmount;
-              let bestDiff = Math.abs(currentTemp - M);
+              let bestDiff = Math.abs(currentValue - M);
               const evalCandidate = (mass) => {
                 const origMass = res.value;
                 return evaluateTemperature(
@@ -256,9 +287,9 @@ class GhgFactory extends Building {
         }
       } else {
         // Reversal available
-        if (currentTemp > A && currentTemp < B) {
+        if (currentValue > A && currentValue < B) {
           // Inside the range: for calcite, maintain enough to offset decay at the midpoint mass; otherwise stop
-          if (recipeKey === 'calcite' && resources?.atmospheric?.calciteAerosol) {
+          if (!isOpticalDepthTarget && recipeKey === 'calcite' && resources?.atmospheric?.calciteAerosol) {
             const maxProduction = computeMaxProduction('atmospheric', 'calciteAerosol');
             if (maxProduction > 0) {
               const res = resources.atmospheric.calciteAerosol;
@@ -269,7 +300,7 @@ class GhgFactory extends Building {
               // Estimate midpoint calcite mass by probing both add/remove directions with a larger search window
               const searchWindow = Math.max(maxProduction * 50, originalAmount * 0.5, 1);
               let midMass = originalAmount;
-              let bestDiff = Math.abs(currentTemp - M);
+              let bestDiff = Math.abs(currentValue - M);
               const evalCandidate = (mass) => {
                 const origMass = res.value;
                 return evaluateTemperature(
@@ -316,9 +347,37 @@ class GhgFactory extends Building {
           this.productivity = 0;
           return;
         }
+
+        if (isOpticalDepthTarget) {
+          if (currentValue < A) {
+            const calciteRes = resources.atmospheric.calciteAerosol;
+            const calciteAmount = calciteRes.value || 0;
+            if (calciteAmount > 0) {
+              if (recipeKey !== 'calcite') {
+                this._toggleRecipe();
+                recipeKey = this.currentRecipeKey || 'calcite';
+                resourceName = 'calciteAerosol';
+              }
+              const maxProduction = computeMaxProduction('atmospheric', 'calciteAerosol');
+              this.reverseEnabled = true;
+              if (maxProduction > 0) {
+                this.productivity = applySolverProductivity(calciteAmount, maxProduction);
+              } else {
+                this.productivity = targetProductivity;
+              }
+              return;
+            }
+            if (recipeKey !== 'ghg') {
+              this._toggleRecipe();
+              recipeKey = this.currentRecipeKey || 'ghg';
+              resourceName = 'greenhouseGas';
+            }
+          }
+        }
+
         let reverse =
-          (recipeKey === 'ghg' && currentTemp >= B) ||
-          (recipeKey === 'calcite' && currentTemp <= A);
+          (recipeKey === 'ghg' && currentValue >= B) ||
+          (recipeKey === 'calcite' && currentValue <= A);
 
         if (reverse) {
           const resObj = resources?.atmospheric?.[resourceName];
@@ -346,7 +405,7 @@ class GhgFactory extends Building {
             const required = solveRequiredAmount((amt) => (
               evaluateTemperature(
                 () => { res.value = originalAmount + (reverse ? -amt : amt); },
-                () => readTrendTemperature() - targetTemp,
+                () => (isOpticalDepthTarget ? readOpticalDepth() : readTrendTemperature()) - targetTemp,
                 () => { res.value = originalAmount; }
               )
             ), maxProduction, originalAmount);
@@ -355,7 +414,7 @@ class GhgFactory extends Building {
             if (required > 0) {
               this.productivity = applySolverProductivity(required, maxProduction);
             } else {
-              const outside = (currentTemp <= A) || (currentTemp >= B);
+              const outside = (currentValue <= A) || (currentValue >= B);
               this.productivity = outside ? targetProductivity : 0;
             }
             return;
@@ -397,6 +456,24 @@ class GhgFactory extends Building {
     tempLabel.htmlFor = tempCheckbox.id;
     tempControl.appendChild(tempLabel);
 
+    const tempLabelPrefix = document.createElement('span');
+    tempLabel.appendChild(tempLabelPrefix);
+
+    const tempModeSelect = document.createElement('select');
+    tempModeSelect.classList.add('ghg-temp-mode');
+    const modeOptionTemp = document.createElement('option');
+    modeOptionTemp.value = 'temperature';
+    modeOptionTemp.textContent = 'avg T';
+    tempModeSelect.appendChild(modeOptionTemp);
+    const modeOptionDepth = document.createElement('option');
+    modeOptionDepth.value = 'opticalDepth';
+    modeOptionDepth.textContent = 'optical depth';
+    tempModeSelect.appendChild(modeOptionDepth);
+    tempControl.appendChild(tempModeSelect);
+
+    const tempLabelSuffix = document.createElement('span');
+    tempControl.appendChild(tempLabelSuffix);
+
     const lineBreak = document.createElement('span');
     lineBreak.classList.add('ghg-temp-line-break');
     tempControl.appendChild(lineBreak);
@@ -426,7 +503,7 @@ class GhgFactory extends Building {
     tempTooltip.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       tempTooltip,
-      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of temperature and a solver will attempt to set the trend inside this range. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
+      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. Optical depth ignores calcite aerosols and will clear them first if it needs to increase GHG. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
     );
     tempControl.appendChild(tempTooltip);
 
@@ -437,17 +514,22 @@ class GhgFactory extends Building {
 
     const update = () => {
       const showReverse = !!this.reversalAvailable;
-      tempLabel.textContent = showReverse ? 'Automate avg T between ' : 'Disable if avg T > ';
-      if (typeof getTemperatureUnit === 'function') {
-        unitSpan.textContent = getTemperatureUnit();
+      const useOpticalDepth = settings.targetMode === 'opticalDepth';
+      tempLabelPrefix.textContent = showReverse ? 'Automate ' : 'Disable if ';
+      tempLabelSuffix.textContent = showReverse ? ' between ' : ' > ';
+      tempModeSelect.value = settings.targetMode || 'temperature';
+      unitSpan.textContent = useOpticalDepth ? 'tau' : getTemperatureUnit();
+      tempInput.step = useOpticalDepth ? 0.01 : 0.1;
+      tempInputB.step = useOpticalDepth ? 0.01 : 0.1;
+      if (document.activeElement !== tempInput) {
+        tempInput.value = useOpticalDepth
+          ? settings.disableTempThreshold
+          : toDisplayTemperature(settings.disableTempThreshold);
       }
-      if (typeof toDisplayTemperature === 'function') {
-        if (document.activeElement !== tempInput) {
-          tempInput.value = toDisplayTemperature(settings.disableTempThreshold);
-        }
-        if (document.activeElement !== tempInputB) {
-          tempInputB.value = toDisplayTemperature(settings.reverseTempThreshold);
-        }
+      if (document.activeElement !== tempInputB) {
+        tempInputB.value = useOpticalDepth
+          ? settings.reverseTempThreshold
+          : toDisplayTemperature(settings.reverseTempThreshold);
       }
       lineBreak.style.display = showReverse ? 'block' : 'none';
       betweenLabel.style.display = showReverse ? 'inline' : 'none';
@@ -456,10 +538,26 @@ class GhgFactory extends Building {
     };
     update();
 
+    tempModeSelect.addEventListener('change', () => {
+      settings.targetMode = tempModeSelect.value === 'opticalDepth' ? 'opticalDepth' : 'temperature';
+      const tempState = terraforming.temperature;
+      if (settings.targetMode === 'opticalDepth') {
+        const currentTau = tempState.opticalDepth ?? 0;
+        settings.disableTempThreshold = currentTau;
+        settings.reverseTempThreshold = currentTau + (this.reversalAvailable ? 0.5 : 0);
+      } else {
+        const currentTemp = tempState.trendValue ?? tempState.value ?? 0;
+        settings.disableTempThreshold = currentTemp;
+        settings.reverseTempThreshold = currentTemp + (this.reversalAvailable ? 5 : 0);
+      }
+      GhgFactory.enforceAutomationThresholdGap();
+      update();
+    });
+
     tempInput.addEventListener('input', () => {
       const val = parseFloat(tempInput.value);
-      const useC = typeof gameSettings !== 'undefined' && gameSettings.useCelsius;
-      settings.disableTempThreshold = useC ? val + 273.15 : val;
+      const useC = gameSettings.useCelsius;
+      settings.disableTempThreshold = settings.targetMode === 'opticalDepth' ? val : (useC ? val + 273.15 : val);
       if (!this.reversalAvailable) {
         settings.reverseTempThreshold = settings.disableTempThreshold;
       } else {
@@ -470,8 +568,8 @@ class GhgFactory extends Building {
 
     tempInputB.addEventListener('input', () => {
       const val = parseFloat(tempInputB.value);
-      const useC = typeof gameSettings !== 'undefined' && gameSettings.useCelsius;
-      settings.reverseTempThreshold = useC ? val + 273.15 : val;
+      const useC = gameSettings.useCelsius;
+      settings.reverseTempThreshold = settings.targetMode === 'opticalDepth' ? val : (useC ? val + 273.15 : val);
       GhgFactory.enforceAutomationThresholdGap('B');
       update();
     });
@@ -482,6 +580,9 @@ class GhgFactory extends Building {
       container: tempControl,
       checkbox: tempCheckbox,
       label: tempLabel,
+      labelPrefix: tempLabelPrefix,
+      labelSuffix: tempLabelSuffix,
+      modeSelect: tempModeSelect,
       inputA: tempInput,
       inputB: tempInputB,
       lineBreak: lineBreak,
@@ -502,14 +603,25 @@ class GhgFactory extends Building {
       ghgEls.checkbox.checked = settings.autoDisableAboveTemp;
     }
     const showReverse = !!this.reversalAvailable;
-    if (ghgEls.label) {
-      ghgEls.label.textContent = showReverse ? 'Automate avg T between ' : 'Disable if avg T > ';
+    const useOpticalDepth = settings.targetMode === 'opticalDepth';
+    if (ghgEls.labelPrefix) {
+      ghgEls.labelPrefix.textContent = showReverse ? 'Automate ' : 'Disable if ';
     }
-    if (ghgEls.inputA && typeof toDisplayTemperature === 'function' && document.activeElement !== ghgEls.inputA) {
-      ghgEls.inputA.value = toDisplayTemperature(settings.disableTempThreshold);
+    if (ghgEls.labelSuffix) {
+      ghgEls.labelSuffix.textContent = showReverse ? ' between ' : ' > ';
     }
-    if (ghgEls.inputB && typeof toDisplayTemperature === 'function' && document.activeElement !== ghgEls.inputB) {
-      ghgEls.inputB.value = toDisplayTemperature(settings.reverseTempThreshold);
+    if (ghgEls.modeSelect) {
+      ghgEls.modeSelect.value = settings.targetMode || 'temperature';
+    }
+    if (ghgEls.inputA && document.activeElement !== ghgEls.inputA) {
+      ghgEls.inputA.value = useOpticalDepth
+        ? settings.disableTempThreshold
+        : toDisplayTemperature(settings.disableTempThreshold);
+    }
+    if (ghgEls.inputB && document.activeElement !== ghgEls.inputB) {
+      ghgEls.inputB.value = useOpticalDepth
+        ? settings.reverseTempThreshold
+        : toDisplayTemperature(settings.reverseTempThreshold);
     }
     ghgEls.lineBreak.style.display = showReverse ? 'block' : 'none';
     if (ghgEls.betweenLabel) {
@@ -521,8 +633,14 @@ class GhgFactory extends Building {
     if (ghgEls.tooltip) {
       ghgEls.tooltip.style.display = showReverse ? 'inline' : 'none';
     }
-    if (ghgEls.unitSpan && typeof getTemperatureUnit === 'function') {
-      ghgEls.unitSpan.textContent = getTemperatureUnit();
+    if (ghgEls.unitSpan) {
+      ghgEls.unitSpan.textContent = useOpticalDepth ? 'tau' : getTemperatureUnit();
+    }
+    if (ghgEls.inputA) {
+      ghgEls.inputA.step = useOpticalDepth ? 0.01 : 0.1;
+    }
+    if (ghgEls.inputB) {
+      ghgEls.inputB.step = useOpticalDepth ? 0.01 : 0.1;
     }
   }
 
@@ -542,7 +660,8 @@ class GhgFactory extends Building {
       this.automationSettings = {
         autoDisableAboveTemp: DEFAULT_GHG_AUTOMATION_SETTINGS.autoDisableAboveTemp,
         disableTempThreshold: DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold,
-        reverseTempThreshold: DEFAULT_GHG_AUTOMATION_SETTINGS.reverseTempThreshold
+        reverseTempThreshold: DEFAULT_GHG_AUTOMATION_SETTINGS.reverseTempThreshold,
+        targetMode: DEFAULT_GHG_AUTOMATION_SETTINGS.targetMode
       };
     }
     return this.automationSettings;
@@ -550,7 +669,7 @@ class GhgFactory extends Building {
 
   static enforceAutomationThresholdGap(changed) {
     const settings = this.getAutomationSettings();
-    const minGap = 1;
+    const minGap = settings.targetMode === 'opticalDepth' ? 0.1 : 1;
     let disable = settings.disableTempThreshold;
     if (!Number.isFinite(disable)) {
       disable = DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold;
@@ -582,7 +701,8 @@ class GhgFactory extends Building {
       reverseTempThreshold: sanitizeNumber(
         settings.reverseTempThreshold,
         sanitizeNumber(settings.disableTempThreshold, DEFAULT_GHG_AUTOMATION_SETTINGS.disableTempThreshold)
-      )
+      ),
+      targetMode: settings.targetMode === 'opticalDepth' ? 'opticalDepth' : DEFAULT_GHG_AUTOMATION_SETTINGS.targetMode
     };
   }
 
@@ -600,6 +720,9 @@ class GhgFactory extends Building {
     settings.reverseTempThreshold = reverseChanged
       ? sanitizeNumber(saved.reverseTempThreshold, settings.disableTempThreshold)
       : DEFAULT_GHG_AUTOMATION_SETTINGS.reverseTempThreshold;
+    settings.targetMode = hasData && saved.targetMode === 'opticalDepth'
+      ? 'opticalDepth'
+      : DEFAULT_GHG_AUTOMATION_SETTINGS.targetMode;
     const changeFlag = reverseChanged ? 'B' : 'A';
     this.enforceAutomationThresholdGap(changeFlag);
     return settings;
