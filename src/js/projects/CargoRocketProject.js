@@ -28,6 +28,30 @@ class CargoRocketProject extends Project {
       increment: this.selectionIncrement,
     };
 
+    const syncQuantityFromText = (input) => {
+      const parsed = parseSelectionQuantity(input.value);
+      input.dataset.quantity = String(parsed);
+      return parsed;
+    };
+
+    const getInputQuantity = (input) => {
+      const stored = Number(input.dataset.quantity);
+      return Number.isFinite(stored) ? stored : syncQuantityFromText(input);
+    };
+
+    const setInputQuantity = (input, quantity, formatLarge = true) => {
+      const normalized = Math.max(0, Math.floor(quantity));
+      input.dataset.quantity = String(normalized);
+      input.value = (formatLarge && normalized >= 1e6)
+        ? formatNumber(normalized, true, 3)
+        : String(normalized);
+      return normalized;
+    };
+
+    elements.syncQuantityFromText = syncQuantityFromText;
+    elements.getInputQuantity = getInputQuantity;
+    elements.setInputQuantity = setInputQuantity;
+
     const updateIncrementButtons = () => {
       elements.minusButtons.forEach((btn) => {
         btn.textContent = `-${formatNumber(elements.increment, true)}`;
@@ -104,18 +128,22 @@ class CargoRocketProject extends Project {
         resourceRow.appendChild(label);
 
         const quantityInput = document.createElement('input');
-        quantityInput.type = 'number';
-        quantityInput.min = 0;
+        quantityInput.type = 'text';
+        quantityInput.inputMode = 'decimal';
         const selected = this.selectedResources.find(
           (sr) => sr.category === category && sr.resource === resourceId
         );
-        quantityInput.value = selected ? selected.quantity : 0;
+        setInputQuantity(quantityInput, selected ? selected.quantity : 0, false);
         quantityInput.classList.add('resource-selection-input', `resource-selection-${this.name}`);
         quantityInput.dataset.category = category;
         quantityInput.dataset.resource = resourceId;
         quantityInput.addEventListener('input', () => {
+          syncQuantityFromText(quantityInput);
           this.clampKesslerCargoInputs();
           updateTotalCostDisplay(this);
+        });
+        quantityInput.addEventListener('blur', () => {
+          setInputQuantity(quantityInput, getInputQuantity(quantityInput), true);
         });
         resourceRow.appendChild(quantityInput);
 
@@ -147,16 +175,17 @@ class CargoRocketProject extends Project {
         };
 
         createButton('0', () => {
-          quantityInput.value = 0;
+          setInputQuantity(quantityInput, 0, true);
         });
 
         const minusButton = createButton(`-${formatNumber(elements.increment, true)}`, () => {
-          const current = parseInt(quantityInput.value, 10) || 0;
-          quantityInput.value = Math.max(0, current - elements.increment);
+          const current = getInputQuantity(quantityInput);
+          setInputQuantity(quantityInput, current - elements.increment, true);
         });
 
         const plusButton = createButton(`+${formatNumber(elements.increment, true)}`, () => {
-          quantityInput.value = (parseInt(quantityInput.value, 10) || 0) + elements.increment;
+          const current = getInputQuantity(quantityInput);
+          setInputQuantity(quantityInput, current + elements.increment, true);
         });
 
         elements.minusButtons.push(minusButton);
@@ -226,13 +255,16 @@ class CargoRocketProject extends Project {
         }
       });
 
+      const getInputQuantity = elements.getInputQuantity || ((input) => parseSelectionQuantity(input.value));
+      const setInputQuantity = elements.setInputQuantity || ((input, quantity) => { input.value = quantity; });
+
       if (this.oneTimeResourceGainsDisplay) {
         inputs.forEach((input) => {
           const match = this.oneTimeResourceGainsDisplay.find(
             (r) => r.resource === input.dataset.resource
           );
           if (match) {
-            input.value = match.quantity;
+            setInputQuantity(input, match.quantity, true);
           }
         });
         this.oneTimeResourceGainsDisplay = null;
@@ -247,7 +279,7 @@ class CargoRocketProject extends Project {
         if (typeof category !== 'string' || typeof resource !== 'string') {
           return;
         }
-        const quantity = parseSelectionQuantity(input.value);
+        const quantity = getInputQuantity(input);
         if (quantity > 0) {
           selectedResources.push({ category, resource, quantity });
         }
@@ -333,7 +365,13 @@ class CargoRocketProject extends Project {
         (input) => input.dataset.resource === resource
       );
       if (inputElement) {
-        inputElement.value = parseSelectionQuantity(quantity);
+        const elements = projectElements[this.name];
+        const setInputQuantity = elements?.setInputQuantity;
+        if (setInputQuantity) {
+          setInputQuantity(inputElement, parseSelectionQuantity(quantity), true);
+        } else {
+          inputElement.value = parseSelectionQuantity(quantity);
+        }
       }
     });
 
@@ -628,11 +666,13 @@ class CargoRocketProject extends Project {
   clampKesslerCargoInputs() {
     const elements = projectElements[this.name];
     const inputs = elements.selectionInputs || [];
+    const getInputQuantity = elements.getInputQuantity || ((input) => parseSelectionQuantity(input.value));
+    const setInputQuantity = elements.setInputQuantity || ((input, quantity) => { input.value = quantity; });
     const limit = this.getKesslerCargoLimit();
     let total = 0;
     const entries = [];
     inputs.forEach((input) => {
-      const quantity = parseSelectionQuantity(input.value);
+      const quantity = getInputQuantity(input);
       total += quantity;
       entries.push({ input, quantity });
     });
@@ -641,7 +681,7 @@ class CargoRocketProject extends Project {
     if (scale < 1) {
       entries.forEach((entry) => {
         const scaled = Math.max(0, Math.floor(entry.quantity * scale));
-        entry.input.value = String(scaled);
+        setInputQuantity(entry.input, scaled, true);
       });
     }
     this.updateKesslerWarning();

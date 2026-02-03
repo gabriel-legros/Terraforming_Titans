@@ -1085,17 +1085,15 @@ function updateTotalCostDisplay(project) {
     }
   }
 
+  const getInputQuantity = elements.getInputQuantity || ((input) => parseSelectionQuantity(input.value));
+
   quantityInputs.forEach((input) => {
     const category = input?.dataset?.category;
     const resource = input?.dataset?.resource;
     if (typeof category !== 'string' || typeof resource !== 'string') {
       return;
     }
-    const raw = input.value;
-    const parsed = Number.isFinite(raw)
-      ? raw
-      : Number.parseInt(`${raw ?? ''}`, 10);
-    const quantity = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    const quantity = getInputQuantity(input);
     const basePrice = project.attributes.resourceChoiceGainCost?.[category]?.[resource];
     if (typeof basePrice !== 'number') return;
     if (resource === 'spaceships' && typeof project.getSpaceshipTotalCost === 'function') {
