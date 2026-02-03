@@ -189,17 +189,25 @@ class KesslerHazard {
 
     const waterResource = resources.colony.water;
     const totalWater = waterResource.value;
+    const solisBonus = (waterResource.activeEffects || []).reduce((sum, effect) => {
+      if (effect && effect.effectId === 'solisStorage-water') {
+        return sum + (effect.value || 0);
+      }
+      return sum;
+    }, 0);
     const keptWater = Math.min(totalWater, SOLIS_WATER_KEEP);
     const excessWater = totalWater - keptWater;
+    const solisDrop = Math.max(0, solisBonus - SOLIS_WATER_KEEP);
+    const dropAmount = Math.max(excessWater, solisDrop);
 
     waterResource.value = keptWater;
     waterResource.activeEffects = waterResource.activeEffects.filter((effect) => effect.effectId !== 'solisStorage-water');
     waterResource.updateStorageCap();
 
-    if (excessWater > 0) {
+    if (dropAmount > 0) {
       const surfaceWater = resources.surface.liquidWater;
       ZONES.forEach((zone) => {
-        const zoneShare = excessWater * getZonePercentage(zone);
+        const zoneShare = dropAmount * getZonePercentage(zone);
         terraforming.zonalSurface[zone].liquidWater += zoneShare;
       });
 
