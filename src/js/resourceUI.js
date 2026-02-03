@@ -852,6 +852,7 @@ function createResourceElement(category, resourceObj, resourceName) {
   resourceElement.classList.add('resource-item');
   resourceElement.id = `${resourceName}-container`;
   resourceElement.style.display = 'none'; // Initially hidden
+  const showRate = !resourceObj.hideRate || resourceName === 'workers';
 
   if (resourceName === 'colonists') {
     // Special display for population (colonists) as an integer
@@ -863,7 +864,7 @@ function createResourceElement(category, resourceObj, resourceName) {
           <div class="resource-slash">/</div>
           <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${Math.floor(resourceObj.cap)}</span></div>
         ` : ''}
-        ${resourceObj.hideRate ? '' : `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>`}
+        ${showRate ? `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>` : ''}
       </div>
     `;
     const tooltip = createTooltipElement(resourceName);
@@ -881,7 +882,7 @@ function createResourceElement(category, resourceObj, resourceName) {
           <div class="resource-slash">/</div>
           <div class="resource-cap"><span id="${resourceName}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
         ` : ''}
-        ${resourceObj.hideRate ? '' : '<div class="resource-pps"></div>'}
+        ${showRate ? '<div class="resource-pps"></div>' : ''}
       </div>
     `;
     if (resourceObj.name === 'land') {
@@ -907,7 +908,7 @@ function createResourceElement(category, resourceObj, resourceName) {
           <div class="resource-slash">/</div>
           <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${resourceObj.cap.toFixed(2)}</span></div>
         ` : ''}
-        ${resourceObj.hideRate ? '' : `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>`}
+        ${showRate ? `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>` : ''}
       </div>
     `;
     const tooltip = createTooltipElement(resourceName);
@@ -1222,68 +1223,77 @@ function getDisplayConsumptionRates(resource) {
 function updateResourceRateDisplay(resource, frameDelta = 0){
   const entry = resourceUICache.resources[resource.name] || cacheSingleResource(resource.category, resource.name);
   const ppsElement = entry ? entry.ppsEl : document.getElementById(`${resource.name}-pps-resources-container`);
-  if (resource.hideRate) {
+  const showRate = !resource.hideRate || resource.name === 'workers';
+  if (!showRate) {
     if (ppsElement) {
       ppsElement.remove();
     }
   } else if (ppsElement) {
-    const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
-    const consumptionDisplay = getDisplayConsumptionRates(resource);
-    const netRate = resource.productionRate - consumptionDisplay.total;
-
-    // Record net rate history
-    if (typeof resource.recordNetRate === 'function') {
-      resource.recordNetRate(netRate);
+    if (resource.name === 'workers') {
+      const cap = resource.cap || 0;
+      const freePercent = cap > 0 ? (resource.value / cap) * 100 : 0;
+      ppsElement.textContent = `${freePercent >= 0 ? '+' : ''}${formatNumber(freePercent, false, 2)}%`;
+      const ppsColor = freePercent < 0 ? 'red' : '';
+      ppsElement.style.color = swapResourceRateColor(resource, ppsColor);
     } else {
-      resource.rateHistory = resource.rateHistory || [];
-      resource.rateHistory.push(netRate);
-      if (resource.rateHistory.length > 10) {
-        resource.rateHistory.shift();
-      }
-    }
+      const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
+      const consumptionDisplay = getDisplayConsumptionRates(resource);
+      const netRate = resource.productionRate - consumptionDisplay.total;
 
-    let baseUnstable = false;
-    const history = resource.rateHistory || [];
-    if (history.length >= 10) {
-      // Count sign changes
-      let signChanges = 0;
-      for (let i = 1; i < history.length; i++) {
-        const current = history[i];
-        const previous = history[i - 1];
-        if ((current > 0 && previous < 0) || (current < 0 && previous > 0)) {
-          signChanges++;
+      // Record net rate history
+      if (typeof resource.recordNetRate === 'function') {
+        resource.recordNetRate(netRate);
+      } else {
+        resource.rateHistory = resource.rateHistory || [];
+        resource.rateHistory.push(netRate);
+        if (resource.rateHistory.length > 10) {
+          resource.rateHistory.shift();
         }
       }
-      if (signChanges > 1) {
-        baseUnstable = true;
+
+      let baseUnstable = false;
+      const history = resource.rateHistory || [];
+      if (history.length >= 10) {
+        // Count sign changes
+        let signChanges = 0;
+        for (let i = 1; i < history.length; i++) {
+          const current = history[i];
+          const previous = history[i - 1];
+          if ((current > 0 && previous < 0) || (current < 0 && previous > 0)) {
+            signChanges++;
+          }
+        }
+        if (signChanges > 1) {
+          baseUnstable = true;
+        }
       }
-    }
 
-    const unstableTimers = resourceUICache.unstableTimers || (resourceUICache.unstableTimers = {});
-    let timer = unstableTimers[resource.name] || 0;
-    if (baseUnstable) {
-      timer = 0.5;
-    } else if (timer > 0) {
-      timer = Math.max(0, timer - elapsed);
-    }
-    unstableTimers[resource.name] = timer;
+      const unstableTimers = resourceUICache.unstableTimers || (resourceUICache.unstableTimers = {});
+      let timer = unstableTimers[resource.name] || 0;
+      if (baseUnstable) {
+        timer = 0.5;
+      } else if (timer > 0) {
+        timer = Math.max(0, timer - elapsed);
+      }
+      unstableTimers[resource.name] = timer;
 
-    if (baseUnstable || timer > 0) {
-      ppsElement.textContent = 'Unstable';
-      ppsElement.style.color = '';
-    } else {
-      if (Math.abs(netRate) < 1e-3) {
-        ppsElement.textContent = `0`;
+      if (baseUnstable || timer > 0) {
+        ppsElement.textContent = 'Unstable';
+        ppsElement.style.color = '';
       } else {
-        ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
+        if (Math.abs(netRate) < 1e-3) {
+          ppsElement.textContent = `0`;
+        } else {
+          ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
+        }
+        let ppsColor = '';
+        if (netRate < 0 && Math.abs(netRate) > resource.value) {
+          ppsColor = 'red';
+        } else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) {
+          ppsColor = 'orange';
+        }
+        ppsElement.style.color = swapResourceRateColor(resource, ppsColor);
       }
-      let ppsColor = '';
-      if (netRate < 0 && Math.abs(netRate) > resource.value) {
-        ppsColor = 'red';
-      } else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) {
-        ppsColor = 'orange';
-      }
-      ppsElement.style.color = swapResourceRateColor(resource, ppsColor);
     }
   }
 

@@ -79,6 +79,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Magnetic Shield research now hides on worlds with a natural magnetosphere.
 - Patience now banks at 2 seconds per second per world from arrival, is claimed on terraform completion, continues earning until a 3-hour world cap, and the Patience UI shows a dedicated terraforming patience card.
 - Research cards now include per-item Hide/Unhide controls, and the completed toggle now shows or hides hidden entries.
+- Workers now display percent of free workers in the resource rate slot.
 
 ## Prestige systems
 Two reset layers control long term progression:
