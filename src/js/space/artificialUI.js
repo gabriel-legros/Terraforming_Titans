@@ -1336,9 +1336,23 @@ function ensureArtificialLayout() {
     const isLegacyDefaultName = /^Artificial World(?: \\d+)?$/.test(rawName);
     const chosenName = rawName && !isLegacyDefaultName ? rawName : '';
     const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
+    const manager = artificialManager;
+    const selection = buildArtificialSelection(null, manager);
+    const cost = type === 'ring'
+      ? manager.calculateRingworldCost(manager.calculateRingWorldAreaHectares(selection.orbitRadiusAU, selection.widthKm), selection.widthKm)
+      : manager.calculateCost(selection.radiusEarth);
+    const durationContext = manager.getDurationContext(selection.radiusEarth);
+    if (manager.exceedsDurationLimit(durationContext.durationMs)) return;
+    const prepayState = manager.getPrepayState(selection, cost);
+    if (!prepayState.canStart) {
+      if (prepayState.canPrepay) {
+        manager.applyPrepay(selection, cost);
+      }
+      return;
+    }
     if (type === 'shell') {
       artificialManager.startShellConstruction({
-        radiusEarth: clampRadiusValue(parseFloat(radiusRange.value) || 1),
+        radiusEarth: selection.radiusEarth,
         core: artificialUICache.core.value,
         starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
         name: chosenName,
@@ -1349,9 +1363,9 @@ function ensureArtificialLayout() {
     if (type === 'ring') {
       artificialManager.startRingConstruction({
         starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
-        orbitRadiusAU: clampRingOrbitValue(parseFloat(ringOrbitRange.value) || 0.1),
-        widthKm: clampRingWidthValue(parseFloat(ringWidthRange.value) || 10_000),
-        targetFluxWm2: clampRingFluxValue(parseFloat(ringFluxRange.value) || ARTIFICIAL_RING_FLUX_DEFAULT_WM2),
+        orbitRadiusAU: selection.orbitRadiusAU,
+        widthKm: selection.widthKm,
+        targetFluxWm2: selection.targetFluxWm2,
         name: chosenName,
         sector: artificialUICache.sector ? artificialUICache.sector.value : undefined
       });
@@ -1368,7 +1382,14 @@ function ensureArtificialLayout() {
   });
   stopBtn.addEventListener('click', () => {
     const manager = artificialManager;
-    if (!manager || !manager.activeProject) return;
+    if (!manager) return;
+    if (!manager.activeProject) {
+      const paid = manager.prepay?.paid || {};
+      if ((paid.metal || 0) + (paid.superalloys || 0) > 0) {
+        manager.clearPrepay();
+      }
+      return;
+    }
     if (manager.activeProject.status === 'building') {
       manager.cancelConstruction();
       return;
@@ -1532,14 +1553,23 @@ function renderArtificialHistory(force = false) {
   }
 }
 
-function renderProgress(project) {
+function renderProgress(project, prepayState) {
   if (!artificialUICache.progressFill || !artificialUICache.progressLabel) return;
   if (!project) {
     artificialUICache.progressFill.style.width = '0%';
     artificialUICache.progressLabel.textContent = 'No active project';
-    artificialUICache.stopBtn.disabled = true;
-    artificialUICache.stopBtn.textContent = 'Cancel Construction';
-    artificialUICache.stopBtn.title = '';
+    if (artificialUICache.stopBtn) {
+      const prepaid = (prepayState?.paid?.metal || 0) + (prepayState?.paid?.superalloys || 0);
+      if (prepaid > 0) {
+        artificialUICache.stopBtn.disabled = false;
+        artificialUICache.stopBtn.textContent = 'Discard Prepay';
+        artificialUICache.stopBtn.title = 'Clear staged prepayments for this artificial world.';
+      } else {
+        artificialUICache.stopBtn.disabled = true;
+        artificialUICache.stopBtn.textContent = 'Cancel Construction';
+        artificialUICache.stopBtn.title = '';
+      }
+    }
     artificialUICache.travelBtn.disabled = true;
     return;
   }
@@ -1665,6 +1695,43 @@ function renderBailout(project, manager) {
   }
 }
 
+function buildArtificialSelection(project, manager) {
+  if (project) {
+    return {
+      type: project.type || 'shell',
+      radiusEarth: project.radiusEarth,
+      orbitRadiusAU: project.orbitRadiusAU || project.distanceFromStarAU,
+      widthKm: project.widthKm || project.ringWidthKm,
+      starCore: project.starCore || project.core,
+      targetFluxWm2: project.targetFluxWm2,
+      core: project.core,
+      starContext: project.starContext
+    };
+  }
+  const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
+  if (type === 'ring') {
+    const orbitRadiusAU = getRingOrbitRadiusAUValue();
+    const widthKm = getRingWidthKmValue();
+    const targetFluxWm2 = getRingFluxWm2Value();
+    const landHa = manager.calculateRingWorldAreaHectares(orbitRadiusAU, widthKm);
+    const radiusEarth = manager.calculateRadiusEarthFromLandHectares(landHa);
+    return {
+      type,
+      radiusEarth,
+      orbitRadiusAU,
+      widthKm,
+      targetFluxWm2,
+      starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : ''
+    };
+  }
+  return {
+    type,
+    radiusEarth: getRadiusValue(),
+    core: artificialUICache.core ? artificialUICache.core.value : '',
+    starContext: artificialUICache.starContext ? artificialUICache.starContext.value : ''
+  };
+}
+
 function renderCosts(project, selection, manager) {
   const type = project?.type || selection?.type || 'shell';
   const r = project ? project.radiusEarth : selection.radiusEarth;
@@ -1676,6 +1743,7 @@ function renderCosts(project, selection, manager) {
   const durationContext = project
     ? { durationMs: project.durationMs, worldCount: project.worldDivisor || 1 }
     : manager.getDurationContext(r);
+  const prepayState = manager.getPrepayState(selection, cost);
 
   const fmt = formatNumber || ((n) => n);
   if (artificialUICache.costMetalRow) {
@@ -1703,10 +1771,24 @@ function renderCosts(project, selection, manager) {
     artificialUICache.ringAreaLabel.textContent = `${fmt(area, false, 2)} land`;
   }
   if (artificialUICache.costMetal) {
-    artificialUICache.costMetal.textContent = `${fmt(cost.metal, false, 2)}`;
+    const prepaid = prepayState.paid.metal || 0;
+    if (prepaid >= cost.metal) {
+      artificialUICache.costMetal.textContent = 'Paid';
+    } else if (prepaid > 0) {
+      artificialUICache.costMetal.textContent = `${fmt(cost.metal, false, 2)} (${fmt(prepaid, false, 2)} prepaid)`;
+    } else {
+      artificialUICache.costMetal.textContent = `${fmt(cost.metal, false, 2)}`;
+    }
   }
   if (artificialUICache.costSuperalloy) {
-    artificialUICache.costSuperalloy.textContent = `${fmt(cost.superalloys, false, 2)}`;
+    const prepaid = prepayState.paid.superalloys || 0;
+    if (prepaid >= cost.superalloys) {
+      artificialUICache.costSuperalloy.textContent = 'Paid';
+    } else if (prepaid > 0) {
+      artificialUICache.costSuperalloy.textContent = `${fmt(cost.superalloys, false, 2)} (${fmt(prepaid, false, 2)} prepaid)`;
+    } else {
+      artificialUICache.costSuperalloy.textContent = `${fmt(cost.superalloys, false, 2)}`;
+    }
   }
   if (artificialUICache.durationValue) {
     const seconds = Math.ceil(durationContext.durationMs / 1000);
@@ -1716,7 +1798,7 @@ function renderCosts(project, selection, manager) {
     artificialUICache.durationTooltip.title = `Construction time is divided by terraformed worlds (currently ${fmt(durationContext.worldCount, false, 2)}). \nConstruction will progress while on other worlds, so you can use this time to complete other tasks.\nHumanity cannot be convinced to participate in constructing worlds that would take longer than 5 hours.`;
   }
   const exceedsLimit = manager.exceedsDurationLimit(durationContext.durationMs);
-  return { type, cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount, exceedsLimit };
+  return { type, cost, durationMs: durationContext.durationMs, worldCount: durationContext.worldCount, exceedsLimit, prepayState };
 }
 
 function renderGains(project, selection, manager) {
@@ -1771,12 +1853,13 @@ function renderStartButton(project, manager, preview) {
     btn.title = '';
     return;
   }
-  const { cost } = preview;
-  const canAfford = manager.canCoverCost(cost);
+  const prepayState = preview.prepayState;
+  const canStart = prepayState.canStart;
+  const canPrepay = prepayState.canPrepay;
   const durationBlocked = preview.exceedsLimit;
   const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
   const supported = type === 'shell' || type === 'ring';
-  btn.disabled = durationBlocked || !canAfford || !supported;
+  btn.disabled = durationBlocked || !supported || (!canStart && !canPrepay);
   if (durationBlocked) {
     btn.textContent = 'Exceeds 5-hour limit';
     btn.title = 'Reduce size or gain more terraformed worlds to shorten construction below 5 hours.';
@@ -1784,14 +1867,14 @@ function renderStartButton(project, manager, preview) {
     if (!supported) {
       btn.textContent = 'Coming soon';
       btn.title = '';
-    } else if (!canAfford) {
-      btn.textContent = 'Insufficient materials';
+    } else if (canStart) {
+      btn.textContent = 'Start Construction';
       btn.title = '';
-    } else if (type === 'ring') {
-      btn.textContent = 'Start Ringworld';
+    } else if (canPrepay) {
+      btn.textContent = 'Prepay';
       btn.title = '';
     } else {
-      btn.textContent = 'Start Artificial World';
+      btn.textContent = 'Insufficient';
       btn.title = '';
     }
   }
@@ -2107,33 +2190,33 @@ function updateArtificialUI(options = {}) {
     setRingFluxFields(project.targetFluxWm2 || ARTIFICIAL_RING_FLUX_DEFAULT_WM2, true);
   }
 
-  const selection = project
-    ? {
-        type: project.type || 'shell',
-        radiusEarth: project.radiusEarth,
-        orbitRadiusAU: project.orbitRadiusAU || project.distanceFromStarAU,
-        widthKm: project.widthKm || project.ringWidthKm,
-        starCore: project.starCore || project.core,
-        targetFluxWm2: project.targetFluxWm2
-      }
-    : (() => {
-        const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
-        if (type === 'ring') {
-          const orbitRadiusAU = getRingOrbitRadiusAUValue();
-          const widthKm = getRingWidthKmValue();
-          const targetFluxWm2 = getRingFluxWm2Value();
-          const landHa = manager.calculateRingWorldAreaHectares(orbitRadiusAU, widthKm);
-          const radiusEarth = manager.calculateRadiusEarthFromLandHectares(landHa);
-          return { type, radiusEarth, orbitRadiusAU, widthKm, targetFluxWm2, starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : '' };
-        }
-        return { type, radiusEarth: getRadiusValue() };
-      })();
+  const selection = buildArtificialSelection(project, manager);
 
   const preview = renderCosts(project, selection, manager);
   renderGains(project, selection, manager);
   renderEffects(project, selection);
   renderStartButton(project, manager, preview);
-  renderProgress(project);
+  renderProgress(project, preview.prepayState);
+  if (!project) {
+    const paid = preview.prepayState.paid;
+    const prepayLocked = (paid.metal || 0) + (paid.superalloys || 0) > 0;
+    if (artificialUICache.type) artificialUICache.type.disabled = prepayLocked;
+    if (artificialUICache.core) artificialUICache.core.disabled = prepayLocked || !isShell;
+    if (artificialUICache.starContext) artificialUICache.starContext.disabled = prepayLocked || !isShell;
+    if (artificialUICache.radiusRange) artificialUICache.radiusRange.disabled = prepayLocked || !isShell;
+    if (artificialUICache.radiusInput) artificialUICache.radiusInput.disabled = prepayLocked || !isShell;
+    if (artificialUICache.radiusAuto) artificialUICache.radiusAuto.disabled = prepayLocked || !isShell;
+    if (artificialUICache.ringStarCore) artificialUICache.ringStarCore.disabled = prepayLocked || !isRing;
+    if (artificialUICache.ringOrbitRange) artificialUICache.ringOrbitRange.disabled = prepayLocked || !isRing;
+    if (artificialUICache.ringOrbitInput) artificialUICache.ringOrbitInput.disabled = prepayLocked || !isRing;
+    if (artificialUICache.ringWidthRange) artificialUICache.ringWidthRange.disabled = prepayLocked || !isRing;
+    if (artificialUICache.ringWidthInput) artificialUICache.ringWidthInput.disabled = prepayLocked || !isRing;
+    artificialUICache.ringFluxRange.disabled = prepayLocked || !isRing;
+    artificialUICache.ringFluxInput.disabled = prepayLocked || !isRing;
+    artificialUICache.ringAuto.disabled = prepayLocked || !isRing;
+    artificialUICache.sector.disabled = prepayLocked;
+    artificialUICache.sectorFilter.disabled = prepayLocked;
+  }
   renderStash(project, manager);
   renderBailout(project, manager);
   renderArtificialHistory(force);

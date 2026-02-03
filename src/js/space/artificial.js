@@ -280,6 +280,10 @@ class ArtificialManager extends EffectableEntity {
         this.activeProject = null;
         this.history = [];
         this.travelHistory = [];
+        this.prepay = {
+            signature: '',
+            paid: { metal: 0, superalloys: 0 }
+        };
         this._tickTimer = 0;
     }
 
@@ -592,6 +596,126 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
+    buildPrepaySignature(selection, cost) {
+        return JSON.stringify({
+            type: selection?.type || 'shell',
+            radiusEarth: selection?.radiusEarth || 0,
+            orbitRadiusAU: selection?.orbitRadiusAU || 0,
+            widthKm: selection?.widthKm || 0,
+            targetFluxWm2: selection?.targetFluxWm2 || 0,
+            core: selection?.core || '',
+            starCore: selection?.starCore || '',
+            starContext: selection?.starContext || '',
+            cost: {
+                metal: Math.max(cost?.metal || 0, 0),
+                superalloys: Math.max(cost?.superalloys || 0, 0)
+            }
+        });
+    }
+
+    resetPrepay() {
+        this.prepay.signature = '';
+        this.prepay.paid = { metal: 0, superalloys: 0 };
+    }
+
+    clearPrepay() {
+        this.resetPrepay();
+        this.updateUI(true);
+    }
+
+    getRemainingCost(cost, paid) {
+        const remaining = {};
+        Object.keys(cost).forEach((key) => {
+            const required = Math.max(cost[key] || 0, 0);
+            const prepaid = Math.max(paid[key] || 0, 0);
+            remaining[key] = Math.max(required - prepaid, 0);
+        });
+        return remaining;
+    }
+
+    getResourceAvailability(cost) {
+        const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
+        const availability = {};
+        Object.keys(cost).forEach((key) => {
+            const required = Math.max(cost[key] || 0, 0);
+            if (!required) {
+                availability[key] = 0;
+                return;
+            }
+            const colonyRes = resources.colony[key];
+            const colonyAvailable = colonyRes ? colonyRes.value : 0;
+            const storageKey = key === 'water' ? 'liquidWater' : key;
+            availability[key] = getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable);
+        });
+        return availability;
+    }
+
+    getPrepayState(selection, cost) {
+        const signature = this.buildPrepaySignature(selection, cost);
+        if (this.prepay.signature !== signature) {
+            this.prepay.signature = signature;
+            this.prepay.paid = { metal: 0, superalloys: 0 };
+        }
+        const paid = this.prepay.paid;
+        const remaining = this.getRemainingCost(cost, paid);
+        const availability = this.getResourceAvailability(remaining);
+        const keys = Object.keys(remaining);
+        let canStart = true;
+        let canPrepay = false;
+        let hasRemaining = false;
+        keys.forEach((key) => {
+            const due = remaining[key] || 0;
+            const avail = availability[key] || 0;
+            if (due > 0) {
+                hasRemaining = true;
+                if (avail < due) canStart = false;
+                if (avail > 0) canPrepay = true;
+            }
+        });
+        if (!hasRemaining) {
+            canStart = true;
+            canPrepay = false;
+        }
+        return {
+            signature,
+            paid,
+            remaining,
+            availability,
+            canStart,
+            canPrepay,
+            hasRemaining
+        };
+    }
+
+    applyPrepay(selection, cost) {
+        const state = this.getPrepayState(selection, cost);
+        const remaining = state.remaining;
+        const availability = state.availability;
+        const payload = {};
+        Object.keys(remaining).forEach((key) => {
+            const due = remaining[key] || 0;
+            const avail = availability[key] || 0;
+            const pay = Math.min(due, avail);
+            if (pay > 0) {
+                payload[key] = pay;
+            }
+        });
+        const payloadKeys = Object.keys(payload);
+        if (!payloadKeys.length) {
+            return { status: 'insufficient', state };
+        }
+        const deduction = this.pullResources(payload);
+        if (!deduction) {
+            return { status: 'insufficient', state };
+        }
+        payloadKeys.forEach((key) => {
+            this.prepay.paid[key] = (this.prepay.paid[key] || 0) + payload[key];
+        });
+        const nextState = this.getPrepayState(selection, cost);
+        this.updateUI(true);
+        return { status: nextState.canStart ? 'ready' : 'prepaid', state: nextState };
+    }
+
     pullResources(cost) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const useStorage = !!storageProj;
@@ -661,11 +785,20 @@ class ArtificialManager extends EffectableEntity {
       if (this.exceedsDurationLimit(durationContext.durationMs)) {
         return false;
       }
-      if (!this.canCoverCost(cost)) {
+      const selection = {
+        type: 'shell',
+        radiusEarth,
+        core,
+        starContext
+      };
+      const prepayState = this.getPrepayState(selection, cost);
+      const remainingCost = this.getRemainingCost(cost, prepayState.paid);
+      if (!this.canCoverCost(remainingCost)) {
         return false;
       }
-      const deduction = this.pullResources(cost);
+      const deduction = this.pullResources(remainingCost);
       if (!deduction) return false;
+      this.resetPrepay();
 
       const areaHa = this.calculateAreaHectares(radiusEarth);
         const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
@@ -743,9 +876,20 @@ class ArtificialManager extends EffectableEntity {
       const cost = this.calculateRingworldCost(landHa, widthKm);
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
-      if (!this.canCoverCost(cost)) return false;
-      const deduction = this.pullResources(cost);
+      const selection = {
+        type: 'ring',
+        radiusEarth,
+        orbitRadiusAU,
+        widthKm,
+        targetFluxWm2: options?.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2,
+        starCore
+      };
+      const prepayState = this.getPrepayState(selection, cost);
+      const remainingCost = this.getRemainingCost(cost, prepayState.paid);
+      if (!this.canCoverCost(remainingCost)) return false;
+      const deduction = this.pullResources(remainingCost);
       if (!deduction) return false;
+      this.resetPrepay();
 
       const terraformedValue = this.calculateTerraformWorldValue(radiusEarth);
       const { durationMs, worldCount } = durationContext;
@@ -1387,7 +1531,8 @@ class ArtificialManager extends EffectableEntity {
             nextId: this.nextId,
             activeProject: project,
             history: this.history,
-            travelHistory: this.travelHistory
+            travelHistory: this.travelHistory,
+            prepay: this.prepay
         };
     }
 
@@ -1395,7 +1540,16 @@ class ArtificialManager extends EffectableEntity {
         if (!state) return;
         this.prioritizeSpaceStorage = !!state.prioritizeSpaceStorage;
         this.activeProject = state.activeProject || null;
+        const prepay = state.prepay || {};
+        this.prepay = {
+            signature: prepay.signature || '',
+            paid: {
+                metal: Math.max(prepay.paid?.metal || 0, 0),
+                superalloys: Math.max(prepay.paid?.superalloys || 0, 0)
+            }
+        };
         if (this.activeProject) {
+            this.resetPrepay();
             this.activeProject.override = null;
             if (!this.activeProject.stockpile) {
                 const legacyDeposit = this.activeProject.initialDeposit || {};
