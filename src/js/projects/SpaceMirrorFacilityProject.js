@@ -150,6 +150,21 @@ function applyMirrorOversightTravelSettings(settings, saved = {}) {
   return settings;
 }
 
+function buildMirrorOversightTravelSnapshot(settings) {
+  return {
+    applyToLantern: settings.applyToLantern,
+    useFinerControls: settings.useFinerControls,
+    assignmentStep: { ...settings.assignmentStep },
+    advancedOversight: settings.advancedOversight,
+    allowAvailableToHeat: settings.allowAvailableToHeat,
+    targets: { ...settings.targets },
+    tempMode: { ...settings.tempMode },
+    priority: { ...settings.priority },
+    waterMultiplier: settings.waterMultiplier,
+    autoAssign: { ...settings.autoAssign },
+  };
+}
+
 function getQuickBuildCount(building, buildCount) {
   const count = buildCount || 1;
   if (!gameSettings.roundBuildingConstruction || building.autoBuildEnabled) {
@@ -2100,7 +2115,7 @@ class SpaceMirrorFacilityProject extends Project {
     const settings = this.mirrorOversightSettings;
     if (gameSettings.preserveProjectSettingsOnTravel) {
       return {
-        mirrorOversightSettings: JSON.parse(JSON.stringify(settings)),
+        mirrorOversightSettings: buildMirrorOversightTravelSnapshot(settings),
       };
     }
     return {
