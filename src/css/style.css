@@ -321,8 +321,108 @@ body.journal-collapsed .tab-content {
     align-items: center;
 }
 
+.journal-automation-toggle {
+    margin-left: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 1em;
+    display: inline-flex;
+    align-items: center;
+}
+
+.journal-automation-toggle.hidden {
+    display: none;
+}
+
 .journal-index-icon.active {
     color: #6ec0ff;
+}
+
+.journal.automation-mode #journal-entries,
+.journal.automation-mode #journal-index,
+.journal.automation-mode #current-objective,
+.journal.automation-mode #journal-nav-container,
+.journal.automation-mode #journal-index-icon {
+    display: none;
+}
+
+.journal-automation-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.journal-automation-panel.hidden {
+    display: none;
+}
+
+.journal-automation-section {
+    background-color: #f8f8f8;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.journal-automation-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 0.95em;
+    color: #333;
+}
+
+.journal-automation-section-status {
+    font-size: 0.85em;
+    color: #b14b4b;
+}
+
+.journal-automation-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.journal-automation-row-label {
+    font-weight: 600;
+    font-size: 0.85em;
+    color: #444;
+    min-width: 72px;
+}
+
+.journal-automation-row-stacked {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.journal-automation-row-stacked .journal-automation-row {
+    width: 100%;
+}
+
+.journal-automation-row-tight {
+    flex-wrap: nowrap;
+}
+
+.journal-automation-select {
+    flex: 1 1 150px;
+    min-width: 150px;
+    padding: 4px 6px;
+}
+
+.journal-automation-switch {
+    flex: 0 0 auto;
+}
+
+.journal-automation-action {
+    padding: 4px 8px;
+}
+
+.journal-automation-locked {
+    opacity: 0.6;
 }
 
 .journal-index {

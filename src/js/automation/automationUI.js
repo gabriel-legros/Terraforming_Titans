@@ -416,6 +416,7 @@ function updateAutomationUI() {
   updateShipAutomationUI();
   updateLifeAutomationUI();
   updateBuildingsAutomationUI();
+  updateSidebarAutomationUI();
 }
 
 if (typeof module !== 'undefined' && module.exports) {

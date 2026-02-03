@@ -771,6 +771,7 @@ function initializeJournalUI() {
   if (journalCollapsed) {
     document.body.classList.add('journal-collapsed');
   }
+  initializeSidebarAutomationUI();
 }
 
 initializeJournalUI();

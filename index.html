@@ -167,6 +167,7 @@
     <script src="src/js/funding.js"></script>
     <script src="src/js/population.js"></script>
     <script src="src/js/pop-up.js"></script>
+    <script src="src/js/automation/sideBarAutomationUI.js"></script>
     <script src="src/js/journal.js"></script>
     <script src="src/js/journal-reconstruction.js"></script>
     <script src="src/js/progress.js"></script>
@@ -792,10 +793,11 @@
     <!-- Journal Section -->
     <div id="journal" class="journal">
         <div class="journal-header">
-            <h3 class="journal-title">
+            <h3 class="journal-title" id="journal-title">
                 <span class="journal-title-left">
                     <span id="journal-toggle-icon">&raquo;</span>
                     <span class="journal-title-label">Journal</span>
+                    <span id="journal-automation-toggle" class="journal-automation-toggle hidden" title="Automation shortcuts">&#9881;</span>
                     <span id="journal-index-icon" class="journal-index-icon" title="Show journal index">&#9776;</span>
                 </span>
                 <span id="journal-nav-container">
@@ -806,6 +808,7 @@
             <div id="current-objective" class="current-objective"></div>
         </div>
         <div id="journal-index" class="journal-index hidden"></div>
+        <div id="journal-automation-panel" class="journal-automation-panel hidden"></div>
         <div id="journal-entries">
             <!-- Journal entries will be dynamically inserted here -->
         </div>
