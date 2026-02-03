@@ -972,17 +972,33 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const autoBuildPriorityLabel = document.createElement('label');
   autoBuildPriorityLabel.classList.add('auto-build-priority-label');
-  autoBuildPriorityLabel.textContent = 'Prioritize';
-  const autoBuildPriority = document.createElement('input');
-  autoBuildPriority.type = 'checkbox';
-  autoBuildPriority.classList.add('auto-build-priority');
-  autoBuildPriority.id = `${structure.name}-auto-build-priority`;
-  autoBuildPriority.checked = structure.autoBuildPriority;
-  autoBuildPriority.addEventListener('change', () => {
-    structure.autoBuildPriority = autoBuildPriority.checked;
-  });
-  autoBuildPriorityLabel.prepend(autoBuildPriority);
-  structureUIElements[structure.name].autoBuildPriority = autoBuildPriority;
+  autoBuildPriorityLabel.textContent = 'Priority : ';
+  const priorityContainer = document.createElement('span');
+  priorityContainer.classList.add('worker-priority-container');
+  const priorityUp = document.createElement('span');
+  priorityUp.textContent = '\u25B2';
+  priorityUp.classList.add('worker-priority-btn', 'up');
+  const priorityDown = document.createElement('span');
+  priorityDown.textContent = '\u25BC';
+  priorityDown.classList.add('worker-priority-btn', 'down');
+
+  const refreshPriority = () => {
+    priorityUp.classList.toggle('active', structure.autoBuildPriority > 0);
+    priorityDown.classList.toggle('active', structure.autoBuildPriority < 0);
+  };
+
+  const setPriority = level => {
+    structure.autoBuildPriority = level;
+    refreshPriority();
+  };
+
+  priorityUp.addEventListener('click', () => setPriority(structure.autoBuildPriority > 0 ? 0 : 1));
+  priorityDown.addEventListener('click', () => setPriority(structure.autoBuildPriority < 0 ? 0 : -1));
+
+  priorityContainer.append(priorityUp, priorityDown);
+  autoBuildPriorityLabel.appendChild(priorityContainer);
+  structureUIElements[structure.name].autoBuildPriorityRefresh = refreshPriority;
+  refreshPriority();
 
   structureUIElements[structure.name].autoBuildBasisSelect = autoBuildBasisSelect;
 
@@ -2139,9 +2155,7 @@ function updateDecreaseButtonText(button, buildCount) {
         if (els.autoBuildCheckbox) {
           els.autoBuildCheckbox.checked = structure.autoBuildEnabled;
         }
-        if (els.autoBuildPriority) {
-          els.autoBuildPriority.checked = structure.autoBuildPriority;
-        }
+        els.autoBuildPriorityRefresh();
 
         refreshAutoBuildTarget(structure);
 

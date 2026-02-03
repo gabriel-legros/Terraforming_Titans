@@ -19,7 +19,7 @@ class Building extends EffectableEntity {
     this.autoBuildEnabled = false;
     this.autoBuildPercent = 0.1;
     this.autoBuildStep = 0.01;
-    this.autoBuildPriority = false;
+    this.autoBuildPriority = 0;
     this.autoBuildBasis = this.autoBuildFillEnabled ? 'fill' : 'population';
     this.autoBuildFixed = 0;
     this.workerPriority = 0; // -1 low, 0 normal, 1 high
@@ -254,7 +254,18 @@ class Building extends EffectableEntity {
     if (!Number.isFinite(this.autoBuildStep) || this.autoBuildStep <= 0) {
       this.autoBuildStep = 0.01;
     }
-    if ('autoBuildPriority' in state) this.autoBuildPriority = state.autoBuildPriority;
+    if ('autoBuildPriority' in state) {
+      const priority = state.autoBuildPriority;
+      if (priority === true) {
+        this.autoBuildPriority = 1;
+      } else if (priority === false || priority === undefined) {
+        this.autoBuildPriority = 0;
+      } else if (priority === -1 || priority === 0 || priority === 1) {
+        this.autoBuildPriority = priority;
+      } else {
+        this.autoBuildPriority = 0;
+      }
+    }
     if ('autoBuildBasis' in state) this.autoBuildBasis = state.autoBuildBasis;
     if ('autoBuildFixed' in state) {
       this.autoBuildFixed = Math.max(0, Math.floor(state.autoBuildFixed || 0));
