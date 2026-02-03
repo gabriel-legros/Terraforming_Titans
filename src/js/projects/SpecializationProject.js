@@ -77,6 +77,10 @@
       return false;
     }
 
+    getSpecializationRequirements() {
+      return [];
+    }
+
     getSpecializationLockedText() {
       if (this.isCompleted) {
         return '';

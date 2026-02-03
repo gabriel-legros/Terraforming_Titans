@@ -131,6 +131,10 @@
     color: #bbbbbb;
 }
 
+.dark-mode .project-requirements {
+    color: #c7c7c7;
+}
+
 .dark-mode .bioworld-shop {
     border-top-color: #3c3c3c;
 }

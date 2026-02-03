@@ -90,6 +90,27 @@
       return projectManager.projects.deeperMining.averageDepth;
     }
 
+    getSpecializationRequirements() {
+      const otherSpecialization = projectManager.projects.bioworld;
+      return [
+        {
+          id: 'terraformed',
+          label: 'World is fully terraformed',
+          met: spaceManager.isCurrentWorldTerraformed(),
+        },
+        {
+          id: 'deepMining',
+          label: 'Deeper mining depth at least 50,000',
+          met: this.getDeepMiningDepth() >= 50000,
+        },
+        {
+          id: 'otherSpecialization',
+          label: 'No other specialization started or completed',
+          met: !otherSpecialization.isActive && !otherSpecialization.isCompleted,
+        },
+      ];
+    }
+
     canStart() {
       if (!super.canStart()) {
         return false;

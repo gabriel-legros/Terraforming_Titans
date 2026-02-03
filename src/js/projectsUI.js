@@ -463,6 +463,31 @@ function createProjectItem(project) {
   descriptionElement.classList.add('project-description');
   cardBody.appendChild(descriptionElement);
 
+  if (project.attributes?.projectGroup === 'specializedWorlds') {
+    const requirementsElement = document.createElement('div');
+    requirementsElement.classList.add('project-requirements');
+    const requirementsLabel = document.createElement('strong');
+    requirementsLabel.textContent = 'Requirements:';
+    const requirementsList = document.createElement('ul');
+    requirementsList.classList.add('project-requirements-list');
+    const requirementItems = {};
+    const requirements = project.getSpecializationRequirements();
+    requirements.forEach((requirement) => {
+      const item = document.createElement('li');
+      item.classList.add('project-requirements-item');
+      item.textContent = requirement.label;
+      requirementsList.appendChild(item);
+      requirementItems[requirement.id] = item;
+    });
+    requirementsElement.append(requirementsLabel, requirementsList);
+    cardBody.appendChild(requirementsElement);
+    projectElements[project.name] = {
+      ...projectElements[project.name],
+      requirementsElement,
+      requirementItems
+    };
+  }
+
   const projectDetails = document.createElement('div');
   projectDetails.classList.add('project-details');
 
@@ -1244,6 +1269,15 @@ function updateProjectUI(projectName) {
       }
     }
     elements.resourceGainElement.style.display = hasItem ? 'block' : 'none';
+  }
+
+  if (elements.requirementItems) {
+    const requirements = project.getSpecializationRequirements();
+    requirements.forEach((requirement) => {
+      const item = elements.requirementItems[requirement.id];
+      item.textContent = requirement.label;
+      item.classList.toggle('is-unmet', !requirement.met);
+    });
   }
 
   // Update the cost display, highlighting missing resources in red

@@ -105,6 +105,32 @@
       return this.getEvolutionPointGain(resources.surface.biomass.value);
     }
 
+    getSpecializationRequirements() {
+      const otherSpecialization = projectManager.projects.foundryWorld;
+      return [
+        {
+          id: 'terraformed',
+          label: 'World is fully terraformed',
+          met: spaceManager.isCurrentWorldTerraformed(),
+        },
+        {
+          id: 'biomassDensity',
+          label: 'Biomass density above 1 ton/m^2',
+          met: this.getBiomassDensity() > 1,
+        },
+        {
+          id: 'ecumenopolisCount',
+          label: 'Fewer than 1,000 Ecumenopolis Districts',
+          met: colonies.t7_colony.count < 1000,
+        },
+        {
+          id: 'otherSpecialization',
+          label: 'No other specialization started or completed',
+          met: !otherSpecialization.isActive && !otherSpecialization.isCompleted,
+        },
+      ];
+    }
+
     canStart() {
       if (!super.canStart()) {
         return false;

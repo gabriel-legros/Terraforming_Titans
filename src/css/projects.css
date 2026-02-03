@@ -65,6 +65,25 @@
     margin-bottom: 10px;
 }
 
+.project-requirements {
+    font-size: 0.9em;
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.project-requirements-list {
+    margin: 4px 0 0 18px;
+    padding: 0;
+}
+
+.project-requirements-item {
+    margin: 0 0 4px 0;
+}
+
+.project-requirements-item.is-unmet {
+    color: #f44336;
+}
+
 .project-details p {
     margin: 0 0 5px 0;
     font-size: 0.9em;
