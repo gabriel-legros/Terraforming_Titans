@@ -256,6 +256,7 @@ Buildings and special project cards feature collapsible headers, letting players
 Autobuild now includes a Fixed target mode with formatted numeric input, and building automation presets/save data retain the fixed target value.
 Autobuild now supports a % worker share mode for worker-requiring buildings, translating a worker allocation percentage into an equivalent target count.
 Buildings automation now supports saving control/autobuild presets and applying them in a prioritized list, letting lower entries override higher presets per building and setting type.
+Buildings automation now offers a "Combination on Next Travel" dropdown that applies the selected combination after travel.
 Life Designer automation steps now support a **Max out** mode to spend all available points on the selected attribute in one pass.
 Life automation now offers an **As needed** mode for minimum/maximum temperature tolerance with selectable zones (defaulting to tropical, temperate, and polar), and it can redeploy when freed tolerance points exceed the improve threshold.
 Ship assignment automation steps now include a **Capped by largest max** limit mode alongside the smallest-cap option.

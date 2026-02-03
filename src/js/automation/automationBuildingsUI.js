@@ -125,22 +125,25 @@ function buildAutomationBuildingsUI() {
   applyHeader.classList.add('building-automation-section-title');
   const applyTitle = document.createElement('span');
   applyTitle.textContent = 'Preset Combination';
-  const applyCombinationButton = document.createElement('button');
-  applyCombinationButton.textContent = 'Apply Combination';
-  applyCombinationButton.classList.add('building-automation-apply-combination');
   const applyNextTravelLabel = document.createElement('label');
   applyNextTravelLabel.classList.add('building-automation-apply-next-travel-label');
-  const applyNextTravelCheckbox = document.createElement('input');
-  applyNextTravelCheckbox.type = 'checkbox';
-  applyNextTravelCheckbox.classList.add('building-automation-apply-next-travel');
   const applyNextTravelText = document.createElement('span');
-  applyNextTravelText.textContent = 'Apply on next travel';
-  applyNextTravelLabel.append(applyNextTravelCheckbox, applyNextTravelText);
-  applyHeader.append(applyTitle, applyCombinationButton, applyNextTravelLabel);
+  applyNextTravelText.textContent = 'Combination on Next Travel';
+  const applyNextTravelSelect = document.createElement('select');
+  applyNextTravelSelect.classList.add('building-automation-next-travel-select');
+  applyNextTravelLabel.append(applyNextTravelText, applyNextTravelSelect);
+  applyHeader.append(applyTitle);
   applySection.appendChild(applyHeader);
+  const applyNextTravelRow = document.createElement('div');
+  applyNextTravelRow.classList.add('building-automation-next-travel-row');
+  applyNextTravelRow.appendChild(applyNextTravelLabel);
+  applySection.appendChild(applyNextTravelRow);
 
   const combinationRow = document.createElement('div');
   combinationRow.classList.add('building-automation-row');
+  const applyCombinationButton = document.createElement('button');
+  applyCombinationButton.textContent = 'Apply Combination';
+  applyCombinationButton.classList.add('building-automation-apply-combination');
   const combinationSelect = document.createElement('select');
   combinationSelect.classList.add('building-automation-combination-select');
   const combinationNameInput = document.createElement('input');
@@ -161,7 +164,8 @@ function buildAutomationBuildingsUI() {
     combinationNameInput,
     combinationNewButton,
     combinationSaveButton,
-    combinationDeleteButton
+    combinationDeleteButton,
+    applyCombinationButton
   );
   applySection.appendChild(combinationRow);
 
@@ -198,7 +202,7 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderClearButton = clearButton;
   automationElements.buildingsBuilderSelectedList = selectedList;
   automationElements.buildingsApplyCombinationButton = applyCombinationButton;
-  automationElements.buildingsApplyNextTravelCheckbox = applyNextTravelCheckbox;
+  automationElements.buildingsApplyNextTravelSelect = applyNextTravelSelect;
   automationElements.buildingsCombinationSelect = combinationSelect;
   automationElements.buildingsCombinationNameInput = combinationNameInput;
   automationElements.buildingsCombinationNewButton = combinationNewButton;
@@ -235,7 +239,7 @@ function updateBuildingsAutomationUI() {
     buildingsApplyList,
     buildingsApplyHint,
     buildingsApplyCombinationButton,
-    buildingsApplyNextTravelCheckbox,
+    buildingsApplyNextTravelSelect,
     buildingsAddApplyButton,
     buildingsCombinationSelect,
     buildingsCombinationNameInput,
@@ -368,8 +372,26 @@ function updateBuildingsAutomationUI() {
   buildingsBuilderApplyOnceButton.disabled = !activePreset;
   buildingsApplyCombinationButton.disabled = automation.getAssignments().length === 0;
   buildingsCombinationSaveButton.disabled = automation.getAssignments().length === 0;
-  if (document.activeElement !== buildingsApplyNextTravelCheckbox) {
-    buildingsApplyNextTravelCheckbox.checked = !!automation.applyOnNextTravel;
+  const nextTravelComboId = automation.nextTravelCombinationId;
+  const nextTravelCombo = nextTravelComboId ? automation.getCombinationById(nextTravelComboId) : null;
+  if (nextTravelComboId && !nextTravelCombo) {
+    automation.nextTravelCombinationId = null;
+  }
+  if (document.activeElement !== buildingsApplyNextTravelSelect) {
+    buildingsApplyNextTravelSelect.textContent = '';
+    const noneOption = document.createElement('option');
+    noneOption.value = '';
+    noneOption.textContent = 'None';
+    buildingsApplyNextTravelSelect.appendChild(noneOption);
+    combinations.forEach(combo => {
+      const option = document.createElement('option');
+      option.value = String(combo.id);
+      option.textContent = combo.name || `Combination ${combo.id}`;
+      buildingsApplyNextTravelSelect.appendChild(option);
+    });
+    buildingsApplyNextTravelSelect.value = automation.nextTravelCombinationId
+      ? String(automation.nextTravelCombinationId)
+      : '';
   }
 
   if (document.activeElement !== buildingsCombinationSelect) {
@@ -584,7 +606,7 @@ function attachBuildingsAutomationHandlers() {
     buildingsBuilderAddCategoryButton,
     buildingsBuilderClearButton,
     buildingsApplyCombinationButton,
-    buildingsApplyNextTravelCheckbox,
+    buildingsApplyNextTravelSelect,
     buildingsCombinationSelect,
     buildingsCombinationNameInput,
     buildingsCombinationNewButton,
@@ -735,8 +757,9 @@ function attachBuildingsAutomationHandlers() {
     automationManager.buildingsAutomation.applyPresets();
   });
 
-  buildingsApplyNextTravelCheckbox.addEventListener('change', (event) => {
-    automationManager.buildingsAutomation.applyOnNextTravel = event.target.checked;
+  buildingsApplyNextTravelSelect.addEventListener('change', (event) => {
+    const comboId = event.target.value;
+    automationManager.buildingsAutomation.nextTravelCombinationId = comboId ? Number(comboId) : null;
   });
 
   buildingsCombinationSelect.addEventListener('change', (event) => {

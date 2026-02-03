@@ -51,7 +51,7 @@ class BuildingAutomation {
     this.combinations = [];
     this.collapsed = false;
     this.masterEnabled = true;
-    this.applyOnNextTravel = false;
+    this.nextTravelCombinationId = null;
     this.nextPresetId = 1;
     this.nextAssignmentId = 1;
     this.nextCombinationId = 1;
@@ -167,10 +167,16 @@ class BuildingAutomation {
 
   deleteCombination(id) {
     this.combinations = this.combinations.filter(combo => combo.id !== id);
+    if (this.nextTravelCombinationId === id) {
+      this.nextTravelCombinationId = null;
+    }
   }
 
   applyCombination(id) {
     const combo = this.getCombinationById(id);
+    if (!combo) {
+      return;
+    }
     this.setAssignments(combo.assignments);
   }
 
@@ -480,7 +486,7 @@ class BuildingAutomation {
       })),
       collapsed: this.collapsed,
       masterEnabled: this.masterEnabled,
-      applyOnNextTravel: !!this.applyOnNextTravel,
+      nextTravelCombinationId: this.nextTravelCombinationId,
       nextPresetId: this.nextPresetId,
       nextAssignmentId: this.nextAssignmentId,
       nextCombinationId: this.nextCombinationId
@@ -511,7 +517,10 @@ class BuildingAutomation {
     })) : [];
     this.collapsed = !!data.collapsed;
     this.masterEnabled = data.masterEnabled !== false;
-    this.applyOnNextTravel = !!data.applyOnNextTravel;
+    this.nextTravelCombinationId = data.nextTravelCombinationId ? Number(data.nextTravelCombinationId) : null;
+    if (!this.nextTravelCombinationId && data.applyOnNextTravel) {
+      this.nextTravelCombinationId = this.addCombination('Next Travel', this.assignments);
+    }
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.nextAssignmentId = data.nextAssignmentId || this.assignments.length + 1;
     this.nextCombinationId = data.nextCombinationId || this.combinations.length + 1;

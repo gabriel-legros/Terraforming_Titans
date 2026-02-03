@@ -512,6 +512,31 @@
   gap: 8px;
 }
 
+.building-automation-apply-next-travel-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f2f5fb;
+  border: 1px solid #d8dfec;
+  color: #3b4760;
+  font-size: 12px;
+}
+
+.building-automation-next-travel-row {
+  display: flex;
+  align-items: center;
+}
+
+.building-automation-next-travel-select {
+  background: #fff;
+  border: 1px solid #cfd6e5;
+  border-radius: 6px;
+  padding: 6px 8px;
+  min-width: 160px;
+}
+
 .building-automation-builder-dirty {
   color: #c13b3b;
   font-weight: 700;
