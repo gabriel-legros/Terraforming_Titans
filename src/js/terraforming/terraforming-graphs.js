@@ -1,6 +1,6 @@
 // playTimeSeconds advances in in-game days for display, so 365 units = 1 year.
 const TERRAFORMING_GRAPH_YEAR_UNITS = 365;
-const TERRAFORMING_GRAPH_MAX_YEAR = 500;
+const TERRAFORMING_GRAPH_WINDOW_YEARS = 500;
 const TERRAFORMING_GRAPH_MIN_LOG = 1e-6;
 
 const TERRAFORMING_GRAPH_ORDER = [
@@ -73,12 +73,15 @@ function buildEmptyTerraformingGraphHistory() {
 function normalizeTerraformingGraphHistory(state) {
   const source = state || {};
   const history = buildEmptyTerraformingGraphHistory();
-  const maxLength = TERRAFORMING_GRAPH_MAX_YEAR + 1;
-  const years = Array.isArray(source.years) ? source.years.slice(0, maxLength) : [];
+  const maxLength = TERRAFORMING_GRAPH_WINDOW_YEARS;
+  const rawYears = Array.isArray(source.years) ? source.years : [];
+  const startIndex = Math.max(0, rawYears.length - maxLength);
+  const years = rawYears.slice(startIndex, startIndex + maxLength);
   history.years = years;
   const length = years.length;
   const normalizeArray = (arr, fallback) => {
-    const output = Array.isArray(arr) ? arr.slice(0, maxLength) : [];
+    const raw = Array.isArray(arr) ? arr : [];
+    const output = raw.slice(startIndex, startIndex + length);
     output.length = length;
     for (let i = 0; i < length; i += 1) {
       output[i] = output[i] || fallback;
@@ -139,7 +142,7 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
     id: 'temperature',
     label: 'Temperature',
     axisLabel: () => `Temperature (${getTemperatureUnit()})`,
-    note: () => 'Yearly snapshots. Max 500 years.',
+    note: () => 'Yearly snapshots. Rolling 500 years.',
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 1),
     buildSeries: (manager, history) => {
@@ -167,7 +170,7 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
     id: 'atmosphere',
     label: 'Atmosphere',
     axisLabel: () => 'Pressure (Pa)',
-    note: () => 'Log scale pressure. Max 500 years.',
+    note: () => 'Log scale pressure. Rolling 500 years.',
     logScale: true,
     formatTick: (value) => formatNumber(value, false, 2, true),
     buildSeries: (manager, history) => manager.buildAtmosphereSeries(history)
@@ -176,7 +179,7 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
     id: 'water',
     label: 'Water',
     axisLabel: () => 'Coverage (%)',
-    note: () => 'Yearly snapshots. Max 500 years.',
+    note: () => 'Yearly snapshots. Rolling 500 years.',
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 1),
     buildSeries: (manager, history) => ([
@@ -198,7 +201,7 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
     id: 'albedo',
     label: 'Albedo',
     axisLabel: () => 'Albedo',
-    note: () => 'Yearly snapshots. Max 500 years.',
+    note: () => 'Yearly snapshots. Rolling 500 years.',
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 3),
     buildSeries: (manager, history) => ([
@@ -226,7 +229,7 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
     id: 'luminosity',
     label: 'Luminosity',
     axisLabel: () => 'Surface Flux (W/m^2)',
-    note: () => 'Yearly snapshots. Max 500 years.',
+    note: () => 'Yearly snapshots. Rolling 500 years.',
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 1),
     buildSeries: (manager, history) => ([
@@ -242,7 +245,7 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
     id: 'life',
     label: 'Life Coverage',
     axisLabel: () => 'Coverage (%)',
-    note: () => 'Yearly snapshots. Max 500 years.',
+    note: () => 'Yearly snapshots. Rolling 500 years.',
     logScale: false,
     formatTick: (value) => formatNumber(value, false, 1),
     buildSeries: (manager, history) => {
@@ -313,7 +316,9 @@ class TerraformingGraphsManager {
     this.history = normalizeTerraformingGraphHistory(state);
     this.legendSignature = '';
     this.needsRedraw = true;
-    this.lastSnapshotYear = null;
+    this.lastSnapshotYear = this.history.years.length
+      ? this.history.years[this.history.years.length - 1]
+      : null;
   }
 
   attachSummaryButton(container) {
@@ -442,17 +447,14 @@ class TerraformingGraphsManager {
 
   update() {
     const currentYear = Math.floor(playTimeSeconds / TERRAFORMING_GRAPH_YEAR_UNITS);
-    const targetYear = Math.min(currentYear, TERRAFORMING_GRAPH_MAX_YEAR);
     const startingLength = this.history.years.length;
-    if (this.history.years.length <= targetYear) {
-      while (this.history.years.length <= targetYear) {
-        this.appendYearSnapshot();
+    if (this.lastSnapshotYear === null) {
+      this.lastSnapshotYear = -1;
+    }
+    if (currentYear > this.lastSnapshotYear) {
+      for (let year = this.lastSnapshotYear + 1; year <= currentYear; year += 1) {
+        this.appendYearSnapshot(year);
       }
-      this.lastSnapshotYear = currentYear;
-      this.needsRedraw = true;
-    } else if (currentYear !== this.lastSnapshotYear) {
-      const overwriteIndex = currentYear > TERRAFORMING_GRAPH_MAX_YEAR ? TERRAFORMING_GRAPH_MAX_YEAR : currentYear;
-      this.overwriteYearSnapshot(overwriteIndex);
       this.lastSnapshotYear = currentYear;
       this.needsRedraw = true;
     }
@@ -464,13 +466,19 @@ class TerraformingGraphsManager {
     }
   }
 
-  appendYearSnapshot() {
+  appendYearSnapshot(year) {
     const index = this.history.years.length;
-    this.history.years.push(index);
+    this.history.years.push(year);
     this.writeSnapshotAt(index);
+    this.trimHistoryToWindow();
   }
 
-  overwriteYearSnapshot(index) {
+  overwriteYearSnapshot(year) {
+    const index = this.history.years.indexOf(year);
+    if (index === -1) {
+      this.appendYearSnapshot(year);
+      return;
+    }
     this.writeSnapshotAt(index);
   }
 
@@ -508,6 +516,31 @@ class TerraformingGraphsManager {
       const amount = resources.atmospheric[gasKey].value || 0;
       series[index] = calculateAtmosphericPressure(amount, gravity, radius);
       gases[gasKey] = series;
+    }
+  }
+
+  trimHistoryToWindow() {
+    const history = this.history;
+    while (history.years.length > TERRAFORMING_GRAPH_WINDOW_YEARS) {
+      history.years.shift();
+      history.temperature.global.shift();
+      history.temperature.tropical.shift();
+      history.temperature.temperate.shift();
+      history.temperature.polar.shift();
+      history.water.liquid.shift();
+      history.water.ice.shift();
+      history.albedo.ground.shift();
+      history.albedo.surface.shift();
+      history.albedo.actual.shift();
+      history.luminosity.flux.shift();
+      history.life.global.shift();
+      history.life.tropical.shift();
+      history.life.temperate.shift();
+      history.life.polar.shift();
+      const gases = history.atmosphere.gases;
+      for (const key in gases) {
+        gases[key].shift();
+      }
     }
   }
 
@@ -566,16 +599,18 @@ class TerraformingGraphsManager {
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
 
-    const maxYear = Math.min(TERRAFORMING_GRAPH_MAX_YEAR, Math.max(0, this.history.years.length - 1));
-    const tickMaxYear = Math.max(1, maxYear);
-    const xSpan = tickMaxYear;
+    const years = this.history.years;
+    const maxIndex = Math.max(0, years.length - 1);
+    const minYear = years.length ? years[0] : 0;
+    const maxYear = years.length ? years[maxIndex] : 0;
+    const xSpan = Math.max(1, maxYear - minYear);
 
     let minValue = Infinity;
     let maxValue = -Infinity;
     for (const entry of series) {
       const values = entry.values;
       const transform = entry.transform || ((value) => value);
-      for (let i = 0; i <= maxYear; i += 1) {
+      for (let i = 0; i <= maxIndex; i += 1) {
         const raw = values[i] || 0;
         const displayValue = transform(raw);
         const plotValue = definition.logScale
@@ -623,8 +658,8 @@ class TerraformingGraphsManager {
 
     const xTicks = 5;
     for (let i = 0; i <= xTicks; i += 1) {
-      const yearValue = Math.round((tickMaxYear / xTicks) * i);
-      const x = padding.left + (yearValue / xSpan) * plotWidth;
+      const yearValue = Math.round(minYear + (xSpan / xTicks) * i);
+      const x = padding.left + ((yearValue - minYear) / xSpan) * plotWidth;
       ctx.beginPath();
       ctx.moveTo(x, padding.top + plotHeight);
       ctx.lineTo(x, padding.top + plotHeight + 6);
@@ -639,13 +674,14 @@ class TerraformingGraphsManager {
       const values = entry.values;
       const transform = entry.transform || ((value) => value);
       ctx.beginPath();
-      for (let i = 0; i <= maxYear; i += 1) {
+      for (let i = 0; i <= maxIndex; i += 1) {
         const raw = values[i] || 0;
         const displayValue = transform(raw);
         const plotValue = definition.logScale
           ? Math.log10(Math.max(displayValue, TERRAFORMING_GRAPH_MIN_LOG))
           : displayValue;
-        const x = padding.left + (i / xSpan) * plotWidth;
+        const yearValue = years[i] ?? minYear;
+        const x = padding.left + ((yearValue - minYear) / xSpan) * plotWidth;
         const y = padding.top + (1 - (plotValue - minValue) / range) * plotHeight;
         if (i === 0) {
           ctx.moveTo(x, y);
