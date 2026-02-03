@@ -419,6 +419,32 @@ function setRingFluxFields(value, force = false) {
   }
 }
 
+function storeDraftSelection(manager, options = {}) {
+  const preserveSector = !!options.preserveSector;
+  const preserveFilter = !!options.preserveFilter;
+  const selection = buildArtificialSelection(null, manager);
+  const payload = {
+    type: artificialUICache.type ? artificialUICache.type.value : selection.type,
+    core: artificialUICache.core ? artificialUICache.core.value : selection.core,
+    starContext: artificialUICache.starContext ? artificialUICache.starContext.value : selection.starContext,
+    ringStarCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : selection.starCore,
+    radiusEarth: selection.radiusEarth,
+    orbitRadiusAU: selection.orbitRadiusAU,
+    widthKm: selection.widthKm,
+    targetFluxWm2: selection.targetFluxWm2,
+    name: artificialUICache.nameInput ? artificialUICache.nameInput.value : ''
+  };
+  if (!preserveSector) {
+    const currentSector = artificialUICache.sector ? artificialUICache.sector.value : 'auto';
+    const draft = manager.getDraftSelection();
+    payload.sector = (currentSector === 'auto' && draft.sector) ? draft.sector : currentSector;
+  }
+  if (!preserveFilter) {
+    payload.sectorFilter = artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all';
+  }
+  manager.setDraftSelection(payload);
+}
+
 function getAutoRadiusValue() {
   const bounds = getRadiusBounds();
   const manager = artificialManager;
@@ -1210,6 +1236,7 @@ function ensureArtificialLayout() {
     applyRadiusBounds();
     applyStarContextBounds();
     applyRingBounds();
+    artificialManager && artificialManager.setDraftSelection({ type: typeSelect.value });
     updateArtificialUI({ force: true });
   });
 
@@ -1319,10 +1346,16 @@ function ensureArtificialLayout() {
   });
 
   nameInput.addEventListener('input', () => {
-    artificialManager?.setActiveProjectName(nameInput.value);
+    const manager = artificialManager;
+    const project = manager.activeProject;
+    project && manager.setActiveProjectName(nameInput.value);
+    project || manager.setDraftSelection({ name: nameInput.value });
   });
   nameInput.addEventListener('blur', () => {
-    artificialManager?.setActiveProjectName(nameInput.value);
+    const manager = artificialManager;
+    const project = manager.activeProject;
+    project && manager.setActiveProjectName(nameInput.value);
+    project || manager.setDraftSelection({ name: nameInput.value });
   });
   priorityCheckbox.addEventListener('change', () => {
     if (artificialManager) {
@@ -1376,8 +1409,13 @@ function ensureArtificialLayout() {
     applyStarContextBounds();
     updateArtificialUI();
   });
+  sectorSelect.addEventListener('change', () => {
+    artificialManager && artificialManager.setDraftSelection({ sector: sectorSelect.value });
+    updateArtificialUI({ force: true });
+  });
   sectorFilterSelect.addEventListener('change', () => {
     artificialUICache.sector.value = 'auto';
+    artificialManager && artificialManager.setDraftSelection({ sectorFilter: sectorFilterSelect.value, sector: 'auto' });
     updateArtificialUI({ force: true });
   });
   stopBtn.addEventListener('click', () => {
@@ -1889,6 +1927,9 @@ function updateArtificialUI(options = {}) {
 
   ensureArtificialLayout();
   const project = manager.activeProject || null;
+  const draft = manager.getDraftSelection();
+  let sectorsReady = false;
+  let filterReady = false;
 
   // Populate sector selector
   if (artificialUICache.sector) {
@@ -1909,6 +1950,7 @@ function updateArtificialUI(options = {}) {
     });
 
     const filterResources = buildArtificialSectorFilterOptions(sortedSectors);
+    filterReady = filterResources.length > 0;
     const filterSig = JSON.stringify(filterResources);
     if (artificialUICache.sectorFilter.dataset.lastFilterList !== filterSig) {
       const filterFrag = document.createDocumentFragment();
@@ -1929,11 +1971,24 @@ function updateArtificialUI(options = {}) {
     if (!artificialUICache.sectorFilter.value) {
       artificialUICache.sectorFilter.value = 'all';
     }
+    if (!project && draft.sectorFilter && filterReady) {
+      const shouldApplyDraft = force
+        || (artificialUICache.sectorFilter.dataset.lastDraftApplied !== draft.sectorFilter
+          && document.activeElement !== artificialUICache.sectorFilter);
+      if (shouldApplyDraft) {
+        const hasFilter = Array.from(artificialUICache.sectorFilter.options).some(option => option.value === draft.sectorFilter);
+        if (hasFilter) {
+          artificialUICache.sectorFilter.value = draft.sectorFilter;
+          artificialUICache.sectorFilter.dataset.lastDraftApplied = draft.sectorFilter;
+        }
+      }
+    }
 
     const filterValue = project ? 'all' : artificialUICache.sectorFilter.value;
     const filteredSectors = filterValue === 'all'
       ? sortedSectors
       : sortedSectors.filter(sector => getArtificialSectorRichResource(sector) === filterValue);
+    sectorsReady = filteredSectors.length > 0 || !!draft.sector;
 
     const sectorSig = JSON.stringify({
       filter: filterValue,
@@ -1964,13 +2019,42 @@ function updateArtificialUI(options = {}) {
       artificialUICache.sector.appendChild(frag);
       artificialUICache.sector.dataset.lastSectorList = sectorSig;
     }
+    if (!project && draft.sector) {
+      const hasDraftOption = Array.from(artificialUICache.sector.options).some(option => option.value === draft.sector);
+      if (!hasDraftOption) {
+        const opt = document.createElement('option');
+        opt.value = draft.sector;
+        opt.textContent = draft.sector;
+        artificialUICache.sector.appendChild(opt);
+      }
+    }
     // Set default or project value
     if (project && project.sector) {
       artificialUICache.sector.value = project.sector;
-    } else if (!artificialUICache.sector.value) {
+    } else if (!project && draft.sector && sectorsReady) {
+      const shouldApplyDraft = force
+        || (artificialUICache.sector.dataset.lastDraftApplied !== draft.sector
+          && document.activeElement !== artificialUICache.sector);
+      if (shouldApplyDraft) {
+        const hasSector = Array.from(artificialUICache.sector.options).some(option => option.value === draft.sector);
+        if (hasSector) {
+          artificialUICache.sector.value = draft.sector;
+          artificialUICache.sector.dataset.lastDraftApplied = draft.sector;
+        }
+      }
+    } else if (!artificialUICache.sector.value && !draft.sector) {
       artificialUICache.sector.value = 'auto';
     } else if (!Array.from(artificialUICache.sector.options).some(option => option.value === artificialUICache.sector.value)) {
-      artificialUICache.sector.value = 'auto';
+      if (!draft.sector) {
+        artificialUICache.sector.value = 'auto';
+      }
+    }
+    if (!project && draft.sector && artificialUICache.sector.value === 'auto') {
+      const hasDraft = Array.from(artificialUICache.sector.options).some(option => option.value === draft.sector);
+      if (hasDraft) {
+        artificialUICache.sector.value = draft.sector;
+        artificialUICache.sector.dataset.lastDraftApplied = draft.sector;
+      }
     }
     artificialUICache.sector.disabled = !!project;
     artificialUICache.sectorFilter.disabled = !!project;
@@ -1993,11 +2077,9 @@ function updateArtificialUI(options = {}) {
       artificialUICache.nameInput.disabled = false;
     } else {
       artificialUICache.nameInput.disabled = false;
-      if (artificialUICache.nameInput.dataset.lastProjectId) {
-        if (document.activeElement !== artificialUICache.nameInput) {
-          artificialUICache.nameInput.value = '';
-          artificialUICache.nameInput.dataset.lastProjectId = '';
-        }
+      if ((force || !artificialUICache.nameInput.value) && document.activeElement !== artificialUICache.nameInput) {
+        artificialUICache.nameInput.value = draft.name;
+        artificialUICache.nameInput.dataset.lastProjectId = '';
       }
       if (!artificialUICache.nameInput.value) {
         const typeValue = artificialUICache.type ? artificialUICache.type.value : 'shell';
@@ -2027,6 +2109,9 @@ function updateArtificialUI(options = {}) {
     }
     if (project && project.type) {
       artificialUICache.type.value = project.type;
+    } else if (!project && draft.type && (force || !artificialUICache.type.value)) {
+      const hasDraft = options.some((entry) => entry.value === draft.type && !entry.disabled);
+      artificialUICache.type.value = hasDraft ? draft.type : (fallback ? fallback.value : '');
     } else if (!artificialUICache.type.value && fallback) {
       artificialUICache.type.value = fallback.value;
     }
@@ -2053,6 +2138,9 @@ function updateArtificialUI(options = {}) {
     }
     if (project && project.core) {
       artificialUICache.core.value = project.core;
+    } else if (!project && draft.core && (force || !artificialUICache.core.value)) {
+      const hasDraft = options.some((entry) => entry.value === draft.core && !entry.disabled);
+      artificialUICache.core.value = hasDraft ? draft.core : (fallback ? fallback.value : '');
     } else if (!artificialUICache.core.value && fallback) {
       artificialUICache.core.value = fallback.value;
     }
@@ -2063,6 +2151,9 @@ function updateArtificialUI(options = {}) {
     const fallback = options.find((entry) => !entry.disabled) || options[0];
     if (project && project.starContext) {
       artificialUICache.starContext.value = project.starContext;
+    } else if (!project && draft.starContext && (force || !artificialUICache.starContext.value)) {
+      const hasDraft = options.some((entry) => entry.value === draft.starContext && !entry.disabled);
+      artificialUICache.starContext.value = hasDraft ? draft.starContext : (fallback ? fallback.value : '');
     } else if (!artificialUICache.starContext.value && fallback) {
       artificialUICache.starContext.value = fallback.value;
     }
@@ -2090,6 +2181,9 @@ function updateArtificialUI(options = {}) {
     }
     if (project && project.type === 'ring') {
       artificialUICache.ringStarCore.value = project.starCore || project.core || artificialUICache.ringStarCore.value;
+    } else if (!project && draft.ringStarCore && (force || !artificialUICache.ringStarCore.value)) {
+      const hasDraft = options.some((entry) => entry.value === draft.ringStarCore && !entry.disabled);
+      artificialUICache.ringStarCore.value = hasDraft ? draft.ringStarCore : (fallback ? fallback.value : '');
     } else if (!artificialUICache.ringStarCore.value && fallback) {
       artificialUICache.ringStarCore.value = fallback.value;
     }
@@ -2154,18 +2248,17 @@ function updateArtificialUI(options = {}) {
     artificialUICache.ringAuto.disabled = !isRing;
     artificialUICache.sector.disabled = false;
     artificialUICache.sectorFilter.disabled = false;
-    if (!artificialRadiusEditing) {
-      const clamped = getRadiusValue();
-      setRadiusFields(clamped);
+    if (force && !artificialRadiusEditing) {
+      setRadiusFields(draft.radiusEarth, true);
     }
-    if (!artificialRingOrbitEditing) {
-      setRingOrbitFields(getRingOrbitRadiusAUValue());
+    if (force && !artificialRingOrbitEditing) {
+      setRingOrbitFields(draft.orbitRadiusAU, true);
     }
-    if (!artificialRingWidthEditing) {
-      setRingWidthFields(getRingWidthKmValue());
+    if (force && !artificialRingWidthEditing) {
+      setRingWidthFields(draft.widthKm, true);
     }
-    if (!artificialRingFluxEditing) {
-      setRingFluxFields(getRingFluxWm2Value());
+    if (force && !artificialRingFluxEditing) {
+      setRingFluxFields(draft.targetFluxWm2, true);
     }
   } else {
     artificialUICache.type.disabled = true;
@@ -2216,6 +2309,11 @@ function updateArtificialUI(options = {}) {
     artificialUICache.ringAuto.disabled = prepayLocked || !isRing;
     artificialUICache.sector.disabled = prepayLocked;
     artificialUICache.sectorFilter.disabled = prepayLocked;
+    const sectorHasOption = artificialUICache.sector
+      ? Array.from(artificialUICache.sector.options).some(option => option.value === draft.sector)
+      : false;
+    const preserveSector = !sectorsReady || (!!draft.sector && !sectorHasOption);
+    storeDraftSelection(manager, { preserveSector, preserveFilter: !filterReady });
   }
   renderStash(project, manager);
   renderBailout(project, manager);

@@ -278,6 +278,7 @@ class ArtificialManager extends EffectableEntity {
         this.prioritizeSpaceStorage = true;
         this.nextId = 1;
         this.activeProject = null;
+        this.draftSelection = this.normalizeDraftSelection(this.createDefaultDraftSelection());
         this.history = [];
         this.travelHistory = [];
         this.prepay = {
@@ -285,6 +286,83 @@ class ArtificialManager extends EffectableEntity {
             paid: { metal: 0, superalloys: 0 }
         };
         this._tickTimer = 0;
+    }
+
+    createDefaultDraftSelection() {
+        const types = getArtificialTypes();
+        const typeDefault = types.find((entry) => !entry.disabled) || types[0];
+        const cores = getArtificialCores();
+        const coreDefault = cores.find((entry) => !entry.disabled) || cores[0];
+        const starContexts = getArtificialStarContexts();
+        const starDefault = starContexts.find((entry) => !entry.disabled) || starContexts[0];
+        const ringCores = getRingStarCores();
+        const ringDefault = ringCores.find((entry) => !entry.disabled) || ringCores[0];
+        const coreBounds = getArtificialCoreBounds(coreDefault.value);
+        const orbitBounds = getRingRadiusBoundsAU(ringDefault.value);
+        return {
+            type: typeDefault.value,
+            core: coreDefault.value,
+            starContext: starDefault.value,
+            radiusEarth: coreBounds.min,
+            ringStarCore: ringDefault.value,
+            orbitRadiusAU: clampRingOrbitRadiusAU(orbitBounds.min, orbitBounds),
+            widthKm: clampRingWidthKm(10_000, ringDefault.value),
+            targetFluxWm2: clampRingTargetFluxWm2(RINGWORLD_TARGET_FLUX_WM2),
+            sector: 'auto',
+            sectorFilter: 'all',
+            name: ''
+        };
+    }
+
+    normalizeDraftSelection(selection) {
+        const types = getArtificialTypes();
+        const typeDefault = types.find((entry) => !entry.disabled) || types[0];
+        const typeValue = types.some((entry) => entry.value === selection.type && !entry.disabled)
+            ? selection.type
+            : typeDefault.value;
+        const cores = getArtificialCores();
+        const coreDefault = cores.find((entry) => !entry.disabled) || cores[0];
+        const coreValue = cores.some((entry) => entry.value === selection.core && !entry.disabled)
+            ? selection.core
+            : coreDefault.value;
+        const starContexts = getArtificialStarContexts();
+        const starDefault = starContexts.find((entry) => !entry.disabled) || starContexts[0];
+        const starValue = starContexts.some((entry) => entry.value === selection.starContext && !entry.disabled)
+            ? selection.starContext
+            : starDefault.value;
+        const ringCores = getRingStarCores();
+        const ringDefault = ringCores.find((entry) => !entry.disabled) || ringCores[0];
+        const ringValue = ringCores.some((entry) => entry.value === selection.ringStarCore && !entry.disabled)
+            ? selection.ringStarCore
+            : ringDefault.value;
+        const coreBounds = getArtificialCoreBounds(coreValue);
+        const orbitBounds = getRingRadiusBoundsAU(ringValue);
+        return {
+            type: typeValue,
+            core: coreValue,
+            starContext: starValue,
+            radiusEarth: Math.min(Math.max(Number(selection.radiusEarth) || coreBounds.min, coreBounds.min), coreBounds.max),
+            ringStarCore: ringValue,
+            orbitRadiusAU: clampRingOrbitRadiusAU(selection.orbitRadiusAU, orbitBounds),
+            widthKm: clampRingWidthKm(selection.widthKm, ringValue),
+            targetFluxWm2: clampRingTargetFluxWm2(selection.targetFluxWm2),
+            sector: selection.sector || 'auto',
+            sectorFilter: selection.sectorFilter || 'all',
+            name: selection.name || ''
+        };
+    }
+
+    getDraftSelection() {
+        return { ...this.draftSelection };
+    }
+
+    setDraftSelection(next) {
+        const incoming = next || {};
+        const merged = { ...this.draftSelection };
+        Object.keys(incoming).forEach((key) => {
+            incoming[key] !== undefined && (merged[key] = incoming[key]);
+        });
+        this.draftSelection = this.normalizeDraftSelection(merged);
     }
 
     enable() {
@@ -1530,6 +1608,7 @@ class ArtificialManager extends EffectableEntity {
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
             nextId: this.nextId,
             activeProject: project,
+            draftSelection: { ...this.draftSelection },
             history: this.history,
             travelHistory: this.travelHistory,
             prepay: this.prepay
@@ -1540,6 +1619,9 @@ class ArtificialManager extends EffectableEntity {
         if (!state) return;
         this.prioritizeSpaceStorage = !!state.prioritizeSpaceStorage;
         this.activeProject = state.activeProject || null;
+        const draft = state.draftSelection || {};
+        const defaultDraft = this.createDefaultDraftSelection();
+        this.draftSelection = this.normalizeDraftSelection({ ...defaultDraft, ...draft });
         const prepay = state.prepay || {};
         this.prepay = {
             signature: prepay.signature || '',
