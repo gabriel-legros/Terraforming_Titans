@@ -7,7 +7,52 @@ class SpaceshipAutomation {
     this.nextPresetId = 1;
     this.elapsed = 0;
     this.lockedAssignments = false;
+    this.automationShipPool = 0;
+    this.automationMassDriverCapacity = 0;
     this.ensureDefaultPreset();
+  }
+
+  getMassDriverAutomationId() {
+    return 'resourceDisposalMassDrivers';
+  }
+
+  getMassDriverDisposalProject() {
+    return projectManager.projects.disposeResources;
+  }
+
+  getMassDriverAutomationTarget() {
+    const disposalProject = this.getMassDriverDisposalProject();
+    return {
+      name: this.getMassDriverAutomationId(),
+      displayName: 'Resource Disposal (mass drivers included)',
+      enabled: disposalProject.enabled !== false,
+      unlocked: disposalProject.unlocked !== false,
+      isVisible: () => disposalProject.isVisible(),
+      isPermanentlyDisabled: () => disposalProject.isPermanentlyDisabled(),
+      isAutomationManuallyDisabled: () => disposalProject.isAutomationManuallyDisabled(),
+      shouldAutomationDisable: () => disposalProject.shouldAutomationDisable(),
+      getMaxAssignableShips: () => this.automationShipPool + this.automationMassDriverCapacity
+    };
+  }
+
+  getMassDriverEquivalency(project) {
+    return project.massDriverShipEquivalency || 0;
+  }
+
+  getMassDriverCapacity(project) {
+    if (!project.isBooleanFlagSet('massDriverEnabled')) {
+      return 0;
+    }
+    const structure = project.getMassDriverStructure();
+    return structure.count * this.getMassDriverEquivalency(project);
+  }
+
+  getMassDriverActiveEquivalency(project) {
+    if (!project.isBooleanFlagSet('massDriverEnabled')) {
+      return 0;
+    }
+    const structure = project.getMassDriverStructure();
+    return structure.active * this.getMassDriverEquivalency(project);
   }
 
   sanitizeShipCount(value) {
@@ -296,6 +341,7 @@ class SpaceshipAutomation {
 
   getAutomationTargets() {
     const projects = this.getSpaceshipProjects();
+    projects.push(this.getMassDriverAutomationTarget());
     projects.push(this.getUnassignedTarget());
     return projects;
   }
@@ -359,14 +405,23 @@ class SpaceshipAutomation {
 
     this.updateManualControls(true);
 
-    let totalShips = this.sanitizeShipCount(resources.special.spaceships?.value || 0);
+    const massDriverTargetId = this.getMassDriverAutomationId();
+    const massDriverProject = this.getMassDriverDisposalProject();
+    const massDriverCapacity = this.getMassDriverCapacity(massDriverProject);
+    const massDriverActive = this.getMassDriverActiveEquivalency(massDriverProject);
+    let totalShipsOnly = this.sanitizeShipCount(resources.special.spaceships?.value || 0);
     const currentAssignments = {};
     for (let index = 0; index < projects.length; index += 1) {
       const project = projects[index];
       const assigned = this.normalizeProjectAssignment(project);
       currentAssignments[project.name] = assigned;
-      totalShips += assigned;
+      totalShipsOnly += assigned;
     }
+    this.automationShipPool = totalShipsOnly;
+    this.automationMassDriverCapacity = massDriverCapacity;
+
+    let totalShips = totalShipsOnly + massDriverCapacity;
+    currentAssignments[massDriverTargetId] = this.sanitizeShipCount(massDriverProject.getAutomationShipCount() + massDriverActive);
 
     const desiredAssignments = {};
     let remainingTotal = totalShips;
@@ -549,6 +604,47 @@ class SpaceshipAutomation {
       }
     }
 
+    const desiredMassDriverTarget = this.sanitizeShipCount(desiredAssignments[massDriverTargetId] || 0);
+    const massDriverEquivalency = this.getMassDriverEquivalency(massDriverProject);
+    const maxMassDrivers = massDriverEquivalency > 0
+      ? Math.floor(massDriverCapacity / massDriverEquivalency)
+      : 0;
+    const desiredMassDrivers = Math.min(maxMassDrivers, Math.floor(desiredMassDriverTarget / massDriverEquivalency));
+    const desiredMassDriverEquivalency = desiredMassDrivers * massDriverEquivalency;
+    desiredAssignments[massDriverProject.name] = Math.max(0, desiredMassDriverTarget - desiredMassDriverEquivalency);
+
+    const shipProjectsTotal = projects.reduce((sum, project) => {
+      return sum + this.sanitizeShipCount(desiredAssignments[project.name] || 0);
+    }, 0);
+
+    if (shipProjectsTotal > totalShipsOnly) {
+      const scale = totalShipsOnly / shipProjectsTotal;
+      const allocations = [];
+      let scaledTotal = 0;
+      for (let index = 0; index < projects.length; index += 1) {
+        const project = projects[index];
+        const desired = this.sanitizeShipCount(desiredAssignments[project.name] || 0);
+        if (desired <= 0) {
+          desiredAssignments[project.name] = 0;
+          continue;
+        }
+        const scaled = Math.floor(desired * scale);
+        desiredAssignments[project.name] = scaled;
+        scaledTotal += scaled;
+        allocations.push({
+          project,
+          fractional: (desired * scale) - scaled
+        });
+      }
+      let remainder = Math.max(0, totalShipsOnly - scaledTotal);
+      allocations.sort((a, b) => b.fractional - a.fractional);
+      for (let index = 0; index < allocations.length && remainder > 0; index += 1) {
+        const allocation = allocations[index];
+        desiredAssignments[allocation.project.name] += 1;
+        remainder -= 1;
+      }
+    }
+
     // First release surplus ships so they become available for other assignments.
     for (let index = 0; index < projects.length; index += 1) {
       const project = projects[index];
@@ -578,6 +674,8 @@ class SpaceshipAutomation {
         project.finalizeAssignmentChange(wasContinuous);
       }
     }
+
+    massDriverProject.setMassDriverActive(desiredMassDrivers);
   }
 
   saveState() {
