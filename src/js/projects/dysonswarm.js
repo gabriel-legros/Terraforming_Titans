@@ -12,6 +12,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     this.continuousThreshold = 1000; // Duration threshold in ms below which collector deployment becomes continuous
     this.fractionalCollectors = 0; // Track partial collectors in continuous mode
     this.collectorShortfallLastTick = false;
+    this.lastCollectorColonyCost = null;
   }
 
   isCollectorContinuous() {
@@ -60,13 +61,16 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
   deductCollectorResources() {
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const colonyCost = {};
     for (const cat in this.collectorCost) {
       for (const res in this.collectorCost[cat]) {
         const amount = this.collectorCost[cat][res];
+        let colonyUsed = amount;
         if (storageProj) {
           const key = res === 'water' ? 'liquidWater' : res;
           const colonyAvailable = resources[cat][res].value;
           const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+          colonyUsed = allocation.fromColony;
           if (allocation.fromColony > 0) {
             resources[cat][res].decrease(allocation.fromColony);
           }
@@ -78,11 +82,16 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
         } else {
           resources[cat][res].decrease(amount);
         }
+        if (colonyUsed > 0) {
+          if (!colonyCost[cat]) colonyCost[cat] = {};
+          colonyCost[cat][res] = (colonyCost[cat][res] || 0) + colonyUsed;
+        }
       }
     }
     if (storageProj && typeof updateSpaceStorageUI === 'function') {
       updateSpaceStorageUI(storageProj);
     }
+    return colonyCost;
   }
 
   startCollector() {
@@ -91,7 +100,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       return false;
     }
     if (this.canStartCollector()) {
-      this.deductCollectorResources();
+      this.lastCollectorColonyCost = this.deductCollectorResources();
       this.collectorProgress = this.collectorDuration;
       return true;
     }
@@ -121,49 +130,75 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     
-    // Only estimate if in continuous mode and auto-deploying
-    if (!this.isCollectorContinuous() || !this.autoDeployCollectors) {
-      return totals;
-    }
-    if (!this.isCompleted && this.collectors === 0) {
-      return totals;
-    }
-    if (!this.canStartCollector()) {
+    if (this.isCollectorContinuous()) {
+      if (!this.autoDeployCollectors) {
+        return totals;
+      }
+      if (!this.isCompleted && this.collectors === 0) {
+        return totals;
+      }
+      if (!this.canStartCollector()) {
+        return totals;
+      }
+
+      const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+      const duration = this.collectorDuration;
+      const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
+      const fraction = deltaTime / duration;
+      
+      for (const category in this.collectorCost) {
+        if (!totals.cost[category]) totals.cost[category] = {};
+        for (const resource in this.collectorCost[category]) {
+          const baseCost = this.collectorCost[category][resource];
+          const tickAmount = baseCost * fraction * (applyRates ? productivity : 1);
+          if (applyRates && resources[category]?.[resource]) {
+            const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+            const colonyAvailable = resources[category][resource].value + pending;
+            const key = resource === 'water' ? 'liquidWater' : resource;
+            const allocation = getMegaProjectResourceAllocation(
+              storageProj,
+              key,
+              tickAmount,
+              Math.max(colonyAvailable, 0)
+            );
+            const colonyPortion = allocation.fromColony;
+            const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
+            if (colonyRate > 0) {
+              resources[category][resource].modifyRate(
+                -colonyRate,
+                'Dyson Collector',
+                'project'
+              );
+            }
+          }
+          totals.cost[category][resource] =
+            (totals.cost[category][resource] || 0) + baseCost * fraction;
+        }
+      }
       return totals;
     }
 
-    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    if (!this.autoDeployCollectors || this.collectorProgress <= 0) {
+      return totals;
+    }
+
+    const colonyCost = this.lastCollectorColonyCost || {};
     const duration = this.collectorDuration;
-    const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
-    const fraction = deltaTime / duration;
-    
-    for (const category in this.collectorCost) {
-      if (!totals.cost[category]) totals.cost[category] = {};
-      for (const resource in this.collectorCost[category]) {
-        const baseCost = this.collectorCost[category][resource];
-        const tickAmount = baseCost * fraction * (applyRates ? productivity : 1);
+    const perSecondRate = duration > 0 ? 1000 / duration : 0;
+    for (const category in colonyCost) {
+      const categoryCost = colonyCost[category];
+      for (const resource in categoryCost) {
+        const amount = categoryCost[resource];
         if (applyRates && resources[category]?.[resource]) {
-          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-          const colonyAvailable = resources[category][resource].value + pending;
-          const key = resource === 'water' ? 'liquidWater' : resource;
-          const allocation = getMegaProjectResourceAllocation(
-            storageProj,
-            key,
-            tickAmount,
-            Math.max(colonyAvailable, 0)
-          );
-          const colonyPortion = allocation.fromColony;
-          const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
-          if (colonyRate > 0) {
+          const rateValue = amount * perSecondRate;
+          if (rateValue > 0) {
             resources[category][resource].modifyRate(
-              -colonyRate,
+              -rateValue,
               'Dyson Collector',
               'project'
             );
           }
         }
-        totals.cost[category][resource] =
-          (totals.cost[category][resource] || 0) + baseCost * fraction;
       }
     }
     return totals;
@@ -267,6 +302,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       collectorProgress: this.collectorProgress,
       autoDeployCollectors: this.autoDeployCollectors,
       fractionalCollectors: this.fractionalCollectors,
+      lastCollectorColonyCost: this.lastCollectorColonyCost,
     };
   }
 
@@ -276,6 +312,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     this.collectorProgress = state.collectorProgress || 0;
     this.autoDeployCollectors = state.autoDeployCollectors || false;
     this.fractionalCollectors = state.fractionalCollectors || 0;
+    this.lastCollectorColonyCost = state.lastCollectorColonyCost || null;
   }
 
   saveTravelState() {
