@@ -488,6 +488,7 @@ function initializeRandomWorldUI() {
   rwgUIInitialized = true;
 
   container.innerHTML = '';
+  try { resetRWGEffectsUI(); } catch(_) {}
 
   const header = document.createElement('div');
   header.className = 'rwg-header';
@@ -650,6 +651,7 @@ function initializeRandomWorldUI() {
   });
 
   renderHistory();
+  try { updateRWGEffectsUI(); } catch(_) {}
 }
 
 function ensureRandomWorldUI() {

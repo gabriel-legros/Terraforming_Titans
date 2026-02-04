@@ -78,6 +78,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Kessler building warnings now show a tooltip with debris added, multiplier shift, and small/large project failure deltas.
 - Game loop now derives delta time from performance.now(), clamped to 1s, instead of Phaser’s provided delta.
 - Life automation auto-purchase thresholds now accept two-decimal percentages from 0–100%.
+- Random World Effects card now reinitializes after the Random subtab rebuilds so the effects list stays visible.
 - Magnetic Shield research now hides on worlds with a natural magnetosphere.
 - Patience now banks at 2 seconds per second per world from arrival, is claimed on terraform completion, continues earning until a 3-hour world cap, and the Patience UI shows a dedicated terraforming patience card.
 - GHG factory automation now offers an avg T vs optical depth target selector, and optical depth mode ignores calcite while clearing it before building up GHG.

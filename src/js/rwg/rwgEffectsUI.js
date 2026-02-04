@@ -28,8 +28,21 @@ function _titleCaseArchetype(t) {
   } catch(_) { return String(t || ''); }
 }
 
+function resetRWGEffectsUI() {
+  _rwgEffectsInitialized = false;
+  _rwgEffectsCardEl = null;
+  _rwgEffectsListEl = null;
+  _rwgEffectsLastKey = '';
+}
+
 function _ensureRWGEffectsUI() {
-  if (_rwgEffectsInitialized) return true;
+  if (_rwgEffectsInitialized) {
+    try {
+      if (_rwgEffectsCardEl.isConnected) return true;
+    } catch (_) {
+      resetRWGEffectsUI();
+    }
+  }
   const container = typeof document !== 'undefined' ? document.getElementById('space-random') : null;
   if (!container) return false;
 
@@ -203,11 +216,7 @@ function updateRWGEffectsUI() {
   _rwgEffectsListEl.innerHTML = parts.join('');
 }
 
-if (typeof globalThis !== 'undefined') {
-  globalThis.updateRWGEffectsUI = updateRWGEffectsUI;
-}
-
-try { module.exports = { updateRWGEffectsUI }; } catch(_) {}
+try { module.exports = { updateRWGEffectsUI, resetRWGEffectsUI }; } catch(_) {}
 
 
 
