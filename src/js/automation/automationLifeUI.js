@@ -420,17 +420,18 @@ function renderLifeAutomationSteps(automation, preset, container) {
     title.textContent = `Step ${index + 1}`;
     const subtitle = document.createElement('span');
     subtitle.classList.add('automation-step-subtitle');
-    const updateSubtitle = (isTempTolerance) => {
+    const updateSubtitle = (isTempTolerance, isRadiationTolerance) => {
       subtitle.textContent = step.mode === 'remaining' && isLast
         ? 'Spend all remaining points'
         : step.mode === 'max'
           ? 'Max out attribute'
-          : step.mode === 'needed' && isTempTolerance
-            ? 'As needed for selected zones'
+          : step.mode === 'needed' && (isTempTolerance || isRadiationTolerance)
+            ? (isTempTolerance ? 'As needed for selected zones' : 'As needed for magnetosphere')
             : 'Spend fixed points';
     };
     let isTempTolerance = step.attribute === 'minTemperatureTolerance' || step.attribute === 'maxTemperatureTolerance';
-    updateSubtitle(isTempTolerance);
+    let isRadiationTolerance = step.attribute === 'radiationTolerance';
+    updateSubtitle(isTempTolerance, isRadiationTolerance);
     heading.append(title, subtitle);
     header.appendChild(heading);
 
@@ -505,10 +506,12 @@ function renderLifeAutomationSteps(automation, preset, container) {
     attributeSelect.addEventListener('change', (event) => {
       const attributeName = event.target.value;
       const isTempToleranceAttribute = attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance';
-      const mode = !isTempToleranceAttribute && step.mode === 'needed' ? 'fixed' : step.mode;
+      const isRadiationToleranceAttribute = attributeName === 'radiationTolerance';
+      const mode = (!isTempToleranceAttribute && !isRadiationToleranceAttribute && step.mode === 'needed') ? 'fixed' : step.mode;
       automation.updateDesignStep(preset.id, step.id, { attribute: attributeName, mode });
       isTempTolerance = isTempToleranceAttribute;
-      updateSubtitle(isTempTolerance);
+      isRadiationTolerance = isRadiationToleranceAttribute;
+      updateSubtitle(isTempTolerance, isRadiationTolerance);
       const attribute = lifeDesigner.currentDesign[attributeName];
       maxUpgrades = attribute.maxUpgrades;
       isOptimal = attributeName === 'optimalGrowthTemperature';
@@ -516,14 +519,14 @@ function renderLifeAutomationSteps(automation, preset, container) {
       amountInput.max = `${maxUpgrades}`;
       amountInput.value = step.amount;
       minButton.style.display = isOptimal ? '' : 'none';
-      if (isTempTolerance) {
+      if (isTempTolerance || isRadiationTolerance) {
         if (neededOpt.parentElement !== modeSelect) {
           modeSelect.insertBefore(neededOpt, remainingOpt);
         }
       } else if (neededOpt.parentElement === modeSelect) {
         modeSelect.removeChild(neededOpt);
       }
-      if (!isTempTolerance && modeSelect.value === 'needed') {
+      if (!isTempTolerance && !isRadiationTolerance && modeSelect.value === 'needed') {
         modeSelect.value = 'fixed';
       }
       amountInput.disabled = (modeSelect.value === 'remaining' || modeSelect.value === 'max' || modeSelect.value === 'needed')
@@ -592,7 +595,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
     remainingOpt.value = 'remaining';
     remainingOpt.textContent = 'All remaining';
     remainingOpt.disabled = !isLast;
-    if (isTempTolerance) {
+    if (isTempTolerance || isRadiationTolerance) {
       modeSelect.append(fixedOpt, maxOpt, neededOpt, remainingOpt);
     } else {
       modeSelect.append(fixedOpt, maxOpt, remainingOpt);
@@ -601,7 +604,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
       ? 'remaining'
       : step.mode === 'max'
         ? 'max'
-        : step.mode === 'needed' && isTempTolerance
+        : step.mode === 'needed' && (isTempTolerance || isRadiationTolerance)
           ? 'needed'
           : 'fixed';
     modeLabel.append(modeText, modeSelect);

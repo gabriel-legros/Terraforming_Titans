@@ -47,6 +47,14 @@ class LifeAutomation {
     return attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance';
   }
 
+  isRadiationToleranceAttribute(attributeName) {
+    return attributeName === 'radiationTolerance';
+  }
+
+  isAsNeededAttribute(attributeName) {
+    return this.isTemperatureToleranceAttribute(attributeName) || this.isRadiationToleranceAttribute(attributeName);
+  }
+
   getTemperatureZoneNames(step) {
     const zones = step.zones || this.createTemperatureZoneSettings();
     return getZones().filter(zoneName => zones[zoneName]);
@@ -250,7 +258,8 @@ class LifeAutomation {
     }
     const attributeName = step.attribute;
     const isTempTolerance = this.isTemperatureToleranceAttribute(attributeName);
-    if (!isTempTolerance && step.mode === 'needed') {
+    const isNeededEligible = this.isAsNeededAttribute(attributeName);
+    if (!isNeededEligible && step.mode === 'needed') {
       step.mode = 'fixed';
     }
     if (isTempTolerance) {
@@ -272,7 +281,7 @@ class LifeAutomation {
     if (Object.prototype.hasOwnProperty.call(updates, 'mode')) {
       step.mode = updates.mode === 'remaining'
         || updates.mode === 'max'
-        || (updates.mode === 'needed' && isTempTolerance)
+        || (updates.mode === 'needed' && isNeededEligible)
         ? updates.mode
         : 'fixed';
     }
@@ -437,7 +446,9 @@ class LifeAutomation {
       const maxUpgrades = attribute.maxUpgrades;
       const isRemaining = step.mode === 'remaining' && index === preset.designSteps.length - 1;
       const isMax = step.mode === 'max';
-      const isNeeded = step.mode === 'needed' && this.isTemperatureToleranceAttribute(attributeName);
+      const isTempTolerance = this.isTemperatureToleranceAttribute(attributeName);
+      const isRadiationTolerance = this.isRadiationToleranceAttribute(attributeName);
+      const isNeeded = step.mode === 'needed' && (isTempTolerance || isRadiationTolerance);
       if (attributeName === 'optimalGrowthTemperature') {
         const direction = step.amount < 0 ? -1 : 1;
         const desiredMagnitude = isRemaining
@@ -460,9 +471,20 @@ class LifeAutomation {
           attribute.value = target;
           remaining -= costDelta;
         }
-      } else if (isNeeded) {
+      } else if (isNeeded && isTempTolerance) {
         const zoneNames = this.getTemperatureZoneNames(step);
         const targetValue = Math.min(maxUpgrades, Math.ceil(this.getTemperatureToleranceTarget(attributeName, zoneNames)));
+        const currentValue = attribute.value;
+        if (targetValue > currentValue) {
+          const delta = Math.min(remaining, targetValue - currentValue);
+          attribute.value = currentValue + delta;
+          remaining -= delta;
+        } else {
+          attribute.value = targetValue;
+          remaining += currentValue - targetValue;
+        }
+      } else if (isNeeded && isRadiationTolerance) {
+        const targetValue = terraforming.getMagnetosphereStatus() ? maxUpgrades : 0;
         const currentValue = attribute.value;
         if (targetValue > currentValue) {
           const delta = Math.min(remaining, targetValue - currentValue);
@@ -507,7 +529,9 @@ class LifeAutomation {
       const maxUpgrades = attribute.maxUpgrades;
       const isRemaining = step.mode === 'remaining' && index === preset.designSteps.length - 1;
       const isMax = step.mode === 'max';
-      const isNeeded = step.mode === 'needed' && this.isTemperatureToleranceAttribute(attributeName);
+      const isTempTolerance = this.isTemperatureToleranceAttribute(attributeName);
+      const isRadiationTolerance = this.isRadiationToleranceAttribute(attributeName);
+      const isNeeded = step.mode === 'needed' && (isTempTolerance || isRadiationTolerance);
       let spend = 0;
       if (attributeName === 'optimalGrowthTemperature') {
         const direction = step.amount < 0 ? -1 : 1;
@@ -532,9 +556,22 @@ class LifeAutomation {
           remaining -= costDelta;
           spend = Math.max(0, costDelta);
         }
-      } else if (isNeeded) {
+      } else if (isNeeded && isTempTolerance) {
         const zoneNames = this.getTemperatureZoneNames(step);
         const targetValue = Math.min(maxUpgrades, Math.ceil(this.getTemperatureToleranceTarget(attributeName, zoneNames)));
+        const currentValue = attribute.value;
+        if (targetValue > currentValue) {
+          const delta = Math.min(remaining, targetValue - currentValue);
+          attribute.value = currentValue + delta;
+          remaining -= delta;
+          spend = Math.max(0, delta);
+        } else {
+          attribute.value = targetValue;
+          remaining += currentValue - targetValue;
+          spend = 0;
+        }
+      } else if (isNeeded && isRadiationTolerance) {
+        const targetValue = terraforming.getMagnetosphereStatus() ? maxUpgrades : 0;
         const currentValue = attribute.value;
         if (targetValue > currentValue) {
           const delta = Math.min(remaining, targetValue - currentValue);
@@ -676,7 +713,7 @@ class LifeAutomation {
         const attribute = LIFE_AUTOMATION_ATTRIBUTES.includes(step.attribute)
           ? step.attribute
           : LIFE_AUTOMATION_ATTRIBUTES[0];
-        const isTempTolerance = this.isTemperatureToleranceAttribute(attribute);
+        const isNeededEligible = this.isAsNeededAttribute(attribute);
         const maxUpgrades = lifeDesigner.currentDesign[attribute].maxUpgrades;
         const parsed = Math.floor(Number(step.amount) || 0);
         const amount = attribute === 'optimalGrowthTemperature'
@@ -688,7 +725,7 @@ class LifeAutomation {
           amount,
           mode: step.mode === 'remaining'
             || step.mode === 'max'
-            || (step.mode === 'needed' && isTempTolerance)
+            || (step.mode === 'needed' && isNeededEligible)
             ? step.mode
             : 'fixed',
           zones: { ...(step.zones || this.createTemperatureZoneSettings()) }
