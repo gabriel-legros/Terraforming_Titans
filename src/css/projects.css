@@ -1457,7 +1457,8 @@
 
 .mass-driver-assignment-container .assigned-ships-container span:first-child,
 .mass-driver-assignment-container .available-ships-container span:first-child {
-    min-width: 150px;
+    min-width: 0;
+    text-align: left;
 }
 
 .android-speed-row {

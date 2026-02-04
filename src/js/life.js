@@ -972,6 +972,26 @@ class LifeManager extends EffectableEntity {
       }
     };
 
+    const canGrowByZone = {};
+    const baseMaxDensity = requirements.baseMaxBiomassDensityTPerM2;
+    const densityMultiplier = 1 + design.spaceEfficiency.value;
+    const effectiveGrowthMultiplier = this.getEffectiveLifeGrowthMultiplier();
+    const radMitigation = design.getRadiationMitigationRatio();
+    let radPenalty = terraforming.getMagnetosphereStatus()
+      ? 0
+      : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
+    if (radPenalty < 0.0001) radPenalty = 0;
+    const radMult = 1 - radPenalty;
+    zones.forEach(zoneName => {
+      const lumMult = usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
+      const tempMult = design.temperatureGrowthMultiplierZone(zoneName);
+      const waterMult = waterByZone[zoneName] > 1e-9 ? 1 : 0;
+      const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
+      const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
+      const growthRate = baseGrowthRate * lumMult * tempMult * radMult * waterMult * effectiveGrowthMultiplier;
+      canGrowByZone[zoneName] = growthRate > 0 && maxBiomassForZone > 0;
+    });
+
     const potentialGrowthByZone = {};
     zones.forEach(zoneName => {
       potentialGrowthByZone[zoneName] = 0;
@@ -988,17 +1008,11 @@ class LifeManager extends EffectableEntity {
       if (!moisturePass || growthFactor <= 0) return;
 
       let zonalMaxGrowthRate = baseGrowthRate;
-      const radMitigation = design.getRadiationMitigationRatio();
-      const radPenalty = terraforming.getMagnetosphereStatus()
-        ? 0
-        : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
-      zonalMaxGrowthRate *= (1 - radPenalty);
+      zonalMaxGrowthRate *= radMult;
       zonalMaxGrowthRate *= usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
-      zonalMaxGrowthRate *= this.getEffectiveLifeGrowthMultiplier();
+      zonalMaxGrowthRate *= effectiveGrowthMultiplier;
 
       const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
-      const baseMaxDensity = requirements.baseMaxBiomassDensityTPerM2;
-      const densityMultiplier = 1 + design.spaceEfficiency.value;
       const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
 
       if (zonalBiomass > maxBiomassForZone) {
@@ -1078,9 +1092,11 @@ class LifeManager extends EffectableEntity {
 
     const seedTargets = zones.filter(zoneName => {
       const zonalBiomass = biomassByZone[zoneName];
-      return zonalBiomass > 0 && zonalBiomass < 1 && potentialGrowthByZone[zoneName] > 0;
+      return zonalBiomass < 1 && canGrowByZone[zoneName];
     });
-    const seedDonors = zones.filter(zoneName => !seedTargets.includes(zoneName));
+    const seedDonors = zones.filter(zoneName =>
+      biomassByZone[zoneName] > 0 && !seedTargets.includes(zoneName)
+    );
 
     seedTargets.forEach(targetZone => {
       let availableGrowth = 0;
