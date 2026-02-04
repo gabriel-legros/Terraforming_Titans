@@ -41,6 +41,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - The ResearchManager persists between planets so only advanced research remains after travel.
 
 # Recent updates
+- Incoming attack cards now show the enemy success chance, and the space tab alert turns green when all active attacks have a 0% success chance.
 - Golden asteroid visuals now stay loaded and hide between spawns to prevent image load failures.
 - Golden asteroid save loading now clears any lingering countdown notifications before restoring the saved timer.
 - Ringworld setup now includes a target flux slider (1200–1500 W/m²).

@@ -2961,6 +2961,8 @@ function ensureAttackCard(cache, attack) {
     details.className = 'galaxy-attack-card__details';
     const powerNode = doc.createElement('span');
     powerNode.className = 'galaxy-attack-card__power';
+    const chanceNode = doc.createElement('span');
+    chanceNode.className = 'galaxy-attack-card__chance';
     const sectorNode = doc.createElement('span');
     sectorNode.className = 'galaxy-attack-card__sector';
     const sectorLabel = doc.createElement('span');
@@ -2973,6 +2975,7 @@ function ensureAttackCard(cache, attack) {
     sectorNode.appendChild(sectorLabel);
     sectorNode.appendChild(sectorButton);
     details.appendChild(powerNode);
+    details.appendChild(chanceNode);
     details.appendChild(sectorNode);
 
     card.appendChild(header);
@@ -2983,6 +2986,7 @@ function ensureAttackCard(cache, attack) {
         factionNode,
         timerNode,
         powerNode,
+        chanceNode,
         sectorNode,
         sectorButton
     };
@@ -3017,9 +3021,9 @@ function updateIncomingAttackPanel(manager, cache) {
     if (!cache?.attackContent || !cache.attackList) {
         return;
     }
-    const getIncomingAttacks = globalThis.GalaxyFactionUI && globalThis.GalaxyFactionUI.getIncomingAttacks;
-    const incomingAttacks = getIncomingAttacks ? getIncomingAttacks(manager) : [];
+    const incomingAttacks = GalaxyFactionUI.getIncomingAttacks(manager);
     const seen = new Set();
+    let hasThreat = false;
 
     for (let index = 0; index < incomingAttacks.length; index += 1) {
         const attack = incomingAttacks[index];
@@ -3031,6 +3035,20 @@ function updateIncomingAttackPanel(manager, cache) {
         record.timerNode.textContent = formatAttackCountdown(attack.remainingMs);
         const formattedPower = formatFleetValue(attack.power);
         record.powerNode.textContent = `Power: ${formattedPower}`;
+        const estimate = manager.operationManager.getOperationLossEstimate({
+            sectorKey: attack.sectorKey,
+            factionId: attack.attackerId,
+            assignedPower: attack.power,
+            reservedPower: attack.reservedPower,
+            offensePower: attack.power,
+            targetFactionId: attack.targetFactionId
+        });
+        const successChance = estimate?.successChance || 0;
+        record.chanceNode.textContent = `Enemy success: ${formatPercentDisplay(successChance)}`;
+        const displayPercent = Math.max(0, Math.min(100, Math.round(successChance * 100)));
+        if (displayPercent > 0) {
+            hasThreat = true;
+        }
         if (record.sectorButton) {
             const sectorKey = attack.sectorKey || '';
             const sectorName = attack.sectorName || 'Unknown sector';
@@ -3068,7 +3086,7 @@ function updateIncomingAttackPanel(manager, cache) {
     }
 
     const hasEntries = incomingAttacks.length > 0;
-    globalThis?.setSpaceIncomingAttackWarning?.(hasEntries);
+    setSpaceIncomingAttackWarning(hasEntries, hasThreat);
     const defenseVisible = cache.defenseForm ? !cache.defenseForm.hidden : false;
     if (cache.attackContent) {
         cache.attackContent.classList.toggle('is-populated', hasEntries || defenseVisible);

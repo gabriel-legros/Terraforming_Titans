@@ -539,6 +539,10 @@ body.journal-collapsed .tab-content {
     align-items: center;
 }
 
+.space-tab-warning.is-safe {
+    color: #43a047;
+}
+
 .journal.collapsed {
     display: none;
 }

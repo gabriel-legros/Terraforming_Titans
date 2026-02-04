@@ -776,6 +776,7 @@
 }
 
 .galaxy-attack-card__power,
+.galaxy-attack-card__chance,
 .galaxy-attack-card__sector {
   flex: 1 1 auto;
   min-width: 140px;

@@ -1261,16 +1261,13 @@ class GalaxyManager extends EffectableEntity {
     }
 
     #updateIncomingAttackWarning() {
-        const setter = globalThis?.setSpaceIncomingAttackWarning;
-        if (!setter) {
-            return;
-        }
         const operations = this.operationManager?.operations;
         if (!operations || operations.size === 0) {
-            setter.call(globalThis, false);
+            setSpaceIncomingAttackWarning(false, false);
             return;
         }
         let hasIncomingAttack = false;
+        let hasThreat = false;
         for (const operation of operations.values()) {
             if (!operation || operation.status !== 'running') {
                 continue;
@@ -1283,12 +1280,26 @@ class GalaxyManager extends EffectableEntity {
                 continue;
             }
             const uhfControl = Number(sector.getControlValue?.(galaxyUhfId)) || 0;
-            if (uhfControl > 0) {
-                hasIncomingAttack = true;
+            if (!(uhfControl > 0)) {
+                continue;
+            }
+            hasIncomingAttack = true;
+            const estimate = this.operationManager.getOperationLossEstimate({
+                sectorKey: operation.sectorKey,
+                factionId: operation.factionId,
+                assignedPower: operation.assignedPower,
+                reservedPower: operation.reservedPower,
+                offensePower: operation.offensePower,
+                targetFactionId: operation.targetFactionId
+            });
+            const successChance = estimate?.successChance || 0;
+            const displayPercent = Math.max(0, Math.min(100, Math.round(successChance * 100)));
+            if (displayPercent > 0) {
+                hasThreat = true;
                 break;
             }
         }
-        setter.call(globalThis, hasIncomingAttack);
+        setSpaceIncomingAttackWarning(hasIncomingAttack, hasThreat);
     }
 
     #updateSectorControl(sector, mutator) {

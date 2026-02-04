@@ -136,8 +136,8 @@ function markSpaceStoryAlertViewed() {
     updateSpaceAlertUI();
 }
 
-function setSpaceIncomingAttackWarning(isActive) {
-    const doc = globalThis.document;
+function setSpaceIncomingAttackWarning(isActive, isThreat = true) {
+    const doc = document;
     if (!doc) {
         return;
     }
@@ -147,20 +147,25 @@ function setSpaceIncomingAttackWarning(isActive) {
     }
     if (isActive) {
         warning.classList.add('is-visible');
+        warning.classList.toggle('is-safe', !isThreat);
         warning.setAttribute('aria-hidden', 'false');
         warning.setAttribute('role', 'img');
-        warning.setAttribute('aria-label', 'Incoming attack detected in UHF sector');
-        warning.title = 'Incoming attack detected in UHF sector';
+        if (isThreat) {
+            warning.setAttribute('aria-label', 'Incoming attack detected in UHF sector');
+            warning.title = 'Incoming attack detected in UHF sector';
+        } else {
+            warning.setAttribute('aria-label', 'Incoming attack detected in UHF sector with no current success chance');
+            warning.title = 'Incoming attack detected in UHF sector with no current success chance';
+        }
         return;
     }
     warning.classList.remove('is-visible');
+    warning.classList.remove('is-safe');
     warning.setAttribute('aria-hidden', 'true');
     warning.removeAttribute('role');
     warning.removeAttribute('aria-label');
     warning.removeAttribute('title');
 }
-
-globalThis.setSpaceIncomingAttackWarning = setSpaceIncomingAttackWarning;
 
 function showSpaceGalaxyTab() {
     spaceGalaxyTabVisible = true;

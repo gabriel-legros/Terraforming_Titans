@@ -86,6 +86,8 @@ function extractIncomingAttacks(manager) {
         const remaining = Math.max(0, duration - elapsed);
         const power = Math.max(0, sanitizeOperationPower(operation));
         const reservedPower = sanitizeReservedPower(operation);
+        const assignedPower = Number(operation?.assignedPower);
+        const offensePower = Number(operation?.offensePower);
         const attacker = extractAttacker(manager, attackerId, factionCache);
         const displayName = sector.getDisplayName?.();
         const sectorName = displayName || sector.key || 'Unknown sector';
@@ -94,10 +96,13 @@ function extractIncomingAttacks(manager) {
             sectorName,
             attackerId,
             attackerName: attacker.name,
+            targetFactionId: operation?.targetFactionId || null,
             remainingMs: remaining,
             durationMs: duration,
             elapsedMs: elapsed,
             power,
+            assignedPower,
+            offensePower,
             reservedPower,
             uhfControl
         });
