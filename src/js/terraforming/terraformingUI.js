@@ -1901,7 +1901,7 @@ function updateLifeBox() {
 
       for (const z of getZones()) {
         const fr = calculateZonalSurfaceFractions(terraforming, z);
-        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.ammonia + fr.ammoniaIce + fr.biomass), 0);
+        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.ammonia + fr.ammoniaIce + fr.oxygen + fr.oxygenIce + fr.nitrogen + fr.nitrogenIce + fr.biomass), 0);
         const name = z.charAt(0).toUpperCase() + z.slice(1);
         lines.push(`${name}:`);
 
@@ -1913,6 +1913,10 @@ function updateLifeBox() {
         if (!isZeroPct(fr.co2_ice)) lines.push(`  Dry Ice: ${pct(fr.co2_ice)}%`);
         if (!isZeroPct(fr.ammonia)) lines.push(`  Ammonia: ${pct(fr.ammonia)}%`);
         if (!isZeroPct(fr.ammoniaIce)) lines.push(`  Ammonia Ice: ${pct(fr.ammoniaIce)}%`);
+        if (!isZeroPct(fr.oxygen)) lines.push(`  Oxygen: ${pct(fr.oxygen)}%`);
+        if (!isZeroPct(fr.oxygenIce)) lines.push(`  Oxygen Ice: ${pct(fr.oxygenIce)}%`);
+        if (!isZeroPct(fr.nitrogen)) lines.push(`  Nitrogen: ${pct(fr.nitrogen)}%`);
+        if (!isZeroPct(fr.nitrogenIce)) lines.push(`  Nitrogen Ice: ${pct(fr.nitrogenIce)}%`);
         if (!isZeroPct(fr.biomass)) lines.push(`  Biomass: ${pct(fr.biomass)}%`);
         lines.push('');
       }

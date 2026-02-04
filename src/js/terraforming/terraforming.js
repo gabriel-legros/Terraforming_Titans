@@ -165,7 +165,7 @@ const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
 let surfaceLiquidHeatCapacityConfigs = [];
 
 // Load utility functions when running under Node for tests
-var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance;
+var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance;
 var getFactoryTemperatureMaintenancePenaltyReductionHelper;
 var getAerostatMaintenanceMitigationHelper;
 var isBuildingEligibleForFactoryMitigationHelper;
@@ -175,6 +175,8 @@ waterCycleInstance = waterCycle;
 methaneCycleInstance = methaneCycle;
 co2CycleInstance = co2Cycle;
 ammoniaCycleInstance = ammoniaCycle;
+oxygenCycleInstance = oxygenCycle;
+nitrogenCycleInstance = nitrogenCycle;
 
 if (!cloudPropsOnlyHelper && typeof globalThis.cloudPropsOnly === 'function') {
     cloudPropsOnlyHelper = globalThis.cloudPropsOnly;
@@ -706,7 +708,7 @@ class Terraforming extends EffectableEntity{
         const availableGlobalOxygenGas = availableByKey.oxygen || 0;
 
         if (!this.cycles) {
-            this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance];
+            this.cycles = [waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance];
         }
 
         for (const cycle of this.cycles) {
@@ -1271,7 +1273,7 @@ class Terraforming extends EffectableEntity{
         const groundAlbedo = this.calculateGroundAlbedo();
         const fractions = (typeof calculateZonalSurfaceFractions === 'function')
             ? calculateZonalSurfaceFractions(this, zone)
-            : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, biomass: 0 };
+            : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, ammonia: 0, ammoniaIce: 0, oxygen: 0, oxygenIce: 0, nitrogen: 0, nitrogenIce: 0, biomass: 0 };
         return surfaceAlbedoMix(groundAlbedo, fractions);
     }
 

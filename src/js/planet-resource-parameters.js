@@ -139,6 +139,62 @@
           distribution: { production: 'area', consumption: 'currentAmount' },
         },
       },
+      liquidOxygen: {
+        name: 'Liquid Oxygen',
+        initialValue: 0,
+        unlocked: true,
+        unit: 'ton',
+        hideWhenSmall: true,
+        zonalConfig: {
+          keys: ['liquidOxygen'],
+          coverageKeys: ['liquidOxygen'],
+          coverageScale: 0.0001,
+          distributionKey: 'liquidOxygen',
+          distribution: { production: 'area', consumption: 'currentAmount' },
+        },
+      },
+      oxygenIce: {
+        name: 'Oxygen Ice',
+        initialValue: 0,
+        unlocked: true,
+        unit: 'ton',
+        hideWhenSmall: true,
+        zonalConfig: {
+          keys: ['oxygenIce', 'buriedOxygenIce'],
+          coverageKeys: ['oxygenIce'],
+          coverageScale: 0.01,
+          distributionKey: 'oxygenIce',
+          distribution: { production: 'area', consumption: 'currentAmount' },
+        },
+      },
+      liquidNitrogen: {
+        name: 'Liquid Nitrogen',
+        initialValue: 0,
+        unlocked: true,
+        unit: 'ton',
+        hideWhenSmall: true,
+        zonalConfig: {
+          keys: ['liquidNitrogen'],
+          coverageKeys: ['liquidNitrogen'],
+          coverageScale: 0.0001,
+          distributionKey: 'liquidNitrogen',
+          distribution: { production: 'area', consumption: 'currentAmount' },
+        },
+      },
+      nitrogenIce: {
+        name: 'Nitrogen Ice',
+        initialValue: 0,
+        unlocked: true,
+        unit: 'ton',
+        hideWhenSmall: true,
+        zonalConfig: {
+          keys: ['nitrogenIce', 'buriedNitrogenIce'],
+          coverageKeys: ['nitrogenIce'],
+          coverageScale: 0.01,
+          distributionKey: 'nitrogenIce',
+          distribution: { production: 'area', consumption: 'currentAmount' },
+        },
+      },
       biomass: {
         name: 'Biomass',
         hasCap: false,
@@ -181,7 +237,7 @@
     },
     atmospheric: {
       carbonDioxide: { name: 'CO2', initialValue: 23998810562847.49, unlocked:false , unit: 'ton' },
-      inertGas: { name: 'Inert Gas', initialValue: 1.075e12, unlocked:false , unit: 'ton' },
+      inertGas: { name: 'Nitrogen', initialValue: 1.075e12, unlocked:false , unit: 'ton' },
       oxygen: { name: 'Oxygen', initialValue: 3.25e10, unlocked:false , unit: 'ton' },
       atmosphericWater: { name: 'Water Vap.', initialValue:  19100402.066922974, unlocked:false , unit: 'ton' },
       greenhouseGas: {name: 'Safe GHG', initialValue : 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
@@ -249,6 +305,28 @@
         { category: 'surface', resource: 'ammoniaIce', label: 'Ammonia Ice' },
       ],
     },
+    oxygen: {
+      name: 'Oxygen',
+      surfaceKeys: { liquid: 'liquidOxygen', ice: 'oxygenIce', buriedIce: 'buriedOxygenIce' },
+      coverageKeys: { liquid: 'liquidOxygenCoverage', ice: 'oxygenIceCoverage' },
+      legacyZonalKey: 'zonalOxygen',
+      options: [
+        { category: 'atmospheric', resource: 'oxygen', label: 'Atmospheric Oxygen' },
+        { category: 'surface', resource: 'liquidOxygen', label: 'Liquid Oxygen' },
+        { category: 'surface', resource: 'oxygenIce', label: 'Oxygen Ice' },
+      ],
+    },
+    nitrogen: {
+      name: 'Nitrogen',
+      surfaceKeys: { liquid: 'liquidNitrogen', ice: 'nitrogenIce', buriedIce: 'buriedNitrogenIce' },
+      coverageKeys: { liquid: 'liquidNitrogenCoverage', ice: 'nitrogenIceCoverage' },
+      legacyZonalKey: 'zonalNitrogen',
+      options: [
+        { category: 'atmospheric', resource: 'inertGas', label: 'Atmospheric Nitrogen' },
+        { category: 'surface', resource: 'liquidNitrogen', label: 'Liquid Nitrogen' },
+        { category: 'surface', resource: 'nitrogenIce', label: 'Nitrogen Ice' },
+      ],
+    },
   };
 
   const surfaceLiquidHeatCapacityConfigs = [
@@ -278,6 +356,20 @@
       coverageKey: 'liquidAmmonia',
       density: 680,
       specificHeat: 4700,
+      fallbackDepth: 50,
+    },
+    {
+      key: 'liquidOxygen',
+      coverageKey: 'liquidOxygen',
+      density: 1140,
+      specificHeat: 1700,
+      fallbackDepth: 50,
+    },
+    {
+      key: 'liquidNitrogen',
+      coverageKey: 'liquidNitrogen',
+      density: 810,
+      specificHeat: 2000,
       fallbackDepth: 50,
     },
   ];

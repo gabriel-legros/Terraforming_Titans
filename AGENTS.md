@@ -87,6 +87,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Research cards now include per-item Hide/Unhide controls, and the completed toggle now shows or hides hidden entries.
 - Workers now display percent of free workers in the resource rate slot.
 - Atmospheric resource tooltips now estimate time to reach target pressure when below the minimum target.
+- Oxygen and nitrogen now have phase-change cycles (like water/CO₂/methane/ammonia), enabling liquid/ice surface oxygen plus liquid/ice surface nitrogen (tracked via Inert Gas).
 - Artificial world construction now supports prepaying costs; cost rows show prepaid amounts and the start button updates to Insufficient/Prepay/Start Construction based on remaining resources.
 - Artificial world selection now locks after any prepay until the prepay is discarded or construction completes.
 - Artificial world blueprint selections now persist across saves and planet travel.

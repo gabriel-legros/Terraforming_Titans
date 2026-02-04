@@ -115,6 +115,10 @@ const DEFAULT_SURFACE_ALBEDO = {
   hydrocarbonIce :0.50,
   ammonia: 0.12,
   ammoniaIce: 0.70,
+  oxygen: 0.15,
+  oxygenIce: 0.80,
+  nitrogen: 0.12,
+  nitrogenIce: 0.80,
   biomass: 0.20
 };
 
