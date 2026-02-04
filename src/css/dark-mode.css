@@ -942,8 +942,8 @@
 }
 
 .dark-mode .deep-mining-option {
-    background: #0e1421;
-    border-color: #202d42;
+    background-color: #2d2d2d;
+    border-color: #444;
 }
 
 .dark-mode .deep-mining-option-label {
