@@ -387,8 +387,8 @@ class GhgFactory extends Building {
             recipeKey = this.currentRecipeKey || 'ghg';
             resourceName = recipeKey === 'calcite' ? 'calciteAerosol' : 'greenhouseGas';
             reverse =
-              (recipeKey === 'ghg' && currentTemp >= B) ||
-              (recipeKey === 'calcite' && currentTemp <= A);
+              (recipeKey === 'ghg' && currentValue >= B) ||
+              (recipeKey === 'calcite' && currentValue <= A);
           }
         }
 
