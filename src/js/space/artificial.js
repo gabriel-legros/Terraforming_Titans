@@ -730,10 +730,7 @@ class ArtificialManager extends EffectableEntity {
 
     getPrepayState(selection, cost) {
         const signature = this.buildPrepaySignature(selection, cost);
-        if (this.prepay.signature !== signature) {
-            this.prepay.signature = signature;
-            this.prepay.paid = { metal: 0, superalloys: 0 };
-        }
+        this.prepay.signature = signature;
         const paid = this.prepay.paid;
         const remaining = this.getRemainingCost(cost, paid);
         const availability = this.getResourceAvailability(remaining);
@@ -790,7 +787,7 @@ class ArtificialManager extends EffectableEntity {
             this.prepay.paid[key] = (this.prepay.paid[key] || 0) + payload[key];
         });
         const nextState = this.getPrepayState(selection, cost);
-        this.updateUI(true);
+        this.updateUI(false);
         return { status: nextState.canStart ? 'ready' : 'prepaid', state: nextState };
     }
 

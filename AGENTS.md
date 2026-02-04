@@ -89,6 +89,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Artificial world selection now locks after any prepay until the prepay is discarded or construction completes.
 - Artificial world blueprint selections now persist across saves and planet travel.
 - Heat capacity calculations now include all liquid surface resources via a shared liquid configuration list.
+- Artificial world prepay now persists through selection changes; only the discard action clears it.
 
 ## Prestige systems
 Two reset layers control long term progression:
