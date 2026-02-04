@@ -1930,6 +1930,8 @@ function updateArtificialUI(options = {}) {
   const draft = manager.getDraftSelection();
   let sectorsReady = false;
   let filterReady = false;
+  const sectorFocused = document.activeElement === artificialUICache.sector;
+  const filterFocused = document.activeElement === artificialUICache.sectorFilter;
 
   // Populate sector selector
   if (artificialUICache.sector) {
@@ -1952,7 +1954,7 @@ function updateArtificialUI(options = {}) {
     const filterResources = buildArtificialSectorFilterOptions(sortedSectors);
     filterReady = filterResources.length > 0;
     const filterSig = JSON.stringify(filterResources);
-    if (artificialUICache.sectorFilter.dataset.lastFilterList !== filterSig) {
+    if ((!filterFocused || force) && artificialUICache.sectorFilter.dataset.lastFilterList !== filterSig) {
       const filterFrag = document.createDocumentFragment();
       const allOpt = document.createElement('option');
       allOpt.value = 'all';
@@ -1968,11 +1970,11 @@ function updateArtificialUI(options = {}) {
       artificialUICache.sectorFilter.appendChild(filterFrag);
       artificialUICache.sectorFilter.dataset.lastFilterList = filterSig;
     }
-    if (!artificialUICache.sectorFilter.value) {
+    if ((!filterFocused || force) && !artificialUICache.sectorFilter.value) {
       artificialUICache.sectorFilter.value = 'all';
     }
     if (!project && draft.sectorFilter && filterReady) {
-      const shouldApplyDraft = force
+      const shouldApplyDraft = (force || !filterFocused)
         || (artificialUICache.sectorFilter.dataset.lastDraftApplied !== draft.sectorFilter
           && document.activeElement !== artificialUICache.sectorFilter);
       if (shouldApplyDraft) {
@@ -2000,7 +2002,7 @@ function updateArtificialUI(options = {}) {
         worlds: manager?.getTerraformedWorldCountForSector?.(sector) || 0
       }))
     });
-    if (artificialUICache.sector.dataset.lastSectorList !== sectorSig) {
+    if ((!sectorFocused || force) && artificialUICache.sector.dataset.lastSectorList !== sectorSig) {
       const frag = document.createDocumentFragment();
       const autoOpt = document.createElement('option');
       autoOpt.value = 'auto';
@@ -2032,7 +2034,7 @@ function updateArtificialUI(options = {}) {
     if (project && project.sector) {
       artificialUICache.sector.value = project.sector;
     } else if (!project && draft.sector && sectorsReady) {
-      const shouldApplyDraft = force
+      const shouldApplyDraft = (force || !sectorFocused)
         || (artificialUICache.sector.dataset.lastDraftApplied !== draft.sector
           && document.activeElement !== artificialUICache.sector);
       if (shouldApplyDraft) {
@@ -2042,14 +2044,14 @@ function updateArtificialUI(options = {}) {
           artificialUICache.sector.dataset.lastDraftApplied = draft.sector;
         }
       }
-    } else if (!artificialUICache.sector.value && !draft.sector) {
+    } else if ((!sectorFocused || force) && !artificialUICache.sector.value && !draft.sector) {
       artificialUICache.sector.value = 'auto';
     } else if (!Array.from(artificialUICache.sector.options).some(option => option.value === artificialUICache.sector.value)) {
       if (!draft.sector) {
         artificialUICache.sector.value = 'auto';
       }
     }
-    if (!project && draft.sector && artificialUICache.sector.value === 'auto') {
+    if (!project && draft.sector && artificialUICache.sector.value === 'auto' && (!sectorFocused || force)) {
       const hasDraft = Array.from(artificialUICache.sector.options).some(option => option.value === draft.sector);
       if (hasDraft) {
         artificialUICache.sector.value = draft.sector;
