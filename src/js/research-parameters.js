@@ -2251,7 +2251,7 @@ const researchParameters = {
       {
         id: 'graphene_mastery',
         name: 'Graphene Mastery',
-        description: 'Unlocks advanced graphene processing techniques for industrial use.',
+        description: 'Unlocks advanced graphene processing techniques for industrial use as a metal substitute.',
         cost: { advancedResearch: 9_000_000 },
         prerequisites: [],
         effects: [
