@@ -822,7 +822,7 @@ class GalacticMarketProject extends Project {
     }
 
     const seconds = deltaTime / 1000;
-    const rateMultiplier = applyRates ? productivity : 1;
+    const rateMultiplier = 1;
     const tradeScale = this.getKesslerTradeScale();
 
     this.buySelections.forEach(({ category, resource, quantity }) => {
