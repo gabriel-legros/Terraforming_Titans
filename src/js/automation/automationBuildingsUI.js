@@ -131,12 +131,23 @@ function buildAutomationBuildingsUI() {
   applyNextTravelText.textContent = 'Combination on Next Travel';
   const applyNextTravelSelect = document.createElement('select');
   applyNextTravelSelect.classList.add('building-automation-next-travel-select');
-  applyNextTravelLabel.append(applyNextTravelText, applyNextTravelSelect);
+  const applyNextTravelPersistToggle = document.createElement('input');
+  applyNextTravelPersistToggle.type = 'checkbox';
+  applyNextTravelPersistToggle.classList.add('building-automation-next-travel-persist-toggle');
+  const applyNextTravelPersistText = document.createElement('span');
+  applyNextTravelPersistText.textContent = 'All future travels';
+  applyNextTravelPersistText.classList.add('building-automation-next-travel-persist-text');
+  applyNextTravelLabel.append(
+    applyNextTravelText,
+    applyNextTravelSelect,
+    applyNextTravelPersistToggle,
+    applyNextTravelPersistText
+  );
   applyHeader.append(applyTitle);
   applySection.appendChild(applyHeader);
   const applyNextTravelRow = document.createElement('div');
   applyNextTravelRow.classList.add('building-automation-next-travel-row');
-  applyNextTravelRow.appendChild(applyNextTravelLabel);
+  applyNextTravelRow.append(applyNextTravelLabel);
   applySection.appendChild(applyNextTravelRow);
 
   const combinationRow = document.createElement('div');
@@ -203,6 +214,7 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderSelectedList = selectedList;
   automationElements.buildingsApplyCombinationButton = applyCombinationButton;
   automationElements.buildingsApplyNextTravelSelect = applyNextTravelSelect;
+  automationElements.buildingsApplyNextTravelPersistToggle = applyNextTravelPersistToggle;
   automationElements.buildingsCombinationSelect = combinationSelect;
   automationElements.buildingsCombinationNameInput = combinationNameInput;
   automationElements.buildingsCombinationNewButton = combinationNewButton;
@@ -240,6 +252,7 @@ function updateBuildingsAutomationUI() {
     buildingsApplyHint,
     buildingsApplyCombinationButton,
     buildingsApplyNextTravelSelect,
+    buildingsApplyNextTravelPersistToggle,
     buildingsAddApplyButton,
     buildingsCombinationSelect,
     buildingsCombinationNameInput,
@@ -376,7 +389,9 @@ function updateBuildingsAutomationUI() {
   const nextTravelCombo = nextTravelComboId ? automation.getCombinationById(nextTravelComboId) : null;
   if (nextTravelComboId && !nextTravelCombo) {
     automation.nextTravelCombinationId = null;
+    automation.nextTravelCombinationPersistent = false;
   }
+  automation.nextTravelCombinationPersistent = automation.nextTravelCombinationPersistent && !!automation.nextTravelCombinationId;
   if (document.activeElement !== buildingsApplyNextTravelSelect) {
     buildingsApplyNextTravelSelect.textContent = '';
     const noneOption = document.createElement('option');
@@ -393,6 +408,8 @@ function updateBuildingsAutomationUI() {
       ? String(automation.nextTravelCombinationId)
       : '';
   }
+  buildingsApplyNextTravelPersistToggle.checked = automation.nextTravelCombinationPersistent;
+  buildingsApplyNextTravelPersistToggle.disabled = !automation.nextTravelCombinationId;
 
   if (document.activeElement !== buildingsCombinationSelect) {
     buildingsCombinationSelect.textContent = '';
@@ -607,6 +624,7 @@ function attachBuildingsAutomationHandlers() {
     buildingsBuilderClearButton,
     buildingsApplyCombinationButton,
     buildingsApplyNextTravelSelect,
+    buildingsApplyNextTravelPersistToggle,
     buildingsCombinationSelect,
     buildingsCombinationNameInput,
     buildingsCombinationNewButton,
@@ -760,6 +778,14 @@ function attachBuildingsAutomationHandlers() {
   buildingsApplyNextTravelSelect.addEventListener('change', (event) => {
     const comboId = event.target.value;
     automationManager.buildingsAutomation.nextTravelCombinationId = comboId ? Number(comboId) : null;
+    automationManager.buildingsAutomation.nextTravelCombinationPersistent = automationManager.buildingsAutomation.nextTravelCombinationPersistent
+      && !!automationManager.buildingsAutomation.nextTravelCombinationId;
+    buildingsApplyNextTravelPersistToggle.checked = automationManager.buildingsAutomation.nextTravelCombinationPersistent;
+    buildingsApplyNextTravelPersistToggle.disabled = !automationManager.buildingsAutomation.nextTravelCombinationId;
+  });
+  buildingsApplyNextTravelPersistToggle.addEventListener('change', (event) => {
+    automationManager.buildingsAutomation.nextTravelCombinationPersistent = event.target.checked
+      && !!automationManager.buildingsAutomation.nextTravelCombinationId;
   });
 
   buildingsCombinationSelect.addEventListener('change', (event) => {

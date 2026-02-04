@@ -501,9 +501,12 @@ function initializeGameState(options = {}) {
   applyPlanetParameterEffects();
   hazardManager.ensureCrusaderPresence(terraforming);
   if (preserveManagers && automationManager.buildingsAutomation.nextTravelCombinationId) {
-    automationManager.buildingsAutomation.applyCombination(automationManager.buildingsAutomation.nextTravelCombinationId);
-    automationManager.buildingsAutomation.applyPresets();
-    automationManager.buildingsAutomation.nextTravelCombinationId = null;
+    const buildingsAutomation = automationManager.buildingsAutomation;
+    buildingsAutomation.applyCombination(buildingsAutomation.nextTravelCombinationId);
+    buildingsAutomation.applyPresets();
+    if (!buildingsAutomation.nextTravelCombinationPersistent) {
+      buildingsAutomation.nextTravelCombinationId = null;
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   }

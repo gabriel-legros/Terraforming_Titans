@@ -52,6 +52,7 @@ class BuildingAutomation {
     this.collapsed = false;
     this.masterEnabled = true;
     this.nextTravelCombinationId = null;
+    this.nextTravelCombinationPersistent = false;
     this.nextPresetId = 1;
     this.nextAssignmentId = 1;
     this.nextCombinationId = 1;
@@ -169,6 +170,7 @@ class BuildingAutomation {
     this.combinations = this.combinations.filter(combo => combo.id !== id);
     if (this.nextTravelCombinationId === id) {
       this.nextTravelCombinationId = null;
+      this.nextTravelCombinationPersistent = false;
     }
   }
 
@@ -487,6 +489,7 @@ class BuildingAutomation {
       collapsed: this.collapsed,
       masterEnabled: this.masterEnabled,
       nextTravelCombinationId: this.nextTravelCombinationId,
+      nextTravelCombinationPersistent: this.nextTravelCombinationPersistent,
       nextPresetId: this.nextPresetId,
       nextAssignmentId: this.nextAssignmentId,
       nextCombinationId: this.nextCombinationId
@@ -518,6 +521,7 @@ class BuildingAutomation {
     this.collapsed = !!data.collapsed;
     this.masterEnabled = data.masterEnabled !== false;
     this.nextTravelCombinationId = data.nextTravelCombinationId ? Number(data.nextTravelCombinationId) : null;
+    this.nextTravelCombinationPersistent = data.nextTravelCombinationPersistent === true && !!this.nextTravelCombinationId;
     if (!this.nextTravelCombinationId && data.applyOnNextTravel) {
       this.nextTravelCombinationId = this.addCombination('Next Travel', this.assignments);
     }

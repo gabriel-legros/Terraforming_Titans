@@ -58,6 +58,7 @@ const automationElements = {
   buildingsApplyHint: null,
   buildingsApplyCombinationButton: null,
   buildingsApplyNextTravelSelect: null,
+  buildingsApplyNextTravelPersistToggle: null,
   buildingsCombinationSelect: null,
   buildingsCombinationNameInput: null,
   buildingsCombinationNewButton: null,
