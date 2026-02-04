@@ -9,6 +9,7 @@ const R_AIR = 287;
 const KG_PER_TON = 1000;
 const WATER_DENSITY = 1000; // kg/m³
 const WATER_VOLUMETRIC_HEAT_CAPACITY = 4.2e6; // J/m³/K
+const EMPTY_LIQUID_CONFIGS = [];
 const DEFAULT_OCEAN_MIX_DEPTH = 50.0; // m
 
 // ===== Tunables (safe defaults) ======================================
@@ -266,8 +267,85 @@ function calculateCloudAlbedoContributions({
   };
 }
 
-function oceanHeatCapacity(fOcean, options) {
-  const coverage = Math.max(0, Math.min(1, fOcean));
+function liquidHeatCapacity(surfaceFractions, options) {
+  const liquidConfigs = options?.liquidConfigs || EMPTY_LIQUID_CONFIGS;
+  if (liquidConfigs.length === 0) {
+    return oceanHeatCapacity(surfaceFractions, options);
+  }
+
+  const zoneArea = Math.max(0, options?.zoneArea ?? 0);
+  const liquidCoverageByKey = options?.liquidCoverageByKey || {};
+  const liquidMassByKey = options?.liquidMassByKey || {};
+
+  let totalCoverage = 0;
+  for (const config of liquidConfigs) {
+    totalCoverage += liquidCoverageByKey[config.coverageKey] || 0;
+  }
+  const scale = totalCoverage > 1 ? (1 / totalCoverage) : 1;
+
+  let totalCoverageScaled = 0;
+  let weightedCapacity = 0;
+  for (const config of liquidConfigs) {
+    const coverage = (liquidCoverageByKey[config.coverageKey] || 0) * scale;
+    if (!(coverage > 0)) {
+      continue;
+    }
+    totalCoverageScaled += coverage;
+
+    const density = config.density || WATER_DENSITY;
+    const specificHeat = config.specificHeat || (WATER_VOLUMETRIC_HEAT_CAPACITY / WATER_DENSITY);
+    const volumetricHeatCapacity = density * specificHeat;
+    const fallbackDepth = config.fallbackDepth ?? DEFAULT_OCEAN_MIX_DEPTH;
+    const liquidTon = liquidMassByKey[config.key] || 0;
+
+    let capacityPerArea = volumetricHeatCapacity * fallbackDepth;
+    if (zoneArea > 0 && liquidTon > 0) {
+      const liquidArea = zoneArea * coverage;
+      if (liquidArea > 0) {
+        const volume_m3 = (liquidTon * KG_PER_TON) / density;
+        const depth = volume_m3 / liquidArea;
+        if (depth > 0) {
+          capacityPerArea = volumetricHeatCapacity * depth;
+        }
+      }
+    }
+    weightedCapacity += capacityPerArea * coverage;
+  }
+
+  if (totalCoverageScaled > 0) {
+    return weightedCapacity / totalCoverageScaled;
+  }
+  return 0;
+}
+
+function getLiquidCoverageTotal(options, surfaceFractions) {
+  const liquidConfigs = options?.liquidConfigs || EMPTY_LIQUID_CONFIGS;
+  if (liquidConfigs.length > 0) {
+    const liquidCoverageByKey = options?.liquidCoverageByKey || {};
+    let totalCoverage = 0;
+    for (const config of liquidConfigs) {
+      totalCoverage += liquidCoverageByKey[config.coverageKey] || 0;
+    }
+    if (totalCoverage > 1) {
+      return 1;
+    }
+    if (totalCoverage < 0) {
+      return 0;
+    }
+    return totalCoverage;
+  }
+  const oceanCoverage = surfaceFractions?.ocean || 0;
+  if (oceanCoverage > 1) {
+    return 1;
+  }
+  if (oceanCoverage < 0) {
+    return 0;
+  }
+  return oceanCoverage;
+}
+
+function oceanHeatCapacity(surfaceFractions, options) {
+  const coverage = Math.max(0, Math.min(1, surfaceFractions?.ocean || 0));
   if (!(coverage > 0)) return 0;
 
   const zoneArea = Math.max(0, options?.zoneArea ?? 0);
@@ -300,13 +378,13 @@ function autoSlabHeatCapacity(
   options = {}
 ) {
   const f = surfaceFractions || {};
-  const fOcean = f.ocean || 0.0;
   const fIce = f.ice || 0.0;
-  const fOther = 1.0 - fOcean - fIce;
+  const liquidCoverage = getLiquidCoverageTotal(options, f);
+  const fOther = Math.max(0, 1.0 - liquidCoverage - fIce);
 
   const hSoil = Math.sqrt(kappaSoil * rotationPeriodH * 3600 / Math.PI);
   const CSoil = rhoCSoil * hSoil;
-  const COcean = oceanHeatCapacity(fOcean, options);
+  const COcean = liquidHeatCapacity(f, options);
   const CIce = 1.9e6 * 0.05;
 
   const cpOverride = options?.airSpecificHeat;
@@ -323,7 +401,7 @@ function autoSlabHeatCapacity(
   const atmCapacity = options?.atmosphereCapacity;
   const CAtm = Number.isFinite(atmCapacity) ? atmCapacity : fallbackAtmosphere;
 
-  return fOther * CSoil + fOcean * COcean + fIce * CIce + CAtm;
+  return fOther * CSoil + liquidCoverage * COcean + fIce * CIce + CAtm;
 }
 
 function effectiveTemp(albedo, flux) {

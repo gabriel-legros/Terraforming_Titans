@@ -251,6 +251,37 @@
     },
   };
 
+  const surfaceLiquidHeatCapacityConfigs = [
+    {
+      key: 'liquidWater',
+      coverageKey: 'liquidWater',
+      density: 1000,
+      specificHeat: 4200,
+      fallbackDepth: 50,
+    },
+    {
+      key: 'liquidCO2',
+      coverageKey: 'liquidCO2',
+      density: 1100,
+      specificHeat: 2100,
+      fallbackDepth: 50,
+    },
+    {
+      key: 'liquidMethane',
+      coverageKey: 'liquidMethane',
+      density: 450,
+      specificHeat: 3500,
+      fallbackDepth: 50,
+    },
+    {
+      key: 'liquidAmmonia',
+      coverageKey: 'liquidAmmonia',
+      density: 680,
+      specificHeat: 4700,
+      fallbackDepth: 50,
+    },
+  ];
+
   try {
     window.defaultPlanetResources = defaultPlanetResources;
   } catch (error) {
@@ -264,13 +295,31 @@
   }
 
   try {
+    window.surfaceLiquidHeatCapacityConfigs = surfaceLiquidHeatCapacityConfigs;
+  } catch (error) {
+    // Browser-only export.
+  }
+
+  try {
     global.resourcePhaseGroups = resourcePhaseGroups;
   } catch (error) {
     // Global not available.
   }
 
   try {
+    global.surfaceLiquidHeatCapacityConfigs = surfaceLiquidHeatCapacityConfigs;
+  } catch (error) {
+    // Global not available.
+  }
+
+  try {
     module.exports = defaultPlanetResources;
+  } catch (error) {
+    // Module export not available in the browser.
+  }
+
+  try {
+    module.exports.surfaceLiquidHeatCapacityConfigs = surfaceLiquidHeatCapacityConfigs;
   } catch (error) {
     // Module export not available in the browser.
   }

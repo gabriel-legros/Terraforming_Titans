@@ -162,6 +162,7 @@ const STEFAN_BOLTZMANN = 5.670374419e-8;
 const MIN_SURFACE_HEAT_CAPACITY = 100;
 const AUTO_SLAB_ATMOS_CP = 850;
 const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
+let surfaceLiquidHeatCapacityConfigs = [];
 
 // Load utility functions when running under Node for tests
 var getZonePercentage, estimateCoverage, waterCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance;
@@ -180,6 +181,34 @@ if (!cloudPropsOnlyHelper && typeof globalThis.cloudPropsOnly === 'function') {
 }
 if (!calculateCloudAlbedoContributionsHelper && typeof calculateCloudAlbedoContributions === 'function') {
     calculateCloudAlbedoContributionsHelper = calculateCloudAlbedoContributions;
+}
+
+try {
+  surfaceLiquidHeatCapacityConfigs = window.surfaceLiquidHeatCapacityConfigs || [];
+} catch (error) {
+  surfaceLiquidHeatCapacityConfigs = [];
+}
+try {
+  surfaceLiquidHeatCapacityConfigs = global.surfaceLiquidHeatCapacityConfigs || surfaceLiquidHeatCapacityConfigs;
+} catch (error) {
+  // Global not available.
+}
+
+function getSurfaceLiquidHeatCapacityConfigs() {
+  if (surfaceLiquidHeatCapacityConfigs.length > 0) {
+    return surfaceLiquidHeatCapacityConfigs;
+  }
+  try {
+    return window.surfaceLiquidHeatCapacityConfigs || [];
+  } catch (error) {
+    // Browser-only export.
+  }
+  try {
+    return global.surfaceLiquidHeatCapacityConfigs || [];
+  } catch (error) {
+    // Global not available.
+  }
+  return [];
 }
 
 function getEffectiveLifeFraction(terraforming) {
@@ -319,6 +348,7 @@ class Terraforming extends EffectableEntity{
         pressureByKey: {},
         availableByKey: {},
     };
+    this.heatCapacityCache = null;
     this.exosphereHeightMeters = 0;
 
     this.initialValuesCalculated = false;
@@ -953,21 +983,19 @@ class Terraforming extends EffectableEntity{
     let weightedTrendTemp = 0;
     let weightedEqTemp = 0;
     let weightedFluxUnpenalized = 0;
-    const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(this.resources.atmospheric, surfacePressurePa, gSurface);
-    const baseSlabOptions = { atmosphereCapacity: atmosphericHeatCapacity };
+    const heatCapacityCache = this.getHeatCapacity();
+    const baseSlabOptions = { atmosphereCapacity: heatCapacityCache.atmosphericHeatCapacity };
     for (const zone of ORDER) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
 
-        const zoneFractions = (typeof calculateZonalSurfaceFractions === 'function')
-        ? calculateZonalSurfaceFractions(this, zone)
-        : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, biomass: 0 };
-
+        const zoneCapacity = heatCapacityCache.zones[zone];
+        const zoneFractions = zoneCapacity.fractions;
         const pct = this.getZoneWeight(zone);
         if (pct <= 0) {
             continue;
         }
-        const zoneArea = (this.celestialParameters.surfaceArea || 0) * pct;
+        const zoneArea = zoneCapacity.zoneArea;
         const slabOptions = {
             ...baseSlabOptions,
             zoneArea,
@@ -982,23 +1010,9 @@ class Terraforming extends EffectableEntity{
         });
 
         // Slab heat capacity (J/m²/K) including atmosphere + ocean/ice/soil
-        const Cslab = (typeof autoSlabHeatCapacity === 'function')
-        ? autoSlabHeatCapacity(
-            rotationPeriodH,
-            surfacePressureBar,
-            zoneFractions,
-            gSurface,
-            undefined,
-            undefined,
-            slabOptions
-          )
-        : // Fallback: atmosphere only
-            (Number.isFinite(atmosphericHeatCapacity)
-              ? atmosphericHeatCapacity
-              : (1004 /* C_P_AIR */) * (surfacePressurePa / Math.max(gSurface, 1e-6)));
-
         const area = zoneArea; // m²
-        const capacityPerArea = Math.max(Cslab, MIN_SURFACE_HEAT_CAPACITY);
+        const Cslab = zoneCapacity.Cslab;
+        const capacityPerArea = zoneCapacity.capacityPerArea;
 
         z[zone] = {
             mean:  zTemps.mean,
@@ -1341,6 +1355,75 @@ class Terraforming extends EffectableEntity{
         return cache;
     }
 
+    getHeatCapacity() {
+        return this.heatCapacityCache || this._updateHeatCapacityCache();
+    }
+
+    _updateHeatCapacityCache() {
+        const rotationPeriodH = Math.abs(this.celestialParameters.rotationPeriod) || 24;
+        const gSurface = this.celestialParameters.gravity || 9.81;
+        const { totalMass } = this.calculateAtmosphericComposition();
+        const surfacePressurePa = calculateAtmosphericPressure(
+            totalMass / 1000,
+            gSurface,
+            this.celestialParameters.radius
+        );
+        const surfacePressureBar = surfacePressurePa / 1e5;
+        const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(
+            this.resources.atmospheric,
+            surfacePressurePa,
+            gSurface
+        );
+        const liquidConfigs = getSurfaceLiquidHeatCapacityConfigs();
+        const baseSlabOptions = {
+            atmosphereCapacity: atmosphericHeatCapacity,
+            liquidConfigs
+        };
+        const zones = getZones();
+        const zoneCache = {};
+        for (const zone of zones) {
+            const zoneFractions = calculateZonalSurfaceFractions(this, zone);
+            const zoneArea = (this.celestialParameters.surfaceArea || 0) * this.getZoneWeight(zone);
+            const liquidCoverageByKey = {};
+            const liquidMassByKey = {};
+            for (const config of liquidConfigs) {
+                liquidCoverageByKey[config.coverageKey] = this.zonalCoverageCache[zone]?.[config.coverageKey] || 0;
+                liquidMassByKey[config.key] = this.zonalSurface[zone]?.[config.key] || 0;
+            }
+            const slabOptions = {
+                ...baseSlabOptions,
+                zoneArea,
+                liquidCoverageByKey,
+                liquidMassByKey,
+                zoneLiquidWater: this.zonalSurface[zone]?.liquidWater || 0
+            };
+            const Cslab = autoSlabHeatCapacity(
+                rotationPeriodH,
+                surfacePressureBar,
+                zoneFractions,
+                gSurface,
+                undefined,
+                undefined,
+                slabOptions
+            );
+            zoneCache[zone] = {
+                fractions: zoneFractions,
+                zoneArea,
+                Cslab,
+                capacityPerArea: Math.max(Cslab, MIN_SURFACE_HEAT_CAPACITY)
+            };
+        }
+
+        this.heatCapacityCache = {
+            rotationPeriodH,
+            surfacePressurePa,
+            surfacePressureBar,
+            atmosphericHeatCapacity,
+            zones: zoneCache
+        };
+        return this.heatCapacityCache;
+    }
+
     _updateExosphereHeightCache() {
         const atmospheric = this.resources.atmospheric;
         let totalMassTons = 0;
@@ -1372,6 +1455,7 @@ class Terraforming extends EffectableEntity{
       this.synchronizeGlobalResources();
       this._updateZonalCoverageCache(); // New call at the start of the update tick
       this._updateAtmosphericPressureCache();
+      this._updateHeatCapacityCache();
 
       //First update luminosity
       this.updateLuminosity();

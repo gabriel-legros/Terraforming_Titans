@@ -88,6 +88,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Artificial world construction now supports prepaying costs; cost rows show prepaid amounts and the start button updates to Insufficient/Prepay/Start Construction based on remaining resources.
 - Artificial world selection now locks after any prepay until the prepay is discarded or construction completes.
 - Artificial world blueprint selections now persist across saves and planet travel.
+- Heat capacity calculations now include all liquid surface resources via a shared liquid configuration list.
 
 ## Prestige systems
 Two reset layers control long term progression:
