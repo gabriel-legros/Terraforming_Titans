@@ -243,7 +243,7 @@ class Resource extends EffectableEntity {
     } catch (error) {
       kesslerActive = false;
     }
-    if (kesslerActive) {
+    if (kesslerActive && this.name !== 'metal' && this.name !== 'research') {
       solisBonus = Math.min(solisBonus, 1000);
     }
     bonus += solisBonus;

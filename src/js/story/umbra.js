@@ -120,7 +120,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 21,
     activePlanet: 'umbra',
-    narrative: "Mary : 'Hold on...  why are the crusaders over 2 meters tall?  Kane, what the hell are you doing?' \n Evelyn : 'I can answer this Mary.  Something before you were born.  PANDORA, in its work to perfect the human genome also... created enhanced humans.  Taller, stronger, smarter, with 3 hearts and 6 lungs, capable of regenerating from almost any wound.  It was kept as a secret but... many scientists had to know anyway.  I... was one of them.  I believed they all died on Earth though.  That means Kane got a hold of the recipe.'",
+    narrative: "Mary : 'Hold on...  why are the crusaders over 2 meters tall?  Kane, what the hell are you doing?' \n Evelyn : 'I can answer this Mary.  Something from before you were born.  PANDORA, in its work to perfect the human genome also... created enhanced humans.  Taller, stronger, smarter, with 3 hearts and 6 lungs, capable of regenerating from almost any wound.  It was kept as a secret but... many scientists had to know anyway.  I... was one of them.  I believed they all died on Earth though.  That means Kane got a hold of the recipe.'",
     prerequisites: ['chapter21.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
