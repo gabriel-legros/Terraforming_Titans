@@ -670,7 +670,7 @@ progressVenus.chapters.push(
     objectives: [],
     reward: [
       { target: 'galaxyManager', type: 'enable', targetId: 'space-galaxy' },
-      { target: 'tab', targetId: 'space', type: 'activateTab', onLoad: false },
+      { target: 'tab', targetId: 'space', type: 'activateTab', onLoad: false, onTravel: false },
       {
         target: 'global',
         type: 'activateSubtab',
@@ -678,7 +678,8 @@ progressVenus.chapters.push(
         contentClass: 'space-subtab-content',
         targetId: 'space-galaxy',
         unhide: true,
-        onLoad: false
+        onLoad: false,
+        onTravel: false
       }
     ]
   },

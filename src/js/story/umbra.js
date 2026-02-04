@@ -59,7 +59,8 @@ progressUmbra.chapters.push(
         target: 'tab',
         targetId: 'terraforming',
         type: 'activateTab',
-        onLoad: false
+        onLoad: false,
+        onTravel: false
       },
       {
         target: 'global',
@@ -68,7 +69,8 @@ progressUmbra.chapters.push(
         contentClass: 'terraforming-subtab-content',
         targetId: 'hazard-terraforming',
         unhide: true,
-        onLoad: false
+        onLoad: false,
+        onTravel: false
       }
     ]
   },

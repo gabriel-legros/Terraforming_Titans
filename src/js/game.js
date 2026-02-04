@@ -189,6 +189,7 @@ function initializeGameState(options = {}) {
   const preserveManagers = options.preserveManagers || false;
   const preserveJournal = options.preserveJournal || false;
   const skipStoryInitialization = options.skipStoryInitialization || false;
+  globalGameIsTraveling = preserveManagers && !globalGameIsLoadingFromSave;
   let savedAdvancedResearch = null;
   let savedAlienArtifact = null;
   let savedProjectTravelState = null;
@@ -506,6 +507,7 @@ function initializeGameState(options = {}) {
     queueAutomationUIRefresh();
     updateAutomationUI();
   }
+  globalGameIsTraveling = false;
 }
 
 function updateLogic(delta) {

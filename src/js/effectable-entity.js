@@ -73,7 +73,8 @@ class EffectableEntity {
   
   // Method to apply a specific effect
   applyEffect(effect) {
-    if(!('onLoad' in effect && effect.onLoad == false && globalGameIsLoadingFromSave))
+    if(!('onLoad' in effect && effect.onLoad == false && globalGameIsLoadingFromSave)
+      && !('onTravel' in effect && effect.onTravel == false && globalGameIsTraveling))
     {
       switch (effect.type) {
         case 'increaseResourceGain':

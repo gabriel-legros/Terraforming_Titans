@@ -1,4 +1,5 @@
 globalGameIsLoadingFromSave = false;
+globalGameIsTraveling = false;
 
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;

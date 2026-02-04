@@ -90,6 +90,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Artificial world blueprint selections now persist across saves and planet travel.
 - Heat capacity calculations now include all liquid surface resources via a shared liquid configuration list.
 - Artificial world prepay now persists through selection changes; only the discard action clears it.
+- Story effects now respect an `onTravel: false` flag during planet travel reapply, and Umbra 21.1 tab/subtab activation uses it to avoid forcing the UI on travel.
 
 ## Prestige systems
 Two reset layers control long term progression:
