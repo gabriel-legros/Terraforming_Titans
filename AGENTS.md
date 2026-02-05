@@ -98,6 +98,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Story effects now respect an `onTravel: false` flag during planet travel reapply, and Umbra 21.1 tab/subtab activation uses it to avoid forcing the UI on travel.
 - Galactic Market cost/gain estimates now ignore productivity and use a fixed 1x rate.
 - Galactic Market +Max now cancels row sells before buying to avoid simultaneous sell/buy on the same resource.
+- Hazardous biomass crusader focus dropdown now keeps the selected zone instead of reverting to Any.
 
 ## Prestige systems
 Two reset layers control long term progression:

@@ -1,5 +1,6 @@
 let getZonePercentageHelper;
 let zonesList;
+let getZonesHelper;
 
 const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = 5;
 
@@ -14,14 +15,16 @@ try {
 }
 
 try {
-  ({ getZonePercentage: getZonePercentageHelper, ZONES: zonesList } = require('../zones.js'));
+  ({ getZonePercentage: getZonePercentageHelper, ZONES: zonesList, getZones: getZonesHelper } = require('../zones.js'));
 } catch (error) {
   try {
     getZonePercentageHelper = getZonePercentage;
     zonesList = ZONES;
+    getZonesHelper = getZones;
   } catch (innerError) {
     getZonePercentageHelper = null;
     zonesList = null;
+    getZonesHelper = null;
   }
 }
 
@@ -120,6 +123,30 @@ class HazardousBiomassHazard {
     const hazardousResource = resourcesState?.surface?.hazardousBiomass;
     const hazardousValue = Number.isFinite(hazardousResource?.value) ? hazardousResource.value : 0;
     return hazardousValue > 0;
+  }
+
+  getZoneKeys(terraforming) {
+    let zoneKeys = null;
+
+    try {
+      zoneKeys = getZonesHelper(terraforming);
+    } catch (error) {
+      zoneKeys = null;
+    }
+
+    try {
+      return zoneKeys.slice();
+    } catch (error) {
+      // fall through to alternative sources
+    }
+
+    try {
+      return zonesList.slice();
+    } catch (error) {
+      // fall through to fallback
+    }
+
+    return ['tropical', 'temperate', 'polar'];
   }
 
   isCleared(terraforming) {
