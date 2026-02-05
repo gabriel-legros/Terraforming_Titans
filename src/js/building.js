@@ -132,7 +132,17 @@ class Building extends EffectableEntity {
     }
 
   getBuildLimit() {
-    return Infinity;
+    let limit = Infinity;
+    const deposits = this.requiresDeposit?.underground || {};
+
+    for (const deposit in deposits) {
+      const available = resources.underground[deposit].value;
+      const perUnit = deposits[deposit];
+      const possible = Math.floor(available / perUnit);
+      limit = Math.min(limit, possible);
+    }
+
+    return limit;
   }
 
   getBuildLimitRemaining() {
