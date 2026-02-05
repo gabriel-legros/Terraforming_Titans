@@ -86,6 +86,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Patience now banks at 2 seconds per second per world from arrival, is claimed on terraform completion, continues earning until a 3-hour world cap, and the Patience UI shows a dedicated terraforming patience card.
 - GHG factory automation now offers an avg T vs optical depth target selector, and optical depth mode ignores calcite while clearing it before building up GHG.
 - Research cards now include per-item Hide/Unhide controls, and the completed toggle now shows or hides hidden entries.
+- Day-night cycle display now stays dark blue and reads "Too fast to display" when the period drops below 0.5 hours.
 - Workers now display percent of free workers in the resource rate slot.
 - Atmospheric resource tooltips now estimate time to reach target pressure when below the minimum target.
 - Oxygen and nitrogen now have phase-change cycles (like water/CO₂/methane/ammonia), enabling liquid/ice surface oxygen plus liquid/ice surface nitrogen (tracked via Inert Gas).

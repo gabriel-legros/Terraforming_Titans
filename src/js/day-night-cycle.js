@@ -110,6 +110,9 @@ function updateDayNightDisplay() {
   }
   if (container) container.style.display = 'block';
 
+  const rotationHours = (dayNightCycle.dayDuration || 0) * 24 / 30000;
+  const tooFastToDisplay = rotationHours > 0 && rotationHours < 0.5;
+
   const dayProgress = dayNightCycle.getDayProgress();
   const dayProgressPercent = dayProgress * 100;
   const rotationDirection = dayNightCycle.rotationDirection < 0 ? -1 : 1;
@@ -123,10 +126,23 @@ function updateDayNightDisplay() {
     dayNightProgressBar.style.backgroundPosition = `${dayProgressPercent}% 50%`;
   }
 
-  // ----- SUN LOGIC -----
   if (container) ensureSun(container);
+  if (tooFastToDisplay) {
+    if (dayNightProgressBar) {
+      dayNightProgressBar.style.backgroundPosition = '0% 50%';
+    }
+    if (dayNightSun) {
+      dayNightSun.style.opacity = '0';
+      dayNightSun.style.display = 'none';
+    }
+    if (dayNightProgressText) {
+      dayNightProgressText.textContent = 'Too fast to display';
+    }
+    return;
+  }
 
   if (dayNightSun && container) {
+    dayNightSun.style.display = '';
     // Measure container and sun
     const barWidth = container.clientWidth;
     const sunWidth = dayNightSun.offsetWidth || 24; // fallback if not yet rendered
