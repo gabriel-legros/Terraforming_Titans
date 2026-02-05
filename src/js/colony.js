@@ -107,6 +107,7 @@ class Colony extends Building {
     const base = super.saveState();
     return {
       ...base,
+      alertedWhenUnlocked: this.alertedWhenUnlocked,
       filledNeeds: { ...this.filledNeeds },
       luxuryResourcesEnabled: { ...this.luxuryResourcesEnabled },
       obsolete: this.obsolete,
@@ -121,6 +122,8 @@ class Colony extends Building {
       this.rebuildFilledNeeds();
       return;
     }
+
+    this.alertedWhenUnlocked = state.alertedWhenUnlocked ?? this.unlocked;
 
     if (state.filledNeeds) {
       this.filledNeeds = { ...state.filledNeeds };

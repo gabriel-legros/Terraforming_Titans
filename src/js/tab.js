@@ -142,6 +142,9 @@ const tabParameters = {
       if (tabId === 'terraforming') {
         try { window.handleTerraformingTabActivated(); } catch (e) {}
       }
+      if (tabId === 'colonies') {
+        markColoniesViewed();
+      }
     }
 
     setSpaceTabAlert(effect) {
