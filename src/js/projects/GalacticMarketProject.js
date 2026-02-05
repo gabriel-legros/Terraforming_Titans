@@ -192,7 +192,7 @@ class GalacticMarketProject extends Project {
           tooltip.innerHTML = '&#9432;';
           attachDynamicInfoTooltip(
             tooltip,
-            'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max buys enough to spend a positive funding gain down to zero.'
+            'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max first cancels this row’s sells, then buys enough to spend a positive funding gain down to zero.'
           );
           headerControls.insertBefore(tooltip, multiplyButton.nextSibling);
 
@@ -374,13 +374,29 @@ class GalacticMarketProject extends Project {
         createButton('0', () => applyShift('reset'));
         const plusButton = createButton('', () => applyShift('toBuy'));
         const plusMaxButton = createButton('+Max', () => {
-          const totalCost = getTotalCostFromInputs();
+          let totalCost = getTotalCostFromInputs();
           if (totalCost >= 0) return;
+
+          const currentSell = getInputQuantity(sellInput);
+          if (currentSell > 0) {
+            const sellPrice = this.getSellPrice(category, resourceId, currentSell);
+            const cancelAmount = sellPrice > 0
+              ? Math.min(currentSell, Math.ceil((-totalCost) / sellPrice))
+              : currentSell;
+            if (cancelAmount > 0) {
+              setInputQuantity(sellInput, currentSell - cancelAmount, true);
+              totalCost = getTotalCostFromInputs();
+              if (totalCost >= 0) return;
+            }
+          }
+
           const buyPrice = this.getBuyPrice(category, resourceId);
           if (buyPrice <= 0) return;
           const currentBuy = getInputQuantity(buyInput);
           const needed = Math.floor((-totalCost) / buyPrice);
-          setInputQuantity(buyInput, currentBuy + needed, true);
+          if (needed > 0) {
+            setInputQuantity(buyInput, currentBuy + needed, true);
+          }
         });
 
         leftRow.appendChild(label);
