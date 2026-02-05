@@ -8,26 +8,35 @@ class NanotechManager extends EffectableEntity {
     this.metalSlider = 10; // 0-10
     this.maintenance2Slider = 0; // 0-10
     this.componentsSlider = 0; // 0-10
+    this.maintenance3Slider = 0; // 0-10
+    this.electronicsSlider = 0; // 0-10
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
     this.currentMetalConsumption = 0;
     this.currentComponentsProduction = 0;
+    this.currentBiomassConsumption = 0;
+    this.currentElectronicsProduction = 0;
     this.currentMaintenanceReduction = 0;
     this.currentMaintenance2Reduction = 0;
+    this.currentMaintenance3Reduction = 0;
     this.optimalEnergyConsumption = 0;
     this.optimalSiliconConsumption = 0;
     this.optimalMetalConsumption = 0;
+    this.optimalBiomassConsumption = 0;
     this.enabled = false;
     this.powerFraction = 1;
     this.siliconFraction = 1;
     this.metalFraction = 1;
+    this.biomassFraction = 1;
     this.hasEnoughEnergy = true;
     this.hasEnoughSilicon = true;
     this.hasEnoughMetal = true;
+    this.hasEnoughBiomass = true;
     this.effectiveGrowthRate = 0;
     this.onlyScrap = false;
     this.onlyJunk = false;
+    this.onlyTrash = false;
     this.maxEnergyPercent = 10;
     this.maxEnergyAbsolute = 1e6;
     this.energyLimitMode = 'percent';
@@ -37,6 +46,9 @@ class NanotechManager extends EffectableEntity {
     this.maxMetalPercent = 10;
     this.maxMetalAbsolute = 1e6;
     this.metalLimitMode = 'percent';
+    this.maxBiomassPercent = 10;
+    this.maxBiomassAbsolute = 1e6;
+    this.biomassLimitMode = 'percent';
     this.uiCache = null; // cache of UI element references for fast updates
     this.uiState = {
       glassMax: 10,
@@ -75,10 +87,12 @@ class NanotechManager extends EffectableEntity {
     }
     if (!this.enabled) return;
     const extraStages = this.getExtraNanotechStages();
-    const baseRate = 0.0025 * (1 + extraStages);
+    const baseRate = 0.0025 * Math.pow(2, extraStages);
     const stage2Enabled = this.isBooleanFlagSet('stage2_enabled');
+    const stage3Enabled = this.isBooleanFlagSet('stage3_enabled');
     const siliconAllocation = 10;
     const metalAllocation = stage2Enabled ? 10 : 0;
+    const biomassAllocation = stage3Enabled ? 10 : 0;
     const isArtificialWorld = currentPlanetParameters?.classification?.archetype === 'artificial';
     const getEffectiveProductionRate = (resource) => {
       const production = resource?.productionRate || 0;
@@ -92,17 +106,24 @@ class NanotechManager extends EffectableEntity {
     let powerFraction = 1;
     let siliconFraction = 1;
     let metalFraction = 1;
+    let biomassFraction = 1;
     let siliconProvided = 0;
     let metalProvided = 0;
+    let biomassProvided = 0;
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
     this.currentMetalConsumption = 0;
     this.currentComponentsProduction = 0;
+    this.currentBiomassConsumption = 0;
+    this.currentElectronicsProduction = 0;
     this.optimalEnergyConsumption = this.nanobots * 1e-12;
     this.optimalSiliconConsumption = this.nanobots * 1e-18 * (siliconAllocation / 10);
     this.optimalMetalConsumption = stage2Enabled
       ? this.nanobots * 1e-18 * (metalAllocation / 10)
+      : 0;
+    this.optimalBiomassConsumption = stage3Enabled
+      ? this.nanobots * 1e-18 * (biomassAllocation / 10)
       : 0;
     if (typeof resources !== 'undefined') {
       const recyclingEnabled = this.isBooleanFlagSet('nanotechRecycling');
@@ -209,6 +230,51 @@ class NanotechManager extends EffectableEntity {
         this.hasEnoughMetal = true;
       }
 
+      if (stage3Enabled) {
+        const biomassRes = resources.surface.biomass;
+        const trashRes = resources.surface.trash;
+        const onlyTrash = recyclingEnabled && this.onlyTrash;
+        const biomassProduction = recyclingEnabled
+          ? (onlyTrash ? getEffectiveProductionRate(trashRes) : getCombinedProductionRate(biomassRes, trashRes, true))
+          : getEffectiveProductionRate(biomassRes);
+        const biomassLimitRate = this.biomassLimitMode === 'absolute'
+          ? Math.max(0, this.maxBiomassAbsolute)
+          : (this.biomassLimitMode === 'uncapped'
+            ? Number.POSITIVE_INFINITY
+            : Math.max(0, (biomassProduction * this.maxBiomassPercent) / 100));
+        const needed = this.optimalBiomassConsumption * (deltaTime / 1000);
+        const limitedNeed = Math.min(needed, biomassLimitRate * (deltaTime / 1000));
+
+        let usedTrash = 0;
+        if (recyclingEnabled && limitedNeed > 0) {
+          const trashAvailable = Math.max(trashRes.value + (accumulatedChanges.surface.trash || 0), 0);
+          usedTrash = Math.min(limitedNeed, trashAvailable);
+          if (usedTrash > 0) {
+            accumulatedChanges.surface.trash = (accumulatedChanges.surface.trash || 0) - usedTrash;
+            trashRes.modifyRate(-usedTrash / (deltaTime / 1000), 'Nanotech Trash', 'nanotech');
+          }
+        }
+
+        const remainingNeeded = limitedNeed - usedTrash;
+        const biomassAvailable = Math.max(biomassRes.value + (accumulatedChanges.surface.biomass || 0), 0);
+        const usedBiomass = onlyTrash ? 0 : Math.min(remainingNeeded, biomassAvailable);
+        const totalUsed = usedTrash + usedBiomass;
+
+        this.hasEnoughBiomass = limitedNeed >= needed && totalUsed >= needed;
+        biomassProvided = totalUsed;
+        this.currentBiomassConsumption = deltaTime > 0 ? totalUsed / (deltaTime / 1000) : 0;
+
+        if (usedBiomass > 0) {
+          accumulatedChanges.surface.biomass = (accumulatedChanges.surface.biomass || 0) - usedBiomass;
+          biomassRes.modifyRate(-usedBiomass / (deltaTime / 1000), 'Nanotech Biomass', 'nanotech');
+        }
+
+        biomassFraction = this.hasEnoughBiomass ? 1 : (needed > 0 ? totalUsed / needed : 1);
+      } else {
+        biomassFraction = 0;
+        this.hasEnoughBiomass = true;
+      }
+
       const glassRes = resources.colony?.glass;
       const junkRes = recyclingEnabled ? resources.surface?.junk : null;
       
@@ -240,6 +306,20 @@ class NanotechManager extends EffectableEntity {
           accumulatedChanges.colony.components =
             (accumulatedChanges.colony.components || 0) + componentsAmount;
           componentsRes.modifyRate(this.currentComponentsProduction, 'Nanotech Components', 'nanotech');
+        }
+      }
+
+      const electronicsRes = resources.colony?.electronics;
+      if (electronicsRes && accumulatedChanges?.colony && stage3Enabled) {
+        const electronicsRate = this.nanobots * 1e-19 * (this.electronicsSlider / 10);
+        const electronicsAmount = isArtificialWorld
+          ? Math.min(electronicsRate * (deltaTime / 1000), biomassProvided)
+          : electronicsRate * (deltaTime / 1000);
+        this.currentElectronicsProduction = deltaTime > 0 ? electronicsAmount / (deltaTime / 1000) : 0;
+        if (electronicsAmount > 0) {
+          accumulatedChanges.colony.electronics =
+            (accumulatedChanges.colony.electronics || 0) + electronicsAmount;
+          electronicsRes.modifyRate(this.currentElectronicsProduction, 'Nanotech Electronics', 'nanotech');
         }
       }
 
@@ -277,20 +357,26 @@ class NanotechManager extends EffectableEntity {
     this.powerFraction = powerFraction;
     this.siliconFraction = siliconFraction;
     this.metalFraction = metalFraction;
+    this.biomassFraction = biomassFraction;
     const siliconRate =
       (siliconAllocation / 10) * 0.0015 * this.siliconFraction;
     const metalRate = stage2Enabled
       ? (metalAllocation / 10) * 0.0015 * this.metalFraction
       : 0;
+    const biomassRate = stage3Enabled
+      ? (biomassAllocation / 10) * 0.0015 * this.biomassFraction
+      : 0;
     const penalty =
       (this.maintenanceSlider / 10) * 0.0015 +
       (this.glassSlider / 10) * 0.0015 +
       (stage2Enabled ? (this.maintenance2Slider / 10) * 0.0015 : 0) +
-      (stage2Enabled ? (this.componentsSlider / 10) * 0.0015 : 0);
+      (stage2Enabled ? (this.componentsSlider / 10) * 0.0015 : 0) +
+      (stage3Enabled ? (this.maintenance3Slider / 10) * 0.0015 : 0) +
+      (stage3Enabled ? (this.electronicsSlider / 10) * 0.0015 : 0);
 
     // Apply growth multiplier from effects (e.g., garbage hazard)
     const growthMultiplier = this.getEffectiveGrowthMultiplier();
-    const effectiveRate = (baseRate * this.powerFraction + siliconRate + metalRate - penalty) * growthMultiplier;
+    const effectiveRate = (baseRate * this.powerFraction + siliconRate + metalRate + biomassRate - penalty) * growthMultiplier;
     this.effectiveGrowthRate = effectiveRate;
     if (effectiveRate !== 0 && !isNaN(effectiveRate)) {
       this.nanobots += this.nanobots * effectiveRate * (deltaTime / 1000);
@@ -314,7 +400,7 @@ class NanotechManager extends EffectableEntity {
 
   applyMaintenanceEffects() {
     if (typeof structures === 'undefined' || !structures) return;
-    const totals = { metal: 0, glass: 0, water: 0, components: 0, superconductors: 0 };
+    const totals = { metal: 0, glass: 0, water: 0, components: 0, superconductors: 0, electronics: 0 };
     for (const name in structures) {
       const s = structures[name];
       if (!s || !s.maintenanceCost) continue;
@@ -324,6 +410,7 @@ class NanotechManager extends EffectableEntity {
       totals.water += (s.maintenanceCost.water || 0) * (s.active || 0) * prod;
       totals.components += (s.maintenanceCost.components || 0) * (s.active || 0) * prod;
       totals.superconductors += (s.maintenanceCost.superconductors || 0) * (s.active || 0) * prod;
+      totals.electronics += (s.maintenanceCost.electronics || 0) * (s.active || 0) * prod;
     }
     const total = totals.metal + totals.glass + totals.water;
     const coveragePerBot = 1e-18;
@@ -375,6 +462,30 @@ class NanotechManager extends EffectableEntity {
         addEffect(effect);
       }
     });
+
+    const stage3Total = totals.electronics;
+    let coverage3 = stage3Total > 0 ? (this.nanobots * coveragePerBot) / stage3Total : 0;
+    coverage3 = Math.min(coverage3, 0.5);
+    const reduction3 = this.isBooleanFlagSet('stage3_enabled')
+      ? coverage3 * (this.maintenance3Slider / 10)
+      : 0;
+    this.currentMaintenance3Reduction = reduction3;
+    const mult3 = 1 - reduction3;
+    for (const name in structures) {
+      const target = colonies && colonies[name] ? 'colony' : 'building';
+      const effect = {
+        target,
+        targetId: name,
+        type: 'maintenanceCostMultiplier',
+        resourceCategory: 'colony',
+        resourceId: 'electronics',
+        value: mult3,
+        effectId: 'nanotechMaint3_electronics',
+        sourceId: 'nanotechMaintenance3',
+        name: 'Nanocolony',
+      };
+      addEffect(effect);
+    }
   }
 
   updateUI() {
@@ -569,6 +680,75 @@ class NanotechManager extends EffectableEntity {
               </div>
             </div>
           </div>
+          <div class="nanotech-stage" id="nanotech-stage-3">
+            <div class="nanotech-stage-header">
+              <h4>Stage III</h4>
+            </div>
+            <div class="nanotech-slider-grid">
+              <div class="nanotech-slider-card">
+                <div class="nanotech-allocation-header">
+                  <span class="allocation-title">
+                    Biomass allocation <span class="info-tooltip-icon" id="nanotech-biomass-tooltip">&#9432;</span>
+                  </span>
+                  <label class="nanotech-recycling-toggle" id="nanotech-only-trash-wrapper">
+                    <input type="checkbox" id="nanotech-only-trash">
+                    <span>Only Trash</span>
+                  </label>
+                </div>
+                <div class="nanotech-energy-limit">
+                  <input type="text" id="nanotech-biomass-limit" value="${this.maxBiomassPercent}">
+                  <select id="nanotech-biomass-limit-mode">
+                    <option value="percent" selected>percentage of production</option>
+                    <option value="absolute">absolute</option>
+                    <option value="uncapped">uncapped</option>
+                  </select>
+                </div>
+                <div class="nanotech-energy-stats">
+                  <div class="energy-stat">
+                    <span class="energy-label">Growth boost</span>
+                    <span class="energy-value" id="nanotech-biomass-impact">+0.00%</span>
+                  </div>
+                  <div class="energy-stat">
+                    <span class="energy-label">Draw</span>
+                    <span class="energy-value" id="nanotech-biomass-rate">0 ton/s</span>
+                  </div>
+                </div>
+                <p class="slider-description">Consumes biomass to boost growth.</p>
+              </div>
+              <div class="nanotech-slider-card">
+                <div class="slider-header">
+                  <span class="slider-title">Maintenance III</span>
+                  <div class="slider-values">
+                    <span id="nanotech-maintenance3-impact">0.00%</span>
+                    <span id="nanotech-maintenance3-rate">0%</span>
+                  </div>
+                </div>
+                <div class="slider-control">
+                  <div class="slider-container">
+                    <input type="range" id="nanotech-maintenance3-slider" class="pretty-slider" min="0" max="10" step="1">
+                    <div class="tick-marks">${Array(11).fill('<span></span>').join('')}</div>
+                  </div>
+                </div>
+                <p class="slider-description">Reduces electronics maintenance by up to 50%.</p>
+              </div>
+              <div class="nanotech-slider-card">
+                <div class="slider-header">
+                  <span class="slider-title">Electronics Production</span>
+                  <div class="slider-values">
+                    <span id="nanotech-electronics-impact">0.00%</span>
+                    <span id="nanotech-electronics-rate">0 ton/s</span>
+                  </div>
+                </div>
+                <div class="slider-control">
+                  <div class="slider-container">
+                    <input type="range" id="nanotech-electronics-slider" class="pretty-slider" min="0" max="10" step="1">
+                    <div class="tick-marks" id="nanotech-electronics-ticks">${Array(11).fill('<span></span>').join('')}</div>
+                  </div>
+                </div>
+                <p class="slider-description">Diverts growth to fabricate electronics.</p>
+              </div>
+            </div>
+          </div>
         </div>`;
       // Cache references once the container is built
       this.cacheUIRefs(container);
@@ -584,9 +764,11 @@ class NanotechManager extends EffectableEntity {
     const max = this.getMaxNanobots();
     const C = this.uiCache || {};
     const stage2Active = this.isBooleanFlagSet('stage2_enabled');
+    const stage3Active = this.isBooleanFlagSet('stage3_enabled');
     const recyclingEnabled = this.isBooleanFlagSet('nanotechRecycling');
     const siliconAllocation = 10;
     const metalAllocation = stage2Active ? 10 : 0;
+    const biomassAllocation = stage3Active ? 10 : 0;
     const hasSand = this.hasSandDeposits();
     const oreDeposits = currentPlanetParameters && currentPlanetParameters.resources
       ? currentPlanetParameters.resources.underground?.ore?.maxDeposits || 0
@@ -639,19 +821,23 @@ class NanotechManager extends EffectableEntity {
     }
     if (C.growthEl) {
       const extraStages = this.getExtraNanotechStages();
-      const baseOpt = 0.0025 * (1 + extraStages);
+      const baseOpt = 0.0025 * Math.pow(2, extraStages);
       const siliconOpt = (siliconAllocation / 10) * 0.0015;
       const metalOpt = stage2Active ? (metalAllocation / 10) * 0.0015 : 0;
+      const biomassOpt = stage3Active ? (biomassAllocation / 10) * 0.0015 : 0;
       const penalty =
         (this.maintenanceSlider / 10) * 0.0015 +
         (this.glassSlider / 10) * 0.0015 +
         (stage2Active ? (this.maintenance2Slider / 10) * 0.0015 : 0) +
-        (stage2Active ? (this.componentsSlider / 10) * 0.0015 : 0);
-      const optimalRate = baseOpt + siliconOpt + metalOpt - penalty;
+        (stage2Active ? (this.componentsSlider / 10) * 0.0015 : 0) +
+        (stage3Active ? (this.maintenance3Slider / 10) * 0.0015 : 0) +
+        (stage3Active ? (this.electronicsSlider / 10) * 0.0015 : 0);
+      const optimalRate = baseOpt + siliconOpt + metalOpt + biomassOpt - penalty;
       const effectiveRate =
         baseOpt * this.powerFraction +
         siliconOpt * this.siliconFraction +
-        (stage2Active ? metalOpt * this.metalFraction : 0) -
+        (stage2Active ? metalOpt * this.metalFraction : 0) +
+        (stage3Active ? biomassOpt * this.biomassFraction : 0) -
         penalty;
       const growthMultiplier = this.getEffectiveGrowthMultiplier();
       const actualRate = effectiveRate * growthMultiplier;
@@ -660,7 +846,7 @@ class NanotechManager extends EffectableEntity {
       C.growthEl.textContent = Math.abs(growthMultiplier - 1) > 1e-6
         ? `${rawLabel} -> ${actualLabel}`
         : actualLabel;
-      C.growthEl.style.color = (!this.hasEnoughEnergy || !this.hasEnoughSilicon || !this.hasEnoughMetal) ? 'orange' : '';
+      C.growthEl.style.color = (!this.hasEnoughEnergy || !this.hasEnoughSilicon || !this.hasEnoughMetal || !this.hasEnoughBiomass) ? 'orange' : '';
       this.effectiveGrowthRate = actualRate;
     }
     if (C.mSlider && document.activeElement !== C.mSlider) C.mSlider.value = this.maintenanceSlider;
@@ -670,6 +856,12 @@ class NanotechManager extends EffectableEntity {
     }
     if (C.componentsSlider && document.activeElement !== C.componentsSlider) {
       C.componentsSlider.value = this.componentsSlider;
+    }
+    if (C.maintenance3Slider && document.activeElement !== C.maintenance3Slider) {
+      C.maintenance3Slider.value = this.maintenance3Slider;
+    }
+    if (C.electronicsSlider && document.activeElement !== C.electronicsSlider) {
+      C.electronicsSlider.value = this.electronicsSlider;
     }
     if (C.eMode) C.eMode.value = this.energyLimitMode;
     if (C.eLimit && document.activeElement !== C.eLimit) {
@@ -746,10 +938,35 @@ class NanotechManager extends EffectableEntity {
         C.metalLimit.disabled = false;
       }
     }
+    if (C.biomassMode) C.biomassMode.value = this.biomassLimitMode;
+    if (C.biomassLimit && document.activeElement !== C.biomassLimit) {
+      if (this.biomassLimitMode === 'absolute') {
+        const tons = Math.max(0, this.maxBiomassAbsolute);
+        C.biomassLimit.dataset.biomassLimit = String(tons);
+        C.biomassLimit.value = tons >= 1e6 ? formatNumber(tons, true, 3) : String(tons);
+        C.biomassLimit.removeAttribute('max');
+        C.biomassLimit.placeholder = '';
+        C.biomassLimit.disabled = false;
+      } else if (this.biomassLimitMode === 'uncapped') {
+        C.biomassLimit.dataset.biomassLimit = '0';
+        C.biomassLimit.value = '';
+        C.biomassLimit.placeholder = 'uncapped';
+        C.biomassLimit.removeAttribute('max');
+        C.biomassLimit.disabled = true;
+      } else {
+        const pct = Math.max(0, Math.min(100, this.maxBiomassPercent));
+        this.maxBiomassPercent = pct;
+        C.biomassLimit.dataset.biomassLimit = String(pct);
+        C.biomassLimit.value = String(pct);
+        C.biomassLimit.max = 100;
+        C.biomassLimit.placeholder = '';
+        C.biomassLimit.disabled = false;
+      }
+    }
 
     if (C.growthImpactEl) {
       const extraStages = this.getExtraNanotechStages();
-      const optimal = 0.25 * (1 + extraStages);
+      const optimal = 0.25 * Math.pow(2, extraStages);
       const effective = optimal * this.powerFraction;
       C.growthImpactEl.textContent = `+${effective.toFixed(3)}%`;
       C.growthImpactEl.style.color = !this.hasEnoughEnergy ? 'orange' : '';
@@ -766,6 +983,12 @@ class NanotechManager extends EffectableEntity {
       C.metalImpactEl.textContent = `+${effective.toFixed(3)}%`;
       C.metalImpactEl.style.color = !this.hasEnoughMetal ? 'orange' : '';
     }
+    if (C.biomassImpactEl) {
+      const optimal = stage3Active ? (biomassAllocation / 10) * 0.15 : 0;
+      const effective = stage3Active ? optimal * this.biomassFraction : 0;
+      C.biomassImpactEl.textContent = `+${effective.toFixed(3)}%`;
+      C.biomassImpactEl.style.color = !this.hasEnoughBiomass ? 'orange' : '';
+    }
     if (C.maintenanceImpactEl) {
       const value = -(this.maintenanceSlider / 10) * 0.15;
       C.maintenanceImpactEl.textContent = `${value.toFixed(3)}%`;
@@ -776,6 +999,11 @@ class NanotechManager extends EffectableEntity {
       C.maintenance2ImpactEl.textContent = `${value.toFixed(3)}%`;
       C.maintenance2ImpactEl.style.color = '';
     }
+    if (C.maintenance3ImpactEl) {
+      const value = stage3Active ? -(this.maintenance3Slider / 10) * 0.15 : 0;
+      C.maintenance3ImpactEl.textContent = `${value.toFixed(3)}%`;
+      C.maintenance3ImpactEl.style.color = '';
+    }
     if (C.glassImpactEl) {
       const value = -(this.glassSlider / 10) * 0.15;
       C.glassImpactEl.textContent = `${value.toFixed(3)}%`;
@@ -785,6 +1013,11 @@ class NanotechManager extends EffectableEntity {
       const value = stage2Active ? -(this.componentsSlider / 10) * 0.15 : 0;
       C.componentsImpactEl.textContent = `${value.toFixed(3)}%`;
       C.componentsImpactEl.style.color = '';
+    }
+    if (C.electronicsImpactEl) {
+      const value = stage3Active ? -(this.electronicsSlider / 10) * 0.15 : 0;
+      C.electronicsImpactEl.textContent = `${value.toFixed(3)}%`;
+      C.electronicsImpactEl.style.color = '';
     }
 
     if (C.energyRateEl) {
@@ -801,23 +1034,42 @@ class NanotechManager extends EffectableEntity {
       C.metalRateEl.textContent = `${formatNumber(current, false, 2, true)} / ${formatNumber(optimal, false, 2, true)} ton/s`;
       C.metalRateEl.style.color = !this.hasEnoughMetal ? 'orange' : '';
     }
+    if (C.biomassRateEl) {
+      const current = stage3Active ? this.currentBiomassConsumption : 0;
+      const optimal = stage3Active ? this.optimalBiomassConsumption : 0;
+      C.biomassRateEl.textContent = `${formatNumber(current, false, 2, true)} / ${formatNumber(optimal, false, 2, true)} ton/s`;
+      C.biomassRateEl.style.color = !this.hasEnoughBiomass ? 'orange' : '';
+    }
     if (C.maintenanceRateEl)
       C.maintenanceRateEl.textContent = `-${(this.currentMaintenanceReduction * 100).toFixed(2)}%`;
     if (C.maintenance2RateEl)
       C.maintenance2RateEl.textContent = `-${(this.currentMaintenance2Reduction * 100).toFixed(2)}%`;
+    if (C.maintenance3RateEl)
+      C.maintenance3RateEl.textContent = `-${(this.currentMaintenance3Reduction * 100).toFixed(2)}%`;
     if (C.glassRateEl)
       C.glassRateEl.textContent = `${formatNumber(this.currentGlassProduction, false, 2, true)} ton/s`;
     if (C.componentsRateEl)
       C.componentsRateEl.textContent = `${formatNumber(stage2Active ? this.currentComponentsProduction : 0, false, 2, true)} ton/s`;
+    if (C.electronicsRateEl)
+      C.electronicsRateEl.textContent = `${formatNumber(stage3Active ? this.currentElectronicsProduction : 0, false, 2, true)} ton/s`;
 
     if (C.stage2Container) {
       C.stage2Container.style.display = stage2Active ? '' : 'none';
+    }
+    if (C.stage3Container) {
+      C.stage3Container.style.display = stage3Active ? '' : 'none';
     }
     if (C.onlyScrapWrapper) {
       C.onlyScrapWrapper.style.display = recyclingEnabled ? '' : 'none';
     }
     if (C.onlyScrapToggle) {
       C.onlyScrapToggle.checked = recyclingEnabled ? this.onlyScrap : false;
+    }
+    if (C.onlyTrashWrapper) {
+      C.onlyTrashWrapper.style.display = recyclingEnabled ? '' : 'none';
+    }
+    if (C.onlyTrashToggle) {
+      C.onlyTrashToggle.checked = recyclingEnabled ? this.onlyTrash : false;
     }
     if (C.onlyJunkWrapper) {
       C.onlyJunkWrapper.style.display = recyclingEnabled ? '' : 'none';
@@ -862,6 +1114,20 @@ class NanotechManager extends EffectableEntity {
         nanotechManager.updateUI();
       });
       C.componentsSlider.dataset.nanotechBound = 'components';
+    }
+    if (C.maintenance3Slider?.dataset?.nanotechBound !== 'maintenance3') {
+      C.maintenance3Slider.addEventListener('input', (e) => {
+        nanotechManager.maintenance3Slider = parseInt(e.target.value);
+        nanotechManager.updateUI();
+      });
+      C.maintenance3Slider.dataset.nanotechBound = 'maintenance3';
+    }
+    if (C.electronicsSlider?.dataset?.nanotechBound !== 'electronics') {
+      C.electronicsSlider.addEventListener('input', (e) => {
+        nanotechManager.electronicsSlider = parseInt(e.target.value);
+        nanotechManager.updateUI();
+      });
+      C.electronicsSlider.dataset.nanotechBound = 'electronics';
     }
     if (C.eLimit?.dataset?.nanotechBound !== 'energyLimit') {
       wireStringNumberInput(C.eLimit, {
@@ -969,12 +1235,54 @@ class NanotechManager extends EffectableEntity {
       });
       C.metalMode.dataset.nanotechBound = 'metalMode';
     }
+    if (C.biomassLimit?.dataset?.nanotechBound !== 'biomassLimit') {
+      wireStringNumberInput(C.biomassLimit, {
+        datasetKey: 'biomassLimit',
+        parseValue: (value) => {
+          const numeric = parseFlexibleNumber(value) || 0;
+          if (nanotechManager.biomassLimitMode === 'absolute') return Math.max(0, numeric);
+          return Math.max(0, Math.min(100, numeric));
+        },
+        formatValue: (parsed) => {
+          if (nanotechManager.biomassLimitMode === 'absolute') {
+            return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+          }
+          return String(parsed);
+        },
+        onValue: (parsed) => {
+          if (nanotechManager.biomassLimitMode === 'absolute') {
+            nanotechManager.maxBiomassAbsolute = parsed;
+          } else {
+            nanotechManager.maxBiomassPercent = parsed;
+          }
+          nanotechManager.updateUI();
+        },
+      });
+      C.biomassLimit.dataset.nanotechBound = 'biomassLimit';
+    }
+    if (C.biomassMode?.dataset?.nanotechBound !== 'biomassMode') {
+      C.biomassMode.addEventListener('change', (e) => {
+        nanotechManager.biomassLimitMode = e.target.value;
+        if (nanotechManager.biomassLimitMode === 'absolute' && !(nanotechManager.maxBiomassAbsolute > 0)) {
+          nanotechManager.maxBiomassAbsolute = 1e6;
+        }
+        nanotechManager.updateUI();
+      });
+      C.biomassMode.dataset.nanotechBound = 'biomassMode';
+    }
     if (C.onlyScrapToggle?.dataset?.nanotechBound !== 'onlyScrap') {
       C.onlyScrapToggle.addEventListener('change', (e) => {
         nanotechManager.onlyScrap = e.target.checked;
         nanotechManager.updateUI();
       });
       C.onlyScrapToggle.dataset.nanotechBound = 'onlyScrap';
+    }
+    if (C.onlyTrashToggle?.dataset?.nanotechBound !== 'onlyTrash') {
+      C.onlyTrashToggle.addEventListener('change', (e) => {
+        nanotechManager.onlyTrash = e.target.checked;
+        nanotechManager.updateUI();
+      });
+      C.onlyTrashToggle.dataset.nanotechBound = 'onlyTrash';
     }
     if (C.onlyJunkToggle?.dataset?.nanotechBound !== 'onlyJunk') {
       C.onlyJunkToggle.addEventListener('change', (e) => {
@@ -1011,6 +1319,13 @@ class NanotechManager extends EffectableEntity {
       );
       C.metalTooltipIcon.dataset.nanotechBound = 'metalTooltip';
     }
+    if (C.biomassTooltipIcon?.dataset?.nanotechBound !== 'biomassTooltip') {
+      attachDynamicInfoTooltip(
+        C.biomassTooltipIcon,
+        'Percentage of biomass production: maximum share of biomass production the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+      );
+      C.biomassTooltipIcon.dataset.nanotechBound = 'biomassTooltip';
+    }
   }
 
   cacheUIRefs(container) {
@@ -1025,37 +1340,52 @@ class NanotechManager extends EffectableEntity {
       glSlider: qs('#nanotech-glass-slider'),
       maintenance2Slider: qs('#nanotech-maintenance2-slider'),
       componentsSlider: qs('#nanotech-components-slider'),
+      maintenance3Slider: qs('#nanotech-maintenance3-slider'),
+      electronicsSlider: qs('#nanotech-electronics-slider'),
       glassTicks: qs('#nanotech-glass-ticks'),
       componentsTicks: qs('#nanotech-components-ticks'),
+      electronicsTicks: qs('#nanotech-electronics-ticks'),
       eLimit: qs('#nanotech-energy-limit'),
       eMode: qs('#nanotech-energy-limit-mode'),
       sLimit: qs('#nanotech-silicon-limit'),
       sMode: qs('#nanotech-silicon-limit-mode'),
       metalLimit: qs('#nanotech-metal-limit'),
       metalMode: qs('#nanotech-metal-limit-mode'),
+      biomassLimit: qs('#nanotech-biomass-limit'),
+      biomassMode: qs('#nanotech-biomass-limit-mode'),
       onlyScrapToggle: qs('#nanotech-only-scrap'),
       onlyScrapWrapper: qs('#nanotech-only-scrap-wrapper'),
+      onlyTrashToggle: qs('#nanotech-only-trash'),
+      onlyTrashWrapper: qs('#nanotech-only-trash-wrapper'),
       onlyJunkToggle: qs('#nanotech-only-junk'),
       onlyJunkWrapper: qs('#nanotech-only-junk-wrapper'),
       energyTooltipIcon: qs('#nanotech-energy-tooltip'),
       travelTooltipIcon: qs('#nanotech-travel-tooltip'),
       siliconTooltipIcon: qs('#nanotech-silicon-tooltip'),
       metalTooltipIcon: qs('#nanotech-metal-tooltip'),
+      biomassTooltipIcon: qs('#nanotech-biomass-tooltip'),
       growthImpactEl: qs('#nanotech-growth-impact'),
       siliconImpactEl: qs('#nanotech-silicon-impact'),
       metalImpactEl: qs('#nanotech-metal-impact'),
+      biomassImpactEl: qs('#nanotech-biomass-impact'),
       maintenanceImpactEl: qs('#nanotech-maintenance-impact'),
       maintenance2ImpactEl: qs('#nanotech-maintenance2-impact'),
+      maintenance3ImpactEl: qs('#nanotech-maintenance3-impact'),
       glassImpactEl: qs('#nanotech-glass-impact'),
       componentsImpactEl: qs('#nanotech-components-impact'),
+      electronicsImpactEl: qs('#nanotech-electronics-impact'),
       energyRateEl: qs('#nanotech-growth-energy'),
       siliconRateEl: qs('#nanotech-silicon-rate'),
       maintenanceRateEl: qs('#nanotech-maintenance-rate'),
       maintenance2RateEl: qs('#nanotech-maintenance2-rate'),
+      maintenance3RateEl: qs('#nanotech-maintenance3-rate'),
       glassRateEl: qs('#nanotech-glass-rate'),
       metalRateEl: qs('#nanotech-metal-rate'),
       componentsRateEl: qs('#nanotech-components-rate'),
+      biomassRateEl: qs('#nanotech-biomass-rate'),
+      electronicsRateEl: qs('#nanotech-electronics-rate'),
       stage2Container: qs('#nanotech-stage-2'),
+      stage3Container: qs('#nanotech-stage-3'),
       stage1WarningEl: qs('#nanotech-stage1-warning'),
       stage2WarningEl: qs('#nanotech-stage2-warning'),
       travelCapEl: qs('#nanotech-travel-cap'),
@@ -1067,6 +1397,7 @@ class NanotechManager extends EffectableEntity {
       this.uiCache?.countEl,
       this.uiCache?.growthEl,
       this.uiCache?.siliconImpactEl,
+      this.uiCache?.biomassImpactEl,
       this.uiCache?.siliconRateEl,
       this.uiCache?.stage1WarningEl,
       this.uiCache?.stage2WarningEl,
@@ -1098,6 +1429,8 @@ class NanotechManager extends EffectableEntity {
       metalSlider: this.metalSlider,
       maintenance2Slider: this.maintenance2Slider,
       componentsSlider: this.componentsSlider,
+      maintenance3Slider: this.maintenance3Slider,
+      electronicsSlider: this.electronicsSlider,
       maxEnergyPercent: this.maxEnergyPercent,
       maxEnergyAbsolute: this.maxEnergyAbsolute,
       energyLimitMode: this.energyLimitMode,
@@ -1107,7 +1440,11 @@ class NanotechManager extends EffectableEntity {
       maxMetalPercent: this.maxMetalPercent,
       maxMetalAbsolute: this.maxMetalAbsolute,
       metalLimitMode: this.metalLimitMode,
+      maxBiomassPercent: this.maxBiomassPercent,
+      maxBiomassAbsolute: this.maxBiomassAbsolute,
+      biomassLimitMode: this.biomassLimitMode,
       onlyScrap: this.onlyScrap,
+      onlyTrash: this.onlyTrash,
       onlyJunk: this.onlyJunk,
     };
   }
@@ -1121,6 +1458,8 @@ class NanotechManager extends EffectableEntity {
     this.metalSlider = 10;
     this.maintenance2Slider = state.maintenance2Slider || 0;
     this.componentsSlider = state.componentsSlider || 0;
+    this.maintenance3Slider = state.maintenance3Slider || 0;
+    this.electronicsSlider = state.electronicsSlider || 0;
     this.maxEnergyPercent = state.maxEnergyPercent ?? 10;
     this.maxEnergyAbsolute = state.maxEnergyAbsolute ?? 1e6;
     this.energyLimitMode = state.energyLimitMode || 'percent';
@@ -1130,7 +1469,11 @@ class NanotechManager extends EffectableEntity {
     this.maxMetalPercent = state.maxMetalPercent ?? 10;
     this.maxMetalAbsolute = state.maxMetalAbsolute ?? 1e6;
     this.metalLimitMode = state.metalLimitMode || 'percent';
+    this.maxBiomassPercent = state.maxBiomassPercent ?? 10;
+    this.maxBiomassAbsolute = state.maxBiomassAbsolute ?? 1e6;
+    this.biomassLimitMode = state.biomassLimitMode || 'percent';
     this.onlyScrap = !!state.onlyScrap;
+    this.onlyTrash = !!state.onlyTrash;
     this.onlyJunk = !!state.onlyJunk;
     const max = this.getMaxNanobots();
     this.nanobots = Math.max(1, Math.min(this.nanobots, max));
@@ -1146,26 +1489,35 @@ class NanotechManager extends EffectableEntity {
     this.metalSlider = 10;
     this.maintenance2Slider = 0;
     this.componentsSlider = 0;
+    this.maintenance3Slider = 0;
+    this.electronicsSlider = 0;
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
     this.currentMetalConsumption = 0;
     this.currentComponentsProduction = 0;
+    this.currentBiomassConsumption = 0;
+    this.currentElectronicsProduction = 0;
     this.currentMaintenanceReduction = 0;
     this.currentMaintenance2Reduction = 0;
+    this.currentMaintenance3Reduction = 0;
     this.optimalEnergyConsumption = 0;
     this.optimalSiliconConsumption = 0;
     this.optimalMetalConsumption = 0;
+    this.optimalBiomassConsumption = 0;
     this.enabled = false;
     this.powerFraction = 1;
     this.siliconFraction = 1;
     this.metalFraction = 1;
+    this.biomassFraction = 1;
     this.hasEnoughEnergy = true;
     this.hasEnoughSilicon = true;
     this.hasEnoughMetal = true;
+    this.hasEnoughBiomass = true;
     this.effectiveGrowthRate = 0;
     this.onlyScrap = false;
     this.onlyJunk = false;
+    this.onlyTrash = false;
     this.maxEnergyPercent = 10;
     this.maxEnergyAbsolute = 1e6;
     this.energyLimitMode = 'percent';
@@ -1175,6 +1527,9 @@ class NanotechManager extends EffectableEntity {
     this.maxMetalPercent = 10;
     this.maxMetalAbsolute = 1e6;
     this.metalLimitMode = 'percent';
+    this.maxBiomassPercent = 10;
+    this.maxBiomassAbsolute = 1e6;
+    this.biomassLimitMode = 'percent';
     this.updateUI();
   }
 

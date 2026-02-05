@@ -1898,6 +1898,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'nanotechnology_stage_3',
+        name: 'Nanotechnology Stage III',
+        description: 'Further expands the nanocolony program.',
+        cost: { advancedResearch: 25_000_000 },
+        prerequisites: ['nanotechnology_stage_2'],
+        effects: [
+          {
+            target: 'nanotechManager',
+            type: 'booleanFlag',
+            flagId: 'stage3_enabled',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'orbital_rings',
         name: 'Orbital Rings',
         description: 'Unlocks a new megastructure project for constructing orbital rings.',
@@ -2275,7 +2290,7 @@ const researchParameters = {
       {
         id: 'nanotechnology_recycling',
         name: 'Nanotechnology recycling',
-        description: 'Enables nanobots to recycle waste materials, substituting junk for silica consumption and scrap metal for metal consumption.',
+        description: 'Enables nanobots to recycle waste materials, substituting junk for silica consumption, scrap metal for metal consumption, and trash for biomass consumption.',
         cost: { advancedResearch: 15_000_000 },
         prerequisites: [],
         effects: [
