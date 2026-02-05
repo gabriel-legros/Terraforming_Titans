@@ -407,8 +407,9 @@ class SpaceshipAutomation {
 
     const massDriverTargetId = this.getMassDriverAutomationId();
     const massDriverProject = this.getMassDriverDisposalProject();
-    const massDriverCapacity = this.getMassDriverCapacity(massDriverProject);
-    const massDriverActive = this.getMassDriverActiveEquivalency(massDriverProject);
+    const useMassDriverMode = preset.steps.some(step => step.entries.some(entry => entry.projectId === massDriverTargetId));
+    const massDriverCapacity = useMassDriverMode ? this.getMassDriverCapacity(massDriverProject) : 0;
+    const massDriverActive = useMassDriverMode ? this.getMassDriverActiveEquivalency(massDriverProject) : 0;
     let totalShipsOnly = this.sanitizeShipCount(resources.special.spaceships?.value || 0);
     const currentAssignments = {};
     for (let index = 0; index < projects.length; index += 1) {
@@ -421,7 +422,9 @@ class SpaceshipAutomation {
     this.automationMassDriverCapacity = massDriverCapacity;
 
     let totalShips = totalShipsOnly + massDriverCapacity;
-    currentAssignments[massDriverTargetId] = this.sanitizeShipCount(massDriverProject.getAutomationShipCount() + massDriverActive);
+    if (useMassDriverMode) {
+      currentAssignments[massDriverTargetId] = this.sanitizeShipCount(massDriverProject.getAutomationShipCount() + massDriverActive);
+    }
 
     const desiredAssignments = {};
     let remainingTotal = totalShips;
@@ -604,16 +607,19 @@ class SpaceshipAutomation {
       }
     }
 
-    const desiredMassDriverTarget = this.sanitizeShipCount(desiredAssignments[massDriverTargetId] || 0);
-    const desiredShipOnlyTarget = this.sanitizeShipCount(desiredAssignments[massDriverProject.name] || 0);
-    const massDriverEquivalency = this.getMassDriverEquivalency(massDriverProject);
-    const maxMassDrivers = massDriverEquivalency > 0
-      ? Math.floor(massDriverCapacity / massDriverEquivalency)
-      : 0;
-    const desiredMassDrivers = Math.min(maxMassDrivers, Math.floor(desiredMassDriverTarget / massDriverEquivalency));
-    const desiredMassDriverEquivalency = desiredMassDrivers * massDriverEquivalency;
-    desiredAssignments[massDriverProject.name] =
-      desiredShipOnlyTarget + Math.max(0, desiredMassDriverTarget - desiredMassDriverEquivalency);
+    let desiredMassDrivers = 0;
+    if (useMassDriverMode) {
+      const desiredMassDriverTarget = this.sanitizeShipCount(desiredAssignments[massDriverTargetId] || 0);
+      const desiredShipOnlyTarget = this.sanitizeShipCount(desiredAssignments[massDriverProject.name] || 0);
+      const massDriverEquivalency = this.getMassDriverEquivalency(massDriverProject);
+      const maxMassDrivers = massDriverEquivalency > 0
+        ? Math.floor(massDriverCapacity / massDriverEquivalency)
+        : 0;
+      desiredMassDrivers = Math.min(maxMassDrivers, Math.floor(desiredMassDriverTarget / massDriverEquivalency));
+      const desiredMassDriverEquivalency = desiredMassDrivers * massDriverEquivalency;
+      desiredAssignments[massDriverProject.name] =
+        desiredShipOnlyTarget + Math.max(0, desiredMassDriverTarget - desiredMassDriverEquivalency);
+    }
 
     const shipProjectsTotal = projects.reduce((sum, project) => {
       return sum + this.sanitizeShipCount(desiredAssignments[project.name] || 0);
@@ -677,7 +683,9 @@ class SpaceshipAutomation {
       }
     }
 
-    massDriverProject.setMassDriverActive(desiredMassDrivers);
+    if (useMassDriverMode) {
+      massDriverProject.setMassDriverActive(desiredMassDrivers);
+    }
   }
 
   saveState() {
