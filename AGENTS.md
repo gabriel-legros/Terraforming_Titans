@@ -99,6 +99,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Galactic Market cost/gain estimates now ignore productivity and use a fixed 1x rate.
 - Galactic Market +Max now cancels row sells before buying to avoid simultaneous sell/buy on the same resource.
 - Hazardous biomass crusader focus dropdown now keeps the selected zone instead of reverting to Any.
+- Clipboard exports now fall back to execCommand/prompt so save and WGC copy buttons work inside iframes.
 
 ## Prestige systems
 Two reset layers control long term progression:

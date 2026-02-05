@@ -771,19 +771,15 @@ function saveGameToClipboard() {
   patienceManager.claimDailyPatience();
   updatePatienceUI();
   const saveData = JSON.stringify(getGameState());
-  const clipboard = navigator?.clipboard;
-  if (!clipboard || !clipboard.writeText) {
-    console.warn('Clipboard write unavailable.');
-    return;
-  }
-  clipboard.writeText(saveData).then(
-    () => {
+  copyTextToClipboard(saveData, {
+    promptLabel: 'Copy save data:',
+    onSuccess: () => {
       console.log('Game saved to clipboard.');
       patienceManager.claimDailyPatience();
       updatePatienceUI();
     },
-    (e) => console.warn('Unable to copy save to clipboard:', e)
-  );
+    onError: (e) => console.warn('Unable to copy save to clipboard:', e)
+  });
 }
 
 // Load game state from a file

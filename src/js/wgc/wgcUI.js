@@ -66,20 +66,7 @@ function copyWGCTeamStatsToClipboard() {
     teams: buildWGCTeamStatsForClipboard(manager)
   };
   const serialized = JSON.stringify(payload, null, 2);
-  const clipboard = typeof navigator !== 'undefined' && navigator && navigator.clipboard ? navigator.clipboard : null;
-  if (clipboard && typeof clipboard.writeText === 'function') {
-    clipboard.writeText(serialized);
-    return;
-  }
-  const helper = document.createElement('textarea');
-  helper.value = serialized;
-  helper.setAttribute('readonly', '');
-  helper.style.position = 'absolute';
-  helper.style.left = '-9999px';
-  document.body.appendChild(helper);
-  helper.select();
-  document.execCommand('copy');
-  helper.remove();
+  copyTextToClipboard(serialized, { promptLabel: 'Copy Warp Gate Command team stats:' });
 }
 
 function updateWGCStoryToggleButton() {

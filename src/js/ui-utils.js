@@ -313,6 +313,54 @@ function makeCollapsibleCard(card) {
   if (toggleTarget !== arrow) toggleTarget.addEventListener('click', toggle);
 }
 
+function copyTextToClipboard(text, options = {}) {
+  const payload = String(text);
+  const onSuccess = options.onSuccess;
+  const onError = options.onError;
+  const promptLabel = options.promptLabel || 'Copy to clipboard:';
+  const allowPrompt = options.allowPrompt === undefined ? true : !!options.allowPrompt;
+  const tryExecCommand = () => {
+    const helper = document.createElement('textarea');
+    helper.value = payload;
+    helper.setAttribute('readonly', '');
+    helper.style.position = 'fixed';
+    helper.style.left = '-9999px';
+    helper.style.top = '0';
+    document.body.appendChild(helper);
+    helper.focus();
+    helper.select();
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch (e) {
+      copied = false;
+    }
+    helper.remove();
+    if (!copied && allowPrompt) window.prompt(promptLabel, payload);
+    return copied;
+  };
+
+  let request;
+  try {
+    request = navigator.clipboard.writeText(payload);
+  } catch (e) {
+    const ok = tryExecCommand();
+    if (ok && onSuccess) onSuccess();
+    if (!ok && onError) onError(e);
+    return;
+  }
+  request.then(
+    () => {
+      if (onSuccess) onSuccess();
+    },
+    (e) => {
+      const ok = tryExecCommand();
+      if (ok && onSuccess) onSuccess();
+      if (!ok && onError) onError(e);
+    }
+  );
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     activateSubtab,
@@ -323,6 +371,7 @@ if (typeof module !== 'undefined' && module.exports) {
     makeCollapsibleCard,
     wireStringNumberInput,
     createToggleButton,
-    setToggleButtonState
+    setToggleButtonState,
+    copyTextToClipboard
   };
 }
