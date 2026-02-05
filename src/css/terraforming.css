@@ -361,6 +361,51 @@
     color: #555555;
   }
 
+  .terraforming-graphs-phase {
+    margin-top: 6px;
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .terraforming-graphs-phase-disclaimer {
+    font-weight: 600;
+    font-size: 12px;
+    color: #6f3a2f;
+    background: linear-gradient(90deg, #fff4ef 0%, #fffaf7 100%);
+    border: 1px solid #e7c4b8;
+    padding: 6px 10px;
+    border-radius: 999px;
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+
+  .terraforming-graphs-phase-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .terraforming-graphs-phase-title {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .terraforming-graphs-phase-canvas {
+    width: 100%;
+    height: 260px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #d0d0d0;
+  }
+
+  .terraforming-graphs-phase-note {
+    font-size: 12px;
+    color: #555555;
+  }
+
   @media (max-width: 760px) {
     .terraforming-graphs-body {
       grid-template-columns: 1fr;
@@ -376,4 +421,24 @@
     .terraforming-graphs-canvas {
       height: 260px;
     }
+
+    .terraforming-graphs-phase-canvas {
+      height: 220px;
+    }
+  }
+  .terraforming-graphs-phase-button {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #c8bfb4;
+    background: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    color: #2c2c2c;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .terraforming-graphs-phase-button.active {
+    background: #1b6ac9;
+    border-color: #1b6ac9;
+    color: #ffffff;
   }

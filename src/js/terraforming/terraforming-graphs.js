@@ -9,7 +9,8 @@ const TERRAFORMING_GRAPH_ORDER = [
   'water',
   'albedo',
   'luminosity',
-  'life'
+  'life',
+  'phase'
 ];
 
 const TERRAFORMING_GRAPH_ZONE_LABELS = {
@@ -36,6 +37,54 @@ const TERRAFORMING_GRAPH_PALETTE = [
   '#34495e',
   '#16a085'
 ];
+
+const TERRAFORMING_PHASE_DIAGRAM_ORDER = [
+  'water',
+  'carbonDioxide',
+  'methane',
+  'ammonia',
+  'oxygen',
+  'nitrogen'
+];
+
+const TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS = {
+  water: {
+    id: 'water',
+    label: 'Water',
+    cycle: waterCycle,
+    atmosphereKey: 'atmosphericWater'
+  },
+  carbonDioxide: {
+    id: 'carbonDioxide',
+    label: 'CO2',
+    cycle: co2Cycle,
+    atmosphereKey: 'carbonDioxide'
+  },
+  methane: {
+    id: 'methane',
+    label: 'Methane',
+    cycle: methaneCycle,
+    atmosphereKey: 'atmosphericMethane'
+  },
+  ammonia: {
+    id: 'ammonia',
+    label: 'Ammonia',
+    cycle: ammoniaCycle,
+    atmosphereKey: 'atmosphericAmmonia'
+  },
+  oxygen: {
+    id: 'oxygen',
+    label: 'O2',
+    cycle: oxygenCycle,
+    atmosphereKey: 'oxygen'
+  },
+  nitrogen: {
+    id: 'nitrogen',
+    label: 'N2',
+    cycle: nitrogenCycle,
+    atmosphereKey: 'inertGas'
+  }
+};
 
 function buildEmptyTerraformingGraphHistory() {
   return {
@@ -268,6 +317,15 @@ const TERRAFORMING_GRAPH_DEFINITIONS = {
       }
       return series;
     }
+  },
+  phase: {
+    id: 'phase',
+    label: 'Phase Diagrams',
+    axisLabel: () => '',
+    note: () => '',
+    logScale: false,
+    formatTick: () => '',
+    buildSeries: () => []
   }
 };
 
@@ -275,10 +333,13 @@ class TerraformingGraphsManager {
   constructor() {
     this.history = buildEmptyTerraformingGraphHistory();
     this.selectedGraph = 'temperature';
+    this.selectedPhaseDiagram = 'water';
     this.atmosphereColors = {};
     this.legendSignature = '';
+    this.phaseSignature = '';
     this.isOpen = false;
     this.needsRedraw = true;
+    this.phaseNeedsRedraw = true;
     this.lastSnapshotYear = null;
     this.ui = {
       overlay: null,
@@ -292,6 +353,12 @@ class TerraformingGraphsManager {
       canvas: null,
       legend: null,
       note: null,
+      phaseSection: null,
+      phaseTitle: null,
+      phaseCanvas: null,
+      phaseNote: null,
+      phaseButtons: null,
+      phaseButtonsMap: {},
       menuButtons: {},
       legendItems: [],
       button: null
@@ -301,9 +368,12 @@ class TerraformingGraphsManager {
   reset() {
     this.history = buildEmptyTerraformingGraphHistory();
     this.selectedGraph = 'temperature';
+    this.selectedPhaseDiagram = 'water';
     this.atmosphereColors = {};
     this.legendSignature = '';
+    this.phaseSignature = '';
     this.needsRedraw = true;
+    this.phaseNeedsRedraw = true;
     this.lastSnapshotYear = null;
     this.hide();
   }
@@ -315,7 +385,9 @@ class TerraformingGraphsManager {
   loadState(state) {
     this.history = normalizeTerraformingGraphHistory(state);
     this.legendSignature = '';
+    this.phaseSignature = '';
     this.needsRedraw = true;
+    this.phaseNeedsRedraw = true;
     this.lastSnapshotYear = this.history.years.length
       ? this.history.years[this.history.years.length - 1]
       : null;
@@ -370,9 +442,28 @@ class TerraformingGraphsManager {
     legend.className = 'terraforming-graphs-legend';
     const note = document.createElement('div');
     note.className = 'terraforming-graphs-note';
+    const phaseSection = document.createElement('div');
+    phaseSection.className = 'terraforming-graphs-phase';
+    const phaseTitle = document.createElement('div');
+    phaseTitle.className = 'terraforming-graphs-phase-title';
+    const phaseDisclaimer = document.createElement('div');
+    phaseDisclaimer.className = 'terraforming-graphs-phase-disclaimer';
+    phaseDisclaimer.textContent = 'Phase diagrams in Terraforming Titans are very simplified versions of the real ones.  Pressure is typically saturation pressure, not total pressure.';
+    const phaseCanvas = document.createElement('canvas');
+    phaseCanvas.className = 'terraforming-graphs-phase-canvas';
+    const phaseNote = document.createElement('div');
+    phaseNote.className = 'terraforming-graphs-phase-note';
+    const phaseButtons = document.createElement('div');
+    phaseButtons.className = 'terraforming-graphs-phase-buttons';
+    phaseSection.appendChild(phaseDisclaimer);
+    phaseSection.appendChild(phaseTitle);
+    phaseSection.appendChild(phaseCanvas);
+    phaseSection.appendChild(phaseNote);
+    phaseSection.appendChild(phaseButtons);
     chart.appendChild(canvas);
     chart.appendChild(legend);
     chart.appendChild(note);
+    chart.appendChild(phaseSection);
     body.appendChild(menu);
     body.appendChild(chart);
     windowEl.appendChild(body);
@@ -390,6 +481,18 @@ class TerraformingGraphsManager {
       menuButtons[graphId] = button;
     }
 
+    const phaseButtonsMap = {};
+    for (const diagramId of TERRAFORMING_PHASE_DIAGRAM_ORDER) {
+      const definition = TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS[diagramId];
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'terraforming-graphs-phase-button';
+      button.textContent = definition.label;
+      button.addEventListener('click', () => this.selectPhaseDiagram(diagramId));
+      phaseButtons.appendChild(button);
+      phaseButtonsMap[diagramId] = button;
+    }
+
     overlay.addEventListener('click', (event) => {
       if (event.target === overlay) {
         this.hide();
@@ -399,6 +502,7 @@ class TerraformingGraphsManager {
     window.addEventListener('resize', () => {
       if (this.isOpen) {
         this.needsRedraw = true;
+        this.phaseNeedsRedraw = true;
         this.draw();
       }
     });
@@ -414,14 +518,22 @@ class TerraformingGraphsManager {
     this.ui.canvas = canvas;
     this.ui.legend = legend;
     this.ui.note = note;
+    this.ui.phaseSection = phaseSection;
+    this.ui.phaseTitle = phaseTitle;
+    this.ui.phaseCanvas = phaseCanvas;
+    this.ui.phaseNote = phaseNote;
+    this.ui.phaseButtons = phaseButtons;
+    this.ui.phaseButtonsMap = phaseButtonsMap;
     this.ui.menuButtons = menuButtons;
     this.updateMenuState();
+    this.updatePhaseMenuState();
   }
 
   show() {
     this.ui.overlay.classList.add('is-visible');
     this.isOpen = true;
     this.needsRedraw = true;
+    this.phaseNeedsRedraw = true;
     this.draw();
   }
 
@@ -438,10 +550,29 @@ class TerraformingGraphsManager {
     this.draw();
   }
 
+  selectPhaseDiagram(diagramId) {
+    this.selectedPhaseDiagram = diagramId;
+    this.phaseNeedsRedraw = true;
+    this.updatePhaseMenuState();
+    this.drawPhaseDiagram();
+  }
+
   updateMenuState() {
     for (const graphId of TERRAFORMING_GRAPH_ORDER) {
       const button = this.ui.menuButtons[graphId];
       button.classList.toggle('active', graphId === this.selectedGraph);
+    }
+    const isPhaseMode = this.selectedGraph === 'phase';
+    this.ui.canvas.style.display = isPhaseMode ? 'none' : '';
+    this.ui.legend.style.display = isPhaseMode ? 'none' : '';
+    this.ui.note.style.display = isPhaseMode ? 'none' : '';
+    this.ui.phaseSection.style.display = isPhaseMode ? '' : 'none';
+  }
+
+  updatePhaseMenuState() {
+    for (const diagramId of TERRAFORMING_PHASE_DIAGRAM_ORDER) {
+      const button = this.ui.phaseButtonsMap[diagramId];
+      button.classList.toggle('active', diagramId === this.selectedPhaseDiagram);
     }
   }
 
@@ -461,8 +592,12 @@ class TerraformingGraphsManager {
     if (this.history.years.length !== startingLength) {
       this.needsRedraw = true;
     }
-    if (this.isOpen && this.needsRedraw) {
-      this.draw();
+    if (this.isOpen) {
+      if (this.needsRedraw) {
+        this.draw();
+      } else if (this.selectedGraph === 'phase') {
+        this.drawPhaseDiagram();
+      }
     }
   }
 
@@ -568,6 +703,11 @@ class TerraformingGraphsManager {
   }
 
   draw() {
+    if (this.selectedGraph === 'phase') {
+      this.drawPhaseDiagram();
+      this.needsRedraw = false;
+      return;
+    }
     const definition = TERRAFORMING_GRAPH_DEFINITIONS[this.selectedGraph] || TERRAFORMING_GRAPH_DEFINITIONS.temperature;
     const series = definition.buildSeries(this, this.history);
     const signature = series.map(entry => entry.label).join('|');
@@ -695,6 +835,152 @@ class TerraformingGraphsManager {
     }
 
     this.needsRedraw = false;
+  }
+
+  drawPhaseDiagram() {
+    const definition = TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS[this.selectedPhaseDiagram]
+      || TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS.water;
+    const cycle = definition.cycle;
+    const tripleTemp = cycle.tripleTemperature;
+    const criticalTemp = cycle.criticalTemperature;
+    const minTemp = Math.max(5, tripleTemp * 0.4);
+    const maxTemp = Math.max(tripleTemp * 1.2, Math.min(criticalTemp * 1.05, tripleTemp * 4));
+    const maxTempForPressure = Math.min(criticalTemp, maxTemp);
+    const triplePressure = cycle.triplePressure;
+    const minPressure = Math.max(0.1, triplePressure * 0.02);
+    const maxPressure = Math.max(triplePressure * 8, cycle.saturationVaporPressureFn(maxTempForPressure) * 1.2);
+    const logMin = Math.log10(minPressure);
+    const logMax = Math.log10(maxPressure);
+
+    const gravity = terraforming.celestialParameters.gravity;
+    const radius = terraforming.celestialParameters.radius;
+    const currentTemp = terraforming.temperature.value;
+    const currentAmount = resources.atmospheric[definition.atmosphereKey].value;
+    const currentPressure = calculateAtmosphericPressure(currentAmount, gravity, radius);
+    const signature = `${definition.id}:${Math.round(currentTemp * 10)}:${Math.round(currentPressure)}`;
+    if (!this.phaseNeedsRedraw && signature === this.phaseSignature) {
+      return;
+    }
+    this.phaseSignature = signature;
+    this.phaseNeedsRedraw = false;
+
+    this.ui.phaseTitle.textContent = `Phase Diagram - ${definition.label}`;
+    this.ui.phaseNote.textContent =
+      `Current global mean: ${formatNumber(currentTemp, false, 1)} K | Partial pressure: ${formatNumber(currentPressure, false, 2, true)} Pa`;
+
+    const canvas = this.ui.phaseCanvas;
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(320, Math.floor(rect.width));
+    const height = Math.max(220, Math.floor(rect.height));
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = width * pixelRatio;
+    canvas.height = height * pixelRatio;
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const padding = {
+      left: 60,
+      right: 28,
+      top: 30,
+      bottom: 36
+    };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+
+    const colorMap = {
+      gas: '#f4f4f4',
+      liquid: '#3b82c4',
+      solid: '#bcd9f3',
+      supercritical: '#f5b041'
+    };
+
+    const cols = 120;
+    const rows = 70;
+    const tempSpan = maxTemp - minTemp;
+    const logSpan = logMax - logMin;
+    for (let row = 0; row < rows; row += 1) {
+      const rowT = row / rows;
+      const logP = logMax - rowT * logSpan;
+      const pressure = Math.pow(10, logP);
+      const y = padding.top + rowT * plotHeight;
+      for (let col = 0; col < cols; col += 1) {
+        const colT = col / cols;
+        const temp = minTemp + colT * tempSpan;
+        const psat = cycle.saturationVaporPressureFn(temp);
+        let phase = 'gas';
+        if (temp < tripleTemp) {
+          phase = pressure >= psat ? 'solid' : 'gas';
+        } else if (temp >= criticalTemp) {
+          phase = pressure >= psat ? 'supercritical' : 'gas';
+        } else {
+          phase = pressure >= psat ? 'liquid' : 'gas';
+        }
+        ctx.fillStyle = colorMap[phase];
+        const x = padding.left + colT * plotWidth;
+        const cellWidth = plotWidth / cols + 0.5;
+        const cellHeight = plotHeight / rows + 0.5;
+        ctx.fillRect(x, y, cellWidth, cellHeight);
+      }
+    }
+
+    const darkMode = document.body.classList.contains('dark-mode');
+    ctx.strokeStyle = darkMode ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.12)';
+    ctx.lineWidth = 1;
+
+    const pressureTicks = buildLogTicks(logMin, logMax);
+    pressureTicks.forEach((exp) => {
+      const y = padding.top + (1 - (exp - logMin) / logSpan) * plotHeight;
+      ctx.beginPath();
+      ctx.moveTo(padding.left, y);
+      ctx.lineTo(width - padding.right, y);
+      ctx.stroke();
+    });
+
+    const tempTicks = buildLinearTicks(minTemp, maxTemp, 5);
+    tempTicks.forEach((tickValue) => {
+      const x = padding.left + ((tickValue - minTemp) / tempSpan) * plotWidth;
+      ctx.beginPath();
+      ctx.moveTo(x, padding.top + plotHeight);
+      ctx.lineTo(x, padding.top + plotHeight + 6);
+      ctx.stroke();
+    });
+
+    ctx.strokeStyle = '#2c2c2c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= cols; i += 1) {
+      const temp = minTemp + (tempSpan * i) / cols;
+      const psat = cycle.saturationVaporPressureFn(temp);
+      const clampedLogP = Math.min(logMax, Math.max(logMin, Math.log10(Math.max(psat, minPressure))));
+      const x = padding.left + ((temp - minTemp) / tempSpan) * plotWidth;
+      const y = padding.top + (1 - (clampedLogP - logMin) / logSpan) * plotHeight;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = darkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)';
+    ctx.font = '12px "Segoe UI", Arial, sans-serif';
+    pressureTicks.forEach((exp) => {
+      const y = padding.top + (1 - (exp - logMin) / logSpan) * plotHeight;
+      const labelValue = Math.pow(10, exp);
+      ctx.fillText(formatNumber(labelValue, false, 2, true), 6, y + 4);
+    });
+    tempTicks.forEach((tickValue) => {
+      const x = padding.left + ((tickValue - minTemp) / tempSpan) * plotWidth;
+      ctx.fillText(formatNumber(tickValue, false, 0), x - 10, padding.top + plotHeight + 20);
+    });
+
+    ctx.fillText('Temperature (K)', padding.left, padding.top - 12);
+    const pressureLabelX = Math.max(padding.left, width - padding.right - 130);
+    ctx.fillText('Pressure (Pa, log)', pressureLabelX, padding.top - 12);
+
+    return;
   }
 
   updateLegend(series) {

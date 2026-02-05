@@ -100,6 +100,7 @@ UI modules. Story progression is handled by **StoryManager** in **progress.js** 
 - Galactic Market +Max now cancels row sells before buying to avoid simultaneous sell/buy on the same resource.
 - Hazardous biomass crusader focus dropdown now keeps the selected zone instead of reverting to Any.
 - Clipboard exports now fall back to execCommand/prompt so save and WGC copy buttons work inside iframes.
+- Terraforming history charts now include a Phase Diagrams section with selectable Water/CO2/Methane/Ammonia/O2/N2 diagrams.
 
 ## Prestige systems
 Two reset layers control long term progression:
