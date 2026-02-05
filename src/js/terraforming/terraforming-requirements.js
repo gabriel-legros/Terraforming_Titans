@@ -180,7 +180,7 @@ const terraformingRequirements = {
       optimalGrowthTemperatureBaseK: 283.15,
       growthTemperatureToleranceBaseC: 1,
       growthTemperatureTolerancePerPointC: 0.5,
-      photosynthesisRatePerPoint: 0.00005,
+      photosynthesisRatePerPoint: 0.0015,
       bioworkersPerBiomassPerPoint: 0.00004,
       baseMaxBiomassDensityTPerM2: 0.1,
       radiationToleranceThresholdPoints: 25,

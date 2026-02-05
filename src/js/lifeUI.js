@@ -227,7 +227,7 @@ const lifeUICache = {
     dayTemp: {},
     nightTemp: {},
     tempMultiplier: {},
-    moisture: {},
+    liquidRequirements: {},
     radiation: {},
     maxDensity: {},
     biomassAmount: {},
@@ -235,7 +235,8 @@ const lifeUICache = {
     growthRate: {},
     growthRateValue: {},
     growthRateTooltip: {}
-  }
+  },
+  liquidRequirementRows: [],
 };
 
 let lifePointPurchaseQuantity = 1;
@@ -251,6 +252,7 @@ function cacheLifeModifyButtons() {
 function cacheLifeStatusTableElements() {
   lifeUICache.tempUnits = Array.from(document.querySelectorAll('#life-status-table .temp-unit'));
   const zones = ['global', 'tropical', 'temperate', 'polar'];
+  buildLifeLiquidRequirementRows(zones);
   zones.forEach(zone => {
     const dayCell = document.getElementById(`day-temp-${zone}`);
     const nightCell = document.getElementById(`night-temp-${zone}`);
@@ -267,7 +269,6 @@ function cacheLifeStatusTableElements() {
       tooltipEl: null
     };
     lifeUICache.cells.tempMultiplier[zone] = document.getElementById(`temp-multiplier-${zone}-status`);
-    lifeUICache.cells.moisture[zone] = document.getElementById(`moisture-${zone}-status`);
     lifeUICache.cells.radiation[zone] = document.getElementById(`radiation-${zone}-status`);
     lifeUICache.cells.maxDensity[zone] = document.getElementById(`max-density-${zone}-status`);
     lifeUICache.cells.biomassAmount[zone] = document.getElementById(`biomass-amount-${zone}-status`);
@@ -284,6 +285,66 @@ function cacheLifeStatusTableElements() {
     temperate: document.getElementById('life-status-header-temperate'),
     polar: document.getElementById('life-status-header-polar'),
   };
+}
+
+function getLiquidRequirementLabel(resourceKey) {
+  if (resourceKey === 'liquidWater') return 'Liquid Water';
+  const groupName = Object.values(resourcePhaseGroups || {})
+    .find(group => group.surfaceKeys?.liquid === resourceKey)?.name;
+  if (groupName) return `Liquid ${groupName}`;
+  const resourceName = resources?.surface?.[resourceKey]?.name;
+  return resourceName || resourceKey || 'Liquid';
+}
+
+function getLiquidRequirementKeysFromProcess(process) {
+  const surfaceInputs = Object.entries(process?.growth?.perBiomass?.surface || {})
+    .filter(([, value]) => value < 0)
+    .map(([resourceKey]) => resourceKey)
+    .filter((resourceKey) => resourceKey && resourceKey !== 'biomass')
+    .filter((resourceKey) => {
+      const groups = Object.values(resourcePhaseGroups || {});
+      return groups.some(group => group.surfaceKeys?.liquid === resourceKey);
+    });
+  return surfaceInputs;
+}
+
+function buildLifeLiquidRequirementRows(zones) {
+  const anchor = document.getElementById('life-liquid-rows-anchor');
+  if (!anchor) return;
+  const tbody = anchor.parentElement;
+  lifeUICache.liquidRequirementRows.forEach(row => row.remove());
+  lifeUICache.liquidRequirementRows = [];
+  lifeUICache.cells.liquidRequirements = {};
+
+  const process = getActiveLifeMetabolismProcessForUI();
+  const surfaceInputs = getLiquidRequirementKeysFromProcess(process);
+  surfaceInputs.forEach((resourceKey, index) => {
+    const row = document.createElement('tr');
+    const key = resourceKey || `liquid-${index}`;
+    const labelCell = document.createElement('td');
+    labelCell.style.border = '1px solid #ccc';
+    labelCell.style.padding = '5px';
+    const label = getLiquidRequirementLabel(resourceKey);
+    labelCell.textContent = label;
+    row.appendChild(labelCell);
+
+    const zoneCells = {};
+    zones.forEach(zone => {
+      const cell = document.createElement('td');
+      cell.id = `liquid-${key}-${zone}-status`;
+      cell.style.border = '1px solid #ccc';
+      cell.style.padding = '5px';
+      cell.style.textAlign = 'center';
+      cell.textContent = '-';
+      row.appendChild(cell);
+      zoneCells[zone] = cell;
+    });
+
+    lifeUICache.cells.liquidRequirements[key] = { resourceKey, labelCell, zoneCells };
+    lifeUICache.liquidRequirementRows.push(row);
+    tbody.insertBefore(row, anchor);
+  });
+  anchor.style.display = 'none';
 }
 
 function invalidateLifeDesignCaches() {
@@ -465,13 +526,7 @@ function initializeLifeTerraformingDesignerUI() {
                         <td id="temp-multiplier-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="temp-multiplier-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
-                    <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Liquid Water</td>
-                        <td id="moisture-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="moisture-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="moisture-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                        <td id="moisture-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
-                    </tr>
+                    <tr id="life-liquid-rows-anchor"></tr>
                      <tr>
                         <td style="border: 1px solid #ccc; padding: 5px;">Radiation</td>
                         <td id="radiation-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -1055,6 +1110,16 @@ function updateLifeStatusTable() {
 
     const zoneList = getZones();
     const zones = ['global', ...zoneList];
+    const process = getActiveLifeMetabolismProcessForUI();
+    const expectedLiquidKeys = getLiquidRequirementKeysFromProcess(process);
+    const cachedLiquidKeys = Object.values(lifeUICache.cells.liquidRequirements || {})
+        .map(entry => entry.resourceKey)
+        .filter(Boolean);
+    const needsLiquidRebuild = expectedLiquidKeys.length !== cachedLiquidKeys.length
+        || expectedLiquidKeys.some(key => !cachedLiquidKeys.includes(key));
+    if (needsLiquidRebuild) {
+        buildLifeLiquidRequirementRows(['global', 'tropical', 'temperate', 'polar']);
+    }
 
     const toggleZoneColumn = (zone, isVisible) => {
         const header = lifeUICache.cells.headers?.[zone];
@@ -1065,13 +1130,16 @@ function updateLifeStatusTable() {
         if (nightCell) nightCell.style.display = isVisible ? '' : 'none';
         const cells = [
             lifeUICache.cells.tempMultiplier?.[zone],
-            lifeUICache.cells.moisture?.[zone],
             lifeUICache.cells.radiation?.[zone],
             lifeUICache.cells.maxDensity?.[zone],
             lifeUICache.cells.biomassAmount?.[zone],
             lifeUICache.cells.biomassDensity?.[zone],
             lifeUICache.cells.growthRate?.[zone]?.cell,
         ];
+        Object.values(lifeUICache.cells.liquidRequirements || {}).forEach((entry) => {
+            const cell = entry.zoneCells?.[zone];
+            if (cell) cells.push(cell);
+        });
         cells.forEach(cell => {
             if (cell) cell.style.display = isVisible ? '' : 'none';
         });
@@ -1206,7 +1274,23 @@ function updateLifeStatusTable() {
             tempMultCell.textContent = formatNumber(growthTempResults[zone].multiplier, false, 2);
         }
 
-        updateStatusCell(lifeUICache.cells.moisture[zone], moistureResults[zone]);
+        Object.values(lifeUICache.cells.liquidRequirements).forEach((entry) => {
+            const cell = entry.zoneCells?.[zone];
+            if (!cell) return;
+            const resourceKey = entry.resourceKey;
+            const label = getLiquidRequirementLabel(resourceKey);
+            if (resourceKey === 'liquidWater') {
+                updateStatusCell(cell, moistureResults[zone]);
+                return;
+            }
+            const zoneAmount = (zone === 'global')
+                ? zoneList.reduce((sum, zoneName) => sum + (terraforming.zonalSurface[zoneName]?.[resourceKey] || 0), 0)
+                : (terraforming.zonalSurface[zone]?.[resourceKey] || 0);
+            const status = zone === 'global'
+                ? { pass: zoneAmount > 1e-9, reason: zoneAmount > 1e-9 ? '' : `Need ${label}` }
+                : { pass: zoneAmount > 1e-9, reason: `Need ${label}` };
+            updateStatusCell(cell, status);
+        });
         updateStatusCell(lifeUICache.cells.radiation[zone], radiationResult, zone === 'global');
 
         const maxDensityCell = lifeUICache.cells.maxDensity[zone];
@@ -1269,7 +1353,6 @@ function updateLifeStatusTable() {
                     `Temp: x${formatNumber(tempMult, false, 2)}`,
                     `Capacity: x${formatNumber(capacityMult, false, 2)}`,
                     `Radiation: x${formatNumber(radMult, false, 2)}`,
-                    `Liquid Water: x${formatNumber(waterMult, false, 2)}`,
                 ];
                 if (usesLuminosity) {
                     lines.splice(2, 0, `Luminosity: x${formatNumber(lumMult, false, 2)}`);
@@ -1286,6 +1369,18 @@ function updateLifeStatusTable() {
                     const landReduction = (1 - landMult) * 100;
                     lines.push(`Ecumenopolis: x${formatNumber(landMult, false, 2)} (-${landReduction.toFixed(2)}%)`);
                 }
+                const process = getActiveLifeMetabolismProcessForUI();
+                const liquidKeys = getLiquidRequirementKeysFromProcess(process);
+                liquidKeys.forEach((resourceKey) => {
+                    if (resourceKey === 'liquidWater') {
+                        lines.push(`Liquid Water: x${formatNumber(waterMult, false, 2)}`);
+                        return;
+                    }
+                    const zoneAmount = terraforming.zonalSurface[zone]?.[resourceKey] || 0;
+                    const mult = zoneAmount > 1e-9 ? 1 : 0;
+                    const label = getLiquidRequirementLabel(resourceKey);
+                    lines.push(`${label}: x${formatNumber(mult, false, 2)}`);
+                });
                 growthObj.tooltipEl = ensureDynamicInfoTooltip(tooltipIcon, growthObj.tooltipEl, lines.join('\n'));
             }
         }
