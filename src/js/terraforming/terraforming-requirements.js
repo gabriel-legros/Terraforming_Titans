@@ -232,6 +232,79 @@ const terraformingRequirements = {
       },
     },
   },
+  oommaa: {
+    id: 'oommaa',
+    displayName: 'Oommaa',
+    lore: [
+      'The Oommaa are an aquatic carbon-water dominion with a twist.  Due to the extreme pressure and low luminosity on their homeworld, carbon dioxide was more easily available in liquid form.',
+      'As a result the Oommaa thrive in mixed aquatic environments, with equal amount of CO2 and Water.  Their adapted version of photosynthesis does not produce any leftover oxygen, and instead uses it along with calcium to create thick shells that doubles as defense.',
+      'The Oommaa are a very long-lived species with a long memory and a slow metabolism.  Most Oommaa individuals were alive during the days of the Early Empire, and hold a strong grudge against it that will never go away.  They appreciate long and slow conversations, extended periods of sleep and stargazing.',
+    ].join('\n\n'),
+    dominionUnlock: { type: 'fullyControlledSectors', minimum: 10 },
+    temperatureRangeK: { min: 283.15, max: 298.15 },
+    luminosityRange: { min: 0, max: 100 },
+    totalPressureRangeKPa: { min: 6000, max: 11000 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 5_800_000, max: 9_500_000 },
+      inertGas: { min: 1_000_000, max: 2_000_000 },
+      atmosphericAmmonia: { min: 0, max: 10 },
+    },
+    liquidCoverageTarget: 0.5,
+    liquidType: 'water',
+    liquidCoverageTargets: [
+      { liquidType: 'water', coverageTarget: 0.5 },
+      { liquidType: 'carbonDioxide', coverageTarget: 0.5 },
+    ],
+    lifeCoverageTarget: 0.4,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    lifeDesign: {
+      survivalTemperatureRangeK: { min: 273.15, max: 308.15 },
+      optimalGrowthTemperatureBaseK: 288.15,
+      growthTemperatureToleranceBaseC: 1,
+      growthTemperatureTolerancePerPointC: 0.5,
+      photosynthesisRatePerPoint: 0.00005,
+      bioworkersPerBiomassPerPoint: 0.00004,
+      baseMaxBiomassDensityTPerM2: 0.1,
+      radiationToleranceThresholdPoints: 25,
+      minimumBiomassDecayRateTPerS: 1,
+      metabolism: {
+        primaryProcessId: 'carbonateShellPhotosynthesis',
+        processes: {
+          carbonateShellPhotosynthesis: {
+            id: 'carbonateShellPhotosynthesis',
+            displayName: 'Carbonate-Shell Photosynthesis',
+            growth: {
+              usesLuminosity: true,
+              perBiomass: {
+                surface: { biomass: 1, liquidWater: -0.2903225806451613, liquidCO2: -0.7096774193548387 },
+                atmospheric: {},
+              },
+            },
+            decay: {
+              allowSterileDecayWithoutOxygen: true,
+              perBiomass: {
+                surface: { biomass: -1, liquidCO2: 0.7096774193548387 },
+                atmospheric: { atmosphericWater: 0.2903225806451613 },
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 25,
+        invasiveness: 50,
+        spaceEfficiency: 100,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+      },
+    },
+  },
 };
 
 function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {

@@ -1244,6 +1244,8 @@ function createWaterBox(row) {
       </table>
       <p class="no-margin">Water coverage: <span id="water-current">0.00</span>%</p>
       <p class="no-margin">Ice coverage: <span id="ice-current">0.00</span>%</p>
+      <p class="no-margin" id="co2-liquid-row" style="display:none;">Liquid CO2 coverage: <span id="co2-liquid-current">0.00</span>%</p>
+      <p class="no-margin" id="co2-ice-row" style="display:none;">Dry ice coverage: <span id="co2-ice-current">0.00</span>%</p>
     `;
 
     const waterHeading = waterBox.querySelector('h3');
@@ -1253,10 +1255,7 @@ function createWaterBox(row) {
 
     const targetSpan = document.createElement('span');
     targetSpan.id = 'water-target';
-    const waterTargetPercent = terraforming.waterTarget * 100;
-    const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget);
-    const targetAmountText = formatNumber(targetAmount, false, 1);
-    targetSpan.textContent = `Target : Water coverage >= ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
+    targetSpan.innerHTML = formatLiquidCoverageTargets(terraforming);
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     waterBox.appendChild(targetSpan);
@@ -1268,6 +1267,10 @@ function createWaterBox(row) {
       box: waterBox,
       waterCurrent: waterBox.querySelector('#water-current'),
       iceCurrent: waterBox.querySelector('#ice-current'),
+      co2LiquidRow: waterBox.querySelector('#co2-liquid-row'),
+      co2LiquidCurrent: waterBox.querySelector('#co2-liquid-current'),
+      co2IceRow: waterBox.querySelector('#co2-ice-row'),
+      co2IceCurrent: waterBox.querySelector('#co2-ice-current'),
       evaporationRate: waterBox.querySelector('#evaporation-rate'),
       sublimationRate: waterBox.querySelector('#sublimation-rate'),
       rainfallRate: waterBox.querySelector('#rainfall-rate'),
@@ -1282,6 +1285,28 @@ function createWaterBox(row) {
       freezingRateKg: waterBox.querySelector('#freezing-rate-kg'),
       target: targetSpan
     };
+  }
+
+  function getLiquidCoverageTargetLabel(entry) {
+    switch (entry.liquidType) {
+      case 'water':
+        return 'Water';
+      case 'carbonDioxide':
+        return 'Liquid CO2';
+      default:
+        return entry.liquidType || entry.coverageKey || 'Liquid';
+    }
+  }
+
+  function formatLiquidCoverageTargets(terraformingState) {
+    const parts = terraformingState.liquidCoverageTargets.map((entry) => {
+      const label = getLiquidCoverageTargetLabel(entry);
+      const pct = entry.coverageTarget * 100;
+      const targetAmount = getWaterTargetAmount(terraformingState, entry.coverageTarget) || 0;
+      const targetAmountText = formatNumber(targetAmount, false, 1);
+      return `${label} coverage >= ${formatNumber(pct, false, 0)}% (${targetAmountText}).`;
+    });
+    return `Target : ${parts.join('<br>')}`;
   }
 
   function formatWaterRate(value) {
@@ -1325,18 +1350,33 @@ function createWaterBox(row) {
 
     const avgLiquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
     const avgIceCoverage = calculateAverageCoverage(terraforming, 'ice') || 0;
+    const avgCo2LiquidCoverage = calculateAverageCoverage(terraforming, 'liquidCO2') || 0;
+    const avgDryIceCoverage = calculateAverageCoverage(terraforming, 'dryIce') || 0;
 
-    // Update border based on average liquid coverage vs target
-    waterBox.style.borderColor = avgLiquidCoverage >= terraforming.waterTarget ? 'green' : 'red';
+    const requiresCo2 = terraforming.liquidCoverageTargets.some((entry) => entry.liquidType === 'carbonDioxide');
+    if (els.co2LiquidRow) els.co2LiquidRow.style.display = requiresCo2 ? '' : 'none';
+    if (els.co2IceRow) els.co2IceRow.style.display = requiresCo2 ? '' : 'none';
+
+    let allTargetsMet = true;
+    for (const entry of terraforming.liquidCoverageTargets) {
+      const current = calculateAverageCoverage(terraforming, entry.coverageKey) || 0;
+      if (current < entry.coverageTarget) {
+        allTargetsMet = false;
+        break;
+      }
+    }
+
+    waterBox.style.borderColor = allTargetsMet ? 'green' : 'red';
 
     els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
     els.iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
+    if (requiresCo2) {
+      if (els.co2LiquidCurrent) els.co2LiquidCurrent.textContent = (avgCo2LiquidCoverage * 100).toFixed(2);
+      if (els.co2IceCurrent) els.co2IceCurrent.textContent = (avgDryIceCoverage * 100).toFixed(2);
+    }
 
     if (els.target) {
-      const waterTargetPercent = terraforming.waterTarget * 100;
-      const targetAmount = getWaterTargetAmount(terraforming, terraforming.waterTarget) || 0;
-      const targetAmountText = formatNumber(targetAmount, false, 1);
-      els.target.textContent = `Target : Water coverage >= ${formatNumber(waterTargetPercent, false, 0)}% (${targetAmountText}).`;
+      els.target.innerHTML = formatLiquidCoverageTargets(terraforming);
     }
 
     els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate || 0);

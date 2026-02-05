@@ -1356,14 +1356,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       let showDefaultTime = true;
       const unstableTimer = resourceUICache.unstableTimers[resource.name] || 0;
       const rateUnstable = unstableTimer > 0;
-      if (resource.name === terraforming.liquidCoverageKey && netRate > 0) {
-        const targetAmount = getLiquidCoverageTargetAmount(terraforming, terraforming.waterTarget);
+      const liquidTarget = terraforming.liquidCoverageTargets.find((entry) => entry.coverageKey === resource.name);
+      if (liquidTarget && netRate > 0) {
+        const targetAmount = getLiquidCoverageTargetAmount(terraforming, liquidTarget.coverageTarget);
         const remaining = targetAmount - resource.value;
+        const label = resource.displayName || resource.name;
         if (remaining > 0) {
           const time = remaining / netRate;
-          timeDiv.textContent = `Time to terraforming target: ${formatDuration(Math.max(time, 0))}`;
+          timeDiv.textContent = `Time to ${label} terraforming target: ${formatDuration(Math.max(time, 0))}`;
         } else {
-          timeDiv.textContent = 'Terraforming target reached.';
+          timeDiv.textContent = `${label} terraforming target reached.`;
         }
         showDefaultTime = false;
       }

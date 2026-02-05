@@ -98,6 +98,24 @@ const LIQUID_COVERAGE_KEYS = phaseGroupMappings.liquidCoverageKeys;
 const ZONAL_SURFACE_RESOURCE_KEYS = phaseGroupMappings.surfaceKeys;
 const LEGACY_ZONAL_SURFACE_MAPPINGS = phaseGroupMappings.legacyMappings;
 
+function buildLiquidCoverageTargets(requirements) {
+  const fallbackLiquidType = requirements.liquidType || 'water';
+  const fallbackTarget = Number.isFinite(requirements.liquidCoverageTarget) ? requirements.liquidCoverageTarget : 0;
+  const entries = Array.isArray(requirements.liquidCoverageTargets) && requirements.liquidCoverageTargets.length
+    ? requirements.liquidCoverageTargets
+    : [{ liquidType: fallbackLiquidType, coverageTarget: fallbackTarget }];
+
+  const targets = [];
+  for (const entry of entries) {
+    const liquidType = entry.liquidType || fallbackLiquidType;
+    const coverageKey = LIQUID_COVERAGE_KEYS[liquidType] || LIQUID_COVERAGE_KEYS[fallbackLiquidType] || 'liquidWater';
+    const rawTarget = Number.isFinite(entry.coverageTarget) ? entry.coverageTarget : fallbackTarget;
+    const coverageTarget = Math.max(0, Math.min(rawTarget, 1));
+    targets.push({ liquidType, coverageKey, coverageTarget });
+  }
+  return targets;
+}
+
 function buildZonalSurfaceResourceConfigs() {
   const configs = [];
   const surfaceResources = defaultPlanetResources.surface;
@@ -362,9 +380,12 @@ class Terraforming extends EffectableEntity{
     // Zonal Surface Data
     this.zonalSurface = createEmptyZonalSurface();
 
-    // Global liquid target remains, moved outside the old structure
-    this.waterTarget = this.requirements.liquidCoverageTarget;
-    this.liquidCoverageKey = LIQUID_COVERAGE_KEYS[this.requirements.liquidType] || 'liquidWater';
+    // Global liquid targets (supports multi-liquid terraforming requirements)
+    this.liquidCoverageTargets = buildLiquidCoverageTargets(this.requirements);
+    const waterTargetEntry = this.liquidCoverageTargets.find((entry) => entry.liquidType === 'water')
+      || this.liquidCoverageTargets[0];
+    this.waterTarget = waterTargetEntry.coverageTarget;
+    this.liquidCoverageKey = waterTargetEntry.coverageKey;
     this.waterUnlocked = false; // Global unlock status
 
     // Global atmosphere properties (Now primarily accessed via global 'resources.atmospheric')
@@ -531,8 +552,12 @@ class Terraforming extends EffectableEntity{
 
 
   getWaterStatus() {
-    // Compare average liquid water coverage to the global target
-    return (calculateAverageCoverage(this, this.liquidCoverageKey) >= this.waterTarget);
+    for (const entry of this.liquidCoverageTargets) {
+      if ((calculateAverageCoverage(this, entry.coverageKey) || 0) < entry.coverageTarget) {
+        return false;
+      }
+    }
+    return true;
   }
 
   getLuminosityStatus() {

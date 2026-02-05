@@ -96,7 +96,7 @@ var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMulti
 var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
 const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage', kessler: 'Kessler Skies' };
-const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', random: 'Random' };
+const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', random: 'Random' };
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
