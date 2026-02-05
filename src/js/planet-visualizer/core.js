@@ -220,10 +220,11 @@
       const surface = this.surfaceMesh;
       if (!surface || !surface.material || !surface.material.color) return;
       const base = this.getGameBaseColor();
-      if (dustFactorySettings.dustColorChanged) {
+      const dustFactory = buildings.dustFactory;
+      if (dustFactory.dustColorChanged) {
         const currentTint = this.lastDustTintColor || this.dustTintColor || base;
         this.dustTintStartColor = currentTint || base;
-        dustFactorySettings.dustColorChanged = false;
+        dustFactory.dustColorChanged = false;
       }
       const customColor = dustFactorySettings.dustColor;
       const ratio = this.getDustTintRatio();

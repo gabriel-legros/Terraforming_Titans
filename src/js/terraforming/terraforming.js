@@ -1264,6 +1264,7 @@ class Terraforming extends EffectableEntity{
         const blackAlbedo = dustFactorySettings.dustColorAlbedo; // black dust
         const whiteAlbedo = 0.8;  // white dust
         const surfaceArea = this.celestialParameters.surfaceArea || 0;
+        const dustFactory = buildings.dustFactory;
 
         const special = this.resources.special;
         const black = special.albedoUpgrades.value;
@@ -1282,11 +1283,11 @@ class Terraforming extends EffectableEntity{
         const untouched = Math.max(0, 1 - totalApplied);
         const blended = (blackAlbedo * shareBlack) + (whiteAlbedo * shareWhite) + (baseAlbedo * untouched);
 
-        if (dustFactorySettings.dustAlbedoTransitionActive) {
-            const start = dustFactorySettings.dustAlbedoStart ?? baseAlbedo;
+        if (dustFactory.dustAlbedoTransitionActive) {
+            const start = dustFactory.dustAlbedoStart ?? baseAlbedo;
             const transitioned = (start * (1 - totalApplied)) + (blended * totalApplied);
             if (totalApplied >= 1) {
-                dustFactorySettings.dustAlbedoTransitionActive = false;
+                dustFactory.dustAlbedoTransitionActive = false;
             }
             return transitioned;
         }
