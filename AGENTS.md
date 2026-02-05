@@ -674,3 +674,4 @@ The planet visualiser has been modularised into files covering core setup, light
 - Cloud map generation now uses tileable noise so cloud textures wrap cleanly on the sphere.
 - Cloud generation now samples 3D noise on the sphere for smoother, cloud-like coverage without seams.
 - Terraforming summary now includes a history charts button with a left-hand graph picker, recording yearly snapshots (saved/loaded, cleared on travel) for temperature, atmosphere, water/ice, albedo, luminosity, and life coverage up to 500 years.
+- Ship automation now tracks remaining ships and mass-driver capacity separately during allocation so mass-driver assignments aren't skipped when ships run out.

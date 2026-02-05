@@ -427,17 +427,38 @@ class SpaceshipAutomation {
     }
 
     const desiredAssignments = {};
-    let remainingTotal = totalShips;
+    let remainingShipsOnly = totalShipsOnly;
+    let remainingMassDriverEquivalency = massDriverCapacity;
+    let remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
+    const getPoolAvailable = usesMassDrivers => usesMassDrivers
+      ? remainingShipsOnly + remainingMassDriverEquivalency
+      : remainingShipsOnly;
+    const consumePool = (usesMassDrivers, amount) => {
+      if (amount <= 0) return 0;
+      if (usesMassDrivers) {
+        const fromMass = Math.min(amount, remainingMassDriverEquivalency);
+        remainingMassDriverEquivalency -= fromMass;
+        const remaining = amount - fromMass;
+        if (remaining > 0) {
+          remainingShipsOnly = Math.max(0, remainingShipsOnly - remaining);
+        }
+        return amount;
+      }
+      const applied = Math.min(amount, remainingShipsOnly);
+      remainingShipsOnly = Math.max(0, remainingShipsOnly - applied);
+      return applied;
+    };
     for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
       const step = preset.steps[stepIndex];
-      if (remainingTotal <= 0) break;
       const entries = step.entries;
+      const stepHasMassDrivers = entries.some(entry => entry.projectId === massDriverTargetId);
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
       const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
-      let stepLimit = remainingTotal;
+      const stepPoolLimit = stepHasMassDrivers ? remainingTotal : remainingShipsOnly;
+      let stepLimit = stepPoolLimit;
       if (!isCappedMin && !isCappedMax) {
-        stepLimit = limitValue === null ? 0 : Math.min(limitValue, remainingTotal);
+        stepLimit = limitValue === null ? 0 : Math.min(limitValue, stepPoolLimit);
       }
       if (isCappedMax) {
         let totalWeight = 0;
@@ -481,6 +502,7 @@ class SpaceshipAutomation {
           const entry = entries[entryIndex];
           const project = targets.find(item => item.name === entry.projectId);
           if (!project) continue;
+          const usesMassDrivers = entry.projectId === massDriverTargetId;
           const releaseOnDisable = this.disabledProjects.has(entry.projectId);
           const automationAllowed = typeof project.shouldAutomationDisable === 'function' ? !project.shouldAutomationDisable() : true;
           const manuallyDisabled = project.isAutomationManuallyDisabled();
@@ -491,12 +513,14 @@ class SpaceshipAutomation {
           const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
           desiredAssignments[entry.projectId] = currentTarget;
           const maxForEntry = this.computeEntryMax(entry, project);
-          const remainingCapacity = Math.max(0, maxForEntry - currentTarget);
+          const entryPool = getPoolAvailable(usesMassDrivers);
+          const remainingCapacity = Math.min(Math.max(0, maxForEntry - currentTarget), entryPool);
           if (entry.weight > 0 && remainingCapacity > 0) {
             weightedEntries.push({
               project,
               entry,
-              remainingCapacity
+              remainingCapacity,
+              usesMassDrivers
             });
           }
         }
@@ -516,8 +540,10 @@ class SpaceshipAutomation {
             const item = weightedEntries[wIndex];
             const share = Math.floor(stepRemaining * (item.entry.weight / totalWeight));
             if (share <= 0) continue;
-            const applied = Math.min(share, item.remainingCapacity);
+            const poolAvailable = getPoolAvailable(item.usesMassDrivers);
+            const applied = Math.min(share, item.remainingCapacity, poolAvailable);
             if (applied > 0) {
+              consumePool(item.usesMassDrivers, applied);
               desiredAssignments[item.project.name] = (desiredAssignments[item.project.name] || 0) + applied;
               allocatedInPass += applied;
             }
@@ -527,9 +553,13 @@ class SpaceshipAutomation {
           if (remainder > 0) {
             for (let wIndex = 0; wIndex < weightedEntries.length && remainder > 0; wIndex += 1) {
               const item = weightedEntries[wIndex];
+              const poolAvailable = getPoolAvailable(item.usesMassDrivers);
+              if (poolAvailable <= 0) continue;
               const current = desiredAssignments[item.project.name] || 0;
               const cap = this.computeEntryMax(item.entry, item.project);
               if (current < cap) {
+                const applied = consumePool(item.usesMassDrivers, 1);
+                if (applied <= 0) continue;
                 desiredAssignments[item.project.name] = current + 1;
                 allocatedInPass += 1;
                 remainder -= 1;
@@ -565,8 +595,10 @@ class SpaceshipAutomation {
           for (let wIndex = 0; wIndex < weightedEntries.length; wIndex += 1) {
             const item = weightedEntries[wIndex];
             const share = Math.floor(item.entry.weight * factor);
-            const applied = Math.min(share, item.remainingCapacity);
+            const poolAvailable = getPoolAvailable(item.usesMassDrivers);
+            const applied = Math.min(share, item.remainingCapacity, poolAvailable);
             if (applied > 0) {
+              consumePool(item.usesMassDrivers, applied);
               desiredAssignments[item.project.name] = (desiredAssignments[item.project.name] || 0) + applied;
               allocatedInPass += applied;
             }
@@ -582,6 +614,10 @@ class SpaceshipAutomation {
             for (let allocIndex = 0; allocIndex < allocations.length && remainder > 0; allocIndex += 1) {
               const allocation = allocations[allocIndex];
               if (allocation.applied >= allocation.item.remainingCapacity) continue;
+              const poolAvailable = getPoolAvailable(allocation.item.usesMassDrivers);
+              if (poolAvailable <= 0) continue;
+              const applied = consumePool(allocation.item.usesMassDrivers, 1);
+              if (applied <= 0) continue;
               desiredAssignments[allocation.item.project.name] = (desiredAssignments[allocation.item.project.name] || 0) + 1;
               allocation.applied += 1;
               allocatedInPass += 1;
@@ -591,7 +627,7 @@ class SpaceshipAutomation {
           if (allocatedInPass <= 0) {
             break;
           }
-          remainingTotal = Math.max(0, remainingTotal - allocatedInPass);
+          remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
           stepRemaining = Math.max(0, stepRemaining - allocatedInPass);
           break;
         } else {
@@ -602,7 +638,7 @@ class SpaceshipAutomation {
           }
 
           stepRemaining = Math.max(0, stepRemaining - allocatedInPass);
-          remainingTotal = Math.max(0, remainingTotal - allocatedInPass);
+          remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
         }
       }
     }
