@@ -351,11 +351,6 @@ class DustFactory extends Building {
     return {
       autoTargetAlbedo: !!settings.autoTargetAlbedo,
       targetAlbedo: settings.targetAlbedo,
-      dustColor: settings.dustColor,
-      dustColorAlbedo: settings.dustColorAlbedo,
-      dustAlbedoStart: settings.dustAlbedoStart,
-      dustAlbedoTransitionActive: !!settings.dustAlbedoTransitionActive,
-      hasCustomTarget: !!settings.hasCustomTarget,
       initialized: !!settings.initialized
     };
   }
@@ -368,22 +363,6 @@ class DustFactory extends Building {
     settings.targetAlbedo = 'targetAlbedo' in saved
       ? saved.targetAlbedo
       : DEFAULT_DUST_AUTOMATION_SETTINGS.targetAlbedo;
-    settings.dustColor = 'dustColor' in saved
-      ? saved.dustColor
-      : DEFAULT_DUST_AUTOMATION_SETTINGS.dustColor;
-    settings.dustColorAlbedo = 'dustColorAlbedo' in saved
-      ? saved.dustColorAlbedo
-      : getDustAlbedoFromColor(settings.dustColor);
-    settings.dustColorChanged = false;
-    settings.dustAlbedoStart = 'dustAlbedoStart' in saved
-      ? saved.dustAlbedoStart
-      : DEFAULT_DUST_AUTOMATION_SETTINGS.dustAlbedoStart;
-    settings.dustAlbedoTransitionActive = 'dustAlbedoTransitionActive' in saved
-      ? !!saved.dustAlbedoTransitionActive
-      : DEFAULT_DUST_AUTOMATION_SETTINGS.dustAlbedoTransitionActive;
-    settings.hasCustomTarget = 'hasCustomTarget' in saved
-      ? !!saved.hasCustomTarget
-      : DEFAULT_DUST_AUTOMATION_SETTINGS.hasCustomTarget;
     settings.initialized = 'initialized' in saved
       ? !!saved.initialized
       : DEFAULT_DUST_AUTOMATION_SETTINGS.initialized;
@@ -396,6 +375,12 @@ class DustFactory extends Building {
 
   static applyDustColorChange(previousColor, settings, previousAlbedo) {
     applyDustColorChange(previousColor, settings, previousAlbedo);
+  }
+
+  static resetTravelState() {
+    const settings = this.getAutomationSettings();
+    settings.dustAlbedoStart = DEFAULT_DUST_AUTOMATION_SETTINGS.dustAlbedoStart;
+    settings.dustAlbedoTransitionActive = DEFAULT_DUST_AUTOMATION_SETTINGS.dustAlbedoTransitionActive;
   }
 }
 
