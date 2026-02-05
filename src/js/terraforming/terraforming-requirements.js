@@ -236,9 +236,10 @@ const terraformingRequirements = {
     id: 'oommaa',
     displayName: 'Oommaa',
     lore: [
-      'The Oommaa are an aquatic carbon-water dominion with a twist.  Due to the extreme pressure and low luminosity on their homeworld, carbon dioxide was more easily available in liquid form.',
-      'As a result the Oommaa thrive in mixed aquatic environments, with equal amount of CO2 and Water.  Their adapted version of photosynthesis does not produce any leftover oxygen, and instead uses it along with calcium to create thick shells that doubles as defense.',
-      'The Oommaa are a very long-lived species with a long memory and a slow metabolism.  Most Oommaa individuals were alive during the days of the Early Empire, and hold a strong grudge against it that will never go away.  They appreciate long and slow conversations, extended periods of sleep and stargazing.',
+      'The Oommaa are an aquatic carbon–water dominion with one major twist: on their homeworld, extreme pressure and low light make carbon dioxide readily available in liquid form. Instead of being mostly an atmospheric gas, CO₂ collects in dense layers and pools within the global ocean, creating habitats where liquid CO₂ and liquid water meet.',
+      'Oommaa biology is adapted to these mixed environments—regions with roughly comparable amounts of CO₂ and water, often in stratified basins or along turbulent boundaries where the two fluids interact. Their light-harvesting metabolism is a pressure-adapted form of photosynthesis designed for dim conditions, and it does not vent oxygen as waste. Any free oxygen is treated as a useful reagent rather than something to release.',
+      'A defining feature of the Oommaa is how they turn oxygen into armor. They use oxygen together with calcium to grow thick shells that serve as both protection and structural support. Shell growth is responsive: it thickens under threat and can develop layered patterns that reflect an individual’s age and life history.',
+      'Oommaa are extremely long-lived, with slow metabolisms and long memories. Many individuals alive today were already adults during the era of the Early Empire, and their resentment toward it is personal and enduring. Culturally, they favor patience: long, unhurried conversations, careful deliberation, and extended periods of sleep are all considered normal—signs of maturity.'
     ].join('\n\n'),
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 10 },
     temperatureRangeK: { min: 283.15, max: 298.15 },
