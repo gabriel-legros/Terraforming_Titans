@@ -193,7 +193,7 @@ function updateLifeAutomationUI() {
   }
 
   lifeAddStepButton.disabled = activePreset.designSteps.length >= automation.maxSteps;
-  lifeAddStepButton.style.display = activePreset.designSteps.length === 0 ? '' : 'none';
+  lifeAddStepButton.style.display = '';
 }
 
 function attachLifeAutomationHandlers() {
