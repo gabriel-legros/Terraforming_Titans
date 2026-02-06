@@ -21,7 +21,10 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - For screenshots, set `DEBUG_MODE` to `true` in `src/js/debug_constants.js` so intro skip paths are available.
 
 ## Testing
-- Run test with npm test.
+- In this repo setup (WSL working on a Windows folder), run tests with Windows binaries:
+  - `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm test"`
+- If Windows `node_modules` is missing, install dependencies with:
+  - `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm ci"`
 - Report pass/fail counts.
 - Do not add tests for new features unless explicitly requested.
 
