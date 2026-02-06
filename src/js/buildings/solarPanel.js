@@ -33,9 +33,11 @@ class SolarPanel extends Building {
     if (!tooltip) {
       tooltip = document.createElement('span');
       tooltip.classList.add('info-tooltip-icon');
-      tooltip.title =
-        'Solar panels are limited to 10× the initial land amount.';
       tooltip.innerHTML = '&#9432;';
+      cache.countTooltipContent = attachDynamicInfoTooltip(
+        tooltip,
+        'Solar panels are limited to 10× the initial land amount.'
+      );
       cache.countTooltip = tooltip;
     }
 

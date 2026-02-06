@@ -40,9 +40,11 @@ class WindTurbine extends Building {
     if (!tooltip) {
       tooltip = document.createElement('span');
       tooltip.classList.add('info-tooltip-icon');
-      tooltip.title =
-        'Wind turbine arrays are limited to 1 per 50 units of initial land.';
       tooltip.innerHTML = '&#9432;';
+      cache.countTooltipContent = attachDynamicInfoTooltip(
+        tooltip,
+        'Wind turbine arrays are limited to 1 per 50 units of initial land.'
+      );
       cache.countTooltip = tooltip;
     }
 

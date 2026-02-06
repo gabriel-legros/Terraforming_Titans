@@ -676,8 +676,10 @@ function attachAerostatBuoyancySection(container, structure) {
     const liftInfo = document.createElement('span');
     liftInfo.classList.add('info-tooltip-icon');
     liftInfo.innerHTML = '&#9432;';
-    liftInfo.title =
-      'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.  When "Land as Research Outpost" is enabled, disabled aerostats will attempt to convert into Research Outposts if land is available.';
+    const liftTooltip = attachDynamicInfoTooltip(
+      liftInfo,
+      'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.  When "Land as Research Outpost" is enabled, disabled aerostats will attempt to convert into Research Outposts if land is available.'
+    );
     liftRow.appendChild(liftInfo);
 
     body.appendChild(liftRow);
@@ -706,8 +708,11 @@ function attachAerostatBuoyancySection(container, structure) {
 
     const mitigationInfo = document.createElement('span');
     mitigationInfo.classList.add('info-tooltip-icon');
-   mitigationInfo.innerHTML = '&#9432;';
-    mitigationInfo.title = AEROSTAT_TEMPERATURE_TOOLTIP_INTRO;
+    mitigationInfo.innerHTML = '&#9432;';
+    const mitigationTooltip = attachDynamicInfoTooltip(
+      mitigationInfo,
+      AEROSTAT_TEMPERATURE_TOOLTIP_INTRO
+    );
     mitigationRow.appendChild(mitigationInfo);
 
     body.appendChild(mitigationRow);
@@ -737,7 +742,10 @@ function attachAerostatBuoyancySection(container, structure) {
     const limitInfo = document.createElement('span');
     limitInfo.classList.add('info-tooltip-icon');
     limitInfo.innerHTML = '&#9432;';
-    limitInfo.title = AEROSTAT_LAND_LIMIT_TOOLTIP;
+    const limitTooltip = attachDynamicInfoTooltip(
+      limitInfo,
+      AEROSTAT_LAND_LIMIT_TOOLTIP
+    );
     limitRow.appendChild(limitInfo);
 
     body.appendChild(limitRow);
@@ -750,10 +758,13 @@ function attachAerostatBuoyancySection(container, structure) {
       text,
       liftValue,
       liftInfo,
+      liftTooltip,
       mitigationValue,
       mitigationInfo,
+      mitigationTooltip,
       limitValue,
       limitInfo,
+      limitTooltip,
       expanded: true
     };
 
@@ -865,7 +876,7 @@ function updateAerostatBuoyancySection(structure) {
       false,
       0
     )} kPa of surface pressure to remain buoyant.`;
-    ui.liftInfo.title = title;
+    setTooltipText(ui.liftTooltip, title, ui, 'liftTooltipText');
   }
 
   if (ui.mitigationValue) {
@@ -913,7 +924,7 @@ function updateAerostatBuoyancySection(structure) {
         mitigationTitle += '\nNo buildings currently list an Aerostat Support value.';
       }
     }
-    ui.mitigationInfo.title = mitigationTitle;
+    setTooltipText(ui.mitigationTooltip, mitigationTitle, ui, 'mitigationTooltipText');
   }
 
   if (ui.limitValue) {
@@ -930,7 +941,7 @@ function updateAerostatBuoyancySection(structure) {
         2
       )}.`;
     }
-    ui.limitInfo.title = limitTitle;
+    setTooltipText(ui.limitTooltip, limitTitle, ui, 'limitTooltipText');
   }
 }
 

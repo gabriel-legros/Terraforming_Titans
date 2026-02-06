@@ -90,6 +90,9 @@ class DysonReceiver extends Building {
   _updateTooltip(cache) {
     const tooltip = this._ensureTooltip(cache);
     if (!tooltip) return;
+    if (!cache.countTooltipContent) {
+      cache.countTooltipContent = attachDynamicInfoTooltip(tooltip, '');
+    }
 
     const perBuilding = this.production?.colony?.energy || 0;
     const totals = this.getCollectorTotals();
@@ -97,7 +100,12 @@ class DysonReceiver extends Building {
     const cap = perBuilding > 0 ? Math.floor(totalEnergy / perBuilding) : 0;
 
     if (totals.totalCollectors <= 0 || cap <= 0) {
-      tooltip.title = 'Build Dyson Swarm or Dyson Sphere collectors to increase receiver capacity.';
+      setTooltipText(
+        cache.countTooltipContent,
+        'Build Dyson Swarm or Dyson Sphere collectors to increase receiver capacity.',
+        cache,
+        'countTooltipText'
+      );
       return;
     }
 
@@ -112,9 +120,7 @@ class DysonReceiver extends Building {
     }
     const breakdown = parts.length ? ` (${parts.join(' + ')})` : '';
     const title = `Dyson receivers constructions are capped by swarm and sphere collectors, and you cannot build more than this cap. ${formattedCollectors}${breakdown} collectors allow ${formattedCap} receivers.`;
-    if (tooltip.title !== title) {
-      tooltip.title = title;
-    }
+    setTooltipText(cache.countTooltipContent, title, cache, 'countTooltipText');
   }
 
   initUI(_, cache) {
