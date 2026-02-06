@@ -292,6 +292,13 @@ function initializeSidebarAutomationUI() {
 }
 
 function updateSidebarAutomationUI() {
+  if (!sidebarAutomationInitialized) {
+    initializeSidebarAutomationUI();
+  }
+  if (!sidebarAutomationInitialized) {
+    return false;
+  }
+
   const elements = sidebarAutomationElements;
   const manager = automationManager;
   const hasAnyAutomation = manager.hasFeature('automationShipAssignment')
@@ -364,4 +371,6 @@ function updateSidebarAutomationUI() {
     elements.buildingsPresetDeploy.disabled = !elements.buildingsPresetSelect.value;
     elements.buildingsCombinationDeploy.disabled = buildingAutomation.getAssignments().length === 0;
   }
+
+  return true;
 }

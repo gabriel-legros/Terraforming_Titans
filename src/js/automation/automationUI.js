@@ -417,7 +417,9 @@ function updateAutomationUI() {
   updateShipAutomationUI();
   updateLifeAutomationUI();
   updateBuildingsAutomationUI();
-  updateSidebarAutomationUI();
+  if (!updateSidebarAutomationUI()) {
+    automationUIStale = true;
+  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {
