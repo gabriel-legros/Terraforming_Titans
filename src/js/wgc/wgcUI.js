@@ -137,7 +137,7 @@ const teamRulesTooltip = [
   '- Individual Power Challenge: Failed checks deal double damage.',
   '- Individual Athletics Challenge: Targets the most athletic member (random if tied).',
   '- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.',
-  '- Social Science Challenge: Social Scientists excel; failures may escalate into combat.',
+  '- Social Science Challenge: Prefers Social Scientists; failures may escalate into combat.',
   '- Science challenges never deal damage on failure.',
   '- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.'
 ].join('\n');

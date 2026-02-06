@@ -537,7 +537,6 @@ function loadGame(slotOrCustomString, recreate = true) {
       // Restore research progress
       if (gameState.research) {
           researchManager.loadState(gameState.research);
-          projectManager.applyEffects();
           updateAllResearchButtons(researchManager.researches);
       }
       if (typeof updateAdvancedResearchVisibility === 'function') {
@@ -600,6 +599,10 @@ function loadGame(slotOrCustomString, recreate = true) {
     }
     if(gameState.skills){
       skillManager.loadState(gameState.skills);
+    }
+
+    if (projectManager && typeof projectManager.applyEffects === 'function') {
+      projectManager.applyEffects();
     }
 
     if(gameState.settings){

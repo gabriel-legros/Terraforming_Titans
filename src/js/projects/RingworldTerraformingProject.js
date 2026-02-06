@@ -613,6 +613,11 @@ class RingworldTerraformingProject extends Project {
   }
 
   applyEffects() {
+    if (!this.unlocked) {
+      removeEffect(this.lowGravityTerraformingEffect);
+      removeEffect(this.lowGravityLifeEffect);
+      return;
+    }
     this.refreshMassAndEnergyRequirement();
     this.currentShipSpinEnergyPerTon = this.getShipSpinEnergyPerTon();
     this.shipEnergyMultiplierEffect.value = this.shipEnergyMultiplier;
