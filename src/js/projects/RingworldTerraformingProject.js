@@ -678,6 +678,7 @@ class RingworldTerraformingProject extends Project {
     this.autoShadeEnabled = state.autoShadeEnabled === true;
     this.autoShadeMode = state.autoShadeMode || this.autoShadeMode;
     this.autoShadeTarget = state.autoShadeTarget || this.autoShadeTarget;
+    this.applyEffects();
   }
 
   saveTravelState() {
