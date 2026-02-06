@@ -512,6 +512,9 @@ class NanotechManager extends EffectableEntity {
                 <span class="summary-divider">/</span>
                 <span id="nanobot-cap">1</span>
               </div>
+              <div class="nanotech-time-to-full">
+                <span id="nanobot-time-to-full">Time to full: --</span>
+              </div>
             </div>
             <div class="nanotech-summary-card">
               <span class="summary-label">Growth rate</span>
@@ -848,6 +851,20 @@ class NanotechManager extends EffectableEntity {
         : actualLabel;
       C.growthEl.style.color = (!this.hasEnoughEnergy || !this.hasEnoughSilicon || !this.hasEnoughMetal || !this.hasEnoughBiomass) ? 'orange' : '';
       this.effectiveGrowthRate = actualRate;
+      if (C.timeToFullEl) {
+        let timeToFullText = '--';
+        if (this.nanobots >= max) {
+          timeToFullText = 'Full';
+        } else if (actualRate > 0 && this.nanobots > 0 && max > this.nanobots) {
+          const secondsToFull = Math.log(max / this.nanobots) / actualRate;
+          timeToFullText = Number.isFinite(secondsToFull) && secondsToFull >= 0
+            ? formatDuration(secondsToFull)
+            : '--';
+        } else if (actualRate <= 0) {
+          timeToFullText = 'Never';
+        }
+        C.timeToFullEl.textContent = `Time to full: ${timeToFullText}`;
+      }
     }
     if (C.mSlider && document.activeElement !== C.mSlider) C.mSlider.value = this.maintenanceSlider;
     if (C.glSlider && document.activeElement !== C.glSlider) C.glSlider.value = this.glassSlider;
@@ -1336,6 +1353,7 @@ class NanotechManager extends EffectableEntity {
       countEl: qs('#nanobot-count'),
       capEl: qs('#nanobot-cap'),
       growthEl: qs('#nanobot-growth-rate'),
+      timeToFullEl: qs('#nanobot-time-to-full'),
       mSlider: qs('#nanotech-maintenance-slider'),
       glSlider: qs('#nanotech-glass-slider'),
       maintenance2Slider: qs('#nanotech-maintenance2-slider'),
