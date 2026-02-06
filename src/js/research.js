@@ -464,7 +464,18 @@ class Research {
     // Helpers to determine whether a research should display based on
     // planet resources and unlocked flags.
     planetHasMethane() {
-      if (typeof currentPlanetParameters === 'undefined') return true;
+      const surface = resources.surface;
+      const atmospheric = resources.atmospheric;
+      if ((surface.liquidMethane.value || 0) > 0) {
+        return true;
+      }
+      if ((surface.hydrocarbonIce.value || 0) > 0) {
+        return true;
+      }
+      if ((atmospheric.atmosphericMethane.value || 0) > 0) {
+        return true;
+      }
+
       const surf = currentPlanetParameters.resources.surface;
       const atm = currentPlanetParameters.resources.atmospheric;
       return (surf.liquidMethane?.initialValue || 0) > 0 ||

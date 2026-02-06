@@ -305,50 +305,8 @@ function loadResearchCategory(category) {
         return;
     }
 
-    const planetHasMethane = () => {
-        const surf = currentPlanetParameters.resources.surface;
-        const atm = currentPlanetParameters.resources.atmospheric;
-        return (surf.liquidMethane?.initialValue || 0) > 0 ||
-               (surf.hydrocarbonIce?.initialValue || 0) > 0 ||
-               (atm.atmosphericMethane?.initialValue || 0) > 0;
-    };
-
-    const planetHasGeothermal = () => {
-        const geo = currentPlanetParameters.resources.underground?.geothermal;
-        return (geo?.maxDeposits || 0) > 0;
-    };
-
-    const planetHasNaturalMagnetosphere = () => currentPlanetParameters.celestialParameters.hasNaturalMagnetosphere;
-
-    const planetIsArtificial = () => {
-        if (researchManager.isArtificialWorld) {
-            return researchManager.isArtificialWorld();
-        }
-        return currentPlanetParameters?.classification?.archetype === 'artificial';
-    };
-
-    const planetIsRingWorld = () => researchManager.isRingWorld();
-
     researches.forEach((research) => {
         if (research.disabled) {
-            return;
-        }
-        if (research.requiresMethane && !planetHasMethane()) {
-            return;
-        }
-        if (research.requiresGeothermal && !planetHasGeothermal()) {
-            return;
-        }
-        if (research.requiresNoNaturalMagnetosphere && planetHasNaturalMagnetosphere()) {
-            return;
-        }
-        if (research.artificialAllowed === false && planetIsArtificial()) {
-            return;
-        }
-        if (research.ringworldAllowed === false && planetIsRingWorld()) {
-            return;
-        }
-        if (research.requiredFlags && !research.requiredFlags.every(f => researchManager.isBooleanFlagSet(f))) {
             return;
         }
         const researchContainer = document.createElement('div');
