@@ -769,9 +769,15 @@ class Terraforming extends EffectableEntity{
         });
 
         for (const [key, delta] of Object.entries(chemTotals.changes)) {
-            const res = this.resources.atmospheric[key];
-            if (res && delta) {
-                res.value = Math.max(0, res.value + delta);
+            if (!delta) continue;
+            const atmosphericRes = this.resources.atmospheric[key];
+            if (atmosphericRes) {
+                atmosphericRes.value = Math.max(0, atmosphericRes.value + delta);
+                continue;
+            }
+            const surfaceRes = this.resources.surface[key];
+            if (surfaceRes) {
+                surfaceRes.value = Math.max(0, surfaceRes.value + delta);
             }
         }
 

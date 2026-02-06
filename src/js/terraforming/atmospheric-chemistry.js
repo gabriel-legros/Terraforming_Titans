@@ -8,6 +8,8 @@ const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
 const SULFURIC_ACID_RAIN_THRESHOLD_K = 570;
 const SULFURIC_ACID_REFERENCE_TEMPERATURE_K = 300;
 const SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = Math.log(2) / 300;
+const SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION = 0.5;
+const H2SO4_TO_H2O_MASS_RATIO = 18.01528 / 98.079;
 
 // ------------------------------
 // Physically-motivated H escape
@@ -255,6 +257,11 @@ function runAtmosphericChemistry(resources, params = {}) {
   const methaneRate = durationSeconds > 0 ? (combustionMethaneAmount / durationSeconds) * 86400 : 0;
   const oxygenRate = durationSeconds > 0 ? (combustionOxygenAmount / durationSeconds) * 86400 : 0;
   const waterRate = durationSeconds > 0 ? (combustionWaterAmount / durationSeconds) * 86400 : 0;
+  const acidRainWaterAmount =
+    sulfuricAcidDecayAmount *
+    SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION *
+    H2SO4_TO_H2O_MASS_RATIO;
+  const acidRainWaterRate = realSeconds > 0 ? acidRainWaterAmount / realSeconds : 0;
   const co2Rate = durationSeconds > 0 ? (combustionCO2Amount / durationSeconds) * 86400 : 0;
   const calciteRate = realSeconds > 0 ? calciteDecayAmount / realSeconds : 0;
   const acidRainRate = realSeconds > 0 ? sulfuricAcidDecayAmount / realSeconds : 0;
@@ -291,6 +298,11 @@ function runAtmosphericChemistry(resources, params = {}) {
     'Acid rain',
     rateType
   );
+  resources?.surface?.liquidWater?.modifyRate?.(
+    acidRainWaterRate,
+    'Acid rain',
+    rateType
+  );
   resources?.atmospheric?.hydrogen?.modifyRate?.(
     -hydrogenRate,
     'Hydrogen Escape',
@@ -302,6 +314,7 @@ function runAtmosphericChemistry(resources, params = {}) {
       atmosphericMethane: -combustionMethaneAmount,
       oxygen: -combustionOxygenAmount,
       atmosphericWater: combustionWaterAmount,
+      liquidWater: acidRainWaterAmount,
       carbonDioxide: combustionCO2Amount,
       calciteAerosol: -calciteDecayAmount,
       sulfuricAcid: -sulfuricAcidDecayAmount,
@@ -311,6 +324,7 @@ function runAtmosphericChemistry(resources, params = {}) {
       methane: methaneRate,
       oxygen: oxygenRate,
       water: waterRate,
+      acidRainWater: acidRainWaterRate,
       co2: co2Rate,
       calcite: calciteRate,
       acidRain: acidRainRate,
@@ -329,6 +343,8 @@ if (isNodeChem) {
     SULFURIC_ACID_RAIN_THRESHOLD_K,
     SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
     SULFURIC_ACID_REFERENCE_DECAY_CONSTANT,
+    SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION,
+    H2SO4_TO_H2O_MASS_RATIO,
     HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX,
     HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION,
     computeHydrogenEscapeTons,
@@ -343,6 +359,8 @@ if (isNodeChem) {
   window.SULFURIC_ACID_RAIN_THRESHOLD_K = SULFURIC_ACID_RAIN_THRESHOLD_K;
   window.SULFURIC_ACID_REFERENCE_TEMPERATURE_K = SULFURIC_ACID_REFERENCE_TEMPERATURE_K;
   window.SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = SULFURIC_ACID_REFERENCE_DECAY_CONSTANT;
+  window.SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION = SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION;
+  window.H2SO4_TO_H2O_MASS_RATIO = H2SO4_TO_H2O_MASS_RATIO;
   window.HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX = HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX;
   window.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION = HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION;
   window.computeHydrogenEscapeTons = computeHydrogenEscapeTons;
