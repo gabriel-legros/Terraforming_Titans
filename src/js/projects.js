@@ -287,7 +287,21 @@ class Project extends EffectableEntity {
   updateDurationFromEffects() {
     const base = this.getBaseDuration();
     const newDuration = base * this.getDurationMultiplier();
+    if (this.isActive && this.isContinuous()) {
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+      return;
+    }
     if (this.isActive) {
+      const canCarryProgress =
+        Number.isFinite(this.startingDuration) &&
+        Number.isFinite(this.remainingTime) &&
+        this.startingDuration > 0;
+      if (!canCarryProgress) {
+        this.startingDuration = newDuration;
+        this.remainingTime = newDuration;
+        return;
+      }
       const progressRatio =
         (this.startingDuration - this.remainingTime) / this.startingDuration;
       this.startingDuration = newDuration;

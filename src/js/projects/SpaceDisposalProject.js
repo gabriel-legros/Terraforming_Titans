@@ -209,9 +209,11 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     if (!delta) {
       return;
     }
+    const wasContinuous = this.isContinuous();
     const structure = this.getMassDriverStructure();
     adjustStructureActivation(structure, delta);
     updateBuildingDisplay(buildings);
+    this.finalizeAssignmentChange(wasContinuous);
   }
 
   setMassDriverActive(target) {
