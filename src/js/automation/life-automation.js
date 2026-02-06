@@ -10,6 +10,7 @@ const LIFE_AUTOMATION_ATTRIBUTES = [
   'geologicalBurial',
   'bioworkforce'
 ];
+const LIFE_AUTOMATION_ZONE_KEYS = ['tropical', 'temperate', 'polar'];
 class LifeAutomation {
   constructor() {
     this.presets = [];
@@ -35,12 +36,22 @@ class LifeAutomation {
   }
 
   createTemperatureZoneSettings() {
-    const zones = getZones();
     const settings = {};
-    zones.forEach((zone) => {
+    LIFE_AUTOMATION_ZONE_KEYS.forEach((zone) => {
       settings[zone] = true;
     });
     return settings;
+  }
+
+  normalizeTemperatureZoneSettings(zones) {
+    const normalized = this.createTemperatureZoneSettings();
+    const zoneSettings = zones || {};
+    LIFE_AUTOMATION_ZONE_KEYS.forEach((zoneName) => {
+      if (Object.prototype.hasOwnProperty.call(zoneSettings, zoneName)) {
+        normalized[zoneName] = !!zoneSettings[zoneName];
+      }
+    });
+    return normalized;
   }
 
   isTemperatureToleranceAttribute(attributeName) {
@@ -56,7 +67,8 @@ class LifeAutomation {
   }
 
   getTemperatureZoneNames(step) {
-    const zones = step.zones || this.createTemperatureZoneSettings();
+    const zones = this.normalizeTemperatureZoneSettings(step.zones);
+    step.zones = zones;
     return getZones().filter(zoneName => zones[zoneName]);
   }
 
@@ -263,7 +275,7 @@ class LifeAutomation {
       step.mode = 'fixed';
     }
     if (isTempTolerance) {
-      step.zones = step.zones || this.createTemperatureZoneSettings();
+      step.zones = this.normalizeTemperatureZoneSettings(step.zones);
     }
     const maxUpgrades = lifeDesigner.currentDesign[attributeName].maxUpgrades;
     if (Object.prototype.hasOwnProperty.call(updates, 'amount')) {
@@ -292,7 +304,7 @@ class LifeAutomation {
   setDesignStepZone(presetId, stepId, zoneName, enabled) {
     const preset = this.presets.find(item => item.id === presetId) || this.presets[0];
     const step = preset.designSteps.find(item => item.id === stepId) || preset.designSteps[0];
-    const zones = step.zones || this.createTemperatureZoneSettings();
+    const zones = this.normalizeTemperatureZoneSettings(step.zones);
     zones[zoneName] = !!enabled;
     step.zones = zones;
     this.refreshActiveDeployment(preset);
@@ -366,7 +378,8 @@ class LifeAutomation {
         id: Date.now() + Math.floor(Math.random() * 1000) + index,
         attribute: attributeName,
         amount,
-        mode: isMetabolism ? 'remaining' : 'fixed'
+        mode: isMetabolism ? 'remaining' : 'fixed',
+        zones: this.normalizeTemperatureZoneSettings()
       });
     }
     preset.designSteps = steps;
@@ -682,7 +695,7 @@ class LifeAutomation {
           attribute: step.attribute,
           amount: step.amount,
           mode: step.mode,
-          zones: { ...(step.zones || this.createTemperatureZoneSettings()) }
+          zones: this.normalizeTemperatureZoneSettings(step.zones)
         })),
         deployImprovement: preset.deployImprovement,
         designEnabled: !!preset.designEnabled
@@ -728,7 +741,7 @@ class LifeAutomation {
             || (step.mode === 'needed' && isNeededEligible)
             ? step.mode
             : 'fixed',
-          zones: { ...(step.zones || this.createTemperatureZoneSettings()) }
+          zones: this.normalizeTemperatureZoneSettings(step.zones)
         };
       });
       return {

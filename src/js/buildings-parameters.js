@@ -29,7 +29,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    automationBuildingsDropDown: ['glassSmelter'],
+    automationBuildingsDropDown: ['glassSmelter', 'electronicsFactory'],
     unlocked: false
   },
   iceHarvester: {
@@ -375,6 +375,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    automationBuildingsDropDown: ['superconductorFactory'],
     unlocked: false,
     defaultRecipe: 'water',
     recipes: {
