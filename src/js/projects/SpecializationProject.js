@@ -21,6 +21,7 @@
       this.specializationSourceId = options.specializationSourceId;
       this.otherSpecializationId = options.otherSpecializationId;
       this.ecumenopolisEffectPrefix = options.ecumenopolisEffectPrefix;
+      this.hazardPointBonusPerHazard = options.hazardPointBonusPerHazard || 0;
       this[this.pointsKey] = 0;
       this.ecumenopolisDisabled = false;
       this.shopPurchases = this.createEmptyShopPurchases();
@@ -94,6 +95,17 @@
 
     getTravelPointGain() {
       return 0;
+    }
+
+    applyHazardPointBonus(points) {
+      if (points <= 0 || this.hazardPointBonusPerHazard <= 0) {
+        return points;
+      }
+      const hazardCount = spaceManager.getCurrentWorldHazardCount();
+      if (hazardCount <= 0) {
+        return points;
+      }
+      return points * (1 + (hazardCount * this.hazardPointBonusPerHazard));
     }
 
     prepareTravelState() {

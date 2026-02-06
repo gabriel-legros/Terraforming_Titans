@@ -76,13 +76,14 @@
         pointsLabel: 'Evolution Points:',
         pointsUnit: 'EP',
         shopTitle: 'Evolution Shop',
-        shopTooltip: 'You gain evolution points when travelling after completing this project: 2*log10(total biomass / 1T) + 1.',
+        shopTooltip: 'You gain evolution points when travelling after completing this project: 2*log10(total biomass / 1T) + 1, then +10% per hazard on this world.',
         emptyShopText: '',
         shopItems: BIOWORLD_SHOP_ITEMS,
         shopItemMap: BIOWORLD_SHOP_ITEM_MAP,
         specializationSourceId: 'bioworld',
         otherSpecializationId: 'foundryWorld',
         ecumenopolisEffectPrefix: 'bioworld',
+        hazardPointBonusPerHazard: 0.1,
       });
       this.biocortexIntegration = false;
     }
@@ -102,7 +103,8 @@
     }
 
     getTravelPointGain() {
-      return this.getEvolutionPointGain(resources.surface.biomass.value);
+      const basePoints = this.getEvolutionPointGain(resources.surface.biomass.value);
+      return this.applyHazardPointBonus(basePoints);
     }
 
     getSpecializationRequirements() {

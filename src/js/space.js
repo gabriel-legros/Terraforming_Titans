@@ -762,6 +762,13 @@ class SpaceManager extends EffectableEntity {
         return this.allPlanetsData[this.currentPlanetKey]?.name || '';
     }
 
+    getCurrentWorldHazardCount() {
+        const hazards = currentPlanetParameters.hazards || {};
+        return Object.keys(hazards).reduce((count, key) => (
+            key && key !== 'none' ? count + 1 : count
+        ), 0);
+    }
+
     getCurrentWorldOriginal() {
         if (this.currentRandomSeed !== null) {
             return this.randomWorldStatuses[this.currentRandomSeed]?.original || null;

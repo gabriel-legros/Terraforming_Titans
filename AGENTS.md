@@ -668,6 +668,7 @@ The planet visualiser has been modularised into files covering core setup, light
 - Bioworld and Foundry World specialization projects now share a common SpecializationProject base for shop UI, point accrual, and ecumenopolis disable logic.
 - Travel now warns first when a Bioworld or Foundry World specialization is in progress before proceeding to story, random world, or artificial travel warnings.
 - Bioworld and Foundry World projects now include the Uncheck on travelling automation option.
+- Bioworld and Foundry World specializations now gain +10% travel points per hazard on the current world.
 - Planet visualizer cloud textures now use softer thresholding with density falloff to reduce blocky edges.
 - Artificial worlds now render with a metallic surface texture and skip crater noise in the planet visualizer.
 - Planet visualizer terrain now highlights the top height-map band as mountain ridges.

@@ -64,13 +64,14 @@
         pointsLabel: 'Metallurgy Points:',
         pointsUnit: 'MP',
         shopTitle: 'Metallurgy Shop',
-        shopTooltip: 'You gain 10 metallurgy points times sqrt(initial land / 50B) when travelling after completing this project.',
+        shopTooltip: 'You gain 10 metallurgy points times sqrt(initial land / 50B) when travelling after completing this project, then +10% per hazard on this world.',
         emptyShopText: 'No foundry upgrades available yet.',
         shopItems: FOUNDRY_SHOP_ITEMS,
         shopItemMap: FOUNDRY_SHOP_ITEM_MAP,
         specializationSourceId: 'foundryWorld',
         otherSpecializationId: 'bioworld',
         ecumenopolisEffectPrefix: 'foundry',
+        hazardPointBonusPerHazard: 0.1,
       });
     }
 
@@ -83,7 +84,8 @@
       if (spaceManager.currentArtificialKey !== null) {
         return 0;
       }
-      return this.getFoundryPointGain(terraforming.initialLand);
+      const basePoints = this.getFoundryPointGain(terraforming.initialLand);
+      return this.applyHazardPointBonus(basePoints);
     }
 
     getDeepMiningDepth() {
