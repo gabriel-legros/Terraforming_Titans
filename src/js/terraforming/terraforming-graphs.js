@@ -448,7 +448,7 @@ class TerraformingGraphsManager {
     phaseTitle.className = 'terraforming-graphs-phase-title';
     const phaseDisclaimer = document.createElement('div');
     phaseDisclaimer.className = 'terraforming-graphs-phase-disclaimer';
-    phaseDisclaimer.textContent = 'Phase diagrams in Terraforming Titans are very simplified versions of the real ones.  Pressure is typically saturation pressure, not total pressure.';
+    phaseDisclaimer.textContent = 'Phase diagrams in Terraforming Titans are very simplified versions of the real ones.  Pressure is typically used as saturation pressure, not total pressure.';
     const phaseCanvas = document.createElement('canvas');
     phaseCanvas.className = 'terraforming-graphs-phase-canvas';
     const phaseNote = document.createElement('div');
