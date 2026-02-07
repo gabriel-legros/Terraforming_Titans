@@ -103,6 +103,21 @@ class NanotechManager extends EffectableEntity {
       if (!useExtra) return base;
       return base + getEffectiveProductionRate(extraResource);
     };
+    const getEstimatedLifeBiomassProductionRate = () => {
+      const seconds = deltaTime / 1000;
+      if (seconds <= 0) {
+        return 0;
+      }
+      const plan = lifeManager.buildAtmosphericPlan(deltaTime);
+      let growthTotal = 0;
+      plan.zones.forEach(zoneName => {
+        const zoneGrowth = plan.zoneGrowthByZone[zoneName] || 0;
+        if (zoneGrowth > 0) {
+          growthTotal += zoneGrowth;
+        }
+      });
+      return growthTotal / seconds;
+    };
     let powerFraction = 1;
     let siliconFraction = 1;
     let metalFraction = 1;
@@ -234,9 +249,13 @@ class NanotechManager extends EffectableEntity {
         const biomassRes = resources.surface.biomass;
         const trashRes = resources.surface.trash;
         const onlyTrash = recyclingEnabled && this.onlyTrash;
-        const biomassProduction = recyclingEnabled
+        const estimatedLifeBiomassProduction = this.biomassLimitMode === 'percent' && !onlyTrash
+          ? getEstimatedLifeBiomassProductionRate()
+          : 0;
+        const biomassBaseProduction = recyclingEnabled
           ? (onlyTrash ? getEffectiveProductionRate(trashRes) : getCombinedProductionRate(biomassRes, trashRes, true))
           : getEffectiveProductionRate(biomassRes);
+        const biomassProduction = biomassBaseProduction + estimatedLifeBiomassProduction;
         const biomassLimitRate = this.biomassLimitMode === 'absolute'
           ? Math.max(0, this.maxBiomassAbsolute)
           : (this.biomassLimitMode === 'uncapped'
@@ -1339,7 +1358,7 @@ class NanotechManager extends EffectableEntity {
     if (C.biomassTooltipIcon?.dataset?.nanotechBound !== 'biomassTooltip') {
       attachDynamicInfoTooltip(
         C.biomassTooltipIcon,
-        'Percentage of biomass production: maximum share of biomass production the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+        'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
       );
       C.biomassTooltipIcon.dataset.nanotechBound = 'biomassTooltip';
     }
