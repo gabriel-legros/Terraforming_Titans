@@ -109,26 +109,33 @@ class OxygenFactory extends MultiRecipesBuilding {
     pressureControl.appendChild(pressureLabel);
 
     const pressureInput = document.createElement('input');
-    pressureInput.type = 'number';
-    pressureInput.step = 1;
+    pressureInput.type = 'text';
+    pressureInput.inputMode = 'decimal';
     pressureInput.classList.add('o2-pressure-input');
     pressureControl.appendChild(pressureInput);
 
     const unitSpan = document.createElement('span');
     unitSpan.classList.add('o2-pressure-unit');
-    unitSpan.textContent = 'kPa';
+    unitSpan.textContent = 'Pa';
     pressureControl.appendChild(unitSpan);
 
     const update = () => {
       if (document.activeElement !== pressureInput) {
-        pressureInput.value = settings.disablePressureThreshold;
+        pressureInput.value = formatNumber(settings.disablePressureThreshold * 1000, true, 2);
       }
     };
     update();
 
-    pressureInput.addEventListener('input', () => {
-      const val = parseFloat(pressureInput.value);
-      settings.disablePressureThreshold = val;
+    wireStringNumberInput(pressureInput, {
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      },
+      formatValue: (value) => formatNumber(Math.max(0, value), true, 2),
+      onValue: (value) => {
+        settings.disablePressureThreshold = Math.max(0, value) / 1000;
+      },
+      datasetKey: 'o2PressurePa',
     });
 
     autoBuildContainer.appendChild(pressureControl);
@@ -153,10 +160,10 @@ class OxygenFactory extends MultiRecipesBuilding {
       o2Els.checkbox.checked = settings.autoDisableAbovePressure;
     }
     if (o2Els.input && document.activeElement !== o2Els.input) {
-      o2Els.input.value = settings.disablePressureThreshold;
+      o2Els.input.value = formatNumber(settings.disablePressureThreshold * 1000, true, 2);
     }
     if (o2Els.unitSpan) {
-      o2Els.unitSpan.textContent = 'kPa';
+      o2Els.unitSpan.textContent = 'Pa';
     }
   }
 

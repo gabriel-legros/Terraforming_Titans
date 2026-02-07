@@ -11,8 +11,8 @@ class SpaceMiningProject extends SpaceshipProject {
     this.waterCoverageThreshold = 0.2;
     this.waterCoverageDisableMode = 'coverage';
     this.hasOxygenPressureControl = false;
-    this.pressureUnit = 'kPa';
-    this.oxygenPressureUnit = 'kPa';
+    this.pressureUnit = 'Pa';
+    this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = 'surface';
     const maxPressure = config.attributes?.maxPressure;
     if (Number.isFinite(maxPressure)) {
@@ -97,56 +97,34 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(label);
 
     const input = document.createElement('input');
-    input.type = 'number';
-    input.step = 'any';
+    input.type = 'text';
+    input.inputMode = 'decimal';
     input.classList.add(`${key}-input`);
-    input.value = this[thresholdProp];
-    input.addEventListener('input', () => {
-      const rawValue = input.value;
-      if (rawValue === '') {
-        return;
-      }
-      const val = Number(rawValue);
-      if (!Number.isFinite(val)) {
-        this[thresholdProp] = 0;
-        return;
-      }
-      this[thresholdProp] = this[unitProp] === 'Pa' ? (val / 1000) : val;
-    });
-    input.addEventListener('blur', () => {
-      if (input.value === '') {
-        this[thresholdProp] = 0;
-        input.value = this[unitProp] === 'Pa'
-          ? this[thresholdProp] * 1000
-          : this[thresholdProp];
-      }
+    input.value = formatNumber(this[thresholdProp] * 1000, true, 2);
+    wireStringNumberInput(input, {
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      },
+      formatValue: (value) => formatNumber(Math.max(0, value), true, 2),
+      onValue: (value) => {
+        this[thresholdProp] = Math.max(0, value) / 1000;
+      },
+      datasetKey: `${key}PressurePa`,
     });
     control.appendChild(input);
 
-    const unitSelect = document.createElement('select');
-    unitSelect.classList.add(`${key}-unit`);
-    ['kPa', 'Pa'].forEach(u => {
-      const option = document.createElement('option');
-      option.value = u;
-      option.textContent = u;
-      unitSelect.appendChild(option);
-    });
-    const unitProp = `${key}Unit`;
-    unitSelect.value = this[unitProp];
-    unitSelect.addEventListener('change', () => {
-      this[unitProp] = unitSelect.value;
-      input.value = this[unitProp] === 'Pa'
-        ? this[thresholdProp] * 1000
-        : this[thresholdProp];
-    });
-    control.appendChild(unitSelect);
+    const unitLabel = document.createElement('span');
+    unitLabel.classList.add(`${key}-unit`);
+    unitLabel.textContent = 'Pa';
+    control.appendChild(unitLabel);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
       [`${key}Control`]: control,
       [`${key}Checkbox`]: checkbox,
       [`${key}Input`]: input,
-      [`${key}UnitSelect`]: unitSelect,
+      [`${key}UnitLabel`]: unitLabel,
     };
 
     return control;
@@ -319,13 +297,11 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.pressureCheckbox) {
       elements.pressureCheckbox.checked = this.disableAbovePressure;
     }
-    if (elements.pressureUnitSelect) {
-      elements.pressureUnitSelect.value = this.pressureUnit;
-    }
     if (elements.pressureInput && document.activeElement !== elements.pressureInput) {
-      elements.pressureInput.value = this.pressureUnit === 'Pa'
-        ? this.disablePressureThreshold * 1000
-        : this.disablePressureThreshold;
+      elements.pressureInput.value = formatNumber(this.disablePressureThreshold * 1000, true, 2);
+    }
+    if (elements.pressureUnitLabel) {
+      elements.pressureUnitLabel.textContent = 'Pa';
     }
     if (elements.waterCoverageControl) {
       elements.waterCoverageControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
@@ -356,13 +332,11 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.oxygenPressureCheckbox) {
       elements.oxygenPressureCheckbox.checked = this.disableAboveOxygenPressure;
     }
-    if (elements.oxygenPressureUnitSelect) {
-      elements.oxygenPressureUnitSelect.value = this.oxygenPressureUnit;
-    }
     if (elements.oxygenPressureInput && document.activeElement !== elements.oxygenPressureInput) {
-      elements.oxygenPressureInput.value = this.oxygenPressureUnit === 'Pa'
-        ? this.disableOxygenPressureThreshold * 1000
-        : this.disableOxygenPressureThreshold;
+      elements.oxygenPressureInput.value = formatNumber(this.disableOxygenPressureThreshold * 1000, true, 2);
+    }
+    if (elements.oxygenPressureUnitLabel) {
+      elements.oxygenPressureUnitLabel.textContent = 'Pa';
     }
   }
 
@@ -493,8 +467,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
       waterCoverageDisableMode: this.waterCoverageDisableMode,
-      pressureUnit: this.pressureUnit,
-      oxygenPressureUnit: this.oxygenPressureUnit,
+      pressureUnit: 'Pa',
+      oxygenPressureUnit: 'Pa',
       waterImportTarget: this.waterImportTarget,
     };
   }
@@ -510,8 +484,8 @@ class SpaceMiningProject extends SpaceshipProject {
       this.waterCoverageThreshold = Math.max(0, Math.min(state.waterCoverageThreshold, 1));
     }
     this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
-    this.pressureUnit = state.pressureUnit || 'kPa';
-    this.oxygenPressureUnit = state.oxygenPressureUnit || 'kPa';
+    this.pressureUnit = 'Pa';
+    this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
   }
 
@@ -527,8 +501,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
       waterCoverageDisableMode: this.waterCoverageDisableMode,
-      pressureUnit: this.pressureUnit,
-      oxygenPressureUnit: this.oxygenPressureUnit,
+      pressureUnit: 'Pa',
+      oxygenPressureUnit: 'Pa',
       waterImportTarget: this.waterImportTarget,
     };
   }
@@ -544,8 +518,8 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAboveWaterCoverage = state.disableAboveWaterCoverage ?? this.disableAboveWaterCoverage;
     this.waterCoverageThreshold = state.waterCoverageThreshold ?? this.waterCoverageThreshold;
     this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
-    this.pressureUnit = state.pressureUnit || this.pressureUnit;
-    this.oxygenPressureUnit = state.oxygenPressureUnit || this.oxygenPressureUnit;
+    this.pressureUnit = 'Pa';
+    this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
   }
 

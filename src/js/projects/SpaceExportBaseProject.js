@@ -5,7 +5,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     this.disableTemperatureThreshold = 303.15;
     this.disableBelowPressure = false;
     this.disablePressureThreshold = 0;
-    this.pressureUnit = 'kPa';
+    this.pressureUnit = 'Pa';
   }
 
   getAutomationTemperatureReading() {
@@ -310,39 +310,34 @@ class SpaceExportBaseProject extends SpaceshipProject {
     control.appendChild(label);
 
     const input = document.createElement('input');
-    input.type = 'number';
-    input.step = 'any';
+    input.type = 'text';
+    input.inputMode = 'decimal';
     input.classList.add('pressure-input');
-    input.value = this.disablePressureThreshold;
-    input.addEventListener('input', () => {
-      const val = parseFloat(input.value);
-      this.disablePressureThreshold = this.pressureUnit === 'Pa' ? (val / 1000) : val;
+    input.value = formatNumber(this.disablePressureThreshold * 1000, true, 2);
+    wireStringNumberInput(input, {
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      },
+      formatValue: (value) => formatNumber(Math.max(0, value), true, 2),
+      onValue: (value) => {
+        this.disablePressureThreshold = Math.max(0, value) / 1000;
+      },
+      datasetKey: 'pressurePa',
     });
     control.appendChild(input);
 
-    const unitSelect = document.createElement('select');
-    unitSelect.classList.add('pressure-unit');
-    ['kPa', 'Pa'].forEach(u => {
-      const option = document.createElement('option');
-      option.value = u;
-      option.textContent = u;
-      unitSelect.appendChild(option);
-    });
-    unitSelect.value = this.pressureUnit;
-    unitSelect.addEventListener('change', () => {
-      this.pressureUnit = unitSelect.value;
-      input.value = this.pressureUnit === 'Pa'
-        ? this.disablePressureThreshold * 1000
-        : this.disablePressureThreshold;
-    });
-    control.appendChild(unitSelect);
+    const unitLabel = document.createElement('span');
+    unitLabel.classList.add('pressure-unit');
+    unitLabel.textContent = 'Pa';
+    control.appendChild(unitLabel);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
       pressureControl: control,
       pressureCheckbox: checkbox,
       pressureInput: input,
-      pressureUnitSelect: unitSelect,
+      pressureUnitLabel: unitLabel,
     };
 
     return control;
@@ -446,13 +441,11 @@ class SpaceExportBaseProject extends SpaceshipProject {
     if (elements.pressureCheckbox) {
       elements.pressureCheckbox.checked = this.disableBelowPressure;
     }
-    if (elements.pressureUnitSelect) {
-      elements.pressureUnitSelect.value = this.pressureUnit;
-    }
     if (elements.pressureInput && document.activeElement !== elements.pressureInput) {
-      elements.pressureInput.value = this.pressureUnit === 'Pa'
-        ? this.disablePressureThreshold * 1000
-        : this.disablePressureThreshold;
+      elements.pressureInput.value = formatNumber(this.disablePressureThreshold * 1000, true, 2);
+    }
+    if (elements.pressureUnitLabel) {
+      elements.pressureUnitLabel.textContent = 'Pa';
     }
 
     if (elements.disposalPerShipElement) {
@@ -579,7 +572,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       disableTemperatureThreshold: this.disableTemperatureThreshold,
       disableBelowPressure: this.disableBelowPressure,
       disablePressureThreshold: this.disablePressureThreshold,
-      pressureUnit: this.pressureUnit,
+      pressureUnit: 'Pa',
     };
   }
 
@@ -593,7 +586,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       disableTemperatureThreshold: this.disableTemperatureThreshold,
       disableBelowPressure: this.disableBelowPressure,
       disablePressureThreshold: this.disablePressureThreshold,
-      pressureUnit: this.pressureUnit,
+      pressureUnit: 'Pa',
     };
   }
 
@@ -606,7 +599,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     this.disableTemperatureThreshold = state.disableTemperatureThreshold ?? this.disableTemperatureThreshold;
     this.disableBelowPressure = state.disableBelowPressure ?? this.disableBelowPressure;
     this.disablePressureThreshold = state.disablePressureThreshold ?? this.disablePressureThreshold;
-    this.pressureUnit = state.pressureUnit || this.pressureUnit;
+    this.pressureUnit = 'Pa';
   }
 
   loadState(state) {
@@ -615,7 +608,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     this.disableTemperatureThreshold = typeof state.disableTemperatureThreshold === 'number' ? state.disableTemperatureThreshold : 303.15;
     this.disableBelowPressure = state.disableBelowPressure || false;
     this.disablePressureThreshold = typeof state.disablePressureThreshold === 'number' ? state.disablePressureThreshold : 0;
-    this.pressureUnit = state.pressureUnit || 'kPa';
+    this.pressureUnit = 'Pa';
   }
 }
 
