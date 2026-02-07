@@ -381,7 +381,7 @@ class SpaceMiningProject extends SpaceshipProject {
     if (this.attributes.dynamicWaterImport && !projectElements[this.name]?.waterCoverageControl) {
       container.appendChild(this.createWaterCoverageControl());
     }
-    if (this.getTargetAtmosphericResource() === 'carbonDioxide' && this.hasCo2LiquidTarget() && !projectElements[this.name]?.co2CoverageControl) {
+    if (this.getTargetAtmosphericResource() === 'carbonDioxide' && !projectElements[this.name]?.co2CoverageControl) {
       container.appendChild(this.createCo2CoverageControl());
     }
     if (this.hasOxygenPressureControl && !projectElements[this.name]?.oxygenPressureControl) {
