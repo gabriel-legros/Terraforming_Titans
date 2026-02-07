@@ -485,8 +485,8 @@ function initializeLifeTerraformingDesignerUI() {
                <h3>Point Shop</h3>
                <div id="life-point-quantity-controls" style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
                 <span>Buying <span id="life-point-quantity-display">1</span> at a time</span>
-                <button id="life-point-quantity-divide">/10</button><span id="life-point-quantity-divide-tooltip" class="info-tooltip-icon">&#9432;</span>
-                <button id="life-point-quantity-multiply">x10</button><span id="life-point-quantity-multiply-tooltip" class="info-tooltip-icon">&#9432;</span>
+                <button id="life-point-quantity-divide">/10</button>
+                <button id="life-point-quantity-multiply">x10</button>
                </div>
             </div>
         </div>
@@ -826,8 +826,6 @@ function initializeLifeTerraformingDesignerUI() {
   // Cache frequently used node lists for hot paths
   const staticTooltips = [
     { id: 'life-biodome-tooltip', text: 'Each active Biodome generates life design points at log10(10 x Active Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.' },
-    { id: 'life-point-quantity-divide-tooltip', text: 'Buy fewer points each purchase.' },
-    { id: 'life-point-quantity-multiply-tooltip', text: 'Buy more points each purchase.' },
     { id: 'life-status-polar-tooltip', text: 'Not required to complete terraforming. Can be ignored. Or not. Tip: keeping a zone colder than others can be good to force more water condensation, a very potent greenhouse gas.' },
     { id: 'life-modify-tooltip', text: 'Hold Shift on -/+ to apply the maximum change for that direction.' }
   ];
