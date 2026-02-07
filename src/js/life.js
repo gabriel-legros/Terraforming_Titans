@@ -1116,19 +1116,23 @@ class LifeManager extends EffectableEntity {
     });
 
     const growthAtmosphericDeltas = {};
-    const waterDeltaByZone = {};
+    const growthSurfaceDeltasByZone = {};
     zones.forEach(zoneName => {
-      waterDeltaByZone[zoneName] = 0;
+      growthSurfaceDeltasByZone[zoneName] = {};
     });
     zones.forEach(zoneName => {
       const zoneGrowth = zoneGrowthByZone[zoneName];
       if (zoneGrowth <= 0) return;
       biomassByZone[zoneName] += zoneGrowth;
-      const waterDelta = zoneGrowth * (growthPerBiomass.surface.liquidWater || 0);
-      if (waterDelta) {
-        waterDeltaByZone[zoneName] = waterDelta;
-        waterByZone[zoneName] = Math.max(0, waterByZone[zoneName] + waterDelta);
-      }
+      Object.entries(growthPerBiomass.surface || {}).forEach(([resourceKey, coef]) => {
+        if (resourceKey === 'biomass' || !coef) return;
+        const delta = zoneGrowth * coef;
+        growthSurfaceDeltasByZone[zoneName][resourceKey] =
+          (growthSurfaceDeltasByZone[zoneName][resourceKey] || 0) + delta;
+        if (resourceKey === 'liquidWater') {
+          waterByZone[zoneName] = Math.max(0, waterByZone[zoneName] + delta);
+        }
+      });
       Object.entries(growthPerBiomass.atmospheric || {}).forEach(([resourceKey, coef]) => {
         growthAtmosphericDeltas[resourceKey] =
           (growthAtmosphericDeltas[resourceKey] || 0) + zoneGrowth * coef;
@@ -1169,10 +1173,9 @@ class LifeManager extends EffectableEntity {
       let maxBySurfaceInputs = targetDecay;
       decaySurfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
         const requiredPerBiomass = -coef;
-        let available = 0;
-        if (resourceKey === 'liquidWater') {
-          available = waterByZone[zoneName];
-        }
+        let available = resourceKey === 'liquidWater'
+          ? waterByZone[zoneName]
+          : (terraforming.zonalSurface[zoneName][resourceKey] || 0);
         if (requiredPerBiomass > 0) {
           maxBySurfaceInputs = Math.min(maxBySurfaceInputs, available / requiredPerBiomass);
         }
@@ -1193,12 +1196,24 @@ class LifeManager extends EffectableEntity {
 
     const supportedDecayTotal = Math.max(0, Math.min(totalPotentialDecay, maxSupportedDecayByAtmosphere));
     const decayAtmosphericDeltas = {};
+    const decaySurfaceDeltasByZone = {};
+    const supportedDecayByZone = {};
+    zones.forEach(zoneName => {
+      decaySurfaceDeltasByZone[zoneName] = {};
+      supportedDecayByZone[zoneName] = 0;
+    });
     zones.forEach(zoneName => {
       const targetDecay = decayTargetsByZone[zoneName];
       if (targetDecay <= 0) return;
       const supportedDecay = totalPotentialDecay > 0
         ? supportedDecayTotal * (potentialDecayByZone[zoneName] / totalPotentialDecay)
         : 0;
+      supportedDecayByZone[zoneName] = supportedDecay;
+      Object.entries(decayPerBiomass.surface || {}).forEach(([resourceKey, coef]) => {
+        if (resourceKey === 'biomass' || !coef) return;
+        decaySurfaceDeltasByZone[zoneName][resourceKey] =
+          (decaySurfaceDeltasByZone[zoneName][resourceKey] || 0) + supportedDecay * coef;
+      });
       Object.entries(decayPerBiomass.atmospheric || {}).forEach(([resourceKey, coef]) => {
         decayAtmosphericDeltas[resourceKey] =
           (decayAtmosphericDeltas[resourceKey] || 0) + supportedDecay * coef;
@@ -1223,7 +1238,9 @@ class LifeManager extends EffectableEntity {
       potentialGrowthByZone,
       totalPotentialGrowth,
       zoneGrowthByZone,
-      waterDeltaByZone,
+      growthSurfaceDeltasByZone,
+      supportedDecayByZone,
+      decaySurfaceDeltasByZone,
       decayTargetsByZone,
       growthAtmosphericDeltas,
       decayAtmosphericDeltas,
@@ -1279,7 +1296,9 @@ class LifeManager extends EffectableEntity {
       overflowDecayByZone,
       biomassGrowthLimiters,
       zoneGrowthByZone,
-      waterDeltaByZone,
+      growthSurfaceDeltasByZone,
+      supportedDecayByZone,
+      decaySurfaceDeltasByZone,
       decayTargetsByZone,
       growthAtmosphericDeltas,
       decayAtmosphericDeltas,
@@ -1312,12 +1331,13 @@ class LifeManager extends EffectableEntity {
       netBiomassChangeByZone[zoneName] += zoneGrowth;
       resources.surface.biomass.modifyRate(zoneGrowth / secondsMultiplier, growthReason, 'life');
 
-      const waterDelta = waterDeltaByZone[zoneName] || 0;
-      if (waterDelta) {
-        terraforming.zonalSurface[zoneName].liquidWater += waterDelta;
-        terraforming.zonalSurface[zoneName].liquidWater = Math.max(0, terraforming.zonalSurface[zoneName].liquidWater);
-        resources.surface.liquidWater.modifyRate(waterDelta / secondsMultiplier, growthReason, 'life');
-      }
+      const growthSurfaceDeltas = growthSurfaceDeltasByZone[zoneName] || {};
+      Object.entries(growthSurfaceDeltas).forEach(([resourceKey, delta]) => {
+        if (!delta) return;
+        const currentValue = terraforming.zonalSurface[zoneName][resourceKey] || 0;
+        terraforming.zonalSurface[zoneName][resourceKey] = Math.max(0, currentValue + delta);
+        resources.surface[resourceKey].modifyRate(delta / secondsMultiplier, growthReason, 'life');
+      });
     });
 
     Object.entries(growthAtmosphericDeltas).forEach(([resourceKey, delta]) => {
@@ -1330,10 +1350,19 @@ class LifeManager extends EffectableEntity {
       const targetDecay = decayTargetsByZone[zoneName];
       if (targetDecay <= 0) return;
 
-      terraforming.zonalSurface[zoneName].biomass -= targetDecay;
+      const supportedDecay = supportedDecayByZone[zoneName] || 0;
+      terraforming.zonalSurface[zoneName].biomass -= supportedDecay;
       terraforming.zonalSurface[zoneName].biomass = Math.max(0, terraforming.zonalSurface[zoneName].biomass);
-      netBiomassChangeByZone[zoneName] -= targetDecay;
-      resources.surface.biomass.modifyRate(-targetDecay / secondsMultiplier, decayReason, 'life');
+      netBiomassChangeByZone[zoneName] -= supportedDecay;
+      resources.surface.biomass.modifyRate(-supportedDecay / secondsMultiplier, decayReason, 'life');
+
+      const decaySurfaceDeltas = decaySurfaceDeltasByZone[zoneName] || {};
+      Object.entries(decaySurfaceDeltas).forEach(([resourceKey, delta]) => {
+        if (!delta) return;
+        const currentValue = terraforming.zonalSurface[zoneName][resourceKey] || 0;
+        terraforming.zonalSurface[zoneName][resourceKey] = Math.max(0, currentValue + delta);
+        resources.surface[resourceKey].modifyRate(delta / secondsMultiplier, decayReason, 'life');
+      });
     });
 
     Object.entries(decayAtmosphericDeltas).forEach(([resourceKey, delta]) => {
