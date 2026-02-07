@@ -137,7 +137,6 @@ class GhgFactory extends Building {
       let B = settings.reverseTempThreshold ?? (A + (isOpticalDepthTarget ? 0.5 : 5));
       if (B - A < minGap) {
         B = A + minGap;
-        settings.reverseTempThreshold = B;
       }
       const M = (A + B) / 2; // Midpoint target when correcting
       const currentValue = isOpticalDepthTarget ? readOpticalDepth() : readTrendTemperature();
@@ -554,15 +553,19 @@ class GhgFactory extends Building {
       update();
     });
 
+    const commitThresholdGap = (changed) => {
+      if (!this.reversalAvailable) {
+        settings.reverseTempThreshold = settings.disableTempThreshold;
+      } else {
+        GhgFactory.enforceAutomationThresholdGap(changed);
+      }
+      update();
+    };
+
     tempInput.addEventListener('input', () => {
       const val = parseFloat(tempInput.value);
       const useC = gameSettings.useCelsius;
       settings.disableTempThreshold = settings.targetMode === 'opticalDepth' ? val : (useC ? val + 273.15 : val);
-      if (!this.reversalAvailable) {
-        settings.reverseTempThreshold = settings.disableTempThreshold;
-      } else {
-        GhgFactory.enforceAutomationThresholdGap('A');
-      }
       update();
     });
 
@@ -570,8 +573,15 @@ class GhgFactory extends Building {
       const val = parseFloat(tempInputB.value);
       const useC = gameSettings.useCelsius;
       settings.reverseTempThreshold = settings.targetMode === 'opticalDepth' ? val : (useC ? val + 273.15 : val);
-      GhgFactory.enforceAutomationThresholdGap('B');
       update();
+    });
+
+    tempInput.addEventListener('blur', () => {
+      commitThresholdGap('A');
+    });
+
+    tempInputB.addEventListener('blur', () => {
+      commitThresholdGap('B');
     });
 
     autoBuildContainer.appendChild(tempControl);
