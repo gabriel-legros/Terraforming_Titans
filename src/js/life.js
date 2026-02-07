@@ -1091,12 +1091,17 @@ class LifeManager extends EffectableEntity {
         : 0;
     });
 
+    const canSurviveByZone = {};
+    zones.forEach(zoneName => {
+      canSurviveByZone[zoneName] = design.temperatureSurvivalCheckZone(zoneName).pass;
+    });
+
     const seedTargets = zones.filter(zoneName => {
       const zonalBiomass = biomassByZone[zoneName];
-      return zonalBiomass < 1 && canGrowByZone[zoneName];
+      return zonalBiomass < 1 && canSurviveByZone[zoneName];
     });
     const seedDonors = zones.filter(zoneName =>
-      biomassByZone[zoneName] > 0 && !seedTargets.includes(zoneName)
+      biomassByZone[zoneName] > 0 && canGrowByZone[zoneName] && !seedTargets.includes(zoneName)
     );
 
     seedTargets.forEach(targetZone => {
