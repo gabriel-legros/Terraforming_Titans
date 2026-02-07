@@ -5,6 +5,9 @@ class SpaceExportBaseProject extends SpaceshipProject {
     this.disableTemperatureThreshold = 303.15;
     this.disableBelowPressure = false;
     this.disablePressureThreshold = 0;
+    this.disableBelowCoverage = false;
+    this.disableCoverageThreshold = 0;
+    this.disposalLimitSettings = {};
     this.pressureUnit = 'Pa';
   }
 
@@ -44,6 +47,32 @@ class SpaceExportBaseProject extends SpaceshipProject {
     const groupList = [];
     const groupMap = {};
     const resourceGroupLookup = {};
+    const resourceMetaLookup = {};
+
+    const resolveOptionPhaseType = (group, option) => {
+      if (option.category === 'atmospheric') {
+        return 'gas';
+      }
+      if (option.category !== 'surface' || !group.surfaceKeys) {
+        return null;
+      }
+      if (group.surfaceKeys.liquid === option.resource) {
+        return 'liquid';
+      }
+      if (group.surfaceKeys.ice === option.resource || group.surfaceKeys.buriedIce === option.resource) {
+        return 'ice';
+      }
+      return null;
+    };
+
+    const assignResourceMeta = (groupKey, group, option) => {
+      const resourceKey = `${option.category}:${option.resource}`;
+      const phaseType = resolveOptionPhaseType(group, option);
+      resourceMetaLookup[resourceKey] = {
+        groupKey,
+        phaseType,
+      };
+    };
 
     Object.entries(phaseGroups).forEach(([groupKey, group]) => {
       const options = [];
@@ -59,6 +88,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
           label: option.label || displayName,
         });
         resourceGroupLookup[resourceKey] = groupKey;
+        assignResourceMeta(groupKey, group, option);
       });
       if (options.length) {
         const entry = { key: groupKey, label: group.name, options };
@@ -78,6 +108,12 @@ class SpaceExportBaseProject extends SpaceshipProject {
           label: displayName,
         });
         resourceGroupLookup[`${category}:${resource}`] = 'storageDepotResource';
+        if (!resourceMetaLookup[`${category}:${resource}`]) {
+          resourceMetaLookup[`${category}:${resource}`] = {
+            groupKey: 'storageDepotResource',
+            phaseType: category === 'atmospheric' ? 'gas' : null,
+          };
+        }
       });
     });
     if (storageDepotOptions.length) {
@@ -105,13 +141,20 @@ class SpaceExportBaseProject extends SpaceshipProject {
         groupList.push(entry);
         groupMap[resourceKey] = entry;
         resourceGroupLookup[resourceKey] = resourceKey;
+        if (!resourceMetaLookup[resourceKey]) {
+          resourceMetaLookup[resourceKey] = {
+            groupKey: resourceKey,
+            phaseType: category === 'atmospheric' ? 'gas' : null,
+          };
+        }
       });
     });
 
-    return { groupList, groupMap, resourceGroupLookup };
+    return { groupList, groupMap, resourceGroupLookup, resourceMetaLookup };
   }
 
   setDisposalSelection(elements, groupKey, resourceKey) {
+    this.saveCurrentSelectionLimitSettings();
     const group = elements.disposalGroupMap[groupKey];
     const options = group.options;
     if (elements.activeDisposalGroupKey !== groupKey) {
@@ -141,6 +184,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       category: selectedOption.category,
       resource: selectedOption.resource,
     };
+    this.loadCurrentSelectionLimitSettings();
   }
   renderUI(container) {
     super.renderUI(container);
@@ -224,8 +268,10 @@ class SpaceExportBaseProject extends SpaceshipProject {
     });
 
     disposalPhaseSelect.addEventListener('change', (event) => {
+      this.saveCurrentSelectionLimitSettings();
       const [category, resource] = event.target.value.split(':');
       this.selectedDisposalResource = { category, resource };
+      this.loadCurrentSelectionLimitSettings();
       this.updateUI();
     });
 
@@ -265,6 +311,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       disposalGroups: disposalGroupData.groupList,
       disposalGroupMap: disposalGroupData.groupMap,
       disposalResourceGroupLookup: disposalGroupData.resourceGroupLookup,
+      disposalResourceMetaLookup: disposalGroupData.resourceMetaLookup,
       disposalDetailsGrid: detailsGrid,
       disposalPerShipElement: disposalPerShip,
       totalDisposalElement: totalDisposal,
@@ -280,6 +327,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       disposalGroupData.resourceGroupLookup[defaultKey] || disposalGroupData.groupList[0].key;
     disposalTypeSelect.value = defaultGroupKey;
     this.setDisposalSelection(projectElements[this.name], defaultGroupKey, defaultKey);
+    this.loadCurrentSelectionLimitSettings();
 
     return sectionContainer;
   }
@@ -288,32 +336,133 @@ class SpaceExportBaseProject extends SpaceshipProject {
     return this.selectedDisposalResource?.category === 'atmospheric';
   }
 
-  createPressureControl() {
+  getDisposalSelectionKey(selection = this.selectedDisposalResource) {
+    if (!selection?.category || !selection?.resource) {
+      return null;
+    }
+    return `${selection.category}:${selection.resource}`;
+  }
+
+  getDefaultLimitSettings() {
+    return {
+      disableBelowTemperature: false,
+      disableTemperatureThreshold: 303.15,
+      disableBelowPressure: false,
+      disablePressureThreshold: 0,
+      disableBelowCoverage: false,
+      disableCoverageThreshold: 0,
+    };
+  }
+
+  readCurrentLimitSettings() {
+    return {
+      disableBelowTemperature: this.disableBelowTemperature,
+      disableTemperatureThreshold: this.disableTemperatureThreshold,
+      disableBelowPressure: this.disableBelowPressure,
+      disablePressureThreshold: this.disablePressureThreshold,
+      disableBelowCoverage: this.disableBelowCoverage,
+      disableCoverageThreshold: this.disableCoverageThreshold,
+    };
+  }
+
+  applyLimitSettings(settings) {
+    const defaults = this.getDefaultLimitSettings();
+    const resolved = { ...defaults, ...(settings || {}) };
+    this.disableBelowTemperature = !!resolved.disableBelowTemperature;
+    this.disableTemperatureThreshold = resolved.disableTemperatureThreshold;
+    this.disableBelowPressure = !!resolved.disableBelowPressure;
+    this.disablePressureThreshold = resolved.disablePressureThreshold;
+    this.disableBelowCoverage = !!resolved.disableBelowCoverage;
+    this.disableCoverageThreshold = resolved.disableCoverageThreshold;
+  }
+
+  saveCurrentSelectionLimitSettings() {
+    const key = this.getDisposalSelectionKey();
+    if (!key) {
+      return;
+    }
+    this.disposalLimitSettings[key] = this.readCurrentLimitSettings();
+  }
+
+  loadCurrentSelectionLimitSettings() {
+    const key = this.getDisposalSelectionKey();
+    if (!key) {
+      this.applyLimitSettings(this.getDefaultLimitSettings());
+      return;
+    }
+    this.applyLimitSettings(this.disposalLimitSettings[key] || this.getDefaultLimitSettings());
+  }
+
+  isSafeGhgSelection() {
+    return this.selectedDisposalResource?.category === 'atmospheric'
+      && this.selectedDisposalResource?.resource === 'greenhouseGas';
+  }
+
+  getSelectedDisposalMeta() {
+    const elements = projectElements[this.name];
+    const selection = this.selectedDisposalResource;
+    if (!elements || !selection) {
+      return null;
+    }
+    const selectionKey = `${selection.category}:${selection.resource}`;
+    const meta = elements.disposalResourceMetaLookup?.[selectionKey];
+    if (meta) {
+      return meta;
+    }
+    if (selection.category === 'atmospheric') {
+      return { phaseType: 'gas' };
+    }
+    return { phaseType: null };
+  }
+
+  shouldShowPressureControl() {
+    const selectedMeta = this.getSelectedDisposalMeta();
+    return selectedMeta?.phaseType === 'gas';
+  }
+
+  shouldShowCoverageControl() {
+    const selectedMeta = this.getSelectedDisposalMeta();
+    return selectedMeta?.phaseType === 'liquid' || selectedMeta?.phaseType === 'ice';
+  }
+
+  getSelectedCoverageResourceKey() {
+    const selectedMeta = this.getSelectedDisposalMeta();
+    const selection = this.selectedDisposalResource;
+    if (!selectedMeta || !selection || selection.category !== 'surface') {
+      return null;
+    }
+    if (selectedMeta.phaseType === 'liquid' || selectedMeta.phaseType === 'ice') {
+      return selection.resource;
+    }
+    return null;
+  }
+
+  createThresholdToggleControl(config) {
     const control = document.createElement('div');
-    control.classList.add('checkbox-container', 'pressure-control');
-    control.id = `${this.name}-pressure-control`;
+    control.classList.add('checkbox-container', config.className);
+    control.id = `${this.name}-${config.key}-control`;
     control.style.display = 'none';
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.id = `${this.name}-pressure-checkbox`;
-    checkbox.classList.add('pressure-checkbox');
-    checkbox.checked = this.disableBelowPressure;
+    checkbox.id = `${this.name}-${config.key}-checkbox`;
+    checkbox.classList.add(`${config.key}-checkbox`);
+    checkbox.checked = this[config.enabledProp];
     checkbox.addEventListener('change', () => {
-      this.disableBelowPressure = checkbox.checked;
+      this[config.enabledProp] = checkbox.checked;
     });
     control.appendChild(checkbox);
 
     const label = document.createElement('label');
-    label.textContent = 'Disable if pressure below: ';
+    label.textContent = config.labelText;
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const input = document.createElement('input');
     input.type = 'text';
     input.inputMode = 'decimal';
-    input.classList.add('pressure-input');
-    input.value = formatNumber(this.disablePressureThreshold * 1000, true, 2);
+    input.classList.add(`${config.key}-input`);
+    input.value = formatNumber(config.toDisplay(this[config.thresholdProp]), true, 2);
     wireStringNumberInput(input, {
       parseValue: (value) => {
         const parsed = parseFlexibleNumber(value);
@@ -321,26 +470,62 @@ class SpaceExportBaseProject extends SpaceshipProject {
       },
       formatValue: (value) => formatNumber(Math.max(0, value), true, 2),
       onValue: (value) => {
-        this.disablePressureThreshold = Math.max(0, value) / 1000;
+        this[config.thresholdProp] = config.fromDisplay(Math.max(0, value));
       },
-      datasetKey: 'pressurePa',
+      datasetKey: config.datasetKey,
     });
     control.appendChild(input);
 
     const unitLabel = document.createElement('span');
-    unitLabel.classList.add('pressure-unit');
-    unitLabel.textContent = 'Pa';
+    unitLabel.classList.add(`${config.key}-unit`);
+    unitLabel.textContent = config.unit;
     control.appendChild(unitLabel);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
-      pressureControl: control,
-      pressureCheckbox: checkbox,
-      pressureInput: input,
-      pressureUnitLabel: unitLabel,
+      [config.controlElementKey]: control,
+      [config.checkboxElementKey]: checkbox,
+      [config.inputElementKey]: input,
+      [config.unitElementKey]: unitLabel,
     };
 
     return control;
+  }
+
+  createPressureControl() {
+    return this.createThresholdToggleControl({
+      key: 'pressure',
+      className: 'pressure-control',
+      enabledProp: 'disableBelowPressure',
+      thresholdProp: 'disablePressureThreshold',
+      labelText: 'Disable if pressure below: ',
+      datasetKey: 'pressurePa',
+      toDisplay: (value) => value * 1000,
+      fromDisplay: (value) => value / 1000,
+      unit: 'Pa',
+      controlElementKey: 'pressureControl',
+      checkboxElementKey: 'pressureCheckbox',
+      inputElementKey: 'pressureInput',
+      unitElementKey: 'pressureUnitLabel',
+    });
+  }
+
+  createCoverageControl() {
+    return this.createThresholdToggleControl({
+      key: 'coverage',
+      className: 'coverage-control',
+      enabledProp: 'disableBelowCoverage',
+      thresholdProp: 'disableCoverageThreshold',
+      labelText: 'Disable if coverage below: ',
+      datasetKey: 'coveragePercent',
+      toDisplay: (value) => value * 100,
+      fromDisplay: (value) => Math.max(0, Math.min(100, value)) / 100,
+      unit: '%',
+      controlElementKey: 'coverageControl',
+      checkboxElementKey: 'coverageCheckbox',
+      inputElementKey: 'coverageInput',
+      unitElementKey: 'coverageUnitLabel',
+    });
   }
 
   createTemperatureControl() {
@@ -402,6 +587,9 @@ class SpaceExportBaseProject extends SpaceshipProject {
     if (!elements.pressureControl) {
       container.appendChild(this.createPressureControl());
     }
+    if (!elements.coverageControl) {
+      container.appendChild(this.createCoverageControl());
+    }
   }
 
   updateUI() {
@@ -418,10 +606,12 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
 
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
-    const isAtmospheric = this.isAtmosphericSelection();
+    const showTemperatureControl = this.isSafeGhgSelection();
+    const showPressureControl = this.shouldShowPressureControl();
+    const showCoverageControl = this.shouldShowCoverageControl();
 
     if (elements.temperatureControl) {
-      elements.temperatureControl.style.display = hasMonitoring ? 'flex' : 'none';
+      elements.temperatureControl.style.display = hasMonitoring && showTemperatureControl ? 'flex' : 'none';
     }
     if (elements.temperatureCheckbox) {
       elements.temperatureCheckbox.checked = this.disableBelowTemperature;
@@ -436,7 +626,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
 
     if (elements.pressureControl) {
-      elements.pressureControl.style.display = hasMonitoring && isAtmospheric ? 'flex' : 'none';
+      elements.pressureControl.style.display = hasMonitoring && showPressureControl ? 'flex' : 'none';
     }
     if (elements.pressureCheckbox) {
       elements.pressureCheckbox.checked = this.disableBelowPressure;
@@ -446,6 +636,19 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
     if (elements.pressureUnitLabel) {
       elements.pressureUnitLabel.textContent = 'Pa';
+    }
+
+    if (elements.coverageControl) {
+      elements.coverageControl.style.display = hasMonitoring && showCoverageControl ? 'flex' : 'none';
+    }
+    if (elements.coverageCheckbox) {
+      elements.coverageCheckbox.checked = this.disableBelowCoverage;
+    }
+    if (elements.coverageInput && document.activeElement !== elements.coverageInput) {
+      elements.coverageInput.value = formatNumber(this.disableCoverageThreshold * 100, true, 2);
+    }
+    if (elements.coverageUnitLabel) {
+      elements.coverageUnitLabel.textContent = '%';
     }
 
     if (elements.disposalPerShipElement) {
@@ -512,13 +715,14 @@ class SpaceExportBaseProject extends SpaceshipProject {
   }
 
   shouldAutomationDisable() {
-    if (this.disableBelowTemperature) {
+    const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    if (hasMonitoring && this.disableBelowTemperature && this.isSafeGhgSelection()) {
       const temp = this.getAutomationTemperatureReading();
       if (temp <= this.disableTemperatureThreshold) {
         return true;
       }
     }
-    if (this.disableBelowPressure && this.isAtmosphericSelection()) {
+    if (hasMonitoring && this.disableBelowPressure && this.shouldShowPressureControl()) {
       const resource = resources.atmospheric?.[this.selectedDisposalResource.resource];
       if (resource) {
         const amount = resource.value || 0;
@@ -533,20 +737,30 @@ class SpaceExportBaseProject extends SpaceshipProject {
         }
       }
     }
+    if (hasMonitoring && this.disableBelowCoverage && this.shouldShowCoverageControl()) {
+      const coverageKey = this.getSelectedCoverageResourceKey();
+      if (coverageKey) {
+        const coverage = calculateAverageCoverage(terraforming, coverageKey) || 0;
+        if (coverage <= this.disableCoverageThreshold) {
+          return true;
+        }
+      }
+    }
     return false;
   }
 
   canStart() {
     if (!super.canStart()) return false;
 
-    if (this.disableBelowTemperature) {
+    const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    if (hasMonitoring && this.disableBelowTemperature && this.isSafeGhgSelection()) {
       const temp = this.getAutomationTemperatureReading();
       if (temp <= this.disableTemperatureThreshold) {
         return false;
       }
     }
 
-    if (this.disableBelowPressure && this.isAtmosphericSelection()) {
+    if (hasMonitoring && this.disableBelowPressure && this.shouldShowPressureControl()) {
       const resource = resources.atmospheric?.[this.selectedDisposalResource.resource];
       if (resource) {
         const amount = resource.value || 0;
@@ -562,16 +776,30 @@ class SpaceExportBaseProject extends SpaceshipProject {
       }
     }
 
+    if (hasMonitoring && this.disableBelowCoverage && this.shouldShowCoverageControl()) {
+      const coverageKey = this.getSelectedCoverageResourceKey();
+      if (coverageKey) {
+        const coverage = calculateAverageCoverage(terraforming, coverageKey) || 0;
+        if (coverage <= this.disableCoverageThreshold) {
+          return false;
+        }
+      }
+    }
+
     return true;
   }
 
   saveState() {
+    this.saveCurrentSelectionLimitSettings();
     return {
       ...super.saveState(),
       disableBelowTemperature: this.disableBelowTemperature,
       disableTemperatureThreshold: this.disableTemperatureThreshold,
       disableBelowPressure: this.disableBelowPressure,
       disablePressureThreshold: this.disablePressureThreshold,
+      disableBelowCoverage: this.disableBelowCoverage,
+      disableCoverageThreshold: this.disableCoverageThreshold,
+      disposalLimitSettings: this.disposalLimitSettings,
       pressureUnit: 'Pa',
     };
   }
@@ -580,12 +808,16 @@ class SpaceExportBaseProject extends SpaceshipProject {
     if (!gameSettings.preserveProjectSettingsOnTravel) {
       return {};
     }
+    this.saveCurrentSelectionLimitSettings();
     return {
       selectedDisposalResource: this.selectedDisposalResource,
       disableBelowTemperature: this.disableBelowTemperature,
       disableTemperatureThreshold: this.disableTemperatureThreshold,
       disableBelowPressure: this.disableBelowPressure,
       disablePressureThreshold: this.disablePressureThreshold,
+      disableBelowCoverage: this.disableBelowCoverage,
+      disableCoverageThreshold: this.disableCoverageThreshold,
+      disposalLimitSettings: this.disposalLimitSettings,
       pressureUnit: 'Pa',
     };
   }
@@ -595,19 +827,37 @@ class SpaceExportBaseProject extends SpaceshipProject {
       return;
     }
     this.selectedDisposalResource = state.selectedDisposalResource || this.selectedDisposalResource;
-    this.disableBelowTemperature = state.disableBelowTemperature ?? this.disableBelowTemperature;
-    this.disableTemperatureThreshold = state.disableTemperatureThreshold ?? this.disableTemperatureThreshold;
-    this.disableBelowPressure = state.disableBelowPressure ?? this.disableBelowPressure;
-    this.disablePressureThreshold = state.disablePressureThreshold ?? this.disablePressureThreshold;
+    this.disposalLimitSettings = state.disposalLimitSettings || this.disposalLimitSettings || {};
+    if (!state.disposalLimitSettings) {
+      this.applyLimitSettings({
+        disableBelowTemperature: state.disableBelowTemperature ?? this.disableBelowTemperature,
+        disableTemperatureThreshold: state.disableTemperatureThreshold ?? this.disableTemperatureThreshold,
+        disableBelowPressure: state.disableBelowPressure ?? this.disableBelowPressure,
+        disablePressureThreshold: state.disablePressureThreshold ?? this.disablePressureThreshold,
+        disableBelowCoverage: state.disableBelowCoverage ?? this.disableBelowCoverage,
+        disableCoverageThreshold: state.disableCoverageThreshold ?? this.disableCoverageThreshold,
+      });
+      this.saveCurrentSelectionLimitSettings();
+    }
+    this.loadCurrentSelectionLimitSettings();
     this.pressureUnit = 'Pa';
   }
 
   loadState(state) {
     super.loadState(state);
-    this.disableBelowTemperature = state.disableBelowTemperature || false;
-    this.disableTemperatureThreshold = typeof state.disableTemperatureThreshold === 'number' ? state.disableTemperatureThreshold : 303.15;
-    this.disableBelowPressure = state.disableBelowPressure || false;
-    this.disablePressureThreshold = typeof state.disablePressureThreshold === 'number' ? state.disablePressureThreshold : 0;
+    this.disposalLimitSettings = state.disposalLimitSettings || {};
+    if (!state.disposalLimitSettings) {
+      this.applyLimitSettings({
+        disableBelowTemperature: state.disableBelowTemperature || false,
+        disableTemperatureThreshold: Number.isFinite(state.disableTemperatureThreshold) ? state.disableTemperatureThreshold : 303.15,
+        disableBelowPressure: state.disableBelowPressure || false,
+        disablePressureThreshold: Number.isFinite(state.disablePressureThreshold) ? state.disablePressureThreshold : 0,
+        disableBelowCoverage: state.disableBelowCoverage || false,
+        disableCoverageThreshold: Number.isFinite(state.disableCoverageThreshold) ? state.disableCoverageThreshold : 0,
+      });
+      this.saveCurrentSelectionLimitSettings();
+    }
+    this.loadCurrentSelectionLimitSettings();
     this.pressureUnit = 'Pa';
   }
 }
