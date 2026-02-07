@@ -10,6 +10,9 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAboveWaterCoverage = false;
     this.waterCoverageThreshold = 0.2;
     this.waterCoverageDisableMode = 'coverage';
+    this.disableAboveCo2Coverage = false;
+    this.co2CoverageThreshold = 0.2;
+    this.co2CoverageDisableMode = 'coverage';
     this.hasOxygenPressureControl = false;
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
@@ -227,6 +230,106 @@ class SpaceMiningProject extends SpaceshipProject {
     return control;
   }
 
+  createCo2CoverageControl() {
+    const control = document.createElement('div');
+    control.classList.add('checkbox-container', 'co2-coverage-control');
+    control.id = `${this.name}-co2-coverage-control`;
+    control.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-co2-coverage-checkbox`;
+    checkbox.classList.add('co2-coverage-checkbox');
+    checkbox.checked = this.disableAboveCo2Coverage;
+    checkbox.addEventListener('change', () => {
+      this.disableAboveCo2Coverage = checkbox.checked;
+    });
+    control.appendChild(checkbox);
+
+    const label = document.createElement('label');
+    label.textContent = 'Disable if ';
+    label.htmlFor = checkbox.id;
+    control.appendChild(label);
+
+    const modeSelect = document.createElement('select');
+    modeSelect.classList.add('co2-coverage-mode');
+    [
+      { value: 'coverage', text: 'liquid CO2 coverage above' },
+      { value: 'target', text: 'liquid CO2+dry ice above target' }
+    ].forEach(optionData => {
+      const option = document.createElement('option');
+      option.value = optionData.value;
+      option.textContent = optionData.text;
+      modeSelect.appendChild(option);
+    });
+    modeSelect.value = this.co2CoverageDisableMode;
+    control.appendChild(modeSelect);
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = 'any';
+    input.min = '0';
+    input.max = '100';
+    input.classList.add('co2-coverage-input');
+    input.value = this.co2CoverageThreshold * 100;
+    input.addEventListener('input', () => {
+      if (input.value === '') {
+        return;
+      }
+      const val = Number(input.value);
+      if (!Number.isFinite(val)) {
+        this.co2CoverageThreshold = 0;
+        return;
+      }
+      const clamped = Math.max(0, Math.min(val, 100));
+      this.co2CoverageThreshold = clamped / 100;
+      input.value = clamped;
+    });
+    input.addEventListener('blur', () => {
+      if (input.value === '') {
+        input.value = this.co2CoverageThreshold * 100;
+      }
+    });
+    control.appendChild(input);
+
+    const percent = document.createElement('span');
+    percent.classList.add('co2-coverage-unit');
+    percent.textContent = '%';
+    control.appendChild(percent);
+
+    const updateControlVisibility = () => {
+      const targetOption = modeSelect.querySelector('option[value="target"]');
+      const showTargetOption = this.hasCo2LiquidTarget();
+      targetOption.style.display = showTargetOption ? '' : 'none';
+      if (!showTargetOption && this.co2CoverageDisableMode === 'target') {
+        this.co2CoverageDisableMode = 'coverage';
+        modeSelect.value = 'coverage';
+      }
+      const showInput = this.co2CoverageDisableMode === 'coverage';
+      input.style.display = showInput ? '' : 'none';
+      percent.style.display = showInput ? '' : 'none';
+    };
+
+    modeSelect.addEventListener('change', () => {
+      this.co2CoverageDisableMode = modeSelect.value;
+      updateControlVisibility();
+    });
+
+    updateControlVisibility();
+
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      co2CoverageControl: control,
+      co2CoverageCheckbox: checkbox,
+      co2CoverageInput: input,
+      co2CoverageMode: modeSelect,
+      co2CoveragePercent: percent,
+      co2CoverageVisibilityUpdate: updateControlVisibility,
+    };
+
+    return control;
+  }
+
   createWaterImportTargetControl() {
     const control = document.createElement('div');
     control.classList.add('checkbox-container', 'water-import-target-control');
@@ -278,6 +381,9 @@ class SpaceMiningProject extends SpaceshipProject {
     if (this.attributes.dynamicWaterImport && !projectElements[this.name]?.waterCoverageControl) {
       container.appendChild(this.createWaterCoverageControl());
     }
+    if (this.getTargetAtmosphericResource() === 'carbonDioxide' && this.hasCo2LiquidTarget() && !projectElements[this.name]?.co2CoverageControl) {
+      container.appendChild(this.createCo2CoverageControl());
+    }
     if (this.hasOxygenPressureControl && !projectElements[this.name]?.oxygenPressureControl) {
       container.appendChild(this.createGasPressureControl('oxygen', 'disableAboveOxygenPressure', 'disableOxygenPressureThreshold', 'oxygenPressure'));
     }
@@ -320,6 +426,22 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.waterCoverageInput.style.display = showInput ? '' : 'none';
       elements.waterCoveragePercent.style.display = showInput ? '' : 'none';
     }
+    if (elements.co2CoverageControl) {
+      const shouldShowCo2Control = this.isBooleanFlagSet('atmosphericMonitoring') && this.hasCo2LiquidTarget();
+      elements.co2CoverageControl.style.display = shouldShowCo2Control ? 'flex' : 'none';
+    }
+    if (elements.co2CoverageCheckbox) {
+      elements.co2CoverageCheckbox.checked = this.disableAboveCo2Coverage;
+    }
+    if (elements.co2CoverageMode) {
+      elements.co2CoverageMode.value = this.co2CoverageDisableMode;
+    }
+    if (elements.co2CoverageInput && document.activeElement !== elements.co2CoverageInput) {
+      elements.co2CoverageInput.value = this.co2CoverageThreshold * 100;
+    }
+    if (elements.co2CoverageVisibilityUpdate) {
+      elements.co2CoverageVisibilityUpdate();
+    }
     if (elements.waterImportTargetControl) {
       elements.waterImportTargetControl.style.display = this.isBooleanFlagSet('waterImportTargeting') ? 'flex' : 'none';
     }
@@ -354,6 +476,52 @@ class SpaceMiningProject extends SpaceshipProject {
   waterCoverageLimitEnabled(hasMonitoring) {
     const monitoringOn = hasMonitoring ?? this.isBooleanFlagSet('atmosphericMonitoring');
     return monitoringOn && this.attributes.dynamicWaterImport && this.disableAboveWaterCoverage;
+  }
+
+  co2CoverageLimitEnabled(hasMonitoring) {
+    const monitoringOn = hasMonitoring ?? this.isBooleanFlagSet('atmosphericMonitoring');
+    return monitoringOn && this.getTargetAtmosphericResource() === 'carbonDioxide' && this.disableAboveCo2Coverage;
+  }
+
+  hasCo2LiquidTarget() {
+    return terraforming.liquidCoverageTargets.some((entry) => entry.coverageKey === 'liquidCO2');
+  }
+
+  getCo2TargetAmount() {
+    const targetEntry = terraforming.liquidCoverageTargets.find((entry) => entry.coverageKey === 'liquidCO2');
+    if (!targetEntry) {
+      return 0;
+    }
+    const surfaceArea = terraforming.celestialParameters.surfaceArea;
+    let total = 0;
+    for (const zone of getZones()) {
+      const zoneArea = surfaceArea * getZonePercentage(zone);
+      total += estimateAmountForCoverage(targetEntry.coverageTarget, zoneArea);
+    }
+    return total;
+  }
+
+  getCo2IceTotalAmount() {
+    let total = 0;
+    for (const zone of getZones()) {
+      const zoneSurface = terraforming.zonalSurface[zone];
+      total += (zoneSurface.liquidCO2 || 0) + (zoneSurface.dryIce || 0);
+    }
+    return total;
+  }
+
+  exceedsCo2CoverageLimit(hasMonitoring) {
+    if (!this.co2CoverageLimitEnabled(hasMonitoring)) {
+      return false;
+    }
+    if (this.co2CoverageDisableMode === 'target' && this.hasCo2LiquidTarget()) {
+      const totalAmount = this.getCo2IceTotalAmount();
+      const targetAmount = this.getCo2TargetAmount();
+      return totalAmount >= (targetAmount * (1 - ATMOSPHERIC_MONITORING_TOLERANCE));
+    }
+    const liquidCoverage = calculateAverageCoverage(terraforming, 'liquidCO2') || 0;
+    const totalCoverage = Math.min(1, liquidCoverage);
+    return totalCoverage >= (this.co2CoverageThreshold - ATMOSPHERIC_MONITORING_TOLERANCE);
   }
 
   getWaterTargetAmount() {
@@ -394,6 +562,9 @@ class SpaceMiningProject extends SpaceshipProject {
     if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
       return true;
     }
+    if (this.exceedsCo2CoverageLimit(hasMonitoring)) {
+      return true;
+    }
     if (hasMonitoring && this.disableAbovePressure) {
       const gas = this.getTargetAtmosphericResource();
       const amount = resources.atmospheric[gas].value || 0;
@@ -426,6 +597,9 @@ class SpaceMiningProject extends SpaceshipProject {
     if (!super.canStart()) return false;
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
+      return false;
+    }
+    if (this.exceedsCo2CoverageLimit(hasMonitoring)) {
       return false;
     }
     if (hasMonitoring && this.disableAbovePressure) {
@@ -467,6 +641,9 @@ class SpaceMiningProject extends SpaceshipProject {
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
       waterCoverageDisableMode: this.waterCoverageDisableMode,
+      disableAboveCo2Coverage: this.disableAboveCo2Coverage,
+      co2CoverageThreshold: this.co2CoverageThreshold,
+      co2CoverageDisableMode: this.co2CoverageDisableMode,
       pressureUnit: 'Pa',
       oxygenPressureUnit: 'Pa',
       waterImportTarget: this.waterImportTarget,
@@ -484,6 +661,11 @@ class SpaceMiningProject extends SpaceshipProject {
       this.waterCoverageThreshold = Math.max(0, Math.min(state.waterCoverageThreshold, 1));
     }
     this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
+    this.disableAboveCo2Coverage = state.disableAboveCo2Coverage ?? this.disableAboveCo2Coverage;
+    if (Number.isFinite(state.co2CoverageThreshold)) {
+      this.co2CoverageThreshold = Math.max(0, Math.min(state.co2CoverageThreshold, 1));
+    }
+    this.co2CoverageDisableMode = state.co2CoverageDisableMode || this.co2CoverageDisableMode;
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
@@ -501,6 +683,9 @@ class SpaceMiningProject extends SpaceshipProject {
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
       waterCoverageDisableMode: this.waterCoverageDisableMode,
+      disableAboveCo2Coverage: this.disableAboveCo2Coverage,
+      co2CoverageThreshold: this.co2CoverageThreshold,
+      co2CoverageDisableMode: this.co2CoverageDisableMode,
       pressureUnit: 'Pa',
       oxygenPressureUnit: 'Pa',
       waterImportTarget: this.waterImportTarget,
@@ -518,6 +703,9 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAboveWaterCoverage = state.disableAboveWaterCoverage ?? this.disableAboveWaterCoverage;
     this.waterCoverageThreshold = state.waterCoverageThreshold ?? this.waterCoverageThreshold;
     this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
+    this.disableAboveCo2Coverage = state.disableAboveCo2Coverage ?? this.disableAboveCo2Coverage;
+    this.co2CoverageThreshold = state.co2CoverageThreshold ?? this.co2CoverageThreshold;
+    this.co2CoverageDisableMode = state.co2CoverageDisableMode || this.co2CoverageDisableMode;
     this.pressureUnit = 'Pa';
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = state.waterImportTarget || this.waterImportTarget;
@@ -572,6 +760,10 @@ class SpaceMiningProject extends SpaceshipProject {
 
   applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    if (this.exceedsCo2CoverageLimit(hasMonitoring)) {
+      resources.surface.liquidCO2.automationLimited = true;
+      return;
+    }
     if (this.attributes.dynamicWaterImport && (gain.surface || gain.colony)) {
       const entry = gain.colony || gain.surface;
       const resourceName = Object.keys(entry)[0];

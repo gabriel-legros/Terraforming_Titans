@@ -55,6 +55,7 @@ class NanotechManager extends EffectableEntity {
       componentsMax: 10,
       stage1Warning: '',
       stage2Warning: '',
+      stage3Warning: '',
     };
   }
 
@@ -124,7 +125,6 @@ class NanotechManager extends EffectableEntity {
     let biomassFraction = 1;
     let siliconProvided = 0;
     let metalProvided = 0;
-    let biomassProvided = 0;
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
     this.currentGlassProduction = 0;
@@ -252,6 +252,15 @@ class NanotechManager extends EffectableEntity {
         const estimatedLifeBiomassProduction = this.biomassLimitMode === 'percent' && !onlyTrash
           ? getEstimatedLifeBiomassProductionRate()
           : 0;
+        const biomassTotalAvailable = recyclingEnabled
+          ? (onlyTrash
+            ? Math.max(trashRes.value + (accumulatedChanges.surface.trash || 0), 0)
+            : Math.max(
+              biomassRes.value + (accumulatedChanges.surface.biomass || 0) +
+              trashRes.value + (accumulatedChanges.surface.trash || 0),
+              0
+            ))
+          : Math.max(biomassRes.value + (accumulatedChanges.surface.biomass || 0), 0);
         const biomassBaseProduction = recyclingEnabled
           ? (onlyTrash ? getEffectiveProductionRate(trashRes) : getCombinedProductionRate(biomassRes, trashRes, true))
           : getEffectiveProductionRate(biomassRes);
@@ -260,7 +269,9 @@ class NanotechManager extends EffectableEntity {
           ? Math.max(0, this.maxBiomassAbsolute)
           : (this.biomassLimitMode === 'uncapped'
             ? Number.POSITIVE_INFINITY
-            : Math.max(0, (biomassProduction * this.maxBiomassPercent) / 100));
+            : (this.biomassLimitMode === 'percent_total'
+              ? Math.max(0, (biomassTotalAvailable * this.maxBiomassPercent) / 100)
+              : Math.max(0, (biomassProduction * this.maxBiomassPercent) / 100)));
         const needed = this.optimalBiomassConsumption * (deltaTime / 1000);
         const limitedNeed = Math.min(needed, biomassLimitRate * (deltaTime / 1000));
 
@@ -280,7 +291,6 @@ class NanotechManager extends EffectableEntity {
         const totalUsed = usedTrash + usedBiomass;
 
         this.hasEnoughBiomass = limitedNeed >= needed && totalUsed >= needed;
-        biomassProvided = totalUsed;
         this.currentBiomassConsumption = deltaTime > 0 ? totalUsed / (deltaTime / 1000) : 0;
 
         if (usedBiomass > 0) {
@@ -331,8 +341,9 @@ class NanotechManager extends EffectableEntity {
       const electronicsRes = resources.colony?.electronics;
       if (electronicsRes && accumulatedChanges?.colony && stage3Enabled) {
         const electronicsRate = this.nanobots * 1e-19 * (this.electronicsSlider / 10);
+        const biomassConsumed = this.currentBiomassConsumption * (deltaTime / 1000);
         const electronicsAmount = isArtificialWorld
-          ? Math.min(electronicsRate * (deltaTime / 1000), biomassProvided)
+          ? Math.min(electronicsRate * (deltaTime / 1000), biomassConsumed)
           : electronicsRate * (deltaTime / 1000);
         this.currentElectronicsProduction = deltaTime > 0 ? electronicsAmount / (deltaTime / 1000) : 0;
         if (electronicsAmount > 0) {
@@ -704,7 +715,7 @@ class NanotechManager extends EffectableEntity {
           </div>
           <div class="nanotech-stage" id="nanotech-stage-3">
             <div class="nanotech-stage-header">
-              <h4>Stage III</h4>
+              <h4>Stage III <span id="nanotech-stage3-warning" class="nanotech-stage-warning"></span></h4>
             </div>
             <div class="nanotech-slider-grid">
               <div class="nanotech-slider-card">
@@ -721,6 +732,7 @@ class NanotechManager extends EffectableEntity {
                   <input type="text" id="nanotech-biomass-limit" value="${this.maxBiomassPercent}">
                   <select id="nanotech-biomass-limit-mode">
                     <option value="percent" selected>percentage of production</option>
+                    <option value="percent_total">percentage of total biomass</option>
                     <option value="absolute">absolute</option>
                     <option value="uncapped">uncapped</option>
                   </select>
@@ -796,6 +808,7 @@ class NanotechManager extends EffectableEntity {
       ? currentPlanetParameters.resources.underground?.ore?.maxDeposits || 0
       : 0;
     const hasOre = oreDeposits > 0;
+    const isArtificialWorld = currentPlanetParameters?.classification?.archetype === 'artificial';
 
     const glassMax = hasSand ? 10 : siliconAllocation;
     if (this.glassSlider > glassMax) {
@@ -829,6 +842,13 @@ class NanotechManager extends EffectableEntity {
     if (C.stage2WarningEl && C.stage2WarningEl.textContent !== stage2Warning) {
       C.stage2WarningEl.textContent = stage2Warning;
       this.uiState.stage2Warning = stage2Warning;
+    }
+    const stage3Warning = stage3Active && isArtificialWorld
+      ? '⚠️ No resources; electronics capped to biomass.'
+      : '';
+    if (C.stage3WarningEl && C.stage3WarningEl.textContent !== stage3Warning) {
+      C.stage3WarningEl.textContent = stage3Warning;
+      this.uiState.stage3Warning = stage3Warning;
     }
     if (C.countEl) {
       C.countEl.textContent = formatNumber(this.nanobots, false, 2);
@@ -1358,7 +1378,7 @@ class NanotechManager extends EffectableEntity {
     if (C.biomassTooltipIcon?.dataset?.nanotechBound !== 'biomassTooltip') {
       attachDynamicInfoTooltip(
         C.biomassTooltipIcon,
-        'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+        'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
       );
       C.biomassTooltipIcon.dataset.nanotechBound = 'biomassTooltip';
     }
@@ -1425,6 +1445,7 @@ class NanotechManager extends EffectableEntity {
       stage3Container: qs('#nanotech-stage-3'),
       stage1WarningEl: qs('#nanotech-stage1-warning'),
       stage2WarningEl: qs('#nanotech-stage2-warning'),
+      stage3WarningEl: qs('#nanotech-stage3-warning'),
       travelCapEl: qs('#nanotech-travel-cap'),
     };
   }
@@ -1438,6 +1459,7 @@ class NanotechManager extends EffectableEntity {
       this.uiCache?.siliconRateEl,
       this.uiCache?.stage1WarningEl,
       this.uiCache?.stage2WarningEl,
+      this.uiCache?.stage3WarningEl,
       this.uiCache?.travelCapEl,
     ];
     const needsRefresh = !this.uiCache ||

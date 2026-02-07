@@ -748,7 +748,11 @@ const projectParameters = {
           'liquidMethane',
           'hydrocarbonIce',
           'liquidAmmonia',
-          'ammoniaIce'
+          'ammoniaIce',
+          'liquidOxygen',
+          'oxygenIce',
+          'liquidNitrogen',
+          'nitrogenIce'
         ],
         atmospheric: [
           'atmosphericWater',
