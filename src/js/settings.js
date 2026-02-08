@@ -40,17 +40,6 @@ function addSettingsListeners() {
     });
   }
 
-  const languageSelect = document.getElementById('language-select');
-  if (languageSelect) {
-    languageSelect.value = gameSettings.language || 'en';
-    languageSelect.addEventListener('change', () => {
-      gameSettings.language = languageSelect.value;
-      if (typeof setLanguage === 'function') {
-        setLanguage(gameSettings.language);
-      }
-    });
-  }
-
   const silenceToggle = document.getElementById('solis-silence-toggle');
   if (silenceToggle) {
     silenceToggle.checked = gameSettings.silenceSolisAlert;

@@ -67,7 +67,6 @@ function cacheSettingsElements() {
     unlockToggle: document.getElementById('unlock-alert-toggle'),
     dayNightToggle: document.getElementById('day-night-toggle'),
     darkModeToggle: document.getElementById('dark-mode-toggle'),
-    languageSelect: document.getElementById('language-select'),
     preserveAutoStartToggle: document.getElementById('preserve-project-auto-start-toggle'),
     preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
     keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
@@ -605,9 +604,6 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
-      if (!gameSettings.language) {
-        gameSettings.language = 'en';
-      }
       delete gameSettings.formatAutoBuildTargets;
       const cachedSettings = cacheSettingsElements();
       cachedSettings.autosaveToggle.checked = gameSettings.disableAutosave;
@@ -626,9 +622,6 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
       cachedSettings.darkModeToggle.checked = gameSettings.darkMode;
-      if (cachedSettings.languageSelect) {
-        cachedSettings.languageSelect.value = gameSettings.language;
-      }
       document.body.classList.toggle('dark-mode', gameSettings.darkMode);
       cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
@@ -639,9 +632,6 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.scientificNotationThresholdInput.value = formatScientific(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.scientificNotationThresholdInput.dataset.scientificNotationThreshold = String(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
-      if (typeof setLanguage === 'function') {
-        setLanguage(gameSettings.language, { skipEvent: true });
-      }
       if (gameSettings.keepTabRunningAudio) {
         startBackgroundSilence();
       } else {
