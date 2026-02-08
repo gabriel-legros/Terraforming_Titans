@@ -12,7 +12,11 @@ class WaterTank extends Building {
 
     const cache = context.cachedElements || {};
     const emptyButton = globalThis.document.createElement('button');
-    emptyButton.textContent = 'Empty';
+    emptyButton.textContent = this.localizeModuleText(
+      'buildingsTab.modules.waterTank.empty',
+      null,
+      'Empty'
+    );
     emptyButton.classList.add('empty-button');
     emptyButton.addEventListener('click', event => {
       event.stopPropagation();
@@ -38,6 +42,11 @@ class WaterTank extends Building {
 
     const availableWater = resources?.colony?.water?.value ?? 0;
     button.disabled = availableWater <= 0;
+    button.textContent = this.localizeModuleText(
+      'buildingsTab.modules.waterTank.empty',
+      null,
+      'Empty'
+    );
     button.style.display = this.unlocked && !this.isHidden ? 'inline-block' : 'none';
   }
 
@@ -79,6 +88,17 @@ class WaterTank extends Building {
       const portion = totalAmount * (weights[index] / totalWeight);
       entry.liquidWater += portion;
     });
+  }
+
+  localizeModuleText(key, vars, fallback) {
+    if (typeof t !== 'function') {
+      return fallback || key;
+    }
+    const resolved = t(key, vars);
+    if (resolved === key) {
+      return fallback || key;
+    }
+    return resolved;
   }
 }
 

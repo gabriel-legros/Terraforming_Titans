@@ -8,6 +8,17 @@ const DEFAULT_CHEM_REACTOR_AUTOMATION_SETTINGS = {
   resourceId: ''
 };
 
+function localizeChemicalReactorText(key, vars, fallback) {
+  if (typeof t !== 'function') {
+    return fallback || key;
+  }
+  const resolved = t(key, vars);
+  if (resolved === key) {
+    return fallback || key;
+  }
+  return resolved;
+}
+
 class ChemicalReactor extends MultiRecipesBuilding {
   getAutomationSettings() {
     const settings = ChemicalReactor.getAutomationSettings();
@@ -46,7 +57,11 @@ class ChemicalReactor extends MultiRecipesBuilding {
       for (const resource in categoryResources) {
         const resourceData = resources[category][resource];
         const displayName = resourceData.displayName || resource;
-        const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+        const categoryLabel = localizeChemicalReactorText(
+          `buildingsTab.subtabs.categories.${category}`,
+          null,
+          category.charAt(0).toUpperCase() + category.slice(1)
+        );
         options.push({
           category,
           resource,
@@ -60,12 +75,24 @@ class ChemicalReactor extends MultiRecipesBuilding {
   _getAutomationUnitOptions(resourceCategory) {
     if (resourceCategory === 'atmospheric') {
       return [
-        { value: 'ton', label: 'ton' },
-        { value: 'Pa', label: 'Pa' },
-        { value: 'kPa', label: 'kPa' }
+        {
+          value: 'ton',
+          label: localizeChemicalReactorText('buildingsTab.modules.units.ton', null, 'ton')
+        },
+        {
+          value: 'Pa',
+          label: localizeChemicalReactorText('buildingsTab.modules.units.Pa', null, 'Pa')
+        },
+        {
+          value: 'kPa',
+          label: localizeChemicalReactorText('buildingsTab.modules.units.kPa', null, 'kPa')
+        }
       ];
     }
-    return [{ value: 'ton', label: 'ton' }];
+    return [{
+      value: 'ton',
+      label: localizeChemicalReactorText('buildingsTab.modules.units.ton', null, 'ton')
+    }];
   }
 
   _getAutomationCurrentValue(settings) {
@@ -200,17 +227,29 @@ class ChemicalReactor extends MultiRecipesBuilding {
 
     const label = document.createElement('label');
     label.htmlFor = checkbox.id;
-    label.textContent = 'Disable if';
+    label.textContent = localizeChemicalReactorText(
+      'buildingsTab.modules.chemicalReactor.disableIf',
+      null,
+      'Disable if'
+    );
     control.appendChild(label);
 
     const modeSelect = document.createElement('select');
     modeSelect.classList.add('chem-reactor-mode');
     const inputOption = document.createElement('option');
     inputOption.value = 'input';
-    inputOption.textContent = 'Input';
+    inputOption.textContent = localizeChemicalReactorText(
+      'buildingsTab.modules.chemicalReactor.mode.input',
+      null,
+      'Input'
+    );
     const outputOption = document.createElement('option');
     outputOption.value = 'output';
-    outputOption.textContent = 'Output';
+    outputOption.textContent = localizeChemicalReactorText(
+      'buildingsTab.modules.chemicalReactor.mode.output',
+      null,
+      'Output'
+    );
     modeSelect.appendChild(inputOption);
     modeSelect.appendChild(outputOption);
     control.appendChild(modeSelect);
@@ -317,7 +356,10 @@ class ChemicalReactor extends MultiRecipesBuilding {
     cache.chemicalReactor = {
       container: control,
       checkbox,
+      label,
       modeSelect,
+      inputOption,
+      outputOption,
       resourceSelect,
       operatorSelect,
       unitSelect,
@@ -337,6 +379,27 @@ class ChemicalReactor extends MultiRecipesBuilding {
 
     const settings = this.getAutomationSettings();
     chemEls.checkbox.checked = settings.autoDisable;
+    if (chemEls.label) {
+      chemEls.label.textContent = localizeChemicalReactorText(
+        'buildingsTab.modules.chemicalReactor.disableIf',
+        null,
+        'Disable if'
+      );
+    }
+    if (chemEls.inputOption) {
+      chemEls.inputOption.textContent = localizeChemicalReactorText(
+        'buildingsTab.modules.chemicalReactor.mode.input',
+        null,
+        'Input'
+      );
+    }
+    if (chemEls.outputOption) {
+      chemEls.outputOption.textContent = localizeChemicalReactorText(
+        'buildingsTab.modules.chemicalReactor.mode.output',
+        null,
+        'Output'
+      );
+    }
     if (chemEls.modeSelect.value !== settings.mode) {
       chemEls.modeSelect.value = settings.mode;
     }

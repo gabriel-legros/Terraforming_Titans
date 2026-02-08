@@ -5,6 +5,17 @@ const DEFAULT_GHG_AUTOMATION_SETTINGS = {
   targetMode: 'temperature'
 };
 
+function localizeGhgFactoryText(key, vars, fallback) {
+  if (typeof t !== 'function') {
+    return fallback || key;
+  }
+  const resolved = t(key, vars);
+  if (resolved === key) {
+    return fallback || key;
+  }
+  return resolved;
+}
+
 function sanitizeNumber(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -462,11 +473,19 @@ class GhgFactory extends Building {
     tempModeSelect.classList.add('ghg-temp-mode');
     const modeOptionTemp = document.createElement('option');
     modeOptionTemp.value = 'temperature';
-    modeOptionTemp.textContent = 'avg T';
+    modeOptionTemp.textContent = localizeGhgFactoryText(
+      'buildingsTab.modules.ghgFactory.mode.avgTemperature',
+      null,
+      'avg T'
+    );
     tempModeSelect.appendChild(modeOptionTemp);
     const modeOptionDepth = document.createElement('option');
     modeOptionDepth.value = 'opticalDepth';
-    modeOptionDepth.textContent = 'optical depth';
+    modeOptionDepth.textContent = localizeGhgFactoryText(
+      'buildingsTab.modules.ghgFactory.mode.opticalDepth',
+      null,
+      'optical depth'
+    );
     tempModeSelect.appendChild(modeOptionDepth);
     tempControl.appendChild(tempModeSelect);
 
@@ -484,7 +503,11 @@ class GhgFactory extends Building {
     tempControl.appendChild(tempInput);
 
     const betweenLabel = document.createElement('span');
-    betweenLabel.textContent = ' and ';
+    betweenLabel.textContent = localizeGhgFactoryText(
+      'buildingsTab.modules.ghgFactory.and',
+      null,
+      ' and '
+    );
     tempControl.appendChild(betweenLabel);
 
     const tempInputB = document.createElement('input');
@@ -500,9 +523,9 @@ class GhgFactory extends Building {
     const tempTooltip = document.createElement('span');
     tempTooltip.classList.add('info-tooltip-icon');
     tempTooltip.innerHTML = '&#9432;';
-    attachDynamicInfoTooltip(
+    const tempTooltipContent = attachDynamicInfoTooltip(
       tempTooltip,
-      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. Optical depth ignores calcite aerosols and will clear them first if it needs to increase GHG. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
+      ''
     );
     tempControl.appendChild(tempTooltip);
 
@@ -514,10 +537,16 @@ class GhgFactory extends Building {
     const update = () => {
       const showReverse = !!this.reversalAvailable;
       const useOpticalDepth = settings.targetMode === 'opticalDepth';
-      tempLabelPrefix.textContent = showReverse ? 'Automate ' : 'Disable if ';
-      tempLabelSuffix.textContent = showReverse ? ' between ' : ' > ';
+      tempLabelPrefix.textContent = showReverse
+        ? localizeGhgFactoryText('buildingsTab.modules.ghgFactory.automatePrefix', null, 'Automate ')
+        : localizeGhgFactoryText('buildingsTab.modules.ghgFactory.disableIfPrefix', null, 'Disable if ');
+      tempLabelSuffix.textContent = showReverse
+        ? localizeGhgFactoryText('buildingsTab.modules.ghgFactory.betweenSuffix', null, ' between ')
+        : localizeGhgFactoryText('buildingsTab.modules.ghgFactory.greaterSuffix', null, ' > ');
       tempModeSelect.value = settings.targetMode || 'temperature';
-      unitSpan.textContent = useOpticalDepth ? 'tau' : getTemperatureUnit();
+      unitSpan.textContent = useOpticalDepth
+        ? localizeGhgFactoryText('buildingsTab.modules.ghgFactory.unit.tau', null, 'tau')
+        : getTemperatureUnit();
       tempInput.step = useOpticalDepth ? 0.01 : 0.1;
       tempInputB.step = useOpticalDepth ? 0.01 : 0.1;
       if (document.activeElement !== tempInput) {
@@ -534,6 +563,16 @@ class GhgFactory extends Building {
       betweenLabel.style.display = showReverse ? 'inline' : 'none';
       tempInputB.style.display = showReverse ? 'inline' : 'none';
       tempTooltip.style.display = showReverse ? 'inline' : 'none';
+      setTooltipText(
+        tempTooltipContent,
+        localizeGhgFactoryText(
+          'buildingsTab.modules.ghgFactory.tooltip',
+          null,
+          'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. Optical depth ignores calcite aerosols and will clear them first if it needs to increase GHG. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
+        ),
+        cache,
+        'ghgTooltipText'
+      );
     };
     update();
 
@@ -598,7 +637,10 @@ class GhgFactory extends Building {
       lineBreak: lineBreak,
       betweenLabel: betweenLabel,
       unitSpan: unitSpan,
-      tooltip: tempTooltip
+      tooltip: tempTooltip,
+      tooltipContent: tempTooltipContent,
+      modeOptionTemp,
+      modeOptionDepth
     };
   }
 
@@ -615,10 +657,28 @@ class GhgFactory extends Building {
     const showReverse = !!this.reversalAvailable;
     const useOpticalDepth = settings.targetMode === 'opticalDepth';
     if (ghgEls.labelPrefix) {
-      ghgEls.labelPrefix.textContent = showReverse ? 'Automate ' : 'Disable if ';
+      ghgEls.labelPrefix.textContent = showReverse
+        ? localizeGhgFactoryText('buildingsTab.modules.ghgFactory.automatePrefix', null, 'Automate ')
+        : localizeGhgFactoryText('buildingsTab.modules.ghgFactory.disableIfPrefix', null, 'Disable if ');
     }
     if (ghgEls.labelSuffix) {
-      ghgEls.labelSuffix.textContent = showReverse ? ' between ' : ' > ';
+      ghgEls.labelSuffix.textContent = showReverse
+        ? localizeGhgFactoryText('buildingsTab.modules.ghgFactory.betweenSuffix', null, ' between ')
+        : localizeGhgFactoryText('buildingsTab.modules.ghgFactory.greaterSuffix', null, ' > ');
+    }
+    if (ghgEls.modeOptionTemp) {
+      ghgEls.modeOptionTemp.textContent = localizeGhgFactoryText(
+        'buildingsTab.modules.ghgFactory.mode.avgTemperature',
+        null,
+        'avg T'
+      );
+    }
+    if (ghgEls.modeOptionDepth) {
+      ghgEls.modeOptionDepth.textContent = localizeGhgFactoryText(
+        'buildingsTab.modules.ghgFactory.mode.opticalDepth',
+        null,
+        'optical depth'
+      );
     }
     if (ghgEls.modeSelect) {
       ghgEls.modeSelect.value = settings.targetMode || 'temperature';
@@ -635,6 +695,11 @@ class GhgFactory extends Building {
     }
     ghgEls.lineBreak.style.display = showReverse ? 'block' : 'none';
     if (ghgEls.betweenLabel) {
+      ghgEls.betweenLabel.textContent = localizeGhgFactoryText(
+        'buildingsTab.modules.ghgFactory.and',
+        null,
+        ' and '
+      );
       ghgEls.betweenLabel.style.display = showReverse ? 'inline' : 'none';
     }
     if (ghgEls.inputB) {
@@ -644,7 +709,21 @@ class GhgFactory extends Building {
       ghgEls.tooltip.style.display = showReverse ? 'inline' : 'none';
     }
     if (ghgEls.unitSpan) {
-      ghgEls.unitSpan.textContent = useOpticalDepth ? 'tau' : getTemperatureUnit();
+      ghgEls.unitSpan.textContent = useOpticalDepth
+        ? localizeGhgFactoryText('buildingsTab.modules.ghgFactory.unit.tau', null, 'tau')
+        : getTemperatureUnit();
+    }
+    if (ghgEls.tooltipContent) {
+      setTooltipText(
+        ghgEls.tooltipContent,
+        localizeGhgFactoryText(
+          'buildingsTab.modules.ghgFactory.tooltip',
+          null,
+          'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. Optical depth ignores calcite aerosols and will clear them first if it needs to increase GHG. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
+        ),
+        ghgEls,
+        'ghgTooltipText'
+      );
     }
     if (ghgEls.inputA) {
       ghgEls.inputA.step = useOpticalDepth ? 0.01 : 0.1;

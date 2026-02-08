@@ -39,6 +39,11 @@
     <link rel="stylesheet" href="src/css/planet-visualizer.css">
     <link rel="stylesheet" href="src/css/automation.css">
 
+    <!-- Language-->
+    <script src="src/js/localization.js"></script>
+    <script src="src/js/i18n/en/ui.js"></script>
+    <script src="src/js/i18n/la/ui.js"></script>
+
     <!-- Parameter Scripts -->
     <script src="src/js/debug_constants.js"></script>
     <script src="src/js/planet-resource-parameters.js"></script>
@@ -71,7 +76,6 @@
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="src/js/numbers.js"></script>
     <script src="src/js/globals.js"></script>
-    <script src="src/js/localization.js"></script>
     <script src="src/js/buildCount.js"></script>
     <script src="src/js/tab.js"></script>
     <script src="src/js/ui-utils.js"></script>
@@ -267,7 +271,7 @@
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <div class="tab hidden" id="buildings-tab" data-tab="buildings">Buildings<span id="buildings-alert" class="unlock-alert">!</span></div>
+    <div class="tab hidden" id="buildings-tab" data-tab="buildings"><span data-i18n="tabs.buildings">Buildings</span><span id="buildings-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects<span id="projects-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony<span id="colonies-alert" class="unlock-alert">!</span></div>
     <div class="tab hidden" id="research-tab" data-tab="research">Research<span id="research-alert" class="unlock-alert">!</span></div>
@@ -278,7 +282,7 @@
     <!-- *** NEW HOPE TAB BUTTON *** -->
     <div class="tab hidden" id="hope-tab" data-tab="hope">H.O.P.E.<span id="hope-alert" class="hope-alert">!</span></div>
     <!-- ***************************** -->
-    <div class="tab active" id="settings-tab" data-tab="settings">Save and Settings</div>
+    <div class="tab active" id="settings-tab" data-tab="settings" data-i18n="tabs.settings">Save and Settings</div>
   </div>
 
   <div class="top-bar">
@@ -643,34 +647,34 @@
     <div id="settings" class="tab-content active">
       <!-- ... existing settings content ... -->
       <div class="container settings-container">
-          <h2>Save</h2>
+          <h2 data-i18n="saveSettings.save.title">Save</h2>
           <div class="save-slots">
               <!-- ... table ... -->
               <table>
                   <thead>
                       <tr>
-                          <th>Slot</th>
-                          <th>Date</th>
-                          <th>Actions</th>
+                          <th data-i18n="saveSettings.save.headers.slot">Slot</th>
+                          <th data-i18n="saveSettings.save.headers.date">Date</th>
+                          <th data-i18n="saveSettings.save.headers.actions">Actions</th>
                       </tr>
                   </thead>
                   <tbody>
                       <tr>
-                        <td>Autosave</td>
+                        <td data-i18n="saveSettings.save.rows.autosave">Autosave</td>
                         <td id="autosave-date">Empty</td>
                         <td>
-                            <button class="save-button" data-slot="autosave">Save</button>
-                            <button class="load-button" data-slot="autosave">Load</button>
-                            <button class="delete-button" data-slot="autosave">Delete</button>
+                            <button class="save-button" data-slot="autosave" data-i18n="saveSettings.save.buttons.save">Save</button>
+                            <button class="load-button" data-slot="autosave" data-i18n="saveSettings.save.buttons.load">Load</button>
+                            <button class="delete-button" data-slot="autosave" data-i18n="saveSettings.save.buttons.delete">Delete</button>
                         </td>
                     </tr>
                     <tr id="pretravel-row" class="hidden">
-                        <td>Pre-travel</td>
+                        <td data-i18n="saveSettings.save.rows.pretravel">Pre-travel</td>
                         <td id="pretravel-date">Empty</td>
                         <td>
-                            <button class="save-button" data-slot="pretravel" disabled>Save</button>
-                            <button class="load-button" data-slot="pretravel">Load</button>
-                            <button class="delete-button" data-slot="pretravel">Delete</button>
+                            <button class="save-button" data-slot="pretravel" data-i18n="saveSettings.save.buttons.save" disabled>Save</button>
+                            <button class="load-button" data-slot="pretravel" data-i18n="saveSettings.save.buttons.load">Load</button>
+                            <button class="delete-button" data-slot="pretravel" data-i18n="saveSettings.save.buttons.delete">Delete</button>
                         </td>
                     </tr>
                     <tr>
@@ -679,124 +683,124 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>Slot 1</td>
+                        <td data-i18n="saveSettings.save.rows.slot1">Slot 1</td>
                         <td id="slot1-date">Empty</td>
                         <td>
-                            <button class="save-button" data-slot="slot1">Save</button>
-                            <button class="load-button" data-slot="slot1">Load</button>
-                            <button class="delete-button" data-slot="slot1">Delete</button>
+                            <button class="save-button" data-slot="slot1" data-i18n="saveSettings.save.buttons.save">Save</button>
+                            <button class="load-button" data-slot="slot1" data-i18n="saveSettings.save.buttons.load">Load</button>
+                            <button class="delete-button" data-slot="slot1" data-i18n="saveSettings.save.buttons.delete">Delete</button>
                         </td>
                     </tr>
                     <!-- ... other slots ... -->
                      <tr>
-                          <td>Slot 2</td>
+                          <td data-i18n="saveSettings.save.rows.slot2">Slot 2</td>
                           <td id="slot2-date">Empty</td>
                           <td>
-                              <button class="save-button" data-slot="slot2">Save</button>
-                              <button class="load-button" data-slot="slot2">Load</button>
-                              <button class="delete-button" data-slot="slot2">Delete</button>
+                              <button class="save-button" data-slot="slot2" data-i18n="saveSettings.save.buttons.save">Save</button>
+                              <button class="load-button" data-slot="slot2" data-i18n="saveSettings.save.buttons.load">Load</button>
+                              <button class="delete-button" data-slot="slot2" data-i18n="saveSettings.save.buttons.delete">Delete</button>
                           </td>
                       </tr>
                       <tr>
-                          <td>Slot 3</td>
+                          <td data-i18n="saveSettings.save.rows.slot3">Slot 3</td>
                           <td id="slot3-date">Empty</td>
                           <td>
-                              <button class="save-button" data-slot="slot3">Save</button>
-                              <button class="load-button" data-slot="slot3">Load</button>
-                              <button class="delete-button" data-slot="slot3">Delete</button>
+                              <button class="save-button" data-slot="slot3" data-i18n="saveSettings.save.buttons.save">Save</button>
+                              <button class="load-button" data-slot="slot3" data-i18n="saveSettings.save.buttons.load">Load</button>
+                              <button class="delete-button" data-slot="slot3" data-i18n="saveSettings.save.buttons.delete">Delete</button>
                           </td>
                       </tr>
                       <tr>
-                          <td>Slot 4</td>
+                          <td data-i18n="saveSettings.save.rows.slot4">Slot 4</td>
                           <td id="slot4-date">Empty</td>
                           <td>
-                              <button class="save-button" data-slot="slot4">Save</button>
-                              <button class="load-button" data-slot="slot4">Load</button>
-                              <button class="delete-button" data-slot="slot4">Delete</button>
+                              <button class="save-button" data-slot="slot4" data-i18n="saveSettings.save.buttons.save">Save</button>
+                              <button class="load-button" data-slot="slot4" data-i18n="saveSettings.save.buttons.load">Load</button>
+                              <button class="delete-button" data-slot="slot4" data-i18n="saveSettings.save.buttons.delete">Delete</button>
                           </td>
                       </tr>
                       <tr>
-                          <td>Slot 5</td>
+                          <td data-i18n="saveSettings.save.rows.slot5">Slot 5</td>
                           <td id="slot5-date">Empty</td>
                           <td>
-                              <button class="save-button" data-slot="slot5">Save</button>
-                              <button class="load-button" data-slot="slot5">Load</button>
-                              <button class="delete-button" data-slot="slot5">Delete</button>
+                              <button class="save-button" data-slot="slot5" data-i18n="saveSettings.save.buttons.save">Save</button>
+                              <button class="load-button" data-slot="slot5" data-i18n="saveSettings.save.buttons.load">Load</button>
+                              <button class="delete-button" data-slot="slot5" data-i18n="saveSettings.save.buttons.delete">Delete</button>
                           </td>
                       </tr>
                       <tr>
                         <td colspan="3">
-                          <button id="new-game-button">New Game</button>
-                          <button id="save-to-file-button">Save to File</button>
+                          <button id="new-game-button" data-i18n="saveSettings.save.buttons.newGame">New Game</button>
+                          <button id="save-to-file-button" data-i18n="saveSettings.save.buttons.saveToFile">Save to File</button>
                           <input type="file" id="load-from-file-input" accept=".json" style="display: none;">
-                          <button id="load-from-file-button">Load from File</button>
-                          <button id="save-to-clipboard-button">Save to Clipboard</button>
-                          <button id="load-from-string-button">Load from string</button>
+                          <button id="load-from-file-button" data-i18n="saveSettings.save.buttons.loadFromFile">Load from File</button>
+                          <button id="save-to-clipboard-button" data-i18n="saveSettings.save.buttons.saveToClipboard">Save to Clipboard</button>
+                          <button id="load-from-string-button" data-i18n="saveSettings.save.buttons.loadFromString">Load from string</button>
                         </td>
                       </tr>
                         <tr>
                           <td colspan="3">
-                            <button id="pause-button">Pause</button>
+                            <button id="pause-button" data-i18n="saveSettings.save.buttons.pause">Pause</button>
                           </td>
                         </tr>
                   </tbody>
               </table>
           </div>
-          <h2>Settings</h2>
+          <h2 data-i18n="saveSettings.settings.title">Settings</h2>
           <div class="settings-grid">
             <label class="settings-option">
-              <span data-i18n="settings.language.label">Language</span>
+              <span data-i18n="saveSettings.settings.language.label">Language</span>
               <select id="language-select">
-                <option value="en" data-i18n="settings.language.option.en">English</option>
-                <option value="es" data-i18n="settings.language.option.es">Lorem Ipsum</option>
+                <option value="en" data-i18n="saveSettings.settings.language.option.en">English</option>
+                <option value="la" data-i18n="saveSettings.settings.language.option.la">Lorem Ipsum</option>
               </select>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="keep-tab-running-audio-toggle"> Use white noise to keep tab active <span class="info-tooltip-icon" title="After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution.  Much more quiet on Firefox.  May still work even if the tab is muted.">&#9432;</span>
+              <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="saveSettings.settings.keepTabRunningAudio.label">Use white noise to keep tab active</span> <span class="info-tooltip-icon" data-i18n-title="saveSettings.settings.keepTabRunningAudio.tooltip" title="After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution.  Much more quiet on Firefox.  May still work even if the tab is muted.">&#9432;</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="disable-autosave-toggle"> Disable autosave
+              <input type="checkbox" id="disable-autosave-toggle"> <span data-i18n="saveSettings.settings.disableAutosave.label">Disable autosave</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="celsius-toggle"> Display temperature in Celsius
+              <input type="checkbox" id="celsius-toggle"> <span data-i18n="saveSettings.settings.useCelsius.label">Display temperature in Celsius</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="dark-mode-toggle"> Enable Dark Mode
+              <input type="checkbox" id="dark-mode-toggle"> <span data-i18n="saveSettings.settings.darkMode.label">Enable Dark Mode</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="unlock-alert-toggle"> Disable unlock alerts
+              <input type="checkbox" id="unlock-alert-toggle"> <span data-i18n="saveSettings.settings.disableUnlockAlerts.label">Disable unlock alerts</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="day-night-toggle"> Disable day-night cycle <span class="info-tooltip-icon" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
+              <input type="checkbox" id="day-night-toggle"> <span data-i18n="saveSettings.settings.disableDayNightCycle.label">Disable day-night cycle</span> <span class="info-tooltip-icon" data-i18n-title="saveSettings.settings.disableDayNightCycle.tooltip" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="preserve-project-auto-start-toggle"> Preserve project auto-start between worlds <span class="info-tooltip-icon" title="Keeps project auto-start selections when travelling.">&#9432;</span>
+              <input type="checkbox" id="preserve-project-auto-start-toggle"> <span data-i18n="saveSettings.settings.preserveProjectAutoStart.label">Preserve project auto-start between worlds</span> <span class="info-tooltip-icon" data-i18n-title="saveSettings.settings.preserveProjectAutoStart.tooltip" title="Keeps project auto-start selections when travelling.">&#9432;</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="preserve-project-settings-toggle"> Preserve most project settings on travel <span id="preserve-project-settings-tooltip" class="info-tooltip-icon" title="Preserves most project settings when traveling.">&#9432;</span>
+              <input type="checkbox" id="preserve-project-settings-toggle"> <span data-i18n="saveSettings.settings.preserveProjectSettings.label">Preserve most project settings on travel</span> <span id="preserve-project-settings-tooltip" class="info-tooltip-icon" data-i18n-title="saveSettings.settings.preserveProjectSettings.tooltip" title="Preserves most project settings when traveling.">&#9432;</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="keep-hidden-structures-toggle"> Keep hidden buildings on travel <span class="info-tooltip-icon" title="Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.">&#9432;</span>
+              <input type="checkbox" id="keep-hidden-structures-toggle"> <span data-i18n="saveSettings.settings.keepHiddenStructures.label">Keep hidden buildings on travel</span> <span class="info-tooltip-icon" data-i18n-title="saveSettings.settings.keepHiddenStructures.tooltip" title="Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.">&#9432;</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="autobuild-set-active-toggle" checked> Checking autobuild also checks Set Active to Target
+              <input type="checkbox" id="autobuild-set-active-toggle" checked> <span data-i18n="saveSettings.settings.autobuildAlsoSetsActive.label">Checking autobuild also checks Set Active to Target</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> Checking Colony Upgrade unchecks autobuild
+              <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> <span data-i18n="saveSettings.settings.colonyUpgradeUnchecksAutobuild.label">Checking Colony Upgrade unchecks autobuild</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="round-building-toggle"> Round building construction <span class="info-tooltip-icon" title="When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.  Does not apply if autobuild is on.">&#9432;</span>
+              <input type="checkbox" id="round-building-toggle"> <span data-i18n="saveSettings.settings.roundBuildingConstruction.label">Round building construction</span> <span class="info-tooltip-icon" data-i18n-title="saveSettings.settings.roundBuildingConstruction.tooltip" title="When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.  Does not apply if autobuild is on.">&#9432;</span>
             </label>
             <label class="settings-option">
-              Use scientific notation above <input type="text" id="scientific-notation-threshold-input" value="1e30"> <span class="info-tooltip-icon" title="Values at or above this threshold are displayed in scientific notation, such as 1e30.">&#9432;</span>
+              <span data-i18n="saveSettings.settings.scientificNotation.label">Use scientific notation above</span> <input type="text" id="scientific-notation-threshold-input" value="1e30"> <span class="info-tooltip-icon" data-i18n-title="saveSettings.settings.scientificNotation.tooltip" title="Values at or above this threshold are displayed in scientific notation, such as 1e30.">&#9432;</span>
             </label>
             <label class="settings-option">
-              <input type="checkbox" id="simplify-golden-asteroid-toggle"> Simplify Golden Asteroid <span class="info-tooltip-icon" title="When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.">&#9432;</span>
+              <input type="checkbox" id="simplify-golden-asteroid-toggle"> <span data-i18n="saveSettings.settings.simplifyGoldenAsteroid.label">Simplify Golden Asteroid</span> <span class="info-tooltip-icon" data-i18n-title="saveSettings.settings.simplifyGoldenAsteroid.tooltip" title="When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.">&#9432;</span>
             </label>
           </div>
 
-          <h2>Statistics</h2>
-          <p>Total Playtime: <span id="total-playtime-display"></span></p>
+          <h2 data-i18n="saveSettings.statistics.title">Statistics</h2>
+          <p><span data-i18n="saveSettings.statistics.totalPlaytime">Total Playtime:</span> <span id="total-playtime-display"></span></p>
       </div>
     </div>
 

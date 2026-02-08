@@ -23,12 +23,25 @@ const DUST_COLOR_ALBEDO_RANGE = {
   max: 0.8
 };
 
+function localizeDustFactoryText(key, vars, fallback) {
+  if (typeof t !== 'function') {
+    return fallback || key;
+  }
+  const resolved = t(key, vars);
+  if (resolved === key) {
+    return fallback || key;
+  }
+  return resolved;
+}
+
 function isCustomDustColor(color) {
   return color !== '#000000' && color !== '#ffffff';
 }
 
 function updateDustResourceName(settings) {
-  const name = isCustomDustColor(settings.dustColor) ? 'Custom Dust' : 'Black Dust';
+  const name = isCustomDustColor(settings.dustColor)
+    ? localizeDustFactoryText('buildingsTab.modules.dustFactory.resourceNameCustom', null, 'Custom Dust')
+    : localizeDustFactoryText('buildingsTab.modules.dustFactory.resourceNameBlack', null, 'Black Dust');
   const resource = resources.special.albedoUpgrades;
   if (resource.displayName !== name) {
     resource.displayName = name;
@@ -245,7 +258,11 @@ class DustFactory extends Building {
 
     const albedoLabel = document.createElement('label');
     albedoLabel.htmlFor = albedoCheckbox.id;
-    albedoLabel.textContent = 'Target ground albedo:';
+    albedoLabel.textContent = localizeDustFactoryText(
+      'buildingsTab.modules.dustFactory.targetGroundAlbedo',
+      null,
+      'Target ground albedo:'
+    );
     albedoControl.appendChild(albedoLabel);
 
     const albedoInput = document.createElement('input');
@@ -263,7 +280,11 @@ class DustFactory extends Building {
       : 'none';
 
     const colorLabel = document.createElement('span');
-    colorLabel.textContent = 'Dust color:';
+    colorLabel.textContent = localizeDustFactoryText(
+      'buildingsTab.modules.dustFactory.dustColor',
+      null,
+      'Dust color:'
+    );
     colorControl.appendChild(colorLabel);
 
     const colorInput = document.createElement('input');
@@ -314,8 +335,10 @@ class DustFactory extends Building {
     cache.dust = {
       container: albedoControl,
       checkbox: albedoCheckbox,
+      albedoLabel,
       input: albedoInput,
       colorControl,
+      colorLabel,
       colorInput
     };
   }
@@ -329,6 +352,20 @@ class DustFactory extends Building {
     updateDustResourceName(settings);
     this.enforceBlackOnly(settings);
     dustEls.checkbox.checked = settings.autoTargetAlbedo;
+    if (dustEls.albedoLabel) {
+      dustEls.albedoLabel.textContent = localizeDustFactoryText(
+        'buildingsTab.modules.dustFactory.targetGroundAlbedo',
+        null,
+        'Target ground albedo:'
+      );
+    }
+    if (dustEls.colorLabel) {
+      dustEls.colorLabel.textContent = localizeDustFactoryText(
+        'buildingsTab.modules.dustFactory.dustColor',
+        null,
+        'Dust color:'
+      );
+    }
     if (isCustomDustColor(settings.dustColor)) {
       settings.targetAlbedo = settings.dustColorAlbedo;
       this.hasCustomTarget = false;

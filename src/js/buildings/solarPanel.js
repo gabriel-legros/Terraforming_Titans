@@ -1,4 +1,15 @@
 class SolarPanel extends Building {
+  localizeModuleText(key, vars, fallback) {
+    if (typeof t !== 'function') {
+      return fallback || key;
+    }
+    const resolved = t(key, vars);
+    if (resolved === key) {
+      return fallback || key;
+    }
+    return resolved;
+  }
+
   getBuildLimit() {
     const initialLand = terraforming.initialLand || 0;
     return initialLand * 10;
@@ -36,7 +47,7 @@ class SolarPanel extends Building {
       tooltip.innerHTML = '&#9432;';
       cache.countTooltipContent = attachDynamicInfoTooltip(
         tooltip,
-        'Solar panels are limited to 10× the initial land amount.'
+        ''
       );
       cache.countTooltip = tooltip;
     }
@@ -44,6 +55,16 @@ class SolarPanel extends Building {
     if (!tooltip.isConnected) {
       countEl.parentElement.insertBefore(tooltip, countEl.nextSibling);
     }
+    setTooltipText(
+      cache.countTooltipContent,
+      this.localizeModuleText(
+        'buildingsTab.modules.solarPanel.tooltip.limit',
+        null,
+        'Solar panels are limited to 10× the initial land amount.'
+      ),
+      cache,
+      'countTooltipText'
+    );
   }
 
   initUI(_, cache) {

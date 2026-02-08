@@ -1,28 +1,8 @@
 var localizationFallbackLanguage = 'en';
 var localizationActiveLanguage = 'en';
 var localizationResources = {
-  en: {
-    settings: {
-      language: {
-        label: 'Language',
-        option: {
-          en: 'English',
-          es: 'Lorem Ipsum'
-        }
-      }
-    }
-  },
-  es: {
-    settings: {
-      language: {
-        label: 'Lorem Ipsum',
-        option: {
-          en: 'Dolor Sit',
-          es: 'Lorem Ipsum'
-        }
-      }
-    }
-  }
+  en: {},
+  la: {}
 };
 
 function normalizeLanguageCode(code) {

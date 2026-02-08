@@ -8,6 +8,62 @@ if (typeof SubtabManager === 'undefined') {
 }
 let buildingSubtabManager = null;
 
+function localizeBuildingTabText(key, vars, fallback) {
+    if (typeof t !== 'function') {
+        return fallback || key;
+    }
+    const resolved = t(key, vars);
+    if (resolved === key) {
+        return fallback || key;
+    }
+    return resolved;
+}
+
+function formatBuildingCategoryLabel(category) {
+    const normalized = `${category || ''}`;
+    if (!normalized) return '';
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function getLocalizedBuildingCategoryLabel(category) {
+    const fallback = formatBuildingCategoryLabel(category);
+    return localizeBuildingTabText(`buildingsTab.subtabs.categories.${category}`, null, fallback);
+}
+
+function getLocalizedCategoryHeaderLabel(category) {
+    const categoryLabel = getLocalizedBuildingCategoryLabel(category);
+    const fallback = `${formatBuildingCategoryLabel(category)} Buildings`;
+    return localizeBuildingTabText(
+        'buildingsTab.subtabs.categoryHeader',
+        { category: categoryLabel },
+        fallback
+    );
+}
+
+function localizeBuildingCategoryTabs() {
+    const categories = typeof getBuildingCategories === 'function' ? getBuildingCategories() : [];
+    categories.forEach(category => {
+        const tabLabel = document.getElementById(`${category}-buildings-label`);
+        if (tabLabel) {
+            tabLabel.textContent = getLocalizedBuildingCategoryLabel(category);
+        }
+
+        const header = document.getElementById(`${category}-buildings-header`);
+        if (header) {
+            header.textContent = getLocalizedCategoryHeaderLabel(category);
+        }
+
+        const unhideButton = document.getElementById(`${category}-unhide-button`);
+        if (unhideButton) {
+            unhideButton.textContent = localizeBuildingTabText(
+                'buildingsTab.subtabs.unhideObsolete',
+                null,
+                'Unhide Obsolete Buildings'
+            );
+        }
+    });
+}
+
 function createBuildingCategoryTabs() {
     const categories = typeof getBuildingCategories === 'function' ? getBuildingCategories() : [];
     if (categories.length === 0) return;
@@ -24,34 +80,63 @@ function createBuildingCategoryTabs() {
     // Create tabs and content for each category
     categories.forEach(category => {
         const categoryId = `${category}-buildings`;
-        
-        // Create tab button
+
         const tab = document.createElement('div');
         tab.id = `${categoryId}-tab`;
         tab.className = 'building-subtab';
         tab.dataset.subtab = categoryId;
-        tab.innerHTML = `${category.charAt(0).toUpperCase() + category.slice(1)}<span id="${categoryId}-alert" class="unlock-alert">!</span>`;
+        const label = document.createElement('span');
+        label.id = `${categoryId}-label`;
+        label.textContent = getLocalizedBuildingCategoryLabel(category);
+        const alert = document.createElement('span');
+        alert.id = `${categoryId}-alert`;
+        alert.className = 'unlock-alert';
+        alert.textContent = '!';
+        tab.appendChild(label);
+        tab.appendChild(alert);
         subtabsContainer.appendChild(tab);
 
-        // Create content section
         const content = document.createElement('div');
         content.id = categoryId;
         content.className = 'building-subtab-content';
-        content.innerHTML = `
-            <div class="category-header">
-                <h3>${category.charAt(0).toUpperCase() + category.slice(1)} Buildings</h3>
-                <div class="unhide-obsolete-container" id="${category}-unhide-container" style="display: none;">
-                    <button id="${category}-unhide-button" class="unhide-obsolete-button">Unhide Obsolete Buildings</button>
-                </div>
-            </div>
-            <div class="building-list" id="${categoryId}-buttons"></div>
-        `;
+
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'category-header';
+
+        const header = document.createElement('h3');
+        header.id = `${categoryId}-header`;
+        header.textContent = getLocalizedCategoryHeaderLabel(category);
+        categoryHeader.appendChild(header);
+
+        const unhideContainer = document.createElement('div');
+        unhideContainer.className = 'unhide-obsolete-container';
+        unhideContainer.id = `${category}-unhide-container`;
+        unhideContainer.style.display = 'none';
+
+        const unhideButton = document.createElement('button');
+        unhideButton.id = `${category}-unhide-button`;
+        unhideButton.className = 'unhide-obsolete-button';
+        unhideButton.textContent = localizeBuildingTabText(
+            'buildingsTab.subtabs.unhideObsolete',
+            null,
+            'Unhide Obsolete Buildings'
+        );
+        unhideContainer.appendChild(unhideButton);
+        categoryHeader.appendChild(unhideContainer);
+
+        const list = document.createElement('div');
+        list.className = 'building-list';
+        list.id = `${categoryId}-buttons`;
+
+        content.appendChild(categoryHeader);
+        content.appendChild(list);
         contentWrapper.appendChild(content);
     });
 }
 
 function initializeBuildingTabs() {
     createBuildingCategoryTabs();
+    localizeBuildingCategoryTabs();
     if (typeof SubtabManager !== 'function') return;
     buildingSubtabManager = new SubtabManager('.buildings-subtabs .building-subtab', '.building-subtab-content');
     buildingSubtabManager.onActivate(id => {
@@ -160,6 +245,12 @@ function initializeBuildingAlerts() {
         }
     }
     updateBuildingAlert();
+}
+
+if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('languageChanged', () => {
+        localizeBuildingCategoryTabs();
+    });
 }
 
 if (typeof module !== 'undefined' && module.exports) {

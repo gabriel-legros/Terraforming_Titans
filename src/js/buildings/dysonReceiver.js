@@ -1,4 +1,15 @@
 class DysonReceiver extends Building {
+  localizeModuleText(key, vars, fallback) {
+    if (typeof t !== 'function') {
+      return fallback || key;
+    }
+    const resolved = t(key, vars);
+    if (resolved === key) {
+      return fallback || key;
+    }
+    return resolved;
+  }
+
   getCollectorTotals() {
     const swarm = projectManager?.projects?.dysonSwarmReceiver;
     const sphere = projectManager?.projects?.dysonSphere;
@@ -102,7 +113,11 @@ class DysonReceiver extends Building {
     if (totals.totalCollectors <= 0 || cap <= 0) {
       setTooltipText(
         cache.countTooltipContent,
-        'Build Dyson Swarm or Dyson Sphere collectors to increase receiver capacity.',
+        this.localizeModuleText(
+          'buildingsTab.modules.dysonReceiver.tooltip.noCollectors',
+          null,
+          'Build Dyson Swarm or Dyson Sphere collectors to increase receiver capacity.'
+        ),
         cache,
         'countTooltipText'
       );
@@ -113,13 +128,29 @@ class DysonReceiver extends Building {
     const formattedCap = formatNumber(cap, false, 2);
     const parts = [];
     if (totals.swarmCollectors > 0) {
-      parts.push(`${formatNumber(totals.swarmCollectors, false, 2)} swarm`);
+      parts.push(this.localizeModuleText(
+        'buildingsTab.modules.dysonReceiver.tooltip.swarmPart',
+        { value: formatNumber(totals.swarmCollectors, false, 2) },
+        `${formatNumber(totals.swarmCollectors, false, 2)} swarm`
+      ));
     }
     if (totals.sphereCollectors > 0) {
-      parts.push(`${formatNumber(totals.sphereCollectors, false, 2)} sphere`);
+      parts.push(this.localizeModuleText(
+        'buildingsTab.modules.dysonReceiver.tooltip.spherePart',
+        { value: formatNumber(totals.sphereCollectors, false, 2) },
+        `${formatNumber(totals.sphereCollectors, false, 2)} sphere`
+      ));
     }
     const breakdown = parts.length ? ` (${parts.join(' + ')})` : '';
-    const title = `Dyson receivers constructions are capped by swarm and sphere collectors, and you cannot build more than this cap. ${formattedCollectors}${breakdown} collectors allow ${formattedCap} receivers.`;
+    const title = this.localizeModuleText(
+      'buildingsTab.modules.dysonReceiver.tooltip.capSummary',
+      {
+        collectors: formattedCollectors,
+        breakdown,
+        cap: formattedCap
+      },
+      `Dyson receivers constructions are capped by swarm and sphere collectors, and you cannot build more than this cap. ${formattedCollectors}${breakdown} collectors allow ${formattedCap} receivers.`
+    );
     setTooltipText(cache.countTooltipContent, title, cache, 'countTooltipText');
   }
 

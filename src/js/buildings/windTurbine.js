@@ -1,4 +1,15 @@
 class WindTurbine extends Building {
+  localizeModuleText(key, vars, fallback) {
+    if (typeof t !== 'function') {
+      return fallback || key;
+    }
+    const resolved = t(key, vars);
+    if (resolved === key) {
+      return fallback || key;
+    }
+    return resolved;
+  }
+
   getBuildLimit() {
     const initialLand = terraforming.initialLand || 0;
     return Math.floor(initialLand / 50);
@@ -43,7 +54,7 @@ class WindTurbine extends Building {
       tooltip.innerHTML = '&#9432;';
       cache.countTooltipContent = attachDynamicInfoTooltip(
         tooltip,
-        'Wind turbine arrays are limited to 1 per 50 units of initial land.'
+        ''
       );
       cache.countTooltip = tooltip;
     }
@@ -51,6 +62,16 @@ class WindTurbine extends Building {
     if (!tooltip.isConnected) {
       countEl.parentElement.insertBefore(tooltip, countEl.nextSibling);
     }
+    setTooltipText(
+      cache.countTooltipContent,
+      this.localizeModuleText(
+        'buildingsTab.modules.windTurbine.tooltip.limit',
+        null,
+        'Wind turbine arrays are limited to 1 per 50 units of initial land.'
+      ),
+      cache,
+      'countTooltipText'
+    );
   }
 
   initUI(_, cache) {
