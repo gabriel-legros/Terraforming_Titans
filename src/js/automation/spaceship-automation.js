@@ -1,4 +1,14 @@
 class SpaceshipAutomation {
+  static getMassDriverAutoActiveLockEffect() {
+    return {
+      type: 'booleanFlag',
+      flagId: 'autoActiveLockedByShipAutomation',
+      value: true,
+      effectId: 'shipAutomationMassDriverAutoActiveLock',
+      sourceId: 'shipAutomationMassDriverAutoActiveLock'
+    };
+  }
+
   constructor() {
     this.presets = [];
     this.activePresetId = null;
@@ -346,6 +356,26 @@ class SpaceshipAutomation {
     return projects;
   }
 
+  isMassDriverTargetInActivePreset() {
+    const preset = this.getActivePreset();
+    if (!preset || !Array.isArray(preset.steps)) {
+      return false;
+    }
+    const massDriverTargetId = this.getMassDriverAutomationId();
+    for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
+      const step = preset.steps[stepIndex];
+      if (!step || !Array.isArray(step.entries)) {
+        continue;
+      }
+      for (let entryIndex = 0; entryIndex < step.entries.length; entryIndex += 1) {
+        if (step.entries[entryIndex].projectId === massDriverTargetId) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   unlockManualControls() {
     if (!this.lockedAssignments) return;
     this.updateManualControls(false);
@@ -374,7 +404,9 @@ class SpaceshipAutomation {
   }
 
   update(delta) {
-    if (!this.isActive()) {
+    const active = this.isActive();
+    this.syncMassDriverAutoActiveLockEffect(active);
+    if (!active) {
       this.unlockManualControls();
       return;
     }
@@ -384,6 +416,21 @@ class SpaceshipAutomation {
     }
     this.elapsed = 0;
     this.applyAssignments();
+  }
+
+  syncMassDriverAutoActiveLockEffect(isActiveOverride) {
+    const massDriver = buildings && buildings.massDriver;
+    if (!massDriver || typeof massDriver.addAndReplace !== 'function' || typeof massDriver.removeEffect !== 'function') {
+      return;
+    }
+    const shouldLock = (isActiveOverride !== undefined ? isActiveOverride : this.isActive())
+      && this.isMassDriverTargetInActivePreset();
+    const effect = SpaceshipAutomation.getMassDriverAutoActiveLockEffect();
+    if (shouldLock) {
+      massDriver.addAndReplace(effect);
+      return;
+    }
+    massDriver.removeEffect({ sourceId: effect.sourceId });
   }
 
   applyAssignments() {
@@ -424,6 +471,17 @@ class SpaceshipAutomation {
     let totalShips = totalShipsOnly + massDriverCapacity;
     if (useMassDriverMode) {
       currentAssignments[massDriverTargetId] = this.sanitizeShipCount(massDriverProject.getAutomationShipCount() + massDriverActive);
+    }
+    const disabledTargetStates = {};
+    for (let index = 0; index < targets.length; index += 1) {
+      const target = targets[index];
+      const automationAllowed = typeof target.shouldAutomationDisable === 'function'
+        ? !target.shouldAutomationDisable()
+        : true;
+      const manuallyDisabled = target.isAutomationManuallyDisabled
+        ? target.isAutomationManuallyDisabled()
+        : false;
+      disabledTargetStates[target.name] = !automationAllowed || manuallyDisabled;
     }
 
     const desiredAssignments = {};
@@ -504,10 +562,14 @@ class SpaceshipAutomation {
           if (!project) continue;
           const usesMassDrivers = entry.projectId === massDriverTargetId;
           const releaseOnDisable = this.disabledProjects.has(entry.projectId);
-          const automationAllowed = typeof project.shouldAutomationDisable === 'function' ? !project.shouldAutomationDisable() : true;
-          const manuallyDisabled = project.isAutomationManuallyDisabled();
-          if (releaseOnDisable && (!automationAllowed || manuallyDisabled)) {
-            desiredAssignments[project.name] = 0;
+          const isTemporarilyDisabled = disabledTargetStates[entry.projectId] === true;
+          if (isTemporarilyDisabled) {
+            const currentTarget = this.sanitizeShipCount(
+              Object.prototype.hasOwnProperty.call(desiredAssignments, entry.projectId)
+                ? desiredAssignments[entry.projectId]
+                : (currentAssignments[entry.projectId] || 0)
+            );
+            desiredAssignments[entry.projectId] = releaseOnDisable ? 0 : currentTarget;
             continue;
           }
           const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);

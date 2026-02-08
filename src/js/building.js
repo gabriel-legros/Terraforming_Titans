@@ -175,6 +175,18 @@ class Building extends EffectableEntity {
     return population;
   }
 
+  isAutoActiveLocked() {
+    return false;
+  }
+
+  enforceAutoActiveLock() {
+    if (this.isAutoActiveLocked()) {
+      this.autoActiveEnabled = false;
+      return true;
+    }
+    return false;
+  }
+
   getWorkerShareTarget(workerCap) {
     const perBuildingNeed = this.getTotalWorkerNeed() * this.getEffectiveWorkerMultiplier();
     const maxWorkers = Math.max(0, (this.autoBuildPercent || 0) * workerCap / 100);

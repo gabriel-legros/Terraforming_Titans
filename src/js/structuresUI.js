@@ -1056,6 +1056,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   autoActiveCheckbox.checked = structure.autoActiveEnabled;
   autoActiveCheckbox.addEventListener('change', (e) => {
     e.stopPropagation();
+    const autoActiveLockedFlag = structure.name === 'massDriver'
+      && structure.isBooleanFlagSet('autoActiveLockedByShipAutomation');
+    if (autoActiveCheckbox.disabled || autoActiveLockedFlag || (structure.isAutoActiveLocked && structure.isAutoActiveLocked())) {
+      autoActiveCheckbox.checked = structure.autoActiveEnabled;
+      return;
+    }
     structure.autoActiveEnabled = autoActiveCheckbox.checked;
   });
   autoActiveCheckbox.addEventListener('click', e => e.stopPropagation());
@@ -1066,6 +1072,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setActiveButton.appendChild(setActiveLabel);
 
   setActiveButton.addEventListener('click', () => {
+    const autoActiveLockedFlag = structure.name === 'massDriver'
+      && structure.isBooleanFlagSet('autoActiveLockedByShipAutomation');
+    if (setActiveButton.disabled || autoActiveLockedFlag || (structure.isAutoActiveLocked && structure.isAutoActiveLocked())) {
+      return;
+    }
     const pop = resources.colony.colonists.value;
     const workerCap = resources.colony.workers?.cap || 0;
     const totalLand = resources.surface.land.value;
@@ -1094,6 +1105,16 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     adjustStructureActivation(structure, change);
     updateBuildingDisplay(buildings);
   });
+
+  const autoActiveLockedFlag = structure.name === 'massDriver'
+    && structure.isBooleanFlagSet('autoActiveLockedByShipAutomation');
+  const autoActiveLocked = autoActiveLockedFlag || (structure.enforceAutoActiveLock
+    ? structure.enforceAutoActiveLock()
+    : (structure.isAutoActiveLocked && structure.isAutoActiveLocked()));
+  autoActiveCheckbox.disabled = autoActiveLocked;
+  autoActiveCheckbox.checked = structure.autoActiveEnabled;
+  setActiveButton.disabled = autoActiveLocked;
+  setActiveButton.classList.toggle('automation-locked', autoActiveLocked);
 
   autoBuildTargetContainer.appendChild(setActiveButton);
 
@@ -2167,6 +2188,19 @@ function updateDecreaseButtonText(button, buildCount) {
         }
         if (els.autoActiveCheckbox) {
           els.autoActiveCheckbox.checked = structure.autoActiveEnabled;
+        }
+        const autoActiveLockedFlag = structure.name === 'massDriver'
+          && structure.isBooleanFlagSet('autoActiveLockedByShipAutomation');
+        const autoActiveLocked = autoActiveLockedFlag || (structure.enforceAutoActiveLock
+          ? structure.enforceAutoActiveLock()
+          : (structure.isAutoActiveLocked && structure.isAutoActiveLocked()));
+        if (els.autoActiveCheckbox) {
+          els.autoActiveCheckbox.checked = structure.autoActiveEnabled;
+          els.autoActiveCheckbox.disabled = autoActiveLocked;
+        }
+        if (els.setActiveButton) {
+          els.setActiveButton.disabled = autoActiveLocked;
+          els.setActiveButton.classList.toggle('automation-locked', autoActiveLocked);
         }
 
         const autoUpgradeContainer = els.autoUpgradeContainer;

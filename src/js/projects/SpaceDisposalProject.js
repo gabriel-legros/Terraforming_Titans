@@ -130,6 +130,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       maxAutoActiveCheckbox.checked = this.getMassDriverStructure().autoActiveEnabled;
       maxAutoActiveCheckbox.addEventListener('change', (event) => {
         event.stopPropagation();
+        if (maxAutoActiveCheckbox.disabled) {
+          maxAutoActiveCheckbox.checked = this.getMassDriverStructure().autoActiveEnabled;
+          return;
+        }
         const structure = this.getMassDriverStructure();
         structure.autoActiveEnabled = maxAutoActiveCheckbox.checked;
         if (structure.autoActiveEnabled) {
@@ -187,6 +191,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         massDriverIncreaseButton: increaseButton,
         massDriverMaxButton: maxButton,
         massDriverMaxAutoActiveCheckbox: maxAutoActiveCheckbox,
+        massDriverAutoActiveContainer: autoContainer,
         massDriverDivideButton: divideButton,
         massDriverMultiplyButton: multiplyButton,
         massDriverInfoNoteElement: infoNote,
@@ -544,8 +549,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         if (elements.massDriverBuiltElement) {
           elements.massDriverBuiltElement.textContent = formatBuildingCount(structure.count);
         }
+        const autoActiveLocked = structure.enforceAutoActiveLock
+          ? structure.enforceAutoActiveLock()
+          : (structure.isAutoActiveLocked && structure.isAutoActiveLocked());
         if (elements.massDriverMaxAutoActiveCheckbox) {
           elements.massDriverMaxAutoActiveCheckbox.checked = structure.autoActiveEnabled;
+          elements.massDriverMaxAutoActiveCheckbox.disabled = autoActiveLocked;
+        }
+        if (elements.massDriverAutoActiveContainer) {
+          elements.massDriverAutoActiveContainer.classList.toggle('automation-locked', autoActiveLocked);
         }
         elements.massDriverInfoSection.style.display = 'block';
         this.updateMassDriverButtonLabels();

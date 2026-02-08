@@ -1,4 +1,8 @@
 class MassDriver extends Building {
+  isAutoActiveLocked() {
+    return this.isBooleanFlagSet('autoActiveLockedByShipAutomation');
+  }
+
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
 

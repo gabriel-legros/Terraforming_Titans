@@ -783,6 +783,15 @@ function autoBuild(buildings, delta = 0) {
 
     // Step 4: Auto-set active counts after building
     buildingInfos.forEach(({ building, targetCount }) => {
+        const autoActiveLocked = building.name === 'massDriver'
+            && building.isBooleanFlagSet('autoActiveLockedByShipAutomation');
+        if (autoActiveLocked) {
+            building.autoActiveEnabled = false;
+            return;
+        }
+        if (building.enforceAutoActiveLock && building.enforceAutoActiveLock()) {
+            return;
+        }
         if (building.autoActiveEnabled) {
             const desiredActive = Math.min(targetCount, building.count);
             const change = desiredActive - building.active;
