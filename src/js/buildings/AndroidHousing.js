@@ -5,10 +5,7 @@ class AndroidHousing extends Building {
 
   getUsageProductivity(resources) {
     const androidsResource = resources.colony.androids;
-    const baseBonus = (androidsResource.activeEffects || [])
-      .filter((effect) => effect.type === 'baseStorageBonus')
-      .reduce((sum, effect) => sum + effect.value, 0);
-    const freeStorage = androidsResource.baseCap + baseBonus;
+    const freeStorage = androidsResource.getEffectiveBaseStorageCap();
     const usedStorage = Math.max(0, androidsResource.value - freeStorage);
     const perBuilding = this.storage.colony.androids;
     const capacity = this.active * perBuilding * this.getEffectiveStorageMultiplier();
