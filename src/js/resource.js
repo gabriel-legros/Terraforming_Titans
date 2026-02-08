@@ -7,8 +7,7 @@ class Resource extends EffectableEntity {
 
     this.name = resourceData.name || '';
     this.category = resourceData.category;
-    this._baseDisplayName = resourceData.displayName || resourceData.name || this.name;
-    this.displayName = this.getLocalizedDisplayName(this._baseDisplayName);
+    this.displayName = resourceData.displayName || resourceData.name || '';
     this.unit = resourceData.unit || null;
     this.initialValue = resourceData.initialValue || 0;
     this.value = resourceData.initialValue || 0;
@@ -54,7 +53,7 @@ class Resource extends EffectableEntity {
     }
 
     if (config.displayName !== undefined) {
-      this._baseDisplayName = config.displayName || config.name || this._baseDisplayName;
+      this.displayName = config.displayName || config.name || this.displayName;
     }
     if (config.category !== undefined) {
       this.category = config.category;
@@ -102,18 +101,6 @@ class Resource extends EffectableEntity {
     if (this.name === 'land' && config.initialValue !== undefined) {
       this.value = Math.max(this.value, config.initialValue);
     }
-
-    this.refreshLocalizedText();
-  }
-
-  getLocalizedDisplayName(fallback) {
-    const key = `resourcesParameters.${this.category}.${this.name}`;
-    const resolved = t(key);
-    return resolved === key ? (fallback || this.name) : resolved;
-  }
-
-  refreshLocalizedText() {
-    this.displayName = this.getLocalizedDisplayName(this._baseDisplayName);
   }
 
   increase(amount, ignoreCap) {
@@ -131,16 +118,15 @@ class Resource extends EffectableEntity {
       defaultPlanetParameters.resources[this.category][this.name];
 
     if (defaultResource) {
-      this._baseDisplayName =
+      this.displayName =
         defaultResource.displayName || defaultResource.name || this.name;
       this.marginTop = defaultResource.marginTop || 0;
       this.marginBottom = defaultResource.marginBottom || 0;
     } else {
-      this._baseDisplayName = this._baseDisplayName || this.displayName || this.name;
+      this.displayName = this.displayName || this.name;
       this.marginTop = this.marginTop || 0;
       this.marginBottom = this.marginBottom || 0;
     }
-    this.refreshLocalizedText();
   }
 
   decrease(amount) {
@@ -440,16 +426,7 @@ function createResources(resourcesData) {
       resources[category][resourceName] = new Resource(resourceData);
     }
   }
-  refreshResourceLocalization(resources);
   return resources;
-}
-
-function refreshResourceLocalization(resourceCollection) {
-  for (const category in resourceCollection) {
-    for (const resourceName in resourceCollection[category]) {
-      resourceCollection[category][resourceName].refreshLocalizedText();
-    }
-  }
 }
 
 function reconcileLandResourceValue() {
@@ -1004,15 +981,6 @@ function getResourceAvailabilityRatio(resource) {
   return resource.availabilityRatio;
 }
 
-if (typeof document !== 'undefined' && document.addEventListener) {
-  document.addEventListener('languageChanged', () => {
-    refreshResourceLocalization(resources);
-    if (typeof updateResourceDisplay === 'function') {
-      updateResourceDisplay(resources, 0);
-    }
-  });
-}
-
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     Resource,
@@ -1025,7 +993,6 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateProjectProductivities,
     recalculateTotalRates,
     reconcileLandResourceValue,
-    refreshResourceLocalization,
   };
 }
 
