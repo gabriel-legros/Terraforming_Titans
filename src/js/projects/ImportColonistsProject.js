@@ -83,8 +83,6 @@ class ImportColonistsProject extends Project {
     elements.importTargetWrapper = wrapper;
     elements.importTargetLabel = label;
     elements.importTargetSelect = select;
-    elements.importColonistsOption = colonistsOption;
-    elements.importCrusadersOption = crusaders ? select.lastElementChild : null;
     elements.importTargetSeparator = separator;
     elements.crusaderTooltip = crusaderTooltip;
     elements.importAmountSpan = amount;
@@ -98,16 +96,8 @@ class ImportColonistsProject extends Project {
     const label = elements.importTargetLabel;
     const amountSpan = elements.importAmountSpan;
     const crusaderTooltip = elements.crusaderTooltip;
-    const colonistsOption = elements.importColonistsOption;
-    const crusadersOption = elements.importCrusadersOption;
 
     const crusaderEnabled = this.canImportCrusaders();
-    if (colonistsOption) {
-      colonistsOption.textContent = resources.colony.colonists.displayName;
-    }
-    if (crusadersOption && resources.special?.crusaders) {
-      crusadersOption.textContent = resources.special.crusaders.displayName;
-    }
 
     if (crusaderEnabled) {
       select.value = this.importTarget;

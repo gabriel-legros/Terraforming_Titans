@@ -435,13 +435,17 @@ function createProjectItem(project) {
     warningIcon.classList.add('project-kessler-warning__icon');
     warningIcon.textContent = '⚠';
     const warningText = document.createElement('span');
-    const warningKey = project.name === 'import_colonists_1'
-      ? 'projectsTab.warnings.kesslerImportColonists'
-      : 'projectsTab.warnings.kesslerWarpgateReplica';
-    const warningFallback = project.name === 'import_colonists_1'
-      ? 'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.'
-      : 'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.';
-    warningText.textContent = localizeProjectsUI(warningKey, null, warningFallback);
+    warningText.textContent = project.name === 'import_colonists_1'
+      ? localizeProjectsUI(
+        'projectsTab.warnings.kesslerImportColonists',
+        null,
+        'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.'
+      )
+      : localizeProjectsUI(
+        'projectsTab.warnings.kesslerWarpgateReplica',
+        null,
+        'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.'
+      );
     const warningIconRight = document.createElement('span');
     warningIconRight.classList.add('project-kessler-warning__icon');
     warningIconRight.textContent = '⚠';
@@ -449,9 +453,7 @@ function createProjectItem(project) {
     projectCard.appendChild(warning);
     projectElements[project.name] = {
       ...projectElements[project.name],
-      kesslerWarning: warning,
-      kesslerWarningText: warningText,
-      kesslerWarningKey: warningKey
+      kesslerWarning: warning
     };
   }
 
@@ -605,8 +607,7 @@ function createProjectItem(project) {
     projectElements[project.name] = {
       ...projectElements[project.name],
       resourceGainElement: resourceGainElement,
-      resourceGainItems: gainItems,
-      resourceGainLabel: gainLabel
+      resourceGainItems: gainItems
     };
   }
   
@@ -1244,17 +1245,6 @@ function updateProjectUI(projectName) {
     elements.descriptionElement.textContent = project.description;
   }
 
-  if (elements.kesslerWarningText && elements.kesslerWarningKey) {
-    const warningFallback = elements.kesslerWarningKey === 'projectsTab.warnings.kesslerImportColonists'
-      ? 'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.'
-      : 'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.';
-    elements.kesslerWarningText.textContent = localizeProjectsUI(
-      elements.kesslerWarningKey,
-      null,
-      warningFallback
-    );
-  }
-
   if (project.name === 'galactic_market' || project.name === 'cargo_rocket') {
     project.updateKesslerWarning();
   }
@@ -1322,9 +1312,6 @@ function updateProjectUI(projectName) {
     elements.autoStartLabel.textContent = continuous
       ? localizeProjectsUI('projectsTab.card.run', null, 'Run')
       : localizeProjectsUI('projectsTab.card.autoStart', null, 'Auto start');
-  }
-  if (elements.resourceGainLabel) {
-    elements.resourceGainLabel.textContent = localizeProjectsUI('projectsTab.card.gain', null, 'Gain:');
   }
 
   if (elements.allowColonyEnergyCheckbox) {

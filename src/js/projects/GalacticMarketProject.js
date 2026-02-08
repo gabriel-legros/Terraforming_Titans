@@ -69,36 +69,19 @@ class GalacticMarketProject extends Project {
     rightHeaderRow.classList.add('cargo-resource-row', 'cargo-grid-header', 'galactic-market-row', 'galactic-market-header', 'galactic-market-right-row', 'galactic-market-right-header');
 
     const leftHeaderConfig = [
+      { text: 'Resource' },
+      { text: 'Saturation' },
       {
-        key: 'projectsTab.projects.galacticMarket.headers.resource',
-        fallback: 'Resource'
+        text: 'Sell Price',
+        tooltip: 'Sell prices fall as you approach the saturation amount, so higher sell orders lower the payout per unit.',
       },
-      {
-        key: 'projectsTab.projects.galacticMarket.headers.saturation',
-        fallback: 'Saturation'
-      },
-      {
-        key: 'projectsTab.projects.galacticMarket.headers.sellPrice',
-        fallback: 'Sell Price',
-        tooltipKey: 'projectsTab.projects.galacticMarket.tooltips.sellPrice',
-        tooltipFallback: 'Sell prices fall as you approach the saturation amount, so higher sell orders lower the payout per unit.',
-      },
-      {
-        key: 'projectsTab.projects.galacticMarket.headers.sellAmount',
-        fallback: 'Sell Amount'
-      },
+      { text: 'Sell Amount' },
     ];
 
     const rightHeaderConfig = [
       { type: 'controls' },
-      {
-        key: 'projectsTab.projects.galacticMarket.headers.buyAmount',
-        fallback: 'Buy Amount'
-      },
-      {
-        key: 'projectsTab.projects.galacticMarket.headers.buyPrice',
-        fallback: 'Buy Price'
-      },
+      { text: 'Buy Amount' },
+      { text: 'Buy Price' },
       { type: 'spacer' },
     ];
 
@@ -118,11 +101,6 @@ class GalacticMarketProject extends Project {
       rowMeta: [],
       leftRows: [],
       rightRows: [],
-      rowLabelTextNodes: [],
-      headerTextNodes: [],
-      headerTooltipText: [],
-      controlsTooltipText: null,
-      spaceshipTooltipText: [],
       increment: this.selectionIncrement,
     };
 
@@ -212,13 +190,9 @@ class GalacticMarketProject extends Project {
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
           tooltip.innerHTML = '&#9432;';
-          elements.controlsTooltipText = attachDynamicInfoTooltip(
+          attachDynamicInfoTooltip(
             tooltip,
-            localizeProjectsText(
-              'projectsTab.projects.galacticMarket.tooltips.headerControls',
-              null,
-              'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max first cancels this row’s sells, then buys enough to spend a positive funding gain down to zero.'
-            )
+            'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max first cancels this row’s sells, then buys enough to spend a positive funding gain down to zero.'
           );
           headerControls.insertBefore(tooltip, multiplyButton.nextSibling);
 
@@ -228,26 +202,12 @@ class GalacticMarketProject extends Project {
         }
 
         const span = document.createElement('span');
-        const textNode = document.createTextNode(localizeProjectsText(config.key, null, config.fallback));
-        span.appendChild(textNode);
-        elements.headerTextNodes.push({
-          textNode: textNode,
-          key: config.key,
-          fallback: config.fallback
-        });
-        if (config.tooltipKey) {
+        span.textContent = config.text;
+        if (config.tooltip) {
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
+          tooltip.title = config.tooltip;
           tooltip.innerHTML = '&#9432;';
-          const tooltipContent = attachDynamicInfoTooltip(
-            tooltip,
-            localizeProjectsText(config.tooltipKey, null, config.tooltipFallback)
-          );
-          elements.headerTooltipText.push({
-            tooltip: tooltipContent,
-            key: config.tooltipKey,
-            fallback: config.tooltipFallback
-          });
           span.appendChild(tooltip);
         }
         headerRow.appendChild(span);
@@ -277,32 +237,18 @@ class GalacticMarketProject extends Project {
 
         const label = document.createElement('span');
         label.classList.add('cargo-resource-label');
-        const labelTextNode = document.createTextNode(resourceData ? resourceData.displayName : resourceId);
-        label.appendChild(labelTextNode);
+        label.textContent = resourceData ? resourceData.displayName : resourceId;
         if (resourceId === 'spaceships') {
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
-          const tooltipContent = attachDynamicInfoTooltip(
-            tooltip,
-            localizeProjectsText(
-              'projectsTab.projects.galacticMarket.tooltips.spaceshipPrice',
-              null,
-              localizeProjectsText(
-                'projectsTab.projects.cargoRocket.spaceshipPriceTooltip',
-                null,
-                'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.'
-              )
-            )
+          tooltip.title = localizeProjectsText(
+            'projectsTab.projects.cargoRocket.spaceshipPriceTooltip',
+            null,
+            'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.'
           );
-          elements.spaceshipTooltipText.push(tooltipContent);
           tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         }
-        elements.rowLabelTextNodes.push({
-          textNode: labelTextNode,
-          category: category,
-          resource: resourceId
-        });
 
         const buyPriceSpan = document.createElement('span');
         buyPriceSpan.classList.add('resource-price-display');
@@ -564,7 +510,6 @@ class GalacticMarketProject extends Project {
     } = elements;
 
     elements.updateIncrementButtons?.();
-    this.updateLocalizedSelectionText(elements);
     this.updateExtraSettingsUI();
     this.updateControlsHeaderWidth();
 
@@ -594,49 +539,6 @@ class GalacticMarketProject extends Project {
     this.applySelectionsToInputs();
     this.updateSelectedResources();
     updateTotalCostDisplay(this);
-  }
-
-  updateLocalizedSelectionText(elements) {
-    (elements.rowLabelTextNodes || []).forEach((entry) => {
-      const resourceData = resources[entry.category]?.[entry.resource];
-      entry.textNode.textContent = resourceData ? resourceData.displayName : entry.resource;
-    });
-
-    (elements.headerTextNodes || []).forEach((entry) => {
-      entry.textNode.textContent = localizeProjectsText(entry.key, null, entry.fallback);
-    });
-
-    (elements.headerTooltipText || []).forEach((entry) => {
-      if (!entry.tooltip) return;
-      setTooltipText(entry.tooltip, localizeProjectsText(entry.key, null, entry.fallback));
-    });
-
-    if (elements.controlsTooltipText) {
-      setTooltipText(
-        elements.controlsTooltipText,
-        localizeProjectsText(
-          'projectsTab.projects.galacticMarket.tooltips.headerControls',
-          null,
-          'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max first cancels this row’s sells, then buys enough to spend a positive funding gain down to zero.'
-        )
-      );
-    }
-
-    (elements.spaceshipTooltipText || []).forEach((tooltip) => {
-      if (!tooltip) return;
-      setTooltipText(
-        tooltip,
-        localizeProjectsText(
-          'projectsTab.projects.galacticMarket.tooltips.spaceshipPrice',
-          null,
-          localizeProjectsText(
-            'projectsTab.projects.cargoRocket.spaceshipPriceTooltip',
-            null,
-            'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.'
-          )
-        )
-      );
-    });
   }
 
   updateSelectedResources() {
