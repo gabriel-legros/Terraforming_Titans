@@ -1,7 +1,70 @@
 registerTranslations('la', {
   tabs: {
     buildings: 'Aedificia Lorem',
+    projects: 'Projecta Specialia',
     settings: 'Lorem et Ipsum'
+  },
+  projectsTab: {
+    subtabs: {
+      resources: 'Opes',
+      infrastructure: 'Infrastructura',
+      mega: 'Mega',
+      giga: 'Giga',
+      story: 'Fabula'
+    },
+    card: {
+      requirements: 'Requisita:',
+      cost: 'Sumptus:',
+      gain: 'Lucrum:',
+      sustain: 'Sustinere: {value}',
+      sustainTooltip: 'Project pausat si sustain cost non impletur.',
+      autoStart: 'Auto start',
+      run: 'Curre',
+      enableExtraSettings: 'Settings extra enable',
+      uncheckOnTravel: 'In travel uncheck',
+      allowColonyEnergy: 'Permitte usum energiae coloniae',
+      totalGain: 'Lucrum Totale: ',
+      totalCost: 'Sumptus Totalis: ',
+      totalCostWithItems: 'Sumptus Totalis: {value}',
+      totalGainWithItems: 'Lucrum Totale: {value}',
+      spaceshipsAssigned: 'Naves Assignatae: {assigned}',
+      spaceshipsAssignedWithMax: 'Naves Assignatae: {assigned}/{max}',
+      averageDepth: 'Profunditas media: {current} / {max}',
+      completedCount: 'Completa: {current} / {max}'
+    },
+    warnings: {
+      kesslerImportColonists: 'Project hic propter Kessler Skies limitatur. Importationes ad 100 per cursum per warpgate parvum limitantur.',
+      kesslerWarpgateReplica: 'Project hic propter Kessler Skies limitatur. Facultates eius per warpgate parvum replicantur.',
+      kesslerFailureChance: 'Kessler Skies: {percent}% casus defectus projecti.'
+    },
+    status: {
+      maxDepthReached: 'Profunditas maxima attacta',
+      completedShort: 'Completum',
+      completedNamed: 'Completum: {name}',
+      disabledByKessler: 'A Kessler disable',
+      stopped: 'Stetit',
+      productivitySuffix: ' ({percent}% productivitas)',
+      continuous: 'Continuum{productivity}',
+      inProgressShort: 'In progressu: {seconds} secunda restant',
+      inProgressPercent: 'In progressu: {seconds} secunda restant ({percent}%)',
+      resumeStorageExpansion: 'Resume expansionem storage ({seconds}s restant)',
+      resumeNamed: 'Resume {name} ({seconds}s restant)',
+      resumeShort: 'Resume ({seconds}s restant)',
+      startStorageExpansion: 'Incipe expansionem storage (Duratio: {seconds} secunda)',
+      startNamed: 'Incipe {name} (Duratio: {seconds} secunda)',
+      startShort: 'Incipe (Duratio: {seconds} secunda)'
+    },
+    empty: {
+      nothingAvailable: 'Nihil nunc praesto.'
+    },
+    settings: {
+      megaProjectMode: {
+        spaceFirst: 'Prioriza opes spatii pro mega+ projectis',
+        colonyFirst: 'Prioriza opes coloniae pro mega+ projectis',
+        spaceOnly: 'Solum opes spatii pro mega+ projectis',
+        colonyOnly: 'Solum opes coloniae pro mega+ projectis'
+      }
+    }
   },
   buildingsTab: {
     subtabs: {
@@ -434,6 +497,128 @@ registerTranslations('la', {
     laserCannon: {
       name: 'Aedificium 44',
       description: 'Lorem ipsum descriptio laserCannon.',
+    },
+  },
+  projectsParameters: {
+    cargo_rocket: {
+      name: 'Lorem Cargo Rocket',
+      description: 'Lorem ipsum descriptio cargo_rocket.',
+    },
+    galactic_market: {
+      name: 'Lorem Galactic Market',
+      description: 'Lorem ipsum descriptio galactic_market.',
+    },
+    import_colonists_1: {
+      name: 'Lorem Import colonists',
+      description: 'Lorem ipsum descriptio import_colonists_1.',
+    },
+    exportResources: {
+      name: 'Lorem Metal Exportation',
+      description: 'Lorem ipsum descriptio exportResources.',
+    },
+    satellite: {
+      name: 'Lorem Ore satellite',
+      description: 'Lorem ipsum descriptio satellite.',
+    },
+    geo_satellite: {
+      name: 'Lorem Geothermal satellite',
+      description: 'Lorem ipsum descriptio geo_satellite.',
+    },
+    spaceMirrorFacility: {
+      name: 'Lorem Space mirror facility',
+      description: 'Lorem ipsum descriptio spaceMirrorFacility.',
+    },
+    ringworldTerraforming: {
+      name: 'Lorem Ringworld Terraforming',
+      description: 'Lorem ipsum descriptio ringworldTerraforming.',
+    },
+    deeperMining: {
+      name: 'Lorem Deeper mining',
+      description: 'Lorem ipsum descriptio deeperMining.',
+    },
+    undergroundExpansion: {
+      name: 'Lorem Underground Land Expansion',
+      description: 'Lorem ipsum descriptio undergroundExpansion.',
+    },
+    oreSpaceMining: {
+      name: 'Lorem Metal Asteroid Mining',
+      description: 'Lorem ipsum descriptio oreSpaceMining.',
+    },
+    siliconSpaceMining: {
+      name: 'Lorem Silica Asteroid Mining',
+      description: 'Lorem ipsum descriptio siliconSpaceMining.',
+    },
+    carbonSpaceMining: {
+      name: 'Lorem Carbon Asteroid Mining',
+      description: 'Lorem ipsum descriptio carbonSpaceMining.',
+    },
+    waterSpaceMining: {
+      name: 'Lorem Ice and Water importation',
+      description: 'Lorem ipsum descriptio waterSpaceMining.',
+    },
+    nitrogenSpaceMining: {
+      name: 'Lorem Nitrogen harvesting',
+      description: 'Lorem ipsum descriptio nitrogenSpaceMining.',
+    },
+    hydrogenSpaceMining: {
+      name: 'Lorem Hydrogen Importation',
+      description: 'Lorem ipsum descriptio hydrogenSpaceMining.',
+    },
+    spaceElevator: {
+      name: 'Lorem Space Elevator',
+      description: 'Lorem ipsum descriptio spaceElevator.',
+    },
+    magneticShield: {
+      name: 'Lorem Magnetic Shield',
+      description: 'Lorem ipsum descriptio magneticShield.',
+    },
+    planetaryThruster: {
+      name: 'Lorem Planetary Thrusters',
+      description: 'Lorem ipsum descriptio planetaryThruster.',
+    },
+    dysonSwarmReceiver: {
+      name: 'Lorem Dyson Swarm',
+      description: 'Lorem ipsum descriptio dysonSwarmReceiver.',
+    },
+    dysonSphere: {
+      name: 'Lorem Dyson Sphere',
+      description: 'Lorem ipsum descriptio dysonSphere.',
+    },
+    hephaestusMegaconstruction: {
+      name: 'Lorem Hephaestus Megaconstruction Yard',
+      description: 'Lorem ipsum descriptio hephaestusMegaconstruction.',
+    },
+    orbitalRing: {
+      name: 'Lorem Orbital Ring',
+      description: 'Lorem ipsum descriptio orbitalRing.',
+    },
+    spaceStorage: {
+      name: 'Lorem Space Storage',
+      description: 'Lorem ipsum descriptio spaceStorage.',
+    },
+    particleAccelerator: {
+      name: 'Lorem Particle Accelerator',
+      description: 'Lorem ipsum descriptio particleAccelerator.',
+    },
+    megaHeatSink: {
+      name: 'Lorem Mega Heat Sink',
+      description: 'Lorem ipsum descriptio megaHeatSink.',
+    },
+    lifters: {
+      name: 'Lorem Lifters',
+      description: 'Lorem ipsum descriptio lifters.',
+    },
+    bioworld: {
+      name: 'Lorem Bioworld',
+      description: 'Lorem ipsum descriptio bioworld.',
+    },
+    foundryWorld: {
+      name: 'Lorem Foundry World',
+      description: 'Lorem ipsum descriptio foundryWorld.',
+    },
+    disposeResources: {
+      name: 'Lorem Resource Disposal',
+      description: 'Lorem ipsum descriptio disposeResources.',
     },
   },
   resourcesPanel: {

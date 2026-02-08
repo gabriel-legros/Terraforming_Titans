@@ -112,7 +112,7 @@ class ImportResourcesProjectUI {
 
     const nameElement = document.createElement('span');
     nameElement.classList.add('card-title');
-    nameElement.textContent = 'Import Resources';
+    nameElement.textContent = localizeProjectsText('projectsTab.projects.importResources.title', null, 'Import Resources');
 
     arrow.addEventListener('click', () => this.toggleProjectCollapse?.(card));
     nameElement.addEventListener('click', () => this.toggleProjectCollapse?.(card));
@@ -148,7 +148,11 @@ class ImportResourcesProjectUI {
 
     const description = document.createElement('p');
     description.classList.add('project-description');
-    description.textContent = 'Coordinate orbital shipments for various space resources.  The first 100 spaceship assignments reduce the duration, every assignment afterward provides a multiplier.';
+    description.textContent = localizeProjectsText(
+      'projectsTab.projects.importResources.description',
+      null,
+      'Coordinate orbital shipments for various space resources.  The first 100 spaceship assignments reduce the duration, every assignment afterward provides a multiplier.'
+    );
     cardBody.appendChild(description);
 
     const kesslerWarning = document.createElement('div');
@@ -181,7 +185,7 @@ class ImportResourcesProjectUI {
     capArrow.textContent = this.capExpanded ? '\u25BC' : '\u25B6';
 
     const capLabel = document.createElement('span');
-    capLabel.textContent = 'Import cap';
+    capLabel.textContent = localizeProjectsText('projectsTab.projects.importResources.importCap', null, 'Import cap');
 
     capToggle.appendChild(capArrow);
     capToggle.appendChild(capLabel);
@@ -211,7 +215,7 @@ class ImportResourcesProjectUI {
 
     const availableDisplay = document.createElement('span');
     availableDisplay.classList.add('import-available-display');
-    availableDisplay.textContent = 'Available: 0';
+    availableDisplay.textContent = localizeProjectsText('projectsTab.labels.availableWithValue', { value: 0 }, 'Available: 0');
 
     const availableCell = document.createElement('div');
     availableCell.classList.add('import-top-cell', 'import-top-available');
@@ -248,7 +252,13 @@ class ImportResourcesProjectUI {
 
     const headerRow = document.createElement('div');
     headerRow.classList.add('import-resources-row', 'import-resources-header');
-    const headers = ['Resource', 'Assignment', 'Auto Assign', 'Total Cost & Gain', ''];
+    const headers = [
+      localizeProjectsText('projectsTab.labels.resource', null, 'Resource'),
+      localizeProjectsText('projectsTab.labels.assignment', null, 'Assignment'),
+      localizeProjectsText('projectsTab.labels.autoAssign', null, 'Auto Assign'),
+      localizeProjectsText('projectsTab.labels.totalCostGain', null, 'Total Cost & Gain'),
+      ''
+    ];
     headers.forEach((labelText) => {
       const cell = document.createElement('div');
       cell.classList.add('import-resources-cell');
@@ -275,6 +285,8 @@ class ImportResourcesProjectUI {
 
     this.card = card;
     this.cardBody = cardBody;
+    this.nameElement = nameElement;
+    this.descriptionElement = description;
     this.table = table;
     this.availableDisplay = availableDisplay;
     this.costPerShipmentDisplay = costDisplay;
@@ -342,7 +354,7 @@ class ImportResourcesProjectUI {
 
   formatCostPerShipment(project) {
     if (!project || typeof project.calculateSpaceshipCost !== 'function') {
-      return 'Cost per Shipment: -';
+      return localizeProjectsText('projectsTab.projects.importResources.costPerShipmentUnknown', null, 'Cost per Shipment: -');
     }
     const costPerShip = project.calculateSpaceshipCost();
     const segments = [];
@@ -360,9 +372,13 @@ class ImportResourcesProjectUI {
       }
     }
     if (!segments.length) {
-      return 'Cost per Shipment: -';
+      return localizeProjectsText('projectsTab.projects.importResources.costPerShipmentUnknown', null, 'Cost per Shipment: -');
     }
-    return `Cost per Shipment: ${segments.join(', ')}`;
+    return localizeProjectsText(
+      'projectsTab.projects.importResources.costPerShipment',
+      { value: segments.join(', ') },
+      `Cost per Shipment: ${segments.join(', ')}`
+    );
   }
 
   updateSharedDisplays(project) {
@@ -370,12 +386,27 @@ class ImportResourcesProjectUI {
       return;
     }
 
+    if (this.nameElement) {
+      this.nameElement.textContent = localizeProjectsText('projectsTab.projects.importResources.title', null, 'Import Resources');
+    }
+    if (this.descriptionElement) {
+      this.descriptionElement.textContent = localizeProjectsText(
+        'projectsTab.projects.importResources.description',
+        null,
+        'Coordinate orbital shipments for various space resources.  The first 100 spaceship assignments reduce the duration, every assignment afterward provides a multiplier.'
+      );
+    }
+
     this.updateCapSummary(warpGateNetworkManager.getCapSummaryData());
     this.updateKesslerFailureWarning(project);
 
     if (this.availableDisplay) {
       const availableShips = formatNumber(Math.floor(resources?.special?.spaceships?.value || 0), true);
-      this.availableDisplay.textContent = `Available: ${availableShips}`;
+      this.availableDisplay.textContent = localizeProjectsText(
+        'projectsTab.labels.availableWithValue',
+        { value: availableShips },
+        `Available: ${availableShips}`
+      );
     }
 
     if (this.costPerShipmentDisplay && project && typeof project.calculateSpaceshipCost === 'function') {
@@ -402,7 +433,11 @@ class ImportResourcesProjectUI {
         this.kesslerWarning.style.display = 'none';
         return;
       }
-      this.kesslerWarningText.textContent = `Kessler Skies: ${formatNumber(percent, false, 2)}% chance of project failure.`;
+      this.kesslerWarningText.textContent = localizeProjectsText(
+        'projectsTab.warnings.kesslerFailureChance',
+        { percent: formatNumber(percent, false, 2) },
+        `Kessler Skies: ${formatNumber(percent, false, 2)}% chance of project failure.`
+      );
       this.kesslerWarning.style.display = 'flex';
     } catch (error) {
       // no-op
@@ -436,7 +471,12 @@ class ImportResourcesProjectUI {
     const table = document.createElement('div');
     table.classList.add('import-cap-table');
 
-    ['Resource', 'Ratio', 'Cap', 'Details'].forEach((label) => {
+    [
+      localizeProjectsText('projectsTab.labels.resource', null, 'Resource'),
+      localizeProjectsText('projectsTab.labels.ratio', null, 'Ratio'),
+      localizeProjectsText('projectsTab.labels.cap', null, 'Cap'),
+      localizeProjectsText('projectsTab.labels.details', null, 'Details')
+    ].forEach((label) => {
       const cell = document.createElement('div');
       cell.classList.add('import-cap-cell', 'import-cap-header');
       cell.textContent = label;
@@ -599,7 +639,7 @@ class ImportResourcesProjectUI {
     assignmentInfo.classList.add('import-assignment-info');
 
     const assignedLabel = document.createElement('span');
-    assignedLabel.textContent = 'Assigned:';
+    assignedLabel.textContent = localizeProjectsText('projectsTab.labels.assigned', null, 'Assigned:');
     const assignedDisplay = document.createElement('span');
     assignedDisplay.classList.add('import-assigned-value');
     assignmentInfo.appendChild(assignedLabel);
@@ -629,7 +669,7 @@ class ImportResourcesProjectUI {
     });
 
     const maxButton = document.createElement('button');
-    maxButton.textContent = 'Max';
+    maxButton.textContent = localizeProjectsText('projectsTab.labels.max', null, 'Max');
     maxButton.addEventListener('click', () => {
       const ships = Math.floor(resources.special?.spaceships?.value || 0);
       if (ships > 0) {
@@ -687,7 +727,7 @@ class ImportResourcesProjectUI {
     });
     const autoStartLabel = document.createElement('label');
     autoStartLabel.htmlFor = `${project.name}-auto-start`;
-    autoStartLabel.textContent = 'Auto start';
+    autoStartLabel.textContent = localizeProjectsText('projectsTab.card.autoStart', null, 'Auto start');
     autoStartContainer.appendChild(autoStartCheckbox);
     autoStartContainer.appendChild(autoStartLabel);
     automationContainer.appendChild(autoStartContainer);

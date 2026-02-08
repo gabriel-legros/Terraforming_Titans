@@ -14,31 +14,31 @@ function renderDysonSphereUI(project, container) {
   card.classList.add('dyson-sphere-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Dyson Sphere Collectors</span>
+      <span class="card-title">${localizeProjectsText('projectsTab.projects.dysonSphere.title', null, 'Dyson Sphere Collectors')}</span>
     </div>
     <div class="card-body">
       <div class="stats-grid four-col">
-        <div class="stat-item"><span class="stat-label">Collectors:</span><span id="dsph-collectors"></span></div>
-        <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="dsph-power-per"></span></div>
-        <div class="stat-item"><span class="stat-label">Total Power:</span><span id="dsph-total-power"></span></div>
-        <div class="stat-item"><span class="stat-label">Frame:</span><span id="dsph-frame"></span></div>
+        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.labels.collectors', null, 'Collectors:')}</span><span id="dsph-collectors"></span></div>
+        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.dyson.powerPerCollector', null, 'Power/Collector:')}</span><span id="dsph-power-per"></span></div>
+        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.dyson.totalPower', null, 'Total Power:')}</span><span id="dsph-total-power"></span></div>
+        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.dysonSphere.frame', null, 'Frame:')}</span><span id="dsph-frame"></span></div>
       </div>
       <div class="stats-grid two-col collector-cost-container">
         <div class="stat-item">
-          <span class="stat-label">Collector Cost:</span>
+          <span class="stat-label">${localizeProjectsText('projectsTab.projects.dyson.collectorCost', null, 'Collector Cost:')}</span>
           <span id="dsph-collector-cost"></span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Expansion</span>
+          <span class="stat-label">${localizeProjectsText('projectsTab.projects.dyson.expansion', null, 'Expansion')}</span>
           <span id="dsph-expansion-rate"></span>
         </div>
       </div>
       <div class="progress-button-container dyson-progress-container"><button id="dsph-start" class="progress-button"></button></div>
       <div class="checkbox-container">
         <input type="checkbox" id="dsph-auto">
-        <label for="dsph-auto">Auto start</label>
+        <label for="dsph-auto">${localizeProjectsText('projectsTab.card.autoStart', null, 'Auto start')}</label>
         <input type="checkbox" id="dsph-auto-travel-reset">
-        <label for="dsph-auto-travel-reset">Uncheck on travelling</label>
+        <label for="dsph-auto-travel-reset">${localizeProjectsText('projectsTab.card.uncheckOnTravel', null, 'Uncheck on travelling')}</label>
       </div>
     </div>`;
   if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
@@ -145,6 +145,11 @@ function updateDysonSphereUI(project) {
   const total = project.energyPerCollector * collectors;
   els.totalPowerDisplay.textContent = formatNumber(total, false, 2);
   els.frameStatusDisplay.textContent = project.isCompleted ? 'Complete' : 'Incomplete';
+  if (els.frameStatusDisplay) {
+    els.frameStatusDisplay.textContent = project.isCompleted
+      ? localizeProjectsText('projectsTab.labels.complete', null, 'Complete')
+      : localizeProjectsText('projectsTab.labels.incomplete', null, 'Incomplete');
+  }
 
   if (els.costDisplay) {
     updateCollectorCostDisplay(project, els.costDisplay);
@@ -154,7 +159,11 @@ function updateDysonSphereUI(project) {
       ? project.autoDeployCollectors && (project.isCompleted || collectors > 0)
       : project.collectorProgress > 0;
     const rate = active ? (1000 / project.collectorDuration) : 0;
-    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
+    els.expansionRateDisplay.textContent = localizeProjectsText(
+      'projectsTab.projects.dyson.collectorsPerSecond',
+      { value: formatNumber(rate, true, 3) },
+      `${formatNumber(rate, true, 3)} collectors/s`
+    );
   }
 
   if (els.autoCheckbox) {
@@ -179,7 +188,11 @@ function updateDysonSphereUI(project) {
     return;
   }
   if (!project.isCompleted) {
-    els.startButton.textContent = 'Build the frame to deploy collectors';
+    els.startButton.textContent = localizeProjectsText(
+      'projectsTab.projects.dysonSphere.buildFrameToDeploy',
+      null,
+      'Build the frame to deploy collectors'
+    );
     els.startButton.style.background = '#f44336';
     els.startButton.disabled = true;
     return;
@@ -188,10 +201,10 @@ function updateDysonSphereUI(project) {
   els.startButton.disabled = false;
   if (project.isCollectorContinuous()) {
     if (project.autoDeployCollectors && (project.isCompleted || project.collectors > 0)) {
-      els.startButton.textContent = 'Continuous (On)';
+      els.startButton.textContent = localizeProjectsText('projectsTab.projects.dyson.continuousOn', null, 'Continuous (On)');
       els.startButton.style.background = '#4caf50';
     } else {
-      els.startButton.textContent = 'Continuous (Off)';
+      els.startButton.textContent = localizeProjectsText('projectsTab.projects.dyson.continuousOff', null, 'Continuous (Off)');
       els.startButton.style.background = '#f44336';
     }
   } else if (project.collectorProgress > 0) {
@@ -202,7 +215,11 @@ function updateDysonSphereUI(project) {
   } else {
     const can = project.canStartCollector();
     const dur = Math.round(project.collectorDuration / 1000);
-    els.startButton.textContent = `Deploy Collector (${dur}s)`;
+    els.startButton.textContent = localizeProjectsText(
+      'projectsTab.projects.dyson.deployCollector',
+      { seconds: dur },
+      `Deploy Collector (${dur}s)`
+    );
     els.startButton.style.background = can ? '#4caf50' : '#f44336';
     els.startButton.disabled = !can;
   }

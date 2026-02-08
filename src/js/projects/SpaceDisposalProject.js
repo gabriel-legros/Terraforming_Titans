@@ -16,11 +16,11 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   }
 
   getExportRateLabel(baseLabel) {
-    return 'Resource Disposal';
+    return localizeProjectsText('projectsParameters.disposeResources.name', null, 'Resource Disposal');
   }
 
   getCostRateLabel() {
-    return 'Resource Disposal';
+    return localizeProjectsText('projectsParameters.disposeResources.name', null, 'Resource Disposal');
   }
 
   createResourceDisposalUI() {
@@ -50,7 +50,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
       const title = document.createElement('h4');
       title.classList.add('section-title');
-      title.textContent = 'Mass Drivers';
+      title.textContent = localizeProjectsText('projectsTab.projects.spaceDisposal.massDrivers', null, 'Mass Drivers');
       sectionContainer.appendChild(title);
 
       const infoContent = document.createElement('div');
@@ -65,7 +65,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
       const activeLabel = document.createElement('span');
       activeLabel.classList.add('mass-driver-label');
-      activeLabel.textContent = 'Active: ';
+      activeLabel.textContent = localizeProjectsText('projectsTab.labels.active', null, 'Active: ');
       const activeValue = document.createElement('span');
       activeValue.id = `${this.name}-active-mass-drivers`;
       activeValue.classList.add('mass-driver-count');
@@ -75,7 +75,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       builtContainer.classList.add('available-ships-container');
       const builtLabel = document.createElement('span');
       builtLabel.classList.add('mass-driver-built-label');
-      builtLabel.textContent = 'Built : ';
+      builtLabel.textContent = localizeProjectsText('projectsTab.labels.built', null, 'Built : ');
       const builtValue = document.createElement('span');
       builtValue.id = `${this.name}-built-mass-drivers`;
       builtValue.classList.add('mass-driver-built-count');
@@ -116,7 +116,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         applyManualMassDriverChange(() => this.adjustMassDriverActive(1));
       }, mainButtons);
 
-      const maxButton = createButton('Max', () => {
+      const maxButton = createButton(localizeProjectsText('projectsTab.labels.max', null, 'Max'), () => {
         const structure = this.getMassDriverStructure();
         applyManualMassDriverChange(() => this.setMassDriverActive(structure.count));
       }, mainButtons);
@@ -147,7 +147,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       });
 
       const autoLabel = document.createElement('span');
-      autoLabel.textContent = 'Set active to target';
+      autoLabel.textContent = localizeProjectsText('projectsTab.card.setActiveToTarget', null, 'Set active to target');
 
       autoContainer.append(maxAutoActiveCheckbox, autoLabel);
       mainButtons.appendChild(autoContainer);
@@ -174,7 +174,11 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       const infoNote = document.createElement('p');
       infoNote.classList.add('project-description');
       infoNote.classList.add('mass-driver-note');
-      infoNote.textContent = 'Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.';
+      infoNote.textContent = localizeProjectsText(
+        'projectsTab.projects.spaceDisposal.massDriverNote',
+        null,
+        'Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.'
+      );
       sectionContainer.appendChild(infoNote);
 
       container.appendChild(sectionContainer);

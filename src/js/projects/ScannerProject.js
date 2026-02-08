@@ -266,7 +266,11 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
 
   renderUI(container) {
     const controls = this.renderWorkerCapacityControls(container, {
-      tooltip: 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 10,000 worker cap.',
+      tooltip: localizeProjectsText(
+        'projectsTab.projects.scanner.workerCapacityTooltip',
+        null,
+        'Worker capacity lets us build scanners in parallel. One satellite can be produced per 10,000 worker cap.'
+      ),
       layoutClass: 'scanner-layout',
     });
 
@@ -279,7 +283,7 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       depositSection.className = 'project-section-container';
       const depositTitle = document.createElement('h4');
       depositTitle.className = 'section-title';
-      depositTitle.textContent = 'Deposits';
+      depositTitle.textContent = localizeProjectsText('projectsTab.projects.scanner.deposits', null, 'Deposits');
       const depositContainer = document.createElement('div');
       depositContainer.className = 'deposits-container';
       dVal = document.createElement('span');
@@ -290,7 +294,11 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       dMax.id = `${this.name}-deposit-max`;
       const dInfo = document.createElement('span');
       dInfo.className = 'info-tooltip-icon';
-      dInfo.title = 'Shows discovered and maximum deposits satellites can find on this planet.';
+      dInfo.title = localizeProjectsText(
+        'projectsTab.projects.scanner.depositTooltip',
+        null,
+        'Shows discovered and maximum deposits satellites can find on this planet.'
+      );
       dInfo.innerHTML = '&#9432;';
       depositContainer.append(dVal, dSlash, dMax, dInfo);
       depositSection.append(depositTitle, depositContainer);

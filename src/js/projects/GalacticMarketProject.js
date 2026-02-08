@@ -30,7 +30,7 @@ class GalacticMarketProject extends Project {
     totalCostDisplay.id = `${this.name}-total-cost-display`;
     totalCostDisplay.classList.add('total-cost-display');
     const totalCostLabel = document.createElement('span');
-    totalCostLabel.textContent = 'Total Cost: ';
+    totalCostLabel.textContent = localizeProjectsText('projectsTab.card.totalCost', null, 'Total Cost: ');
     const totalCostValue = document.createElement('span');
     totalCostValue.id = `${this.name}-total-cost-display-value`;
     totalCostDisplay.append(totalCostLabel, totalCostValue);
@@ -241,7 +241,11 @@ class GalacticMarketProject extends Project {
         if (resourceId === 'spaceships') {
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
-          tooltip.title = 'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.';
+          tooltip.title = localizeProjectsText(
+            'projectsTab.projects.cargoRocket.spaceshipPriceTooltip',
+            null,
+            'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.'
+          );
           tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         }

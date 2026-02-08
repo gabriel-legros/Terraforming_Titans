@@ -119,7 +119,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const unitLabel = document.createElement('span');
     unitLabel.classList.add(`${key}-unit`);
-    unitLabel.textContent = 'Pa';
+    unitLabel.textContent = localizeProjectsText('projectsTab.labels.pa', null, 'Pa');
     control.appendChild(unitLabel);
 
     projectElements[this.name] = {
@@ -155,15 +155,21 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(checkbox);
 
     const label = document.createElement('label');
-    label.textContent = 'Disable if ';
+    label.textContent = localizeProjectsText('projectsTab.projects.spaceMining.disableIf', null, 'Disable if ');
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const modeSelect = document.createElement('select');
     modeSelect.classList.add('water-coverage-mode');
     [
-      { value: 'coverage', text: 'water coverage above' },
-      { value: 'target', text: 'water+ice above target' }
+      {
+        value: 'coverage',
+        text: localizeProjectsText('projectsTab.projects.spaceMining.waterCoverageAbove', null, 'water coverage above')
+      },
+      {
+        value: 'target',
+        text: localizeProjectsText('projectsTab.projects.spaceMining.waterIceAboveTarget', null, 'water+ice above target')
+      }
     ].forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
@@ -202,7 +208,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const percent = document.createElement('span');
     percent.classList.add('water-coverage-unit');
-    percent.textContent = '%';
+    percent.textContent = localizeProjectsText('projectsTab.labels.percent', null, '%');
     control.appendChild(percent);
 
     const updateInputVisibility = () => {
@@ -247,15 +253,21 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(checkbox);
 
     const label = document.createElement('label');
-    label.textContent = 'Disable if ';
+    label.textContent = localizeProjectsText('projectsTab.projects.spaceMining.disableIf', null, 'Disable if ');
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const modeSelect = document.createElement('select');
     modeSelect.classList.add('co2-coverage-mode');
     [
-      { value: 'coverage', text: 'liquid CO2 coverage above' },
-      { value: 'target', text: 'liquid CO2+dry ice above target' }
+      {
+        value: 'coverage',
+        text: localizeProjectsText('projectsTab.projects.spaceMining.co2CoverageAbove', null, 'liquid CO2 coverage above')
+      },
+      {
+        value: 'target',
+        text: localizeProjectsText('projectsTab.projects.spaceMining.co2DryIceAboveTarget', null, 'liquid CO2+dry ice above target')
+      }
     ].forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
@@ -294,7 +306,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const percent = document.createElement('span');
     percent.classList.add('co2-coverage-unit');
-    percent.textContent = '%';
+    percent.textContent = localizeProjectsText('projectsTab.labels.percent', null, '%');
     control.appendChild(percent);
 
     const updateControlVisibility = () => {
@@ -337,14 +349,14 @@ class SpaceMiningProject extends SpaceshipProject {
     control.style.display = this.isBooleanFlagSet('waterImportTargeting') ? 'flex' : 'none';
 
     const label = document.createElement('label');
-    label.textContent = 'Target ';
+    label.textContent = localizeProjectsText('projectsTab.projects.spaceMining.target', null, 'Target ');
     control.appendChild(label);
 
     const select = document.createElement('select');
     select.classList.add('water-import-target-select');
     [
-      { value: 'surface', text: 'Surface' },
-      { value: 'colony', text: 'Colony' }
+      { value: 'surface', text: localizeProjectsText('projectsTab.labels.surface', null, 'Surface') },
+      { value: 'colony', text: localizeProjectsText('projectsTab.labels.colony', null, 'Colony') }
     ].forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
@@ -407,7 +419,7 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.pressureInput.value = formatNumber(this.disablePressureThreshold * 1000, true, 2);
     }
     if (elements.pressureUnitLabel) {
-      elements.pressureUnitLabel.textContent = 'Pa';
+      elements.pressureUnitLabel.textContent = localizeProjectsText('projectsTab.labels.pa', null, 'Pa');
     }
     if (elements.waterCoverageControl) {
       elements.waterCoverageControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
@@ -458,7 +470,7 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.oxygenPressureInput.value = formatNumber(this.disableOxygenPressureThreshold * 1000, true, 2);
     }
     if (elements.oxygenPressureUnitLabel) {
-      elements.oxygenPressureUnitLabel.textContent = 'Pa';
+      elements.oxygenPressureUnitLabel.textContent = localizeProjectsText('projectsTab.labels.pa', null, 'Pa');
     }
   }
 

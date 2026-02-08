@@ -9,29 +9,41 @@ if (typeof makeCollapsibleCard === 'undefined') {
   } catch (e) {}
 }
 
+if (typeof localizeProjectsText !== 'function') {
+  var localizeProjectsText = function (key, vars, fallback) {
+    if (typeof t === 'function') {
+      const resolved = t(key, vars);
+      if (resolved !== key) {
+        return resolved;
+      }
+    }
+    return fallback || key;
+  };
+}
+
 const storageResourceOptions = [
-  { label: 'Metal', category: 'colony', resource: 'metal' },
-  { label: 'Silica', category: 'colony', resource: 'silicon' },
-  { label: 'Glass', category: 'colony', resource: 'glass' },
-  { label: 'Components', category: 'colony', resource: 'components' },
-  { label: 'Electronics', category: 'colony', resource: 'electronics' },
-  { label: 'Superconductors', category: 'colony', resource: 'superconductors' },
-  { label: 'Superalloys', category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
-  { label: 'Oxygen', category: 'atmospheric', resource: 'oxygen' },
-  { label: 'Hydrogen', category: 'atmospheric', resource: 'hydrogen' },
-  { label: 'Methane', category: 'atmospheric', resource: 'atmosphericMethane', requiresProjectFlag: 'methaneAmmoniaStorage' },
-  { label: 'Ammonia', category: 'atmospheric', resource: 'atmosphericAmmonia', requiresProjectFlag: 'methaneAmmoniaStorage' },
-  { label: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
-  { label: 'Water', category: 'surface', resource: 'liquidWater' },
-  { label: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },
-  { label: 'Biomass', category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' }
+  { label: localizeProjectsText('projectsTab.labels.metal', null, 'Metal'), category: 'colony', resource: 'metal' },
+  { label: localizeProjectsText('projectsTab.labels.silica', null, 'Silica'), category: 'colony', resource: 'silicon' },
+  { label: localizeProjectsText('projectsTab.labels.glass', null, 'Glass'), category: 'colony', resource: 'glass' },
+  { label: localizeProjectsText('projectsTab.labels.components', null, 'Components'), category: 'colony', resource: 'components' },
+  { label: localizeProjectsText('projectsTab.labels.electronics', null, 'Electronics'), category: 'colony', resource: 'electronics' },
+  { label: localizeProjectsText('projectsTab.labels.superconductors', null, 'Superconductors'), category: 'colony', resource: 'superconductors' },
+  { label: localizeProjectsText('projectsTab.labels.superalloys', null, 'Superalloys'), category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
+  { label: localizeProjectsText('projectsTab.labels.oxygen', null, 'Oxygen'), category: 'atmospheric', resource: 'oxygen' },
+  { label: localizeProjectsText('projectsTab.labels.hydrogen', null, 'Hydrogen'), category: 'atmospheric', resource: 'hydrogen' },
+  { label: localizeProjectsText('projectsTab.labels.methane', null, 'Methane'), category: 'atmospheric', resource: 'atmosphericMethane', requiresProjectFlag: 'methaneAmmoniaStorage' },
+  { label: localizeProjectsText('projectsTab.labels.ammonia', null, 'Ammonia'), category: 'atmospheric', resource: 'atmosphericAmmonia', requiresProjectFlag: 'methaneAmmoniaStorage' },
+  { label: localizeProjectsText('projectsTab.labels.carbondioxide', null, 'Carbon Dioxide'), category: 'atmospheric', resource: 'carbonDioxide' },
+  { label: localizeProjectsText('projectsTab.labels.water', null, 'Water'), category: 'surface', resource: 'liquidWater' },
+  { label: localizeProjectsText('projectsTab.labels.nitrogen', null, 'Nitrogen'), category: 'atmospheric', resource: 'inertGas' },
+  { label: localizeProjectsText('projectsTab.labels.biomass', null, 'Biomass'), category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' }
 ];
 
 if (typeof SpaceStorageProject !== 'undefined') {
   SpaceStorageProject.prototype.createShipAutoStartCheckbox = function () {
     const els = projectElements[this.name] || {};
     if (els.autoStartLabel) {
-      els.autoStartLabel.textContent = 'Auto Start Expansion';
+      els.autoStartLabel.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.autoStartExpansion', null, 'Auto Start Expansion');
     }
     const container = document.createElement('div');
     container.classList.add('checkbox-container');
@@ -43,7 +55,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
     });
     const label = document.createElement('label');
     label.htmlFor = checkbox.id;
-    label.textContent = 'Auto Start Ships';
+    label.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.autoStartShips', null, 'Auto Start Ships');
     container.append(checkbox, label);
     projectElements[this.name] = {
       ...projectElements[this.name],
@@ -66,7 +78,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
     MEGA_PROJECT_RESOURCE_MODE_OPTIONS.forEach((option) => {
       const entry = document.createElement('option');
       entry.value = option.value;
-      entry.textContent = option.label;
+      entry.textContent = localizeProjectsText(option.key, null, option.fallback);
       select.appendChild(entry);
     });
     const initialMode = MEGA_PROJECT_RESOURCE_MODE_MAP[this.megaProjectResourceMode]
@@ -97,7 +109,11 @@ if (typeof SpaceStorageProject !== 'undefined') {
     });
     const label = document.createElement('label');
     label.htmlFor = checkbox.id;
-    label.textContent = 'Set to Space Only on travel';
+    label.textContent = localizeProjectsText(
+      'projectsTab.projects.spaceStorage.spaceOnlyOnTravel',
+      null,
+      'Set to Space Only on travel'
+    );
     container.append(checkbox, label);
     projectElements[this.name] = {
       ...projectElements[this.name],
@@ -112,12 +128,15 @@ if (typeof SpaceStorageProject !== 'undefined') {
     container.classList.add('checkbox-container');
     const label = document.createElement('label');
     label.htmlFor = `${this.name}-strategic-reserve`;
-    label.textContent = 'Strategic reserve ';
+    label.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.strategicReserve', null, 'Strategic reserve ');
     const info = document.createElement('span');
     info.classList.add('info-tooltip-icon');
     info.innerHTML = '&#9432;';
-    info.title =
-      'Minimum space storage kept in reserve; transfers ignore this reserve. Accepts scientific notation (e.g., 1e3 for 1000).';
+    info.title = localizeProjectsText(
+      'projectsTab.projects.spaceStorage.strategicReserveTooltip',
+      null,
+      'Minimum space storage kept in reserve; transfers ignore this reserve. Accepts scientific notation (e.g., 1e3 for 1000).'
+    );
     label.appendChild(info);
     const input = document.createElement('input');
     input.type = 'text';
@@ -208,12 +227,12 @@ function renderSpaceStorageUI(project, container) {
   card.classList.add('info-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Space Storage</span>
+      <span class="card-title">${localizeProjectsText('projectsParameters.spaceStorage.name', null, 'Space Storage')}</span>
     </div>
     <div class="card-body">
       <div class="stats-grid two-col">
-        <div class="stat-item"><span class="stat-label">Used Storage:</span><span id="ss-used"></span></div>
-        <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max"></span></div>
+        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.spaceStorage.usedStorage', null, 'Used Storage:')}</span><span id="ss-used"></span></div>
+        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.spaceStorage.maxStorage', null, 'Max Storage:')}</span><span id="ss-max"></span></div>
       </div>
       <div id="ss-resource-grid"></div>
     </div>`;
@@ -234,19 +253,19 @@ function renderSpaceStorageUI(project, container) {
   expansionSection.classList.add('project-section-container');
   const expansionTitle = document.createElement('h4');
   expansionTitle.classList.add('section-title');
-  expansionTitle.textContent = 'Expansion';
+  expansionTitle.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.expansion', null, 'Expansion');
   expansionSection.appendChild(expansionTitle);
 
   const expansionGrid = document.createElement('div');
   expansionGrid.classList.add('project-details-grid');
   const expansionCostRow = document.createElement('div');
   expansionCostRow.id = 'ss-expansion-cost';
-  expansionCostRow.innerHTML = `<strong>Cost:</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon" title="Construction time is reduced for each terraformed planet">&#9432;</span>`;
+  expansionCostRow.innerHTML = `<strong>${localizeProjectsText('projectsTab.card.cost', null, 'Cost:')}</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon" title="${localizeProjectsText('projectsTab.projects.spaceStorage.expansionTooltip', null, 'Construction time is reduced for each terraformed planet')}">&#9432;</span>`;
   expansionGrid.appendChild(expansionCostRow);
 
   const expansionRateRow = document.createElement('div');
   expansionRateRow.id = 'ss-expansion-rate';
-  expansionRateRow.innerHTML = '<strong>Expansion/s:</strong> <span class="expansion-rate"></span>';
+  expansionRateRow.innerHTML = `<strong>${localizeProjectsText('projectsTab.projects.spaceStorage.expansionPerSecond', null, 'Expansion/s:')}</strong> <span class="expansion-rate"></span>`;
   expansionGrid.appendChild(expansionRateRow);
   expansionSection.appendChild(expansionGrid);
   topSection.appendChild(expansionSection);
@@ -283,19 +302,19 @@ function renderSpaceStorageUI(project, container) {
     capHeader.classList.add('space-storage-settings-header');
     const capTitle = document.createElement('div');
     capTitle.classList.add('space-storage-settings-title');
-    capTitle.textContent = 'Space Storage Cap';
+    capTitle.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.capTitle', null, 'Space Storage Cap');
     capClose = document.createElement('button');
     capClose.type = 'button';
     capClose.classList.add('space-storage-settings-close');
     capClose.textContent = 'X';
-    capClose.title = 'Close';
+    capClose.title = localizeProjectsText('projectsTab.labels.close', null, 'Close');
     capHeader.append(capTitle, capClose);
 
     const capResourceRow = document.createElement('div');
     capResourceRow.classList.add('space-storage-settings-row');
     const capResourceLabel = document.createElement('span');
     capResourceLabel.classList.add('space-storage-settings-label');
-    capResourceLabel.textContent = 'Resource:';
+    capResourceLabel.textContent = localizeProjectsText('projectsTab.labels.resource', null, 'Resource:');
     capResourceValue = document.createElement('span');
     capResourceValue.classList.add('space-storage-settings-value');
     capResourceRow.append(capResourceLabel, capResourceValue);
@@ -304,18 +323,18 @@ function renderSpaceStorageUI(project, container) {
     capModeRow.classList.add('space-storage-settings-row');
     const capModeLabel = document.createElement('label');
     capModeLabel.classList.add('space-storage-settings-label');
-    capModeLabel.textContent = 'Cap type:';
+    capModeLabel.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.capType', null, 'Cap type:');
     capModeSelect = document.createElement('select');
     capModeSelect.classList.add('space-storage-settings-select');
     const capModeNone = document.createElement('option');
     capModeNone.value = 'none';
-    capModeNone.textContent = 'No cap';
+    capModeNone.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.capNone', null, 'No cap');
     const capModeAmount = document.createElement('option');
     capModeAmount.value = 'amount';
-    capModeAmount.textContent = 'Amount';
+    capModeAmount.textContent = localizeProjectsText('projectsTab.labels.amount', null, 'Amount');
     const capModePercent = document.createElement('option');
     capModePercent.value = 'percent';
-    capModePercent.textContent = '% of max storage';
+    capModePercent.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.capPercentMax', null, '% of max storage');
     capModeSelect.append(capModeNone, capModeAmount, capModePercent);
     capModeRow.append(capModeLabel, capModeSelect);
 
@@ -323,11 +342,15 @@ function renderSpaceStorageUI(project, container) {
     capValueRow.classList.add('space-storage-settings-row');
     capValueLabel = document.createElement('label');
     capValueLabel.classList.add('space-storage-settings-label');
-    capValueLabel.textContent = 'Cap value:';
+    capValueLabel.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.capValue', null, 'Cap value:');
     const capValueInfo = document.createElement('span');
     capValueInfo.classList.add('info-tooltip-icon');
     capValueInfo.innerHTML = '&#9432;';
-    capValueInfo.title = 'Accepts scientific notation. Percent caps clamp to 0-100.';
+    capValueInfo.title = localizeProjectsText(
+      'projectsTab.projects.spaceStorage.capValueTooltip',
+      null,
+      'Accepts scientific notation. Percent caps clamp to 0-100.'
+    );
     capValueLabel.appendChild(capValueInfo);
     capValueInput = document.createElement('input');
     capValueInput.type = 'text';
@@ -363,13 +386,17 @@ function renderSpaceStorageUI(project, container) {
     capClampButton = document.createElement('button');
     capClampButton.type = 'button';
     capClampButton.classList.add('space-storage-settings-clamp');
-    capClampButton.textContent = 'Delete Current Resources above Cap';
+    capClampButton.textContent = localizeProjectsText(
+      'projectsTab.projects.spaceStorage.deleteAboveCap',
+      null,
+      'Delete Current Resources above Cap'
+    );
     capClampRow.appendChild(capClampButton);
 
     const capConfirm = document.createElement('button');
     capConfirm.type = 'button';
     capConfirm.classList.add('space-storage-settings-confirm');
-    capConfirm.textContent = 'Confirm';
+    capConfirm.textContent = localizeProjectsText('projectsTab.labels.confirm', null, 'Confirm');
 
     capWindow.append(capHeader, capResourceRow, capModeRow, capValueRow, capClampRow, capConfirm);
     capOverlay.appendChild(capWindow);
@@ -389,7 +416,9 @@ function renderSpaceStorageUI(project, container) {
   const updateCapInputState = () => {
     const mode = capModeSelect.value;
     capValueInput.disabled = mode === 'none';
-    capValueLabel.firstChild.textContent = mode === 'percent' ? 'Cap %:' : 'Cap value:';
+    capValueLabel.firstChild.textContent = mode === 'percent'
+      ? localizeProjectsText('projectsTab.projects.spaceStorage.capPercent', null, 'Cap %:')
+      : localizeProjectsText('projectsTab.projects.spaceStorage.capValue', null, 'Cap value:');
     if (mode === 'none') {
       capValueInput.value = '';
       capValueInput.dataset.spaceStorageCap = '0';
@@ -486,7 +515,11 @@ function renderSpaceStorageUI(project, container) {
       biomassInfo = document.createElement('span');
       biomassInfo.classList.add('info-tooltip-icon');
       biomassInfo.innerHTML = '&#9432;';
-      biomassInfo.title = 'Storing biomass removes it from all zones proportionally to their current biomass. Withdrawing places biomass into zones that can grow it first, then zones where it can survive, then anywhere, weighted by zone percentage.';
+      biomassInfo.title = localizeProjectsText(
+        'projectsTab.projects.spaceStorage.biomassTooltip',
+        null,
+        'Storing biomass removes it from all zones proportionally to their current biomass. Withdrawing places biomass into zones that can grow it first, then zones where it can survive, then anywhere, weighted by zone percentage.'
+      );
     }
 
     const fullIcon = document.createElement('span');
@@ -507,7 +540,11 @@ function renderSpaceStorageUI(project, container) {
     const transferIcon = document.createElement('span');
     transferIcon.classList.add('storage-transfer-icon');
     transferButton.appendChild(transferIcon);
-    const transferTooltip = attachDynamicInfoTooltip(transferButton, 'Store in space storage', false);
+    const transferTooltip = attachDynamicInfoTooltip(
+      transferButton,
+      localizeProjectsText('projectsTab.projects.spaceStorage.tooltipStore', null, 'Store in space storage'),
+      false
+    );
     transferButton.addEventListener('click', () => {
       const current = project.getResourceTransferMode(opt.resource);
       const next = current === 'withdraw' ? 'store' : 'withdraw';
@@ -520,7 +557,7 @@ function renderSpaceStorageUI(project, container) {
     capButton.type = 'button';
     capButton.classList.add('storage-cap-button');
     capButton.innerHTML = '&#9881;&#xFE0E;';
-    capButton.title = 'Space storage cap settings';
+    capButton.title = localizeProjectsText('projectsTab.projects.spaceStorage.capSettings', null, 'Space storage cap settings');
     capButton.addEventListener('click', () => {
       openCapWindow(opt.resource, opt.label);
     });
@@ -532,10 +569,10 @@ function renderSpaceStorageUI(project, container) {
       waterSelect.style.fontSize = '12px';
       const colonyOpt = document.createElement('option');
       colonyOpt.value = 'colony';
-      colonyOpt.textContent = 'Colony';
+      colonyOpt.textContent = localizeProjectsText('projectsTab.labels.colony', null, 'Colony');
       const surfaceOpt = document.createElement('option');
       surfaceOpt.value = 'surface';
-      surfaceOpt.textContent = 'Surface';
+      surfaceOpt.textContent = localizeProjectsText('projectsTab.labels.surface', null, 'Surface');
       waterSelect.append(colonyOpt, surfaceOpt);
       waterSelect.addEventListener('change', e => {
         project.waterWithdrawTarget = e.target.value;
@@ -624,15 +661,15 @@ function renderSpaceStorageUI(project, container) {
   const modeContainer = document.createElement('div');
   modeContainer.classList.add('mode-selection');
   const modeLabel = document.createElement('span');
-  modeLabel.textContent = 'Mode:';
+  modeLabel.textContent = localizeProjectsText('projectsTab.labels.mode', null, 'Mode:');
   const withdrawButton = document.createElement('button');
-  withdrawButton.textContent = 'Withdraw';
+  withdrawButton.textContent = localizeProjectsText('projectsTab.labels.withdraw', null, 'Withdraw');
   withdrawButton.classList.add('mode-button');
   const mixedButton = document.createElement('button');
-  mixedButton.textContent = 'Mixed';
+  mixedButton.textContent = localizeProjectsText('projectsTab.labels.mixed', null, 'Mixed');
   mixedButton.classList.add('mode-button');
   const storeButton = document.createElement('button');
-  storeButton.textContent = 'Store';
+  storeButton.textContent = localizeProjectsText('projectsTab.labels.store', null, 'Store');
   storeButton.classList.add('mode-button');
 
   const updateModeButtons = () => {
@@ -714,7 +751,7 @@ function updateSpaceStorageUI(project) {
   const els = projectElements[project.name];
   if (!els) return;
   if (els.autoStartLabel) {
-    els.autoStartLabel.textContent = 'Auto Start Expansion';
+    els.autoStartLabel.textContent = localizeProjectsText('projectsTab.projects.spaceStorage.autoStartExpansion', null, 'Auto Start Expansion');
   }
   if (els.shipAutoStartContainer && els.prioritizeRowContainer) {
     const display = projectManager && typeof projectManager.isBooleanFlagSet === 'function' &&
@@ -724,8 +761,8 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipAutoStartLabel) {
     els.shipAutoStartLabel.textContent = project.isShipOperationContinuous()
-      ? 'Run'
-      : 'Auto Start Ships';
+      ? localizeProjectsText('projectsTab.card.run', null, 'Run')
+      : localizeProjectsText('projectsTab.projects.spaceStorage.autoStartShips', null, 'Auto Start Ships');
   }
   if (els.usedDisplay) {
     els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 2);
@@ -747,7 +784,11 @@ function updateSpaceStorageUI(project) {
   }
   if (els.expansionRateDisplay) {
     const rate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
-    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} expansions/s`;
+    els.expansionRateDisplay.textContent = localizeProjectsText(
+      'projectsTab.projects.spaceStorage.expansionsPerSecondValue',
+      { value: formatNumber(rate, true, 3) },
+      `${formatNumber(rate, true, 3)} expansions/s`
+    );
   }
   if (els.usageCells) {
     storageResourceOptions.forEach(opt => {
@@ -806,12 +847,20 @@ function updateSpaceStorageUI(project) {
         icon.innerHTML = '&#8595;&#xFE0E;';
         button.classList.add('withdraw');
         button.classList.remove('store');
-        tooltip.textContent = 'Withdraw from space storage';
+        tooltip.textContent = localizeProjectsText(
+          'projectsTab.projects.spaceStorage.tooltipWithdraw',
+          null,
+          'Withdraw from space storage'
+        );
       } else {
         icon.innerHTML = '&#8593;&#xFE0E;';
         button.classList.add('store');
         button.classList.remove('withdraw');
-        tooltip.textContent = 'Store in space storage';
+        tooltip.textContent = localizeProjectsText(
+          'projectsTab.projects.spaceStorage.tooltipStore',
+          null,
+          'Store in space storage'
+        );
       }
     });
   }
@@ -875,12 +924,12 @@ function updateSpaceStorageUI(project) {
     els.updateModeButtons();
   }
   if (els.shipProgressButton) {
-    if (project.isShipOperationContinuous()) {
-      if (project.shipOperationAutoStart) {
-        els.shipProgressButton.textContent = 'Continuous';
+      if (project.isShipOperationContinuous()) {
+        if (project.shipOperationAutoStart) {
+        els.shipProgressButton.textContent = localizeProjectsText('projectsTab.status.continuousNoSuffix', null, 'Continuous');
         els.shipProgressButton.style.background = '#4caf50';
       } else {
-        els.shipProgressButton.textContent = 'Stopped';
+        els.shipProgressButton.textContent = localizeProjectsText('projectsTab.status.stopped', null, 'Stopped');
         els.shipProgressButton.style.background = '#f44336';
       }
     } else {
@@ -888,16 +937,32 @@ function updateSpaceStorageUI(project) {
       const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
       if (project.shipOperationIsActive) {
         const progressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
-        els.shipProgressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent.toFixed(2)}%)`;
+        els.shipProgressButton.textContent = localizeProjectsText(
+          'projectsTab.status.inProgressPercent',
+          { seconds: timeRemaining, percent: progressPercent.toFixed(2) },
+          `In Progress: ${timeRemaining} seconds remaining (${progressPercent.toFixed(2)}%)`
+        );
         els.shipProgressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
       } else if (project.shipOperationIsPaused) {
-        els.shipProgressButton.textContent = `Resume ship transfers (${timeRemaining}s left)`;
+        els.shipProgressButton.textContent = localizeProjectsText(
+          'projectsTab.projects.spaceStorage.resumeTransfers',
+          { seconds: timeRemaining },
+          `Resume ship transfers (${timeRemaining}s left)`
+        );
         els.shipProgressButton.style.background = project.canStartShipOperation() ? '#4caf50' : '#f44336';
       } else if (project.canStartShipOperation && project.canStartShipOperation()) {
-        els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+        els.shipProgressButton.textContent = localizeProjectsText(
+          'projectsTab.projects.spaceStorage.startTransfers',
+          { seconds: (duration / 1000).toFixed(2) },
+          `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`
+        );
         els.shipProgressButton.style.background = '#4caf50';
       } else {
-        els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+        els.shipProgressButton.textContent = localizeProjectsText(
+          'projectsTab.projects.spaceStorage.startTransfers',
+          { seconds: (duration / 1000).toFixed(2) },
+          `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`
+        );
         els.shipProgressButton.style.background = '#f44336';
       }
     }

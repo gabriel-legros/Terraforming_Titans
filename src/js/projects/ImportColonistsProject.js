@@ -58,7 +58,7 @@ class ImportColonistsProject extends Project {
     wrapper.appendChild(select);
 
     const separator = document.createElement('span');
-    separator.textContent = ': ';
+    separator.textContent = localizeProjectsText('projectsTab.labels.separator', null, ': ');
     wrapper.appendChild(separator);
 
     const amount = document.createElement('span');
@@ -68,7 +68,11 @@ class ImportColonistsProject extends Project {
     const crusaderTooltip = document.createElement('span');
     crusaderTooltip.classList.add('info-tooltip-icon');
     crusaderTooltip.innerHTML = '&#9432;';
-    crusaderTooltip.title = 'Crusaders do not grow or produce research, but can eliminate hazardous biomass.';
+    crusaderTooltip.title = localizeProjectsText(
+      'projectsTab.projects.importColonists.crusaderTooltip',
+      null,
+      'Crusaders do not grow or produce research, but can eliminate hazardous biomass.'
+    );
     crusaderTooltip.style.display = 'none';
     crusaderTooltip.style.marginLeft = '4px';
     wrapper.appendChild(crusaderTooltip);

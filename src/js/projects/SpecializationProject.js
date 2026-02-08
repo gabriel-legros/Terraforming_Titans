@@ -173,7 +173,7 @@
       const potentialGroup = document.createElement('div');
       potentialGroup.classList.add('bioworld-shop-meta');
       const potentialLabel = document.createElement('span');
-      potentialLabel.textContent = 'Potential Points:';
+      potentialLabel.textContent = localizeProjectsText('projectsTab.projects.specialization.potentialPoints', null, 'Potential Points:');
       const potentialValue = document.createElement('span');
       potentialValue.classList.add('bioworld-shop-points');
       potentialGroup.append(potentialLabel, potentialValue);
@@ -214,7 +214,7 @@
 
         const button = document.createElement('button');
         button.classList.add('bioworld-shop-button');
-        button.textContent = 'Buy';
+        button.textContent = localizeProjectsText('projectsTab.labels.buy', null, 'Buy');
         button.addEventListener('click', () => this.purchaseUpgrade(item.id));
 
         const metaRow = document.createElement('div');
