@@ -1,16 +1,5 @@
 const ENERGY_PER_ANTIMATTER = 2_000_000_000_000_000;
 
-function localizeAntimatterBatteryText(key, vars, fallback) {
-  if (typeof t !== 'function') {
-    return fallback || key;
-  }
-  const resolved = t(key, vars);
-  if (resolved === key) {
-    return fallback || key;
-  }
-  return resolved;
-}
-
 let exportedAntimatterHelpers = null;
 if (
   typeof window === 'undefined' &&
@@ -40,11 +29,7 @@ class AntimatterBattery extends Building {
     let { fillButton } = cache;
     if (!fillButton) {
       fillButton = globalThis.document.createElement('button');
-      fillButton.textContent = localizeAntimatterBatteryText(
-        'buildingsTab.modules.antimatterBattery.fill',
-        null,
-        'Fill'
-      );
+      fillButton.textContent = 'Fill';
       fillButton.classList.add('fill-button');
       cache.fillButton = fillButton;
     }
@@ -84,11 +69,6 @@ class AntimatterBattery extends Building {
       antimatter.value <= 0 ||
       missingEnergy <= 0 ||
       energyPerAntimatter <= 0;
-    button.textContent = localizeAntimatterBatteryText(
-      'buildingsTab.modules.antimatterBattery.fill',
-      null,
-      'Fill'
-    );
     button.style.display = this.unlocked && !this.isHidden ? 'inline-block' : 'none';
   }
 

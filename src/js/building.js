@@ -54,8 +54,8 @@ class Building extends EffectableEntity {
     return true;
   }
 
-  // Method to initialize configurable properties
-  initializeFromConfig(config, buildingName) {
+    // Method to initialize configurable properties
+    initializeFromConfig(config, buildingName) {
       const {
         name,
         category,
@@ -87,11 +87,9 @@ class Building extends EffectableEntity {
       } = config;
   
       this.name = buildingName;
-      this._baseDisplayName = name;
-      this._baseDescription = description;
-      this.displayName = this.getLocalizedParameterText('name', name);
+      this.displayName = name;
       this.category = category;
-      this.description = this.getLocalizedParameterText('description', description);
+      this.description = description;
       this.cost = cost;
       this.consumption = consumption;
       this.production = production;
@@ -132,22 +130,6 @@ class Building extends EffectableEntity {
 
       this.updateResourceStorage();
     }
-
-  getLocalizedParameterText(path, fallback, vars) {
-    const key = `buildingsParameters.${this.name}.${path}`;
-    const resolved = t(key, vars);
-    return resolved === key ? fallback : resolved;
-  }
-
-  getLocalizedRecipeText(recipeKey, field, fallback, vars) {
-    return this.getLocalizedParameterText(`recipes.${recipeKey}.${field}`, fallback, vars);
-  }
-
-  refreshLocalizedText() {
-    this.displayName = this.getLocalizedParameterText('name', this._baseDisplayName);
-    this.description = this.getLocalizedParameterText('description', this._baseDescription);
-    this._applyRecipeMapping();
-  }
 
   getBuildLimit() {
     let limit = Infinity;
@@ -227,7 +209,6 @@ class Building extends EffectableEntity {
   _applyRecipeMapping() {
     if (!this.recipes || !this.currentRecipeKey) return;
     const recipe = this.recipes[this.currentRecipeKey] || {};
-    this.displayName = this.getLocalizedParameterText('name', this._baseDisplayName);
     // Keep base energy/material consumption separate
     this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
     // Apply production from current recipe
@@ -235,11 +216,7 @@ class Building extends EffectableEntity {
       this.production = JSON.parse(JSON.stringify(recipe.production));
     }
     if (recipe.displayName) {
-      this.displayName = this.getLocalizedRecipeText(
-        this.currentRecipeKey,
-        'displayName',
-        recipe.displayName
-      );
+      this.displayName = recipe.displayName;
     }
   }
 
@@ -1314,24 +1291,8 @@ function initializeBuildings(buildingsParameters) {
     const Ctor = loadConstructor(buildingName);
     buildings[buildingName] = new Ctor(buildingConfig, buildingName);
   }
-  refreshBuildingLocalization(buildings);
   initializeBuildingTabs();
   return buildings;
-}
-
-function refreshBuildingLocalization(buildingCollection) {
-  for (const buildingName in buildingCollection) {
-    buildingCollection[buildingName].refreshLocalizedText();
-  }
-}
-
-if (typeof document !== 'undefined' && document.addEventListener) {
-  document.addEventListener('languageChanged', () => {
-    refreshBuildingLocalization(buildings);
-    if (typeof updateBuildingDisplay === 'function') {
-      updateBuildingDisplay(buildings);
-    }
-  });
 }
 
 if (typeof module !== "undefined" && module.exports) {

@@ -3,86 +3,6 @@
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
 
-function localizeBuildingsTabText(key, vars, fallback) {
-  if (typeof t !== 'function') {
-    return fallback || key;
-  }
-  const resolved = t(key, vars);
-  if (resolved === key) {
-    return fallback || key;
-  }
-  return resolved;
-}
-
-function getLocalizedBuildingParameterText(buildingId, field, fallback) {
-  if (typeof t !== 'function') {
-    return fallback || '';
-  }
-  const key = `buildingsParameters.${buildingId}.${field}`;
-  const resolved = t(key);
-  return resolved === key ? (fallback || '') : resolved;
-}
-
-function getLocalizedStructureDisplayName(structure) {
-  if (!structure) return '';
-  const recipeKey = structure.currentRecipeKey;
-  const recipe = structure.recipes && recipeKey ? structure.recipes[recipeKey] : null;
-  if (recipe && recipe.displayName) {
-    return getLocalizedBuildingParameterText(
-      structure.name,
-      `recipes.${recipeKey}.displayName`,
-      recipe.displayName
-    );
-  }
-  return getLocalizedBuildingParameterText(
-    structure.name,
-    'name',
-    structure.displayName || structure.name
-  );
-}
-
-function formatBuildingCategoryLabel(category) {
-  const normalized = `${category || ''}`;
-  if (!normalized) return '';
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-}
-
-function getLocalizedBuildingCategoryLabel(category) {
-  const fallback = formatBuildingCategoryLabel(category);
-  return localizeBuildingsTabText(`buildingsTab.subtabs.categories.${category}`, null, fallback);
-}
-
-function getLocalizedAutoBuildBasisLabel(basis, displayName) {
-  if (basis === 'fill') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.fill', null, '% filled');
-  }
-  if (basis === 'population') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.population', null, '% of pop');
-  }
-  if (basis === 'workers') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.workers', null, '% of workers');
-  }
-  if (basis === 'workerShare') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.workerShare', null, '% worker share');
-  }
-  if (basis === 'landShare') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.landShare', null, '% land share');
-  }
-  if (basis === 'initialLand') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.initialLand', null, '% initial land');
-  }
-  if (basis === 'fixed') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.fixed', null, 'Fixed');
-  }
-  if (basis === 'max') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.max', null, 'Max');
-  }
-  if (basis === 'building') {
-    return localizeBuildingsTabText('buildingsTab.autoBuild.basis.ofBuilding', { name: displayName }, `% of ${displayName}`);
-  }
-  return displayName || basis;
-}
-
 function getManualBuildCount(structure, buildCount) {
   if (!gameSettings.roundBuildingConstruction || structure.autoBuildEnabled) {
     return buildCount;
@@ -99,7 +19,7 @@ function swapResourceRateColor(resource, color) {
 // Helper function to get all unique building categories from buildings-parameters.js
 function getBuildingCategories() {
   if (typeof buildingsParameters === 'undefined') {
-    return ['resource', 'production', 'energy', 'storage', 'terraforming', 'waste'];
+    return ['resource', 'production', 'energy', 'storage', 'terraforming'];
   }
   const categories = new Set();
   for (const buildingName in buildingsParameters) {
@@ -262,21 +182,11 @@ function refreshAutoBuildTarget(structure) {
           : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
 
   if (els.autoBuildTarget) {
-    const fillPercentText = formatNumber(structure.autoBuildFillPercent || 0, true);
-    const targetCountText = formatNumber(targetCount, true);
     const targetText = autoBuildUsesFill
-      ? localizeBuildingsTabText(
-        'buildingsTab.autoBuild.target.maxFill',
-        { percent: fillPercentText },
-        `Max fill : ${fillPercentText}%`
-      )
+      ? `Max fill : ${formatNumber(structure.autoBuildFillPercent || 0, true)}%`
       : autoBuildUsesMax
-        ? localizeBuildingsTabText('buildingsTab.autoBuild.target.max', null, 'Target : Max')
-        : localizeBuildingsTabText(
-          'buildingsTab.autoBuild.target.count',
-          { value: targetCountText },
-          `Target : ${targetCountText}`
-        );
+        ? 'Target : Max'
+        : `Target : ${formatNumber(targetCount, true)}`;
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
     }
@@ -427,29 +337,6 @@ function resolveAutoBuildBasisValue(structure, select) {
   }
   structure.autoBuildBasis = defaultBasis;
   return defaultBasis;
-}
-
-function updateAutoBuildBasisOptionLabels(structure, select) {
-  if (!select || !select.options) return;
-  for (let i = 0; i < select.options.length; i += 1) {
-    const option = select.options[i];
-    const value = option.value || '';
-    if (value.startsWith('building:')) {
-      const buildingId = value.slice(9);
-      const displayName = buildings[buildingId]
-        ? getLocalizedStructureDisplayName(buildings[buildingId])
-        : buildingId;
-      const text = getLocalizedAutoBuildBasisLabel('building', displayName);
-      if (option.textContent !== text) {
-        option.textContent = text;
-      }
-      continue;
-    }
-    const text = getLocalizedAutoBuildBasisLabel(value);
-    if (option.textContent !== text) {
-      option.textContent = text;
-    }
-  }
 }
 
 function updateAutoBuildInputState(structure, basisSelect, input) {
@@ -655,17 +542,13 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   button.classList.add('building-button', 'building-header-button');
   // Initial button text with a dedicated span for the build count to keep width stable
   button.textContent = '';
-  const buildPrefixNode = document.createTextNode(
-    `${localizeBuildingsTabText('buildingsTab.card.build', null, 'Build')} `
-  );
-  button.appendChild(buildPrefixNode);
+  button.append('Build ');
   const countSpan = document.createElement('span');
   countSpan.classList.add('build-button-count');
   countSpan.textContent = '1';
   button.appendChild(countSpan);
   button._countSpan = countSpan;
-  button._buildPrefixNode = buildPrefixNode;
-  const nameNode = document.createTextNode(` ${getLocalizedStructureDisplayName(structure)}`);
+  const nameNode = document.createTextNode(` ${structure.displayName}`);
   button.appendChild(nameNode);
   button.buttonNameNode = nameNode;
 
@@ -779,12 +662,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   });
 
   autoBuildHeaderLabel.appendChild(autoBuildCheckbox);
-  const autoBuildHeaderTextNode = document.createTextNode(
-    localizeBuildingsTabText('buildingsTab.card.autoBuild', null, 'Auto-build')
-  );
-  autoBuildHeaderLabel.appendChild(autoBuildHeaderTextNode);
+  autoBuildHeaderLabel.appendChild(document.createTextNode('Auto-build'));
   autoBuildHeaderContainer.appendChild(autoBuildHeaderLabel);
-  cached.autoBuildHeaderTextNode = autoBuildHeaderTextNode;
 
   const autoBuildInput = document.createElement('input');
   autoBuildInput.type = 'text';
@@ -830,53 +709,52 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   if (structure.autoBuildFillEnabled) {
     const fillOption = document.createElement('option');
     fillOption.value = 'fill';
-    fillOption.textContent = getLocalizedAutoBuildBasisLabel('fill');
+    fillOption.textContent = '% filled';
     autoBuildBasisSelect.appendChild(fillOption);
   }
   const popOption = document.createElement('option');
   popOption.value = 'population';
-  popOption.textContent = getLocalizedAutoBuildBasisLabel('population');
+  popOption.textContent = '% of pop';
   autoBuildBasisSelect.appendChild(popOption);
   const workerOption = document.createElement('option');
   workerOption.value = 'workers';
-  workerOption.textContent = getLocalizedAutoBuildBasisLabel('workers');
+  workerOption.textContent = '% of workers';
   autoBuildBasisSelect.appendChild(workerOption);
   if (structure.requiresWorker > 0) {
     const shareOption = document.createElement('option');
     shareOption.value = 'workerShare';
-    shareOption.textContent = getLocalizedAutoBuildBasisLabel('workerShare');
+    shareOption.textContent = '% worker share';
     autoBuildBasisSelect.appendChild(shareOption);
   }
   if (structure.requiresLand > 0) {
     const landOption = document.createElement('option');
     landOption.value = 'landShare';
-    landOption.textContent = getLocalizedAutoBuildBasisLabel('landShare');
+    landOption.textContent = '% land share';
     autoBuildBasisSelect.appendChild(landOption);
   }
   const initialLandOption = document.createElement('option');
   initialLandOption.value = 'initialLand';
-  initialLandOption.textContent = getLocalizedAutoBuildBasisLabel('initialLand');
+  initialLandOption.textContent = '% initial land';
   autoBuildBasisSelect.appendChild(initialLandOption);
   const fixedOption = document.createElement('option');
   fixedOption.value = 'fixed';
-  fixedOption.textContent = getLocalizedAutoBuildBasisLabel('fixed');
+  fixedOption.textContent = 'Fixed';
   autoBuildBasisSelect.appendChild(fixedOption);
   if (Array.isArray(structure.automationBuildingsDropDown)) {
     structure.automationBuildingsDropDown.forEach(name => {
       const option = document.createElement('option');
       option.value = `building:${name}`;
-      const displayName = buildings[name] ? getLocalizedStructureDisplayName(buildings[name]) : name;
-      option.textContent = getLocalizedAutoBuildBasisLabel('building', displayName);
+      const displayName = (buildings[name] && buildings[name].displayName) || name;
+      option.textContent = `% of ${displayName}`;
       autoBuildBasisSelect.appendChild(option);
     });
   }
   if (structure.autoBuildMaxOption) {
     const maxOption = document.createElement('option');
     maxOption.value = 'max';
-    maxOption.textContent = getLocalizedAutoBuildBasisLabel('max');
+    maxOption.textContent = 'Max';
     autoBuildBasisSelect.appendChild(maxOption);
   }
-  updateAutoBuildBasisOptionLabels(structure, autoBuildBasisSelect);
   autoBuildBasisSelect.value = resolveAutoBuildBasisValue(structure, autoBuildBasisSelect);
 
   autoBuildHeaderContainer.appendChild(autoBuildInput);
@@ -889,9 +767,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const controlsLabel = document.createElement('div');
   controlsLabel.classList.add('building-controls-label');
-  controlsLabel.textContent = localizeBuildingsTabText('buildingsTab.card.controls', null, 'Controls');
+  controlsLabel.textContent = 'Controls';
   controlsColumn.appendChild(controlsLabel);
-  cached.controlsLabel = controlsLabel;
 
   const customControlsContainer = document.createElement('div');
   customControlsContainer.classList.add('building-custom-controls');
@@ -914,7 +791,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const hideButton = document.createElement('button');
   hideButton.classList.add('hide-button');
-  hideButton.textContent = localizeBuildingsTabText('buildingsTab.card.hide', null, 'Hide');
+  hideButton.textContent = 'Hide';
   hideButton.addEventListener('click', function () {
     structure.isHidden = true;
     disableStructureAutomations(structure, isColony);
@@ -962,7 +839,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const reverseInlineBtn = document.createElement('button');
   reverseInlineBtn.classList.add('reverse-button');
   reverseInlineBtn.id = `${structure.name}-reverse-button`;
-  reverseInlineBtn.textContent = localizeBuildingsTabText('buildingsTab.card.reverse', null, 'Reverse');
+  reverseInlineBtn.textContent = 'Reverse';
   reverseInlineBtn.style.display = structure.reversalAvailable ? 'inline-block' : 'none';
   reverseInlineBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1019,21 +896,16 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   constructedCountElement.classList.add('constructed-count');
   constructedCountElement.classList.add('small-text'); // Add the 'small-text' class
 
-  const constructedLabel = localizeBuildingsTabText('buildingsTab.card.constructed', null, 'Constructed');
-  const constructedLabelElement = document.createElement('strong');
-  constructedLabelElement.textContent = `${constructedLabel}:`;
-  constructedCountElement.appendChild(constructedLabelElement);
-  constructedCountElement.appendChild(document.createTextNode(' '));
-  const constructedValueElement = document.createElement('span');
+
   if (structure.canBeToggled) {
-    constructedValueElement.id = `${structure.name}-count-active`;
-    constructedValueElement.textContent = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
+    constructedCountElement.innerHTML = `
+      <strong>Constructed:</strong> <span id="${structure.name}-count-active">${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}</span>
+    `;
   } else {
-    constructedValueElement.id = `${structure.name}-count`;
-    constructedValueElement.textContent = `${formatBuildingCount(structure.count)}`;
+    constructedCountElement.innerHTML = `
+      <strong>Constructed:</strong> <span id="${structure.name}-count">${formatBuildingCount(structure.count)}</span>
+    `;
   }
-  constructedCountElement.appendChild(constructedValueElement);
-  cached.constructedLabelElement = constructedLabelElement;
 
   constructedInfo.appendChild(constructedCountElement);
 
@@ -1043,12 +915,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     productivityContainer.classList.add('productivity-container');
 
     const productivityLabel = document.createElement('span');
-    const productivityLabelStrong = document.createElement('strong');
-    productivityLabelStrong.textContent = `${localizeBuildingsTabText('buildingsTab.card.productivity', null, 'Productivity')}:`;
-    productivityLabel.appendChild(productivityLabelStrong);
-    productivityLabel.appendChild(document.createTextNode(' '));
+    productivityLabel.innerHTML = `<strong>Productivity:</strong> `;
     productivityContainer.appendChild(productivityLabel);
-    cached.productivityLabelStrong = productivityLabelStrong;
 
     const productivityValue = document.createElement('span');
     productivityValue.id = `${structure.name}-productivity`;
@@ -1059,11 +927,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       const warning = document.createElement('span');
       warning.id = `${structure.name}-life-warning`;
       warning.classList.add('biodome-life-warning');
-      warning.textContent = localizeBuildingsTabText(
-        'buildingsTab.card.biodomeLifeWarning',
-        null,
-        '⚠ Requires Active Life Design ⚠'
-      );
+      warning.textContent = '⚠ Requires Active Life Design ⚠';
       warning.style.display = 'none';
       productivityContainer.appendChild(warning);
       structureUIElements[structure.name] = structureUIElements[structure.name] || {};
@@ -1087,11 +951,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const description = document.createElement('p');
   description.classList.add('building-description');
-  description.textContent = getLocalizedBuildingParameterText(
-    structure.name,
-    'description',
-    structure.description
-  );
+  description.textContent = structure.description;
   structureRow.appendChild(description);
   cached.descriptionElement = description;
 
@@ -1112,8 +972,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
   const autoBuildPriorityLabel = document.createElement('label');
   autoBuildPriorityLabel.classList.add('auto-build-priority-label');
-  autoBuildPriorityLabel.textContent = localizeBuildingsTabText('buildingsTab.card.priority', null, 'Priority : ');
-  cached.autoBuildPriorityLabel = autoBuildPriorityLabel;
+  autoBuildPriorityLabel.textContent = 'Priority : ';
   const priorityContainer = document.createElement('span');
   priorityContainer.classList.add('worker-priority-container');
   const priorityUp = document.createElement('span');
@@ -1179,7 +1038,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const autoBuildTarget = document.createElement('span');
   autoBuildTarget.classList.add('auto-build-target');
   autoBuildTarget.id = `${structure.name}-auto-build-target`;
-  autoBuildTarget.textContent = localizeBuildingsTabText('buildingsTab.autoBuild.target.count', { value: '0' }, 'Target : 0');
+  autoBuildTarget.textContent = 'Target : 0';
   cached.autoBuildTarget = autoBuildTarget;
   autoBuildTargetContainer.appendChild(autoBuildTarget);
 
@@ -1189,8 +1048,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   setActiveButton.classList.add('auto-build-setactive-button');
 
   const setActiveLabel = document.createElement('span');
-  setActiveLabel.textContent = localizeBuildingsTabText('buildingsTab.card.setActiveToTarget', null, 'Set active to target');
-  cached.setActiveLabel = setActiveLabel;
+  setActiveLabel.textContent = 'Set active to target';
 
   const autoActiveCheckbox = document.createElement('input');
   autoActiveCheckbox.type = 'checkbox';
@@ -1269,8 +1127,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const setTargetButton = document.createElement('button');
   setTargetButton.id = `${structure.name}-set-target-button`;
   setTargetButton.classList.add('auto-build-setactive-button');
-  setTargetButton.textContent = localizeBuildingsTabText('buildingsTab.card.setTargetToActive', null, 'Set Target to Active');
-  cached.setTargetButton = setTargetButton;
+  setTargetButton.textContent = 'Set Target to Active';
 
   setTargetButtonContainer.appendChild(setTargetButton);
 
@@ -1431,10 +1288,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     });
 
     autoUpgradeContainer.appendChild(autoUpgradeCheckbox);
-    autoUpgradeContainer.appendChild(
-      document.createTextNode(localizeBuildingsTabText('buildingsTab.card.autoUpgrade', null, 'Auto-upgrade'))
-    );
-    cached.autoUpgradeLabelNode = autoUpgradeContainer.lastChild;
+    autoUpgradeContainer.appendChild(document.createTextNode('Auto-upgrade'));
 
     structureUIElements[structure.name].autoUpgradeCheckbox = autoUpgradeCheckbox;
     structureUIElements[structure.name].autoUpgradeContainer = autoUpgradeContainer;
@@ -1445,22 +1299,22 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     autoBuildFillContainer = document.createElement('div');
     autoBuildFillContainer.classList.add('auto-build-fill-container');
 
-    const buildFillSelect = (labelKey, fallbackLabel, defaultValue) => {
+    const buildFillSelect = (labelText, defaultValue) => {
       const wrapper = document.createElement('label');
       wrapper.classList.add('auto-build-fill-select');
       const label = document.createElement('span');
-      label.textContent = localizeBuildingsTabText(labelKey, null, fallbackLabel);
+      label.textContent = labelText;
       const select = document.createElement('select');
       select.classList.add('auto-build-fill-dropdown');
 
       const anyOption = document.createElement('option');
       anyOption.value = 'any';
-      anyOption.textContent = localizeBuildingsTabText('buildingsTab.autoBuild.fillFilters.any', null, 'Any');
+      anyOption.textContent = 'Any';
       select.appendChild(anyOption);
 
       const noneOption = document.createElement('option');
       noneOption.value = 'none';
-      noneOption.textContent = localizeBuildingsTabText('buildingsTab.autoBuild.fillFilters.none', null, 'None');
+      noneOption.textContent = 'None';
       select.appendChild(noneOption);
 
       for (const category in structure.storage) {
@@ -1477,19 +1331,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       select.value = defaultValue;
       wrapper.appendChild(label);
       wrapper.appendChild(select);
-      return { wrapper, select, label, anyOption, noneOption };
+      return { wrapper, select };
     };
 
-    const primarySelect = buildFillSelect(
-      'buildingsTab.autoBuild.fillFilters.primary',
-      'Primary',
-      structure.autoBuildFillResourcePrimary || 'any'
-    );
-    const secondarySelect = buildFillSelect(
-      'buildingsTab.autoBuild.fillFilters.secondary',
-      'Secondary',
-      structure.autoBuildFillResourceSecondary || 'none'
-    );
+    const primarySelect = buildFillSelect('Primary', structure.autoBuildFillResourcePrimary || 'any');
+    const secondarySelect = buildFillSelect('Secondary', structure.autoBuildFillResourceSecondary || 'none');
 
     primarySelect.select.addEventListener('change', () => {
       structure.autoBuildFillResourcePrimary = primarySelect.select.value;
@@ -1508,12 +1354,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     cached.autoBuildFillContainer = autoBuildFillContainer;
     cached.autoBuildFillPrimary = primarySelect.select;
     cached.autoBuildFillSecondary = secondarySelect.select;
-    cached.autoBuildFillPrimaryLabel = primarySelect.label;
-    cached.autoBuildFillSecondaryLabel = secondarySelect.label;
-    cached.autoBuildFillPrimaryAnyOption = primarySelect.anyOption;
-    cached.autoBuildFillPrimaryNoneOption = primarySelect.noneOption;
-    cached.autoBuildFillSecondaryAnyOption = secondarySelect.anyOption;
-    cached.autoBuildFillSecondaryNoneOption = secondarySelect.noneOption;
   }
 
   if (autoUpgradeContainer) {
@@ -1620,8 +1460,7 @@ function createStructureControls(structure, toggleCallback) {
     structureControls.appendChild(increaseButton);
 
     maxButton = document.createElement('button');
-    maxButton.id = `${structure.name}-max-button`;
-    maxButton.textContent = localizeBuildingsTabText('buildingsTab.autoBuild.basis.max', null, 'Max');
+    maxButton.textContent = 'Max';
     maxButton.addEventListener('click', function () {
       toggleCallback(structure, structure.count - structure.active);
       disableAutoActive(structure);
@@ -1657,10 +1496,7 @@ function updateDecreaseButtonText(button, buildCount) {
     // Rebuild the button label structure if expected nodes are missing
     if (!countSpan || !button.buttonNameNode) {
       button.textContent = '';
-      const buildPrefixNode = document.createTextNode(
-        `${localizeBuildingsTabText('buildingsTab.card.build', null, 'Build')} `
-      );
-      button.appendChild(buildPrefixNode);
+      button.append('Build ');
       countSpan = document.createElement('span');
       countSpan.classList.add('build-button-count');
       button.appendChild(countSpan);
@@ -1668,19 +1504,13 @@ function updateDecreaseButtonText(button, buildCount) {
       button.appendChild(nameNodeNew);
       button.buttonNameNode = nameNodeNew;
       button._countSpan = countSpan;
-      button._buildPrefixNode = buildPrefixNode;
-    } else if (button._buildPrefixNode) {
-      const prefixText = `${localizeBuildingsTabText('buildingsTab.card.build', null, 'Build')} `;
-      if (button._buildPrefixNode.nodeValue !== prefixText) {
-        button._buildPrefixNode.nodeValue = prefixText;
-      }
     }
     if (countSpan.textContent !== newCount) {
       countSpan.textContent = newCount;
     }
 
     const nameNode = button.buttonNameNode;
-    const desiredName = ` ${getLocalizedStructureDisplayName(structure)}`;
+    const desiredName = ` ${structure.displayName}`;
     if (nameNode.textContent !== desiredName) {
       nameNode.textContent = desiredName;
     }
@@ -1731,7 +1561,7 @@ function updateDecreaseButtonText(button, buildCount) {
       button.dataset.keys = keyString;
       button.dataset.amount = amountString;
       button.textContent = '';
-      button.append(`${localizeBuildingsTabText('buildingsTab.card.upgrade', null, 'Upgrade')} `);
+      button.append('Upgrade ');
       button.append(`${formatNumber(amount, true)} \u2192 ${formatNumber(upgradeCount, true)} `);
       list = document.createElement('span');
       button.appendChild(list);
@@ -1770,14 +1600,12 @@ function updateDecreaseButtonText(button, buildCount) {
     if (!id.startsWith('rwg-')) return null;
     const type = id.slice(4).replace(/-/g, ' ');
     const name = type.replace(/\b\w/g, char => char.toUpperCase());
-    return name
-      ? localizeBuildingsTabText('buildingsTab.tooltips.randomWorldNamed', { name }, `Random World: ${name}`)
-      : localizeBuildingsTabText('buildingsTab.tooltips.randomWorld', null, 'Random World');
+    return name ? `Random World: ${name}` : 'Random World';
   }
 
   function resolveCostMultiplierSourceName(effect) {
     if (effect.sourceId === 'wgcRD') {
-      return localizeBuildingsTabText('buildingsTab.tooltips.wgcRD', null, 'Warp Gate Command R&D');
+      return 'Warp Gate Command R&D';
     }
     const rwgName = formatRwgMultiplierSource(effect.sourceId);
     const skillName = skillManager?.skills?.[effect.sourceId]?.name;
@@ -1796,20 +1624,13 @@ function updateDecreaseButtonText(button, buildCount) {
       ?? colonies[effect.sourceId]?.name
       ?? rwgName
       ?? effect.effectId
-      ?? localizeBuildingsTabText('buildingsTab.tooltips.unknownEffect', null, 'Unknown effect');
+      ?? 'Unknown effect';
   }
 
   function buildStructureCostTooltip(structure, category, resource, buildCount) {
     const baseCost = structure.cost?.[category]?.[resource] ?? 0;
     const totalBaseCost = baseCost * buildCount;
-    const baseCostText = formatNumber(totalBaseCost, true);
-    const lines = [
-      localizeBuildingsTabText(
-        'buildingsTab.tooltips.baseCost',
-        { value: baseCostText },
-        `Base cost: ${baseCostText}`
-      )
-    ];
+    const lines = [`Base cost: ${formatNumber(totalBaseCost, true)}`];
     const multipliers = [];
     const kesslerMultiplier = structure.getKesslerCostMultiplier();
 
@@ -1835,12 +1656,12 @@ function updateDecreaseButtonText(button, buildCount) {
     });
 
     if (multipliers.length) {
-      lines.push(localizeBuildingsTabText('buildingsTab.tooltips.multipliers', null, 'Multipliers:'));
+      lines.push('Multipliers:');
       multipliers.forEach(multiplier => {
         lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
       });
     } else {
-      lines.push(localizeBuildingsTabText('buildingsTab.tooltips.multipliersNone', null, 'Multipliers: none'));
+      lines.push('Multipliers: none');
     }
 
     return lines.join('\n');
@@ -1850,19 +1671,9 @@ function updateDecreaseButtonText(button, buildCount) {
     const effectiveCost = structure.getEffectiveCost(buildCount);
     const totalBaseCost = effectiveCost?.colony?.[resource] ?? 0;
     const baseMaintenanceMultiplier = maintenanceFraction * structure.maintenanceFactor;
-    const baseCostText = formatNumber(totalBaseCost, true);
-    const baseMaintenanceText = `${baseMaintenanceMultiplier}`;
     const lines = [
-      localizeBuildingsTabText(
-        'buildingsTab.tooltips.baseCost',
-        { value: baseCostText },
-        `Base cost: ${baseCostText}`
-      ),
-      localizeBuildingsTabText(
-        'buildingsTab.tooltips.innateMaintenance',
-        { value: baseMaintenanceText },
-        `Innate maintenance multiplier: x${baseMaintenanceText}`
-      )
+      `Base cost: ${formatNumber(totalBaseCost, true)}`,
+      `Innate maintenance multiplier: x${baseMaintenanceMultiplier}`
     ];
     const multipliers = [];
 
@@ -1898,12 +1709,12 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     if (multipliers.length) {
-      lines.push(localizeBuildingsTabText('buildingsTab.tooltips.multipliers', null, 'Multipliers:'));
+      lines.push('Multipliers:');
       multipliers.forEach(multiplier => {
         lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
       });
     } else {
-      lines.push(localizeBuildingsTabText('buildingsTab.tooltips.multipliersNone', null, 'Multipliers: none'));
+      lines.push('Multipliers: none');
     }
 
     return lines.join('\n');
@@ -1912,14 +1723,7 @@ function updateDecreaseButtonText(button, buildCount) {
   function buildStructureProductionTooltip(structure, category, resource, buildCount) {
     const baseProduction = structure.production?.[category]?.[resource] ?? 0;
     const totalBaseProduction = baseProduction * buildCount;
-    const baseProductionText = formatNumber(totalBaseProduction, true, 2);
-    const lines = [
-      localizeBuildingsTabText(
-        'buildingsTab.tooltips.baseProduction',
-        { value: baseProductionText },
-        `Base production: ${baseProductionText}`
-      )
-    ];
+    const lines = [`Base production: ${formatNumber(totalBaseProduction, true, 2)}`];
     const multipliers = [];
 
     structure.activeEffects.forEach(effect => {
@@ -1942,12 +1746,12 @@ function updateDecreaseButtonText(button, buildCount) {
     });
 
     if (multipliers.length) {
-      lines.push(localizeBuildingsTabText('buildingsTab.tooltips.multipliers', null, 'Multipliers:'));
+      lines.push('Multipliers:');
       multipliers.forEach(multiplier => {
         lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
       });
     } else {
-      lines.push(localizeBuildingsTabText('buildingsTab.tooltips.multipliersNone', null, 'Multipliers: none'));
+      lines.push('Multipliers: none');
     }
 
     return lines.join('\n');
@@ -1956,23 +1760,9 @@ function updateDecreaseButtonText(button, buildCount) {
   function buildStructureWorkerTooltip(structure, buildCount) {
     const baseWorkers = structure.requiresWorker * buildCount;
     const addedWorkers = structure.getAddedWorkerNeed() * buildCount;
-    const baseWorkersText = formatNumber(baseWorkers, true);
-    const lines = [
-      localizeBuildingsTabText(
-        'buildingsTab.tooltips.baseWorkers',
-        { value: baseWorkersText },
-        `Base workers: ${baseWorkersText}`
-      )
-    ];
+    const lines = [`Base workers: ${formatNumber(baseWorkers, true)}`];
     if (addedWorkers > 0) {
-      const addedWorkersText = formatNumber(addedWorkers, true);
-      lines.push(
-        localizeBuildingsTabText(
-          'buildingsTab.tooltips.addedWorkers',
-          { value: addedWorkersText },
-          `Added workers: ${addedWorkersText}`
-        )
-      );
+      lines.push(`Added workers: ${formatNumber(addedWorkers, true)}`);
     }
     const multipliers = [];
 
@@ -1986,12 +1776,12 @@ function updateDecreaseButtonText(button, buildCount) {
     });
 
     if (multipliers.length) {
-      lines.push(localizeBuildingsTabText('buildingsTab.tooltips.multipliers', null, 'Multipliers:'));
+      lines.push('Multipliers:');
       multipliers.forEach(multiplier => {
         lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
       });
     } else {
-      lines.push(localizeBuildingsTabText('buildingsTab.tooltips.multipliersNone', null, 'Multipliers: none'));
+      lines.push('Multipliers: none');
     }
 
     return lines.join('\n');
@@ -2020,7 +1810,7 @@ function updateDecreaseButtonText(button, buildCount) {
     if (structure.getTotalWorkerNeed() > 0) {
       items.push({
         key: 'colony.workers',
-        label: localizeBuildingsTabText('buildingsTab.resources.workers', null, 'Workers'),
+        label: 'Workers',
         required: structure.getTotalWorkerNeed() * structure.getEffectiveWorkerMultiplier(),
         available: resources.colony.workers?.value || 0,
         insufficientColor: 'orange',
@@ -2032,7 +1822,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const requiredLand = structure.requiresLand * buildCount;
       items.push({
         key: 'colony.land',
-        label: localizeBuildingsTabText('buildingsTab.resources.land', null, 'Land'),
+        label: 'Land',
         required: structure.requiresLand,
         available: structure.canAffordLand(buildCount) ? requiredLand : 0,
         insufficientColor: 'red'
@@ -2043,7 +1833,7 @@ function updateDecreaseButtonText(button, buildCount) {
       const requiredDeposit = buildCount;
       items.push({
         key: 'deposit',
-        label: localizeBuildingsTabText('buildingsTab.resources.deposit', null, 'Deposit'),
+        label: 'Deposit',
         required: 1,
         available: structure.canAffordDeposit(buildCount) ? requiredDeposit : 0,
         insufficientColor: 'red'
@@ -2056,9 +1846,8 @@ function updateDecreaseButtonText(button, buildCount) {
       costElement.dataset.keys = keyString;
       costElement.textContent = '';
       const label = document.createElement('strong');
-      label.textContent = localizeBuildingsTabText('buildingsTab.card.cost', null, 'Cost:');
+      label.textContent = 'Cost:';
       costElement.append(label, ' ');
-      costElement._labelElement = label;
       list = document.createElement('span');
       costElement.appendChild(list);
       costElement._list = list;
@@ -2095,12 +1884,6 @@ function updateDecreaseButtonText(button, buildCount) {
           list.appendChild(document.createTextNode(', '));
         }
       });
-    }
-    if (costElement._labelElement) {
-      const costText = localizeBuildingsTabText('buildingsTab.card.cost', null, 'Cost:');
-      if (costElement._labelElement.textContent !== costText) {
-        costElement._labelElement.textContent = costText;
-      }
     }
 
     items.forEach(item => {
@@ -2287,12 +2070,7 @@ function updateDecreaseButtonText(button, buildCount) {
         warning.style.display = 'none';
         return;
       }
-      const multiplierText = formatNumber(multiplier, false, 2);
-      warningText.textContent = localizeBuildingsTabText(
-        'buildingsTab.tooltips.kesslerWarning',
-        { multiplier: multiplierText },
-        `Extra Cost from Kessler x${multiplierText} will create debris`
-      );
+      warningText.textContent = `Extra Cost from Kessler x${formatNumber(multiplier, false, 2)} will create debris`;
       const tooltip = elements.kesslerWarningTooltip;
       const baseCost = structure.getBaseEffectiveCost(buildCount);
       const debrisAdded = structure._getKesslerDebrisFromCost(baseCost, multiplier);
@@ -2302,176 +2080,16 @@ function updateDecreaseButtonText(button, buildCount) {
       const nextMultiplier = hazardManager.kesslerHazard.getCostMultiplierForDebris(totalDebris, isLarge);
       const currentChances = hazardManager.kesslerHazard.getProjectFailureChances();
       const nextChances = hazardManager.kesslerHazard.getProjectFailureChancesForDebris(totalDebris);
-      const debrisAddedText = formatNumber(debrisAdded, true);
-      const currentMultiplierText = formatNumber(multiplier, false, 2);
-      const nextMultiplierText = formatNumber(nextMultiplier, false, 2);
-      const currentSmallFailureText = formatNumber(currentChances.smallFailure * 100, false, 2);
-      const nextSmallFailureText = formatNumber(nextChances.smallFailure * 100, false, 2);
-      const currentLargeFailureText = formatNumber(currentChances.largeFailure * 100, false, 2);
-      const nextLargeFailureText = formatNumber(nextChances.largeFailure * 100, false, 2);
       const tooltipText = [
-        localizeBuildingsTabText(
-          'buildingsTab.tooltips.debrisFromBuild',
-          { value: debrisAddedText },
-          `Debris from this build: +${debrisAddedText} t`
-        ),
-        localizeBuildingsTabText(
-          'buildingsTab.tooltips.costMultiplierTransition',
-          { current: currentMultiplierText, next: nextMultiplierText },
-          `Cost multiplier: ${currentMultiplierText}x -> ${nextMultiplierText}x`
-        ),
-        localizeBuildingsTabText(
-          'buildingsTab.tooltips.smallFailureTransition',
-          { current: currentSmallFailureText, next: nextSmallFailureText },
-          `Small project failure: ${currentSmallFailureText}% -> ${nextSmallFailureText}%`
-        ),
-        localizeBuildingsTabText(
-          'buildingsTab.tooltips.largeFailureTransition',
-          { current: currentLargeFailureText, next: nextLargeFailureText },
-          `Large project failure: ${currentLargeFailureText}% -> ${nextLargeFailureText}%`
-        )
+        `Debris from this build: +${formatNumber(debrisAdded, true)} t`,
+        `Cost multiplier: ${formatNumber(multiplier, false, 2)}x -> ${formatNumber(nextMultiplier, false, 2)}x`,
+        `Small project failure: ${formatNumber(currentChances.smallFailure * 100, false, 2)}% -> ${formatNumber(nextChances.smallFailure * 100, false, 2)}%`,
+        `Large project failure: ${formatNumber(currentChances.largeFailure * 100, false, 2)}% -> ${formatNumber(nextChances.largeFailure * 100, false, 2)}%`
       ].join('\n');
       setTooltipText(tooltip, tooltipText, elements.kesslerWarningTooltipCache, 'text');
       warning.style.display = 'flex';
     } catch (error) {
       // no-op
-    }
-  }
-
-  function updateStructureStaticLocalization(structure, elements) {
-    if (elements.buildButton && elements.buildButton._buildPrefixNode) {
-      const buildPrefixText = `${localizeBuildingsTabText('buildingsTab.card.build', null, 'Build')} `;
-      if (elements.buildButton._buildPrefixNode.nodeValue !== buildPrefixText) {
-        elements.buildButton._buildPrefixNode.nodeValue = buildPrefixText;
-      }
-    }
-    if (elements.controlsLabel) {
-      const controlsText = localizeBuildingsTabText('buildingsTab.card.controls', null, 'Controls');
-      if (elements.controlsLabel.textContent !== controlsText) {
-        elements.controlsLabel.textContent = controlsText;
-      }
-    }
-    if (elements.hideButton) {
-      const hideText = localizeBuildingsTabText('buildingsTab.card.hide', null, 'Hide');
-      if (elements.hideButton.textContent !== hideText) {
-        elements.hideButton.textContent = hideText;
-      }
-    }
-    if (elements.reverseButton) {
-      const reverseText = localizeBuildingsTabText('buildingsTab.card.reverse', null, 'Reverse');
-      if (elements.reverseButton.textContent !== reverseText) {
-        elements.reverseButton.textContent = reverseText;
-      }
-    }
-    const maxButton = document.getElementById(`${structure.name}-max-button`);
-    if (maxButton) {
-      const maxText = localizeBuildingsTabText('buildingsTab.autoBuild.basis.max', null, 'Max');
-      if (maxButton.textContent !== maxText) {
-        maxButton.textContent = maxText;
-      }
-    }
-    if (elements.autoBuildHeaderTextNode) {
-      const autoBuildText = localizeBuildingsTabText('buildingsTab.card.autoBuild', null, 'Auto-build');
-      if (elements.autoBuildHeaderTextNode.nodeValue !== autoBuildText) {
-        elements.autoBuildHeaderTextNode.nodeValue = autoBuildText;
-      }
-    }
-    if (elements.autoBuildPriorityLabel) {
-      const priorityText = localizeBuildingsTabText('buildingsTab.card.priority', null, 'Priority : ');
-      if (elements.autoBuildPriorityLabel.firstChild && elements.autoBuildPriorityLabel.firstChild.nodeType === 3) {
-        if (elements.autoBuildPriorityLabel.firstChild.nodeValue !== priorityText) {
-          elements.autoBuildPriorityLabel.firstChild.nodeValue = priorityText;
-        }
-      }
-    }
-    if (elements.setActiveLabel) {
-      const setActiveText = localizeBuildingsTabText('buildingsTab.card.setActiveToTarget', null, 'Set active to target');
-      if (elements.setActiveLabel.textContent !== setActiveText) {
-        elements.setActiveLabel.textContent = setActiveText;
-      }
-    }
-    if (elements.setTargetButton) {
-      const setTargetText = localizeBuildingsTabText('buildingsTab.card.setTargetToActive', null, 'Set Target to Active');
-      if (elements.setTargetButton.textContent !== setTargetText) {
-        elements.setTargetButton.textContent = setTargetText;
-      }
-    }
-    if (elements.autoUpgradeLabelNode) {
-      const autoUpgradeText = localizeBuildingsTabText('buildingsTab.card.autoUpgrade', null, 'Auto-upgrade');
-      if (elements.autoUpgradeLabelNode.nodeValue !== autoUpgradeText) {
-        elements.autoUpgradeLabelNode.nodeValue = autoUpgradeText;
-      }
-    }
-    if (elements.constructedLabelElement) {
-      const constructedText = `${localizeBuildingsTabText('buildingsTab.card.constructed', null, 'Constructed')}:`;
-      if (elements.constructedLabelElement.textContent !== constructedText) {
-        elements.constructedLabelElement.textContent = constructedText;
-      }
-    }
-    if (elements.productivityLabelStrong) {
-      const productivityText = `${localizeBuildingsTabText('buildingsTab.card.productivity', null, 'Productivity')}:`;
-      if (elements.productivityLabelStrong.textContent !== productivityText) {
-        elements.productivityLabelStrong.textContent = productivityText;
-      }
-    }
-    if (elements.descriptionElement) {
-      const descriptionText = getLocalizedBuildingParameterText(
-        structure.name,
-        'description',
-        structure.description
-      );
-      if (elements.descriptionElement.textContent !== descriptionText) {
-        elements.descriptionElement.textContent = descriptionText;
-      }
-    }
-    if (elements.lifeWarning) {
-      const lifeWarningText = localizeBuildingsTabText(
-        'buildingsTab.card.biodomeLifeWarning',
-        null,
-        '⚠ Requires Active Life Design ⚠'
-      );
-      if (elements.lifeWarning.textContent !== lifeWarningText) {
-        elements.lifeWarning.textContent = lifeWarningText;
-      }
-    }
-    if (elements.autoBuildBasisSelect) {
-      updateAutoBuildBasisOptionLabels(structure, elements.autoBuildBasisSelect);
-    }
-    if (elements.autoBuildFillPrimaryLabel) {
-      const primaryText = localizeBuildingsTabText('buildingsTab.autoBuild.fillFilters.primary', null, 'Primary');
-      if (elements.autoBuildFillPrimaryLabel.textContent !== primaryText) {
-        elements.autoBuildFillPrimaryLabel.textContent = primaryText;
-      }
-    }
-    if (elements.autoBuildFillSecondaryLabel) {
-      const secondaryText = localizeBuildingsTabText('buildingsTab.autoBuild.fillFilters.secondary', null, 'Secondary');
-      if (elements.autoBuildFillSecondaryLabel.textContent !== secondaryText) {
-        elements.autoBuildFillSecondaryLabel.textContent = secondaryText;
-      }
-    }
-    if (elements.autoBuildFillPrimaryAnyOption) {
-      const anyText = localizeBuildingsTabText('buildingsTab.autoBuild.fillFilters.any', null, 'Any');
-      if (elements.autoBuildFillPrimaryAnyOption.textContent !== anyText) {
-        elements.autoBuildFillPrimaryAnyOption.textContent = anyText;
-      }
-    }
-    if (elements.autoBuildFillPrimaryNoneOption) {
-      const noneText = localizeBuildingsTabText('buildingsTab.autoBuild.fillFilters.none', null, 'None');
-      if (elements.autoBuildFillPrimaryNoneOption.textContent !== noneText) {
-        elements.autoBuildFillPrimaryNoneOption.textContent = noneText;
-      }
-    }
-    if (elements.autoBuildFillSecondaryAnyOption) {
-      const anyText = localizeBuildingsTabText('buildingsTab.autoBuild.fillFilters.any', null, 'Any');
-      if (elements.autoBuildFillSecondaryAnyOption.textContent !== anyText) {
-        elements.autoBuildFillSecondaryAnyOption.textContent = anyText;
-      }
-    }
-    if (elements.autoBuildFillSecondaryNoneOption) {
-      const noneText = localizeBuildingsTabText('buildingsTab.autoBuild.fillFilters.none', null, 'None');
-      if (elements.autoBuildFillSecondaryNoneOption.textContent !== noneText) {
-        elements.autoBuildFillSecondaryNoneOption.textContent = noneText;
-      }
     }
   }
   
@@ -2506,8 +2124,6 @@ function updateDecreaseButtonText(button, buildCount) {
         combinedStructureRow.style.display = 'none';
         continue;
       }
-
-      updateStructureStaticLocalization(structure, els);
   
       if (countElement) {
         countElement.textContent = formatBuildingCount(structure.count);
@@ -2695,12 +2311,6 @@ function updateDecreaseButtonText(button, buildCount) {
     sections.forEach(sec => {
       const info = productionConsumptionElement._sections[sec.key];
       if (!info) return;
-      if (info.labelElement) {
-        const labelText = `${sec.label}:`;
-        if (info.labelElement.textContent !== labelText) {
-          info.labelElement.textContent = labelText;
-        }
-      }
       if (sec.key === 'provides') {
         sec.data.forEach((text, i) => {
           const span = info.spans.get(String(i));
@@ -2799,33 +2409,15 @@ function updateDecreaseButtonText(button, buildCount) {
         ? (terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea)
         : 1;
       const flux = (structure.powerPerBuilding * structure.active * structure.productivity) / area;
-      const fluxText = formatNumber(flux, true, 2);
-      providesParts.push(
-        localizeBuildingsTabText(
-          'buildingsTab.prodCons.solarFlux',
-          { value: fluxText },
-          `${fluxText} W/m² solar flux`
-        )
-      );
+      providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
     }
     if (structure.name === 'spaceMirror' && terraforming && typeof terraforming.calculateMirrorEffect === 'function') {
       const mirrorFluxPerMirror = terraforming.calculateMirrorEffect().powerPerUnitArea;
       const flux = mirrorFluxPerMirror * structure.active;
-      const fluxText = formatNumber(flux, true, 2);
-      providesParts.push(
-        localizeBuildingsTabText(
-          'buildingsTab.prodCons.solarFlux',
-          { value: fluxText },
-          `${fluxText} W/m² solar flux`
-        )
-      );
+      providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
     }
     if (providesParts.length > 0) {
-      sections.push({
-        key: 'provides',
-        label: localizeBuildingsTabText('buildingsTab.prodCons.provides', null, 'Provides'),
-        data: providesParts
-      });
+      sections.push({ key: 'provides', label: 'Provides', data: providesParts });
     }
 
     const production = scaleResourceMap(structure.getModifiedProduction(), buildCount);
@@ -2838,22 +2430,12 @@ function updateDecreaseButtonText(button, buildCount) {
       allowNegative: true
     });
     if (prodKeys.length > 0) {
-      sections.push({
-        key: 'production',
-        label: localizeBuildingsTabText('buildingsTab.prodCons.production', null, 'Production'),
-        data: displayProduction,
-        keys: prodKeys
-      });
+      sections.push({ key: 'production', label: 'Production', data: displayProduction, keys: prodKeys });
     }
 
     const consKeys = collectResourceKeys(displayConsumption, { forceShow: structure.alwaysShowConsumption });
     if (consKeys.length > 0) {
-      sections.push({
-        key: 'consumption',
-        label: localizeBuildingsTabText('buildingsTab.prodCons.consumption', null, 'Consumption'),
-        data: displayConsumption,
-        keys: consKeys
-      });
+      sections.push({ key: 'consumption', label: 'Consumption', data: displayConsumption, keys: consKeys });
     }
 
     if (structure.requiresMaintenance && Object.keys(structure.maintenanceCost).length > 0) {
@@ -2865,12 +2447,7 @@ function updateDecreaseButtonText(button, buildCount) {
         }, {});
       const maintenanceKeys = Object.keys(filteredMaintenance).map(r => `colony.${r}`);
       if (maintenanceKeys.length > 0) {
-        sections.push({
-          key: 'maintenance',
-          label: localizeBuildingsTabText('buildingsTab.prodCons.maintenance', null, 'Maintenance'),
-          data: filteredMaintenance,
-          keys: maintenanceKeys
-        });
+        sections.push({ key: 'maintenance', label: 'Maintenance', data: filteredMaintenance, keys: maintenanceKeys });
       }
     }
 
@@ -2927,7 +2504,7 @@ function updateDecreaseButtonText(button, buildCount) {
         }
       }
 
-      const info = { list, labelElement: label, spans: new Map() };
+      const info = { list, spans: new Map() };
       if (sec.key === 'provides') {
         sec.data.forEach((_, i) => {
           const span = document.createElement('span');
@@ -3053,9 +2630,7 @@ function formatStorageDetails(storageObject) {
     const hasVisible = rows.some(row => row.style.display !== 'none');
     const structures = structureContainerMap[id] || [];
     const hasHidden = structures.some(structure => structure.unlocked && structure.isHidden);
-    const messageText = hasHidden
-      ? localizeBuildingsTabText('buildingsTab.empty.allHidden', null, 'Everything hidden')
-      : localizeBuildingsTabText('buildingsTab.empty.nothingAvailable', null, 'Nothing available for now.');
+    const messageText = hasHidden ? 'Everything hidden' : 'Nothing available for now.';
 
     if (!hasVisible) {
       if (!message) {

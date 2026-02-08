@@ -1,7 +1,7 @@
 class MultiRecipesBuilding extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
-    this._defaultDisplayName = this.displayName;
+    this._defaultDisplayName = config.name || this.displayName;
     this._staticConsumption = MultiRecipesBuilding._clone(config.consumption || {});
     this._defaultProduction = MultiRecipesBuilding._clone(config.production || {});
     this._applyRecipeMapping();
@@ -15,11 +15,7 @@ class MultiRecipesBuilding extends Building {
     const defs = this.recipes || {};
     return this._getAllowedRecipeKeys().map(key => ({
       key,
-      label: this.getLocalizedRecipeText(
-        key,
-        'shortName',
-        this.getLocalizedRecipeText(key, 'displayName', defs[key].shortName || defs[key].displayName || key)
-      )
+      label: defs[key].shortName || defs[key].displayName || key
     }));
   }
 
@@ -59,10 +55,9 @@ class MultiRecipesBuilding extends Building {
     if (!this._defaultProduction) {
       this._defaultProduction = MultiRecipesBuilding._clone(this.production || {});
     }
-    this._defaultDisplayName = this.getLocalizedParameterText(
-      'name',
-      this._baseDisplayName || this._defaultDisplayName || this.displayName
-    );
+    if (!this._defaultDisplayName) {
+      this._defaultDisplayName = this.displayName;
+    }
 
     const ignoreRestrictions = options.ignoreRestrictions || this.ignoreRecipeRestrictionsOnLoad;
     if (!ignoreRestrictions) {
@@ -93,12 +88,8 @@ class MultiRecipesBuilding extends Building {
     const productionSource = recipe?.production || this._defaultProduction;
     this.production = MultiRecipesBuilding._clone(productionSource);
 
-    this.displayName = recipe?.displayName
-      ? this.getLocalizedRecipeText(this.currentRecipeKey, 'displayName', recipe.displayName)
-      : this._defaultDisplayName;
-    this.shortName = recipe?.shortName
-      ? this.getLocalizedRecipeText(this.currentRecipeKey, 'shortName', recipe.shortName)
-      : null;
+    this.displayName = recipe?.displayName || this._defaultDisplayName;
+    this.shortName = recipe?.shortName || null;
   }
 
   setRecipe(recipeKey) {
@@ -139,11 +130,7 @@ class MultiRecipesBuilding extends Building {
     wrapper.classList.add('building-recipe-select');
 
     const label = document.createElement('label');
-    label.textContent = this.localizeModuleText(
-      'buildingsTab.modules.multiRecipe.recipeLabel',
-      null,
-      'Recipe: '
-    );
+    label.textContent = 'Recipe: ';
     label.htmlFor = `${this.name}-recipe-select`;
     wrapper.appendChild(label);
 
@@ -170,17 +157,8 @@ class MultiRecipesBuilding extends Building {
   updateUI(elements = {}) {
     const select = elements.recipeSelect;
     const container = elements.recipeSelectContainer;
-    const label = elements.recipeSelectLabel;
     if (!select) {
       return;
-    }
-
-    if (label) {
-      label.textContent = this.localizeModuleText(
-        'buildingsTab.modules.multiRecipe.recipeLabel',
-        null,
-        'Recipe: '
-      );
     }
 
     const options = this._getRecipeOptions();
@@ -207,17 +185,6 @@ class MultiRecipesBuilding extends Building {
     if (select.value !== this.currentRecipeKey) {
       select.value = this.currentRecipeKey;
     }
-  }
-
-  localizeModuleText(key, vars, fallback) {
-    if (typeof t !== 'function') {
-      return fallback || key;
-    }
-    const resolved = t(key, vars);
-    if (resolved === key) {
-      return fallback || key;
-    }
-    return resolved;
   }
 }
 

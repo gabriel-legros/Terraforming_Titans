@@ -13,47 +13,12 @@ const AEROSTAT_MINIMUM_OPERATIONAL_LIFT =
 const AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ?? 50;
 const AEROSTAT_MAX_LAND_SHARE = 0.25;
-const AEROSTAT_BUOYANCY_NOTES_FALLBACK =
+const AEROSTAT_BUOYANCY_NOTES =
   'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches that normally unlock new colony types will also improve aerostats.  Aerostats need at least 50 kPa of ambient pressure to stay buoyant.  When lift fails, active aerostats can land as Research Outposts if the option is enabled and sufficient land remains.';
-const AEROSTAT_LAND_LIMIT_TOOLTIP_FALLBACK =
+const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
-const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO_FALLBACK =
+const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
   'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Some buildings have an aerostat support value; each active aerostat covers that many structures before penalties apply.';
-
-function localizeAerostatText(key, vars, fallback) {
-  if (typeof t !== 'function') {
-    return fallback || key;
-  }
-  const resolved = t(key, vars);
-  if (resolved === key) {
-    return fallback || key;
-  }
-  return resolved;
-}
-
-function getAerostatBuoyancyNotes() {
-  return localizeAerostatText(
-    'buildingsTab.modules.aerostat.buoyancyNotes',
-    null,
-    AEROSTAT_BUOYANCY_NOTES_FALLBACK
-  );
-}
-
-function getAerostatLandLimitTooltip() {
-  return localizeAerostatText(
-    'buildingsTab.modules.aerostat.landLimitTooltip',
-    null,
-    AEROSTAT_LAND_LIMIT_TOOLTIP_FALLBACK
-  );
-}
-
-function getAerostatTemperatureTooltipIntro() {
-  return localizeAerostatText(
-    'buildingsTab.modules.aerostat.temperatureTooltipIntro',
-    null,
-    AEROSTAT_TEMPERATURE_TOOLTIP_INTRO_FALLBACK
-  );
-}
 
 globalThis.AEROSTAT_STANDARD_PRESSURE_PA ??= AEROSTAT_STANDARD_PRESSURE_PA;
 globalThis.AEROSTAT_STANDARD_TEMPERATURE_K ??= AEROSTAT_STANDARD_TEMPERATURE_K;
@@ -76,7 +41,7 @@ class Aerostat extends BaseColony {
     this._liftDisableAccumulator = 0;
     this._liftBelowThreshold = false;
     this._pressureBelowThreshold = false;
-    this.buoyancyNotes = getAerostatBuoyancyNotes();
+    this.buoyancyNotes = AEROSTAT_BUOYANCY_NOTES;
     this.landAsResearchOutpost = true;
   }
 
@@ -156,7 +121,6 @@ class Aerostat extends BaseColony {
   }
 
   getBuoyancySummary() {
-    this.buoyancyNotes = getAerostatBuoyancyNotes();
     let summary = this.buoyancyNotes;
     const lift = this.getCurrentLift();
     const pressure = this.getCurrentSurfacePressure();
@@ -169,25 +133,15 @@ class Aerostat extends BaseColony {
     if (pressureBelow) {
       const minPressure = this.getMinimumOperationalPressure();
       warning = Number.isFinite(pressure)
-        ? localizeAerostatText(
-          'buildingsTab.modules.aerostat.summary.pressureBelowCurrent',
-          {
-            currentPressure: formatNumber(pressure, false, 1),
-            minPressure: formatNumber(minPressure, false, 0)
-          },
-          `▲ Current atmospheric pressure is ${formatNumber(pressure, false, 1)} kPa, below the ${formatNumber(minPressure, false, 0)} kPa minimum needed for aerostat buoyancy. ▲`
-        )
-        : localizeAerostatText(
-          'buildingsTab.modules.aerostat.summary.pressureBelow',
-          { minPressure: formatNumber(minPressure, false, 0) },
-          `▲ Atmospheric pressure is below the ${formatNumber(minPressure, false, 0)} kPa minimum needed for aerostat buoyancy. ▲`
-        );
+        ? `▲ Current atmospheric pressure is ${formatNumber(pressure, false, 1)} kPa, below the ${formatNumber(
+            minPressure,
+            false,
+            0
+          )} kPa minimum needed for aerostat buoyancy. ▲`
+        : `▲ Atmospheric pressure is below the ${formatNumber(minPressure, false, 0)} kPa minimum needed for aerostat buoyancy. ▲`;
     } else if (liftBelow) {
-      warning = localizeAerostatText(
-        'buildingsTab.modules.aerostat.summary.liftBelow',
-        null,
-        '▲ Current lift is below the minimum operational requirement, preventing aerostat activation and construction. ▲'
-      );
+      warning =
+        '▲ Current lift is below the minimum operational requirement, preventing aerostat activation and construction. ▲';
     }
 
     if (warning) {
@@ -453,11 +407,7 @@ class Aerostat extends BaseColony {
       });
 
       const text = document.createElement('span');
-      text.textContent = localizeAerostatText(
-        'buildingsTab.modules.aerostat.landAsResearchOutpost',
-        null,
-        'Land as Research Outpost'
-      );
+      text.textContent = 'Land as Research Outpost';
 
       container.appendChild(checkbox);
       container.appendChild(text);
@@ -483,15 +433,6 @@ class Aerostat extends BaseColony {
     const checkbox = cache.researchOutpostCheckbox;
     if (checkbox) {
       checkbox.checked = this.landAsResearchOutpost;
-    }
-    const container = cache.researchOutpostContainer;
-    const text = container ? container.querySelector('span') : null;
-    if (text) {
-      text.textContent = localizeAerostatText(
-        'buildingsTab.modules.aerostat.landAsResearchOutpost',
-        null,
-        'Land as Research Outpost'
-      );
     }
   }
 }
@@ -682,11 +623,7 @@ function attachAerostatBuoyancySection(container, structure) {
   }
 
   const summaryText =
-    structure.getBuoyancySummary?.() ?? localizeAerostatText(
-      'buildingsTab.modules.aerostat.summary.pending',
-      null,
-      'Buoyancy telemetry pending.'
-    );
+    structure.getBuoyancySummary?.() ?? 'Buoyancy telemetry pending.';
   const existing = structure.buoyancyUI ?? {};
   const needsRebuild =
     !existing.container ||
@@ -710,11 +647,7 @@ function attachAerostatBuoyancySection(container, structure) {
 
     const title = document.createElement('span');
     title.classList.add('card-title');
-    title.textContent = localizeAerostatText(
-      'buildingsTab.modules.aerostat.title',
-      null,
-      'Aerostats Details'
-    );
+    title.textContent = 'Aerostats Details';
 
     header.appendChild(arrow);
     header.appendChild(title);
@@ -732,16 +665,12 @@ function attachAerostatBuoyancySection(container, structure) {
 
     const liftLabel = document.createElement('span');
     liftLabel.classList.add('colony-buoyancy-lift-label');
-    liftLabel.textContent = localizeAerostatText(
-      'buildingsTab.modules.aerostat.currentLift',
-      null,
-      'Current Lift:'
-    );
+    liftLabel.textContent = 'Current Lift:';
     liftRow.appendChild(liftLabel);
 
     const liftValue = document.createElement('span');
     liftValue.classList.add('colony-buoyancy-lift-value');
-    liftValue.textContent = localizeAerostatText('buildingsTab.modules.aerostat.notAvailable', null, 'N/A');
+    liftValue.textContent = 'N/A';
     liftRow.appendChild(liftValue);
 
     const liftInfo = document.createElement('span');
@@ -749,7 +678,7 @@ function attachAerostatBuoyancySection(container, structure) {
     liftInfo.innerHTML = '&#9432;';
     const liftTooltip = attachDynamicInfoTooltip(
       liftInfo,
-      ''
+      'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.  When "Land as Research Outpost" is enabled, disabled aerostats will attempt to convert into Research Outposts if land is available.'
     );
     liftRow.appendChild(liftInfo);
 
@@ -766,11 +695,7 @@ function attachAerostatBuoyancySection(container, structure) {
       'colony-buoyancy-lift-label',
       'colony-buoyancy-mitigation-label'
     );
-    mitigationLabel.textContent = localizeAerostatText(
-      'buildingsTab.modules.aerostat.temperatureMitigation',
-      null,
-      'Temperature Maintenance Mitigation:'
-    );
+    mitigationLabel.textContent = 'Temperature Maintenance Mitigation:';
     mitigationRow.appendChild(mitigationLabel);
 
     const mitigationValue = document.createElement('span');
@@ -778,7 +703,7 @@ function attachAerostatBuoyancySection(container, structure) {
       'colony-buoyancy-lift-value',
       'colony-buoyancy-mitigation-value'
     );
-    mitigationValue.textContent = localizeAerostatText('buildingsTab.modules.aerostat.notAvailable', null, 'N/A');
+    mitigationValue.textContent = 'N/A';
     mitigationRow.appendChild(mitigationValue);
 
     const mitigationInfo = document.createElement('span');
@@ -786,7 +711,7 @@ function attachAerostatBuoyancySection(container, structure) {
     mitigationInfo.innerHTML = '&#9432;';
     const mitigationTooltip = attachDynamicInfoTooltip(
       mitigationInfo,
-      ''
+      AEROSTAT_TEMPERATURE_TOOLTIP_INTRO
     );
     mitigationRow.appendChild(mitigationInfo);
 
@@ -803,11 +728,7 @@ function attachAerostatBuoyancySection(container, structure) {
       'colony-buoyancy-lift-label',
       'colony-buoyancy-limit-label'
     );
-    limitLabel.textContent = localizeAerostatText(
-      'buildingsTab.modules.aerostat.maximumAerostats',
-      null,
-      'Maximum Aerostats:'
-    );
+    limitLabel.textContent = 'Maximum Aerostats:';
     limitRow.appendChild(limitLabel);
 
     const limitValue = document.createElement('span');
@@ -815,7 +736,7 @@ function attachAerostatBuoyancySection(container, structure) {
       'colony-buoyancy-lift-value',
       'colony-buoyancy-limit-value'
     );
-    limitValue.textContent = localizeAerostatText('buildingsTab.modules.aerostat.notAvailable', null, 'N/A');
+    limitValue.textContent = 'N/A';
     limitRow.appendChild(limitValue);
 
     const limitInfo = document.createElement('span');
@@ -823,7 +744,7 @@ function attachAerostatBuoyancySection(container, structure) {
     limitInfo.innerHTML = '&#9432;';
     const limitTooltip = attachDynamicInfoTooltip(
       limitInfo,
-      ''
+      AEROSTAT_LAND_LIMIT_TOOLTIP
     );
     limitRow.appendChild(limitInfo);
 
@@ -871,39 +792,8 @@ function updateAerostatBuoyancySection(structure) {
   }
 
   const summaryText =
-    structure.getBuoyancySummary?.() ?? localizeAerostatText(
-      'buildingsTab.modules.aerostat.summary.pending',
-      null,
-      'Buoyancy telemetry pending.'
-    );
+    structure.getBuoyancySummary?.() ?? 'Buoyancy telemetry pending.';
   ui.text.innerHTML = (summaryText ?? '').replace(/\n/g, '<br>');
-
-  const title = ui.header ? ui.header.querySelector('.card-title') : null;
-  if (title) {
-    title.textContent = localizeAerostatText(
-      'buildingsTab.modules.aerostat.title',
-      null,
-      'Aerostats Details'
-    );
-  }
-  const labels = ui.container ? ui.container.querySelectorAll('.colony-buoyancy-lift-label') : [];
-  if (labels && labels.length >= 3) {
-    labels[0].textContent = localizeAerostatText(
-      'buildingsTab.modules.aerostat.currentLift',
-      null,
-      'Current Lift:'
-    );
-    labels[1].textContent = localizeAerostatText(
-      'buildingsTab.modules.aerostat.temperatureMitigation',
-      null,
-      'Temperature Maintenance Mitigation:'
-    );
-    labels[2].textContent = localizeAerostatText(
-      'buildingsTab.modules.aerostat.maximumAerostats',
-      null,
-      'Maximum Aerostats:'
-    );
-  }
 
   const expanded = ui.expanded !== false;
   ui.container.classList.toggle('collapsed', !expanded);
@@ -951,7 +841,7 @@ function updateAerostatBuoyancySection(structure) {
   if (ui.liftValue) {
     ui.liftValue.textContent =
       liftAvailable === null
-        ? localizeAerostatText('buildingsTab.modules.aerostat.notAvailable', null, 'N/A')
+        ? 'N/A'
         : `${liftAvailable >= 0 ? '+' : ''}${formatNumber(
             liftAvailable,
             false,
@@ -961,117 +851,77 @@ function updateAerostatBuoyancySection(structure) {
 
   if (ui.liftInfo) {
     let title =
-      localizeAerostatText(
-        'buildingsTab.modules.aerostat.tooltip.liftIntro',
-        null,
-        'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.'
-      );
+      'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.';
     if (Number.isFinite(molecularWeight) && molecularWeight > 0) {
-      title += '\n' + localizeAerostatText(
-        'buildingsTab.modules.aerostat.tooltip.externalMolWeight',
-        { value: formatNumber(molecularWeight, false, 2) },
-        `External mean molecular weight: ${formatNumber(molecularWeight, false, 2)} g/mol.`
-      );
+      title += `\nExternal mean molecular weight: ${formatNumber(
+        molecularWeight,
+        false,
+        2
+      )} g/mol.`;
     }
     if (liftAvailable !== null) {
-      title += '\n' + localizeAerostatText(
-        'buildingsTab.modules.aerostat.tooltip.currentLift',
-        {
-          value: `${liftAvailable >= 0 ? '+' : ''}${formatNumber(liftAvailable, false, 3)}`
-        },
-        `Current lift: ${liftAvailable >= 0 ? '+' : ''}${formatNumber(liftAvailable, false, 3)} kg/m³.`
-      );
+      title += `\nCurrent lift: ${liftAvailable >= 0 ? '+' : ''}${formatNumber(
+        liftAvailable,
+        false,
+        3
+      )} kg/m³.`;
     }
-    title += '\n' + localizeAerostatText(
-      'buildingsTab.modules.aerostat.tooltip.shutdownThreshold',
-      { value: formatNumber(AEROSTAT_MINIMUM_OPERATIONAL_LIFT, false, 3) },
-      `Aerostat shutdown threshold: ${formatNumber(AEROSTAT_MINIMUM_OPERATIONAL_LIFT, false, 3)} kg/m³.`
-    );
-    title += '\n' + localizeAerostatText(
-      'buildingsTab.modules.aerostat.tooltip.minPressure',
-      { value: formatNumber(minPressure, false, 0) },
-      `Aerostats require at least ${formatNumber(minPressure, false, 0)} kPa of surface pressure to remain buoyant.`
-    );
+    title += `\nAerostat shutdown threshold: ${formatNumber(
+      AEROSTAT_MINIMUM_OPERATIONAL_LIFT,
+      false,
+      3
+    )} kg/m³.`;
+    title += `\nAerostats require at least ${formatNumber(
+      minPressure,
+      false,
+      0
+    )} kPa of surface pressure to remain buoyant.`;
     setTooltipText(ui.liftTooltip, title, ui, 'liftTooltipText');
   }
 
   if (ui.mitigationValue) {
     ui.mitigationValue.textContent =
       mitigationShare === null
-        ? localizeAerostatText('buildingsTab.modules.aerostat.notAvailable', null, 'N/A')
+        ? 'N/A'
         : `${formatNumber(mitigationShare * 100, false, 1)}%`;
   }
 
   if (ui.mitigationInfo) {
-    let mitigationTitle = getAerostatTemperatureTooltipIntro();
+    let mitigationTitle = AEROSTAT_TEMPERATURE_TOOLTIP_INTRO;
     if (!mitigationDetails) {
-      mitigationTitle += '\n' + localizeAerostatText(
-        'buildingsTab.modules.aerostat.tooltip.mitigationDataUnavailable',
-        null,
-        'Mitigation data unavailable.'
-      );
+      mitigationTitle += '\nMitigation data unavailable.';
     } else {
-      mitigationTitle += '\n' + localizeAerostatText(
-        'buildingsTab.modules.aerostat.tooltip.activeAerostats',
-        { value: formatNumber(aerostatCount, false, 2) },
-        `Active aerostats: ${formatNumber(aerostatCount, false, 2)}.`
-      );
+      mitigationTitle += `\nActive aerostats: ${formatNumber(
+        aerostatCount,
+        false,
+        2
+      )}.`;
 
       if (mitigationShare === null) {
-        mitigationTitle += '\n' + localizeAerostatText(
-          'buildingsTab.modules.aerostat.tooltip.factoryMitigationDataUnavailable',
-          null,
-          'Factory mitigation data unavailable.'
-        );
+        mitigationTitle += '\nFactory mitigation data unavailable.';
       } else {
-        mitigationTitle += '\n' + localizeAerostatText(
-          'buildingsTab.modules.aerostat.tooltip.factoryMitigationApplied',
-          { value: formatNumber(mitigationShare * 100, false, 2) },
-          `Factory mitigation applied: ${formatNumber(mitigationShare * 100, false, 2)}% of the penalty is negated.`
-        );
+        mitigationTitle += `\nFactory mitigation applied: ${formatNumber(
+          mitigationShare * 100,
+          false,
+          2
+        )}% of the penalty is negated.`;
         mitigationTitle +=
           mitigationShare < 1
-            ? '\n' + localizeAerostatText(
-              'buildingsTab.modules.aerostat.tooltip.mitigationLimited',
-              null,
-              'Mitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
-            )
-            : '\n' + localizeAerostatText(
-              'buildingsTab.modules.aerostat.tooltip.mitigationFull',
-              null,
-              'All staffed buildings currently avoid the temperature maintenance penalty.'
-            );
+            ? '\nMitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
+            : '\nAll staffed buildings currently avoid the temperature maintenance penalty.';
       }
 
       if (buildingCoverageList.length > 0) {
-        mitigationTitle += '\n' + localizeAerostatText(
-          'buildingsTab.modules.aerostat.tooltip.supportedBuildings',
-          null,
-          'Aerostat-supported buildings:'
-        );
+        mitigationTitle += '\nAerostat-supported buildings:';
         buildingCoverageList.forEach(entry => {
           const activeText = formatNumber(entry.activeCount, false, 2);
           const supportedText = formatNumber(entry.supported, false, 2);
           const capacityText = formatNumber(entry.maxSupported, false, 2);
           const perAerostatText = formatNumber(entry.perAerostat, false, 2);
-          mitigationTitle += '\n' + localizeAerostatText(
-            'buildingsTab.modules.aerostat.tooltip.supportedBuildingEntry',
-            {
-              name: entry.name,
-              supported: supportedText,
-              active: activeText,
-              capacity: capacityText,
-              perAerostat: perAerostatText
-            },
-            `• ${entry.name}: ${supportedText} of ${activeText} active covered (can support ${capacityText}; ${perAerostatText} per aerostat).`
-          );
+          mitigationTitle += `\n• ${entry.name}: ${supportedText} of ${activeText} active covered (can support ${capacityText}; ${perAerostatText} per aerostat).`;
         });
       } else {
-        mitigationTitle += '\n' + localizeAerostatText(
-          'buildingsTab.modules.aerostat.tooltip.noSupportedBuildings',
-          null,
-          'No buildings currently list an Aerostat Support value.'
-        );
+        mitigationTitle += '\nNo buildings currently list an Aerostat Support value.';
       }
     }
     setTooltipText(ui.mitigationTooltip, mitigationTitle, ui, 'mitigationTooltipText');
@@ -1079,19 +929,17 @@ function updateAerostatBuoyancySection(structure) {
 
   if (ui.limitValue) {
     ui.limitValue.textContent =
-      buildLimit === null
-        ? localizeAerostatText('buildingsTab.modules.aerostat.notAvailable', null, 'N/A')
-        : formatNumber(buildLimit, false, 2);
+      buildLimit === null ? 'N/A' : formatNumber(buildLimit, false, 2);
   }
 
   if (ui.limitInfo) {
-    let limitTitle = getAerostatLandLimitTooltip();
+    let limitTitle = AEROSTAT_LAND_LIMIT_TOOLTIP;
     if (remainingCapacity !== null) {
-      limitTitle += '\n' + localizeAerostatText(
-        'buildingsTab.modules.aerostat.tooltip.remainingCapacity',
-        { value: formatNumber(remainingCapacity, false, 2) },
-        `Remaining aerostat capacity: ${formatNumber(remainingCapacity, false, 2)}.`
-      );
+      limitTitle += `\nRemaining aerostat capacity: ${formatNumber(
+        remainingCapacity,
+        false,
+        2
+      )}.`;
     }
     setTooltipText(ui.limitTooltip, limitTitle, ui, 'limitTooltipText');
   }

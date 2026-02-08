@@ -108,17 +108,10 @@ function addSettingsListeners() {
   });
 
   const preserveProjectSettingsTooltip = document.getElementById('preserve-project-settings-tooltip');
-  const preserveProjectSettingsDynamicTooltip = attachDynamicInfoTooltip(
+  attachDynamicInfoTooltip(
     preserveProjectSettingsTooltip,
-    t('saveSettings.settings.preserveProjectSettings.dynamicTooltip')
+    'Keeps most project settings when travelling, including import disable limits, Space Mirror Facility oversight settings, and resource disposal selections. On World 11, a much more powerful version of this setting will be available.'
   );
-  document.addEventListener('languageChanged', () => {
-    if (!preserveProjectSettingsDynamicTooltip) return;
-    setTooltipText(
-      preserveProjectSettingsDynamicTooltip,
-      t('saveSettings.settings.preserveProjectSettings.dynamicTooltip')
-    );
-  });
 
   const keepHiddenStructuresToggle = document.getElementById('keep-hidden-structures-toggle');
   if (keepHiddenStructuresToggle) {

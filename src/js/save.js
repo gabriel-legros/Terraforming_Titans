@@ -5,23 +5,6 @@ let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
 let statisticsElements = null;
 let settingsElements = null;
-const saveSlotIds = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
-
-function localizeSaveText(key, vars) {
-  if (typeof t === 'function') {
-    return t(key, vars);
-  }
-  return key;
-}
-
-function getSaveSlotDisplayName(slot) {
-  const key = `saveSettings.save.rows.${slot}`;
-  const resolved = localizeSaveText(key);
-  if (resolved === key) {
-    return slot;
-  }
-  return resolved;
-}
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -657,7 +640,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.scientificNotationThresholdInput.dataset.scientificNotationThreshold = String(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
       if (typeof setLanguage === 'function') {
-        setLanguage(gameSettings.language);
+        setLanguage(gameSettings.language, { skipEvent: true });
       }
       if (gameSettings.keepTabRunningAudio) {
         startBackgroundSilence();
@@ -740,7 +723,7 @@ function setSaveSlotStatus(slot, text) {
 
 function saveGameToSlot(slot) {
   const gameState = getGameState();
-  const genericFailure = localizeSaveText('saveSettings.save.status.saveFailedStorage');
+  const genericFailure = 'SAVE FAILED: Game needs cookies/local storage permission.';
   let saveFailedReason = '';
   try {
     localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
@@ -799,7 +782,7 @@ function saveGameToClipboard() {
   updatePatienceUI();
   const saveData = JSON.stringify(getGameState());
   copyTextToClipboard(saveData, {
-    promptLabel: localizeSaveText('saveSettings.save.prompts.copySave'),
+    promptLabel: 'Copy save data:',
     onSuccess: () => {
       console.log('Game saved to clipboard.');
       patienceManager.claimDailyPatience();
@@ -827,7 +810,7 @@ function loadGameFromFile(event) {
 }
 
 function loadGameFromString() {
-  const text = window.prompt(localizeSaveText('saveSettings.save.prompts.pasteSave'));
+  const text = window.prompt('Paste save data to load:');
   if (text) {
     loadGame(text);
   }
@@ -843,7 +826,7 @@ function deleteSaveFileFromSlot(slot) {
   }
 
   // Clear the save date for the slot
-  document.getElementById(`${slot}-date`).textContent = localizeSaveText('saveSettings.save.empty');
+  document.getElementById(`${slot}-date`).textContent = 'Empty';
 
   // Delete the save slot date
   deleteSaveSlotDate(slot);
@@ -874,12 +857,6 @@ function loadSaveSlotDates() {
     console.warn('Unable to access localStorage for save slot dates:', e);
     saveSlotDates = {};
   }
-  saveSlotIds.forEach(slot => {
-    const dateCell = document.getElementById(`${slot}-date`);
-    if (dateCell) {
-      dateCell.textContent = localizeSaveText('saveSettings.save.empty');
-    }
-  });
   for (const slot in saveSlotDates) {
     const timestamp = saveSlotDates[slot];
     const date = new Date(timestamp);
@@ -924,7 +901,9 @@ function deleteSaveSlotDate(slot) {
 
 // Add event listeners to save, load, and delete buttons
 function addSaveSlotListeners() {
-  saveSlotIds.forEach(slot => {
+  const saveSlots = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
+
+  saveSlots.forEach(slot => {
     const saveButton = document.querySelector(`.save-button[data-slot="${slot}"]`);
     const loadButton = document.querySelector(`.load-button[data-slot="${slot}"]`);
     const deleteButton = document.querySelector(`.delete-button[data-slot="${slot}"]`);
@@ -936,7 +915,7 @@ function addSaveSlotListeners() {
     loadButton.addEventListener('click', () => loadGame(`gameState_${slot}`));
 
     deleteButton.addEventListener('click', () => {
-      if (confirm(localizeSaveText('saveSettings.save.confirm.deleteSlot', { slot: getSaveSlotDisplayName(slot) }))) {
+      if (confirm(`Are you sure you want to delete the save file in slot ${slot}? This action cannot be undone.`)) {
         deleteSaveFileFromSlot(slot);
       }
     });
@@ -1007,12 +986,12 @@ function updateAutosaveText(overrideText) {
     return;
   }
   if (gameSettings && gameSettings.disableAutosave) {
-    autosaveText.textContent = localizeSaveText('saveSettings.save.status.autosaveDisabled');
+    autosaveText.textContent = 'Autosave disabled';
     return;
   }
   const minutes = Math.floor(autosaveTimer / 60);
   const seconds = Math.floor(autosaveTimer % 60);
-  autosaveText.textContent = localizeSaveText('saveSettings.save.status.nextAutosaveIn', { minutes, seconds });
+  autosaveText.textContent = `Next autosave in ${minutes}m ${seconds}s`;
 }
 
 function updateStatisticsDisplay() {
@@ -1028,7 +1007,7 @@ function updateStatisticsDisplay() {
 function addSaveLoadListeners() {
   // Event listener for "New Game" button
   document.getElementById('new-game-button').addEventListener('click', () => {
-    if (confirm(localizeSaveText('saveSettings.save.confirm.newGame'))) {
+    if (confirm("Are you sure you want to start a new game? Any unsaved progress will be lost.")) {
       if (typeof startNewGame === 'function') {
         startNewGame();
       } else {
@@ -1067,10 +1046,6 @@ if (typeof document !== 'undefined' && document.addEventListener) {
     initializeLoadingOverlay();
     addSaveSlotListeners();
     addSaveLoadListeners();
-    document.addEventListener('languageChanged', () => {
-      loadSaveSlotDates();
-      updateAutosaveText();
-    });
   });
 }
 
