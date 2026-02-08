@@ -1,5 +1,40 @@
 const wasteResourceNames = new Set(['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']);
-const wasteTooltipNoteText = 'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages.  The numbers here are not their actual consumption.';
+
+function localizeResourcePanelText(key, vars, fallback) {
+  if (typeof t !== 'function') {
+    return fallback || key;
+  }
+  const resolved = t(key, vars);
+  if (resolved === key) {
+    return fallback || key;
+  }
+  return resolved;
+}
+
+function getLocalizedResourceCategoryHeader(category) {
+  const fallback = `${capitalizeFirstLetter(category)} Resources`;
+  return localizeResourcePanelText(`resourcesPanel.categories.${category}`, null, fallback);
+}
+
+function localizeResourceTooltipText(key, vars, fallback) {
+  return localizeResourcePanelText(`resourcesPanel.tooltip.${key}`, vars, fallback);
+}
+
+function getLocalizedZoneName(zone) {
+  return localizeResourceTooltipText(`zones.names.${zone}`, null, capitalizeFirstLetter(zone));
+}
+
+function formatLocalizedZoneList(zones) {
+  return zones.map(getLocalizedZoneName).join(', ');
+}
+
+function getWasteTooltipNoteText() {
+  return localizeResourceTooltipText(
+    'notes.wasteProcessing',
+    null,
+    'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages.  The numbers here are not their actual consumption.'
+  );
+}
 
 function isWasteResource(resourceName) {
   return wasteResourceNames.has(resourceName);
@@ -43,7 +78,9 @@ function createResourceContainers(resourcesData) {
     header.appendChild(arrow);
 
     const label = document.createElement('span');
-    label.textContent = `${capitalizeFirstLetter(category)} Resources`;
+    label.textContent = getLocalizedResourceCategoryHeader(category);
+    label.id = `${category}-resources-header-label`;
+    header._labelEl = label;
     header.appendChild(label);
     categoryContainer.appendChild(header);
 
@@ -80,7 +117,11 @@ function createTooltipElement(resourceName) {
   if (resourceName === 'land') {
     noteDiv = document.createElement('div');
     noteDiv.id = `${resourceName}-tooltip-note`;
-    noteDiv.textContent = 'Land can be recovered by turning off the corresponding building';
+    noteDiv.textContent = localizeResourceTooltipText(
+      'notes.landRecover',
+      null,
+      'Land can be recovered by turning off the corresponding building'
+    );
   }
   if (isWasteResource(resourceName)) {
     wasteNoteDiv = document.createElement('div');
@@ -88,9 +129,12 @@ function createTooltipElement(resourceName) {
     const wasteNoteIcon = document.createElement('span');
     wasteNoteIcon.classList.add('info-tooltip-icon');
     wasteNoteIcon.innerHTML = '&#9432;';
+    const wasteTooltipNoteText = getWasteTooltipNoteText();
     wasteNoteIcon.title = wasteTooltipNoteText;
     wasteNoteDiv.appendChild(wasteNoteIcon);
     wasteNoteDiv.appendChild(document.createTextNode(` ${wasteTooltipNoteText}`));
+    wasteNoteDiv._icon = wasteNoteIcon;
+    wasteNoteDiv._textNode = wasteNoteDiv.lastChild;
   }
 
   const assignmentsDiv = document.createElement('div');
@@ -101,10 +145,10 @@ function createTooltipElement(resourceName) {
   zonesDiv.style.display = 'none';
   zonesDiv.appendChild(document.createElement('br'));
   const zonesHeader = document.createElement('strong');
-  zonesHeader.textContent = 'Zonal Amounts:';
+  zonesHeader.textContent = localizeResourceTooltipText('zones.header', null, 'Zonal Amounts:');
   zonesDiv.appendChild(zonesHeader);
   zonesDiv.appendChild(document.createElement('br'));
-  zonesDiv._info = { lines: new Map() };
+  zonesDiv._info = { header: zonesHeader, lines: new Map() };
   getZones().forEach(zone => {
     const line = document.createElement('div');
     zonesDiv.appendChild(line);
@@ -155,7 +199,7 @@ function createTooltipElement(resourceName) {
   productionDiv.id = `${resourceName}-tooltip-production`;
   productionDiv.style.display = 'none';
   const prodHeader = document.createElement('strong');
-  prodHeader.textContent = 'Production:';
+  prodHeader.textContent = localizeResourceTooltipText('sections.production', null, 'Production:');
   productionDiv.appendChild(prodHeader);
   productionDiv.appendChild(document.createElement('br'));
   const prodTable = document.createElement('div');
@@ -169,7 +213,7 @@ function createTooltipElement(resourceName) {
   prodTotalLeft.style.textAlign = 'left';
   prodTotalLeft.style.paddingRight = '10px';
   const prodTotalLeftStrong = document.createElement('strong');
-  prodTotalLeftStrong.textContent = 'Total :';
+  prodTotalLeftStrong.textContent = localizeResourceTooltipText('sections.total', null, 'Total :');
   prodTotalLeft.appendChild(prodTotalLeftStrong);
   const prodTotalRight = document.createElement('div');
   prodTotalRight.style.display = 'table-cell';
@@ -181,14 +225,25 @@ function createTooltipElement(resourceName) {
   prodTotalRow.appendChild(prodTotalLeft);
   prodTotalRow.appendChild(prodTotalRight);
   prodTable.appendChild(prodTotalRow);
-  productionDiv._info = { table: prodTable, rows: new Map(), totalRow: prodTotalRow, totalRight: prodTotalRightStrong };
+  productionDiv._info = {
+    header: prodHeader,
+    totalLabel: prodTotalLeftStrong,
+    table: prodTable,
+    rows: new Map(),
+    totalRow: prodTotalRow,
+    totalRight: prodTotalRightStrong
+  };
 
   const consumptionDiv = document.createElement('div');
   consumptionDiv.id = `${resourceName}-tooltip-consumption`;
   consumptionDiv.style.display = 'none';
   consumptionDiv.appendChild(document.createElement('br'));
   const consHeader = document.createElement('strong');
-  consHeader.textContent = 'Consumption and Maintenance:';
+  consHeader.textContent = localizeResourceTooltipText(
+    'sections.consumptionMaintenance',
+    null,
+    'Consumption and Maintenance:'
+  );
   consumptionDiv.appendChild(consHeader);
   consumptionDiv.appendChild(document.createElement('br'));
   const consTable = document.createElement('div');
@@ -202,7 +257,7 @@ function createTooltipElement(resourceName) {
   consTotalLeft.style.textAlign = 'left';
   consTotalLeft.style.paddingRight = '10px';
   const consTotalLeftStrong = document.createElement('strong');
-  consTotalLeftStrong.textContent = 'Total :';
+  consTotalLeftStrong.textContent = localizeResourceTooltipText('sections.total', null, 'Total :');
   consTotalLeft.appendChild(consTotalLeftStrong);
   const consTotalRight = document.createElement('div');
   consTotalRight.style.display = 'table-cell';
@@ -214,14 +269,21 @@ function createTooltipElement(resourceName) {
   consTotalRow.appendChild(consTotalLeft);
   consTotalRow.appendChild(consTotalRight);
   consTable.appendChild(consTotalRow);
-  consumptionDiv._info = { table: consTable, rows: new Map(), totalRow: consTotalRow, totalRight: consTotalRightStrong };
+  consumptionDiv._info = {
+    header: consHeader,
+    totalLabel: consTotalLeftStrong,
+    table: consTable,
+    rows: new Map(),
+    totalRow: consTotalRow,
+    totalRight: consTotalRightStrong
+  };
 
   const overflowDiv = document.createElement('div');
   overflowDiv.id = `${resourceName}-tooltip-overflow`;
   overflowDiv.style.display = 'none';
   overflowDiv.appendChild(document.createElement('br'));
   const overflowHeader = document.createElement('strong');
-  overflowHeader.textContent = 'Overflow:';
+  overflowHeader.textContent = localizeResourceTooltipText('sections.overflow', null, 'Overflow:');
   overflowDiv.appendChild(overflowHeader);
   overflowDiv.appendChild(document.createElement('br'));
   const overflowTable = document.createElement('div');
@@ -235,7 +297,7 @@ function createTooltipElement(resourceName) {
   overflowTotalLeft.style.textAlign = 'left';
   overflowTotalLeft.style.paddingRight = '10px';
   const overflowTotalLeftStrong = document.createElement('strong');
-  overflowTotalLeftStrong.textContent = 'Total :';
+  overflowTotalLeftStrong.textContent = localizeResourceTooltipText('sections.total', null, 'Total :');
   overflowTotalLeft.appendChild(overflowTotalLeftStrong);
   const overflowTotalRight = document.createElement('div');
   overflowTotalRight.style.display = 'table-cell';
@@ -247,14 +309,25 @@ function createTooltipElement(resourceName) {
   overflowTotalRow.appendChild(overflowTotalLeft);
   overflowTotalRow.appendChild(overflowTotalRight);
   overflowTable.appendChild(overflowTotalRow);
-  overflowDiv._info = { table: overflowTable, rows: new Map(), totalRow: overflowTotalRow, totalRight: overflowTotalRightStrong };
+  overflowDiv._info = {
+    header: overflowHeader,
+    totalLabel: overflowTotalLeftStrong,
+    table: overflowTable,
+    rows: new Map(),
+    totalRow: overflowTotalRow,
+    totalRight: overflowTotalRightStrong
+  };
 
   const autobuildDiv = document.createElement('div');
   autobuildDiv.id = `${resourceName}-tooltip-autobuild`;
   autobuildDiv.style.display = 'none';
   autobuildDiv.appendChild(document.createElement('br'));
   const autoHeader = document.createElement('strong');
-  autoHeader.textContent = 'Autobuild Cost (avg 10s):';
+  autoHeader.textContent = localizeResourceTooltipText(
+    'sections.autobuildCost',
+    null,
+    'Autobuild Cost (avg 10s):'
+  );
   autobuildDiv.appendChild(autoHeader);
   autobuildDiv.appendChild(document.createTextNode(' '));
   const autoValue = document.createElement('span');
@@ -263,7 +336,7 @@ function createTooltipElement(resourceName) {
   autoTable.style.display = 'table';
   autoTable.style.width = '100%';
   autobuildDiv.appendChild(autoTable);
-  autobuildDiv._info = { value: autoValue, table: autoTable, rows: new Map() };
+  autobuildDiv._info = { header: autoHeader, value: autoValue, table: autoTable, rows: new Map() };
 
   const col1 = document.createElement('div');
   col1.appendChild(headerDiv);
@@ -277,6 +350,7 @@ function createTooltipElement(resourceName) {
   const col3 = document.createElement('div');
   // Store references needed for dynamic column reflow
   tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv };
+  tooltip._i18n = { noteDiv, wasteNoteDiv, zonesDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv };
 
   return tooltip;
 }
@@ -453,6 +527,60 @@ function isAutobuildTrackedResource(resource) {
     || (resource.category === 'special' && resource.name === 'orbitalDebris');
 }
 
+function refreshResourceTooltipLocalization(tooltip) {
+  if (!tooltip || !tooltip._i18n) return;
+  const refs = tooltip._i18n;
+  if (refs.noteDiv) {
+    const noteText = localizeResourceTooltipText(
+      'notes.landRecover',
+      null,
+      'Land can be recovered by turning off the corresponding building'
+    );
+    if (refs.noteDiv.textContent !== noteText) {
+      refs.noteDiv.textContent = noteText;
+    }
+  }
+  if (refs.wasteNoteDiv) {
+    const wasteText = getWasteTooltipNoteText();
+    if (refs.wasteNoteDiv._icon && refs.wasteNoteDiv._icon.title !== wasteText) {
+      refs.wasteNoteDiv._icon.title = wasteText;
+    }
+    if (refs.wasteNoteDiv._textNode && refs.wasteNoteDiv._textNode.textContent !== ` ${wasteText}`) {
+      refs.wasteNoteDiv._textNode.textContent = ` ${wasteText}`;
+    }
+  }
+  const zonesHeader = refs.zonesDiv?._info?.header;
+  if (zonesHeader) {
+    const text = localizeResourceTooltipText('zones.header', null, 'Zonal Amounts:');
+    if (zonesHeader.textContent !== text) {
+      zonesHeader.textContent = text;
+    }
+  }
+  const sectionRefs = [
+    [refs.productionDiv, 'sections.production', 'Production:'],
+    [refs.consumptionDiv, 'sections.consumptionMaintenance', 'Consumption and Maintenance:'],
+    [refs.overflowDiv, 'sections.overflow', 'Overflow:'],
+    [refs.autobuildDiv, 'sections.autobuildCost', 'Autobuild Cost (avg 10s):']
+  ];
+  sectionRefs.forEach(([section, key, fallback]) => {
+    const headerEl = section?._info?.header;
+    if (!headerEl) return;
+    const text = localizeResourceTooltipText(key, null, fallback);
+    if (headerEl.textContent !== text) {
+      headerEl.textContent = text;
+    }
+  });
+  const totalSections = [refs.productionDiv, refs.consumptionDiv, refs.overflowDiv];
+  totalSections.forEach(section => {
+    const label = section?._info?.totalLabel;
+    if (!label) return;
+    const text = localizeResourceTooltipText('sections.total', null, 'Total :');
+    if (label.textContent !== text) {
+      label.textContent = text;
+    }
+  });
+}
+
 function setResourceTooltipColumns(tooltip, cols) {
   if (!tooltip || !tooltip._columnsInfo) return;
   const { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
@@ -553,13 +681,15 @@ function updateAssignmentTable(container, assignments) {
       return;
     }
     const header = document.createElement('div');
-    header.innerHTML = '<strong>Assignments:</strong>';
+    const headerStrong = document.createElement('strong');
+    headerStrong.textContent = localizeResourceTooltipText('sections.assignments', null, 'Assignments:');
+    header.appendChild(headerStrong);
     container.appendChild(header);
     const table = document.createElement('div');
     table.style.display = 'table';
     table.style.width = '100%';
     container.appendChild(table);
-    info = { table, spans: new Map() };
+    info = { headerStrong, table, spans: new Map() };
     assignments.forEach(([n, count]) => {
       const row = document.createElement('div');
       row.style.display = 'table-row';
@@ -581,6 +711,12 @@ function updateAssignmentTable(container, assignments) {
   }
 
   info = container._info;
+  if (info.headerStrong) {
+    const assignmentsText = localizeResourceTooltipText('sections.assignments', null, 'Assignments:');
+    if (info.headerStrong.textContent !== assignmentsText) {
+      info.headerStrong.textContent = assignmentsText;
+    }
+  }
   assignments.forEach(([n, count]) => {
     const span = info.spans.get(n);
     if (!span) return;
@@ -599,7 +735,11 @@ function updateWorkerAssignments(assignmentsDiv) {
     assignmentsDiv._ratioDiv = ratioDiv;
   }
   const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);
-  const ratioText = `${ratioPercent}% of colonists provide workers`;
+  const ratioText = localizeResourceTooltipText(
+    'assignments.workersRatio',
+    { percent: ratioPercent },
+    `${ratioPercent}% of colonists provide workers`
+  );
   if (ratioDiv.textContent !== ratioText) ratioDiv.textContent = ratioText;
 
   if (typeof resources !== 'undefined') {
@@ -616,7 +756,11 @@ function updateWorkerAssignments(assignmentsDiv) {
     }
     const colonists = resources.colony?.colonists?.value || 0;
     const colonistWorkers = Math.floor(populationModule.getEffectiveWorkerRatio() * colonists);
-    const colonistText = `${formatNumber(colonistWorkers, true)} from colonists`;
+    const colonistText = localizeResourceTooltipText(
+      'assignments.fromColonists',
+      { value: formatNumber(colonistWorkers, true) },
+      `${formatNumber(colonistWorkers, true)} from colonists`
+    );
     if (colonistDiv.textContent !== colonistText) colonistDiv.textContent = colonistText;
 
     let androidDiv = assignmentsDiv._androidDiv;
@@ -634,7 +778,11 @@ function updateWorkerAssignments(assignmentsDiv) {
       assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
     }
     const workers = Math.max(effective - assigned, 0);
-    const androidText = `${formatNumber(workers, true)} from androids`;
+    const androidText = localizeResourceTooltipText(
+      'assignments.fromAndroids',
+      { value: formatNumber(workers, true) },
+      `${formatNumber(workers, true)} from androids`
+    );
     if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
 
     const bioworkers = populationModule.getBioworkerContribution?.() || 0;
@@ -648,7 +796,12 @@ function updateWorkerAssignments(assignmentsDiv) {
         assignmentsDiv.insertBefore(bioworkerDiv, androidDiv);
       }
       const bioworkerText = `${formatNumber(bioworkers, true)} from bioworkers`;
-      if (bioworkerDiv.textContent !== bioworkerText) bioworkerDiv.textContent = bioworkerText;
+      const localizedBioworkerText = localizeResourceTooltipText(
+        'assignments.fromBioworkers',
+        { value: formatNumber(bioworkers, true) },
+        bioworkerText
+      );
+      if (bioworkerDiv.textContent !== localizedBioworkerText) bioworkerDiv.textContent = localizedBioworkerText;
     } else if (bioworkerDiv && bioworkerDiv.parentNode === assignmentsDiv) {
       assignmentsDiv.removeChild(bioworkerDiv);
     }
@@ -718,7 +871,9 @@ function updateAndroidAssignments(assignmentsDiv) {
   const assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
   const workers = Math.max(effective - assigned, 0);
   const entries = [];
-  if (workers > 0) entries.push(['Workers', workers]);
+  if (workers > 0) {
+    entries.push([localizeResourceTooltipText('resources.workers', null, 'Workers'), workers]);
+  }
   androidAssignments.forEach(([name, count]) => entries.push([name, count]));
   let tableContainer = assignmentsDiv._tableContainer;
   if (!tableContainer) {
@@ -750,7 +905,11 @@ function updateSpaceshipAssignments(assignmentsDiv) {
     assignmentsDiv.appendChild(totalDiv);
     assignmentsDiv._totalDiv = totalDiv;
   }
-  const totalText = `Total ${formatNumber(available + assignedTotal, true)}`;
+  const totalText = localizeResourceTooltipText(
+    'assignments.total',
+    { value: formatNumber(available + assignedTotal, true) },
+    `Total ${formatNumber(available + assignedTotal, true)}`
+  );
   if (totalDiv.textContent !== totalText) totalDiv.textContent = totalText;
 
   let unassignedDiv = assignmentsDiv._unassignedDiv;
@@ -759,7 +918,11 @@ function updateSpaceshipAssignments(assignmentsDiv) {
     assignmentsDiv.appendChild(unassignedDiv);
     assignmentsDiv._unassignedDiv = unassignedDiv;
   }
-  const unassignedText = `Unassigned ${formatNumber(available, true)}`;
+  const unassignedText = localizeResourceTooltipText(
+    'assignments.unassigned',
+    { value: formatNumber(available, true) },
+    `Unassigned ${formatNumber(available, true)}`
+  );
   if (unassignedDiv.textContent !== unassignedText) unassignedDiv.textContent = unassignedText;
 
   let tableContainer = assignmentsDiv._tableContainer;
@@ -812,29 +975,30 @@ function getAerostatLiftAlert() {
   if (Number.isFinite(pressure) && pressure < minPressure) {
     severity = 'critical';
     const pressureText = formatNumber(pressure, false, 1);
-    const pressureLine = `Active aerostats only have ${pressureText} kPa of surface pressure, below the ${formatNumber(
-      minPressure,
-      false,
-      0
-    )} kPa minimum needed to stay buoyant.`;
-    message = `▲ ${pressureLine} ▲`;
+    const minPressureText = formatNumber(minPressure, false, 0);
+    message = localizeResourceTooltipText(
+      'warnings.aerostat.pressureBelow',
+      { pressure: pressureText, minPressure: minPressureText },
+      `▲ Active aerostats only have ${pressureText} kPa of surface pressure, below the ${minPressureText} kPa minimum needed to stay buoyant. ▲`
+    );
   } else if (Number.isFinite(lift) && lift < minLift) {
     severity = 'critical';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
-    const liftLine = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
-      minLift,
-      false,
-      2
-    )} kg/m³ minimum needed to stay aloft.`;
-    message = `▲ ${liftLine} ▲`;
+    const minLiftText = formatNumber(minLift, false, 2);
+    message = localizeResourceTooltipText(
+      'warnings.aerostat.liftBelowMinimum',
+      { lift: liftText, minLift: minLiftText },
+      `▲ Active aerostats only have ${liftText} kg/m³ of lift, below the ${minLiftText} kg/m³ minimum needed to stay aloft. ▲`
+    );
   } else if (Number.isFinite(lift) && lift < warningLift) {
     severity = 'warning';
     const liftText = `${lift >= 0 ? '+' : ''}${formatNumber(lift, false, 3)}`;
-    message = `Active aerostats only have ${liftText} kg/m³ of lift, below the ${formatNumber(
-      warningLift,
-      false,
-      2
-    )} kg/m³ safety margin.`;
+    const warningLiftText = formatNumber(warningLift, false, 2);
+    message = localizeResourceTooltipText(
+      'warnings.aerostat.liftBelowSafety',
+      { lift: liftText, warningLift: warningLiftText },
+      `Active aerostats only have ${liftText} kg/m³ of lift, below the ${warningLiftText} kg/m³ safety margin.`
+    );
   }
 
   return { severity, message, lift, active };
@@ -843,8 +1007,12 @@ function getAerostatLiftAlert() {
 function getBiomassWarningMessage(zones) {
   const dyingZones = getZones().filter(zone => zones[zone]);
   if (dyingZones.length === 0) return '';
-  const zoneText = dyingZones.map(zone => capitalizeFirstLetter(zone)).join(', ');
-  return `Biomass is dying in the ${zoneText} zone${dyingZones.length > 1 ? 's' : ''}.`;
+  const zoneText = formatLocalizedZoneList(dyingZones);
+  return localizeResourceTooltipText(
+    'warnings.biomassDyingZones',
+    { zones: zoneText, suffix: dyingZones.length > 1 ? 's' : '' },
+    `Biomass is dying in the ${zoneText} zone${dyingZones.length > 1 ? 's' : ''}.`
+  );
 }
 
 function createResourceElement(category, resourceObj, resourceName) {
@@ -982,6 +1150,16 @@ function updateResourceDisplay(resources, deltaSeconds) {
     const cat = resourceUICache.categories[category] || cacheResourceCategory(category);
     const container = cat ? cat.container : null;
     const header = cat ? cat.header : null;
+    if (header) {
+      const label = header._labelEl || document.getElementById(`${category}-resources-header-label`);
+      if (label) {
+        header._labelEl = label;
+        const text = getLocalizedResourceCategoryHeader(category);
+        if (label.textContent !== text) {
+          label.textContent = text;
+        }
+      }
+    }
 
     let hasUnlockedResources = false;
 
@@ -1064,7 +1242,13 @@ function updateResourceDisplay(resources, deltaSeconds) {
           land &&
           land.value > 0 &&
           land.reserved / land.value < 0.99;
-        const warningMessage = warn ? 'Android production has reached its current cap.' : '';
+        const warningMessage = warn
+          ? localizeResourceTooltipText(
+            'warnings.androidCap',
+            null,
+            'Android production has reached its current cap.'
+          )
+          : '';
         const icon = warn ? '⚠' : '';
         if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
         if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
@@ -1074,11 +1258,21 @@ function updateResourceDisplay(resources, deltaSeconds) {
         const limiter = lifeManager.biomassGrowthLimiters[resourceName];
         const limiterZones = limiter?.zones || [];
         const zoneText = limiterZones.length
-          ? ` in the ${limiterZones.map(capitalizeFirstLetter).join(', ')} zone${limiterZones.length > 1 ? 's' : ''}`
+          ? localizeResourceTooltipText(
+            'warnings.scopeZones',
+            { zones: formatLocalizedZoneList(limiterZones), suffix: limiterZones.length > 1 ? 's' : '' },
+            ` in the ${formatLocalizedZoneList(limiterZones)} zone${limiterZones.length > 1 ? 's' : ''}`
+          )
           : '';
-        const scopeSuffix = limiter?.scope === 'atmospheric' ? ' across the atmosphere' : zoneText;
+        const scopeSuffix = limiter?.scope === 'atmospheric'
+          ? localizeResourceTooltipText('warnings.scopeAtmospheric', null, ' across the atmosphere')
+          : zoneText;
         const warningMessage = limiter
-          ? `Biomass growth is limited by ${resourceObj.displayName} availability${scopeSuffix}.`
+          ? localizeResourceTooltipText(
+            'warnings.biomassLimiter',
+            { resource: resourceObj.displayName, scope: scopeSuffix },
+            `Biomass growth is limited by ${resourceObj.displayName} availability${scopeSuffix}.`
+          )
           : '';
         const icon = warningMessage ? '⚠' : '';
         if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
@@ -1144,7 +1338,11 @@ function updateResourceDisplay(resources, deltaSeconds) {
           scanningProgressElement
         ) {
           scanningProgressElement.style.display = 'block';
-          scanningProgressElement.textContent = `Scanning Progress: ${(scanData.currentScanProgress * 100).toFixed(2)}%`;
+          scanningProgressElement.textContent = localizeResourceTooltipText(
+            'scanningProgress',
+            { percent: (scanData.currentScanProgress * 100).toFixed(2) },
+            `Scanning Progress: ${(scanData.currentScanProgress * 100).toFixed(2)}%`
+          );
         } else if (scanningProgressElement) {
           scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
@@ -1211,8 +1409,9 @@ function getDisplayConsumptionRates(resource) {
     const dysonRate = lifters?.lastDysonEnergyPerSecond || 0;
     const colonyRate = Math.max(totalLifterRate - dysonRate, 0);
     if (colonyRate > 0) {
-      const current = adjustedBySource.Lifting || 0;
-      adjustedBySource.Lifting = current + colonyRate;
+      const sourceName = localizeResourceTooltipText('sources.lifting', null, 'Lifting');
+      const current = adjustedBySource[sourceName] || 0;
+      adjustedBySource[sourceName] = current + colonyRate;
       total += colonyRate;
     }
   }
@@ -1277,7 +1476,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       unstableTimers[resource.name] = timer;
 
       if (baseUnstable || timer > 0) {
-        ppsElement.textContent = 'Unstable';
+        ppsElement.textContent = localizeResourceTooltipText('rates.unstable', null, 'Unstable');
         ppsElement.style.color = '';
       } else {
         if (Math.abs(netRate) < 1e-3) {
@@ -1298,6 +1497,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
 
   const tooltipElement = entry?.tooltip?.root || document.getElementById(`${resource.name}-tooltip`);
   if (!tooltipElement || !tooltipElement._isActive) return;
+  refreshResourceTooltipLocalization(tooltipElement);
 
   const valueDiv = entry?.tooltip?.valueDiv || document.getElementById(`${resource.name}-tooltip-value`);
   const timeDiv = entry?.tooltip?.timeDiv || document.getElementById(`${resource.name}-tooltip-time`);
@@ -1335,18 +1535,37 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
         valueDiv.appendChild(hazard);
         valueDiv._hazard = hazard;
       }
-      const availText = `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`;
-      const usedText = `Used ${formatNumber(resource.reserved, false, 3)}`;
+      const availText = localizeResourceTooltipText(
+        'values.available',
+        { value: formatNumber(resource.value - resource.reserved, false, 3) },
+        `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`
+      );
+      const usedText = localizeResourceTooltipText(
+        'values.used',
+        { value: formatNumber(resource.reserved, false, 3) },
+        `Used ${formatNumber(resource.reserved, false, 3)}`
+      );
       if (avail.textContent !== availText) avail.textContent = availText;
       if (used.textContent !== usedText) used.textContent = usedText;
       const hazardReserved = resource.getReservedAmountForSource
         ? resource.getReservedAmountForSource('hazardousBiomass')
         : 0;
-      const hazardText = `Hazardous biomass ${formatNumber(hazardReserved, false, 3)}`;
+      const hazardText = localizeResourceTooltipText(
+        'values.hazardousBiomass',
+        { value: formatNumber(hazardReserved, false, 3) },
+        `Hazardous biomass ${formatNumber(hazardReserved, false, 3)}`
+      );
       if (hazard.textContent !== hazardText) hazard.textContent = hazardText;
       hazard.style.display = hazardReserved > 0 ? '' : 'none';
     } else {
-      const text = `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`;
+      const text = localizeResourceTooltipText(
+        'values.value',
+        {
+          value: formatNumber(resource.value, false, 3),
+          unit: resource.unit ? ` ${resource.unit}` : ''
+        },
+        `Value ${formatNumber(resource.value, false, 3)}${resource.unit ? ' ' + resource.unit : ''}`
+      );
       if (valueDiv.textContent !== text) valueDiv.textContent = text;
     }
   }
@@ -1363,9 +1582,17 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
         const label = resource.displayName || resource.name;
         if (remaining > 0) {
           const time = remaining / netRate;
-          timeDiv.textContent = `Time to ${label} terraforming target: ${formatDuration(Math.max(time, 0))}`;
+          timeDiv.textContent = localizeResourceTooltipText(
+            'time.toTerraformingTarget',
+            { label, duration: formatDuration(Math.max(time, 0)) },
+            `Time to ${label} terraforming target: ${formatDuration(Math.max(time, 0))}`
+          );
         } else {
-          timeDiv.textContent = `${label} terraforming target reached.`;
+          timeDiv.textContent = localizeResourceTooltipText(
+            'time.terraformingTargetReached',
+            { label },
+            `${label} terraforming target reached.`
+          );
         }
         showDefaultTime = false;
       }
@@ -1383,9 +1610,17 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
             const remaining = targetMass - resource.value;
             if (remaining > 0) {
               const time = remaining / netRate;
-              timeDiv.textContent = `Time to target pressure: ${formatDuration(Math.max(time, 0))}`;
+              timeDiv.textContent = localizeResourceTooltipText(
+                'time.toTargetPressure',
+                { duration: formatDuration(Math.max(time, 0)) },
+                `Time to target pressure: ${formatDuration(Math.max(time, 0))}`
+              );
             } else {
-              timeDiv.textContent = 'Terraforming target reached.';
+              timeDiv.textContent = localizeResourceTooltipText(
+                'time.targetReached',
+                null,
+                'Terraforming target reached.'
+              );
             }
             showDefaultTime = false;
           }
@@ -1393,13 +1628,21 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       }
       if (showDefaultTime) {
         if (rateUnstable) {
-          timeDiv.textContent = 'Time to full : unstable.';
+          timeDiv.textContent = localizeResourceTooltipText('time.toFullUnstable', null, 'Time to full : unstable.');
         } else if (netRate > 0 && resource.hasCap) {
           const time = (resource.cap - resource.value) / netRate;
-          timeDiv.textContent = `Time to full: ${formatDuration(Math.max(time, 0))}`;
+          timeDiv.textContent = localizeResourceTooltipText(
+            'time.toFull',
+            { duration: formatDuration(Math.max(time, 0)) },
+            `Time to full: ${formatDuration(Math.max(time, 0))}`
+          );
         } else if (netRate < 0) {
           const time = resource.value / Math.abs(netRate);
-          timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
+          timeDiv.textContent = localizeResourceTooltipText(
+            'time.toEmpty',
+            { duration: formatDuration(Math.max(time, 0)) },
+            `Time to empty: ${formatDuration(Math.max(time, 0))}`
+          );
         } else {
           timeDiv.innerHTML = '&nbsp;';
         }
@@ -1428,7 +1671,11 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     const warningMessages = [];
 
     if (resource.autobuildShortage) {
-      warningMessages.push('Autobuild is short on required inputs for queued construction.');
+      warningMessages.push(localizeResourceTooltipText(
+        'warnings.autobuildShortage',
+        null,
+        'Autobuild is short on required inputs for queued construction.'
+      ));
     }
 
     if (resource.name === 'androids') {
@@ -1442,7 +1689,11 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
         }
       }
       if (androidCapped) {
-        warningMessages.push('Android production has reached its current cap.');
+        warningMessages.push(localizeResourceTooltipText(
+          'warnings.androidCap',
+          null,
+          'Android production has reached its current cap.'
+        ));
       }
     }
 
@@ -1450,10 +1701,20 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     if (limiter) {
       const limiterZones = limiter.zones || [];
       const zoneText = limiterZones.length
-        ? ` in the ${limiterZones.map(capitalizeFirstLetter).join(', ')} zone${limiterZones.length > 1 ? 's' : ''}`
+        ? localizeResourceTooltipText(
+          'warnings.scopeZones',
+          { zones: formatLocalizedZoneList(limiterZones), suffix: limiterZones.length > 1 ? 's' : '' },
+          ` in the ${formatLocalizedZoneList(limiterZones)} zone${limiterZones.length > 1 ? 's' : ''}`
+        )
         : '';
-      const scopeSuffix = limiter.scope === 'atmospheric' ? ' across the atmosphere' : zoneText;
-      warningMessages.push(`Biomass growth is limited by ${resource.displayName} availability${scopeSuffix}.`);
+      const scopeSuffix = limiter.scope === 'atmospheric'
+        ? localizeResourceTooltipText('warnings.scopeAtmospheric', null, ' across the atmosphere')
+        : zoneText;
+      warningMessages.push(localizeResourceTooltipText(
+        'warnings.biomassLimiter',
+        { resource: resource.displayName, scope: scopeSuffix },
+        `Biomass growth is limited by ${resource.displayName} availability${scopeSuffix}.`
+      ));
     }
 
     if (resource.name === 'hydrogen') {
@@ -1463,24 +1724,51 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       const photodissociationFraction = Math.round(
         (globalThis.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION || 0) * 100
       );
-      let hydrogenMessage = `Hydrogen slowly escapes to space depending on solar flux and gravity.`;
-      hydrogenMessage += ` Stellar UV can photodissociate up to ${photodissociationFraction}% of that gas, creating atoms that escape about ${formatNumber(atomicSpeedup, false, 0)}× faster than molecules.`;
+      let hydrogenMessage = localizeResourceTooltipText(
+        'warnings.hydrogen.base',
+        null,
+        'Hydrogen slowly escapes to space depending on solar flux and gravity.'
+      );
+      hydrogenMessage += ` ${localizeResourceTooltipText(
+        'warnings.hydrogen.photodissociation',
+        {
+          percent: photodissociationFraction,
+          speedup: formatNumber(atomicSpeedup, false, 0)
+        },
+        `Stellar UV can photodissociate up to ${photodissociationFraction}% of that gas, creating atoms that escape about ${formatNumber(atomicSpeedup, false, 0)}× faster than molecules.`
+      )}`;
 
       const gravity = globalThis.terraforming?.celestialParameters?.gravity;
       if (Number.isFinite(gravity)) {
         const relationText = gravity < gravityThreshold
-          ? ', so expect ongoing decay.'
-          : ', so the atmosphere can retain hydrogen.';
-        hydrogenMessage += ` Current gravity is ${formatNumber(gravity, false, 2)} m/s²${relationText}`;
+          ? localizeResourceTooltipText('warnings.hydrogen.gravityLow', null, ', so expect ongoing decay.')
+          : localizeResourceTooltipText('warnings.hydrogen.gravityHigh', null, ', so the atmosphere can retain hydrogen.');
+        hydrogenMessage += ` ${localizeResourceTooltipText(
+          'warnings.hydrogen.gravitySentence',
+          { gravity: formatNumber(gravity, false, 2), relation: relationText },
+          `Current gravity is ${formatNumber(gravity, false, 2)} m/s²${relationText}`
+        )}`;
       }
 
       const solarFlux = globalThis.terraforming?.luminosity?.solarFlux;
       const referenceFlux = globalThis.HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX || 0;
       if (Number.isFinite(solarFlux)) {
         const fluxText = solarFlux > referenceFlux
-          ? 'accelerating the photodissociation that feeds this loss'
-          : 'keeping most hydrogen molecular and slowing the loss';
-        hydrogenMessage += ` Solar flux is ${formatNumber(solarFlux, false, 0)} W/m², ${fluxText}.`;
+          ? localizeResourceTooltipText(
+            'warnings.hydrogen.solarHigh',
+            null,
+            'accelerating the photodissociation that feeds this loss'
+          )
+          : localizeResourceTooltipText(
+            'warnings.hydrogen.solarLow',
+            null,
+            'keeping most hydrogen molecular and slowing the loss'
+          );
+        hydrogenMessage += ` ${localizeResourceTooltipText(
+          'warnings.hydrogen.solarSentence',
+          { flux: formatNumber(solarFlux, false, 0), effect: fluxText },
+          `Solar flux is ${formatNumber(solarFlux, false, 0)} W/m², ${fluxText}.`
+        )}`;
       }
 
       warningMessages.push(hydrogenMessage);
@@ -1580,10 +1868,24 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       getZones().forEach(zone => {
         const line = info.lines.get(zone);
         if (zoneValues[zone] !== undefined) {
-          let text = `${capitalizeFirstLetter(zone)}: ${formatNumber(zoneValues[zone], false, 3)}`;
+          const zoneName = getLocalizedZoneName(zone);
+          let text = localizeResourceTooltipText(
+            'zones.row',
+            { zone: zoneName, value: formatNumber(zoneValues[zone], false, 3) },
+            `${zoneName}: ${formatNumber(zoneValues[zone], false, 3)}`
+          );
           if (resource.name === 'ice' || resource.name === 'hydrocarbonIce') {
             const buried = zoneBuried[zone] || 0;
-            text += ` / ${formatNumber(buried, false, 3)} (surface/buried)`;
+            text = localizeResourceTooltipText(
+              'zones.rowSurfaceBuried',
+              {
+                zone: zoneName,
+                surface: formatNumber(zoneValues[zone], false, 3),
+                buried: formatNumber(buried, false, 3),
+                label: localizeResourceTooltipText('zones.surfaceBuried', null, 'surface/buried')
+              },
+              `${zoneName}: ${formatNumber(zoneValues[zone], false, 3)} / ${formatNumber(buried, false, 3)} (surface/buried)`
+            );
           }
           line.style.display = 'block';
           if (line.textContent !== text) line.textContent = text;
@@ -1604,14 +1906,20 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     const netRateWithAutobuild = netRate - autobuildAvg;
     const displayNetRate = Math.abs(netRateWithAutobuild) < 1e-6 ? 0 : netRateWithAutobuild;
     const baseText = `${formatNumber(displayNetRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
-    const autoText = isAutobuildTrackedResource(resource) ? 'Net Change (including autobuild):' : '';
+    const autoText = isAutobuildTrackedResource(resource)
+      ? localizeResourceTooltipText('net.includingAutobuild', null, 'Net Change (including autobuild):')
+      : '';
     if (autoLine && autoLine.textContent !== autoText) autoLine.textContent = autoText;
     if (baseLine && baseLine.textContent !== baseText) baseLine.textContent = baseText;
   }
 
   if (limitDiv) {
     if (resource.automationLimited) {
-      const text = 'Imports are being limited by automation settings';
+      const text = localizeResourceTooltipText(
+        'limits.importsAutomation',
+        null,
+        'Imports are being limited by automation settings'
+      );
       if (limitDiv.textContent !== text) limitDiv.textContent = text;
       if (limitDiv.style.display !== 'block') limitDiv.style.display = 'block';
     } else {

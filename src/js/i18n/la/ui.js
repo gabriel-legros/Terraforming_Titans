@@ -436,6 +436,170 @@ registerTranslations('la', {
       description: 'Lorem ipsum descriptio laserCannon.',
     },
   },
+  resourcesPanel: {
+    categories: {
+      colony: 'Lorem Colony Opes',
+      surface: 'Lorem Surface Opes',
+      underground: 'Lorem Underground Opes',
+      atmospheric: 'Lorem Atmospheric Opes',
+      special: 'Lorem Special Opes'
+    },
+    tooltip: {
+      notes: {
+        landRecover: 'Terra recuperari potest si aedificium respondens exstinguitur',
+        wasteProcessing: 'Aedificia vasti consumptionem monstrant ex operariis et energia praesto, carentias vasti ignorando.  Hic numeri non sunt vera consumptio.'
+      },
+      sections: {
+        production: 'Productio:',
+        consumptionMaintenance: 'Consumptio et Sustentatio:',
+        overflow: 'Excessus:',
+        autobuildCost: 'Sumptus Autobuild (avg 10s):',
+        total: 'Totale :',
+        assignments: 'Assignationes:'
+      },
+      assignments: {
+        workersRatio: '{percent}% colonistarum operarios praebent',
+        fromColonists: '{value} ex colonistis',
+        fromAndroids: '{value} ex androidis',
+        fromBioworkers: '{value} ex bioworkers',
+        total: 'Totale {value}',
+        unassigned: 'Non assignata {value}'
+      },
+      resources: {
+        workers: 'Operarii'
+      },
+      warnings: {
+        biomassDyingZones: 'Biomassa in zona {zones} moritur{suffix}.',
+        androidCap: 'Productio androidum cap currentem attigit.',
+        autobuildShortage: 'Autobuild inputis requisitis caret pro constructione in queue.',
+        biomassLimiter: 'Crescentia biomassae per disponibilitatem {resource} limitatur{scope}.',
+        scopeZones: ' in zona {zones}{suffix}',
+        scopeAtmospheric: ' per atmosphaeram',
+        aerostat: {
+          pressureBelow: '▲ Aerostata activa tantum {pressure} kPa pressionis superficiei habent, sub minimo {minPressure} kPa ad buoyancy necessaria. ▲',
+          liftBelowMinimum: '▲ Aerostata activa tantum {lift} kg/m³ lift habent, sub minimo {minLift} kg/m³ ad volandum necessaria. ▲',
+          liftBelowSafety: 'Aerostata activa tantum {lift} kg/m³ lift habent, sub margine securitatis {warningLift} kg/m³.'
+        },
+        hydrogen: {
+          base: 'Hydrogenium lente in spatium effugit secundum fluxum solarem et gravitatem.',
+          photodissociation: 'UV stellarum usque ad {percent}% illius gasi photodissociare potest, atomos creans qui circa {speedup}× celerius quam moleculae effugiunt.',
+          gravityLow: ', ita continua imminutio exspectanda est.',
+          gravityHigh: ', ita atmosphaera hydrogenium retinere potest.',
+          gravitySentence: 'Gravitas currentis est {gravity} m/s²{relation}',
+          solarHigh: 'photodissociationem huius amissionis accelerans',
+          solarLow: 'plurimum hydrogenii moleculare servans et amissionem tardans',
+          solarSentence: 'Fluxus solaris est {flux} W/m², {effect}.'
+        }
+      },
+      scanningProgress: 'Progressus Scanning: {percent}%',
+      rates: {
+        unstable: 'Instabilis'
+      },
+      values: {
+        available: 'Praesto {value}',
+        used: 'Usus {value}',
+        hazardousBiomass: 'Biomassa periculosa {value}',
+        value: 'Valor {value}{unit}'
+      },
+      time: {
+        toTerraformingTarget: 'Tempus ad scopum terraformationis {label}: {duration}',
+        terraformingTargetReached: 'Scopus terraformationis {label} attingitur.',
+        toTargetPressure: 'Tempus ad pressionem scopi: {duration}',
+        targetReached: 'Scopus terraformationis attingitur.',
+        toFullUnstable: 'Tempus ad plenum : instabile.',
+        toFull: 'Tempus ad plenum: {duration}',
+        toEmpty: 'Tempus ad vacuum: {duration}'
+      },
+      zones: {
+        header: 'Quantitates Zonales:',
+        row: '{zone}: {value}',
+        rowSurfaceBuried: '{zone}: {surface} / {buried} ({label})',
+        surfaceBuried: 'superficies/sepulta',
+        names: {
+          tropical: 'Tropica',
+          temperate: 'Temperata',
+          polar: 'Polaris'
+        }
+      },
+      net: {
+        includingAutobuild: 'Mutatio Neta (cum autobuild):'
+      },
+      limits: {
+        importsAutomation: 'Importationes a setting automationis limitantur'
+      },
+      sources: {
+        lifting: 'Elevatio'
+      }
+    }
+  },
+  resourcesParameters: {
+    colony: {
+      funding: 'Lorem funding',
+      colonists: 'Lorem colonists',
+      workers: 'Lorem workers',
+      energy: 'Lorem energy',
+      metal: 'Lorem metal',
+      silicon: 'Lorem silicon',
+      glass: 'Lorem glass',
+      water: 'Lorem water',
+      food: 'Lorem food',
+      components: 'Lorem components',
+      electronics: 'Lorem electronics',
+      superconductors: 'Lorem superconductors',
+      superalloys: 'Lorem superalloys',
+      androids: 'Lorem androids',
+      research: 'Lorem research',
+      advancedResearch: 'Lorem advancedResearch',
+    },
+    surface: {
+      land: 'Lorem land',
+      ice: 'Lorem ice',
+      liquidWater: 'Lorem liquidWater',
+      dryIce: 'Lorem dryIce',
+      liquidCO2: 'Lorem liquidCO2',
+      liquidMethane: 'Lorem liquidMethane',
+      hydrocarbonIce: 'Lorem hydrocarbonIce',
+      liquidAmmonia: 'Lorem liquidAmmonia',
+      ammoniaIce: 'Lorem ammoniaIce',
+      liquidOxygen: 'Lorem liquidOxygen',
+      oxygenIce: 'Lorem oxygenIce',
+      liquidNitrogen: 'Lorem liquidNitrogen',
+      nitrogenIce: 'Lorem nitrogenIce',
+      biomass: 'Lorem biomass',
+      hazardousBiomass: 'Lorem hazardousBiomass',
+      graphite: 'Lorem graphite',
+      scrapMetal: 'Lorem scrapMetal',
+      garbage: 'Lorem garbage',
+      trash: 'Lorem trash',
+      junk: 'Lorem junk',
+      radioactiveWaste: 'Lorem radioactiveWaste',
+    },
+    underground: {
+      ore: 'Lorem ore',
+      geothermal: 'Lorem geothermal',
+    },
+    atmospheric: {
+      carbonDioxide: 'Lorem carbonDioxide',
+      inertGas: 'Lorem inertGas',
+      oxygen: 'Lorem oxygen',
+      atmosphericWater: 'Lorem atmosphericWater',
+      greenhouseGas: 'Lorem greenhouseGas',
+      atmosphericMethane: 'Lorem atmosphericMethane',
+      atmosphericAmmonia: 'Lorem atmosphericAmmonia',
+      hydrogen: 'Lorem hydrogen',
+      sulfuricAcid: 'Lorem sulfuricAcid',
+      calciteAerosol: 'Lorem calciteAerosol',
+    },
+    special: {
+      albedoUpgrades: 'Lorem albedoUpgrades',
+      whiteDust: 'Lorem whiteDust',
+      orbitalDebris: 'Lorem orbitalDebris',
+      spaceships: 'Lorem spaceships',
+      alienArtifact: 'Lorem alienArtifact',
+      crusaders: 'Lorem crusaders',
+      antimatter: 'Lorem antimatter',
+    },
+  },
   saveSettings: {
     save: {
       title: 'Lorem Save',
