@@ -235,8 +235,9 @@ class Resource extends EffectableEntity {
     }
   }
 
-  getEffectiveBaseStorageCap() {
-    let cap = this.baseCap;
+  // Method to update the storage cap based on active structures
+  updateStorageCap() {
+    let newCap = this.baseCap; // Start with the base capacity
     const effects = this.activeEffects || [];
     let bonus = 0;
     let solisBonus = 0;
@@ -260,13 +261,7 @@ class Resource extends EffectableEntity {
       solisBonus = Math.min(solisBonus, 1000);
     }
     bonus += solisBonus;
-    cap += bonus;
-    return cap;
-  }
-
-  // Method to update the storage cap based on active structures
-  updateStorageCap() {
-    let newCap = this.getEffectiveBaseStorageCap();
+    newCap += bonus;
 
     for (const structureName in structures) {
       const structure = structures[structureName];

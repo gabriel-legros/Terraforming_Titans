@@ -19,7 +19,10 @@ class Ecumenopolis extends Colony {
 
   getFreeAndroidStorage(resources) {
     const androidsResource = resources.colony.androids;
-    return androidsResource.getEffectiveBaseStorageCap();
+    const baseBonus = (androidsResource.activeEffects || [])
+      .filter((effect) => effect.type === 'baseStorageBonus')
+      .reduce((sum, effect) => sum + effect.value, 0);
+    return androidsResource.baseCap + baseBonus;
   }
 
   getAndroidHousingCapacity() {
