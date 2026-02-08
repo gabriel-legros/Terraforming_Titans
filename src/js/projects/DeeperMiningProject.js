@@ -100,8 +100,8 @@ class DeeperMiningProject extends AndroidProject {
       cost.colony.superalloys = (cost.colony.superalloys || 0) + (componentCost * bonusLevel) / 100;
     }
     
-    // Double components cost when geothermal deposits enabled
-    if (this.createGeothermalDeposits && this.averageDepth >= 500) {
+    // Double components cost when geothermal deposits are active beyond depth 500
+    if (this.createGeothermalDeposits && this.averageDepth > 500) {
       cost.colony.components = (cost.colony.components || 0) * 2;
     }
     
@@ -182,26 +182,21 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   applyDeepMiningEffects(oldDepth, newDepth) {
-    const levelsGained = newDepth - oldDepth;
-    // Create geothermal deposits for depth changes beyond 500
-    if (this.createGeothermalDeposits && this.planetAllowsGeothermalCreation() && newDepth >= 500) {
-      
-      if (levelsGained > 0) {
-        const depositsGained = levelsGained * this.oreMineCount * this.geothermalDepositsPerMinePerLevel;
-        const geothermal = resources.underground.geothermal;
-        geothermal.addDeposit(depositsGained);
-        geothermal.baseCap += depositsGained;
-        geothermal.cap += depositsGained;
-        this.lastGeothermalDepth = newDepth;
-      }
+    const deepLevelsGained = Math.max(0, newDepth - Math.max(oldDepth, 500));
+
+    // Create geothermal deposits only for depth gained beyond 500
+    if (this.createGeothermalDeposits && this.planetAllowsGeothermalCreation() && deepLevelsGained > 0) {
+      const depositsGained = deepLevelsGained * this.oreMineCount * this.geothermalDepositsPerMinePerLevel;
+      const geothermal = resources.underground.geothermal;
+      geothermal.addDeposit(depositsGained);
+      geothermal.baseCap += depositsGained;
+      geothermal.cap += depositsGained;
+      this.lastGeothermalDepth = newDepth;
     }
 
-    if (this.undergroundStorage && newDepth >= 500) {
-      if (levelsGained > 0) {
-        this.undergroundStorageLevels += levelsGained;
-      }
+    if (this.undergroundStorage && deepLevelsGained > 0) {
+      this.undergroundStorageLevels += deepLevelsGained;
     }
-    
   }
 
   applyUndergroundStorageEffects() {
@@ -254,8 +249,8 @@ class DeeperMiningProject extends AndroidProject {
     const base = super.getBaseDuration();
     let duration = base / this.getUnderworldMiningSpeedMultiplier();
     
-    // Slow down by 2x when underground storage is enabled
-    if (this.undergroundStorage && this.averageDepth >= 500) {
+    // Slow down by 2x when underground storage is active beyond depth 500
+    if (this.undergroundStorage && this.averageDepth > 500) {
       duration *= 2;
     }
     
@@ -518,20 +513,19 @@ class DeeperMiningProject extends AndroidProject {
       if (!hasUnderworldUpgrade) {
         elements.deepMiningSection.style.display = 'none';
       } else {
-        const isDeepEnough = this.averageDepth >= 500;
         elements.deepMiningSection.style.display = '';
-        elements.deepMiningSection.classList.toggle('deep-mining-locked', !isDeepEnough);
+        elements.deepMiningSection.classList.remove('deep-mining-locked');
 
         if (elements.geothermalToggle) {
           const geothermalAllowed = this.planetAllowsGeothermalCreation();
-          elements.geothermalToggle.disabled = !isDeepEnough || !geothermalAllowed;
+          elements.geothermalToggle.disabled = !geothermalAllowed;
           if (!geothermalAllowed) {
             this.createGeothermalDeposits = false;
           }
           setToggleButtonState(elements.geothermalToggle, this.createGeothermalDeposits);
         }
         if (elements.storageToggle) {
-          elements.storageToggle.disabled = !isDeepEnough;
+          elements.storageToggle.disabled = false;
           setToggleButtonState(elements.storageToggle, this.undergroundStorage);
         }
       }
