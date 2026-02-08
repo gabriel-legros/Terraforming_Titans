@@ -102,55 +102,29 @@ class ImportColonistsProject extends Project {
     const crusadersOption = elements.importCrusadersOption;
 
     const crusaderEnabled = this.canImportCrusaders();
-    const colonistsDisplayName = resources.colony.colonists.displayName;
-    const isSelectFocused = document.activeElement === select;
     if (colonistsOption) {
-      if (colonistsOption.textContent !== colonistsDisplayName) {
-        colonistsOption.textContent = colonistsDisplayName;
-      }
+      colonistsOption.textContent = resources.colony.colonists.displayName;
     }
     if (crusadersOption && resources.special?.crusaders) {
-      const crusaderDisplayName = resources.special.crusaders.displayName;
-      if (crusadersOption.textContent !== crusaderDisplayName) {
-        crusadersOption.textContent = crusaderDisplayName;
-      }
+      crusadersOption.textContent = resources.special.crusaders.displayName;
     }
 
     if (crusaderEnabled) {
-      if (!isSelectFocused && select.value !== this.importTarget) {
-        select.value = this.importTarget;
-      }
-      if (select.style.display === 'none') {
-        select.style.display = '';
-      }
-      if (label.style.display !== 'none') {
-        label.style.display = 'none';
-      }
-      if (crusaderTooltip.style.display === 'none') {
-        crusaderTooltip.style.display = '';
-      }
+      select.value = this.importTarget;
+      select.style.display = '';
+      label.style.display = 'none';
+      crusaderTooltip.style.display = '';
     } else {
-      if (label.textContent !== colonistsDisplayName) {
-        label.textContent = colonistsDisplayName;
-      }
-      if (label.style.display === 'none') {
-        label.style.display = '';
-      }
-      if (select.style.display !== 'none') {
-        select.style.display = 'none';
-      }
-      if (crusaderTooltip.style.display !== 'none') {
-        crusaderTooltip.style.display = 'none';
-      }
+      label.textContent = resources.colony.colonists.displayName;
+      label.style.display = '';
+      select.style.display = 'none';
+      crusaderTooltip.style.display = 'none';
     }
 
     const gain = this.getEffectiveResourceGain();
     const target = this.getImportTarget();
     const amount = this.getImportAmountFromGain(gain, target);
-    const amountText = formatNumber(amount, true);
-    if (amountSpan.textContent !== amountText) {
-      amountSpan.textContent = amountText;
-    }
+    amountSpan.textContent = formatNumber(amount, true);
     this.updateKesslerWarning();
   }
 
