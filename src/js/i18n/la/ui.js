@@ -37,6 +37,26 @@ registerTranslations('la', {
       kesslerWarpgateReplica: 'Project hic propter Kessler Skies limitatur. Facultates eius per warpgate parvum replicantur.',
       kesslerFailureChance: 'Kessler Skies: {percent}% casus defectus projecti.'
     },
+    labels: {
+      separator: ': '
+    },
+    projects: {
+      galacticMarket: {
+        headers: {
+          resource: 'Opes',
+          saturation: 'Saturatio',
+          sellPrice: 'Pretium Venditionis',
+          sellAmount: 'Quantitas Venditionis',
+          buyAmount: 'Quantitas Emptionis',
+          buyPrice: 'Pretium Emptionis'
+        },
+        tooltips: {
+          sellPrice: 'Pretia venditionis cadunt dum ad quantitatem saturationis accedis; ergo maiores venditiones lucrum per unitatem minuunt.',
+          headerControls: 'Utere -/+ ut gradum praesentem inter venditionem et emptionem transferas. Cum extra settings activae sunt, -Max surplus praesentem vendit (productio minus consumptio). +Max primum venditiones huius lineae delet, deinde emit usque dum lucrum funding positivum ad zerum reducitur.',
+          spaceshipPrice: 'Unaquaeque navis empta pretium funding per 1 auget et hoc per secundam 1% decrescit. Hic augmentus progressu ulteriore minui potest.'
+        }
+      }
+    },
     status: {
       maxDepthReached: 'Profunditas maxima attacta',
       completedShort: 'Completum',

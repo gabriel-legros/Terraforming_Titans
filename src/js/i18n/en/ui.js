@@ -37,6 +37,26 @@ registerTranslations('en', {
       kesslerWarpgateReplica: 'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.',
       kesslerFailureChance: 'Kessler Skies: {percent}% chance of project failure.'
     },
+    labels: {
+      separator: ': '
+    },
+    projects: {
+      galacticMarket: {
+        headers: {
+          resource: 'Resource',
+          saturation: 'Saturation',
+          sellPrice: 'Sell Price',
+          sellAmount: 'Sell Amount',
+          buyAmount: 'Buy Amount',
+          buyPrice: 'Buy Price'
+        },
+        tooltips: {
+          sellPrice: 'Sell prices fall as you approach the saturation amount, so higher sell orders lower the payout per unit.',
+          headerControls: 'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max first cancels this row’s sells, then buys enough to spend a positive funding gain down to zero.',
+          spaceshipPrice: 'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.'
+        }
+      }
+    },
     status: {
       maxDepthReached: 'Max depth reached',
       completedShort: 'Completed',
