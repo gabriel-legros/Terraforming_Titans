@@ -596,11 +596,20 @@ class SpaceshipAutomation {
           break;
         }
 
-        const allocateFill = () => {
+        const hasNonMassEntries = weightedEntries.some(item => !item.usesMassDrivers);
+        const passPoolLimit = hasNonMassEntries
+          ? remainingShipsOnly
+          : (remainingShipsOnly + remainingMassDriverEquivalency);
+        const distributableRemaining = Math.min(stepRemaining, passPoolLimit);
+        if (distributableRemaining <= 0) {
+          break;
+        }
+
+        const allocateFill = (budget) => {
           let allocatedInPass = 0;
           for (let wIndex = 0; wIndex < weightedEntries.length; wIndex += 1) {
             const item = weightedEntries[wIndex];
-            const share = Math.floor(stepRemaining * (item.entry.weight / totalWeight));
+            const share = Math.floor(budget * (item.entry.weight / totalWeight));
             if (share <= 0) continue;
             const poolAvailable = getPoolAvailable(item.usesMassDrivers);
             const applied = Math.min(share, item.remainingCapacity, poolAvailable);
@@ -611,7 +620,7 @@ class SpaceshipAutomation {
             }
           }
 
-          let remainder = stepRemaining - allocatedInPass;
+          let remainder = budget - allocatedInPass;
           if (remainder > 0) {
             for (let wIndex = 0; wIndex < weightedEntries.length && remainder > 0; wIndex += 1) {
               const item = weightedEntries[wIndex];
@@ -635,10 +644,7 @@ class SpaceshipAutomation {
         if (mode === 'cappedMin') {
           const hasFiniteCap = weightedEntries.some(item => Number.isFinite(item.remainingCapacity));
           if (!hasFiniteCap) {
-            if (stepRemaining <= 0) {
-              stepRemaining = remainingTotal;
-            }
-            const allocatedInPass = allocateFill();
+            const allocatedInPass = allocateFill(distributableRemaining);
             if (allocatedInPass === 0) {
               break;
             }
@@ -650,7 +656,7 @@ class SpaceshipAutomation {
             const val = item.remainingCapacity / item.entry.weight;
             return Math.min(min, val);
           }, Infinity);
-          const stepFactor = stepRemaining / totalWeight;
+          const stepFactor = distributableRemaining / totalWeight;
           const factor = Math.min(capFactor, stepFactor);
           const allocations = [];
           let allocatedInPass = 0;
@@ -670,7 +676,7 @@ class SpaceshipAutomation {
               fractional: (item.entry.weight * factor) - share
             });
           }
-          let remainder = Math.max(0, stepRemaining - allocatedInPass);
+          let remainder = Math.max(0, distributableRemaining - allocatedInPass);
           if (remainder > 0) {
             allocations.sort((a, b) => b.fractional - a.fractional);
             for (let allocIndex = 0; allocIndex < allocations.length && remainder > 0; allocIndex += 1) {
@@ -693,7 +699,7 @@ class SpaceshipAutomation {
           stepRemaining = Math.max(0, stepRemaining - allocatedInPass);
           break;
         } else {
-          const allocatedInPass = allocateFill();
+          const allocatedInPass = allocateFill(distributableRemaining);
 
           if (allocatedInPass === 0) {
             break;

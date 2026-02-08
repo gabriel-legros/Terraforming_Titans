@@ -230,7 +230,18 @@ function renderAutomationSteps(automation, preset, container) {
     const limitInfo = document.createElement('span');
     limitInfo.className = 'info-tooltip-icon';
     limitInfo.innerHTML = '&#9432;';
-    attachDynamicInfoTooltip(limitInfo, 'Assign Amount: distribute up to the entered ship count by weight. Capped by smallest max: balance by weight until the smallest max is reached. Capped by largest max: balance by weight until the largest max is reached; if no largest max is reached (infinite/unset caps), it uses every remaining ship.');
+    attachDynamicInfoTooltip(
+      limitInfo,
+      'Assign Amount:\n' +
+      '- Distributes up to the entered amount by weight.\n\n' +
+      'Modes:\n' +
+      '- Capped by smallest max: balance by weight until the smallest max is reached.\n' +
+      '- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n\n' +
+      'Mass Drivers:\n' +
+      '- Each Mass Driver counts as 10 ships.\n' +
+      '- Counts toward assign amount limits.\n' +
+      '- Can only be assigned through "Resource Disposal (mass drivers included)".'
+    );
     const limitMode = document.createElement('select');
     const fixedOpt = document.createElement('option');
     fixedOpt.value = 'fixed';
