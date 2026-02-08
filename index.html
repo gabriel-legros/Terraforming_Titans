@@ -71,6 +71,7 @@
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="src/js/numbers.js"></script>
     <script src="src/js/globals.js"></script>
+    <script src="src/js/localization.js"></script>
     <script src="src/js/buildCount.js"></script>
     <script src="src/js/tab.js"></script>
     <script src="src/js/ui-utils.js"></script>
@@ -743,6 +744,13 @@
           </div>
           <h2>Settings</h2>
           <div class="settings-grid">
+            <label class="settings-option">
+              <span data-i18n="settings.language.label">Language</span>
+              <select id="language-select">
+                <option value="en" data-i18n="settings.language.option.en">English</option>
+                <option value="es" data-i18n="settings.language.option.es">Lorem Ipsum</option>
+              </select>
+            </label>
             <label class="settings-option">
               <input type="checkbox" id="keep-tab-running-audio-toggle"> Use white noise to keep tab active <span class="info-tooltip-icon" title="After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution.  Much more quiet on Firefox.  May still work even if the tab is muted.">&#9432;</span>
             </label>
