@@ -488,6 +488,10 @@ class SpaceshipAutomation {
     let remainingShipsOnly = totalShipsOnly;
     let remainingMassDriverEquivalency = massDriverCapacity;
     let remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
+    const getMixedStepPoolLimit = () => {
+      const cappedMassEquivalency = Math.min(remainingMassDriverEquivalency, remainingShipsOnly);
+      return remainingShipsOnly + cappedMassEquivalency;
+    };
     const getPoolAvailable = usesMassDrivers => usesMassDrivers
       ? remainingShipsOnly + remainingMassDriverEquivalency
       : remainingShipsOnly;
@@ -510,10 +514,13 @@ class SpaceshipAutomation {
       const step = preset.steps[stepIndex];
       const entries = step.entries;
       const stepHasMassDrivers = entries.some(entry => entry.projectId === massDriverTargetId);
+      const stepHasNonMassEntries = entries.some(entry => entry.projectId !== massDriverTargetId);
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
       const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
-      const stepPoolLimit = stepHasMassDrivers ? remainingTotal : remainingShipsOnly;
+      const stepPoolLimit = stepHasMassDrivers
+        ? (stepHasNonMassEntries ? getMixedStepPoolLimit() : remainingTotal)
+        : remainingShipsOnly;
       let stepLimit = stepPoolLimit;
       if (!isCappedMin && !isCappedMax) {
         stepLimit = limitValue === null ? 0 : Math.min(limitValue, stepPoolLimit);
@@ -597,8 +604,9 @@ class SpaceshipAutomation {
         }
 
         const hasNonMassEntries = weightedEntries.some(item => !item.usesMassDrivers);
+        const hasMassEntries = weightedEntries.some(item => item.usesMassDrivers);
         const passPoolLimit = hasNonMassEntries
-          ? remainingShipsOnly
+          ? (hasMassEntries ? getMixedStepPoolLimit() : remainingShipsOnly)
           : (remainingShipsOnly + remainingMassDriverEquivalency);
         const distributableRemaining = Math.min(stepRemaining, passPoolLimit);
         if (distributableRemaining <= 0) {

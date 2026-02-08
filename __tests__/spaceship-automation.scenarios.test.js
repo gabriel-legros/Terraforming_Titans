@@ -429,4 +429,82 @@ describe('Spaceship automation scenarios', () => {
     expect(resources.special.spaceships.value).toBe(600);
     cleanup();
   });
+
+  it('splits weighted mixed target with 10M ships and 500k mass drivers into 7.5M mining + 2.5M disposal ships + all mass drivers', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 10000000,
+      massDriverCount: 500000,
+      projects: {
+        metalMining: {},
+      },
+    });
+    const massDriverTargetId = automation.getMassDriverAutomationId();
+    configurePreset(automation, {
+      mode: 'cappedMax',
+      entries: [
+        { projectId: 'metalMining', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: massDriverTargetId, weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    automation.applyAssignments();
+
+    expect(projects.metalMining.getAutomationShipCount()).toBe(7500000);
+    expect(projects.disposeResources.getAutomationShipCount()).toBe(2500000);
+    expect(buildings.massDriver.active).toBe(500000);
+    expect(resources.special.spaceships.value).toBe(0);
+    cleanup();
+  });
+
+  it('handles 10M ships + 1M mass drivers with equal weights in a mixed step', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 10000000,
+      massDriverCount: 1000000,
+      projects: {
+        metalMining: {},
+      },
+    });
+    const massDriverTargetId = automation.getMassDriverAutomationId();
+    configurePreset(automation, {
+      mode: 'cappedMax',
+      entries: [
+        { projectId: 'metalMining', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: massDriverTargetId, weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    automation.applyAssignments();
+
+    expect(projects.metalMining.getAutomationShipCount()).toBe(10000000);
+    expect(projects.disposeResources.getAutomationShipCount()).toBe(0);
+    expect(buildings.massDriver.active).toBe(1000000);
+    expect(resources.special.spaceships.value).toBe(0);
+    cleanup();
+  });
+
+  it('caps mixed-step mass-driver contribution at ship parity: 10M ships + 10M mass drivers, equal weights', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 10000000,
+      massDriverCount: 10000000,
+      projects: {
+        metalMining: {},
+      },
+    });
+    const massDriverTargetId = automation.getMassDriverAutomationId();
+    configurePreset(automation, {
+      mode: 'cappedMax',
+      entries: [
+        { projectId: 'metalMining', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: massDriverTargetId, weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    automation.applyAssignments();
+
+    expect(projects.metalMining.getAutomationShipCount()).toBe(10000000);
+    expect(projects.disposeResources.getAutomationShipCount()).toBe(0);
+    expect(buildings.massDriver.active).toBe(1000000);
+    expect(resources.special.spaceships.value).toBe(0);
+    cleanup();
+  });
 });
