@@ -622,20 +622,10 @@ class ArtificialManager extends EffectableEntity {
     }
 
     setPrioritizeSpaceStorage(value) {
-        const checked = !!value;
-        const storageProj = projectManager?.projects?.spaceStorage;
-        storageProj && (storageProj.megaProjectResourceMode = checked
-            ? MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
-            : MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST);
-        this.prioritizeSpaceStorage = checked;
+        this.prioritizeSpaceStorage = !!value;
     }
 
     getPrioritizeSpaceStorage() {
-        const mode = projectManager?.projects?.spaceStorage?.megaProjectResourceMode;
-        if (MEGA_PROJECT_RESOURCE_MODE_MAP[mode]) {
-            return mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
-                || mode === MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
-        }
         return this.prioritizeSpaceStorage;
     }
 
@@ -791,7 +781,7 @@ class ArtificialManager extends EffectableEntity {
         return { status: nextState.canStart ? 'ready' : 'prepaid', state: nextState };
     }
 
-    pullResources(cost) {
+    pullResources(cost, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const useStorage = !!storageProj;
         const plan = {};
@@ -802,14 +792,20 @@ class ArtificialManager extends EffectableEntity {
             const colonyRes = resources.colony[key];
             const colonyAvailable = colonyRes ? colonyRes.value : 0;
             const storageKey = key === 'water' ? 'liquidWater' : key;
-            const total = getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable);
+            const storageAvailable = useStorage && storageProj.getAvailableStoredResource
+                ? storageProj.getAvailableStoredResource(storageKey)
+                : 0;
+            const total = colonyAvailable + storageAvailable;
             if (total < required) {
                 return null;
             }
 
             if (useStorage) {
-                const allocation = getMegaProjectResourceAllocation(storageProj, storageKey, required, colonyAvailable);
-                plan[key] = { colony: allocation.fromColony, storage: allocation.fromStorage, storageKey };
+                const fromStorage = prioritizeStorage
+                    ? Math.min(storageAvailable, required)
+                    : Math.max(required - colonyAvailable, 0);
+                const fromColony = required - fromStorage;
+                plan[key] = { colony: fromColony, storage: fromStorage, storageKey };
             } else {
                 const fromColony = Math.min(colonyAvailable, required);
                 plan[key] = { colony: fromColony, storage: 0, storageKey };
@@ -1614,7 +1610,7 @@ class ArtificialManager extends EffectableEntity {
 
     loadState(state) {
         if (!state) return;
-        this.prioritizeSpaceStorage = !!state.prioritizeSpaceStorage;
+        this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
         this.activeProject = state.activeProject || null;
         const draft = state.draftSelection || {};
         const defaultDraft = this.createDefaultDraftSelection();
