@@ -521,16 +521,21 @@ class NanotechManager extends EffectableEntity {
   updateUI() {
     if (typeof document === 'undefined') return;
     if (nanotechManager && nanotechManager !== this) return;
+    const nanocolonyContentHost = document.getElementById('nanocolony-colonies-content');
     const controlsSection =
       document.getElementById('colony-controls-section') ||
       document.getElementById('colony-controls-container') ||
       document.getElementById('colony-buildings-buttons');
+    const hostContainer = nanocolonyContentHost || controlsSection;
     let container = document.getElementById('nanocolony-container');
-    if (!container && controlsSection) {
+    if (container && nanocolonyContentHost && container.parentElement !== nanocolonyContentHost) {
+      nanocolonyContentHost.appendChild(container);
+    }
+    if (!container && hostContainer) {
       container = document.createElement('div');
       container.id = 'nanocolony-container';
       container.classList.add('project-card');
-      controlsSection.insertAdjacentElement('afterend', container);
+      hostContainer.appendChild(container);
       container.innerHTML = `
         <div class="card-header"><span class="card-title">Nanocolony</span></div>
         <div class="card-body nanotech-card-body">

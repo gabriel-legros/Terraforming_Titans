@@ -87,6 +87,7 @@ function initializeDefaultGlobals(){
   colonies = initializeColonies(colonyParameters);
   createColonyButtons(colonies);
   initializeColonyAlerts();
+  initializeColonySubtabs();
   // Initialize colony slider settings with clean state
   colonySliderSettings = new ColonySlidersManager();
   initializeColonySlidersUI();
@@ -444,17 +445,18 @@ function initializeGameState(options = {}) {
   }
   createColonyButtons(colonies);
   initializeColonyAlerts();
-    initializeProjectsUI();
-    renderProjects();
-    if (typeof initializeProjectAlerts === 'function') {
-      initializeProjectAlerts();
-    }
-    initializeColonySlidersUI();
-    initializeResearchUI(); // Reinitialize research UI as well
-    if (typeof initializeResearchAlerts === 'function') {
-      initializeResearchAlerts();
-    }
-    initializeHopeUI();
+  initializeColonySubtabs();
+  initializeProjectsUI();
+  renderProjects();
+  if (typeof initializeProjectAlerts === 'function') {
+    initializeProjectAlerts();
+  }
+  initializeColonySlidersUI();
+  initializeResearchUI(); // Reinitialize research UI as well
+  if (typeof initializeResearchAlerts === 'function') {
+    initializeResearchAlerts();
+  }
+  initializeHopeUI();
   if (preserveManagers && typeof updateSpaceUI === 'function') {
     updateSpaceUI();
   } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {
@@ -510,6 +512,7 @@ function initializeGameState(options = {}) {
     queueAutomationUIRefresh();
     updateAutomationUI();
   }
+  updateColonySubtabsVisibility();
   globalGameIsTraveling = false;
 }
 
@@ -595,6 +598,7 @@ function updateRender(force = false, options = {}) {
   // Always keep alert badges in sync regardless of active tab
   if (typeof updateBuildingAlert === 'function') updateBuildingAlert();
   updateColonyAlert();
+  updateColonySubtabsVisibility();
   if (typeof updateProjectAlert === 'function') updateProjectAlert();
   if (typeof updateResearchAlert === 'function') updateResearchAlert();
   if (typeof updateHopeAlert === 'function') updateHopeAlert();

@@ -42,6 +42,7 @@ body {
 
 .tabs,
 .buildings-subtabs,
+.colonies-subtabs,
 .research-subtabs,
 .projects-subtabs,
 .terraforming-subtabs,
@@ -57,6 +58,7 @@ body {
 }
 
 .buildings-subtabs,
+.colonies-subtabs,
 .research-subtabs,
 .projects-subtabs,
 .terraforming-subtabs,
@@ -72,6 +74,7 @@ body {
 
 /* Adjust subtab spacing when journal is collapsed to account for show button */
 body.journal-collapsed .buildings-subtabs,
+body.journal-collapsed .colonies-subtabs,
 body.journal-collapsed .research-subtabs,
 body.journal-collapsed .projects-subtabs,
 body.journal-collapsed .terraforming-subtabs,
@@ -83,6 +86,7 @@ body.journal-collapsed .space-subtabs
 
 .tab,
 .building-subtab,
+.colony-subtab,
 .research-subtab,
 .projects-subtab,
 .terraforming-subtab,
@@ -104,6 +108,7 @@ body.journal-collapsed .space-subtabs
 
 .tab.active,
 .building-subtab.active,
+.colony-subtab.active,
 .research-subtab.active,
 .projects-subtab.active,
 .terraforming-subtab.active,
@@ -162,6 +167,7 @@ body.journal-collapsed .tab-content {
 }
 
 .building-subtab-content,
+.colony-subtab-content,
 .research-subtab-content,
 .projects-subtab-content,
 .terraforming-subtab-content,
@@ -171,6 +177,7 @@ body.journal-collapsed .tab-content {
 }
 
 .building-subtab-content.active,
+.colony-subtab-content.active,
 .research-subtab-content.active,
 .projects-subtab-content.active,
 .terraforming-subtab-content.active,

@@ -5,6 +5,7 @@
 
 .dark-mode .tabs,
 .dark-mode .buildings-subtabs,
+.dark-mode .colonies-subtabs,
 .dark-mode .research-subtabs,
 .dark-mode .projects-subtabs,
 .dark-mode .terraforming-subtabs,
@@ -15,6 +16,7 @@
 
 .dark-mode .tab,
 .dark-mode .building-subtab,
+.dark-mode .colony-subtab,
 .dark-mode .research-subtab,
 .dark-mode .projects-subtab,
 .dark-mode .terraforming-subtab,
@@ -26,6 +28,7 @@
 
 .dark-mode .tab.active,
 .dark-mode .building-subtab.active,
+.dark-mode .colony-subtab.active,
 .dark-mode .research-subtab.active,
 .dark-mode .projects-subtab.active,
 .dark-mode .terraforming-subtab.active,

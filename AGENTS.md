@@ -162,6 +162,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - GHG/calcite and dust factory automation targeting
 - String numeric input handling standardized across major controls.
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
+- Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
 
 ### Story, Planets, and Progression
 - Story effects support `onTravel: false`.

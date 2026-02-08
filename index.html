@@ -116,6 +116,7 @@
     <script src="src/js/buildings/aerostat.js"></script>
     <script src="src/js/buildingUI.js"></script>
     <script src="src/js/colonyUI.js"></script>
+    <script src="src/js/colonySubtabUI.js"></script>
     <script src="src/js/colonySliders.js"></script>
     <script src="src/js/colonySlidersUI.js"></script>
     <script src="src/js/nanotech.js"></script>
@@ -349,24 +350,35 @@
 
     <!-- Colonies Tab Content -->
     <div id="colonies" class="tab-content">
-        <!-- ... existing colonies content ... -->
-         <div class="container colonies-container">
-              <div class="header-container">
-                <h2>Colonies</h2>
-                <div id="unhide-obsolete-container" class="unhide-obsolete-container" style="display: none;">
-                  <button id="unhide-obsolete-button" class="unhide-obsolete-button">Unhide Obsolete Buildings</button>
-                </div>
-              </div>
-              <div id="colony-structures-section">
-                <div class="building-list" id="colony-buildings-buttons"></div>
-              </div>
-              <div id="colony-controls-section">
-                <div id="colony-controls-container">
-                  <div id="colony-sliders-container"></div>
-                  <div id="construction-office-container" class="invisible"></div>
-                </div>
+      <!-- ... existing colonies content ... -->
+      <div class="container colonies-container">
+        <div class="colonies-subtabs">
+          <div id="population-colonies-tab" class="colony-subtab active" data-subtab="population-colonies">Population</div>
+          <div id="nanocolony-colonies-tab" class="colony-subtab hidden" data-subtab="nanocolony-colonies">Nanocolony</div>
+        </div>
+        <div class="colony-subtab-content-wrapper">
+          <div id="population-colonies" class="colony-subtab-content active">
+            <div class="header-container">
+              <h2>Colonies</h2>
+              <div id="unhide-obsolete-container" class="unhide-obsolete-container" style="display: none;">
+                <button id="unhide-obsolete-button" class="unhide-obsolete-button">Unhide Obsolete Buildings</button>
               </div>
             </div>
+            <div id="colony-structures-section">
+              <div class="building-list" id="colony-buildings-buttons"></div>
+            </div>
+            <div id="colony-controls-section">
+              <div id="colony-controls-container">
+                <div id="colony-sliders-container"></div>
+                <div id="construction-office-container" class="invisible"></div>
+              </div>
+            </div>
+          </div>
+          <div id="nanocolony-colonies" class="colony-subtab-content hidden">
+            <div id="nanocolony-colonies-content"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Research Tab Content -->
