@@ -232,11 +232,11 @@ class AndroidProject extends Project {
     const headerRow = document.createElement('div');
     headerRow.classList.add('android-assignment-headers');
     const androidHeader = document.createElement('div');
-    androidHeader.textContent = localizeProjectsText('projectsTab.projects.android.headerAndroids', null, 'Androids');
+    androidHeader.textContent = 'Androids';
     const controlsHeader = document.createElement('div');
-    controlsHeader.textContent = localizeProjectsText('projectsTab.labels.controls', null, 'Controls');
+    controlsHeader.textContent = 'Controls';
     const autoHeader = document.createElement('div');
-    autoHeader.textContent = localizeProjectsText('projectsTab.labels.auto', null, 'Auto');
+    autoHeader.textContent = 'Auto';
     const speedHeader = document.createElement('div');
     speedHeader.textContent = this.getAndroidSpeedLabelText();
     headerRow.append(androidHeader, controlsHeader, autoHeader, speedHeader);
@@ -251,7 +251,7 @@ class AndroidProject extends Project {
     const assignedContainer = document.createElement('div');
     assignedContainer.classList.add('assigned-ships-container');
     const assignedLabel = document.createElement('span');
-    assignedLabel.textContent = localizeProjectsText('projectsTab.labels.assigned', null, 'Assigned:');
+    assignedLabel.textContent = 'Assigned:';
     const assignedDisplay = document.createElement('span');
     assignedDisplay.id = `${this.name}-assigned-androids`;
     assignedContainer.append(assignedLabel, assignedDisplay);
@@ -259,7 +259,7 @@ class AndroidProject extends Project {
     const availableContainer = document.createElement('div');
     availableContainer.classList.add('available-ships-container');
     const availableLabel = document.createElement('span');
-    availableLabel.textContent = localizeProjectsText('projectsTab.labels.available', null, 'Available:');
+    availableLabel.textContent = 'Available:';
     const availableDisplay = document.createElement('span');
     availableDisplay.id = `${this.name}-available-androids`;
     availableContainer.append(availableLabel, availableDisplay);
@@ -312,7 +312,7 @@ class AndroidProject extends Project {
     autoAssignCheckbox.checked = this.autoAssignAndroids;
     const autoAssignLabel = document.createElement('label');
     autoAssignLabel.htmlFor = autoAssignCheckbox.id;
-    autoAssignLabel.textContent = localizeProjectsText('projectsTab.labels.auto', null, 'Auto');
+    autoAssignLabel.textContent = 'Auto';
     const autoAssignInput = document.createElement('input');
     autoAssignInput.type = 'text';
     autoAssignInput.inputMode = 'decimal';
@@ -323,7 +323,7 @@ class AndroidProject extends Project {
     autoAssignInput.value = String(initialAutoAssign);
     autoAssignInput.classList.add('android-auto-assign-input');
     const autoAssignSuffix = document.createElement('span');
-    autoAssignSuffix.textContent = localizeProjectsText('projectsTab.projects.android.percentOfAndroids', null, '% of androids');
+    autoAssignSuffix.textContent = '% of androids';
     autoAssignContainer.append(autoAssignCheckbox, autoAssignLabel, autoAssignInput, autoAssignSuffix);
 
     const speedContainer = document.createElement('div');

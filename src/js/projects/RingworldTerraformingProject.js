@@ -182,16 +182,12 @@ class RingworldTerraformingProject extends Project {
     shadingPanel.className = 'ringworld-terraforming-panel ringworld-terraforming-shading';
     const shadingTitle = document.createElement('div');
     shadingTitle.className = 'ringworld-section-title';
-    shadingTitle.textContent = localizeProjectsText('projectsTab.projects.ringworld.shadingControls', null, 'Shading Controls');
+    shadingTitle.textContent = 'Shading Controls';
     shadingPanel.appendChild(shadingTitle);
 
     const shadingText = document.createElement('div');
     shadingText.className = 'project-description ringworld-terraforming-shading-text';
-    shadingText.textContent = localizeProjectsText(
-      'projectsTab.projects.ringworld.shadingDescription',
-      null,
-      'Ringworlds solar flux is perfect, but too much exposure would lead to overheating.  Shades can be used to control this and also simulate a day/night cycle.'
-    );
+    shadingText.textContent = 'Ringworlds solar flux is perfect, but too much exposure would lead to overheating.  Shades can be used to control this and also simulate a day/night cycle.';
     shadingPanel.appendChild(shadingText);
 
     const shadingControls = document.createElement('div');
@@ -208,13 +204,13 @@ class RingworldTerraformingProject extends Project {
 
     const shadingStats = document.createElement('div');
     shadingStats.className = 'stats-grid three-col ringworld-terraforming-stats';
-    const shadingStrength = createRingworldStat(localizeProjectsText('projectsTab.projects.ringworld.shading', null, 'Shading:'));
-    const tropicsFlux = createRingworldStat(localizeProjectsText('projectsTab.projects.ringworld.avgTropicalFlux', null, 'Avg Tropical Flux:'));
+    const shadingStrength = createRingworldStat('Shading:');
+    const tropicsFlux = createRingworldStat('Avg Tropical Flux:');
     const autoShade = document.createElement('div');
     autoShade.className = 'stat-item ringworld-stat ringworld-terraforming-auto-shade';
     const autoShadeLabel = document.createElement('span');
     autoShadeLabel.className = 'stat-label';
-    autoShadeLabel.textContent = localizeProjectsText('projectsTab.projects.ringworld.autoShade', null, 'Auto Shade:');
+    autoShadeLabel.textContent = 'Auto Shade:';
     const autoShadeValue = document.createElement('span');
     autoShadeValue.className = 'stat-value ringworld-terraforming-auto-shade-value';
     const autoShadeToggle = document.createElement('input');
@@ -223,9 +219,9 @@ class RingworldTerraformingProject extends Project {
     const autoShadeMode = document.createElement('select');
     autoShadeMode.className = 'ringworld-terraforming-auto-shade-mode';
     [
-      { value: 'average', label: localizeProjectsText('projectsTab.labels.average', null, 'Average') },
-      { value: 'day', label: localizeProjectsText('projectsTab.labels.day', null, 'Day') },
-      { value: 'night', label: localizeProjectsText('projectsTab.labels.night', null, 'Night') }
+      { value: 'average', label: 'Average' },
+      { value: 'day', label: 'Day' },
+      { value: 'night', label: 'Night' }
     ].forEach(optionData => {
       const opt = document.createElement('option');
       opt.value = optionData.value;
@@ -245,7 +241,7 @@ class RingworldTerraformingProject extends Project {
     statusPanel.className = 'ringworld-terraforming-panel';
     const statusTitle = document.createElement('div');
     statusTitle.className = 'ringworld-section-title';
-    statusTitle.textContent = localizeProjectsText('projectsTab.projects.ringworld.spinStatus', null, 'Spin Status');
+    statusTitle.textContent = 'Spin Status';
     statusPanel.appendChild(statusTitle);
 
     const progressBlock = document.createElement('div');
@@ -263,12 +259,12 @@ class RingworldTerraformingProject extends Project {
     const stats = document.createElement('div');
     stats.className = 'stats-grid five-col ringworld-terraforming-stats';
 
-    const surfaceGravity = createRingworldStat(localizeProjectsText('projectsTab.projects.ringworld.surfaceGravity', null, 'Surface Gravity:'));
-    const rate = createRingworldStat(localizeProjectsText('projectsTab.projects.ringworld.investRate', null, 'Invest Rate:'));
-    const status = createRingworldStat(localizeProjectsText('projectsTab.projects.ringworld.status', null, 'Status:'));
-    const shipMultiplier = createRingworldStat(localizeProjectsText('projectsTab.projects.ringworld.shipEnergyMultiplier', null, 'Ship Energy Multiplier:'));
-    const spinEnergy = createRingworldStat(localizeProjectsText('projectsTab.projects.ringworld.spinEnergyPerTon', null, 'Spin Energy per Ton:'));
-    const massTotal = createRingworldStat(localizeProjectsText('projectsTab.projects.ringworld.mass', null, 'Ringworld Mass:'));
+    const surfaceGravity = createRingworldStat('Surface Gravity:');
+    const rate = createRingworldStat('Invest Rate:');
+    const status = createRingworldStat('Status:');
+    const shipMultiplier = createRingworldStat('Ship Energy Multiplier:');
+    const spinEnergy = createRingworldStat('Spin Energy per Ton:');
+    const massTotal = createRingworldStat('Ringworld Mass:');
 
     stats.append(
       surfaceGravity.wrapper,
@@ -296,7 +292,7 @@ class RingworldTerraformingProject extends Project {
     powerReadout.className = 'ringworld-terraforming-power';
     const powerLabel = document.createElement('span');
     powerLabel.className = 'ringworld-terraforming-power-label';
-    powerLabel.textContent = localizeProjectsText('projectsTab.projects.ringworld.power', null, 'Power:');
+    powerLabel.textContent = 'Power:';
     const powerValue = document.createElement('span');
     powerValue.className = 'ringworld-terraforming-power-value';
     powerReadout.append(powerLabel, powerValue);
@@ -329,18 +325,18 @@ class RingworldTerraformingProject extends Project {
     notesPanel.className = 'ringworld-terraforming-panel ringworld-terraforming-notes-panel';
     const notesTitle = document.createElement('div');
     notesTitle.className = 'ringworld-section-title';
-    notesTitle.textContent = localizeProjectsText('projectsTab.projects.ringworld.operationalNotes', null, 'Operational Notes');
+    notesTitle.textContent = 'Operational Notes';
     notesPanel.appendChild(notesTitle);
 
     const notes = document.createElement('ul');
     notes.className = 'ringworld-terraforming-notes';
     const noteEntries = [
-      localizeProjectsText('projectsTab.projects.ringworld.notes.spinRequired', null, 'You must completely spin the ringworld to complete its terraforming.'),
-      localizeProjectsText('projectsTab.projects.ringworld.notes.resourcesStored', null, 'Atmospheric and surface resources are stored inside the ringworld until surface gravity reaches 0.1g.'),
-      localizeProjectsText('projectsTab.projects.ringworld.notes.lifeGrowth', null, 'Life will not grow on its own until surface gravity reaches 0.1g due to the atmosphere not being present.'),
-      localizeProjectsText('projectsTab.projects.ringworld.notes.spaceshipPenalty', null, 'Spaceships have a base energy multiplier of 0.1, but faster spin adds a flat penalty per ton equal to spin energy per ton.  The paid penalty is then also added to the spin status.'),
-      localizeProjectsText('projectsTab.projects.ringworld.notes.massAdvice', null, 'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.  If planning on building another artificial world, it may be wise to do so before spinning the current one, to remain as light as possible.'),
-      localizeProjectsText('projectsTab.projects.ringworld.notes.energyParity', null, 'The total energy required to import resources then spin, or spin then import should be the same.')
+      'You must completely spin the ringworld to complete its terraforming.',
+      'Atmospheric and surface resources are stored inside the ringworld until surface gravity reaches 0.1g.',
+      'Life will not grow on its own until surface gravity reaches 0.1g due to the atmosphere not being present.',
+      'Spaceships have a base energy multiplier of 0.1, but faster spin adds a flat penalty per ton equal to spin energy per ton.  The paid penalty is then also added to the spin status.',
+      'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.  If planning on building another artificial world, it may be wise to do so before spinning the current one, to remain as light as possible.',
+      'The total energy required to import resources then spin, or spin then import should be the same.'
     ];
     noteEntries.forEach((text) => {
       const item = document.createElement('li');

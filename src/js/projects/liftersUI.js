@@ -71,7 +71,7 @@ function renderLiftersUI(project, container) {
   header.classList.add('card-header');
   const title = document.createElement('span');
   title.classList.add('card-title');
-  title.textContent = localizeProjectsText('projectsTab.projects.lifters.title', null, 'Lifter Controls');
+  title.textContent = 'Lifter Controls';
   header.appendChild(title);
   card.appendChild(header);
 
@@ -80,15 +80,11 @@ function renderLiftersUI(project, container) {
 
   const summaryGrid = document.createElement('div');
   summaryGrid.classList.add('stats-grid', 'three-col');
-  const completedStat = buildStat(localizeProjectsText('projectsTab.projects.lifters.completedLifters', null, 'Completed Lifters:'));
-  const capacityStat = buildStat(localizeProjectsText('projectsTab.projects.lifters.capacityPerLifter', null, 'Capacity / Lifter:'));
-  const energyStat = buildStat(localizeProjectsText('projectsTab.projects.lifters.energyPerUnit', null, 'Energy / Unit:'));
+  const completedStat = buildStat('Completed Lifters:');
+  const capacityStat = buildStat('Capacity / Lifter:');
+  const energyStat = buildStat('Energy / Unit:');
   energyStat.labelEl.appendChild(
-    createInfoIcon(localizeProjectsText(
-      'projectsTab.projects.lifters.energyTooltip',
-      null,
-      'Each unit lifted requires 1e7 energy whether drawn from colony grids or spare Dyson collectors.'
-    )),
+    createInfoIcon('Each unit lifted requires 1e7 energy whether drawn from colony grids or spare Dyson collectors.'),
   );
   summaryGrid.append(completedStat.wrapper, capacityStat.wrapper, energyStat.wrapper);
   body.appendChild(summaryGrid);
@@ -102,7 +98,7 @@ function renderLiftersUI(project, container) {
   modeField.style.alignItems = 'center';
   modeField.style.gap = '8px';
   const modeLabel = document.createElement('label');
-  modeLabel.textContent = localizeProjectsText('projectsTab.labels.mode', null, 'Mode');
+  modeLabel.textContent = 'Mode';
   modeLabel.htmlFor = `${project.name}-lifters-mode`;
   modeLabel.classList.add('stat-label');
   modeLabel.style.margin = '0';
@@ -116,7 +112,7 @@ function renderLiftersUI(project, container) {
   recipeField.style.alignItems = 'center';
   recipeField.style.gap = '8px';
   const recipeLabel = document.createElement('label');
-  recipeLabel.textContent = localizeProjectsText('projectsTab.projects.lifters.harvest', null, 'Harvest');
+  recipeLabel.textContent = 'Harvest';
   recipeLabel.htmlFor = `${project.name}-lifters-recipe`;
   recipeLabel.classList.add('stat-label');
   recipeLabel.style.margin = '0';
@@ -131,10 +127,10 @@ function renderLiftersUI(project, container) {
   runCheckbox.id = `${project.name}-lifters-run`;
   const runLabel = document.createElement('label');
   runLabel.htmlFor = runCheckbox.id;
-  runLabel.textContent = localizeProjectsText('projectsTab.projects.lifters.runLifters', null, 'Run lifters');
+  runLabel.textContent = 'Run lifters';
   runField.append(runCheckbox, runLabel);
 
-  const energyRateStat = buildStat(localizeProjectsText('projectsTab.projects.lifters.energyRate', null, 'Energy Rate'));
+  const energyRateStat = buildStat('Energy Rate');
   energyRateStat.wrapper.classList.add('lifters-energy-rate');
 
   controlsGrid.append(modeField, recipeField, runField, energyRateStat.wrapper);
@@ -142,20 +138,16 @@ function renderLiftersUI(project, container) {
 
   const statusGrid = document.createElement('div');
   statusGrid.classList.add('stats-grid', 'two-col', 'lifters-status-grid');
-  const statusStat = buildStat(localizeProjectsText('projectsTab.projects.ringworld.status', null, 'Status'));
+  const statusStat = buildStat('Status');
   statusStat.wrapper.classList.add('lifters-status');
-  const expansionRateStat = buildStat(localizeProjectsText('projectsTab.projects.spaceStorage.expansionPerSecond', null, 'Expansion/s'));
+  const expansionRateStat = buildStat('Expansion/s');
   expansionRateStat.wrapper.classList.add('lifters-expansion-rate');
   statusGrid.append(statusStat.wrapper, expansionRateStat.wrapper);
   body.appendChild(statusGrid);
 
   const note = document.createElement('p');
   note.classList.add('project-description', 'lifters-note');
-  note.textContent = localizeProjectsText(
-    'projectsTab.projects.lifters.note',
-    null,
-    'Gas giant harvests feed gases into space storage, atmosphere mode peels every gas proportionally, getting rid of it.  Unused Dyson energy is used first; allow colony usage in automation if overflow is insufficient.'
-  );
+  note.textContent = 'Gas giant harvests feed gases into space storage, atmosphere mode peels every gas proportionally, getting rid of it.  Unused Dyson energy is used first; allow colony usage in automation if overflow is insufficient.';
   body.appendChild(note);
 
   card.appendChild(body);
@@ -224,19 +216,12 @@ function updateLiftersUI(project) {
   elements.liftersEnergyRateElement.textContent = formatPerSecond(project.lastEnergyPerSecond);
   if (elements.liftersExpansionRateElement) {
     const rate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
-    elements.liftersExpansionRateElement.textContent = localizeProjectsText(
-      'projectsTab.projects.spaceStorage.expansionsPerSecondValue',
-      { value: formatNumber(rate, true, 3) },
-      `${formatNumber(rate, true, 3)} expansions/s`
-    );
+    elements.liftersExpansionRateElement.textContent = `${formatNumber(rate, true, 3)} expansions/s`;
   }
 
-  const status = project.statusText || localizeProjectsText('projectsTab.labels.idle', null, 'Idle');
+  const status = project.statusText || 'Idle';
   elements.liftersStatusElement.textContent = status;
-  elements.liftersStatusElement.parentElement.classList.toggle(
-    'active',
-    status === 'Running' || status === localizeProjectsText('projectsTab.labels.running', null, 'Running')
-  );
+  elements.liftersStatusElement.parentElement.classList.toggle('active', status === 'Running');
 }
 
 if (typeof window !== 'undefined') {

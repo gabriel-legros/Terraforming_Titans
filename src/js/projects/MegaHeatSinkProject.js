@@ -22,12 +22,8 @@
 
     renderUI(container) {
       this.renderWorkerCapacityControls(container, {
-        amountTitle: localizeProjectsText('projectsTab.projects.megaHeatSink.buildAmount', null, 'Build Amount'),
-        tooltip: localizeProjectsText(
-          'projectsTab.projects.megaHeatSink.buildTooltip',
-          null,
-          'Worker capacity lets us build heat sinks in parallel. One heat sink can be produced per 1,000,000,000 worker cap.'
-        ),
+        amountTitle: 'Build Amount',
+        tooltip: 'Worker capacity lets us build heat sinks in parallel. One heat sink can be produced per 1,000,000,000 worker cap.',
         layoutClass: 'scanner-layout worker-capacity-layout',
       });
 
@@ -38,7 +34,7 @@
       header.classList.add('card-header');
       const title = document.createElement('span');
       title.classList.add('card-title');
-      title.textContent = localizeProjectsText('projectsTab.projects.megaHeatSink.summaryTitle', null, 'Heat Sink Summary');
+      title.textContent = 'Heat Sink Summary';
       header.appendChild(title);
       card.appendChild(header);
 
@@ -64,12 +60,12 @@
         return { value, content };
       };
 
-      const countElements = createSummaryBox(localizeProjectsText('projectsTab.projects.megaHeatSink.heatSinksBuilt', null, 'Heat Sinks Built'));
-      const coolingElements = createSummaryBox(localizeProjectsText('projectsTab.projects.megaHeatSink.coolingPerSecond', null, 'Cooling per Second'));
-      const controlElements = createSummaryBox(localizeProjectsText('projectsTab.labels.control', null, 'Control'));
+      const countElements = createSummaryBox('Heat Sinks Built');
+      const coolingElements = createSummaryBox('Cooling per Second');
+      const controlElements = createSummaryBox('Control');
       const coolingToggle = createToggleButton({
-        onLabel: localizeProjectsText('projectsTab.labels.on', null, 'On'),
-        offLabel: localizeProjectsText('projectsTab.labels.off', null, 'Off'),
+        onLabel: 'On',
+        offLabel: 'Off',
         isOn: this.heatSinksActive
       });
       coolingToggle.id = `${this.name}-cooling-toggle`;
@@ -117,7 +113,7 @@
       const coolingActive = this.heatSinksActive;
       setToggleButtonState(elements.coolingToggle, coolingActive);
       if (!coolingActive) {
-        elements.coolingValue.textContent = localizeProjectsText('projectsTab.labels.off', null, 'Off');
+        elements.coolingValue.textContent = 'Off';
       } else if (Number.isFinite(coolingPerSecond) && coolingPerSecond > 0) {
         elements.coolingValue.textContent = `${formatValue(coolingPerSecond, false, 2)} K/s`;
       } else {

@@ -14,30 +14,30 @@ function renderDysonSwarmUI(project, container) {
   card.classList.add('dyson-swarm-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">${localizeProjectsText('projectsTab.projects.dysonSwarm.title', null, 'Dyson Swarm Collectors')}</span>
+      <span class="card-title">Dyson Swarm Collectors</span>
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.labels.collectors', null, 'Collectors:')}</span><span id="ds-collectors"></span></div>
-        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.dyson.powerPerCollector', null, 'Power/Collector:')}</span><span id="ds-power-per"></span></div>
-        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.dyson.totalPower', null, 'Total Power:')}</span><span id="ds-total-power"></span></div>
+        <div class="stat-item"><span class="stat-label">Collectors:</span><span id="ds-collectors"></span></div>
+        <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="ds-power-per"></span></div>
+        <div class="stat-item"><span class="stat-label">Total Power:</span><span id="ds-total-power"></span></div>
       </div>
       <div class="stats-grid two-col collector-cost-container">
         <div class="stat-item">
-          <span class="stat-label">${localizeProjectsText('projectsTab.projects.dyson.collectorCost', null, 'Collector Cost:')}</span>
+          <span class="stat-label">Collector Cost:</span>
           <span id="ds-collector-cost"></span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">${localizeProjectsText('projectsTab.projects.dyson.expansion', null, 'Expansion')}</span>
+          <span class="stat-label">Expansion</span>
           <span id="ds-expansion-rate"></span>
         </div>
       </div>
       <div class="progress-button-container dyson-progress-container"><button id="ds-start" class="progress-button"></button></div>
       <div class="checkbox-container">
         <input type="checkbox" id="ds-auto">
-        <label for="ds-auto">${localizeProjectsText('projectsTab.card.autoStart', null, 'Auto start')}</label>
+        <label for="ds-auto">Auto start</label>
         <input type="checkbox" id="ds-auto-travel-reset">
-        <label for="ds-auto-travel-reset">${localizeProjectsText('projectsTab.card.uncheckOnTravel', null, 'Uncheck on travelling')}</label>
+        <label for="ds-auto-travel-reset">Uncheck on travelling</label>
       </div>
     </div>`;
   if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
@@ -138,11 +138,7 @@ function updateDysonSwarmUI(project) {
       ? project.autoDeployCollectors && (project.isCompleted || project.collectors > 0)
       : project.collectorProgress > 0;
     const rate = active ? (1000 / project.collectorDuration) : 0;
-    els.expansionRateDisplay.textContent = localizeProjectsText(
-      'projectsTab.projects.dyson.collectorsPerSecond',
-      { value: formatNumber(rate, true, 3) },
-      `${formatNumber(rate, true, 3)} collectors/s`
-    );
+    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
   }
   if (els.startButton) {
     els.startButton.parentElement.style.display = '';
@@ -166,10 +162,10 @@ function updateDysonSwarmUI(project) {
   // Check if in continuous mode
   if (project.isCollectorContinuous()) {
     if (project.autoDeployCollectors && (project.isCompleted || project.collectors > 0)) {
-      els.startButton.textContent = localizeProjectsText('projectsTab.status.continuousNoSuffix', null, 'Continuous');
+      els.startButton.textContent = 'Continuous';
       els.startButton.style.background = '#4caf50';
     } else {
-      els.startButton.textContent = localizeProjectsText('projectsTab.status.stopped', null, 'Stopped');
+      els.startButton.textContent = 'Stopped';
       els.startButton.style.background = '#f44336';
     }
     els.startButton.disabled = true;
@@ -181,11 +177,7 @@ function updateDysonSwarmUI(project) {
   } else {
     const can = project.canStartCollector();
     const dur = Math.round(project.collectorDuration / 1000);
-    els.startButton.textContent = localizeProjectsText(
-      'projectsTab.projects.dyson.deployCollector',
-      { seconds: dur },
-      `Deploy Collector (${dur}s)`
-    );
+    els.startButton.textContent = `Deploy Collector (${dur}s)`;
     els.startButton.style.background = can ? '#4caf50' : '#f44336';
     els.startButton.disabled = !can;
   }

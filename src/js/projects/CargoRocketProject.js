@@ -65,15 +65,15 @@ class CargoRocketProject extends Project {
     headerRow.classList.add('cargo-resource-row', 'cargo-grid-header');
 
     const resourceHeader = document.createElement('span');
-    resourceHeader.textContent = localizeProjectsText('projectsTab.labels.resource', null, 'Resource');
+    resourceHeader.textContent = 'Resource';
     headerRow.appendChild(resourceHeader);
 
     const amountHeader = document.createElement('span');
-    amountHeader.textContent = localizeProjectsText('projectsTab.labels.amount', null, 'Amount');
+    amountHeader.textContent = 'Amount';
     headerRow.appendChild(amountHeader);
 
     const priceHeader = document.createElement('span');
-    priceHeader.textContent = localizeProjectsText('projectsTab.projects.cargoRocket.priceFunding', null, 'Price (Funding)');
+    priceHeader.textContent = 'Price (Funding)';
     headerRow.appendChild(priceHeader);
 
     const headerButtons = document.createElement('div');
@@ -119,11 +119,7 @@ class CargoRocketProject extends Project {
           label.textContent = resource.displayName;
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
-          tooltip.title = localizeProjectsText(
-            'projectsTab.projects.cargoRocket.spaceshipPriceTooltip',
-            null,
-            'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.'
-          );
+          tooltip.title = 'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.';
           tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         } else {
@@ -216,7 +212,7 @@ class CargoRocketProject extends Project {
     totalCostDisplay.id = `${this.name}-total-cost-display`;
     totalCostDisplay.classList.add('total-cost-display');
     const totalCostLabel = document.createElement('span');
-    totalCostLabel.textContent = localizeProjectsText('projectsTab.card.totalCost', null, 'Total Cost: ');
+    totalCostLabel.textContent = 'Total Cost: ';
     const totalCostValue = document.createElement('span');
     totalCostValue.id = `${this.name}-total-cost-display-value`;
     totalCostDisplay.append(totalCostLabel, totalCostValue);

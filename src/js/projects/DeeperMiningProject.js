@@ -239,23 +239,15 @@ class DeeperMiningProject extends AndroidProject {
     elements.underworldSlider.value = `${level}`;
     elements.underworldValue.textContent = `Lv ${level}`;
     elements.underworldEffect.textContent = level === 0
-      ? localizeProjectsText('projectsTab.projects.deeperMining.noBonus', null, 'No bonus')
-      : localizeProjectsText(
-        'projectsTab.projects.deeperMining.underworldBonus',
-        { speed: speedBonus, depth: formatNumber(depthBonus, true) },
-        `+${speedBonus}% speed, +${formatNumber(depthBonus, true)} max depth`
-      );
+      ? 'No bonus'
+      : `+${speedBonus}% speed, +${formatNumber(depthBonus, true)} max depth`;
     const superchargeLevel = this.superchargedMiningLevel;
     const superchargeMultiplier = this.getSuperchargedMiningMultiplier();
     elements.superchargedSlider.value = `${superchargeLevel}`;
     elements.superchargedValue.textContent = `x${superchargeMultiplier}`;
     elements.superchargedEffect.textContent = superchargeLevel === 0
-      ? localizeProjectsText('projectsTab.projects.deeperMining.noBonus', null, 'No bonus')
-      : localizeProjectsText(
-        'projectsTab.projects.deeperMining.superchargedBonus',
-        { ore: superchargeMultiplier, energy: formatNumber(this.getSuperchargedMiningEnergyMultiplier(), true) },
-        `x${superchargeMultiplier} ore, x${formatNumber(this.getSuperchargedMiningEnergyMultiplier(), true)} energy`
-      );
+      ? 'No bonus'
+      : `x${superchargeMultiplier} ore, x${formatNumber(this.getSuperchargedMiningEnergyMultiplier(), true)} energy`;
   }
 
   getBaseDuration() {
@@ -276,11 +268,7 @@ class DeeperMiningProject extends AndroidProject {
     if (elements?.costElement) {
       const info = document.createElement('span');
       info.classList.add('info-tooltip-icon');
-      info.title = localizeProjectsText(
-        'projectsTab.projects.deeperMining.costTooltip',
-        null,
-        '90% of the cost scales with ore mines built. 10% also scales with average depth.'
-      );
+      info.title = '90% of the cost scales with ore mines built. 10% also scales with average depth.';
       info.innerHTML = '&#9432;';
       elements.costElement.appendChild(info);
     }
@@ -296,18 +284,10 @@ class DeeperMiningProject extends AndroidProject {
 
     const sectionTitle = document.createElement('h4');
     sectionTitle.classList.add('section-title');
-    sectionTitle.textContent = localizeProjectsText(
-      'projectsTab.projects.deeperMining.underworldTitle',
-      null,
-      'Underworld mining upgrades'
-    );
+    sectionTitle.textContent = 'Underworld mining upgrades';
     const info = document.createElement('span');
     info.classList.add('info-tooltip-icon');
-    info.title = localizeProjectsText(
-      'projectsTab.projects.deeperMining.underworldTooltip',
-      null,
-      'Superalloy drills increase deepening speed and maximum depth. Superalloy cost scales with the slider.'
-    );
+    info.title = 'Superalloy drills increase deepening speed and maximum depth. Superalloy cost scales with the slider.';
     info.innerHTML = '&#9432;';
     sectionTitle.appendChild(info);
     sectionContainer.appendChild(sectionTitle);
@@ -316,7 +296,7 @@ class DeeperMiningProject extends AndroidProject {
     sliderRow.classList.add('colony-slider');
 
     const label = document.createElement('label');
-    label.textContent = localizeProjectsText('projectsTab.projects.deeperMining.superalloyDrills', null, 'Superalloy drills');
+    label.textContent = 'Superalloy drills';
     label.htmlFor = `${this.name}-underworld-slider`;
 
     const valueSpan = document.createElement('span');
@@ -345,11 +325,7 @@ class DeeperMiningProject extends AndroidProject {
     superchargeRow.classList.add('colony-slider');
 
     const superchargeLabel = document.createElement('label');
-    superchargeLabel.textContent = localizeProjectsText(
-      'projectsTab.projects.deeperMining.superchargedMining',
-      null,
-      'Supercharged Mining'
-    );
+    superchargeLabel.textContent = 'Supercharged Mining';
     superchargeLabel.htmlFor = `${this.name}-supercharged-slider`;
 
     const superchargeValue = document.createElement('span');
@@ -381,11 +357,7 @@ class DeeperMiningProject extends AndroidProject {
 
     const deepMiningTitle = document.createElement('h4');
     deepMiningTitle.classList.add('section-title');
-    deepMiningTitle.textContent = localizeProjectsText(
-      'projectsTab.projects.deeperMining.depthUnlock',
-      null,
-      'Available with depth > 500'
-    );
+    deepMiningTitle.textContent = 'Available with depth > 500';
     deepMiningSection.appendChild(deepMiningTitle);
 
     const deepMiningOptions = document.createElement('div');
@@ -412,8 +384,8 @@ class DeeperMiningProject extends AndroidProject {
       labelWrap.append(label, info);
 
       const toggle = createToggleButton({
-        onLabel: localizeProjectsText('projectsTab.labels.on', null, 'On'),
-        offLabel: localizeProjectsText('projectsTab.labels.off', null, 'Off'),
+        onLabel: 'On',
+        offLabel: 'Off',
         isOn
       });
       toggle.id = `${this.name}-${key}-toggle`;
@@ -424,29 +396,18 @@ class DeeperMiningProject extends AndroidProject {
       return { option, toggle };
     };
 
-    const geothermalTooltipText = localizeProjectsText(
-      'projectsTab.projects.deeperMining.geothermalTooltip',
-      { amount: formatNumber(this.geothermalDepositsPerMinePerLevel, true) },
-      `Generates ${formatNumber(this.geothermalDepositsPerMinePerLevel, true)} geothermal deposits per ore mine for each 250m depth level beyond 500m. Deposits are only created when this setting is enabled during deepening. Tradeoff: Doubles components cost.`
-    );
+    const geothermalTooltipText = `Generates ${formatNumber(this.geothermalDepositsPerMinePerLevel, true)} geothermal deposits per ore mine for each 250m depth level beyond 500m. Deposits are only created when this setting is enabled during deepening. Tradeoff: Doubles components cost.`;
     const geothermalOption = createDeepMiningOption(
       'geothermal',
-      localizeProjectsText('projectsTab.projects.deeperMining.createGeothermal', null, 'Create geothermal deposits'),
+      'Create geothermal deposits',
       geothermalTooltipText,
       this.createGeothermalDeposits
     );
 
-    const storageTooltipText = localizeProjectsText(
-      'projectsTab.projects.deeperMining.storageTooltip',
-      {
-        amount: this.storageDepotsPerMinePerLevel,
-        suffix: this.storageDepotsPerMinePerLevel !== 1 ? 's' : ''
-      },
-      `Provides storage capacity equivalent to ${this.storageDepotsPerMinePerLevel} storage depot${this.storageDepotsPerMinePerLevel !== 1 ? 's' : ''} per ore mine for each 250m depth level beyond 500m. These do not count as actual buildings and have no maintenance cost. Tradeoff: Deepening time is slowed by 2x.`
-    );
+    const storageTooltipText = `Provides storage capacity equivalent to ${this.storageDepotsPerMinePerLevel} storage depot${this.storageDepotsPerMinePerLevel !== 1 ? 's' : ''} per ore mine for each 250m depth level beyond 500m. These do not count as actual buildings and have no maintenance cost. Tradeoff: Deepening time is slowed by 2x.`;
     const storageOption = createDeepMiningOption(
       'storage',
-      localizeProjectsText('projectsTab.projects.deeperMining.undergroundStorage', null, 'Underground Storage'),
+      'Underground Storage',
       storageTooltipText,
       this.undergroundStorage
     );

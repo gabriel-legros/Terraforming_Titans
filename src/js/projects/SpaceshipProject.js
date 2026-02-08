@@ -347,11 +347,7 @@ class SpaceshipProject extends Project {
             })
         )
         .join(', ');
-      elements.costPerShipElement.textContent = localizeProjectsText(
-        'projectsTab.projects.spaceship.costPerShipment',
-        { value: costPerShipText },
-        `Cost per Shipment: ${costPerShipText}`
-      );
+      elements.costPerShipElement.textContent = `Cost per Shipment: ${costPerShipText}`;
     }
 
     if (elements.totalCostElement && this.assignedSpaceships != null) {
@@ -372,11 +368,7 @@ class SpaceshipProject extends Project {
               return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
             })
         ).join(', ');
-      elements.resourceGainPerShipElement.textContent = localizeProjectsText(
-        'projectsTab.projects.spaceship.gainPerShipment',
-        { value: gainPerShipText },
-        `Gain per Shipment: ${gainPerShipText}`
-      );
+      elements.resourceGainPerShipElement.textContent = `Gain per Shipment: ${gainPerShipText}`;
     }
 
     if (elements.totalGainElement && this.assignedSpaceships != null) {
@@ -397,7 +389,7 @@ class SpaceshipProject extends Project {
 
     const title = document.createElement('h4');
     title.classList.add('section-title');
-    title.textContent = localizeProjectsText('projectsTab.labels.assignment', null, 'Assignment');
+    title.textContent = 'Assignment';
     sectionContainer.appendChild(title);
 
     const assignmentContainer = document.createElement('div');
@@ -410,7 +402,7 @@ class SpaceshipProject extends Project {
     const assignedContainer = document.createElement('div');
     assignedContainer.classList.add('assigned-ships-container');
     const assignedLabel = document.createElement('span');
-    assignedLabel.textContent = localizeProjectsText('projectsTab.labels.assigned', null, 'Assigned:');
+    assignedLabel.textContent = 'Assigned:';
     const assignedDisplay = document.createElement('span');
     assignedDisplay.id = `${this.name}-assigned-spaceships`;
     assignedContainer.append(assignedLabel, assignedDisplay);
@@ -418,7 +410,7 @@ class SpaceshipProject extends Project {
     const availableContainer = document.createElement('div');
     availableContainer.classList.add('available-ships-container');
     const availableLabel = document.createElement('span');
-    availableLabel.textContent = localizeProjectsText('projectsTab.labels.available', null, 'Available:');
+    availableLabel.textContent = 'Available:';
     const availableDisplay = document.createElement('span');
     availableDisplay.id = `${this.name}-available-spaceships`;
     availableContainer.append(availableLabel, availableDisplay);
@@ -483,7 +475,7 @@ class SpaceshipProject extends Project {
 
     const title = document.createElement('h4');
     title.classList.add('section-title');
-    title.textContent = localizeProjectsText('projectsTab.labels.costGain', null, 'Cost & Gain');
+    title.textContent = 'Cost & Gain';
     sectionContainer.appendChild(title);
 
     const grid = document.createElement('div');
@@ -544,7 +536,7 @@ class SpaceshipProject extends Project {
   
     const autoAssignLabel = document.createElement('label');
     autoAssignLabel.htmlFor = `${this.name}-auto-assign-spaceships`;
-    autoAssignLabel.textContent = localizeProjectsText('projectsTab.labels.autoAssign', null, 'Auto assign');
+    autoAssignLabel.textContent = 'Auto assign';
 
     autoAssignCheckboxContainer.appendChild(autoAssignCheckbox);
     autoAssignCheckboxContainer.appendChild(autoAssignLabel);

@@ -35,7 +35,7 @@ class ParticleAcceleratorProject extends Project {
     header.classList.add('card-header');
     const title = document.createElement('span');
     title.classList.add('card-title');
-    title.textContent = localizeProjectsText('projectsTab.projects.particleAccelerator.title', null, 'Accelerator Design');
+    title.textContent = 'Accelerator Design';
     header.appendChild(title);
     card.appendChild(header);
 
@@ -61,7 +61,7 @@ class ParticleAcceleratorProject extends Project {
       return { box, value, content };
     };
 
-    const radiusBox = createSummaryBox(localizeProjectsText('projectsTab.projects.particleAccelerator.targetRadius', null, 'Target Radius'));
+    const radiusBox = createSummaryBox('Target Radius');
     const radiusValue = radiusBox.value;
 
     const buttonRow = document.createElement('div');
@@ -84,7 +84,7 @@ class ParticleAcceleratorProject extends Project {
     const divButton = createButton('/10', () => this.scaleStepMeters(1 / STEP_MULTIPLIER), multiplierRow);
     const mulButton = createButton('x10', () => this.scaleStepMeters(STEP_MULTIPLIER), multiplierRow);
 
-    const maxButton = createButton(localizeProjectsText('projectsTab.labels.auto', null, 'Auto'), () => this.setMaxAffordableRadius(), multiplierRow);
+    const maxButton = createButton('Auto', () => this.setMaxAffordableRadius(), multiplierRow);
 
     const controlsWrapper = document.createElement('div');
     controlsWrapper.classList.add('project-radius-controls');
@@ -93,10 +93,8 @@ class ParticleAcceleratorProject extends Project {
     radiusBox.content.classList.add('project-summary-flex');
     radiusBox.content.appendChild(controlsWrapper);
 
-    const { value: bestValue } = createSummaryBox(localizeProjectsText('projectsTab.projects.particleAccelerator.largestBuilt', null, 'Largest Built'));
-    const { value: researchBoostValue } = createSummaryBox(
-      localizeProjectsText('projectsTab.projects.particleAccelerator.researchBoost', null, 'Advanced Research Boost (New / Current)')
-    );
+    const { value: bestValue } = createSummaryBox('Largest Built');
+    const { value: researchBoostValue } = createSummaryBox('Advanced Research Boost (New / Current)');
 
     body.appendChild(summaryGrid);
 

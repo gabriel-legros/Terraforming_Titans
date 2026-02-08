@@ -3,18 +3,18 @@ function renderOrbitalRingUI(project, container) {
   card.classList.add('orbital-ring-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">${localizeProjectsText('projectsParameters.orbitalRing.name', null, 'Orbital Ring')}</span>
+      <span class="card-title">Orbital Ring</span>
     </div>
     <div class="card-body">
       <div class="stats-grid four-col">
-        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.orbitalRing.ringsBuilt', null, 'Rings Built:')}</span><span id="or-rings-built"></span></div>
-        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.orbitalRing.maxRings', null, 'Max Rings:')}</span><span id="or-max-rings"></span></div>
-        <div class="stat-item"><span class="stat-label">${localizeProjectsText('projectsTab.projects.orbitalRing.currentWorldRing', null, 'Current World Ring:')}</span><span id="or-current-world"></span></div>
+        <div class="stat-item"><span class="stat-label">Rings Built:</span><span id="or-rings-built"></span></div>
+        <div class="stat-item"><span class="stat-label">Max Rings:</span><span id="or-max-rings"></span></div>
+        <div class="stat-item"><span class="stat-label">Current World Ring:</span><span id="or-current-world"></span></div>
         <div class="stat-item">
-          <span class="stat-label">${localizeProjectsText('projectsTab.projects.orbitalRing.prepaidRings', null, 'Prepaid Rings:')}</span>
+          <span class="stat-label">Prepaid Rings:</span>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span id="or-prepaid-rings"></span>
-            <button id="or-prepay-button" style="padding: 2px 10px; font-size: 0.85em; line-height: 1.2;">${localizeProjectsText('projectsTab.projects.orbitalRing.prepay', null, 'Prepay')}</button>
+            <button id="or-prepay-button" style="padding: 2px 10px; font-size: 0.85em; line-height: 1.2;">Prepay</button>
           </div>
         </div>
       </div>
@@ -50,11 +50,9 @@ function updateOrbitalRingUI(project) {
       : 0;
   els.maxRingsDisplay.textContent = terraformedWorlds;
   if (spaceManager && spaceManager.currentArtificialKey !== null) {
-    els.currentWorldDisplay.textContent = localizeProjectsText('projectsTab.projects.orbitalRing.notAllowedOnArtificial', null, 'Not allowed on artificial');
+    els.currentWorldDisplay.textContent = 'Not allowed on artificial';
   } else {
-    els.currentWorldDisplay.textContent = project.currentWorldHasRing
-      ? localizeProjectsText('projectsTab.labels.yes', null, 'Yes')
-      : localizeProjectsText('projectsTab.labels.no', null, 'No');
+    els.currentWorldDisplay.textContent = project.currentWorldHasRing ? 'Yes' : 'No';
   }
   
   els.prepaidRingsDisplay.textContent = project.prepaidRings;

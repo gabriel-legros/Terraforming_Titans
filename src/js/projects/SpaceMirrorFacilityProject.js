@@ -240,7 +240,7 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
       labelNode = document.createElement('strong');
       element._labelNode = labelNode;
     }
-    labelNode.textContent = localizeProjectsText('projectsTab.card.cost', null, 'Cost:');
+    labelNode.textContent = 'Cost:';
     element.appendChild(labelNode);
     const list = document.createElement('span');
     element._list = list;
@@ -609,7 +609,7 @@ function initializeMirrorOversightUI(container) {
   div.classList.add('mirror-oversight-card');
   div.style.display = 'none';
 
-  div.innerHTML = localizeProjectsText('projectsTab.projects.spaceMirror.oversightHtml', null, `
+  div.innerHTML = `
     <div class="card-header">
       <span class="card-title">Mirror Oversight</span>
       <span class="info-tooltip-icon" title="Distribute mirror focus among zones."></span>
@@ -665,7 +665,7 @@ function initializeMirrorOversightUI(container) {
         <span class="info-tooltip-icon" title="Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.">&#9432;</span>
       </div>
     </div>
-  `);
+  `;
   if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(div);
 
   const sliders = {
@@ -717,14 +717,14 @@ function initializeMirrorOversightUI(container) {
   advDiv.id = 'mirror-advanced-oversight-div';
   advDiv.className = 'control-group';
   advDiv.style.display = 'none';
-  advDiv.innerHTML = localizeProjectsText('projectsTab.projects.spaceMirror.advancedToggleHtml', null, `
+  advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">Advanced Oversight</label>
     <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.">&#9432;</span>
     <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
     <label for="mirror-allow-available-heat">Allow available to heat</label>
     <span class="info-tooltip-icon" title="When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.">&#9432;</span>
-  `);
+  `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
     lanternDivInit.style.alignItems = 'center';
@@ -736,7 +736,7 @@ function initializeMirrorOversightUI(container) {
   const advancedControls = document.createElement('div');
   advancedControls.id = 'advanced-oversight-controls';
   advancedControls.style.display = 'none';
-  advancedControls.innerHTML = localizeProjectsText('projectsTab.projects.spaceMirror.advancedControlsHtml', null, `
+  advancedControls.innerHTML = `
     <div class="control-group">
       <span class="control-label" style="font-weight:600;">Targets & Priority</span>
       <span class="info-tooltip-icon" title="Set temperature targets for each zone using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.">&#9432;</span>
@@ -795,16 +795,12 @@ function initializeMirrorOversightUI(container) {
         </select>
       </div>
     </div>
-  `);
+  `;
   const targetsHeaderRow = advancedControls.firstElementChild;
   const setLifeOptimalButton = document.createElement('button');
   setLifeOptimalButton.id = 'adv-set-life-optimal';
   setLifeOptimalButton.type = 'button';
-  setLifeOptimalButton.textContent = localizeProjectsText(
-    'projectsTab.projects.spaceMirror.setLifeOptimal',
-    null,
-    'Set all Targets to Day and Life Optimal Temperature'
-  );
+  setLifeOptimalButton.textContent = 'Set all Targets to Day and Life Optimal Temperature';
   setLifeOptimalButton.style.fontSize = '12px';
   setLifeOptimalButton.style.padding = '2px 6px';
   setLifeOptimalButton.style.marginLeft = '8px';
@@ -927,7 +923,7 @@ function initializeMirrorOversightUI(container) {
   const fluxTable = document.createElement('table');
   fluxTable.id = 'mirror-flux-table';
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
-  fluxTable.innerHTML = localizeProjectsText('projectsTab.projects.spaceMirror.fluxTableHtml', null, `
+  fluxTable.innerHTML = `
     <thead>
       <tr><th>Zone</th><th>Average Solar Flux (W/m^2)</th><th>Temperature (${tempUnit}) Current / Trend</th><th>Day Temperature (${tempUnit}) Current / Trend</th></tr>
     </thead>
@@ -936,27 +932,23 @@ function initializeMirrorOversightUI(container) {
       <tr data-zone="temperate"><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0 / 0</td><td id="mirror-day-temp-temperate">0 / 0</td></tr>
       <tr data-zone="polar"><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0 / 0</td><td id="mirror-day-temp-polar">0 / 0</td></tr>
     </tbody>
-  `);
+  `;
   cardBody.appendChild(fluxTable);
   // Fix mis-encoded units in header
   try {
     const fluxHeader = fluxTable.querySelector('thead tr th:nth-child(2)');
-    if (fluxHeader) fluxHeader.textContent = localizeProjectsText(
-      'projectsTab.projects.spaceMirror.averageSolarFlux',
-      null,
-      'Average Solar Flux (W/m2)'
-    );
+    if (fluxHeader) fluxHeader.textContent = 'Average Solar Flux (W/m2)';
   } catch (e) {}
 
   const finerToggle = document.createElement('div');
   finerToggle.id = 'mirror-finer-toggle';
   finerToggle.classList.add('collapse-toggle');
-  finerToggle.innerHTML = `<span id="mirror-finer-icon">▶</span> ${localizeProjectsText('projectsTab.projects.spaceMirror.finerControls', null, 'Finer Controls')}`;
+  finerToggle.innerHTML = '<span id="mirror-finer-icon">▶</span> Finer Controls';
   finerToggle.style.cursor = 'pointer';
   const finerContent = document.createElement('div');
   finerContent.id = 'mirror-finer-content';
   finerContent.style.display = 'none';
-  finerContent.innerHTML = localizeProjectsText('projectsTab.projects.spaceMirror.finerContentHtml', null, `
+  finerContent.innerHTML = `
     <div class="finer-controls-header">
       <div class="control-group">
         <input type="checkbox" id="mirror-use-finer">
@@ -1034,7 +1026,7 @@ function initializeMirrorOversightUI(container) {
         <input type="checkbox" class="auto-assign" data-zone="focus">
       </div>
     </div>
-  `);
+  `;
   cardBody.appendChild(finerToggle);
   cardBody.appendChild(finerContent);
 
@@ -1692,7 +1684,7 @@ class SpaceMirrorFacilityProject extends Project {
   renderUI(container) {
     const mirrorDetails = document.createElement('div');
     mirrorDetails.classList.add('info-card', 'mirror-details-card');
-    mirrorDetails.innerHTML = localizeProjectsText('projectsTab.projects.spaceMirror.mirrorDetailsHtml', null, `
+    mirrorDetails.innerHTML = `
       <div class="card-header">
         <span class="card-title">Mirror Status</span>
       </div>
@@ -1720,7 +1712,7 @@ class SpaceMirrorFacilityProject extends Project {
           </div>
         </div>
       </div>
-    `);
+    `;
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(mirrorDetails);
     container.appendChild(mirrorDetails);
 
@@ -1729,7 +1721,7 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorQuick.style.display = 'none';
     const mirrorQuickLabel = document.createElement('span');
     mirrorQuickLabel.classList.add('quick-build-label');
-    mirrorQuickLabel.textContent = localizeProjectsText('projectsTab.projects.spaceMirror.quickBuild', null, 'Quick Build:');
+    mirrorQuickLabel.textContent = 'Quick Build:';
     mirrorQuick.appendChild(mirrorQuickLabel);
     const mirrorQuickButton = document.createElement('button');
     mirrorQuickButton.classList.add('quick-build-button');
@@ -1764,7 +1756,7 @@ class SpaceMirrorFacilityProject extends Project {
     const lanternDetails = document.createElement('div');
     lanternDetails.classList.add('info-card', 'lantern-details-card');
     lanternDetails.style.display = 'none';
-    lanternDetails.innerHTML = localizeProjectsText('projectsTab.projects.spaceMirror.lanternDetailsHtml', null, `
+    lanternDetails.innerHTML = `
       <div class="card-header">
         <span class="card-title">Lantern Status</span>
       </div>
@@ -1797,7 +1789,7 @@ class SpaceMirrorFacilityProject extends Project {
           <span class="info-tooltip-icon" style="flex-shrink:0;" title="Control the day-night cycle duration for this rogue world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
         </div>
       </div>
-    `);
+    `;
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(lanternDetails);
     container.appendChild(lanternDetails);
 
@@ -1806,7 +1798,7 @@ class SpaceMirrorFacilityProject extends Project {
     lanternQuick.style.display = 'none';
     const lanternQuickLabel = document.createElement('span');
     lanternQuickLabel.classList.add('quick-build-label');
-    lanternQuickLabel.textContent = localizeProjectsText('projectsTab.projects.spaceMirror.quickBuild', null, 'Quick Build:');
+    lanternQuickLabel.textContent = 'Quick Build:';
     lanternQuick.appendChild(lanternQuickLabel);
     const lanternQuickButton = document.createElement('button');
     lanternQuickButton.classList.add('quick-build-button');

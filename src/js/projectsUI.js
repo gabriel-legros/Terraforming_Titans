@@ -7,17 +7,6 @@ if (typeof SubtabManager === 'undefined') {
 }
 let projectElements = {};
 
-function localizeProjectsUI(key, vars, fallback) {
-  if (typeof localizeProjectsText === 'function') {
-    return localizeProjectsText(key, vars, fallback);
-  }
-  if (typeof t === 'function') {
-    const resolved = t(key, vars);
-    if (resolved !== key) return resolved;
-  }
-  return fallback || key;
-}
-
 // Centralized, browser-friendly caches for Projects UI
 const projectsUICache = {
   contentWrapper: null,
@@ -242,11 +231,7 @@ function updateKesslerFailureWarning(project, elements) {
       warning.style.display = 'none';
       return;
     }
-    warningText.textContent = localizeProjectsUI(
-      'projectsTab.warnings.kesslerFailureChance',
-      { percent: formatNumber(percent, false, 2) },
-      `Kessler Skies: ${formatNumber(percent, false, 2)}% chance of project failure.`
-    );
+    warningText.textContent = `Kessler Skies: ${formatNumber(percent, false, 2)}% chance of project failure.`;
     warning.style.display = 'flex';
   } catch (error) {
     // no-op
@@ -436,16 +421,8 @@ function createProjectItem(project) {
     warningIcon.textContent = '⚠';
     const warningText = document.createElement('span');
     warningText.textContent = project.name === 'import_colonists_1'
-      ? localizeProjectsUI(
-        'projectsTab.warnings.kesslerImportColonists',
-        null,
-        'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.'
-      )
-      : localizeProjectsUI(
-        'projectsTab.warnings.kesslerWarpgateReplica',
-        null,
-        'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.'
-      );
+      ? 'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.'
+      : 'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.';
     const warningIconRight = document.createElement('span');
     warningIconRight.classList.add('project-kessler-warning__icon');
     warningIconRight.textContent = '⚠';
@@ -490,7 +467,7 @@ function createProjectItem(project) {
     const requirementsElement = document.createElement('div');
     requirementsElement.classList.add('project-requirements');
     const requirementsLabel = document.createElement('strong');
-    requirementsLabel.textContent = localizeProjectsUI('projectsTab.card.requirements', null, 'Requirements:');
+    requirementsLabel.textContent = 'Requirements:';
     const requirementsList = document.createElement('ul');
     requirementsList.classList.add('project-requirements-list');
     const requirementItems = {};
@@ -519,7 +496,7 @@ function createProjectItem(project) {
     const costElement = document.createElement('p');
     costElement.classList.add('project-cost');
     const label = document.createElement('strong');
-    label.textContent = localizeProjectsUI('projectsTab.card.cost', null, 'Cost:');
+    label.textContent = 'Cost:';
     costElement.append(label, ' ');
     const list = document.createElement('span');
     costElement.appendChild(list);
@@ -556,11 +533,7 @@ function createProjectItem(project) {
     const sustainText = document.createElement('span');
     const info = document.createElement('span');
     info.classList.add('info-tooltip-icon');
-    info.title = localizeProjectsUI(
-      'projectsTab.card.sustainTooltip',
-      null,
-      'Project will pause if sustain cost is not met.'
-    );
+    info.title = 'Project will pause if sustain cost is not met.';
     info.innerHTML = '&#9432;';
     sustainContainer.append(sustainText, info);
     projectDetails.appendChild(sustainContainer);
@@ -582,7 +555,7 @@ function createProjectItem(project) {
     resourceGainElement.classList.add('project-resource-gain');
     resourceGainElement.id = `${project.name}-resource-gain`;
     const gainLabel = document.createElement('strong');
-    gainLabel.textContent = localizeProjectsUI('projectsTab.card.gain', null, 'Gain:');
+    gainLabel.textContent = 'Gain:';
     resourceGainElement.append(gainLabel, ' ');
     const gainList = document.createElement('span');
     resourceGainElement.appendChild(gainList);
@@ -645,7 +618,7 @@ function createProjectItem(project) {
   autoStartCheckbox.addEventListener('change', (event) => { project.autoStart = event.target.checked; });
   const autoStartLabel = document.createElement('label');
   autoStartLabel.htmlFor = `${project.name}-auto-start`;
-  autoStartLabel.textContent = localizeProjectsUI('projectsTab.card.autoStart', null, 'Auto start');
+  autoStartLabel.textContent = 'Auto start';
   autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
   automationSettingsContainer.appendChild(autoStartCheckboxContainer);
@@ -665,11 +638,7 @@ function createProjectItem(project) {
     });
     const extraSettingsLabel = document.createElement('label');
     extraSettingsLabel.htmlFor = extraSettingsCheckbox.id;
-    extraSettingsLabel.textContent = localizeProjectsUI(
-      'projectsTab.card.enableExtraSettings',
-      null,
-      'Enable extra settings'
-    );
+    extraSettingsLabel.textContent = 'Enable extra settings';
     extraSettingsContainer.appendChild(extraSettingsCheckbox);
     extraSettingsContainer.appendChild(extraSettingsLabel);
     automationSettingsContainer.appendChild(extraSettingsContainer);
@@ -696,11 +665,7 @@ function createProjectItem(project) {
     });
     autoStartTravelResetLabel = document.createElement('label');
     autoStartTravelResetLabel.htmlFor = autoStartTravelResetCheckbox.id;
-    autoStartTravelResetLabel.textContent = localizeProjectsUI(
-      'projectsTab.card.uncheckOnTravel',
-      null,
-      'Uncheck on travelling'
-    );
+    autoStartTravelResetLabel.textContent = 'Uncheck on travelling';
     autoStartTravelResetContainer.appendChild(autoStartTravelResetCheckbox);
     autoStartTravelResetContainer.appendChild(autoStartTravelResetLabel);
     automationSettingsContainer.appendChild(autoStartTravelResetContainer);
@@ -720,11 +685,7 @@ function createProjectItem(project) {
     });
     const allowColonyEnergyLabel = document.createElement('label');
     allowColonyEnergyLabel.htmlFor = allowColonyEnergyCheckbox.id;
-    allowColonyEnergyLabel.textContent = localizeProjectsUI(
-      'projectsTab.card.allowColonyEnergy',
-      null,
-      'Allow Colony Energy Use'
-    );
+    allowColonyEnergyLabel.textContent = 'Allow Colony Energy Use';
     allowColonyEnergyContainer.appendChild(allowColonyEnergyCheckbox);
     allowColonyEnergyContainer.appendChild(allowColonyEnergyLabel);
     automationSettingsContainer.appendChild(allowColonyEnergyContainer);
@@ -738,8 +699,6 @@ function createProjectItem(project) {
     ...projectElements[project.name],
     projectItem: projectCard,
     cardBody: cardBody,
-    descriptionElement,
-    titleElement: nameElement,
     collapseArrow: arrow,
     groupId: groupId,
     groupNav: groupNav,
@@ -1048,11 +1007,7 @@ function updateSustainCostDisplay(project) {
       }
     }
     if (costArray.length > 0) {
-      elements.sustainCostElement.textContent = localizeProjectsUI(
-        'projectsTab.card.sustain',
-        { value: costArray.join(', ') },
-        `Sustain: ${costArray.join(', ')}`
-      );
+      elements.sustainCostElement.textContent = `Sustain: ${costArray.join(', ')}`;
       elements.sustainCostElement.parentElement.style.display = 'block';
     } else {
       elements.sustainCostElement.parentElement.style.display = 'none';
@@ -1097,10 +1052,10 @@ function updateTotalCostDisplay(project) {
     if (totalCostValue && totalCostLabel) {
       const available = resources.colony?.funding?.value || 0;
       if (totalCost < 0) {
-        totalCostLabel.textContent = localizeProjectsUI('projectsTab.card.totalGain', null, 'Total Gain: ');
+        totalCostLabel.textContent = 'Total Gain: ';
         totalCostValue.textContent = formatNumber(-totalCost, true);
       } else {
-        totalCostLabel.textContent = localizeProjectsUI('projectsTab.card.totalCost', null, 'Total Cost: ');
+        totalCostLabel.textContent = 'Total Cost: ';
         totalCostValue.textContent = formatNumber(totalCost, true);
       }
       const highlight = project.isContinuous()
@@ -1234,16 +1189,6 @@ function updateProjectUI(projectName) {
   }
 
   updateProjectGroupNavigation(project, elements);
-  if (!elements.groupNav && elements.titleElement) {
-    const title = project.displayName || project.name;
-    if (elements.titleElement.textContent !== title) {
-      elements.titleElement.textContent = title;
-    }
-  }
-
-  if (elements.descriptionElement && elements.descriptionElement.textContent !== project.description) {
-    elements.descriptionElement.textContent = project.description;
-  }
 
   if (project.name === 'galactic_market' || project.name === 'cargo_rocket') {
     project.updateKesslerWarning();
@@ -1265,35 +1210,19 @@ function updateProjectUI(projectName) {
     } else {
       elements.assignedSpaceshipsDisplay.textContent =
         maxShips != null
-          ? localizeProjectsUI(
-            'projectsTab.card.spaceshipsAssignedWithMax',
-            { assigned: assignedText, max: formatShipCount(maxShips) },
-            `Spaceships Assigned: ${assignedText}/${formatShipCount(maxShips)}`
-          )
-          : localizeProjectsUI(
-            'projectsTab.card.spaceshipsAssigned',
-            { assigned: assignedText },
-            `Spaceships Assigned: ${assignedText}`
-          );
+          ? `Spaceships Assigned: ${assignedText}/${formatShipCount(maxShips)}`
+          : `Spaceships Assigned: ${assignedText}`;
     }
   }
 
   // Update Repeat Count / Depth display if applicable
   if (elements.repeatCountElement) {
     if (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject) {
-      elements.repeatCountElement.textContent = localizeProjectsUI(
-        'projectsTab.card.averageDepth',
-        { current: formatNumber(project.averageDepth, true), max: formatNumber(project.maxDepth, true) },
-        `Average depth: ${formatNumber(project.averageDepth, true)} / ${formatNumber(project.maxDepth, true)}`
-      );
+      elements.repeatCountElement.textContent = `Average depth: ${formatNumber(project.averageDepth, true)} / ${formatNumber(project.maxDepth, true)}`;
       project.updateUnderworldMiningUI(elements);
       elements.underworldSection.style.display = project.isBooleanFlagSet('underworld_mining') ? 'flex' : 'none';
     } else {
-      elements.repeatCountElement.textContent = localizeProjectsUI(
-        'projectsTab.card.completedCount',
-        { current: project.repeatCount, max: project.maxRepeatCount },
-        `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`
-      );
+      elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
     }
   }
 
@@ -1309,9 +1238,7 @@ function updateProjectUI(projectName) {
   }
   if (elements.autoStartLabel) {
     const continuous = project.isContinuous();
-    elements.autoStartLabel.textContent = continuous
-      ? localizeProjectsUI('projectsTab.card.run', null, 'Run')
-      : localizeProjectsUI('projectsTab.card.autoStart', null, 'Auto start');
+    elements.autoStartLabel.textContent = continuous ? 'Run' : 'Auto start';
   }
 
   if (elements.allowColonyEnergyCheckbox) {
@@ -1381,14 +1308,12 @@ function updateProjectUI(projectName) {
     }
     if (elements.progressButton) {
       if (keepStartBarVisible) {
-        const localizedStatusText = isMaxRepeatReached
-          ? localizeProjectsUI('projectsTab.status.maxDepthReached', null, 'Max depth reached')
-          : localizeProjectsUI('projectsTab.status.completedShort', null, 'Completed');
+        const statusText = isMaxRepeatReached ? 'Max depth reached' : 'Completed';
         const statusColor = isMaxRepeatReached ? '#f44336' : '#4caf50';
         if (isImportProject && importUI) {
-          importUI.setProgressLabel(elements, project, localizedStatusText);
+          importUI.setProgressLabel(elements, project, statusText);
         } else {
-          elements.progressButton.textContent = localizedStatusText;
+          elements.progressButton.textContent = statusText;
         }
         elements.progressButton.style.display = 'block';
         elements.progressButton.style.background = statusColor;
@@ -1425,29 +1350,21 @@ function updateProjectUI(projectName) {
           }
           elements.progressButton.style.background = '#f44336';
         } else if (!project.isActive && !project.isCompleted && project.isKesslerDisabled()) {
-          const localizedStatusText = localizeProjectsUI('projectsTab.status.disabledByKessler', null, 'Disabled by Kessler');
+          const statusText = 'Disabled by Kessler';
           if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, localizedStatusText);
+            importUI.setProgressLabel(elements, project, statusText);
           } else {
-            elements.progressButton.textContent = localizedStatusText;
+            elements.progressButton.textContent = statusText;
           }
           elements.progressButton.style.background = '#f44336';
         } else if (isContinuousProject) {
           const showProductivity = project.attributes?.continuousAsBuilding;
           const productivity = project.continuousProductivity ?? 1;
           const productivityLabel = showProductivity
-            ? localizeProjectsUI(
-              'projectsTab.status.productivitySuffix',
-              { percent: Math.round(productivity * 100) },
-              ` (${Math.round(productivity * 100)}% productivity)`
-            )
+            ? ` (${Math.round(productivity * 100)}% productivity)`
             : '';
           if (project.autoStart && project.isActive && !project.isPaused) {
-            const statusText = localizeProjectsUI(
-              'projectsTab.status.continuous',
-              { productivity: productivityLabel },
-              `Continuous${productivityLabel}`
-            );
+            const statusText = `Continuous${productivityLabel}`;
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
@@ -1456,9 +1373,9 @@ function updateProjectUI(projectName) {
             elements.progressButton.style.background = '#4caf50';
           } else {
             if (isImportProject && importUI) {
-              importUI.setProgressLabel(elements, project, localizeProjectsUI('projectsTab.status.stopped', null, 'Stopped'));
+              importUI.setProgressLabel(elements, project, 'Stopped');
             } else {
-              elements.progressButton.textContent = localizeProjectsUI('projectsTab.status.stopped', null, 'Stopped');
+              elements.progressButton.textContent = 'Stopped';
             }
             elements.progressButton.style.background = '#f44336';
           }
@@ -1466,11 +1383,7 @@ function updateProjectUI(projectName) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           const progressPercent = project.getProgress();
           if (project.startingDuration < 1000) {
-            const statusText = localizeProjectsUI(
-              'projectsTab.status.inProgressShort',
-              { seconds: timeRemaining },
-              `In Progress: ${timeRemaining} seconds remaining`
-            );
+            const statusText = `In Progress: ${timeRemaining} seconds remaining`;
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
@@ -1479,11 +1392,7 @@ function updateProjectUI(projectName) {
             // Avoid flashy gradients for instant projects
             elements.progressButton.style.background = '#4caf50';
           } else {
-            const statusText = localizeProjectsUI(
-              'projectsTab.status.inProgressPercent',
-              { seconds: timeRemaining, percent: progressPercent },
-              `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`
-            );
+            const statusText = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
@@ -1491,46 +1400,26 @@ function updateProjectUI(projectName) {
             }
             elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
           }
-          } else if (project.isCompleted) {
-            if (isImportProject && importUI) {
-              importUI.setProgressLabel(elements, project, localizeProjectsUI('projectsTab.status.completedShort', null, 'Completed'));
-            } else {
-              elements.progressButton.textContent = localizeProjectsUI(
-                'projectsTab.status.completedNamed',
-                { name: project.displayName },
-                `Completed: ${project.displayName}`
-              );
-            }
-            elements.progressButton.style.background = '#4caf50';
+        } else if (project.isCompleted) {
+          if (isImportProject && importUI) {
+            importUI.setProgressLabel(elements, project, 'Completed');
+          } else {
+            elements.progressButton.textContent = `Completed: ${project.displayName}`;
+          }
+          elements.progressButton.style.background = '#4caf50';
         } else if (project.isPaused) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-            const statusText = localizeProjectsUI(
-              'projectsTab.status.resumeStorageExpansion',
-              { seconds: timeRemaining },
-              `Resume storage expansion (${timeRemaining}s left)`
-            );
+            const statusText = `Resume storage expansion (${timeRemaining}s left)`;
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
               elements.progressButton.textContent = statusText;
             }
           } else {
-            const statusText = localizeProjectsUI(
-              'projectsTab.status.resumeNamed',
-              { name: project.displayName, seconds: timeRemaining },
-              `Resume ${project.displayName} (${timeRemaining}s left)`
-            );
+            const statusText = `Resume ${project.displayName} (${timeRemaining}s left)`;
             if (isImportProject && importUI) {
-              importUI.setProgressLabel(
-                elements,
-                project,
-                localizeProjectsUI(
-                  'projectsTab.status.resumeShort',
-                  { seconds: timeRemaining },
-                  `Resume (${timeRemaining}s left)`
-                )
-              );
+              importUI.setProgressLabel(elements, project, `Resume (${timeRemaining}s left)`);
             } else {
               elements.progressButton.textContent = statusText;
             }
@@ -1540,32 +1429,16 @@ function updateProjectUI(projectName) {
           // Update dynamic duration for spaceMining projects
           let duration = project.getEffectiveDuration();
           if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-            const statusText = localizeProjectsUI(
-              'projectsTab.status.startStorageExpansion',
-              { seconds: (duration / 1000).toFixed(2) },
-              `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`
-            );
+            const statusText = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
               elements.progressButton.textContent = statusText;
             }
           } else {
-            const statusText = localizeProjectsUI(
-              'projectsTab.status.startNamed',
-              { name: project.displayName, seconds: (duration / 1000).toFixed(2) },
-              `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`
-            );
+            const statusText = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
             if (isImportProject && importUI) {
-              importUI.setProgressLabel(
-                elements,
-                project,
-                localizeProjectsUI(
-                  'projectsTab.status.startShort',
-                  { seconds: (duration / 1000).toFixed(2) },
-                  `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`
-                )
-              );
+              importUI.setProgressLabel(elements, project, `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`);
             } else {
               elements.progressButton.textContent = statusText;
             }
@@ -1688,11 +1561,7 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
       costArray.push(formattedResourceText);
     }
   }
-  return localizeProjectsUI(
-    'projectsTab.card.totalCostWithItems',
-    { value: costArray.join(', ') },
-    `Total Cost: ${costArray.join(', ')}`
-  );
+  return `Total Cost: ${costArray.join(', ')}`;
 }
 
 
@@ -1717,11 +1586,7 @@ function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
       gainArray.push(entry);
     }
   }
-  return localizeProjectsUI(
-    'projectsTab.card.totalGainWithItems',
-    { value: gainArray.join(', ') },
-    `Total Gain: ${gainArray.join(', ')}`
-  );
+  return `Total Gain: ${gainArray.join(', ')}`;
 }
 
 function updateEmptyProjectMessages(activeSubtabId) {
@@ -1740,7 +1605,7 @@ function updateEmptyProjectMessages(activeSubtabId) {
         message = document.createElement('p');
         message.id = messageId;
         message.classList.add('empty-message');
-        message.textContent = localizeProjectsUI('projectsTab.empty.nothingAvailable', null, 'Nothing available for now.');
+        message.textContent = 'Nothing available for now.';
         container.appendChild(message);
       }
     } else if (message) {

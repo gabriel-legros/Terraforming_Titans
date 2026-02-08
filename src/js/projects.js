@@ -18,45 +18,11 @@ const MEGA_PROJECT_RESOURCE_MODES = {
 
 const EARTH_RADIUS_KM = 6371;
 
-function localizeProjectsText(key, vars, fallback) {
-  if (typeof t !== 'function') {
-    return fallback || key;
-  }
-  const resolved = t(key, vars);
-  if (resolved === key) {
-    return fallback || key;
-  }
-  return resolved;
-}
-
-if (typeof window !== 'undefined') {
-  window.localizeProjectsText = localizeProjectsText;
-}
-if (typeof global !== 'undefined') {
-  global.localizeProjectsText = localizeProjectsText;
-}
-
 const MEGA_PROJECT_RESOURCE_MODE_OPTIONS = [
-  {
-    value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
-    key: 'projectsTab.settings.megaProjectMode.spaceFirst',
-    fallback: 'Prioritize space resources for mega+ projects'
-  },
-  {
-    value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST,
-    key: 'projectsTab.settings.megaProjectMode.colonyFirst',
-    fallback: 'Prioritize colony resources for mega+ projects'
-  },
-  {
-    value: MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY,
-    key: 'projectsTab.settings.megaProjectMode.spaceOnly',
-    fallback: 'Only use space resources for mega+ projects'
-  },
-  {
-    value: MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY,
-    key: 'projectsTab.settings.megaProjectMode.colonyOnly',
-    fallback: 'Only use colony resources for mega+ projects'
-  },
+  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: 'Prioritize space resources for mega+ projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: 'Prioritize colony resources for mega+ projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY, label: 'Only use space resources for mega+ projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY, label: 'Only use colony resources for mega+ projects' },
 ];
 
 const MEGA_PROJECT_RESOURCE_MODE_MAP = {
@@ -145,13 +111,11 @@ class Project extends EffectableEntity {
   initializeFromConfig(config, name) {
     // Reinitialize properties from configuration
     this.name = name;
-    this._baseDisplayName = config.name;
     this.displayName = config.name;
     this.cost = config.cost;
     this.sustainCost = config.sustainCost || null; // Per-second resource cost while active
     this.production = config.production;
     this.duration = config.duration;
-    this._baseDescription = config.description;
     this.description = config.description;
     this.attributes = config.attributes || {}; // Load attributes, e.g., scanner-related details
     this.repeatable = config.repeatable || false; // Flag indicating if the project can be repeated
@@ -163,17 +127,7 @@ class Project extends EffectableEntity {
     this.kesslerDebrisSize = config.kesslerDebrisSize || null;
 
 
-    this.refreshLocalizedText();
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
-  }
-
-  getLocalizedParameterText(path, fallback, vars) {
-    return localizeProjectsText(`projectsParameters.${this.name}.${path}`, vars, fallback);
-  }
-
-  refreshLocalizedText() {
-    this.displayName = this.getLocalizedParameterText('name', this._baseDisplayName);
-    this.description = this.getLocalizedParameterText('description', this._baseDescription);
   }
 
   applyEffects() {}
@@ -1586,33 +1540,6 @@ class ProjectManager extends EffectableEntity {
       }
     }
   }
-}
-
-function refreshProjectLocalization(projectCollection) {
-  if (!projectCollection) return;
-  for (const projectName in projectCollection) {
-    const project = projectCollection[projectName];
-    if (!project || typeof project.refreshLocalizedText !== 'function') continue;
-    project.refreshLocalizedText();
-  }
-}
-
-if (typeof document !== 'undefined' && document.addEventListener) {
-  document.addEventListener('languageChanged', () => {
-    if (typeof projectManager === 'undefined' || !projectManager || !projectManager.projects) {
-      return;
-    }
-    refreshProjectLocalization(projectManager.projects);
-    if (typeof renderProjects === 'function') {
-      renderProjects();
-      return;
-    }
-    if (typeof updateProjectUI === 'function') {
-      for (const projectName in projectManager.projects) {
-        updateProjectUI(projectName);
-      }
-    }
-  });
 }
 
 if (typeof module !== 'undefined' && module.exports) {

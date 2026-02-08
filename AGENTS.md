@@ -155,7 +155,6 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
-- Localization scaffolding now includes project systems: Special Projects tab/subtabs, project parameter names/descriptions, and project-specific UI labels/status text can resolve through `t(...)` keys with language-change refresh.
 - Multiple automation systems expanded:
   - Ship automation reorder/limits/resource disposal support
   - Building preset combinations and travel application options

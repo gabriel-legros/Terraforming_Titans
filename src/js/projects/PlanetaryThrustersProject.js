@@ -185,7 +185,7 @@ class PlanetaryThrustersProject extends Project{
 /* -----------------------  U I  --------------------------------------- */
   renderUI(c){
     /* spin */
-    const spinHTML = localizeProjectsText('projectsTab.projects.planetaryThrusters.spinHtml', null, `<div class="card-header"><span class="card-title">Spin <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's rotation period. When you check Invest, continuous thruster power is applied toward the target day length, consuming colony Energy per second. Progress is measured in equivalent Δv; when the target is reached, investment stops automatically.">&#9432;</span></span></div>
+    const spinHTML=`<div class="card-header"><span class="card-title">Spin <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's rotation period. When you check Invest, continuous thruster power is applied toward the target day length, consuming colony Energy per second. Progress is measured in equivalent Δv; when the target is reached, investment stops automatically.">&#9432;</span></span></div>
     <div class="card-body">
       <div class="stats-grid six-col">
         <div><span class="stat-label">Rotation:</span><span id="rotNow" class="stat-value">—</span></div>
@@ -197,13 +197,13 @@ class PlanetaryThrustersProject extends Project{
         <div><span class="stat-label">Burn Time:</span><span id="rotBurn" class="stat-value">—</span></div>
       </div>
       <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
-    </div>`);
+    </div>`;
     const spinCard=document.createElement('div');spinCard.className="info-card";spinCard.innerHTML=spinHTML;c.appendChild(spinCard);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(spinCard);
     spinCard.style.display=this.isCompleted?"block":"none";
 
     /* motion */
-    const motHTML = localizeProjectsText('projectsTab.projects.planetaryThrusters.motionHtml', null, `<div class="card-header"><span class="card-title">Motion <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's orbit. If bound to a parent body (moon), investment first drives a slow spiral to the Hill radius (escape). After escape, investment changes heliocentric distance toward the target AU. Investment consumes Energy continuously; only one mode (Spin or Motion) can be active at a time.">&#9432;</span></span></div>
+    const motHTML=`<div class="card-header"><span class="card-title">Motion <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's orbit. If bound to a parent body (moon), investment first drives a slow spiral to the Hill radius (escape). After escape, investment changes heliocentric distance toward the target AU. Investment consumes Energy continuously; only one mode (Spin or Motion) can be active at a time.">&#9432;</span></span></div>
     <div class="card-body">
       <div class="stats-grid six-col">
         <div><span class="stat-label">Distance:</span><span id="distNow" class="stat-value">—</span></div>
@@ -229,7 +229,7 @@ class PlanetaryThrustersProject extends Project{
         <span class="info-tooltip-icon" style="margin-left:6px;" title="Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet, removes the star, and shutters planetary thrusters.">&#9432;</span>
       </div>
       <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
-    </div>`);
+    </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(motCard);
     motCard.style.display=this.isCompleted?"block":"none";
@@ -238,7 +238,7 @@ class PlanetaryThrustersProject extends Project{
     const veDisplay = this.hasTractorBeams()
       ? 'N/A'
       : `${fmt(FUSION_VE,false,0)} m/s`;
-    const pwrHTML = localizeProjectsText('projectsTab.projects.planetaryThrusters.powerHtml', null, `<div class="card-header"><span class="card-title">Thruster Power</span></div>
+    const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
     <div class="card-body">
       <div class="stats-grid four-col">
         <div><span class="stat-label">Continuous:</span><span id="pwrVal" class="stat-value">0</span></div>
@@ -253,7 +253,7 @@ class PlanetaryThrustersProject extends Project{
       <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Exhaust velocity (Ve) measures how fast propellant is ejected. A higher Ve provides more thrust per unit of propellant, increasing mass efficiency. It is directly related to Specific Impulse (Isp), a standard measure of engine performance, via the formula Isp = Ve / g₀ (where g₀ is standard gravity). While you must supply the energy, the required propellant is sourced locally and does not have a resource cost.">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
       <div><span class="stat-label">Thrust / Power:<span class="info-tooltip-icon" title="This ratio measures how efficiently thrusters convert input energy (Power) into motive force (Thrust). For an ideal engine, this value is T/P = 2 / Ve. Fusion drives have very high exhaust velocity, making them extremely propellant-efficient, but this comes at the cost of a lower thrust-to-power ratio.">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(this.getThrustPowerRatio(),false,6)} N/W</span></div>
       </div>
-    </div>`);
+    </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(pwrCard);
     pwrCard.style.display=this.isCompleted?"block":"none";

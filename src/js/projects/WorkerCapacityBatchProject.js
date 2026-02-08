@@ -138,9 +138,9 @@ class WorkerCapacityBatchProject extends Project {
   }
 
   renderWorkerCapacityControls(container, {
-    amountTitle = localizeProjectsText('projectsTab.labels.amount', null, 'Amount'),
+    amountTitle = 'Amount',
     tooltip,
-    autoMaxLabel = localizeProjectsText('projectsTab.labels.autoMax', null, 'Auto Max'),
+    autoMaxLabel = 'Auto Max',
     layoutClass = 'worker-capacity-layout',
   } = {}) {
     if (this.workerCapacityUI && this.workerCapacityUI.container?.isConnected) {
@@ -156,7 +156,7 @@ class WorkerCapacityBatchProject extends Project {
     costSection.className = 'project-section-container';
     const costTitle = document.createElement('h4');
     costTitle.className = 'section-title';
-    costTitle.textContent = localizeProjectsText('projectsTab.card.cost', null, 'Cost');
+    costTitle.textContent = 'Cost';
     costSection.appendChild(costTitle);
     if (costElement) {
       const label = costElement.querySelector('strong');

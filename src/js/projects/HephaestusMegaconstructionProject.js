@@ -354,7 +354,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     header.classList.add('card-header');
     const title = document.createElement('span');
     title.classList.add('card-title');
-    title.textContent = localizeProjectsText('projectsTab.projects.hephaestus.title', null, 'Hephaestus Yards');
+    title.textContent = 'Hephaestus Yards';
     header.appendChild(title);
     card.appendChild(header);
 
@@ -379,9 +379,9 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
       return { value };
     };
 
-    const totalValue = createSummaryBox(localizeProjectsText('projectsTab.projects.hephaestus.totalYards', null, 'Total Yards')).value;
-    const freeValue = createSummaryBox(localizeProjectsText('projectsTab.projects.hephaestus.unassigned', null, 'Unassigned')).value;
-    const expansionRateValue = createSummaryBox(localizeProjectsText('projectsTab.projects.hephaestus.expansion', null, 'Expansion')).value;
+    const totalValue = createSummaryBox('Total Yards').value;
+    const freeValue = createSummaryBox('Unassigned').value;
+    const expansionRateValue = createSummaryBox('Expansion').value;
 
     const assignmentGrid = document.createElement('div');
     assignmentGrid.classList.add('hephaestus-assignment-list');
@@ -403,7 +403,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row');
     const headerName = document.createElement('span');
     headerName.classList.add('stat-label');
-    headerName.textContent = localizeProjectsText('projectsTab.projects.hephaestus.project', null, 'Project');
+    headerName.textContent = 'Project';
     const headerValue = document.createElement('span');
     headerValue.classList.add('stat-label');
     headerValue.textContent = '';
@@ -414,7 +414,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     headerButtons.append(stepDownButton, stepUpButton);
     const weightHeader = document.createElement('span');
     weightHeader.classList.add('stat-label', 'hephaestus-weight-header');
-    weightHeader.textContent = localizeProjectsText('projectsTab.projects.hephaestus.weight', null, 'Weight');
+    weightHeader.textContent = 'Weight';
     headerControls.append(headerButtons, weightHeader);
     const headerSpacer = document.createElement('div');
     headerSpacer.classList.add('hephaestus-row-spacer');
@@ -485,7 +485,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
         this.setAutoAssignTarget(key, autoAssign.checked);
       });
       const autoAssignLabel = document.createElement('span');
-      autoAssignLabel.textContent = localizeProjectsText('projectsTab.labels.auto', null, 'Auto');
+      autoAssignLabel.textContent = 'Auto';
       autoAssignLabel.addEventListener('click', () => {
         autoAssign.checked = !autoAssign.checked;
         this.setAutoAssignTarget(key, autoAssign.checked);
@@ -565,11 +565,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     const step = this.assignmentStep;
     if (elements.expansionRateValue) {
       const rate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
-      elements.expansionRateValue.textContent = localizeProjectsText(
-        'projectsTab.projects.hephaestus.yardsPerSecond',
-        { value: formatNumber(rate, true, 3) },
-        `${formatNumber(rate, true, 3)} yards/s`
-      );
+      elements.expansionRateValue.textContent = `${formatNumber(rate, true, 3)} yards/s`;
     }
 
     const activeDyson = this.getActiveDysonKey();

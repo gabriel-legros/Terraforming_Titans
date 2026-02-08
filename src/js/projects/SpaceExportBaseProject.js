@@ -213,7 +213,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
   
     const waitLabel = document.createElement('label');
     waitLabel.htmlFor = `${this.name}-wait-capacity`;
-    waitLabel.textContent = localizeProjectsText('projectsTab.projects.spaceExport.waitFullCapacity', null, 'Wait for full capacity');
+    waitLabel.textContent = 'Wait for full capacity';
   
     waitCheckboxContainer.appendChild(waitCheckbox);
     waitCheckboxContainer.appendChild(waitLabel);
@@ -233,7 +233,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
 
     const title = document.createElement('h4');
     title.classList.add('section-title');
-    title.textContent = localizeProjectsText('projectsTab.projects.spaceExport.exportTitle', null, 'Export');
+    title.textContent = 'Export';
     sectionContainer.appendChild(title);
 
     const disposalContainer = document.createElement('div');
@@ -242,14 +242,14 @@ class SpaceExportBaseProject extends SpaceshipProject {
     const groupSelectContainer = document.createElement('div');
     groupSelectContainer.classList.add('disposal-select-container');
     const disposalLabel = document.createElement('label');
-    disposalLabel.textContent = localizeProjectsText('projectsTab.projects.spaceExport.exportLabel', null, 'Export:');
+    disposalLabel.textContent = 'Export:';
     const disposalTypeSelect = document.createElement('select');
     disposalTypeSelect.id = `${this.name}-disposal-type-select`;
 
     const phaseSelectContainer = document.createElement('div');
     phaseSelectContainer.classList.add('disposal-select-container');
     const phaseLabel = document.createElement('label');
-    phaseLabel.textContent = localizeProjectsText('projectsTab.projects.spaceExport.phaseLabel', null, 'Phase:');
+    phaseLabel.textContent = 'Phase:';
     const disposalPhaseSelect = document.createElement('select');
     disposalPhaseSelect.id = `${this.name}-disposal-phase-select`;
 
@@ -545,11 +545,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     control.appendChild(checkbox);
 
     const label = document.createElement('label');
-    label.textContent = localizeProjectsText(
-      'projectsTab.projects.spaceExport.disableTemperatureBelow',
-      null,
-      'Disable if temperature below: '
-    );
+    label.textContent = 'Disable if temperature below: ';
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
@@ -639,7 +635,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       elements.pressureInput.value = formatNumber(this.disablePressureThreshold * 1000, true, 2);
     }
     if (elements.pressureUnitLabel) {
-      elements.pressureUnitLabel.textContent = localizeProjectsText('projectsTab.labels.pa', null, 'Pa');
+      elements.pressureUnitLabel.textContent = 'Pa';
     }
 
     if (elements.coverageControl) {
@@ -652,16 +648,12 @@ class SpaceExportBaseProject extends SpaceshipProject {
       elements.coverageInput.value = formatNumber(this.disableCoverageThreshold * 100, true, 2);
     }
     if (elements.coverageUnitLabel) {
-      elements.coverageUnitLabel.textContent = localizeProjectsText('projectsTab.labels.percent', null, '%');
+      elements.coverageUnitLabel.textContent = '%';
     }
 
     if (elements.disposalPerShipElement) {
       const perShip = this.getShipCapacity();
-      elements.disposalPerShipElement.textContent = localizeProjectsText(
-        'projectsTab.projects.spaceExport.maxExportPerShip',
-        { value: formatNumber(perShip, true) },
-        `Max Export/Ship: ${formatNumber(perShip, true)}`
-      );
+      elements.disposalPerShipElement.textContent = `Max Export/Ship: ${formatNumber(perShip, true)}`;
     }
 
     if (elements.totalDisposalElement) {
@@ -675,34 +667,18 @@ class SpaceExportBaseProject extends SpaceshipProject {
       if (this.isContinuous()) {
         const activeShips = this.getActiveShipCount();
         total *= activeShips * (1000 / this.getEffectiveDuration());
-        elements.totalDisposalElement.textContent = localizeProjectsText(
-          'projectsTab.projects.spaceExport.totalExportPerSecond',
-          { value: formatNumber(total, true) },
-          `Total Export: ${formatNumber(total, true)}/s`
-        );
+        elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}/s`;
       } else {
-        elements.totalDisposalElement.textContent = localizeProjectsText(
-          'projectsTab.projects.spaceExport.totalExport',
-          { value: formatNumber(total, true) },
-          `Total Export: ${formatNumber(total, true)}`
-        );
+        elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}`;
       }
     }
 
     if (elements.maxDisposalText && typeof this.getExportCap === 'function') {
-      elements.maxDisposalText.textContent = localizeProjectsText(
-        'projectsTab.projects.spaceExport.maxExportCapacity',
-        { value: formatNumber(this.getExportCap(), true) },
-        `Max Export Capacity: ${formatNumber(this.getExportCap(), true)} /s`
-      );
+      elements.maxDisposalText.textContent = `Max Export Capacity: ${formatNumber(this.getExportCap(), true)} /s`;
     }
     
     if (elements.gainPerResourceElement && this.attributes.fundingGainAmount) {
-        elements.gainPerResourceElement.textContent = localizeProjectsText(
-          'projectsTab.projects.spaceExport.gainPerResource',
-          { value: formatNumber(this.attributes.fundingGainAmount, true) },
-          `Gain/Resource: ${formatNumber(this.attributes.fundingGainAmount, true)}`
-        );
+        elements.gainPerResourceElement.textContent = `Gain/Resource: ${formatNumber(this.attributes.fundingGainAmount, true)}`;
     }
 
     if (elements.disposalTypeSelect && elements.disposalPhaseSelect) {
