@@ -92,8 +92,6 @@ class SpaceMirrorAdvancedOversight {
         return out;
       };
 
-      const weightFor = (p) => Math.pow(2, (6 - Math.max(1, Math.min(5, p)))) ; // 32,16,8,4,2
-
       const allPriorities = [prio.tropical, prio.temperate, prio.polar, prio.focus].filter(x => typeof x === 'number');
       const minP = Math.min(...allPriorities);
       const maxP = Math.max(...allPriorities);
@@ -266,7 +264,7 @@ class SpaceMirrorAdvancedOversight {
           const tgt = targets[z] || 0;
           if (!(tgt > 0)) continue;
           let w = 0;
-          if ((prio[z] || 5) <= passLevel) w = weightFor(prio[z]);
+          if ((prio[z] || 5) <= passLevel) w = 1;
           if ((prio[z] || 5) <  passLevel) w *= 32; // lock-in for higher priority
           if (w > 0) {
             const t = temps[z];
@@ -280,7 +278,7 @@ class SpaceMirrorAdvancedOversight {
           const tgt = targets.water || 0;
           const relErr = tgt > 0 ? (tgt - melt) / tgt : 0;
           let w = 0;
-          if ((prio.focus || 5) <= passLevel) w = weightFor(prio.focus);
+          if ((prio.focus || 5) <= passLevel) w = 1;
           if ((prio.focus || 5) <  passLevel) w *= 32;
           sum += w * relErr * relErr;
         }
