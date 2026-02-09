@@ -21,7 +21,7 @@ function normalizePulsarParameters(parameters = {}) {
   const severity = Number.isFinite(parameters.severity) ? Math.max(0, parameters.severity) : 1;
   const surfaceDoseBoost = Number.isFinite(parameters.surfaceDoseBoost_mSvPerDay)
     ? Math.max(0, parameters.surfaceDoseBoost_mSvPerDay)
-    : 50000 * severity;
+    : 4900 * severity;
   const orbitalDoseBoost = Number.isFinite(parameters.orbitalDoseBoost_mSvPerDay)
     ? Math.max(0, parameters.orbitalDoseBoost_mSvPerDay)
     : surfaceDoseBoost;
