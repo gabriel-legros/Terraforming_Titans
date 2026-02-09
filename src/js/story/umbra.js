@@ -243,7 +243,7 @@ progressUmbra.chapters.push(
     type: 'journal',
     chapter: 22,
     activePlanet: 'umbra',
-    narrative: "Feroza : 'Their fleet is suddenly moving sluggish.  Their troops are unresponsive and running low on supplies.  I have to agree, we've practically won.  However... the battle earlier had not been to our advantage after all.  We found antimatter mines on your potential escape route.  I am glad we did not evacuate you.  I think it was bait.'",
+    narrative: "Feroza : 'Their fleet is suddenly moving sluggishly.  Their troops are unresponsive and running low on supplies.  I have to agree, we've practically won.  However... the battle earlier had not been to our advantage after all.  We found antimatter mines on your potential escape route.  I am glad we did not evacuate you.  I think it was bait.'",
     prerequisites: ['chapter22.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
