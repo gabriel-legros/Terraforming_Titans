@@ -175,6 +175,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Specialized Systems
 - Buildings moved toward dedicated subclass logic (e.g., GHG/Oxygen factories, Dyson receiver, biodome behavior).
 - Random World effects/archetypes expanded with gameplay bonuses and hazard interactions.
+- RWG moons now generate seeded gas-giant belt radiation parameters (`refDistance_Rp`, `parentBeltAtRef_mSvPerDay`, `beltFalloffExp`) so orbital/surface radiation follows the same parent-belt model as story moons.
 - Artificial world flow matured with prepay persistence, lock states, and travel warnings.
 - Warp Gate Command gained richer operation story/event handling and improved team management tools.
 

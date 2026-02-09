@@ -1153,7 +1153,47 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   if (DEFAULT_PARAMS.specials.includeCrusaders)     special.crusaders      = { name: "Crusaders", hasCap: false, initialValue: 0, unlocked: false };
 
   // Optional parent body for moons
-  let parentBody = undefined; if (isMoon) { const gg = (function makeGasGiant(r) { const Mj = 1.898e27; return { mass: randRange(r, 0.3, 3.0) * Mj, radius_km: randRange(r, 30000, 80000), orbitRadius_km: Math.floor(randRange(r, 600000, 2500000)) }; })(mulberry32(seed ^ 0xFACE)); parentBody = { name: "Gas Giant", mass: gg.mass, radius: gg.radius_km, orbitRadius: gg.orbitRadius_km }; }
+  let parentBody = undefined;
+  if (isMoon) {
+    const gg = (function makeGasGiant(r) {
+      const Mj = 1.898e27;
+      return {
+        mass: randRange(r, 0.3, 3.0) * Mj,
+        radius_km: randRange(r, 30000, 80000),
+        orbitRadius_km: Math.floor(randRange(r, 600000, 2500000))
+      };
+    })(mulberry32(seed ^ 0xFACE));
+
+    const beltRng = mulberry32(seed ^ 0xB317);
+    const jupiterMassKg = 1.898e27;
+    const jupiterRadiusKm = 71492;
+    const saturnRefDose = 3.5;
+    const jupiterRefDose = 5400;
+
+    const massMj = Math.max(0.3, gg.mass / jupiterMassKg);
+    const radiusRj = Math.max(0.3, gg.radius_km / jupiterRadiusKm);
+    const densityRatio = Math.max(0.2, massMj / Math.pow(radiusRj, 3));
+    const compactness = clamp((densityRatio - 0.2) / 1.8, 0, 1);
+    const massNorm = clamp((Math.log10(massMj) - Math.log10(0.3)) / Math.log10(10), 0, 1);
+
+    const weakLog = Math.log10(saturnRefDose);
+    const strongLog = Math.log10(jupiterRefDose);
+    const baselineLog = weakLog + (strongLog - weakLog) * (0.6 * massNorm + 0.4 * compactness);
+    const jitterLog = randRange(beltRng, -0.6, 0.6);
+    const referenceDose = clamp(Math.pow(10, baselineLog + jitterLog), 0.5, 7000);
+    const beltFalloffExp = clamp(6 + 2.8 * compactness + randRange(beltRng, -0.4, 0.4), 5.2, 10.8);
+    const refDistanceRp = randRange(beltRng, 9.0, 12.0);
+
+    parentBody = {
+      name: "Gas Giant",
+      mass: gg.mass,
+      radius: gg.radius_km,
+      orbitRadius: gg.orbitRadius_km,
+      refDistance_Rp: refDistanceRp,
+      parentBeltAtRef_mSvPerDay: referenceDose,
+      beltFalloffExp: beltFalloffExp
+    };
+  }
 
   // Initial colony caps scale
   const baseCapScale = clamp(landHa / DEFAULT_PARAMS.volatiles.referenceLandHa, 0.3, 3);
