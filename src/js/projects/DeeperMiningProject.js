@@ -448,6 +448,7 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   update(deltaTime) {
+    this.updateUnderworldMiningMaxDepth();
     if (this.unlocked) {
       this.applySuperchargedMiningEffects();
       this.applyUndergroundStorageEffects();
