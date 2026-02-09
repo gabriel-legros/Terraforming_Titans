@@ -92,11 +92,11 @@ function updatePulsarHazardUI(pulsarParameters) {
     ? pulsarParameters.severity
     : 1;
   const description = pulsarParameters.description || 'Pulsar hazard detected.';
-  const surfaceBoost = Number.isFinite(pulsarParameters.surfaceDoseBoost_mSvPerDay)
-    ? pulsarParameters.surfaceDoseBoost_mSvPerDay
+  const orbitalBoost = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
+    ? pulsarParameters.orbitalDoseBoost_mSvPerDay
     : 0;
 
-  pulsarHazardUICache.summary.textContent = `${description} Pulse period: ${pulsePeriodSeconds}s. Severity: ${severity}. Added radiation: +${Math.round(surfaceBoost)} mSv/day.`;
+  pulsarHazardUICache.summary.textContent = `${description} Pulse period: ${pulsePeriodSeconds}s. Severity: ${severity}. Added orbital radiation: +${Math.round(orbitalBoost)} mSv/day (surface attenuated by atmosphere).`;
 }
 
 try {

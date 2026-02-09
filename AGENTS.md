@@ -177,7 +177,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Random World effects/archetypes expanded with gameplay bonuses and hazard interactions.
 - RWG moons now generate seeded gas-giant belt radiation parameters (`refDistance_Rp`, `parentBeltAtRef_mSvPerDay`, `beltFalloffExp`) so orbital/surface radiation follows the same parent-belt model as story moons.
 - Radiation tolerance now uses quadratic mitigation (`points² × 0.01 mSv/day`) with a 100-point cap; life growth penalties are based on remaining dose after mitigation, and life UI/automation "As needed" behavior reflects this dose model.
-- Pulsar hazard now injects extreme additional radiation into surface/orbital dose calculations when active.
+- Pulsar hazard now injects additional orbital radiation when active; surface impact is derived by atmospheric attenuation from orbital dose.
 - Artificial world flow matured with prepay persistence, lock states, and travel warnings.
 - Warp Gate Command gained richer operation story/event handling and improved team management tools.
 

@@ -19,16 +19,14 @@ if (!pulsarRadiationPenaltyFromDose) {
 
 function normalizePulsarParameters(parameters = {}) {
   const severity = Number.isFinite(parameters.severity) ? Math.max(0, parameters.severity) : 1;
-  const surfaceDoseBoost = Number.isFinite(parameters.surfaceDoseBoost_mSvPerDay)
-    ? Math.max(0, parameters.surfaceDoseBoost_mSvPerDay)
-    : 4900 * severity;
   const orbitalDoseBoost = Number.isFinite(parameters.orbitalDoseBoost_mSvPerDay)
     ? Math.max(0, parameters.orbitalDoseBoost_mSvPerDay)
-    : surfaceDoseBoost;
+    : (Number.isFinite(parameters.surfaceDoseBoost_mSvPerDay)
+      ? Math.max(0, parameters.surfaceDoseBoost_mSvPerDay)
+      : 4900 * severity);
   return {
     pulsePeriodSeconds: Number.isFinite(parameters.pulsePeriodSeconds) ? Math.max(1, parameters.pulsePeriodSeconds) : 1.337,
     severity: severity,
-    surfaceDoseBoost_mSvPerDay: surfaceDoseBoost,
     orbitalDoseBoost_mSvPerDay: orbitalDoseBoost,
     description: parameters.description || 'Pulsar hazard detected. Extreme radiation floods the planet.'
   };
@@ -40,12 +38,18 @@ function applyPulsarRadiation(terraforming, pulsarParameters) {
     return;
   }
 
-  const surfaceBoost = Number.isFinite(pulsarParameters.surfaceDoseBoost_mSvPerDay)
-    ? Math.max(0, pulsarParameters.surfaceDoseBoost_mSvPerDay)
-    : 0;
   const orbitalBoost = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
     ? Math.max(0, pulsarParameters.orbitalDoseBoost_mSvPerDay)
-    : surfaceBoost;
+    : 0;
+
+  const pressureKPa = terraforming.calculateTotalPressure ? terraforming.calculateTotalPressure() : 0;
+  const pressurePa = Number.isFinite(pressureKPa) ? pressureKPa * 1000 : 0;
+  const gravity = terraforming.celestialParameters && Number.isFinite(terraforming.celestialParameters.gravity)
+    ? terraforming.celestialParameters.gravity
+    : 1;
+  const column_gcm2 = gravity > 0 ? (pressurePa / gravity) * 0.1 : 0;
+  const beltAttenuationLength_gcm2 = 30;
+  const surfaceBoost = orbitalBoost * Math.exp(-column_gcm2 / beltAttenuationLength_gcm2);
 
   terraforming.surfaceRadiation = (terraforming.surfaceRadiation || 0) + surfaceBoost;
   terraforming.orbitalRadiation = (terraforming.orbitalRadiation || 0) + orbitalBoost;
