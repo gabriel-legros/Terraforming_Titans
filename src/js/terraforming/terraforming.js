@@ -942,12 +942,16 @@ class Terraforming extends EffectableEntity{
         );
         const surfacePressureBar = surfacePressurePa / 1e5;
 
-        const { emissivity, tau: computedTau, contributions: computedContributions } =
-            calculateEmissivity(composition, surfacePressureBar, gSurface);
         const ignoreLowGravityAtmosphere = options?.ignoreLowGravityAtmosphere === true;
-        const tau = this.isBooleanFlagSet('ringworldLowGravityTerraforming') && !ignoreLowGravityAtmosphere
-          ? 0
-          : computedTau;
+        const suppressAtmosphere =
+          this.isBooleanFlagSet('ringworldLowGravityTerraforming') && !ignoreLowGravityAtmosphere;
+        const effectiveComposition = suppressAtmosphere ? {} : composition;
+        const effectiveSurfacePressurePa = suppressAtmosphere ? 0 : surfacePressurePa;
+        const effectiveSurfacePressureBar = suppressAtmosphere ? 0 : surfacePressureBar;
+
+        const { emissivity, tau: computedTau, contributions: computedContributions } =
+            calculateEmissivity(effectiveComposition, effectiveSurfacePressureBar, gSurface);
+        const tau = computedTau;
         const contributions = tau === 0 ? {} : computedContributions;
         this.temperature.emissivity = emissivity;
         this.temperature.opticalDepth = tau;
@@ -955,7 +959,7 @@ class Terraforming extends EffectableEntity{
 
         const aerosolsSW = {};
         const area_m2 = 4 * Math.PI * Math.pow((this.celestialParameters.radius || 1) * 1000, 2);
-        if (this.resources?.atmospheric?.calciteAerosol) {
+        if (!suppressAtmosphere && this.resources?.atmospheric?.calciteAerosol) {
             const mass_ton = this.resources.atmospheric.calciteAerosol.value || 0;
             aerosolsSW.calcite = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
         }
@@ -963,8 +967,8 @@ class Terraforming extends EffectableEntity{
         const baseParams = {
             groundAlbedo,
             rotationPeriodH,
-            surfacePressureBar,
-            composition,
+            surfacePressureBar: effectiveSurfacePressureBar,
+            composition: effectiveComposition,
             gSurface,
             aerosolsSW
         };
@@ -1017,7 +1021,8 @@ class Terraforming extends EffectableEntity{
     let weightedEqTemp = 0;
     let weightedFluxUnpenalized = 0;
     const heatCapacityCache = this.getHeatCapacity();
-    const baseSlabOptions = { atmosphereCapacity: heatCapacityCache.atmosphericHeatCapacity };
+    const effectiveAtmosphereCapacity = suppressAtmosphere ? 0 : heatCapacityCache.atmosphericHeatCapacity;
+    const baseSlabOptions = { atmosphereCapacity: effectiveAtmosphereCapacity };
     for (const zone of ORDER) {
         const zoneFlux = this.calculateZoneSolarFlux(zone);
         this.luminosity.zonalFluxes[zone] = zoneFlux;
@@ -1065,7 +1070,7 @@ class Terraforming extends EffectableEntity{
 
     // --- Meridional (equator↔pole) mixing strength --------------------
     // Column mass (kg/m²) — higher => stronger mixing
-    const columnMass = surfacePressurePa / Math.max(gSurface, 1e-6);
+    const columnMass = effectiveSurfacePressurePa / Math.max(gSurface, 1e-6);
 
     // Tunables (picked to match Earth/Mars/Titan/Venus qualitatively)
     const MASS_REF = 1.03e4;  // ≈ Earth column mass at 1 bar

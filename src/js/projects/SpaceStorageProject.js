@@ -392,7 +392,7 @@ class SpaceStorageProject extends SpaceshipProject {
       const stored = this.resourceUsage[entry.resource] || 0;
       const capLimit = this.getResourceCapLimit(entry.resource);
       const capRemaining = Math.max(0, capLimit - stored);
-      if (!Number.isFinite(capRemaining) || capRemaining <= 0) return;
+      if (capRemaining <= 0) return;
       let amount = 0;
       if (entry.resource === 'biomass') {
         const available = resources.surface.biomass?.value || 0;
