@@ -347,7 +347,6 @@ progressTartarus.chapters.push(
     ],
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'tartarus', value: true },
-      { target: 'spaceManager', targetId: 'hades', type: 'enable' },
       { target: 'artificialManager', type: 'unlockCore', targetId: 'brown-dwarf' },
       { target: 'rwgManager', type: 'allowHazard', targetId: 'kessler' }
     ]
