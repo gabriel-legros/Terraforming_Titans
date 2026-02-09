@@ -4,6 +4,25 @@ try {
 } catch (error) {
   DEFAULT_LIFE_DESIGN_REQUIREMENTS = require('./terraforming/terraforming-requirements.js').terraformingRequirements.human.lifeDesign;
 }
+const LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY = 0.01;
+let lifeRadiationPenaltyFromDose = null;
+try {
+  ({ radiationPenalty: lifeRadiationPenaltyFromDose } = require('./terraforming/radiation-utils.js'));
+} catch (error) {
+  try {
+    lifeRadiationPenaltyFromDose = radiationPenalty;
+  } catch (innerError) {
+    lifeRadiationPenaltyFromDose = null;
+  }
+}
+if (!lifeRadiationPenaltyFromDose) {
+  lifeRadiationPenaltyFromDose = function fallbackRadiationPenalty(dose_mSvDay) {
+    const D0 = 1.07;
+    const a = 1.12;
+    const D = Math.max(dose_mSvDay, 1e-12);
+    return 1 / (1 + Math.pow(D0 / D, a));
+  };
+}
 
 function getTerraformingSafe() {
   try {
@@ -173,7 +192,7 @@ class LifeAttribute {
       case 'photosynthesisEfficiency':
         return (requirements.photosynthesisRatePerPoint * this.value).toFixed(5);
       case 'radiationTolerance':
-        return this.value * 4 + '%';
+        return `${formatNumber(this.value * this.value * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY, false, 2)} mSv/day mitigated`;
       case 'invasiveness':
         return this.value;
       case 'spaceEfficiency':
@@ -219,7 +238,7 @@ class LifeDesign {
     );
     this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', getAttributeMaxUpgrades('growthTemperatureTolerance'));
     this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', getAttributeMaxUpgrades('photosynthesisEfficiency'));
-    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Resistance to radiation; vital without a magnetosphere.', getAttributeMaxUpgrades('radiationTolerance'));
+    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Mitigates radiation quadratically: points² × 0.01 mSv/day.', getAttributeMaxUpgrades('radiationTolerance'));
     this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', getAttributeMaxUpgrades('invasiveness'));
     this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', getAttributeMaxUpgrades('spaceEfficiency'));
     this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, 'Geological Burial', 'Removes existing biomass into inert storage.', getAttributeMaxUpgrades('geologicalBurial'));
@@ -248,9 +267,29 @@ class LifeDesign {
     return calculateGrowthTemperatureTolerance(this.growthTemperatureTolerance.value);
   }
 
-  getRadiationMitigationRatio() {
-    const requirements = getActiveLifeDesignRequirements();
-    return this.radiationTolerance.value / requirements.radiationToleranceThresholdPoints;
+  getRadiationMitigationDose() {
+    const points = Math.max(0, this.radiationTolerance.value || 0);
+    return points * points * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY;
+  }
+
+  getEffectiveRadiationDose() {
+    if (terraforming.getMagnetosphereStatus()) {
+      return 0;
+    }
+    const surfaceDose = Number.isFinite(terraforming.surfaceRadiation) ? terraforming.surfaceRadiation : 0;
+    const mitigationDose = this.getRadiationMitigationDose();
+    return Math.max(0, surfaceDose - mitigationDose);
+  }
+
+  getRadiationGrowthPenalty() {
+    if (terraforming.getMagnetosphereStatus()) {
+      return 0;
+    }
+    const effectiveDose = this.getEffectiveRadiationDose();
+    if (effectiveDose <= 0) {
+      return 0;
+    }
+    return lifeRadiationPenaltyFromDose(effectiveDose);
   }
 
   // Method to copy attributes from another LifeDesign
@@ -425,20 +464,30 @@ class LifeDesign {
     // Checks radiation tolerance against magnetosphere status
     radiationCheck() {
         const hasShield = terraforming.getMagnetosphereStatus();
-        const basePenalty = terraforming.radiationPenalty || 0;
-        let finalPenalty = 0;
-        if (!hasShield) {
-            const mitigation = this.getRadiationMitigationRatio();
-            finalPenalty = basePenalty * (1 - mitigation);
-        }
+        const baseDose = Number.isFinite(terraforming.surfaceRadiation) ? terraforming.surfaceRadiation : 0;
+        const mitigationDose = this.getRadiationMitigationDose();
+        const effectiveDose = hasShield ? 0 : Math.max(0, baseDose - mitigationDose);
+        let finalPenalty = hasShield ? 0 : this.getRadiationGrowthPenalty();
         if (finalPenalty < 0.0001) {
             finalPenalty = 0;
         }
 
         const pass = finalPenalty === 0;
-        const reason = pass ? null : "High radiation";
+        const reason = hasShield
+          ? 'Magnetosphere active'
+          : (pass
+            ? `Dose fully mitigated (${formatNumber(baseDose, false, 2)} - ${formatNumber(mitigationDose, false, 2)} mSv/day)`
+            : `Effective dose: ${formatNumber(effectiveDose, false, 2)} mSv/day`);
         const reductionPercent = finalPenalty * 100;
-        return { pass, reason, reduction: reductionPercent };
+        return {
+          pass,
+          reason,
+          reduction: reductionPercent,
+          baseDose,
+          mitigationDose,
+          effectiveDose,
+          hasShield
+        };
     }
 
   // Checks if the lifeform can survive in at least one zone based on temperature
@@ -977,10 +1026,7 @@ class LifeManager extends EffectableEntity {
     const baseMaxDensity = requirements.baseMaxBiomassDensityTPerM2;
     const densityMultiplier = 1 + design.spaceEfficiency.value;
     const effectiveGrowthMultiplier = this.getEffectiveLifeGrowthMultiplier();
-    const radMitigation = design.getRadiationMitigationRatio();
-    let radPenalty = terraforming.getMagnetosphereStatus()
-      ? 0
-      : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
+    let radPenalty = design.getRadiationGrowthPenalty();
     if (radPenalty < 0.0001) radPenalty = 0;
     const radMult = 1 - radPenalty;
     zones.forEach(zoneName => {

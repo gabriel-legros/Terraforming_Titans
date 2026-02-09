@@ -613,7 +613,7 @@ function initializeLifeTerraformingDesignerUI() {
           <tr id="life-attribute-row-${attributeName}"${isBioworkforceRow ? ' data-bioworkforce-ui="true"' : ''}${bioworkforceRowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
               ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max <span id="${attributeName}-max-upgrades">${attribute.maxUpgrades}</span>)
-              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Each point assigns ${bioworkersPerBiomassPerPoint} of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>` : ''}`}</div>
+              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'radiationTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Each point assigns ${bioworkersPerBiomassPerPoint} of global biomass as temporary workers. Worker capacity updates automatically as biomass changes.">&#9432;</span>` : ''}`}</div>
             </td>
             <td>
               <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
@@ -1153,17 +1153,21 @@ function updateLifeStatusTable() {
             return;
         }
 
+        const radiationTooltip = isGlobalRadiation
+            ? `Surface dose: ${formatNumber(status.baseDose || 0, false, 2)} mSv/day\nMitigation: ${formatNumber(status.mitigationDose || 0, false, 2)} mSv/day\nEffective dose: ${formatNumber(status.effectiveDose || 0, false, 2)} mSv/day\nGrowth penalty: ${formatNumber(status.reduction || 0, false, 1)}%`
+            : '';
+
         if (status.warning) {
             const reason = status.reason || '';
             updateStatusCellIcon(cell, '⚠', reason, '');
         } else if (status.pass) {
-            updateStatusCellIcon(cell, '✅', '', '');
+            updateStatusCellIcon(cell, '✅', radiationTooltip, '');
         } else {
             const reason = status.reason || 'Failed';
             const reductionText = (isGlobalRadiation && status.reduction > 0)
                 ? ` (-${status.reduction.toFixed(0)}% Growth)`
                 : '';
-            updateStatusCellIcon(cell, '❌', reason, reductionText);
+            updateStatusCellIcon(cell, '❌', isGlobalRadiation ? `${reason}\n${radiationTooltip}` : reason, reductionText);
         }
     };
 
@@ -1331,8 +1335,7 @@ function updateLifeStatusTable() {
                     : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1))
                 : 1;
             const tempMult = growthTempResults[zone]?.multiplier || 0;
-            const radMitigation = designToCheck.getRadiationMitigationRatio();
-            let radPenalty = terraforming.getMagnetosphereStatus() ? 0 : (terraforming.radiationPenalty || 0) * (1 - radMitigation);
+            let radPenalty = designToCheck.getRadiationGrowthPenalty();
             if (radPenalty < 0.0001) radPenalty = 0;
             const radMult = 1 - radPenalty;
             const waterMult = (terraforming.zonalSurface[zone]?.liquidWater || 0) > 1e-9 ? 1 : 0;
@@ -1351,6 +1354,9 @@ function updateLifeStatusTable() {
                     `Temp: x${formatNumber(tempMult, false, 2)}`,
                     `Capacity: x${formatNumber(capacityMult, false, 2)}`,
                     `Radiation: x${formatNumber(radMult, false, 2)}`,
+                    `Radiation dose: ${formatNumber(radiationResult.baseDose || 0, false, 2)} mSv/day`,
+                    `Radiation mitigation: ${formatNumber(radiationResult.mitigationDose || 0, false, 2)} mSv/day`,
+                    `Effective radiation: ${formatNumber(radiationResult.effectiveDose || 0, false, 2)} mSv/day`,
                 ];
                 if (usesLuminosity) {
                     lines.splice(2, 0, `Luminosity: x${formatNumber(lumMult, false, 2)}`);

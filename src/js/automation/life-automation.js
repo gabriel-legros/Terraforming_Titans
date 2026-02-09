@@ -11,6 +11,7 @@ const LIFE_AUTOMATION_ATTRIBUTES = [
   'bioworkforce'
 ];
 const LIFE_AUTOMATION_ZONE_KEYS = ['tropical', 'temperate', 'polar'];
+const LIFE_AUTOMATION_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY = 0.01;
 class LifeAutomation {
   constructor() {
     this.presets = [];
@@ -96,6 +97,17 @@ class LifeAutomation {
       return Math.max(0, baseRange.min - coldest + buffer - 0.5);
     }
     return Math.max(0, hottest - baseRange.max + buffer - 0.5);
+  }
+
+  getRadiationToleranceTarget() {
+    if (terraforming.getMagnetosphereStatus()) {
+      return 0;
+    }
+    const currentDose = Number.isFinite(terraforming.surfaceRadiation) ? terraforming.surfaceRadiation : 0;
+    if (currentDose <= 0) {
+      return 0;
+    }
+    return Math.ceil(Math.sqrt(currentDose / LIFE_AUTOMATION_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY));
   }
 
   ensureDefaultPreset() {
@@ -497,7 +509,7 @@ class LifeAutomation {
           remaining += currentValue - targetValue;
         }
       } else if (isNeeded && isRadiationTolerance) {
-        const targetValue = terraforming.getMagnetosphereStatus() ? maxUpgrades : 0;
+        const targetValue = Math.min(maxUpgrades, this.getRadiationToleranceTarget());
         const currentValue = attribute.value;
         if (targetValue > currentValue) {
           const delta = Math.min(remaining, targetValue - currentValue);
@@ -584,7 +596,7 @@ class LifeAutomation {
           spend = 0;
         }
       } else if (isNeeded && isRadiationTolerance) {
-        const targetValue = terraforming.getMagnetosphereStatus() ? maxUpgrades : 0;
+        const targetValue = Math.min(maxUpgrades, this.getRadiationToleranceTarget());
         const currentValue = attribute.value;
         if (targetValue > currentValue) {
           const delta = Math.min(remaining, targetValue - currentValue);
@@ -632,7 +644,7 @@ class LifeAutomation {
     let needsToleranceIncrease = false;
     for (let index = 0; index < preset.designSteps.length; index += 1) {
       const step = preset.designSteps[index];
-      if (step.mode !== 'needed' || !this.isTemperatureToleranceAttribute(step.attribute)) {
+      if (step.mode !== 'needed' || !this.isAsNeededAttribute(step.attribute)) {
         continue;
       }
       if (candidate[step.attribute].value > currentDesign[step.attribute].value) {

@@ -1403,6 +1403,8 @@ const hadesOverrides = {
     pulsar: {
       pulsePeriodSeconds: 1.337,
       severity: 1,
+      surfaceDoseBoost_mSvPerDay: 50000,
+      orbitalDoseBoost_mSvPerDay: 50000,
       description: 'The pulsar emits periodic radiation bursts across the system.'
     }
   },

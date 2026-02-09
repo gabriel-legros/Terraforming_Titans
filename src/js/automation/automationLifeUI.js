@@ -426,7 +426,7 @@ function renderLifeAutomationSteps(automation, preset, container) {
         : step.mode === 'max'
           ? 'Max out attribute'
           : step.mode === 'needed' && (isTempTolerance || isRadiationTolerance)
-            ? (isTempTolerance ? 'As needed for selected zones' : 'As needed for magnetosphere')
+            ? (isTempTolerance ? 'As needed for selected zones' : 'As needed for radiation dose')
             : 'Spend fixed points';
     };
     let isTempTolerance = step.attribute === 'minTemperatureTolerance' || step.attribute === 'maxTemperatureTolerance';
