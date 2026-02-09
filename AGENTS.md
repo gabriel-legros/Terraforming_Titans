@@ -148,6 +148,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Space, Projects, and Hazards
 - Kessler Skies gained richer failure/debris modeling, warnings/tooltips, and capped Solis storage bonuses.
 - Kessler cost multipliers and decay behaviors were tuned; hazard charts and bin diagnostics expanded.
+- Added placeholder Pulsar hazard wiring (manager + minimal UI card) for Hades; gameplay effects are deferred.
+- Land reservation now has a combined `hazards` source; hazard land usage uses the max share across hazard systems (currently Hazardous Biomass vs Pulsar).
 - Space storage supports additional resources and per-resource cap controls.
 - Resource Disposal can include Mass Drivers as ship-equivalent throughput.
 - Dyson Swarm/Receiver/Sphere, Lifters, mega/giga projects, and continuous ops gained stronger persistence and UI clarity.

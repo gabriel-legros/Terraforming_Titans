@@ -226,23 +226,15 @@ class HazardousBiomassHazard {
       }
     }
 
-    const reservedLand = maxDensity > 0 ? Math.min(totalBiomass / maxDensity, initialLand) : 0;
-
     const carryingCapacity = maxDensity > 0 && initialLand > 0
       ? initialLand * maxDensity
       : 0;
 
-    const controlShare = carryingCapacity > 0 ? totalBiomass / carryingCapacity : 0;
+    const controlShare = carryingCapacity > 0
+      ? Math.max(0, Math.min(1, totalBiomass / carryingCapacity))
+      : 0;
     this.manager.updateHazardousBiomassControl(controlShare);
-
-    if (landResource.setReservedAmountForSource && landResource.setReservedAmountForSource.call) {
-      landResource.setReservedAmountForSource('hazardousBiomass', reservedLand);
-      return;
-    }
-
-    const previous = landResource._hazardousBiomassReserved || 0;
-    landResource.reserved = Math.max(0, landResource.reserved - previous + reservedLand);
-    landResource._hazardousBiomassReserved = reservedLand;
+    this.manager.setHazardLandReservationShare('hazardousBiomass', controlShare);
   }
 
   update(deltaTime, terraforming, hazardParameters) {

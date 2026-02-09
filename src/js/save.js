@@ -105,7 +105,11 @@ function recalculateLandUsage() {
     }
 
     const hazardousReserved = landResource.getReservedAmountForSource
-      ? landResource.getReservedAmountForSource('hazardousBiomass') || 0
+      ? (
+        landResource.getReservedAmountForSource('hazards')
+        || landResource.getReservedAmountForSource('hazardousBiomass')
+        || 0
+      )
       : (Number.isFinite(landResource._hazardousBiomassReserved) ? landResource._hazardousBiomassReserved : 0);
 
     landResource.reserved = reserved + (hazardousReserved || 0);

@@ -1340,9 +1340,9 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       if (avail.textContent !== availText) avail.textContent = availText;
       if (used.textContent !== usedText) used.textContent = usedText;
       const hazardReserved = resource.getReservedAmountForSource
-        ? resource.getReservedAmountForSource('hazardousBiomass')
+        ? (resource.getReservedAmountForSource('hazards') || resource.getReservedAmountForSource('hazardousBiomass'))
         : 0;
-      const hazardText = `Hazardous biomass ${formatNumber(hazardReserved, false, 3)}`;
+      const hazardText = `Hazards ${formatNumber(hazardReserved, false, 3)}`;
       if (hazard.textContent !== hazardText) hazard.textContent = hazardText;
       hazard.style.display = hazardReserved > 0 ? '' : 'none';
     } else {

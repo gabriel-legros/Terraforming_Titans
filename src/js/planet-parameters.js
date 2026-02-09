@@ -1399,6 +1399,13 @@ const hadesOverrides = {
   visualization: {
     baseColor: '#4a4340',
   },
+  hazards: {
+    pulsar: {
+      pulsePeriodSeconds: 1.337,
+      severity: 1,
+      description: 'The pulsar emits periodic radiation bursts across the system.'
+    }
+  },
   resources: {
     surface: {
       land: { initialValue: 31_000_000_000 },

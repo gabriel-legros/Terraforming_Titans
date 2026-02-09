@@ -31,6 +31,17 @@ function initializeHazardUI() {
   if (initializeKessler && initializeKessler.call) {
     initializeKessler();
   }
+
+  let initializePulsar = null;
+  try {
+    initializePulsar = initializePulsarHazardUI;
+  } catch (error) {
+    initializePulsar = null;
+  }
+
+  if (initializePulsar && initializePulsar.call) {
+    initializePulsar();
+  }
 }
 
 function updateHazardUI(parameters = {}) {
@@ -54,6 +65,17 @@ function updateHazardUI(parameters = {}) {
 
   if (updateKessler && updateKessler.call) {
     updateKessler(parameters.kessler);
+  }
+
+  let updatePulsar = null;
+  try {
+    updatePulsar = updatePulsarHazardUI;
+  } catch (error) {
+    updatePulsar = null;
+  }
+
+  if (updatePulsar && updatePulsar.call) {
+    updatePulsar(parameters.pulsar);
   }
 
   let updateHazardous = null;
