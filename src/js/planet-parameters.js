@@ -1375,6 +1375,53 @@ const tartarusOverrides = {
   }
 };
 
+const hadesOverrides = {
+  name: 'Hades',
+  star: {
+    name: 'PSR S-17634',
+    spectralType: 'Pulsar',
+    luminositySolar: 0.002,
+    massSolar: 1.6,
+    temperatureK: 600000,
+    habitableZone: { inner: 0.02, outer: 0.05 }
+  },
+  celestialParameters: {
+    distanceFromSun: 20,
+    gravity: 6.9,
+    radius: 5000,
+    mass: 3.6e24,
+    albedo: 0.18,
+    rotationPeriod: 31.2,
+    spinPeriod: 31.2,
+    starLuminosity: 0.002,
+    sector: 'R4-03'
+  },
+  visualization: {
+    baseColor: '#4a4340',
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 31_000_000_000 },
+      liquidWater: { initialValue: 0 },
+      ice: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 0 },
+      hydrogen: { initialValue: 0 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  }
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -1387,7 +1434,8 @@ const planetSpecificOverrides = {
   umbra: umbraOverrides,
   solisprime: solisPrimeOverrides,
   gabbag: gabbagOverrides,
-  tartarus: tartarusOverrides
+  tartarus: tartarusOverrides,
+  hades: hadesOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -1435,6 +1483,7 @@ const planetParameters = {
     solisprime: getPlanetParameters('solisprime'),
     gabbag: getPlanetParameters('gabbag'),
     tartarus: getPlanetParameters('tartarus'),
+    hades: getPlanetParameters('hades'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
