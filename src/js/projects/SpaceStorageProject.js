@@ -56,7 +56,17 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.getTotalExpansions() * this.capacityPerCompletion;
   }
 
+  sanitizeResourceUsage() {
+    for (const resourceKey in this.resourceUsage) {
+      const amount = this.resourceUsage[resourceKey];
+      if (!Number.isFinite(amount) || amount <= 0) {
+        delete this.resourceUsage[resourceKey];
+      }
+    }
+  }
+
   reconcileUsedStorage() {
+    this.sanitizeResourceUsage();
     this.usedStorage = Object.values(this.resourceUsage).reduce((sum, amount) => sum + amount, 0);
   }
 
@@ -66,7 +76,11 @@ class SpaceStorageProject extends SpaceshipProject {
     const mode = setting.mode === 'amount' || setting.mode === 'percent'
       ? setting.mode
       : 'none';
-    const value = setting.value || 0;
+    const parsedValue = Number(setting.value);
+    let value = Number.isFinite(parsedValue) ? parsedValue : 0;
+    if (mode === 'percent') {
+      value = Math.max(0, Math.min(100, value));
+    }
     return { mode, value };
   }
 
@@ -334,10 +348,11 @@ class SpaceStorageProject extends SpaceshipProject {
     const selected = selections ?? this.getUnlockedSelectedResources();
     if (selected.length === 0) return { transfers, total };
     const capacity = capacityOverride != null ? capacityOverride : this.calculateTransferAmount();
-    if (capacity <= 0) return { transfers, total };
+    if (!Number.isFinite(capacity) || capacity <= 0) return { transfers, total };
 
     const perResourceCapacity = capacity / selected.length;
-    let availableFreeSpace = this.maxStorage - this.usedStorage;
+    if (!Number.isFinite(perResourceCapacity) || perResourceCapacity <= 0) return { transfers, total };
+    let availableFreeSpace = Math.max(0, this.maxStorage - this.usedStorage);
 
     const resolveMode = (resourceKey) => {
       if (this.shipTransferMode === 'mixed') {
@@ -357,7 +372,7 @@ class SpaceStorageProject extends SpaceshipProject {
       const targetRes = resources[target.category][target.resource];
       const destFree = targetRes && Number.isFinite(targetRes.cap) ? Math.max(0, targetRes.cap - targetRes.value) : Infinity;
       const amount = Math.min(perResourceCapacity, stored, destFree);
-      if (amount <= 0) return;
+      if (!Number.isFinite(amount) || amount <= 0) return;
       transfers.push({ mode: 'withdraw', category: target.category, resource: target.resource, amount, storageKey: entry.resource });
       total += amount;
       availableFreeSpace += amount;
@@ -373,18 +388,18 @@ class SpaceStorageProject extends SpaceshipProject {
     };
 
     const applyStoreForResource = (entry) => {
-      if (availableFreeSpace <= 0) return;
+      if (!Number.isFinite(availableFreeSpace) || availableFreeSpace <= 0) return;
       const stored = this.resourceUsage[entry.resource] || 0;
       const capLimit = this.getResourceCapLimit(entry.resource);
       const capRemaining = Math.max(0, capLimit - stored);
-      if (capRemaining <= 0) return;
+      if (!Number.isFinite(capRemaining) || capRemaining <= 0) return;
       let amount = 0;
       if (entry.resource === 'biomass') {
         const available = resources.surface.biomass?.value || 0;
         amount = Math.min(perResourceCapacity, available, capRemaining, availableFreeSpace);
-        if (amount <= 0) return;
+        if (!Number.isFinite(amount) || amount <= 0) return;
         const removed = simulate ? amount : this.removeBiomassFromZones(amount);
-        if (removed <= 0) return;
+        if (!Number.isFinite(removed) || removed <= 0) return;
         transfers.push({ mode: 'store', category: entry.category, resource: entry.resource, amount: removed });
         total += removed;
         availableFreeSpace = Math.max(0, availableFreeSpace - removed);
@@ -393,9 +408,9 @@ class SpaceStorageProject extends SpaceshipProject {
       if (entry.resource === 'liquidWater') {
         const available = resources.surface.liquidWater.value;
         amount = Math.min(perResourceCapacity, available, capRemaining, availableFreeSpace);
-        if (amount <= 0) return;
+        if (!Number.isFinite(amount) || amount <= 0) return;
         const removed = simulate ? amount : this.removeLiquidWaterFromZones(amount);
-        if (removed <= 0) return;
+        if (!Number.isFinite(removed) || removed <= 0) return;
         transfers.push({ mode: 'store', category: entry.category, resource: entry.resource, amount: removed });
         total += removed;
         availableFreeSpace = Math.max(0, availableFreeSpace - removed);
@@ -404,7 +419,7 @@ class SpaceStorageProject extends SpaceshipProject {
       const src = resources[entry.category][entry.resource];
       const available = src.value;
       amount = Math.min(perResourceCapacity, available, capRemaining, availableFreeSpace);
-      if (amount <= 0) return;
+      if (!Number.isFinite(amount) || amount <= 0) return;
       transfers.push({ mode: 'store', category: entry.category, resource: entry.resource, amount });
       total += amount;
       availableFreeSpace = Math.max(0, availableFreeSpace - amount);
@@ -432,6 +447,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (durationSeconds <= 0) return;
     this.pendingTransfers.forEach(t => {
       if (t.mode !== 'store' && (!includeWithdraw || t.mode !== 'withdraw')) return;
+      if (!Number.isFinite(t.amount) || t.amount <= 0) return;
       const res = resources[t.category][t.resource];
       const rate = t.amount / durationSeconds;
       res.modifyRate(t.mode === 'store' ? -rate : rate, 'Space storage transfer', 'project');
@@ -704,6 +720,9 @@ class SpaceStorageProject extends SpaceshipProject {
     }
 
     plan.transfers.forEach(t => {
+      if (!Number.isFinite(t.amount) || t.amount <= 0) {
+        return;
+      }
       const delivered = t.amount * successChance;
       const rate = seconds > 0 ? t.amount / seconds : 0;
       const deliveredRate = seconds > 0 ? delivered / seconds : 0;
@@ -765,6 +784,9 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationIsActive = false;
     const durationSeconds = this.shipOperationStartingDuration / 1000;
     this.pendingTransfers.forEach(t => {
+      if (!Number.isFinite(t.amount) || t.amount <= 0) {
+        return;
+      }
       if (t.mode === 'withdraw') {
         if (t.resource === 'biomass') {
           this.addBiomassToZones(t.amount);
@@ -1033,6 +1055,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.usedStorage = state.usedStorage || 0;
     this.selectedResources = state.selectedResources || [];
     this.resourceUsage = state.resourceUsage || {};
+    this.sanitizeResourceUsage();
     this.pendingTransfers = state.pendingTransfers || [];
     if (MEGA_PROJECT_RESOURCE_MODE_MAP[state.megaProjectResourceMode]) {
       this.megaProjectResourceMode = state.megaProjectResourceMode;
@@ -1047,6 +1070,12 @@ class SpaceStorageProject extends SpaceshipProject {
     this.strategicReserve = state.strategicReserve || 0;
     this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
     this.resourceCaps = state.resourceCaps || {};
+    for (const resourceKey in this.resourceCaps) {
+      const cap = this.resourceCaps[resourceKey];
+      if (!cap || (cap.mode !== 'amount' && cap.mode !== 'percent')) {
+        delete this.resourceCaps[resourceKey];
+      }
+    }
     this.resourceTransferModes = state.resourceTransferModes || {};
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
@@ -1090,8 +1119,15 @@ class SpaceStorageProject extends SpaceshipProject {
     this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
     this.resourceUsage = state.resourceUsage || {};
+    this.sanitizeResourceUsage();
     this.strategicReserve = state.strategicReserve || 0;
     this.resourceCaps = state.resourceCaps || {};
+    for (const resourceKey in this.resourceCaps) {
+      const cap = this.resourceCaps[resourceKey];
+      if (!cap || (cap.mode !== 'amount' && cap.mode !== 'percent')) {
+        delete this.resourceCaps[resourceKey];
+      }
+    }
     this.shipTransferMode = state.shipTransferMode || this.shipTransferMode;
     this.lastUniformTransferMode = state.lastUniformTransferMode || this.lastUniformTransferMode;
     this.resourceTransferModes = state.resourceTransferModes || {};

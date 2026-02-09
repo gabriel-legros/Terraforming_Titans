@@ -236,7 +236,7 @@ class LiftersProject extends TerraformingDurationProject {
   }
 
   storeHarvestedResource(resourceKey, amount) {
-    if (amount <= 0) {
+    if (!Number.isFinite(amount) || amount <= 0) {
       return 0;
     }
     const storage = this.getSpaceStorageProject();
@@ -252,7 +252,7 @@ class LiftersProject extends TerraformingDurationProject {
       : (!storage
         ? 'Build space storage'
         : (capRemaining <= 0 ? 'Storage cap reached' : 'Space storage is full'));
-    if (stored <= 0) {
+    if (!Number.isFinite(stored) || stored <= 0) {
       return 0;
     }
     storage.resourceUsage[resourceKey] = (storage.resourceUsage[resourceKey] || 0) + stored;
