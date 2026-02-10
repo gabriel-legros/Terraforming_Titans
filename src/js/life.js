@@ -1313,6 +1313,32 @@ class LifeManager extends EffectableEntity {
     return consumption;
   }
 
+  estimateAtmosphericIdealNeed(deltaTime) {
+    const secondsMultiplier = deltaTime / 1000;
+    if (secondsMultiplier <= 0) {
+      return {};
+    }
+
+    const plan = this.buildAtmosphericPlan(deltaTime);
+    const need = {};
+    const addNeed = (inputsPerBiomass, biomassAmount) => {
+      Object.entries(inputsPerBiomass || {}).forEach(([resourceKey, coef]) => {
+        if (coef < 0) {
+          need[resourceKey] = (need[resourceKey] || 0) + (-coef * biomassAmount);
+        }
+      });
+    };
+
+    addNeed(plan.growthPerBiomass.atmospheric, Math.max(0, plan.totalPotentialGrowth));
+    let totalDecayTarget = 0;
+    Object.values(plan.decayTargetsByZone).forEach((value) => {
+      totalDecayTarget += value || 0;
+    });
+    addNeed(plan.decayPerBiomass.atmospheric, totalDecayTarget);
+
+    return need;
+  }
+
   calculateAtmosphericDeltas(deltaTime) {
     const secondsMultiplier = deltaTime / 1000;
     if (secondsMultiplier <= 0) {

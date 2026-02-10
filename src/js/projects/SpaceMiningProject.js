@@ -802,14 +802,14 @@ class SpaceMiningProject extends SpaceshipProject {
       const entry = gain.atmospheric;
       const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
       const deltaTime = this.isContinuous() ? fraction * duration : 0;
-      const lifeConsumption = lifeManager.estimateAtmosphericConsumption(deltaTime);
+      const lifeConsumption = lifeManager.estimateAtmosphericIdealNeed(deltaTime);
       const currentAmount = resources.atmospheric[gas].value + (accumulatedChanges?.atmospheric?.[gas] || 0);
       const gSurface = terraforming.celestialParameters.gravity;
       const radius = terraforming.celestialParameters.radius;
       const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
       const limitPa = this.disablePressureThreshold * 1000;
       const maxMass = (limitPa * surfaceArea) / (1000 * gSurface);
-      const remaining = Math.max(0, maxMass - currentAmount) + (lifeConsumption[gas] || 0) + 1;
+      const remaining = Math.max(0, maxMass - currentAmount) + (lifeConsumption[gas] || 0);
       const desired = entry[gas] * fraction * productivity;
       const applied = Math.min(desired, remaining);
       if (applied < desired) {
