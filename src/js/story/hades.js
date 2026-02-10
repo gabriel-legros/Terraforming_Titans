@@ -13,7 +13,7 @@ progressHades.chapters.push(
     activePlanet: 'hades',
     title: 'Chapter 33: Pulsar Arrival',
     narrative: 'Placeholder: Arrival log for Hades under pulsar radiation.',
-    prerequisites: ['tartarus.32.12'],
+    prerequisites: ['tartarus.32.13'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
     ],

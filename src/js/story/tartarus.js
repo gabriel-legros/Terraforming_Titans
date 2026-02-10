@@ -351,6 +351,30 @@ progressTartarus.chapters.push(
       { target: 'rwgManager', type: 'allowHazard', targetId: 'kessler' }
     ]
   },
+  {
+    id: 'tartarus.32.12',
+    type: 'journal',
+    chapter: 32,
+    activePlanet: 'tartarus',
+    narrative: "Conquer sector R4-03 to continue.",
+    prerequisites: ['impossible5'],
+    objectives: [
+      { type: 'galaxySectorControl', sectorLabel: 'R4-03' }
+    ],
+    reward: [      { target: 'spaceManager', targetId: 'hades', type: 'enable' }]
+  },
+  {
+    id: 'tartarus.32.13',
+    type: 'journal',
+    chapter: 32,
+    activePlanet: 'tartarus',
+    narrative: "(Some time later) \n Mary : '... and this is why I need your support in the senate.  We can't do this alone.'  \n Pete : 'Very well.  You have me convinced.  My faction will back yours.  That should give you the three-quarters majority you need.  Just... don't mess this up.'  \n Mary : 'Thanks!'  \n $PROMETHEUS$ : 'Well that wasn't too hard.'  \n Mary : 'I know how to deal with politicians.  We're all set then.  Feroza has already secured the gate on the other side... just like you told us how to do it.  We should be able to keep it in the shadow of the planet in perpetuity.  We can't afford to radiation-proof every ship.  HOPE, we need you in there first.  Let's go!'  \n Travel to Hades to continue.",
+    prerequisites: ['tartarus.32.12'],
+    objectives: [
+    ],
+    reward: [
+    ]
+  },
 
 );
 
