@@ -336,7 +336,8 @@ class RingworldTerraformingProject extends Project {
       'Life will not grow on its own until surface gravity reaches 0.1g due to the atmosphere not being present.',
       'Spaceships have a base energy multiplier of 0.1, but faster spin adds a flat penalty per ton equal to spin energy per ton.  The paid penalty is then also added to the spin status.',
       'Ringworld mass includes all colony, surface and atmospheric resources that are measured in tons.  If planning on building another artificial world, it may be wise to do so before spinning the current one, to remain as light as possible.',
-      'The total energy required to import resources then spin, or spin then import should be the same.'
+      'The total energy required to import resources then spin, or spin then import should be the same.',
+      'All values in the Terraforming Summary screen are displayed as if the ringworld is fully spun.'
     ];
     noteEntries.forEach((text) => {
       const item = document.createElement('li');
