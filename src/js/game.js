@@ -258,6 +258,8 @@ function initializeGameState(options = {}) {
   }
 
   globalEffects = new EffectableEntity({description : 'Manages global effects'});
+  androidResearch.activeEffects = [];
+  androidResearch.booleanFlags = new Set();
 
   playTimeSeconds = 0;
   realPlayTimeSeconds = 0;
