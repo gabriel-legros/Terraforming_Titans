@@ -982,7 +982,7 @@ class LifeManager extends EffectableEntity {
     return this.getLifeGrowthMultiplierBreakdown().totalMultiplier;
   }
 
-  buildAtmosphericPlan(deltaTime) {
+  buildAtmosphericPlan(deltaTime, accumulatedChanges = null) {
     const design = lifeDesigner.currentDesign;
     const baseGrowthRate = Number(design.getBaseGrowthRate());
     const requirements = getActiveLifeDesignRequirements();
@@ -996,6 +996,10 @@ class LifeManager extends EffectableEntity {
     const secondsMultiplier = deltaTime / 1000;
     const landMultiplier = Math.max(0, 1 - getEcumenopolisLandFraction(terraforming));
     const zones = getZones();
+    const getAtmosphericAvailable = (resourceKey) => {
+      const pending = accumulatedChanges ? (accumulatedChanges.atmospheric[resourceKey] || 0) : 0;
+      return Math.max(0, resources.atmospheric[resourceKey].value + pending);
+    };
 
     const biomassByZone = {};
     const waterByZone = {};
@@ -1110,7 +1114,7 @@ class LifeManager extends EffectableEntity {
     let limitingAtmosphericValue = totalPotentialGrowth;
     atmosphericInputsPerBiomass.forEach(([resourceKey, coef]) => {
       const requiredPerBiomass = -coef;
-      const available = resources.atmospheric[resourceKey].value;
+      const available = getAtmosphericAvailable(resourceKey);
       if (requiredPerBiomass > 0) {
         const maxGrowth = available / requiredPerBiomass;
         maxByAtmosphericInputs = Math.min(maxByAtmosphericInputs, maxGrowth);
@@ -1239,7 +1243,7 @@ class LifeManager extends EffectableEntity {
     let maxSupportedDecayByAtmosphere = totalPotentialDecay;
     decayAtmosphericInputsPerBiomass.forEach(([resourceKey, coef]) => {
       const requiredPerBiomass = -coef;
-      const available = resources.atmospheric[resourceKey].value;
+      const available = getAtmosphericAvailable(resourceKey);
       if (requiredPerBiomass > 0) {
         maxSupportedDecayByAtmosphere = Math.min(maxSupportedDecayByAtmosphere, available / requiredPerBiomass);
       }
@@ -1359,11 +1363,11 @@ class LifeManager extends EffectableEntity {
   }
   // Method to update life growth/decay based on zonal environmental conditions
   // Now uses global atmospheric resources instead of zonal atmosphere
-  updateLife(deltaTime) {
+  updateLife(deltaTime, accumulatedChanges = null) {
     if (this.isBooleanFlagSet('ringworldLowGravityLife')) {
       return;
     }
-    const plan = this.buildAtmosphericPlan(deltaTime);
+    const plan = this.buildAtmosphericPlan(deltaTime, accumulatedChanges);
     const {
       design,
       growthReason,
@@ -1420,7 +1424,11 @@ class LifeManager extends EffectableEntity {
     Object.entries(growthAtmosphericDeltas).forEach(([resourceKey, delta]) => {
       if (!delta) return;
       resources.atmospheric[resourceKey].modifyRate(delta / secondsMultiplier, growthReason, 'life');
-      resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
+      if (accumulatedChanges) {
+        accumulatedChanges.atmospheric[resourceKey] += delta;
+      } else {
+        resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
+      }
     });
 
     zones.forEach(zoneName => {
@@ -1445,7 +1453,11 @@ class LifeManager extends EffectableEntity {
     Object.entries(decayAtmosphericDeltas).forEach(([resourceKey, delta]) => {
       if (!delta) return;
       resources.atmospheric[resourceKey].modifyRate(delta / secondsMultiplier, decayReason, 'life');
-      resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
+      if (accumulatedChanges) {
+        accumulatedChanges.atmospheric[resourceKey] += delta;
+      } else {
+        resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
+      }
     });
 
     zones.forEach(zoneName => {
@@ -1465,7 +1477,7 @@ class LifeManager extends EffectableEntity {
       // Base burial rate is 0.01% per point per day
       let burialRatePerDay = burialValue * 0.0001;
       // If CO2 has run out, slow burial drastically as life recycles more efficiently
-    const co2Amount = resources.atmospheric['carbonDioxide']?.value || 0;
+    const co2Amount = resources.atmospheric.carbonDioxide.value + (accumulatedChanges ? accumulatedChanges.atmospheric.carbonDioxide : 0);
       if (co2Amount <= 1) {
         burialRatePerDay = 0; // 10,000 times slower without CO2
       }

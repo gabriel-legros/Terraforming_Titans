@@ -568,7 +568,7 @@ class SpaceMiningProject extends SpaceshipProject {
     if (hasMonitoring && this.disableAbovePressure) {
       const gas = this.getTargetAtmosphericResource();
       const amount = resources.atmospheric[gas].value || 0;
-      const consumption = lifeManager.estimateAtmosphericConsumption(this.currentTickDeltaTime || 0)[gas] || 0;
+      const consumption = lifeManager.estimateAtmosphericIdealNeed(this.currentTickDeltaTime || 0)[gas] || 0;
       const gSurface = terraforming.celestialParameters.gravity;
       const radius = terraforming.celestialParameters.radius;
       const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
@@ -580,7 +580,7 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (hasMonitoring && this.disableAboveOxygenPressure) {
       const amount = resources.atmospheric.oxygen.value || 0;
-      const consumption = lifeManager.estimateAtmosphericConsumption(this.currentTickDeltaTime || 0).oxygen || 0;
+      const consumption = lifeManager.estimateAtmosphericIdealNeed(this.currentTickDeltaTime || 0).oxygen || 0;
       const gSurface = terraforming.celestialParameters.gravity;
       const radius = terraforming.celestialParameters.radius;
       const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
@@ -809,7 +809,8 @@ class SpaceMiningProject extends SpaceshipProject {
       const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
       const limitPa = this.disablePressureThreshold * 1000;
       const maxMass = (limitPa * surfaceArea) / (1000 * gSurface);
-      const remaining = Math.max(0, maxMass - currentAmount) + (lifeConsumption[gas] || 0);
+      const safetyMargin = 1;
+      const remaining = Math.max(0, Math.max(0, maxMass - currentAmount) + (lifeConsumption[gas] || 0) - safetyMargin);
       const desired = entry[gas] * fraction * productivity;
       const applied = Math.min(desired, remaining);
       if (applied < desired) {

@@ -829,7 +829,7 @@ function produceResources(deltaTime, buildings) {
   // depending on desired interaction. Assuming it runs after buildings and before applying changes.
   // It should call modifyRate with type 'life'.
   if(lifeManager){
-    lifeManager.updateLife(deltaTime);
+    lifeManager.updateLife(deltaTime, accumulatedChanges);
   }
 
   if(researchManager && typeof researchManager.update === 'function'){

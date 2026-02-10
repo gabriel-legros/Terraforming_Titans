@@ -38,8 +38,12 @@ function setupGlobals() {
     applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1) {
       Object.entries(gain.atmospheric || {}).forEach(([key, value]) => {
         const delta = value * fraction * productivity;
-        const pending = accumulatedChanges?.atmospheric?.[key] || 0;
-        resources.atmospheric[key].value += delta + pending;
+        if (accumulatedChanges) {
+          if (!accumulatedChanges.atmospheric) accumulatedChanges.atmospheric = {};
+          accumulatedChanges.atmospheric[key] = (accumulatedChanges.atmospheric[key] || 0) + delta;
+          return;
+        }
+        resources.atmospheric[key].value += delta;
       });
     }
   }
@@ -64,8 +68,8 @@ function setupGlobals() {
   }, originalGlobals);
   setGlobal('resources', {
     atmospheric: {
-      carbonDioxide: { value: 4, automationLimited: false },
-      oxygen: { value: 0, automationLimited: false },
+      carbonDioxide: { value: 4, automationLimited: false, modifyRate: () => {} },
+      oxygen: { value: 0, automationLimited: false, modifyRate: () => {} },
     },
     surface: {
       liquidCO2: { automationLimited: false },
@@ -94,7 +98,7 @@ function setupGlobals() {
 }
 
 describe('SpaceMiningProject pressure limiter with life buffer', () => {
-  it('keeps 10 Pa after life consumes 100 Pa from a low-CO2 start', () => {
+  it('stays 1 Pa below target buffer after life consumes 100 Pa from a low-CO2 start in continuous tick order', () => {
     const cleanup = setupGlobals();
     const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
     const project = new SpaceMiningProject({
@@ -110,14 +114,27 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
     project.currentTickDeltaTime = 1000;
 
     const gain = { atmospheric: { carbonDioxide: 1000 } };
-    project.applySpaceshipResourceGain(gain, 1, null, 1);
+    const accumulatedChanges = { atmospheric: { carbonDioxide: 0 } };
+    project.applySpaceshipResourceGain(gain, 1, accumulatedChanges, 1);
+
+    const afterProjectApplyPa = calculateAtmosphericPressure(
+      resources.atmospheric.carbonDioxide.value,
+      terraforming.celestialParameters.gravity,
+      terraforming.celestialParameters.radius
+    );
+    expect(afterProjectApplyPa).toBeCloseTo(4, 8);
+    expect(accumulatedChanges.atmospheric.carbonDioxide).toBeCloseTo(105, 8);
+
+    resources.atmospheric.carbonDioxide.value += accumulatedChanges.atmospheric.carbonDioxide;
+    accumulatedChanges.atmospheric.carbonDioxide = 0;
 
     const afterMiningPa = calculateAtmosphericPressure(
       resources.atmospheric.carbonDioxide.value,
       terraforming.celestialParameters.gravity,
       terraforming.celestialParameters.radius
     );
-    expect(afterMiningPa).toBeCloseTo(110, 8);
+    expect(afterMiningPa).toBeCloseTo(109, 8);
+    expect(accumulatedChanges.atmospheric.carbonDioxide).toBeCloseTo(0, 8);
 
     const consumed = lifeManager.estimateAtmosphericIdealNeed(1000).carbonDioxide || 0;
     resources.atmospheric.carbonDioxide.value = Math.max(0, resources.atmospheric.carbonDioxide.value - consumed);
@@ -127,7 +144,7 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
       terraforming.celestialParameters.gravity,
       terraforming.celestialParameters.radius
     );
-    expect(finalPa).toBeCloseTo(10, 8);
+    expect(finalPa).toBeCloseTo(9, 8);
 
     cleanup();
   });
