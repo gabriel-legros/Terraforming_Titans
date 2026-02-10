@@ -31,6 +31,10 @@ function setupGlobals() {
       return 1000;
     }
 
+    calculateSpaceshipCost() {
+      return this.attributes.costPerShip || {};
+    }
+
     isContinuous() {
       return this.assignedSpaceships > 100;
     }
@@ -103,6 +107,7 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
     const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
     const project = new SpaceMiningProject({
       attributes: {
+        costPerShip: { colony: { energy: 10, metal: 2 } },
         resourceGainPerShip: { atmospheric: { carbonDioxide: 1 } },
         maxPressure: 0.01, // 10 Pa
       },
@@ -114,7 +119,10 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
     project.currentTickDeltaTime = 1000;
 
     const gain = { atmospheric: { carbonDioxide: 1000 } };
-    const accumulatedChanges = { atmospheric: { carbonDioxide: 0 } };
+    const accumulatedChanges = {
+      atmospheric: { carbonDioxide: 0 },
+      colony: { energy: 0, metal: 0 },
+    };
     project.applySpaceshipResourceGain(gain, 1, accumulatedChanges, 1);
 
     const afterProjectApplyPa = calculateAtmosphericPressure(

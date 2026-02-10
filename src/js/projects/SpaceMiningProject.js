@@ -813,6 +813,11 @@ class SpaceMiningProject extends SpaceshipProject {
       const remaining = Math.max(0, Math.max(0, maxMass - currentAmount) + (lifeConsumption[gas] || 0) - safetyMargin);
       const desired = entry[gas] * fraction * productivity;
       const applied = Math.min(desired, remaining);
+      const appliedRatio = desired > 0 ? (applied / desired) : 1;
+      const refundRatio = Math.max(0, 1 - appliedRatio);
+      if (refundRatio > 0) {
+        this.refundUnusedImportCost(refundRatio, fraction, productivity, accumulatedChanges);
+      }
       if (applied < desired) {
         resources.atmospheric[gas].automationLimited = true;
       }
@@ -827,6 +832,30 @@ class SpaceMiningProject extends SpaceshipProject {
       }
     }
     super.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity);
+  }
+
+  refundUnusedImportCost(refundRatio, fraction, productivity, accumulatedChanges = null) {
+    const activeShips = this.assignedSpaceships;
+    if (activeShips <= 0 || refundRatio <= 0) {
+      return;
+    }
+    const costPerShip = this.calculateSpaceshipCost();
+    for (const category in costPerShip) {
+      for (const resource in costPerShip[category]) {
+        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+          continue;
+        }
+        const refundAmount = costPerShip[category][resource] * activeShips * fraction * productivity * refundRatio;
+        if (refundAmount <= 0) {
+          continue;
+        }
+        if (accumulatedChanges) {
+          accumulatedChanges[category][resource] += refundAmount;
+        } else {
+          resources[category][resource].increase(refundAmount);
+        }
+      }
+    }
   }
 }
 
