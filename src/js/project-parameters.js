@@ -228,7 +228,7 @@ const projectParameters = {
         components: 10
       }
     },
-    duration: 30000,
+    duration: 300000,
     description: "Build subterranean habitats to slightly expand usable land. Each completion increases land by a small amount.",
     repeatable: true,
     maxRepeatCount: 10000,

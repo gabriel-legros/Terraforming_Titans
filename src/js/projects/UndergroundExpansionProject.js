@@ -7,19 +7,7 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   getScaledCost() {
-    const cost = super.getScaledCost();
-    const land = this.getBaseLand();
-    if (!land) {
-      return cost;
-    }
-    const scaledCost = {};
-    for (const category in cost) {
-      scaledCost[category] = {};
-      for (const resource in cost[category]) {
-        scaledCost[category][resource] = cost[category][resource] * land;
-      }
-    }
-    return scaledCost;
+    return super.getScaledCost();
   }
 
   start(resources) {
@@ -161,20 +149,38 @@ class UndergroundExpansionProject extends AndroidProject {
     }
 
     const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
-    let costPortion = Math.max(0, progress - this.prepaidPortion);
+    const prepaidCovered = Math.min(progress, this.prepaidPortion);
+    const requestedCostPortion = Math.max(0, progress - prepaidCovered);
     this.prepaidPortion = Math.max(0, this.prepaidPortion - progress);
 
     const cost = this.getScaledCost();
     let shortfall = false;
+    let paidCostPortion = requestedCostPortion;
 
-    if (costPortion > 0) {
+    if (requestedCostPortion > 0) {
+      let maxAffordablePortion = requestedCostPortion;
       for (const category in cost) {
         for (const resource in cost[category]) {
-          const amount = cost[category][resource] * costPortion;
-          const available = resources[category][resource].value || 0;
-          if (available < amount) {
-            shortfall = true;
+          const perCompletionCost = cost[category][resource];
+          if (perCompletionCost <= 0) {
+            continue;
           }
+          const pendingChange = accumulatedChanges && accumulatedChanges[category] && accumulatedChanges[category][resource] !== undefined
+            ? accumulatedChanges[category][resource]
+            : 0;
+          const available = Math.max(0, (resources[category][resource].value || 0) + pendingChange);
+          const affordablePortion = available / perCompletionCost;
+          maxAffordablePortion = Math.min(maxAffordablePortion, affordablePortion);
+        }
+      }
+      paidCostPortion = Math.max(0, Math.min(requestedCostPortion, maxAffordablePortion));
+      shortfall = paidCostPortion < requestedCostPortion;
+    }
+
+    if (paidCostPortion > 0) {
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          const amount = cost[category][resource] * paidCostPortion;
           if (accumulatedChanges) {
             if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
             if (accumulatedChanges[category][resource] === undefined) {
@@ -188,7 +194,8 @@ class UndergroundExpansionProject extends AndroidProject {
       }
     }
 
-    const completed = this.applyContinuousProgress(progress);
+    const totalPaidProgress = prepaidCovered + paidCostPortion;
+    const completed = this.applyContinuousProgress(totalPaidProgress);
     if (completed > 0) {
       this.prepaidPortion = 0;
     }
@@ -196,11 +203,11 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   getAndroidSpeedMultiplier() {
-    return 1 + Math.sqrt(this.assignedAndroids || 0);
+    return 1 + ((this.assignedAndroids || 0) / 100);
   }
 
   getAndroidSpeedTooltip() {
-    return '1 + sqrt(androids assigned)';
+    return '1 + (androids assigned / 100)';
   }
 
   updateUI() {
@@ -210,7 +217,7 @@ class UndergroundExpansionProject extends AndroidProject {
       const maxLand = this.getBaseLand();
       const perCompletion = this.getPerCompletionLand();
       const expanded = Math.min(this.getTotalProgress() * perCompletion, maxLand);
-      elements.repeatCountElement.textContent = `Land Expansion: ${formatNumber(expanded, true)} / ${formatNumber(maxLand, true)}`;
+      elements.repeatCountElement.textContent = `Land Expansion: ${formatNumber(expanded, false, 3)} / ${formatNumber(maxLand, false, 3)}`;
     }
   }
 
