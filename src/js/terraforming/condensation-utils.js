@@ -14,6 +14,12 @@ function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nig
     throw new Error('condensationRateFactor requires saturationFn');
   }
 
+  const hasDayTemp = typeof dayTemp === 'number';
+  const hasNightTemp = typeof nightTemp === 'number';
+  const averageTemp = hasDayTemp && hasNightTemp
+    ? (dayTemp + nightTemp) / 2
+    : (hasDayTemp ? dayTemp : nightTemp);
+
   const calc = (temp) => {
     let liquid = 0, ice = 0;
     if (zoneArea > 0 && typeof temp === 'number') {
@@ -42,12 +48,11 @@ function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nig
     return { liquid, ice };
   };
 
-  const night = calc(nightTemp);
-  const day = calc(dayTemp);
+  const average = calc(averageTemp);
 
   return {
-    liquidRate: (night.liquid + day.liquid) / 2,
-    iceRate: (night.ice + day.ice) / 2
+    liquidRate: average.liquid,
+    iceRate: average.ice
   };
 }
 
