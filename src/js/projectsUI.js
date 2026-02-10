@@ -1287,10 +1287,11 @@ function updateProjectUI(projectName) {
   }
 
   // Check if the project has reached its maximum repeat count or is completed and not repeatable
+  const maxRepeats = project.getMaxRepeats ? project.getMaxRepeats() : project.maxRepeatCount;
   const isMaxRepeatReached =
     (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject)
       ? project.averageDepth >= project.maxDepth
-      : project.repeatable && project.repeatCount >= project.maxRepeatCount;
+      : project.repeatable && project.repeatCount >= maxRepeats;
   const isCompletedAndNotRepeatable = project.isCompleted && !project.repeatable;
   const shouldHideStartBar = project.shouldHideStartBar();
   const keepStartBarVisible = project.attributes?.keepStartBarVisible === true;

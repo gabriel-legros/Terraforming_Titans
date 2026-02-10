@@ -42,14 +42,14 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   canStart() {
-    if (this.repeatCount >= this.maxRepeatCount) {
+    if (this.repeatCount >= this.getMaxRepeats()) {
       return false;
     }
     return super.canStart();
   }
 
   canContinue() {
-    return this.repeatCount < this.maxRepeatCount;
+    return this.repeatCount < this.getMaxRepeats();
   }
 
   getBaseLand() {
@@ -57,17 +57,31 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   getPerCompletionLand() {
-    const baseLand = this.getBaseLand();
-    return baseLand ? baseLand / 10000 : 0;
+    return 1;
+  }
+
+  getMaxRepeats() {
+    const maxRepeats = Math.max(Math.floor(this.getBaseLand()), 0);
+    this.maxRepeatCount = maxRepeats;
+    return maxRepeats;
+  }
+
+  getEffectiveDuration() {
+    const duration = super.getEffectiveDuration();
+    const perCompletionLand = this.getPerCompletionLand();
+    if (!perCompletionLand) {
+      return duration;
+    }
+    return duration * perCompletionLand;
   }
 
   getRemainingRepeats() {
-    const limit = Number.isFinite(this.maxRepeatCount) ? this.maxRepeatCount : Infinity;
+    const limit = this.getMaxRepeats();
     return Math.max(0, limit - this.repeatCount);
   }
 
   getTotalProgress() {
-    const limit = Number.isFinite(this.maxRepeatCount) ? this.maxRepeatCount : Infinity;
+    const limit = this.getMaxRepeats();
     const total = this.repeatCount + this.fractionalRepeatCount;
     return Math.min(total, limit);
   }
@@ -182,12 +196,11 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   getAndroidSpeedMultiplier() {
-    const initialLand = Math.max(terraforming.initialLand || 0, 1);
-    return 1 + Math.sqrt((10000 * (this.assignedAndroids || 0)) / initialLand);
+    return 1 + Math.sqrt(this.assignedAndroids || 0);
   }
 
   getAndroidSpeedTooltip() {
-    return '1 + sqrt(10000*androids assigned / initial land)';
+    return '1 + sqrt(androids assigned)';
   }
 
   updateUI() {

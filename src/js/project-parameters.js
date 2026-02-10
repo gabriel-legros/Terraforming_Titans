@@ -224,11 +224,11 @@ const projectParameters = {
     category: "infrastructure",
     cost: {
       colony: {
-        metal: 1,
-        components: 0.01
+        metal: 100,
+        components: 10
       }
     },
-    duration: 120000,
+    duration: 30000,
     description: "Build subterranean habitats to slightly expand usable land. Each completion increases land by a small amount.",
     repeatable: true,
     maxRepeatCount: 10000,

@@ -486,11 +486,15 @@ function reconcileLandResourceValue() {
 
   const undergroundProject = projectMgr?.projects?.undergroundExpansion;
   if (undergroundProject) {
-    const perCompletion = baseLand / 10000;
+    const perCompletion = undergroundProject.getPerCompletionLand
+      ? undergroundProject.getPerCompletionLand()
+      : (baseLand / 10000);
     if (perCompletion > 0) {
-      const maxRepeats = Number.isFinite(undergroundProject.maxRepeatCount)
-        ? undergroundProject.maxRepeatCount
-        : Infinity;
+      const maxRepeats = undergroundProject.getMaxRepeats
+        ? undergroundProject.getMaxRepeats()
+        : (Number.isFinite(undergroundProject.maxRepeatCount)
+          ? undergroundProject.maxRepeatCount
+          : Infinity);
       const fractional = Math.max(0, undergroundProject.fractionalRepeatCount || 0);
       const progress = Math.max(0, (undergroundProject.repeatCount || 0) + fractional);
       const cappedProgress = Number.isFinite(maxRepeats) ? Math.min(progress, maxRepeats) : progress;

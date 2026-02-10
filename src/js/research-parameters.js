@@ -548,7 +548,7 @@ const researchParameters = {
         id: 'underground_land_expansion',
         name: 'Underground Land Expansion',
         description: 'Unlocks a repeatable android project to expand usable land via subterranean construction.',
-        cost: { research: 2000000 },
+        cost: { research: 20_000 },
         prerequisites: ['android_factory'],
         artificialAllowed: false,
         disabled: true,
