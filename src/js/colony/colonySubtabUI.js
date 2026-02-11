@@ -3,24 +3,24 @@ let colonySubtabManager = null;
 const COLONY_SUBTAB_IDS = {
   population: 'population-colonies',
   nanocolony: 'nanocolony-colonies',
-  orbital: 'orbital-colonies',
+  followers: 'followers-colonies',
 };
 
 const colonySubtabState = {
   initialized: false,
   populationUnlocked: false,
   nanocolonyUnlocked: false,
-  orbitalUnlocked: false,
+  followersUnlocked: false,
 };
 
 const colonySubtabCache = {
   tabButton: null,
   populationTab: null,
   nanocolonyTab: null,
-  orbitalTab: null,
+  followersTab: null,
   populationContent: null,
   nanocolonyContent: null,
-  orbitalContent: null,
+  followersContent: null,
 };
 
 function cacheColonySubtabElements() {
@@ -33,8 +33,8 @@ function cacheColonySubtabElements() {
   if (!colonySubtabCache.nanocolonyTab || !colonySubtabCache.nanocolonyTab.isConnected) {
     colonySubtabCache.nanocolonyTab = document.getElementById('nanocolony-colonies-tab');
   }
-  if (!colonySubtabCache.orbitalTab || !colonySubtabCache.orbitalTab.isConnected) {
-    colonySubtabCache.orbitalTab = document.getElementById('orbital-colonies-tab');
+  if (!colonySubtabCache.followersTab || !colonySubtabCache.followersTab.isConnected) {
+    colonySubtabCache.followersTab = document.getElementById('followers-colonies-tab');
   }
   if (!colonySubtabCache.populationContent || !colonySubtabCache.populationContent.isConnected) {
     colonySubtabCache.populationContent = document.getElementById(COLONY_SUBTAB_IDS.population);
@@ -42,8 +42,8 @@ function cacheColonySubtabElements() {
   if (!colonySubtabCache.nanocolonyContent || !colonySubtabCache.nanocolonyContent.isConnected) {
     colonySubtabCache.nanocolonyContent = document.getElementById(COLONY_SUBTAB_IDS.nanocolony);
   }
-  if (!colonySubtabCache.orbitalContent || !colonySubtabCache.orbitalContent.isConnected) {
-    colonySubtabCache.orbitalContent = document.getElementById(COLONY_SUBTAB_IDS.orbital);
+  if (!colonySubtabCache.followersContent || !colonySubtabCache.followersContent.isConnected) {
+    colonySubtabCache.followersContent = document.getElementById(COLONY_SUBTAB_IDS.followers);
   }
 }
 
@@ -56,8 +56,8 @@ function isNanocolonySubtabUnlocked() {
   return !!(nanotechManager && nanotechManager.enabled);
 }
 
-function isOrbitalSubtabUnlocked() {
-  return !!(orbitalManager && orbitalManager.enabled);
+function isFollowersSubtabUnlocked() {
+  return !!(followersManager && followersManager.enabled);
 }
 
 function setColonySubtabVisibility(subtabId, visible) {
@@ -78,9 +78,9 @@ function setColonySubtabVisibility(subtabId, visible) {
   } else if (subtabId === COLONY_SUBTAB_IDS.nanocolony) {
     tab = colonySubtabCache.nanocolonyTab;
     content = colonySubtabCache.nanocolonyContent;
-  } else if (subtabId === COLONY_SUBTAB_IDS.orbital) {
-    tab = colonySubtabCache.orbitalTab;
-    content = colonySubtabCache.orbitalContent;
+  } else if (subtabId === COLONY_SUBTAB_IDS.followers) {
+    tab = colonySubtabCache.followersTab;
+    content = colonySubtabCache.followersContent;
   }
   if (!tab || !content) {
     return;
@@ -121,11 +121,11 @@ function updateColonySubtabsVisibility() {
 
   const populationUnlocked = isPopulationSubtabUnlocked();
   const nanocolonyUnlocked = populationUnlocked && isNanocolonySubtabUnlocked();
-  const orbitalUnlocked = populationUnlocked && isOrbitalSubtabUnlocked();
+  const followersUnlocked = populationUnlocked && isFollowersSubtabUnlocked();
 
   setColonySubtabVisibility(COLONY_SUBTAB_IDS.population, populationUnlocked);
   setColonySubtabVisibility(COLONY_SUBTAB_IDS.nanocolony, nanocolonyUnlocked);
-  setColonySubtabVisibility(COLONY_SUBTAB_IDS.orbital, orbitalUnlocked);
+  setColonySubtabVisibility(COLONY_SUBTAB_IDS.followers, followersUnlocked);
 
   const availableSubtabs = [];
   if (populationUnlocked) {
@@ -134,8 +134,8 @@ function updateColonySubtabsVisibility() {
   if (nanocolonyUnlocked) {
     availableSubtabs.push(COLONY_SUBTAB_IDS.nanocolony);
   }
-  if (orbitalUnlocked) {
-    availableSubtabs.push(COLONY_SUBTAB_IDS.orbital);
+  if (followersUnlocked) {
+    availableSubtabs.push(COLONY_SUBTAB_IDS.followers);
   }
 
   const activeId = getActiveColonySubtabId();
@@ -152,14 +152,14 @@ function updateColonySubtabsVisibility() {
     tabManager.activateTab('colonies');
     activateColonySubtab(COLONY_SUBTAB_IDS.nanocolony);
   }
-  if (canAutoSwitch && !colonySubtabState.orbitalUnlocked && orbitalUnlocked) {
+  if (canAutoSwitch && !colonySubtabState.followersUnlocked && followersUnlocked) {
     tabManager.activateTab('colonies');
-    activateColonySubtab(COLONY_SUBTAB_IDS.orbital);
+    activateColonySubtab(COLONY_SUBTAB_IDS.followers);
   }
 
   colonySubtabState.populationUnlocked = populationUnlocked;
   colonySubtabState.nanocolonyUnlocked = nanocolonyUnlocked;
-  colonySubtabState.orbitalUnlocked = orbitalUnlocked;
+  colonySubtabState.followersUnlocked = followersUnlocked;
   colonySubtabState.initialized = true;
 }
 

@@ -84,7 +84,7 @@ let warpGateCommand;
 let patienceManager;
 let galaxyManager;
 let nanotechManager;
-let orbitalManager;
+let followersManager;
 let playTimeSeconds = 0;
 let totalPlayTimeSeconds = 0;
 let realPlayTimeSeconds = 0;

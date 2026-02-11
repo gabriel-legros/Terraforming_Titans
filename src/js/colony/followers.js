@@ -1,8 +1,8 @@
-class OrbitalManager extends EffectableEntity {
+class FollowersManager extends EffectableEntity {
   constructor() {
-    super({ description: 'Manages orbital colony systems' });
+    super({ description: 'Manages followers systems' });
     this.enabled = false;
-    this.currentWorldHabitatCount = 0;
+    this.currentWorldFollowers = 0;
   }
 
   enable() {
@@ -11,12 +11,12 @@ class OrbitalManager extends EffectableEntity {
   }
 
   resetCurrentWorldState() {
-    this.currentWorldHabitatCount = 0;
+    this.currentWorldFollowers = 0;
   }
 
   prepareTravelState() {
     const travelState = {
-      currentWorldHabitatCount: this.currentWorldHabitatCount
+      currentWorldFollowers: this.currentWorldFollowers
     };
     this.resetCurrentWorldState();
     return travelState;
@@ -29,7 +29,7 @@ class OrbitalManager extends EffectableEntity {
 
   updateUI() {
     updateColonySubtabsVisibility();
-    updateOrbitalUI();
+    updateFollowersUI();
   }
 
   reapplyEffects() {
@@ -39,16 +39,18 @@ class OrbitalManager extends EffectableEntity {
   saveState() {
     return {
       enabled: this.enabled,
-      currentWorldHabitatCount: this.currentWorldHabitatCount,
+      currentWorldFollowers: this.currentWorldFollowers,
       booleanFlags: Array.from(this.booleanFlags)
     };
   }
 
   loadState(data = {}) {
     this.enabled = !!data.enabled;
-    this.currentWorldHabitatCount = Number.isFinite(data.currentWorldHabitatCount)
+    this.currentWorldFollowers = Number.isFinite(data.currentWorldFollowers)
+      ? Math.max(0, data.currentWorldFollowers)
+      : (Number.isFinite(data.currentWorldHabitatCount)
       ? Math.max(0, data.currentWorldHabitatCount)
-      : 0;
+      : 0);
     this.booleanFlags = new Set(Array.isArray(data.booleanFlags) ? data.booleanFlags : []);
     this.reapplyEffects();
   }

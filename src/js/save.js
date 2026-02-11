@@ -188,7 +188,7 @@ function getGameState() {
     solisManager: (typeof solisManager !== 'undefined' && typeof solisManager.saveState === 'function') ? solisManager.saveState() : undefined,
     warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
     patienceManager: (typeof patienceManager !== 'undefined' && typeof patienceManager.saveState === 'function') ? patienceManager.saveState() : undefined,
-    orbitalManager: (typeof orbitalManager !== 'undefined' && typeof orbitalManager.saveState === 'function') ? orbitalManager.saveState() : undefined,
+    followersManager: (typeof followersManager !== 'undefined' && typeof followersManager.saveState === 'function') ? followersManager.saveState() : undefined,
     artificialManager: (typeof artificialManager !== 'undefined' && typeof artificialManager.saveState === 'function') ? artificialManager.saveState() : undefined,
     lifeDesigner: (typeof lifeDesigner !== 'undefined' && typeof lifeDesigner.saveState === 'function') ? lifeDesigner.saveState() : undefined,
     milestonesManager: (typeof milestonesManager !== 'undefined' && typeof milestonesManager.saveState === 'function') ? milestonesManager.saveState() : undefined,
@@ -595,8 +595,10 @@ function loadGame(slotOrCustomString, recreate = true) {
     if(gameState.patienceManager && typeof patienceManager !== 'undefined' && typeof patienceManager.loadState === 'function'){
       patienceManager.loadState(gameState.patienceManager);
     }
-    if (gameState.orbitalManager && orbitalManager && orbitalManager.loadState) {
-      orbitalManager.loadState(gameState.orbitalManager);
+    if (gameState.followersManager && followersManager && followersManager.loadState) {
+      followersManager.loadState(gameState.followersManager);
+    } else if (gameState.orbitalManager && followersManager && followersManager.loadState) {
+      followersManager.loadState(gameState.orbitalManager);
     }
 
     if(gameState.lifeDesigner){

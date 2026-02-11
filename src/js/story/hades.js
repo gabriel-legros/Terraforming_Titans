@@ -18,7 +18,7 @@ progressHades.chapters.push(
     ],
     reward: [
       {
-        target: 'orbitalManager',
+        target: 'followersManager',
         type: 'enable'
       },
       {
@@ -37,7 +37,7 @@ progressHades.chapters.push(
         type: 'activateSubtab',
         subtabClass: 'colony-subtab',
         contentClass: 'colony-subtab-content',
-        targetId: 'orbital-colonies',
+        targetId: 'followers-colonies',
         unhide: true,
         onLoad: false
       }
