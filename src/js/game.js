@@ -138,6 +138,7 @@ function initializeDefaultGlobals(){
   warpGateCommand = new WarpGateCommand();
 
   nanotechManager = new NanotechManager();
+  orbitalManager = new OrbitalManager();
 
   lifeDesigner = new LifeDesigner();
   lifeManager = new LifeManager();
@@ -177,7 +178,8 @@ function prepareForTravel(options = {}) {
   }
 
   const travelState = {
-    projects: projectManager?.saveTravelState?.()
+    projects: projectManager?.saveTravelState?.(),
+    orbital: orbitalManager?.prepareTravelState?.()
   };
 
   nanotechManager?.prepareForTravel?.();
@@ -197,6 +199,7 @@ function initializeGameState(options = {}) {
   let savedConstructionOffice = null;
   let savedAntimatter = null;
   let savedLifeDesignerTravelState = null;
+  let savedOrbitalTravelState = null;
   if (!preserveManagers && !globalGameIsLoadingFromSave) {
     resetStructureDisplayState();
     resetProjectDisplayState();
@@ -209,6 +212,7 @@ function initializeGameState(options = {}) {
     const travelState = preparedTravelState || prepareForTravel({ savePretravel: false });
     preparedTravelState = null;
     savedProjectTravelState = travelState.projects;
+    savedOrbitalTravelState = travelState.orbital;
   }
   if (preserveManagers && typeof captureAutoBuildSettings === 'function' && typeof structures !== 'undefined') {
     captureAutoBuildSettings(structures);
@@ -410,6 +414,11 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !patienceManager) {
     patienceManager = new PatienceManager();
   }
+  if (!preserveManagers || !orbitalManager) {
+    orbitalManager = new OrbitalManager();
+  } else if (preserveManagers && savedOrbitalTravelState && orbitalManager.restoreTravelState) {
+    orbitalManager.restoreTravelState(savedOrbitalTravelState);
+  }
   if (!preserveManagers || !artificialManager) {
     artificialManager = setArtificialManager(new ArtificialManager());
   } else if (artificialManager && typeof artificialManager.updateUI === 'function') {
@@ -447,6 +456,7 @@ function initializeGameState(options = {}) {
   }
   createColonyButtons(colonies);
   initializeColonyAlerts();
+  initializeOrbitalUI();
   initializeColonySubtabs();
   initializeProjectsUI();
   renderProjects();
@@ -497,6 +507,9 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && patienceManager && typeof patienceManager.reapplyEffects === 'function') {
     patienceManager.reapplyEffects();
+  }
+  if (preserveManagers && orbitalManager && typeof orbitalManager.reapplyEffects === 'function') {
+    orbitalManager.reapplyEffects();
   }
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
@@ -556,6 +569,9 @@ function updateLogic(delta) {
 
   if (solisManager) {
     solisManager.update(delta);
+  }
+  if (orbitalManager && typeof orbitalManager.update === 'function') {
+    orbitalManager.update(delta);
   }
   if (automationManager) {
     automationManager.update(delta);

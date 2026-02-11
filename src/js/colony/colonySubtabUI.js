@@ -3,20 +3,24 @@ let colonySubtabManager = null;
 const COLONY_SUBTAB_IDS = {
   population: 'population-colonies',
   nanocolony: 'nanocolony-colonies',
+  orbital: 'orbital-colonies',
 };
 
 const colonySubtabState = {
   initialized: false,
   populationUnlocked: false,
   nanocolonyUnlocked: false,
+  orbitalUnlocked: false,
 };
 
 const colonySubtabCache = {
   tabButton: null,
   populationTab: null,
   nanocolonyTab: null,
+  orbitalTab: null,
   populationContent: null,
   nanocolonyContent: null,
+  orbitalContent: null,
 };
 
 function cacheColonySubtabElements() {
@@ -29,11 +33,17 @@ function cacheColonySubtabElements() {
   if (!colonySubtabCache.nanocolonyTab || !colonySubtabCache.nanocolonyTab.isConnected) {
     colonySubtabCache.nanocolonyTab = document.getElementById('nanocolony-colonies-tab');
   }
+  if (!colonySubtabCache.orbitalTab || !colonySubtabCache.orbitalTab.isConnected) {
+    colonySubtabCache.orbitalTab = document.getElementById('orbital-colonies-tab');
+  }
   if (!colonySubtabCache.populationContent || !colonySubtabCache.populationContent.isConnected) {
     colonySubtabCache.populationContent = document.getElementById(COLONY_SUBTAB_IDS.population);
   }
   if (!colonySubtabCache.nanocolonyContent || !colonySubtabCache.nanocolonyContent.isConnected) {
     colonySubtabCache.nanocolonyContent = document.getElementById(COLONY_SUBTAB_IDS.nanocolony);
+  }
+  if (!colonySubtabCache.orbitalContent || !colonySubtabCache.orbitalContent.isConnected) {
+    colonySubtabCache.orbitalContent = document.getElementById(COLONY_SUBTAB_IDS.orbital);
   }
 }
 
@@ -44,6 +54,10 @@ function isPopulationSubtabUnlocked() {
 
 function isNanocolonySubtabUnlocked() {
   return !!(nanotechManager && nanotechManager.enabled);
+}
+
+function isOrbitalSubtabUnlocked() {
+  return !!(orbitalManager && orbitalManager.enabled);
 }
 
 function setColonySubtabVisibility(subtabId, visible) {
@@ -64,6 +78,9 @@ function setColonySubtabVisibility(subtabId, visible) {
   } else if (subtabId === COLONY_SUBTAB_IDS.nanocolony) {
     tab = colonySubtabCache.nanocolonyTab;
     content = colonySubtabCache.nanocolonyContent;
+  } else if (subtabId === COLONY_SUBTAB_IDS.orbital) {
+    tab = colonySubtabCache.orbitalTab;
+    content = colonySubtabCache.orbitalContent;
   }
   if (!tab || !content) {
     return;
@@ -104,9 +121,11 @@ function updateColonySubtabsVisibility() {
 
   const populationUnlocked = isPopulationSubtabUnlocked();
   const nanocolonyUnlocked = populationUnlocked && isNanocolonySubtabUnlocked();
+  const orbitalUnlocked = populationUnlocked && isOrbitalSubtabUnlocked();
 
   setColonySubtabVisibility(COLONY_SUBTAB_IDS.population, populationUnlocked);
   setColonySubtabVisibility(COLONY_SUBTAB_IDS.nanocolony, nanocolonyUnlocked);
+  setColonySubtabVisibility(COLONY_SUBTAB_IDS.orbital, orbitalUnlocked);
 
   const availableSubtabs = [];
   if (populationUnlocked) {
@@ -114,6 +133,9 @@ function updateColonySubtabsVisibility() {
   }
   if (nanocolonyUnlocked) {
     availableSubtabs.push(COLONY_SUBTAB_IDS.nanocolony);
+  }
+  if (orbitalUnlocked) {
+    availableSubtabs.push(COLONY_SUBTAB_IDS.orbital);
   }
 
   const activeId = getActiveColonySubtabId();
@@ -130,9 +152,14 @@ function updateColonySubtabsVisibility() {
     tabManager.activateTab('colonies');
     activateColonySubtab(COLONY_SUBTAB_IDS.nanocolony);
   }
+  if (canAutoSwitch && !colonySubtabState.orbitalUnlocked && orbitalUnlocked) {
+    tabManager.activateTab('colonies');
+    activateColonySubtab(COLONY_SUBTAB_IDS.orbital);
+  }
 
   colonySubtabState.populationUnlocked = populationUnlocked;
   colonySubtabState.nanocolonyUnlocked = nanocolonyUnlocked;
+  colonySubtabState.orbitalUnlocked = orbitalUnlocked;
   colonySubtabState.initialized = true;
 }
 

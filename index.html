@@ -112,15 +112,17 @@
     <script src="src/js/buildings/WaterTank.js"></script>
     <script src="src/js/buildings/AntimatterBattery.js"></script>
     <script src="src/js/buildings/LaserCannon.js"></script>
-    <script src="src/js/colony.js"></script>
+    <script src="src/js/colony/colony.js"></script>
     <script src="src/js/buildings/Ecumenopolis.js"></script>
     <script src="src/js/buildings/aerostat.js"></script>
     <script src="src/js/buildingUI.js"></script>
-    <script src="src/js/colonyUI.js"></script>
-    <script src="src/js/colonySubtabUI.js"></script>
-    <script src="src/js/colonySliders.js"></script>
-    <script src="src/js/colonySlidersUI.js"></script>
-    <script src="src/js/nanotech.js"></script>
+    <script src="src/js/colony/colonyUI.js"></script>
+    <script src="src/js/colony/colonySubtabUI.js"></script>
+    <script src="src/js/colony/colonySliders.js"></script>
+    <script src="src/js/colony/colonySlidersUI.js"></script>
+    <script src="src/js/colony/nanotech.js"></script>
+    <script src="src/js/colony/orbital.js"></script>
+    <script src="src/js/colony/orbitalUI.js"></script>
     <script src="src/js/automation/spaceship-automation.js"></script>
     <script src="src/js/automation/life-automation.js"></script>
     <script src="src/js/automation/building-automation.js"></script>
@@ -358,6 +360,7 @@
         <div class="colonies-subtabs">
           <div id="population-colonies-tab" class="colony-subtab active" data-subtab="population-colonies">Population</div>
           <div id="nanocolony-colonies-tab" class="colony-subtab hidden" data-subtab="nanocolony-colonies">Nanocolony</div>
+          <div id="orbital-colonies-tab" class="colony-subtab hidden" data-subtab="orbital-colonies">Orbital</div>
         </div>
         <div class="colony-subtab-content-wrapper">
           <div id="population-colonies" class="colony-subtab-content active">
@@ -379,6 +382,9 @@
           </div>
           <div id="nanocolony-colonies" class="colony-subtab-content hidden">
             <div id="nanocolony-colonies-content"></div>
+          </div>
+          <div id="orbital-colonies" class="colony-subtab-content hidden">
+            <div id="orbital-colonies-content"></div>
           </div>
         </div>
       </div>

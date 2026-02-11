@@ -165,6 +165,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - String numeric input handling standardized across major controls.
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
+- Hades chapter `hades.33.0` unlocks `orbitalManager`; when enabled, Colony shows an `Orbital` subtab with placeholder UI content.
 
 ### Story, Planets, and Progression
 - Story effects support `onTravel: false`.

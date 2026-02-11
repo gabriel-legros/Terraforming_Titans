@@ -16,7 +16,32 @@ progressHades.chapters.push(
     prerequisites: ['tartarus.32.13'],
     objectives: [
     ],
-    reward: []
+    reward: [
+      {
+        target: 'orbitalManager',
+        type: 'enable'
+      },
+      {
+        target: 'tab',
+        targetId: 'colonies-tab',
+        type: 'enable'
+      },
+      {
+        target: 'tab',
+        targetId: 'colonies',
+        type: 'activateTab',
+        onLoad: false
+      },
+      {
+        target: 'global',
+        type: 'activateSubtab',
+        subtabClass: 'colony-subtab',
+        contentClass: 'colony-subtab-content',
+        targetId: 'orbital-colonies',
+        unhide: true,
+        onLoad: false
+      }
+    ]
   },
   {
     id: 'hades.33.0a',

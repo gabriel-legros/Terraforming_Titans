@@ -708,6 +708,7 @@ function addOrRemoveEffect(effect, action) {
     'warpGateNetworkManager': warpGateNetworkManager,
     'rwgManager': typeof rwgManager !== 'undefined' ? rwgManager : undefined,
     'nanotechManager': typeof nanotechManager !== 'undefined' ? nanotechManager : undefined,
+    'orbitalManager': typeof orbitalManager !== 'undefined' ? orbitalManager : undefined,
     'galaxyManager': typeof galaxyManager !== 'undefined' ? galaxyManager : undefined,
     'artificialManager': typeof artificialManager !== 'undefined' ? artificialManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
