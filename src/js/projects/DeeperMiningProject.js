@@ -456,6 +456,17 @@ class DeeperMiningProject extends AndroidProject {
     super.update(deltaTime);
   }
 
+  applyEffects() {
+    if (!this.unlocked) {
+      return;
+    }
+    if (this.attributes?.completionEffect) {
+      this.applyCompletionEffect();
+    }
+    this.applySuperchargedMiningEffects();
+    this.applyUndergroundStorageEffects();
+  }
+
   start(resources) {
     const started = super.start(resources);
     if (started) {
