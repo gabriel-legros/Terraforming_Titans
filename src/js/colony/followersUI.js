@@ -283,7 +283,7 @@ function buildFollowersUI() {
     'World believers cannot exceed Galactic believers + 5 percentage points.',
     'Once world conversion reaches the cap, world and galactic faith rise together at 1/1000 speed.',
     'After travelling, world count will join the galactic count.',
-    'Pilgrim: increases population growth by world believer %.',
+    'Pilgrims: increases population growth by world believer %.',
     'Zeal: increases colonist worker efficiency by 5x world believer %.',
     'Apostles: increases available orbitals by 10 * (world believer % - 10%), up to +900%.',
     'Missionaries: increases post-cap galactic conversion power by world believer %.'
@@ -351,7 +351,7 @@ function buildFollowersUI() {
     return value;
   };
 
-  const pilgrimBonus = createFaithBonus('Pilgrim (Growth)', '+0.00%');
+  const pilgrimBonus = createFaithBonus('Pilgrims (Growth)', '+0.00%');
   const zealBonus = createFaithBonus('Zeal (Worker Efficiency)', '+0.00%');
   const apostlesBonus = createFaithBonus('Apostles (Orbitals)', '+0.00%');
   const missionariesBonus = createFaithBonus('Missionaries (Galactic Conversion)', '+0.00%');
