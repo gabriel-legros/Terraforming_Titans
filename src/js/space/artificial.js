@@ -1189,7 +1189,7 @@ class ArtificialManager extends EffectableEntity {
         const base = JSON.parse(JSON.stringify(defaultPlanetParameters || {}));
         this.resetInitialResources(base.resources);
         base.name = project.name;
-        base.specialAttributes = { ...(base.specialAttributes || {}), hasSand: false };
+        base.specialAttributes = { ...(base.specialAttributes || {}), hasSand: false, hasOre: false };
         if (isRing) {
             base.specialAttributes.zoneKeys = ['tropical'];
             base.specialAttributes.ringOrbitRadiusAU = project.orbitRadiusAU || distanceFromStarAU;
