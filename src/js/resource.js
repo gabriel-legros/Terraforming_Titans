@@ -263,6 +263,10 @@ class Resource extends EffectableEntity {
 
       newCap += structure.active * storageByCategory[this.name] * structure.getEffectiveStorageMultiplier();
     }
+
+    if (followersManager && this.hasCap) {
+      newCap += followersManager.getOrbitalStorageCapBonusForResource(this.category, this.name);
+    }
     this.cap = this.hasCap ? newCap : Infinity;
   }
 
@@ -638,10 +642,6 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
 }
 
 function produceResources(deltaTime, buildings) {
-  if (typeof followersManager !== 'undefined' && followersManager && typeof followersManager.produceOrbitals === 'function') {
-    followersManager.produceOrbitals(deltaTime);
-  }
-
   const isDay = dayNightCycle.isDay();
   let projectEntries = [];
   let projectProductivityMap = {};
@@ -657,6 +657,10 @@ function produceResources(deltaTime, buildings) {
         resource.updateStorageCap();
       }
     }
+  }
+
+  if (followersManager && followersManager.produceOrbitals) {
+    followersManager.produceOrbitals(deltaTime);
   }
 
   for (const buildingName in buildings) {
@@ -758,7 +762,7 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
-  if (typeof followersManager !== 'undefined' && followersManager && typeof followersManager.applyOrbitalProductionRates === 'function') {
+  if (followersManager && followersManager.applyOrbitalProductionRates) {
     followersManager.applyOrbitalProductionRates();
   }
 

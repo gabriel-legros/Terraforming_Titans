@@ -338,6 +338,40 @@ class FollowersManager extends EffectableEntity {
     return 0;
   }
 
+  getPerOrbitalCapBonus(config) {
+    const perOrbitalRate = this.getPerOrbitalRate(config);
+    return Math.max(100, perOrbitalRate * 10);
+  }
+
+  getOrbitalStorageCapBonusForResource(category, resourceName) {
+    if (!this.enabled) {
+      return 0;
+    }
+
+    const snapshot = this.getAssignmentsSnapshot();
+    const configs = this.getOrbitalConfigs();
+    let bonus = 0;
+    for (let i = 0; i < configs.length; i += 1) {
+      const config = configs[i];
+      if (config.targetCategory !== category || config.targetResource !== resourceName) {
+        continue;
+      }
+
+      const assigned = snapshot.assignments[config.id] || 0;
+      if (assigned <= 0) {
+        continue;
+      }
+
+      const targetResource = resources[category][resourceName];
+      if (!targetResource || !targetResource.hasCap || !targetResource.unlocked) {
+        continue;
+      }
+
+      bonus += this.getPerOrbitalCapBonus(config) * assigned;
+    }
+    return bonus;
+  }
+
   getLastProductionRate(id) {
     return this.lastProductionRates[id] || 0;
   }

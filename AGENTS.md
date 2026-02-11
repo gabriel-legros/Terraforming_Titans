@@ -166,6 +166,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
 - Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes) and placeholder `Faith`/`Holy World` sections.
+- Followers Orbitals also grant storage cap on assigned target resources: per assigned orbital cap bonus is `max(100, per-orbital production × 10)`, and this cap bonus is applied during storage-cap recalculation before orbital production runs.
 
 ### Story, Planets, and Progression
 - Story effects support `onTravel: false`.
