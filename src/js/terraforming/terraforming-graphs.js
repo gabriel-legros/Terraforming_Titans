@@ -981,6 +981,18 @@ class TerraformingGraphsManager {
     const pressureLabelX = Math.max(padding.left, width - padding.right - 130);
     ctx.fillText('Pressure (Pa, log)', pressureLabelX, padding.top - 12);
 
+    const clampedTemp = Math.max(minTemp, Math.min(maxTemp, currentTemp));
+    const clampedPressure = Math.max(minPressure, Math.min(maxPressure, currentPressure));
+    const markerX = padding.left + ((clampedTemp - minTemp) / tempSpan) * plotWidth;
+    const markerY = padding.top + (1 - (Math.log10(clampedPressure) - logMin) / logSpan) * plotHeight;
+    ctx.beginPath();
+    ctx.arc(markerX, markerY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#e11d48';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+
     return;
   }
 
