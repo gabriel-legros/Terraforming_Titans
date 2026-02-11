@@ -63,13 +63,27 @@
       return this.getSpecializationPoints() >= item.cost;
     }
 
-    purchaseUpgrade(id) {
+    getMaxShopPurchases(item) {
+      const points = this.getSpecializationPoints();
+      if (points < item.cost) {
+        return 0;
+      }
+      const remainingPurchases = item.maxPurchases - this.getShopPurchaseCount(item.id);
+      return Math.min(remainingPurchases, Math.floor(points / item.cost));
+    }
+
+    purchaseUpgrade(id, purchaseCount = 1) {
       const item = this.shopItemMap[id];
-      if (!this.canPurchaseUpgrade(item)) {
+      if (!item || purchaseCount <= 0 || !this.canPurchaseUpgrade(item)) {
         return;
       }
-      this.addSpecializationPoints(-item.cost);
-      this.shopPurchases[id] = this.getShopPurchaseCount(id) + 1;
+      const maxPurchases = this.getMaxShopPurchases(item);
+      const actualPurchases = Math.min(purchaseCount, maxPurchases);
+      if (actualPurchases <= 0) {
+        return;
+      }
+      this.addSpecializationPoints(-(item.cost * actualPurchases));
+      this.shopPurchases[id] = this.getShopPurchaseCount(id) + actualPurchases;
       this.applySpecializationEffects();
       this.updateUI();
     }
@@ -215,7 +229,10 @@
         const button = document.createElement('button');
         button.classList.add('bioworld-shop-button');
         button.textContent = 'Buy';
-        button.addEventListener('click', () => this.purchaseUpgrade(item.id));
+        button.addEventListener('click', (event) => {
+          const purchaseCount = event.shiftKey ? this.getMaxShopPurchases(item) : 1;
+          this.purchaseUpgrade(item.id, purchaseCount);
+        });
 
         const metaRow = document.createElement('div');
         metaRow.classList.add('bioworld-shop-item-meta');
