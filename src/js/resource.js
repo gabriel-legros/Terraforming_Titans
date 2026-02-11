@@ -638,6 +638,10 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
 }
 
 function produceResources(deltaTime, buildings) {
+  if (typeof followersManager !== 'undefined' && followersManager && typeof followersManager.produceOrbitals === 'function') {
+    followersManager.produceOrbitals(deltaTime);
+  }
+
   const isDay = dayNightCycle.isDay();
   let projectEntries = [];
   let projectProductivityMap = {};
@@ -752,6 +756,10 @@ function produceResources(deltaTime, buildings) {
         accumulatedMaintenance[resourceName] = 0; // Initialize accumulated maintenance costs for colony resources
       }
     }
+  }
+
+  if (typeof followersManager !== 'undefined' && followersManager && typeof followersManager.applyOrbitalProductionRates === 'function') {
+    followersManager.applyOrbitalProductionRates();
   }
 
   //Productivity is now calculated, let's actually produce and consume

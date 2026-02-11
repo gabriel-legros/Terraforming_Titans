@@ -639,6 +639,7 @@ function updateRender(force = false, options = {}) {
         updateGrowthRateDisplay();
       }
       updateColonySlidersUI();
+      updateFollowersUI();
     }
 
     if (isActive('special-projects')) {
