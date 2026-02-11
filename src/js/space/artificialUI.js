@@ -494,10 +494,10 @@ function applyRingBounds() {
   const widthBounds = getRingWidthBoundsKm();
   artificialUICache.ringWidthRange.min = widthBounds.min;
   artificialUICache.ringWidthRange.max = widthBounds.max;
-  artificialUICache.ringWidthRange.step = '1000';
+  artificialUICache.ringWidthRange.step = '1';
   artificialUICache.ringWidthInput.min = widthBounds.min;
   artificialUICache.ringWidthInput.max = widthBounds.max;
-  artificialUICache.ringWidthInput.step = '1000';
+  artificialUICache.ringWidthInput.step = '1';
   if (!isRingWidthFieldActive() && !artificialRingWidthEditing) {
     artificialUICache.ringWidthRange.value = clampRingWidthValue(parseFloat(artificialUICache.ringWidthRange.value) || widthBounds.min);
   }
@@ -796,7 +796,7 @@ function ensureArtificialLayout() {
   ringAuto.type = 'button';
   ringAuto.className = 'artificial-secondary artificial-radius-auto';
   ringAuto.textContent = 'Auto';
-  ringAuto.title = 'Find the cheapest ring that still builds just under 5 hours.';
+  ringAuto.title = 'Pick the widest ring possible while keeping construction at or under 5 hours.';
   artificialUICache.ringAuto = ringAuto;
   ringOrbitControls.appendChild(ringAuto);
   ringOrbitBox.appendChild(ringOrbitControls);
@@ -826,7 +826,7 @@ function ensureArtificialLayout() {
   ringWidthControls.className = 'artificial-radius-controls';
   const ringWidthRange = document.createElement('input');
   ringWidthRange.type = 'range';
-  ringWidthRange.step = '1000';
+  ringWidthRange.step = '1';
   ringWidthRange.value = '10000';
   ringWidthRange.className = 'artificial-radius-range';
   artificialUICache.ringWidthRange = ringWidthRange;
@@ -834,7 +834,7 @@ function ensureArtificialLayout() {
 
   const ringWidthInput = document.createElement('input');
   ringWidthInput.type = 'number';
-  ringWidthInput.step = '1000';
+  ringWidthInput.step = '1';
   ringWidthInput.value = '10000';
   ringWidthInput.className = 'artificial-radius-input';
   artificialUICache.ringWidthInput = ringWidthInput;

@@ -65,6 +65,7 @@ const MAX_SHELL_DURATION_MS = 5 * 3_600_000;
 const AUTO_RADIUS_STEP = 0.01;
 const AUTO_RADIUS_ITERATIONS = 32;
 const AUTO_RING_ORBIT_STEP = 0.001;
+const AUTO_RING_WIDTH_STEP = 1;
 const BASE_SHELL_COST = (() => {
     const radiusAtCalibration = Math.sqrt(SHELL_COST_CALIBRATION.landHa / EARTH_AREA_HA);
     const superalloyBase = SHELL_COST_CALIBRATION.superalloys / (radiusAtCalibration ** 3);
@@ -550,9 +551,7 @@ class ArtificialManager extends EffectableEntity {
         const targetMs = MAX_SHELL_DURATION_MS;
         const width = Math.max(widthKm || 0, 0);
         const getDuration = (orbitRadiusAU) => {
-            const landHa = calculateRingLandHectares(orbitRadiusAU, width);
-            const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
-            return this.getDurationContext(radiusEarth).durationMs;
+            return this.getRingConstructionDurationMs(orbitRadiusAU, width);
         };
         let low = bounds.min;
         let high = bounds.max;
@@ -581,40 +580,42 @@ class ArtificialManager extends EffectableEntity {
             snapped = Math.round((snapped - AUTO_RING_ORBIT_STEP) / AUTO_RING_ORBIT_STEP) * AUTO_RING_ORBIT_STEP;
             durationMs = getDuration(snapped);
         }
-        return Math.min(Math.max(snapped, bounds.min), bounds.max);
+        return Math.min(Math.max(Number(snapped.toFixed(3)), bounds.min), bounds.max);
     }
 
     getAutoRingSelection(bounds, widthBounds) {
         const targetMs = MAX_SHELL_DURATION_MS;
-        const worldCount = this.getDurationContext(DEFAULT_RADIUS_BOUNDS.min).worldCount;
-        const batches = (targetMs * worldCount) / (this.constructionHoursPer50B * 3_600_000);
-        const targetLand = batches * 50_000_000_000;
-        const landFactor = 2 * Math.PI * AU_IN_KM * 100;
-        const widthStep = 1000;
-
         const minWidth = Math.max(widthBounds.min, 0);
         const maxWidth = Math.max(widthBounds.max, minWidth);
-        const minOrbit = Math.max(bounds.min, 0.01);
-        const maxOrbit = Math.max(bounds.max, minOrbit);
+        const snappedMaxWidth = Math.floor(maxWidth / AUTO_RING_WIDTH_STEP) * AUTO_RING_WIDTH_STEP;
+        const snappedMinWidth = Math.ceil(minWidth / AUTO_RING_WIDTH_STEP) * AUTO_RING_WIDTH_STEP;
+        const minOrbitAU = Math.min(Math.max(bounds.min, 0.01), bounds.max);
+        // Width-first: compute the largest width that still meets 5h at the smallest orbit.
+        // Duration scales linearly with ring width for fixed orbit/core bounds.
+        const minOrbitDurationAtMaxWidth = this.getRingConstructionDurationMs(minOrbitAU, snappedMaxWidth);
+        const widthScale = minOrbitDurationAtMaxWidth > 0
+            ? targetMs / minOrbitDurationAtMaxWidth
+            : 1;
+        let chosenWidthKm = Math.floor((snappedMaxWidth * widthScale) / AUTO_RING_WIDTH_STEP) * AUTO_RING_WIDTH_STEP;
+        chosenWidthKm = Math.min(Math.max(chosenWidthKm, snappedMinWidth), snappedMaxWidth);
 
-        const widthForMaxOrbit = targetLand / (landFactor * maxOrbit);
-        const widthForMinOrbit = targetLand / (landFactor * minOrbit);
+        let orbitRadiusAU = this.getAutoRingOrbit(bounds, chosenWidthKm);
+        let durationMs = this.getRingConstructionDurationMs(orbitRadiusAU, chosenWidthKm);
 
-        const feasibleMin = Math.max(minWidth, widthForMaxOrbit);
-        const feasibleMax = Math.min(maxWidth, widthForMinOrbit);
-
-        let widthKm = feasibleMin;
-        if (feasibleMin > feasibleMax) {
-            widthKm = Math.min(Math.max(minWidth, widthForMinOrbit), maxWidth);
+        // Safety backoff for rare rounding edges.
+        while (durationMs > targetMs && chosenWidthKm > snappedMinWidth) {
+            chosenWidthKm -= AUTO_RING_WIDTH_STEP;
+            orbitRadiusAU = this.getAutoRingOrbit(bounds, chosenWidthKm);
+            durationMs = this.getRingConstructionDurationMs(orbitRadiusAU, chosenWidthKm);
         }
 
-        widthKm = Math.floor(widthKm / widthStep) * widthStep;
-        widthKm = Math.min(Math.max(widthKm, minWidth), maxWidth);
+        return { orbitRadiusAU, widthKm: chosenWidthKm };
+    }
 
-        let orbitRadiusAU = targetLand / (landFactor * widthKm);
-        orbitRadiusAU = Math.min(Math.max(orbitRadiusAU, minOrbit), maxOrbit);
-
-        return { orbitRadiusAU, widthKm };
+    getRingConstructionDurationMs(orbitRadiusAU, widthKm) {
+        const landHa = calculateRingLandHectares(orbitRadiusAU, widthKm);
+        const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
+        return this.getDurationContext(radiusEarth).durationMs;
     }
 
     exceedsDurationLimit(durationMs) {
