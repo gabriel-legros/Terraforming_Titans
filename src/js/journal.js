@@ -76,30 +76,37 @@ function joinLines(text) {
 }
 
 const PROMETHEUS_TOKEN = '$PROMETHEUS$';
+const RED_TOKEN = '$RED$';
 const PROMETHEUS_LABEL = 'Prometheus';
 const PROMETHEUS_CLASS = 'prometheus-text';
 const DIAGNOSTIC_TOKEN = '$DIAGNOSTIC$';
+const GREEN_TOKEN = '$GREEN$';
 const DIAGNOSTIC_CLASS = 'diagnostic-text';
+
+const JOURNAL_LINE_TOKENS = [
+  { token: PROMETHEUS_TOKEN, className: PROMETHEUS_CLASS, label: PROMETHEUS_LABEL },
+  { token: RED_TOKEN, className: PROMETHEUS_CLASS, label: '' },
+  { token: DIAGNOSTIC_TOKEN, className: DIAGNOSTIC_CLASS, label: '' },
+  { token: GREEN_TOKEN, className: DIAGNOSTIC_CLASS, label: '' }
+];
 
 function buildJournalSegments(text) {
   const normalized = joinLines(text)
-    .replace(/<span class="prometheus-text">Prometheus([^<]*)<\/span>/g, `${PROMETHEUS_TOKEN}$1`)
-    .replace(/<span class="diagnostic-text">([^<]*)<\/span>/g, `${DIAGNOSTIC_TOKEN}$1`);
+    .replace(/<span class="prometheus-text">Prometheus([^<]*)<\/span>/g, `${RED_TOKEN}Prometheus$1`)
+    .replace(/<span class="diagnostic-text">([^<]*)<\/span>/g, `${GREEN_TOKEN}$1`);
   const lines = normalized.split('\n');
   const segments = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     let bestIndex = line.length;
     let bestToken = null;
-    const prometheusIndex = line.indexOf(PROMETHEUS_TOKEN);
-    if (prometheusIndex !== -1 && prometheusIndex < bestIndex) {
-      bestIndex = prometheusIndex;
-      bestToken = { token: PROMETHEUS_TOKEN, className: PROMETHEUS_CLASS, label: PROMETHEUS_LABEL };
-    }
-    const diagnosticIndex = line.indexOf(DIAGNOSTIC_TOKEN);
-    if (diagnosticIndex !== -1 && diagnosticIndex < bestIndex) {
-      bestIndex = diagnosticIndex;
-      bestToken = { token: DIAGNOSTIC_TOKEN, className: DIAGNOSTIC_CLASS, label: '' };
+    for (let tokenIndex = 0; tokenIndex < JOURNAL_LINE_TOKENS.length; tokenIndex++) {
+      const tokenConfig = JOURNAL_LINE_TOKENS[tokenIndex];
+      const currentIndex = line.indexOf(tokenConfig.token);
+      if (currentIndex !== -1 && currentIndex < bestIndex) {
+        bestIndex = currentIndex;
+        bestToken = tokenConfig;
+      }
     }
     if (bestIndex === line.length) {
       if (line.length) {
