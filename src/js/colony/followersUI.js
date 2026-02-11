@@ -7,6 +7,18 @@ const followersUICache = {
   stepValue: null,
   divideStepButton: null,
   multiplyStepButton: null,
+  faithWorldPercent: null,
+  faithWorldBelievers: null,
+  faithGalacticPercent: null,
+  faithGalacticBelievers: null,
+  faithWorldCap: null,
+  faithWorldRate: null,
+  faithGalacticRate: null,
+  faithGalacticAbsoluteRate: null,
+  faithPilgrimBonus: null,
+  faithZealBonus: null,
+  faithApostlesBonus: null,
+  faithMissionariesBonus: null,
   rowsById: {},
 };
 
@@ -61,6 +73,7 @@ function buildFollowersUI() {
   root.classList.add('followers-layout');
 
   const orbitalsTooltipText = [
+    'With orbitals, humanity can now help HOPE with its project directly.',
     'Assign orbitals to produce resources automatically.',
     'You can assign up to your effective terraformed world count.',
     'Manual mode sets exact assignments with the current step size.',
@@ -264,11 +277,83 @@ function buildFollowersUI() {
   const bottomRow = document.createElement('div');
   bottomRow.classList.add('followers-secondary-row');
 
-  const faith = createFollowersCard('Faith', 'followers-feature-card');
-  const faithPlaceholder = document.createElement('div');
-  faithPlaceholder.classList.add('followers-placeholder-text');
-  faithPlaceholder.textContent = 'Faith systems will be added in a future update.';
-  faith.body.appendChild(faithPlaceholder);
+  const faithTooltipText = [
+    'Believers in the Church of HOPE convert the current population exponentially.',
+    'All colonists import bring population that respect the galactic believers %',
+    'World believers cannot exceed Galactic believers + 5 percentage points.',
+    'Once world conversion reaches the cap, world and galactic faith rise together at 1/1000 speed.',
+    'After travelling, world count will join the galactic count.',
+    'Missionaries only boost the galactic post-cap conversion.'
+  ].join('\n');
+  const faith = createFollowersCard('Faith', 'followers-feature-card', faithTooltipText);
+  faith.body.classList.add('followers-faith-body');
+
+  const faithStatsGrid = document.createElement('div');
+  faithStatsGrid.classList.add('followers-faith-stats-grid');
+
+  const createFaithStat = (labelText, valueText) => {
+    const stat = document.createElement('div');
+    stat.classList.add('followers-faith-stat');
+
+    const label = document.createElement('span');
+    label.classList.add('followers-faith-stat-label');
+    label.textContent = labelText;
+
+    const value = document.createElement('span');
+    value.classList.add('followers-faith-stat-value');
+    value.textContent = valueText;
+
+    stat.append(label, value);
+    return { stat, value };
+  };
+
+  const worldPercentStat = createFaithStat('World Believers', '0.00%');
+  const worldBelieversStat = createFaithStat('World Count', '0');
+  const galacticPercentStat = createFaithStat('Galactic Believers', '10.00%');
+  const galacticBelieversStat = createFaithStat('Galactic Count', '0');
+  const worldCapStat = createFaithStat('World Cap', '15.00%');
+  const worldRateStat = createFaithStat('World Conversion', '+0.0000%/s');
+  const galacticRateStat = createFaithStat('Galactic Conversion (%)', '+0.0000%/s');
+  const galacticAbsoluteRateStat = createFaithStat('Galactic Conversion', '+0/s');
+
+  faithStatsGrid.append(
+    worldPercentStat.stat,
+    worldBelieversStat.stat,
+    galacticPercentStat.stat,
+    galacticBelieversStat.stat,
+    worldCapStat.stat,
+    worldRateStat.stat,
+    galacticRateStat.stat,
+    galacticAbsoluteRateStat.stat
+  );
+  faith.body.appendChild(faithStatsGrid);
+
+  const faithBonuses = document.createElement('div');
+  faithBonuses.classList.add('followers-faith-bonuses');
+
+  const createFaithBonus = (name, valueText) => {
+    const row = document.createElement('div');
+    row.classList.add('followers-faith-bonus-row');
+
+    const label = document.createElement('span');
+    label.classList.add('followers-faith-bonus-label');
+    label.textContent = name;
+
+    const value = document.createElement('span');
+    value.classList.add('followers-faith-bonus-value');
+    value.textContent = valueText;
+
+    row.append(label, value);
+    faithBonuses.appendChild(row);
+    return value;
+  };
+
+  const pilgrimBonus = createFaithBonus('Pilgrim (Growth)', '+0.00%');
+  const zealBonus = createFaithBonus('Zeal (Worker Efficiency)', '+0.00%');
+  const apostlesBonus = createFaithBonus('Apostles (Orbitals)', '+0.00%');
+  const missionariesBonus = createFaithBonus('Missionaries (Galactic Conversion)', '+0.00%');
+
+  faith.body.appendChild(faithBonuses);
 
   const holyWorld = createFollowersCard('Holy World', 'followers-feature-card');
   const holyWorldPlaceholder = document.createElement('div');
@@ -301,6 +386,18 @@ function buildFollowersUI() {
   followersUICache.stepValue = stepValue;
   followersUICache.divideStepButton = divideStepButton;
   followersUICache.multiplyStepButton = multiplyStepButton;
+  followersUICache.faithWorldPercent = worldPercentStat.value;
+  followersUICache.faithWorldBelievers = worldBelieversStat.value;
+  followersUICache.faithGalacticPercent = galacticPercentStat.value;
+  followersUICache.faithGalacticBelievers = galacticBelieversStat.value;
+  followersUICache.faithWorldCap = worldCapStat.value;
+  followersUICache.faithWorldRate = worldRateStat.value;
+  followersUICache.faithGalacticRate = galacticRateStat.value;
+  followersUICache.faithGalacticAbsoluteRate = galacticAbsoluteRateStat.value;
+  followersUICache.faithPilgrimBonus = pilgrimBonus;
+  followersUICache.faithZealBonus = zealBonus;
+  followersUICache.faithApostlesBonus = apostlesBonus;
+  followersUICache.faithMissionariesBonus = missionariesBonus;
 }
 
 function initializeFollowersUI() {
@@ -385,4 +482,18 @@ function updateFollowersUI() {
       }
     }
   }
+
+  const faith = followersManager.getFaithSnapshot();
+  followersUICache.faithWorldPercent.textContent = `${formatNumber(faith.worldPercent * 100, false, 2)}%`;
+  followersUICache.faithWorldBelievers.textContent = `${formatNumber(faith.worldBelievers, true)} / ${formatNumber(faith.worldPopulation, true)}`;
+  followersUICache.faithGalacticPercent.textContent = `${formatNumber(faith.galacticPercent * 100, false, 2)}%`;
+  followersUICache.faithGalacticBelievers.textContent = `${formatNumber(faith.galacticBelievers, true)} / ${formatNumber(faith.galacticPopulation, true)}`;
+  followersUICache.faithWorldCap.textContent = `${formatNumber(faith.worldCapPercent * 100, false, 2)}%`;
+  followersUICache.faithWorldRate.textContent = `+${formatNumber(faith.rates.worldPerSecond * faith.worldPopulation, false, 2)}/s`;
+  followersUICache.faithGalacticRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * 100, false, 4)}%/s`;
+  followersUICache.faithGalacticAbsoluteRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * faith.galacticPopulation, false, 2)}/s`;
+  followersUICache.faithPilgrimBonus.textContent = `+${formatNumber(faith.bonuses.pilgrim * 100, false, 2)}%`;
+  followersUICache.faithZealBonus.textContent = `+${formatNumber(faith.bonuses.zeal * 100, false, 2)}%`;
+  followersUICache.faithApostlesBonus.textContent = `+${formatNumber(faith.bonuses.apostles * 100, false, 2)}%`;
+  followersUICache.faithMissionariesBonus.textContent = `+${formatNumber(faith.bonuses.missionaries * 100, false, 2)}%`;
 }

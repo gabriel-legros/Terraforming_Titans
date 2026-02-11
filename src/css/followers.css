@@ -252,6 +252,70 @@
   min-height: 92px;
 }
 
+#followers-layout .followers-faith-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#followers-layout .followers-faith-stats-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#followers-layout .followers-faith-stat {
+  border: 1px solid #c8d8ef;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f9fcff 0%, #ecf3ff 100%);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#followers-layout .followers-faith-stat-label {
+  font-size: 0.71rem;
+  color: #5a6f90;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+#followers-layout .followers-faith-stat-value {
+  font-size: 0.9rem;
+  color: #1e3d6a;
+  font-weight: 700;
+}
+
+#followers-layout .followers-faith-bonuses {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid #c8d8ef;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f7fbff 0%, #eaf2ff 100%);
+  padding: 7px 8px;
+}
+
+#followers-layout .followers-faith-bonus-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#followers-layout .followers-faith-bonus-label {
+  color: #2b4876;
+  font-size: 0.81rem;
+}
+
+#followers-layout .followers-faith-bonus-value {
+  color: #1d3a65;
+  font-weight: 700;
+  font-size: 0.83rem;
+}
+
 #followers-layout .followers-placeholder-text {
   border: 1px dashed #bfd0e8;
   border-radius: 6px;
@@ -294,6 +358,10 @@
   }
 
   #followers-layout .followers-secondary-row {
+    grid-template-columns: 1fr;
+  }
+
+  #followers-layout .followers-faith-stats-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -380,6 +448,29 @@
   border-color: #4b607f;
   background: #121b29;
   color: #d3e0f8;
+}
+
+.dark-mode #followers-layout .followers-faith-stat {
+  border-color: #455a79;
+  background: linear-gradient(180deg, #1d2a3d 0%, #182335 100%);
+}
+
+.dark-mode #followers-layout .followers-faith-stat-label {
+  color: #9eb3d1;
+}
+
+.dark-mode #followers-layout .followers-faith-stat-value {
+  color: #d6e5ff;
+}
+
+.dark-mode #followers-layout .followers-faith-bonuses {
+  border-color: #425876;
+  background: linear-gradient(180deg, #1d2a3d 0%, #172233 100%);
+}
+
+.dark-mode #followers-layout .followers-faith-bonus-label,
+.dark-mode #followers-layout .followers-faith-bonus-value {
+  color: #c3d5f0;
 }
 
 .dark-mode #followers-layout .followers-placeholder-text {

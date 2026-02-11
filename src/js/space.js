@@ -1052,6 +1052,9 @@ class SpaceManager extends EffectableEntity {
         
         const now = Date.now();
         const pop = globalThis?.resources?.colony?.colonists?.value || 0;
+        if (followersManager && followersManager.onTravelDeparture) {
+            followersManager.onTravelDeparture(pop);
+        }
         const ecoPercent = getEcumenopolisLandFraction(globalThis.terraforming) * 100;
         const specialization = terraforming.requirementId;
         let foundryCompleted = false;

@@ -165,8 +165,10 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - String numeric input handling standardized across major controls.
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
-- Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes) and placeholder `Faith`/`Holy World` sections.
+- Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes), a live `Faith` panel, and a placeholder `Holy World` section.
 - Followers Orbitals also grant storage cap on assigned target resources: per assigned orbital cap bonus is `max(100, per-orbital production × 10)`, and this cap bonus is applied during storage-cap recalculation before orbital production runs.
+- Faith tracks separate world and galactic believers: enabling seeds galactic believers to 10%, colonist imports blend world faith with galactic faith share, world conversion is exponential with a world cap of `galactic + 5%`, and at cap world+galactic faith increase together at 1/1000 speed (Missionaries only boosts this post-cap galactic conversion).
+- Faith bonuses scale from world believer share: Pilgrim boosts population growth, Zeal boosts colonist worker efficiency, Apostles boosts available orbitals above 10% world faith (up to +900%), and Missionaries boosts only galactic post-cap conversion power.
 
 ### Story, Planets, and Progression
 - Story effects support `onTravel: false`.

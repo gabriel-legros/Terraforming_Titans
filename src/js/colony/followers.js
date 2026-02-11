@@ -9,6 +9,14 @@ class FollowersManager extends EffectableEntity {
     this.weights = {};
     this.lastProductionRates = {};
     this.lastAppliedAssignments = {};
+    this.faithInitialized = false;
+    this.worldBelieverRatio = 0.1;
+    this.galacticPopulation = 0;
+    this.galacticBelievers = 0;
+    this.galacticBelieverPercentFallback = 0.1;
+    this.lastFaithWorldConversionRate = 0;
+    this.lastFaithGalacticConversionRate = 0;
+    this.lastFaithWorldCap = 0.15;
     this.ensureTrackedOrbitals();
   }
 
@@ -42,9 +50,220 @@ class FollowersManager extends EffectableEntity {
     }
   }
 
+  clampPercent(value) {
+    if (value <= 0) {
+      return 0;
+    }
+    if (value >= 1) {
+      return 1;
+    }
+    return value;
+  }
+
+  getCurrentWorldPopulation() {
+    return Math.max(0, resources.colony.colonists.value);
+  }
+
+  getGalacticBelieverPercent() {
+    if (this.galacticPopulation > 0) {
+      return this.clampPercent(this.galacticBelievers / this.galacticPopulation);
+    }
+    return this.clampPercent(this.galacticBelieverPercentFallback);
+  }
+
+  getWorldBelieverPercent() {
+    return this.clampPercent(this.worldBelieverRatio);
+  }
+
+  setWorldBelieverPercent(percent) {
+    this.worldBelieverRatio = this.clampPercent(percent);
+  }
+
+  getWorldBelievers() {
+    return this.getWorldBelieverPercent() * this.getCurrentWorldPopulation();
+  }
+
+  getPilgrimGrowthBonus() {
+    return this.getWorldBelieverPercent();
+  }
+
+  getZealWorkerEfficiencyBonus() {
+    return this.getWorldBelieverPercent() * 5;
+  }
+
+  getApostlesOrbitalsMultiplier() {
+    const worldPercent = this.getWorldBelieverPercent();
+    const bonus = Math.max(0, Math.min(9, (worldPercent - 0.1) * 10));
+    return 1 + bonus;
+  }
+
+  getMissionaryGalacticConversionMultiplier() {
+    return 1 + this.getWorldBelieverPercent();
+  }
+
+  getFaithConversionRatePerSecond() {
+    return (0.05 / (5 * 3600)) / 0.1;
+  }
+
+  getCurrentWorldBelieverCap() {
+    return Math.min(1, this.getGalacticBelieverPercent() + 0.05);
+  }
+
+  getFaithSnapshot() {
+    const worldPopulation = this.getCurrentWorldPopulation();
+    const worldPercent = this.getWorldBelieverPercent();
+    const galacticPercent = this.getGalacticBelieverPercent();
+    const apostlesMultiplier = this.getApostlesOrbitalsMultiplier();
+    return {
+      worldPopulation,
+      worldBelievers: worldPopulation * worldPercent,
+      worldPercent,
+      worldCapPercent: this.getCurrentWorldBelieverCap(),
+      galacticPopulation: this.galacticPopulation,
+      galacticBelievers: this.galacticBelievers,
+      galacticPercent,
+      rates: {
+        worldPerSecond: this.lastFaithWorldConversionRate,
+        galacticPerSecond: this.lastFaithGalacticConversionRate
+      },
+      bonuses: {
+        pilgrim: this.getPilgrimGrowthBonus(),
+        zeal: this.getZealWorkerEfficiencyBonus(),
+        apostles: apostlesMultiplier - 1,
+        missionaries: this.getWorldBelieverPercent()
+      },
+      atWorldCap: worldPercent >= this.getCurrentWorldBelieverCap() - 1e-12
+    };
+  }
+
+  recalculateGalacticPopulation() {
+    let total = 0;
+    const currentStoryKey = spaceManager.currentPlanetKey;
+    const currentSeed = spaceManager.currentRandomSeed === null ? null : String(spaceManager.currentRandomSeed);
+    const currentArtificialKey = spaceManager.currentArtificialKey === null ? null : String(spaceManager.currentArtificialKey);
+
+    Object.keys(spaceManager.planetStatuses).forEach((key) => {
+      if (currentSeed === null && currentArtificialKey === null && key === currentStoryKey) {
+        return;
+      }
+      total += Math.max(0, spaceManager.planetStatuses[key].colonists || 0);
+    });
+
+    Object.keys(spaceManager.randomWorldStatuses).forEach((key) => {
+      if (currentSeed !== null && key === currentSeed) {
+        return;
+      }
+      total += Math.max(0, spaceManager.randomWorldStatuses[key].colonists || 0);
+    });
+
+    Object.keys(spaceManager.artificialWorldStatuses).forEach((key) => {
+      if (currentArtificialKey !== null && key === currentArtificialKey) {
+        return;
+      }
+      total += Math.max(0, spaceManager.artificialWorldStatuses[key].colonists || 0);
+    });
+
+    this.galacticPopulation = total;
+  }
+
+  initializeFaithIfNeeded() {
+    if (this.faithInitialized) {
+      return;
+    }
+    this.recalculateGalacticPopulation();
+    this.galacticBelievers = this.galacticPopulation * 0.1;
+    this.galacticBelieverPercentFallback = 0.1;
+    this.setWorldBelieverPercent(this.getGalacticBelieverPercent());
+    this.lastFaithWorldCap = this.getCurrentWorldBelieverCap();
+    this.faithInitialized = true;
+  }
+
+  onColonistsImported(amount) {
+    if (!this.enabled || amount <= 0) {
+      return;
+    }
+    this.initializeFaithIfNeeded();
+    const currentPopulation = this.getCurrentWorldPopulation();
+    if (currentPopulation <= 0) {
+      return;
+    }
+    const previousPopulation = Math.max(0, currentPopulation - amount);
+    const previousBelievers = this.getWorldBelieverPercent() * previousPopulation;
+    const importedBelievers = amount * this.getGalacticBelieverPercent();
+    const nextRatio = (previousBelievers + importedBelievers) / currentPopulation;
+    this.setWorldBelieverPercent(nextRatio);
+  }
+
+  onTravelDeparture(population = this.getCurrentWorldPopulation()) {
+    if (!this.enabled) {
+      return;
+    }
+    this.initializeFaithIfNeeded();
+    const worldPopulation = Math.max(0, population);
+    if (worldPopulation <= 0) {
+      return;
+    }
+    const worldBelievers = worldPopulation * this.getWorldBelieverPercent();
+    this.galacticPopulation += worldPopulation;
+    this.galacticBelievers += worldBelievers;
+    this.galacticBelievers = Math.min(this.galacticBelievers, this.galacticPopulation);
+    this.galacticBelieverPercentFallback = this.getGalacticBelieverPercent();
+  }
+
+  updateFaith(deltaTime) {
+    if (!this.enabled) {
+      this.lastFaithWorldConversionRate = 0;
+      this.lastFaithGalacticConversionRate = 0;
+      return;
+    }
+    this.initializeFaithIfNeeded();
+    const worldPopulation = this.getCurrentWorldPopulation();
+    if (worldPopulation <= 0 || deltaTime <= 0) {
+      this.lastFaithWorldConversionRate = 0;
+      this.lastFaithGalacticConversionRate = 0;
+      return;
+    }
+
+    const seconds = deltaTime / 1000;
+    const conversionFactor = this.getFaithConversionRatePerSecond();
+    let worldPercent = this.getWorldBelieverPercent();
+    let galacticPercent = this.getGalacticBelieverPercent();
+    const worldCap = Math.min(1, galacticPercent + 0.05);
+    this.lastFaithWorldCap = worldCap;
+
+    this.lastFaithWorldConversionRate = conversionFactor * worldPercent;
+    if (worldPercent < worldCap) {
+      const deltaPercent = this.lastFaithWorldConversionRate * seconds;
+      worldPercent = Math.min(worldCap, worldPercent + deltaPercent);
+      this.setWorldBelieverPercent(worldPercent);
+      this.lastFaithGalacticConversionRate = 0;
+      return;
+    }
+
+    this.lastFaithGalacticConversionRate = 0;
+    if (this.galacticPopulation <= 0 || galacticPercent >= 1) {
+      return;
+    }
+
+    const galacticRate = (this.lastFaithWorldConversionRate / 1000) * this.getMissionaryGalacticConversionMultiplier();
+    this.lastFaithGalacticConversionRate = galacticRate;
+    const galacticDelta = Math.min(1 - galacticPercent, galacticRate * seconds);
+    if (galacticDelta <= 0) {
+      return;
+    }
+
+    galacticPercent += galacticDelta;
+    this.galacticBelievers = galacticPercent * this.galacticPopulation;
+    this.galacticBelieverPercentFallback = galacticPercent;
+
+    const syncedWorldPercent = Math.min(1, this.getWorldBelieverPercent() + galacticDelta);
+    this.setWorldBelieverPercent(syncedWorldPercent);
+  }
+
   getAvailableOrbitals() {
     const worlds = Math.floor(spaceManager.getTerraformedPlanetCount());
-    return worlds > 0 ? worlds : 0;
+    const boosted = Math.floor(worlds * this.getApostlesOrbitalsMultiplier());
+    return boosted > 0 ? boosted : 0;
   }
 
   getAssignmentMode() {
@@ -448,7 +667,11 @@ class FollowersManager extends EffectableEntity {
   }
 
   enable() {
+    const wasEnabled = this.enabled;
     this.enabled = true;
+    if (!wasEnabled) {
+      this.initializeFaithIfNeeded();
+    }
     this.updateUI();
   }
 
@@ -463,6 +686,10 @@ class FollowersManager extends EffectableEntity {
 
   restoreTravelState() {
     this.resetTransientState();
+    if (this.enabled) {
+      this.initializeFaithIfNeeded();
+      this.setWorldBelieverPercent(this.getGalacticBelieverPercent());
+    }
     this.updateUI();
   }
 
@@ -484,6 +711,13 @@ class FollowersManager extends EffectableEntity {
       autoAssignId: this.autoAssignId,
       manualAssignments: { ...this.manualAssignments },
       weights: { ...this.weights },
+      faith: {
+        faithInitialized: this.faithInitialized,
+        worldBelieverRatio: this.worldBelieverRatio,
+        galacticPopulation: this.galacticPopulation,
+        galacticBelievers: this.galacticBelievers,
+        galacticBelieverPercentFallback: this.galacticBelieverPercentFallback
+      },
       booleanFlags: Array.from(this.booleanFlags)
     };
   }
@@ -498,6 +732,7 @@ class FollowersManager extends EffectableEntity {
 
     const savedAssignments = data.manualAssignments || data.assignments || {};
     const savedWeights = data.weights || {};
+    const faith = data.faith || {};
 
     this.manualAssignments = {};
     this.weights = {};
@@ -518,10 +753,23 @@ class FollowersManager extends EffectableEntity {
     }
 
     this.booleanFlags = new Set(Array.isArray(data.booleanFlags) ? data.booleanFlags : []);
+    this.faithInitialized = !!faith.faithInitialized;
+    this.worldBelieverRatio = this.clampPercent(faith.worldBelieverRatio ?? 0.1);
+    this.galacticPopulation = Math.max(0, faith.galacticPopulation || 0);
+    this.galacticBelievers = Math.max(0, faith.galacticBelievers || 0);
+    this.galacticBelieverPercentFallback = this.clampPercent(
+      faith.galacticBelieverPercentFallback ?? 0.1
+    );
+    if (this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
+      this.galacticBelievers = this.galacticPopulation;
+    }
+    if (this.enabled && !this.faithInitialized) {
+      this.initializeFaithIfNeeded();
+    }
     this.reapplyEffects();
   }
 
-  update() {
+  update(deltaTime) {
     if (!this.enabled) {
       return;
     }
@@ -529,5 +777,6 @@ class FollowersManager extends EffectableEntity {
     if (this.assignmentMode === 'weight') {
       this.getAssignmentsSnapshot();
     }
+    this.updateFaith(deltaTime);
   }
 }

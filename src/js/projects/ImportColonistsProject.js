@@ -131,6 +131,9 @@ class ImportColonistsProject extends Project {
       crusaders.increase(amount);
     } else {
       resources.colony.colonists.increase(amount);
+      if (followersManager && followersManager.onColonistsImported) {
+        followersManager.onColonistsImported(amount);
+      }
     }
   }
 

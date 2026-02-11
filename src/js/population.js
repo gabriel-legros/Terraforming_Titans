@@ -28,6 +28,9 @@ class PopulationModule extends EffectableEntity {
         multiplier *= effect.value;
       }
     });
+    if (followersManager && followersManager.enabled) {
+      multiplier *= (1 + followersManager.getPilgrimGrowthBonus());
+    }
     return multiplier;
   }
 
@@ -231,8 +234,12 @@ class PopulationModule extends EffectableEntity {
 
     const availableAndroids = Math.max(0, effectiveAndroids - assignedAndroids);
 
+    const faithZealMultiplier = followersManager && followersManager.enabled
+      ? (1 + followersManager.getZealWorkerEfficiencyBonus())
+      : 1;
+
     const workerCap =
-      Math.floor(ratio * this.populationResource.value) +
+      Math.floor(ratio * this.populationResource.value * faithZealMultiplier) +
       availableAndroids +
       this.getBioworkerContribution();
     this.workerResource.cap = workerCap;
