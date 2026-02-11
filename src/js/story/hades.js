@@ -11,8 +11,8 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    title: 'Chapter 33: Pulsar Arrival',
-    narrative: 'Placeholder: Arrival log for Hades under pulsar radiation.',
+    title: 'Chapter 33: The invisible enemy',
+    narrative: 'Confirmed arrival in the shadow of Hades.  \n Mary : ',
     prerequisites: ['tartarus.32.13'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
