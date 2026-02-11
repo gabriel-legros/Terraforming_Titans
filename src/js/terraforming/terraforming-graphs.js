@@ -857,7 +857,8 @@ class TerraformingGraphsManager {
     const currentTemp = terraforming.temperature.value;
     const currentAmount = resources.atmospheric[definition.atmosphereKey].value;
     const currentPressure = calculateAtmosphericPressure(currentAmount, gravity, radius);
-    const signature = `${definition.id}:${Math.round(currentTemp * 10)}:${Math.round(currentPressure)}`;
+    const displayTempUnit = getTemperatureUnit();
+    const signature = `${definition.id}:${displayTempUnit}:${Math.round(currentTemp * 10)}:${Math.round(currentPressure)}`;
     if (!this.phaseNeedsRedraw && signature === this.phaseSignature) {
       return;
     }
@@ -866,7 +867,7 @@ class TerraformingGraphsManager {
 
     this.ui.phaseTitle.textContent = `Phase Diagram - ${definition.label}`;
     this.ui.phaseNote.textContent =
-      `Current global mean: ${formatNumber(currentTemp, false, 1)} K | Partial pressure: ${formatNumber(currentPressure, false, 2, true)} Pa`;
+      `Current global mean: ${formatNumber(toDisplayTemperature(currentTemp), false, 1)} ${displayTempUnit} | Partial pressure: ${formatNumber(currentPressure, false, 2, true)} Pa`;
 
     const canvas = this.ui.phaseCanvas;
     const rect = canvas.getBoundingClientRect();
@@ -938,8 +939,8 @@ class TerraformingGraphsManager {
       ctx.stroke();
     });
 
-    const tempTicks = buildLinearTicks(minTemp, maxTemp, 5);
-    tempTicks.forEach((tickValue) => {
+    const tempTicksKelvin = buildLinearTicks(minTemp, maxTemp, 5);
+    tempTicksKelvin.forEach((tickValue) => {
       const x = padding.left + ((tickValue - minTemp) / tempSpan) * plotWidth;
       ctx.beginPath();
       ctx.moveTo(x, padding.top + plotHeight);
@@ -971,12 +972,12 @@ class TerraformingGraphsManager {
       const labelValue = Math.pow(10, exp);
       ctx.fillText(formatNumber(labelValue, false, 2, true), 6, y + 4);
     });
-    tempTicks.forEach((tickValue) => {
+    tempTicksKelvin.forEach((tickValue) => {
       const x = padding.left + ((tickValue - minTemp) / tempSpan) * plotWidth;
-      ctx.fillText(formatNumber(tickValue, false, 0), x - 10, padding.top + plotHeight + 20);
+      ctx.fillText(formatNumber(toDisplayTemperature(tickValue), false, 0), x - 10, padding.top + plotHeight + 20);
     });
 
-    ctx.fillText('Temperature (K)', padding.left, padding.top - 12);
+    ctx.fillText(`Temperature (${displayTempUnit})`, padding.left, padding.top - 12);
     const pressureLabelX = Math.max(padding.left, width - padding.right - 130);
     ctx.fillText('Pressure (Pa, log)', pressureLabelX, padding.top - 12);
 

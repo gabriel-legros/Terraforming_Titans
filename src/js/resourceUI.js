@@ -997,13 +997,25 @@ function updateResourceDisplay(resources, deltaSeconds) {
 
       if (showResource) {
         const activityRate = (resourceObj.productionRate || 0) + (resourceObj.consumptionRate || 0);
-        const isSmall = resourceObj.hideWhenSmall && resourceObj.value < 1e-4 && activityRate < 1;
+        const isUndergroundDeposit = category === 'underground';
+        const hideWhenSmall = resourceObj.hideWhenSmall || isUndergroundDeposit;
+        const displayedAvailable = Math.floor(Math.max(0, resourceObj.value - resourceObj.reserved));
+        const displayedTotal = Math.floor(Math.max(0, resourceObj.value));
+        const isZeroDisplayDeposit = isUndergroundDeposit && displayedAvailable <= 0 && displayedTotal <= 0;
+        const isSmall =
+          hideWhenSmall &&
+          (isZeroDisplayDeposit || (resourceObj.value < 1e-4 && activityRate < 1));
         if (isSmall) {
-          if (timer > 0) {
-            timer = Math.max(0, timer - frameDelta);
+          if (isZeroDisplayDeposit) {
+            timer = 0;
+            showResource = false;
+          } else {
+            if (timer > 0) {
+              timer = Math.max(0, timer - frameDelta);
+            }
+            showResource = timer > 0;
           }
-          showResource = timer > 0;
-        } else if (resourceObj.hideWhenSmall) {
+        } else if (hideWhenSmall) {
           timer = 1;
         } else {
           timer = 0;
