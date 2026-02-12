@@ -77,33 +77,6 @@ function resolveSectorFromSources(...sources) {
     return SPACE_DEFAULT_SECTOR_LABEL;
 }
 
-function hasSuperEarthArchetype(...sources) {
-    for (let index = 0; index < sources.length; index += 1) {
-        const source = sources[index];
-        if (!source) {
-            continue;
-        }
-        const candidates = [
-            source.cachedArchetype,
-            source.classification?.archetype,
-            source.override?.classification?.archetype,
-            source.merged?.classification?.archetype,
-            source.original?.classification?.archetype,
-            source.archetype
-        ];
-        for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
-            const candidate = candidates[candidateIndex];
-            if (!candidate) {
-                continue;
-            }
-            if (String(candidate).trim().toLowerCase() === 'super-earth') {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 function getLandFromParams(source) {
     return source?.resources?.surface?.land?.initialValue
         || source?.resources?.surface?.land?.baseCap
@@ -308,9 +281,6 @@ class SpaceManager extends EffectableEntity {
             if (status.orbitalRing) {
                 total += 1;
             }
-            if (hasSuperEarthArchetype(override, planetData)) {
-                total += 2;
-            }
         });
 
         Object.values(this.randomWorldStatuses).forEach((status) => {
@@ -326,9 +296,6 @@ class SpaceManager extends EffectableEntity {
             if (status.orbitalRing) {
                 total += 1;
             }
-            if (hasSuperEarthArchetype(status, original)) {
-                total += 2;
-            }
         });
 
         Object.values(this.artificialWorldStatuses).forEach((status) => {
@@ -342,9 +309,6 @@ class SpaceManager extends EffectableEntity {
             const value = this._deriveArtificialTerraformValue(status);
             if (value > 0) {
                 total += value;
-            }
-            if (hasSuperEarthArchetype(status, status.original)) {
-                total += 2;
             }
         });
 
@@ -729,12 +693,9 @@ class SpaceManager extends EffectableEntity {
     getTerraformedPlanetCountExcludingCurrent() {
         let count = this.getTerraformedPlanetCount();
         if (this.currentWorldHasOrbitalRing()) count--;
-        const isCurrentSuperEarth = this.currentRandomSeed !== null &&
-            this.randomWorldStatuses[String(this.currentRandomSeed)]?.original?.override?.classification?.archetype === 'super-earth';
         if (this.currentRandomSeed !== null) {
             if (this.isSeedTerraformed(String(this.currentRandomSeed))) {
                 count--;
-                if (isCurrentSuperEarth) count--;
             }
             return Math.max(count, 0);
         }
@@ -746,7 +707,6 @@ class SpaceManager extends EffectableEntity {
         }
         if (this.isPlanetTerraformed(this.currentPlanetKey)) {
             count--;
-            if (isCurrentSuperEarth) count--;
         }
         return Math.max(count, 0);
     }
