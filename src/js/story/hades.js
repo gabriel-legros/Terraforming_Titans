@@ -51,7 +51,10 @@ progressHades.chapters.push(
     narrative: "Detecting orbital habitats coming from warpgate.  \n Mary : 'This mission is bigger than you and I, HOPE.  Sending you alone with a bit of military cover would be foolish at this point.  Each and every world is contributing.  We are taking down those superweapons together.'  \n $RED$Prometheus : 'As we've explained already, you cannot realistically support ground colonies on Hades.  Your priority should be to establish underground colonies.'",
     prerequisites: ['hades.33.0'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
+      {
+        type: 'research',
+        researchId: 'underground_land_expansion'
+      }
     ],
     reward: []
   },

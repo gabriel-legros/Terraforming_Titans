@@ -408,6 +408,23 @@ class StoryManager {
                      return proj ? proj.repeatCount >= objective.repeatCount : false;
                 }
                 return false;
+          case 'research': {
+               if (typeof researchManager === 'undefined') {
+                   return false;
+               }
+               const research = researchManager.getResearchById(objective.researchId);
+               if (!research) {
+                   return false;
+               }
+               const target = objective.repeatCount || objective.timesResearched || 1;
+               if (target <= 1) {
+                   return !!research.isResearched;
+               }
+               const current = typeof researchManager.getRepeatCount === 'function'
+                   ? researchManager.getRepeatCount(research)
+                   : Math.max(research.timesResearched || 0, research.isResearched ? 1 : 0);
+               return compareValues(current, target, objective.comparison);
+          }
           case 'solisPoints':
                if (typeof solisManager !== 'undefined') {
                    return solisManager.solisPoints >= (objective.points || 0);
@@ -545,6 +562,23 @@ class StoryManager {
                 }
                 return '';
             }
+          case 'research': {
+               if (typeof researchManager === 'undefined') {
+                   return '';
+               }
+               const research = researchManager.getResearchById(objective.researchId);
+               const name = objective.name || research?.name || objective.researchId;
+               const target = objective.repeatCount || objective.timesResearched || 1;
+               if (target <= 1) {
+                   return `Research ${name}`;
+               }
+               const current = research
+                    ? (typeof researchManager.getRepeatCount === 'function'
+                        ? researchManager.getRepeatCount(research)
+                        : Math.max(research.timesResearched || 0, research.isResearched ? 1 : 0))
+                    : 0;
+               return `${name}: ${format(current, true)}/${format(target, true)}`;
+          }
           case 'currentPlanet': {
                 let name = objective.planetId || '';
                 if (typeof planetParameters !== 'undefined' && planetParameters[name] && planetParameters[name].name) {
