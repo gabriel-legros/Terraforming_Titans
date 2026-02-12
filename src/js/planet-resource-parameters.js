@@ -216,6 +216,7 @@
         unlocked: false,
         unit: 'ton',
         hideWhenSmall: true,
+        reverseColor: true,
         zonalConfig: {
           keys: ['hazardousBiomass'],
           coverageKeys: ['hazardousBiomass'],
