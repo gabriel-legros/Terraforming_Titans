@@ -337,7 +337,7 @@ progressHades.chapters.push(
     }
     ],
     reward: []
-  },
+  }
 );
 
 try {
