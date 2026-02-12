@@ -16,7 +16,7 @@
     {
       id: 'lifeDesignerUnlock',
       label: 'Unlock Life Designer',
-      cost: 100,
+      cost: 10,
       maxPurchases: 1,
       description: 'Permanently completes the Life Designing and Production Research.',
     },

@@ -149,7 +149,7 @@ class SpaceMirrorAdvancedOversight {
       // Determine reversal based on baseline (no mirrors/lanterns, no reversal):
       // Evaluate temperatures with 0 assignments and all reversal off, then
       // set reversal on zones where baseline temp is above the target, off otherwise.
-      (function alignReversalFromBaseline() {
+      const alignReversalFromBaseline = () => {
         // Save current state
         const savedAssignM = { ...assignM };
         const savedAssignL = { ...assignL };
@@ -186,7 +186,34 @@ class SpaceMirrorAdvancedOversight {
         // Ensure 'any' remains off in advanced mode
         reverse.any = false;
         updateTemps();
-      })();
+      };
+
+      const alignReversalForUnassignedZones = () => {
+        const savedReverse = { ...reverse };
+        updateTemps();
+        const currentTemps = readTemps();
+
+        if (REVERSAL_AVAILABLE) {
+          for (const z of ZONES) {
+            if ((assignM[z] || 0) > 0) {
+              // Keep locked mode for zones that already have mirrors assigned.
+              reverse[z] = !!savedReverse[z];
+              continue;
+            }
+            const tgt = targets[z] || 0;
+            if (tgt > 0 && isFinite(currentTemps[z])) {
+              reverse[z] = currentTemps[z] > tgt;
+            } else {
+              reverse[z] = !!savedReverse[z];
+            }
+          }
+        } else {
+          reverse.tropical = reverse.temperate = reverse.polar = false;
+        }
+
+        reverse.any = false;
+        updateTemps();
+      };
 
       const clearLanternsInReverseZones = () => {
         let changed = false;
@@ -199,8 +226,6 @@ class SpaceMirrorAdvancedOversight {
         }
         if (changed) updateTemps();
       };
-
-      clearLanternsInReverseZones();
 
       const trimReverseFloorOvershoot = () => {
         for (const zone of ZONES) {
@@ -236,8 +261,6 @@ class SpaceMirrorAdvancedOversight {
           assignM[zone] = low;
         }
       };
-
-      trimReverseFloorOvershoot();
 
       // ---------------- Objective ----------------
       const computeFocusMeltRate = () => {
@@ -644,6 +667,12 @@ class SpaceMirrorAdvancedOversight {
           (FOCUS_FLAG && (targets.water) > 0 && (prio.focus||5) <= pass);
         if (!hasActive) continue;
 
+        // Re-evaluate only zones with zero mirror assignments on every pass.
+        // Zones already carrying mirror assignments keep their current reverse mode.
+        alignReversalForUnassignedZones();
+        clearLanternsInReverseZones();
+        trimReverseFloorOvershoot();
+
         let actions = 0;
 
         while (actions < MAX_ACTIONS_PER_PASS) {
@@ -685,8 +714,6 @@ class SpaceMirrorAdvancedOversight {
           actions++;
           updateTemps();
         }
-
-        // Do not flip reversal every pass; it is fixed by baseline evaluation above.
       }
 
       // Final clamping (defensive)
