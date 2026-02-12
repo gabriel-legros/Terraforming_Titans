@@ -52,7 +52,7 @@ const getImportCapEntries = (baseCap, summary, fallbackDetail) => (
     return {
       key,
       label,
-      ratio: `x${ratio}`,
+      ratio: `x${formatNumber(ratio, false, 2)}`,
       cap: formatNumber(cap, true),
       detail,
     };
