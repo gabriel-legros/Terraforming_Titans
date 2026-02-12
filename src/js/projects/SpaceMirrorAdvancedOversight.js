@@ -192,6 +192,7 @@ class SpaceMirrorAdvancedOversight {
         const savedReverse = { ...reverse };
         updateTemps();
         const currentTemps = readTemps();
+        let lanternsCleared = false;
 
         if (REVERSAL_AVAILABLE) {
           for (const z of ZONES) {
@@ -206,13 +207,19 @@ class SpaceMirrorAdvancedOversight {
             } else {
               reverse[z] = !!savedReverse[z];
             }
+            if (reverse[z] && (assignL[z] || 0) > 0) {
+              assignL[z] = 0;
+              lanternsCleared = true;
+            }
           }
         } else {
           reverse.tropical = reverse.temperate = reverse.polar = false;
         }
 
         reverse.any = false;
-        updateTemps();
+        if (lanternsCleared) {
+          updateTemps();
+        }
       };
 
       const clearLanternsInReverseZones = () => {
