@@ -163,6 +163,7 @@ const projectParameters = {
     unlocked: false,
     kesslerDebrisSize: 'large',
     attributes: {
+      disableWhenHazard: ['pulsar'],
       spaceMirrorFacility: true,
       completionEffect: [
         {
@@ -373,7 +374,7 @@ const projectParameters = {
     repeatable: false,
     unlocked : false,
     attributes : {
-      disableWhenKessler: true,
+      disableWhenHazard: ['kessler', 'pulsar'],
       landCostScaling: true,
       completionEffect: [
         {
@@ -510,7 +511,7 @@ const projectParameters = {
     repeatable: false,
     unlocked: false,
     attributes: {
-      disableWhenKessler: true
+      disableWhenHazard: ['kessler']
     }
   },
   dysonSwarmReceiver : {
@@ -640,7 +641,7 @@ const projectParameters = {
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
-      disableWhenKessler: true,
+      disableWhenHazard: ['kessler', 'pulsar'],
       canUseSpaceStorage: true,
       megaHeatSink: true,
       workersPerCompletion: 1_000_000_000,

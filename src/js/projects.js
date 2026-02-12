@@ -207,11 +207,54 @@ class Project extends EffectableEntity {
     return false;
   }
 
-  isKesslerDisabled() {
-    if (!this.attributes.disableWhenKessler) {
-      return false;
+  getDisableHazards() {
+    if (this.attributes.disableWhenHazard) {
+      return this.attributes.disableWhenHazard;
     }
-    return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+    if (this.attributes.disableWhenKessler) {
+      return ['kessler'];
+    }
+    return [];
+  }
+
+  isHazardActiveForDisable(hazardKey) {
+    if (hazardKey === 'kessler') {
+      return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+    }
+    if (hazardKey === 'pulsar') {
+      return !!hazardManager.parameters.pulsar;
+    }
+    return false;
+  }
+
+  getActiveDisableHazard() {
+    const disableHazards = this.getDisableHazards();
+    for (let i = 0; i < disableHazards.length; i += 1) {
+      const hazardKey = disableHazards[i];
+      if (this.isHazardActiveForDisable(hazardKey)) {
+        return hazardKey;
+      }
+    }
+    return null;
+  }
+
+  isHazardDisabled() {
+    return this.getActiveDisableHazard() !== null;
+  }
+
+  getHazardDisableLabel() {
+    const hazardKey = this.getActiveDisableHazard();
+    if (hazardKey === 'kessler') {
+      return 'Kessler';
+    }
+    if (hazardKey === 'pulsar') {
+      return 'Pulsar';
+    }
+    return '';
+  }
+
+  isKesslerDisabled() {
+    return this.getActiveDisableHazard() === 'kessler';
   }
 
   // Calculates the effective cost for building, factoring in all active cost multipliers
@@ -383,7 +426,7 @@ class Project extends EffectableEntity {
       return this.hasSustainResources();
     }
 
-    if (this.isKesslerDisabled()) {
+    if (this.isHazardDisabled()) {
       return false;
     }
 

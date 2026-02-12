@@ -1352,8 +1352,9 @@ function updateProjectUI(projectName) {
             elements.progressButton.textContent = specializationLockedText;
           }
           elements.progressButton.style.background = '#f44336';
-        } else if (!project.isActive && !project.isCompleted && project.isKesslerDisabled()) {
-          const statusText = 'Disabled by Kessler';
+        } else if (!project.isActive && !project.isCompleted && project.isHazardDisabled()) {
+          const hazardLabel = project.getHazardDisableLabel();
+          const statusText = hazardLabel ? `Disabled by ${hazardLabel}` : 'Disabled by Hazard';
           if (isImportProject && importUI) {
             importUI.setProgressLabel(elements, project, statusText);
           } else {

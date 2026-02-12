@@ -34,7 +34,7 @@ class OrbitalRingProject extends TerraformingDurationProject {
     if (this.isPaused) {
       return this.hasSustainResources();
     }
-    if (this.isKesslerDisabled()) {
+    if (this.isHazardDisabled()) {
       return false;
     }
     if (
