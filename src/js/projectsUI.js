@@ -299,7 +299,9 @@ function initializeProjectsUI() {
     }
   });
   projectElements = {};
-  resetProjectGroupState();
+  if (!globalGameIsTraveling) {
+    resetProjectGroupState();
+  }
   if (importResourcesController) {
     importResourcesController.reset();
   }
