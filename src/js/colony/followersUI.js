@@ -19,6 +19,13 @@ const followersUICache = {
   faithZealBonus: null,
   faithApostlesBonus: null,
   faithMissionariesBonus: null,
+  holyWorldStatus: null,
+  holyWorldRequirements: {},
+  holyWorldCostRows: {},
+  holyWorldConsecrateButton: null,
+  holyWorldConsecratePoints: null,
+  holyWorldShopRows: {},
+  holyWorldRespecButton: null,
   rowsById: {},
 };
 
@@ -358,11 +365,141 @@ function buildFollowersUI() {
 
   faith.body.appendChild(faithBonuses);
 
-  const holyWorld = createFollowersCard('Holy World', 'followers-feature-card');
-  const holyWorldPlaceholder = document.createElement('div');
-  holyWorldPlaceholder.classList.add('followers-placeholder-text');
-  holyWorldPlaceholder.textContent = 'Holy World systems will be added in a future update.';
-  holyWorld.body.appendChild(holyWorldPlaceholder);
+  const holyWorldTooltipText = [
+    'Consecrate this world into a Holy World once requirements and scaled costs are met.',
+    'Consecrated worlds block other world specializations on that world.',
+    'Each departure from a consecrated world grants 1 Holy Point.',
+    'Spend Holy Points on persistent upgrades. Use Respec to refund spent Holy Points.'
+  ].join('\n');
+  const holyWorld = createFollowersCard('Holy World', 'followers-feature-card', holyWorldTooltipText);
+  holyWorld.body.classList.add('followers-holy-world-body');
+
+  const holyStatus = document.createElement('div');
+  holyStatus.classList.add('followers-holy-status');
+  holyStatus.textContent = 'Not consecrated';
+  holyWorld.body.appendChild(holyStatus);
+
+  const holyRequirements = document.createElement('div');
+  holyRequirements.classList.add('followers-holy-requirements');
+
+  const requirementRows = {};
+  const requirementKeys = [
+    'noOtherSpecialization',
+    'ecumenopolisCoverage',
+    'occupancy'
+  ];
+  for (let i = 0; i < requirementKeys.length; i += 1) {
+    const id = requirementKeys[i];
+    const row = document.createElement('div');
+    row.classList.add('followers-holy-requirement');
+    row.textContent = '';
+    holyRequirements.appendChild(row);
+    requirementRows[id] = row;
+  }
+  holyWorld.body.appendChild(holyRequirements);
+
+  const costContainer = document.createElement('div');
+  costContainer.classList.add('followers-holy-costs');
+  const costHeader = document.createElement('div');
+  costHeader.classList.add('followers-holy-cost-header');
+  const costHeaderLabel = document.createElement('span');
+  costHeaderLabel.textContent = 'Consecration Cost';
+  const costHeaderInfo = document.createElement('span');
+  costHeaderInfo.classList.add('info-tooltip-icon');
+  costHeaderInfo.innerHTML = '&#9432;';
+  attachDynamicInfoTooltip(costHeaderInfo, 'Consecration costs double after each successful consecration.');
+  costHeader.append(costHeaderLabel, costHeaderInfo);
+  costContainer.appendChild(costHeader);
+
+  const costRows = {};
+  const costOrder = ['metal', 'glass', 'superalloys', 'components', 'electronics'];
+  for (let i = 0; i < costOrder.length; i += 1) {
+    const key = costOrder[i];
+    const row = document.createElement('div');
+    row.classList.add('followers-holy-cost-row');
+
+    const label = document.createElement('span');
+    label.classList.add('followers-holy-cost-label');
+    label.textContent = key === 'superalloys' ? 'Superalloys' : key.charAt(0).toUpperCase() + key.slice(1);
+
+    const value = document.createElement('span');
+    value.classList.add('followers-holy-cost-value');
+    value.textContent = '0';
+
+    row.append(label, value);
+    costContainer.appendChild(row);
+    costRows[key] = { row, value };
+  }
+  holyWorld.body.appendChild(costContainer);
+
+  const holyActions = document.createElement('div');
+  holyActions.classList.add('followers-holy-actions');
+
+  const consecrateButton = document.createElement('button');
+  consecrateButton.type = 'button';
+  consecrateButton.classList.add('followers-action-button', 'followers-holy-consecrate');
+  consecrateButton.textContent = 'Consecrate';
+  consecrateButton.addEventListener('click', () => {
+    followersManager.consecrateHolyWorld();
+  });
+  const consecratePoints = document.createElement('div');
+  consecratePoints.classList.add('followers-holy-consecrate-points');
+  consecratePoints.textContent = 'Holy Points: 0';
+  holyActions.append(consecrateButton, consecratePoints);
+  holyWorld.body.appendChild(holyActions);
+
+  const holyShop = document.createElement('div');
+  holyShop.classList.add('followers-holy-shop');
+  const holyShopHeader = document.createElement('div');
+  holyShopHeader.classList.add('followers-holy-shop-header');
+  const holyShopTitle = document.createElement('span');
+  holyShopTitle.textContent = 'Holy Shop';
+  const respecButton = document.createElement('button');
+  respecButton.type = 'button';
+  respecButton.classList.add('followers-action-button', 'followers-holy-respec-button');
+  respecButton.textContent = 'Respec';
+  respecButton.addEventListener('click', () => {
+    followersManager.respecHolyWorldShop();
+  });
+  holyShopHeader.append(holyShopTitle, respecButton);
+  holyShop.appendChild(holyShopHeader);
+
+  const holyShopRows = {};
+  const shopItems = followersManager.getHolyWorldShopItems();
+  for (let i = 0; i < shopItems.length; i += 1) {
+    const item = shopItems[i];
+    const row = document.createElement('div');
+    row.classList.add('followers-holy-shop-row');
+
+    const labelRow = document.createElement('div');
+    labelRow.classList.add('followers-holy-shop-label');
+    const label = document.createElement('span');
+    label.textContent = item.label;
+    const icon = document.createElement('span');
+    icon.classList.add('info-tooltip-icon');
+    icon.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(icon, item.description);
+    labelRow.append(label, icon);
+
+    const count = document.createElement('span');
+    count.classList.add('followers-holy-shop-count');
+    count.textContent = '0/0';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.classList.add('followers-action-button', 'followers-holy-shop-button');
+    button.textContent = 'Buy';
+    button.addEventListener('click', (event) => {
+      const purchaseCount = event.shiftKey ? item.maxPurchases : 1;
+      followersManager.purchaseHolyWorldUpgrade(item.id, purchaseCount);
+    });
+
+    row.append(labelRow, count, button);
+    holyShop.appendChild(row);
+    holyShopRows[item.id] = { count, button, item };
+  }
+
+  holyWorld.body.appendChild(holyShop);
 
   bottomRow.append(faith.card, holyWorld.card);
 
@@ -401,6 +538,13 @@ function buildFollowersUI() {
   followersUICache.faithZealBonus = zealBonus;
   followersUICache.faithApostlesBonus = apostlesBonus;
   followersUICache.faithMissionariesBonus = missionariesBonus;
+  followersUICache.holyWorldStatus = holyStatus;
+  followersUICache.holyWorldRequirements = requirementRows;
+  followersUICache.holyWorldCostRows = costRows;
+  followersUICache.holyWorldConsecrateButton = consecrateButton;
+  followersUICache.holyWorldConsecratePoints = consecratePoints;
+  followersUICache.holyWorldShopRows = holyShopRows;
+  followersUICache.holyWorldRespecButton = respecButton;
 }
 
 function initializeFollowersUI() {
@@ -499,4 +643,51 @@ function updateFollowersUI() {
   followersUICache.faithZealBonus.textContent = `+${formatNumber(faith.bonuses.zeal * 100, false, 2)}%`;
   followersUICache.faithApostlesBonus.textContent = `+${formatNumber(faith.bonuses.apostles * 100, false, 2)}%`;
   followersUICache.faithMissionariesBonus.textContent = `+${formatNumber(faith.bonuses.missionaries * 100, false, 2)}%`;
+
+  const holyRequirements = followersManager.getHolyWorldRequirements();
+  for (let i = 0; i < holyRequirements.length; i += 1) {
+    const requirement = holyRequirements[i];
+    const row = followersUICache.holyWorldRequirements[requirement.id];
+    if (!row) {
+      continue;
+    }
+    row.textContent = requirement.label;
+    row.classList.toggle('is-unmet', !requirement.met);
+  }
+
+  const holyCost = followersManager.getHolyWorldCost();
+  const holyCostEntries = holyCost.colony;
+  for (const key in followersUICache.holyWorldCostRows) {
+    const row = followersUICache.holyWorldCostRows[key];
+    const required = holyCostEntries[key] || 0;
+    const available = resources.colony[key].value;
+    row.value.textContent = `${formatNumber(required, true)} (have ${formatNumber(available, true)})`;
+    row.row.classList.toggle('is-unmet', available < required);
+  }
+
+  const consecrated = followersManager.isCurrentWorldHolyConsecrated();
+  followersUICache.holyWorldStatus.textContent = consecrated ? 'Consecrated' : 'Not consecrated';
+  followersUICache.holyWorldStatus.classList.toggle('is-consecrated', consecrated);
+  followersUICache.holyWorldConsecrateButton.disabled = !followersManager.canConsecrateHolyWorld();
+  followersUICache.holyWorldConsecrateButton.textContent = consecrated ? 'Consecrated' : 'Consecrate';
+  followersUICache.holyWorldConsecratePoints.textContent = `Holy Points: ${formatNumber(followersManager.getHolyWorldPointBalance(), true)}`;
+
+  const holyShopRows = followersUICache.holyWorldShopRows;
+  for (const id in holyShopRows) {
+    const shopRow = holyShopRows[id];
+    const purchases = followersManager.getHolyWorldShopPurchaseCount(id);
+    const canBuy = followersManager.canPurchaseHolyWorldUpgrade(shopRow.item);
+    shopRow.count.textContent = `${purchases}/${shopRow.item.maxPurchases}`;
+    shopRow.button.disabled = !canBuy;
+    shopRow.button.textContent = purchases >= shopRow.item.maxPurchases ? 'Maxed' : 'Buy';
+  }
+  const shopItems = followersManager.getHolyWorldShopItems();
+  let hasPurchases = false;
+  for (let i = 0; i < shopItems.length; i += 1) {
+    if (followersManager.getHolyWorldShopPurchaseCount(shopItems[i].id) > 0) {
+      hasPurchases = true;
+      break;
+    }
+  }
+  followersUICache.holyWorldRespecButton.disabled = !hasPurchases;
 }

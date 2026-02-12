@@ -165,10 +165,12 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - String numeric input handling standardized across major controls.
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
-- Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes), a live `Faith` panel, and a placeholder `Holy World` section.
+- Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes), a live `Faith` panel, and the Holy World consecration/shop systems.
 - Followers Orbitals also grant storage cap on assigned target resources: per assigned orbital cap bonus is `max(100, per-orbital production × 10)`, and this cap bonus is applied during storage-cap recalculation before orbital production runs.
 - Faith tracks separate world and galactic believers: enabling seeds galactic believers to 10%, colonist imports blend world faith with galactic faith share, world conversion is exponential with a world cap of `galactic + 5%`, and at cap world+galactic faith increase together at 1/1000 speed (Missionaries only boosts this post-cap galactic conversion).
 - Faith bonuses scale from world believer share: Pilgrim boosts population growth, Zeal boosts colonist worker efficiency, Apostles boosts available orbitals above 10% world faith (up to +900%), and Missionaries boosts only galactic post-cap conversion power.
+- Holy World is now fully implemented in Followers: consecration requires no other active/completed world specialization, at least 80% initial land in Ecumenopolis districts, and at least 90% colonist occupancy; costs are per-initial-land and scale `2x` per consecration completion, consecration blocks starting Foundry/Bioworld on that world, and consecrated world departures grant 1 Holy Point.
+- Holy Shop purchases persist through travel and support Respec; upgrades include +5s Festival/Golden Asteroid durations (max 18), +1 max patience (max 12), and +10% faith conversion power (max 90%).
 
 ### Story, Planets, and Progression
 - Story effects support `onTravel: false`.

@@ -94,6 +94,7 @@
 
     getSpecializationRequirements() {
       const otherSpecialization = projectManager.projects.bioworld;
+      const holyWorldBlocked = followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated();
       return [
         {
           id: 'terraformed',
@@ -110,11 +111,26 @@
           label: 'No other specialization started or completed',
           met: !otherSpecialization.isActive && !otherSpecialization.isCompleted,
         },
+        {
+          id: 'holyWorld',
+          label: 'World is not consecrated as a Holy World',
+          met: !holyWorldBlocked,
+        },
       ];
+    }
+
+    getSpecializationLockedText() {
+      if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
+        return 'Blocked by Holy World';
+      }
+      return super.getSpecializationLockedText();
     }
 
     canStart() {
       if (!super.canStart()) {
+        return false;
+      }
+      if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
         return false;
       }
       if (!spaceManager.isCurrentWorldTerraformed()) {

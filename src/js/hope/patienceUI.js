@@ -401,7 +401,10 @@ const PatienceUI = {
         }
         
         if (this.maxValueEl) {
-            this.maxValueEl.textContent = patienceManager.maxHours;
+            const effectiveMaxHours = patienceManager.getEffectiveMaxHours
+                ? patienceManager.getEffectiveMaxHours()
+                : patienceManager.maxHours;
+            this.maxValueEl.textContent = effectiveMaxHours;
         }
 
         if (this.timerValueEl) {
@@ -458,7 +461,7 @@ const PatienceUI = {
         }
 
         if (this.meterFillEl) {
-            const maxHours = patienceManager.maxHours || 1;
+            const maxHours = (patienceManager.getEffectiveMaxHours ? patienceManager.getEffectiveMaxHours() : patienceManager.maxHours) || 1;
             const ratio = Math.min(1, Math.max(0, patienceManager.currentHours / maxHours));
             this.meterFillEl.style.width = `${ratio * 100}%`;
         }

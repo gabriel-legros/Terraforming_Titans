@@ -326,6 +326,166 @@
   line-height: 1.35;
 }
 
+#followers-layout .followers-holy-world-body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+#followers-layout .followers-holy-status {
+  border: 1px solid #c8d8ef;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f8fbff 0%, #eaf2ff 100%);
+  color: #2d4c79;
+  font-weight: 700;
+  padding: 6px 8px;
+}
+
+#followers-layout .followers-holy-status.is-consecrated {
+  border-color: #5ca16f;
+  background: linear-gradient(180deg, #f3fff6 0%, #e1f7e6 100%);
+  color: #23623a;
+}
+
+#followers-layout .followers-holy-requirements {
+  border: 1px solid #c8d8ef;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f9fcff 0%, #ecf3ff 100%);
+  padding: 6px 8px;
+  display: grid;
+  gap: 4px;
+}
+
+#followers-layout .followers-holy-requirement {
+  font-size: 0.8rem;
+  color: #2b4876;
+}
+
+#followers-layout .followers-holy-requirement.is-unmet {
+  color: #b42323;
+  font-weight: 700;
+}
+
+#followers-layout .followers-holy-costs {
+  border: 1px solid #c8d8ef;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f7fbff 0%, #eaf2ff 100%);
+  padding: 6px 8px;
+  display: grid;
+  gap: 4px;
+}
+
+#followers-layout .followers-holy-cost-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #2b4876;
+  font-weight: 700;
+  font-size: 0.79rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#followers-layout .followers-holy-cost-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.79rem;
+  color: #2b4876;
+}
+
+#followers-layout .followers-holy-cost-row.is-unmet {
+  color: #b42323;
+  font-weight: 700;
+}
+
+#followers-layout .followers-holy-cost-label {
+  text-transform: capitalize;
+}
+
+#followers-layout .followers-holy-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#followers-layout .followers-holy-consecrate {
+  min-width: 110px;
+}
+
+#followers-layout .followers-holy-consecrate-points {
+  font-size: 0.82rem;
+  color: #2c4a77;
+  font-weight: 700;
+}
+
+#followers-layout .followers-holy-meta {
+  border: 1px solid #c8d8ef;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f9fcff 0%, #edf3ff 100%);
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#followers-layout .followers-holy-meta-row {
+  font-size: 0.8rem;
+  color: #2c4a77;
+}
+
+#followers-layout .followers-holy-shop {
+  border: 1px solid #c8d8ef;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f8fbff 0%, #eaf2ff 100%);
+  padding: 7px 8px;
+  display: grid;
+  gap: 6px;
+}
+
+#followers-layout .followers-holy-shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #2b4876;
+  font-weight: 700;
+  font-size: 0.79rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#followers-layout .followers-holy-shop-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+#followers-layout .followers-holy-shop-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #2b4876;
+  font-size: 0.8rem;
+}
+
+#followers-layout .followers-holy-shop-count {
+  font-size: 0.78rem;
+  color: #1e3d6a;
+  font-weight: 700;
+}
+
+#followers-layout .followers-holy-shop-button {
+  min-width: 58px;
+}
+
+#followers-layout .followers-holy-respec-button {
+  min-width: 70px;
+}
+
 #followers-layout .followers-orbital-card:nth-child(5n + 2) {
   border-left-color: #2f8f83;
 }
@@ -477,4 +637,43 @@
   border-color: #425671;
   background: linear-gradient(180deg, #1b2535 0%, #16202e 100%);
   color: #b3c4df;
+}
+
+.dark-mode #followers-layout .followers-holy-status {
+  border-color: #455a79;
+  background: linear-gradient(180deg, #1d2a3d 0%, #182335 100%);
+  color: #d1dff6;
+}
+
+.dark-mode #followers-layout .followers-holy-consecrate-points {
+  color: #c3d5f0;
+}
+
+.dark-mode #followers-layout .followers-holy-status.is-consecrated {
+  border-color: #4b8b5d;
+  background: linear-gradient(180deg, #172b1d 0%, #132417 100%);
+  color: #b6e6c2;
+}
+
+.dark-mode #followers-layout .followers-holy-requirements,
+.dark-mode #followers-layout .followers-holy-costs,
+.dark-mode #followers-layout .followers-holy-meta,
+.dark-mode #followers-layout .followers-holy-shop {
+  border-color: #425876;
+  background: linear-gradient(180deg, #1d2a3d 0%, #172233 100%);
+}
+
+.dark-mode #followers-layout .followers-holy-requirement,
+.dark-mode #followers-layout .followers-holy-cost-row,
+.dark-mode #followers-layout .followers-holy-meta-row,
+.dark-mode #followers-layout .followers-holy-shop-label,
+.dark-mode #followers-layout .followers-holy-shop-count,
+.dark-mode #followers-layout .followers-holy-cost-header,
+.dark-mode #followers-layout .followers-holy-shop-header {
+  color: #c3d5f0;
+}
+
+.dark-mode #followers-layout .followers-holy-requirement.is-unmet,
+.dark-mode #followers-layout .followers-holy-cost-row.is-unmet {
+  color: #ff8f8f;
 }

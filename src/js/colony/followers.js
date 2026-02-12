@@ -17,7 +17,268 @@ class FollowersManager extends EffectableEntity {
     this.lastFaithWorldConversionRate = 0;
     this.lastFaithGalacticConversionRate = 0;
     this.lastFaithWorldCap = 0.15;
+    this.holyWorldPoints = 0;
+    this.holyWorldCompletions = 0;
+    this.holyWorldConsecratedWorlds = {};
+    this.holyWorldShopPurchases = this.createEmptyHolyWorldShopPurchases();
     this.ensureTrackedOrbitals();
+  }
+
+  createEmptyHolyWorldShopPurchases() {
+    return {
+      festivalGoldenDuration: 0,
+      patienceMax: 0,
+      conversionPower: 0
+    };
+  }
+
+  getHolyWorldShopItems() {
+    return [
+      {
+        id: 'festivalGoldenDuration',
+        label: 'Festival and Gold Duration +5s',
+        description: 'Increases Festival and Golden Asteroid multiplier durations by 5 seconds each.',
+        maxPurchases: 18,
+        cost: 1
+      },
+      {
+        id: 'patienceMax',
+        label: 'Maximum Patience +1',
+        description: 'Increases maximum patience by 1.',
+        maxPurchases: 12,
+        cost: 1
+      },
+      {
+        id: 'conversionPower',
+        label: 'Conversion Power +10%',
+        description: 'Increases Faith conversion power by 10%.',
+        maxPurchases: 9,
+        cost: 1
+      }
+    ];
+  }
+
+  getHolyWorldShopItemMap() {
+    const map = {};
+    const items = this.getHolyWorldShopItems();
+    for (let i = 0; i < items.length; i += 1) {
+      map[items[i].id] = items[i];
+    }
+    return map;
+  }
+
+  getCurrentWorldHolyKey() {
+    if (spaceManager.currentRandomSeed !== null) {
+      return `seed:${spaceManager.currentRandomSeed}`;
+    }
+    if (spaceManager.currentArtificialKey !== null) {
+      return `artificial:${spaceManager.currentArtificialKey}`;
+    }
+    return `planet:${spaceManager.currentPlanetKey}`;
+  }
+
+  isCurrentWorldHolyConsecrated() {
+    return !!this.holyWorldConsecratedWorlds[this.getCurrentWorldHolyKey()];
+  }
+
+  getHolyWorldCostScale() {
+    return 2 ** Math.max(0, this.holyWorldCompletions);
+  }
+
+  getHolyWorldCost() {
+    const scale = this.getHolyWorldCostScale();
+    return {
+      colony: {
+        metal: 1e12 * scale,
+        glass: 1e12 * scale,
+        superalloys: 1e11 * scale,
+        components: 1e10 * scale,
+        electronics: 1e10 * scale
+      }
+    };
+  }
+
+  canAffordHolyWorldCost() {
+    const cost = this.getHolyWorldCost();
+    for (const category in cost) {
+      for (const resourceName in cost[category]) {
+        if (resources[category][resourceName].value < cost[category][resourceName]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  deductHolyWorldCost() {
+    const cost = this.getHolyWorldCost();
+    for (const category in cost) {
+      for (const resourceName in cost[category]) {
+        resources[category][resourceName].decrease(cost[category][resourceName]);
+      }
+    }
+  }
+
+  getHolyWorldOccupancyRatio() {
+    const cap = Math.max(0, resources.colony.colonists.cap || 0);
+    if (cap <= 0) {
+      return 0;
+    }
+    return Math.max(0, resources.colony.colonists.value) / cap;
+  }
+
+  getHolyWorldEcumenopolisCoverage() {
+    const initialLand = Math.max(0, terraforming.initialLand || 0);
+    if (initialLand <= 0) {
+      return 0;
+    }
+    const ecumenopolis = colonies.t7_colony;
+    return (Math.max(0, ecumenopolis.active) * ecumenopolis.requiresLand) / initialLand;
+  }
+
+  getHolyWorldRequirements() {
+    const foundry = projectManager.projects.foundryWorld;
+    const bioworld = projectManager.projects.bioworld;
+    const noOtherSpecialization = !foundry.isActive && !foundry.isCompleted
+      && !bioworld.isActive && !bioworld.isCompleted;
+    const ecumenopolisCoverage = this.getHolyWorldEcumenopolisCoverage();
+    const occupancyRatio = this.getHolyWorldOccupancyRatio();
+    return [
+      {
+        id: 'noOtherSpecialization',
+        label: 'No other world specialization complete or ongoing',
+        met: noOtherSpecialization
+      },
+      {
+        id: 'ecumenopolisCoverage',
+        label: `Ecumenopolis coverage at least 80% (${formatNumber(ecumenopolisCoverage * 100, false, 2)}%)`,
+        met: ecumenopolisCoverage >= 0.8
+      },
+      {
+        id: 'occupancy',
+        label: `Colonist occupancy at least 90% (${formatNumber(occupancyRatio * 100, false, 2)}%)`,
+        met: occupancyRatio >= 0.9
+      }
+    ];
+  }
+
+  canConsecrateHolyWorld() {
+    if (!this.enabled || this.isCurrentWorldHolyConsecrated()) {
+      return false;
+    }
+    const requirements = this.getHolyWorldRequirements();
+    for (let i = 0; i < requirements.length; i += 1) {
+      if (!requirements[i].met) {
+        return false;
+      }
+    }
+    return this.canAffordHolyWorldCost();
+  }
+
+  consecrateHolyWorld() {
+    if (!this.canConsecrateHolyWorld()) {
+      return false;
+    }
+    this.deductHolyWorldCost();
+    const key = this.getCurrentWorldHolyKey();
+    this.holyWorldConsecratedWorlds[key] = true;
+    this.holyWorldCompletions += 1;
+    this.updateUI();
+    return true;
+  }
+
+  getHolyWorldPointBalance() {
+    return this.holyWorldPoints;
+  }
+
+  getHolyWorldTravelPointGain() {
+    return this.isCurrentWorldHolyConsecrated() ? 1 : 0;
+  }
+
+  getHolyWorldShopPurchaseCount(id) {
+    return this.holyWorldShopPurchases[id] || 0;
+  }
+
+  canPurchaseHolyWorldUpgrade(item) {
+    const purchases = this.getHolyWorldShopPurchaseCount(item.id);
+    if (purchases >= item.maxPurchases) {
+      return false;
+    }
+    return this.holyWorldPoints >= item.cost;
+  }
+
+  purchaseHolyWorldUpgrade(id, purchaseCount = 1) {
+    const itemMap = this.getHolyWorldShopItemMap();
+    const item = itemMap[id];
+    if (!item || purchaseCount <= 0) {
+      return false;
+    }
+    const currentPurchases = this.getHolyWorldShopPurchaseCount(id);
+    const remaining = Math.max(0, item.maxPurchases - currentPurchases);
+    const maxAffordable = Math.floor(this.holyWorldPoints / item.cost);
+    const actual = Math.min(purchaseCount, remaining, maxAffordable);
+    if (actual <= 0) {
+      return false;
+    }
+    this.holyWorldPoints -= actual * item.cost;
+    this.holyWorldShopPurchases[id] = currentPurchases + actual;
+    this.applyHolyWorldEffects();
+    this.updateUI();
+    return true;
+  }
+
+  respecHolyWorldShop() {
+    const items = this.getHolyWorldShopItems();
+    let refund = 0;
+    for (let i = 0; i < items.length; i += 1) {
+      const item = items[i];
+      refund += this.getHolyWorldShopPurchaseCount(item.id) * item.cost;
+    }
+    this.holyWorldPoints += refund;
+    this.holyWorldShopPurchases = this.createEmptyHolyWorldShopPurchases();
+    this.applyHolyWorldEffects();
+    this.updateUI();
+  }
+
+  getHolyWorldFestivalDurationBonusMs() {
+    return this.getHolyWorldShopPurchaseCount('festivalGoldenDuration') * 5000;
+  }
+
+  getHolyWorldPatienceMaxBonus() {
+    return this.getHolyWorldShopPurchaseCount('patienceMax');
+  }
+
+  getHolyWorldConversionPowerMultiplier() {
+    return 1 + (this.getHolyWorldShopPurchaseCount('conversionPower') * 0.1);
+  }
+
+  applyHolyWorldEffects() {
+    if (!this.enabled) {
+      removeEffect({ target: 'global', sourceId: 'holyWorld' });
+      removeEffect({ target: 'patienceManager', sourceId: 'holyWorld' });
+      return;
+    }
+    addEffect({
+      target: 'global',
+      type: 'festivalDurationBonusMs',
+      value: this.getHolyWorldFestivalDurationBonusMs(),
+      effectId: 'holyworld-festival-duration',
+      sourceId: 'holyWorld'
+    });
+    addEffect({
+      target: 'global',
+      type: 'goldenAsteroidDurationBonusMs',
+      value: this.getHolyWorldFestivalDurationBonusMs(),
+      effectId: 'holyworld-golden-duration',
+      sourceId: 'holyWorld'
+    });
+    addEffect({
+      target: 'patienceManager',
+      type: 'patienceMaxHoursBonus',
+      value: this.getHolyWorldPatienceMaxBonus(),
+      effectId: 'holyworld-patience-max',
+      sourceId: 'holyWorld'
+    });
   }
 
   getOrbitalConfigs() {
@@ -102,7 +363,8 @@ class FollowersManager extends EffectableEntity {
   }
 
   getFaithConversionRatePerSecond() {
-    return (0.05 / (5 * 3600)) / 0.1;
+    const base = (0.05 / (5 * 3600)) / 0.1;
+    return base * this.getHolyWorldConversionPowerMultiplier();
   }
 
   getCurrentWorldBelieverCap() {
@@ -208,6 +470,9 @@ class FollowersManager extends EffectableEntity {
     this.galacticBelievers += worldBelievers;
     this.galacticBelievers = Math.min(this.galacticBelievers, this.galacticPopulation);
     this.galacticBelieverPercentFallback = this.getGalacticBelieverPercent();
+    if (this.isCurrentWorldHolyConsecrated()) {
+      this.holyWorldPoints += 1;
+    }
   }
 
   updateFaith(deltaTime) {
@@ -671,6 +936,7 @@ class FollowersManager extends EffectableEntity {
     this.enabled = true;
     if (!wasEnabled) {
       this.initializeFaithIfNeeded();
+      this.applyHolyWorldEffects();
     }
     this.updateUI();
   }
@@ -699,6 +965,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   reapplyEffects() {
+    this.applyHolyWorldEffects();
     this.updateUI();
   }
 
@@ -718,6 +985,12 @@ class FollowersManager extends EffectableEntity {
         galacticBelievers: this.galacticBelievers,
         galacticBelieverPercentFallback: this.galacticBelieverPercentFallback
       },
+      holyWorld: {
+        points: this.holyWorldPoints,
+        completions: this.holyWorldCompletions,
+        consecratedWorlds: { ...this.holyWorldConsecratedWorlds },
+        shopPurchases: { ...this.holyWorldShopPurchases }
+      },
       booleanFlags: Array.from(this.booleanFlags)
     };
   }
@@ -733,6 +1006,7 @@ class FollowersManager extends EffectableEntity {
     const savedAssignments = data.manualAssignments || data.assignments || {};
     const savedWeights = data.weights || {};
     const faith = data.faith || {};
+    const holyWorld = data.holyWorld || {};
 
     this.manualAssignments = {};
     this.weights = {};
@@ -760,6 +1034,13 @@ class FollowersManager extends EffectableEntity {
     this.galacticBelieverPercentFallback = this.clampPercent(
       faith.galacticBelieverPercentFallback ?? 0.1
     );
+    this.holyWorldPoints = Math.max(0, holyWorld.points || 0);
+    this.holyWorldCompletions = Math.max(0, holyWorld.completions || 0);
+    this.holyWorldConsecratedWorlds = { ...(holyWorld.consecratedWorlds || {}) };
+    this.holyWorldShopPurchases = {
+      ...this.createEmptyHolyWorldShopPurchases(),
+      ...(holyWorld.shopPurchases || {})
+    };
     if (this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
       this.galacticBelievers = this.galacticPopulation;
     }

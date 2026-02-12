@@ -43,7 +43,25 @@ class PatienceManager extends EffectableEntity {
      * @param {number} hours - Hours to add
      */
     addPatience(hours) {
-        this.currentHours = Math.min(this.currentHours + hours, this.maxHours);
+        this.currentHours = Math.min(this.currentHours + hours, this.getEffectiveMaxHours());
+    }
+
+    getEffectiveMaxHours() {
+        let bonus = 0;
+        for (let i = 0; i < this.activeEffects.length; i += 1) {
+            const effect = this.activeEffects[i];
+            if (effect.type === 'patienceMaxHoursBonus') {
+                bonus += effect.value || 0;
+            }
+        }
+        return this.maxHours + bonus;
+    }
+
+    clampCurrentHoursToMax() {
+        const maxHours = this.getEffectiveMaxHours();
+        if (this.currentHours > maxHours) {
+            this.currentHours = maxHours;
+        }
     }
 
     resetWorldPatience() {
@@ -358,6 +376,7 @@ class PatienceManager extends EffectableEntity {
      */
     reapplyEffects() {
         this.applyActiveEffects();
+        this.clampCurrentHoursToMax();
     }
 }
 

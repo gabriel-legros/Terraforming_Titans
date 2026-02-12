@@ -1,4 +1,18 @@
 const goldenEffectPrefix = 'goldenAsteroid';
+function getGlobalGoldenAsteroidDurationBonusMs() {
+  if (!globalEffects || !globalEffects.activeEffects) {
+    return 0;
+  }
+  let bonus = 0;
+  for (let i = 0; i < globalEffects.activeEffects.length; i += 1) {
+    const effect = globalEffects.activeEffects[i];
+    if (effect.type === 'goldenAsteroidDurationBonusMs') {
+      bonus += effect.value || 0;
+    }
+  }
+  return bonus;
+}
+
 const goldenEffects = [
   {
     effectId: `${goldenEffectPrefix}-fundingModuleMultiplier`,
@@ -215,7 +229,7 @@ class GoldenAsteroid {
     if (this.active) {
         console.log('Clicked golden asteroid!');
         this.addEffects();
-        this.startCountdown(this.countdownDuration);
+        this.startCountdown(this.countdownDuration + getGlobalGoldenAsteroidDurationBonusMs());
         this.despawn();
         }
     }

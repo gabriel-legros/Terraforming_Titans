@@ -69,6 +69,20 @@ const festivalEffects = [
   }
 ]
 
+function getGlobalFestivalDurationBonusMs() {
+    if (!globalEffects || !globalEffects.activeEffects) {
+        return 0;
+    }
+    let bonus = 0;
+    for (let i = 0; i < globalEffects.activeEffects.length; i += 1) {
+        const effect = globalEffects.activeEffects[i];
+        if (effect.type === 'festivalDurationBonusMs') {
+            bonus += effect.value || 0;
+        }
+    }
+    return bonus;
+}
+
 const terraformingMilestones = 
     [
         {
@@ -295,7 +309,7 @@ class MilestonesManager {
             milestone.canBeCompleted = false;
         }
         this.addEffects();
-        this.startCountdown(30000);
+        this.startCountdown(30000 + getGlobalFestivalDurationBonusMs());
     }
 
     // Get milestones that can be completed
