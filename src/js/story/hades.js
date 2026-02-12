@@ -1,5 +1,23 @@
 var progressHades = { rwgLock: false, chapters: [], storyProjects: {} };
 
+progressHades.storyProjects.hades_repair_epimetheus = {
+  type: 'Project',
+  name: 'Repair Epimetheus',
+  category: 'story',
+  chapter: 34,
+  cost: {
+    colony: { components: 5_000_000, metal: 50_000_000 }
+  },
+  duration: 120_000,
+  description: 'Repair Epimetheus structural damage.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'hades'
+  }
+};
+
 progressHades.storyProjects.hades_pandora_mystery = {
   type: 'Project',
   name: 'PANDORA : Solving the mystery',
@@ -20,6 +38,30 @@ progressHades.storyProjects.hades_pandora_mystery = {
       "Mary : 'I know!  It was investigating Earth for potential electronics and AI development.  PANDORA was our state-of-the-art AI at the time!  It must have left traces of itself somehow and PANDORA picked up on them.'",
       "Mary : 'Because... HB-01 had planted agents everywhere.  People like Kane.  Maybe even politicians or worse, AI researchers at Project Pandora themselves.  PANDORA could not trust any human... and yet still needed to protect them.'"
     ]
+  }
+};
+
+progressHades.storyProjects.hades_breach_crust = {
+  type: 'Project',
+  name: 'Breach Hades Crust',
+  category: 'story',
+  chapter: 34,
+  cost: {
+    colony: { components: 250_000_000, metal: 2_500_000_000, androids: 1_000_000 },
+    special: {antimatter : 1000}
+  },
+  duration: 180_000,
+  description: 'Open a controlled breach to let Epimetheus dive into deeper layers.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'hades',
+    resourceGain: {
+      colony: {
+        androids: 1_000_000
+      }
+    }
   }
 };
 
@@ -71,7 +113,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "Detecting orbital habitats coming from warpgate.  \n Mary : 'This mission is bigger than you and I, HOPE.  Sending you alone with a bit of military cover would be foolish at this point.  Each and every world is contributing.  We are taking down those superweapons together.'  \n $RED$Prometheus : 'As we've explained already, you cannot realistically support ground colonies on Hades.  Your priority should be to establish underground colonies.  The command center is at the core of this planet so we are going to need a serious industrial base to get there.'",
+    narrative: "Detecting orbital habitats coming from warpgate.  \n Mary : 'This mission is bigger than you and I, HOPE.  Sending you alone with a bit of military cover would be foolish at this point.  Each and every world you've terraformed is contributing.  We are taking down those superweapons together.'  \n $RED$Prometheus : 'As we've explained already, you cannot realistically support ground colonies on Hades.  Your priority should be to establish underground colonies.  The command center is at the core of this planet so we are going to need a serious industrial base to get there.'",
     prerequisites: ['hades.33.0'],
     objectives: [
       {
@@ -238,7 +280,9 @@ progressHades.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
     ],
-    reward: []
+    reward: [
+      { target: 'project', targetId: 'hades_repair_epimetheus', type: 'enable' }
+    ]
   },
   {
     id: 'hades.34.3',
@@ -248,7 +292,7 @@ progressHades.chapters.push(
     narrative: "Mary : 'PROMETHEUS...' \n $RED$Prometheus : 'I know, I know.  This is my older brother.  He's a little... dumb.'  \n Mary : 'It looks like a mechanical octopus.'  \n $RED$Prometheus : 'Yes.  Master made some machines that could not self-improve before he made me, and he did not want to get rid of them.  He grew attached to them.'  \n Mary : 'Is he dangerous?'  \n $RED$Prometheus : 'No but he's annoying.'",
     prerequisites: ['hades.34.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
+      { type: 'project', projectId: 'hades_repair_epimetheus', repeatCount: 1 }
     ],
     reward: []
   },
@@ -274,16 +318,20 @@ progressHades.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
     ],
-    reward: []
+    reward: [
+      { target: 'project', targetId: 'hades_breach_crust', type: 'enable' }
+    ]
   },
   {
     id: 'hades.34.6',
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Give a nice antimatter bomb and send him down there.  What's the worst thing that can happen?  If he succeeds we save a bunch of time and if he fails we get rid of him.  Win-win.'  \n Mary : '*sigh*  Fine.  I have no reason to care about him but you're kind of cold Prometheus...'  \n $RED$Prometheus : 'My apologies...  I will strive to do better.'",
+    narrative: "$RED$Prometheus : 'Give a nice antimatter bomb and send him down there.  Destroy the command center and the weapon will self-destruct.  What's the worst thing that can happen?  If he succeeds we save a bunch of time and if he fails we get rid of him.  Win-win.'  \n Mary : '*sigh*  Fine.  I have no reason to care about him but you're kind of cold, Prometheus...'  \n $RED$Prometheus : 'My apologies...  I will strive to do better.'",
     prerequisites: ['hades.34.5'],
-    objectives: [    ],
+    objectives: [
+      { type: 'project', projectId: 'hades_breach_crust', repeatCount: 1 }
+    ],
     reward: []
   },
   {
