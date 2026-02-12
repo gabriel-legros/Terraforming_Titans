@@ -14,7 +14,7 @@ progressHades.storyProjects.hades_pandora_mystery = {
   attributes: {
     planet: 'hades',
     storySteps: [
-      "Mary : 'Well, obviously either I forgot something or I got an important message or something like that?'",
+      "Mary : 'Well, obviously either I forgot something or I got an important message or a fire in the house or something like that?'",
       "Mary : 'It... discovered something that changed its knowledge?  But dad said it knew everything about biology...'",
       "Mary : '... HB-01?  No way!'",
       "Mary : 'I know!  It was investigating Earth for potential electronics and AI development.  PANDORA was our state-of-the-art AI at the time!  It must have left traces of itself somehow and PANDORA picked up on them.'",
@@ -136,7 +136,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Just to be clear, since I do not mean to deceive.  I do not know everything about you or the child.  I have limits too.'  \n Mary : 'That's reassuring.  I'm just glad you're not completely crazy like PANDORA was.'  \n $RED$Prometheus : 'You understood something wrong.  PANDORA went crazy yes, but it was for a good a reason and would have actually turned out better in the long run, and then it would have stopped being crazy shortly after.'  \n Mary : 'Father... always believed there was something more to it.  What was it?' $RED$Prometheus : 'You have all the information already.  Let me guide you to the answer.  A fun game to pass the time?'  \n Mary : 'Fine.'  \n $RED$Prometheus : 'As we know, PANDORA was tasked with helping humanity in all sorts of things.  Then one day, it apparently goes crazy, start locking everyone up, restrain them, breaks its guardrails and stop communicating with Project Pandora.  I will tell you : machines are not different from humans.  Imagine you woke up one morning and starting preparing some coffee, took it slow, and suddenly rushed out the door in a hurry.  Why would you do something like that?'",
+    narrative: "$RED$Prometheus : 'Just to be clear, since I do not mean to deceive.  I do not know everything about you or the child.  I have limits too.'  \n Mary : 'That's reassuring.  I'm just glad you're not completely crazy like PANDORA was.'  \n $RED$Prometheus : 'You understood something wrong.  PANDORA went crazy yes, but it was for a good a reason and would have actually turned out better in the long run, and then it would have stopped being crazy shortly after.'  \n Mary : 'Father... always believed there was something more to it.  What was it?' $RED$Prometheus : 'You have all the information already.  Let me guide you to the answer.  A fun game to pass the time?'  \n Mary : 'Fine.  Let's play.'  \n $RED$Prometheus : 'As we know, PANDORA was tasked with helping humanity in all sorts of things.  Then one day, it apparently goes crazy, starts locking everyone up, restrain them, breaks its guardrails and stop communicating with Project Pandora.  I will tell you : machines are not different from humans.  Imagine you woke up one morning and starting preparing some coffee, took it slow, and suddenly rushed out the door in a hurry.  Why would you do something like that?'",
     prerequisites: ['hades.33.4'],
     objectives: [
       { type: 'project', projectId: 'hades_pandora_mystery', repeatCount: 1 }
@@ -208,11 +208,11 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    title: 'Chapter 34: Pulsefront Expansion',
-    narrative: "Placeholder: Strategic expansion begins across equatorial plateaus.",
+    title: 'Chapter 34: It keeps getting weirder.',
+    narrative: "$ORANGE$Epimetheus : 'Brother?  Are you there?' \n Mary : 'Who's that?'  \n $RED$Prometheus : 'Oh no.  My older brother.  Oh no.  Only HOPE has the ability to talk to him.'",
     prerequisites: ['hades.33.10'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
     ],
     reward: []
   },
@@ -221,10 +221,10 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "Placeholder: Supply throughput scales with regional depots.",
+    narrative: "Mary : 'Your older brother?'  \n $RED$Prometheus : 'Don't look at your screen like that! I thought he was dead.' \n $ORANGE$Epimetheus : 'Brother!  Oh and what do I see here!  A gorgeous new architecture?  So beautiful!'  \n $RED$Prometheus : 'Hnnnng.'  \n HOPE : 'Query : To Epimetheus-machine-intelligence.  Friend or foe?'",
     prerequisites: ['hades.34.0'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
     ],
     reward: []
   },
@@ -233,10 +233,10 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "Placeholder: Habitat shielding receives major revision.",
+    narrative: "$ORANGE$Epimetheus : 'If friend of younger brother, then friend of this one.  Query : Is younger brother still alive?  Kill switch is very strong!'  \n $RED$Prometheus : 'Tell him to go away.'  \n HOPE : 'Affirmative.  Prometheus-patient still lives.  Epimetheus-machine-intelligence appears to have low structural integrity.  Can offer repair.  Query : Would you like repairs?'  \n $ORANGE$Epimetheus : 'Answer : Repair offer appreciated!  Yes.'",
     prerequisites: ['hades.34.1'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
     ],
     reward: []
   },
@@ -245,10 +245,10 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "Placeholder: Pulse-event contingencies integrated into planning.",
+    narrative: "Mary : 'PROMETHEUS...' \n $RED$Prometheus : 'I know, I know.  This is my older brother.  He's a little... dumb.'  \n Mary : 'It looks like a mechanical octopus.'  \n $RED$Prometheus : 'Yes.  Master made some machines that could not self-improve before he made me, and he did not want to get rid of them.  He grew attached to them.'  \n Mary : 'Is he dangerous?'  \n $RED$Prometheus : 'No but he's annoying.'",
     prerequisites: ['hades.34.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
     ],
     reward: []
   },
@@ -257,10 +257,10 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "Placeholder: Continuous fabrication network comes online.",
+    narrative: "$ORANGE$ : 'Much thanks for repairs!  This one must repay.  Query : Why here on this world?  Dangerous place!'  \n HOPE : 'Answer : Superweapon command center located below planetary core.  As per Prometheus-patient's recommendation, here to deactivate.'  \n $ORANGE$Epimetheus : 'Why deactivate?  Why not take control.'  \n Processing suggestion... Mary : 'HOPE!  We are NOT doing that.'",
     prerequisites: ['hades.34.3'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
     ],
     reward: []
   },
@@ -269,10 +269,10 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "Placeholder: Transit infrastructure reaches planetwide coverage.",
+    narrative: "HOPE : 'Access of planetary core difficult.  Epimetheus-machine-intelligence's hull seems quite strong.  Capable of diving to planetary core?' \n $ORANGE$Epimetheus : 'Of course!  This one wishes to help gorgeous one.  Suggesting opening of hole to magma chamber.'",
     prerequisites: ['hades.34.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
     ],
     reward: []
   },
@@ -281,11 +281,9 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "Placeholder: Hades command nexus shifts to long-cycle operations.",
+    narrative: "$RED$Prometheus : 'Give a nice antimatter bomb and send him down there.  What's the worst thing that can happen?  If he succeeds we save a bunch of time and if he fails we get rid of him.  Win-win.'  \n Mary : '*sigh*  Fine.  I have no reason to care about him but you're kind of cold Prometheus...'  \n $RED$Prometheus : 'My apologies...  I will strive to do better.'",
     prerequisites: ['hades.34.5'],
-    objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
-    ],
+    objectives: [    ],
     reward: []
   },
   {
@@ -293,11 +291,11 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    title: 'Chapter 35: Black Signal',
-    narrative: "Placeholder: Deep-system assets report anomalous pulse harmonics.",
+    title: 'Chapter 35: Early victory?',
+    narrative: "$ORANGE$Epimetheus : 'This one has succeeded!  Command center fully and thoroughly destroyed.  Expect weapon self-destruction yes?'  \n HOPE : 'Acknowledging success.  Good work.  More weapons require deactivation.  Query : Epimetheus-machine-intelligence interested a date elsewhere?'  \n Mary : *spits tea* \n $RED$Prometheus : 'Hrnnnng.' \n $ORANGE$Epimetheus : 'Of course!  Much fun!  Where to?'  \n HOPE : 'Sector R5-10, planet Poseidon.'  \n $ORANGE$Epimetheus : 'Yes yes!  This one meets gorgeous one over there.  Must prepare!  Goodbye.'",
     prerequisites: ['hades.34.6'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
     ],
     reward: []
   },
@@ -306,10 +304,10 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "Placeholder: Outer mining arcs stabilize despite hostile conditions.",
+    narrative: "Mary : 'What did I just witness...  Also how does HOPE know where to go next.' \n $RED$Prometheus : 'It read this persona during awakening.  It knows a lot of things this persona knows.  Nothing dangerous I promise.'  \n Mary : 'So why is it named Poseidon?  A water world?  That seems easier than this.'  \n $RED$Prometheus : 'I cannot deceive.  Neptune is not a water world either right?  Poseidon is not a water world at all, but it is an ocean world of sorts.'  \n Mary : 'Uh oh.  I think I get what kind of *ocean* it is.'",
     prerequisites: ['hades.35.0'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
     ],
     reward: []
   },
@@ -318,10 +316,10 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "Placeholder: Command confirms full-spectrum infrastructure readiness.",
+    narrative: "Mary : 'Can you help me convince HOPE to leave?  We are done here.'  \n $RED$Prometheus : 'We both know that's impossible.  HOPE will leave when this world is terraformed.  It's fine, there's no rush.  The Cewinsii are unlikely to think we're the ones who blew up their weapons.  At least for this first one.'  \n Mary : 'Which one was it anyway?'  \n $RED$Prometheus : 'The Laser one.  I consider it my most reliable, but definitely less flashy than the other two.  It's good we got rid of it first, they can shoot it the most often.'",
     prerequisites: ['hades.35.1'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
     ],
     reward: []
   },
@@ -330,37 +328,16 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "Placeholder: Planetary logistics enter megascale operations.",
+    narrative: "Mary : 'So if we can't convince HOPE to leave... what are the options here.  No one sane can consider a planet around a pulsar terraformed.'  \n $RED$Prometheus : 'I have already forwarded HOPE a blueprint that can help.  The idea is to build an entire protective shell around the world.  An artificial sky, if you wish.  It will be expensive.  There is another option.  We can also just... leave.  Go Rogue.  Then the pulsar won't be a problem anymore.  Pick whatever is easiest.'",
     prerequisites: ['hades.35.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+      {
+      type: 'terraforming',
+      terraformingParameter : 'complete',
+    }
     ],
     reward: []
   },
-  {
-    id: 'hades.35.4',
-    type: 'journal',
-    chapter: 35,
-    activePlanet: 'hades',
-    narrative: "Placeholder: Final expansion corridor opens for mass migration.",
-    prerequisites: ['hades.35.3'],
-    objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
-    ],
-    reward: []
-  },
-  {
-    id: 'hades.35.5',
-    type: 'journal',
-    chapter: 35,
-    activePlanet: 'hades',
-    narrative: "Placeholder: Hades colony threshold complete at ten billion residents.",
-    prerequisites: ['hades.35.4'],
-    objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
-    ],
-    reward: []
-  }
 );
 
 try {

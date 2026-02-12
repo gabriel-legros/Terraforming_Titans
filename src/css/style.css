@@ -261,6 +261,10 @@ body.journal-collapsed .tab-content {
     color: #2e7d32;
 }
 
+#journal-entries .orange-text {
+    color: #d97706;
+}
+
 /* Separator for story project entries */
 #journal-entries hr.journal-entry-separator {
     border: 0;

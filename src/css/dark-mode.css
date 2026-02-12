@@ -87,6 +87,10 @@
     color: #7dff7d;
 }
 
+.dark-mode #journal-entries .orange-text {
+    color: #ffb347;
+}
+
 .dark-mode .journal-automation-section {
     background-color: #1f1f1f;
     border-color: #444;

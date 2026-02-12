@@ -82,18 +82,22 @@ const PROMETHEUS_CLASS = 'prometheus-text';
 const DIAGNOSTIC_TOKEN = '$DIAGNOSTIC$';
 const GREEN_TOKEN = '$GREEN$';
 const DIAGNOSTIC_CLASS = 'diagnostic-text';
+const ORANGE_TOKEN = '$ORANGE$';
+const ORANGE_CLASS = 'orange-text';
 
 const JOURNAL_LINE_TOKENS = [
   { token: PROMETHEUS_TOKEN, className: PROMETHEUS_CLASS, label: PROMETHEUS_LABEL },
   { token: RED_TOKEN, className: PROMETHEUS_CLASS, label: '' },
   { token: DIAGNOSTIC_TOKEN, className: DIAGNOSTIC_CLASS, label: '' },
-  { token: GREEN_TOKEN, className: DIAGNOSTIC_CLASS, label: '' }
+  { token: GREEN_TOKEN, className: DIAGNOSTIC_CLASS, label: '' },
+  { token: ORANGE_TOKEN, className: ORANGE_CLASS, label: '' }
 ];
 
 function buildJournalSegments(text) {
   const normalized = joinLines(text)
     .replace(/<span class="prometheus-text">Prometheus([^<]*)<\/span>/g, `${RED_TOKEN}Prometheus$1`)
-    .replace(/<span class="diagnostic-text">([^<]*)<\/span>/g, `${GREEN_TOKEN}$1`);
+    .replace(/<span class="diagnostic-text">([^<]*)<\/span>/g, `${GREEN_TOKEN}$1`)
+    .replace(/<span class="orange-text">([^<]*)<\/span>/g, `${ORANGE_TOKEN}$1`);
   const lines = normalized.split('\n');
   const segments = [];
   for (let i = 0; i < lines.length; i++) {
