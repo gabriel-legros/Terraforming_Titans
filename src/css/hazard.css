@@ -576,3 +576,144 @@
 .hazard-garbage-grid .hazard-factor-row:not(.hazard-factor-row--header) {
   background: rgba(34, 44, 48, 0.55);
 }
+
+.pulsar-viz {
+  position: relative;
+  height: 170px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(109, 214, 255, 0.42), rgba(12, 24, 44, 0.2) 44%, rgba(4, 10, 28, 0.9) 100%),
+    linear-gradient(180deg, rgba(9, 26, 56, 0.95), rgba(4, 18, 39, 0.95));
+  overflow: hidden;
+}
+
+.pulsar-viz__core,
+.pulsar-viz__ring,
+.pulsar-viz__beam {
+  animation-play-state: paused;
+}
+
+.hazard-card--pulsar.hazard-card--active .pulsar-viz__core,
+.hazard-card--pulsar.hazard-card--active .pulsar-viz__ring,
+.hazard-card--pulsar.hazard-card--active .pulsar-viz__beam {
+  animation-play-state: running;
+}
+
+.pulsar-viz__core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  margin-top: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f8ffff 0%, #d7f4ff 30%, #87d8ff 68%, #2f78d6 100%);
+  box-shadow: 0 0 18px rgba(138, 218, 255, 0.95), 0 0 36px rgba(61, 141, 255, 0.75);
+  animation: pulsarCorePulse 0.8s ease-in-out infinite alternate;
+}
+
+.pulsar-viz__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  border: 2px solid rgba(176, 225, 255, 0.55);
+  box-shadow: 0 0 20px rgba(122, 186, 255, 0.35), inset 0 0 16px rgba(120, 188, 255, 0.22);
+}
+
+.pulsar-viz__ring--outer {
+  width: 150px;
+  height: 56px;
+  margin-left: -75px;
+  margin-top: -28px;
+  animation: pulsarRingPulse 2.8s ease-in-out infinite;
+}
+
+.pulsar-viz__ring--inner {
+  width: 96px;
+  height: 34px;
+  margin-left: -48px;
+  margin-top: -17px;
+  border-color: rgba(130, 196, 255, 0.68);
+  box-shadow: 0 0 14px rgba(130, 196, 255, 0.45), inset 0 0 12px rgba(107, 177, 255, 0.24);
+  animation: pulsarRingPulseInner 2.1s ease-in-out infinite;
+}
+
+.pulsar-viz__beam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 92px;
+  height: 16px;
+  margin-left: 0;
+  margin-top: -8px;
+  clip-path: polygon(0% 50%, 14% 0%, 100% 40%, 100% 60%, 14% 100%);
+  background: linear-gradient(90deg, rgba(204, 244, 255, 0.95) 0%, rgba(109, 214, 255, 0.8) 35%, rgba(74, 146, 255, 0.42) 70%, rgba(74, 146, 255, 0.02) 100%);
+  filter: drop-shadow(0 0 10px rgba(121, 212, 255, 0.55));
+  transform-origin: 0 50%;
+}
+
+.pulsar-viz__beam--top {
+  animation: pulsarBeamSweepRight 2.2s ease-in-out infinite alternate;
+}
+
+.pulsar-viz__beam--bottom {
+  animation: pulsarBeamSweepLeft 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes pulsarCorePulse {
+  from {
+    transform: scale(0.92);
+    box-shadow: 0 0 14px rgba(138, 218, 255, 0.8), 0 0 28px rgba(61, 141, 255, 0.62);
+  }
+  to {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(176, 232, 255, 1), 0 0 44px rgba(92, 167, 255, 0.86);
+  }
+}
+
+@keyframes pulsarRingPulse {
+  from {
+    transform: scaleX(0.98);
+    opacity: 0.62;
+  }
+  to {
+    transform: scaleX(1.06);
+    opacity: 0.95;
+  }
+}
+
+@keyframes pulsarRingPulseInner {
+  from {
+    transform: scaleX(0.94);
+    opacity: 0.55;
+  }
+  to {
+    transform: scaleX(1.04);
+    opacity: 0.9;
+  }
+}
+
+@keyframes pulsarBeamSweepRight {
+  from {
+    transform: rotate(-42deg) scaleX(0.86);
+    opacity: 0.76;
+  }
+  to {
+    transform: rotate(42deg) scaleX(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes pulsarBeamSweepLeft {
+  from {
+    transform: rotate(138deg) scaleX(0.86);
+    opacity: 0.76;
+  }
+  to {
+    transform: rotate(222deg) scaleX(1.08);
+    opacity: 1;
+  }
+}

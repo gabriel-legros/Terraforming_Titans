@@ -3,8 +3,14 @@ const pulsarHazardUICache = {
   root: null,
   rootResolved: false,
   card: null,
-  summary: null
+  summaryStatusBody: null,
+  summaryRadiationBody: null,
+  effectsItems: []
 };
+
+const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, and Mega Heat Sink are disabled until the pulsar hazard is cleared.';
+const PULSAR_LAND_UNUSABLE_TEXT = 'Land is unusable until the hazard is cleared, except underground land and aerostats.';
+const PULSAR_CLEAR_TEXT = 'Build an artificial sky or go rogue.';
 
 function getPulsarDocument() {
   if (pulsarHazardUICache.doc !== undefined) {
@@ -53,20 +59,110 @@ function ensurePulsarLayout() {
   icon.className = 'info-tooltip-icon';
   icon.innerHTML = '&#9432;';
   try {
-    attachDynamicInfoTooltip(icon, 'Placeholder hazard panel for future pulsar mechanics.');
+    attachDynamicInfoTooltip(icon, 'Pulsar bursts add severe orbital radiation. Surface radiation is reduced by atmospheric attenuation.');
   } catch (error) {
-    icon.title = 'Placeholder hazard panel for future pulsar mechanics.';
+    icon.title = 'Pulsar bursts add severe orbital radiation. Surface radiation is reduced by atmospheric attenuation.';
   }
   titleRow.appendChild(icon);
   card.appendChild(titleRow);
 
-  const summary = doc.createElement('div');
-  summary.className = 'hazard-card__summary';
-  card.appendChild(summary);
+  const summaryRow = doc.createElement('div');
+  summaryRow.className = 'hazard-summary-row';
+
+  const summaryStatus = doc.createElement('div');
+  summaryStatus.className = 'hazard-summary hazard-summary--left';
+  const summaryStatusHeader = doc.createElement('div');
+  summaryStatusHeader.className = 'hazard-summary__header';
+  summaryStatusHeader.textContent = 'Status';
+  const summaryStatusBody = doc.createElement('div');
+  summaryStatusBody.className = 'hazard-summary__body';
+  summaryStatus.appendChild(summaryStatusHeader);
+  summaryStatus.appendChild(summaryStatusBody);
+
+  const summaryRadiation = doc.createElement('div');
+  summaryRadiation.className = 'hazard-summary hazard-summary--right';
+  const summaryRadiationHeader = doc.createElement('div');
+  summaryRadiationHeader.className = 'hazard-summary__header';
+  summaryRadiationHeader.textContent = 'Added Radiation';
+  const summaryRadiationBody = doc.createElement('div');
+  summaryRadiationBody.className = 'hazard-summary__body';
+  summaryRadiation.appendChild(summaryRadiationHeader);
+  summaryRadiation.appendChild(summaryRadiationBody);
+
+  summaryRow.appendChild(summaryStatus);
+  summaryRow.appendChild(summaryRadiation);
+  card.appendChild(summaryRow);
+
+  const pulsarViz = doc.createElement('div');
+  pulsarViz.className = 'pulsar-viz';
+
+  const pulsarCore = doc.createElement('div');
+  pulsarCore.className = 'pulsar-viz__core';
+  pulsarViz.appendChild(pulsarCore);
+
+  const pulsarRingOuter = doc.createElement('div');
+  pulsarRingOuter.className = 'pulsar-viz__ring pulsar-viz__ring--outer';
+  pulsarViz.appendChild(pulsarRingOuter);
+
+  const pulsarRingInner = doc.createElement('div');
+  pulsarRingInner.className = 'pulsar-viz__ring pulsar-viz__ring--inner';
+  pulsarViz.appendChild(pulsarRingInner);
+
+  const pulsarBeamTop = doc.createElement('div');
+  pulsarBeamTop.className = 'pulsar-viz__beam pulsar-viz__beam--top';
+  pulsarViz.appendChild(pulsarBeamTop);
+
+  const pulsarBeamBottom = doc.createElement('div');
+  pulsarBeamBottom.className = 'pulsar-viz__beam pulsar-viz__beam--bottom';
+  pulsarViz.appendChild(pulsarBeamBottom);
+
+  card.appendChild(pulsarViz);
+
+  const effectsSection = doc.createElement('div');
+  effectsSection.className = 'hazard-effects';
+
+  const effectsHeader = doc.createElement('div');
+  effectsHeader.className = 'hazard-effects__header';
+  effectsHeader.textContent = 'Effects';
+
+  const effectsList = doc.createElement('ul');
+  effectsList.className = 'hazard-effects__list';
+
+  const disabledProjectsItem = doc.createElement('li');
+  disabledProjectsItem.className = 'hazard-effects__item';
+  effectsList.appendChild(disabledProjectsItem);
+
+  const landUnusableItem = doc.createElement('li');
+  landUnusableItem.className = 'hazard-effects__item';
+  effectsList.appendChild(landUnusableItem);
+
+  effectsSection.appendChild(effectsHeader);
+  effectsSection.appendChild(effectsList);
+  card.appendChild(effectsSection);
+
+  const clearSection = doc.createElement('div');
+  clearSection.className = 'hazard-effects';
+
+  const clearHeader = doc.createElement('div');
+  clearHeader.className = 'hazard-effects__header';
+  clearHeader.textContent = 'How to Clear';
+
+  const clearList = doc.createElement('ul');
+  clearList.className = 'hazard-effects__list';
+  const clearItem = doc.createElement('li');
+  clearItem.className = 'hazard-effects__item';
+  clearItem.textContent = PULSAR_CLEAR_TEXT;
+  clearList.appendChild(clearItem);
+
+  clearSection.appendChild(clearHeader);
+  clearSection.appendChild(clearList);
+  card.appendChild(clearSection);
 
   root.appendChild(card);
   pulsarHazardUICache.card = card;
-  pulsarHazardUICache.summary = summary;
+  pulsarHazardUICache.summaryStatusBody = summaryStatusBody;
+  pulsarHazardUICache.summaryRadiationBody = summaryRadiationBody;
+  pulsarHazardUICache.effectsItems = [disabledProjectsItem, landUnusableItem];
   return card;
 }
 
@@ -81,22 +177,30 @@ function updatePulsarHazardUI(pulsarParameters) {
   }
 
   card.style.display = pulsarParameters ? '' : 'none';
+  card.classList.toggle('hazard-card--active', !!pulsarParameters);
   if (!pulsarParameters) {
     return;
   }
 
-  const pulsePeriodSeconds = Number.isFinite(pulsarParameters.pulsePeriodSeconds)
-    ? pulsarParameters.pulsePeriodSeconds
-    : 1.337;
-  const severity = Number.isFinite(pulsarParameters.severity)
-    ? pulsarParameters.severity
-    : 1;
   const description = pulsarParameters.description || 'Pulsar hazard detected.';
   const orbitalBoost = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
     ? pulsarParameters.orbitalDoseBoost_mSvPerDay
     : 0;
 
-  pulsarHazardUICache.summary.textContent = `${description} Pulse period: ${pulsePeriodSeconds}s. Severity: ${severity}. Added orbital radiation: +${Math.round(orbitalBoost)} mSv/day (surface attenuated by atmosphere).`;
+  if (pulsarHazardUICache.summaryStatusBody) {
+    pulsarHazardUICache.summaryStatusBody.textContent = description;
+  }
+
+  const roundedOrbitalBoost = Math.round(orbitalBoost);
+  if (pulsarHazardUICache.summaryRadiationBody) {
+    pulsarHazardUICache.summaryRadiationBody.textContent = `+${roundedOrbitalBoost} mSv/day orbital dose\nSurface dose is attenuated by atmosphere.`;
+  }
+  if (pulsarHazardUICache.effectsItems[0]) {
+    pulsarHazardUICache.effectsItems[0].textContent = PULSAR_DISABLED_PROJECTS_TEXT;
+  }
+  if (pulsarHazardUICache.effectsItems[1]) {
+    pulsarHazardUICache.effectsItems[1].textContent = PULSAR_LAND_UNUSABLE_TEXT;
+  }
 }
 
 try {
