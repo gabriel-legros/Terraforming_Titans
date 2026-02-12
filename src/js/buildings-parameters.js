@@ -456,7 +456,42 @@ const buildingsParameters = {
     autoBuildFillPercent: 95,
     autoBuildFillResourceFilters: true,
     autoBuildFillResourcePrimary: 'any',
-    autoBuildFillResourceSecondary: 'none'
+    autoBuildFillResourceSecondary: 'none',
+    defaultRecipe: 'standard',
+    recipes: {
+      standard: {
+        shortName: 'Standard Storage',
+        storage: {
+          colony: {
+            metal: 5000,
+            silicon: 5000,
+            glass: 5000,
+            food: 5000,
+            components: 500,
+            electronics: 200,
+            superconductors: 200,
+            superalloys: 50
+          }
+        }
+      },
+      warp: {
+        shortName: 'Warp Storage',
+        requiresBuildingFlag: 'warpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000 } },
+        storage: {
+          colony: {
+            metal: 50_000,
+            silicon: 50_000,
+            glass: 50_000,
+            food: 50_000,
+            components: 5_000,
+            electronics: 2_000,
+            superconductors: 2_000,
+            superalloys: 500
+          }
+        }
+      }
+    }
   },
   waterTank: {
     name: 'Water Tank',

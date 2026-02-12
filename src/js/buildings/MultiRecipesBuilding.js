@@ -4,6 +4,7 @@ class MultiRecipesBuilding extends Building {
     this._defaultDisplayName = config.name || this.displayName;
     this._staticConsumption = MultiRecipesBuilding._clone(config.consumption || {});
     this._defaultProduction = MultiRecipesBuilding._clone(config.production || {});
+    this._defaultStorage = MultiRecipesBuilding._clone(config.storage || {});
     this._applyRecipeMapping();
   }
 
@@ -55,6 +56,9 @@ class MultiRecipesBuilding extends Building {
     if (!this._defaultProduction) {
       this._defaultProduction = MultiRecipesBuilding._clone(this.production || {});
     }
+    if (!this._defaultStorage) {
+      this._defaultStorage = MultiRecipesBuilding._clone(this.storage || {});
+    }
     if (!this._defaultDisplayName) {
       this._defaultDisplayName = this.displayName;
     }
@@ -87,6 +91,9 @@ class MultiRecipesBuilding extends Building {
 
     const productionSource = recipe?.production || this._defaultProduction;
     this.production = MultiRecipesBuilding._clone(productionSource);
+
+    const storageSource = recipe?.storage || this._defaultStorage;
+    this.storage = MultiRecipesBuilding._clone(storageSource);
 
     this.displayName = recipe?.displayName || this._defaultDisplayName;
     this.shortName = recipe?.shortName || null;

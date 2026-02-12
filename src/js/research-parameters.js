@@ -2354,6 +2354,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'warp_storage',
+        name: 'Warp Storage',
+        description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot Recipe.',
+        cost: { advancedResearch: 75_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'storageDepot',
+            type: 'booleanFlag',
+            flagId: 'warpStorageRecipe',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: 'Tractor Beams',
         description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
