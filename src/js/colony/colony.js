@@ -11,7 +11,15 @@ const colonyConstructors = {
   t7_colony: { className: 'Ecumenopolis', file: 'Ecumenopolis.js' }
 };
 
+const colonyConstructorRegistry = {};
+
+function registerColonyConstructor(name, ctor) {
+  colonyConstructorRegistry[name] = ctor;
+}
+
 function loadColonyConstructor(name) {
+  const registered = colonyConstructorRegistry[name];
+  if (registered) return registered;
   const entry = colonyConstructors[name];
   if (!entry) return Colony;
   const { className, file } = entry;

@@ -74,5 +74,9 @@ class Ecumenopolis extends Colony {
 }
 
 try {
+  registerColonyConstructor('t7_colony', Ecumenopolis);
+} catch (error) {}
+
+try {
   module.exports = { Ecumenopolis };
 } catch (error) {}
