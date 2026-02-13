@@ -196,7 +196,7 @@ class SpaceMirrorAdvancedOversight {
 
         if (REVERSAL_AVAILABLE) {
           for (const z of ZONES) {
-            if ((assignM[z] || 0) > 0) {
+            if ((assignM[z] || 0) > 0 || (assignL[z] > 0)) {
               // Keep locked mode for zones that already have mirrors assigned.
               reverse[z] = !!savedReverse[z];
               continue;

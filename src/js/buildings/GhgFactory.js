@@ -347,31 +347,10 @@ class GhgFactory extends Building {
           return;
         }
 
-        if (isOpticalDepthTarget) {
-          if (currentValue < A) {
-            const calciteRes = resources.atmospheric.calciteAerosol;
-            const calciteAmount = calciteRes.value || 0;
-            if (calciteAmount > 0) {
-              if (recipeKey !== 'calcite') {
-                this._toggleRecipe();
-                recipeKey = this.currentRecipeKey || 'calcite';
-                resourceName = 'calciteAerosol';
-              }
-              const maxProduction = computeMaxProduction('atmospheric', 'calciteAerosol');
-              this.reverseEnabled = true;
-              if (maxProduction > 0) {
-                this.productivity = applySolverProductivity(calciteAmount, maxProduction);
-              } else {
-                this.productivity = targetProductivity;
-              }
-              return;
-            }
-            if (recipeKey !== 'ghg') {
-              this._toggleRecipe();
-              recipeKey = this.currentRecipeKey || 'ghg';
-              resourceName = 'greenhouseGas';
-            }
-          }
+        if (isOpticalDepthTarget && recipeKey !== 'ghg') {
+          this._toggleRecipe();
+          recipeKey = this.currentRecipeKey || 'ghg';
+          resourceName = 'greenhouseGas';
         }
 
         let reverse =
@@ -381,6 +360,12 @@ class GhgFactory extends Building {
         if (reverse) {
           const resObj = resources?.atmospheric?.[resourceName];
           const available = resObj ? resObj.value || 0 : 0;
+          if (available <= 0 && isOpticalDepthTarget) {
+            this.reverseEnabled = false;
+            this.setAutomationActivityMultiplier(0);
+            this.productivity = 0;
+            return;
+          }
           if (available <= 0 && typeof this._toggleRecipe === 'function') {
             this._toggleRecipe();
             recipeKey = this.currentRecipeKey || 'ghg';
@@ -502,7 +487,7 @@ class GhgFactory extends Building {
     tempTooltip.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       tempTooltip,
-      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. Optical depth ignores calcite aerosols and will clear them first if it needs to increase GHG. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
+      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. Optical depth automation is GHG-only and never runs calcite aerosol mode. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
     );
     tempControl.appendChild(tempTooltip);
 
