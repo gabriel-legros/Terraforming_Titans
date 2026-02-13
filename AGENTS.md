@@ -164,6 +164,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - GHG/calcite and dust factory automation targeting
 - String numeric input handling standardized across major controls.
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
+- Space Storage reserve controls are now per-resource in the resource settings dialog, with reserve modes for absolute amount, `% of resource cap`, and `% of max storage`; the old global strategic reserve was removed.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
 - Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes), a live `Faith` panel, and the Holy World consecration/shop systems.
 - Followers Orbitals also grant storage cap on assigned target resources: per assigned orbital cap bonus is `max(100, per-orbital production × 10)`, and this cap bonus is applied during storage-cap recalculation before orbital production runs.

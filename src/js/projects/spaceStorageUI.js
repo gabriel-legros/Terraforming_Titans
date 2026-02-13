@@ -107,41 +107,6 @@ if (typeof SpaceStorageProject !== 'undefined') {
     return container;
   };
 
-  SpaceStorageProject.prototype.createStrategicReserveInput = function () {
-    const container = document.createElement('div');
-    container.classList.add('checkbox-container');
-    const label = document.createElement('label');
-    label.htmlFor = `${this.name}-strategic-reserve`;
-    label.textContent = 'Strategic reserve ';
-    const info = document.createElement('span');
-    info.classList.add('info-tooltip-icon');
-    info.innerHTML = '&#9432;';
-    info.title =
-      'Minimum space storage kept in reserve; transfers ignore this reserve. Accepts scientific notation (e.g., 1e3 for 1000).';
-    label.appendChild(info);
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.id = `${this.name}-strategic-reserve`;
-    wireStringNumberInput(input, {
-      datasetKey: 'strategicReserve',
-      parseValue: (value) => Math.max(0, parseFlexibleNumber(value) || 0),
-      formatValue: (parsed) => (parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed)),
-      onValue: (parsed) => {
-        this.strategicReserve = parsed;
-      },
-    });
-    const reserveValue = this.strategicReserve || 0;
-    input.dataset.strategicReserve = String(reserveValue);
-    input.value = reserveValue >= 1e6 ? formatNumber(reserveValue, true, 3) : String(reserveValue);
-    container.append(label, input);
-    projectElements[this.name] = {
-      ...projectElements[this.name],
-      strategicReserveInput: input,
-      strategicReserveContainer: container,
-    };
-    return container;
-  };
-
   SpaceStorageProject.prototype.attachShipAutoStartToAssignment = function (runContainer) {
     if (!runContainer) return false;
     const projectEls = projectElements[this.name];
@@ -165,8 +130,6 @@ if (typeof SpaceStorageProject !== 'undefined') {
       delete els.megaProjectTravelModeCheckbox;
       delete els.megaProjectTravelModeContainer;
       delete els.prioritizeRowContainer;
-      delete els.strategicReserveInput;
-      delete els.strategicReserveContainer;
     }
 
     if (!els.shipAutoStartContainer) {
@@ -176,7 +139,6 @@ if (typeof SpaceStorageProject !== 'undefined') {
       const prioritize = this.createMegaProjectModeSelect();
       const travelMode = this.createMegaProjectTravelModeCheckbox();
       prioritizeRow.append(prioritize, travelMode);
-      const reserve = this.createStrategicReserveInput();
       projectElements[this.name] = {
         ...projectElements[this.name],
         prioritizeRowContainer: prioritizeRow,
@@ -184,7 +146,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
       if (!this.attachShipAutoStartToAssignment(ship)) {
         container.appendChild(ship);
       }
-      container.append(prioritizeRow, reserve);
+      container.appendChild(prioritizeRow);
     } else {
       const placed = this.attachShipAutoStartToAssignment(els.shipAutoStartContainer);
       if (!placed && els.shipAutoStartContainer.parentElement !== container) {
@@ -192,9 +154,6 @@ if (typeof SpaceStorageProject !== 'undefined') {
       }
       if (els.prioritizeRowContainer && els.prioritizeRowContainer.parentElement !== container) {
         container.appendChild(els.prioritizeRowContainer);
-      }
-      if (els.strategicReserveContainer && els.strategicReserveContainer.parentElement !== container) {
-        container.appendChild(els.strategicReserveContainer);
       }
     }
 
@@ -268,6 +227,9 @@ function renderSpaceStorageUI(project, container) {
   let capModeSelect = cachedCaps.capModeSelect;
   let capValueInput = cachedCaps.capValueInput;
   let capValueLabel = cachedCaps.capValueLabel;
+  let reserveModeSelect = cachedCaps.reserveModeSelect;
+  let reserveValueInput = cachedCaps.reserveValueInput;
+  let reserveValueLabel = cachedCaps.reserveValueLabel;
   let capClose = cachedCaps.capClose;
   let capClampButton = cachedCaps.capClampButton;
 
@@ -327,7 +289,7 @@ function renderSpaceStorageUI(project, container) {
     const capValueInfo = document.createElement('span');
     capValueInfo.classList.add('info-tooltip-icon');
     capValueInfo.innerHTML = '&#9432;';
-    capValueInfo.title = 'Accepts scientific notation. Percent caps clamp to 0-100.';
+    attachDynamicInfoTooltip(capValueInfo, 'Accepts scientific notation. Percent caps clamp to 0-100.');
     capValueLabel.appendChild(capValueInfo);
     capValueInput = document.createElement('input');
     capValueInput.type = 'text';
@@ -351,12 +313,94 @@ function renderSpaceStorageUI(project, container) {
       },
       onValue: (parsed) => {
         const mode = capModeSelect.value;
-        if (mode === 'none') return;
+        if (mode === 'none') {
+          updateCapResourceValue();
+          return;
+        }
         projectElements[project.name].capDraft = { mode, value: parsed };
         projectElements[project.name].capDraftDirty = true;
+        updateCapResourceValue();
       },
     });
     capValueRow.append(capValueLabel, capValueInput);
+
+    const reserveModeRow = document.createElement('div');
+    reserveModeRow.classList.add('space-storage-settings-row');
+    const reserveModeLabel = document.createElement('label');
+    reserveModeLabel.classList.add('space-storage-settings-label');
+    reserveModeLabel.textContent = 'Strategic reserve:';
+    const reserveModeInfo = document.createElement('span');
+    reserveModeInfo.classList.add('info-tooltip-icon');
+    reserveModeInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      reserveModeInfo,
+      'Projects will avoid spending the specified strategic reserve amount. Withdrawals ignore this setting.'
+    );
+    reserveModeLabel.appendChild(reserveModeInfo);
+    reserveModeSelect = document.createElement('select');
+    reserveModeSelect.classList.add('space-storage-settings-select');
+    const reserveModeNone = document.createElement('option');
+    reserveModeNone.value = 'none';
+    reserveModeNone.textContent = 'No reserve';
+    const reserveModeAmount = document.createElement('option');
+    reserveModeAmount.value = 'amount';
+    reserveModeAmount.textContent = 'Amount';
+    const reserveModePercentCap = document.createElement('option');
+    reserveModePercentCap.value = 'percentCap';
+    reserveModePercentCap.textContent = '% of resource cap';
+    const reserveModePercentTotal = document.createElement('option');
+    reserveModePercentTotal.value = 'percentTotal';
+    reserveModePercentTotal.textContent = '% of max storage';
+    reserveModeSelect.append(
+      reserveModeNone,
+      reserveModeAmount,
+      reserveModePercentCap,
+      reserveModePercentTotal
+    );
+    reserveModeRow.append(reserveModeLabel, reserveModeSelect);
+
+    const reserveValueRow = document.createElement('div');
+    reserveValueRow.classList.add('space-storage-settings-row');
+    reserveValueLabel = document.createElement('label');
+    reserveValueLabel.classList.add('space-storage-settings-label');
+    reserveValueLabel.textContent = 'Reserve value:';
+    const reserveValueInfo = document.createElement('span');
+    reserveValueInfo.classList.add('info-tooltip-icon');
+    reserveValueInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(reserveValueInfo, 'Accepts scientific notation. Percent reserves clamp to 0-100.');
+    reserveValueLabel.appendChild(reserveValueInfo);
+    reserveValueInput = document.createElement('input');
+    reserveValueInput.type = 'text';
+    reserveValueInput.classList.add('space-storage-settings-input');
+    wireStringNumberInput(reserveValueInput, {
+      datasetKey: 'spaceStorageReserve',
+      parseValue: (value) => {
+        const mode = reserveModeSelect.value;
+        const parsed = parseFlexibleNumber(value) || 0;
+        if (mode === 'percentCap' || mode === 'percentTotal') {
+          return Math.max(0, Math.min(100, parsed));
+        }
+        return Math.max(0, parsed);
+      },
+      formatValue: (parsed) => {
+        const mode = reserveModeSelect.value;
+        if (mode === 'percentCap' || mode === 'percentTotal') {
+          return String(parsed);
+        }
+        return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+      },
+      onValue: (parsed) => {
+        const mode = reserveModeSelect.value;
+        if (mode === 'none') {
+          updateCapResourceValue();
+          return;
+        }
+        projectElements[project.name].reserveDraft = { mode, value: parsed };
+        projectElements[project.name].reserveDraftDirty = true;
+        updateCapResourceValue();
+      },
+    });
+    reserveValueRow.append(reserveValueLabel, reserveValueInput);
 
     const capClampRow = document.createElement('div');
     capClampRow.classList.add('space-storage-settings-row', 'space-storage-settings-button-row');
@@ -371,7 +415,16 @@ function renderSpaceStorageUI(project, container) {
     capConfirm.classList.add('space-storage-settings-confirm');
     capConfirm.textContent = 'Confirm';
 
-    capWindow.append(capHeader, capResourceRow, capModeRow, capValueRow, capClampRow, capConfirm);
+    capWindow.append(
+      capHeader,
+      capResourceRow,
+      capModeRow,
+      capValueRow,
+      reserveModeRow,
+      reserveValueRow,
+      capClampRow,
+      capConfirm
+    );
     capOverlay.appendChild(capWindow);
     document.body.appendChild(capOverlay);
 
@@ -386,6 +439,53 @@ function renderSpaceStorageUI(project, container) {
     capOverlay.classList.remove('is-visible');
   };
 
+  const getCapLimit = (mode, value) => {
+    if (mode === 'percent') {
+      return Math.max(0, (project.maxStorage * value) / 100);
+    }
+    if (mode === 'amount') {
+      return Math.max(0, value);
+    }
+    return Math.max(0, project.maxStorage);
+  };
+
+  const getReserveLimit = (resourceKey, mode, value) => {
+    if (mode === 'amount') {
+      return Math.max(0, value);
+    }
+    if (mode === 'percentTotal') {
+      return Math.max(0, (project.maxStorage * value) / 100);
+    }
+    if (mode === 'percentCap') {
+      let capLimit = project.getResourceCapLimit(resourceKey);
+      if (!Number.isFinite(capLimit)) {
+        capLimit = project.maxStorage;
+      }
+      return Math.max(0, (capLimit * value) / 100);
+    }
+    return 0;
+  };
+
+  const updateCapResourceValue = () => {
+    const key = projectElements[project.name].capResourceKey;
+    if (!key) return;
+    const label = projectElements[project.name].capResourceLabelText || '';
+    const mode = capModeSelect.value;
+    const parsed = parseFlexibleNumber(capValueInput.dataset.spaceStorageCap) || 0;
+    const normalized = mode === 'percent'
+      ? Math.max(0, Math.min(100, parsed))
+      : Math.max(0, parsed);
+    const amount = Math.max(0, project.resourceUsage[key] || 0);
+    const capLimit = getCapLimit(mode, normalized);
+    const reserveMode = reserveModeSelect.value;
+    const reserveParsed = parseFlexibleNumber(reserveValueInput.dataset.spaceStorageReserve) || 0;
+    const reserveNormalized = reserveMode === 'percentCap' || reserveMode === 'percentTotal'
+      ? Math.max(0, Math.min(100, reserveParsed))
+      : Math.max(0, reserveParsed);
+    const reserveLimit = getReserveLimit(key, reserveMode, reserveNormalized);
+    capResourceValue.textContent = `${label} ${formatNumber(amount, false, 2)}/${formatNumber(capLimit, false, 2)} (reserve ${formatNumber(reserveLimit, false, 2)})`;
+  };
+
   const updateCapInputState = () => {
     const mode = capModeSelect.value;
     capValueInput.disabled = mode === 'none';
@@ -394,6 +494,20 @@ function renderSpaceStorageUI(project, container) {
       capValueInput.value = '';
       capValueInput.dataset.spaceStorageCap = '0';
     }
+    updateCapResourceValue();
+  };
+
+  const updateReserveInputState = () => {
+    const mode = reserveModeSelect.value;
+    reserveValueInput.disabled = mode === 'none';
+    reserveValueLabel.firstChild.textContent = mode === 'percentCap' || mode === 'percentTotal'
+      ? 'Reserve %:'
+      : 'Reserve value:';
+    if (mode === 'none') {
+      reserveValueInput.value = '';
+      reserveValueInput.dataset.spaceStorageReserve = '0';
+    }
+    updateCapResourceValue();
   };
 
   if (!cachedCaps.capHandlersBound || newOverlay) {
@@ -406,12 +520,19 @@ function renderSpaceStorageUI(project, container) {
     projectElements[project.name].capConfirmButton.addEventListener('click', () => {
       const key = projectElements[project.name].capResourceKey;
       const draft = projectElements[project.name].capDraft || { mode: 'none', value: 0 };
+      const reserveDraft = projectElements[project.name].reserveDraft || { mode: 'none', value: 0 };
       if (draft.mode === 'none') {
         delete project.resourceCaps[key];
       } else {
         project.resourceCaps[key] = { mode: draft.mode, value: draft.value || 0 };
       }
+      if (reserveDraft.mode === 'none') {
+        delete project.resourceStrategicReserves[key];
+      } else {
+        project.resourceStrategicReserves[key] = { mode: reserveDraft.mode, value: reserveDraft.value || 0 };
+      }
       projectElements[project.name].capDraftDirty = false;
+      projectElements[project.name].reserveDraftDirty = false;
       closeCapWindow();
       if (typeof updateSpaceStorageUI === 'function') {
         updateSpaceStorageUI(project);
@@ -447,20 +568,49 @@ function renderSpaceStorageUI(project, container) {
         : (normalized >= 1e6 ? formatNumber(normalized, true, 3) : String(normalized));
       updateCapInputState();
     });
+    reserveModeSelect.addEventListener('change', () => {
+      const mode = reserveModeSelect.value;
+      const parsed = parseFlexibleNumber(reserveValueInput.dataset.spaceStorageReserve) || 0;
+      const normalized = mode === 'percentCap' || mode === 'percentTotal'
+        ? Math.max(0, Math.min(100, parsed))
+        : Math.max(0, parsed);
+      projectElements[project.name].reserveDraft = mode === 'none'
+        ? { mode: 'none', value: 0 }
+        : { mode, value: normalized };
+      projectElements[project.name].reserveDraftDirty = true;
+      reserveValueInput.dataset.spaceStorageReserve = String(normalized);
+      reserveValueInput.value = mode === 'percentCap' || mode === 'percentTotal'
+        ? String(normalized)
+        : (normalized >= 1e6 ? formatNumber(normalized, true, 3) : String(normalized));
+      updateReserveInputState();
+    });
   }
 
   const openCapWindow = (resourceKey, label) => {
     projectElements[project.name].capResourceKey = resourceKey;
+    projectElements[project.name].capResourceLabelText = label;
     capResourceValue.textContent = label;
     const capSetting = project.getResourceCapSetting(resourceKey);
+    const reserveSetting = project.getResourceStrategicReserveSetting(resourceKey);
     projectElements[project.name].capDraft = { mode: capSetting.mode, value: capSetting.value || 0 };
     projectElements[project.name].capDraftDirty = false;
+    projectElements[project.name].reserveDraft = { mode: reserveSetting.mode, value: reserveSetting.value || 0 };
+    projectElements[project.name].reserveDraftDirty = false;
     capModeSelect.value = capSetting.mode;
     capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
     capValueInput.value = capSetting.value >= 1e6
       ? formatNumber(capSetting.value, true, 3)
       : String(capSetting.value || 0);
+    reserveModeSelect.value = reserveSetting.mode;
+    reserveValueInput.dataset.spaceStorageReserve = String(reserveSetting.value || 0);
+    reserveValueInput.value = (reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal')
+      ? String(reserveSetting.value || 0)
+      : ((reserveSetting.value || 0) >= 1e6
+        ? formatNumber(reserveSetting.value || 0, true, 3)
+        : String(reserveSetting.value || 0));
     updateCapInputState();
+    updateReserveInputState();
+    updateCapResourceValue();
     capOverlay.classList.add('is-visible');
   };
 
@@ -695,11 +845,16 @@ function renderSpaceStorageUI(project, container) {
     capValueLabel,
     capModeSelect,
     capValueInput,
+    reserveModeSelect,
+    reserveValueInput,
+    reserveValueLabel,
     capClose,
     capClampButton,
     capConfirmButton: projectElements[project.name].capConfirmButton,
     capDraft: projectElements[project.name].capDraft,
     capDraftDirty: projectElements[project.name].capDraftDirty,
+    reserveDraft: projectElements[project.name].reserveDraft,
+    reserveDraftDirty: projectElements[project.name].reserveDraftDirty,
     capHandlersBound: true,
     shipProgressButton,
     withdrawButton,
@@ -847,20 +1002,14 @@ function updateSpaceStorageUI(project) {
     els.megaProjectModeSelect.value = mode;
     els.megaProjectTravelModeCheckbox.checked = project.megaProjectSpaceOnlyOnTravel === true;
   }
-  if (els.strategicReserveInput) {
-    const activeElement = document.activeElement;
-    if (els.strategicReserveInput !== activeElement) {
-      const reserveValue = project.strategicReserve || 0;
-      els.strategicReserveInput.dataset.strategicReserve = String(reserveValue);
-      els.strategicReserveInput.value = reserveValue >= 1e6
-        ? formatNumber(reserveValue, true, 3)
-        : String(reserveValue);
-    }
-  }
   if (els.capOverlay.classList.contains('is-visible')) {
     const capSetting = els.capDraft || { mode: 'none', value: 0 };
+    const reserveSetting = els.reserveDraft || { mode: 'none', value: 0 };
     if (els.capModeSelect.value !== capSetting.mode) {
       els.capModeSelect.value = capSetting.mode;
+    }
+    if (els.reserveModeSelect.value !== reserveSetting.mode) {
+      els.reserveModeSelect.value = reserveSetting.mode;
     }
     if (els.capValueInput !== document.activeElement) {
       const capValue = capSetting.value || 0;
@@ -869,7 +1018,69 @@ function updateSpaceStorageUI(project) {
         ? String(capValue)
         : (capValue >= 1e6 ? formatNumber(capValue, true, 3) : String(capValue));
     }
+    if (els.reserveValueInput !== document.activeElement) {
+      const reserveValue = reserveSetting.value || 0;
+      els.reserveValueInput.dataset.spaceStorageReserve = String(reserveValue);
+      els.reserveValueInput.value = reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal'
+        ? String(reserveValue)
+        : (reserveValue >= 1e6 ? formatNumber(reserveValue, true, 3) : String(reserveValue));
+    }
     els.capValueInput.disabled = els.capModeSelect.value === 'none';
+    els.reserveValueInput.disabled = els.reserveModeSelect.value === 'none';
+    if (els.reserveValueLabel) {
+      els.reserveValueLabel.firstChild.textContent = els.reserveModeSelect.value === 'percentCap' || els.reserveModeSelect.value === 'percentTotal'
+        ? 'Reserve %:'
+        : 'Reserve value:';
+    }
+    if (els.capResourceValue) {
+      const key = els.capResourceKey;
+      const label = els.capResourceLabelText || '';
+      const capMode = els.capModeSelect.value;
+      const capParsed = parseFlexibleNumber(els.capValueInput.dataset.spaceStorageCap) || 0;
+      const capNormalized = capMode === 'percent'
+        ? Math.max(0, Math.min(100, capParsed))
+        : Math.max(0, capParsed);
+      const reserveMode = els.reserveModeSelect.value;
+      const reserveParsed = parseFlexibleNumber(els.reserveValueInput.dataset.spaceStorageReserve) || 0;
+      const reserveNormalized = reserveMode === 'percentCap' || reserveMode === 'percentTotal'
+        ? Math.max(0, Math.min(100, reserveParsed))
+        : Math.max(0, reserveParsed);
+      const amount = key ? Math.max(0, project.resourceUsage[key] || 0) : 0;
+      let capLimit = project.maxStorage;
+      if (capMode === 'percent') {
+        capLimit = (project.maxStorage * capNormalized) / 100;
+      } else if (capMode === 'amount') {
+        capLimit = capNormalized;
+      }
+      let reserveLimit = 0;
+      if (reserveMode === 'amount') {
+        reserveLimit = reserveNormalized;
+      } else if (reserveMode === 'percentTotal') {
+        reserveLimit = (project.maxStorage * reserveNormalized) / 100;
+      } else if (reserveMode === 'percentCap' && key) {
+        const resourceCapLimit = project.getResourceCapLimit(key);
+        const safeCapLimit = Number.isFinite(resourceCapLimit) ? resourceCapLimit : project.maxStorage;
+        reserveLimit = (safeCapLimit * reserveNormalized) / 100;
+      }
+      els.capResourceValue.textContent = `${label} ${formatNumber(amount, false, 2)}/${formatNumber(Math.max(0, capLimit), false, 2)} (reserve ${formatNumber(Math.max(0, reserveLimit), false, 2)})`;
+    }
+    if (els.capValueLabel) {
+      els.capValueLabel.firstChild.textContent = els.capModeSelect.value === 'percent' ? 'Cap %:' : 'Cap value:';
+    }
+    if (els.capModeSelect.value === 'none') {
+      const parsed = parseFlexibleNumber(els.capValueInput.dataset.spaceStorageCap) || 0;
+      const normalized = els.capModeSelect.value === 'percent'
+        ? Math.max(0, Math.min(100, parsed))
+        : Math.max(0, parsed);
+      els.capValueInput.dataset.spaceStorageCap = String(normalized);
+    }
+    if (els.reserveModeSelect.value === 'none') {
+      const parsed = parseFlexibleNumber(els.reserveValueInput.dataset.spaceStorageReserve) || 0;
+      const normalized = els.reserveModeSelect.value === 'percentCap' || els.reserveModeSelect.value === 'percentTotal'
+        ? Math.max(0, Math.min(100, parsed))
+        : Math.max(0, parsed);
+      els.reserveValueInput.dataset.spaceStorageReserve = String(normalized);
+    }
   }
   if (els.updateModeButtons) {
     els.updateModeButtons();

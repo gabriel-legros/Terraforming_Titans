@@ -4,6 +4,23 @@ const SPACE_STORAGE_RESOURCE_REQUIREMENTS = {
   atmosphericMethane: { requiresProjectFlag: 'methaneAmmoniaStorage' },
   atmosphericAmmonia: { requiresProjectFlag: 'methaneAmmoniaStorage' },
 };
+const SPACE_STORAGE_LEGACY_RESERVE_KEYS = [
+  'metal',
+  'silicon',
+  'glass',
+  'components',
+  'electronics',
+  'superconductors',
+  'superalloys',
+  'oxygen',
+  'hydrogen',
+  'atmosphericMethane',
+  'atmosphericAmmonia',
+  'carbonDioxide',
+  'liquidWater',
+  'inertGas',
+  'biomass'
+];
 
 class SpaceStorageProject extends SpaceshipProject {
   constructor(config, name) {
@@ -27,7 +44,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     this.megaProjectSpaceOnlyOnTravel = false;
     this.waterWithdrawTarget = 'colony';
-    this.strategicReserve = 0;
+    this.resourceStrategicReserves = {};
     this.usedStorageResyncTimer = 0;
     this.shipOperationKesslerElapsed = 0;
     this.shipOperationKesslerPending = false;
@@ -93,6 +110,70 @@ class SpaceStorageProject extends SpaceshipProject {
       return Math.max(0, (this.maxStorage * (setting.value || 0)) / 100);
     }
     return Infinity;
+  }
+
+  getResourceStrategicReserveSetting(resourceKey) {
+    const fallback = { mode: 'none', value: 0 };
+    const setting = this.resourceStrategicReserves[resourceKey] || fallback;
+    const mode = setting.mode === 'amount'
+      || setting.mode === 'percentCap'
+      || setting.mode === 'percentTotal'
+      ? setting.mode
+      : 'none';
+    const parsedValue = Number(setting.value);
+    let value = Number.isFinite(parsedValue) ? parsedValue : 0;
+    if (mode === 'percentCap' || mode === 'percentTotal') {
+      value = Math.max(0, Math.min(100, value));
+    } else {
+      value = Math.max(0, value);
+    }
+    return { mode, value };
+  }
+
+  getResourceStrategicReserveAmount(resourceKey) {
+    const setting = this.getResourceStrategicReserveSetting(resourceKey);
+    if (setting.mode === 'none') return 0;
+    if (setting.mode === 'amount') {
+      return Math.max(0, setting.value || 0);
+    }
+    if (setting.mode === 'percentTotal') {
+      return Math.max(0, (this.maxStorage * (setting.value || 0)) / 100);
+    }
+    let capLimit = this.getResourceCapLimit(resourceKey);
+    if (!Number.isFinite(capLimit)) {
+      capLimit = this.maxStorage;
+    }
+    return Math.max(0, (capLimit * (setting.value || 0)) / 100);
+  }
+
+  sanitizeResourceStrategicReserves() {
+    for (const resourceKey in this.resourceStrategicReserves) {
+      const setting = this.resourceStrategicReserves[resourceKey];
+      if (!setting) {
+        delete this.resourceStrategicReserves[resourceKey];
+        continue;
+      }
+      const normalized = this.getResourceStrategicReserveSetting(resourceKey);
+      if (normalized.mode === 'none') {
+        delete this.resourceStrategicReserves[resourceKey];
+      } else {
+        this.resourceStrategicReserves[resourceKey] = normalized;
+      }
+    }
+  }
+
+  applyLegacyStrategicReserve(legacyValue) {
+    const parsed = Number(legacyValue);
+    const amount = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    if (amount <= 0) return;
+    const keys = new Set(SPACE_STORAGE_LEGACY_RESERVE_KEYS);
+    this.selectedResources.forEach(entry => keys.add(entry.resource));
+    Object.keys(this.resourceUsage).forEach(key => keys.add(key));
+    Object.keys(this.resourceCaps).forEach(key => keys.add(key));
+    Object.keys(this.resourceTransferModes).forEach(key => keys.add(key));
+    keys.forEach((key) => {
+      this.resourceStrategicReserves[key] = { mode: 'amount', value: amount };
+    });
   }
 
   clampStoredResourceToLimit(resourceKey, capLimit) {
@@ -228,7 +309,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   getAvailableStoredResource(resourceKey) {
     const stored = this.resourceUsage[resourceKey] || 0;
-    const reserve = this.strategicReserve || 0;
+    const reserve = this.getResourceStrategicReserveAmount(resourceKey);
     return Math.max(0, stored - reserve);
   }
 
@@ -1027,7 +1108,7 @@ class SpaceStorageProject extends SpaceshipProject {
       pendingTransfers: this.pendingTransfers,
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
-      strategicReserve: this.strategicReserve,
+      resourceStrategicReserves: this.resourceStrategicReserves,
       waterWithdrawTarget: this.waterWithdrawTarget,
       resourceCaps: this.resourceCaps,
       shipTransferMode: this.shipTransferMode,
@@ -1067,7 +1148,11 @@ class SpaceStorageProject extends SpaceshipProject {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     }
     this.megaProjectSpaceOnlyOnTravel = state.megaProjectSpaceOnlyOnTravel === true;
-    this.strategicReserve = state.strategicReserve || 0;
+    this.resourceStrategicReserves = state.resourceStrategicReserves || {};
+    this.sanitizeResourceStrategicReserves();
+    if (!state.resourceStrategicReserves && state.strategicReserve > 0) {
+      this.applyLegacyStrategicReserve(state.strategicReserve);
+    }
     this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
     this.resourceCaps = state.resourceCaps || {};
     for (const resourceKey in this.resourceCaps) {
@@ -1106,7 +1191,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceUsage: this.resourceUsage,
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
-      strategicReserve: this.strategicReserve,
+      resourceStrategicReserves: this.resourceStrategicReserves,
       resourceCaps: this.resourceCaps,
       shipTransferMode: this.shipTransferMode,
       lastUniformTransferMode: this.lastUniformTransferMode,
@@ -1120,7 +1205,11 @@ class SpaceStorageProject extends SpaceshipProject {
     this.usedStorage = state.usedStorage || 0;
     this.resourceUsage = state.resourceUsage || {};
     this.sanitizeResourceUsage();
-    this.strategicReserve = state.strategicReserve || 0;
+    this.resourceStrategicReserves = state.resourceStrategicReserves || {};
+    this.sanitizeResourceStrategicReserves();
+    if (!state.resourceStrategicReserves && state.strategicReserve > 0) {
+      this.applyLegacyStrategicReserve(state.strategicReserve);
+    }
     this.resourceCaps = state.resourceCaps || {};
     for (const resourceKey in this.resourceCaps) {
       const cap = this.resourceCaps[resourceKey];
