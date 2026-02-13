@@ -426,6 +426,35 @@ class NanotechManager extends EffectableEntity {
     const travelCap = this.getTravelPreserveCap();
     const capped = Math.min(Number(this.nanobots), travelCap);
     this.nanobots = Math.max(1, capped) || travelCap;
+    this.resetControlsForTravel();
+  }
+
+  resetControlsForTravel() {
+    this.maintenanceSlider = 0;
+    this.glassSlider = 0;
+    this.maintenance2Slider = 0;
+    this.componentsSlider = 0;
+    this.maintenance3Slider = 0;
+    this.electronicsSlider = 0;
+    this.maxEnergyPercent = 0;
+    this.maxEnergyAbsolute = 0;
+    this.maxSiliconPercent = 0;
+    this.maxSiliconAbsolute = 0;
+    this.maxMetalPercent = 0;
+    this.maxMetalAbsolute = 0;
+    this.maxBiomassPercent = 0;
+    this.maxBiomassAbsolute = 0;
+    this.currentEnergyConsumption = 0;
+    this.currentSiliconConsumption = 0;
+    this.currentGlassProduction = 0;
+    this.currentMetalConsumption = 0;
+    this.currentComponentsProduction = 0;
+    this.currentBiomassConsumption = 0;
+    this.currentElectronicsProduction = 0;
+    this.currentMaintenanceReduction = 0;
+    this.currentMaintenance2Reduction = 0;
+    this.currentMaintenance3Reduction = 0;
+    this.updateUI();
   }
 
   applyMaintenanceEffects() {

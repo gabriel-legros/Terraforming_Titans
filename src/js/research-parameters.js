@@ -2356,7 +2356,7 @@ const researchParameters = {
       {
         id: 'warp_storage',
         name: 'Warp Storage',
-        description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot Recipe.',
+        description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot mode.',
         cost: { advancedResearch: 75_000_000 },
         prerequisites: [],
         effects: [
