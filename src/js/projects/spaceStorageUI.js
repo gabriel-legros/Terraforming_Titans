@@ -449,23 +449,6 @@ function renderSpaceStorageUI(project, container) {
     return Math.max(0, project.maxStorage);
   };
 
-  const getReserveLimit = (resourceKey, mode, value) => {
-    if (mode === 'amount') {
-      return Math.max(0, value);
-    }
-    if (mode === 'percentTotal') {
-      return Math.max(0, (project.maxStorage * value) / 100);
-    }
-    if (mode === 'percentCap') {
-      let capLimit = project.getResourceCapLimit(resourceKey);
-      if (!Number.isFinite(capLimit)) {
-        capLimit = project.maxStorage;
-      }
-      return Math.max(0, (capLimit * value) / 100);
-    }
-    return 0;
-  };
-
   const updateCapResourceValue = () => {
     const key = projectElements[project.name].capResourceKey;
     if (!key) return;
@@ -477,13 +460,7 @@ function renderSpaceStorageUI(project, container) {
       : Math.max(0, parsed);
     const amount = Math.max(0, project.resourceUsage[key] || 0);
     const capLimit = getCapLimit(mode, normalized);
-    const reserveMode = reserveModeSelect.value;
-    const reserveParsed = parseFlexibleNumber(reserveValueInput.dataset.spaceStorageReserve) || 0;
-    const reserveNormalized = reserveMode === 'percentCap' || reserveMode === 'percentTotal'
-      ? Math.max(0, Math.min(100, reserveParsed))
-      : Math.max(0, reserveParsed);
-    const reserveLimit = getReserveLimit(key, reserveMode, reserveNormalized);
-    capResourceValue.textContent = `${label} ${formatNumber(amount, false, 2)}/${formatNumber(capLimit, false, 2)} (reserve ${formatNumber(reserveLimit, false, 2)})`;
+    capResourceValue.textContent = `${label} ${formatNumber(amount, false, 2)}/${formatNumber(capLimit, false, 2)}`;
   };
 
   const updateCapInputState = () => {
@@ -1040,11 +1017,6 @@ function updateSpaceStorageUI(project) {
       const capNormalized = capMode === 'percent'
         ? Math.max(0, Math.min(100, capParsed))
         : Math.max(0, capParsed);
-      const reserveMode = els.reserveModeSelect.value;
-      const reserveParsed = parseFlexibleNumber(els.reserveValueInput.dataset.spaceStorageReserve) || 0;
-      const reserveNormalized = reserveMode === 'percentCap' || reserveMode === 'percentTotal'
-        ? Math.max(0, Math.min(100, reserveParsed))
-        : Math.max(0, reserveParsed);
       const amount = key ? Math.max(0, project.resourceUsage[key] || 0) : 0;
       let capLimit = project.maxStorage;
       if (capMode === 'percent') {
@@ -1052,17 +1024,7 @@ function updateSpaceStorageUI(project) {
       } else if (capMode === 'amount') {
         capLimit = capNormalized;
       }
-      let reserveLimit = 0;
-      if (reserveMode === 'amount') {
-        reserveLimit = reserveNormalized;
-      } else if (reserveMode === 'percentTotal') {
-        reserveLimit = (project.maxStorage * reserveNormalized) / 100;
-      } else if (reserveMode === 'percentCap' && key) {
-        const resourceCapLimit = project.getResourceCapLimit(key);
-        const safeCapLimit = Number.isFinite(resourceCapLimit) ? resourceCapLimit : project.maxStorage;
-        reserveLimit = (safeCapLimit * reserveNormalized) / 100;
-      }
-      els.capResourceValue.textContent = `${label} ${formatNumber(amount, false, 2)}/${formatNumber(Math.max(0, capLimit), false, 2)} (reserve ${formatNumber(Math.max(0, reserveLimit), false, 2)})`;
+      els.capResourceValue.textContent = `${label} ${formatNumber(amount, false, 2)}/${formatNumber(Math.max(0, capLimit), false, 2)}`;
     }
     if (els.capValueLabel) {
       els.capValueLabel.firstChild.textContent = els.capModeSelect.value === 'percent' ? 'Cap %:' : 'Cap value:';
