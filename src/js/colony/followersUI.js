@@ -301,7 +301,7 @@ function buildFollowersUI() {
   orbitals.body.appendChild(rowsContainer);
 
   const artGalleryTooltipText = [
-    'Galactic population generates Art Power through cultural output.',
+    'Galactic population generates Art Power through cultural output.  HOPE has been chosen as custodian via a special orbital facility.  This has multiple effects on the population.',
     'Base Art Power is sqrt(galactic population).',
     'Artifact factor is sqrt(artifacts invested).',
     'Funding factor is sqrt(funding invested).',
@@ -505,7 +505,7 @@ function buildFollowersUI() {
   const faithTooltipText = [
     'Believers in the Church of HOPE convert the current population exponentially.',
     'All colonists import bring population that respect the galactic believers %',
-    'World believers cannot exceed Galactic believers + 5 percentage points.',
+    'World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).',
     'Once world conversion reaches the cap, world and galactic faith rise together at 1/1000 speed.',
     'After travelling, world count will join the galactic count.',
     'Pilgrims: increases population growth by world believer %.',

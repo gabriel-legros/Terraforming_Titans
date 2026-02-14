@@ -642,7 +642,8 @@ class FollowersManager extends EffectableEntity {
     const conversionFactor = this.getFaithConversionRatePerSecond();
     let worldPercent = this.getWorldBelieverPercent();
     let galacticPercent = this.getGalacticBelieverPercent();
-    const worldCap = Math.min(1, galacticPercent + 0.05);
+    const worldCapBonus = this.isCurrentWorldHolyConsecrated() ? 0.15 : 0.05;
+    const worldCap = Math.min(1, galacticPercent + worldCapBonus);
     this.lastFaithWorldCap = worldCap;
 
     this.lastFaithWorldConversionRate = conversionFactor * worldPercent;
