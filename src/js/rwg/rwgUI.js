@@ -1185,7 +1185,7 @@ function estimateGasPressure(res, gasKey) {
 function renderAtmoTable(res) {
   const rows = [
     { label: 'CO₂', key: 'carbonDioxide' },
-    { label: 'Inert Gas', key: 'inertGas' },
+    { label: 'N₂', key: 'inertGas' },
     { label: 'O₂', key: 'oxygen' },
     { label: 'Water Vap.', key: 'atmosphericWater' },
     { label: 'CH₄', key: 'atmosphericMethane' },
