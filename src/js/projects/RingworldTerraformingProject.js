@@ -187,7 +187,7 @@ class RingworldTerraformingProject extends Project {
 
     const shadingText = document.createElement('div');
     shadingText.className = 'project-description ringworld-terraforming-shading-text';
-    shadingText.textContent = 'Ringworlds solar flux is perfect, but too much exposure would lead to overheating.  Shades can be used to control this and also simulate a day/night cycle.';
+    shadingText.textContent = 'Ringworlds solar flux is perfect, but too much exposure would lead to overheating.  Shades can be used to control this and also simulate a day/night cycle.  Auto shade assumes the atmosphere is already active (i.e. surface gravity is >= 0.1g).';
     shadingPanel.appendChild(shadingText);
 
     const shadingControls = document.createElement('div');
