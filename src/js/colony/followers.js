@@ -17,6 +17,10 @@ class FollowersManager extends EffectableEntity {
     this.lastFaithWorldConversionRate = 0;
     this.lastFaithGalacticConversionRate = 0;
     this.lastFaithWorldCap = 0.15;
+    this.artifactsInvested = 0;
+    this.fundingInvested = 0;
+    this.artifactInvestmentStep = 1;
+    this.fundingInvestmentStep = 1000;
     this.holyWorldPoints = 0;
     this.holyWorldCompletions = 0;
     this.holyWorldConsecratedWorlds = {};
@@ -349,7 +353,152 @@ class FollowersManager extends EffectableEntity {
   }
 
   getZealWorkerEfficiencyBonus() {
-    return this.getWorldBelieverPercent() * 5;
+    return this.getWorldBelieverPercent() * 2;
+  }
+
+  getArtPowerPopulation() {
+    return Math.max(0, this.galacticPopulation + this.getCurrentWorldPopulation());
+  }
+
+  getArtifactInvestmentStep() {
+    return this.artifactInvestmentStep;
+  }
+
+  getFundingInvestmentStep() {
+    return this.fundingInvestmentStep;
+  }
+
+  setArtifactInvestmentStep(step) {
+    const next = Math.max(1, step);
+    this.artifactInvestmentStep = next;
+    this.updateUI();
+  }
+
+  setFundingInvestmentStep(step) {
+    const next = Math.max(1, step);
+    this.fundingInvestmentStep = next;
+    this.updateUI();
+  }
+
+  divideArtifactInvestmentStep() {
+    this.setArtifactInvestmentStep(this.artifactInvestmentStep / 10);
+  }
+
+  multiplyArtifactInvestmentStep() {
+    this.setArtifactInvestmentStep(this.artifactInvestmentStep * 10);
+  }
+
+  divideFundingInvestmentStep() {
+    this.setFundingInvestmentStep(this.fundingInvestmentStep / 10);
+  }
+
+  multiplyFundingInvestmentStep() {
+    this.setFundingInvestmentStep(this.fundingInvestmentStep * 10);
+  }
+
+  getArtifactResource() {
+    return resources.special.alienArtifact;
+  }
+
+  getFundingResource() {
+    return resources.colony.funding;
+  }
+
+  investArtifacts(amount) {
+    const value = Math.max(0, amount);
+    if (value <= 0) {
+      return false;
+    }
+    const artifactResource = this.getArtifactResource();
+    const invested = Math.min(value, artifactResource.value);
+    if (invested <= 0) {
+      return false;
+    }
+    artifactResource.decrease(invested);
+    this.artifactsInvested += invested;
+    this.updateUI();
+    return true;
+  }
+
+  investArtifactsStep() {
+    return this.investArtifacts(this.artifactInvestmentStep);
+  }
+
+  investArtifactsMax() {
+    const artifactResource = this.getArtifactResource();
+    return this.investArtifacts(artifactResource.value);
+  }
+
+  investFunding(amount) {
+    const value = Math.max(0, amount);
+    if (value <= 0) {
+      return false;
+    }
+    const fundingResource = this.getFundingResource();
+    const invested = Math.min(value, fundingResource.value);
+    if (invested <= 0) {
+      return false;
+    }
+    fundingResource.decrease(invested);
+    this.fundingInvested += invested;
+    this.updateUI();
+    return true;
+  }
+
+  investFundingStep() {
+    return this.investFunding(this.fundingInvestmentStep);
+  }
+
+  investFundingMax() {
+    const fundingResource = this.getFundingResource();
+    return this.investFunding(fundingResource.value);
+  }
+
+  getArtifactPowerMultiplier() {
+    return Math.max(1, Math.sqrt(Math.max(0, this.artifactsInvested)));
+  }
+
+  getFundingPowerMultiplier() {
+    return Math.max(1, Math.sqrt(Math.max(0, this.fundingInvested)));
+  }
+
+  getArtPower() {
+    const basePower = Math.max(1, Math.sqrt(this.getArtPowerPopulation()));
+    return basePower * this.getArtifactPowerMultiplier() * this.getFundingPowerMultiplier();
+  }
+
+  getArtHappinessBonus() {
+    const artPower = this.getArtPower();
+    if (artPower <= 1) {
+      return 0;
+    }
+    return Math.max(0, Math.log10(artPower) / 200);
+  }
+
+  getArtWorkerPerColonistMultiplier() {
+    return 1 + 10 * this.getArtHappinessBonus();
+  }
+
+  getArtPowerSnapshot() {
+    const population = this.getArtPowerPopulation();
+    const basePower = Math.max(1, Math.sqrt(population));
+    const artifactMultiplier = this.getArtifactPowerMultiplier();
+    const fundingMultiplier = this.getFundingPowerMultiplier();
+    const artPower = basePower * artifactMultiplier * fundingMultiplier;
+    const happinessBonus = artPower > 1 ? Math.max(0, Math.log10(artPower) / 200) : 0;
+    return {
+      population,
+      basePower,
+      artifactMultiplier,
+      fundingMultiplier,
+      artPower,
+      artifactsInvested: this.artifactsInvested,
+      fundingInvested: this.fundingInvested,
+      artifactStep: this.artifactInvestmentStep,
+      fundingStep: this.fundingInvestmentStep,
+      happinessBonus,
+      workerMultiplier: 1 + 10 * happinessBonus
+    };
   }
 
   getApostlesOrbitalsMultiplier() {
@@ -991,6 +1140,12 @@ class FollowersManager extends EffectableEntity {
         consecratedWorlds: { ...this.holyWorldConsecratedWorlds },
         shopPurchases: { ...this.holyWorldShopPurchases }
       },
+      artGallery: {
+        artifactsInvested: this.artifactsInvested,
+        fundingInvested: this.fundingInvested,
+        artifactStep: this.artifactInvestmentStep,
+        fundingStep: this.fundingInvestmentStep
+      },
       booleanFlags: Array.from(this.booleanFlags)
     };
   }
@@ -1007,6 +1162,7 @@ class FollowersManager extends EffectableEntity {
     const savedWeights = data.weights || {};
     const faith = data.faith || {};
     const holyWorld = data.holyWorld || {};
+    const artGallery = data.artGallery || {};
 
     this.manualAssignments = {};
     this.weights = {};
@@ -1041,6 +1197,10 @@ class FollowersManager extends EffectableEntity {
       ...this.createEmptyHolyWorldShopPurchases(),
       ...(holyWorld.shopPurchases || {})
     };
+    this.artifactsInvested = Math.max(0, artGallery.artifactsInvested || 0);
+    this.fundingInvested = Math.max(0, artGallery.fundingInvested || 0);
+    this.artifactInvestmentStep = Math.max(1, artGallery.artifactStep || 1);
+    this.fundingInvestmentStep = Math.max(1, artGallery.fundingStep || 1000);
     if (this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
       this.galacticBelievers = this.galacticPopulation;
     }

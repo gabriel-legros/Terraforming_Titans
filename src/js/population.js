@@ -237,9 +237,12 @@ class PopulationModule extends EffectableEntity {
     const faithZealMultiplier = followersManager && followersManager.enabled
       ? (1 + followersManager.getZealWorkerEfficiencyBonus())
       : 1;
+    const artGalleryMultiplier = followersManager && followersManager.enabled
+      ? followersManager.getArtWorkerPerColonistMultiplier()
+      : 1;
 
     const workerCap =
-      Math.floor(ratio * this.populationResource.value * faithZealMultiplier) +
+      Math.floor(ratio * this.populationResource.value * faithZealMultiplier * artGalleryMultiplier) +
       availableAndroids +
       this.getBioworkerContribution();
     this.workerResource.cap = workerCap;

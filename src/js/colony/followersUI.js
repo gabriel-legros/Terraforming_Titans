@@ -7,6 +7,25 @@ const followersUICache = {
   stepValue: null,
   divideStepButton: null,
   multiplyStepButton: null,
+  artPopulation: null,
+  artBasePower: null,
+  artArtifactMultiplier: null,
+  artFundingMultiplier: null,
+  artTotalPower: null,
+  artHappinessBonus: null,
+  artWorkerMultiplier: null,
+  artArtifactAvailable: null,
+  artFundingAvailable: null,
+  artArtifactStepValue: null,
+  artFundingStepValue: null,
+  artArtifactInput: null,
+  artFundingInput: null,
+  artArtifactInvestButton: null,
+  artFundingInvestButton: null,
+  artArtifactInvestStepButton: null,
+  artFundingInvestStepButton: null,
+  artArtifactMaxButton: null,
+  artFundingMaxButton: null,
   faithWorldPercent: null,
   faithWorldBelievers: null,
   faithGalacticPercent: null,
@@ -281,6 +300,205 @@ function buildFollowersUI() {
 
   orbitals.body.appendChild(rowsContainer);
 
+  const artGalleryTooltipText = [
+    'Galactic population generates Art Power through cultural output.',
+    'Base Art Power is sqrt(galactic population).',
+    'Artifact factor is sqrt(artifacts invested).',
+    'Funding factor is sqrt(funding invested).',
+    'Total Art Power = sqrt(population) * sqrt(artifacts invested) * sqrt(funding invested).',
+    'Happiness bonus is 0.5 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 10 * happiness bonus.'
+  ].join('\n');
+  const artGallery = document.createElement('div');
+  artGallery.classList.add('followers-art-gallery');
+
+  const artHeader = document.createElement('div');
+  artHeader.classList.add('followers-art-header');
+
+  const artTitle = document.createElement('span');
+  artTitle.classList.add('followers-art-title');
+  artTitle.textContent = 'Art Gallery';
+
+  const artInfo = document.createElement('span');
+  artInfo.classList.add('info-tooltip-icon');
+  artInfo.innerHTML = '&#9432;';
+  attachDynamicInfoTooltip(artInfo, artGalleryTooltipText);
+  artHeader.append(artTitle, artInfo);
+  artGallery.appendChild(artHeader);
+
+  const artStats = document.createElement('div');
+  artStats.classList.add('followers-art-stats-grid');
+
+  const createArtStat = (labelText, valueText) => {
+    const stat = document.createElement('div');
+    stat.classList.add('followers-art-stat');
+
+    const label = document.createElement('span');
+    label.classList.add('followers-art-stat-label');
+    label.textContent = labelText;
+
+    const value = document.createElement('span');
+    value.classList.add('followers-art-stat-value');
+    value.textContent = valueText;
+
+    stat.append(label, value);
+    return { stat, value };
+  };
+
+  const artPopulationStat = createArtStat('Galactic Population', '0');
+  const artBasePowerStat = createArtStat('Base Power', '0');
+  const artArtifactMultiplierStat = createArtStat('Artifact Factor', 'x0');
+  const artFundingMultiplierStat = createArtStat('Funding Factor', 'x0');
+  const artTotalPowerStat = createArtStat('Art Power', '0');
+  const artHappinessBonusStat = createArtStat('Happiness Bonus', '+0.00%');
+  const artWorkerMultiplierStat = createArtStat('Worker/Colonist', 'x1.00');
+  artStats.append(
+    artPopulationStat.stat,
+    artBasePowerStat.stat,
+    artArtifactMultiplierStat.stat,
+    artFundingMultiplierStat.stat,
+    artTotalPowerStat.stat,
+    artHappinessBonusStat.stat,
+    artWorkerMultiplierStat.stat
+  );
+  artGallery.appendChild(artStats);
+
+  const artControls = document.createElement('div');
+  artControls.classList.add('followers-art-controls-grid');
+
+  const createInvestmentPanel = (titleText) => {
+    const panel = document.createElement('div');
+    panel.classList.add('followers-art-invest-panel');
+
+    const label = document.createElement('div');
+    label.classList.add('followers-art-invest-title');
+    label.textContent = titleText;
+
+    const available = document.createElement('div');
+    available.classList.add('followers-art-invest-available');
+    available.textContent = 'Available: 0';
+
+    const amountRow = document.createElement('div');
+    amountRow.classList.add('followers-art-invest-row');
+
+    const amountInput = document.createElement('input');
+    amountInput.type = 'text';
+    amountInput.classList.add('followers-art-invest-input');
+    amountInput.value = '1';
+
+    const investButton = document.createElement('button');
+    investButton.type = 'button';
+    investButton.classList.add('followers-action-button');
+    investButton.textContent = 'Invest';
+
+    const maxButton = document.createElement('button');
+    maxButton.type = 'button';
+    maxButton.classList.add('followers-action-button');
+    maxButton.textContent = 'Max';
+    amountRow.append(amountInput, investButton, maxButton);
+
+    const stepRow = document.createElement('div');
+    stepRow.classList.add('followers-art-step-row');
+
+    const stepLabel = document.createElement('span');
+    stepLabel.classList.add('followers-inline-label');
+    stepLabel.textContent = 'Step';
+
+    const stepValue = document.createElement('span');
+    stepValue.classList.add('followers-step-value');
+    stepValue.textContent = '1';
+
+    const stepDown = document.createElement('button');
+    stepDown.type = 'button';
+    stepDown.classList.add('followers-action-button', 'followers-step-button');
+    stepDown.textContent = '/10';
+
+    const stepUp = document.createElement('button');
+    stepUp.type = 'button';
+    stepUp.classList.add('followers-action-button', 'followers-step-button');
+    stepUp.textContent = 'x10';
+
+    const investStep = document.createElement('button');
+    investStep.type = 'button';
+    investStep.classList.add('followers-action-button');
+    investStep.textContent = 'Invest Step';
+
+    stepRow.append(stepLabel, stepValue, stepDown, stepUp, investStep);
+    panel.append(label, available, amountRow, stepRow);
+
+    return {
+      panel,
+      available,
+      amountInput,
+      investButton,
+      maxButton,
+      stepValue,
+      stepDown,
+      stepUp,
+      investStep
+    };
+  };
+
+  const artifactPanel = createInvestmentPanel('Artifacts');
+  const fundingPanel = createInvestmentPanel('Funding');
+  artControls.append(artifactPanel.panel, fundingPanel.panel);
+  artGallery.appendChild(artControls);
+  orbitals.body.appendChild(artGallery);
+
+  const parseInvestAmount = (value) => {
+    const parsed = parseFlexibleNumber(value);
+    if (!Number.isFinite(parsed)) {
+      return 0;
+    }
+    return Math.max(0, parsed);
+  };
+
+  const artifactWire = wireStringNumberInput(artifactPanel.amountInput, {
+    parseValue: parseInvestAmount,
+    formatValue: (value) => formatNumber(Math.max(0, value), false, 2),
+    datasetKey: 'investAmount'
+  });
+  const fundingWire = wireStringNumberInput(fundingPanel.amountInput, {
+    parseValue: parseInvestAmount,
+    formatValue: (value) => formatNumber(Math.max(0, value), false, 2),
+    datasetKey: 'investAmount'
+  });
+  followersUICache.artArtifactWire = artifactWire;
+  followersUICache.artFundingWire = fundingWire;
+
+  artifactPanel.investButton.addEventListener('click', () => {
+    const value = parseInvestAmount(artifactPanel.amountInput.dataset.investAmount || artifactPanel.amountInput.value);
+    followersManager.investArtifacts(value);
+  });
+  artifactPanel.maxButton.addEventListener('click', () => {
+    followersManager.investArtifactsMax();
+  });
+  artifactPanel.stepDown.addEventListener('click', () => {
+    followersManager.divideArtifactInvestmentStep();
+  });
+  artifactPanel.stepUp.addEventListener('click', () => {
+    followersManager.multiplyArtifactInvestmentStep();
+  });
+  artifactPanel.investStep.addEventListener('click', () => {
+    followersManager.investArtifactsStep();
+  });
+
+  fundingPanel.investButton.addEventListener('click', () => {
+    const value = parseInvestAmount(fundingPanel.amountInput.dataset.investAmount || fundingPanel.amountInput.value);
+    followersManager.investFunding(value);
+  });
+  fundingPanel.maxButton.addEventListener('click', () => {
+    followersManager.investFundingMax();
+  });
+  fundingPanel.stepDown.addEventListener('click', () => {
+    followersManager.divideFundingInvestmentStep();
+  });
+  fundingPanel.stepUp.addEventListener('click', () => {
+    followersManager.multiplyFundingInvestmentStep();
+  });
+  fundingPanel.investStep.addEventListener('click', () => {
+    followersManager.investFundingStep();
+  });
+
   const bottomRow = document.createElement('div');
   bottomRow.classList.add('followers-secondary-row');
 
@@ -291,7 +509,7 @@ function buildFollowersUI() {
     'Once world conversion reaches the cap, world and galactic faith rise together at 1/1000 speed.',
     'After travelling, world count will join the galactic count.',
     'Pilgrims: increases population growth by world believer %.',
-    'Zeal: increases colonist worker efficiency by 5x world believer %.',
+    'Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).',
     'Apostles: increases available orbitals by 10 * (world believer % - 10%), up to +900%.',
     'Missionaries: increases post-cap galactic conversion power by world believer %.'
   ].join('\n');
@@ -526,6 +744,25 @@ function buildFollowersUI() {
   followersUICache.stepValue = stepValue;
   followersUICache.divideStepButton = divideStepButton;
   followersUICache.multiplyStepButton = multiplyStepButton;
+  followersUICache.artPopulation = artPopulationStat.value;
+  followersUICache.artBasePower = artBasePowerStat.value;
+  followersUICache.artArtifactMultiplier = artArtifactMultiplierStat.value;
+  followersUICache.artFundingMultiplier = artFundingMultiplierStat.value;
+  followersUICache.artTotalPower = artTotalPowerStat.value;
+  followersUICache.artHappinessBonus = artHappinessBonusStat.value;
+  followersUICache.artWorkerMultiplier = artWorkerMultiplierStat.value;
+  followersUICache.artArtifactAvailable = artifactPanel.available;
+  followersUICache.artFundingAvailable = fundingPanel.available;
+  followersUICache.artArtifactStepValue = artifactPanel.stepValue;
+  followersUICache.artFundingStepValue = fundingPanel.stepValue;
+  followersUICache.artArtifactInput = artifactPanel.amountInput;
+  followersUICache.artFundingInput = fundingPanel.amountInput;
+  followersUICache.artArtifactInvestButton = artifactPanel.investButton;
+  followersUICache.artFundingInvestButton = fundingPanel.investButton;
+  followersUICache.artArtifactInvestStepButton = artifactPanel.investStep;
+  followersUICache.artFundingInvestStepButton = fundingPanel.investStep;
+  followersUICache.artArtifactMaxButton = artifactPanel.maxButton;
+  followersUICache.artFundingMaxButton = fundingPanel.maxButton;
   followersUICache.faithWorldPercent = worldPercentStat.value;
   followersUICache.faithWorldBelievers = worldBelieversStat.value;
   followersUICache.faithGalacticPercent = galacticPercentStat.value;
@@ -629,6 +866,27 @@ function updateFollowersUI() {
       }
     }
   }
+
+  const art = followersManager.getArtPowerSnapshot();
+  const artifactAvailable = resources.special.alienArtifact.value;
+  const fundingAvailable = resources.colony.funding.value;
+  followersUICache.artPopulation.textContent = formatNumber(art.population, true);
+  followersUICache.artBasePower.textContent = formatNumber(art.basePower, true);
+  followersUICache.artArtifactMultiplier.textContent = `x${formatNumber(art.artifactMultiplier, false, 3)}`;
+  followersUICache.artFundingMultiplier.textContent = `x${formatNumber(art.fundingMultiplier, false, 3)}`;
+  followersUICache.artTotalPower.textContent = formatNumber(art.artPower, true);
+  followersUICache.artHappinessBonus.textContent = `+${formatNumber(art.happinessBonus * 100, false, 2)}%`;
+  followersUICache.artWorkerMultiplier.textContent = `x${formatNumber(art.workerMultiplier, false, 3)}`;
+  followersUICache.artArtifactAvailable.textContent = `Available: ${formatNumber(artifactAvailable, true)} | Invested: ${formatNumber(art.artifactsInvested, true)}`;
+  followersUICache.artFundingAvailable.textContent = `Available: ${formatNumber(fundingAvailable, true)} | Invested: ${formatNumber(art.fundingInvested, true)}`;
+  followersUICache.artArtifactStepValue.textContent = formatNumber(art.artifactStep, true);
+  followersUICache.artFundingStepValue.textContent = formatNumber(art.fundingStep, true);
+  followersUICache.artArtifactInvestButton.disabled = artifactAvailable <= 0;
+  followersUICache.artFundingInvestButton.disabled = fundingAvailable <= 0;
+  followersUICache.artArtifactInvestStepButton.disabled = artifactAvailable <= 0;
+  followersUICache.artFundingInvestStepButton.disabled = fundingAvailable <= 0;
+  followersUICache.artArtifactMaxButton.disabled = artifactAvailable <= 0;
+  followersUICache.artFundingMaxButton.disabled = fundingAvailable <= 0;
 
   const faith = followersManager.getFaithSnapshot();
   followersUICache.faithWorldPercent.textContent = `${formatNumber(faith.worldPercent * 100, false, 2)}%`;
