@@ -591,6 +591,7 @@ function updateAssignmentTable(container, assignments) {
 
 function updateWorkerAssignments(assignmentsDiv) {
   if (!assignmentsDiv || typeof populationModule === 'undefined') return;
+  const workerBreakdown = populationModule.getWorkerCapacityBreakdown(false);
 
   let ratioDiv = assignmentsDiv._ratioDiv;
   if (!ratioDiv) {
@@ -598,7 +599,7 @@ function updateWorkerAssignments(assignmentsDiv) {
     assignmentsDiv.appendChild(ratioDiv);
     assignmentsDiv._ratioDiv = ratioDiv;
   }
-  const ratioPercent = (populationModule.getEffectiveWorkerRatio() * 100).toFixed(0);
+  const ratioPercent = (workerBreakdown.ratio * 100).toFixed(0);
   const ratioText = `${ratioPercent}% of colonists provide workers`;
   if (ratioDiv.textContent !== ratioText) ratioDiv.textContent = ratioText;
 
@@ -614,9 +615,7 @@ function updateWorkerAssignments(assignmentsDiv) {
       }
       assignmentsDiv._colonistDiv = colonistDiv;
     }
-    const colonists = resources.colony?.colonists?.value || 0;
-    const colonistWorkers = Math.floor(populationModule.getEffectiveWorkerRatio() * colonists);
-    const colonistText = `${formatNumber(colonistWorkers, true)} from colonists`;
+    const colonistText = `${formatNumber(workerBreakdown.colonistWorkers, true)} from colonists`;
     if (colonistDiv.textContent !== colonistText) colonistDiv.textContent = colonistText;
 
     let androidDiv = assignmentsDiv._androidDiv;
@@ -625,19 +624,10 @@ function updateWorkerAssignments(assignmentsDiv) {
       assignmentsDiv.appendChild(androidDiv);
       assignmentsDiv._androidDiv = androidDiv;
     }
-    const stored = resources.colony?.androids?.value || 0;
-    const cap = resources.colony?.androids?.cap;
-    const effective = cap !== undefined ? Math.min(stored, cap) : stored;
-    let assigned = 0;
-    if (typeof projectManager !== 'undefined' && typeof projectManager.getAndroidAssignments === 'function') {
-      const androidAssignments = projectManager.getAndroidAssignments();
-      assigned = androidAssignments.reduce((sum, [, count]) => sum + count, 0);
-    }
-    const workers = Math.max(effective - assigned, 0);
-    const androidText = `${formatNumber(workers, true)} from androids`;
+    const androidText = `${formatNumber(workerBreakdown.androidWorkers, true)} from androids`;
     if (androidDiv.textContent !== androidText) androidDiv.textContent = androidText;
 
-    const bioworkers = populationModule.getBioworkerContribution?.() || 0;
+    const bioworkers = workerBreakdown.bioworkers;
     let bioworkerDiv = assignmentsDiv._bioworkerDiv;
     if (bioworkers > 0) {
       if (!bioworkerDiv) {

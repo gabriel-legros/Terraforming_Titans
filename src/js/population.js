@@ -44,6 +44,59 @@ class PopulationModule extends EffectableEntity {
     return ratio;
   }
 
+  getWorkerEfficiencyMultipliers() {
+    const zealMultiplier = followersManager && followersManager.enabled
+      ? (1 + followersManager.getZealWorkerEfficiencyBonus())
+      : 1;
+    const artMultiplier = followersManager && followersManager.enabled
+      ? followersManager.getArtWorkerPerColonistMultiplier()
+      : 1;
+    return {
+      zealMultiplier,
+      artMultiplier,
+      colonistMultiplier: zealMultiplier * artMultiplier
+    };
+  }
+
+  getAndroidWorkerState(enforceAssignmentCap = false) {
+    const storedAndroids = resources.colony.androids.value;
+    const androidCap = resources.colony.androids.cap;
+    const effectiveAndroids = Math.min(storedAndroids, androidCap);
+
+    let assignedAndroids = projectManager.getAssignedAndroids();
+    if (enforceAssignmentCap && assignedAndroids > effectiveAndroids) {
+      const toUnassign = Math.ceil(assignedAndroids - effectiveAndroids);
+      projectManager.forceUnassignAndroids(toUnassign);
+      assignedAndroids = projectManager.getAssignedAndroids();
+    }
+
+    return {
+      effectiveAndroids,
+      assignedAndroids,
+      availableAndroids: Math.max(0, effectiveAndroids - assignedAndroids)
+    };
+  }
+
+  getWorkerCapacityBreakdown(enforceAssignmentCap = false) {
+    const ratio = this.getEffectiveWorkerRatio();
+    const multipliers = this.getWorkerEfficiencyMultipliers();
+    const androidState = this.getAndroidWorkerState(enforceAssignmentCap);
+    const bioworkers = this.getBioworkerContribution();
+    const colonistWorkers = Math.floor(
+      ratio * this.populationResource.value * multipliers.colonistMultiplier
+    );
+    return {
+      ratio,
+      zealMultiplier: multipliers.zealMultiplier,
+      artMultiplier: multipliers.artMultiplier,
+      colonistMultiplier: multipliers.colonistMultiplier,
+      colonistWorkers,
+      androidWorkers: androidState.availableAndroids,
+      bioworkers,
+      totalWorkers: colonistWorkers + androidState.availableAndroids + bioworkers
+    };
+  }
+
   getCurrentGrowthPerSecond(){
     return this.lastGrowthPerSecond;
   }
@@ -216,35 +269,8 @@ class PopulationModule extends EffectableEntity {
   }
 
   updateWorkerCap() {
-    // Set the worker cap based on the current population and worker ratio
-    const ratio = this.getEffectiveWorkerRatio();
-    const storedAndroids = resources.colony.androids.value;
-    const androidCap = resources.colony.androids.cap;
-    let effectiveAndroids = Math.min(storedAndroids, androidCap);
-
-    let assignedAndroids = (typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids() : 0;
-
-    if (typeof projectManager !== 'undefined' && typeof projectManager.forceUnassignAndroids === 'function') {
-      if (assignedAndroids > effectiveAndroids) {
-        const toUnassign = Math.ceil(assignedAndroids - effectiveAndroids);
-        projectManager.forceUnassignAndroids(toUnassign);
-        assignedAndroids = projectManager.getAssignedAndroids();
-      }
-    }
-
-    const availableAndroids = Math.max(0, effectiveAndroids - assignedAndroids);
-
-    const faithZealMultiplier = followersManager && followersManager.enabled
-      ? (1 + followersManager.getZealWorkerEfficiencyBonus())
-      : 1;
-    const artGalleryMultiplier = followersManager && followersManager.enabled
-      ? followersManager.getArtWorkerPerColonistMultiplier()
-      : 1;
-
-    const workerCap =
-      Math.floor(ratio * this.populationResource.value * faithZealMultiplier * artGalleryMultiplier) +
-      availableAndroids +
-      this.getBioworkerContribution();
+    const breakdown = this.getWorkerCapacityBreakdown(true);
+    const workerCap = breakdown.totalWorkers;
     this.workerResource.cap = workerCap;
 
     // Adjust the worker value if it exceeds the cap
