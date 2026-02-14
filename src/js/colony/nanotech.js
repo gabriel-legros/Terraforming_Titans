@@ -436,8 +436,9 @@ class NanotechManager extends EffectableEntity {
     this.componentsSlider = 0;
     this.maintenance3Slider = 0;
     this.electronicsSlider = 0;
-    this.maxEnergyPercent = 0;
-    this.maxEnergyAbsolute = 0;
+    this.maxEnergyPercent = 10;
+    this.maxEnergyAbsolute = 1e6;
+    this.energyLimitMode = 'percent';
     this.maxSiliconPercent = 0;
     this.maxSiliconAbsolute = 0;
     this.maxMetalPercent = 0;
