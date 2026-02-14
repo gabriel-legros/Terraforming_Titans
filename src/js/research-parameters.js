@@ -60,7 +60,7 @@ const researchParameters = {
       {
         id: 'fission_plant1',
         name: 'Nuclear Power Plant',
-        description: 'Unlocks nuclear power plants, which produce vast amount of energy at great upfront cost.',
+        description: 'Unlocks nuclear power plants, which produce vast amounts of energy at great upfront cost.',
         cost: { research: 10000 },
         prerequisites: [],
         effects: [
@@ -331,8 +331,8 @@ const researchParameters = {
       },
       {
         id: 'components_factory',
-        name: 'Components factories',
-        description: 'Allows production of components using human workers.',
+        name: 'Component factories',
+        description: 'Allows production of components using workers.',
         cost: { research: 1000 },
         prerequisites: [],
         effects: [
@@ -454,7 +454,7 @@ const researchParameters = {
       {
         id: 'electronics_factory',
         name: 'Electronics factories',
-        description: 'Allows production of electronics using human workers.',
+        description: 'Allows production of electronics using workers.',
         cost: { research: 10000 },
         prerequisites: [],
         effects: [
@@ -643,7 +643,7 @@ const researchParameters = {
       {
         id: 'shipyard',
         name: 'Shipbuilding',
-        description: 'Enables the construction of spaceships.  Also unlock a special project for asteroid mining and resource disposal.',
+        description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.',
         cost: { research: 50000000 },
         prerequisites: [],
         effects: [
@@ -1298,7 +1298,7 @@ const researchParameters = {
       {
         id: 'surface_food_production',
         name: 'Surface Food Production',
-        description: 'Surface Biomass can now produce food passively at a rate 0.01 food pack per ton of biomass.',
+        description: 'Surface Biomass can now produce food passively at the rate of 0.01 food packs per ton of biomass per second.',
         cost: { research: 1_000_000_000 },
         prerequisites: [],
         effects: [
@@ -2007,7 +2007,7 @@ const researchParameters = {
       {
         id: 'foundry_worlds',
         name: 'Foundry Worlds',
-        description: 'Planetary cores contain sextillion tons of metal... if we can get to it.',
+        description: 'Planetary cores contain sextillions of tons of metal... if we can get to it.',
         cost: { advancedResearch: 50000000 },
         prerequisites: [],
         effects: [
@@ -2236,7 +2236,7 @@ const researchParameters = {
       {
         id: 'chemistry_of_scale',
         name: 'Chemistry of Scale',
-        description: 'Chemical reactors gain efficiency from scale, with production and consumption multiplied by 1 + log(active reactors) / 5.',
+        description: 'Chemical reactors gain efficiency from scale, with production and consumption multiplied by 1 + log10(active reactors) / 5.',
         cost: { advancedResearch: 6_000_000 },
         prerequisites: [],
         effects: [
