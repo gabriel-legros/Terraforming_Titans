@@ -46,6 +46,7 @@ function create() {
 }
 
 function initializeDefaultGlobals(){
+  shipEfficiency = 1;
   // Instantiate the TabManager and load tabs from the constant
   tabManager = new TabManager({
     description: 'Manages game tabs and unlocks them based on effects.',
@@ -192,6 +193,9 @@ function initializeGameState(options = {}) {
   const preserveManagers = options.preserveManagers || false;
   const preserveJournal = options.preserveJournal || false;
   const skipStoryInitialization = options.skipStoryInitialization || false;
+  if (!preserveManagers) {
+    shipEfficiency = 1;
+  }
   globalGameIsTraveling = preserveManagers && !globalGameIsLoadingFromSave;
   let savedAdvancedResearch = null;
   let savedAlienArtifact = null;
