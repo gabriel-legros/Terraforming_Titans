@@ -228,7 +228,8 @@ class ColonySlidersManager extends EffectableEntity {
       type: 'productionMultiplier',
       value: multiplier,
       effectId: 'oreMineProductionBoost',
-      sourceId: 'oreMineWorkers'
+      sourceId: 'oreMineWorkers',
+      name: 'Colony sliders'
     });
   }
 

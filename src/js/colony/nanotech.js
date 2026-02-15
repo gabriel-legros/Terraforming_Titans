@@ -109,7 +109,7 @@ class NanotechManager extends EffectableEntity {
       if (seconds <= 0) {
         return 0;
       }
-      const plan = lifeManager.buildAtmosphericPlan(deltaTime);
+      const plan = lifeManager.buildAtmosphericPlan(deltaTime, accumulatedChanges);
       let growthTotal = 0;
       plan.zones.forEach(zoneName => {
         const zoneGrowth = plan.zoneGrowthByZone[zoneName] || 0;

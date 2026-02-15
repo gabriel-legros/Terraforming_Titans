@@ -2,25 +2,29 @@ const festivalEffects = [
     {
         target: 'fundingModule',
         type: 'productionMultiplier',
-        value : 3
+        value : 3,
+        name: 'Festival'
     },
     {
         target: 'building',
         targetId: 'oreMine',
         type: 'productionMultiplier',
-        value: 3
+        value: 3,
+        name: 'Festival'
     },
     {
         target: 'building',
         targetId: 'componentFactory',
         type: 'productionMultiplier',
-        value: 3
+        value: 3,
+        name: 'Festival'
     },
     {
         target: 'building',
         targetId: 'electronicsFactory',
         type: 'productionMultiplier',
-        value: 3
+        value: 3,
+        name: 'Festival'
     },
     {
       target: 'population',

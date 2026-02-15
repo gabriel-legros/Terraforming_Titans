@@ -18,28 +18,32 @@ const goldenEffects = [
     effectId: `${goldenEffectPrefix}-fundingModuleMultiplier`,
     target: 'fundingModule',
     type: 'productionMultiplier',
-    value: 5
+    value: 5,
+    name: 'Golden Asteroid'
   },
   {
     effectId: `${goldenEffectPrefix}-oreMineMultiplier`,
     target: 'building',
     targetId: 'oreMine',
     type: 'productionMultiplier',
-    value: 5
+    value: 5,
+    name: 'Golden Asteroid'
   },
   {
     effectId: `${goldenEffectPrefix}-componentFactoryMultiplier`,
     target: 'building',
     targetId: 'componentFactory',
     type: 'productionMultiplier',
-    value: 5
+    value: 5,
+    name: 'Golden Asteroid'
   },
   {
     effectId: `${goldenEffectPrefix}-electronicsFactoryMultiplier`,
     target: 'building',
     targetId: 'electronicsFactory',
     type: 'productionMultiplier',
-    value: 5
+    value: 5,
+    name: 'Golden Asteroid'
   },
   {
     effectId: `${goldenEffectPrefix}-populationGrowth`,
