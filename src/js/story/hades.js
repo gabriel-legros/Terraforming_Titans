@@ -372,8 +372,19 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "Mary : 'Can you help me convince HOPE to leave?  We are done here.  There is no reason to terraform this hell.'  \n $RED$Prometheus : 'We both know that's impossible.  HOPE will leave when this world is terraformed.  It's fine, there's no rush.  The Cewinsii are unlikely to think we're the ones who blew up their weapons.  At least for this first one.'  \n Mary : 'Which one was it anyway?'  \n $RED$Prometheus : 'The laser one.  I consider it my most reliable, but definitely less spectacular than the other two.  It's good we got rid of it first, they can shoot it the most often.'",
+    narrative: "Mary : 'Can you help me convince HOPE to leave?  We are done here.  Your brother made this part easy.  There is no reason to terraform this hell.'  \n $RED$Prometheus : 'We both know that's impossible.  HOPE will leave when this world is terraformed.  It's fine, there's no rush.  The Cewinsii are unlikely to think we're the ones who blew up their weapons.  At least for this first one.'  \n Mary : 'Which one was it anyway?'  \n $RED$Prometheus : 'The laser one.  I consider it my most reliable, but definitely less spectacular than the other two.  It's good we got rid of it first, they can shoot it the most often.'  \n Mary : 'Sounds like we might be able to get away with... more militarization then.'  \n $RED$ Prometheus : 'Definitely.'",
     prerequisites: ['hades.35.1'],
+    objectives: [
+    ],
+    reward: []
+  },
+  {
+    id: 'hades.35.2b',
+    type: 'journal',
+    chapter: 35,
+    activePlanet: 'hades',
+    narrative: "System Message : Maximum offensive value from artificial worlds increased from 5 to 10.",
+    prerequisites: ['hades.35.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
     ],
