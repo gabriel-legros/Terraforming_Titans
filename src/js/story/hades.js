@@ -77,7 +77,7 @@ progressHades.chapters.push(
     chapter: 33,
     activePlanet: 'hades',
     title: 'Chapter 33: The invisible enemy',
-    narrative: "Confirmed arrival in the shadow of Hades.  \n Mary : 'Good.  We cannot see the pulsar from here and honestly I hope we don't ever see it.  Humans are immune to cancer but there's still only so much damage we can take.'  \n $RED$Prometheus : 'Hrnnnggg, these awakenings are scarier than I thought.  HOPE, activate the signal now.' \n Activating countermeasure signal...  \n Mary : 'How do we know if your automated defenses are off?'  \n $RED$Prometheus : 'They are.  The signal is coming from an AI.  More precisely, it is coming from an AI that contains a copy of myself.  These defenses cannot tell the difference between my true self and this copy.'  \n Mary : 'Alright, I choose to believe you.  Bob!  Send in the orbitals through the gate now.'",
+    narrative: "Confirmed arrival in the shadow of Hades.  \n Mary : 'Good.  We cannot see the pulsar from here and honestly I hope we don't ever see it.  Humans are immune to cancer but there's still only so much damage we can take from that angry godlike monster in the middle of the system.'  \n $RED$Prometheus : 'Hrnnnggg, these awakenings are scarier than I thought.  HOPE, activate the signal now.' \n Activating countermeasure signal...  \n Mary : 'How do we know if your automated defenses are off?'  \n $RED$Prometheus : 'They are.  The signal is coming from an AI.  More precisely, it is coming from an AI that contains a copy of myself.  These defenses cannot tell the difference between my true self and this copy.'  \n Mary : 'Alright, I choose to believe you.  Bob!  Send in the orbitals through the gate now.'",
     prerequisites: ['tartarus.32.13'],
     objectives: [
     ],
@@ -113,7 +113,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "Detecting orbital habitats coming from warpgate.  \n Mary : 'This mission is bigger than you and I, HOPE.  Sending you alone with a bit of military cover would be foolish at this point.  Each and every world you've terraformed is contributing.  We are taking down those superweapons together.'  \n $RED$Prometheus : 'As we've explained already, you cannot realistically support ground colonies on Hades.  Your priority should be to establish underground colonies.  The command center is at the core of this planet so we are going to need a serious industrial base to get there.'",
+    narrative: "Detecting orbital habitats coming from warpgate.  \n Mary : 'This mission is bigger than you and I, HOPE.  Sending you alone with a bit of military cover would be foolish at this point.  Each and every world you've terraformed is contributing.  We are taking down those superweapons together.'  \n $RED$Prometheus : 'As we've explained already, you cannot realistically support ground colonies on Hades.  Your priority should be to establish underground colonies.  The command center is at the core of this planet so we are going to need a serious industrial base to get there.  Don't worry, I have blueprints prepared for everything.'",
     prerequisites: ['hades.33.0'],
     objectives: [
       {

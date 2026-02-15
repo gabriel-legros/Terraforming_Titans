@@ -2,10 +2,17 @@ class ArtificialSkyProject extends Project {
   getScaledCost() {
     const scaledCost = super.getScaledCost();
     const initialLand = Math.max(terraforming.initialLand || 0, 0);
-    if (scaledCost.colony && scaledCost.colony.superalloys) {
-      scaledCost.colony.superalloys *= initialLand;
-      if (scaledCost.colony.superalloys <= 0) {
-        delete scaledCost.colony.superalloys;
+    if (scaledCost.colony) {
+      const scaledResources = ['superalloys', 'water', 'metal'];
+      for (let index = 0; index < scaledResources.length; index += 1) {
+        const resource = scaledResources[index];
+        if (!scaledCost.colony[resource]) {
+          continue;
+        }
+        scaledCost.colony[resource] *= initialLand;
+        if (scaledCost.colony[resource] <= 0) {
+          delete scaledCost.colony[resource];
+        }
       }
       if (!Object.keys(scaledCost.colony).length) {
         delete scaledCost.colony;

@@ -165,7 +165,8 @@ class DeeperMiningProject extends AndroidProject {
         type: 'productionMultiplier',
         effectId: 'supercharged_mining_prod',
         value: multiplier,
-        sourceId: this
+        sourceId: this,
+        name: 'Supercharged mining'
       });
       addEffect({
         target: 'building',

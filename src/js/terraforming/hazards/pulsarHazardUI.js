@@ -56,17 +56,7 @@ function ensurePulsarLayout() {
 
   const titleRow = doc.createElement('div');
   titleRow.className = 'hazard-card__title';
-  titleRow.textContent = 'Pulsar Activity';
-
-  const icon = doc.createElement('span');
-  icon.className = 'info-tooltip-icon';
-  icon.innerHTML = '&#9432;';
-  try {
-    attachDynamicInfoTooltip(icon, 'Pulsar bursts add severe orbital radiation. Surface radiation is reduced by atmospheric attenuation.');
-  } catch (error) {
-    icon.title = 'Pulsar bursts add severe orbital radiation. Surface radiation is reduced by atmospheric attenuation.';
-  }
-  titleRow.appendChild(icon);
+  titleRow.textContent = 'Pulsar';
   card.appendChild(titleRow);
 
   const summaryRow = doc.createElement('div');
