@@ -97,7 +97,7 @@ const followersOrbitalParameters = {
       sourceId: 't1_colony',
       targetCategory: 'colony',
       targetResource: 'research',
-      multiplier: 1,
+      multiplier: 10,
     },
   ],
 };

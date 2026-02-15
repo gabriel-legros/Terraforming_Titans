@@ -11,7 +11,7 @@ const pulsarHazardUICache = {
 
 const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, and Mega Heat Sink are disabled until the pulsar hazard is cleared.';
 const PULSAR_LAND_UNUSABLE_TEXT = 'Land is unusable until the hazard is cleared.  You can still use underground land and aerostats.';
-const PULSAR_STORM_TEXT = 'Electromagnetic storm every 100s for 5s: 3% attrition to androids and electronics, spaceship projects paused.';
+const PULSAR_STORM_TEXT = 'Electromagnetic storm every 100s for 5s: 3% attrition to workers androids and electronics, spaceship projects paused.  Androids assigned underground are immune.';
 const PULSAR_THRUSTER_COST_TEXT = 'Planetary Thrusters construction cost is multiplied by x100.';
 const PULSAR_CLEAR_TEXT = 'Build an artificial sky or go rogue.';
 

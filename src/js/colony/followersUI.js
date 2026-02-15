@@ -977,7 +977,7 @@ function updateFollowersUI() {
     const row = followersUICache.holyWorldCostRows[key];
     const required = holyCostEntries[key] || 0;
     const available = resources.colony[key].value;
-    row.value.textContent = `${formatNumber(required, true)} (have ${formatNumber(available, true)})`;
+    row.value.textContent = formatNumber(required, true);
     row.row.classList.toggle('is-unmet', available < required);
   }
 

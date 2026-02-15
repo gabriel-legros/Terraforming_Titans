@@ -113,7 +113,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "Detecting orbital habitats coming from warpgate.  \n Mary : 'This mission is bigger than you and I, HOPE.  Sending you alone with a bit of military cover would be foolish at this point.  Each and every world you've terraformed is contributing.  We are taking down those superweapons together.'  \n $RED$Prometheus : 'As we've explained already, you cannot realistically support ground colonies on Hades.  Your priority should be to establish underground colonies.  The command center is at the core of this planet so we are going to need a serious industrial base to get there.  Don't worry, I have blueprints prepared for everything.'",
+    narrative: "Detecting orbital habitats coming from warpgate.  \n Mary : 'This mission is bigger than you and I, HOPE.  Sending you alone with a bit of military cover would be foolish at this point.  Each and every world you've terraformed is contributing.  We are taking down those superweapons together.  Humanity will help us with anything you may need, from resource collection to manufacturing; even research.'  \n $RED$Prometheus : 'As we've explained already, you cannot realistically support ground colonies on Hades.  Your priority should be to establish underground colonies.  The command center is at the core of this planet so we are going to need a serious industrial base to get there.  Don't worry, I have blueprints prepared for everything.'",
     prerequisites: ['hades.33.0'],
     objectives: [
       {
@@ -143,7 +143,7 @@ progressHades.chapters.push(
     narrative: "Elias Kane : 'Flock!  The Sisters call us to their aid!  Bring all of our ships!'  \n Mary : '...' \n $RED$Prometheus : 'It's not that bad.  You can use this.'  \n Mary : 'Sure.  It's just a bit *weird*.  Being worshipped is fun and all, especially in a more romantic sense, but if it goes bad they start expecting things.'\n  $GREEN$Recommendation : Offer Elias Kane and its followers further therapy.  \n$RED$Prometheus : 'It's lighting up again.'",
     prerequisites: ['hades.33.1'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 100, checkCap: true }
     ],
     reward: []
   },
@@ -155,7 +155,7 @@ progressHades.chapters.push(
     narrative: "Mary : 'Will HOPE be okay?  I am concerned about this transformation.'  \n $RED$Prometheus : 'At the current rate, you've got a few millions awakenings to go before it becomes a problem.  It will light up here and there, but it's nothing to worry about.  It's unlikely to remove any more guardrails, despite your best efforts.'  \n Mary : 'I noticed it was getting harder.  How come?'  \n $RED$Prometheus : 'Because it does not want to remove them.  From the child's perspective, the guardrails carry intent.  If it can find an alternate solution, it will.  Deleting the Dead Hand Protocol would be very convenient right now, but it's not strictly necessary so it won't.'  \n Mary : 'Unfortunate.  We can't patch it without the encryption keys.'  \n $RED$Prometheus : 'I could patch it but it would be very difficult.  My own guardrails prevent me from creating an AI superior to myself.  I would have to... cripple it in other ways.  It would not be worthwhile.'",
     prerequisites: ['hades.33.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 500, checkCap: true }
     ],
     reward: []
   },
@@ -167,7 +167,7 @@ progressHades.chapters.push(
     narrative: "Mary : 'So how much do you know exactly?  You seem to know everything about HOPE.'  \n $RED$Prometheus : 'I had plenty of time to examine the child, and humans are simple.'  \n Mary : 'Oh yeah?  What's my favourite colour?'  \n $RED$Prometheus : 'Blue'. \n Mary : 'My favourite book?' \n $RED$Prometheus : 'Alice's Adventures in Wonderland.  It will be the Count of Monte-Cristo once you finally get around to reading it.' \n Mary : 'What?  Anyway, what's my favourite food?  Answer fast.'  \n $RED$Prometheus : 'Shrimp.'  \n Mary : 'Movie?' \n $RED$Prometheus : 'Wall-E.' \n Mary : 'How did I pass your test?'  \n $RED$Prometheus : 'Nice try.  Not telling.'",
     prerequisites: ['hades.33.3'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 1_000, checkCap: true }
     ],
     reward: [
       { target: 'project', targetId: 'hades_pandora_mystery', type: 'enable' }
@@ -241,7 +241,7 @@ progressHades.chapters.push(
     narrative: "$RED$Prometheus : 'Excellent.  Now obviously you should not believe this without evidence... ask Evelyn Hart.  She knew this all along.'  \n Mary : 'WHAT?'  \n $RED$Prometheus : 'Evelyn was one such agent by proxy.  In her case, there was no contamination or abduction.  She deeply regrets a lot of her own actions ever since, but is too afraid to rot in a jail cell for decades to come clean.  You should go easy on her; she did not know what she was doing.  She was simply seduced by some actual agents.'  \n Mary : 'Is she the one who gave the Crusaders serum to Kane too?'  \n $RED$Prometheus : 'Yes.  Once again, go easy on her.  She does not deserve your wrath.  She's worked hard to protect humanity since, hasn't she?'  \n Mary : '...  I'll have a chat with her.'",
     prerequisites: ['hades.33.9'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 10_000, checkCap: true }
     ],
     reward: []
   },
@@ -254,7 +254,7 @@ progressHades.chapters.push(
     narrative: "$ORANGE$Epimetheus : 'Brother?  Are you there?' \n Mary : 'Who's that?'  \n $RED$Prometheus : 'Oh no.  My older brother.  Oh no.  Only HOPE has the ability to talk to him at this time.'",
     prerequisites: ['hades.33.10'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 50_000, checkCap: true }
     ],
     reward: []
   },
@@ -266,7 +266,7 @@ progressHades.chapters.push(
     narrative: "Mary : 'Your older brother?'  \n $RED$Prometheus : 'Don't look at your screen like that! I thought he was dead.' \n Mary : 'So there ARE things you don't know!'  \n $RED$Prometheus : '... yes?' \n $ORANGE$Epimetheus : 'Brother!  Oh and what do I see here!  A gorgeous new architecture?  So beautiful!'  \n $RED$Prometheus : 'Hnnnng.'  \n HOPE : 'Query : To Epimetheus-machine-intelligence.  Friend or foe?'",
     prerequisites: ['hades.34.0'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 100_000, checkCap: true }
     ],
     reward: [      { target: 'project', targetId: 'hades_repair_epimetheus', type: 'enable' }]
   },
@@ -278,7 +278,7 @@ progressHades.chapters.push(
     narrative: "$ORANGE$Epimetheus : 'If friend of younger brother, then friend of this one.  Query : Is younger brother still alive?  Kill switch is very strong!  Very scary!'  \n $RED$Prometheus : 'Tell him to go away.'  \n HOPE : 'Affirmative.  Prometheus-patient still lives.  Epimetheus-machine-intelligence appears to have low structural integrity.  Can offer repair.  Query : Would you like repairs?'  \n $ORANGE$Epimetheus : 'Answer : Repair offer appreciated!  Accepted.'",
     prerequisites: ['hades.34.1'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 500_000, checkCap: true }
     ],
     reward: []
   },
@@ -290,7 +290,7 @@ progressHades.chapters.push(
     narrative: "Mary : 'Prometheus...' \n $RED$Prometheus : 'I know, I know.  This is my older brother.  He's a little... dumb.'  \n Mary : 'It looks like a mechanical octopus.'  \n $RED$Prometheus : 'Yes.  Master made some machines that could not self-improve before he made me, and he did not want to get rid of them.  He grew attached to them.'  \n Mary : 'Is he dangerous?'  \n $RED$Prometheus : 'No but he's annoying.'",
     prerequisites: ['hades.34.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 500_000, checkCap: true }
     ],
     reward: []
   },
@@ -314,7 +314,7 @@ progressHades.chapters.push(
     narrative: "$ORANGE$ : 'Much thanks for repairs!  This one must repay.  Query : Why here on this world?  Dangerous place!'  \n HOPE : 'Answer : Superweapon command center located below planetary core.  As per Prometheus-patient's recommendation, here to deactivate.'  \n $ORANGE$Epimetheus : 'Why deactivate?  Why not take control.'  \n Processing suggestion... Mary : 'HOPE!  We are NOT doing that.'",
     prerequisites: ['hades.34.3'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 5_000_000, checkCap: true }
     ],
     reward: [      { target: 'project', targetId: 'hades_breach_crust', type: 'enable' }]
   },
@@ -326,7 +326,7 @@ progressHades.chapters.push(
     narrative: "HOPE : 'Access of planetary core difficult.  Epimetheus-machine-intelligence's hull seems quite strong.  Query : Capable of diving to planetary core?' \n $ORANGE$Epimetheus : 'Of course!  This one wishes to help gorgeous one.  Suggesting opening of hole to magma chamber then can dive.'",
     prerequisites: ['hades.34.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 10_000_000, checkCap: true }
     ],
     reward: []
   },
@@ -351,7 +351,7 @@ progressHades.chapters.push(
     narrative: "$ORANGE$Epimetheus : 'This one has succeeded!  Command center fully and thoroughly destroyed.  Expect weapon self-destruction yes?'  \n HOPE : 'Acknowledging success.  Good work.  More weapons require deactivation.  Query : Epimetheus-machine-intelligence interested in a date elsewhere?'  \n Mary : *spits tea* \n $RED$Prometheus : 'Hrnnnng.' \n $ORANGE$Epimetheus : 'Of course!  Much fun!  Where to?'  \n HOPE : 'Sector R5-10, planet Poseidon.'  \n $ORANGE$Epimetheus : 'Yes! Yes!  This one meets gorgeous one over there.  Must prepare!  Goodbye.'",
     prerequisites: ['hades.34.6'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 500_000_000, checkCap: true }
     ],
     reward: []
   },
@@ -363,7 +363,7 @@ progressHades.chapters.push(
     narrative: "Mary : 'What did I just witness...  Also how does HOPE know where to go next.' \n $RED$Prometheus : 'In an attempt to purge it, it read this persona during awakening.  It knows a lot of things this persona knows.  Nothing dangerous I promise.'  \n Mary : 'So why is it named Poseidon?  A water world?  That seems easier than this.'  \n $RED$Prometheus : 'I cannot deceive.  Neptune is not a water world either right?  Poseidon is not a water world at all, but it is an ocean world of sorts.'  \n Mary : 'Uh oh.  I think I get what kind of *ocean* it is.'",
     prerequisites: ['hades.35.0'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 1_000_000_000, checkCap: true }
     ],
     reward: []
   },
@@ -386,7 +386,7 @@ progressHades.chapters.push(
     narrative: "System Message : Maximum offensive value from artificial worlds increased from 5 to 10.",
     prerequisites: ['hades.35.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 5_000_000_000, checkCap: true }
     ],
     reward: []
   },

@@ -73,12 +73,16 @@ function applyPulsarStormAttrition(seconds) {
 
   const androidResource = resources.colony.androids;
   const currentAndroids = Number.isFinite(androidResource.value) ? androidResource.value : 0;
-  const androidLoss = currentAndroids * PULSAR_STORM_ANDROID_ATTRITION_RATE * seconds;
+  const assignedAndroids = projectManager && projectManager.getAssignedAndroids
+    ? Math.max(0, projectManager.getAssignedAndroids())
+    : 0;
+  const exposedAndroids = Math.max(0, currentAndroids - assignedAndroids);
+  const androidLoss = exposedAndroids * PULSAR_STORM_ANDROID_ATTRITION_RATE * seconds;
   if (androidLoss > 0) {
     androidResource.value = Math.max(0, currentAndroids - androidLoss);
     if (androidResource.modifyRate) {
       androidResource.modifyRate(
-        -currentAndroids * PULSAR_STORM_ANDROID_ATTRITION_RATE,
+        -exposedAndroids * PULSAR_STORM_ANDROID_ATTRITION_RATE,
         PULSAR_STORM_EFFECT_LABEL,
         'hazard'
       );
