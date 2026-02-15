@@ -1386,14 +1386,14 @@ const hadesOverrides = {
     habitableZone: { inner: 0.02, outer: 0.05 }
   },
   celestialParameters: {
-    distanceFromSun: 20,
+    distanceFromSun: 6,
     gravity: 6.9,
     radius: 5000,
     mass: 3.6e24,
     albedo: 0.18,
     rotationPeriod: 31.2,
     spinPeriod: 31.2,
-    starLuminosity: 0.002,
+    starLuminosity: 100,
     sector: 'R4-03'
   },
   visualization: {
@@ -1426,6 +1426,23 @@ const hadesOverrides = {
       inertGas: { initialValue: 0 },
       hydrogen: { initialValue: 0 },
       sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 360.72343155652993,
+      "day": 444.31934293218853,
+      "night": 277.12752018087133
+    },
+    "temperate": {
+      "value": 335.06991934433455,
+      "day": 404.58639646313145,
+      "night": 265.55344222553765
+    },
+    "polar": {
+      "value": 261.4127298679641,
+      "day": 298.78642024711985,
+      "night": 224.03903948880838
     }
   }
 };

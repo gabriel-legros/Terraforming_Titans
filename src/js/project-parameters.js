@@ -518,9 +518,9 @@ const projectParameters = {
     requireStar: true,
     cost: {
       colony: {
-        metal: 500_000_000,
-        components: 1_000_000_000,
-        electronics: 200_000_000
+        metal: 5_000_000_000,
+        components: 10_000_000_000,
+        electronics: 2_00_000_000
       }
     },
     duration: 300000,

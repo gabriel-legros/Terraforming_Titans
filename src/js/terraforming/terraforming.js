@@ -1692,7 +1692,7 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateSolarFlux(distanceFromSun){
-      if (this.celestialParameters?.rogue || starLuminosityMultiplier <= 0) {
+      if (this.celestialParameters?.rogue || this.celestialParameters.starLuminosity <= 0) {
         return BACKGROUND_SOLAR_FLUX;
       }
       const validDistance = Number.isFinite(distanceFromSun) && distanceFromSun > 0
@@ -1701,7 +1701,7 @@ class Terraforming extends EffectableEntity{
       if (!validDistance) {
         return BACKGROUND_SOLAR_FLUX;
       }
-      const lum = SOLAR_LUMINOSITY_W * starLuminosityMultiplier;
+      const lum = SOLAR_LUMINOSITY_W * this.celestialParameters.starLuminosity;
       if (!Number.isFinite(lum) || lum <= 0) {
         return BACKGROUND_SOLAR_FLUX;
       }
