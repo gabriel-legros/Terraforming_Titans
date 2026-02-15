@@ -439,7 +439,7 @@ const researchParameters = {
       {
         id: 'robotics_1',
         name: 'Farming robotics assistance',
-        description: 'Integrates robots within hydroponics farm to reduce worker requirements by 20%.',
+        description: 'Integrates robots within hydroponic farms to reduce worker requirements by 20%.',
         cost: { research: 5000 },
         prerequisites: [],
         effects: [
@@ -1414,7 +1414,7 @@ const researchParameters = {
       {
         id: 'hydroponics_efficiency',
         name: 'Adapted crops',
-        description: 'Doubles the performance of our hydroponics farm using genetically modified potatoes.',
+        description: 'Doubles the performance of our hydroponic farms using genetically modified potatoes.',
         cost: { research: 5000 },
         prerequisites: [],
         effects: [
@@ -1510,7 +1510,7 @@ const researchParameters = {
       {
         id: 'ghg_factory',
         name: 'Greenhouse Gas Factories',
-        description: 'Allows the construction of greenhouse gas factories to produce SF6 which is stable, non-toxic and 23500 times more potent than CO2.',
+        description: 'Allows the construction of greenhouse gas factories to produce SF6, which is stable, non-toxic and 23500 times more potent than CO2.',
         cost: { research: 500000 },
         prerequisites: [],
         effects: [
