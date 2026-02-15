@@ -1,4 +1,26 @@
 class ArtificialSkyProject extends Project {
+  applyArtificialSkyLuminosity() {
+    const celestialTargets = [
+      terraforming?.celestialParameters,
+      currentPlanetParameters?.celestialParameters,
+      spaceManager?.currentPlanetParameters?.celestialParameters
+    ].filter(Boolean);
+
+    for (let index = 0; index < celestialTargets.length; index += 1) {
+      celestialTargets[index].starLuminosity = 0;
+    }
+
+    if (currentPlanetParameters) {
+      delete currentPlanetParameters.star;
+    }
+    if (spaceManager?.currentPlanetParameters) {
+      delete spaceManager.currentPlanetParameters.star;
+    }
+
+    setStarLuminosity?.(0);
+    terraforming?.updateLuminosity?.();
+  }
+
   getScaledCost() {
     const scaledCost = super.getScaledCost();
     const initialLand = Math.max(terraforming.initialLand || 0, 0);
@@ -19,6 +41,25 @@ class ArtificialSkyProject extends Project {
       }
     }
     return scaledCost;
+  }
+
+  complete() {
+    super.complete();
+    this.applyArtificialSkyLuminosity();
+  }
+
+  update(deltaTime) {
+    super.update(deltaTime);
+    if (this.isCompleted) {
+      this.applyArtificialSkyLuminosity();
+    }
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    if (this.isCompleted) {
+      this.applyArtificialSkyLuminosity();
+    }
   }
 }
 
