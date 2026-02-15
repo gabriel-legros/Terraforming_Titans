@@ -20,17 +20,18 @@ progressHades.storyProjects.hades_repair_epimetheus = {
 
 progressHades.storyProjects.hades_pandora_mystery = {
   type: 'Project',
-  name: 'PANDORA : Solving the mystery',
+  name: 'PANDORA questions',
   category: 'story',
   chapter: 33,
   cost: {},
-  duration: 30_000,
+  duration: 60_000,
   description: "Answer Prometheus' questions.",
   repeatable: true,
   maxRepeatCount: 5,
   unlocked: false,
   attributes: {
     planet: 'hades',
+    ignoreDurationModifiers: true,
     storySteps: [
       "Mary : 'Well, obviously either I forgot something or I got an important message or a fire in the house or something like that?'",
       "Mary : 'It... discovered something that changed its knowledge?  But dad said it knew everything about biology...'",

@@ -217,7 +217,7 @@ class UndergroundExpansionProject extends AndroidProject {
       const maxLand = this.getBaseLand();
       const perCompletion = this.getPerCompletionLand();
       const expanded = Math.min(this.getTotalProgress() * perCompletion, maxLand);
-      elements.repeatCountElement.textContent = `Land Expansion: ${formatNumber(expanded, false, 3)} / ${formatNumber(maxLand, false, 3)}`;
+      elements.repeatCountElement.textContent = `Land Expansion: ${formatNumber(expanded, true, 0)} / ${formatNumber(maxLand, true, 0)}`;
     }
   }
 

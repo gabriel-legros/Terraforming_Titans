@@ -298,6 +298,9 @@ class Project extends EffectableEntity {
   }
 
   getBaseDuration(){
+    if (this.attributes.ignoreDurationModifiers) {
+      return this.duration;
+    }
     if(this.isBooleanFlagSet('instantDuration')){
       return 1000;
     } else if(this.attributes.spaceMining || this.attributes.spaceExport){
@@ -308,6 +311,9 @@ class Project extends EffectableEntity {
   }
 
   getDurationMultiplier() {
+    if (this.attributes.ignoreDurationModifiers) {
+      return 1;
+    }
     let multiplier = 1;
     if (
       typeof projectManager !== 'undefined' &&

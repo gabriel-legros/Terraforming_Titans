@@ -155,6 +155,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Resource Disposal can include Mass Drivers as ship-equivalent throughput.
 - Dyson Swarm/Receiver/Sphere, Lifters, mega/giga projects, and continuous ops gained stronger persistence and UI clarity.
 - Galactic Market uses fixed 1x estimates for cost/gain (ignores productivity).
+- Projects can set `attributes.ignoreDurationModifiers: true` to lock runtime to base duration and ignore all project duration modifiers.
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
