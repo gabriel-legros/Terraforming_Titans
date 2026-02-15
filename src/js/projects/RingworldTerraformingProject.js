@@ -140,15 +140,15 @@ class RingworldTerraformingProject extends Project {
   refreshMassAndEnergyRequirement() {
     const massTons = this.getTotalRingworldMassTons();
     const radiusMeters = this.getRingOrbitRadiusAU() * RINGWORLD_AU_METERS;
-    const previousRequired = this.energyRequired || 0;
+    const previousRequired = this.lastMassTons > 0
+      ? this.getSpinEnergyRequirementWattDays(this.lastMassTons, radiusMeters)
+      : (this.energyRequired || 0);
     const requiredEnergy = this.getSpinEnergyRequirementWattDays(massTons, radiusMeters);
     const progressRatio = previousRequired > 0
       ? Math.min(this.energyInvested / previousRequired, 1)
       : 0;
-    const energyDelta = requiredEnergy - previousRequired;
-    const massDelta = massTons - this.lastMassTons;
-    if (!this.isCompleted && this.lastMassTons > 0 && massDelta > 0 && energyDelta > 0) {
-      this.energyInvested += progressRatio * energyDelta;
+    if (!this.isCompleted && this.lastMassTons > 0 && previousRequired > 0) {
+      this.energyInvested = progressRatio * requiredEnergy;
     }
     this.energyRequired = requiredEnergy;
     this.currentMassTons = massTons;
@@ -263,7 +263,7 @@ class RingworldTerraformingProject extends Project {
     const rate = createRingworldStat('Invest Rate:');
     const status = createRingworldStat('Status:');
     const shipMultiplier = createRingworldStat('Ship Energy Multiplier:');
-    const spinEnergy = createRingworldStat('Spin Energy per Ton:');
+    const spinEnergy = createRingworldStat('Ship Energy Penalty:');
     const massTotal = createRingworldStat('Ringworld Mass:');
 
     stats.append(
@@ -446,7 +446,7 @@ class RingworldTerraformingProject extends Project {
     this.el.status.textContent = statusLabel;
     this.el.shipMultiplier.textContent = `${formatNumber(this.shipEnergyMultiplier, true, 2)}`;
     this.el.spinEnergy.textContent = `${formatNumber(this.currentShipSpinEnergyPerTon, true)} /ton`;
-    this.el.progressLabel.textContent = `${formatWattDays(investedValue)} / ${formatWattDays(this.energyRequired)} (${formatNumber(progressPercent, true, 1)}%)`;
+    this.el.progressLabel.textContent = `${formatNumber(progressPercent, true, 1)}% (${formatWattDays(investedValue)} / ${formatWattDays(this.energyRequired)})`;
     this.el.progressFill.style.width = `${progressPercent}%`;
     this.el.powerValue.textContent = `${formatNumber(this.power, true)} W`;
     this.el.massTotal.textContent = `${formatNumber(this.currentMassTons, true)} t`;
