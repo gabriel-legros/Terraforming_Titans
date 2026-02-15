@@ -22,6 +22,18 @@ class SpaceshipProject extends Project {
     return this.assignedSpaceships ?? 0;
   }
 
+  isBlockedByPulsarStorm() {
+    try {
+      return hazardManager.parameters.pulsar && hazardManager.pulsarHazard && hazardManager.pulsarHazard.isStormActive();
+    } catch (error) {
+      return false;
+    }
+  }
+
+  isTemporarilyPaused() {
+    return this.isBlockedByPulsarStorm();
+  }
+
   getAutomationShipCount() {
     return this.getActiveShipCount();
   }
@@ -803,6 +815,7 @@ class SpaceshipProject extends Project {
 
   canStart() {
     if (!super.canStart()) return false;
+    if (this.isBlockedByPulsarStorm()) return false;
 
     if (this.getActiveShipCount() === 0) {
       return false;
@@ -932,6 +945,10 @@ class SpaceshipProject extends Project {
   }
 
   update(deltaTime) {
+    if (this.isBlockedByPulsarStorm()) {
+      this.lastActiveTime = 0;
+      return;
+    }
     const wasActive = this.isActive && !this.isCompleted && !this.isPaused;
     const startRemaining = this.remainingTime;
     const activeTime = wasActive ? Math.min(deltaTime, startRemaining) : 0;
@@ -973,6 +990,9 @@ class SpaceshipProject extends Project {
 
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
+    if (this.isBlockedByPulsarStorm()) {
+      return totals;
+    }
     if (this.isActive) {
       const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
 
@@ -1132,6 +1152,7 @@ class SpaceshipProject extends Project {
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
+    if (this.isBlockedByPulsarStorm()) return;
     this.shortfallLastTick = false;
     this.currentTickDeltaTime = deltaTime;
     if (typeof this.shouldAutomationDisable === 'function' && this.shouldAutomationDisable()) {

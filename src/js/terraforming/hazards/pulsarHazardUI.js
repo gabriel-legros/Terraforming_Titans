@@ -3,13 +3,16 @@ const pulsarHazardUICache = {
   root: null,
   rootResolved: false,
   card: null,
+  viz: null,
   summaryStatusBody: null,
   summaryRadiationBody: null,
   effectsItems: []
 };
 
 const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, and Mega Heat Sink are disabled until the pulsar hazard is cleared.';
-const PULSAR_LAND_UNUSABLE_TEXT = 'Land is unusable until the hazard is cleared, except underground land and aerostats.';
+const PULSAR_LAND_UNUSABLE_TEXT = 'Land is unusable until the hazard is cleared.  You can still use underground land and aerostats.';
+const PULSAR_STORM_TEXT = 'Electromagnetic storm every 100s for 5s: 3% attrition to androids and electronics, spaceship projects paused.';
+const PULSAR_THRUSTER_COST_TEXT = 'Planetary Thrusters construction costs are multiplied by x100 until the hazard is cleared.';
 const PULSAR_CLEAR_TEXT = 'Build an artificial sky or go rogue.';
 
 function getPulsarDocument() {
@@ -136,6 +139,14 @@ function ensurePulsarLayout() {
   landUnusableItem.className = 'hazard-effects__item';
   effectsList.appendChild(landUnusableItem);
 
+  const stormItem = doc.createElement('li');
+  stormItem.className = 'hazard-effects__item';
+  effectsList.appendChild(stormItem);
+
+  const thrusterCostItem = doc.createElement('li');
+  thrusterCostItem.className = 'hazard-effects__item';
+  effectsList.appendChild(thrusterCostItem);
+
   effectsSection.appendChild(effectsHeader);
   effectsSection.appendChild(effectsList);
   card.appendChild(effectsSection);
@@ -160,9 +171,10 @@ function ensurePulsarLayout() {
 
   root.appendChild(card);
   pulsarHazardUICache.card = card;
+  pulsarHazardUICache.viz = pulsarViz;
   pulsarHazardUICache.summaryStatusBody = summaryStatusBody;
   pulsarHazardUICache.summaryRadiationBody = summaryRadiationBody;
-  pulsarHazardUICache.effectsItems = [disabledProjectsItem, landUnusableItem];
+  pulsarHazardUICache.effectsItems = [disabledProjectsItem, landUnusableItem, stormItem, thrusterCostItem];
   return card;
 }
 
@@ -176,9 +188,22 @@ function updatePulsarHazardUI(pulsarParameters) {
     return;
   }
 
-  card.style.display = pulsarParameters ? '' : 'none';
-  card.classList.toggle('hazard-card--active', !!pulsarParameters);
-  if (!pulsarParameters) {
+  let cleared = false;
+  if (pulsarParameters && hazardManager && hazardManager.pulsarHazard) {
+    try {
+      cleared = hazardManager.pulsarHazard.isCleared(terraforming, pulsarParameters);
+    } catch (error) {
+      cleared = false;
+    }
+  }
+
+  const isActive = !!pulsarParameters && !cleared;
+  card.style.display = isActive ? '' : 'none';
+  card.classList.toggle('hazard-card--active', isActive);
+  if (!isActive) {
+    if (pulsarHazardUICache.viz) {
+      pulsarHazardUICache.viz.classList.remove('pulsar-viz--storm');
+    }
     return;
   }
 
@@ -186,9 +211,23 @@ function updatePulsarHazardUI(pulsarParameters) {
   const orbitalBoost = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
     ? pulsarParameters.orbitalDoseBoost_mSvPerDay
     : 0;
+  let stormActive = false;
+  let stormRemaining = 0;
+  let stormNext = 0;
+  if (hazardManager && hazardManager.pulsarHazard) {
+    stormActive = hazardManager.pulsarHazard.isStormActive();
+    stormRemaining = hazardManager.pulsarHazard.getStormRemainingSeconds();
+    stormNext = hazardManager.pulsarHazard.getSecondsUntilNextStorm();
+  }
 
   if (pulsarHazardUICache.summaryStatusBody) {
-    pulsarHazardUICache.summaryStatusBody.textContent = description;
+    const stormLine = stormActive
+      ? `Electromagnetic storm active (${stormRemaining.toFixed(1)}s left).`
+      : `Next electromagnetic storm in ${stormNext.toFixed(1)}s.`;
+    pulsarHazardUICache.summaryStatusBody.textContent = `${description}\n${stormLine}`;
+  }
+  if (pulsarHazardUICache.viz) {
+    pulsarHazardUICache.viz.classList.toggle('pulsar-viz--storm', stormActive);
   }
 
   const roundedOrbitalBoost = Math.round(orbitalBoost);
@@ -200,6 +239,12 @@ function updatePulsarHazardUI(pulsarParameters) {
   }
   if (pulsarHazardUICache.effectsItems[1]) {
     pulsarHazardUICache.effectsItems[1].textContent = PULSAR_LAND_UNUSABLE_TEXT;
+  }
+  if (pulsarHazardUICache.effectsItems[2]) {
+    pulsarHazardUICache.effectsItems[2].textContent = PULSAR_STORM_TEXT;
+  }
+  if (pulsarHazardUICache.effectsItems[3]) {
+    pulsarHazardUICache.effectsItems[3].textContent = PULSAR_THRUSTER_COST_TEXT;
   }
 }
 

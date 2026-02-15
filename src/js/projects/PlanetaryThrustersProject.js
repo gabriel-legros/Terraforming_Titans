@@ -182,6 +182,32 @@ class PlanetaryThrustersProject extends Project{
     return this.hasTractorBeams() ? 1 : BASE_TP_RATIO;
   }
 
+  isPulsarConstructionPenaltyActive() {
+    try {
+      const pulsar = hazardManager.parameters.pulsar;
+      return pulsar && hazardManager.pulsarHazard && !hazardManager.pulsarHazard.isCleared(terraforming, pulsar);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  getScaledCost() {
+    const cost = super.getScaledCost();
+    if (!this.isPulsarConstructionPenaltyActive()) {
+      return cost;
+    }
+
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (resource === 'energy') {
+          continue;
+        }
+        cost[category][resource] *= 100;
+      }
+    }
+    return cost;
+  }
+
 /* -----------------------  U I  --------------------------------------- */
   renderUI(c){
     /* spin */

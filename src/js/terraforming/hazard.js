@@ -277,16 +277,23 @@ class HazardManager {
 
   save() {
     let kesslerState = null;
+    let pulsarState = null;
     try {
       kesslerState = this.kesslerHazard.save();
     } catch (error) {
       kesslerState = null;
     }
+    try {
+      pulsarState = this.pulsarHazard && this.pulsarHazard.save ? this.pulsarHazard.save() : null;
+    } catch (error) {
+      pulsarState = null;
+    }
     return {
       parameters: cloneHazardParameters(this.parameters),
       crusaderTargetZone: this.getCrusaderTargetZone(),
       garbageHazard: this.garbageHazard && this.garbageHazard.save ? this.garbageHazard.save() : null,
-      kesslerHazard: kesslerState
+      kesslerHazard: kesslerState,
+      pulsarHazard: pulsarState
     };
   }
 
@@ -300,6 +307,11 @@ class HazardManager {
       && this.garbageHazard.load(data && data.garbageHazard ? data.garbageHazard : null);
     try {
       this.kesslerHazard.load(data && data.kesslerHazard ? data.kesslerHazard : null);
+    } catch (error) {
+      // no-op
+    }
+    try {
+      this.pulsarHazard && this.pulsarHazard.load && this.pulsarHazard.load(data && data.pulsarHazard ? data.pulsarHazard : null);
     } catch (error) {
       // no-op
     }

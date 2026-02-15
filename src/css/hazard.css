@@ -588,6 +588,13 @@
   overflow: hidden;
 }
 
+.pulsar-viz--storm {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 180, 132, 0.56), rgba(40, 14, 10, 0.24) 44%, rgba(34, 8, 8, 0.94) 100%),
+    linear-gradient(180deg, rgba(48, 12, 24, 0.95), rgba(24, 4, 12, 0.95));
+  box-shadow: inset 0 0 24px rgba(255, 88, 88, 0.45), 0 0 22px rgba(255, 115, 80, 0.35);
+}
+
 .pulsar-viz__core,
 .pulsar-viz__ring,
 .pulsar-viz__beam {
@@ -661,6 +668,22 @@
 
 .pulsar-viz__beam--bottom {
   animation: pulsarBeamSweepLeft 2.2s ease-in-out infinite alternate;
+}
+
+.pulsar-viz--storm .pulsar-viz__core {
+  transform: scale(1.18);
+  box-shadow: 0 0 28px rgba(255, 212, 168, 1), 0 0 58px rgba(255, 93, 66, 0.9);
+  filter: saturate(1.35);
+}
+
+.pulsar-viz--storm .pulsar-viz__ring {
+  border-color: rgba(255, 170, 130, 0.86);
+  box-shadow: 0 0 24px rgba(255, 145, 116, 0.58), inset 0 0 20px rgba(255, 116, 92, 0.4);
+}
+
+.pulsar-viz--storm .pulsar-viz__beam {
+  background: linear-gradient(90deg, rgba(255, 232, 210, 0.96) 0%, rgba(255, 179, 132, 0.86) 35%, rgba(255, 108, 92, 0.68) 74%, rgba(255, 94, 86, 0.08) 100%);
+  filter: drop-shadow(0 0 16px rgba(255, 141, 106, 0.8));
 }
 
 @keyframes pulsarCorePulse {

@@ -3,6 +3,7 @@ This folder contains classes for repeatable projects. Any new module here should
 
 # Project overview
 - **AndroidProject** – baseline for projects that assign android workers to accelerate progress.
+- **ArtificialSkyProject** – one-time infrastructure project that scales superalloy cost with initial land to clear Pulsar hazards.
 - **CargoRocketProject** – launches chemical rockets with a custom resource payload; spaceship purchases raise funding cost temporarily.
 - **DeeperMiningProject** – android‑assisted deepening of ore mines whose cost scales with mines built and average depth.
 - **DysonSwarmReceiverProject** – builds the Dyson Swarm Receiver and deploys solar collectors that persist across planets.

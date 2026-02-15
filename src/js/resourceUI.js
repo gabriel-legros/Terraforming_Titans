@@ -1050,6 +1050,18 @@ function updateResourceDisplay(resources, deltaSeconds) {
         resourceNameElement.classList.remove('sparkling-gold');
       }
 
+      let stormActive = false;
+      try {
+        stormActive = hazardManager.parameters.pulsar && hazardManager.pulsarHazard.isStormActive();
+      } catch (error) {
+        stormActive = false;
+      }
+      if (resourceNameElement && (resourceName === 'androids' || resourceName === 'electronics') && stormActive) {
+        resourceNameElement.classList.add('resource-electromagnetic-storm');
+      } else if (resourceNameElement) {
+        resourceNameElement.classList.remove('resource-electromagnetic-storm');
+      }
+
       if (resourceName === 'biomass' && entry.warningEl) {
         const zones = terraforming?.biomassDyingZones || {};
         const warningMessage = getBiomassWarningMessage(zones);

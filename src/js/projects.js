@@ -222,7 +222,13 @@ class Project extends EffectableEntity {
       return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
     }
     if (hazardKey === 'pulsar') {
-      return !!hazardManager.parameters.pulsar;
+      let terraformingState = null;
+      try {
+        terraformingState = terraforming;
+      } catch (error) {
+        terraformingState = null;
+      }
+      return hazardManager.parameters.pulsar && !hazardManager.pulsarHazard.isCleared(terraformingState, hazardManager.parameters.pulsar);
     }
     return false;
   }

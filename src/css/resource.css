@@ -73,6 +73,10 @@
     text-shadow: 1px 1px 2px darkgoldenrod;
   }
 
+  .resource-electromagnetic-storm {
+    color: #67c3ff;
+  }
+
   .resource-warning {
     color: #c62828;
     margin-left: 1px;

@@ -17,6 +17,12 @@ if (!pulsarRadiationPenaltyFromDose) {
   };
 }
 
+const PULSAR_STORM_PERIOD_SECONDS = 100;
+const PULSAR_STORM_DURATION_SECONDS = 5;
+const PULSAR_STORM_ANDROID_ATTRITION_RATE = 0.03;
+const PULSAR_STORM_ELECTRONICS_ATTRITION_RATE = 0.03;
+const PULSAR_STORM_EFFECT_LABEL = 'Electromagnetic Storm';
+
 function normalizePulsarParameters(parameters = {}) {
   const severity = Number.isFinite(parameters.severity) ? Math.max(0, parameters.severity) : 1;
   const orbitalDoseBoost = Number.isFinite(parameters.orbitalDoseBoost_mSvPerDay)
@@ -33,6 +39,67 @@ function normalizePulsarParameters(parameters = {}) {
 }
 
 function consumePulsarArgs() {}
+function getArtificialSkyProject() {
+  try {
+    return projectManager && projectManager.projects ? projectManager.projects.artificialSky : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function ensureArtificialSkyUnlocked(pulsarParameters) {
+  if (!pulsarParameters) {
+    return;
+  }
+  const artificialSky = getArtificialSkyProject();
+  if (artificialSky && !artificialSky.unlocked) {
+    artificialSky.enable();
+  }
+}
+
+function isRogueWorld(terraforming) {
+  return terraforming?.celestialParameters?.rogue === true;
+}
+
+function isArtificialSkyCompleted() {
+  const artificialSky = getArtificialSkyProject();
+  return !!(artificialSky && artificialSky.isCompleted);
+}
+
+function applyPulsarStormAttrition(seconds) {
+  if (!seconds || seconds <= 0) {
+    return;
+  }
+
+  const androidResource = resources.colony.androids;
+  const currentAndroids = Number.isFinite(androidResource.value) ? androidResource.value : 0;
+  const androidLoss = currentAndroids * PULSAR_STORM_ANDROID_ATTRITION_RATE * seconds;
+  if (androidLoss > 0) {
+    androidResource.value = Math.max(0, currentAndroids - androidLoss);
+    if (androidResource.modifyRate) {
+      androidResource.modifyRate(
+        -currentAndroids * PULSAR_STORM_ANDROID_ATTRITION_RATE,
+        PULSAR_STORM_EFFECT_LABEL,
+        'hazard'
+      );
+    }
+  }
+
+  const electronicsResource = resources.colony.electronics;
+  const currentElectronics = Number.isFinite(electronicsResource.value) ? electronicsResource.value : 0;
+  const electronicsLoss = currentElectronics * PULSAR_STORM_ELECTRONICS_ATTRITION_RATE * seconds;
+  if (electronicsLoss > 0) {
+    electronicsResource.value = Math.max(0, currentElectronics - electronicsLoss);
+    if (electronicsResource.modifyRate) {
+      electronicsResource.modifyRate(
+        -currentElectronics * PULSAR_STORM_ELECTRONICS_ATTRITION_RATE,
+        PULSAR_STORM_EFFECT_LABEL,
+        'hazard'
+      );
+    }
+  }
+}
+
 function applyPulsarRadiation(terraforming, pulsarParameters) {
   if (!terraforming || !pulsarParameters) {
     return;
@@ -59,6 +126,8 @@ function applyPulsarRadiation(terraforming, pulsarParameters) {
 class PulsarHazard {
   constructor(manager) {
     this.manager = manager;
+    this.stormTimerSeconds = 0;
+    this.stormRemainingSeconds = 0;
   }
 
   normalize(parameters = {}) {
@@ -67,21 +136,105 @@ class PulsarHazard {
 
   initialize(terraforming, pulsarParameters, options = {}) {
     consumePulsarArgs(terraforming, pulsarParameters, options);
-    const share = pulsarParameters ? 1 : 0;
+    ensureArtificialSkyUnlocked(pulsarParameters);
+    const share = (pulsarParameters && !this.isCleared(terraforming, pulsarParameters)) ? 1 : 0;
     this.manager.setHazardLandReservationShare('pulsar', share);
-    applyPulsarRadiation(terraforming, pulsarParameters);
+    if (share > 0) {
+      applyPulsarRadiation(terraforming, pulsarParameters);
+    } else {
+      this.resetStormState();
+    }
   }
 
   update(deltaSeconds, terraforming, pulsarParameters) {
     consumePulsarArgs(deltaSeconds, terraforming, pulsarParameters);
-    const share = pulsarParameters ? 1 : 0;
+    ensureArtificialSkyUnlocked(pulsarParameters);
+    const share = (pulsarParameters && !this.isCleared(terraforming, pulsarParameters)) ? 1 : 0;
     this.manager.setHazardLandReservationShare('pulsar', share);
-    applyPulsarRadiation(terraforming, pulsarParameters);
+    if (share > 0) {
+      this.advanceStormState(deltaSeconds);
+      applyPulsarRadiation(terraforming, pulsarParameters);
+    } else {
+      this.resetStormState();
+    }
   }
 
   isCleared(terraforming, pulsarParameters) {
     consumePulsarArgs(terraforming, pulsarParameters);
-    return true;
+    ensureArtificialSkyUnlocked(pulsarParameters);
+    if (!pulsarParameters) {
+      return true;
+    }
+    if (isRogueWorld(terraforming)) {
+      return true;
+    }
+    return isArtificialSkyCompleted();
+  }
+
+  isStormActive() {
+    return this.stormRemainingSeconds > 0;
+  }
+
+  getStormRemainingSeconds() {
+    return this.stormRemainingSeconds > 0 ? this.stormRemainingSeconds : 0;
+  }
+
+  getSecondsUntilNextStorm() {
+    if (this.isStormActive()) {
+      return 0;
+    }
+    return Math.max(0, PULSAR_STORM_PERIOD_SECONDS - this.stormTimerSeconds);
+  }
+
+  resetStormState() {
+    this.stormTimerSeconds = 0;
+    this.stormRemainingSeconds = 0;
+  }
+
+  startStorm() {
+    this.stormRemainingSeconds = PULSAR_STORM_DURATION_SECONDS;
+  }
+
+  save() {
+    return {
+      stormTimerSeconds: Number.isFinite(this.stormTimerSeconds) ? this.stormTimerSeconds : 0,
+      stormRemainingSeconds: Number.isFinite(this.stormRemainingSeconds) ? this.stormRemainingSeconds : 0
+    };
+  }
+
+  load(data) {
+    const timer = data && Number.isFinite(data.stormTimerSeconds) ? data.stormTimerSeconds : 0;
+    const remaining = data && Number.isFinite(data.stormRemainingSeconds) ? data.stormRemainingSeconds : 0;
+    this.stormTimerSeconds = Math.max(0, Math.min(PULSAR_STORM_PERIOD_SECONDS, timer));
+    this.stormRemainingSeconds = Math.max(0, Math.min(PULSAR_STORM_DURATION_SECONDS, remaining));
+  }
+
+  advanceStormState(deltaSeconds) {
+    let remaining = Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
+    while (remaining > 0) {
+      if (this.stormRemainingSeconds > 0) {
+        const activeSlice = Math.min(remaining, this.stormRemainingSeconds);
+        applyPulsarStormAttrition(activeSlice);
+        this.stormRemainingSeconds = Math.max(0, this.stormRemainingSeconds - activeSlice);
+        remaining -= activeSlice;
+        continue;
+      }
+
+      const timeUntilStorm = Math.max(0, PULSAR_STORM_PERIOD_SECONDS - this.stormTimerSeconds);
+      if (timeUntilStorm <= 0) {
+        this.stormTimerSeconds = 0;
+        this.startStorm();
+        continue;
+      }
+
+      const quietSlice = Math.min(remaining, timeUntilStorm);
+      this.stormTimerSeconds += quietSlice;
+      remaining -= quietSlice;
+      if (this.stormTimerSeconds >= PULSAR_STORM_PERIOD_SECONDS) {
+        this.stormTimerSeconds = 0;
+        this.startStorm();
+      }
+    }
   }
 }
 

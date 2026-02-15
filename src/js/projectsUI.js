@@ -1384,6 +1384,15 @@ function updateProjectUI(projectName) {
             elements.progressButton.style.background = '#f44336';
           }
         } else if (project.isActive) {
+          if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
+            const statusText = 'Paused: Electromagnetic Storm';
+            if (isImportProject && importUI) {
+              importUI.setProgressLabel(elements, project, statusText);
+            } else {
+              elements.progressButton.textContent = statusText;
+            }
+            elements.progressButton.style.background = '#f44336';
+          } else {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           const progressPercent = project.getProgress();
           if (project.startingDuration < 1000) {
@@ -1403,6 +1412,7 @@ function updateProjectUI(projectName) {
               elements.progressButton.textContent = statusText;
             }
             elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+          }
           }
         } else if (project.isCompleted) {
           if (isImportProject && importUI) {
@@ -1430,29 +1440,39 @@ function updateProjectUI(projectName) {
           }
           elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
         } else {
-          // Update dynamic duration for spaceMining projects
-          let duration = project.getEffectiveDuration();
-          if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-            const statusText = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+          if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
+            const statusText = 'Paused: Electromagnetic Storm';
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
               elements.progressButton.textContent = statusText;
             }
+            elements.progressButton.style.background = '#f44336';
           } else {
-            const statusText = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
-            if (isImportProject && importUI) {
-              importUI.setProgressLabel(elements, project, `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`);
+            // Update dynamic duration for spaceMining projects
+            let duration = project.getEffectiveDuration();
+            if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
+              const statusText = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+              if (isImportProject && importUI) {
+                importUI.setProgressLabel(elements, project, statusText);
+              } else {
+                elements.progressButton.textContent = statusText;
+              }
             } else {
-              elements.progressButton.textContent = statusText;
+              const statusText = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+              if (isImportProject && importUI) {
+                importUI.setProgressLabel(elements, project, `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`);
+              } else {
+                elements.progressButton.textContent = statusText;
+              }
             }
-          }
 
-          // Set background color based on whether the project can start
-          if (project.canStart()) {
-            elements.progressButton.style.background = '#4caf50'; // Green if it can be started
-          } else {
-            elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+            // Set background color based on whether the project can start
+            if (project.canStart()) {
+              elements.progressButton.style.background = '#4caf50'; // Green if it can be started
+            } else {
+              elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+            }
           }
         }
       }
