@@ -149,7 +149,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Kessler Skies gained richer failure/debris modeling, warnings/tooltips, and capped Solis storage bonuses.
 - Kessler cost multipliers and decay behaviors were tuned; hazard charts and bin diagnostics expanded.
 - Pulsar hazard now has full clear paths on affected worlds: complete the `Artificial Sky` infrastructure project or use Planetary Thrusters to `Go Rogue`; both clear pulsar hazard effects.
-- Pulsar hazard now triggers recurring Electromagnetic Storms (3s every 100s): storms apply temporary attrition to androids/electronics, pause spaceship projects, and surface as active warning state in the Pulsar UI card.
+- Pulsar hazard now triggers recurring Electromagnetic Storms (5s every 100s): storms apply temporary attrition to unassigned androids/electronics, pause spaceship projects, and surface as active warning state in the Pulsar UI card.
+- While Pulsar is active, Nanocolony max nanobot cap is scaled by Underground Expansion completion ratio (`completions / initial land`).
 - Land reservation now has a combined `hazards` source; hazard land usage uses the max share across hazard systems (currently Hazardous Biomass vs Pulsar).
 - Space storage supports additional resources and per-resource cap controls.
 - Resource Disposal can include Mass Drivers as ship-equivalent throughput.

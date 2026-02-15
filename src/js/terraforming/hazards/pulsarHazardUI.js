@@ -11,7 +11,8 @@ const pulsarHazardUICache = {
 
 const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, and Mega Heat Sink are disabled until the pulsar hazard is cleared.';
 const PULSAR_LAND_UNUSABLE_TEXT = 'Land is unusable until the hazard is cleared.  You can still use underground land and aerostats.';
-const PULSAR_STORM_TEXT = 'Electromagnetic storm every 100s for 5s: 3% attrition to workers androids and electronics, spaceship projects paused.  Androids assigned underground are immune.';
+const PULSAR_STORM_TEXT = 'Electromagnetic storm every 100s for 5s: 3% attrition to unassigned androids and electronics, spaceship projects paused.';
+const PULSAR_NANOBOT_CAP_TEXT = 'Nanobot cap is multiplied by Underground Expansion completion ratio: completions / initial land.';
 const PULSAR_THRUSTER_COST_TEXT = 'Planetary Thrusters construction cost is multiplied by x100.';
 const PULSAR_CLEAR_TEXT = 'Build an artificial sky or go rogue.';
 
@@ -133,6 +134,10 @@ function ensurePulsarLayout() {
   stormItem.className = 'hazard-effects__item';
   effectsList.appendChild(stormItem);
 
+  const nanobotCapItem = doc.createElement('li');
+  nanobotCapItem.className = 'hazard-effects__item';
+  effectsList.appendChild(nanobotCapItem);
+
   const thrusterCostItem = doc.createElement('li');
   thrusterCostItem.className = 'hazard-effects__item';
   effectsList.appendChild(thrusterCostItem);
@@ -164,7 +169,7 @@ function ensurePulsarLayout() {
   pulsarHazardUICache.viz = pulsarViz;
   pulsarHazardUICache.summaryStatusBody = summaryStatusBody;
   pulsarHazardUICache.summaryRadiationBody = summaryRadiationBody;
-  pulsarHazardUICache.effectsItems = [disabledProjectsItem, landUnusableItem, stormItem, thrusterCostItem];
+  pulsarHazardUICache.effectsItems = [disabledProjectsItem, landUnusableItem, stormItem, nanobotCapItem, thrusterCostItem];
   return card;
 }
 
@@ -234,7 +239,10 @@ function updatePulsarHazardUI(pulsarParameters) {
     pulsarHazardUICache.effectsItems[2].textContent = PULSAR_STORM_TEXT;
   }
   if (pulsarHazardUICache.effectsItems[3]) {
-    pulsarHazardUICache.effectsItems[3].textContent = PULSAR_THRUSTER_COST_TEXT;
+    pulsarHazardUICache.effectsItems[3].textContent = PULSAR_NANOBOT_CAP_TEXT;
+  }
+  if (pulsarHazardUICache.effectsItems[4]) {
+    pulsarHazardUICache.effectsItems[4].textContent = PULSAR_THRUSTER_COST_TEXT;
   }
 }
 

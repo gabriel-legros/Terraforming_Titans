@@ -75,11 +75,42 @@ class NanotechManager extends EffectableEntity {
     return 1e15 * Math.pow(10, extraStages);
   }
 
-  getMaxNanobots() {
-    if (typeof resources !== 'undefined' && resources.surface?.land) {
-      return resources.surface.land.value * 10000 * 1e19;
+  isPulsarHazardActive() {
+    if (!hazardManager || !hazardManager.parameters || !hazardManager.pulsarHazard) {
+      return false;
     }
-    return 1e40;
+    const pulsar = hazardManager.parameters.pulsar;
+    if (!pulsar) {
+      return false;
+    }
+    return !hazardManager.pulsarHazard.isCleared(terraforming, pulsar);
+  }
+
+  getPulsarNanobotCapMultiplier() {
+    if (!this.isPulsarHazardActive()) {
+      return 1;
+    }
+
+    const initialLand = Math.max(terraforming.initialLand || 0, 0);
+    if (initialLand <= 0) {
+      return 0;
+    }
+
+    const undergroundExpansion = projectManager?.projects?.undergroundExpansion;
+    if (!undergroundExpansion) {
+      return 0;
+    }
+
+    const completions = Math.max(undergroundExpansion.repeatCount || 0, 0);
+    return Math.min(1, completions / initialLand);
+  }
+
+  getMaxNanobots() {
+    if (!resources.surface?.land) {
+      return 1e40;
+    }
+    const baseCap = resources.surface.land.value * 10000 * 1e19;
+    return baseCap * this.getPulsarNanobotCapMultiplier();
   }
 
   produceResources(deltaTime, accumulatedChanges) {
