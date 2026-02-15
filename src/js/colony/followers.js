@@ -349,7 +349,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getPilgrimGrowthBonus() {
-    return this.getWorldBelieverPercent();
+    return this.getGalacticBelieverPercent();
   }
 
   getZealWorkerEfficiencyBonus() {
@@ -502,8 +502,8 @@ class FollowersManager extends EffectableEntity {
   }
 
   getApostlesOrbitalsMultiplier() {
-    const worldPercent = this.getWorldBelieverPercent();
-    const bonus = Math.max(0, Math.min(9, (worldPercent - 0.1) * 10));
+    const galacticPercent = this.getGalacticBelieverPercent();
+    const bonus = Math.max(0, Math.min(9, (galacticPercent - 0.1) * 10));
     return 1 + bonus;
   }
 

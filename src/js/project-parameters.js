@@ -500,7 +500,7 @@ const projectParameters = {
     category: 'infrastructure',
     cost: {
       colony: {
-        superalloys: 10_000,
+        superalloys: 1_000,
         water: 300_000,
         metal: 100_000
       }
@@ -509,7 +509,17 @@ const projectParameters = {
     description: 'Deploy an artificial sky shield to block pulsar radiation bursts. Clears the pulsar hazard on completion.',
     repeatable: false,
     unlocked: false,
-    attributes: {}
+    attributes: {
+      completionEffect: [
+        {
+          target: 'building',
+          targetId: 'spaceMirror',
+          type: 'permanentBuildingDisable',
+          value: true,
+          effectId: 'artificial-sky-disable-space-mirror'
+        }
+      ]
+    }
   },
   planetaryThruster: {
     type: 'PlanetaryThrustersProject',

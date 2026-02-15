@@ -595,9 +595,9 @@ function buildFollowersUI() {
   faithBonuses.classList.add('followers-faith-bonuses');
 
   const effectsTooltipText = [
-    'Pilgrims: increases population growth by world believer %.',
+    'Pilgrims: increases population growth by galactic believer %.',
     'Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).',
-    'Apostles: increases available orbitals by 10 * (world believer % - 10%), up to +900%.',
+    'Apostles: increases available orbitals by 10 * (galactic believer % - 10%), up to +900%.',
     'Missionaries: increases post-cap galactic conversion power by world believer %.'
   ].join('\n');
   const faithBonusesHeader = document.createElement('div');

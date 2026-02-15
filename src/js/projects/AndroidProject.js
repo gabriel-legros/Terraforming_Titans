@@ -454,7 +454,7 @@ class AndroidProject extends Project {
 
   getAndroidSpeedDisplayText() {
     const mult = this.getAndroidSpeedMultiplier();
-    return `x${formatNumber(mult, true)}`;
+    return `x${formatNumber(mult, false, 1)}`;
   }
 
   getAndroidSpeedTooltip() {

@@ -21,6 +21,7 @@ const PULSAR_STORM_PERIOD_SECONDS = 100;
 const PULSAR_STORM_DURATION_SECONDS = 5;
 const PULSAR_STORM_ANDROID_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_ELECTRONICS_ATTRITION_RATE = 0.03;
+const PULSAR_STORM_NANOBOT_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_EFFECT_LABEL = 'Electromagnetic Storm';
 
 function normalizePulsarParameters(parameters = {}) {
@@ -100,6 +101,14 @@ function applyPulsarStormAttrition(seconds) {
         PULSAR_STORM_EFFECT_LABEL,
         'hazard'
       );
+    }
+  }
+
+  if (nanotechManager) {
+    const currentNanobots = Number.isFinite(nanotechManager.nanobots) ? nanotechManager.nanobots : 1;
+    const nanobotLoss = currentNanobots * PULSAR_STORM_NANOBOT_ATTRITION_RATE * seconds;
+    if (nanobotLoss > 0) {
+      nanotechManager.nanobots = Math.max(1, currentNanobots - nanobotLoss);
     }
   }
 }

@@ -810,6 +810,12 @@ const researchParameters = {
             type: 'workerMultiplier',
             value: 0.75
           },
+          {
+            target: 'building',
+            targetId: 'grapheneFactory',
+            type: 'workerMultiplier',
+            value: 0.75
+          },
             {
               target: 'building',
               targetId: 'biodome',

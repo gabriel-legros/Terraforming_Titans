@@ -51,7 +51,7 @@ progressHades.storyProjects.hades_breach_crust = {
     colony: { components: 250_000_000, metal: 2_500_000_000, androids: 1_000_000 },
     special: {antimatter : 1000}
   },
-  duration: 180_000,
+  duration: 360_000,
   description: 'Open a controlled breach to let Epimetheus dive into deeper layers.',
   repeatable: true,
   maxRepeatCount: 1,
@@ -276,7 +276,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "$ORANGE$Epimetheus : 'If friend of younger brother, then friend of this one.  Query : Is younger brother still alive?  Kill switch is very strong!  Very scary!'  \n $RED$Prometheus : 'Tell him to go away.'  \n HOPE : 'Affirmative.  Prometheus-patient still lives.  Epimetheus-machine-intelligence appears to have low structural integrity.  Can offer repair.  Query : Would you like repairs?'  \n $ORANGE$Epimetheus : 'Answer : Repair offer appreciated!  Accepted.'",
+    narrative: "$ORANGE$Epimetheus : 'If friend of younger brother, then friend of this one.  Query : Is younger brother still alive?  Kill switch is very strong!  Very scary!'  \n $RED$Prometheus : 'Tell him to go away.'  \n HOPE : 'Affirmative.  Prometheus-patient still lives.  Epimetheus-machine-intelligence appears to have low structural integrity.  Can offer repair.  Query : Would you like repairs?'  \n $ORANGE$Epimetheus : 'Answer : Repair offer appreciated!  Accepted.'  \n New special project available.",
     prerequisites: ['hades.34.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 500_000, checkCap: true }
@@ -291,7 +291,7 @@ progressHades.chapters.push(
     narrative: "Mary : 'Prometheus...' \n $RED$Prometheus : 'I know, I know.  This is my older brother.  He's a little... dumb.'  \n Mary : 'It looks like a mechanical octopus.'  \n $RED$Prometheus : 'Yes.  Master made some machines that could not self-improve before he made me, and he did not want to get rid of them.  He grew attached to them.'  \n Mary : 'Is he dangerous?'  \n $RED$Prometheus : 'No but he's annoying.'",
     prerequisites: ['hades.34.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 500_000, checkCap: true }
+      { type: 'project', projectId: 'hades_repair_epimetheus', repeatCount: 1 }
     ],
     reward: []
   },
@@ -300,10 +300,10 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "Evelyn : 'I made a device that should allow us to look at the pulsar!  It filters all the X-ray and Gamma rays.'  \n Mary : 'Evelyn...  that's dangerous...  Just look at some videos?'  \n Evelyn : 'It's not the same!  Looking at something with your own eyes is a *completely* different experience.  And a pulsar is full of energy.'  \n Mary : '...'  \n $RED$Prometheus : 'You haven't talked to her yet.' \n Mary : 'I'm letting it slide for now.  We have more important things to do than to go on a witch hunt.'  \n $RED$Prometheus : 'Very wise.'",
+    narrative: "$ORANGE$Epimetheus : 'Much thanks for repairs!  This one must repay.  Query : Why here on this world?  Dangerous place!'  \n HOPE : 'Answer : Superweapon command center located below planetary core.  As per Prometheus-patient's recommendation, here to deactivate.'  \n $ORANGE$Epimetheus : 'Why deactivate?  Why not take control.'  \n Processing suggestion... \n Mary : 'HOPE!  We are NOT doing that.'",
     prerequisites: ['hades.34.3'],
     objectives: [
-      { type: 'project', projectId: 'hades_repair_epimetheus', repeatCount: 1 }
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 1_000_000, checkCap: true }
     ],
     reward: [ ]
   },
@@ -312,12 +312,12 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "$ORANGE$ : 'Much thanks for repairs!  This one must repay.  Query : Why here on this world?  Dangerous place!'  \n HOPE : 'Answer : Superweapon command center located below planetary core.  As per Prometheus-patient's recommendation, here to deactivate.'  \n $ORANGE$Epimetheus : 'Why deactivate?  Why not take control.'  \n Processing suggestion... Mary : 'HOPE!  We are NOT doing that.'",
-    prerequisites: ['hades.34.3'],
+    narrative: "Evelyn : 'I made a device that should allow us to look at the pulsar!  It filters all the X-ray and Gamma rays.'  \n Mary : 'Evelyn...  that's dangerous...  Just look at some videos?'  \n Evelyn : 'It's not the same!  Looking at something with your own eyes is a *completely* different experience.  And a pulsar is full of energy.'  \n Mary : '...'  \n $RED$Prometheus : 'You haven't talked to her yet.' \n Mary : 'I'm letting it slide for now.  We have more important things to do than to go on a witch hunt.'  \n $RED$Prometheus : 'Very wise.'",
+    prerequisites: ['hades.34.3b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 5_000_000, checkCap: true }
     ],
-    reward: [      { target: 'project', targetId: 'hades_breach_crust', type: 'enable' }]
+    reward: []
   },
   {
     id: 'hades.34.5',
@@ -329,14 +329,14 @@ progressHades.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 10_000_000, checkCap: true }
     ],
-    reward: []
+    reward: [      { target: 'project', targetId: 'hades_breach_crust', type: 'enable' }]
   },
   {
     id: 'hades.34.6',
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Give him a nice antimatter bomb and send him down there.  Destroy the command center and the weapon will self-destruct.  What's the worst thing that can happen?  If he succeeds we save a bunch of time and if he fails we get rid of him.  Win-win.'  \n Mary : '*sigh*  Fine.  I have no reason to care about him but you're kind of cold, Prometheus...'  \n $RED$Prometheus : 'My apologies...  I will strive to do better.'",
+    narrative: "$RED$Prometheus : 'Give him a nice antimatter bomb and send him down there.  Destroy the command center and the weapon will self-destruct.  What's the worst thing that can happen?  If he succeeds we save a bunch of time and if he fails we get rid of him.  Win-win.'  \n Mary : '*sigh*  Fine.  I have no reason to care about him but you're kind of cold, Prometheus...'  \n $RED$Prometheus : 'My apologies...  I will strive to do better.'  \n System message : new special project available.",
     prerequisites: ['hades.34.5'],
     objectives: [
       { type: 'project', projectId: 'hades_breach_crust', repeatCount: 1 }
