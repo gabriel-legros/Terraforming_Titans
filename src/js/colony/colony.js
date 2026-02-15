@@ -187,6 +187,10 @@ class Colony extends Building {
     return Math.min(populationRatio, 1);
   }
 
+  getConsumptionRatioForResource(category, resource) {
+    return this.getConsumptionRatio();
+  }
+
   updateProductivity(resources, deltaTime) {
     let minRatio = this.calculateBaseMinRatio(resources, deltaTime);
     const populationRatio = this.getConsumptionRatio();
@@ -201,8 +205,6 @@ class Colony extends Building {
 
   updateNeedsRatio(resources, deltaTime) {
     const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
-    const popConsumptionRatio = this.getConsumptionRatio();
-  
     const consumption = this.getConsumption();
     for (const category in consumption) {
       if (!this.currentConsumption[category]) {
@@ -218,24 +220,25 @@ class Colony extends Building {
           continue;
         }
   
+        const consumptionRatio = this.getConsumptionRatioForResource(category, resource);
         const { amount } = this.getConsumptionResource(category, resource);
         const baseConsumption = this.active * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
-        const scaledConsumption = baseConsumption * popConsumptionRatio * (deltaTime / 1000);
+        const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);
   
         const availableAmount = resources[category][resource].value;
   
-        let consumptionRatio = 1;
+        let availabilityRatio = 1;
         if (availableAmount < scaledConsumption) {
           const consumptionRate = resources[category][resource].consumptionRate;
           if (consumptionRate === 0) {
-            consumptionRatio = 1;
+            availabilityRatio = 1;
           } else {
-            consumptionRatio = resources[category][resource].productionRate / consumptionRate;
+            availabilityRatio = resources[category][resource].productionRate / consumptionRate;
           }
         }
   
         // Adjust filledNeeds for the consumed resource
-        this.adjustNeedRatio(resource, consumptionRatio, deltaTime);
+        this.adjustNeedRatio(resource, availabilityRatio, deltaTime);
       }
     }
   }
@@ -243,7 +246,6 @@ class Colony extends Building {
 
   consume(accumulatedChanges, deltaTime) {
     const effectiveMultiplier = this.getEffectiveConsumptionMultiplier();
-    const consumptionRatio = this.getConsumptionRatio();
   
     this.currentConsumption = {}; // Reset current consumption
   
@@ -262,6 +264,7 @@ class Colony extends Building {
           continue;
         }
   
+        const consumptionRatio = this.getConsumptionRatioForResource(category, resource);
         const { amount } = this.getConsumptionResource(category, resource);
         const baseConsumption = this.active * amount * effectiveMultiplier * this.getEffectiveResourceConsumptionMultiplier(category, resource);
         const scaledConsumption = baseConsumption * consumptionRatio * (deltaTime / 1000);

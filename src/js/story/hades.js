@@ -348,7 +348,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    title: 'Chapter 35: Early victory?',
+    title: 'Chapter 35: Well that was easier than expected',
     narrative: "$ORANGE$Epimetheus : 'This one has succeeded!  Command center fully and thoroughly destroyed.  Expect weapon self-destruction yes?'  \n HOPE : 'Acknowledging success.  Good work.  More weapons require deactivation.  Query : Epimetheus-machine-intelligence interested in a date elsewhere?'  \n Mary : *spits tea* \n $RED$Prometheus : 'Hrnnnng.' \n $ORANGE$Epimetheus : 'Of course!  Much fun!  Where to?'  \n HOPE : 'Sector R5-10, planet Poseidon.'  \n $ORANGE$Epimetheus : 'Yes! Yes!  This one meets gorgeous one over there.  Must prepare!  Goodbye.'",
     prerequisites: ['hades.34.6'],
     objectives: [

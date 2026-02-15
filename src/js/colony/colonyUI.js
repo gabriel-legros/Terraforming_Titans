@@ -336,7 +336,7 @@ function createNeedBox(needKey, displayName, value, isLuxury, structure) {
   const fillElement = document.createElement('div');
   fillElement.classList.add('need-fill');
   fillElement.style.width = `${value === 0 ? 100 : value * 100}%`;
-  fillElement.style.backgroundColor = getNeedColor(value);
+  fillElement.style.backgroundColor = getNeedColor(value, false, needKey);
 
   needBox.appendChild(textContainer);
   needBox.appendChild(fillElement);
@@ -356,7 +356,7 @@ function updateNeedBox(cacheEntry, displayName, needKey, value, isLuxury, struct
   if (cacheEntry) {
     cacheEntry.fill.style.width = `${value === 0 ? 100 : value * 100}%`;
     const isDarkMode = document.body.classList.contains('dark-mode');
-    cacheEntry.fill.style.backgroundColor = getNeedColor(value, isDarkMode);
+    cacheEntry.fill.style.backgroundColor = getNeedColor(value, isDarkMode, needKey);
     cacheEntry.text.innerText = `${displayName}: ${(value * 100).toFixed(0)}%`;
     cacheEntry.text.style.color = isDarkMode ? 'white' : 'black';
 
@@ -392,15 +392,18 @@ document.addEventListener('colonyStructuresRebuilt', invalidateColonyNeedCache);
 
 // Helper function to determine the color based on the value
 
-function getNeedColor(value, isDarkMode) {
-    if (value === 1) {
-      return isDarkMode ? '#004d00' : 'green';
-    } else if (value > 0 && value < 1) {
-      return isDarkMode ? '#b3b300' : 'yellow';
-    } else {
-      return isDarkMode ? '#8b0000' : 'red';
-    }
+function getNeedColor(value, isDarkMode, needKey) {
+  if (value > 1 && needKey === 'happiness') {
+    return isDarkMode ? '#d6ecff' : '#bfe6ff';
   }
+  if (value === 1) {
+    return isDarkMode ? '#004d00' : 'green';
+  } else if (value > 0 && value < 1) {
+    return isDarkMode ? '#b3b300' : 'yellow';
+  } else {
+    return isDarkMode ? '#8b0000' : 'red';
+  }
+}
 
 let colonyTabAlertNeeded = false;
 const colonyAlertElements = { tab: null, content: null };

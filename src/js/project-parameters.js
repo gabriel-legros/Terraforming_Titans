@@ -478,6 +478,7 @@ const projectParameters = {
     repeatable: false,
     unlocked : false,
     attributes : {
+      disableWhenHazard: ['pulsar'],
       landCostScaling: true,
       completionEffect: [
         {
@@ -506,7 +507,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Deploy an artificial sky shield to block pulsar radiation bursts. Clears the pulsar hazard on completion.',
+    description: 'Deploy an artificial sky shield to block pulsar radiation bursts. Clears the pulsar hazard on completion.  Removes all solar flux and disables space mirrors (lanterns can still be used).',
     repeatable: false,
     unlocked: false,
     attributes: {

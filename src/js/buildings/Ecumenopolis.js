@@ -1,10 +1,14 @@
 class Ecumenopolis extends Colony {
-  getConsumptionRatio() {
+  getEcumenopolisColonistFillRatio() {
     const colonistCapacity = this.getEcumenopolisCapacity('colonists');
     const colonistRatio = colonistCapacity > 0
       ? resources.colony.colonists.value / colonistCapacity
       : 0;
+    return Math.max(0, Math.min(1, colonistRatio));
+  }
 
+  getConsumptionRatio() {
+    const colonistRatio = this.getEcumenopolisColonistFillRatio();
     const freeAndroidStorage = this.getFreeAndroidStorage(resources);
     const androidHousingCapacity = this.getAndroidHousingCapacity();
     const androidsInEcumenopolis = Math.max(
@@ -15,6 +19,14 @@ class Ecumenopolis extends Colony {
     const androidRatio = androidCapacity > 0 ? androidsInEcumenopolis / androidCapacity : 0;
 
     return Math.max(0, Math.min(1, Math.max(colonistRatio, androidRatio)));
+  }
+
+  getConsumptionRatioForResource(category, resource) {
+    const consumptionRatio = this.getConsumptionRatio();
+    if (category === 'colony' && (resource === 'food' || resource === 'electronics' || resource === 'androids')) {
+      return Math.min(consumptionRatio, super.getConsumptionRatio());
+    }
+    return consumptionRatio;
   }
 
   getFreeAndroidStorage(resources) {
@@ -43,10 +55,7 @@ class Ecumenopolis extends Colony {
       return;
     }
 
-    const colonistCapacity = this.getEcumenopolisCapacity('colonists');
-    const colonistRatio = colonistCapacity > 0
-      ? resources.colony.colonists.value / colonistCapacity
-      : 0;
+    const colonistRatio = this.getEcumenopolisColonistFillRatio();
 
     const freeAndroidStorage = this.getFreeAndroidStorage(resources);
     const androidHousingCapacity = this.getAndroidHousingCapacity();
