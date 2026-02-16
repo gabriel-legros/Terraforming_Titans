@@ -1757,6 +1757,79 @@ function updateDecreaseButtonText(button, buildCount) {
     return lines.join('\n');
   }
 
+  function buildStructureConsumptionTooltip(structure, category, resource, buildCount) {
+    const baseConsumption = (structure.getConsumptionResource(category, resource).amount || 0) * buildCount;
+    const isReverseMode = structure.reversalAvailable && structure.reverseEnabled;
+    const reverseConsumption = isReverseMode
+      ? (structure.production?.[category]?.[resource] || 0) * buildCount
+      : 0;
+    const lines = [`Base consumption: ${formatNumber(baseConsumption, true, 2)}`];
+    if (reverseConsumption > 0) {
+      lines.push(`Reverse-mode base consumption: ${formatNumber(reverseConsumption, true, 2)}`);
+    }
+    const multipliers = [];
+    const reverseMultipliers = [];
+
+    structure.activeEffects.forEach(effect => {
+      if (effect.type === 'consumptionMultiplier') {
+        if (effect.value === 1) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+        return;
+      }
+      if (effect.type === 'resourceConsumptionMultiplier') {
+        if (effect.resourceCategory !== category || effect.resourceTarget !== resource) return;
+        if (effect.value === 1) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+        return;
+      }
+      if (!isReverseMode) return;
+      if (effect.type === 'productionMultiplier') {
+        if (effect.value === 1) return;
+        reverseMultipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+        return;
+      }
+      if (effect.type === 'resourceProductionMultiplier') {
+        if (effect.resourceCategory !== category || effect.resourceTarget !== resource) return;
+        if (effect.value === 1) return;
+        reverseMultipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+      }
+    });
+
+    if (multipliers.length) {
+      lines.push('Multipliers:');
+      multipliers.forEach(multiplier => {
+        lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+      });
+    } else {
+      lines.push('Multipliers: none');
+    }
+
+    if (reverseConsumption > 0) {
+      if (reverseMultipliers.length) {
+        lines.push('Reverse multipliers:');
+        reverseMultipliers.forEach(multiplier => {
+          lines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+        });
+      } else {
+        lines.push('Reverse multipliers: none');
+      }
+    }
+
+    return lines.join('\n');
+  }
+
   function buildStructureWorkerTooltip(structure, buildCount) {
     const baseWorkers = structure.requiresWorker * buildCount;
     const addedWorkers = structure.getAddedWorkerNeed() * buildCount;
@@ -2349,6 +2422,13 @@ function updateDecreaseButtonText(button, buildCount) {
               resource,
               buildCount
             };
+          } else if (sec.key === 'consumption') {
+            span._consumptionTooltipContext = {
+              structure,
+              category,
+              resource,
+              buildCount
+            };
           }
           if (resObj) {
             const netRate = (resObj.productionRate || 0) - (resObj.consumptionRate || 0);
@@ -2518,7 +2598,7 @@ function updateDecreaseButtonText(button, buildCount) {
       } else {
         sec.keys.forEach((key, i) => {
           const span = document.createElement('span');
-          if (sec.key === 'maintenance' || sec.key === 'production') {
+          if (sec.key === 'maintenance' || sec.key === 'production' || sec.key === 'consumption') {
             const textSpan = document.createElement('span');
             span.classList.add('info-tooltip-icon');
             span.style.fontFamily = 'inherit';
@@ -2541,7 +2621,7 @@ function updateDecreaseButtonText(button, buildCount) {
               span.addEventListener('mouseenter', span._updateMaintenanceTooltip);
               span.addEventListener('focusin', span._updateMaintenanceTooltip);
               span.addEventListener('pointerdown', span._updateMaintenanceTooltip);
-            } else {
+            } else if (sec.key === 'production') {
               span._productionTooltip = tooltip;
               span._productionTooltipCache = {};
               span._updateProductionTooltip = () => {
@@ -2557,6 +2637,22 @@ function updateDecreaseButtonText(button, buildCount) {
               span.addEventListener('mouseenter', span._updateProductionTooltip);
               span.addEventListener('focusin', span._updateProductionTooltip);
               span.addEventListener('pointerdown', span._updateProductionTooltip);
+            } else {
+              span._consumptionTooltip = tooltip;
+              span._consumptionTooltipCache = {};
+              span._updateConsumptionTooltip = () => {
+                const context = span._consumptionTooltipContext;
+                const text = buildStructureConsumptionTooltip(
+                  context.structure,
+                  context.category,
+                  context.resource,
+                  context.buildCount
+                );
+                setTooltipText(tooltip, text, span._consumptionTooltipCache, 'text');
+              };
+              span.addEventListener('mouseenter', span._updateConsumptionTooltip);
+              span.addEventListener('focusin', span._updateConsumptionTooltip);
+              span.addEventListener('pointerdown', span._updateConsumptionTooltip);
             }
           }
           info.spans.set(key, span);
