@@ -261,6 +261,8 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
                     const meta = {
                         type: depositRequirement ? 'deposit' : isLandResource ? 'land' : 'resource',
                         available,
+                        category,
+                        resource,
                     };
                     if (meta.type === 'land') {
                         meta.requiredPerUnit = building.requiresLand;
@@ -318,6 +320,11 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
         ratio,
         meta: shortageMeta.get(resObj) || {},
     }));
+    const hasLandShortage = entries.some(entry => entry?.meta?.type === 'land');
+    let oneUnitCost = null;
+    if (hasLandShortage && typeof building.getEffectiveCost === 'function') {
+        oneUnitCost = building.getEffectiveCost(1) || {};
+    }
 
     const isLandOrDepositException = entry => {
         if (!entry || !entry.meta) return false;
@@ -346,9 +353,20 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
     }
 
     for (const { resObj, ratio, meta } of entries) {
-        if (ratio <= lowestRatio + ratioTolerance && meta?.type !== 'deposit') {
-            resObj.autobuildShortage = true;
+        if (ratio > lowestRatio + ratioTolerance || meta?.type === 'deposit') {
+            continue;
         }
+
+        if (hasLandShortage && meta?.type === 'resource') {
+            const category = meta.category;
+            const resource = meta.resource;
+            const requiredForOne = oneUnitCost?.[category]?.[resource] || 0;
+            if (requiredForOne > 0 && (meta.available || 0) + ratioTolerance >= requiredForOne) {
+                continue;
+            }
+        }
+
+        resObj.autobuildShortage = true;
     }
 }
 

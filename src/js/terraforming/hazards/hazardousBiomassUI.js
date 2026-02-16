@@ -142,6 +142,9 @@ function formatSignedValue(value, decimals = 2, unit = '') {
 }
 
 function formatValueWithUnit(value, unit, decimals = 2) {
+  if (`${unit || ''}`.trim().toLowerCase() === 'kpa' && Number.isFinite(value) && Math.abs(value) >= 1000) {
+    return `${formatNumeric(value / 1000, decimals)} MPa`;
+  }
   const safeUnit = unit ? ` ${unit}` : '';
   return `${formatNumeric(value, decimals)}${safeUnit}`;
 }
