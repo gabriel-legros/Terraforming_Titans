@@ -577,6 +577,36 @@
   background: rgba(34, 44, 48, 0.55);
 }
 
+.hazard-card--pulsar .hazard-bar {
+  height: 60px;
+}
+
+.hazard-card--pulsar .hazard-bar__label {
+  font-size: 18px;
+}
+
+.hazard-bar-wrapper--pulsar .hazard-bar__details {
+  font-size: 15px;
+  opacity: 0.92;
+  font-variant-numeric: tabular-nums;
+}
+
+.hazard-factors--pulsar {
+  background: rgba(12, 22, 44, 0.72);
+}
+
+.hazard-factor-grid--pulsar .hazard-factor-row {
+  grid-template-columns: 1.35fr 1fr;
+  background: rgba(22, 38, 70, 0.52);
+}
+
+.hazard-factor-cell--pulsar-value {
+  align-items: flex-end;
+  text-align: right;
+  color: #d8eaff;
+  font-variant-numeric: tabular-nums;
+}
+
 .pulsar-viz {
   position: relative;
   height: 170px;
@@ -684,6 +714,26 @@
 .pulsar-viz--storm .pulsar-viz__beam {
   background: linear-gradient(90deg, rgba(255, 232, 210, 0.96) 0%, rgba(255, 179, 132, 0.86) 35%, rgba(255, 108, 92, 0.68) 74%, rgba(255, 94, 86, 0.08) 100%);
   filter: drop-shadow(0 0 16px rgba(255, 141, 106, 0.8));
+}
+
+@media (max-width: 900px) {
+  .hazard-factor-grid--pulsar .hazard-factor-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .hazard-factor-cell--pulsar-value {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .hazard-card--pulsar .hazard-bar {
+    height: 53px;
+  }
+
+  .hazard-card--pulsar .hazard-bar__label {
+    font-size: 16px;
+  }
 }
 
 @keyframes pulsarCorePulse {

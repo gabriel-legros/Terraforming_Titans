@@ -91,6 +91,28 @@ function isRogueWorld(terraforming) {
   return terraforming?.celestialParameters?.rogue === true;
 }
 
+function resolveDistanceFromSunAU(terraforming) {
+  const distance = terraforming?.celestialParameters?.distanceFromSun;
+  if (!Number.isFinite(distance) || distance <= 0) {
+    return 0;
+  }
+  return distance;
+}
+
+function getDistanceScalingMultiplier(currentDistanceAU, referenceDistanceAU) {
+  if (!Number.isFinite(currentDistanceAU) || currentDistanceAU <= 0) {
+    return 1;
+  }
+  if (!Number.isFinite(referenceDistanceAU) || referenceDistanceAU <= 0) {
+    return 1;
+  }
+  const ratio = referenceDistanceAU / currentDistanceAU;
+  if (!Number.isFinite(ratio) || ratio <= 0) {
+    return 1;
+  }
+  return Math.min(1, ratio * ratio);
+}
+
 function getPulsarHazardStrength(terraforming, pulsarParameters) {
   if (!pulsarParameters) {
     return 0;
@@ -187,6 +209,8 @@ class PulsarHazard {
     this.stormRemainingSeconds = 0;
     this.hazardStrength = 0;
     this.artificialSkyCompletion = 0;
+    this.initialDistanceFromSunAU = 0;
+    this.distanceFromSunMultiplier = 1;
   }
 
   normalize(parameters = {}) {
@@ -196,9 +220,17 @@ class PulsarHazard {
   initialize(terraforming, pulsarParameters, options = {}) {
     consumePulsarArgs(terraforming, pulsarParameters, options);
     ensureArtificialSkyUnlocked(pulsarParameters);
-    const share = getPulsarHazardStrength(terraforming, pulsarParameters);
+    this.initialDistanceFromSunAU = resolveDistanceFromSunAU(terraforming);
+    const currentDistanceAU = resolveDistanceFromSunAU(terraforming);
+    const distanceMultiplier = getDistanceScalingMultiplier(
+      currentDistanceAU,
+      this.initialDistanceFromSunAU
+    );
+    const skyShare = getPulsarHazardStrength(terraforming, pulsarParameters);
+    const share = skyShare * distanceMultiplier;
     this.hazardStrength = share;
-    this.artificialSkyCompletion = 1 - share;
+    this.distanceFromSunMultiplier = distanceMultiplier;
+    this.artificialSkyCompletion = 1 - skyShare;
     this.manager.setHazardLandReservationShare('pulsar', share);
     if (share > 0) {
       applyPulsarRadiation(terraforming, pulsarParameters, share);
@@ -210,9 +242,19 @@ class PulsarHazard {
   update(deltaSeconds, terraforming, pulsarParameters) {
     consumePulsarArgs(deltaSeconds, terraforming, pulsarParameters);
     ensureArtificialSkyUnlocked(pulsarParameters);
-    const share = getPulsarHazardStrength(terraforming, pulsarParameters);
+    if (!(this.initialDistanceFromSunAU > 0)) {
+      this.initialDistanceFromSunAU = resolveDistanceFromSunAU(terraforming);
+    }
+    const currentDistanceAU = resolveDistanceFromSunAU(terraforming);
+    const distanceMultiplier = getDistanceScalingMultiplier(
+      currentDistanceAU,
+      this.initialDistanceFromSunAU
+    );
+    const skyShare = getPulsarHazardStrength(terraforming, pulsarParameters);
+    const share = skyShare * distanceMultiplier;
     this.hazardStrength = share;
-    this.artificialSkyCompletion = 1 - share;
+    this.distanceFromSunMultiplier = distanceMultiplier;
+    this.artificialSkyCompletion = 1 - skyShare;
     this.manager.setHazardLandReservationShare('pulsar', share);
     if (share > 0) {
       this.advanceStormState(deltaSeconds);
@@ -243,9 +285,30 @@ class PulsarHazard {
 
   getHazardStrength(terraforming = null, pulsarParameters = null) {
     if (terraforming && pulsarParameters) {
-      return getPulsarHazardStrength(terraforming, pulsarParameters);
+      const currentDistanceAU = resolveDistanceFromSunAU(terraforming);
+      const referenceDistanceAU = this.initialDistanceFromSunAU > 0
+        ? this.initialDistanceFromSunAU
+        : currentDistanceAU;
+      const distanceMultiplier = getDistanceScalingMultiplier(currentDistanceAU, referenceDistanceAU);
+      const skyShare = getPulsarHazardStrength(terraforming, pulsarParameters);
+      return clampRatio(skyShare * distanceMultiplier);
     }
     return clampRatio(this.hazardStrength);
+  }
+
+  getDistanceFromSunMultiplier(terraforming = null) {
+    if (!terraforming) {
+      return this.distanceFromSunMultiplier > 0 ? this.distanceFromSunMultiplier : 1;
+    }
+    const currentDistanceAU = resolveDistanceFromSunAU(terraforming);
+    const referenceDistanceAU = this.initialDistanceFromSunAU > 0
+      ? this.initialDistanceFromSunAU
+      : currentDistanceAU;
+    return getDistanceScalingMultiplier(currentDistanceAU, referenceDistanceAU);
+  }
+
+  getInitialDistanceFromSunAU() {
+    return this.initialDistanceFromSunAU > 0 ? this.initialDistanceFromSunAU : 0;
   }
 
   isStormActive() {
@@ -277,7 +340,9 @@ class PulsarHazard {
       stormTimerSeconds: Number.isFinite(this.stormTimerSeconds) ? this.stormTimerSeconds : 0,
       stormRemainingSeconds: Number.isFinite(this.stormRemainingSeconds) ? this.stormRemainingSeconds : 0,
       hazardStrength: Number.isFinite(this.hazardStrength) ? this.hazardStrength : 0,
-      artificialSkyCompletion: Number.isFinite(this.artificialSkyCompletion) ? this.artificialSkyCompletion : 0
+      artificialSkyCompletion: Number.isFinite(this.artificialSkyCompletion) ? this.artificialSkyCompletion : 0,
+      initialDistanceFromSunAU: Number.isFinite(this.initialDistanceFromSunAU) ? this.initialDistanceFromSunAU : 0,
+      distanceFromSunMultiplier: Number.isFinite(this.distanceFromSunMultiplier) ? this.distanceFromSunMultiplier : 1
     };
   }
 
@@ -290,6 +355,14 @@ class PulsarHazard {
     this.hazardStrength = clampRatio(strength);
     const completion = data && Number.isFinite(data.artificialSkyCompletion) ? data.artificialSkyCompletion : (1 - this.hazardStrength);
     this.artificialSkyCompletion = clampRatio(completion);
+    const initialDistance = data && Number.isFinite(data.initialDistanceFromSunAU)
+      ? data.initialDistanceFromSunAU
+      : 0;
+    this.initialDistanceFromSunAU = initialDistance > 0 ? initialDistance : 0;
+    const distanceMultiplier = data && Number.isFinite(data.distanceFromSunMultiplier)
+      ? data.distanceFromSunMultiplier
+      : 1;
+    this.distanceFromSunMultiplier = distanceMultiplier > 0 ? distanceMultiplier : 1;
   }
 
   advanceStormState(deltaSeconds) {
