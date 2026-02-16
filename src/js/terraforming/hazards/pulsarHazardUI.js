@@ -9,12 +9,10 @@ const pulsarHazardUICache = {
   effectsItems: []
 };
 
-const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, Mega Heat Sink, and Magnetic Shield are disabled until the pulsar hazard is cleared.';
-const PULSAR_LAND_UNUSABLE_TEXT = 'Land is unusable until the hazard is cleared.  You can still use underground land and aerostats.';
-const PULSAR_STORM_TEXT = 'Electromagnetic storm every 100s for 5s: 3% attrition from leaks and mistakes to worker androids, electronics, and nanobots, spaceship projects paused.';
-const PULSAR_NANOBOT_CAP_TEXT = 'Nanobot cap is multiplied by Underground Expansion completion ratio: completions / initial land.';
+const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, Mega Heat Sink, and Magnetic Shield are disabled until the pulsar hazard is fully cleared.';
 const PULSAR_THRUSTER_COST_TEXT = 'Planetary Thrusters construction cost is multiplied by x100.';
-const PULSAR_CLEAR_TEXT = 'Build an artificial sky or go rogue.';
+const PULSAR_CLEAR_TEXT = 'Build all Artificial Sky segments or go rogue.';
+const PULSAR_BASE_STORM_ATTRITION_PERCENT = 3;
 
 function getPulsarDocument() {
   if (pulsarHazardUICache.doc !== undefined) {
@@ -203,43 +201,63 @@ function updatePulsarHazardUI(pulsarParameters) {
   }
 
   const description = pulsarParameters.description || 'Pulsar hazard detected.';
-  const orbitalBoost = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
+  const baseOrbitalBoost = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
     ? pulsarParameters.orbitalDoseBoost_mSvPerDay
     : 0;
   let stormActive = false;
   let stormRemaining = 0;
   let stormNext = 0;
+  let artificialSkyCompletion = 0;
+  let hazardStrength = 1;
   if (hazardManager && hazardManager.pulsarHazard) {
     stormActive = hazardManager.pulsarHazard.isStormActive();
     stormRemaining = hazardManager.pulsarHazard.getStormRemainingSeconds();
     stormNext = hazardManager.pulsarHazard.getSecondsUntilNextStorm();
+    artificialSkyCompletion = hazardManager.pulsarHazard.getArtificialSkyCompletionRatio(terraforming, pulsarParameters);
+    hazardStrength = hazardManager.pulsarHazard.getHazardStrength(terraforming, pulsarParameters);
   }
+  artificialSkyCompletion = Math.max(0, Math.min(1, artificialSkyCompletion));
+  hazardStrength = Math.max(0, Math.min(1, hazardStrength));
+  const mitigationPercent = artificialSkyCompletion * 100;
+  const hazardPercent = hazardStrength * 100;
+  const effectiveOrbitalBoost = baseOrbitalBoost * hazardStrength;
+  const stormAttritionPercent = PULSAR_BASE_STORM_ATTRITION_PERCENT * hazardStrength;
+  const currentLandLockPercent = hazardPercent;
+  const currentNanobotMultiplier = nanotechManager && nanotechManager.getPulsarNanobotCapMultiplier
+    ? nanotechManager.getPulsarNanobotCapMultiplier()
+    : 0;
 
   if (pulsarHazardUICache.summaryStatusBody) {
     const stormLine = stormActive
       ? `Electromagnetic storm active (${stormRemaining.toFixed(1)}s left).`
       : `Next electromagnetic storm in ${stormNext.toFixed(1)}s.`;
-    pulsarHazardUICache.summaryStatusBody.textContent = `${description}\n${stormLine}`;
+    pulsarHazardUICache.summaryStatusBody.textContent =
+      `${description}\nArtificial Sky completion: ${mitigationPercent.toFixed(1)}% (hazard intensity ${hazardPercent.toFixed(1)}%).\n${stormLine}`;
   }
   if (pulsarHazardUICache.viz) {
     pulsarHazardUICache.viz.classList.toggle('pulsar-viz--storm', stormActive);
   }
 
-  const roundedOrbitalBoost = Math.round(orbitalBoost);
+  const roundedOrbitalBoost = Math.round(effectiveOrbitalBoost);
+  const roundedBaseOrbitalBoost = Math.round(baseOrbitalBoost);
   if (pulsarHazardUICache.summaryRadiationBody) {
-    pulsarHazardUICache.summaryRadiationBody.textContent = `+${roundedOrbitalBoost} mSv/day orbital dose\nSurface dose is attenuated by atmosphere.`;
+    pulsarHazardUICache.summaryRadiationBody.textContent =
+      `+${roundedOrbitalBoost} mSv/day orbital dose (base +${roundedBaseOrbitalBoost})\nSurface dose is attenuated by atmosphere.`;
   }
   if (pulsarHazardUICache.effectsItems[0]) {
     pulsarHazardUICache.effectsItems[0].textContent = PULSAR_DISABLED_PROJECTS_TEXT;
   }
   if (pulsarHazardUICache.effectsItems[1]) {
-    pulsarHazardUICache.effectsItems[1].textContent = PULSAR_LAND_UNUSABLE_TEXT;
+    pulsarHazardUICache.effectsItems[1].textContent =
+      `Hazard land lock now reserves ${formatNumber(currentLandLockPercent, false, 2)}% of initial land.  You can still use underground land and aerostats.`;
   }
   if (pulsarHazardUICache.effectsItems[2]) {
-    pulsarHazardUICache.effectsItems[2].textContent = PULSAR_STORM_TEXT;
+    pulsarHazardUICache.effectsItems[2].textContent =
+      `Electromagnetic storm every 100s for 5s: ${formatNumber(stormAttritionPercent, false, 2)}% attrition to worker androids, electronics, and nanobots while active; spaceship projects paused.`;
   }
   if (pulsarHazardUICache.effectsItems[3]) {
-    pulsarHazardUICache.effectsItems[3].textContent = PULSAR_NANOBOT_CAP_TEXT;
+    pulsarHazardUICache.effectsItems[3].textContent =
+      `Nanobot cap multiplier now uses the higher of Underground Expansion ratio and Artificial Sky completion. Current multiplier: x${formatNumber(currentNanobotMultiplier, false, 3)}.`;
   }
   if (pulsarHazardUICache.effectsItems[4]) {
     pulsarHazardUICache.effectsItems[4].textContent = PULSAR_THRUSTER_COST_TEXT;

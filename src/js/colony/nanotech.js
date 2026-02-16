@@ -91,6 +91,7 @@ class NanotechManager extends EffectableEntity {
       return 1;
     }
 
+    const pulsar = hazardManager.parameters.pulsar;
     const initialLand = Math.max(terraforming.initialLand || 0, 0);
     if (initialLand <= 0) {
       return 0;
@@ -102,7 +103,15 @@ class NanotechManager extends EffectableEntity {
     }
 
     const completions = Math.max(undergroundExpansion.repeatCount || 0, 0);
-    return Math.min(1, completions / initialLand);
+    const undergroundMultiplier = Math.min(1, completions / initialLand);
+
+    let artificialSkyMultiplier = 0;
+    if (hazardManager.pulsarHazard && hazardManager.pulsarHazard.getArtificialSkyCompletionRatio) {
+      artificialSkyMultiplier = hazardManager.pulsarHazard.getArtificialSkyCompletionRatio(terraforming, pulsar);
+    }
+    artificialSkyMultiplier = Math.max(0, Math.min(1, artificialSkyMultiplier));
+
+    return Math.max(undergroundMultiplier, artificialSkyMultiplier);
   }
 
   getMaxNanobots() {

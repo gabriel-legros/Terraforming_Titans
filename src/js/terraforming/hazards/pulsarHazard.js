@@ -48,6 +48,35 @@ function getArtificialSkyProject() {
   }
 }
 
+function clampRatio(value) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  if (value <= 0) {
+    return 0;
+  }
+  if (value >= 1) {
+    return 1;
+  }
+  return value;
+}
+
+function getArtificialSkyCompletionRatio() {
+  const artificialSky = getArtificialSkyProject();
+  if (!artificialSky) {
+    return 0;
+  }
+  if (artificialSky.isCompleted) {
+    return 1;
+  }
+  if (artificialSky.getCompletionFraction) {
+    return clampRatio(artificialSky.getCompletionFraction());
+  }
+  const maxSegments = Math.max(artificialSky.maxRepeatCount || 1, 1);
+  const builtSegments = Math.max(artificialSky.repeatCount || 0, 0);
+  return clampRatio(builtSegments / maxSegments);
+}
+
 function ensureArtificialSkyUnlocked(pulsarParameters) {
   if (!pulsarParameters) {
     return;
@@ -62,15 +91,29 @@ function isRogueWorld(terraforming) {
   return terraforming?.celestialParameters?.rogue === true;
 }
 
-function isArtificialSkyCompleted() {
-  const artificialSky = getArtificialSkyProject();
-  return !!(artificialSky && artificialSky.isCompleted);
+function getPulsarHazardStrength(terraforming, pulsarParameters) {
+  if (!pulsarParameters) {
+    return 0;
+  }
+  if (isRogueWorld(terraforming)) {
+    return 0;
+  }
+  return 1 - getArtificialSkyCompletionRatio();
 }
 
-function applyPulsarStormAttrition(seconds) {
-  if (!seconds || seconds <= 0) {
+function isArtificialSkyCompleted(terraforming, pulsarParameters) {
+  return getPulsarHazardStrength(terraforming, pulsarParameters) <= 0;
+}
+
+function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
+  if (!seconds || seconds <= 0 || hazardStrength <= 0) {
     return;
   }
+
+  const attritionScale = Math.max(0, Math.min(1, hazardStrength));
+  const androidAttritionRate = PULSAR_STORM_ANDROID_ATTRITION_RATE * attritionScale;
+  const electronicsAttritionRate = PULSAR_STORM_ELECTRONICS_ATTRITION_RATE * attritionScale;
+  const nanobotAttritionRate = PULSAR_STORM_NANOBOT_ATTRITION_RATE * attritionScale;
 
   const androidResource = resources.colony.androids;
   const currentAndroids = Number.isFinite(androidResource.value) ? androidResource.value : 0;
@@ -78,12 +121,12 @@ function applyPulsarStormAttrition(seconds) {
     ? Math.max(0, projectManager.getAssignedAndroids())
     : 0;
   const exposedAndroids = Math.max(0, currentAndroids - assignedAndroids);
-  const androidLoss = exposedAndroids * PULSAR_STORM_ANDROID_ATTRITION_RATE * seconds;
+  const androidLoss = exposedAndroids * androidAttritionRate * seconds;
   if (androidLoss > 0) {
     androidResource.value = Math.max(0, currentAndroids - androidLoss);
     if (androidResource.modifyRate) {
       androidResource.modifyRate(
-        -exposedAndroids * PULSAR_STORM_ANDROID_ATTRITION_RATE,
+        -exposedAndroids * androidAttritionRate,
         PULSAR_STORM_EFFECT_LABEL,
         'hazard'
       );
@@ -92,12 +135,12 @@ function applyPulsarStormAttrition(seconds) {
 
   const electronicsResource = resources.colony.electronics;
   const currentElectronics = Number.isFinite(electronicsResource.value) ? electronicsResource.value : 0;
-  const electronicsLoss = currentElectronics * PULSAR_STORM_ELECTRONICS_ATTRITION_RATE * seconds;
+  const electronicsLoss = currentElectronics * electronicsAttritionRate * seconds;
   if (electronicsLoss > 0) {
     electronicsResource.value = Math.max(0, currentElectronics - electronicsLoss);
     if (electronicsResource.modifyRate) {
       electronicsResource.modifyRate(
-        -currentElectronics * PULSAR_STORM_ELECTRONICS_ATTRITION_RATE,
+        -currentElectronics * electronicsAttritionRate,
         PULSAR_STORM_EFFECT_LABEL,
         'hazard'
       );
@@ -106,21 +149,22 @@ function applyPulsarStormAttrition(seconds) {
 
   if (nanotechManager) {
     const currentNanobots = Number.isFinite(nanotechManager.nanobots) ? nanotechManager.nanobots : 1;
-    const nanobotLoss = currentNanobots * PULSAR_STORM_NANOBOT_ATTRITION_RATE * seconds;
+    const nanobotLoss = currentNanobots * nanobotAttritionRate * seconds;
     if (nanobotLoss > 0) {
       nanotechManager.nanobots = Math.max(1, currentNanobots - nanobotLoss);
     }
   }
 }
 
-function applyPulsarRadiation(terraforming, pulsarParameters) {
-  if (!terraforming || !pulsarParameters) {
+function applyPulsarRadiation(terraforming, pulsarParameters, hazardStrength = 1) {
+  if (!terraforming || !pulsarParameters || hazardStrength <= 0) {
     return;
   }
 
-  const orbitalBoost = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
+  const orbitalBoostBase = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
     ? Math.max(0, pulsarParameters.orbitalDoseBoost_mSvPerDay)
     : 0;
+  const orbitalBoost = orbitalBoostBase * Math.max(0, Math.min(1, hazardStrength));
 
   const pressureKPa = terraforming.calculateTotalPressure ? terraforming.calculateTotalPressure() : 0;
   const pressurePa = Number.isFinite(pressureKPa) ? pressureKPa * 1000 : 0;
@@ -141,6 +185,8 @@ class PulsarHazard {
     this.manager = manager;
     this.stormTimerSeconds = 0;
     this.stormRemainingSeconds = 0;
+    this.hazardStrength = 0;
+    this.artificialSkyCompletion = 0;
   }
 
   normalize(parameters = {}) {
@@ -150,10 +196,12 @@ class PulsarHazard {
   initialize(terraforming, pulsarParameters, options = {}) {
     consumePulsarArgs(terraforming, pulsarParameters, options);
     ensureArtificialSkyUnlocked(pulsarParameters);
-    const share = (pulsarParameters && !this.isCleared(terraforming, pulsarParameters)) ? 1 : 0;
+    const share = getPulsarHazardStrength(terraforming, pulsarParameters);
+    this.hazardStrength = share;
+    this.artificialSkyCompletion = 1 - share;
     this.manager.setHazardLandReservationShare('pulsar', share);
     if (share > 0) {
-      applyPulsarRadiation(terraforming, pulsarParameters);
+      applyPulsarRadiation(terraforming, pulsarParameters, share);
     } else {
       this.resetStormState();
     }
@@ -162,11 +210,13 @@ class PulsarHazard {
   update(deltaSeconds, terraforming, pulsarParameters) {
     consumePulsarArgs(deltaSeconds, terraforming, pulsarParameters);
     ensureArtificialSkyUnlocked(pulsarParameters);
-    const share = (pulsarParameters && !this.isCleared(terraforming, pulsarParameters)) ? 1 : 0;
+    const share = getPulsarHazardStrength(terraforming, pulsarParameters);
+    this.hazardStrength = share;
+    this.artificialSkyCompletion = 1 - share;
     this.manager.setHazardLandReservationShare('pulsar', share);
     if (share > 0) {
       this.advanceStormState(deltaSeconds);
-      applyPulsarRadiation(terraforming, pulsarParameters);
+      applyPulsarRadiation(terraforming, pulsarParameters, share);
     } else {
       this.resetStormState();
     }
@@ -181,7 +231,21 @@ class PulsarHazard {
     if (isRogueWorld(terraforming)) {
       return true;
     }
-    return isArtificialSkyCompleted();
+    return isArtificialSkyCompleted(terraforming, pulsarParameters);
+  }
+
+  getArtificialSkyCompletionRatio(terraforming = null, pulsarParameters = null) {
+    if (terraforming && pulsarParameters) {
+      return clampRatio(1 - getPulsarHazardStrength(terraforming, pulsarParameters));
+    }
+    return clampRatio(this.artificialSkyCompletion);
+  }
+
+  getHazardStrength(terraforming = null, pulsarParameters = null) {
+    if (terraforming && pulsarParameters) {
+      return getPulsarHazardStrength(terraforming, pulsarParameters);
+    }
+    return clampRatio(this.hazardStrength);
   }
 
   isStormActive() {
@@ -211,7 +275,9 @@ class PulsarHazard {
   save() {
     return {
       stormTimerSeconds: Number.isFinite(this.stormTimerSeconds) ? this.stormTimerSeconds : 0,
-      stormRemainingSeconds: Number.isFinite(this.stormRemainingSeconds) ? this.stormRemainingSeconds : 0
+      stormRemainingSeconds: Number.isFinite(this.stormRemainingSeconds) ? this.stormRemainingSeconds : 0,
+      hazardStrength: Number.isFinite(this.hazardStrength) ? this.hazardStrength : 0,
+      artificialSkyCompletion: Number.isFinite(this.artificialSkyCompletion) ? this.artificialSkyCompletion : 0
     };
   }
 
@@ -220,6 +286,10 @@ class PulsarHazard {
     const remaining = data && Number.isFinite(data.stormRemainingSeconds) ? data.stormRemainingSeconds : 0;
     this.stormTimerSeconds = Math.max(0, Math.min(PULSAR_STORM_PERIOD_SECONDS, timer));
     this.stormRemainingSeconds = Math.max(0, Math.min(PULSAR_STORM_DURATION_SECONDS, remaining));
+    const strength = data && Number.isFinite(data.hazardStrength) ? data.hazardStrength : 0;
+    this.hazardStrength = clampRatio(strength);
+    const completion = data && Number.isFinite(data.artificialSkyCompletion) ? data.artificialSkyCompletion : (1 - this.hazardStrength);
+    this.artificialSkyCompletion = clampRatio(completion);
   }
 
   advanceStormState(deltaSeconds) {
@@ -227,7 +297,7 @@ class PulsarHazard {
     while (remaining > 0) {
       if (this.stormRemainingSeconds > 0) {
         const activeSlice = Math.min(remaining, this.stormRemainingSeconds);
-        applyPulsarStormAttrition(activeSlice);
+        applyPulsarStormAttrition(activeSlice, this.hazardStrength);
         this.stormRemainingSeconds = Math.max(0, this.stormRemainingSeconds - activeSlice);
         remaining -= activeSlice;
         continue;

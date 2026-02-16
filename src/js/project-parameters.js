@@ -506,20 +506,15 @@ const projectParameters = {
         metal: 100_000
       }
     },
-    duration: 300000,
-    description: 'Deploy an artificial sky shield to block pulsar radiation bursts. Clears the pulsar hazard on completion.  Removes all solar flux and disables space mirrors (lanterns can still be used).',
-    repeatable: false,
+    duration: 50000000,
+    description: 'Deploy segmented artificial sky shielding to block pulsar radiation bursts. Segment count is based on initial land, and assigned spaceships accelerate construction. Full completion clears the pulsar hazard, removes all solar flux, and disables space mirrors (lanterns can still be used).',
+    repeatable: true,
+    maxRepeatCount: 1,
     unlocked: false,
+    kesslerDebrisSize: 'large',
     attributes: {
-      completionEffect: [
-        {
-          target: 'building',
-          targetId: 'spaceMirror',
-          type: 'permanentBuildingDisable',
-          value: true,
-          effectId: 'artificial-sky-disable-space-mirror'
-        }
-      ]
+      spaceMining: true,
+      showInResourcesRate: false
     }
   },
   planetaryThruster: {

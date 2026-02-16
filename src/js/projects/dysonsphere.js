@@ -61,6 +61,7 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
       collectors: this.collectors,
     };
     if (typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart) {
+      state.autoContinuousOperation = this.autoContinuousOperation;
       state.autoDeployCollectors = this.autoDeployCollectors;
     }
     return state;
@@ -79,9 +80,9 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
     if (
       typeof gameSettings !== 'undefined' &&
       gameSettings.preserveProjectAutoStart &&
-      typeof state.autoDeployCollectors !== 'undefined'
+      (typeof state.autoContinuousOperation !== 'undefined' || typeof state.autoDeployCollectors !== 'undefined')
     ) {
-      this.autoDeployCollectors = state.autoDeployCollectors;
+      this.autoContinuousOperation = state.autoContinuousOperation === true || state.autoDeployCollectors === true;
     }
     if (this.isCompleted || state.isCompleted) {
       this.isCompleted = true;

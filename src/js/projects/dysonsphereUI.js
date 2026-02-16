@@ -68,13 +68,13 @@ function renderDysonSphereUI(project, container) {
       return;
     }
     if (project.isCollectorContinuous()) {
-      project.autoDeployCollectors = !project.autoDeployCollectors;
+      project.autoContinuousOperation = !project.autoContinuousOperation;
       updateDysonSphereUI(project);
       return;
     }
     project.startCollector();
   });
-  autoCheckbox.addEventListener('change', e => { project.autoDeployCollectors = e.target.checked; });
+  autoCheckbox.addEventListener('change', e => { project.autoContinuousOperation = e.target.checked; });
   travelResetCheckbox.addEventListener('change', e => {
     project.autoStartUncheckOnTravel = e.target.checked;
     updateDysonSphereUI(project);
@@ -151,7 +151,7 @@ function updateDysonSphereUI(project) {
   }
   if (els.expansionRateDisplay) {
     const active = project.isCollectorContinuous()
-      ? project.autoDeployCollectors && (project.isCompleted || collectors > 0)
+      ? project.autoContinuousOperation && (project.isCompleted || collectors > 0)
       : project.collectorProgress > 0;
     const rate = active ? (1000 / project.collectorDuration) : 0;
     els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
@@ -161,7 +161,7 @@ function updateDysonSphereUI(project) {
     const canAuto = project.isCompleted || project.collectors > 0;
     els.autoCheckbox.parentElement.style.display = canAuto ? '' : 'none';
     els.autoCheckbox.disabled = !canAuto;
-    els.autoCheckbox.checked = project.autoDeployCollectors;
+    els.autoCheckbox.checked = project.autoContinuousOperation;
   }
   if (els.autoStartTravelResetCheckbox) {
     els.autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
@@ -187,7 +187,7 @@ function updateDysonSphereUI(project) {
 
   els.startButton.disabled = false;
   if (project.isCollectorContinuous()) {
-    if (project.autoDeployCollectors && (project.isCompleted || project.collectors > 0)) {
+    if (project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)) {
       els.startButton.textContent = 'Continuous (On)';
       els.startButton.style.background = '#4caf50';
     } else {

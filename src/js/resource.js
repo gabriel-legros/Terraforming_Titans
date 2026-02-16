@@ -518,6 +518,9 @@ const shouldTreatProjectAsBuilding = (project) =>
   project?.treatAsBuilding ||
   (project?.isContinuous() && project?.attributes?.continuousAsBuilding);
 
+const isProjectAutoContinuousEnabled = (project) =>
+  project?.autoContinuousOperation === true || project?.autoDeployCollectors === true;
+
 function calculateProductionRates(deltaTime, buildings, options = {}) {
   const {
     useProductivity = false,
@@ -796,7 +799,10 @@ function produceResources(deltaTime, buildings) {
         continue;
       }
       const productivity = project.continuousProductivity;
-      if (project.autoStart === false) {
+      const shouldEstimateContinuous =
+        project.autoStart !== false ||
+        isProjectAutoContinuousEnabled(project);
+      if (!shouldEstimateContinuous) {
         project.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
         continue;
       }
@@ -809,7 +815,9 @@ function produceResources(deltaTime, buildings) {
         continue;
       }
 //      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
-      const shouldEstimate = project.autoStart !== false || project.autoDeployCollectors;
+      const shouldEstimate =
+        project.autoStart !== false ||
+        isProjectAutoContinuousEnabled(project);
       if (!shouldEstimate) {
         project.applyCostAndGain(deltaTime, accumulatedChanges);
         continue;

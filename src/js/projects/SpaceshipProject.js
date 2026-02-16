@@ -988,7 +988,7 @@ class SpaceshipProject extends Project {
     }
   }
 
-  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     if (this.isBlockedByPulsarStorm()) {
       return totals;
@@ -1146,8 +1146,8 @@ class SpaceshipProject extends Project {
     return totals;
   }
 
-  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
-    return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -1286,8 +1286,8 @@ class SpaceshipProject extends Project {
 
   loadState(state) {
     super.loadState(state);
-    this.assignedSpaceships = state.assignedSpaceships;
-    this.autoAssignSpaceships = state.autoAssignSpaceships;
+    this.assignedSpaceships = state.assignedSpaceships || 0;
+    this.autoAssignSpaceships = state.autoAssignSpaceships === true;
     this.selectedDisposalResource = state.selectedDisposalResource || this.attributes.defaultDisposal;
     if (state.waitForCapacity !== undefined) {
       this.waitForCapacity = state.waitForCapacity;

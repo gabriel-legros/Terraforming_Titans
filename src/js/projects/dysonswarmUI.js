@@ -61,7 +61,7 @@ function renderDysonSwarmUI(project, container) {
   };
 
   card.querySelector('#ds-start').addEventListener('click', () => project.startCollector());
-  autoCheckbox.addEventListener('change', e => { project.autoDeployCollectors = e.target.checked; });
+  autoCheckbox.addEventListener('change', e => { project.autoContinuousOperation = e.target.checked; });
   travelResetCheckbox.addEventListener('change', e => {
     project.autoStartUncheckOnTravel = e.target.checked;
     updateDysonSwarmUI(project);
@@ -135,7 +135,7 @@ function updateDysonSwarmUI(project) {
   }
   if (els.expansionRateDisplay) {
     const active = project.isCollectorContinuous()
-      ? project.autoDeployCollectors && (project.isCompleted || project.collectors > 0)
+      ? project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)
       : project.collectorProgress > 0;
     const rate = active ? (1000 / project.collectorDuration) : 0;
     els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
@@ -161,7 +161,7 @@ function updateDysonSwarmUI(project) {
   }
   // Check if in continuous mode
   if (project.isCollectorContinuous()) {
-    if (project.autoDeployCollectors && (project.isCompleted || project.collectors > 0)) {
+    if (project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)) {
       els.startButton.textContent = 'Continuous';
       els.startButton.style.background = '#4caf50';
     } else {
@@ -181,7 +181,7 @@ function updateDysonSwarmUI(project) {
     els.startButton.style.background = can ? '#4caf50' : '#f44336';
     els.startButton.disabled = !can;
   }
-  els.autoCheckbox.checked = project.autoDeployCollectors;
+  els.autoCheckbox.checked = project.autoContinuousOperation;
   if (els.autoStartTravelResetCheckbox) {
     els.autoStartTravelResetCheckbox.checked = project.autoStartUncheckOnTravel === true;
   }

@@ -4,7 +4,15 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     this.collectors = 0;
     this.baseCollectorDuration = 60000;
     this.collectorProgress = 0;
-    this.autoDeployCollectors = false;
+    this.autoContinuousOperation = false;
+    Object.defineProperty(this, 'autoDeployCollectors', {
+      configurable: true,
+      enumerable: true,
+      get: () => this.autoContinuousOperation === true,
+      set: (value) => {
+        this.autoContinuousOperation = value === true;
+      }
+    });
     this.collectorCost = {
       colony: { metal: 2500000, electronics: 1250000, components: 200000, glass: 40000,  }
     };
@@ -120,9 +128,9 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       if (this.collectorProgress <= 0) {
         this.collectorProgress = 0;
         this.collectors += 1;
-        if (this.autoDeployCollectors && (this.isCompleted || this.collectors > 0)) this.startCollector();
+        if (this.autoContinuousOperation && (this.isCompleted || this.collectors > 0)) this.startCollector();
       }
-    } else if (this.autoDeployCollectors && (this.isCompleted || this.collectors > 0)) {
+    } else if (this.autoContinuousOperation && (this.isCompleted || this.collectors > 0)) {
       this.startCollector();
     }
   }
@@ -131,7 +139,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     const totals = { cost: {}, gain: {} };
     
     if (this.isCollectorContinuous()) {
-      if (!this.autoDeployCollectors) {
+      if (!this.autoContinuousOperation) {
         return totals;
       }
       if (!this.isCompleted && this.collectors === 0) {
@@ -178,7 +186,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       return totals;
     }
 
-    if (!this.autoDeployCollectors || this.collectorProgress <= 0) {
+    if (!this.autoContinuousOperation || this.collectorProgress <= 0) {
       return totals;
     }
 
@@ -206,7 +214,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     // Only apply continuous mode if enabled and auto-deploying
-    if (!this.isCollectorContinuous() || !this.autoDeployCollectors) {
+    if (!this.isCollectorContinuous() || !this.autoContinuousOperation) {
       return;
     }
     if (!this.isCompleted && this.collectors === 0) {
@@ -300,6 +308,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       ...super.saveState(),
       collectors: this.collectors,
       collectorProgress: this.collectorProgress,
+      autoContinuousOperation: this.autoContinuousOperation,
       autoDeployCollectors: this.autoDeployCollectors,
       fractionalCollectors: this.fractionalCollectors,
       lastCollectorColonyCost: this.lastCollectorColonyCost,
@@ -310,7 +319,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     super.loadState(state);
     this.collectors = state.collectors || 0;
     this.collectorProgress = state.collectorProgress || 0;
-    this.autoDeployCollectors = state.autoDeployCollectors || false;
+    this.autoContinuousOperation = state.autoContinuousOperation === true || state.autoDeployCollectors === true;
     this.fractionalCollectors = state.fractionalCollectors || 0;
     this.lastCollectorColonyCost = state.lastCollectorColonyCost || null;
   }
@@ -318,6 +327,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
   saveTravelState() {
     const state = { ...super.saveTravelState(), collectors: this.collectors };
     if (typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart) {
+      state.autoContinuousOperation = this.autoContinuousOperation;
       state.autoDeployCollectors = this.autoDeployCollectors;
     }
     return state;
@@ -329,9 +339,9 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     if (
       typeof gameSettings !== 'undefined' &&
       gameSettings.preserveProjectAutoStart &&
-      typeof state.autoDeployCollectors !== 'undefined'
+      (typeof state.autoContinuousOperation !== 'undefined' || typeof state.autoDeployCollectors !== 'undefined')
     ) {
-      this.autoDeployCollectors = state.autoDeployCollectors;
+      this.autoContinuousOperation = state.autoContinuousOperation === true || state.autoDeployCollectors === true;
     }
   }
 }
