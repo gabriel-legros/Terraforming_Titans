@@ -1073,9 +1073,9 @@ class Terraforming extends EffectableEntity{
     const columnMass = effectiveSurfacePressurePa / Math.max(gSurface, 1e-6);
 
     // Tunables (picked to match Earth/Mars/Titan/Venus qualitatively)
-    const MASS_REF = 1.03e4;  // ≈ Earth column mass at 1 bar
-    const K_MASS   = 0.03;    // how quickly mixing rises with mass
-    const A_MASS   = 1.0;     // exponent on (columnMass / MASS_REF)
+    const MASS_REF = 1.03e4;  // Earth column mass scale (~1 bar / 9.81 m/s²)
+    const K_MASS   = 0.51;    // Earth gets moderate massBoost (~0.4) before rot/liquid factors
+    const A_MASS   = 0.50;    // compresses Titan/Venus so they saturate near 1 without overkill
 
     // 0..~1: 1-e^{-K (M/Mref)^a}
     const massBoost = 1 - Math.exp(-K_MASS * Math.pow(columnMass / MASS_REF, A_MASS));
