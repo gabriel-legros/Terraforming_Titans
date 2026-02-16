@@ -671,6 +671,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
       } else {
         elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}`;
       }
+      const disposalShortfall = this.disposalShortfallLastTick === true;
+      elements.totalDisposalElement.style.color = disposalShortfall ? 'red' : '';
     }
 
     if (elements.maxDisposalText && typeof this.getExportCap === 'function') {

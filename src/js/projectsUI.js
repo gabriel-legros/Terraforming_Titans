@@ -1574,8 +1574,9 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
       // Check if the player has enough of this resource
       const resourceText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`;
       const continuous = project && typeof project.isContinuous === 'function' && project.isContinuous();
+      const costShortfall = project ? (project.costShortfallLastTick ?? project.shortfallLastTick) : false;
       const highlight = continuous
-        ? project.shortfallLastTick
+        ? costShortfall
         : availableAmount < requiredAmount &&
           !(project && project.ignoreCostForResource && project.ignoreCostForResource(category, resource));
       const formattedResourceText = highlight

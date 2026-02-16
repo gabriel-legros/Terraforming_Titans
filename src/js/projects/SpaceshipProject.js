@@ -16,6 +16,8 @@ class SpaceshipProject extends Project {
     this.kesslerShipRollPending = false;
     this.kesslerShipCostSnapshot = null;
     this.kesslerShipLossCarry = 0;
+    this.costShortfallLastTick = false;
+    this.disposalShortfallLastTick = false;
   }
 
   getActiveShipCount() {
@@ -870,8 +872,12 @@ class SpaceshipProject extends Project {
   deductResources(resources) {
     super.deductResources(resources);
     let shortfall = false;
+    let costShortfall = false;
+    let disposalShortfall = false;
     if (this.isContinuous()) {
       this.shortfallLastTick = shortfall;
+      this.costShortfallLastTick = false;
+      this.disposalShortfallLastTick = false;
       return;
     }
 
@@ -887,6 +893,7 @@ class SpaceshipProject extends Project {
           const spend = Math.min(required, available);
           if (spend < required) {
             shortfall = shortfall || required > 0;
+            costShortfall = costShortfall || required > 0;
           }
           resources[category][resource].decrease(spend);
         }
@@ -901,6 +908,7 @@ class SpaceshipProject extends Project {
       const actualAmount = Math.min(required, available);
       if (actualAmount < required) {
         shortfall = shortfall || required > 0;
+        disposalShortfall = disposalShortfall || required > 0;
       }
       resources[category][resource].decrease(actualAmount);
       this.removeZonalResource(category, resource, actualAmount);
@@ -912,6 +920,8 @@ class SpaceshipProject extends Project {
     }
 
     this.shortfallLastTick = shortfall;
+    this.costShortfallLastTick = costShortfall;
+    this.disposalShortfallLastTick = disposalShortfall;
   }
 
   start(resources) {
@@ -1154,6 +1164,8 @@ class SpaceshipProject extends Project {
     if (!this.isContinuous() || !this.isActive) return;
     if (this.isBlockedByPulsarStorm()) return;
     this.shortfallLastTick = false;
+    this.costShortfallLastTick = false;
+    this.disposalShortfallLastTick = false;
     this.currentTickDeltaTime = deltaTime;
     if (typeof this.shouldAutomationDisable === 'function' && this.shouldAutomationDisable()) {
       this.isActive = false;
@@ -1167,6 +1179,8 @@ class SpaceshipProject extends Project {
     const seconds = deltaTime / 1000;
 
     let shortfall = false;
+    let costShortfall = false;
+    let disposalShortfall = false;
     let nonEnergyCost = 0;
     const costPerShip = this.calculateSpaceshipCost();
     for (const category in costPerShip) {
@@ -1178,6 +1192,7 @@ class SpaceshipProject extends Project {
         const available = resources[category]?.[resource]?.value || 0;
         if (available < amount) {
           shortfall = shortfall || amount > 0;
+          costShortfall = costShortfall || amount > 0;
         }
         if (accumulatedChanges) {
           accumulatedChanges[category][resource] -= amount;
@@ -1227,6 +1242,7 @@ class SpaceshipProject extends Project {
       }
       if (actualDisposal < requestedAmount) {
         shortfall = shortfall || requestedAmount > 0;
+        disposalShortfall = disposalShortfall || requestedAmount > 0;
       }
       this.removeZonalResource(category, resource, actualDisposal);
     }
@@ -1266,6 +1282,8 @@ class SpaceshipProject extends Project {
     }
 
     this.shortfallLastTick = shortfall;
+    this.costShortfallLastTick = costShortfall;
+    this.disposalShortfallLastTick = disposalShortfall;
     this.lastActiveTime = 0;
   }
 
