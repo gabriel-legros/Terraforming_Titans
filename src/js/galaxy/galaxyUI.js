@@ -1570,6 +1570,14 @@ function formatDefenseInteger(value) {
     return String(rounded);
 }
 
+function formatHexFleetPowerValue(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+        return '0';
+    }
+    return formatNumber(numeric, true, 2);
+}
+
 function formatDefenseDisplayValue(value) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric) || numeric <= 0) {
@@ -1672,7 +1680,7 @@ function buildDefenseSignature(entries) {
         return '';
     }
     return entries.map(({ icon, total, modifier }) => {
-        const displayValue = formatDefenseInteger(total);
+        const displayValue = formatHexFleetPowerValue(total);
         return `${icon}:${displayValue}:${modifier || ''}`;
     }).join('|');
 }
@@ -1695,7 +1703,7 @@ function updateHexDefenseDisplay(hex, entries) {
         iconNode.textContent = icon;
         const valueNode = doc.createElement('span');
         valueNode.className = 'galaxy-hex__defense-text';
-        valueNode.textContent = formatDefenseInteger(total);
+        valueNode.textContent = formatHexFleetPowerValue(total);
         entryNode.append(iconNode, valueNode);
         defenseNode.appendChild(entryNode);
     });
@@ -3119,7 +3127,7 @@ function updateLogisticsDisplay(manager, cache) {
     const faction = manager?.getFaction?.(GALAXY_UHF_FACTION_ID) || null;
     const power = Number.isFinite(faction?.fleetPower) ? faction.fleetPower : 0;
     const capacity = Number.isFinite(faction?.fleetCapacity) ? faction.fleetCapacity : 0;
-    powerNode.textContent = formatNumber(power, false, 2);
+    powerNode.textContent = formatNumber(power, true, 2);
     capacityNode.textContent = formatNumber(capacity, false, 2);
     updateFleetCapacityTooltip(manager, cache);
     if (storyNode) {
