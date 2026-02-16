@@ -1095,9 +1095,9 @@ class Terraforming extends EffectableEntity{
     // Liquids aid meridional transport; keep in a sane range [0.5, 2.0]
     const liquidFactor = 0.5 + 1.5 * Math.max(0, Math.min(1, liquidCoverage));
 
-    // Final fraction of the zonal ΔT that is equalized in one pass (0..0.95)
+    // Final fraction of the zonal ΔT that is equalized in one pass (0..0.99)
     let mixFrac = massBoost * rotFactor * liquidFactor;
-    mixFrac = Math.max(0, Math.min(0.95, mixFrac));
+    mixFrac = Math.max(0, Math.min(0.999, mixFrac));
 
     // Weights are energy capacities (J/K) so updates conserve energy
     const W = {};
