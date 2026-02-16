@@ -8,6 +8,9 @@ const COLONY_SUBTAB_IDS = {
 
 const colonySubtabState = {
   initialized: false,
+  populationEverUnlocked: false,
+  nanocolonyEverUnlocked: false,
+  followersEverUnlocked: false,
   populationUnlocked: false,
   nanocolonyUnlocked: false,
   followersUnlocked: false,
@@ -61,14 +64,7 @@ function isFollowersSubtabUnlocked() {
 }
 
 function setColonySubtabVisibility(subtabId, visible) {
-  if (colonySubtabManager) {
-    if (visible) {
-      colonySubtabManager.show(subtabId);
-    } else {
-      colonySubtabManager.hide(subtabId);
-    }
-    return;
-  }
+  cacheColonySubtabElements();
 
   let tab = null;
   let content = null;
@@ -143,20 +139,26 @@ function updateColonySubtabsVisibility() {
     activateColonySubtab(availableSubtabs[0]);
   }
 
+  const populationFirstUnlock = populationUnlocked && !colonySubtabState.populationEverUnlocked;
+  const nanocolonyFirstUnlock = nanocolonyUnlocked && !colonySubtabState.nanocolonyEverUnlocked;
+  const followersFirstUnlock = followersUnlocked && !colonySubtabState.followersEverUnlocked;
   const canAutoSwitch = colonySubtabState.initialized && !globalGameIsLoadingFromSave && !globalGameIsTraveling;
-  if (canAutoSwitch && !colonySubtabState.populationUnlocked && populationUnlocked) {
+  if (canAutoSwitch && populationFirstUnlock) {
     tabManager.activateTab('colonies');
     activateColonySubtab(COLONY_SUBTAB_IDS.population);
   }
-  if (canAutoSwitch && !colonySubtabState.nanocolonyUnlocked && nanocolonyUnlocked) {
+  if (canAutoSwitch && nanocolonyFirstUnlock) {
     tabManager.activateTab('colonies');
     activateColonySubtab(COLONY_SUBTAB_IDS.nanocolony);
   }
-  if (canAutoSwitch && !colonySubtabState.followersUnlocked && followersUnlocked) {
+  if (canAutoSwitch && followersFirstUnlock) {
     tabManager.activateTab('colonies');
     activateColonySubtab(COLONY_SUBTAB_IDS.followers);
   }
 
+  colonySubtabState.populationEverUnlocked = colonySubtabState.populationEverUnlocked || populationUnlocked;
+  colonySubtabState.nanocolonyEverUnlocked = colonySubtabState.nanocolonyEverUnlocked || nanocolonyUnlocked;
+  colonySubtabState.followersEverUnlocked = colonySubtabState.followersEverUnlocked || followersUnlocked;
   colonySubtabState.populationUnlocked = populationUnlocked;
   colonySubtabState.nanocolonyUnlocked = nanocolonyUnlocked;
   colonySubtabState.followersUnlocked = followersUnlocked;

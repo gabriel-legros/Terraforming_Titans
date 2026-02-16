@@ -202,6 +202,44 @@ class UndergroundExpansionProject extends AndroidProject {
     this.shortfallLastTick = shortfall;
   }
 
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    const totals = super.estimateCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
+
+    if (!this.isContinuous() || !this.isActive) {
+      return totals;
+    }
+
+    const duration = this.getEffectiveDuration();
+    if (!duration || duration === Infinity) {
+      return totals;
+    }
+
+    const perCompletionLand = this.getPerCompletionLand();
+    if (!(perCompletionLand > 0)) {
+      return totals;
+    }
+
+    const remainingRepeats = this.getRemainingRepeats();
+    if (!remainingRepeats) {
+      return totals;
+    }
+
+    const seconds = deltaTime / 1000;
+    const progressForRate = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const landRate = seconds > 0 ? (progressForRate * perCompletionLand) / seconds : 0;
+    if (landRate > 0 && applyRates && this.showsInResourcesRate()) {
+      resources.surface.land.modifyRate(landRate, this.displayName, 'project');
+    }
+
+    const progressForTotals = Math.min(deltaTime / duration, remainingRepeats);
+    if (!totals.gain.surface) {
+      totals.gain.surface = {};
+    }
+    totals.gain.surface.land = (totals.gain.surface.land || 0) + (progressForTotals * perCompletionLand);
+
+    return totals;
+  }
+
   getAndroidSpeedMultiplier() {
     return 1 + ((this.assignedAndroids || 0) / 100);
   }
