@@ -37,6 +37,9 @@ class NanotechManager extends EffectableEntity {
     this.onlyScrap = false;
     this.onlyJunk = false;
     this.onlyTrash = false;
+    this.uncappedJunk = false;
+    this.uncappedScrap = false;
+    this.uncappedTrash = false;
     this.maxEnergyPercent = 10;
     this.maxEnergyAbsolute = 1e6;
     this.energyLimitMode = 'percent';
@@ -184,13 +187,17 @@ class NanotechManager extends EffectableEntity {
       const recyclingEnabled = this.isBooleanFlagSet('nanotechRecycling');
       const onlyJunk = recyclingEnabled && this.onlyJunk;
       const onlyScrap = recyclingEnabled && this.onlyScrap;
+      const uncappedJunk = recyclingEnabled && this.uncappedJunk;
+      const uncappedScrap = recyclingEnabled && this.uncappedScrap;
 
       const siliconRes = resources.colony?.silicon;
       const junkResForSilicon = recyclingEnabled ? resources.surface?.junk : null;
       
       if (siliconRes && accumulatedChanges?.colony) {
         const siliconProduction = recyclingEnabled
-          ? (onlyJunk ? getEffectiveProductionRate(junkResForSilicon) : getCombinedProductionRate(siliconRes, junkResForSilicon, true))
+          ? (uncappedJunk
+            ? (onlyJunk ? 0 : getEffectiveProductionRate(siliconRes))
+            : (onlyJunk ? getEffectiveProductionRate(junkResForSilicon) : getCombinedProductionRate(siliconRes, junkResForSilicon, true)))
           : getEffectiveProductionRate(siliconRes);
         const siliconLimitRate = this.siliconLimitMode === 'absolute'
           ? Math.max(0, this.maxSiliconAbsolute)
@@ -202,9 +209,10 @@ class NanotechManager extends EffectableEntity {
         
         // Try junk first if recycling is enabled
         let usedJunk = 0;
-        if (junkResForSilicon && accumulatedChanges?.surface && limitedNeed > 0) {
+        const junkNeed = uncappedJunk ? needed : limitedNeed;
+        if (junkResForSilicon && accumulatedChanges?.surface && junkNeed > 0) {
           const junkAvailable = Math.max(junkResForSilicon.value + (accumulatedChanges.surface.junk || 0), 0);
-          usedJunk = Math.min(limitedNeed, junkAvailable);
+          usedJunk = Math.min(junkNeed, junkAvailable);
           if (usedJunk > 0) {
             accumulatedChanges.surface.junk = (accumulatedChanges.surface.junk || 0) - usedJunk;
             junkResForSilicon.modifyRate(-usedJunk / (deltaTime / 1000), 'Nanotech Junk', 'nanotech');
@@ -212,12 +220,18 @@ class NanotechManager extends EffectableEntity {
         }
         
         // Use regular silicon for the remainder
-        const remainingNeeded = limitedNeed - usedJunk;
+        const cappedNeed = uncappedJunk ? needed : limitedNeed;
+        const remainingNeeded = cappedNeed - usedJunk;
+        const siliconNeeded = uncappedJunk
+          ? Math.min(remainingNeeded, siliconLimitRate * (deltaTime / 1000))
+          : remainingNeeded;
         const siliconAvailable = Math.max(siliconRes.value + (accumulatedChanges.colony.silicon || 0), 0);
-        const usedSilicon = onlyJunk ? 0 : Math.min(remainingNeeded, siliconAvailable);
+        const usedSilicon = onlyJunk ? 0 : Math.min(siliconNeeded, siliconAvailable);
         const totalUsed = usedJunk + usedSilicon;
 
-        this.hasEnoughSilicon = limitedNeed >= needed && totalUsed >= needed;
+        this.hasEnoughSilicon = uncappedJunk
+          ? totalUsed >= needed
+          : (limitedNeed >= needed && totalUsed >= needed);
         siliconProvided = totalUsed;
         this.currentSiliconConsumption = deltaTime > 0 ? totalUsed / (deltaTime / 1000) : 0;
         
@@ -237,7 +251,9 @@ class NanotechManager extends EffectableEntity {
         
         if (metalRes && accumulatedChanges?.colony) {
           const metalProduction = recyclingEnabled
-            ? (onlyScrap ? getEffectiveProductionRate(scrapRes) : getCombinedProductionRate(metalRes, scrapRes, true))
+            ? (uncappedScrap
+              ? (onlyScrap ? 0 : getEffectiveProductionRate(metalRes))
+              : (onlyScrap ? getEffectiveProductionRate(scrapRes) : getCombinedProductionRate(metalRes, scrapRes, true)))
             : getEffectiveProductionRate(metalRes);
           const metalLimitRate = this.metalLimitMode === 'absolute'
             ? Math.max(0, this.maxMetalAbsolute)
@@ -249,9 +265,10 @@ class NanotechManager extends EffectableEntity {
           
           // Try scrap metal first if recycling is enabled
           let usedScrap = 0;
-          if (scrapRes && accumulatedChanges?.surface && limitedNeed > 0) {
+          const scrapNeed = uncappedScrap ? needed : limitedNeed;
+          if (scrapRes && accumulatedChanges?.surface && scrapNeed > 0) {
             const scrapAvailable = Math.max(scrapRes.value + (accumulatedChanges.surface.scrapMetal || 0), 0);
-            usedScrap = Math.min(limitedNeed, scrapAvailable);
+            usedScrap = Math.min(scrapNeed, scrapAvailable);
             if (usedScrap > 0) {
               accumulatedChanges.surface.scrapMetal = (accumulatedChanges.surface.scrapMetal || 0) - usedScrap;
               scrapRes.modifyRate(-usedScrap / (deltaTime / 1000), 'Nanotech Scrap', 'nanotech');
@@ -259,12 +276,18 @@ class NanotechManager extends EffectableEntity {
           }
           
           // Use regular metal for the remainder
-          const remainingNeeded = limitedNeed - usedScrap;
+          const cappedNeed = uncappedScrap ? needed : limitedNeed;
+          const remainingNeeded = cappedNeed - usedScrap;
+          const metalNeeded = uncappedScrap
+            ? Math.min(remainingNeeded, metalLimitRate * (deltaTime / 1000))
+            : remainingNeeded;
           const metalAvailable = Math.max(metalRes.value + (accumulatedChanges.colony.metal || 0), 0);
-          const usedMetal = onlyScrap ? 0 : Math.min(remainingNeeded, metalAvailable);
+          const usedMetal = onlyScrap ? 0 : Math.min(metalNeeded, metalAvailable);
           const totalUsed = usedScrap + usedMetal;
 
-          this.hasEnoughMetal = limitedNeed >= needed && totalUsed >= needed;
+          this.hasEnoughMetal = uncappedScrap
+            ? totalUsed >= needed
+            : (limitedNeed >= needed && totalUsed >= needed);
           metalProvided = totalUsed;
           this.currentMetalConsumption = deltaTime > 0 ? totalUsed / (deltaTime / 1000) : 0;
           
@@ -289,20 +312,25 @@ class NanotechManager extends EffectableEntity {
         const biomassRes = resources.surface.biomass;
         const trashRes = resources.surface.trash;
         const onlyTrash = recyclingEnabled && this.onlyTrash;
+        const uncappedTrash = recyclingEnabled && this.uncappedTrash;
         const estimatedLifeBiomassProduction = this.biomassLimitMode === 'percent' && !onlyTrash
           ? getEstimatedLifeBiomassProductionRate()
           : 0;
         const biomassTotalAvailable = recyclingEnabled
-          ? (onlyTrash
-            ? Math.max(trashRes.value + (accumulatedChanges.surface.trash || 0), 0)
-            : Math.max(
-              biomassRes.value + (accumulatedChanges.surface.biomass || 0) +
-              trashRes.value + (accumulatedChanges.surface.trash || 0),
-              0
-            ))
+          ? (uncappedTrash
+            ? Math.max(biomassRes.value + (accumulatedChanges.surface.biomass || 0), 0)
+            : (onlyTrash
+              ? Math.max(trashRes.value + (accumulatedChanges.surface.trash || 0), 0)
+              : Math.max(
+                biomassRes.value + (accumulatedChanges.surface.biomass || 0) +
+                trashRes.value + (accumulatedChanges.surface.trash || 0),
+                0
+              )))
           : Math.max(biomassRes.value + (accumulatedChanges.surface.biomass || 0), 0);
         const biomassBaseProduction = recyclingEnabled
-          ? (onlyTrash ? getEffectiveProductionRate(trashRes) : getCombinedProductionRate(biomassRes, trashRes, true))
+          ? (uncappedTrash
+            ? (onlyTrash ? 0 : getEffectiveProductionRate(biomassRes))
+            : (onlyTrash ? getEffectiveProductionRate(trashRes) : getCombinedProductionRate(biomassRes, trashRes, true)))
           : getEffectiveProductionRate(biomassRes);
         const biomassProduction = biomassBaseProduction + estimatedLifeBiomassProduction;
         const biomassLimitRate = this.biomassLimitMode === 'absolute'
@@ -316,21 +344,28 @@ class NanotechManager extends EffectableEntity {
         const limitedNeed = Math.min(needed, biomassLimitRate * (deltaTime / 1000));
 
         let usedTrash = 0;
-        if (recyclingEnabled && limitedNeed > 0) {
+        const trashNeed = uncappedTrash ? needed : limitedNeed;
+        if (recyclingEnabled && trashNeed > 0) {
           const trashAvailable = Math.max(trashRes.value + (accumulatedChanges.surface.trash || 0), 0);
-          usedTrash = Math.min(limitedNeed, trashAvailable);
+          usedTrash = Math.min(trashNeed, trashAvailable);
           if (usedTrash > 0) {
             accumulatedChanges.surface.trash = (accumulatedChanges.surface.trash || 0) - usedTrash;
             trashRes.modifyRate(-usedTrash / (deltaTime / 1000), 'Nanotech Trash', 'nanotech');
           }
         }
 
-        const remainingNeeded = limitedNeed - usedTrash;
+        const cappedNeed = uncappedTrash ? needed : limitedNeed;
+        const remainingNeeded = cappedNeed - usedTrash;
+        const biomassNeeded = uncappedTrash
+          ? Math.min(remainingNeeded, biomassLimitRate * (deltaTime / 1000))
+          : remainingNeeded;
         const biomassAvailable = Math.max(biomassRes.value + (accumulatedChanges.surface.biomass || 0), 0);
-        const usedBiomass = onlyTrash ? 0 : Math.min(remainingNeeded, biomassAvailable);
+        const usedBiomass = onlyTrash ? 0 : Math.min(biomassNeeded, biomassAvailable);
         const totalUsed = usedTrash + usedBiomass;
 
-        this.hasEnoughBiomass = limitedNeed >= needed && totalUsed >= needed;
+        this.hasEnoughBiomass = uncappedTrash
+          ? totalUsed >= needed
+          : (limitedNeed >= needed && totalUsed >= needed);
         this.currentBiomassConsumption = deltaTime > 0 ? totalUsed / (deltaTime / 1000) : 0;
 
         if (usedBiomass > 0) {
@@ -660,10 +695,16 @@ class NanotechManager extends EffectableEntity {
                   <span class="allocation-title">
                     Silica allocation <span class="info-tooltip-icon" id="nanotech-silicon-tooltip"></span>
                   </span>
-                  <label class="nanotech-recycling-toggle" id="nanotech-only-junk-wrapper">
-                    <input type="checkbox" id="nanotech-only-junk">
-                    <span>Only Junk</span>
-                  </label>
+                  <div class="nanotech-recycling-toggles">
+                    <label class="nanotech-recycling-toggle" id="nanotech-only-junk-wrapper">
+                      <input type="checkbox" id="nanotech-only-junk">
+                      <span>Only Junk</span>
+                    </label>
+                    <label class="nanotech-recycling-toggle" id="nanotech-uncapped-junk-wrapper">
+                      <input type="checkbox" id="nanotech-uncapped-junk">
+                      <span>Uncapped</span>
+                    </label>
+                  </div>
                 </div>
                 <div class="nanotech-energy-limit">
                   <input type="text" id="nanotech-silicon-limit" value="${this.maxSiliconPercent}">
@@ -729,10 +770,16 @@ class NanotechManager extends EffectableEntity {
                   <span class="allocation-title">
                     Metal allocation <span class="info-tooltip-icon" id="nanotech-metal-tooltip"></span>
                   </span>
-                  <label class="nanotech-recycling-toggle" id="nanotech-only-scrap-wrapper">
-                    <input type="checkbox" id="nanotech-only-scrap">
-                    <span>Only Scrap</span>
-                  </label>
+                  <div class="nanotech-recycling-toggles">
+                    <label class="nanotech-recycling-toggle" id="nanotech-only-scrap-wrapper">
+                      <input type="checkbox" id="nanotech-only-scrap">
+                      <span>Only Scrap</span>
+                    </label>
+                    <label class="nanotech-recycling-toggle" id="nanotech-uncapped-scrap-wrapper">
+                      <input type="checkbox" id="nanotech-uncapped-scrap">
+                      <span>Uncapped</span>
+                    </label>
+                  </div>
                 </div>
                 <div class="nanotech-energy-limit">
                   <input type="text" id="nanotech-metal-limit" value="${this.maxMetalPercent}">
@@ -798,10 +845,16 @@ class NanotechManager extends EffectableEntity {
                   <span class="allocation-title">
                     Biomass allocation <span class="info-tooltip-icon" id="nanotech-biomass-tooltip">&#9432;</span>
                   </span>
-                  <label class="nanotech-recycling-toggle" id="nanotech-only-trash-wrapper">
-                    <input type="checkbox" id="nanotech-only-trash">
-                    <span>Only Trash</span>
-                  </label>
+                  <div class="nanotech-recycling-toggles">
+                    <label class="nanotech-recycling-toggle" id="nanotech-only-trash-wrapper">
+                      <input type="checkbox" id="nanotech-only-trash">
+                      <span>Only Trash</span>
+                    </label>
+                    <label class="nanotech-recycling-toggle" id="nanotech-uncapped-trash-wrapper">
+                      <input type="checkbox" id="nanotech-uncapped-trash">
+                      <span>Uncapped</span>
+                    </label>
+                  </div>
                 </div>
                 <div class="nanotech-energy-limit">
                   <input type="text" id="nanotech-biomass-limit" value="${this.maxBiomassPercent}">
@@ -1196,17 +1249,35 @@ class NanotechManager extends EffectableEntity {
     if (C.onlyScrapToggle) {
       C.onlyScrapToggle.checked = recyclingEnabled ? this.onlyScrap : false;
     }
+    if (C.uncappedScrapWrapper) {
+      C.uncappedScrapWrapper.style.display = recyclingEnabled ? '' : 'none';
+    }
+    if (C.uncappedScrapToggle) {
+      C.uncappedScrapToggle.checked = recyclingEnabled ? this.uncappedScrap : false;
+    }
     if (C.onlyTrashWrapper) {
       C.onlyTrashWrapper.style.display = recyclingEnabled ? '' : 'none';
     }
     if (C.onlyTrashToggle) {
       C.onlyTrashToggle.checked = recyclingEnabled ? this.onlyTrash : false;
     }
+    if (C.uncappedTrashWrapper) {
+      C.uncappedTrashWrapper.style.display = recyclingEnabled ? '' : 'none';
+    }
+    if (C.uncappedTrashToggle) {
+      C.uncappedTrashToggle.checked = recyclingEnabled ? this.uncappedTrash : false;
+    }
     if (C.onlyJunkWrapper) {
       C.onlyJunkWrapper.style.display = recyclingEnabled ? '' : 'none';
     }
     if (C.onlyJunkToggle) {
       C.onlyJunkToggle.checked = recyclingEnabled ? this.onlyJunk : false;
+    }
+    if (C.uncappedJunkWrapper) {
+      C.uncappedJunkWrapper.style.display = recyclingEnabled ? '' : 'none';
+    }
+    if (C.uncappedJunkToggle) {
+      C.uncappedJunkToggle.checked = recyclingEnabled ? this.uncappedJunk : false;
     }
   }
 
@@ -1408,6 +1479,13 @@ class NanotechManager extends EffectableEntity {
       });
       C.onlyScrapToggle.dataset.nanotechBound = 'onlyScrap';
     }
+    if (C.uncappedScrapToggle?.dataset?.nanotechBound !== 'uncappedScrap') {
+      C.uncappedScrapToggle.addEventListener('change', (e) => {
+        nanotechManager.uncappedScrap = e.target.checked;
+        nanotechManager.updateUI();
+      });
+      C.uncappedScrapToggle.dataset.nanotechBound = 'uncappedScrap';
+    }
     if (C.onlyTrashToggle?.dataset?.nanotechBound !== 'onlyTrash') {
       C.onlyTrashToggle.addEventListener('change', (e) => {
         nanotechManager.onlyTrash = e.target.checked;
@@ -1415,12 +1493,26 @@ class NanotechManager extends EffectableEntity {
       });
       C.onlyTrashToggle.dataset.nanotechBound = 'onlyTrash';
     }
+    if (C.uncappedTrashToggle?.dataset?.nanotechBound !== 'uncappedTrash') {
+      C.uncappedTrashToggle.addEventListener('change', (e) => {
+        nanotechManager.uncappedTrash = e.target.checked;
+        nanotechManager.updateUI();
+      });
+      C.uncappedTrashToggle.dataset.nanotechBound = 'uncappedTrash';
+    }
     if (C.onlyJunkToggle?.dataset?.nanotechBound !== 'onlyJunk') {
       C.onlyJunkToggle.addEventListener('change', (e) => {
         nanotechManager.onlyJunk = e.target.checked;
         nanotechManager.updateUI();
       });
       C.onlyJunkToggle.dataset.nanotechBound = 'onlyJunk';
+    }
+    if (C.uncappedJunkToggle?.dataset?.nanotechBound !== 'uncappedJunk') {
+      C.uncappedJunkToggle.addEventListener('change', (e) => {
+        nanotechManager.uncappedJunk = e.target.checked;
+        nanotechManager.updateUI();
+      });
+      C.uncappedJunkToggle.dataset.nanotechBound = 'uncappedJunk';
     }
     if (C.energyTooltipIcon?.dataset?.nanotechBound !== 'energyTooltip') {
       attachDynamicInfoTooltip(
@@ -1439,21 +1531,21 @@ class NanotechManager extends EffectableEntity {
     if (C.siliconTooltipIcon?.dataset?.nanotechBound !== 'siliconTooltip') {
       attachDynamicInfoTooltip(
         C.siliconTooltipIcon,
-        'Percentage of silica production: maximum share of silicon production the swarm may consume per second.\nAbsolute: fixed silica limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+        'Percentage of silica production: maximum share of silicon production the swarm may consume per second.\nAbsolute: fixed silica limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: junk usage is not capped, but silica usage still follows this limit.'
       );
       C.siliconTooltipIcon.dataset.nanotechBound = 'siliconTooltip';
     }
     if (C.metalTooltipIcon?.dataset?.nanotechBound !== 'metalTooltip') {
       attachDynamicInfoTooltip(
         C.metalTooltipIcon,
-        'Percentage of metal production: maximum share of metal production the swarm may consume per second.\nAbsolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+        'Percentage of metal production: maximum share of metal production the swarm may consume per second.\nAbsolute: fixed metal limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: scrap usage is not capped, but metal usage still follows this limit.'
       );
       C.metalTooltipIcon.dataset.nanotechBound = 'metalTooltip';
     }
     if (C.biomassTooltipIcon?.dataset?.nanotechBound !== 'biomassTooltip') {
       attachDynamicInfoTooltip(
         C.biomassTooltipIcon,
-        'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).'
+        'Percentage of biomass production: maximum share of biomass production the swarm may consume per second. Includes estimated life growth biomass production.\nPercentage of total biomass: maximum share of currently available biomass (and trash when recycling is enabled) the swarm may consume per second.\nAbsolute: fixed biomass limit in tons per second. Accepts scientific notation and suffixes (e.g., 1e3, 2.5k, 1M).\nUncapped: trash usage is not capped, but biomass usage still follows this limit.'
       );
       C.biomassTooltipIcon.dataset.nanotechBound = 'biomassTooltip';
     }
@@ -1487,10 +1579,16 @@ class NanotechManager extends EffectableEntity {
       biomassMode: qs('#nanotech-biomass-limit-mode'),
       onlyScrapToggle: qs('#nanotech-only-scrap'),
       onlyScrapWrapper: qs('#nanotech-only-scrap-wrapper'),
+      uncappedScrapToggle: qs('#nanotech-uncapped-scrap'),
+      uncappedScrapWrapper: qs('#nanotech-uncapped-scrap-wrapper'),
       onlyTrashToggle: qs('#nanotech-only-trash'),
       onlyTrashWrapper: qs('#nanotech-only-trash-wrapper'),
+      uncappedTrashToggle: qs('#nanotech-uncapped-trash'),
+      uncappedTrashWrapper: qs('#nanotech-uncapped-trash-wrapper'),
       onlyJunkToggle: qs('#nanotech-only-junk'),
       onlyJunkWrapper: qs('#nanotech-only-junk-wrapper'),
+      uncappedJunkToggle: qs('#nanotech-uncapped-junk'),
+      uncappedJunkWrapper: qs('#nanotech-uncapped-junk-wrapper'),
       energyTooltipIcon: qs('#nanotech-energy-tooltip'),
       travelTooltipIcon: qs('#nanotech-travel-tooltip'),
       siliconTooltipIcon: qs('#nanotech-silicon-tooltip'),
@@ -1580,6 +1678,9 @@ class NanotechManager extends EffectableEntity {
       onlyScrap: this.onlyScrap,
       onlyTrash: this.onlyTrash,
       onlyJunk: this.onlyJunk,
+      uncappedScrap: this.uncappedScrap,
+      uncappedTrash: this.uncappedTrash,
+      uncappedJunk: this.uncappedJunk,
     };
   }
 
@@ -1609,6 +1710,9 @@ class NanotechManager extends EffectableEntity {
     this.onlyScrap = !!state.onlyScrap;
     this.onlyTrash = !!state.onlyTrash;
     this.onlyJunk = !!state.onlyJunk;
+    this.uncappedScrap = !!state.uncappedScrap;
+    this.uncappedTrash = !!state.uncappedTrash;
+    this.uncappedJunk = !!state.uncappedJunk;
     const max = this.getMaxNanobots();
     this.nanobots = Math.max(1, Math.min(this.nanobots, max));
     this.reapplyEffects();
@@ -1652,6 +1756,9 @@ class NanotechManager extends EffectableEntity {
     this.onlyScrap = false;
     this.onlyJunk = false;
     this.onlyTrash = false;
+    this.uncappedScrap = false;
+    this.uncappedJunk = false;
+    this.uncappedTrash = false;
     this.maxEnergyPercent = 10;
     this.maxEnergyAbsolute = 1e6;
     this.energyLimitMode = 'percent';

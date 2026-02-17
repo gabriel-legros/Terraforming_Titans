@@ -325,6 +325,13 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   gap: 6px;
 }
 
+#nanocolony-container .nanotech-recycling-toggles {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 #nanocolony-container .nanotech-allocation-header .allocation-title {
   font-weight: 600;
   color: #495057;
@@ -335,7 +342,6 @@ input[type="range"].pretty-slider::-moz-range-thumb {
 }
 
 #nanocolony-container .nanotech-recycling-toggle {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 4px;
