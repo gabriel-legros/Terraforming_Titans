@@ -145,9 +145,13 @@ function isBoundToParent(p){
 // Resolve host star mass (kg) from currentPlanetParameters
 function getStarMassKgFromCurrent(){
   const cel = terraforming.celestialParameters || {};
-  if (typeof cel.starMass === 'number' && isFinite(cel.starMass) && cel.starMass > 0) return cel.starMass;
-  const star = currentPlanetParameters.star;
-  if (typeof star.massSolar === 'number' && isFinite(star.massSolar) && star.massSolar > 0) return star.massSolar * SOLAR_MASS;
+  if (Number.isFinite(cel.starMass) && cel.starMass > 0) return cel.starMass;
+  const massSolar = currentPlanetParameters?.star?.massSolar;
+  if (Number.isFinite(massSolar) && massSolar > 0) {
+    const massKg = massSolar * SOLAR_MASS;
+    cel.starMass = massKg;
+    return massKg;
+  }
   return SOLAR_MASS;
 }
 

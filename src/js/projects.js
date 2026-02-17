@@ -425,6 +425,9 @@ class Project extends EffectableEntity {
     if (!this.unlocked){
       return false;
     }
+    if (this.requireStar && !projectManager.currentWorldHasStar()) {
+      return false;
+    }
 
     if(this.repeatCount && this.maxRepeatCount && this.repeatCount >= this.maxRepeatCount){
       return false;
@@ -978,10 +981,6 @@ class ProjectManager extends EffectableEntity {
   }
 
   isProjectRelevantToCurrentPlanet(project) {
-    if (project?.requireStar && !this.currentWorldHasStar()) {
-      return false;
-    }
-
     const targetPlanet = project?.category === 'story' ? project.attributes?.planet : null;
     const globalContext = typeof globalThis !== 'undefined' ? globalThis : {};
     const manager = this.spaceManager || globalContext.spaceManager;
