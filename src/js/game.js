@@ -532,6 +532,9 @@ function initializeGameState(options = {}) {
     updateAutomationUI();
   }
   updateColonySubtabsVisibility();
+  if (preserveManagers && typeof updateRender === 'function') {
+    updateRender(true, { forceAllSubtabs: true });
+  }
   globalGameIsTraveling = false;
 }
 

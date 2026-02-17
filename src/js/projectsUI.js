@@ -22,6 +22,10 @@ const projectGroupState = {
 
 let cachedProjectSubtabContents = null; // cache for .projects-subtab-content containers
 let projectsSubtabManager = null;
+const PROJECTS_DEFAULT_SUBTAB_ID = 'resources-projects';
+const projectsSubtabState = {
+  preferredSubtabId: PROJECTS_DEFAULT_SUBTAB_ID
+};
 const projectDisplayState = {
   collapsed: {}
 };
@@ -252,6 +256,7 @@ function initializeProjectTabs() {
   } else {
     projectsSubtabManager = new SubtabManager('.projects-subtab', '.projects-subtab-content', true);
     projectsSubtabManager.onActivate(id => {
+      projectsSubtabState.preferredSubtabId = id || PROJECTS_DEFAULT_SUBTAB_ID;
       if (typeof markProjectSubtabViewed === 'function') {
         markProjectSubtabViewed(id);
       }
@@ -259,6 +264,53 @@ function initializeProjectTabs() {
     });
   }
   cachedProjectSubtabContents = Array.from(document.getElementsByClassName('projects-subtab-content'));
+}
+
+function setProjectSubtabVisibility(subtabId, visible) {
+  const tab = document.querySelector(`.projects-subtab[data-subtab="${subtabId}"]`);
+  const content = document.getElementById(subtabId);
+  if (!tab || !content) return;
+  if (visible) {
+    tab.classList.remove('hidden');
+    content.classList.remove('hidden');
+  } else {
+    tab.classList.add('hidden');
+    content.classList.add('hidden');
+  }
+}
+
+function getVisibleProjectSubtabIds() {
+  const tabs = Array.from(document.querySelectorAll('.projects-subtab'));
+  return tabs
+    .filter((tab) => {
+      if (!tab || !tab.dataset) return false;
+      if (tab.classList.contains('hidden')) return false;
+      const id = tab.dataset.subtab;
+      const content = id ? document.getElementById(id) : null;
+      return !!(content && !content.classList.contains('hidden'));
+    })
+    .map(tab => tab.dataset.subtab);
+}
+
+function resolveProjectSubtabId(preferredId) {
+  const visibleIds = getVisibleProjectSubtabIds();
+  if (visibleIds.length === 0) return null;
+  if (preferredId && visibleIds.includes(preferredId)) return preferredId;
+  const activeId = getActiveProjectSubtabId();
+  if (activeId && visibleIds.includes(activeId)) return activeId;
+  return visibleIds[0];
+}
+
+function setProjectSubtabSelection(subtabId, fireCallbacks = true) {
+  if (!subtabId) return;
+  if (projectsSubtabManager && fireCallbacks) {
+    projectsSubtabManager.activate(subtabId);
+    return;
+  }
+  activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
+  if (projectsSubtabManager) {
+    projectsSubtabManager.activeId = subtabId;
+  }
 }
 
 function renderProjects(activeSubtabId) {
@@ -290,6 +342,10 @@ function renderProjects(activeSubtabId) {
 }
 
 function initializeProjectsUI() {
+  const previouslyActiveSubtabId = getActiveProjectSubtabId();
+  if (previouslyActiveSubtabId) {
+    projectsSubtabState.preferredSubtabId = previouslyActiveSubtabId;
+  }
   initializeProjectTabs();
   // Clear only the project lists, not the subtab containers
   const lists = Array.from(document.getElementsByClassName('projects-list'));
@@ -312,6 +368,11 @@ function initializeProjectsUI() {
   updateStoryProjectsVisibility();
   updateMegaProjectsVisibility();
   updateGigaProjectsVisibility();
+  const selectedSubtabId = resolveProjectSubtabId(projectsSubtabState.preferredSubtabId);
+  if (selectedSubtabId) {
+    projectsSubtabState.preferredSubtabId = selectedSubtabId;
+    setProjectSubtabSelection(selectedSubtabId, false);
+  }
 }
 
 function createProjectItem(project) {
@@ -1654,24 +1715,7 @@ function updateCategoryProjectsVisibility(category, subtabId) {
       );
     });
   }
-  if (projectsSubtabManager) {
-    if (visible) {
-      projectsSubtabManager.show(subtabId);
-    } else {
-      projectsSubtabManager.hide(subtabId);
-    }
-  } else {
-    const tab = document.querySelector(`.projects-subtab[data-subtab="${subtabId}"]`);
-    const content = document.getElementById(subtabId);
-    if (!tab || !content) return;
-    if (visible) {
-      tab.classList.remove('hidden');
-      content.classList.remove('hidden');
-    } else {
-      tab.classList.add('hidden');
-      content.classList.add('hidden');
-    }
-  }
+  setProjectSubtabVisibility(subtabId, visible);
 }
 
 function updateStoryProjectsVisibility() {
@@ -1689,24 +1733,7 @@ function updateStoryProjectsVisibility() {
       );
     });
   }
-  if (projectsSubtabManager) {
-    if (visible) {
-      projectsSubtabManager.show('story-projects');
-    } else {
-      projectsSubtabManager.hide('story-projects');
-    }
-  } else {
-    const tab = document.querySelector('.projects-subtab[data-subtab="story-projects"]');
-    const content = document.getElementById('story-projects');
-    if (!tab || !content) return;
-    if (visible) {
-      tab.classList.remove('hidden');
-      content.classList.remove('hidden');
-    } else {
-      tab.classList.add('hidden');
-      content.classList.add('hidden');
-    }
-  }
+  setProjectSubtabVisibility('story-projects', visible);
 }
 
 function updateMegaProjectsVisibility() {
@@ -1719,6 +1746,7 @@ function updateGigaProjectsVisibility() {
 
 function activateProjectSubtab(subtabId) {
   if (!subtabId) return;
+  projectsSubtabState.preferredSubtabId = subtabId;
   if (projectsSubtabManager) {
     projectsSubtabManager.activate(subtabId);
   } else {

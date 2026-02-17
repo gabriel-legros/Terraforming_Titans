@@ -695,6 +695,9 @@ class StoryManager {
         }
         });
         uniqueEffectsToApply.forEach(effect => {
+            if (globalGameIsTraveling && (effect.type === 'activateTab' || effect.type === 'activateSubtab') && effect.onTravel !== true) {
+                return;
+            }
             if (this.shouldApplyEffect(effect)) {
                 addEffect(effect);
             }
