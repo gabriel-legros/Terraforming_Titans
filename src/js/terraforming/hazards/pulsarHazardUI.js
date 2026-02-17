@@ -289,7 +289,7 @@ function ensurePulsarLayout() {
   );
   const nanobotRow = createPulsarScalingRow(
     doc,
-    'Nanobot Cap Floor',
+    'Nanobot Cap',
     'Uses max(Underground Expansion ratio, net pulsar mitigation).'
   );
 
