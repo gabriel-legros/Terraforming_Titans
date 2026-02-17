@@ -419,7 +419,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "System Message : RWG lock removed for Hades.  New Ringworld core unlocked.",
+    narrative: "TBD (RWG lock removed and new artificial core unlocked)",
     prerequisites: ['hades.35.3'],
     objectives: [
     ],

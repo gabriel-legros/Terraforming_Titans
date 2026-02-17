@@ -357,7 +357,7 @@ progressTartarus.chapters.push(
     chapter: 32,
     activePlanet: 'tartarus',
     narrative: "Conquer sector R4-03 to continue.",
-    prerequisites: ['impossible'],
+    prerequisites: ['tartarus.32.11'],
     objectives: [
       { type: 'galaxySectorControl', sectorLabel: 'R4-03' }
     ],
