@@ -377,7 +377,15 @@ progressHades.chapters.push(
     prerequisites: ['hades.35.1'],
     objectives: [
     ],
-    reward: []
+    reward: [
+      {
+        target: 'artificialManager',
+        type: 'setFleetCapacityWorldCap',
+        value: 10,
+        effectId: 'hades-artificial-fleet-cap',
+        sourceId: 'hades.35.2'
+      }
+    ]
   },
   {
     id: 'hades.35.2b',
@@ -405,6 +413,20 @@ progressHades.chapters.push(
     }
     ],
     reward: []
+  },
+  {
+    id: 'hades.35.4',
+    type: 'journal',
+    chapter: 35,
+    activePlanet: 'hades',
+    narrative: "System Message : RWG lock removed for Hades.  New Ringworld core unlocked.",
+    prerequisites: ['hades.35.3'],
+    objectives: [
+    ],
+    reward: [
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'hades', value: true },
+      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'k-dwarf' }
+    ]
   }
 );
 

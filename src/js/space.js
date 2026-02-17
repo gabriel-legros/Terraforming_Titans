@@ -521,9 +521,12 @@ class SpaceManager extends EffectableEntity {
     }
 
     _deriveArtificialFleetCapacityValue(status) {
-        const maxFleetValue = Number.isFinite(ARTIFICIAL_FLEET_CAPACITY_WORLDS) && ARTIFICIAL_FLEET_CAPACITY_WORLDS > 0
-            ? ARTIFICIAL_FLEET_CAPACITY_WORLDS
-            : 5;
+        const managerFleetCap = artificialManager?.getFleetCapacityWorldCap?.() || 0;
+        const maxFleetValue = managerFleetCap > 0
+            ? managerFleetCap
+            : (Number.isFinite(ARTIFICIAL_FLEET_CAPACITY_WORLDS) && ARTIFICIAL_FLEET_CAPACITY_WORLDS > 0
+                ? ARTIFICIAL_FLEET_CAPACITY_WORLDS
+                : 5);
         const terraformedValue = this._deriveArtificialTerraformValue(status);
         if (Number.isFinite(terraformedValue) && terraformedValue > 0) {
             return Math.min(maxFleetValue, terraformedValue);

@@ -476,7 +476,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getArtWorkerPerColonistMultiplier() {
-    return 1 + 10 * this.getArtHappinessBonus();
+    return 1 + 5 * this.getArtHappinessBonus();
   }
 
   getArtPowerSnapshot() {
@@ -497,7 +497,7 @@ class FollowersManager extends EffectableEntity {
       artifactStep: this.artifactInvestmentStep,
       fundingStep: this.fundingInvestmentStep,
       happinessBonus,
-      workerMultiplier: 1 + 10 * happinessBonus
+      workerMultiplier: 1 + 5 * happinessBonus
     };
   }
 

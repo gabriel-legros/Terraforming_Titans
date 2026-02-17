@@ -309,7 +309,7 @@ function buildFollowersUI() {
     'Artifact factor is sqrt(artifacts invested).',
     'Funding factor is sqrt(funding invested).',
     'Total Art Power = sqrt(population) * sqrt(artifacts invested) * sqrt(funding invested).',
-    'Happiness bonus is 0.5 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 10 * happiness bonus.'
+    'Happiness bonus is 0.5 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.'
   ].join('\n');
   const artGallery = document.createElement('div');
   artGallery.classList.add('followers-art-gallery');

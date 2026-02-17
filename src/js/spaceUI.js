@@ -572,7 +572,8 @@ function updateSpaceStatsUI() {
     }
     if (spaceStatEffectiveTooltipEl) {
         const effectiveBase = 'Includes worlds from other sources. This value influence advanced research, Solis rewards, mega structure expansion speed, and export caps.';
-        const effectiveGalaxy = galaxyUnlocked ? ' With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to 5 and O\'Neill cylinders are ignored).' : '';
+        const artificialFleetCap = artificialManager?.getFleetCapacityWorldCap?.() || 5;
+        const effectiveGalaxy = galaxyUnlocked ? ` With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to ${artificialFleetCap} and O'Neill cylinders are ignored).` : '';
         spaceStatEffectiveTooltipEl.title = `${effectiveBase}${effectiveGalaxy}`;
     }
     if (typeof updateOneillCylinderStatsUI === 'function') {

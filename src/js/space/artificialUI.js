@@ -42,6 +42,7 @@ const artificialUICache = {
   gainEffective: null,
   gainDistinct: null,
   gainFleet: null,
+  gainFleetLabel: null,
   gainDefense: null,
   gainFleetTooltip: null,
   effectShipEnergy: null,
@@ -996,6 +997,7 @@ function ensureArtificialLayout() {
   const fleetValue = document.createElement('span');
   fleetValue.className = 'artificial-gain-value';
   artificialUICache.gainFleet = fleetValue;
+  artificialUICache.gainFleetLabel = fleetLabel;
   artificialUICache.gainFleetTooltip = fleetInfo;
   fleetRow.appendChild(fleetLabel);
   fleetRow.appendChild(fleetValue);
@@ -1843,6 +1845,7 @@ function renderGains(project, selection, manager) {
   const r = project ? project.radiusEarth : selection.radiusEarth;
   const effective = project?.terraformedValue || manager.calculateTerraformWorldValue(r);
   const defense = effective;
+  const fleetCap = manager.getFleetCapacityWorldCap ? manager.getFleetCapacityWorldCap() : 5;
   const fleet = manager.calculateFleetCapacityWorldValue
     ? manager.calculateFleetCapacityWorldValue(r, effective)
     : 2;
@@ -1863,6 +1866,12 @@ function renderGains(project, selection, manager) {
   if (artificialUICache.gainFleet) {
     const label = fleet === 1 ? '1 world' : `${fleet} worlds`;
     artificialUICache.gainFleet.textContent = label;
+  }
+  if (artificialUICache.gainFleetLabel) {
+    artificialUICache.gainFleetLabel.textContent = `Worlds for fleet capacity (max ${fleetCap}):`;
+  }
+  if (artificialUICache.gainFleetTooltip) {
+    artificialUICache.gainFleetTooltip.title = `Artificial worlds cannot use their full power for direct military purposes. If they did, they would become critical military targets for alien superweapons, which they cannot dodge. Fleet capacity contribution per artificial world is capped at ${fleetCap}. This cap increase applies retroactively.`;
   }
 }
 

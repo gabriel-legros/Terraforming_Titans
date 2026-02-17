@@ -286,6 +286,7 @@ class ArtificialManager extends EffectableEntity {
             signature: '',
             paid: { metal: 0, superalloys: 0 }
         };
+        this.fleetCapacityWorldCap = ARTIFICIAL_FLEET_CAPACITY_WORLDS;
         this._tickTimer = 0;
     }
 
@@ -402,6 +403,24 @@ class ArtificialManager extends EffectableEntity {
         this.updateUI(true);
     }
 
+    getFleetCapacityWorldCap() {
+        return Math.max(1, Math.floor(this.fleetCapacityWorldCap || ARTIFICIAL_FLEET_CAPACITY_WORLDS));
+    }
+
+    setFleetCapacityWorldCap(value) {
+        const next = Math.max(1, Math.floor(value || ARTIFICIAL_FLEET_CAPACITY_WORLDS));
+        if (next === this.fleetCapacityWorldCap) return;
+        this.fleetCapacityWorldCap = next;
+        if (this.activeProject) {
+            const terraformedValue = this.deriveTerraformWorldValue(this.activeProject);
+            this.activeProject.fleetCapacityValue = this.calculateFleetCapacityWorldValue(
+                this.activeProject.radiusEarth,
+                terraformedValue
+            );
+        }
+        this.updateUI(true);
+    }
+
     update(delta) {
         if (!this.enabled || !this.activeProject) return;
         if (this.activeProject.status === 'building') {
@@ -427,6 +446,14 @@ class ArtificialManager extends EffectableEntity {
         }
         if (effect.type === 'unlockCore') {
             this.unlockCore(effect.targetId);
+            return;
+        }
+        if (effect.type === 'unlockRingStarCore') {
+            this.unlockRingStarCore(effect.targetId);
+            return;
+        }
+        if (effect.type === 'setFleetCapacityWorldCap') {
+            this.setFleetCapacityWorldCap(effect.value);
             return;
         }
         super.applyEffect(effect);
@@ -474,7 +501,7 @@ class ArtificialManager extends EffectableEntity {
         const worldValue = Number.isFinite(terraformedValue) && terraformedValue > 0
             ? terraformedValue
             : this.calculateTerraformWorldValue(radiusEarth);
-        return Math.min(ARTIFICIAL_FLEET_CAPACITY_WORLDS, worldValue);
+        return Math.min(this.getFleetCapacityWorldCap(), worldValue);
     }
 
     deriveTerraformWorldValue(entry) {
@@ -1603,6 +1630,7 @@ class ArtificialManager extends EffectableEntity {
         return {
             enabled: this.enabled,
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
+            fleetCapacityWorldCap: this.fleetCapacityWorldCap,
             nextId: this.nextId,
             activeProject: project,
             draftSelection: { ...this.draftSelection },
@@ -1615,6 +1643,14 @@ class ArtificialManager extends EffectableEntity {
     loadState(state) {
         if (!state) return;
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
+        const existingFleetCap = this.getFleetCapacityWorldCap();
+        const hasSavedFleetCap = Object.prototype.hasOwnProperty.call(state, 'fleetCapacityWorldCap');
+        if (hasSavedFleetCap) {
+            const savedFleetCap = Math.max(1, Math.floor(state.fleetCapacityWorldCap || ARTIFICIAL_FLEET_CAPACITY_WORLDS));
+            this.fleetCapacityWorldCap = Math.max(existingFleetCap, savedFleetCap);
+        } else {
+            this.fleetCapacityWorldCap = existingFleetCap;
+        }
         this.activeProject = state.activeProject || null;
         const draft = state.draftSelection || {};
         const defaultDraft = this.createDefaultDraftSelection();
