@@ -509,6 +509,9 @@ class Terraforming extends EffectableEntity{
     if (this.isBooleanFlagSet('magneticShield')) {
       return true;
     }
+    if (projectManager?.projects?.artificialSky?.isCompleted) {
+      return true;
+    }
     return false;
   }
 
@@ -1691,6 +1694,18 @@ class Terraforming extends EffectableEntity{
       };
     }
 
+    getArtificialSkySolarFluxMultiplier() {
+      const pulsarParameters = hazardManager?.parameters?.pulsar;
+      if (!pulsarParameters) {
+        return 1;
+      }
+      const completionRatio = hazardManager?.pulsarHazard?.getArtificialSkyCompletionRatio?.(this, pulsarParameters)
+        ?? projectManager?.projects?.artificialSky?.getCompletionFraction?.()
+        ?? 0;
+      const clampedCompletion = Math.max(0, Math.min(1, completionRatio));
+      return 1 - clampedCompletion;
+    }
+
     calculateSolarFlux(distanceFromSun){
       if (this.celestialParameters?.rogue || this.celestialParameters.starLuminosity <= 0) {
         return BACKGROUND_SOLAR_FLUX;
@@ -1705,7 +1720,11 @@ class Terraforming extends EffectableEntity{
       if (!Number.isFinite(lum) || lum <= 0) {
         return BACKGROUND_SOLAR_FLUX;
       }
-      return lum / (4*Math.PI * Math.pow(validDistance, 2)); // W/m²
+      const scaledLuminosity = lum * this.getArtificialSkySolarFluxMultiplier();
+      if (!Number.isFinite(scaledLuminosity) || scaledLuminosity <= 0) {
+        return BACKGROUND_SOLAR_FLUX;
+      }
+      return scaledLuminosity / (4*Math.PI * Math.pow(validDistance, 2)); // W/m²
     }
 
     calculateModifiedSolarFlux(distanceFromSunInMeters){

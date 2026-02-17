@@ -2,6 +2,8 @@ const ARTIFICIAL_SKY_SEGMENT_LAND = 1000;
 const ARTIFICIAL_SKY_CONTINUOUS_THRESHOLD_MS = 1000;
 const ARTIFICIAL_SKY_SPACE_MIRROR_EFFECT_ID = 'artificial-sky-disable-space-mirror';
 const ARTIFICIAL_SKY_SPACE_MIRROR_SOURCE_ID = 'artificialSkyProject';
+const ARTIFICIAL_SKY_MAGNETIC_SHIELD_EFFECT_ID = 'artificial-sky-disable-magnetic-shield';
+const ARTIFICIAL_SKY_MAGNETIC_SHIELD_SOURCE_ID = 'artificialSkyProject';
 
 class ArtificialSkyProject extends SpaceshipProject {
   constructor(config, name) {
@@ -574,6 +576,17 @@ class ArtificialSkyProject extends SpaceshipProject {
     });
   }
 
+  applyMagneticShieldDisableEffect() {
+    addEffect({
+      target: 'project',
+      targetId: 'magneticShield',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: ARTIFICIAL_SKY_MAGNETIC_SHIELD_EFFECT_ID,
+      sourceId: ARTIFICIAL_SKY_MAGNETIC_SHIELD_SOURCE_ID
+    });
+  }
+
   applyArtificialSkyLuminosity() {
     const celestialTargets = [
       terraforming?.celestialParameters,
@@ -599,6 +612,7 @@ class ArtificialSkyProject extends SpaceshipProject {
   applyArtificialSkyCompletionEffects() {
     this.applyArtificialSkyLuminosity();
     this.applySpaceMirrorDisableEffect();
+    this.applyMagneticShieldDisableEffect();
   }
 
   update(deltaTime) {

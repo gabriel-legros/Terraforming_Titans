@@ -1574,12 +1574,17 @@ function updateLifeBox() {
     const magTooltip = attachDynamicInfoTooltip(magInfo, magTooltipText);
 
     const protectedText = 'The planet is sufficiently protected, providing a 50% boost to life growth';
+    const artificialSkyProtectedText = 'The planet is sufficiently protected by the Artificial Sky';
+    const hasArtificialSkyShield = projectManager?.projects?.artificialSky?.isCompleted;
     const hasMagnetosphere = terraforming.celestialParameters.hasNaturalMagnetosphere
-      || projectManager.isBooleanFlagSet('terraforming', 'magneticShield');
+      || terraforming.isBooleanFlagSet('magneticShield')
+      || hasArtificialSkyShield;
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
       ? `Natural magnetosphere: ${protectedText}`
-      : projectManager.isBooleanFlagSet('terraforming', 'magneticShield')
+      : terraforming.isBooleanFlagSet('magneticShield')
         ? `Artificial magnetosphere: ${protectedText}`
+        : hasArtificialSkyShield
+          ? `Artificial Sky shield: ${artificialSkyProtectedText}`
         : 'No magnetosphere';
 
       const orbRad = terraforming.orbitalRadiation || 0;
@@ -1658,12 +1663,16 @@ function updateLifeBox() {
     const gravityPenaltyValue = els.gravityPenaltyValue;
 
     // Update status based on natural or artificial magnetosphere
+    const hasArtificialSkyShield = projectManager?.projects?.artificialSky?.isCompleted;
     const hasMagnetosphere = terraforming.celestialParameters.hasNaturalMagnetosphere
-      || terraforming.isBooleanFlagSet('magneticShield');
+      || terraforming.isBooleanFlagSet('magneticShield')
+      || hasArtificialSkyShield;
     const magnetosphereStatusText = terraforming.celestialParameters.hasNaturalMagnetosphere
       ? 'Natural magnetosphere'
       : terraforming.isBooleanFlagSet('magneticShield')
         ? 'Artificial magnetosphere'
+        : hasArtificialSkyShield
+          ? 'Artificial Sky shield'
         : 'No magnetosphere';
 
     if (magnetosphereStatus) {

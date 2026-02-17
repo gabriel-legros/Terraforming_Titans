@@ -1423,26 +1423,36 @@ function updateProjectUI(projectName) {
           }
           elements.progressButton.style.background = '#f44336';
         } else if (isContinuousProject) {
-          const showProductivity = project.attributes?.continuousAsBuilding;
-          const productivity = project.continuousProductivity ?? 1;
-          const productivityLabel = showProductivity
-            ? ` (${Math.round(productivity * 100)}% productivity)`
-            : '';
-          if (project.autoStart && project.isActive && !project.isPaused) {
-            const statusText = `Continuous${productivityLabel}`;
+          if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
+            const statusText = 'Paused by pulsar';
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#4caf50';
-          } else {
-            if (isImportProject && importUI) {
-              importUI.setProgressLabel(elements, project, 'Stopped');
-            } else {
-              elements.progressButton.textContent = 'Stopped';
-            }
             elements.progressButton.style.background = '#f44336';
+          } else {
+            const showProductivity = project.attributes?.continuousAsBuilding;
+            const productivity = project.continuousProductivity ?? 1;
+            const productivityLabel = showProductivity
+              ? ` (${Math.round(productivity * 100)}% productivity)`
+              : '';
+            if (project.autoStart && project.isActive && !project.isPaused) {
+              const statusText = `Continuous${productivityLabel}`;
+              if (isImportProject && importUI) {
+                importUI.setProgressLabel(elements, project, statusText);
+              } else {
+                elements.progressButton.textContent = statusText;
+              }
+              elements.progressButton.style.background = '#4caf50';
+            } else {
+              if (isImportProject && importUI) {
+                importUI.setProgressLabel(elements, project, 'Stopped');
+              } else {
+                elements.progressButton.textContent = 'Stopped';
+              }
+              elements.progressButton.style.background = '#f44336';
+            }
           }
         } else if (project.isActive) {
           if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {

@@ -507,7 +507,7 @@ const projectParameters = {
       }
     },
     duration: 50000000,
-    description: 'Deploy segmented artificial sky shielding to block pulsar radiation bursts. Segment count is based on initial land, and assigned spaceships accelerate construction. Full completion clears the pulsar hazard, removes all solar flux, and disables space mirrors (lanterns can still be used).',
+    description: 'Deploy segmented artificial sky shielding to block pulsar radiation bursts. Segment count is based on initial land, and assigned spaceships accelerate construction. Partial completion proportionally reduces pulsar hazard intensity and solar flux. Full completion clears the pulsar hazard, counts as magnetic shielding for terraforming requirements, removes all solar flux, disables space mirrors (lanterns can still be used), and permanently disables Magnetic Shield.',
     repeatable: true,
     maxRepeatCount: 1,
     unlocked: false,

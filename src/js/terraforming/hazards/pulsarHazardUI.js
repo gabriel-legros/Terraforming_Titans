@@ -386,10 +386,11 @@ function updatePulsarHazardUI(pulsarParameters) {
     }
   }
 
-  const isActive = !!pulsarParameters && !cleared;
-  card.style.display = isActive ? '' : 'none';
+  const hasPulsarHazard = !!pulsarParameters;
+  const isActive = hasPulsarHazard && !cleared;
+  card.style.display = hasPulsarHazard ? '' : 'none';
   card.classList.toggle('hazard-card--active', isActive);
-  if (!isActive) {
+  if (!hasPulsarHazard) {
     if (pulsarHazardUICache.viz) {
       pulsarHazardUICache.viz.classList.remove('pulsar-viz--storm');
     }
@@ -430,6 +431,62 @@ function updatePulsarHazardUI(pulsarParameters) {
     : 0;
   const undergroundCompletionRatio = getUndergroundCompletionRatio();
   const skyProgress = getArtificialSkyProgress(artificialSkyCompletion);
+
+  if (!isActive) {
+    if (pulsarHazardUICache.summaryStatusBody) {
+      pulsarHazardUICache.summaryStatusBody.textContent =
+        `${description}\nStatus: Cleared.\nPulsar effects are disabled on this world.`;
+    }
+    if (pulsarHazardUICache.viz) {
+      pulsarHazardUICache.viz.classList.remove('pulsar-viz--storm');
+    }
+    if (pulsarHazardUICache.barSafe && pulsarHazardUICache.barHazard) {
+      pulsarHazardUICache.barSafe.style.width = '100%';
+      pulsarHazardUICache.barHazard.style.width = '0%';
+      pulsarHazardUICache.barSafe.style.flexBasis = '100%';
+      pulsarHazardUICache.barHazard.style.flexBasis = '0%';
+    }
+    if (pulsarHazardUICache.barSafeLabel) {
+      pulsarHazardUICache.barSafeLabel.textContent = '100.0% Shielded';
+    }
+    if (pulsarHazardUICache.barHazardLabel) {
+      pulsarHazardUICache.barHazardLabel.textContent = '';
+    }
+    if (pulsarHazardUICache.barDetails) {
+      pulsarHazardUICache.barDetails.textContent =
+        `Artificial Sky Segments: ${formatNumber(skyProgress.builtSegments, false, 2)} / ${formatNumber(skyProgress.maxSegments, false, 0)} | Hazard Intensity: 0.00%`;
+    }
+    if (pulsarHazardUICache.summaryRadiationBody) {
+      pulsarHazardUICache.summaryRadiationBody.textContent = '+0.00 mSv/day orbital dose';
+    }
+    if (pulsarHazardUICache.scalingRadiationValue) {
+      pulsarHazardUICache.scalingRadiationValue.textContent =
+        `Current: +0.00 mSv/day (base ${formatNumber(baseOrbitalBoost, false, 2)} × x0.000)`;
+    }
+    if (pulsarHazardUICache.scalingLandValue) {
+      pulsarHazardUICache.scalingLandValue.textContent = 'Current: 0.00%';
+    }
+    if (pulsarHazardUICache.scalingStormValue) {
+      pulsarHazardUICache.scalingStormValue.textContent = 'Current: 0.00%/s';
+    }
+    if (pulsarHazardUICache.scalingNanobotValue) {
+      pulsarHazardUICache.scalingNanobotValue.textContent =
+        `Current Floor: x${formatNumber(currentNanobotMultiplier, false, 3)}\nUnderground ${formatNumber(undergroundCompletionRatio * 100, false, 2)}% | Net mitigation 100.00%`;
+    }
+    if (pulsarHazardUICache.effectsItems[0]) {
+      pulsarHazardUICache.effectsItems[0].textContent = PULSAR_DISABLED_PROJECTS_TEXT;
+    }
+    if (pulsarHazardUICache.effectsItems[1]) {
+      pulsarHazardUICache.effectsItems[1].textContent = PULSAR_STORM_PROJECT_TEXT;
+    }
+    if (pulsarHazardUICache.effectsItems[2]) {
+      pulsarHazardUICache.effectsItems[2].textContent = PULSAR_THRUSTER_COST_TEXT;
+    }
+    if (pulsarHazardUICache.effectsItems[3]) {
+      pulsarHazardUICache.effectsItems[3].textContent = PULSAR_DISTANCE_SCALING_TEXT;
+    }
+    return;
+  }
 
   if (pulsarHazardUICache.summaryStatusBody) {
     const stormLine = stormActive
