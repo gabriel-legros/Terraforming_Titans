@@ -681,6 +681,14 @@ class FollowersManager extends EffectableEntity {
     return boosted > 0 ? boosted : 0;
   }
 
+  isKesslerOrbitalsRestricted() {
+    return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+  }
+
+  isOrbitalRestrictedByKessler(id) {
+    return this.isKesslerOrbitalsRestricted() && id !== 'research';
+  }
+
   getAssignmentMode() {
     return this.assignmentMode;
   }
@@ -691,6 +699,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   getAutoAssignId() {
+    if (this.isOrbitalRestrictedByKessler(this.autoAssignId)) {
+      return null;
+    }
     return this.autoAssignId;
   }
 
@@ -700,6 +711,10 @@ class FollowersManager extends EffectableEntity {
       if (this.autoAssignId === id) {
         this.autoAssignId = null;
       }
+      this.updateUI();
+      return;
+    }
+    if (this.isOrbitalRestrictedByKessler(id)) {
       this.updateUI();
       return;
     }
@@ -752,12 +767,19 @@ class FollowersManager extends EffectableEntity {
     const configs = this.getOrbitalConfigs();
     let total = 0;
     for (let i = 0; i < configs.length; i += 1) {
-      total += this.getManualAssignment(configs[i].id);
+      const id = configs[i].id;
+      if (this.isOrbitalRestrictedByKessler(id)) {
+        continue;
+      }
+      total += this.getManualAssignment(id);
     }
     return total;
   }
 
   getManualMaxFor(id) {
+    if (this.isOrbitalRestrictedByKessler(id)) {
+      return 0;
+    }
     const cap = this.getAvailableOrbitals();
     const current = this.getManualAssignment(id);
     const others = this.getTotalManualAssigned() - current;
@@ -767,6 +789,11 @@ class FollowersManager extends EffectableEntity {
 
   setManualAssignment(id, value) {
     this.ensureTrackedOrbitals();
+    if (this.isOrbitalRestrictedByKessler(id)) {
+      this.manualAssignments[id] = 0;
+      this.updateUI();
+      return;
+    }
     let next = Math.max(0, Math.floor(value));
     const maxForThis = this.getManualMaxFor(id);
     if (next > maxForThis) {
@@ -806,6 +833,9 @@ class FollowersManager extends EffectableEntity {
       const config = configs[i];
       const weight = this.getWeight(config.id);
       if (weight <= 0) {
+        continue;
+      }
+      if (this.isOrbitalRestrictedByKessler(config.id)) {
         continue;
       }
       if (!this.isTargetResourceUnlocked(config)) {
@@ -851,10 +881,14 @@ class FollowersManager extends EffectableEntity {
   normalizeManualAssignmentsToCapacity(capacity) {
     this.ensureTrackedOrbitals();
     const configs = this.getOrbitalConfigs();
-    const autoAssignId = this.autoAssignId;
+    const autoAssignId = this.getAutoAssignId();
     const hasAutoAssign = !!autoAssignId;
     for (let i = 0; i < configs.length; i += 1) {
       const id = configs[i].id;
+      if (this.isOrbitalRestrictedByKessler(id)) {
+        this.manualAssignments[id] = 0;
+        continue;
+      }
       if (hasAutoAssign && id === autoAssignId) {
         this.manualAssignments[id] = 0;
       } else {

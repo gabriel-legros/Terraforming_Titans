@@ -449,6 +449,12 @@ function initializeGameState(options = {}) {
     }
   }
 
+  hazardManager = setHazardManager(new HazardManager());
+  const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
+    ? currentPlanetParameters.hazards
+    : {};
+  hazardManager.initialize(planetHazards);
+
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display
   createBuildingButtons(buildings);
@@ -484,12 +490,6 @@ function initializeGameState(options = {}) {
     updateGalaxyUI();
   }
     updateLifeUI();
-
-  hazardManager = setHazardManager(new HazardManager());
-  const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
-    ? currentPlanetParameters.hazards
-    : {};
-  hazardManager.initialize(planetHazards);
 
   // When keeping existing managers, reapplied story effects need to
   // target the newly created game objects for this planet.

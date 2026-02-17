@@ -3,6 +3,7 @@ const followersUICache = {
   initialized: false,
   root: null,
   summary: null,
+  kesslerWarning: null,
   modeToggle: null,
   stepValue: null,
   divideStepButton: null,
@@ -111,6 +112,20 @@ function buildFollowersUI() {
     'Orbitals only produce if the target resource is unlocked.'
   ].join('\n');
   const orbitals = createFollowersCard('Orbitals', 'followers-orbitals-card', orbitalsTooltipText);
+
+  const orbitalKesslerWarning = document.createElement('div');
+  orbitalKesslerWarning.classList.add('project-kessler-warning', 'followers-orbitals-kessler-warning');
+  orbitalKesslerWarning.style.display = 'none';
+  const orbitalWarningIconLeft = document.createElement('span');
+  orbitalWarningIconLeft.classList.add('project-kessler-warning__icon');
+  orbitalWarningIconLeft.textContent = '⚠';
+  const orbitalWarningText = document.createElement('span');
+  orbitalWarningText.textContent = 'Orbitals cannot approach due to Kessler Skies. Limited to research.';
+  const orbitalWarningIconRight = document.createElement('span');
+  orbitalWarningIconRight.classList.add('project-kessler-warning__icon');
+  orbitalWarningIconRight.textContent = '⚠';
+  orbitalKesslerWarning.append(orbitalWarningIconLeft, orbitalWarningText, orbitalWarningIconRight);
+  orbitals.body.appendChild(orbitalKesslerWarning);
 
   const summary = document.createElement('div');
   summary.id = 'followers-orbitals-summary';
@@ -792,6 +807,7 @@ function buildFollowersUI() {
   followersUICache.initialized = true;
   followersUICache.root = root;
   followersUICache.summary = summary;
+  followersUICache.kesslerWarning = orbitalKesslerWarning;
   followersUICache.modeToggle = modeToggle;
   followersUICache.stepValue = stepValue;
   followersUICache.divideStepButton = divideStepButton;
@@ -870,8 +886,10 @@ function updateFollowersUI() {
   const step = followersManager.getAssignmentStep();
   const manualMode = mode === 'manual';
   const autoAssignId = followersManager.getAutoAssignId();
+  const kesslerRestricted = followersManager.isKesslerOrbitalsRestricted();
 
   followersUICache.root.dataset.mode = mode;
+  followersUICache.kesslerWarning.style.display = kesslerRestricted ? 'flex' : 'none';
 
   setToggleButtonState(followersUICache.modeToggle, mode === 'weight');
 
@@ -893,6 +911,7 @@ function updateFollowersUI() {
     const totalRate = perOrbital * assigned;
     const weight = followersManager.getWeight(config.id);
     const isAutoAssignTarget = autoAssignId === config.id;
+    const isKesslerLocked = kesslerRestricted && config.id !== 'research';
 
     row.assigned.textContent = `Assigned: ${formatNumber(assigned, true)}`;
     row.perOrbitalRate.textContent = `Per orbital: +${formatNumber(perOrbital, false, 2)}/s`;
@@ -906,15 +925,16 @@ function updateFollowersUI() {
     row.autoAssignRow.style.display = manualMode ? 'inline-flex' : 'none';
 
     const maxForThis = followersManager.getManualMaxFor(config.id);
-    row.manualZero.disabled = isAutoAssignTarget || assigned <= 0;
-    row.manualMinus.disabled = isAutoAssignTarget || assigned <= 0;
-    row.manualPlus.disabled = isAutoAssignTarget || assigned >= maxForThis;
-    row.manualMax.disabled = isAutoAssignTarget || assigned >= maxForThis;
-    row.autoAssignCheckbox.disabled = !manualMode;
+    row.manualZero.disabled = isKesslerLocked || isAutoAssignTarget || assigned <= 0;
+    row.manualMinus.disabled = isKesslerLocked || isAutoAssignTarget || assigned <= 0;
+    row.manualPlus.disabled = isKesslerLocked || isAutoAssignTarget || assigned >= maxForThis;
+    row.manualMax.disabled = isKesslerLocked || isAutoAssignTarget || assigned >= maxForThis;
+    row.autoAssignCheckbox.disabled = !manualMode || isKesslerLocked;
     row.autoAssignCheckbox.checked = isAutoAssignTarget;
 
     const weightInput = row.weightInput;
     if (weightInput) {
+      weightInput.disabled = isKesslerLocked;
       weightInput.dataset.weight = String(weight);
       if (document.activeElement !== weightInput) {
         weightInput.value = String(weight);

@@ -148,6 +148,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ### Space, Projects, and Hazards
 - Kessler Skies gained richer failure/debris modeling, warnings/tooltips, and capped Solis storage bonuses.
 - Kessler cost multipliers and decay behaviors were tuned; hazard charts and bin diagnostics expanded.
+- While Kessler Skies is active, Followers Orbitals are limited to `research`; non-research orbital outputs are disabled and the Orbitals card shows a warning banner.
 - Pulsar hazard now has full clear paths on affected worlds: fully build all `Artificial Sky` segments or use Planetary Thrusters to `Go Rogue`; both clear pulsar hazard effects.
 - Completing `Artificial Sky` now permanently disables the `Space Mirror` building on that world (this does not disable the `Space Mirror Facility` project).
 - `Artificial Sky` is now a segmented spaceship project: total segments are `ceil(initial land / 1000)`, each segment spends an equal share of the old full cost, base segment duration is 50,000s at 1 assigned ship, and it becomes continuous when effective duration drops below 1s.
