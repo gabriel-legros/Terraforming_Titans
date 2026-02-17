@@ -1,7 +1,7 @@
 
 let defaultPlanet = 'mars';
 let tabManager;
-let currentPlanetParameters = planetParameters[defaultPlanet];
+let currentPlanetParameters = getPlanetParameters(defaultPlanet);
 Object.defineProperty(globalThis, 'currentPlanetParameters', {
   get: () => currentPlanetParameters,
   set: (v) => { currentPlanetParameters = v; },

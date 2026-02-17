@@ -1162,7 +1162,7 @@ class SpaceManager extends EffectableEntity {
             defaultPlanet = options.planetKey;
         }
         if (params) {
-            currentPlanetParameters = params;
+            currentPlanetParameters = JSON.parse(JSON.stringify(params));
         }
         initializeGameState({ preserveManagers: true, preserveJournal: true });
     }
@@ -1198,7 +1198,7 @@ class SpaceManager extends EffectableEntity {
         const firstVisit = this.visitPlanet(targetKey);
         const destinationTerraformed = this.isPlanetTerraformed(targetKey);
         this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
-        const params = planetParameters[targetKey] || defaultPlanetParameters;
+        const params = getPlanetParameters(targetKey);
         this._finalizeTravelInitialization({
             planetKey: targetKey,
             planetParameters: params,

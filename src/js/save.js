@@ -260,7 +260,7 @@ function loadGame(slotOrCustomString, recreate = true) {
         if (currentSeed !== null || artificialKey !== null) {
           if (worldOriginal && worldOriginal.merged) {
             const existingResources = currentPlanetParameters.resources;
-            currentPlanetParameters = worldOriginal.merged;
+            currentPlanetParameters = JSON.parse(JSON.stringify(worldOriginal.merged));
 
             const newResources = currentPlanetParameters.resources || (currentPlanetParameters.resources = {});
             if (existingResources) {
@@ -358,7 +358,7 @@ function loadGame(slotOrCustomString, recreate = true) {
           const key = spaceManager.getCurrentPlanetKey();
           if (planetParameters[key]) {
             defaultPlanet = key; // keep global consistent
-            currentPlanetParameters = planetParameters[key];
+            currentPlanetParameters = getPlanetParameters(key);
           }
         }
         // Clear previously applied story effects so they don't carry over

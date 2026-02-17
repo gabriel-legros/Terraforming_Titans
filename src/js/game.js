@@ -754,7 +754,7 @@ function update(time, delta) {
 
 function startNewGame() {
   defaultPlanet = 'mars';
-  currentPlanetParameters = planetParameters.mars;
+  currentPlanetParameters = getPlanetParameters('mars');
   totalPlayTimeSeconds = 0;
   totalRealPlayTimeSeconds = 0;
   initializeGameState();
