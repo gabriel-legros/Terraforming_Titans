@@ -34,6 +34,27 @@ function getTerraformingManagerSafe() {
   return null;
 }
 
+function getSpaceManagerSafe() {
+  try {
+    return spaceManager || null;
+  } catch (error) {}
+  return null;
+}
+
+function formatTerraformingSummaryLabel(value, fallback = '') {
+  const raw = String(value || fallback || '').trim();
+  if (!raw) {
+    return '';
+  }
+  const capitalizeWord = (word) => word ? (word.charAt(0).toUpperCase() + word.slice(1)) : word;
+  return raw
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map((part) => part.split('-').map(capitalizeWord).join('-'))
+    .join(' ');
+}
+
 function getActiveTerraformingRequirements() {
   const manager = getTerraformingManagerSafe();
   if (manager && manager.requirements) {
@@ -46,6 +67,42 @@ function getActiveTerraformingRequirements() {
     return getTerraformingRequirement(fallbackId);
   }
   return null;
+}
+
+function getTerraformingSummaryWorldType() {
+  const manager = getSpaceManagerSafe();
+  if (manager && manager.currentArtificialKey !== null) {
+    return currentPlanetParameters?.classification?.type || 'shell';
+  }
+  if (manager && manager.currentRandomSeed !== null) {
+    return currentPlanetParameters?.classification?.archetype
+      || currentPlanetParameters?.classification?.type
+      || 'random';
+  }
+  return 'story';
+}
+
+function getTerraformingSummaryRequirementName() {
+  const activeRequirements = getActiveTerraformingRequirements();
+  return terraforming.requirementId || activeRequirements?.id || DEFAULT_TERRAFORMING_REQUIREMENT_ID || 'human';
+}
+
+function updateTerraformingSummaryWorldIdentity() {
+  const summaryCache = terraformingUICache.summary;
+  const manager = getSpaceManagerSafe();
+  const worldName = (manager && manager.getCurrentWorldName && manager.getCurrentWorldName())
+    || currentPlanetParameters?.name
+    || '';
+  if (summaryCache.worldNameText && summaryCache.worldNameText.textContent !== worldName) {
+    summaryCache.worldNameText.textContent = worldName;
+  }
+
+  const worldType = formatTerraformingSummaryLabel(getTerraformingSummaryWorldType(), 'story');
+  const requirementName = formatTerraformingSummaryLabel(getTerraformingSummaryRequirementName(), 'human');
+  const worldMeta = `${worldType}, ${requirementName}`;
+  if (summaryCache.worldMetaText && summaryCache.worldMetaText.textContent !== worldMeta) {
+    summaryCache.worldMetaText.textContent = worldMeta;
+  }
 }
 
 function getGasRangeString(gasName) {
@@ -385,6 +442,7 @@ function getActiveTerraformingSubtabId() {
 function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
   switch (subtabId) {
     case 'summary-terraforming':
+      updateTerraformingSummaryWorldIdentity();
       updatePlayTimeDisplay();
       updateTemperatureBox();
       updateAtmosphereBox(deltaSeconds);
@@ -587,6 +645,20 @@ function createTerraformingSummaryUI() {
   terraformingContainer.textContent = '';
   const summaryCache = terraformingUICache.summary;
   summaryCache.container = terraformingContainer;
+
+  const worldHeader = document.createElement('div');
+  worldHeader.classList.add('terraforming-summary-world-header');
+  const worldNameText = document.createElement('div');
+  worldNameText.classList.add('terraforming-summary-world-name');
+  const worldMetaText = document.createElement('div');
+  worldMetaText.classList.add('terraforming-summary-world-meta');
+  worldHeader.appendChild(worldNameText);
+  worldHeader.appendChild(worldMetaText);
+  terraformingContainer.appendChild(worldHeader);
+  summaryCache.worldHeader = worldHeader;
+  summaryCache.worldNameText = worldNameText;
+  summaryCache.worldMetaText = worldMetaText;
+  updateTerraformingSummaryWorldIdentity();
 
   const playTimeDisplay = document.createElement('div');
   playTimeDisplay.id = 'play-time-display';
