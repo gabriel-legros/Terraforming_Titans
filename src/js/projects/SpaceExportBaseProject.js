@@ -732,7 +732,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       return maxByAvailable;
     }
 
-    const maxDisposableByFloor = Math.max(0, availableAmount - floorAmount);
+    const maxDisposableByFloor = Math.max(0, availableAmount - floorAmount + 1);
     return Math.max(0, Math.min(maxByAvailable, maxDisposableByFloor));
   }
 
