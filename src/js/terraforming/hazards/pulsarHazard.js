@@ -77,20 +77,6 @@ function getArtificialSkyCompletionRatio() {
   return clampRatio(builtSegments / maxSegments);
 }
 
-function syncArtificialSkyAvailability(pulsarParameters) {
-  const artificialSky = getArtificialSkyProject();
-  if (!artificialSky) {
-    return;
-  }
-  if (!pulsarParameters) {
-    artificialSky.unlocked = false;
-    return;
-  }
-  if (!artificialSky.unlocked) {
-    artificialSky.enable();
-  }
-}
-
 function isRogueWorld(terraforming) {
   return terraforming?.celestialParameters?.rogue === true;
 }
@@ -223,7 +209,6 @@ class PulsarHazard {
 
   initialize(terraforming, pulsarParameters, options = {}) {
     consumePulsarArgs(terraforming, pulsarParameters, options);
-    syncArtificialSkyAvailability(pulsarParameters);
     this.initialDistanceFromSunAU = resolveDistanceFromSunAU(terraforming);
     const currentDistanceAU = resolveDistanceFromSunAU(terraforming);
     const distanceMultiplier = getDistanceScalingMultiplier(

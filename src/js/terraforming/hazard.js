@@ -193,6 +193,15 @@ class HazardManager {
     if (this.pulsarHazard) {
       this.pulsarHazard.initialize(activeTerraforming, this.parameters.pulsar, options);
     }
+    if (this.parameters.pulsar) {
+      addEffect({
+        target: 'project',
+        targetId: 'artificialSky',
+        type: 'enable',
+        effectId: 'pulsar-hazard-artificial-sky-enable',
+        sourceId: 'pulsar-hazard'
+      });
+    }
 
     this.syncHazardLandReservation(activeTerraforming);
 
