@@ -319,23 +319,24 @@ class ArtificialManager extends EffectableEntity {
     normalizeDraftSelection(selection) {
         const types = getArtificialTypes();
         const typeDefault = types.find((entry) => !entry.disabled) || types[0];
-        const typeValue = types.some((entry) => entry.value === selection.type && !entry.disabled)
+        const typeValue = types.some((entry) => entry.value === selection.type)
             ? selection.type
             : typeDefault.value;
         const cores = getArtificialCores();
         const coreDefault = cores.find((entry) => !entry.disabled) || cores[0];
-        const coreValue = cores.some((entry) => entry.value === selection.core && !entry.disabled)
+        const coreValue = cores.some((entry) => entry.value === selection.core)
             ? selection.core
             : coreDefault.value;
         const starContexts = getArtificialStarContexts();
         const starDefault = starContexts.find((entry) => !entry.disabled) || starContexts[0];
-        const starValue = starContexts.some((entry) => entry.value === selection.starContext && !entry.disabled)
+        const starValue = starContexts.some((entry) => entry.value === selection.starContext)
             ? selection.starContext
             : starDefault.value;
         const ringCores = getRingStarCores();
         const ringDefault = ringCores.find((entry) => !entry.disabled) || ringCores[0];
-        const ringValue = ringCores.some((entry) => entry.value === selection.ringStarCore && !entry.disabled)
-            ? selection.ringStarCore
+        const requestedRingCore = selection.ringStarCore || (typeValue === 'ring' ? selection.core : null);
+        const ringValue = ringCores.some((entry) => entry.value === requestedRingCore)
+            ? requestedRingCore
             : ringDefault.value;
         const coreBounds = getArtificialCoreBounds(coreValue);
         const orbitBounds = getRingRadiusBoundsAU(ringValue);
@@ -1840,6 +1841,7 @@ if (typeof window !== 'undefined') {
     window.getArtificialCores = getArtificialCores;
     window.getRingStarCores = getRingStarCores;
     window.getRingStarCoreBounds = getRingStarCoreBounds;
+    window.getRingWidthBoundsKm = getRingWidthBoundsKm;
     window.getArtificialStarContexts = getArtificialStarContexts;
     window.getArtificialCoreBounds = getArtificialCoreBounds;
     window.getArtificialCoreConfig = getArtificialCoreConfig;
@@ -1852,6 +1854,7 @@ if (typeof window !== 'undefined') {
         getArtificialCores,
         getRingStarCores,
         getRingStarCoreBounds,
+        getRingWidthBoundsKm,
         getArtificialStarContexts,
         getArtificialCoreBounds,
         getArtificialCoreConfig,

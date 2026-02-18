@@ -325,10 +325,13 @@ function getRingOrbitBoundsAU() {
   return { min: 0.03, max: 0.25 };
 }
 
-function getRingWidthBoundsKm() {
+function getRingWidthBounds() {
   const options = getRingStarCoreOptions();
   const fallback = options[0] || {};
   const coreValue = artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : fallback.value;
+  if (typeof getRingWidthBoundsKm === 'function') {
+    return getRingWidthBoundsKm(coreValue);
+  }
   const core = options.find((entry) => entry.value === coreValue) || fallback;
   const min = ARTIFICIAL_RING_WIDTH_BOUNDS_KM.min;
   const max = Math.max(core?.maxWidthKm || ARTIFICIAL_RING_WIDTH_BOUNDS_KM.max, min);
@@ -347,7 +350,7 @@ function clampRingOrbitValue(value) {
 }
 
 function clampRingWidthValue(value) {
-  const bounds = getRingWidthBoundsKm();
+  const bounds = getRingWidthBounds();
   const next = Math.max(0, Number(value) || 0);
   return Math.min(Math.max(next, bounds.min), bounds.max);
 }
@@ -492,7 +495,7 @@ function applyRingBounds() {
     artificialUICache.ringOrbitInput.value = clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitInput.value) || orbit.min);
   }
 
-  const widthBounds = getRingWidthBoundsKm();
+  const widthBounds = getRingWidthBounds();
   artificialUICache.ringWidthRange.min = widthBounds.min;
   artificialUICache.ringWidthRange.max = widthBounds.max;
   artificialUICache.ringWidthRange.step = '1';
@@ -1299,7 +1302,7 @@ function ensureArtificialLayout() {
   ringAuto.addEventListener('click', () => {
     artificialRingOrbitEditing = false;
     artificialRingWidthEditing = false;
-    const widthBounds = getRingWidthBoundsKm();
+    const widthBounds = getRingWidthBounds();
     const orbitBounds = getRingOrbitBoundsAU();
     const selection = artificialManager.getAutoRingSelection(orbitBounds, widthBounds);
     setRingWidthFields(selection.widthKm, true);
@@ -2121,7 +2124,7 @@ function updateArtificialUI(options = {}) {
     if (project && project.type) {
       artificialUICache.type.value = project.type;
     } else if (!project && draft.type && (force || !artificialUICache.type.value)) {
-      const hasDraft = options.some((entry) => entry.value === draft.type && !entry.disabled);
+      const hasDraft = options.some((entry) => entry.value === draft.type);
       artificialUICache.type.value = hasDraft ? draft.type : (fallback ? fallback.value : '');
     } else if (!artificialUICache.type.value && fallback) {
       artificialUICache.type.value = fallback.value;
@@ -2150,7 +2153,7 @@ function updateArtificialUI(options = {}) {
     if (project && project.core) {
       artificialUICache.core.value = project.core;
     } else if (!project && draft.core && (force || !artificialUICache.core.value)) {
-      const hasDraft = options.some((entry) => entry.value === draft.core && !entry.disabled);
+      const hasDraft = options.some((entry) => entry.value === draft.core);
       artificialUICache.core.value = hasDraft ? draft.core : (fallback ? fallback.value : '');
     } else if (!artificialUICache.core.value && fallback) {
       artificialUICache.core.value = fallback.value;
@@ -2163,7 +2166,7 @@ function updateArtificialUI(options = {}) {
     if (project && project.starContext) {
       artificialUICache.starContext.value = project.starContext;
     } else if (!project && draft.starContext && (force || !artificialUICache.starContext.value)) {
-      const hasDraft = options.some((entry) => entry.value === draft.starContext && !entry.disabled);
+      const hasDraft = options.some((entry) => entry.value === draft.starContext);
       artificialUICache.starContext.value = hasDraft ? draft.starContext : (fallback ? fallback.value : '');
     } else if (!artificialUICache.starContext.value && fallback) {
       artificialUICache.starContext.value = fallback.value;
@@ -2174,6 +2177,7 @@ function updateArtificialUI(options = {}) {
   if (artificialUICache.ringStarCore) {
     const options = getRingStarCoreOptions();
     const fallback = options.find((entry) => !entry.disabled) || options[0];
+    const draftRingCore = draft.ringStarCore || (draft.type === 'ring' ? draft.core : '');
     const signature = JSON.stringify(options.map((option) => ({
       value: option.value,
       disabled: !!option.disabled,
@@ -2192,9 +2196,17 @@ function updateArtificialUI(options = {}) {
     }
     if (project && project.type === 'ring') {
       artificialUICache.ringStarCore.value = project.starCore || project.core || artificialUICache.ringStarCore.value;
-    } else if (!project && draft.ringStarCore && (force || !artificialUICache.ringStarCore.value)) {
-      const hasDraft = options.some((entry) => entry.value === draft.ringStarCore && !entry.disabled);
-      artificialUICache.ringStarCore.value = hasDraft ? draft.ringStarCore : (fallback ? fallback.value : '');
+    } else if (!project && draftRingCore) {
+      const hasDraft = options.some((entry) => entry.value === draftRingCore);
+      const shouldHydrateFromDraft = force
+        || !artificialUICache.ringStarCore.value
+        || (artificialUICache.ringStarCore.value !== draftRingCore
+          && document.activeElement !== artificialUICache.ringStarCore);
+      if (hasDraft && shouldHydrateFromDraft) {
+        artificialUICache.ringStarCore.value = draftRingCore;
+      } else if (!hasDraft && !artificialUICache.ringStarCore.value && fallback) {
+        artificialUICache.ringStarCore.value = fallback.value;
+      }
     } else if (!artificialUICache.ringStarCore.value && fallback) {
       artificialUICache.ringStarCore.value = fallback.value;
     }
@@ -2265,7 +2277,12 @@ function updateArtificialUI(options = {}) {
     if (force && !artificialRingOrbitEditing) {
       setRingOrbitFields(draft.orbitRadiusAU, true);
     }
-    if (force && !artificialRingWidthEditing) {
+    const shouldHydrateRingWidth = force
+      || (!artificialRingWidthEditing
+        && !isRingWidthFieldActive()
+        && artificialUICache.ringWidthRange
+        && Number(artificialUICache.ringWidthRange.value) !== Number(clampRingWidthValue(draft.widthKm)));
+    if (shouldHydrateRingWidth) {
       setRingWidthFields(draft.widthKm, true);
     }
     if (force && !artificialRingFluxEditing) {
