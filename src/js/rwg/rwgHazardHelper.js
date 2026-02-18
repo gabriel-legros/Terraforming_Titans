@@ -30,6 +30,9 @@
     } else if (override.classification && Number.isFinite(override.classification.TeqK)) {
       context.meanTemperatureK = override.classification.TeqK;
     }
+    if (terra && Number.isFinite(terra.surfaceRadiation)) {
+      context.surfaceRadiationMsvPerDay = Math.max(0, terra.surfaceRadiation);
+    }
 
     const temperatureSamples = [];
     if (override.finalTemps) {
@@ -194,7 +197,15 @@
     }
 
     const safeContext = context || {};
-    const { meanTemperatureK, minTemperatureK, maxTemperatureK, surfacePressureKPa, co2PressureKPa, isLiquidWorld } = safeContext;
+    const {
+      meanTemperatureK,
+      minTemperatureK,
+      maxTemperatureK,
+      surfacePressureKPa,
+      co2PressureKPa,
+      isLiquidWorld,
+      surfaceRadiationMsvPerDay
+    } = safeContext;
 
     const entry = hazardous.temperaturePreference || {};
     const ensureTemperatureRange = (minValue, maxValue) => {
@@ -272,6 +283,16 @@
         max,
         unit: entry.unit || 'kPa',
         severity: severityScale
+      };
+    }
+    if (Number.isFinite(surfaceRadiationMsvPerDay)) {
+      const entry = hazardous.radiationPreference || {};
+      hazardous.radiationPreference = {
+        ...entry,
+        min: 0,
+        max: Math.max(0, surfaceRadiationMsvPerDay),
+        unit: entry.unit || 'mSv/day',
+        severity: Number.isFinite(entry.severity) ? entry.severity : 0.1
       };
     }
 
