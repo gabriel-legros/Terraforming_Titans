@@ -919,7 +919,8 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
 
       eqBtn.disabled = true;
       try {
-        const result = await runEquilibration(res.merged, {
+        const eqInput = buildEquilibrationInputParams(res);
+        const result = await runEquilibration(eqInput, {
           cancelToken
         }, (p, info) => {
           const label = document.getElementById('rwg-progress-label');
@@ -935,7 +936,9 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           }
           if (info?.label === 'Additional fast-forward (Game is paused)') endBtn.style.display = '';
         });
-        const newRes = { ...res, override: result.override, merged: deepMerge(defaultPlanetParameters, result.override) };
+        const mergedAfterEq = deepMerge(defaultPlanetParameters, result.override);
+        const newRes = { ...res, override: result.override, merged: mergedAfterEq };
+        syncResultStarData(newRes);
         try { if (newRes?.seedString) equilibratedWorlds.add(newRes.seedString); } catch(_){}
         equilibratedWorlds.add(sStr);
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
@@ -989,6 +992,46 @@ function renderPlanetCard(p, index) {
     </div>`;
 }
 
+function resolveWorldStar(res) {
+  const source = res?.override?.star || res?.star || res?.merged?.star || res?.original?.star || {};
+  const celestialLum = res?.override?.celestialParameters?.starLuminosity
+    ?? res?.merged?.celestialParameters?.starLuminosity;
+  return {
+    name: source.name || 'Unknown Star',
+    spectralType: source.spectralType || '—',
+    luminositySolar: Number(source.luminositySolar ?? celestialLum ?? 1),
+    massSolar: Number(source.massSolar ?? 1),
+    temperatureK: Number(source.temperatureK ?? 0),
+    radiusSolar: Number(source.radiusSolar ?? 0),
+    habitableZone: source.habitableZone || null
+  };
+}
+
+function syncResultStarData(res) {
+  const star = resolveWorldStar(res);
+  res.star = { ...star };
+  res.merged = res.merged || {};
+  res.merged.star = {
+    ...(res.merged.star || {}),
+    ...star
+  };
+  res.merged.celestialParameters = res.merged.celestialParameters || {};
+  res.merged.celestialParameters.starLuminosity = star.luminositySolar;
+  return star;
+}
+
+function buildEquilibrationInputParams(res) {
+  const base = deepMerge(defaultPlanetParameters, res?.override || {});
+  const star = resolveWorldStar(res);
+  base.star = {
+    ...(base.star || {}),
+    ...star
+  };
+  base.celestialParameters = base.celestialParameters || {};
+  base.celestialParameters.starLuminosity = star.luminositySolar;
+  return base;
+}
+
 function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const c = res.merged?.celestialParameters || {};
@@ -1003,14 +1046,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
   // Star summary + parent body if any
-  const starSource = res.merged?.star || res.original?.star || {};
-  const star = {
-    name: starSource.name || 'Unknown Star',
-    spectralType: starSource.spectralType || '—',
-    luminositySolar: Number(starSource.luminositySolar ?? 1),
-    massSolar: Number(starSource.massSolar ?? 1),
-    temperatureK: Number(starSource.temperatureK ?? 0)
-  };
+  const star = syncResultStarData(res);
   const toDisplayTemp = typeof toDisplayTemperature === 'function' ? toDisplayTemperature : (v => v);
   const tempUnit = typeof getTemperatureUnit === 'function' ? getTemperatureUnit() : 'K';
   const starPanel = `
@@ -1117,12 +1153,14 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
 function estimateFlux(res) {
   try {
     const c = res.merged?.celestialParameters || {};
-    const star = res.star;
+    const star = resolveWorldStar(res);
     const Lsun = 3.828e26; // W
     const AU = 149597870700; // m
     const distanceAU = res.orbitAU ?? c.distanceFromSun;
     if (!star || !distanceAU) return 0;
-    return (Lsun * (star.luminositySolar || 1)) / (4 * Math.PI * Math.pow(distanceAU * AU, 2));
+    const luminosity = Number.isFinite(star.luminositySolar) ? star.luminositySolar : 1;
+    if (luminosity <= 0) return 0;
+    return (Lsun * luminosity) / (4 * Math.PI * Math.pow(distanceAU * AU, 2));
   } catch {
     return 0;
   }

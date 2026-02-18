@@ -77,12 +77,16 @@ function getArtificialSkyCompletionRatio() {
   return clampRatio(builtSegments / maxSegments);
 }
 
-function ensureArtificialSkyUnlocked(pulsarParameters) {
-  if (!pulsarParameters) {
+function syncArtificialSkyAvailability(pulsarParameters) {
+  const artificialSky = getArtificialSkyProject();
+  if (!artificialSky) {
     return;
   }
-  const artificialSky = getArtificialSkyProject();
-  if (artificialSky && !artificialSky.unlocked) {
+  if (!pulsarParameters) {
+    artificialSky.unlocked = false;
+    return;
+  }
+  if (!artificialSky.unlocked) {
     artificialSky.enable();
   }
 }
@@ -219,7 +223,7 @@ class PulsarHazard {
 
   initialize(terraforming, pulsarParameters, options = {}) {
     consumePulsarArgs(terraforming, pulsarParameters, options);
-    ensureArtificialSkyUnlocked(pulsarParameters);
+    syncArtificialSkyAvailability(pulsarParameters);
     this.initialDistanceFromSunAU = resolveDistanceFromSunAU(terraforming);
     const currentDistanceAU = resolveDistanceFromSunAU(terraforming);
     const distanceMultiplier = getDistanceScalingMultiplier(
@@ -241,7 +245,6 @@ class PulsarHazard {
 
   update(deltaSeconds, terraforming, pulsarParameters) {
     consumePulsarArgs(deltaSeconds, terraforming, pulsarParameters);
-    ensureArtificialSkyUnlocked(pulsarParameters);
     if (!(this.initialDistanceFromSunAU > 0)) {
       this.initialDistanceFromSunAU = resolveDistanceFromSunAU(terraforming);
     }
@@ -266,7 +269,6 @@ class PulsarHazard {
 
   isCleared(terraforming, pulsarParameters) {
     consumePulsarArgs(terraforming, pulsarParameters);
-    ensureArtificialSkyUnlocked(pulsarParameters);
     if (!pulsarParameters) {
       return true;
     }

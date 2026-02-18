@@ -221,6 +221,18 @@
     return true;
   }
 
+  function normalizeEquilibrationStar(fullParams) {
+    fullParams.celestialParameters = fullParams.celestialParameters || {};
+    const star = fullParams.star || (fullParams.star = {});
+    const lumFromStar = Number(star.luminositySolar);
+    const lumFromCel = Number(fullParams.celestialParameters.starLuminosity);
+    const luminosity = Number.isFinite(lumFromStar)
+      ? lumFromStar
+      : (Number.isFinite(lumFromCel) ? lumFromCel : 1);
+    star.luminositySolar = luminosity;
+    fullParams.celestialParameters.starLuminosity = luminosity;
+  }
+
   /**
    * Run isolated equilibration.
    * options: { yearsMax, stepDays, checkEvery, absTol, relTol, chunkSteps, cancelToken, sync, timeoutMs, minRunMs }
@@ -247,6 +259,7 @@
           reject(new Error('Terraforming module unavailable'));
           return;
         }
+        normalizeEquilibrationStar(fullParams);
         const sandboxResources = buildSandboxResourcesFromOverride(fullParams.resources || {});
 
         // Guarded global swap-in (robust): track previous descriptors
