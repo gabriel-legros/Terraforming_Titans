@@ -303,6 +303,20 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     }
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      autoContinuousOperation: this.autoContinuousOperation === true
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoContinuousOperation')) {
+      this.autoContinuousOperation = settings.autoContinuousOperation === true;
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

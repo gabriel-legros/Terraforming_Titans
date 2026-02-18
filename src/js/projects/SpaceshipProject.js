@@ -1297,6 +1297,34 @@ class SpaceshipProject extends Project {
     this.lastActiveTime = 0;
   }
 
+  saveAutomationSettings() {
+    const settings = super.saveAutomationSettings();
+    settings.waitForCapacity = this.waitForCapacity !== false;
+    settings.selectedDisposalResource = this.selectedDisposalResource
+      ? {
+          category: this.selectedDisposalResource.category,
+          resource: this.selectedDisposalResource.resource
+        }
+      : null;
+    return settings;
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'waitForCapacity')) {
+      this.waitForCapacity = settings.waitForCapacity !== false;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'selectedDisposalResource')) {
+      const selected = settings.selectedDisposalResource;
+      if (selected && selected.category && selected.resource) {
+        this.selectedDisposalResource = {
+          category: selected.category,
+          resource: selected.resource
+        };
+      }
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

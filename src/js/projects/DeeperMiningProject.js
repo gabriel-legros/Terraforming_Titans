@@ -603,6 +603,33 @@ class DeeperMiningProject extends AndroidProject {
     this.isContinuousRun = false;
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      underworldMiningLevel: this.underworldMiningLevel,
+      superchargedMiningLevel: this.superchargedMiningLevel,
+      createGeothermalDeposits: this.createGeothermalDeposits === true,
+      undergroundStorage: this.undergroundStorage === true
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'underworldMiningLevel')) {
+      this.underworldMiningLevel = settings.underworldMiningLevel || 0;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'superchargedMiningLevel')) {
+      this.superchargedMiningLevel = settings.superchargedMiningLevel || 0;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'createGeothermalDeposits')) {
+      this.createGeothermalDeposits = settings.createGeothermalDeposits === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'undergroundStorage')) {
+      this.undergroundStorage = settings.undergroundStorage === true;
+    }
+    this.adjustActiveDuration();
+  }
+
 
   saveState() {
     return {

@@ -22,6 +22,20 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
     this.step = Math.max(1, Math.round(step));
   }
 
+  saveAutomationSettings() {
+    const settings = super.saveAutomationSettings();
+    settings.step = this.step;
+    return settings;
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'step')) {
+      this.step = Math.max(1, Math.round(settings.step || 1));
+      this.workerCapacityStep = this.step;
+    }
+  }
+
   initializeScanner(planetParameters) {
     this.underground = planetParameters.resources.underground;
     this.scanData = {};

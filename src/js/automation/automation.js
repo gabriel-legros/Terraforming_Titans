@@ -21,6 +21,14 @@ try {
   BuildingAutomationRef = BuildingAutomationRef || require('./building-automation.js').BuildingAutomation;
 } catch (error) {}
 
+let ProjectAutomationRef;
+try {
+  ProjectAutomationRef = ProjectAutomation;
+} catch (error) {}
+try {
+  ProjectAutomationRef = ProjectAutomationRef || require('./project-automation.js').ProjectAutomation;
+} catch (error) {}
+
 class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
@@ -28,11 +36,13 @@ class AutomationManager extends EffectableEntity {
     this.features = {
       automationShipAssignment: false,
       automationLifeDesign: false,
-      automationBuildings: false
+      automationBuildings: false,
+      automationProjects: false
     };
     this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef() : null;
     this.lifeAutomation = LifeAutomationRef ? new LifeAutomationRef() : null;
     this.buildingsAutomation = BuildingAutomationRef ? new BuildingAutomationRef() : null;
+    this.projectsAutomation = ProjectAutomationRef ? new ProjectAutomationRef() : null;
   }
 
   enable() {
@@ -48,6 +58,8 @@ class AutomationManager extends EffectableEntity {
       this.setFeature('automationLifeDesign', !!effect.value);
     } else if (effect.flagId === 'automationBuildings') {
       this.setFeature('automationBuildings', !!effect.value);
+    } else if (effect.flagId === 'automationProjects') {
+      this.setFeature('automationProjects', !!effect.value);
     }
   }
 
@@ -75,6 +87,7 @@ class AutomationManager extends EffectableEntity {
     this.setFeature('automationShipAssignment', this.isBooleanFlagSet('automationShipAssignment'));
     this.setFeature('automationLifeDesign', this.isBooleanFlagSet('automationLifeDesign'));
     this.setFeature('automationBuildings', this.isBooleanFlagSet('automationBuildings'));
+    this.setFeature('automationProjects', this.isBooleanFlagSet('automationProjects'));
     if (this.spaceshipAutomation) {
       this.spaceshipAutomation.unlockManualControls();
     }
@@ -90,7 +103,8 @@ class AutomationManager extends EffectableEntity {
       booleanFlags: Array.from(this.booleanFlags),
       spaceshipAutomation: this.spaceshipAutomation ? this.spaceshipAutomation.saveState() : null,
       lifeAutomation: this.lifeAutomation ? this.lifeAutomation.saveState() : null,
-      buildingsAutomation: this.buildingsAutomation ? this.buildingsAutomation.saveState() : null
+      buildingsAutomation: this.buildingsAutomation ? this.buildingsAutomation.saveState() : null,
+      projectsAutomation: this.projectsAutomation ? this.projectsAutomation.saveState() : null
     };
   }
 
@@ -99,7 +113,8 @@ class AutomationManager extends EffectableEntity {
     this.features = Object.assign({
       automationShipAssignment: false,
       automationLifeDesign: false,
-      automationBuildings: false
+      automationBuildings: false,
+      automationProjects: false
     }, data.features || {});
     const flags = Array.isArray(data.booleanFlags) ? data.booleanFlags : [];
     this.booleanFlags = new Set(flags);
@@ -111,6 +126,9 @@ class AutomationManager extends EffectableEntity {
     }
     if (data.buildingsAutomation && this.buildingsAutomation) {
       this.buildingsAutomation.loadState(data.buildingsAutomation);
+    }
+    if (data.projectsAutomation && this.projectsAutomation) {
+      this.projectsAutomation.loadState(data.projectsAutomation);
     }
     this.reapplyEffects();
   }
@@ -124,6 +142,9 @@ class AutomationManager extends EffectableEntity {
     }
     if (this.buildingsAutomation) {
       this.buildingsAutomation.update(delta || 0);
+    }
+    if (this.projectsAutomation) {
+      this.projectsAutomation.update(delta || 0);
     }
   }
 }

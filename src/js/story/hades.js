@@ -341,7 +341,10 @@ progressHades.chapters.push(
     objectives: [
       { type: 'project', projectId: 'hades_breach_crust', repeatCount: 1 }
     ],
-    reward: []
+    reward: [
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisProjectsAutomation', value: true },
+      { target: 'solisManager', type: 'solisTabAlert', value: true, oneTimeFlag: true }
+    ]
   },
   {
     id: 'hades.35.0',

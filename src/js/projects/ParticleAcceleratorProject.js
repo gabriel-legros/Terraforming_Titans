@@ -305,6 +305,26 @@ class ParticleAcceleratorProject extends Project {
     return this.acceleratorCount;
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      selectedRadiusMeters: this.selectedRadiusMeters,
+      radiusStepMeters: this.radiusStepMeters
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'selectedRadiusMeters')) {
+      const nextRadius = settings.selectedRadiusMeters || this.defaultRadiusMeters;
+      this.selectedRadiusMeters = Math.max(this.minimumRadiusMeters, nextRadius);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'radiusStepMeters')) {
+      const step = settings.radiusStepMeters || this.defaultStepMeters;
+      this.radiusStepMeters = Math.max(MINIMUM_STEP_METERS, step);
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

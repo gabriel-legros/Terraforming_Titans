@@ -1098,6 +1098,89 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      selectedResources: Array.isArray(this.selectedResources)
+        ? this.selectedResources.map(entry => ({
+            category: entry.category,
+            resource: entry.resource
+          }))
+        : [],
+      shipOperationAutoStart: this.shipOperationAutoStart === true,
+      shipTransferMode: this.shipTransferMode,
+      lastUniformTransferMode: this.lastUniformTransferMode,
+      resourceTransferModes: { ...(this.resourceTransferModes || {}) },
+      megaProjectResourceMode: this.megaProjectResourceMode,
+      megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel === true,
+      waterWithdrawTarget: this.waterWithdrawTarget,
+      resourceStrategicReserves: JSON.parse(JSON.stringify(this.resourceStrategicReserves || {})),
+      resourceCaps: JSON.parse(JSON.stringify(this.resourceCaps || {}))
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'selectedResources')) {
+      const selected = Array.isArray(settings.selectedResources) ? settings.selectedResources : [];
+      this.selectedResources = selected
+        .filter(entry => entry && entry.category && entry.resource)
+        .map(entry => ({ category: entry.category, resource: entry.resource }));
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'shipOperationAutoStart')) {
+      this.shipOperationAutoStart = settings.shipOperationAutoStart === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'shipTransferMode')) {
+      let transferMode = settings.shipTransferMode;
+      if (transferMode === 'deposit') {
+        transferMode = 'store';
+      }
+      if (transferMode !== 'store' && transferMode !== 'withdraw' && transferMode !== 'mixed') {
+        transferMode = 'store';
+      }
+      this.shipTransferMode = transferMode;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'lastUniformTransferMode')) {
+      this.lastUniformTransferMode = settings.lastUniformTransferMode || this.lastUniformTransferMode;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'resourceTransferModes')) {
+      this.resourceTransferModes = { ...(settings.resourceTransferModes || {}) };
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'megaProjectResourceMode')) {
+      if (MEGA_PROJECT_RESOURCE_MODE_MAP[settings.megaProjectResourceMode]) {
+        this.megaProjectResourceMode = settings.megaProjectResourceMode;
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'megaProjectSpaceOnlyOnTravel')) {
+      this.megaProjectSpaceOnlyOnTravel = settings.megaProjectSpaceOnlyOnTravel === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'waterWithdrawTarget')) {
+      this.waterWithdrawTarget = settings.waterWithdrawTarget || 'colony';
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'resourceStrategicReserves')) {
+      this.resourceStrategicReserves = settings.resourceStrategicReserves
+        ? JSON.parse(JSON.stringify(settings.resourceStrategicReserves))
+        : {};
+      this.sanitizeResourceStrategicReserves();
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'resourceCaps')) {
+      this.resourceCaps = settings.resourceCaps ? JSON.parse(JSON.stringify(settings.resourceCaps)) : {};
+      for (const resourceKey in this.resourceCaps) {
+        const cap = this.resourceCaps[resourceKey];
+        if (!cap || (cap.mode !== 'amount' && cap.mode !== 'percent')) {
+          delete this.resourceCaps[resourceKey];
+        }
+      }
+    }
+    if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
+      this.resourceTransferModes = {};
+      this.lastUniformTransferMode = this.shipTransferMode;
+    }
+    if (this.megaProjectSpaceOnlyOnTravel) {
+      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

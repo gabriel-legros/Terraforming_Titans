@@ -25,7 +25,13 @@ const sidebarAutomationElements = {
   buildingsPresetSelect: null,
   buildingsPresetDeploy: null,
   buildingsCombinationSelect: null,
-  buildingsCombinationDeploy: null
+  buildingsCombinationDeploy: null,
+  projectsSection: null,
+  projectsStatus: null,
+  projectsPresetSelect: null,
+  projectsPresetDeploy: null,
+  projectsCombinationSelect: null,
+  projectsCombinationDeploy: null
 };
 
 function createJournalAutomationToggle(title) {
@@ -178,6 +184,44 @@ function buildSidebarAutomationUI() {
   elements.buildingsPresetDeploy = buildingsPresetDeploy;
   elements.buildingsCombinationSelect = buildingsComboSelect;
   elements.buildingsCombinationDeploy = buildingsComboDeploy;
+
+  const projects = createSidebarSection('Projects');
+  const projectsPresetRow = createSidebarRow();
+  projectsPresetRow.classList.add('journal-automation-row-stacked');
+  const projectsPresetLabel = document.createElement('span');
+  projectsPresetLabel.classList.add('journal-automation-row-label');
+  projectsPresetLabel.textContent = 'Preset';
+  const projectsPresetControls = createSidebarRow();
+  const projectsPresetSelect = document.createElement('select');
+  projectsPresetSelect.classList.add('journal-automation-select');
+  const projectsPresetDeploy = document.createElement('button');
+  projectsPresetDeploy.type = 'button';
+  projectsPresetDeploy.textContent = 'Deploy';
+  projectsPresetDeploy.classList.add('journal-automation-action');
+  projectsPresetControls.append(projectsPresetSelect, projectsPresetDeploy);
+  projectsPresetRow.append(projectsPresetLabel, projectsPresetControls);
+  const projectsComboRow = createSidebarRow();
+  projectsComboRow.classList.add('journal-automation-row-stacked');
+  const projectsComboLabel = document.createElement('span');
+  projectsComboLabel.classList.add('journal-automation-row-label');
+  projectsComboLabel.textContent = 'Combination';
+  const projectsComboControls = createSidebarRow();
+  const projectsComboSelect = document.createElement('select');
+  projectsComboSelect.classList.add('journal-automation-select');
+  const projectsComboDeploy = document.createElement('button');
+  projectsComboDeploy.type = 'button';
+  projectsComboDeploy.textContent = 'Deploy';
+  projectsComboDeploy.classList.add('journal-automation-action');
+  projectsComboControls.append(projectsComboSelect, projectsComboDeploy);
+  projectsComboRow.append(projectsComboLabel, projectsComboControls);
+  projects.section.append(projectsPresetRow, projectsComboRow);
+  panel.appendChild(projects.section);
+  elements.projectsSection = projects.section;
+  elements.projectsStatus = projects.status;
+  elements.projectsPresetSelect = projectsPresetSelect;
+  elements.projectsPresetDeploy = projectsPresetDeploy;
+  elements.projectsCombinationSelect = projectsComboSelect;
+  elements.projectsCombinationDeploy = projectsComboDeploy;
 }
 
 function setJournalAutomationMode(enabled) {
@@ -287,6 +331,30 @@ function initializeSidebarAutomationUI() {
     automationManager.buildingsAutomation.applyPresets();
   });
 
+  sidebarAutomationElements.projectsPresetSelect.addEventListener('change', (event) => {
+    projectAutomationUIState.builderPresetId = event.target.value || null;
+    projectAutomationUIState.syncedPresetId = null;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  sidebarAutomationElements.projectsPresetDeploy.addEventListener('click', () => {
+    const presetId = Number(sidebarAutomationElements.projectsPresetSelect.value);
+    automationManager.projectsAutomation.applyPresetOnce(presetId);
+  });
+  sidebarAutomationElements.projectsCombinationSelect.addEventListener('change', (event) => {
+    const comboId = event.target.value || null;
+    projectAutomationUIState.combinationId = comboId;
+    projectAutomationUIState.combinationSyncedId = null;
+    if (comboId) {
+      automationManager.projectsAutomation.applyCombination(Number(comboId));
+    }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  sidebarAutomationElements.projectsCombinationDeploy.addEventListener('click', () => {
+    automationManager.projectsAutomation.applyPresets();
+  });
+
   setJournalAutomationMode(false);
   sidebarAutomationInitialized = true;
 }
@@ -303,7 +371,8 @@ function updateSidebarAutomationUI() {
   const manager = automationManager;
   const hasAnyAutomation = manager.hasFeature('automationShipAssignment')
     || manager.hasFeature('automationLifeDesign')
-    || manager.hasFeature('automationBuildings');
+    || manager.hasFeature('automationBuildings')
+    || manager.hasFeature('automationProjects');
   const toggleVisible = manager.enabled && hasAnyAutomation;
   elements.toggle.classList.toggle('hidden', !toggleVisible);
   if (!toggleVisible && sidebarAutomationMode) {
@@ -370,6 +439,30 @@ function updateSidebarAutomationUI() {
     );
     elements.buildingsPresetDeploy.disabled = !elements.buildingsPresetSelect.value;
     elements.buildingsCombinationDeploy.disabled = buildingAutomation.getAssignments().length === 0;
+  }
+
+  const projectsAutomation = manager.projectsAutomation;
+  const projectsUnlocked = manager.hasFeature('automationProjects');
+  elements.projectsSection.style.display = projectsUnlocked ? '' : 'none';
+  elements.projectsSection.classList.toggle('journal-automation-locked', !projectsUnlocked);
+  elements.projectsStatus.textContent = projectsUnlocked ? '' : 'Locked';
+  elements.projectsPresetSelect.disabled = !projectsUnlocked;
+  elements.projectsPresetDeploy.disabled = !projectsUnlocked;
+  elements.projectsCombinationSelect.disabled = !projectsUnlocked;
+  elements.projectsCombinationDeploy.disabled = !projectsUnlocked;
+  if (projectsUnlocked) {
+    fillSelect(
+      elements.projectsPresetSelect,
+      projectsAutomation.presets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      projectAutomationUIState.builderPresetId || ''
+    );
+    fillSelect(
+      elements.projectsCombinationSelect,
+      projectsAutomation.getCombinations().map(combo => ({ value: combo.id, label: combo.name || `Combination ${combo.id}` })),
+      projectAutomationUIState.combinationId || ''
+    );
+    elements.projectsPresetDeploy.disabled = !elements.projectsPresetSelect.value;
+    elements.projectsCombinationDeploy.disabled = projectsAutomation.getAssignments().length === 0;
   }
 
   return true;

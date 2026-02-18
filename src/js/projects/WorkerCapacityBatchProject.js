@@ -115,6 +115,28 @@ class WorkerCapacityBatchProject extends Project {
     this.resetProject();
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      buildCount: this.buildCount,
+      autoMax: this.autoMax === true,
+      workerCapacityStep: this.workerCapacityStep
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'buildCount')) {
+      this.setBuildCount(settings.buildCount);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoMax')) {
+      this.autoMax = settings.autoMax === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'workerCapacityStep')) {
+      this.workerCapacityStep = Math.max(1, Math.round(settings.workerCapacityStep || 1));
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

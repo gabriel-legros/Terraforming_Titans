@@ -650,6 +650,46 @@ class RingworldTerraformingProject extends Project {
     }
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      power: this.power,
+      step: this.step,
+      investing: this.investing === true,
+      shadingStrength: this.shadingStrength,
+      autoShadeEnabled: this.autoShadeEnabled === true,
+      autoShadeMode: this.autoShadeMode,
+      autoShadeTarget: this.autoShadeTarget
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'power')) {
+      this.power = settings.power || 0;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'step')) {
+      this.step = settings.step || RINGWORLD_POWER_STEP_MIN;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'investing')) {
+      this.investing = settings.investing === true;
+      this.isActive = this.investing;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'shadingStrength')) {
+      this.setShadingStrength(settings.shadingStrength ?? this.shadingStrength);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoShadeEnabled')) {
+      this.autoShadeEnabled = settings.autoShadeEnabled === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoShadeMode')) {
+      this.autoShadeMode = settings.autoShadeMode || this.autoShadeMode;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoShadeTarget')) {
+      this.autoShadeTarget = settings.autoShadeTarget || this.autoShadeTarget;
+    }
+    this.applyEffects();
+  }
+
   saveState() {
     return {
       ...super.saveState(),

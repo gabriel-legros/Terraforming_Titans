@@ -167,6 +167,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Multiple automation systems expanded:
   - Ship automation reorder/limits/resource disposal support
   - Building preset combinations and travel application options
+  - Project automation presets/combinations (non-story projects), with per-project control-only save/load and travel application options
   - Life automation presets and as-needed modes
   - GHG/calcite and dust factory automation targeting
 - String numeric input handling standardized across major controls.

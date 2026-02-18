@@ -209,6 +209,20 @@ class ImportColonistsProject extends Project {
     warning.style.display = hazardActive && !isCollapsed ? 'flex' : 'none';
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      importTarget: this.importTarget
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'importTarget')) {
+      this.setImportTarget(settings.importTarget);
+    }
+  }
+
   saveState() {
     const state = super.saveState();
     state.importTarget = this.importTarget;

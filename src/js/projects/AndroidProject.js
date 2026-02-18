@@ -416,6 +416,32 @@ class AndroidProject extends Project {
     }
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      autoAssignAndroids: this.autoAssignAndroids === true,
+      autoAssignAndroidPercent: this.autoAssignAndroidPercent,
+      assignmentMultiplier: this.assignmentMultiplier
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignAndroids')) {
+      this.autoAssignAndroids = settings.autoAssignAndroids === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignAndroidPercent')) {
+      const percent = Number(settings.autoAssignAndroidPercent ?? this.autoAssignAndroidPercent);
+      this.autoAssignAndroidPercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'assignmentMultiplier')) {
+      this.assignmentMultiplier = Math.max(1, Math.round(settings.assignmentMultiplier || 1));
+    }
+    if (this.autoAssignAndroids) {
+      this.autoAssign();
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

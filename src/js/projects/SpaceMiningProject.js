@@ -631,6 +631,60 @@ class SpaceMiningProject extends SpaceshipProject {
     return true;
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      disableAbovePressure: this.disableAbovePressure === true,
+      disablePressureThreshold: this.disablePressureThreshold,
+      disableAboveOxygenPressure: this.disableAboveOxygenPressure === true,
+      disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
+      disableAboveWaterCoverage: this.disableAboveWaterCoverage === true,
+      waterCoverageThreshold: this.waterCoverageThreshold,
+      waterCoverageDisableMode: this.waterCoverageDisableMode,
+      disableAboveCo2Coverage: this.disableAboveCo2Coverage === true,
+      co2CoverageThreshold: this.co2CoverageThreshold,
+      co2CoverageDisableMode: this.co2CoverageDisableMode,
+      waterImportTarget: this.waterImportTarget,
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'disableAbovePressure')) {
+      this.disableAbovePressure = settings.disableAbovePressure === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'disablePressureThreshold')) {
+      this.disablePressureThreshold = settings.disablePressureThreshold || 0;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'disableAboveOxygenPressure')) {
+      this.disableAboveOxygenPressure = settings.disableAboveOxygenPressure === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'disableOxygenPressureThreshold')) {
+      this.disableOxygenPressureThreshold = settings.disableOxygenPressureThreshold || 0;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'disableAboveWaterCoverage')) {
+      this.disableAboveWaterCoverage = settings.disableAboveWaterCoverage === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'waterCoverageThreshold')) {
+      this.waterCoverageThreshold = Math.max(0, Math.min(settings.waterCoverageThreshold || 0, 1));
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'waterCoverageDisableMode')) {
+      this.waterCoverageDisableMode = settings.waterCoverageDisableMode || this.waterCoverageDisableMode;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'disableAboveCo2Coverage')) {
+      this.disableAboveCo2Coverage = settings.disableAboveCo2Coverage === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'co2CoverageThreshold')) {
+      this.co2CoverageThreshold = Math.max(0, Math.min(settings.co2CoverageThreshold || 0, 1));
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'co2CoverageDisableMode')) {
+      this.co2CoverageDisableMode = settings.co2CoverageDisableMode || this.co2CoverageDisableMode;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'waterImportTarget')) {
+      this.waterImportTarget = settings.waterImportTarget === 'colony' ? 'colony' : 'surface';
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

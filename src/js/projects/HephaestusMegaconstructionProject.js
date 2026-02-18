@@ -602,6 +602,33 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     updateProjectUI(this.name);
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      yardAssignments: { ...this.yardAssignments },
+      assignmentStep: this.assignmentStep,
+      autoAssignFlags: { ...this.autoAssignFlags },
+      autoAssignWeights: { ...this.autoAssignWeights }
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'yardAssignments')) {
+      this.yardAssignments = { ...(settings.yardAssignments || {}) };
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
+      this.assignmentStep = settings.assignmentStep || 1;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
+      this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
+      this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
+    }
+    this.normalizeAssignments();
+  }
+
   saveState() {
     return {
       ...super.saveState(),

@@ -813,6 +813,40 @@ class PlanetaryThrustersProject extends Project{
     return super.isVisible();
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      power: this.power,
+      step: this.step,
+      spinInvest: this.spinInvest === true,
+      motionInvest: this.motionInvest === true,
+      tgtDays: this.tgtDays,
+      tgtAU: this.tgtAU
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'power')) {
+      this.power = Math.max(0, settings.power || 0);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'step')) {
+      this.step = Math.max(1, settings.step || 1);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'spinInvest')) {
+      this.spinInvest = settings.spinInvest === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'motionInvest')) {
+      this.motionInvest = settings.motionInvest === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'tgtDays')) {
+      this.tgtDays = Math.max(0.1, settings.tgtDays || 1);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'tgtAU')) {
+      this.tgtAU = Math.max(0.1, settings.tgtAU || 0.1);
+    }
+  }
+
   saveState(){
     const state = super.saveState();
     state.power = this.power;

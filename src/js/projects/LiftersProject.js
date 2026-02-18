@@ -741,6 +741,31 @@ class LiftersProject extends TerraformingDurationProject {
     this.applyPendingHarvestRecipe();
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      mode: this.mode,
+      isRunning: this.isRunning === true,
+      harvestRecipeKey: this.harvestRecipeKey
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'mode')) {
+      this.mode = settings.mode || LIFTER_MODES.GAS_HARVEST;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
+      this.isRunning = settings.isRunning === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'harvestRecipeKey')) {
+      this.pendingHarvestRecipeKey = settings.harvestRecipeKey || '';
+      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+      this.applyPendingHarvestRecipe();
+      this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

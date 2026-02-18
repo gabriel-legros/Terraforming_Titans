@@ -2088,6 +2088,27 @@ class SpaceMirrorFacilityProject extends Project {
     }
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      mirrorOversightSettings: JSON.parse(JSON.stringify(this.mirrorOversightSettings))
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (!Object.prototype.hasOwnProperty.call(settings, 'mirrorOversightSettings')) {
+      return;
+    }
+    this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
+    mirrorOversightSettings = this.mirrorOversightSettings;
+    applyMirrorOversightSettings(this.mirrorOversightSettings, settings.mirrorOversightSettings || {});
+
+    if (typeof updateMirrorOversightUI === 'function') {
+      updateMirrorOversightUI();
+    }
+  }
+
   saveState() {
     return {
       ...super.saveState(),

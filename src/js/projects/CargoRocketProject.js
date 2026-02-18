@@ -574,6 +574,28 @@ class CargoRocketProject extends Project {
     return totals;
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      selectedResources: normalizeSelectionEntries(this.selectedResources || []),
+      selectionIncrement: this.selectionIncrement || 1
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'selectedResources')) {
+      this.selectedResources = normalizeSelectionEntries(settings.selectedResources || []);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'selectionIncrement')) {
+      this.selectionIncrement = Math.max(1, settings.selectionIncrement || 1);
+      const elements = projectElements[this.name];
+      if (elements) {
+        elements.increment = this.selectionIncrement;
+      }
+    }
+  }
+
   saveState() {
     const state = super.saveState();
     if (this.autoStart) {

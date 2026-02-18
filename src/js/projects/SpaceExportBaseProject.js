@@ -978,6 +978,55 @@ class SpaceExportBaseProject extends SpaceshipProject {
     return true;
   }
 
+  saveAutomationSettings() {
+    this.saveCurrentSelectionLimitSettings();
+    return {
+      ...super.saveAutomationSettings(),
+      disableBelowTemperature: this.disableBelowTemperature === true,
+      disableTemperatureThreshold: this.disableTemperatureThreshold,
+      disableBelowPressure: this.disableBelowPressure === true,
+      disablePressureThreshold: this.disablePressureThreshold,
+      disableBelowCoverage: this.disableBelowCoverage === true,
+      disableCoverageThreshold: this.disableCoverageThreshold,
+      disposalLimitSettings: JSON.parse(JSON.stringify(this.disposalLimitSettings || {}))
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+
+    if (Object.prototype.hasOwnProperty.call(settings, 'disposalLimitSettings')) {
+      this.disposalLimitSettings = settings.disposalLimitSettings
+        ? JSON.parse(JSON.stringify(settings.disposalLimitSettings))
+        : {};
+      this.loadCurrentSelectionLimitSettings();
+      return;
+    }
+
+    this.applyLimitSettings({
+      disableBelowTemperature: Object.prototype.hasOwnProperty.call(settings, 'disableBelowTemperature')
+        ? settings.disableBelowTemperature === true
+        : this.disableBelowTemperature,
+      disableTemperatureThreshold: Object.prototype.hasOwnProperty.call(settings, 'disableTemperatureThreshold')
+        ? settings.disableTemperatureThreshold
+        : this.disableTemperatureThreshold,
+      disableBelowPressure: Object.prototype.hasOwnProperty.call(settings, 'disableBelowPressure')
+        ? settings.disableBelowPressure === true
+        : this.disableBelowPressure,
+      disablePressureThreshold: Object.prototype.hasOwnProperty.call(settings, 'disablePressureThreshold')
+        ? settings.disablePressureThreshold
+        : this.disablePressureThreshold,
+      disableBelowCoverage: Object.prototype.hasOwnProperty.call(settings, 'disableBelowCoverage')
+        ? settings.disableBelowCoverage === true
+        : this.disableBelowCoverage,
+      disableCoverageThreshold: Object.prototype.hasOwnProperty.call(settings, 'disableCoverageThreshold')
+        ? settings.disableCoverageThreshold
+        : this.disableCoverageThreshold,
+    });
+    this.saveCurrentSelectionLimitSettings();
+    this.loadCurrentSelectionLimitSettings();
+  }
+
   saveState() {
     this.saveCurrentSelectionLimitSettings();
     return {

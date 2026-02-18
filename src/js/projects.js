@@ -849,6 +849,68 @@ class Project extends EffectableEntity {
 
   applyCostAndGain(deltaTime = 1000) {}
 
+  saveAutomationSettings() {
+    const settings = {
+      autoStart: this.autoStart === true,
+      autoStartUncheckOnTravel: this.autoStartUncheckOnTravel === true
+    };
+    if (this.attributes?.canUseDysonOverflow) {
+      settings.allowColonyEnergyUse = this.allowColonyEnergyUse === true;
+    }
+    if ('autoContinuousOperation' in this) {
+      settings.autoContinuousOperation = this.autoContinuousOperation === true;
+    }
+    if ('autoDeployCollectors' in this) {
+      settings.autoDeployCollectors = this.autoDeployCollectors === true;
+    }
+    return settings;
+  }
+
+  loadAutomationSettings(settings = {}) {
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoStart')) {
+      this.autoStart = settings.autoStart === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoStartUncheckOnTravel')) {
+      this.autoStartUncheckOnTravel = settings.autoStartUncheckOnTravel === true;
+    }
+    if (
+      this.attributes?.canUseDysonOverflow &&
+      Object.prototype.hasOwnProperty.call(settings, 'allowColonyEnergyUse')
+    ) {
+      this.setAllowColonyEnergyUse(settings.allowColonyEnergyUse === true);
+    }
+    if ('autoContinuousOperation' in this && Object.prototype.hasOwnProperty.call(settings, 'autoContinuousOperation')) {
+      this.autoContinuousOperation = settings.autoContinuousOperation === true;
+    }
+    if ('autoDeployCollectors' in this && Object.prototype.hasOwnProperty.call(settings, 'autoDeployCollectors')) {
+      this.autoDeployCollectors = settings.autoDeployCollectors === true;
+    }
+    if (
+      'autoContinuousOperation' in this &&
+      !Object.prototype.hasOwnProperty.call(settings, 'autoContinuousOperation') &&
+      Object.prototype.hasOwnProperty.call(settings, 'autoDeployCollectors')
+    ) {
+      this.autoContinuousOperation = settings.autoDeployCollectors === true;
+    }
+    if (
+      'autoDeployCollectors' in this &&
+      !Object.prototype.hasOwnProperty.call(settings, 'autoDeployCollectors') &&
+      Object.prototype.hasOwnProperty.call(settings, 'autoContinuousOperation')
+    ) {
+      this.autoDeployCollectors = settings.autoContinuousOperation === true;
+    }
+
+    if (this.autoStartUncheckOnTravel === true) {
+      this.autoStart = false;
+      if ('autoContinuousOperation' in this) {
+        this.autoContinuousOperation = false;
+      }
+      if ('autoDeployCollectors' in this) {
+        this.autoDeployCollectors = false;
+      }
+    }
+  }
+
   saveState() {
     const state = {
       isActive: this.isActive,

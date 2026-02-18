@@ -1006,6 +1006,40 @@ class GalacticMarketProject extends Project {
     }
   }
 
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      buySelections: normalizeSelectionEntries(this.buySelections || []),
+      sellSelections: normalizeSelectionEntries(this.sellSelections || []),
+      selectionIncrement: this.selectionIncrement || 1,
+      extraSettingsEnabled: this.extraSettingsEnabled === true
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'buySelections')) {
+      this.buySelections = normalizeSelectionEntries(settings.buySelections || []);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'sellSelections')) {
+      this.sellSelections = normalizeSelectionEntries(settings.sellSelections || []);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'selectionIncrement')) {
+      this.selectionIncrement = Math.max(1, settings.selectionIncrement || 1);
+      const elements = projectElements[this.name];
+      if (elements) {
+        elements.increment = this.selectionIncrement;
+        elements.updateIncrementButtons?.();
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'extraSettingsEnabled')) {
+      this.extraSettingsEnabled = settings.extraSettingsEnabled === true;
+    }
+    this.applySelectionsToInputs();
+    this.updateSelectedResources();
+    this.updateExtraSettingsUI();
+  }
+
   saveState() {
     const state = super.saveState();
     state.buySelections = this.buySelections;

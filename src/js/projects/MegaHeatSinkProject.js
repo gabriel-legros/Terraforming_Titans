@@ -157,6 +157,20 @@
       super.complete();
     }
 
+    saveAutomationSettings() {
+      return {
+        ...super.saveAutomationSettings(),
+        heatSinksActive: this.heatSinksActive === true
+      };
+    }
+
+    loadAutomationSettings(settings = {}) {
+      super.loadAutomationSettings(settings);
+      if (Object.prototype.hasOwnProperty.call(settings, 'heatSinksActive')) {
+        this.heatSinksActive = settings.heatSinksActive === true;
+      }
+    }
+
     saveState() {
       return {
         ...super.saveState(),

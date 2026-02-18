@@ -521,19 +521,37 @@ function initializeGameState(options = {}) {
 
   applyPlanetParameterEffects();
   hazardManager.ensureCrusaderPresence(terraforming);
-  if (preserveManagers && automationManager.buildingsAutomation.nextTravelCombinationId) {
-    const buildingsAutomation = automationManager.buildingsAutomation;
-    buildingsAutomation.applyCombination(buildingsAutomation.nextTravelCombinationId);
-    buildingsAutomation.applyPresets();
-    if (!buildingsAutomation.nextTravelCombinationPersistent) {
-      buildingsAutomation.nextTravelCombinationId = null;
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  }
   updateColonySubtabsVisibility();
   if (preserveManagers && typeof updateRender === 'function') {
     updateRender(true, { forceAllSubtabs: true });
+  }
+  if (preserveManagers && automationManager) {
+    let appliedTravelAutomation = false;
+
+    const buildingsAutomation = automationManager.buildingsAutomation;
+    if (buildingsAutomation && buildingsAutomation.nextTravelCombinationId) {
+      buildingsAutomation.applyCombination(buildingsAutomation.nextTravelCombinationId);
+      buildingsAutomation.applyPresets();
+      if (!buildingsAutomation.nextTravelCombinationPersistent) {
+        buildingsAutomation.nextTravelCombinationId = null;
+      }
+      appliedTravelAutomation = true;
+    }
+
+    const projectsAutomation = automationManager.projectsAutomation;
+    if (projectsAutomation && projectsAutomation.nextTravelCombinationId) {
+      projectsAutomation.applyCombination(projectsAutomation.nextTravelCombinationId);
+      projectsAutomation.applyPresets();
+      if (!projectsAutomation.nextTravelCombinationPersistent) {
+        projectsAutomation.nextTravelCombinationId = null;
+      }
+      appliedTravelAutomation = true;
+    }
+
+    if (appliedTravelAutomation) {
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    }
   }
   globalGameIsTraveling = false;
 }
