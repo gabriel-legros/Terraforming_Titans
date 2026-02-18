@@ -1218,6 +1218,8 @@ function updateLifeStatusTable() {
         return Math.exp(-(diff * diff) / (2 * tolerance * tolerance));
     };
 
+    const lowGravityLifeBlocked = isLifeFlagActive('ringworldLowGravityLife');
+
     // Update table cells row by row
     zones.forEach(zone => {
         if (zone !== 'global') {
@@ -1326,6 +1328,17 @@ function updateLifeStatusTable() {
         const capacityMult = maxBiomassForZone > 0 ? Math.max(0, 1 - zoneBiomass / maxBiomassForZone) : 0;
 
         if (zone !== 'global' && growthCell) {
+            if (lowGravityLifeBlocked) {
+                if (valueSpan) valueSpan.textContent = formatNumber(0, false, 2);
+                if (tooltipIcon) {
+                    const lines = [
+                        'Low Gravity: x0.00',
+                        'Growth is disabled because Ringworld gravity is below 0.1g, so atmosphere cannot be retained.',
+                    ];
+                    growthObj.tooltipEl = ensureDynamicInfoTooltip(tooltipIcon, growthObj.tooltipEl, lines.join('\n'));
+                }
+                return;
+            }
             const baseRate = designToCheck.photosynthesisEfficiency.value * requirements.photosynthesisRatePerPoint;
             const metabolismProcess = getActiveLifeMetabolismProcessForUI();
             const usesLuminosity = metabolismProcess?.growth?.usesLuminosity === true;
