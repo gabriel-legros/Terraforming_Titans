@@ -274,7 +274,6 @@ const PatienceUI = {
         
         const hours = parseFloat(this.spendInputEl.value) || 0;
         if (hours > 0 && patienceManager.spendPatience(hours)) {
-            this.spendInputEl.value = '1';
             this.updateSpendPreview();
         }
     },

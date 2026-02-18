@@ -50,9 +50,9 @@
   - enableWaterCondensation (default true)           // cap H2O by saturation at surface
   - relativeHumidity (default 0.7)                   // used for surface saturation cap
   - coldTrapRelativeHumidity (default 0.1)           // used for upper-atmosphere dryness (cold trap)
-  - adjustSurfacePressureForWaterCondensation (default auto)
-      If surface pressure comes from mass-based inference, subtract excess H2O
-      above saturation from the effective surface pressure.
+  - adjustSurfacePressureForWaterCondensation (default true)
+      Subtract excess H2O above saturation from effective gas pressure used by
+      the density model.
 */
 
 (function () {
@@ -386,8 +386,7 @@
     const excess = Math.max(0, pH2O_raw0 - pH2O0);
 
     const adjustOpt = options.adjustSurfacePressureForWaterCondensation;
-    const shouldAutoAdjust = surfacePressureSource !== 'terraforming';
-    const shouldAdjust = (adjustOpt === true) || (adjustOpt === undefined && shouldAutoAdjust);
+    const shouldAdjust = (adjustOpt !== false);
     const adjustedSurfacePressurePa = shouldAdjust ? Math.max(0, surfacePressurePa - excess) : surfacePressurePa;
 
     return {
