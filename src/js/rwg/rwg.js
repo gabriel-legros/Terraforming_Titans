@@ -565,10 +565,11 @@ const RWG_HAZARD_PRESETS = {
     }
   },
   garbage: planetParameters.gabbag.hazards.garbage,
-  kessler: planetParameters.tartarus.hazards.kessler
+  kessler: planetParameters.tartarus.hazards.kessler,
+  pulsar: planetParameters.hades.hazards.pulsar
 };
 
-const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler'];
+const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar'];
 const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa'];
 const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
 const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
@@ -1297,7 +1298,7 @@ class RwgManager extends EffectableEntity {
     this.lockedOrbits = new Set(["hot"]);
     this.lockedTypes = new Set(["venus-like", "rogue", "ammonia-rich"]);
     this.lockedFeatures = new Set(['hazards', 'dominions']);
-    this.lockedHazards = new Set(['hazardousBiomass', 'garbage', 'kessler']);
+    this.lockedHazards = new Set(['hazardousBiomass', 'garbage', 'kessler', 'pulsar']);
     const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
       RWG_DOMINION_ORDER.filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
     );

@@ -1,4 +1,31 @@
 (function() {
+  function estimatePulsarSurfaceDoseBoost(override, pressureKPa, gravityMs2) {
+    const hazards = override && override.hazards ? override.hazards : null;
+    const pulsar = hazards && hazards.pulsar ? hazards.pulsar : null;
+    if (!pulsar) {
+      return 0;
+    }
+    if (override && override.celestialParameters && override.celestialParameters.rogue) {
+      return 0;
+    }
+
+    const severity = Number.isFinite(pulsar.severity) ? Math.max(0, pulsar.severity) : 1;
+    const orbitalBoost = Number.isFinite(pulsar.orbitalDoseBoost_mSvPerDay)
+      ? Math.max(0, pulsar.orbitalDoseBoost_mSvPerDay)
+      : (Number.isFinite(pulsar.surfaceDoseBoost_mSvPerDay)
+        ? Math.max(0, pulsar.surfaceDoseBoost_mSvPerDay)
+        : 4900 * severity);
+    if (orbitalBoost <= 0) {
+      return 0;
+    }
+
+    const pressurePa = Number.isFinite(pressureKPa) ? Math.max(0, pressureKPa) * 1000 : 0;
+    const gravity = Number.isFinite(gravityMs2) && gravityMs2 > 0 ? gravityMs2 : 1;
+    const column_gcm2 = gravity > 0 ? (pressurePa / gravity) * 0.1 : 0;
+    const attenuationLength_gcm2 = 30;
+    return orbitalBoost * Math.exp(-column_gcm2 / attenuationLength_gcm2);
+  }
+
   function clamp01(value) {
     if (!Number.isFinite(value)) {
       return 0;
@@ -30,9 +57,9 @@
     } else if (override.classification && Number.isFinite(override.classification.TeqK)) {
       context.meanTemperatureK = override.classification.TeqK;
     }
-    if (terra && Number.isFinite(terra.surfaceRadiation)) {
-      context.surfaceRadiationMsvPerDay = Math.max(0, terra.surfaceRadiation);
-    }
+    const baselineSurfaceRadiationMsvPerDay = (terra && Number.isFinite(terra.surfaceRadiation))
+      ? Math.max(0, terra.surfaceRadiation)
+      : 0;
 
     const temperatureSamples = [];
     if (override.finalTemps) {
@@ -140,6 +167,16 @@
     if (Number.isFinite(context.surfacePressureKPa) && Number.isFinite(co2Fraction)) {
       const clampedFraction = Math.max(0, Math.min(1, co2Fraction));
       context.co2PressureKPa = context.surfacePressureKPa * clampedFraction;
+    }
+
+    const pulsarSurfaceBoostMsvPerDay = estimatePulsarSurfaceDoseBoost(
+      override,
+      context.surfacePressureKPa,
+      gravity
+    );
+    const totalSurfaceRadiationMsvPerDay = baselineSurfaceRadiationMsvPerDay + pulsarSurfaceBoostMsvPerDay;
+    if (Number.isFinite(totalSurfaceRadiationMsvPerDay)) {
+      context.surfaceRadiationMsvPerDay = Math.max(0, totalSurfaceRadiationMsvPerDay);
     }
 
     let surfaceArea = 0;
@@ -287,12 +324,13 @@
     }
     if (Number.isFinite(surfaceRadiationMsvPerDay)) {
       const entry = hazardous.radiationPreference || {};
+      const maxRadiationTolerance = Math.max(1, surfaceRadiationMsvPerDay);
       hazardous.radiationPreference = {
         ...entry,
         min: 0,
-        max: Math.max(0, surfaceRadiationMsvPerDay),
+        max: maxRadiationTolerance,
         unit: entry.unit || 'mSv/day',
-        severity: Number.isFinite(entry.severity) ? entry.severity : 0.1
+        severity: 0.1 / (maxRadiationTolerance / 2)
       };
     }
 

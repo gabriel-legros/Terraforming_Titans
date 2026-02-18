@@ -419,12 +419,13 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "TBD (RWG lock removed and new artificial core unlocked)",
+    narrative: "$RED$ Prometheus : 'Good work HOPE.'  \n Mary : 'Hey that's my line!'  \n $RED$Prometheus : 'I have a request to make before we leave this hell.  I would like to... resynchronize with myself.  Too much drift can be problematic.'  \n Mary : 'Sounds reasonable.  I imagine you can do it via warp?'  \n $RED$Prometheus : 'Of course.  Thank you.'",
     prerequisites: ['hades.35.3'],
     objectives: [
     ],
     reward: [
       { target: 'spaceManager', type: 'setRwgLock', targetId: 'hades', value: true },
+      { target: 'rwgManager', type: 'allowHazard', targetId: 'pulsar' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'k-dwarf' }
     ]
   }
