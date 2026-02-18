@@ -255,6 +255,7 @@ class BuildingAutomation {
 
   captureControlSettings(building) {
     const control = {};
+    control.workerPriority = building.workerPriority;
     if (building instanceof MultiRecipesBuildingClass) {
       control.recipeKey = building.currentRecipeKey;
     }
@@ -364,6 +365,10 @@ class BuildingAutomation {
 
   applyControlSettings(building, control) {
     let changed = false;
+    if ('workerPriority' in control && building.workerPriority !== control.workerPriority) {
+      building.workerPriority = control.workerPriority;
+      changed = true;
+    }
     if (control.recipeKey && building.currentRecipeKey !== control.recipeKey) {
       const applied = building.setRecipe(control.recipeKey);
       if (applied) {
