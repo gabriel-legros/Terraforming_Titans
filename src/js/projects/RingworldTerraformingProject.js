@@ -440,7 +440,7 @@ class RingworldTerraformingProject extends Project {
       ? Math.min(100, (investedValue / this.energyRequired) * 100)
       : 0;
 
-    this.el.surfaceGravity.textContent = `${formatNumber(surfaceGravity, true, 2)}g`;
+    this.el.surfaceGravity.textContent = `${formatNumber(surfaceGravity, true, 3)}g`;
     const displayRate = this.investing ? this.actualInvestRate : 0;
     this.el.rate.textContent = `${formatNumber(displayRate, true)} W`;
     this.el.status.textContent = statusLabel;
