@@ -517,7 +517,8 @@ class FollowersManager extends EffectableEntity {
   }
 
   getCurrentWorldBelieverCap() {
-    return Math.min(1, this.getGalacticBelieverPercent() + 0.05);
+    const capBonus = this.isCurrentWorldHolyConsecrated() ? 0.15 : 0.05;
+    return Math.min(1, this.getGalacticBelieverPercent() + capBonus);
   }
 
   getFaithSnapshot() {
@@ -643,6 +644,7 @@ class FollowersManager extends EffectableEntity {
     let worldPercent = this.getWorldBelieverPercent();
     let galacticPercent = this.getGalacticBelieverPercent();
     const worldCapBonus = this.isCurrentWorldHolyConsecrated() ? 0.15 : 0.05;
+    const galacticSyncCap = Math.min(1, galacticPercent + 0.05);
     const worldCap = Math.min(1, galacticPercent + worldCapBonus);
     this.lastFaithWorldCap = worldCap;
 
@@ -651,12 +653,10 @@ class FollowersManager extends EffectableEntity {
       const deltaPercent = this.lastFaithWorldConversionRate * seconds;
       worldPercent = Math.min(worldCap, worldPercent + deltaPercent);
       this.setWorldBelieverPercent(worldPercent);
-      this.lastFaithGalacticConversionRate = 0;
-      return;
     }
 
     this.lastFaithGalacticConversionRate = 0;
-    if (this.galacticPopulation <= 0 || galacticPercent >= 1) {
+    if (worldPercent < galacticSyncCap || this.galacticPopulation <= 0 || galacticPercent >= 1) {
       return;
     }
 

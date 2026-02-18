@@ -439,6 +439,10 @@
   pointer-events: none;
 }
 
+#followers-layout .followers-faith-progress-marker-holy {
+  background: #c83232;
+}
+
 #followers-layout .followers-faith-stats-grid {
   display: grid;
   gap: 6px;
@@ -864,6 +868,10 @@
 
 .dark-mode #followers-layout .followers-faith-progress-marker {
   background: #f0ab52;
+}
+
+.dark-mode #followers-layout .followers-faith-progress-marker-holy {
+  background: #ff7676;
 }
 
 .dark-mode #followers-layout .followers-faith-stat-label {

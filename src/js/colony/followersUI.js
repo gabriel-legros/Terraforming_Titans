@@ -29,7 +29,8 @@ const followersUICache = {
   artFundingMaxButton: null,
   faithWorldProgressValue: null,
   faithWorldProgressFill: null,
-  faithWorldCapMarker: null,
+  faithWorldBaseCapMarker: null,
+  faithWorldHolyCapMarker: null,
   faithWorldBelievers: null,
   faithGalacticProgressValue: null,
   faithGalacticProgressFill: null,
@@ -524,7 +525,8 @@ function buildFollowersUI() {
     'Believers in the Church of HOPE convert the current population exponentially.',
     'All colonists import bring population that respect the galactic believers %',
     'World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).',
-    'Once world conversion reaches the cap, world and galactic faith rise together at 1/1000 speed.',
+    'Once world believers reaches Galactic + 5 percentage points, galactic faith also rises at 1/1000 speed.',
+    'On a Holy World, world faith can continue up to Galactic + 15 percentage points.',
     'After travelling, world count will join the galactic count.'
   ].join('\n');
   const faith = createFollowersCard('Faith', 'followers-feature-card', faithTooltipText);
@@ -562,9 +564,13 @@ function buildFollowersUI() {
   };
 
   const worldProgress = createFaithProgress('World Believers', '0.00%');
-  const worldCapMarker = document.createElement('div');
-  worldCapMarker.classList.add('followers-faith-progress-marker');
-  worldProgress.track.appendChild(worldCapMarker);
+  const worldBaseCapMarker = document.createElement('div');
+  worldBaseCapMarker.classList.add('followers-faith-progress-marker', 'followers-faith-progress-marker-base');
+  worldProgress.track.appendChild(worldBaseCapMarker);
+  const worldHolyCapMarker = document.createElement('div');
+  worldHolyCapMarker.classList.add('followers-faith-progress-marker', 'followers-faith-progress-marker-holy');
+  worldHolyCapMarker.style.display = 'none';
+  worldProgress.track.appendChild(worldHolyCapMarker);
 
   const galacticProgress = createFaithProgress('Galactic Believers', '10.00%');
   faithProgress.append(worldProgress.row, galacticProgress.row);
@@ -613,7 +619,7 @@ function buildFollowersUI() {
     'Pilgrims: increases population growth by galactic believer %.',
     'Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).',
     'Apostles: increases available orbitals by 10 * (galactic believer % - 10%), up to +900%.',
-    'Missionaries: increases post-cap galactic conversion power by world believer %.'
+    'Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %.'
   ].join('\n');
   const faithBonusesHeader = document.createElement('div');
   faithBonusesHeader.classList.add('followers-faith-bonuses-header');
@@ -833,7 +839,8 @@ function buildFollowersUI() {
   followersUICache.artFundingMaxButton = fundingPanel.maxButton;
   followersUICache.faithWorldProgressValue = worldProgress.value;
   followersUICache.faithWorldProgressFill = worldProgress.fill;
-  followersUICache.faithWorldCapMarker = worldCapMarker;
+  followersUICache.faithWorldBaseCapMarker = worldBaseCapMarker;
+  followersUICache.faithWorldHolyCapMarker = worldHolyCapMarker;
   followersUICache.faithWorldBelievers = worldBelieversStat.value;
   followersUICache.faithGalacticProgressValue = galacticProgress.value;
   followersUICache.faithGalacticProgressFill = galacticProgress.fill;
@@ -964,14 +971,21 @@ function updateFollowersUI() {
   followersUICache.artFundingMaxButton.disabled = fundingAvailable <= 0;
 
   const faith = followersManager.getFaithSnapshot();
+  const consecrated = followersManager.isCurrentWorldHolyConsecrated();
+  const baseWorldCapPercent = Math.max(0, Math.min(1, faith.galacticPercent + 0.05));
+  const holyWorldCapPercent = Math.max(0, Math.min(1, faith.galacticPercent + 0.15));
   followersUICache.faithWorldProgressValue.textContent = `${formatNumber(faith.worldPercent * 100, false, 2)}% (${formatNumber(faith.worldBelievers, true)} / ${formatNumber(faith.worldPopulation, true)})`;
   followersUICache.faithWorldProgressFill.style.width = `${Math.max(0, Math.min(100, faith.worldPercent * 100))}%`;
-  followersUICache.faithWorldCapMarker.style.left = `${Math.max(0, Math.min(100, faith.worldCapPercent * 100))}%`;
+  followersUICache.faithWorldBaseCapMarker.style.left = `${baseWorldCapPercent * 100}%`;
+  followersUICache.faithWorldHolyCapMarker.style.left = `${holyWorldCapPercent * 100}%`;
+  followersUICache.faithWorldHolyCapMarker.style.display = consecrated ? 'block' : 'none';
   followersUICache.faithWorldBelievers.textContent = `${formatNumber(faith.worldBelievers, true)} / ${formatNumber(faith.worldPopulation, true)}`;
   followersUICache.faithGalacticProgressValue.textContent = `${formatNumber(faith.galacticPercent * 100, false, 2)}% (${formatNumber(faith.galacticBelievers, true)} / ${formatNumber(faith.galacticPopulation, true)})`;
   followersUICache.faithGalacticProgressFill.style.width = `${Math.max(0, Math.min(100, faith.galacticPercent * 100))}%`;
   followersUICache.faithGalacticBelievers.textContent = `${formatNumber(faith.galacticBelievers, true)} / ${formatNumber(faith.galacticPopulation, true)}`;
-  followersUICache.faithWorldCap.textContent = `${formatNumber(faith.worldCapPercent * 100, false, 2)}%`;
+  const worldCapText = `${formatNumber(faith.worldCapPercent * 100, false, 2)}%`;
+  const syncThresholdText = `${formatNumber(baseWorldCapPercent * 100, false, 2)}%`;
+  followersUICache.faithWorldCap.textContent = consecrated ? `${worldCapText} (sync at ${syncThresholdText})` : worldCapText;
   followersUICache.faithWorldRate.textContent = `+${formatNumber(faith.rates.worldPerSecond * faith.worldPopulation, false, 2)}/s`;
   followersUICache.faithGalacticRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * 100, false, 4)}%/s`;
   followersUICache.faithGalacticAbsoluteRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * faith.galacticPopulation, false, 2)}/s`;
@@ -1001,7 +1015,6 @@ function updateFollowersUI() {
     row.row.classList.toggle('is-unmet', available < required);
   }
 
-  const consecrated = followersManager.isCurrentWorldHolyConsecrated();
   followersUICache.holyWorldStatus.textContent = consecrated ? 'Consecrated' : 'Not consecrated';
   followersUICache.holyWorldStatus.classList.toggle('is-consecrated', consecrated);
   followersUICache.holyWorldConsecrateButton.disabled = !followersManager.canConsecrateHolyWorld();
