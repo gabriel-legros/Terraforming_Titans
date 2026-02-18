@@ -1700,6 +1700,9 @@ class Terraforming extends EffectableEntity{
     }
 
     getArtificialSkySolarFluxMultiplier() {
+      if (isEquilibrating) {
+        return 1;
+      }
       const pulsarParameters = hazardManager?.parameters?.pulsar;
       if (!pulsarParameters) {
         return 1;
