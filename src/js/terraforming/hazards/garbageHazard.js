@@ -347,6 +347,7 @@ class GarbageHazard {
         return;
       }
 
+      const hazardEffectName = `Garbage Hazard (${this.formatGarbageResourceName(garbageResourceKey)})`;
       const garbageRatio = initialAmount > 0 ? Math.min(1, Math.max(0, currentAmount / initialAmount)) : 0;
 
       if (penalties.sandHarvesterMultiplier !== undefined && buildings.sandQuarry) {
@@ -362,6 +363,7 @@ class GarbageHazard {
           resourceTarget: 'silicon',
           value: productionMultiplier,
           sourceId: 'hazardPenalties',
+          name: hazardEffectName,
         });
       }
 
@@ -375,6 +377,7 @@ class GarbageHazard {
           type: 'nanoColonyGrowthMultiplier',
           value: growthMultiplier,
           sourceId: 'hazardPenalties',
+          name: hazardEffectName,
         });
       }
 
@@ -390,6 +393,7 @@ class GarbageHazard {
             type: 'happinessPenalty',
             value: happinessPenalty,
             sourceId: 'hazardPenalties',
+            name: hazardEffectName,
           });
         });
       }
@@ -404,6 +408,7 @@ class GarbageHazard {
           type: 'scanningSpeedMultiplier',
           value: scanningMultiplier,
           sourceId: 'hazardPenalties',
+          name: hazardEffectName,
         });
       }
 
@@ -417,6 +422,7 @@ class GarbageHazard {
           type: 'lifeGrowthMultiplier',
           value: lifeMultiplier,
           sourceId: 'hazardPenalties',
+          name: hazardEffectName,
         });
       }
 

@@ -538,6 +538,20 @@
     cursor: not-allowed;
 }
 
+.dark-mode .golden-asteroid-button {
+    background: #ffd700;
+    border: 2px solid #b8860b;
+    color: #000;
+}
+
+.dark-mode .golden-asteroid-button:hover {
+    background: #ffed4e;
+}
+
+.dark-mode .golden-asteroid-button:active {
+    background: #daa520;
+}
+
 .dark-mode .milestone-button.completed {
     background-color: #3cb371;
     border-color: #3cb371;
