@@ -84,7 +84,7 @@ const BETA  = 0.55;              // was 0.6 in old pressure law
 
 // Keep original strengths EXCEPT water (we tune only H2O)
 const GAMMA = {
-  h2o           : 8,
+  h2o           : 20,
   co2           : 10.0,
   ch4           : 22.0,
   greenhousegas : 2500.0
@@ -142,11 +142,11 @@ function opticalDepth(comp, pBar, gSurface) {
     let tau_i;
 
     if (k === 'ch4') {
-      const saturationThreshold = 0.00020;
+      const saturationThreshold = 0.00021;
       if (R <= saturationThreshold) {
         tau_i = G * Math.pow(R, BETA);
       } else {
-        tau_i = G * (Math.pow(saturationThreshold, BETA) + 0.24*Math.pow(R - saturationThreshold,0.9));
+        tau_i = G * (Math.pow(saturationThreshold, BETA) + 0.21*Math.pow(R - saturationThreshold,0.9));
       }
     } else if (k === 'co2') {
       const saturationThreshold = 0.0003;

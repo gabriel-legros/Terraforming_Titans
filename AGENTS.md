@@ -141,6 +141,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Atmospheric density/exobase/drag heuristics now use bulk non-heavy-trace mass/pressure to avoid nonphysical Kessler-line behavior.
 - Atmospheric layer boundaries now use exobase-relative heights for monotonic drag behavior.
 - Water vapor saturation effects now reduce effective pressure, with cold trapping on cold worlds.
+- Condensation/precipitation now includes a simple uplift-based saturation cap (adiabatic cooling to a representative lifted pressure), allowing condensation even when the surface is unsaturated.
 - Terraforming history charts include a rolling 500-year window and phase diagrams (Water, CO2, Methane, Ammonia, O2, N2).
 - Oxygen and nitrogen now have full phase-change cycles.
 - Hydrology, phase transitions, and zonal resource synchronization were refactored for stability and consistency.

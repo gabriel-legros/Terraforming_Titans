@@ -66,6 +66,10 @@
       liquidCO2: resources.surface.liquidCO2?.value || 0,
       liquidMethane: resources.surface.liquidMethane?.value || 0,
       hydrocarbonIce: resources.surface.hydrocarbonIce?.value || 0,
+      liquidOxygen: resources.surface.liquidOxygen?.value || 0,
+      oxygenIce: resources.surface.oxygenIce?.value || 0,
+      liquidNitrogen: resources.surface.liquidNitrogen?.value || 0,
+      nitrogenIce: resources.surface.nitrogenIce?.value || 0,
       co2: resources.atmospheric.carbonDioxide?.value || 0,
       waterVapor: resources.atmospheric.atmosphericWater?.value || 0,
       atmosphericMethane: resources.atmospheric.atmosphericMethane?.value || 0,
@@ -97,7 +101,13 @@
           hazardousBiomass: zoneSurface.hazardousBiomass ?? 0,
           liquidMethane: zoneSurface.liquidMethane ?? zoneHydro.liquid ?? 0,
           hydrocarbonIce: zoneSurface.hydrocarbonIce ?? zoneHydro.ice ?? 0,
-          buriedHydrocarbonIce: zoneSurface.buriedHydrocarbonIce ?? zoneHydro.buriedIce ?? 0
+          buriedHydrocarbonIce: zoneSurface.buriedHydrocarbonIce ?? zoneHydro.buriedIce ?? 0,
+          liquidOxygen: zoneSurface.liquidOxygen ?? 0,
+          oxygenIce: zoneSurface.oxygenIce ?? 0,
+          buriedOxygenIce: zoneSurface.buriedOxygenIce ?? 0,
+          liquidNitrogen: zoneSurface.liquidNitrogen ?? 0,
+          nitrogenIce: zoneSurface.nitrogenIce ?? 0,
+          buriedNitrogenIce: zoneSurface.buriedNitrogenIce ?? 0
         };
         globalVals.buriedIce += zoneData.buriedIce;
         zonalVals[zone] = { ...zoneData };
@@ -113,12 +123,12 @@
   }
 
   function isStable(prev, cur, threshold) {
-    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','co2','waterVapor','liquidMethane','hydrocarbonIce','atmosphericMethane','oxygen','inertGas','hydrogen','sulfuricAcid'];
+    const keys = ['ice','buriedIce','liquidWater','dryIce','liquidCO2','co2','waterVapor','liquidMethane','hydrocarbonIce','liquidOxygen','oxygenIce','liquidNitrogen','nitrogenIce','atmosphericMethane','oxygen','inertGas','hydrogen','sulfuricAcid'];
     for (const k of keys) {
       if (Math.abs(cur.global[k] - prev.global[k]) > threshold) return false;
     }
     for (const zone in cur.zones) {
-      for (const k of ['ice','buriedIce','liquidWater','dryIce','buriedDryIce','liquidCO2','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce']) {
+      for (const k of ['ice','buriedIce','liquidWater','dryIce','buriedDryIce','liquidCO2','biomass','liquidMethane','hydrocarbonIce','buriedHydrocarbonIce','liquidOxygen','oxygenIce','buriedOxygenIce','liquidNitrogen','nitrogenIce','buriedNitrogenIce']) {
         if (Math.abs(cur.zones[zone][k] - prev.zones[zone][k]) > threshold) return false;
       }
     }
@@ -132,7 +142,11 @@
       dryIce: { initialValue: values.global.dryIce },
       liquidCO2: { initialValue: values.global.liquidCO2 },
       liquidMethane: { initialValue: values.global.liquidMethane },
-      hydrocarbonIce: { initialValue: values.global.hydrocarbonIce }
+      hydrocarbonIce: { initialValue: values.global.hydrocarbonIce },
+      liquidOxygen: { initialValue: values.global.liquidOxygen },
+      oxygenIce: { initialValue: values.global.oxygenIce },
+      liquidNitrogen: { initialValue: values.global.liquidNitrogen },
+      nitrogenIce: { initialValue: values.global.nitrogenIce }
     };
     const atmospheric = {
       carbonDioxide: { initialValue: values.global.co2 },
@@ -157,7 +171,13 @@
         hazardousBiomass:  values.zones[zone].hazardousBiomass,
         liquidMethane: values.zones[zone].liquidMethane,
         hydrocarbonIce: values.zones[zone].hydrocarbonIce,
-        buriedHydrocarbonIce: values.zones[zone].buriedHydrocarbonIce
+        buriedHydrocarbonIce: values.zones[zone].buriedHydrocarbonIce,
+        liquidOxygen: values.zones[zone].liquidOxygen,
+        oxygenIce: values.zones[zone].oxygenIce,
+        buriedOxygenIce: values.zones[zone].buriedOxygenIce,
+        liquidNitrogen: values.zones[zone].liquidNitrogen,
+        nitrogenIce: values.zones[zone].nitrogenIce,
+        buriedNitrogenIce: values.zones[zone].buriedNitrogenIce
       };
       const zoneTemps = (values.temperatures && values.temperatures[zone]) || {};
       zonalTemperatures[zone] = {
@@ -360,6 +380,7 @@
       const { liquidRate, iceRate } = waterCycleInstance.condensationRateFactor({
         zoneArea,
         vaporPressure: initialWaterPressurePa,
+        atmPressure: initialTotalPressurePa,
         gravity,
         dayTemp,
         nightTemp,
@@ -408,6 +429,7 @@
       const { liquidRate: ch4Liquid, iceRate: ch4Ice } = methaneCycleInstance.condensationRateFactor({
         zoneArea,
         vaporPressure: initialMethanePressurePa,
+        atmPressure: initialTotalPressurePa,
         gravity: 1,
         dayTemp,
         nightTemp,

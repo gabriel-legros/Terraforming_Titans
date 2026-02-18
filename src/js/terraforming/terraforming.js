@@ -1076,9 +1076,9 @@ class Terraforming extends EffectableEntity{
     const columnMass = effectiveSurfacePressurePa / Math.max(gSurface, 1e-6);
 
     // Tunables (picked to match Earth/Mars/Titan/Venus qualitatively)
-    const MASS_REF = 1.03e4;  // Earth column mass scale (~1 bar / 9.81 m/s²)
-    const K_MASS   = 0.51;    // Earth gets moderate massBoost (~0.4) before rot/liquid factors
-    const A_MASS   = 0.50;    // compresses Titan/Venus so they saturate near 1 without overkill
+    const MASS_REF = 1.03e4;  // ≈ Earth column mass at 1 bar
+    const K_MASS   = 0.115;   // sets how fast massBoost rises
+    const A_MASS   = 0.50;    // sqrt scaling: slows Titan saturation vs Venus
 
     // 0..~1: 1-e^{-K (M/Mref)^a}
     const massBoost = 1 - Math.exp(-K_MASS * Math.pow(columnMass / MASS_REF, A_MASS));
@@ -1095,11 +1095,16 @@ class Terraforming extends EffectableEntity{
     }
     const liquidCoverage = areaSum > 0 ? liquidCoverageWeighted / areaSum : 0;
 
-    // Liquids aid meridional transport; keep in a sane range [0.5, 2.0]
-    const liquidFactor = 0.5 + 1.5 * Math.max(0, Math.min(1, liquidCoverage));
+    // Gas-driven meridional mixing (0..1)
+    let gasMix = massBoost * rotFactor;
+    gasMix = Math.max(0, Math.min(1, gasMix));
 
-    // Final fraction of the zonal ΔT that is equalized in one pass (0..0.99)
-    let mixFrac = massBoost * rotFactor * liquidFactor;
+    // Liquid-driven mixing (0..1) — independent contribution
+    // 0 when no liquid, approaches 1 as coverage rises
+    let liqMix = Math.max(0, Math.min(1, liquidCoverage));
+
+    // Combine independent channels so either can reach 1 alone
+    let mixFrac = 1 - (1 - gasMix) * (1 - liqMix);
     mixFrac = Math.max(0, Math.min(0.999, mixFrac));
 
     // Weights are energy capacities (J/K) so updates conserve energy

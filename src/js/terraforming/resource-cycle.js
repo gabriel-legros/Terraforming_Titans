@@ -81,11 +81,25 @@ class ResourceCycle {
     });
   }
 
-  condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, transitionRange, maxDiff, boilingPoint, boilTransitionRange }) {
+  condensationRateFactor({
+    zoneArea,
+    vaporPressure,
+    gravity,
+    atmPressure,
+    dayTemp,
+    nightTemp,
+    transitionRange,
+    maxDiff,
+    boilingPoint,
+    boilTransitionRange,
+    liftPressureFraction,
+    kappa
+  }) {
     return condensationRateFactorFn({
       zoneArea,
       vaporPressure,
       gravity,
+      atmPressure,
       dayTemp,
       nightTemp,
       saturationFn: this.saturationVaporPressureFn,
@@ -95,6 +109,8 @@ class ResourceCycle {
       boilingPoint,
       boilTransitionRange,
       criticalTemperature: this.criticalTemperature,
+      liftPressureFraction,
+      kappa,
     });
   }
 
@@ -199,6 +215,7 @@ class ResourceCycle {
         zoneArea,
         vaporPressure,
         gravity,
+        atmPressure,
         dayTemp: dayTemperature,
         nightTemp: nightTemperature,
         transitionRange: this.transitionRange,
@@ -207,12 +224,23 @@ class ResourceCycle {
           ? this.boilingPointFn(atmPressure)
           : undefined,
         boilTransitionRange: this.boilTransitionRange,
+        liftPressureFraction: params.liftPressureFraction,
+        kappa: params.kappa,
       });
       const safeLiquidRate = liquidForbidden ? 0 : liquidRate;
       const safeIceRate = liquidForbidden ? liquidRate + iceRate : iceRate;
 
-      const potentialLiquid = safeLiquidRate * condensationParameter * durationSeconds;
-      const potentialSolid  = safeIceRate   * condensationParameter * durationSeconds;
+      // If the zone's mean temperature is above the freezing point and liquid is allowed,
+      // treat snowfall as rain (falls as snow aloft but melts before reaching the surface).
+      let adjustedLiquidRate = safeLiquidRate;
+      let adjustedIceRate = safeIceRate;
+      if (!liquidForbidden && typeof zoneTemperature === 'number' && zoneTemperature >= this.freezePoint) {
+        adjustedLiquidRate += adjustedIceRate;
+        adjustedIceRate = 0;
+      }
+
+      const potentialLiquid = adjustedLiquidRate * condensationParameter * durationSeconds;
+      const potentialSolid  = adjustedIceRate   * condensationParameter * durationSeconds;
 
       if (this.precipitationKeys.liquid) {
         changes.precipitation[this.precipitationKeys.liquid] = potentialLiquid;

@@ -9,30 +9,63 @@ if (isNodeCondensation) {
 }
 
 
-function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nightTemp, saturationFn, freezePoint, transitionRange = 2, maxDiff = 10, boilingPoint = Infinity, boilTransitionRange = 2, criticalTemperature = Infinity }) {
+function condensationRateFactor({
+  zoneArea,
+  vaporPressure,
+  gravity,
+  atmPressure,
+  dayTemp,
+  nightTemp,
+  saturationFn,
+  freezePoint,
+  transitionRange = 2,
+  maxDiff = 10,
+  boilingPoint = Infinity,
+  boilTransitionRange = 2,
+  criticalTemperature = Infinity,
+  liftPressureFraction = 0.65,
+  kappa = 0.286
+}) {
   if (typeof saturationFn !== 'function') {
     throw new Error('condensationRateFactor requires saturationFn');
   }
 
   const hasDayTemp = typeof dayTemp === 'number';
   const hasNightTemp = typeof nightTemp === 'number';
-  const averageTemp = hasDayTemp && hasNightTemp
-    ? (dayTemp + nightTemp) / 2
-    : (hasDayTemp ? dayTemp : nightTemp);
 
   const calc = (temp) => {
     let liquid = 0, ice = 0;
     if (zoneArea > 0 && typeof temp === 'number') {
-      // Above the critical temperature, no condensation (liquid or solid) can occur.
-      if (Number.isFinite(criticalTemperature) && temp >= criticalTemperature) {
-        return { liquid: 0, ice: 0 };
-      }
       // When there is no defined liquid region (boilingPoint not finite, e.g., below triple pressure),
       // use the over-ice saturation branch regardless of temperature by evaluating at or below freezePoint.
       // This ensures condensation still occurs as ice even when T > freezePoint but liquid is not permitted.
       const useIceBranch = !Number.isFinite(boilingPoint);
       const effectiveTemp = useIceBranch ? Math.min(temp, freezePoint) : temp;
-      const saturationPressure = saturationFn(effectiveTemp);
+
+      // Surface saturation cap (optional if temp is above critical).
+      const surfaceCap = (Number.isFinite(criticalTemperature) && effectiveTemp >= criticalTemperature)
+        ? Infinity
+        : saturationFn(effectiveTemp);
+
+      // Simple uplift/cold-level cap: compare vapor at a lifted pressure to saturation at the cooled parcel.
+      // If enabled, this typically produces condensation even when the surface is unsaturated.
+      let upliftCap = Infinity;
+      if (Number.isFinite(atmPressure) && atmPressure > 0
+        && Number.isFinite(liftPressureFraction) && liftPressureFraction > 0 && liftPressureFraction < 1
+        && Number.isFinite(kappa) && kappa > 0) {
+        const ratio = liftPressureFraction;
+        const pLift = atmPressure * ratio;
+        if (pLift > 0) {
+          const liftedTemp = temp * Math.pow(ratio, kappa);
+          const effectiveLiftedTemp = useIceBranch ? Math.min(liftedTemp, freezePoint) : liftedTemp;
+          if (!(Number.isFinite(criticalTemperature) && effectiveLiftedTemp >= criticalTemperature)) {
+            const eSatLift = saturationFn(effectiveLiftedTemp);
+            upliftCap = eSatLift / ratio; // convert back to an equivalent surface partial-pressure cap
+          }
+        }
+      }
+
+      const saturationPressure = Math.min(surfaceCap, upliftCap);
       if (vaporPressure > saturationPressure) {
         const excessPressure = vaporPressure - saturationPressure;
         const excessMassKg = (excessPressure * zoneArea) / gravity;
@@ -48,7 +81,11 @@ function condensationRateFactor({ zoneArea, vaporPressure, gravity, dayTemp, nig
     return { liquid, ice };
   };
 
-  const average = calc(averageTemp);
+  const day = hasDayTemp ? calc(dayTemp) : null;
+  const night = hasNightTemp ? calc(nightTemp) : null;
+  const average = (day && night)
+    ? { liquid: (day.liquid + night.liquid) / 2, ice: (day.ice + night.ice) / 2 }
+    : (day || night || { liquid: 0, ice: 0 });
 
   return {
     liquidRate: average.liquid,

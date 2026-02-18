@@ -14,7 +14,7 @@ const CO2_T_TRIPLE = 216.58;      // K
 const CO2_P_TRIPLE = 5.185e5;     // Pa (5.185 bar)
 const CO2_T_CRIT   = 304.1282;    // K
 const CO2_P_CRIT   = 7.3773e6;    // Pa (73.773 bar)
-var DEFAULT_EQUILIBRIUM_CO2_CONDENSATION_PARAMETER = 1.95e-3;
+var DEFAULT_EQUILIBRIUM_CO2_CONDENSATION_PARAMETER = 1.40e-3;
 
 const isNodeCO2 = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
