@@ -96,6 +96,7 @@ var calculateGravityCostMultiplier = rwgGravityHelpers.calculateGravityCostMulti
 var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
 const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage', kessler: 'Kessler Skies', pulsar: 'Pulsar' };
+const pulsarRwgTooltip = 'The pulsar hazard is generated but does not replace the star.  On rogue worlds, a special "Rogue Pulsar" star is added instead, with low solar flux at the planet.';
 const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', random: 'Random' };
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
@@ -388,6 +389,14 @@ function refreshHazardSelect() {
       });
       const text = document.createElement('span');
       text.textContent = hazardDisplayNames[id] || id;
+      if (id === 'pulsar') {
+        const icon = document.createElement('span');
+        icon.className = 'info-tooltip-icon';
+        icon.innerHTML = '&#9432;';
+        attachDynamicInfoTooltip(icon, pulsarRwgTooltip);
+        text.appendChild(document.createTextNode(' '));
+        text.appendChild(icon);
+      }
       row.appendChild(input);
       row.appendChild(text);
       rwgHazardItemsEl.appendChild(row);

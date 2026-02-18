@@ -265,6 +265,9 @@ const ROGUE_STAR_TEMPLATE = {
   temperatureK: 0,
   habitableZone: { inner: 0, outer: 0 }
 };
+const ROGUE_PULSAR_NAME = 'Rogue Pulsar';
+const ROGUE_PULSAR_FLUX_WM2 = 10;
+const SOLAR_FLUX_1AU_WM2 = 1361;
 
 function pickBaseColorForType(type) {
   return RWG_TYPE_BASE_COLORS[type] || "#7a4a3a";
@@ -714,6 +717,19 @@ function makeRogueStar(seed) {
   base.name = `Rogue-${suffix.slice(-3).padStart(3, '0')}`;
   return base;
 }
+function makeRoguePulsarStar() {
+  const luminositySolar = ROGUE_PULSAR_FLUX_WM2 / SOLAR_FLUX_1AU_WM2;
+  return {
+    ...ROGUE_STAR_TEMPLATE,
+    name: ROGUE_PULSAR_NAME,
+    spectralType: 'Pulsar',
+    luminositySolar,
+    massSolar: 1.6,
+    radiusSolar: 0,
+    temperatureK: 600000,
+    habitableZone: { inner: 0.02, outer: 0.05 }
+  };
+}
 function planetName(seed, params) {
   const rng = mulberry32(seed ^ 0xa5a5a5);
   const s = params.naming.planetSyllables; const pick = () => s[Math.floor(rng() * s.length)];
@@ -1023,7 +1039,7 @@ function applyHazardPresets(hazardKeys, { landHa, params, surface, zonalSurface 
   return Object.keys(hazards).length ? { hazards } : null;
 }
 
-function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazards }, params) {
+function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazards, roguePulsarStar }, params) {
   const rng = mulberry32(seed);
   let classification;
   if (forcedType) {
@@ -1032,6 +1048,8 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     classification = { type: forcedType, Teq, albedo: typeAlb };
   }
   const isRogueWorld = classification.type === "rogue";
+  const isRoguePulsarWorld = isRogueWorld && roguePulsarStar === true;
+  const isStarlessRogueWorld = isRogueWorld && !isRoguePulsarWorld;
   const rogueConfig = params.rogue || {};
   if (isRogueWorld) {
     classification.Teq = rogueConfig.baseTeqK ?? classification.Teq;
@@ -1049,8 +1067,8 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   let rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
   if (type === "venus-like") rotation = randRange(rng, 5200, 6400);
   // For rogue worlds, spinPeriod is 0 but rotationPeriod is 24h for day-night cycle
-  const spinPeriod = isRogueWorld ? 0 : rotation;
-  const rotationPeriod = isRogueWorld ? 24 : rotation;
+  const spinPeriod = isStarlessRogueWorld ? 0 : rotation;
+  const rotationPeriod = isStarlessRogueWorld ? 24 : rotation;
   const albedo = classification.albedo;
   const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng, params);
   const hazardOverride = applyHazardPresets(forcedHazards, {
@@ -1092,10 +1110,11 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
   const surfacePressureKPa = Number.isFinite(surfacePressureBar) ? Math.max(0, surfacePressureBar * 100) : 0;
   const starLuminosity = Number.isFinite(star.luminositySolar) ? star.luminositySolar : 1;
-  const SOLAR_FLUX_1AU = 1361;
   const safeAU = Number.isFinite(aAU) && aAU > 0 ? aAU : 1;
-  const solarFlux = (SOLAR_FLUX_1AU * starLuminosity) / (safeAU * safeAU);
-  const flux = isRogueWorld ? (rogueConfig.backgroundFluxWm2 ?? solarFlux) : solarFlux;
+  const solarFlux = (SOLAR_FLUX_1AU_WM2 * starLuminosity) / (safeAU * safeAU);
+  const flux = isRogueWorld
+    ? (isRoguePulsarWorld ? ROGUE_PULSAR_FLUX_WM2 : (rogueConfig.backgroundFluxWm2 ?? solarFlux))
+    : solarFlux;
   const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, rotationPeriodH: rotationPeriod, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
   classification.Teq = temps.mean;
 
@@ -1214,7 +1233,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
 
   const baseColor = pickBaseColorForType(classification?.type || type);
   const sectorLabel = selectSectorLabel(seed) || DEFAULT_SECTOR_LABEL;
-  const distanceFromSun = isRogueWorld ? 0 : safeAU;
+  const distanceFromSun = isStarlessRogueWorld ? 0 : safeAU;
   const overrides = {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
@@ -1226,7 +1245,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,
-    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod, spinPeriod, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isRogueWorld },
+    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod, spinPeriod, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isStarlessRogueWorld, roguePulsar: isRoguePulsarWorld },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },
@@ -1476,11 +1495,13 @@ class RwgManager extends EffectableEntity {
     }
 
     const isRogueType = forcedType === 'rogue';
+    let roguePulsarStar = false;
     if (isRogueType) {
       isMoon = false;
       usedPreset = 'rogue';
       aAU = 1;
-      star = makeRogueStar(S);
+      roguePulsarStar = forcedHazards.includes('pulsar');
+      star = roguePulsarStar ? makeRoguePulsarStar() : makeRogueStar(S);
     } else {
       const lockResult = resolveTypeOrbitLock({
         forcedType,
@@ -1505,7 +1526,7 @@ class RwgManager extends EffectableEntity {
     }
 
     // Generate the rest using S directly
-    const override = buildPlanetOverride({ seed: S ^ 0xBEEF, star, aAU, isMoon, forcedType, forcedHazards }, P);
+    const override = buildPlanetOverride({ seed: S ^ 0xBEEF, star, aAU, isMoon, forcedType, forcedHazards, roguePulsarStar }, P);
     const selectedHazards = override?.rwgMeta?.selectedHazards ?? forcedHazards;
     forcedHazards = Array.isArray(selectedHazards) ? selectedHazards : [];
 

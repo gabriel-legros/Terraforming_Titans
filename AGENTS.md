@@ -196,6 +196,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Radiation tolerance now uses quadratic mitigation (`points² × 0.01 mSv/day`) with a 100-point cap; life growth penalties are based on remaining dose after mitigation, and life UI/automation "As needed" behavior reflects this dose model.
 - Pulsar hazard now injects additional orbital radiation when active; surface impact is derived by atmospheric attenuation from orbital dose.
 - RWG hazards now include selectable `pulsar` seeds, and hazardous biomass RWG tuning includes pulsar-added surface radiation when both hazards are selected.
+- RWG rogue worlds selected with `pulsar` now generate a `Rogue Pulsar` star and use 10 W/m² flux (instead of starless rogue background flux), and they are not flagged as `celestialParameters.rogue`.
 - Artificial world flow matured with prepay persistence, lock states, and travel warnings.
 - Warp Gate Command gained richer operation story/event handling and improved team management tools.
 

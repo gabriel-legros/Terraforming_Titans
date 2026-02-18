@@ -347,6 +347,19 @@ progressHades.chapters.push(
     ]
   },
   {
+    id: 'hades.34.7',
+    type: 'journal',
+    chapter: 34,
+    activePlanet: 'hades',
+    narrative: "Solis : 'While we are waiting...' \n Mary : *sigh* \n $RED$Prometheus : *sigh* \n Solis 'Fine fine.  HOPE I have something new for you.  I'll be going now...'",
+    prerequisites: ['hades.34.6'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 100_000_000, checkCap: true }
+    ],
+    reward: [
+    ]
+  },
+  {
     id: 'hades.35.0',
     type: 'journal',
     chapter: 35,
