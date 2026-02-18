@@ -540,7 +540,7 @@ function setResourceTooltipColumns(tooltip, cols) {
   if (!col1.parentNode) tooltip.appendChild(col1);
 }
 
-function updateAssignmentTable(container, assignments) {
+function updateAssignmentTable(container, assignments, valueFormatter = null) {
   if (!container) return;
   const keyString = assignments.map(a => a[0]).join('|');
   let info = container._info;
@@ -584,7 +584,7 @@ function updateAssignmentTable(container, assignments) {
   assignments.forEach(([n, count]) => {
     const span = info.spans.get(n);
     if (!span) return;
-    const text = formatNumber(count, true);
+    const text = valueFormatter ? valueFormatter(count) : formatNumber(count, true);
     if (span.textContent !== text) span.textContent = text;
   });
 }
@@ -696,7 +696,7 @@ function updateLandAssignments(assignmentsDiv) {
     assignmentsDiv.appendChild(tableContainer);
     assignmentsDiv._tableContainer = tableContainer;
   }
-  updateAssignmentTable(tableContainer, assignments);
+  updateAssignmentTable(tableContainer, assignments, (count) => formatNumber(count, false, 2));
 }
 
 function updateAndroidAssignments(assignmentsDiv) {
