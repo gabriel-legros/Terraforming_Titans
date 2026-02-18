@@ -716,6 +716,193 @@ class SpaceExportBaseProject extends SpaceshipProject {
     };
   }
 
+  getClampedDisposalAmount(requestedAmount, category, resource, availableAmount) {
+    const maxByAvailable = super.getClampedDisposalAmount(
+      requestedAmount,
+      category,
+      resource,
+      availableAmount
+    );
+    if (maxByAvailable <= 0) {
+      return 0;
+    }
+
+    const floorAmount = this.getDisposalLowerLimitFloorAmount(category, resource, availableAmount);
+    if (floorAmount <= 0) {
+      return maxByAvailable;
+    }
+
+    const maxDisposableByFloor = Math.max(0, availableAmount - floorAmount);
+    return Math.max(0, Math.min(maxByAvailable, maxDisposableByFloor));
+  }
+
+  getDisposalLowerLimitFloorAmount(category, resource, availableAmount) {
+    const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
+    if (!hasMonitoring) {
+      return 0;
+    }
+    if (!this.selectedDisposalResource) {
+      return 0;
+    }
+    if (category !== this.selectedDisposalResource.category || resource !== this.selectedDisposalResource.resource) {
+      return 0;
+    }
+
+    let floorAmount = 0;
+
+    if (this.disableBelowPressure && this.shouldShowPressureControl()) {
+      floorAmount = Math.max(
+        floorAmount,
+        this.getPressureFloorAmount(availableAmount)
+      );
+    }
+
+    if (this.disableBelowCoverage && this.shouldShowCoverageControl()) {
+      floorAmount = Math.max(
+        floorAmount,
+        this.getCoverageFloorAmount(category, resource)
+      );
+    }
+
+    if (this.disableBelowTemperature && this.isSafeGhgSelection()) {
+      floorAmount = Math.max(
+        floorAmount,
+        this.getGreenhouseTemperatureFloorAmount(availableAmount)
+      );
+    }
+
+    return floorAmount;
+  }
+
+  getPressureFloorAmount() {
+    const gravity = terraforming.celestialParameters.gravity;
+    const radius = terraforming.celestialParameters.radius;
+    const pressurePerUnitPa = calculateAtmosphericPressure(1, gravity, radius);
+    if (pressurePerUnitPa <= 0) {
+      return 0;
+    }
+    return (this.disablePressureThreshold * 1000) / pressurePerUnitPa;
+  }
+
+  getCoverageFloorAmount(category, resource) {
+    if (category !== 'surface') {
+      return 0;
+    }
+    const coverageKey = this.getSelectedCoverageResourceKey();
+    if (!coverageKey || resource !== coverageKey) {
+      return 0;
+    }
+    const descriptor = this.getZonalDisposalDescriptor(category, resource);
+    if (!descriptor) {
+      return 0;
+    }
+
+    const zones = getZones();
+    const zoneEntries = zones.map((zone) => {
+      const zoneArea = terraforming.zonalCoverageCache?.[zone]?.zoneArea || 0;
+      return {
+        amount: descriptor.container[zone]?.[descriptor.key] || 0,
+        zoneArea,
+        weight: getZonePercentage(zone),
+      };
+    });
+
+    const totalAmount = zoneEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    if (totalAmount <= 0) {
+      return 0;
+    }
+
+    const currentCoverage = this.calculateCoverageForTotalAmount(zoneEntries, totalAmount);
+    if (currentCoverage <= this.disableCoverageThreshold) {
+      return totalAmount;
+    }
+
+    let low = 0;
+    let high = totalAmount;
+    for (let i = 0; i < 24; i += 1) {
+      const mid = (low + high) / 2;
+      const coverage = this.calculateCoverageForTotalAmount(zoneEntries, mid);
+      if (coverage >= this.disableCoverageThreshold) {
+        high = mid;
+      } else {
+        low = mid;
+      }
+    }
+
+    return high;
+  }
+
+  calculateCoverageForTotalAmount(zoneEntries, totalAmount) {
+    if (totalAmount <= 0) {
+      return 0;
+    }
+    const currentTotal = zoneEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    if (currentTotal <= 0) {
+      return 0;
+    }
+    const scale = totalAmount / currentTotal;
+    const totalWeight = zoneEntries.reduce((sum, entry) => sum + entry.weight, 0);
+    const weightDivisor = totalWeight > 0 ? totalWeight : zoneEntries.length;
+    let weightedCoverage = 0;
+
+    zoneEntries.forEach((entry) => {
+      const amount = entry.amount * scale;
+      const coverage = estimateCoverage(amount, entry.zoneArea);
+      const weight = totalWeight > 0 ? entry.weight : 1;
+      weightedCoverage += coverage * (weight / weightDivisor);
+    });
+
+    return Math.max(0, Math.min(1, weightedCoverage));
+  }
+
+  getGreenhouseTemperatureFloorAmount(availableAmount) {
+    const ghg = resources.atmospheric.greenhouseGas;
+    const currentAmount = Math.max(0, Math.min(availableAmount, ghg.value));
+    if (currentAmount <= 0) {
+      return 0;
+    }
+
+    const currentTemp = this.getAutomationTemperatureReading();
+    if (currentTemp <= this.disableTemperatureThreshold) {
+      return currentAmount;
+    }
+
+    let low = 0;
+    let high = currentAmount;
+    for (let i = 0; i < 12; i += 1) {
+      const mid = (low + high) / 2;
+      const temp = this.calculateTemperatureForGreenhouseAmount(mid);
+      if (temp >= this.disableTemperatureThreshold) {
+        high = mid;
+      } else {
+        low = mid;
+      }
+    }
+    return high;
+  }
+
+  calculateTemperatureForGreenhouseAmount(targetAmount) {
+    const ghg = resources.atmospheric.greenhouseGas;
+    const originalAmount = ghg.value;
+    const snapshot = terraforming.saveTemperatureState ? terraforming.saveTemperatureState() : null;
+    let projected = terraforming.temperature.trendValue || 0;
+
+    try {
+      ghg.value = Math.max(0, targetAmount);
+      terraforming.updateSurfaceTemperature(0);
+      projected = terraforming.temperature?.trendValue || projected;
+    } finally {
+      ghg.value = originalAmount;
+      if (snapshot && terraforming.restoreTemperatureState) {
+        terraforming.restoreTemperatureState(snapshot);
+      } else {
+        terraforming.updateSurfaceTemperature(0);
+      }
+    }
+
+    return projected;
+  }
+
   shouldAutomationDisable() {
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (hasMonitoring && this.disableBelowTemperature && this.isSafeGhgSelection()) {

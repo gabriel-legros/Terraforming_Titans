@@ -714,6 +714,10 @@ class SpaceshipProject extends Project {
     return totalDisposal;
   }
 
+  getClampedDisposalAmount(requestedAmount, category, resource, availableAmount) {
+    return Math.max(0, Math.min(requestedAmount, availableAmount));
+  }
+
   getZonalDisposalDescriptor(category, resource) {
     if (category !== 'surface' || typeof terraforming === 'undefined') {
       return null;
@@ -905,7 +909,7 @@ class SpaceshipProject extends Project {
       const { category, resource } = this.selectedDisposalResource;
       const required = scaledDisposalAmount[category][resource];
       const available = resources[category][resource].value;
-      const actualAmount = Math.min(required, available);
+      const actualAmount = this.getClampedDisposalAmount(required, category, resource, available);
       if (actualAmount < required) {
         shortfall = shortfall || required > 0;
         disposalShortfall = disposalShortfall || required > 0;
@@ -1220,7 +1224,12 @@ class SpaceshipProject extends Project {
         const existingChange = accumulatedChanges[category][resource] || 0;
         const currentValue = resources[category]?.[resource]?.value || 0;
         const effectiveAvailable = Math.max(0, currentValue + existingChange);
-        actualDisposal = Math.min(requestedAmount, effectiveAvailable);
+        actualDisposal = this.getClampedDisposalAmount(
+          requestedAmount,
+          category,
+          resource,
+          effectiveAvailable
+        );
         accumulatedChanges[category][resource] = existingChange - actualDisposal;
         if (
           this.attributes.fundingGainAmount &&
@@ -1233,7 +1242,8 @@ class SpaceshipProject extends Project {
         const res = resources[category]?.[resource];
         if (res && typeof res.decrease === 'function') {
           const before = res.value;
-          res.decrease(requestedAmount);
+          const clampedAmount = this.getClampedDisposalAmount(requestedAmount, category, resource, before);
+          res.decrease(clampedAmount);
           actualDisposal = before - res.value;
         }
         if (this.attributes.fundingGainAmount && resources.colony?.funding) {

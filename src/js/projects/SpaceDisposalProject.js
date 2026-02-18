@@ -469,9 +469,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         const existingChange = accumulatedChanges[category][resource] || 0;
         const currentValue = resources[category][resource].value || 0;
         const effectiveAvailable = Math.max(0, currentValue + existingChange);
-        actualDriver = Math.min(requestedDriver, effectiveAvailable);
-        actualShip = Math.min(requestedShip, effectiveAvailable - actualDriver);
-        accumulatedChanges[category][resource] = existingChange - actualDriver - actualShip;
+        const actualTotal = this.getClampedDisposalAmount(
+          requestedTotal,
+          category,
+          resource,
+          effectiveAvailable
+        );
+        actualDriver = Math.min(requestedDriver, actualTotal);
+        actualShip = Math.min(requestedShip, actualTotal - actualDriver);
+        accumulatedChanges[category][resource] = existingChange - actualTotal;
         const fundingGainAmount = this.attributes.fundingGainAmount || 0;
         const fundingGain = (actualDriver + actualShip * successChance) * fundingGainAmount;
         try {
@@ -486,8 +492,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       } else {
         const res = resources[category][resource];
         const before = res.value;
-        res.decrease(requestedTotal);
-        const actualTotal = before - res.value;
+        const actualTotal = this.getClampedDisposalAmount(requestedTotal, category, resource, before);
+        res.decrease(actualTotal);
         actualDriver = Math.min(requestedDriver, actualTotal);
         actualShip = Math.min(requestedShip, actualTotal - actualDriver);
         const fundingGainAmount = this.attributes.fundingGainAmount || 0;
