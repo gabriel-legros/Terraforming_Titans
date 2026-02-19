@@ -23,6 +23,20 @@ try {
   }
 }
 
+let getSpecialSeedDefinitionCatalog;
+let getSpecialSeedParametersCatalog;
+try {
+  getSpecialSeedDefinitionCatalog = getSpecialSeedDefinition;
+  getSpecialSeedParametersCatalog = getSpecialSeedParameters;
+} catch (error) {
+  try {
+    ({ getSpecialSeedDefinition: getSpecialSeedDefinitionCatalog, getSpecialSeedParameters: getSpecialSeedParametersCatalog } = require('../special-seeds.js'));
+  } catch (innerError) {
+    getSpecialSeedDefinitionCatalog = null;
+    getSpecialSeedParametersCatalog = null;
+  }
+}
+
 // ===================== Utilities & Shims =====================
 function hashStringToInt(str) {
   let h = 1779033703 ^ str.length;
@@ -693,6 +707,64 @@ function buildSeedSpec(baseInt, { target, type, orbitPreset, hazard } = {}) {
   const hazardText = formatHazardList(hazard);
   if (hazardText) parts.push(String(hazardText));
   return parts.join("|");
+}
+
+function cloneRWGValue(value) {
+  if (value === undefined) return undefined;
+  return JSON.parse(JSON.stringify(value));
+}
+
+function buildSpecialSeedWorldResult(seedValue, seedInt) {
+  if (!getSpecialSeedDefinitionCatalog || !getSpecialSeedParametersCatalog) return null;
+  const definition = getSpecialSeedDefinitionCatalog(seedValue);
+  if (!definition) return null;
+  const specialSeedParams = getSpecialSeedParametersCatalog(seedValue);
+  if (!specialSeedParams) return null;
+
+  const merged = deepMerge(defaultPlanetParameters, cloneRWGValue(specialSeedParams));
+  const override = cloneRWGValue(merged);
+  const star = cloneRWGValue(merged.star || {});
+  const starLuminosity = merged?.celestialParameters?.starLuminosity;
+  if (starLuminosity != null) {
+    star.luminositySolar = starLuminosity;
+  }
+
+  const hazards = orderHazardList(Object.keys(merged.hazards || {}).filter((hazard) => hazard && hazard !== 'none'));
+  const specialEffects = Array.isArray(definition.specialEffects)
+    ? cloneRWGValue(definition.specialEffects)
+    : [];
+  const target = definition.target || 'planet';
+  const archetype = definition.archetype || merged?.classification?.archetype || 'venus-like';
+  const orbitPreset = definition.orbitPreset || 'hot';
+  const canonicalParts = [definition.seed || definition.key || String(seedValue || ''), target, archetype, orbitPreset];
+  const hazardText = formatHazardList(hazards);
+  if (hazardText) canonicalParts.push(hazardText);
+  const canonicalSeed = canonicalParts.join('|');
+
+  merged.rwgMeta = merged.rwgMeta || {};
+  merged.rwgMeta.specialSeedKey = definition.key || null;
+  merged.rwgMeta.specialSeedName = definition.name || merged.name || null;
+  merged.rwgMeta.specialEffects = specialEffects;
+  merged.rwgMeta.selectedHazards = hazards.slice();
+  merged.rwgMeta.selectedHazard = hazards.length === 1 ? hazards[0] : null;
+  override.rwgMeta = cloneRWGValue(merged.rwgMeta);
+
+  return {
+    star,
+    orbitAU: merged?.celestialParameters?.distanceFromSun ?? 1,
+    orbitPreset,
+    isMoon: target === 'moon',
+    archetype,
+    hazard: hazards.length ? hazards.slice() : 'none',
+    hazards: hazards.slice(),
+    seedInt: seedInt >>> 0,
+    seedString: canonicalSeed,
+    specialSeedKey: definition.key || null,
+    specialEffects,
+    allowReplay: definition.replayable === true,
+    override,
+    merged
+  };
 }
 
 // ===================== Physics-ish helpers =====================
@@ -1421,6 +1493,10 @@ class RwgManager extends EffectableEntity {
   generateRandomPlanet(seed, opts = {}) {
     const P = resolveParams(this.params, opts.params);
     const { seedInt: S, baseSeed, ann: seedAnn } = parseSeedSpec(seed);
+    const specialSeedResult = buildSpecialSeedWorldResult(baseSeed, S);
+    if (specialSeedResult) {
+      return specialSeedResult;
+    }
 
     // Star
     let star = opts.star ?? generateStar(S ^ 0x1234, P);

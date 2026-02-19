@@ -28,7 +28,11 @@ class MultiRecipesBuilding extends Building {
         const recipe = defs[key] || {};
         const requiredFlag = recipe.requiresResearchFlag;
         const requiredBuildingFlag = recipe.requiresBuildingFlag;
+        const disabledBuildingFlag = recipe.disabledByBuildingFlag;
         if (requiredBuildingFlag && !this.isBooleanFlagSet(requiredBuildingFlag)) {
+          return false;
+        }
+        if (disabledBuildingFlag && this.isBooleanFlagSet(disabledBuildingFlag)) {
           return false;
         }
         return !requiredFlag || researchManager?.isBooleanFlagSet?.(requiredFlag);
@@ -38,10 +42,14 @@ class MultiRecipesBuilding extends Building {
       const recipe = defs[key] || {};
       const requiredFlag = recipe.requiresResearchFlag;
       const requiredBuildingFlag = recipe.requiresBuildingFlag;
+      const disabledBuildingFlag = recipe.disabledByBuildingFlag;
       if (recipe.artificialAllowed === false) {
         return false;
       }
       if (requiredBuildingFlag && !this.isBooleanFlagSet(requiredBuildingFlag)) {
+        return false;
+      }
+      if (disabledBuildingFlag && this.isBooleanFlagSet(disabledBuildingFlag)) {
         return false;
       }
       return !requiredFlag || researchManager?.isBooleanFlagSet?.(requiredFlag);
@@ -119,6 +127,11 @@ class MultiRecipesBuilding extends Building {
     this.currentMaintenance = {};
     updateBuildingDisplay(buildings);
     return true;
+  }
+
+  applyBooleanFlag(effect) {
+    super.applyBooleanFlag(effect);
+    this._applyRecipeMapping();
   }
 
   loadState(state = {}) {

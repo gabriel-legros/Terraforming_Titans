@@ -56,11 +56,26 @@ class LiftersProject extends TerraformingDurationProject {
     return this.isExpansionContinuous();
   }
 
+  isAtmosphereStripDisabled() {
+    return this.isBooleanFlagSet('disableAtmosphereStripMode');
+  }
+
+  normalizeModeForFlags() {
+    if (this.isAtmosphereStripDisabled() && this.mode === LIFTER_MODES.ATMOSPHERE_STRIP) {
+      this.mode = LIFTER_MODES.GAS_HARVEST;
+      return true;
+    }
+    return false;
+  }
+
   getModeOptions() {
-    return [
+    const options = [
       { value: LIFTER_MODES.GAS_HARVEST, label: 'Gas Giant Harvest' },
-      { value: LIFTER_MODES.ATMOSPHERE_STRIP, label: 'Atmosphere Strip' },
     ];
+    if (!this.isAtmosphereStripDisabled()) {
+      options.push({ value: LIFTER_MODES.ATMOSPHERE_STRIP, label: 'Atmosphere Strip' });
+    }
+    return options;
   }
 
   getHarvestRecipeKeys() {
@@ -149,11 +164,14 @@ class LiftersProject extends TerraformingDurationProject {
     if (this.isPermanentlyDisabled?.()) {
       return false;
     }
+    if (this.mode === LIFTER_MODES.ATMOSPHERE_STRIP && this.isAtmosphereStripDisabled()) {
+      return false;
+    }
     return this.isRunning && this.repeatCount > 0;
   }
 
   setMode(value) {
-    const next = value === LIFTER_MODES.ATMOSPHERE_STRIP
+    const next = value === LIFTER_MODES.ATMOSPHERE_STRIP && !this.isAtmosphereStripDisabled()
       ? LIFTER_MODES.ATMOSPHERE_STRIP
       : LIFTER_MODES.GAS_HARVEST;
     if (this.mode !== next) {
@@ -548,6 +566,8 @@ class LiftersProject extends TerraformingDurationProject {
         this.updateStatus('Complete at least one lifter');
       } else if (!this.isRunning) {
         this.updateStatus('Run disabled');
+      } else if (this.mode === LIFTER_MODES.ATMOSPHERE_STRIP && this.isAtmosphereStripDisabled()) {
+        this.updateStatus('Atmosphere strip disabled');
       }
       this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
       return;
@@ -738,7 +758,11 @@ class LiftersProject extends TerraformingDurationProject {
 
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
+    const modeChanged = this.normalizeModeForFlags();
     this.applyPendingHarvestRecipe();
+    if (modeChanged) {
+      this.updateUI();
+    }
   }
 
   saveAutomationSettings() {
@@ -755,6 +779,7 @@ class LiftersProject extends TerraformingDurationProject {
     if (Object.prototype.hasOwnProperty.call(settings, 'mode')) {
       this.mode = settings.mode || LIFTER_MODES.GAS_HARVEST;
     }
+    this.normalizeModeForFlags();
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
     }
@@ -779,6 +804,7 @@ class LiftersProject extends TerraformingDurationProject {
   loadState(state) {
     super.loadState(state);
     this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
+    this.normalizeModeForFlags();
     this.isRunning = state.isRunning || false;
     this.expansionProgress = state.expansionProgress || 0;
     this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
@@ -812,6 +838,7 @@ class LiftersProject extends TerraformingDurationProject {
   loadTravelState(state = {}) {
     this.repeatCount = state.repeatCount || 0;
     this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
+    this.normalizeModeForFlags();
     this.expansionProgress = state.expansionProgress || 0;
     this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
     this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();

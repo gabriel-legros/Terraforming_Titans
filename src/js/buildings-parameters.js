@@ -849,6 +849,7 @@ const buildingsParameters = {
       hazardousBiomass: {
         shortName: 'Hazardous Biomass',
         requiresBuildingFlag: 'hazardousBiomassIncineration',
+        disabledByBuildingFlag: 'disableHazardousBiomassIncineratorRecipe',
         consumption: { colony: { energy: 50000 }, surface: { hazardousBiomass: 10 }, atmospheric: { oxygen: 10.667 }, special : {spaceships : 0.001} },
         production: { atmospheric: { carbonDioxide: 14.667 } }
       }

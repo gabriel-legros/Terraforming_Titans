@@ -112,7 +112,10 @@ function formatSeverityValue(value, decimals = 3) {
     return '0';
   }
 
-  const text = formatNumber(value, false, decimals);
+  const text = `${formatNumeric(value, decimals)}`;
+  if (text.indexOf('.') === -1) {
+    return text;
+  }
   return text.replace(/\.?0+$/, '');
 }
 

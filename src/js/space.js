@@ -1467,8 +1467,9 @@ class SpaceManager extends EffectableEntity {
         // Prefer canonical seedString from RWG result so it encodes target/type/orbit
         const s = String(res && typeof res.seedString === 'string' ? res.seedString : seed);
         const isArtificial = !!(res?.artificial || res?.original?.artificial);
+        const replayAllowed = !!res?.allowReplay;
         if (!isArtificial) {
-            if (this.isSeedTerraformed(s)) {
+            if (this.isSeedTerraformed(s) && !replayAllowed) {
                 console.warn(`SpaceManager: Seed ${s} already terraformed.`);
                 return false;
             }

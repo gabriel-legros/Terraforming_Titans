@@ -129,6 +129,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Preserve compatibility: append new generation logic at the end only.
 - Supports dominion selector and dominion-specific terraforming requirements.
 - Some dominions/world types are story/sector gated.
+- Special seeds can define world-specific effects (project/building flags), are replayable by seed, and surface effect descriptions in RWG world details.
 
 ### Artificial Worlds
 - Managed via `ArtificialManager` (shell/ring/disk-ready architecture).

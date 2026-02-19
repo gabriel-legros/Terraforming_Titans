@@ -314,7 +314,10 @@
           globalThis.calculateZoneSolarFluxWithFacility = prevFacilityFn;
           if (!ok) return;
           const outOverride = copyBackToOverrideFromSandbox(fullParams, sandboxResources, terra);
-          applyPostEquilibrationHazardTuning(outOverride, terra);
+          const specialSeedKey = outOverride?.rwgMeta?.specialSeedKey || fullParams?.rwgMeta?.specialSeedKey;
+          if (!specialSeedKey) {
+            applyPostEquilibrationHazardTuning(outOverride, terra);
+          }
           isEquilibrating = false;
           console.log('Equilibration finished. Final terraforming object:', terra);
           resolve({ override: outOverride, steps: stepIdx });

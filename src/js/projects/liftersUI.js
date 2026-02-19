@@ -20,12 +20,7 @@ function buildStat(label) {
 function createModeSelect(project) {
   const select = document.createElement('select');
   select.id = `${project.name}-lifters-mode`;
-  project.getModeOptions().forEach(option => {
-    const opt = document.createElement('option');
-    opt.value = option.value;
-    opt.textContent = option.label;
-    select.appendChild(opt);
-  });
+  buildSelectOptions(select, project.getModeOptions());
   return select;
 }
 
@@ -46,6 +41,18 @@ function createRecipeSelect(project) {
   select.id = `${project.name}-lifters-recipe`;
   buildSelectOptions(select, project.getHarvestOptions());
   return select;
+}
+
+function syncModeSelect(select, project) {
+  const options = project.getModeOptions();
+  const matches = options.length === select.options.length
+    && options.every((option, index) => select.options[index]?.value === option.value);
+  if (!matches) {
+    buildSelectOptions(select, options);
+  }
+  if (select.value !== project.mode) {
+    select.value = project.mode;
+  }
 }
 
 function syncRecipeSelect(select, project) {
@@ -206,9 +213,7 @@ function updateLiftersUI(project) {
   elements.liftersCapacityElement.textContent = formatNumber(project.getCapacityPerLifter(), true);
   elements.liftersEnergyUnitElement.textContent = formatNumber(project.energyPerUnit, true);
 
-  if (elements.liftersModeSelect.value !== project.mode) {
-    elements.liftersModeSelect.value = project.mode;
-  }
+  syncModeSelect(elements.liftersModeSelect, project);
   syncRecipeSelect(elements.liftersRecipeSelect, project);
   elements.liftersRunCheckbox.checked = project.isRunning;
   elements.liftersRunCheckbox.disabled = project.repeatCount === 0;

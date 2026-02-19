@@ -669,6 +669,10 @@ function ensureRandomWorldUI() {
   }
 }
 
+function isReplayableSeedResult(result) {
+  return !!result?.allowReplay;
+}
+
 function updateRandomWorldUI() {
   const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
   if (!mgr) return;
@@ -712,6 +716,7 @@ function updateRandomWorldUI() {
     if (rwgResultEl && travelBtn && sm) {
       const seedUsed = rwgResultEl.dataset ? rwgResultEl.dataset.seedUsed : undefined;
       const canonicalSeed = rwgResultEl.dataset ? (rwgResultEl.dataset.canonicalSeed || rwgResultEl.dataset.seedString) : undefined;
+      const replayAllowed = rwgResultEl.dataset?.allowReplay === '1';
       const eqDone = seedUsed
         ? (equilibratedWorlds.has(seedUsed) || (canonicalSeed ? equilibratedWorlds.has(canonicalSeed) : false))
         : false;
@@ -719,12 +724,12 @@ function updateRandomWorldUI() {
         ? sm.isSeedTerraformed(canonicalSeed)
         : (seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false);
       const lockedByStory = typeof sm.isRandomTravelLocked === 'function' ? sm.isRandomTravelLocked() : false;
-      const travelDisabled = lockedByStory || !!alreadyTerraformed || !eqDone;
+      const travelDisabled = lockedByStory || (!!alreadyTerraformed && !replayAllowed) || !eqDone;
       travelBtn.disabled = travelDisabled;
 
       const warningMsg = lockedByStory
         ? 'You must complete the story for the current world first'
-        : (alreadyTerraformed
+        : ((!replayAllowed && alreadyTerraformed)
           ? 'This world has already been terraformed.'
           : (!eqDone ? 'Press Equilibrate at least once before traveling.' : ''));
       let warnEl = document.getElementById('rwg-travel-warning');
@@ -753,7 +758,7 @@ function attachTravelHandler(res, sStr) {
     const attemptTravel = () => {
       const canonical = res?.seedString || sStr;
       if (!equilibratedWorlds.has(sStr) && !equilibratedWorlds.has(canonical)) return;
-      if (spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
+      if (!isReplayableSeedResult(res) && spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
       if (spaceManager?.travelToRandomWorld) {
         applyDominionSelection(res);
         const travelled = spaceManager.travelToRandomWorld(res, sStr);
@@ -764,6 +769,7 @@ function attachTravelHandler(res, sStr) {
             try {
               box.dataset.seedUsed = sStr;
               if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
+              box.dataset.allowReplay = isReplayableSeedResult(res) ? '1' : '0';
             } catch(_){}
             cacheResultControls();
             attachEquilibrateHandler(res, sStr, undefined, box);
@@ -838,6 +844,7 @@ function drawSingle(seed, options) {
   try {
     box.dataset.seedUsed = seedKey;
     if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
+    box.dataset.allowReplay = isReplayableSeedResult(res) ? '1' : '0';
   } catch(_){}
   cacheResultControls();
   attachEquilibrateHandler(res, seedKey, archetype, box);
@@ -954,6 +961,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
         try {
           box.dataset.seedUsed = sStr;
           if (newRes?.seedString) box.dataset.canonicalSeed = newRes.seedString;
+          box.dataset.allowReplay = isReplayableSeedResult(newRes) ? '1' : '0';
         } catch(_){}
         cacheResultControls();
         attachEquilibrateHandler(newRes, sStr, archetype, box);
@@ -966,6 +974,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           try {
             box.dataset.seedUsed = sStr;
             if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
+            box.dataset.allowReplay = isReplayableSeedResult(res) ? '1' : '0';
           } catch(_){}
           cacheResultControls();
           attachEquilibrateHandler(res, sStr, archetype, box);
@@ -1078,15 +1087,28 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
         <div class="rwg-chip"><div class="label">Orbit Radius</div><div class="value">${fmt(c.parentBody.orbitRadius)} km</div></div>
       </div>
     </div>` : '';
+  const specialSeedEffects = Array.isArray(res?.specialEffects)
+    ? res.specialEffects
+    : (Array.isArray(res?.merged?.rwgMeta?.specialEffects) ? res.merged.rwgMeta.specialEffects : []);
+  const specialEffectsPanel = specialSeedEffects.length ? `
+    <div class="rwg-card">
+      <h3>Special Seed Effects</h3>
+      ${specialSeedEffects.map((entry) => {
+        const label = entry?.label || entry?.name || entry?.id || 'Effect';
+        const description = entry?.description || '';
+        return `<div class="rwg-row"><span>${label}</span><span>${description}</span></div>`;
+      }).join('')}
+    </div>` : '';
 
   const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
+  const replayAllowed = isReplayableSeedResult(res);
   const eqDone = seedUsed
     && (equilibratedWorlds.has(seedUsed) || (res.seedString ? equilibratedWorlds.has(res.seedString) : false));
   const alreadyTerraformed = (res.seedString && sm?.isSeedTerraformed)
     ? sm.isSeedTerraformed(res.seedString)
     : (seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false);
   const lockedByStory = sm?.isRandomTravelLocked ? sm.isRandomTravelLocked() : false;
-  const travelDisabled = lockedByStory || alreadyTerraformed || !eqDone;
+  const travelDisabled = lockedByStory || (alreadyTerraformed && !replayAllowed) || !eqDone;
   const showTemps = !seedUsed || eqDone;
   const meanTVal = (showTemps && temps)
     ? `${fmt(Math.round(toDisplayTemp(temps.mean)))} ${tempUnit}`
@@ -1104,7 +1126,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     : '';
   const warningMsg = lockedByStory
     ? 'You must complete the story for the current world first'
-    : (alreadyTerraformed
+    : ((!replayAllowed && alreadyTerraformed)
       ? 'This world has already been terraformed.'
       : (!eqDone ? 'Press Equilibrate at least once before traveling.' : ''));
   const gWarn = createGravityWarning(c.gravity, fmt, { includeFlavor: true });
@@ -1156,7 +1178,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
       </div>
     </div>`;
 
-  return `${dominionPanel}${starPanel}${parent}${worldPanel}`;
+  return `${dominionPanel}${specialEffectsPanel}${starPanel}${parent}${worldPanel}`;
 }
 
 function estimateFlux(res) {
