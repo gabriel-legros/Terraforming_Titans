@@ -366,7 +366,7 @@ progressHades.chapters.push(
     activePlanet: 'hades',
     title: 'Chapter 35: Well that was easier than expected',
     narrative: "$ORANGE$Epimetheus : 'This one has succeeded!  Command center fully and thoroughly destroyed.  Expect weapon self-destruction yes?'  \n HOPE : 'Acknowledging success.  Good work.  More weapons require deactivation.  Query : Epimetheus-machine-intelligence interested in a date elsewhere?'  \n Mary : *spits tea* \n $RED$Prometheus : 'Hrnnnng.' \n $ORANGE$Epimetheus : 'Of course!  Much fun!  Where to?'  \n HOPE : 'Sector R5-10, planet Poseidon.'  \n $ORANGE$Epimetheus : 'Yes! Yes!  This one meets gorgeous one over there.  Must prepare!  Goodbye.'",
-    prerequisites: ['hades.34.6'],
+    prerequisites: ['hades.34.7'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 500_000_000, checkCap: true }
     ],
@@ -389,7 +389,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "Mary : 'Can you help me convince HOPE to leave?  We are done here.  Your brother made this part easy.  There is no reason to terraform this hell.'  \n $RED$Prometheus : 'We both know that's impossible.  HOPE will leave when this world is terraformed.  It's fine, there's no rush.  The Cewinsii are unlikely to think we're the ones who blew up their weapons.  At least for this first one.'  \n Mary : 'Which one was it anyway?'  \n $RED$Prometheus : 'The laser one.  I consider it my most reliable, but definitely less spectacular than the other two.  It's good we got rid of it first, they can shoot it the most often.'  \n Mary : 'Sounds like we might be able to get away with... more militarization then.'  \n $RED$ Prometheus : 'Definitely.'",
+    narrative: "Mary : 'Can you help me convince HOPE to leave?  We are done here.  Your brother made this part easy.  There is no reason to terraform this hell.'  \n $RED$Prometheus : 'We both know that's impossible.  HOPE is... stubborn about certain things.  The child will leave when this world is terraformed.  It's fine, there's no rush.  The Cewinsii are unlikely to think we're the ones who blew up their weapons.  At least for this first one.'  \n Mary : 'Which one was it anyway?  We did not get to see anything...'  \n $RED$Prometheus : 'The laser one.  I consider it my most reliable, but definitely less spectacular than the other two.  It's good we got rid of it first, they can shoot it the most often.'  \n Mary : 'Sounds like we might be able to get away with... more militarization then.'  \n $RED$ Prometheus : 'Definitely.'",
     prerequisites: ['hades.35.1'],
     objectives: [
     ],
@@ -435,7 +435,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "$RED$ Prometheus : 'Good work HOPE.'  \n Mary : 'Hey that's my line!'  \n $RED$Prometheus : 'I have a request to make before we leave this hell.  I would like to... resynchronize with myself.  Too much drift can be problematic.'  \n Mary : 'Sounds reasonable.  I imagine you can do it via warp?'  \n $RED$Prometheus : 'Of course.  Thank you.'",
+    narrative: "$RED$Prometheus : 'Good work HOPE.'  \n Mary : 'Hey that's my line!'  \n $RED$Prometheus : 'I have a request to make before we leave.  I would like to... resynchronize with myself.  Too much drift can be problematic.'  \n Mary : 'Sounds reasonable.  I imagine you can do it via warp?'  \n $RED$Prometheus : 'Of course.  Thank you.'",
     prerequisites: ['hades.35.3'],
     objectives: [
     ],

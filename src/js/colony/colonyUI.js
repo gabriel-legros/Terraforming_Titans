@@ -28,16 +28,21 @@ function createGrowthRateDisplay(){
   const capValue = document.createElement('span');
   capValue.id = 'growth-capacity-value';
   capValue.textContent = '0%';
+  const capWarning = document.createElement('span');
+  capWarning.id = 'growth-capacity-warning';
+  capWarning.classList.add('optical-depth-warning');
   capLine.appendChild(capLabel);
   capLine.appendChild(capValue);
+  capLine.appendChild(capWarning);
   const capInfo = document.createElement('span');
   capInfo.classList.add('info-tooltip-icon');
   capInfo.innerHTML = '&#9432;';
-  const capacityText = 'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.';
+  const capacityText = 'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.  \n\n If you feel that the game is very slow, there is a very high chance that this multiplier is the reason why.  Try to keep it as high as possible by building more housing.';
   growthRateDisplayCache.tooltips.capacity = attachDynamicInfoTooltip(capInfo, capacityText);
   capLine.appendChild(capInfo);
   body.appendChild(capLine);
   growthRateDisplayCache.capacityValue = capValue;
+  growthRateDisplayCache.capacityWarning = capWarning;
 
   // Base rate line
   const baseLine = document.createElement('div');
@@ -170,6 +175,7 @@ function updateGrowthRateDisplay(){
   const baseEl = growthRateDisplayCache.baseValue;
   const otherEl = growthRateDisplayCache.otherValue;
   const capEl = growthRateDisplayCache.capacityValue;
+  const capWarningEl = growthRateDisplayCache.capacityWarning;
   const decayEl = growthRateDisplayCache.decayValue;
   if(!growthEl || !baseEl || !capEl || !otherEl) return;
 
@@ -199,6 +205,9 @@ function updateGrowthRateDisplay(){
     capMult = Math.max(0, 1 - pop / cap);
   }
   capEl.textContent = `${formatNumber(capMult * 100, false, 1)}%`;
+  if (capWarningEl) {
+    capWarningEl.textContent = capMult <= 0.5 ? '\u26A0' : '';
+  }
 
   if (decayEl) {
     const starvationRate = populationModule.starvationDecayRate * 100;
