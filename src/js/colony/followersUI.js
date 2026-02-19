@@ -985,7 +985,7 @@ function updateFollowersUI() {
   followersUICache.faithGalacticBelievers.textContent = `${formatNumber(faith.galacticBelievers, true)} / ${formatNumber(faith.galacticPopulation, true)}`;
   const worldCapText = `${formatNumber(faith.worldCapPercent * 100, false, 2)}%`;
   const syncThresholdText = `${formatNumber(baseWorldCapPercent * 100, false, 2)}%`;
-  followersUICache.faithWorldCap.textContent = consecrated ? `${worldCapText} (sync at ${syncThresholdText})` : worldCapText;
+  followersUICache.faithWorldCap.textContent = consecrated ? `${worldCapText}` : worldCapText;
   followersUICache.faithWorldRate.textContent = `+${formatNumber(faith.rates.worldPerSecond * faith.worldPopulation, false, 2)}/s`;
   followersUICache.faithGalacticRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * 100, false, 4)}%/s`;
   followersUICache.faithGalacticAbsoluteRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * faith.galacticPopulation, false, 2)}/s`;
