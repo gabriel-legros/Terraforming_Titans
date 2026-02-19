@@ -349,7 +349,7 @@ function ensurePulsarLayout() {
 
   const effectsHeader = doc.createElement('div');
   effectsHeader.className = 'hazard-effects__header';
-  effectsHeader.textContent = 'Effects';
+  effectsHeader.textContent = 'Other Effects';
 
   const effectsList = doc.createElement('ul');
   effectsList.className = 'hazard-effects__list';
