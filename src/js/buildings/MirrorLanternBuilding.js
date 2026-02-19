@@ -22,6 +22,28 @@ class MirrorLanternBuilding extends MirrorBase {
     this._allowFullProductivity = false;
   }
 
+  isPulsarHazardBlocking() {
+    try {
+      const pulsar = hazardManager.parameters.pulsar;
+      if (!pulsar) return false;
+      return !hazardManager.pulsarHazard.isCleared(terraforming, pulsar);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  filterActivationChange(change) {
+    if (change > 0 && this.isPulsarHazardBlocking()) {
+      return 0;
+    }
+    return change;
+  }
+
+  build(buildCount = 1, activate = true) {
+    const canActivate = activate && !this.isPulsarHazardBlocking();
+    return super.build(buildCount, canActivate);
+  }
+
   _isEveryZoneAboveTrend() {
     const zones = getZones();
     if (!terraforming?.temperature?.zones) return false;
@@ -86,6 +108,20 @@ class MirrorLanternBuilding extends MirrorBase {
   }
 
   updateProductivity(resources, deltaTime) {
+    if (this.isPulsarHazardBlocking()) {
+      if (this.active > 0) {
+        this.active = 0;
+        this.autoActiveEnabled = false;
+        this.updateResourceStorage(resources);
+      }
+      this.setAutomationActivityMultiplier(0);
+      this.productivity = 0;
+      this._baseProductivity = 0;
+      this._assignmentShare = 0;
+      this._allowFullProductivity = false;
+      return;
+    }
+
     this.setAutomationActivityMultiplier(1);
 
     const { targetProductivity: baseTarget } = this.computeBaseProductivity(

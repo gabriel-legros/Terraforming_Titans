@@ -25,7 +25,7 @@ progressHades.storyProjects.hades_pandora_mystery = {
   chapter: 33,
   cost: {},
   duration: 60_000,
-  description: "Answer Prometheus' questions.",
+  description: "Wait for Mary to answer Prometheus' questions.",
   repeatable: true,
   maxRepeatCount: 5,
   unlocked: false,
