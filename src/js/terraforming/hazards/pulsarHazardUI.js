@@ -129,7 +129,14 @@ function getUndergroundCompletionRatio() {
   return clampRatio(completions / initialLand);
 }
 
-function getArtificialSkyProgress(artificialSkyCompletion) {
+function isPulsarClearedByRogue(terraformingState) {
+  return terraformingState
+    && terraformingState.celestialParameters
+    && terraformingState.celestialParameters.rogue === true
+    && terraformingState.celestialParameters.roguePulsar !== true;
+}
+
+function getArtificialSkyProgress(artificialSkyCompletion, useCompletionFallback = true) {
   const manager = getProjectManager();
   const project = manager && manager.projects
     ? manager.projects.artificialSky
@@ -156,8 +163,10 @@ function getArtificialSkyProgress(artificialSkyCompletion) {
 
   if (maxSegments <= 0) {
     maxSegments = 1;
-    builtSegments = clampRatio(artificialSkyCompletion) * maxSegments;
-  } else if (builtSegments <= 0 && artificialSkyCompletion > 0) {
+    builtSegments = useCompletionFallback
+      ? clampRatio(artificialSkyCompletion) * maxSegments
+      : 0;
+  } else if (useCompletionFallback && builtSegments <= 0 && artificialSkyCompletion > 0) {
     builtSegments = clampRatio(artificialSkyCompletion) * maxSegments;
   }
 
@@ -465,7 +474,8 @@ function updatePulsarHazardUI(pulsarParameters) {
     ? nanotechManager.getPulsarNanobotCapMultiplier()
     : 0;
   const undergroundCompletionRatio = getUndergroundCompletionRatio();
-  const skyProgress = getArtificialSkyProgress(artificialSkyCompletion);
+  const clearedByRogue = isPulsarClearedByRogue(terraforming);
+  const skyProgress = getArtificialSkyProgress(artificialSkyCompletion, !clearedByRogue);
 
   if (!isActive) {
     if (pulsarHazardUICache.summaryStatusBody) {
