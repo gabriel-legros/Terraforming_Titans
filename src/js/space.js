@@ -117,12 +117,14 @@ class SpaceManager extends EffectableEntity {
         this.dominionTerraformRewards = {};
         this.dominionTerraformRewardCount = 0;
         this.foundryWorldBonusCache = { count: 0, bonus: 0 };
+        this.worldStatsCache = this._createEmptyWorldStatsCache();
 
         this._initializePlanetStatuses();
         // Mark the starting planet as visited
         if (this.planetStatuses[this.currentPlanetKey]) {
             this.planetStatuses[this.currentPlanetKey].visited = true;
         }
+        this._refreshWorldStatsCache();
         console.log("SpaceManager initialized with planet statuses.");
     }
 
@@ -152,6 +154,7 @@ class SpaceManager extends EffectableEntity {
                 this.planetStatuses[p].enabled = true;
             }
         });
+        this._resetWorldStatsCache();
     }
 
     setRwgLock(planetKey, value = true) {
@@ -255,64 +258,326 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLockManual = false;
     }
 
-    getWorldCountPerSector(sectorLabel) {
-        const target = normalizeSectorLabel(sectorLabel);
-        let total = 0;
-        const overridesLookup = globalThis?.planetOverrides || null;
-        const resolveStatusSector = (status, ...sources) => {
-            if (status?.sector) {
-                return normalizeSectorLabel(status.sector);
-            }
-            return resolveSectorFromSources(...sources);
+    _createEmptyWorldStatsCache() {
+        return {
+            storyTerraformed: 0,
+            randomTerraformed: 0,
+            artificialTerraformed: 0,
+            storyOrbitalRings: 0,
+            randomOrbitalRings: 0,
+            artificialOrbitalRings: 0,
+            artificialTerraformBonus: 0,
+            artificialTerraformValueCounts: {},
+            artificialFleetCapacityWorlds: 0,
+            lastArtificialFleetCap: null,
+            sectorCounts: {},
+            randomTypeCounts: {},
+            randomTypeHazardBonuses: {}
         };
+    }
 
-        Object.keys(this.planetStatuses).forEach((key) => {
-            const status = this.planetStatuses[key];
-            if (!status || !status.terraformed) {
-                return;
+    _resetWorldStatsCache() {
+        this.worldStatsCache = this._createEmptyWorldStatsCache();
+    }
+
+    _getWorldStatusMap(type) {
+        if (type === 'story') {
+            return this.planetStatuses;
+        }
+        if (type === 'random') {
+            return this.randomWorldStatuses;
+        }
+        if (type === 'artificial') {
+            return this.artificialWorldStatuses;
+        }
+        return null;
+    }
+
+    _adjustCachedNumber(field, delta) {
+        if (!delta) {
+            return;
+        }
+        const next = (this.worldStatsCache[field] || 0) + delta;
+        this.worldStatsCache[field] = next > 0 ? next : 0;
+    }
+
+    _adjustCachedMapValue(mapName, key, delta) {
+        if (!delta || !key) {
+            return;
+        }
+        const map = this.worldStatsCache[mapName];
+        if (!map) {
+            return;
+        }
+        const current = map[key] || 0;
+        const next = current + delta;
+        if (next > 0) {
+            map[key] = next;
+        } else {
+            delete map[key];
+        }
+    }
+
+    _addHazardsToSet(hazardKeys, value) {
+        if (!value || value === 'none') return;
+        if (Array.isArray(value)) {
+            value.forEach((entry) => {
+                if (entry && entry !== 'none') hazardKeys.add(String(entry));
+            });
+            return;
+        }
+        if (value.constructor === Object) {
+            Object.keys(value).forEach((entry) => {
+                if (entry && entry !== 'none') hazardKeys.add(String(entry));
+            });
+            return;
+        }
+        hazardKeys.add(String(value));
+    }
+
+    _getRandomWorldType(status) {
+        if (!status) return null;
+        const resolved = status.cachedArchetype
+            || status.archetype
+            || status.classification?.archetype
+            || status.original?.archetype
+            || status.original?.classification?.archetype
+            || status.original?.merged?.classification?.archetype
+            || status.original?.override?.classification?.archetype
+            || null;
+        if (resolved && !status.cachedArchetype) {
+            status.cachedArchetype = resolved;
+        }
+        return resolved;
+    }
+
+    _countRandomWorldHazards(status) {
+        if (!status) {
+            return 0;
+        }
+        if (Number.isFinite(status.cachedHazardCount) && status.cachedHazardCount >= 0) {
+            return Math.floor(status.cachedHazardCount);
+        }
+        const hazardKeys = new Set(status.cachedHazards?.keys || []);
+        this._addHazardsToSet(hazardKeys, status.hazard);
+        this._addHazardsToSet(hazardKeys, status.original?.hazard);
+        const override = status.override
+            || status.merged
+            || status.original?.override
+            || status.original?.merged
+            || null;
+        this._addHazardsToSet(hazardKeys, override?.rwgMeta?.selectedHazards);
+        this._addHazardsToSet(hazardKeys, override?.rwgMeta?.selectedHazard);
+        this._addHazardsToSet(hazardKeys, override?.hazards);
+        this._addHazardsToSet(hazardKeys, status.original?.hazards);
+        const count = hazardKeys.size;
+        status.cachedHazardCount = count;
+        return count;
+    }
+
+    _resolveStatusSector(type, key, status) {
+        if (!status) {
+            return SPACE_DEFAULT_SECTOR_LABEL;
+        }
+        if (status.sector) {
+            const normalized = normalizeSectorLabel(status.sector);
+            status.sector = normalized;
+            return normalized;
+        }
+        let resolved = SPACE_DEFAULT_SECTOR_LABEL;
+        if (type === 'story') {
+            let overridesLookup = null;
+            try {
+                overridesLookup = planetOverrides;
+            } catch (error) {
+                overridesLookup = null;
             }
             const planetData = this.allPlanetsData[key] || null;
             const override = overridesLookup ? overridesLookup[key] : null;
-            const sector = resolveStatusSector(status, override, planetData);
-            if (sector !== target) {
-                return;
-            }
-            total += 1;
-            if (status.orbitalRing) {
-                total += 1;
-            }
-        });
+            resolved = resolveSectorFromSources(status, override, planetData);
+        } else {
+            resolved = resolveSectorFromSources(status, status.original);
+        }
+        const normalized = normalizeSectorLabel(resolved);
+        status.sector = normalized;
+        return normalized;
+    }
 
-        Object.values(this.randomWorldStatuses).forEach((status) => {
-            if (!status || !status.terraformed) {
-                return;
-            }
-            const original = status.original || null;
-            const sector = resolveStatusSector(status, original);
-            if (sector !== target) {
-                return;
-            }
-            total += 1;
-            if (status.orbitalRing) {
-                total += 1;
-            }
-        });
+    _createEmptyWorldContribution() {
+        return {
+            storyTerraformed: 0,
+            randomTerraformed: 0,
+            artificialTerraformed: 0,
+            storyOrbitalRings: 0,
+            randomOrbitalRings: 0,
+            artificialOrbitalRings: 0,
+            artificialBonus: 0,
+            artificialTerraformValue: 0,
+            sector: null,
+            sectorUnits: 0,
+            randomType: null,
+            randomTypeCount: 0,
+            randomTypeHazardBonus: 0
+        };
+    }
 
-        Object.values(this.artificialWorldStatuses).forEach((status) => {
-            if (!status || !status.terraformed) {
-                return;
-            }
-            const sector = resolveStatusSector(status, status.original);
-            if (sector !== target) {
-                return;
-            }
-            const value = this._deriveArtificialTerraformValue(status);
-            if (value > 0) {
-                total += value;
-            }
-        });
+    _buildWorldContribution(type, key, status) {
+        const contribution = this._createEmptyWorldContribution();
+        if (!status) {
+            return contribution;
+        }
 
-        return total;
+        const terraformed = !!status.terraformed;
+        const hasRing = !!status.orbitalRing;
+
+        if (type === 'story') {
+            contribution.storyTerraformed = terraformed ? 1 : 0;
+            contribution.storyOrbitalRings = hasRing ? 1 : 0;
+            if (terraformed) {
+                contribution.sector = this._resolveStatusSector(type, key, status);
+                contribution.sectorUnits = 1 + (hasRing ? 1 : 0);
+            }
+            return contribution;
+        }
+
+        if (type === 'random') {
+            contribution.randomTerraformed = terraformed ? 1 : 0;
+            contribution.randomOrbitalRings = hasRing ? 1 : 0;
+            if (terraformed) {
+                contribution.sector = this._resolveStatusSector(type, key, status);
+                contribution.sectorUnits = 1 + (hasRing ? 1 : 0);
+                const worldType = this._getRandomWorldType(status);
+                if (worldType) {
+                    contribution.randomType = worldType;
+                    contribution.randomTypeCount = 1;
+                    contribution.randomTypeHazardBonus = this._countRandomWorldHazards(status);
+                }
+            }
+            return contribution;
+        }
+
+        contribution.artificialTerraformed = terraformed ? 1 : 0;
+        contribution.artificialOrbitalRings = hasRing ? 1 : 0;
+        if (!terraformed) {
+            return contribution;
+        }
+
+        const terraformedValue = this._deriveArtificialTerraformValue(status);
+        contribution.sector = this._resolveStatusSector(type, key, status);
+        status.terraformedValue = terraformedValue;
+        if (!Number.isFinite(status.fleetCapacityValue) || status.fleetCapacityValue <= 0) {
+            status.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(status);
+        }
+        contribution.artificialTerraformValue = terraformedValue;
+        contribution.artificialBonus = Math.max(0, terraformedValue - 1);
+        contribution.sectorUnits = Math.max(0, terraformedValue);
+        return contribution;
+    }
+
+    _applyWorldContributionDiff(previousContribution, nextContribution) {
+        const previous = previousContribution || this._createEmptyWorldContribution();
+        const next = nextContribution || this._createEmptyWorldContribution();
+
+        this._adjustCachedNumber('storyTerraformed', next.storyTerraformed - previous.storyTerraformed);
+        this._adjustCachedNumber('randomTerraformed', next.randomTerraformed - previous.randomTerraformed);
+        this._adjustCachedNumber('artificialTerraformed', next.artificialTerraformed - previous.artificialTerraformed);
+        this._adjustCachedNumber('storyOrbitalRings', next.storyOrbitalRings - previous.storyOrbitalRings);
+        this._adjustCachedNumber('randomOrbitalRings', next.randomOrbitalRings - previous.randomOrbitalRings);
+        this._adjustCachedNumber('artificialOrbitalRings', next.artificialOrbitalRings - previous.artificialOrbitalRings);
+        this._adjustCachedNumber('artificialTerraformBonus', next.artificialBonus - previous.artificialBonus);
+
+        if (previous.artificialTerraformValue) {
+            this._adjustCachedMapValue('artificialTerraformValueCounts', String(previous.artificialTerraformValue), -1);
+        }
+        if (next.artificialTerraformValue) {
+            this._adjustCachedMapValue('artificialTerraformValueCounts', String(next.artificialTerraformValue), 1);
+        }
+        if (previous.artificialTerraformValue !== next.artificialTerraformValue) {
+            this.worldStatsCache.lastArtificialFleetCap = null;
+        }
+
+        if (previous.sector && previous.sectorUnits) {
+            this._adjustCachedMapValue('sectorCounts', previous.sector, -previous.sectorUnits);
+        }
+        if (next.sector && next.sectorUnits) {
+            this._adjustCachedMapValue('sectorCounts', next.sector, next.sectorUnits);
+        }
+
+        if (previous.randomType && previous.randomTypeCount) {
+            this._adjustCachedMapValue('randomTypeCounts', previous.randomType, -previous.randomTypeCount);
+        }
+        if (next.randomType && next.randomTypeCount) {
+            this._adjustCachedMapValue('randomTypeCounts', next.randomType, next.randomTypeCount);
+        }
+        if (previous.randomType && previous.randomTypeHazardBonus) {
+            this._adjustCachedMapValue('randomTypeHazardBonuses', previous.randomType, -previous.randomTypeHazardBonus);
+        }
+        if (next.randomType && next.randomTypeHazardBonus) {
+            this._adjustCachedMapValue('randomTypeHazardBonuses', next.randomType, next.randomTypeHazardBonus);
+        }
+    }
+
+    _refreshWorldStatsCache() {
+        this._resetWorldStatsCache();
+        Object.keys(this.planetStatuses).forEach((key) => {
+            const contribution = this._buildWorldContribution('story', key, this.planetStatuses[key]);
+            this._applyWorldContributionDiff(null, contribution);
+        });
+        Object.keys(this.randomWorldStatuses).forEach((key) => {
+            const contribution = this._buildWorldContribution('random', key, this.randomWorldStatuses[key]);
+            this._applyWorldContributionDiff(null, contribution);
+        });
+        Object.keys(this.artificialWorldStatuses).forEach((key) => {
+            const contribution = this._buildWorldContribution('artificial', key, this.artificialWorldStatuses[key]);
+            this._applyWorldContributionDiff(null, contribution);
+        });
+    }
+
+    _updateWorldCacheForStatusMutation(type, key, mutator) {
+        const map = this._getWorldStatusMap(type);
+        if (!map) {
+            return null;
+        }
+        const resolvedKey = String(key);
+        const beforeStatus = map[resolvedKey] || null;
+        const beforeContribution = this._buildWorldContribution(type, resolvedKey, beforeStatus);
+        mutator(beforeStatus, map, resolvedKey);
+        const afterStatus = map[resolvedKey] || null;
+        const afterContribution = this._buildWorldContribution(type, resolvedKey, afterStatus);
+        this._applyWorldContributionDiff(beforeContribution, afterContribution);
+        return afterStatus;
+    }
+
+    _setWorldOrbitalRing(type, key, value) {
+        this._updateWorldCacheForStatusMutation(type, key, (status) => {
+            if (!status) {
+                return;
+            }
+            status.orbitalRing = !!value;
+        });
+    }
+
+    _getArtificialFleetCapacityCap() {
+        const managerFleetCap = artificialManager?.getFleetCapacityWorldCap?.() || 0;
+        if (managerFleetCap > 0) {
+            return managerFleetCap;
+        }
+        if (Number.isFinite(ARTIFICIAL_FLEET_CAPACITY_WORLDS) && ARTIFICIAL_FLEET_CAPACITY_WORLDS > 0) {
+            return ARTIFICIAL_FLEET_CAPACITY_WORLDS;
+        }
+        return 5;
+    }
+
+    getRandomWorldEffectCounts() {
+        return {
+            counts: this.worldStatsCache.randomTypeCounts,
+            hazardBonuses: this.worldStatsCache.randomTypeHazardBonuses
+        };
+    }
+
+    getWorldCountPerSector(sectorLabel) {
+        const target = normalizeSectorLabel(sectorLabel);
+        return this.worldStatsCache.sectorCounts[target] || 0;
     }
 
     currentWorldHasOrbitalRing() {
@@ -322,7 +587,7 @@ class SpaceManager extends EffectableEntity {
         if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
             if (this.artificialWorldStatuses[key]?.orbitalRing) {
-                this.artificialWorldStatuses[key].orbitalRing = false;
+                this._setWorldOrbitalRing('artificial', key, false);
             }
             return false;
         }
@@ -336,7 +601,7 @@ class SpaceManager extends EffectableEntity {
         } else if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
             if (this.artificialWorldStatuses[key]) {
-                this.artificialWorldStatuses[key].orbitalRing = false;
+                this._setWorldOrbitalRing('artificial', key, false);
             }
         } else {
             this.setStoryWorldHasOrbitalRing(this.currentPlanetKey, value);
@@ -344,11 +609,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     setStoryWorldHasOrbitalRing(planetKey, value) {
-        const status = this.planetStatuses[planetKey];
-        if (!status) {
-            return;
-        }
-        status.orbitalRing = !!value;
+        this._setWorldOrbitalRing('story', planetKey, value);
     }
 
     _ensureRandomWorldStatus(seed) {
@@ -370,8 +631,8 @@ class SpaceManager extends EffectableEntity {
     }
 
     setRandomWorldHasOrbitalRing(seed, value) {
-        const status = this._ensureRandomWorldStatus(seed);
-        status.orbitalRing = !!value;
+        this._ensureRandomWorldStatus(seed);
+        this._setWorldOrbitalRing('random', seed, value);
     }
 
     isCurrentWorldTerraformed() {
@@ -382,18 +643,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     countOrbitalRings() {
-        let total = 0;
-        Object.values(this.planetStatuses).forEach(status => {
-            if (status?.orbitalRing) {
-                total += 1;
-            }
-        });
-        Object.values(this.randomWorldStatuses).forEach(status => {
-            if (status?.orbitalRing) {
-                total += 1;
-            }
-        });
-        return total;
+        return (this.worldStatsCache.storyOrbitalRings || 0) + (this.worldStatsCache.randomOrbitalRings || 0);
     }
 
     assignOrbitalRings(totalRings, options = {}) {
@@ -412,7 +662,7 @@ class SpaceManager extends EffectableEntity {
             }
             if (!status.terraformed) {
                 if (force && status.orbitalRing) {
-                    status.orbitalRing = false;
+                    this._setWorldOrbitalRing(type, key, false);
                 }
                 return;
             }
@@ -455,7 +705,9 @@ class SpaceManager extends EffectableEntity {
         let assigned = 0;
         ordered.forEach(entry => {
             const shouldAssign = assigned < normalizedTotal;
-            entry.status.orbitalRing = shouldAssign;
+            if (!!entry.status.orbitalRing !== shouldAssign) {
+                this._setWorldOrbitalRing(entry.type, entry.key, shouldAssign);
+            }
             if (shouldAssign) {
                 assigned += 1;
             }
@@ -480,25 +732,13 @@ class SpaceManager extends EffectableEntity {
         } = options;
         let total = 0;
         if (countStory) {
-            Object.values(this.planetStatuses).forEach((status) => {
-                if (status?.terraformed) {
-                    total += 1;
-                }
-            });
+            total += this.worldStatsCache.storyTerraformed || 0;
         }
         if (countRandom) {
-            Object.values(this.randomWorldStatuses).forEach((status) => {
-                if (status?.terraformed) {
-                    total += 1;
-                }
-            });
+            total += this.worldStatsCache.randomTerraformed || 0;
         }
         if (countArtificial) {
-            Object.values(this.artificialWorldStatuses).forEach((status) => {
-                if (status?.terraformed) {
-                    total += 1;
-                }
-            });
+            total += this.worldStatsCache.artificialTerraformed || 0;
         }
         return total;
     }
@@ -521,12 +761,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     _deriveArtificialFleetCapacityValue(status) {
-        const managerFleetCap = artificialManager?.getFleetCapacityWorldCap?.() || 0;
-        const maxFleetValue = managerFleetCap > 0
-            ? managerFleetCap
-            : (Number.isFinite(ARTIFICIAL_FLEET_CAPACITY_WORLDS) && ARTIFICIAL_FLEET_CAPACITY_WORLDS > 0
-                ? ARTIFICIAL_FLEET_CAPACITY_WORLDS
-                : 5);
+        const maxFleetValue = this._getArtificialFleetCapacityCap();
         const terraformedValue = this._deriveArtificialTerraformValue(status);
         if (Number.isFinite(terraformedValue) && terraformedValue > 0) {
             return Math.min(maxFleetValue, terraformedValue);
@@ -626,7 +861,9 @@ class SpaceManager extends EffectableEntity {
      * @returns {number}
      */
     getTerraformedPlanetCount() {
-        const base = this.getUnmodifiedTerraformedWorldCount();
+        const base = (this.worldStatsCache.storyTerraformed || 0)
+            + (this.worldStatsCache.randomTerraformed || 0)
+            + (this.worldStatsCache.artificialTerraformed || 0);
         const rings = (typeof projectManager !== 'undefined' && projectManager.projects && projectManager.projects.orbitalRing)
             ? projectManager.projects.orbitalRing.ringCount
             : 0;
@@ -635,31 +872,33 @@ class SpaceManager extends EffectableEntity {
             ? galaxyManager.getControlledSectorWorldCount()
             : 0;
         const sectorBonus = Number.isFinite(sectorWorlds) ? Math.max(0, sectorWorlds) : 0;
-        const artificialBonus = Object.values(this.artificialWorldStatuses || {}).reduce((acc, status) => {
-            if (!status?.terraformed) return acc;
-            const value = this._deriveArtificialTerraformValue(status);
-            return acc + Math.max(0, value - 1);
-        }, 0);
+        const artificialBonus = this.worldStatsCache.artificialTerraformBonus || 0;
         const cylinders = this.getOneillCylinderCount();
         return base + rings + extra + sectorBonus + artificialBonus + cylinders;
     }
 
     getArtificialFleetCapacityWorlds() {
+        const cap = this._getArtificialFleetCapacityCap();
+        if (this.worldStatsCache.lastArtificialFleetCap === cap) {
+            return this.worldStatsCache.artificialFleetCapacityWorlds || 0;
+        }
         let total = 0;
-        Object.values(this.artificialWorldStatuses).forEach((status) => {
-            if (!status || !status.terraformed) {
+        const counts = this.worldStatsCache.artificialTerraformValueCounts || {};
+        Object.keys(counts).forEach((valueKey) => {
+            const count = counts[valueKey];
+            const terraformedValue = Number(valueKey);
+            if (!count || !Number.isFinite(terraformedValue) || terraformedValue <= 0) {
                 return;
             }
-            const value = this._deriveArtificialFleetCapacityValue(status);
-            if (value > 0) {
-                total += value;
-            }
+            total += Math.min(cap, terraformedValue) * count;
         });
+        this.worldStatsCache.artificialFleetCapacityWorlds = total;
+        this.worldStatsCache.lastArtificialFleetCap = cap;
         return total;
     }
 
     getFleetCapacityWorldCount() {
-        const base = this.getUnmodifiedTerraformedWorldCount({ countArtificial: false });
+        const base = (this.worldStatsCache.storyTerraformed || 0) + (this.worldStatsCache.randomTerraformed || 0);
         const artificial = this.getArtificialFleetCapacityWorlds();
         const rings = projectManager?.projects?.orbitalRing?.ringCount || 0;
         const extra = Number.isFinite(this.extraTerraformedWorlds) && this.extraTerraformedWorlds > 0 ? this.extraTerraformedWorlds : 0;
@@ -852,70 +1091,83 @@ class SpaceManager extends EffectableEntity {
     updateCurrentPlanetTerraformedStatus(isComplete) {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
-            if (!this.randomWorldStatuses[seed]) {
-                this.randomWorldStatuses[seed] = {
-                    name: this.currentRandomName,
-                    terraformed: false,
-                    colonists: 0,
-                    original: this.getCurrentWorldOriginal(),
-                    visited: true,
-                    orbitalRing: false,
-                    sector: resolveSectorFromSources(this.getCurrentWorldOriginal())
-                };
-            }
-            if (this.randomWorldStatuses[seed].terraformed !== isComplete) {
-                this.randomWorldStatuses[seed].terraformed = isComplete;
-                console.log(`SpaceManager: Terraformed status for seed ${seed} updated to ${isComplete}`);
-            }
+            this._updateWorldCacheForStatusMutation('random', seed, (status, map, key) => {
+                let target = status;
+                if (!target) {
+                    const original = this.getCurrentWorldOriginal();
+                    target = {
+                        name: this.currentRandomName,
+                        terraformed: false,
+                        colonists: 0,
+                        original,
+                        visited: true,
+                        orbitalRing: false,
+                        sector: resolveSectorFromSources(original)
+                    };
+                    map[key] = target;
+                }
+                if (target.terraformed !== isComplete) {
+                    target.terraformed = isComplete;
+                    console.log(`SpaceManager: Terraformed status for seed ${seed} updated to ${isComplete}`);
+                }
+            });
             return;
         }
         if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
-            if (!this.artificialWorldStatuses[key]) {
-                const terraformedValue = this._deriveArtificialTerraformValue({
-                    landHa: this._getCurrentWorldLandHa(),
-                    original: this.getCurrentWorldOriginal()
-                });
-                this.artificialWorldStatuses[key] = {
-                    name: this.currentRandomName || `Artificial ${key}`,
-                    terraformed: false,
-                    colonists: 0,
-                    original: this.getCurrentWorldOriginal(),
-                    visited: true,
-                    orbitalRing: false,
-                    departedAt: null,
-                    ecumenopolisPercent: 0,
-                    terraformedValue,
-                    fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue }),
-                    sector: resolveSectorFromSources(this.getCurrentWorldOriginal())
-                };
-            } else if (!this.artificialWorldStatuses[key].terraformedValue) {
-                this.artificialWorldStatuses[key].terraformedValue = this._deriveArtificialTerraformValue({
-                    landHa: this._getCurrentWorldLandHa(),
-                    original: this.getCurrentWorldOriginal(),
-                    terraformedValue: this.artificialWorldStatuses[key].terraformedValue
-                });
-            }
-            if (!Number.isFinite(this.artificialWorldStatuses[key].fleetCapacityValue) || this.artificialWorldStatuses[key].fleetCapacityValue <= 0) {
-                this.artificialWorldStatuses[key].fleetCapacityValue = this._deriveArtificialFleetCapacityValue(this.artificialWorldStatuses[key]);
-            }
-            if (this.artificialWorldStatuses[key].terraformed !== isComplete) {
-                this.artificialWorldStatuses[key].terraformed = isComplete;
-                console.log(`SpaceManager: Terraformed status for artificial world ${key} updated to ${isComplete}`);
-            }
-            if (isComplete) {
-                this.artificialWorldStatuses[key].abandoned = false;
-            }
+            this._updateWorldCacheForStatusMutation('artificial', key, (status, map, resolvedKey) => {
+                let target = status;
+                if (!target) {
+                    const original = this.getCurrentWorldOriginal();
+                    const terraformedValue = this._deriveArtificialTerraformValue({
+                        landHa: this._getCurrentWorldLandHa(),
+                        original
+                    });
+                    target = {
+                        name: this.currentRandomName || `Artificial ${resolvedKey}`,
+                        terraformed: false,
+                        colonists: 0,
+                        original,
+                        visited: true,
+                        orbitalRing: false,
+                        departedAt: null,
+                        ecumenopolisPercent: 0,
+                        terraformedValue,
+                        fleetCapacityValue: this._deriveArtificialFleetCapacityValue({ terraformedValue }),
+                        sector: resolveSectorFromSources(original)
+                    };
+                    map[resolvedKey] = target;
+                } else if (!target.terraformedValue) {
+                    target.terraformedValue = this._deriveArtificialTerraformValue({
+                        landHa: this._getCurrentWorldLandHa(),
+                        original: this.getCurrentWorldOriginal(),
+                        terraformedValue: target.terraformedValue
+                    });
+                }
+
+                if (!Number.isFinite(target.fleetCapacityValue) || target.fleetCapacityValue <= 0) {
+                    target.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(target);
+                }
+                if (target.terraformed !== isComplete) {
+                    target.terraformed = isComplete;
+                    console.log(`SpaceManager: Terraformed status for artificial world ${resolvedKey} updated to ${isComplete}`);
+                }
+                if (isComplete) {
+                    target.abandoned = false;
+                }
+            });
             return;
         }
-        if (this.planetStatuses[this.currentPlanetKey]) {
-            if (this.planetStatuses[this.currentPlanetKey].terraformed !== isComplete) {
-                 this.planetStatuses[this.currentPlanetKey].terraformed = isComplete;
-                 console.log(`SpaceManager: Terraformed status for ${this.currentPlanetKey} updated to ${isComplete}`);
-            }
-        } else {
+        if (!this.planetStatuses[this.currentPlanetKey]) {
             console.error(`SpaceManager: Cannot update terraformed status for unknown current planet key: ${this.currentPlanetKey}`);
+            return;
         }
+        this._updateWorldCacheForStatusMutation('story', this.currentPlanetKey, (status) => {
+            if (status.terraformed !== isComplete) {
+                status.terraformed = isComplete;
+                console.log(`SpaceManager: Terraformed status for ${this.currentPlanetKey} updated to ${isComplete}`);
+            }
+        });
     }
 
 
@@ -1244,38 +1496,53 @@ class SpaceManager extends EffectableEntity {
             })
             : 1;
         const sector = resolveSectorFromSources(res);
-        if (!existing) {
-            const targetMap = isArtificial ? this.artificialWorldStatuses : this.randomWorldStatuses;
-            targetMap[s] = {
-                name: this.currentRandomName,
-                terraformed: false,
-                colonists: 0,
-                original: res,
-                visited: true,
-                orbitalRing: false,
-                departedAt: null,
-                ecumenopolisPercent: 0,
-                artificial: artificialWorld,
-                terraformedValue,
-                sector
-            };
-        } else {
-            existing.original = existing.original || res;
-            existing.artificial = existing.artificial || artificialWorld;
-            existing.visited = true;
-            if (isArtificial && !existing.terraformedValue) {
-                existing.terraformedValue = terraformedValue;
+        const targetType = isArtificial ? 'artificial' : 'random';
+        this._updateWorldCacheForStatusMutation(targetType, s, (status, map, key) => {
+            if (!status) {
+                const cachedArchetype = res?.archetype
+                    || res?.classification?.archetype
+                    || res?.original?.archetype
+                    || res?.original?.classification?.archetype
+                    || res?.merged?.classification?.archetype
+                    || res?.original?.merged?.classification?.archetype
+                    || null;
+                map[key] = {
+                    name: this.currentRandomName,
+                    terraformed: false,
+                    colonists: 0,
+                    original: res,
+                    visited: true,
+                    orbitalRing: false,
+                    departedAt: null,
+                    ecumenopolisPercent: 0,
+                    artificial: artificialWorld,
+                    cachedArchetype,
+                    terraformedValue,
+                    sector
+                };
+                return;
             }
-            if (!existing.name) {
-                existing.name = this.currentRandomName;
+            status.original = status.original || res;
+            status.artificial = status.artificial || artificialWorld;
+            status.visited = true;
+            if (isArtificial && !status.terraformedValue) {
+                status.terraformedValue = terraformedValue;
             }
-            if (!existing.sector) {
-                existing.sector = sector;
+            if (!status.name) {
+                status.name = this.currentRandomName;
             }
-        }
+            if (!status.sector) {
+                status.sector = sector;
+            }
+            if (!status.cachedArchetype) {
+                status.cachedArchetype = this._getRandomWorldType(status);
+            }
+            status.cachedHazardCount = null;
+        });
 
         this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
-        const mergedParams = res?.merged || existing?.original?.merged || null;
+        const latest = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
+        const mergedParams = res?.merged || latest?.original?.merged || null;
         this._finalizeTravelInitialization({
             planetParameters: mergedParams
         });
@@ -1507,6 +1774,7 @@ class SpaceManager extends EffectableEntity {
             status.cachedHazards = (keys.length || selectedKey)
                 ? { selected: selectedKey || null, keys }
                 : null;
+            status.cachedHazardCount = null;
         };
 
         if (!savedData) {
@@ -1649,6 +1917,7 @@ class SpaceManager extends EffectableEntity {
                     selected: resolvedSelected,
                     keys: Array.from(existingKeys)
                 };
+                status.cachedHazardCount = null;
                 if (!status.hazard || status.hazard === 'none') {
                     status.hazard = hazardList.length === 1 ? hazardList[0] : hazardList.slice();
                 }
@@ -1664,6 +1933,7 @@ class SpaceManager extends EffectableEntity {
         Object.keys(this.artificialWorldStatuses).forEach((key) => {
             this._syncFoundryLandFactor(this.artificialWorldStatuses[key], key);
         });
+        this._refreshWorldStatsCache();
         this._refreshFoundryWorldBonusCache();
 
         if (savedData && Object.prototype.hasOwnProperty.call(savedData, 'rwgSectorLock')) {

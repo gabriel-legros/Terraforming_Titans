@@ -193,16 +193,24 @@ function countRandomWorldHazards(status) {
 function applyRWGEffects() {
   if (!spaceManager || !(addEffect instanceof Function)) return;
 
-  const counts = {};
-  const hazardBonuses = {};
-  const statuses = spaceManager.randomWorldStatuses || {};
-  for (const seed in statuses) {
-    const st = statuses[seed];
-    const type = getRandomWorldType(st);
-    if (st?.terraformed && type) {
-      counts[type] = (counts[type] || 0) + 1;
-      const hazardCount = countRandomWorldHazards(st);
-      if (hazardCount) hazardBonuses[type] = (hazardBonuses[type] || 0) + hazardCount;
+  let counts = {};
+  let hazardBonuses = {};
+  if (spaceManager.getRandomWorldEffectCounts instanceof Function) {
+    const cached = spaceManager.getRandomWorldEffectCounts();
+    counts = cached?.counts || {};
+    hazardBonuses = cached?.hazardBonuses || {};
+  } else {
+    counts = {};
+    hazardBonuses = {};
+    const statuses = spaceManager.randomWorldStatuses || {};
+    for (const seed in statuses) {
+      const st = statuses[seed];
+      const type = getRandomWorldType(st);
+      if (st?.terraformed && type) {
+        counts[type] = (counts[type] || 0) + 1;
+        const hazardCount = countRandomWorldHazards(st);
+        if (hazardCount) hazardBonuses[type] = (hazardBonuses[type] || 0) + hazardCount;
+      }
     }
   }
 

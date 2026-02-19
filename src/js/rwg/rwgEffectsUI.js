@@ -87,16 +87,22 @@ function _computeRWGEffectsSummary() {
     Object.keys(RWG).forEach(t => unlocked.add(t));
   }
 
-  const counts = {};
-  const hazardBonuses = {};
-  const statuses = sm.randomWorldStatuses || {};
-  for (const k in statuses) {
-    const st = statuses[k];
-    const type = getRandomWorldType(st);
-    if (st && st.terraformed && type) {
-      counts[type] = (counts[type] || 0) + 1;
-      const hazardCount = countRandomWorldHazards(st);
-      if (hazardCount) hazardBonuses[type] = (hazardBonuses[type] || 0) + hazardCount;
+  let counts = {};
+  let hazardBonuses = {};
+  if (sm.getRandomWorldEffectCounts instanceof Function) {
+    const cached = sm.getRandomWorldEffectCounts();
+    counts = cached?.counts || {};
+    hazardBonuses = cached?.hazardBonuses || {};
+  } else {
+    const statuses = sm.randomWorldStatuses || {};
+    for (const k in statuses) {
+      const st = statuses[k];
+      const type = getRandomWorldType(st);
+      if (st && st.terraformed && type) {
+        counts[type] = (counts[type] || 0) + 1;
+        const hazardCount = countRandomWorldHazards(st);
+        if (hazardCount) hazardBonuses[type] = (hazardBonuses[type] || 0) + hazardCount;
+      }
     }
   }
 
