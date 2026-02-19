@@ -42,6 +42,7 @@ function normalizeSpecialSeedKey(seedInput) {
 
 const wolfysNightmareOverrides = {
   name: 'WolfysNightmare',
+  gravityPenaltyEnabled: true,
   effects: [
     {
       target: 'project',
