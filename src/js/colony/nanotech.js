@@ -483,11 +483,18 @@ class NanotechManager extends EffectableEntity {
     const growthMultiplier = this.getEffectiveGrowthMultiplier();
     const effectiveRate = (baseRate * this.powerFraction + siliconRate + metalRate + biomassRate - penalty) * growthMultiplier;
     this.effectiveGrowthRate = effectiveRate;
-    if (effectiveRate !== 0 && !isNaN(effectiveRate)) {
-      this.nanobots += this.nanobots * effectiveRate * (deltaTime / 1000);
-    }
     const max = this.getMaxNanobots();
-    this.nanobots = Math.max(1, Math.min(this.nanobots, max));
+    if (effectiveRate !== 0 && !isNaN(effectiveRate)) {
+      const growthDelta = this.nanobots * effectiveRate * (deltaTime / 1000);
+      if (growthDelta > 0) {
+        if (this.nanobots < max) {
+          this.nanobots = Math.min(max, this.nanobots + growthDelta);
+        }
+      } else {
+        this.nanobots += growthDelta;
+      }
+    }
+    this.nanobots = Math.max(1, this.nanobots);
     this.applyMaintenanceEffects();
     this.updateUI();
   }

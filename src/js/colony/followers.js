@@ -660,7 +660,7 @@ class FollowersManager extends EffectableEntity {
       return;
     }
 
-    const galacticRate = (this.lastFaithWorldConversionRate / 1000) * this.getMissionaryGalacticConversionMultiplier();
+    const galacticRate = (this.lastFaithWorldConversionRate / 250) * this.getMissionaryGalacticConversionMultiplier();
     this.lastFaithGalacticConversionRate = galacticRate;
     const galacticDelta = Math.min(1 - galacticPercent, galacticRate * seconds);
     if (galacticDelta <= 0) {

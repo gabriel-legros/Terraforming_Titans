@@ -525,7 +525,7 @@ function buildFollowersUI() {
     'Believers in the Church of HOPE convert the current population exponentially.',
     'All colonists import bring population that respect the galactic believers %',
     'World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).',
-    'Once world believers reaches Galactic + 5 percentage points, galactic faith also rises at 1/1000 speed.',
+    'Once world believers reaches Galactic + 5 percentage points, galactic faith also rises at 1/250 speed.',
     'On a Holy World, world faith can continue up to Galactic + 15 percentage points.',
     'After travelling, world count will join the galactic count.'
   ].join('\n');
@@ -619,7 +619,7 @@ function buildFollowersUI() {
     'Pilgrims: increases population growth by galactic believer %.',
     'Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).',
     'Apostles: increases available orbitals by 10 * (galactic believer % - 10%), up to +900%.',
-    'Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %.'
+    'Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %; base rate is 1/250 of world conversion.'
   ].join('\n');
   const faithBonusesHeader = document.createElement('div');
   faithBonusesHeader.classList.add('followers-faith-bonuses-header');

@@ -516,7 +516,7 @@ function updatePulsarHazardUI(pulsarParameters) {
     }
     if (pulsarHazardUICache.scalingNanobotValue) {
       pulsarHazardUICache.scalingNanobotValue.textContent =
-        `Current Floor: x${formatNumber(currentNanobotMultiplier, false, 3)}\nUnderground ${formatNumber(undergroundCompletionRatio * 100, false, 2)}% | Net mitigation 100.00%`;
+        `Current Cap: x${formatNumber(currentNanobotMultiplier, false, 3)}\nUnderground ${formatNumber(undergroundCompletionRatio * 100, false, 2)}% | Net mitigation 100.00%`;
     }
     if (pulsarHazardUICache.effectsItems[0]) {
       pulsarHazardUICache.effectsItems[0].textContent = PULSAR_DISABLED_PROJECTS_TEXT;
