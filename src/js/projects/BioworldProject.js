@@ -219,6 +219,7 @@
           value: 9,
           effectId: 'bioworld-biocortex-research',
           sourceId: 'bioworld-biocortex',
+          name: 'Biocortex-human integration',
         });
       }
     }

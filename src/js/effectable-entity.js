@@ -426,7 +426,8 @@ class EffectableEntity {
             resourceTarget: 'research',
             value: multiplier,
             effectId,
-            sourceId: effect.sourceId
+            sourceId: effect.sourceId,
+            name: effect.name
           });
         }
       }
@@ -436,7 +437,8 @@ class EffectableEntity {
           type: 'productionMultiplier',
           value: multiplier,
           effectId,
-          sourceId: effect.sourceId
+          sourceId: effect.sourceId,
+          name: effect.name
         });
       }
     }
