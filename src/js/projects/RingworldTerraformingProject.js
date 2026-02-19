@@ -159,6 +159,12 @@ class RingworldTerraformingProject extends Project {
     if (this.energyInvested > this.energyRequired) {
       this.energyInvested = this.energyRequired;
     }
+    if (!this.isCompleted && this.energyRequired > 0 && this.energyInvested >= this.energyRequired) {
+      this.complete();
+      this.investing = false;
+      this.isActive = false;
+      this.actualInvestRate = 0;
+    }
   }
 
   getSurfaceGravityRatio() {
