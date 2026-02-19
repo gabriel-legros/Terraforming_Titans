@@ -119,6 +119,38 @@ function getResources() {
   }
 }
 
+function attachHazardCardCollapse(card, title) {
+  if (!card || !title) {
+    return;
+  }
+
+  const doc = getDocument();
+  if (!doc) {
+    return;
+  }
+
+  const arrow = doc.createElement('span');
+  arrow.className = 'hazard-card__collapse-arrow';
+  arrow.innerHTML = '&#9660;';
+  title.insertBefore(arrow, title.firstChild);
+
+  const syncArrow = () => {
+    arrow.innerHTML = card.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  };
+
+  const toggleCard = () => {
+    card.classList.toggle('collapsed');
+    syncArrow();
+  };
+
+  arrow.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleCard();
+  });
+  title.addEventListener('click', toggleCard);
+  syncArrow();
+}
+
 function formatNumeric(value, decimals = 2, allowSmall = false) {
   let formatted = null;
   try {
@@ -261,6 +293,7 @@ function buildKesslerLayout() {
     const title = doc.createElement('h3');
     title.className = 'hazard-card__title';
     title.textContent = 'Kessler Skies';
+    attachHazardCardCollapse(card, title);
     card.appendChild(title);
 
     const summaryRow = doc.createElement('div');

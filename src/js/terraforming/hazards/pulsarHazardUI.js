@@ -3,6 +3,7 @@ const pulsarHazardUICache = {
   root: null,
   rootResolved: false,
   card: null,
+  title: null,
   barSafe: null,
   barHazard: null,
   barSafeLabel: null,
@@ -64,6 +65,38 @@ function getProjectManager() {
   } catch (error) {
     return null;
   }
+}
+
+function attachHazardCardCollapse(card, title) {
+  if (!card || !title) {
+    return;
+  }
+
+  const doc = getPulsarDocument();
+  if (!doc) {
+    return;
+  }
+
+  const arrow = doc.createElement('span');
+  arrow.className = 'hazard-card__collapse-arrow';
+  arrow.innerHTML = '&#9660;';
+  title.insertBefore(arrow, title.firstChild);
+
+  const syncArrow = () => {
+    arrow.innerHTML = card.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  };
+
+  const toggleCard = () => {
+    card.classList.toggle('collapsed');
+    syncArrow();
+  };
+
+  arrow.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleCard();
+  });
+  title.addEventListener('click', toggleCard);
+  syncArrow();
 }
 
 function clampRatio(value) {
@@ -177,6 +210,7 @@ function ensurePulsarLayout() {
   const titleRow = doc.createElement('div');
   titleRow.className = 'hazard-card__title';
   titleRow.textContent = 'Pulsar';
+  attachHazardCardCollapse(card, titleRow);
   card.appendChild(titleRow);
 
   const summaryRow = doc.createElement('div');
@@ -351,6 +385,7 @@ function ensurePulsarLayout() {
 
   root.appendChild(card);
   pulsarHazardUICache.card = card;
+  pulsarHazardUICache.title = titleRow;
   pulsarHazardUICache.barSafe = safeFill;
   pulsarHazardUICache.barHazard = hazardFill;
   pulsarHazardUICache.barSafeLabel = safeLabel;

@@ -231,6 +231,38 @@ function getResources() {
   }
 }
 
+function attachHazardCardCollapse(card, title) {
+  if (!card || !title) {
+    return;
+  }
+
+  const doc = getDocument();
+  if (!doc) {
+    return;
+  }
+
+  const arrow = doc.createElement('span');
+  arrow.className = 'hazard-card__collapse-arrow';
+  arrow.innerHTML = '&#9660;';
+  title.insertBefore(arrow, title.firstChild);
+
+  const syncArrow = () => {
+    arrow.innerHTML = card.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  };
+
+  const toggleCard = () => {
+    card.classList.toggle('collapsed');
+    syncArrow();
+  };
+
+  arrow.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleCard();
+  });
+  title.addEventListener('click', toggleCard);
+  syncArrow();
+}
+
 function createInfoIcon(text) {
   const doc = getDocument();
   const icon = doc.createElement('span');
@@ -1032,6 +1064,7 @@ function ensureLayout() {
   const title = doc.createElement('h3');
   title.className = 'hazard-card__title';
   title.textContent = 'Hazardous Biomass';
+  attachHazardCardCollapse(card, title);
   card.appendChild(title);
 
   const message = doc.createElement('p');
@@ -1340,6 +1373,7 @@ function updateHazardousBiomassUI(parameters = {}) {
     // Hide the hazardous biomass card if no hazardousBiomass hazard
     // but don't show "No Hazards Detected" if other hazards exist
     if (!hasAnyHazard) {
+      hazardUICache.card.style.display = '';
       toggleEmptyState(true);
     } else {
       // Hide the hazardous biomass card entirely when only other hazards exist

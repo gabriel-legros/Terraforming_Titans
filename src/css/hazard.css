@@ -22,6 +22,22 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hazard-card__collapse-arrow {
+  font-size: 14px;
+  line-height: 1;
+  color: #bcd3ff;
+}
+
+.hazard-card.collapsed {
+  gap: 0;
+}
+
+.hazard-card.collapsed > :not(.hazard-card__title) {
+  display: none;
 }
 
 .hazard-card__message {
