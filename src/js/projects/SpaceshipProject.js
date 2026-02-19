@@ -18,6 +18,7 @@ class SpaceshipProject extends Project {
     this.kesslerShipLossCarry = 0;
     this.costShortfallLastTick = false;
     this.disposalShortfallLastTick = false;
+    this.continuousExecutionPlanCache = null;
   }
 
   getActiveShipCount() {
@@ -1002,6 +1003,439 @@ class SpaceshipProject extends Project {
     }
   }
 
+  addAmountToResourceMap(target, category, resource, amount) {
+    if (amount <= 0) {
+      return;
+    }
+    if (!target[category]) {
+      target[category] = {};
+    }
+    target[category][resource] = (target[category][resource] || 0) + amount;
+  }
+
+  addScaledResourceMap(target, source, scale = 1) {
+    if (!source || scale <= 0) {
+      return;
+    }
+    for (const category in source) {
+      for (const resource in source[category]) {
+        this.addAmountToResourceMap(
+          target,
+          category,
+          resource,
+          source[category][resource] * scale
+        );
+      }
+    }
+  }
+
+  getEffectiveAvailableAmount(category, resource, accumulatedChanges = null) {
+    const current = resources[category]?.[resource]?.value || 0;
+    const pending = accumulatedChanges?.[category]?.[resource] || 0;
+    return Math.max(0, current + pending);
+  }
+
+  getContinuousOperationContext(deltaTime = 1000, productivity = 1) {
+    const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
+    const fraction = duration > 0 ? deltaTime / duration : 0;
+    const shipCount = this.getActiveShipCount();
+    const totalTransportCount = shipCount;
+    const auxiliaryCount = 0;
+    const successChance = shipCount > 0 ? this.getKesslerSuccessChance() : 1;
+    const failureChance = shipCount > 0 ? (1 - successChance) : 0;
+    return {
+      deltaTime,
+      duration,
+      fraction,
+      seconds: deltaTime / 1000,
+      productivity,
+      shipCount,
+      auxiliaryCount,
+      totalTransportCount,
+      successChance,
+      failureChance,
+    };
+  }
+
+  getContinuousCostCountForResource(category, resource, context) {
+    return context.shipCount;
+  }
+
+  getContinuousGainCount(context) {
+    return context.shipCount;
+  }
+
+  getContinuousDisposalCount(context) {
+    return context.totalTransportCount;
+  }
+
+  getContinuousFundingCount(context) {
+    return context.shipCount * context.successChance;
+  }
+
+  getContinuousShipLossCount(context) {
+    return context.shipCount;
+  }
+
+  getContinuousGainScaleLimit(context, gainBase, accumulatedChanges = null, productivity = 1) {
+    return 1;
+  }
+
+  buildContinuousExecutionPlan(deltaTime = 1000, productivity = 1, accumulatedChanges = null) {
+    const empty = {
+      context: null,
+      ratio: 0,
+      shortfall: false,
+      costShortfall: false,
+      disposalShortfall: false,
+      cost: {},
+      resourceGain: {},
+      totalCost: {},
+      totalGain: {},
+      gainBase: {},
+      gainFraction: 0,
+      failedGainFraction: 0,
+      fundingGain: 0,
+      nonEnergyCost: 0,
+      appliedDisposal: 0,
+      disposalData: null,
+      shipLoss: 0,
+      hasContinuousWork: false,
+      costRateLabel: this.getCostRateLabel(),
+      gainRateLabel: this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export'),
+      exportRateLabel: this.getExportRateLabel('Spaceship Export'),
+    };
+
+    if (!this.isContinuous() || !this.isActive || this.isBlockedByPulsarStorm()) {
+      return empty;
+    }
+
+    const context = this.getContinuousOperationContext(deltaTime, productivity);
+    if (context.fraction <= 0 || context.totalTransportCount <= 0) {
+      empty.context = context;
+      return empty;
+    }
+
+    const potentialCost = {};
+    let potentialNonEnergyCost = 0;
+    const costPerShip = this.calculateSpaceshipCost();
+    for (const category in costPerShip) {
+      for (const resource in costPerShip[category]) {
+        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+          continue;
+        }
+        const count = this.getContinuousCostCountForResource(category, resource, context);
+        const amount = costPerShip[category][resource] * count * context.fraction * productivity;
+        if (amount <= 0) {
+          continue;
+        }
+        this.addAmountToResourceMap(potentialCost, category, resource, amount);
+        if (resource !== 'energy') {
+          potentialNonEnergyCost += amount;
+        }
+      }
+    }
+
+    let disposalData = null;
+    if (this.attributes.spaceExport && this.selectedDisposalResource) {
+      const disposalCount = this.getContinuousDisposalCount(context);
+      const requestedAmount = this.getShipCapacity() * disposalCount * context.fraction * productivity;
+      if (requestedAmount > 0) {
+        disposalData = {
+          category: this.selectedDisposalResource.category,
+          resource: this.selectedDisposalResource.resource,
+          requestedAmount,
+        };
+      }
+    }
+
+    const gainBase = {};
+    const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
+    const gainCount = this.getContinuousGainCount(context);
+    for (const category in gainPerShip) {
+      for (const resource in gainPerShip[category]) {
+        const amount = gainPerShip[category][resource] * gainCount;
+        if (amount > 0) {
+          this.addAmountToResourceMap(gainBase, category, resource, amount);
+        }
+      }
+    }
+    if (this.applyMetalCostPenalty) {
+      const metalPenalty = (costPerShip.colony?.metal || 0) * gainCount;
+      this.applyMetalCostPenalty(gainBase, metalPenalty);
+    }
+
+    const gainScaleLimit = Math.max(
+      0,
+      Math.min(
+        1,
+        this.getContinuousGainScaleLimit(context, gainBase, accumulatedChanges, productivity)
+      )
+    );
+
+    let costRatio = 1;
+    let costShortfall = false;
+    let disposalRatio = 1;
+    let disposalShortfall = false;
+
+    const sharedDisposalCategory = disposalData?.category;
+    const sharedDisposalResource = disposalData?.resource;
+    const sharedCostNeed = sharedDisposalCategory && sharedDisposalResource
+      ? (potentialCost[sharedDisposalCategory]?.[sharedDisposalResource] || 0)
+      : 0;
+
+    for (const category in potentialCost) {
+      for (const resource in potentialCost[category]) {
+        const required = potentialCost[category][resource];
+        if (required <= 0) {
+          continue;
+        }
+        if (category === sharedDisposalCategory && resource === sharedDisposalResource) {
+          continue;
+        }
+        const available = this.getEffectiveAvailableAmount(category, resource, accumulatedChanges);
+        const ratio = Math.max(0, Math.min(1, available / required));
+        costRatio = Math.min(costRatio, ratio);
+        if (available + 1e-9 < required) {
+          costShortfall = true;
+        }
+      }
+    }
+
+    if (disposalData && disposalData.requestedAmount > 0) {
+      const available = this.getEffectiveAvailableAmount(
+        disposalData.category,
+        disposalData.resource,
+        accumulatedChanges
+      );
+      const combinedPotential = disposalData.requestedAmount + sharedCostNeed;
+      const combinedNeeded = this.getClampedDisposalAmount(
+        combinedPotential,
+        disposalData.category,
+        disposalData.resource,
+        available
+      );
+      const ratio = combinedPotential > 0
+        ? Math.max(0, Math.min(1, combinedNeeded / combinedPotential))
+        : 1;
+      disposalRatio = Math.min(disposalRatio, ratio);
+      if (combinedNeeded + 1e-9 < combinedPotential) {
+        disposalShortfall = true;
+      }
+    }
+
+    const ratio = Math.max(0, Math.min(1, Math.min(costRatio, disposalRatio, gainScaleLimit)));
+
+    const cost = {};
+    const totalCost = {};
+    this.addScaledResourceMap(cost, potentialCost, ratio);
+    this.addScaledResourceMap(totalCost, cost, 1);
+    const nonEnergyCost = potentialNonEnergyCost * ratio;
+
+    let appliedDisposal = 0;
+    if (disposalData) {
+      appliedDisposal = disposalData.requestedAmount * ratio;
+      this.addAmountToResourceMap(totalCost, disposalData.category, disposalData.resource, appliedDisposal);
+    }
+
+    const gainFraction = context.fraction * context.successChance * ratio;
+    const failedGainFraction = context.fraction * context.failureChance * ratio;
+    const resourceGain = {};
+    this.addScaledResourceMap(resourceGain, gainBase, gainFraction * productivity);
+
+    let fundingGain = 0;
+    if (disposalData && this.attributes.fundingGainAmount > 0) {
+      const disposalCount = this.getContinuousDisposalCount(context);
+      const fundingCount = this.getContinuousFundingCount(context);
+      const multiplier = disposalCount > 0 ? (fundingCount / disposalCount) : 0;
+      fundingGain = appliedDisposal * this.attributes.fundingGainAmount * multiplier;
+    }
+
+    const totalGain = {};
+    this.addScaledResourceMap(totalGain, resourceGain, 1);
+    if (fundingGain > 0) {
+      this.addAmountToResourceMap(totalGain, 'colony', 'funding', fundingGain);
+    }
+
+    const shipLoss = this.getContinuousShipLossCount(context) *
+      context.fraction *
+      productivity *
+      context.failureChance *
+      ratio;
+
+    return {
+      context,
+      ratio,
+      shortfall: ratio < (1 - 1e-9) || gainScaleLimit < (1 - 1e-9),
+      costShortfall,
+      disposalShortfall,
+      cost,
+      resourceGain,
+      totalCost,
+      totalGain,
+      gainBase,
+      gainFraction,
+      failedGainFraction,
+      fundingGain,
+      nonEnergyCost,
+      appliedDisposal,
+      disposalData,
+      shipLoss,
+      hasContinuousWork: true,
+      costRateLabel: this.getCostRateLabel(),
+      gainRateLabel: this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export'),
+      exportRateLabel: this.getExportRateLabel('Spaceship Export'),
+    };
+  }
+
+  getContinuousExecutionPlan(deltaTime = 1000, productivity = 1, accumulatedChanges = null) {
+    const cache = this.continuousExecutionPlanCache;
+    const cacheSelectionKey = cache?.selection
+      ? `${cache.selection.category}:${cache.selection.resource}`
+      : '';
+    const currentSelectionKey = this.selectedDisposalResource
+      ? `${this.selectedDisposalResource.category}:${this.selectedDisposalResource.resource}`
+      : '';
+    if (
+      cache &&
+      cache.deltaTime === deltaTime &&
+      cache.productivity === productivity &&
+      cache.accumulatedChanges === accumulatedChanges &&
+      cache.isActive === this.isActive &&
+      cache.isContinuous === this.isContinuous() &&
+      cache.shipCount === this.getActiveShipCount() &&
+      cacheSelectionKey === currentSelectionKey
+    ) {
+      return cache.plan;
+    }
+
+    const plan = this.buildContinuousExecutionPlan(deltaTime, productivity, accumulatedChanges);
+    this.continuousExecutionPlanCache = {
+      deltaTime,
+      productivity,
+      accumulatedChanges,
+      isActive: this.isActive,
+      isContinuous: this.isContinuous(),
+      shipCount: this.getActiveShipCount(),
+      selection: this.selectedDisposalResource
+        ? {
+            category: this.selectedDisposalResource.category,
+            resource: this.selectedDisposalResource.resource,
+          }
+        : null,
+      plan,
+    };
+    return plan;
+  }
+
+  clearContinuousExecutionPlanCache() {
+    this.continuousExecutionPlanCache = null;
+  }
+
+  applyContinuousPlanRates(plan, applyRates = true) {
+    if (!applyRates || !plan.context || plan.context.deltaTime <= 0) {
+      return;
+    }
+    const rateFactor = 1000 / plan.context.deltaTime;
+
+    for (const category in plan.cost) {
+      for (const resource in plan.cost[category]) {
+        const amount = plan.cost[category][resource];
+        if (amount <= 0) {
+          continue;
+        }
+        resources[category][resource].modifyRate(-amount * rateFactor, plan.costRateLabel, 'project');
+      }
+    }
+
+    if (plan.disposalData && plan.appliedDisposal > 0) {
+      resources[plan.disposalData.category][plan.disposalData.resource].modifyRate(
+        -plan.appliedDisposal * rateFactor,
+        plan.exportRateLabel,
+        'project'
+      );
+    }
+
+    for (const category in plan.resourceGain) {
+      for (const resource in plan.resourceGain[category]) {
+        const amount = plan.resourceGain[category][resource];
+        if (amount <= 0) {
+          continue;
+        }
+        resources[category][resource].modifyRate(amount * rateFactor, plan.gainRateLabel, 'project');
+      }
+    }
+
+    if (plan.fundingGain > 0) {
+      resources.colony.funding.modifyRate(plan.fundingGain * rateFactor, plan.exportRateLabel, 'project');
+    }
+  }
+
+  applyContinuousPlan(plan, accumulatedChanges = null) {
+    if (!plan.context || !plan.hasContinuousWork) {
+      return;
+    }
+
+    for (const category in plan.cost) {
+      for (const resource in plan.cost[category]) {
+        const amount = plan.cost[category][resource];
+        if (amount <= 0) {
+          continue;
+        }
+        if (accumulatedChanges) {
+          if (!accumulatedChanges[category]) {
+            accumulatedChanges[category] = {};
+          }
+          if (accumulatedChanges[category][resource] === undefined) {
+            accumulatedChanges[category][resource] = 0;
+          }
+          accumulatedChanges[category][resource] -= amount;
+        } else {
+          resources[category][resource].decrease(amount);
+        }
+      }
+    }
+
+    if (plan.disposalData && plan.appliedDisposal > 0) {
+      const { category, resource } = plan.disposalData;
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[category]) {
+          accumulatedChanges[category] = {};
+        }
+        if (accumulatedChanges[category][resource] === undefined) {
+          accumulatedChanges[category][resource] = 0;
+        }
+        accumulatedChanges[category][resource] -= plan.appliedDisposal;
+      } else {
+        resources[category][resource].decrease(plan.appliedDisposal);
+      }
+      this.removeZonalResource(category, resource, plan.appliedDisposal);
+    }
+
+    if (plan.gainFraction > 0) {
+      this.applySpaceshipResourceGain(
+        plan.gainBase,
+        plan.gainFraction,
+        accumulatedChanges,
+        plan.context.productivity
+      );
+    }
+
+    if (plan.fundingGain > 0) {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges.colony) {
+          accumulatedChanges.colony = {};
+        }
+        if (accumulatedChanges.colony.funding === undefined) {
+          accumulatedChanges.colony.funding = 0;
+        }
+        accumulatedChanges.colony.funding += plan.fundingGain;
+      } else {
+        resources.colony.funding.increase(plan.fundingGain);
+      }
+    }
+  }
+
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     if (this.isBlockedByPulsarStorm()) {
@@ -1011,88 +1445,10 @@ class SpaceshipProject extends Project {
       const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
 
       if (this.isContinuous()) {
-        const activeShips = this.getActiveShipCount();
-        const factor = 1000 / duration;
-        const fraction = deltaTime / duration;
-        const successChance = this.getKesslerSuccessChance();
-        if (fraction > 0) {
-          const costPerShip = this.calculateSpaceshipCost();
-          for (const category in costPerShip) {
-            if (!totals.cost[category]) totals.cost[category] = {};
-            for (const resource in costPerShip[category]) {
-              if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
-                continue;
-              }
-              const rateValue = costPerShip[category][resource] * activeShips * factor * (applyRates ? productivity : 1);
-              if (applyRates) {
-                resources[category][resource].modifyRate(
-                  -rateValue,
-                  this.getCostRateLabel(),
-                  'project'
-                );
-              }
-              totals.cost[category][resource] =
-                (totals.cost[category][resource] || 0) + costPerShip[category][resource] * activeShips * fraction;
-            }
-          }
-
-          const capacity = this.getShipCapacity();
-          if (capacity && this.selectedDisposalResource) {
-            const { category, resource } = this.selectedDisposalResource;
-            const rateValue = capacity * activeShips * factor * (applyRates ? productivity : 1);
-            const exportLabel = this.getExportRateLabel('Spaceship Export');
-            if (applyRates) {
-              resources[category][resource].modifyRate(
-                -rateValue,
-                exportLabel,
-                'project'
-              );
-            }
-            if (!totals.cost[category]) totals.cost[category] = {};
-            totals.cost[category][resource] =
-              (totals.cost[category][resource] || 0) + capacity * activeShips * fraction;
-            if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-              const fundingRate = capacity * activeShips * factor * this.attributes.fundingGainAmount * successChance * (applyRates ? productivity : 1);
-              if (applyRates) {
-                resources.colony.funding.modifyRate(
-                  fundingRate,
-                  exportLabel,
-                  'project'
-                );
-              }
-              if (!totals.gain.colony) totals.gain.colony = {};
-              totals.gain.colony.funding =
-                (totals.gain.colony.funding || 0) +
-                capacity * activeShips * fraction * this.attributes.fundingGainAmount * successChance;
-            }
-          }
-
-          const gainPerShip = this.calculateSpaceshipGainPerShip();
-          if (this.applyMetalCostPenalty) {
-            const cost = this.calculateSpaceshipCost();
-            const metalCost = cost.colony?.metal || 0;
-            if (gainPerShip.colony && typeof gainPerShip.colony.metal === 'number') {
-              gainPerShip.colony.metal = Math.max(0, gainPerShip.colony.metal - metalCost);
-            }
-          }
-          const baseLabel = this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export';
-          const label = this.getExportRateLabel(baseLabel);
-          for (const category in gainPerShip) {
-            if (!totals.gain[category]) totals.gain[category] = {};
-            for (const resource in gainPerShip[category]) {
-              const rateValue = gainPerShip[category][resource] * activeShips * factor * successChance * (applyRates ? productivity : 1);
-              if (applyRates) {
-                resources[category][resource].modifyRate(
-                  rateValue,
-                  label,
-                  'project'
-                );
-              }
-              totals.gain[category][resource] =
-                (totals.gain[category][resource] || 0) + gainPerShip[category][resource] * activeShips * fraction * successChance;
-            }
-          }
-        }
+        const plan = this.getContinuousExecutionPlan(deltaTime, productivity, accumulatedChanges);
+        this.applyContinuousPlanRates(plan, applyRates);
+        this.addScaledResourceMap(totals.cost, plan.totalCost, 1);
+        this.addScaledResourceMap(totals.gain, plan.totalGain, 1);
       } else {
         const rate = 1000 / duration;
         const fraction = deltaTime / duration;
@@ -1165,136 +1521,52 @@ class SpaceshipProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.isContinuous() || !this.isActive) return;
-    if (this.isBlockedByPulsarStorm()) return;
+    if (!this.isContinuous() || !this.isActive) {
+      this.clearContinuousExecutionPlanCache();
+      return;
+    }
+    if (this.isBlockedByPulsarStorm()) {
+      this.clearContinuousExecutionPlanCache();
+      return;
+    }
     this.shortfallLastTick = false;
     this.costShortfallLastTick = false;
     this.disposalShortfallLastTick = false;
     this.currentTickDeltaTime = deltaTime;
     if (typeof this.shouldAutomationDisable === 'function' && this.shouldAutomationDisable()) {
       this.isActive = false;
+      this.clearContinuousExecutionPlanCache();
       return;
     }
-    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
-    const fraction = deltaTime / duration;
-    const activeShips = this.getActiveShipCount();
-    const successChance = this.getKesslerSuccessChance();
-    const failureChance = 1 - successChance;
-    const seconds = deltaTime / 1000;
-
-    let shortfall = false;
-    let costShortfall = false;
-    let disposalShortfall = false;
-    let nonEnergyCost = 0;
-    const costPerShip = this.calculateSpaceshipCost();
-    for (const category in costPerShip) {
-      for (const resource in costPerShip[category]) {
-        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
-          continue;
-        }
-        const amount = costPerShip[category][resource] * activeShips * fraction * productivity;
-        const available = resources[category]?.[resource]?.value || 0;
-        if (available < amount) {
-          shortfall = shortfall || amount > 0;
-          costShortfall = costShortfall || amount > 0;
-        }
-        if (accumulatedChanges) {
-          accumulatedChanges[category][resource] -= amount;
-        } else {
-          const res = resources[category]?.[resource];
-          if (res && typeof res.decrease === 'function') {
-            res.decrease(amount);
-          }
-        }
-        if (resource !== 'energy') {
-          nonEnergyCost += amount;
-        }
-      }
-    }
-
-    if (this.attributes.spaceExport && this.selectedDisposalResource) {
-      const capacity = this.getShipCapacity();
-      const requestedAmount = capacity * activeShips * fraction * productivity;
-      const { category, resource } = this.selectedDisposalResource;
-      let actualDisposal = 0;
-      if (accumulatedChanges) {
-        if (!accumulatedChanges[category]) {
-          accumulatedChanges[category] = {};
-        }
-        const existingChange = accumulatedChanges[category][resource] || 0;
-        const currentValue = resources[category]?.[resource]?.value || 0;
-        const effectiveAvailable = Math.max(0, currentValue + existingChange);
-        actualDisposal = this.getClampedDisposalAmount(
-          requestedAmount,
-          category,
-          resource,
-          effectiveAvailable
-        );
-        accumulatedChanges[category][resource] = existingChange - actualDisposal;
-        if (
-          this.attributes.fundingGainAmount &&
-          accumulatedChanges.colony &&
-          accumulatedChanges.colony.funding !== undefined
-        ) {
-          accumulatedChanges.colony.funding += actualDisposal * this.attributes.fundingGainAmount * successChance;
-        }
-      } else {
-        const res = resources[category]?.[resource];
-        if (res && typeof res.decrease === 'function') {
-          const before = res.value;
-          const clampedAmount = this.getClampedDisposalAmount(requestedAmount, category, resource, before);
-          res.decrease(clampedAmount);
-          actualDisposal = before - res.value;
-        }
-        if (this.attributes.fundingGainAmount && resources.colony?.funding) {
-          resources.colony.funding.increase(actualDisposal * this.attributes.fundingGainAmount * successChance);
-        }
-      }
-      if (actualDisposal < requestedAmount) {
-        shortfall = shortfall || requestedAmount > 0;
-        disposalShortfall = disposalShortfall || requestedAmount > 0;
-      }
-      this.removeZonalResource(category, resource, actualDisposal);
-    }
-
-    const gainPerShip = this.calculateSpaceshipGainPerShip();
-    const gain = {};
-    for (const category in gainPerShip) {
-      gain[category] = {};
-      for (const resource in gainPerShip[category]) {
-        gain[category][resource] = gainPerShip[category][resource] * activeShips;
-      }
-    }
-    if (this.applyMetalCostPenalty) {
-      const cost = this.calculateSpaceshipCost();
-      const metalCost = cost.colony?.metal || 0;
-      const penalty = metalCost * activeShips;
-      this.applyMetalCostPenalty(gain, penalty);
-    }
-    const gainFraction = fraction * successChance;
-    this.applySpaceshipResourceGain(gain, gainFraction, accumulatedChanges, productivity);
+    const plan = this.getContinuousExecutionPlan(deltaTime, productivity, accumulatedChanges);
+    this.applyContinuousPlan(plan, accumulatedChanges);
     const gainDebrisFraction = this.attributes.kesslerDebrisFromGainFraction;
-    if (gainDebrisFraction > 0) {
-      const failedGainFraction = fraction * failureChance;
+    if (gainDebrisFraction > 0 && plan.failedGainFraction > 0) {
       let gainDebris = 0;
-      for (const category in gain) {
-        for (const resource in gain[category]) {
-          gainDebris += gain[category][resource] * failedGainFraction * productivity;
+      for (const category in plan.gainBase) {
+        for (const resource in plan.gainBase[category]) {
+          gainDebris += plan.gainBase[category][resource] *
+            plan.failedGainFraction *
+            productivity;
         }
       }
       gainDebris *= gainDebrisFraction;
       this.addKesslerDebris(gainDebris);
-      this.reportKesslerDebrisRate(gainDebris, seconds);
+      this.reportKesslerDebrisRate(gainDebris, plan.context.seconds);
     }
-    if (failureChance > 0) {
-      const shipLoss = activeShips * fraction * productivity * failureChance;
-      this.applyContinuousKesslerDebris(nonEnergyCost * failureChance, shipLoss, seconds);
+    if (plan.context.failureChance > 0) {
+      this.applyContinuousKesslerDebris(
+        plan.nonEnergyCost * plan.context.failureChance,
+        plan.shipLoss,
+        plan.context.seconds
+      );
     }
 
-    this.shortfallLastTick = shortfall;
-    this.costShortfallLastTick = costShortfall;
-    this.disposalShortfallLastTick = disposalShortfall;
+    this.shortfallLastTick = plan.shortfall;
+    this.costShortfallLastTick = plan.costShortfall;
+    this.disposalShortfallLastTick = plan.disposalShortfall;
     this.lastActiveTime = 0;
+    this.clearContinuousExecutionPlanCache();
   }
 
   saveAutomationSettings() {
