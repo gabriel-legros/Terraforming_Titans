@@ -170,7 +170,7 @@ const wolfysNightmareOverrides = {
         radioactiveWaste: { amountMultiplier: 100 }
       },
       penalties: {
-        garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },
+        garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.1 },
         trash: { happiness: -0.05 },
         junk: { happiness: -0.05 },
         scrapMetal: { oreScanningSpeedMultiplier: 0.25 },
@@ -178,10 +178,11 @@ const wolfysNightmareOverrides = {
       }
     },
     kessler: {
-      orbitalDebrisPerLand: 1000
+      orbitalDebrisPerLand: 10000
     },
     pulsar: {
       pulsePeriodSeconds: 1.337,
+      stormDurationSeconds: 25,
       severity: 1,
       orbitalDoseBoost_mSvPerDay: 4900,
       description: 'The pulsar emits periodic radiation bursts across the system.'

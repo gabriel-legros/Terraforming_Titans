@@ -22,9 +22,22 @@ const pulsarHazardUICache = {
 const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, Mega Heat Sink, and Magnetic Shield are disabled until the pulsar hazard is fully cleared.';
 const PULSAR_THRUSTER_COST_TEXT = 'Planetary Thrusters construction cost is multiplied by x100.';
 const PULSAR_CLEAR_TEXT = 'Build all Artificial Sky segments or go rogue.';
-const PULSAR_STORM_PROJECT_TEXT = 'Electromagnetic storms repeat every 100s for 5s and pause spaceship projects while active.';
+const PULSAR_UI_STORM_PERIOD_SECONDS = 100;
+const PULSAR_UI_STORM_DEFAULT_DURATION_SECONDS = 5;
 const PULSAR_DISTANCE_SCALING_TEXT = 'All pulsar effects are multiplied by (initial distance / current distance)^2 (capped at x1).';
 const PULSAR_BASE_STORM_ATTRITION_PERCENT = 3;
+
+function getPulsarStormDurationSeconds(pulsarParameters) {
+  if (pulsarParameters && Number.isFinite(pulsarParameters.stormDurationSeconds)) {
+    return Math.max(0, pulsarParameters.stormDurationSeconds);
+  }
+  return PULSAR_UI_STORM_DEFAULT_DURATION_SECONDS;
+}
+
+function getPulsarStormProjectText(pulsarParameters) {
+  const durationSeconds = getPulsarStormDurationSeconds(pulsarParameters);
+  return `Electromagnetic storms repeat every ${formatNumber(PULSAR_UI_STORM_PERIOD_SECONDS, false, 0)}s for ${formatNumber(durationSeconds, false, 2)}s and pause spaceship projects while active.`;
+}
 
 function getPulsarDocument() {
   if (pulsarHazardUICache.doc !== undefined) {
@@ -522,7 +535,7 @@ function updatePulsarHazardUI(pulsarParameters) {
       pulsarHazardUICache.effectsItems[0].textContent = PULSAR_DISABLED_PROJECTS_TEXT;
     }
     if (pulsarHazardUICache.effectsItems[1]) {
-      pulsarHazardUICache.effectsItems[1].textContent = PULSAR_STORM_PROJECT_TEXT;
+      pulsarHazardUICache.effectsItems[1].textContent = getPulsarStormProjectText(pulsarParameters);
     }
     if (pulsarHazardUICache.effectsItems[2]) {
       pulsarHazardUICache.effectsItems[2].textContent = PULSAR_THRUSTER_COST_TEXT;
@@ -592,7 +605,7 @@ function updatePulsarHazardUI(pulsarParameters) {
     pulsarHazardUICache.effectsItems[0].textContent = PULSAR_DISABLED_PROJECTS_TEXT;
   }
   if (pulsarHazardUICache.effectsItems[1]) {
-    pulsarHazardUICache.effectsItems[1].textContent = PULSAR_STORM_PROJECT_TEXT;
+    pulsarHazardUICache.effectsItems[1].textContent = getPulsarStormProjectText(pulsarParameters);
   }
   if (pulsarHazardUICache.effectsItems[2]) {
     pulsarHazardUICache.effectsItems[2].textContent = PULSAR_THRUSTER_COST_TEXT;

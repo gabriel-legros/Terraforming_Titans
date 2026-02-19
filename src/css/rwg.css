@@ -240,6 +240,8 @@
 .rwg-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 4px 0; }
 .rwg-row span:first-child { color: var(--rwg-fg-dim); }
 .rwg-row span:last-child { color: var(--rwg-fg); font-weight: 600; }
+.rwg-row.rwg-row-negative { grid-template-columns: 1fr; }
+.rwg-row.rwg-row-negative span { color: #ff6b6b; font-weight: 700; }
 
 /* Atmosphere table with aligned columns */
 .rwg-atmo-table .rwg-row { grid-template-columns: 1fr 1fr 1fr; }

@@ -1420,6 +1420,7 @@ const hadesOverrides = {
   hazards: {
     pulsar: {
       pulsePeriodSeconds: 1.337,
+      stormDurationSeconds: 5,
       severity: 1,
       orbitalDoseBoost_mSvPerDay: 4900,
       description: 'The pulsar emits periodic radiation bursts across the system.'

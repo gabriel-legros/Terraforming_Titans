@@ -18,7 +18,7 @@ if (!pulsarRadiationPenaltyFromDose) {
 }
 
 const PULSAR_STORM_PERIOD_SECONDS = 100;
-const PULSAR_STORM_DURATION_SECONDS = 5;
+const PULSAR_STORM_DEFAULT_DURATION_SECONDS = 5;
 const PULSAR_STORM_ANDROID_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_ELECTRONICS_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_NANOBOT_ATTRITION_RATE = 0.03;
@@ -33,6 +33,9 @@ function normalizePulsarParameters(parameters = {}) {
       : 4900 * severity);
   return {
     pulsePeriodSeconds: Number.isFinite(parameters.pulsePeriodSeconds) ? Math.max(1, parameters.pulsePeriodSeconds) : 1.337,
+    stormDurationSeconds: Number.isFinite(parameters.stormDurationSeconds)
+      ? Math.max(0, parameters.stormDurationSeconds)
+      : PULSAR_STORM_DEFAULT_DURATION_SECONDS,
     severity: severity,
     orbitalDoseBoost_mSvPerDay: orbitalDoseBoost,
     description: parameters.description || 'Pulsar hazard detected. Extreme radiation floods the planet.'
@@ -246,7 +249,7 @@ class PulsarHazard {
     this.artificialSkyCompletion = 1 - skyShare;
     this.manager.setHazardLandReservationShare('pulsar', share);
     if (share > 0) {
-      this.advanceStormState(deltaSeconds);
+      this.advanceStormState(deltaSeconds, pulsarParameters);
       applyPulsarRadiation(terraforming, pulsarParameters, share);
     } else {
       this.resetStormState();
@@ -314,13 +317,22 @@ class PulsarHazard {
     return Math.max(0, PULSAR_STORM_PERIOD_SECONDS - this.stormTimerSeconds);
   }
 
+  getStormDurationSeconds(pulsarParameters = null) {
+    const activeParameters = pulsarParameters
+      || (this.manager && this.manager.parameters ? this.manager.parameters.pulsar : null);
+    if (activeParameters && Number.isFinite(activeParameters.stormDurationSeconds)) {
+      return Math.max(0, activeParameters.stormDurationSeconds);
+    }
+    return PULSAR_STORM_DEFAULT_DURATION_SECONDS;
+  }
+
   resetStormState() {
     this.stormTimerSeconds = 0;
     this.stormRemainingSeconds = 0;
   }
 
-  startStorm() {
-    this.stormRemainingSeconds = PULSAR_STORM_DURATION_SECONDS;
+  startStorm(pulsarParameters = null) {
+    this.stormRemainingSeconds = this.getStormDurationSeconds(pulsarParameters);
   }
 
   save() {
@@ -335,10 +347,11 @@ class PulsarHazard {
   }
 
   load(data) {
+    const stormDurationSeconds = this.getStormDurationSeconds();
     const timer = data && Number.isFinite(data.stormTimerSeconds) ? data.stormTimerSeconds : 0;
     const remaining = data && Number.isFinite(data.stormRemainingSeconds) ? data.stormRemainingSeconds : 0;
     this.stormTimerSeconds = Math.max(0, Math.min(PULSAR_STORM_PERIOD_SECONDS, timer));
-    this.stormRemainingSeconds = Math.max(0, Math.min(PULSAR_STORM_DURATION_SECONDS, remaining));
+    this.stormRemainingSeconds = Math.max(0, Math.min(stormDurationSeconds, remaining));
     const strength = data && Number.isFinite(data.hazardStrength) ? data.hazardStrength : 0;
     this.hazardStrength = clampRatio(strength);
     const completion = data && Number.isFinite(data.artificialSkyCompletion) ? data.artificialSkyCompletion : (1 - this.hazardStrength);
@@ -353,7 +366,7 @@ class PulsarHazard {
     this.distanceFromSunMultiplier = distanceMultiplier > 0 ? distanceMultiplier : 1;
   }
 
-  advanceStormState(deltaSeconds) {
+  advanceStormState(deltaSeconds, pulsarParameters = null) {
     let remaining = Number.isFinite(deltaSeconds) ? Math.max(0, deltaSeconds) : 0;
     while (remaining > 0) {
       if (this.stormRemainingSeconds > 0) {
@@ -367,7 +380,7 @@ class PulsarHazard {
       const timeUntilStorm = Math.max(0, PULSAR_STORM_PERIOD_SECONDS - this.stormTimerSeconds);
       if (timeUntilStorm <= 0) {
         this.stormTimerSeconds = 0;
-        this.startStorm();
+        this.startStorm(pulsarParameters);
         continue;
       }
 
@@ -376,7 +389,7 @@ class PulsarHazard {
       remaining -= quietSlice;
       if (this.stormTimerSeconds >= PULSAR_STORM_PERIOD_SECONDS) {
         this.stormTimerSeconds = 0;
-        this.startStorm();
+        this.startStorm(pulsarParameters);
       }
     }
   }
