@@ -2175,7 +2175,7 @@ const researchParameters = {
       {
         id: 'oneill_cylinders',
         name: "O'Neill Cylinders",
-        description: 'Worlds producing worlds producing worlds...',
+        description: 'Worlds producing worlds producing worlds...  Enables passive generation of terraformed worlds.',
         cost: { advancedResearch: 1000000 },
         prerequisites: [],
         effects: [
@@ -2227,7 +2227,7 @@ const researchParameters = {
       {
         id: 'warp_gate_fabrication',
         name: 'Warp Gate Fabrication',
-        description: 'Enables growth of the warp gate network from terraformed worlds.',
+        description: 'Enables growth of the warp gate network from terraformed worlds in the galactic tab.  Raises resource import limits.',
         cost: { advancedResearch: 5_000_000 },
         prerequisites: [],
         effects: [
