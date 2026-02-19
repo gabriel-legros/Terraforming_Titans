@@ -290,6 +290,10 @@
     font-size: 0.85em;
 }
 
+.constructed-count-container .resource-tooltip {
+    font-size: 12px;
+}
+
 .constructed-info {
     display: flex;
     align-items: center;
