@@ -421,4 +421,40 @@ describe('Spaceship scaled cost/gain execution', () => {
     expect(result.callsAfterApply.cost).toBe(result.callsAfterEstimate.cost);
     expect(result.callsAfterApply.gain).toBe(result.callsAfterEstimate.gain);
   });
+
+  it('keeps productivity estimate based on unscaled shipment cost only', () => {
+    jest.resetModules();
+    const { cleanup } = createHarness();
+    const SpaceshipProject = require(path.resolve(__dirname, '../src/js/projects/SpaceshipProject.js'));
+
+    class TestProject extends SpaceshipProject {
+      getKesslerSuccessChance() {
+        return 1;
+      }
+
+      getContinuousGainScaleLimit() {
+        return 0.1;
+      }
+    }
+
+    const project = new TestProject({
+      duration: 1000,
+      attributes: {
+        spaceMining: true,
+        costPerShip: { colony: { energy: 10, metal: 5 } },
+        resourceGainPerShip: { colony: { ore: 20 } },
+      },
+    }, 'productivityCostOnly');
+
+    project.assignedSpaceships = 200;
+    project.isActive = true;
+
+    const scaledEstimate = project.estimateCostAndGain(1000, false, 1, null);
+    const productivityEstimate = project.estimateProductivityCostAndGain(1000);
+
+    expectApprox(scaledEstimate.cost?.colony?.energy || 0, 200);
+    expectApprox(productivityEstimate.cost?.colony?.energy || 0, 2000);
+    expectApprox(productivityEstimate.cost?.colony?.metal || 0, 1000);
+    cleanup();
+  });
 });

@@ -721,7 +721,10 @@ function produceResources(deltaTime, buildings) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
-      const { cost = {}, gain = {} } = project.estimateCostAndGain(deltaTime, false) || {};
+      const estimateResult = project.estimateProductivityCostAndGain
+        ? project.estimateProductivityCostAndGain(deltaTime)
+        : project.estimateCostAndGain(deltaTime, false);
+      const { cost = {}, gain = {} } = estimateResult || {};
       projectData[name] = { project, cost, gain };
     }
     projectProductivityMap = calculateProjectProductivities(

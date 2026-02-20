@@ -1516,6 +1516,35 @@ class SpaceshipProject extends Project {
     return totals;
   }
 
+  estimateProductivityCostAndGain(deltaTime = 1000) {
+    const totals = { cost: {}, gain: {} };
+    if (this.isBlockedByPulsarStorm()) {
+      return totals;
+    }
+    if (!this.isActive || !this.isContinuous()) {
+      return this.estimateProjectCostAndGain(deltaTime, false, 1, null);
+    }
+
+    const context = this.getContinuousOperationContext(deltaTime, 1);
+    if (context.fraction <= 0 || context.totalTransportCount <= 0) {
+      return totals;
+    }
+
+    const costPerShip = this.calculateSpaceshipCost();
+    for (const category in costPerShip) {
+      for (const resource in costPerShip[category]) {
+        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+          continue;
+        }
+        const count = this.getContinuousCostCountForResource(category, resource, context);
+        const amount = costPerShip[category][resource] * count * context.fraction;
+        this.addAmountToResourceMap(totals.cost, category, resource, amount);
+      }
+    }
+
+    return totals;
+  }
+
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     return this.estimateProjectCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
   }
