@@ -191,7 +191,7 @@ const wolfysNightmareOverrides = {
   },
   celestialParameters: {
     distanceFromSun: 0.683,
-    gravity: 88.88,
+    gravity: 60.00,
     radius: 6051.8,
     mass: 4.867e24,
     albedo: 0.15,

@@ -145,9 +145,22 @@ function formatSignedValue(value, decimals = 2, unit = '') {
 }
 
 function formatValueWithUnit(value, unit, decimals = 2) {
-  if (`${unit || ''}`.trim().toLowerCase() === 'kpa' && Number.isFinite(value) && Math.abs(value) >= 1000) {
-    return `${formatNumeric(value / 1000, decimals)} MPa`;
+  const normalizedUnit = `${unit || ''}`.trim().toLowerCase();
+  const magnitude = Number.isFinite(value) ? Math.abs(value) : 0;
+
+  if (normalizedUnit === 'kpa' && Number.isFinite(value)) {
+    if (magnitude >= 1_000_000) {
+      return `${formatNumeric(value / 1_000_000, decimals)} GPa`;
+    }
+    if (magnitude >= 1000) {
+      return `${formatNumeric(value / 1000, decimals)} MPa`;
+    }
   }
+
+  if (normalizedUnit === 'mpa' && Number.isFinite(value) && magnitude >= 1000) {
+    return `${formatNumeric(value / 1000, decimals)} GPa`;
+  }
+
   const safeUnit = unit ? ` ${unit}` : '';
   return `${formatNumeric(value, decimals)}${safeUnit}`;
 }
