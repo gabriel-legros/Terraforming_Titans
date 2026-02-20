@@ -256,6 +256,7 @@ class BuildingAutomation {
   captureControlSettings(building) {
     const control = {};
     control.workerPriority = building.workerPriority;
+    control.hidden = building.isHidden === true;
     if (building instanceof MultiRecipesBuildingClass) {
       control.recipeKey = building.currentRecipeKey;
     }
@@ -368,6 +369,14 @@ class BuildingAutomation {
     if ('workerPriority' in control && building.workerPriority !== control.workerPriority) {
       building.workerPriority = control.workerPriority;
       changed = true;
+    }
+    if ('hidden' in control) {
+      const shouldHide = control.hidden === true && building.active <= 0;
+      if (building.isHidden !== shouldHide) {
+        building.isHidden = shouldHide;
+        updateStructureHiddenPreference(building.name, shouldHide);
+        changed = true;
+      }
     }
     if (control.recipeKey && building.currentRecipeKey !== control.recipeKey) {
       const applied = building.setRecipe(control.recipeKey);

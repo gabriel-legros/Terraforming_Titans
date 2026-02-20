@@ -472,6 +472,7 @@ class PlanetaryThrustersProject extends Project{
     ].filter(Boolean);
     celestialTargets.forEach(cel => {
       cel.rogue = true;
+      cel.roguePulsar = false;
       cel.starLuminosity = 0;
       // When going rogue, preserve current rotation as day-night cycle but set spin to 0
       cel.spinPeriod = 0;

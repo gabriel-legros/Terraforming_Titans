@@ -92,7 +92,7 @@ function buildAutomationBuildingsUI() {
 
   const builderHint = document.createElement('div');
   builderHint.classList.add('building-automation-hint');
-  builderHint.textContent = 'Control saves worker priority, recipe selections, and building controls (Disable if / Target albedo). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.';
+  builderHint.textContent = 'Control saves worker priority, hidden state, recipe selections, and building controls (Disable if / Target albedo). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.';
   builderSection.appendChild(builderHint);
 
   const pickerRow = document.createElement('div');
