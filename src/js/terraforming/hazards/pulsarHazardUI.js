@@ -512,7 +512,7 @@ function updatePulsarHazardUI(pulsarParameters) {
     }
     if (pulsarHazardUICache.barDetails) {
       pulsarHazardUICache.barDetails.textContent =
-        `Artificial Sky Segments: ${formatNumber(skyProgress.builtSegments, false, 2)} / ${formatNumber(skyProgress.maxSegments, false, 0)} | Hazard Intensity: 0.00%`;
+        `Artificial Sky Segments: ${formatNumber(skyProgress.builtSegments, false, 2)} / ${formatNumber(skyProgress.maxSegments, false, 2)} | Hazard Intensity: 0.00%`;
     }
     if (pulsarHazardUICache.summaryRadiationBody) {
       pulsarHazardUICache.summaryRadiationBody.textContent = '+0.00 mSv/day orbital dose';
@@ -577,7 +577,7 @@ function updatePulsarHazardUI(pulsarParameters) {
   }
   if (pulsarHazardUICache.barDetails) {
     pulsarHazardUICache.barDetails.textContent =
-      `Artificial Sky Segments: ${formatNumber(skyProgress.builtSegments, false, 2)} / ${formatNumber(skyProgress.maxSegments, false, 0)} | Hazard Intensity: ${formatNumber(hazardPercent, false, 2)}%`;
+      `Artificial Sky Segments: ${formatNumber(skyProgress.builtSegments, false, 2)} / ${formatNumber(skyProgress.maxSegments, false, 2)} | Hazard Intensity: ${formatNumber(hazardPercent, false, 2)}%`;
   }
 
   if (pulsarHazardUICache.summaryRadiationBody) {

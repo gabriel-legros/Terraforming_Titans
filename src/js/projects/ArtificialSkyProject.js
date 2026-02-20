@@ -543,7 +543,7 @@ class ArtificialSkyProject extends SpaceshipProject {
       const built = this.getBuiltSegmentsWithProgress();
       const maxSegments = this.getMaxRepeats();
       elements.segmentProgressElement.textContent =
-        `Segments Built: ${formatNumber(built, true, 3)} / ${formatNumber(maxSegments, true, 0)}`;
+        `Segments Built: ${formatNumber(built, true, 3)} / ${formatNumber(maxSegments, true, 3)}`;
     }
   }
 
