@@ -749,6 +749,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       autoBuildBasisSelect.appendChild(option);
     });
   }
+  if (Array.isArray(structure.automationCustomBasisOptions)) {
+    structure.automationCustomBasisOptions.forEach(optionData => {
+      const option = document.createElement('option');
+      option.value = optionData.value;
+      option.textContent = optionData.label;
+      autoBuildBasisSelect.appendChild(option);
+    });
+  }
   if (structure.autoBuildMaxOption) {
     const maxOption = document.createElement('option');
     maxOption.value = 'max';
