@@ -349,6 +349,15 @@ function updateAutoBuildInputState(structure, basisSelect, input) {
   }
 }
 
+function hasAutoBuildBasisOption(select, value) {
+  for (let i = 0; i < select.options.length; i += 1) {
+    if (select.options[i].value === value) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function getAutoBuildBaseValue(structure, population, workerCap, collection) {
   const baseMethod = structure?.getAutoBuildBase;
   if (baseMethod?.call) {
@@ -740,6 +749,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   fixedOption.value = 'fixed';
   fixedOption.textContent = 'Fixed';
   autoBuildBasisSelect.appendChild(fixedOption);
+  if (!hasAutoBuildBasisOption(autoBuildBasisSelect, 'building:storageDepot')) {
+    const storageDepotOption = document.createElement('option');
+    storageDepotOption.value = 'building:storageDepot';
+    storageDepotOption.textContent = '% of Storage Depots';
+    autoBuildBasisSelect.appendChild(storageDepotOption);
+  }
   if (Array.isArray(structure.automationBuildingsDropDown)) {
     structure.automationBuildingsDropDown.forEach(name => {
       const option = document.createElement('option');
