@@ -422,6 +422,20 @@ describe('Spaceship scaled cost/gain execution', () => {
     expect(result.callsAfterApply.gain).toBe(result.callsAfterEstimate.gain);
   });
 
+  it('does not collapse gain to zero when productivity is already cost-limited', () => {
+    const result = runScenario({
+      successChance: 1,
+      productivity: 0.04,
+      energyAvailable: 80,
+      pendingEnergy: -80,
+    });
+
+    expectApprox(-result.deltas.energy, 80);
+    expectApprox(result.deltas.ore, 160);
+    expectApprox(result.estimate.cost?.colony?.energy || 0, 80);
+    expectApprox(result.estimate.gain?.colony?.ore || 0, 160);
+  });
+
   it('keeps productivity estimate based on unscaled shipment cost only', () => {
     jest.resetModules();
     const { cleanup } = createHarness();
@@ -448,6 +462,8 @@ describe('Spaceship scaled cost/gain execution', () => {
 
     project.assignedSpaceships = 200;
     project.isActive = true;
+    resources.colony.energy.value = 100000;
+    resources.colony.metal.value = 100000;
 
     const scaledEstimate = project.estimateCostAndGain(1000, false, 1, null);
     const productivityEstimate = project.estimateProductivityCostAndGain(1000);

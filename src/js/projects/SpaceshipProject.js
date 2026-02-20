@@ -1173,8 +1173,10 @@ class SpaceshipProject extends Project {
       )
     );
 
+    const productivityEpsilon = 1e-6;
+    const productivityLimited = context.productivity < (1 - productivityEpsilon);
     let costRatio = 1;
-    let costShortfall = false;
+    let costShortfall = productivityLimited;
     let disposalRatio = 1;
     let disposalShortfall = false;
 
@@ -1184,20 +1186,22 @@ class SpaceshipProject extends Project {
       ? (potentialCost[sharedDisposalCategory]?.[sharedDisposalResource] || 0)
       : 0;
 
-    for (const category in potentialCost) {
-      for (const resource in potentialCost[category]) {
-        const required = potentialCost[category][resource];
-        if (required <= 0) {
-          continue;
-        }
-        if (category === sharedDisposalCategory && resource === sharedDisposalResource) {
-          continue;
-        }
-        const available = this.getEffectiveAvailableAmount(category, resource, accumulatedChanges);
-        const ratio = Math.max(0, Math.min(1, available / required));
-        costRatio = Math.min(costRatio, ratio);
-        if (available + 1e-9 < required) {
-          costShortfall = true;
+    if (!productivityLimited) {
+      for (const category in potentialCost) {
+        for (const resource in potentialCost[category]) {
+          const required = potentialCost[category][resource];
+          if (required <= 0) {
+            continue;
+          }
+          if (category === sharedDisposalCategory && resource === sharedDisposalResource) {
+            continue;
+          }
+          const available = this.getEffectiveAvailableAmount(category, resource, accumulatedChanges);
+          const ratio = Math.max(0, Math.min(1, available / required));
+          costRatio = Math.min(costRatio, ratio);
+          if (available + 1e-9 < required) {
+            costShortfall = true;
+          }
         }
       }
     }
