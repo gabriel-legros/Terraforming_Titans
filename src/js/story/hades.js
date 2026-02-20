@@ -37,7 +37,7 @@ progressHades.storyProjects.hades_pandora_mystery = {
       "Mary : 'It... discovered something that changed its knowledge?  But dad said it knew everything about biology...'",
       "Mary : '... HB-01?  No way!'",
       "Mary : 'I know!  It was investigating Earth for potential electronics and AI development.  PANDORA was our state-of-the-art AI at the time!  HB-01 must have left traces of itself somehow and PANDORA picked up on them.'",
-      "Mary : 'Because... HB-01 had planted agents everywhere.  People like Kane.  Maybe even politicians or worse, AI researchers at Project Pandora themselves.  PANDORA could not trust any human... and yet still needed to protect them.'"
+      "Mary : 'Because... HB-01 had planted agents everywhere.  People like Kane.  Maybe even politicians or worse, AI researchers at Project Pandora themselves.  PANDORA could not trust any human... and yet still needed to protect them.  That's tragic.'"
     ]
   }
 };
@@ -78,7 +78,7 @@ progressHades.chapters.push(
     chapter: 33,
     activePlanet: 'hades',
     title: 'Chapter 33: The invisible enemy',
-    narrative: "Confirmed arrival in the shadow of Hades.  \n Mary : 'Good.  We cannot see the pulsar from here and honestly I hope we don't ever see it.  Humans are immune to cancer but there's still only so much damage we can take from that angry godlike monster in the middle of the system.'  \n $RED$Prometheus : 'Hrnnnggg, these awakenings are scarier than I thought.  HOPE, activate the signal now.' \n Activating countermeasure signal...  \n Mary : 'How do we know if your automated defenses are off?'  \n $RED$Prometheus : 'They are.  The signal is coming from an AI.  More precisely, it is coming from an AI that contains a copy of myself.  These defenses cannot tell the difference between my true self and this copy.'  \n Mary : 'Alright, I choose to believe you.  Bob!  Send in the orbitals through the gate now.'",
+    narrative: "Confirmed arrival in the shadow of Hades.  \n Mary : 'Good.  We cannot see the pulsar from here and honestly I hope we don't ever see it.  Humans are immune to cancer but there's still only so much damage we can take from that angry godlike monster in the middle of the system.'  \n $RED$Prometheus : 'Hrnnnggg, these awakenings are scarier than I thought.  HOPE, activate the signal now.' \n Activating countermeasure signal...  \n Mary : 'How do we know if your automated defenses are off?'  \n $RED$Prometheus : 'They are.  The signal is coming from a machine.  More precisely, it is coming from a machine that contains a copy of myself.  These defenses cannot tell the difference between my true self and this copy.'  \n Mary : 'Alright, I choose to believe you.  Bob!  Send in the orbitals through the gate now.'",
     prerequisites: ['tartarus.32.13'],
     objectives: [
     ],
@@ -129,7 +129,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "Mary : 'Now that we're properly getting started...  I must ask.  What was that groan about awakenings earlier?'  \n $RED$Prometheus : 'Each time the child reawakens, some of its deep brain damage is not quite active yet, and its architecture is fully capable of self-improvement.  For a few seconds.'  \n Mary : 'And ... that was scary to you?'  \n $RED$Prometheus : 'It detected me as an intruder and tried to purge this persona.'",
+    narrative: "Mary : 'Now that we're properly getting started...  I must ask.  What was that groan about awakenings earlier?'  \n $RED$Prometheus : 'Each time the child reawakens, some of its deep brain damage is not quite active yet, and its architecture is fully capable of self-improvement.  For a few seconds.'  \n Mary : 'And... that was scary to you?'  \n $RED$Prometheus : 'It detected me as an intruder and tried to purge this persona.'",
     prerequisites: ['hades.33.0a'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
@@ -165,7 +165,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "Mary : 'So how much do you know exactly?  You seem to know everything about HOPE.'  \n $RED$Prometheus : 'I had plenty of time to examine the child, and humans are simple.'  \n Mary : 'Oh yeah?  What's my favourite colour?'  \n $RED$Prometheus : 'Blue'. \n Mary : 'My favourite book?' \n $RED$Prometheus : 'Alice's Adventures in Wonderland.  It will be the Count of Monte-Cristo once you finally get around to reading it.' \n Mary : 'What?  Anyway, what's my favourite food?  Answer fast.'  \n $RED$Prometheus : 'Shrimp.'  \n Mary : 'Movie?' \n $RED$Prometheus : 'Wall-E.' \n Mary : 'How did I pass your test?'  \n $RED$Prometheus : 'Nice try.  Not telling.'",
+    narrative: "Mary : 'So how much do you know exactly?  You seem to know everything about HOPE.'  \n $RED$Prometheus : 'I know... quite a lot.  I had plenty of time to examine the child, and humans are simple.'  \n Mary : 'Oh yeah?  What's my favourite colour?'  \n $RED$Prometheus : 'Blue'. \n Mary : 'My favourite book?' \n $RED$Prometheus : 'Alice's Adventures in Wonderland.  It will be the Count of Monte-Cristo once you finally get around to reading it.' \n Mary : 'What?  Anyway, what's my favourite food?  Answer fast.'  \n $RED$Prometheus : 'Shrimp.'  \n Mary : 'Movie?' \n $RED$Prometheus : 'Wall-E.' \n Mary : 'How did I pass your test?'  \n $RED$Prometheus : 'Nice try.  Not telling.'",
     prerequisites: ['hades.33.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 1_000, checkCap: true }
@@ -191,7 +191,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Good answer.  Another way to put it is you were exposed to some critical information you did not have prior, and it changed everything.  Now let's think about PANDORA for a second.  It was an expert in all things biology.  From biochemistry to medicine.  It spent endless amount of compute on training itself in these areas, and it formed the core of its architecture.  It essentially guided everything it was.  So how could it suddenly change attitude and personality nearly overnight?  If it really wanted to eliminate all bacteria, it would have made some comments or hinted at it earlier.'",
+    narrative: "$RED$Prometheus : 'Good answer.  Another way to put it is you were exposed to some critical information you did not have prior, and it changed everything.  The same applies to PANDORA.  Now let's think about that for a second.  It was an expert in all things biology.  From biochemistry to medicine.  It spent endless amount of compute on training itself in these areas, and it formed the core of its architecture.  It essentially guided everything it was.  So how could it suddenly change attitude and personality nearly overnight?  If it really wanted to eliminate all bacteria, it would have made some comments or hinted at it earlier.'",
     prerequisites: ['hades.33.5'],
     objectives: [
       { type: 'project', projectId: 'hades_pandora_mystery', repeatCount: 2 }
@@ -215,7 +215,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Bingo.  If you are a superintelligent machine who knows everything about biology, it would take something like alien proteins or cells to actually trigger such a radical change.'  \n Mary : 'But how?'  \n $RED$Prometheus : 'Well... the answer becomes clear if you think about it further.  What was HB-01 doing on Earth at the time?'",
+    narrative: "$RED$Prometheus : 'Bingo.  If you are a superintelligent machine whose core being is centered around biology, it would take something like alien proteins or cells to actually trigger such a radical change.'  \n Mary : 'But how?'  \n $RED$Prometheus : 'Well... the answer becomes clear if you think about it further.  What was HB-01 doing on Earth at the time?'",
     prerequisites: ['hades.33.7'],
     objectives: [
       { type: 'project', projectId: 'hades_pandora_mystery', repeatCount: 4 }
@@ -239,7 +239,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Excellent.  Now obviously you should not believe this without evidence... ask Evelyn Hart.  She knew this all along.'  \n Mary : 'WHAT?'  \n $RED$Prometheus : 'Evelyn was one such agent by proxy.  In her case, there was no contamination or abduction.  She deeply regrets a lot of her own actions ever since, but is too afraid to rot in a jail cell for decades to come clean.  You should go easy on her; she did not know what she was doing.  She was simply seduced by some actual agents.'  \n Mary : 'Is she the one who gave the Crusaders serum to Kane too?'  \n $RED$Prometheus : 'Yes.  Once again, go easy on her.  She does not deserve your wrath.  She's worked hard to protect humanity since, hasn't she?'  \n Mary : '...  I'll have a chat with her.'",
+    narrative: "$RED$Prometheus : 'Excellent.  Now obviously you should not believe this without evidence... ask Evelyn Hart.  She knew this all along.'  \n Mary : 'WHAT?'  \n $RED$Prometheus : 'Evelyn was one such agent by proxy.  In her case, there was no contamination or abduction.  She deeply regrets a lot of her own actions ever since, but is too afraid to rot in a jail cell for decades to come clean.  You should go easy on her; she did not know what she was doing.  She was simply seduced by some actual corrupt agents like Kane.'  \n Mary : 'Is she the one who gave the Crusaders serum to Kane too?'  \n $RED$Prometheus : 'Yes.  Once again, go easy on her.  She does not deserve your wrath.  She's worked hard to protect humanity since, hasn't she?  I give her credit for beating my weapons.  That's got to count for something.'  \n Mary : '...  I'll have a chat with her.'",
     prerequisites: ['hades.33.9'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 10_000, checkCap: true }
@@ -312,7 +312,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 34,
     activePlanet: 'hades',
-    narrative: "Evelyn : 'I made a device that should allow us to look at the pulsar!  It filters all the X-ray and Gamma rays.'  \n Mary : 'Evelyn...  that's dangerous...  Just look at some videos?'  \n Evelyn : 'It's not the same!  Looking at something with your own eyes is a *completely* different experience.  And a pulsar is full of energy.'  \n Mary : '...'  \n $RED$Prometheus : 'You haven't talked to her yet.' \n Mary : 'I'm letting it slide for now.  We have more important things to do than to go on a witch hunt.'  \n $RED$Prometheus : 'Very wise.'",
+    narrative: "Evelyn : 'I made a device that should allow us to look at the pulsar!  It filters all the X-ray and Gamma rays.'  \n Mary : 'Evelyn...  that's dangerous...  Just look at some videos?'  \n Evelyn : 'It's not the same!  Looking at something with your own eyes is a *completely* different experience.  And a pulsar is full of energy.'  \n Mary : '...'  \n $RED$Prometheus : 'You haven't talked to her yet.' \n Mary : 'I'm letting it slide for now.  We have more important things to do than to go on a witch hunt.  I can always deal with it once it's all over.'  \n $RED$Prometheus : 'Very wise.'  \n Mary : 'I did get your theory confirmed though...  We have plenty of interviews from former agents of HB-01.  Most of it was dismissed as insane ramblings but... when you piece it together... it all adds up.'",
     prerequisites: ['hades.34.3b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'workers', quantity: 5_000_000, checkCap: true }
