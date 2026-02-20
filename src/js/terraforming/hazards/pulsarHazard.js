@@ -81,8 +81,7 @@ function getArtificialSkyCompletionRatio() {
 }
 
 function isRogueWorld(terraforming) {
-  return terraforming?.celestialParameters?.rogue === true
-    && terraforming?.celestialParameters?.roguePulsar !== true;
+  return terraforming?.celestialParameters?.rogue === true;
 }
 
 function resolveDistanceFromSunAU(terraforming) {
