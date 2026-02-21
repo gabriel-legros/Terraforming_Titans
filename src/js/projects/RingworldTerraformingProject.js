@@ -252,14 +252,19 @@ class RingworldTerraformingProject extends Project {
 
     const progressBlock = document.createElement('div');
     progressBlock.className = 'ringworld-terraforming-progress';
+    const progressMeta = document.createElement('div');
+    progressMeta.className = 'ringworld-terraforming-progress-meta';
     const progressLabel = document.createElement('div');
     progressLabel.className = 'ringworld-terraforming-progress-label';
+    const progressEta = document.createElement('div');
+    progressEta.className = 'ringworld-terraforming-progress-label ringworld-terraforming-progress-eta';
     const progressBar = document.createElement('div');
     progressBar.className = 'ringworld-terraforming-progress-bar';
     const progressFill = document.createElement('div');
     progressFill.className = 'ringworld-terraforming-progress-fill';
     progressBar.appendChild(progressFill);
-    progressBlock.append(progressLabel, progressBar);
+    progressMeta.append(progressLabel, progressEta);
+    progressBlock.append(progressMeta, progressBar);
     statusPanel.appendChild(progressBlock);
 
     const stats = document.createElement('div');
@@ -364,6 +369,7 @@ class RingworldTerraformingProject extends Project {
       surfaceGravity: surfaceGravity.value,
       rate: rate.value,
       status: status.value,
+      progressEta,
       spinEnergy: spinEnergy.value,
       massTotal: massTotal.value,
       progressLabel,
@@ -445,8 +451,14 @@ class RingworldTerraformingProject extends Project {
 
     this.el.surfaceGravity.textContent = `${formatNumber(surfaceGravity, true, 3)}g`;
     const displayRate = this.investing ? this.actualInvestRate : 0;
+    const remainingEnergy = Math.max(this.energyRequired - investedValue, 0);
+    const etaSeconds = displayRate > 0 ? (remainingEnergy / displayRate) : Infinity;
+    const etaText = this.isCompleted
+      ? 'Completed'
+      : (Number.isFinite(etaSeconds) ? formatDuration(etaSeconds) : 'No progress');
     this.el.rate.textContent = `${formatNumber(displayRate, true)} W`;
     this.el.status.textContent = statusLabel;
+    this.el.progressEta.textContent = `To 100%: ${etaText}`;
     this.el.spinEnergy.textContent = `${formatNumber(this.currentShipSpinEnergyPerTon, true)} /ton`;
     this.el.progressLabel.textContent = `${formatNumber(progressPercent, true, 1)}% (${formatWattDays(investedValue)} / ${formatWattDays(this.energyRequired)})`;
     this.el.progressFill.style.width = `${progressPercent}%`;

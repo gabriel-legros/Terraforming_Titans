@@ -577,9 +577,19 @@
     margin-bottom: 10px;
 }
 
+.ringworld-terraforming-progress-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .ringworld-terraforming-progress-label {
     font-size: 0.85em;
     color: #6c757d;
+}
+
+.ringworld-terraforming-progress-eta {
+    text-align: left;
 }
 
 .ringworld-terraforming-progress-bar {
