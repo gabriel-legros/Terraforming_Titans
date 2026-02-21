@@ -1,28 +1,11 @@
-let pulsarRadiationPenaltyFromDose = null;
-try {
-  ({ radiationPenalty: pulsarRadiationPenaltyFromDose } = require('../radiation-utils.js'));
-} catch (error) {
-  try {
-    pulsarRadiationPenaltyFromDose = radiationPenalty;
-  } catch (innerError) {
-    pulsarRadiationPenaltyFromDose = null;
-  }
-}
-if (!pulsarRadiationPenaltyFromDose) {
-  pulsarRadiationPenaltyFromDose = function fallbackRadiationPenalty(dose_mSvDay) {
-    const D0 = 1.07;
-    const a = 1.12;
-    const D = Math.max(dose_mSvDay, 1e-12);
-    return 1 / (1 + Math.pow(D0 / D, a));
-  };
-}
-
 const PULSAR_STORM_PERIOD_SECONDS = 100;
 const PULSAR_STORM_DEFAULT_DURATION_SECONDS = 5;
 const PULSAR_STORM_ANDROID_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_ELECTRONICS_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_NANOBOT_ATTRITION_RATE = 0.03;
 const PULSAR_STORM_EFFECT_LABEL = 'Electromagnetic Storm';
+const PULSAR_RADIATION_EFFECT_ID = 'pulsar-hazard-radiation-dose';
+const PULSAR_RADIATION_EFFECT_SOURCE_ID = 'pulsar-hazard-radiation-dose';
 
 function normalizePulsarParameters(parameters = {}) {
   const severity = Number.isFinite(parameters.severity) ? Math.max(0, parameters.severity) : 1;
@@ -171,9 +154,9 @@ function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
   }
 }
 
-function applyPulsarRadiation(terraforming, pulsarParameters, hazardStrength = 1) {
+function calculatePulsarRadiationBoost(terraforming, pulsarParameters, hazardStrength = 1) {
   if (!terraforming || !pulsarParameters || hazardStrength <= 0) {
-    return;
+    return { surfaceBoost: 0, orbitalBoost: 0 };
   }
 
   const orbitalBoostBase = Number.isFinite(pulsarParameters.orbitalDoseBoost_mSvPerDay)
@@ -190,9 +173,7 @@ function applyPulsarRadiation(terraforming, pulsarParameters, hazardStrength = 1
   const beltAttenuationLength_gcm2 = 30;
   const surfaceBoost = orbitalBoost * Math.exp(-column_gcm2 / beltAttenuationLength_gcm2);
 
-  terraforming.surfaceRadiation = (terraforming.surfaceRadiation || 0) + surfaceBoost;
-  terraforming.orbitalRadiation = (terraforming.orbitalRadiation || 0) + orbitalBoost;
-  terraforming.radiationPenalty = pulsarRadiationPenaltyFromDose(terraforming.surfaceRadiation || 0);
+  return { surfaceBoost, orbitalBoost };
 }
 
 class PulsarHazard {
@@ -210,6 +191,40 @@ class PulsarHazard {
     return normalizePulsarParameters(parameters);
   }
 
+  clearRadiationEffect(terraforming) {
+    if (!terraforming || !terraforming.removeEffect) {
+      return;
+    }
+    terraforming.removeEffect({
+      sourceId: PULSAR_RADIATION_EFFECT_SOURCE_ID
+    });
+  }
+
+  syncRadiationEffect(terraforming, pulsarParameters, hazardStrength = 0) {
+    if (!terraforming || !terraforming.addAndReplace) {
+      return;
+    }
+
+    const boost = calculatePulsarRadiationBoost(terraforming, pulsarParameters, hazardStrength);
+    const surfaceBoost = Number.isFinite(boost.surfaceBoost) ? boost.surfaceBoost : 0;
+    const orbitalBoost = Number.isFinite(boost.orbitalBoost) ? boost.orbitalBoost : 0;
+
+    if (surfaceBoost <= 0 && orbitalBoost <= 0) {
+      this.clearRadiationEffect(terraforming);
+      return;
+    }
+
+    terraforming.addAndReplace({
+      target: 'terraforming',
+      type: 'radiationDoseBoost',
+      surfaceDoseBoost_mSvPerDay: surfaceBoost,
+      orbitalDoseBoost_mSvPerDay: orbitalBoost,
+      effectId: PULSAR_RADIATION_EFFECT_ID,
+      sourceId: PULSAR_RADIATION_EFFECT_SOURCE_ID,
+      name: 'Pulsar Radiation'
+    });
+  }
+
   initialize(terraforming, pulsarParameters, options = {}) {
     consumePulsarArgs(terraforming, pulsarParameters, options);
     this.initialDistanceFromSunAU = resolveDistanceFromSunAU(terraforming);
@@ -224,11 +239,11 @@ class PulsarHazard {
     this.distanceFromSunMultiplier = distanceMultiplier;
     this.artificialSkyCompletion = 1 - skyShare;
     this.manager.setHazardLandReservationShare('pulsar', share);
+    this.syncRadiationEffect(terraforming, pulsarParameters, share);
     if (share > 0) {
-      applyPulsarRadiation(terraforming, pulsarParameters, share);
-    } else {
-      this.resetStormState();
+      return;
     }
+    this.resetStormState();
   }
 
   update(deltaSeconds, terraforming, pulsarParameters) {
@@ -247,9 +262,9 @@ class PulsarHazard {
     this.distanceFromSunMultiplier = distanceMultiplier;
     this.artificialSkyCompletion = 1 - skyShare;
     this.manager.setHazardLandReservationShare('pulsar', share);
+    this.syncRadiationEffect(terraforming, pulsarParameters, share);
     if (share > 0) {
       this.advanceStormState(deltaSeconds, pulsarParameters);
-      applyPulsarRadiation(terraforming, pulsarParameters, share);
     } else {
       this.resetStormState();
     }

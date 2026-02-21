@@ -1053,16 +1053,6 @@ class LifeManager extends EffectableEntity {
       let zonalBiomass = biomassByZone[zoneName];
       if (zonalBiomass <= 0) return;
 
-      const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
-      const growthFactor = 1 - penaltyFraction;
-      const moisturePass = design.moistureCheckZone(zoneName).pass;
-      if (!moisturePass || growthFactor <= 0) return;
-
-      let zonalMaxGrowthRate = baseGrowthRate;
-      zonalMaxGrowthRate *= radMult;
-      zonalMaxGrowthRate *= usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
-      zonalMaxGrowthRate *= effectiveGrowthMultiplier;
-
       const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
       const maxBiomassForZone = zoneArea * baseMaxDensity * densityMultiplier;
 
@@ -1072,6 +1062,16 @@ class LifeManager extends EffectableEntity {
         zonalBiomass = Math.max(0, zonalBiomass - overflowDecay);
         biomassByZone[zoneName] = zonalBiomass;
       }
+
+      const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
+      const growthFactor = 1 - penaltyFraction;
+      const moisturePass = design.moistureCheckZone(zoneName).pass;
+      if (!moisturePass || growthFactor <= 0) return;
+
+      let zonalMaxGrowthRate = baseGrowthRate;
+      zonalMaxGrowthRate *= radMult;
+      zonalMaxGrowthRate *= usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
+      zonalMaxGrowthRate *= effectiveGrowthMultiplier;
 
       const logisticFactor = maxBiomassForZone > 0
         ? Math.max(0, 1 - zonalBiomass / maxBiomassForZone)

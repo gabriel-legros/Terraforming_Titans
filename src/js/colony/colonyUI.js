@@ -166,6 +166,13 @@ function getGrowthMultiplierBreakdown(){
       lines.push(`${name}: ${formatNumber(mult, false, 3)}x`);
     }
   });
+  if (followersManager && followersManager.enabled) {
+    const pilgrimBonus = followersManager.getPilgrimGrowthBonus();
+    const pilgrimMultiplier = 1 + pilgrimBonus;
+    if (Math.abs(pilgrimMultiplier - 1) > 1e-9) {
+      lines.push(`Pilgrim Followers: ${formatNumber(pilgrimMultiplier, false, 3)}x`);
+    }
+  }
   return lines;
 }
 
@@ -479,4 +486,3 @@ globalThis.invalidateColonyNeedCache = invalidateColonyNeedCache;
 if (typeof module !== 'undefined') {
   module.exports = { createColonyDetails, updateColonyDetailsDisplay, rebuildColonyNeedCache, invalidateColonyNeedCache };
 }
-

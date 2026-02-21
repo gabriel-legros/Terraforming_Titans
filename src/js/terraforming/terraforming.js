@@ -1240,6 +1240,25 @@ class Terraforming extends EffectableEntity{
             effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized);
     }
 
+    getRadiationDoseBoostFromEffects() {
+      let surfaceBoost = 0;
+      let orbitalBoost = 0;
+
+      this.activeEffects.forEach((effect) => {
+        if (!effect || effect.type !== 'radiationDoseBoost') {
+          return;
+        }
+        if (Number.isFinite(effect.surfaceDoseBoost_mSvPerDay)) {
+          surfaceBoost += effect.surfaceDoseBoost_mSvPerDay;
+        }
+        if (Number.isFinite(effect.orbitalDoseBoost_mSvPerDay)) {
+          orbitalBoost += effect.orbitalDoseBoost_mSvPerDay;
+        }
+      });
+
+      return { surfaceBoost, orbitalBoost };
+    }
+
     // Estimate and store current surface and orbital radiation levels in mSv/day
     updateSurfaceRadiation() {
       const pressurePa = this.calculateTotalPressure() * 1000; // kPa -> Pa
@@ -1265,7 +1284,8 @@ class Terraforming extends EffectableEntity{
           refDistance,
           opts
         );
-        this.surfaceRadiation = dose.total;
+        const radiationBoost = this.getRadiationDoseBoostFromEffects();
+        this.surfaceRadiation = dose.total + (radiationBoost.surfaceBoost || 0);
         this.radiationPenalty = radiationPenalty(this.surfaceRadiation);
 
       const orbitalDose = estimateSurfaceDoseByColumn(
@@ -1275,7 +1295,7 @@ class Terraforming extends EffectableEntity{
         refDistance,
         opts
       );
-      this.orbitalRadiation = orbitalDose.total;
+      this.orbitalRadiation = orbitalDose.total + (radiationBoost.orbitalBoost || 0);
     }
 
     calculateGroundAlbedo() {

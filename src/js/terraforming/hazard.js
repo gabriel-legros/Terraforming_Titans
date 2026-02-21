@@ -192,6 +192,9 @@ class HazardManager {
 
     if (this.pulsarHazard) {
       this.pulsarHazard.initialize(activeTerraforming, this.parameters.pulsar, options);
+      if (activeTerraforming && activeTerraforming.updateSurfaceRadiation) {
+        activeTerraforming.updateSurfaceRadiation();
+      }
     }
     if (this.parameters.pulsar) {
       addEffect({
@@ -331,6 +334,17 @@ class HazardManager {
       return;
     }
 
+    const deltaSeconds = deltaTime > 0 ? deltaTime / 1000 : 0;
+
+    // Pulsar modifies active radiation. Apply it before hazardous biomass so
+    // hazardous growth/decay uses the same effective dose shown in UI.
+    if (this.pulsarHazard) {
+      this.pulsarHazard.update(deltaSeconds, terraformingState, this.parameters.pulsar);
+      if (terraformingState.updateSurfaceRadiation) {
+        terraformingState.updateSurfaceRadiation();
+      }
+    }
+
     const hazardous = this.parameters.hazardousBiomass;
     if (this.hazardousBiomassHazard && hazardous) {
       this.hazardousBiomassHazard.update(deltaTime, terraformingState, hazardous);
@@ -340,14 +354,10 @@ class HazardManager {
       this.updateHazardousBiomassControl(0);
     }
 
-    const deltaSeconds = deltaTime > 0 ? deltaTime / 1000 : 0;
     if (this.garbageHazard) {
       this.garbageHazard.update(deltaSeconds);
     }
     this.kesslerHazard.update(deltaSeconds, terraformingState, this.parameters.kessler);
-    if (this.pulsarHazard) {
-      this.pulsarHazard.update(deltaSeconds, terraformingState, this.parameters.pulsar);
-    }
   }
 
   normalizeHazardLandShare(share) {
