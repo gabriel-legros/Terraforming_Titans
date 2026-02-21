@@ -1807,7 +1807,7 @@ class SpaceMirrorFacilityProject extends Project {
         <div id="rogue-day-night-control" class="control-group" style="display:none; margin-top:12px; gap:8px; flex-wrap:nowrap; align-items:center;">
           <label for="rogue-day-night-period" style="white-space:nowrap;">Day-Night Period (hours):</label>
           <input type="number" id="rogue-day-night-period" min="1" max="1000" step="1" value="24" style="width:80px; flex-shrink:0;">
-          <span class="info-tooltip-icon" style="flex-shrink:0;" title="Control the day-night cycle duration for this world (1-1000 hours) when rogue mode is active or Artificial Sky is complete. Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
+          <span class="info-tooltip-icon" style="flex-shrink:0;" title="Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
         </div>
       </div>
     `;
