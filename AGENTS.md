@@ -182,7 +182,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Faith bonuses scale from believer share: Pilgrim boosts population growth from galactic believer %, Zeal boosts colonist worker efficiency up to `x3` total from world believer %, Apostles boosts available orbitals above 10% galactic faith (up to +900%), and Missionaries boosts only galactic post-cap conversion power from world believer %.
 - Followers Orbitals include an `Art Gallery` subsection: Art Power is `sqrt(galactic population) * sqrt(artifacts invested) * sqrt(funding invested)`, and persistent Art Power grants `0.5 * log10(Art Power)%` happiness plus worker-per-colonist multiplier `1 + 5 * happiness bonus`.
 - Holy World is now fully implemented in Followers: consecration requires no other active/completed world specialization, at least 80% initial land in Ecumenopolis districts, and at least 90% colonist occupancy; costs are per-initial-land and scale `2x` per consecration completion, consecration blocks starting Foundry/Bioworld on that world, and consecrated world departures grant 1 Holy Point.
-- Holy Shop purchases persist through travel and support Respec; upgrades include +5s Festival/Golden Asteroid durations (max 18), +1 max patience (max 12), and +10% faith conversion power (max 90%).
+- Holy Shop purchases persist through travel and support Respec; upgrades include +5s Festival/Golden Asteroid durations (max 18), +1 max patience (max 12), and +10% faith conversion power (max 100%).
 
 ### Story, Planets, and Progression
 - Story effects support `onTravel: false`.

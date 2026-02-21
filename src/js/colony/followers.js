@@ -56,7 +56,7 @@ class FollowersManager extends EffectableEntity {
         id: 'conversionPower',
         label: 'Conversion Power +10%',
         description: 'Increases Faith conversion power by 10%.',
-        maxPurchases: 9,
+        maxPurchases: 10,
         cost: 1
       }
     ];
