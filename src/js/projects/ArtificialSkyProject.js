@@ -508,19 +508,6 @@ class ArtificialSkyProject extends SpaceshipProject {
   updateCostAndGains(elements) {
     if (!elements) return;
 
-    const perSegmentCost = this.calculateSpaceshipCost();
-    const costPerSegmentText = Object.entries(perSegmentCost)
-      .flatMap(([category, resourcesList]) =>
-        Object.entries(resourcesList)
-          .filter(([, amount]) => amount > 0)
-          .map(([resource, amount]) => {
-            const displayName = resources[category][resource].displayName ||
-              resource.charAt(0).toUpperCase() + resource.slice(1);
-            return `${displayName}: ${formatNumber(amount, true)}`;
-          })
-      )
-      .join(', ');
-
     if (elements.costPerShipElement) {
       elements.costPerShipElement.style.display = 'none';
     }
@@ -532,8 +519,8 @@ class ArtificialSkyProject extends SpaceshipProject {
         elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this, true)
           .replace(/^Total Cost:/, 'Cost/s:');
       } else {
-        const fallbackText = formatTotalCostDisplay(totalCost, this, false).replace(/^Total Cost:\s*/, '');
-        elements.totalCostElement.innerHTML = `Segment Cost: ${costPerSegmentText || fallbackText}`;
+        elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this, false)
+          .replace(/^Total Cost:/, 'Segment Cost:');
       }
     }
 
