@@ -410,7 +410,7 @@ document.addEventListener('colonyStructuresRebuilt', invalidateColonyNeedCache);
 
 function getNeedColor(value, isDarkMode, needKey) {
   if (value > 1 && needKey === 'happiness') {
-    return isDarkMode ? '#d6ecff' : '#bfe6ff';
+    return '#357abd';
   }
   if (value === 1) {
     return isDarkMode ? '#004d00' : 'green';
