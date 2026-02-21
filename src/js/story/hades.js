@@ -203,7 +203,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 33,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Correct.  However, there was something PANDORA could have discovered your father did not know of at the time, would have been on Earth, and would fit the bill perfectly.  What was it?'",
+    narrative: "$RED$Prometheus : 'Did it really?  There was something PANDORA could have discovered your father did not know of at the time, would have been on Earth, and would fit the bill perfectly.  What was it?'",
     prerequisites: ['hades.33.6'],
     objectives: [
       { type: 'project', projectId: 'hades_pandora_mystery', repeatCount: 3 }

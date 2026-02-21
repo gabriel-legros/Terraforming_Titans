@@ -268,7 +268,6 @@ class RingworldTerraformingProject extends Project {
     const surfaceGravity = createRingworldStat('Surface Gravity:');
     const rate = createRingworldStat('Invest Rate:');
     const status = createRingworldStat('Status:');
-    const shipMultiplier = createRingworldStat('Ship Energy Multiplier:');
     const spinEnergy = createRingworldStat('Ship Energy Penalty:');
     const massTotal = createRingworldStat('Ringworld Mass:');
 
@@ -276,7 +275,6 @@ class RingworldTerraformingProject extends Project {
       surfaceGravity.wrapper,
       rate.wrapper,
       status.wrapper,
-      shipMultiplier.wrapper,
       spinEnergy.wrapper,
       massTotal.wrapper
     );
@@ -366,7 +364,6 @@ class RingworldTerraformingProject extends Project {
       surfaceGravity: surfaceGravity.value,
       rate: rate.value,
       status: status.value,
-      shipMultiplier: shipMultiplier.value,
       spinEnergy: spinEnergy.value,
       massTotal: massTotal.value,
       progressLabel,
@@ -450,7 +447,6 @@ class RingworldTerraformingProject extends Project {
     const displayRate = this.investing ? this.actualInvestRate : 0;
     this.el.rate.textContent = `${formatNumber(displayRate, true)} W`;
     this.el.status.textContent = statusLabel;
-    this.el.shipMultiplier.textContent = `${formatNumber(this.shipEnergyMultiplier, true, 2)}`;
     this.el.spinEnergy.textContent = `${formatNumber(this.currentShipSpinEnergyPerTon, true)} /ton`;
     this.el.progressLabel.textContent = `${formatNumber(progressPercent, true, 1)}% (${formatWattDays(investedValue)} / ${formatWattDays(this.energyRequired)})`;
     this.el.progressFill.style.width = `${progressPercent}%`;
