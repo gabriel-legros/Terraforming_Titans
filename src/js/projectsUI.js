@@ -485,7 +485,7 @@ function createProjectItem(project) {
     const warningText = document.createElement('span');
     warningText.textContent = project.name === 'import_colonists_1'
       ? 'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.'
-      : 'This project is currently being capped due to Kessler Skies. Its capabilities are replicated by a small warpgate.';
+      : 'This project is currently being capped due to Kessler Skies. Imports and exports are limited to 100 per second through a small warpgate.';
     const warningIconRight = document.createElement('span');
     warningIconRight.classList.add('project-kessler-warning__icon');
     warningIconRight.textContent = '⚠';
