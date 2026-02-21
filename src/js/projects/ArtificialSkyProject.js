@@ -14,6 +14,10 @@ class ArtificialSkyProject extends SpaceshipProject {
     this.maxRepeatCount = 1;
   }
 
+  getCostRateLabel() {
+    return 'Artificial Sky';
+  }
+
   getInitialLand() {
     try {
       return Math.max(terraforming.initialLand || 0, 0);

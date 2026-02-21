@@ -9,6 +9,21 @@ const DEFAULT_CHEM_REACTOR_AUTOMATION_SETTINGS = {
 };
 
 class ChemicalReactor extends MultiRecipesBuilding {
+  _getDefaultAutomationUnit(resourceCategory, resourceId) {
+    if (resourceCategory === 'atmospheric') {
+      return 'ton';
+    }
+    const resourceData = resources[resourceCategory][resourceId];
+    return resourceData.unit || 'ton';
+  }
+
+  _getAvailableAutomationUnits(resourceCategory, resourceId) {
+    if (resourceCategory === 'atmospheric') {
+      return ['ton', 'Pa', 'kPa'];
+    }
+    return [this._getDefaultAutomationUnit(resourceCategory, resourceId)];
+  }
+
   getAutomationSettings() {
     const settings = ChemicalReactor.getAutomationSettings();
     this._normalizeAutomationSettings(settings);
@@ -18,11 +33,6 @@ class ChemicalReactor extends MultiRecipesBuilding {
   _normalizeAutomationSettings(settings) {
     settings.mode = settings.mode === 'output' ? 'output' : 'input';
     settings.operator = settings.operator === '<' ? '<' : '>';
-    settings.unit = settings.unit === 'Pa'
-      ? 'Pa'
-      : settings.unit === 'kPa'
-        ? 'kPa'
-        : 'ton';
     const options = this._getAutomationResourceOptions(settings.mode);
     if (!options.length) return;
     const match = options.find((option) => (
@@ -33,8 +43,12 @@ class ChemicalReactor extends MultiRecipesBuilding {
       settings.resourceCategory = options[0].category;
       settings.resourceId = options[0].resource;
     }
-    if (settings.resourceCategory !== 'atmospheric') {
-      settings.unit = 'ton';
+    const availableUnits = this._getAvailableAutomationUnits(
+      settings.resourceCategory,
+      settings.resourceId
+    );
+    if (!availableUnits.includes(settings.unit)) {
+      settings.unit = availableUnits[0];
     }
   }
 
@@ -57,7 +71,7 @@ class ChemicalReactor extends MultiRecipesBuilding {
     return options;
   }
 
-  _getAutomationUnitOptions(resourceCategory) {
+  _getAutomationUnitOptions(resourceCategory, resourceId) {
     if (resourceCategory === 'atmospheric') {
       return [
         { value: 'ton', label: 'ton' },
@@ -65,7 +79,8 @@ class ChemicalReactor extends MultiRecipesBuilding {
         { value: 'kPa', label: 'kPa' }
       ];
     }
-    return [{ value: 'ton', label: 'ton' }];
+    const unit = this._getDefaultAutomationUnit(resourceCategory, resourceId);
+    return [{ value: unit, label: unit }];
   }
 
   _getAutomationCurrentValue(settings) {
@@ -269,7 +284,10 @@ class ChemicalReactor extends MultiRecipesBuilding {
       if (resourceSelect.value !== desiredValue) {
         resourceSelect.value = desiredValue;
       }
-      const unitOptions = this._getAutomationUnitOptions(settings.resourceCategory);
+      const unitOptions = this._getAutomationUnitOptions(
+        settings.resourceCategory,
+        settings.resourceId
+      );
       const unitKey = unitOptions.map((option) => `${option.value}:${option.label}`).join('|');
       if (unitSelect.dataset.optionKey !== unitKey) {
         unitSelect.textContent = '';
@@ -295,6 +313,7 @@ class ChemicalReactor extends MultiRecipesBuilding {
       const [category, resource] = resourceSelect.value.split('.');
       settings.resourceCategory = category;
       settings.resourceId = resource;
+      syncResourceOptions();
     });
 
     operatorSelect.addEventListener('change', () => {
@@ -363,7 +382,10 @@ class ChemicalReactor extends MultiRecipesBuilding {
     if (chemEls.resourceSelect.value !== desiredValue) {
       chemEls.resourceSelect.value = desiredValue;
     }
-    const unitOptions = this._getAutomationUnitOptions(settings.resourceCategory);
+    const unitOptions = this._getAutomationUnitOptions(
+      settings.resourceCategory,
+      settings.resourceId
+    );
     const unitKey = unitOptions.map((option) => `${option.value}:${option.label}`).join('|');
     if (chemEls.unitSelect.dataset.optionKey !== unitKey) {
       chemEls.unitSelect.textContent = '';
@@ -421,11 +443,13 @@ class ChemicalReactor extends MultiRecipesBuilding {
       mode: settings.mode === 'output' ? 'output' : 'input',
       operator: settings.operator === '<' ? '<' : '>',
       amount: Math.max(0, amount || 0),
-      unit: settings.unit === 'Pa'
-        ? 'Pa'
-        : settings.unit === 'kPa'
-          ? 'kPa'
-          : 'ton',
+      unit: settings.resourceCategory === 'atmospheric'
+        ? (settings.unit === 'Pa'
+          ? 'Pa'
+          : settings.unit === 'kPa'
+            ? 'kPa'
+            : 'ton')
+        : (settings.unit || 'ton'),
       resourceCategory: settings.resourceCategory,
       resourceId: settings.resourceId
     };
@@ -446,11 +470,9 @@ class ChemicalReactor extends MultiRecipesBuilding {
     settings.amount = 'amount' in saved
       ? Math.max(0, loadedAmount || 0)
       : DEFAULT_CHEM_REACTOR_AUTOMATION_SETTINGS.amount;
-    settings.unit = saved.unit === 'Pa'
-      ? 'Pa'
-      : saved.unit === 'kPa'
-        ? 'kPa'
-        : DEFAULT_CHEM_REACTOR_AUTOMATION_SETTINGS.unit;
+    settings.unit = 'unit' in saved
+      ? saved.unit
+      : DEFAULT_CHEM_REACTOR_AUTOMATION_SETTINGS.unit;
     settings.resourceCategory = 'resourceCategory' in saved
       ? saved.resourceCategory
       : settings.resourceCategory;

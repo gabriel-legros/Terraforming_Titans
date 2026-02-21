@@ -34,7 +34,7 @@ const followersOrbitalParameters = {
       sourceId: 'glassSmelter',
       targetCategory: 'colony',
       targetResource: 'glass',
-      multiplier: 1,
+      multiplier: 10,
     },
     {
       id: 'food',

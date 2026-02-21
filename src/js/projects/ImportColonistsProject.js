@@ -130,9 +130,11 @@ class ImportColonistsProject extends Project {
       }
       crusaders.increase(amount);
     } else {
+      const previousColonists = resources.colony.colonists.value;
       resources.colony.colonists.increase(amount);
+      const importedColonists = Math.max(0, resources.colony.colonists.value - previousColonists);
       if (followersManager && followersManager.onColonistsImported) {
-        followersManager.onColonistsImported(amount);
+        followersManager.onColonistsImported(importedColonists);
       }
     }
   }
