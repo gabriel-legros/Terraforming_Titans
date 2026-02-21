@@ -198,6 +198,13 @@ function formatResourceLabel(resource) {
   return resource.charAt(0).toUpperCase() + resource.slice(1);
 }
 
+function attachProjectInfoTooltips(rootElement) {
+  if (!rootElement) return;
+  rootElement.querySelectorAll('.info-tooltip-icon[data-tooltip-text]').forEach(icon => {
+    attachDynamicInfoTooltip(icon, icon.getAttribute('data-tooltip-text') || '');
+  });
+}
+
 function clearQuickBuildCost(element) {
   if (!element) return;
   element.textContent = '';
@@ -618,7 +625,7 @@ function initializeMirrorOversightUI(container) {
   div.innerHTML = `
     <div class="card-header">
       <span class="card-title">Mirror Oversight</span>
-      <span class="info-tooltip-icon" title="Distribute mirror focus among zones."></span>
+      <span class="info-tooltip-icon" data-tooltip-text="Distribute mirror focus among zones."></span>
     </div>
     <div class="card-body">
       <div id="mirror-oversight-sliders">
@@ -651,7 +658,7 @@ function initializeMirrorOversightUI(container) {
         <label for="mirror-oversight-any-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
       </div>
       <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
-        <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" title="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.">&#9432;</span></label>
+        <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" data-tooltip-text="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.">&#9432;</span></label>
         <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-focus-reverse" class="slider-reversal-checkbox" data-zone="focus" style="display:none; visibility:hidden;">
@@ -668,7 +675,7 @@ function initializeMirrorOversightUI(container) {
       <div id="mirror-oversight-lantern-div" class="control-group">
         <input type="checkbox" id="mirror-oversight-lantern">
         <label for="mirror-oversight-lantern">Apply Oversight to Hyperion Lantern</label>
-        <span class="info-tooltip-icon" title="Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.">&#9432;</span>
+        <span class="info-tooltip-icon" data-tooltip-text="Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.">&#9432;</span>
       </div>
     </div>
   `;
@@ -726,10 +733,10 @@ function initializeMirrorOversightUI(container) {
   advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">Advanced Oversight</label>
-    <span class="info-tooltip-icon" title="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.">&#9432;</span>
+    <span class="info-tooltip-icon" data-tooltip-text="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.">&#9432;</span>
     <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
     <label for="mirror-allow-available-heat">Allow available to heat</label>
-    <span class="info-tooltip-icon" title="When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.">&#9432;</span>
+    <span class="info-tooltip-icon" data-tooltip-text="When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
@@ -745,7 +752,7 @@ function initializeMirrorOversightUI(container) {
   advancedControls.innerHTML = `
     <div class="control-group">
       <span class="control-label" style="font-weight:600;">Targets & Priority</span>
-      <span class="info-tooltip-icon" title="Set temperature targets for each zone using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.">&#9432;</span>
+      <span class="info-tooltip-icon" data-tooltip-text="Set temperature targets for each zone using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.">&#9432;</span>
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" data-zone="tropical" style="display:flex; gap:8px; align-items:center;">
@@ -1113,6 +1120,7 @@ function initializeMirrorOversightUI(container) {
   });
 
   updateAssignmentDisplays();
+  attachProjectInfoTooltips(div);
 
   container.appendChild(div);
 
@@ -1807,10 +1815,11 @@ class SpaceMirrorFacilityProject extends Project {
         <div id="rogue-day-night-control" class="control-group" style="display:none; margin-top:12px; gap:8px; flex-wrap:nowrap; align-items:center;">
           <label for="rogue-day-night-period" style="white-space:nowrap;">Day-Night Period (hours):</label>
           <input type="number" id="rogue-day-night-period" min="1" max="1000" step="1" value="24" style="width:80px; flex-shrink:0;">
-          <span class="info-tooltip-icon" style="flex-shrink:0;" title="Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
+          <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
         </div>
       </div>
     `;
+    attachProjectInfoTooltips(lanternDetails);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(lanternDetails);
     container.appendChild(lanternDetails);
 
