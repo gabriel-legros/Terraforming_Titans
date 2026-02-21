@@ -185,6 +185,12 @@ function getFacilityResourceFactor(building) {
   return Math.max(0, Math.min(1, base));
 }
 
+function canControlLanternDayNightCycle() {
+  if (typeof terraforming === 'undefined' || !terraforming.celestialParameters) return false;
+  return terraforming.celestialParameters.rogue === true
+    || projectManager?.projects?.artificialSky?.isCompleted === true;
+}
+
 var mirrorOversightSettings = null;
 
 function formatResourceLabel(resource) {
@@ -1801,7 +1807,7 @@ class SpaceMirrorFacilityProject extends Project {
         <div id="rogue-day-night-control" class="control-group" style="display:none; margin-top:12px; gap:8px; flex-wrap:nowrap; align-items:center;">
           <label for="rogue-day-night-period" style="white-space:nowrap;">Day-Night Period (hours):</label>
           <input type="number" id="rogue-day-night-period" min="1" max="1000" step="1" value="24" style="width:80px; flex-shrink:0;">
-          <span class="info-tooltip-icon" style="flex-shrink:0;" title="Control the day-night cycle duration for this rogue world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
+          <span class="info-tooltip-icon" style="flex-shrink:0;" title="Control the day-night cycle duration for this world (1-1000 hours) when rogue mode is active or Artificial Sky is complete. Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
         </div>
       </div>
     `;
@@ -1958,8 +1964,7 @@ class SpaceMirrorFacilityProject extends Project {
       const applyRogueDayNightPeriod = () => {
         const newPeriod = Math.max(1, Math.min(1000, Number(rogueDayNightInput.value) || 24));
         rogueDayNightInput.value = newPeriod;
-        const isRogue = terraforming.celestialParameters.rogue === true;
-        if (isRogue) {
+        if (canControlLanternDayNightCycle()) {
           terraforming.celestialParameters.rotationPeriod = newPeriod;
           const durationData = rotationPeriodToDuration(newPeriod);
           const progress = dayNightCycle.getDayProgress();
@@ -2041,11 +2046,11 @@ class SpaceMirrorFacilityProject extends Project {
         elements.quickBuild.lantern.container.style.display = showLantern ? 'grid' : 'none';
       }
       
-      const isRogue = typeof terraforming !== 'undefined' && terraforming.celestialParameters && terraforming.celestialParameters.rogue === true;
+      const canControlDayNight = canControlLanternDayNightCycle();
       if (elements.lanternDetails.rogueDayNightControl) {
-        elements.lanternDetails.rogueDayNightControl.style.display = (showLantern && isRogue) ? 'flex' : 'none';
+        elements.lanternDetails.rogueDayNightControl.style.display = (showLantern && canControlDayNight) ? 'flex' : 'none';
       }
-      if (elements.lanternDetails.rogueDayNightInput && isRogue && typeof terraforming !== 'undefined') {
+      if (elements.lanternDetails.rogueDayNightInput && canControlDayNight && typeof terraforming !== 'undefined') {
         const currentPeriod = terraforming.celestialParameters.rotationPeriod || 24;
         const dayNightInput = elements.lanternDetails.rogueDayNightInput;
         if (document.activeElement !== dayNightInput && dayNightInput.dataset.editing !== 'true') {
