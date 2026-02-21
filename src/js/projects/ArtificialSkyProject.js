@@ -181,6 +181,10 @@ class ArtificialSkyProject extends SpaceshipProject {
     return this.repeatCount < this.getMaxRepeats();
   }
 
+  shouldAutomationDisable() {
+    return !this.canContinue();
+  }
+
   deductResources(resources) {
     let shortfall = false;
     if (this.isContinuous()) {
