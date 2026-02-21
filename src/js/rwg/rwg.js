@@ -714,6 +714,91 @@ function cloneRWGValue(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function initializeHazardousBiomassFromMaxDensity(worldParameters, params = DEFAULT_PARAMS) {
+  if (!worldParameters || !worldParameters.hazards || !worldParameters.hazards.hazardousBiomass) {
+    return;
+  }
+
+  const surface = worldParameters.resources && worldParameters.resources.surface;
+  if (!surface) {
+    return;
+  }
+
+  const landArea = surface.land && Number.isFinite(surface.land.initialValue)
+    ? surface.land.initialValue
+    : 0;
+  if (landArea <= 0) {
+    return;
+  }
+
+  const baseGrowth = worldParameters.hazards.hazardousBiomass.baseGrowth || {};
+  const maxDensity = Number.isFinite(baseGrowth.maxDensity) && baseGrowth.maxDensity > 0
+    ? baseGrowth.maxDensity
+    : 0;
+  if (maxDensity <= 0) {
+    return;
+  }
+
+  const zonalSurface = worldParameters.zonalSurface || (worldParameters.zonalSurface = {});
+  const zoneKeys = Object.keys(zonalSurface).length ? Object.keys(zonalSurface) : RWG_ZONE_KEYS.slice();
+
+  let existingZonalBiomass = 0;
+  zoneKeys.forEach((zone) => {
+    const zoneSurface = zonalSurface[zone];
+    if (!zoneSurface) return;
+    const value = Number.isFinite(zoneSurface.hazardousBiomass) ? zoneSurface.hazardousBiomass : 0;
+    if (value > 0) existingZonalBiomass += value;
+  });
+
+  const existingGlobalBiomass = surface.hazardousBiomass && Number.isFinite(surface.hazardousBiomass.initialValue)
+    ? surface.hazardousBiomass.initialValue
+    : 0;
+  if (existingZonalBiomass > 0 || existingGlobalBiomass > 0) {
+    return;
+  }
+
+  const baseFractions = getZoneFractionsSafe(params);
+  const zoneFractions = {};
+  let totalFraction = 0;
+  zoneKeys.forEach((zone) => {
+    let fraction = 0;
+    try {
+      const zonePercentage = getZonePercentage(zone);
+      if (Number.isFinite(zonePercentage) && zonePercentage > 0) {
+        fraction = zonePercentage;
+      }
+    } catch (error) {}
+    if (!(fraction > 0)) {
+      fraction = Number.isFinite(baseFractions[zone]) ? Math.max(0, baseFractions[zone]) : 0;
+    }
+    zoneFractions[zone] = fraction;
+    totalFraction += fraction;
+  });
+
+  if (totalFraction <= 0) {
+    const equalFraction = zoneKeys.length > 0 ? (1 / zoneKeys.length) : 0;
+    zoneKeys.forEach((zone) => {
+      zoneFractions[zone] = equalFraction;
+    });
+  } else {
+    zoneKeys.forEach((zone) => {
+      zoneFractions[zone] = zoneFractions[zone] / totalFraction;
+    });
+  }
+
+  let totalHazardousBiomass = 0;
+  zoneKeys.forEach((zone) => {
+    const zoneSurface = zonalSurface[zone] || (zonalSurface[zone] = {});
+    const amount = landArea * zoneFractions[zone] * maxDensity;
+    zoneSurface.hazardousBiomass = amount;
+    totalHazardousBiomass += amount;
+  });
+
+  const hazardousResource = surface.hazardousBiomass || cloneDefaultSurfaceResource('hazardousBiomass');
+  hazardousResource.initialValue = totalHazardousBiomass;
+  surface.hazardousBiomass = hazardousResource;
+}
+
 function buildSpecialSeedWorldResult(seedValue, seedInt) {
   if (!getSpecialSeedDefinitionCatalog || !getSpecialSeedParametersCatalog) return null;
   const definition = getSpecialSeedDefinitionCatalog(seedValue);
@@ -722,6 +807,7 @@ function buildSpecialSeedWorldResult(seedValue, seedInt) {
   if (!specialSeedParams) return null;
 
   const merged = deepMerge(defaultPlanetParameters, cloneRWGValue(specialSeedParams));
+  initializeHazardousBiomassFromMaxDensity(merged);
   const override = cloneRWGValue(merged);
   const star = cloneRWGValue(merged.star || {});
   const starLuminosity = merged?.celestialParameters?.starLuminosity;
