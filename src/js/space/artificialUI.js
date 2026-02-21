@@ -800,7 +800,7 @@ function ensureArtificialLayout() {
   ringAuto.type = 'button';
   ringAuto.className = 'artificial-secondary artificial-radius-auto';
   ringAuto.textContent = 'Auto';
-  ringAuto.title = 'Pick the widest ring possible while keeping construction at or under 5 hours.';
+  ringAuto.title = 'Set a just-under-5h build by maximizing width at minimum orbit, then solving orbit radius.';
   artificialUICache.ringAuto = ringAuto;
   ringOrbitControls.appendChild(ringAuto);
   ringOrbitBox.appendChild(ringOrbitControls);
@@ -2277,11 +2277,7 @@ function updateArtificialUI(options = {}) {
     if (force && !artificialRingOrbitEditing) {
       setRingOrbitFields(draft.orbitRadiusAU, true);
     }
-    const shouldHydrateRingWidth = force
-      || (!artificialRingWidthEditing
-        && !isRingWidthFieldActive()
-        && artificialUICache.ringWidthRange
-        && Number(artificialUICache.ringWidthRange.value) !== Number(clampRingWidthValue(draft.widthKm)));
+    const shouldHydrateRingWidth = force && !artificialRingWidthEditing;
     if (shouldHydrateRingWidth) {
       setRingWidthFields(draft.widthKm, true);
     }

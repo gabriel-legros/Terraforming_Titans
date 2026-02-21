@@ -612,32 +612,31 @@ class ArtificialManager extends EffectableEntity {
     }
 
     getAutoRingSelection(bounds, widthBounds) {
-        const targetMs = MAX_SHELL_DURATION_MS;
+        const targetMs = Math.max(0, MAX_SHELL_DURATION_MS - 1);
         const minWidth = Math.max(widthBounds.min, 0);
         const maxWidth = Math.max(widthBounds.max, minWidth);
         const snappedMaxWidth = Math.floor(maxWidth / AUTO_RING_WIDTH_STEP) * AUTO_RING_WIDTH_STEP;
         const snappedMinWidth = Math.ceil(minWidth / AUTO_RING_WIDTH_STEP) * AUTO_RING_WIDTH_STEP;
         const minOrbitAU = Math.min(Math.max(bounds.min, 0.01), bounds.max);
-        // Width-first: compute the largest width that still meets 5h at the smallest orbit.
-        // Duration scales linearly with ring width for fixed orbit/core bounds.
-        const minOrbitDurationAtMaxWidth = this.getRingConstructionDurationMs(minOrbitAU, snappedMaxWidth);
-        const widthScale = minOrbitDurationAtMaxWidth > 0
-            ? targetMs / minOrbitDurationAtMaxWidth
-            : 1;
-        let chosenWidthKm = Math.floor((snappedMaxWidth * widthScale) / AUTO_RING_WIDTH_STEP) * AUTO_RING_WIDTH_STEP;
-        chosenWidthKm = Math.min(Math.max(chosenWidthKm, snappedMinWidth), snappedMaxWidth);
-
-        let orbitRadiusAU = this.getAutoRingOrbit(bounds, chosenWidthKm);
-        let durationMs = this.getRingConstructionDurationMs(orbitRadiusAU, chosenWidthKm);
-
-        // Safety backoff for rare rounding edges.
-        while (durationMs > targetMs && chosenWidthKm > snappedMinWidth) {
-            chosenWidthKm -= AUTO_RING_WIDTH_STEP;
-            orbitRadiusAU = this.getAutoRingOrbit(bounds, chosenWidthKm);
-            durationMs = this.getRingConstructionDurationMs(orbitRadiusAU, chosenWidthKm);
+        const maxOrbitAU = Math.max(bounds.max, minOrbitAU);
+        const durationPerOrbitWidth = Math.max(this.getRingConstructionDurationMs(1, 1), 0);
+        if (!durationPerOrbitWidth) {
+            return { orbitRadiusAU: Number(minOrbitAU.toFixed(3)), widthKm: snappedMinWidth };
         }
 
-        return { orbitRadiusAU, widthKm: chosenWidthKm };
+        // 1) Convert "just under 5h" to a target orbit*width size.
+        const targetOrbitWidth = targetMs / durationPerOrbitWidth;
+
+        // 2) At min orbit, pick the widest width that still fits target size.
+        const maxWidthAtMinOrbit = Math.floor((targetOrbitWidth / minOrbitAU) / AUTO_RING_WIDTH_STEP) * AUTO_RING_WIDTH_STEP;
+        const chosenWidthKm = Math.min(Math.max(maxWidthAtMinOrbit, snappedMinWidth), snappedMaxWidth);
+
+        // 3) Solve orbit from chosen width and snap down to stay under target.
+        const solvedOrbit = chosenWidthKm > 0 ? (targetOrbitWidth / chosenWidthKm) : minOrbitAU;
+        const snappedOrbit = Math.floor((solvedOrbit + 1e-9) / AUTO_RING_ORBIT_STEP) * AUTO_RING_ORBIT_STEP;
+        const orbitRadiusAU = Math.min(Math.max(snappedOrbit, minOrbitAU), maxOrbitAU);
+
+        return { orbitRadiusAU: Number(orbitRadiusAU.toFixed(3)), widthKm: chosenWidthKm };
     }
 
     getRingConstructionDurationMs(orbitRadiusAU, widthKm) {
