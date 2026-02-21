@@ -791,6 +791,19 @@ class Terraforming extends EffectableEntity{
     // Function to update luminosity properties
     updateLuminosity() {
       this.luminosity.groundAlbedo = this.calculateGroundAlbedo();
+      const dustFactory = buildings.dustFactory;
+      if (dustFactory.dustAlbedoTransitionActive) {
+        const surfaceArea = this.celestialParameters.surfaceArea || 0;
+        const special = this.resources.special;
+        const black = special.albedoUpgrades.value;
+        const white = special.whiteDust.value;
+        const bRatioRaw = surfaceArea > 0 ? Math.max(0, black / surfaceArea) : 0;
+        const wRatioRaw = surfaceArea > 0 ? Math.max(0, white / surfaceArea) : 0;
+        const totalApplied = Math.min(bRatioRaw + wRatioRaw, 1);
+        if (totalApplied >= 1) {
+          dustFactory.dustAlbedoTransitionActive = false;
+        }
+      }
       this.luminosity.surfaceAlbedo = this.calculateSurfaceAlbedo();
       const albRes = this.calculateActualAlbedo();
       this.luminosity.actualAlbedo = albRes.albedo;
@@ -1325,9 +1338,6 @@ class Terraforming extends EffectableEntity{
         if (dustFactory.dustAlbedoTransitionActive) {
             const start = dustFactory.dustAlbedoStart ?? baseAlbedo;
             const transitioned = (start * (1 - totalApplied)) + (blended * totalApplied);
-            if (totalApplied >= 1) {
-                dustFactory.dustAlbedoTransitionActive = false;
-            }
             return transitioned;
         }
 

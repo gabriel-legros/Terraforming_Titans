@@ -35,8 +35,8 @@ function updateDustResourceName(settings) {
   }
 }
 
-function applyDustColorChange(previousColor, building, settings, previousAlbedo) {
-  if (isCustomDustColor(settings.dustColor) && previousColor !== settings.dustColor) {
+function applyDustColorChange(previousColor, building, settings, previousAlbedo, resetDustStock = false) {
+  if (resetDustStock && previousColor !== settings.dustColor) {
     resources.special.albedoUpgrades.value = 0;
     resources.special.whiteDust.value = 0;
   }
@@ -300,11 +300,12 @@ class DustFactory extends Building {
       const previousColor = settings.dustColor;
       settings.dustColor = colorInput.value;
       settings.dustColorAlbedo = getDustAlbedoFromColor(settings.dustColor);
-      if (isCustomDustColor(settings.dustColor)) {
+      const shouldLockTargetToColor = isCustomDustColor(settings.dustColor) || !this.hasCustomTarget;
+      if (shouldLockTargetToColor) {
         settings.targetAlbedo = settings.dustColorAlbedo;
         this.hasCustomTarget = false;
       }
-      applyDustColorChange(previousColor, this, settings, previousAlbedo);
+      applyDustColorChange(previousColor, this, settings, previousAlbedo, shouldLockTargetToColor);
       update();
     });
 
@@ -421,8 +422,8 @@ class DustFactory extends Building {
     return getDustAlbedoFromColor(color);
   }
 
-  static applyDustColorChange(previousColor, building, settings, previousAlbedo) {
-    applyDustColorChange(previousColor, building, settings, previousAlbedo);
+  static applyDustColorChange(previousColor, building, settings, previousAlbedo, resetDustStock) {
+    applyDustColorChange(previousColor, building, settings, previousAlbedo, resetDustStock);
   }
 
   static resetTravelState() {
