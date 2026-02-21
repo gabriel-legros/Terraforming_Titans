@@ -40,10 +40,10 @@ const followersOrbitalParameters = {
       id: 'food',
       label: 'Food',
       sourceType: 'building',
-      sourceId: 'potatoFarm',
+      sourceId: 'hydroponicFarm',
       targetCategory: 'colony',
       targetResource: 'food',
-      multiplier: 1,
+      multiplier: 10,
     },
     {
       id: 'electronics',
