@@ -1154,19 +1154,33 @@ class LifeManager extends EffectableEntity {
       biomassByZone[zoneName] > 0 && canGrowByZone[zoneName] && !seedTargets.includes(zoneName)
     );
 
+    const planetRadiusMeters = (terraforming.celestialParameters.radius || 3389.5) * 1000;
+    const boundaryLengthTropicalTemperate = 4 * Math.PI * planetRadiusMeters * Math.cos(23.5 * Math.PI / 180);
+    const boundaryLengthTemperatePolar = 4 * Math.PI * planetRadiusMeters * Math.cos(66.5 * Math.PI / 180);
+    const defaultBoundaryLength = 4 * Math.PI * planetRadiusMeters;
+    const getBoundaryLengthMeters = (zoneA, zoneB) => {
+      const indexA = zones.indexOf(zoneA);
+      const indexB = zones.indexOf(zoneB);
+      if (indexA < 0 || indexB < 0 || Math.abs(indexA - indexB) !== 1) return 0;
+      if (zones.length === 3 && zones[0] === 'tropical' && zones[1] === 'temperate' && zones[2] === 'polar') {
+        const lowerIndex = Math.min(indexA, indexB);
+        if (lowerIndex === 0) return boundaryLengthTropicalTemperate;
+        if (lowerIndex === 1) return boundaryLengthTemperatePolar;
+      }
+      return defaultBoundaryLength;
+    };
+
     seedTargets.forEach(targetZone => {
-      let availableGrowth = 0;
-      seedDonors.forEach(donorZone => {
-        availableGrowth += zoneGrowthByZone[donorZone];
-      });
-      if (availableGrowth <= 0) return;
-      const seedAmount = Math.min(1, availableGrowth);
-      zoneGrowthByZone[targetZone] += seedAmount;
       seedDonors.forEach(donorZone => {
         const donorGrowth = zoneGrowthByZone[donorZone];
         if (donorGrowth <= 0) return;
-        const share = donorGrowth / availableGrowth;
-        zoneGrowthByZone[donorZone] = donorGrowth - seedAmount * share;
+        const boundaryLengthMeters = getBoundaryLengthMeters(donorZone, targetZone);
+        if (boundaryLengthMeters <= 0) return;
+        const donorCap = donorGrowth * 0.01;
+        const transferAmount = Math.min(donorGrowth, donorCap, boundaryLengthMeters);
+        if (transferAmount <= 0) return;
+        zoneGrowthByZone[donorZone] -= transferAmount;
+        zoneGrowthByZone[targetZone] += transferAmount;
       });
     });
 
