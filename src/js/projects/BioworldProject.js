@@ -109,6 +109,7 @@
 
     getSpecializationRequirements() {
       const otherSpecialization = projectManager.projects.foundryWorld;
+      const holyWorldBlocked = followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated();
       return [
         {
           id: 'terraformed',
@@ -128,7 +129,7 @@
         {
           id: 'otherSpecialization',
           label: 'No other specialization started or completed',
-          met: !otherSpecialization.isActive && !otherSpecialization.isCompleted,
+          met: !holyWorldBlocked && !otherSpecialization.isActive && !otherSpecialization.isCompleted,
         },
       ];
     }
