@@ -1,6 +1,7 @@
 const SOLIS_RESOURCE_CAP = 1000;
 const SOLIS_WATER_KEEP = 1000;
 const SOLIS_CAPPED_RESOURCES = ['food', 'components', 'electronics', 'glass', 'androids'];
+const KESSLER_FAILURE_BASE_DEBRIS_PER_LAND = 100;
 const SMALL_PROJECT_BASE_SUCCESS = 0.3;
 const LARGE_PROJECT_BASE_SUCCESS = 0.02;
 const PERIAPSIS_SAMPLE_COUNT = 64;
@@ -231,15 +232,21 @@ class KesslerHazard {
 
   getProjectFailureChances() {
     const debris = resources.special.orbitalDebris;
-    const initialAmount = debris.initialValue || 0;
     const currentAmount = debris.value || 0;
-    return this.getProjectFailureChancesForDebris(initialAmount ? currentAmount : 0);
+    return this.getProjectFailureChancesForDebris(currentAmount);
+  }
+
+  getFailureDenominatorDebris() {
+    const debris = resources.special.orbitalDebris;
+    const initialAmount = debris.initialValue || 0;
+    const normalizedParameters = this.normalize(this.manager.parameters.kessler);
+    const perLand = normalizedParameters.orbitalDebrisPerLand || KESSLER_FAILURE_BASE_DEBRIS_PER_LAND;
+    return initialAmount ? initialAmount * (KESSLER_FAILURE_BASE_DEBRIS_PER_LAND / perLand) : 0;
   }
 
   getProjectFailureChancesForDebris(totalDebris) {
-    const debris = resources.special.orbitalDebris;
-    const initialAmount = debris.initialValue || 0;
-    const ratio = initialAmount ? totalDebris / initialAmount : 0;
+    const denominator = this.getFailureDenominatorDebris();
+    const ratio = denominator ? totalDebris / denominator : 0;
     const smallSuccess = Math.pow(SMALL_PROJECT_BASE_SUCCESS, ratio);
     const largeSuccess = Math.pow(LARGE_PROJECT_BASE_SUCCESS, ratio);
     return {
