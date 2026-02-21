@@ -128,6 +128,9 @@ class AndroidProject extends Project {
   }
 
   update(deltaTime) {
+    if (this.isCompleted && this.assignedAndroids > 0) {
+      this.releaseAndroidAssignments();
+    }
     if (this.isPermanentlyDisabled()) {
       this.isActive = false;
       this.isPaused = false;
@@ -406,6 +409,15 @@ class AndroidProject extends Project {
       return;
     }
     if (!this.autoAssignAndroids) return;
+    if (this.isCompleted) {
+      this.releaseAndroidAssignments();
+      return;
+    }
+    const isRunning = this.isActive && !this.isPaused;
+    if (!isRunning && !this.autoStart) {
+      this.releaseAndroidAssignments();
+      return;
+    }
     const total = Math.floor(resources.colony.androids.value);
     const assignedOther = projectManager.getAssignedAndroids(this);
     const maxForThisProject = Math.max(0, total - assignedOther);
