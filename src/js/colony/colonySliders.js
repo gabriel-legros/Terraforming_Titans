@@ -179,7 +179,8 @@ class ColonySlidersManager extends EffectableEntity {
         resourceTarget: 'food',
         value: value,
         effectId: 'foodConsumption',
-        sourceId: 'foodConsumption'
+        sourceId: 'foodConsumption',
+        name: 'Colony sliders'
       });
     });
   }

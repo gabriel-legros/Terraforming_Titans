@@ -22,6 +22,7 @@ class ResourceCycle {
     slopeSaturationVaporPressureFn,
     freezePoint,
     sublimationPoint,
+    boilingRateMultiplier = 1e-7,
     evaporationAlbedo = 0.6,
     sublimationAlbedo = 0.6,
     coverageKeys = {},
@@ -42,6 +43,7 @@ class ResourceCycle {
     this.slopeSaturationVaporPressureFn = slopeSaturationVaporPressureFn;
     this.freezePoint = freezePoint;
     this.sublimationPoint = sublimationPoint;
+    this.boilingRateMultiplier = boilingRateMultiplier;
     this.evaporationAlbedo = evaporationAlbedo;
     this.sublimationAlbedo = sublimationAlbedo;
     this.coverageKeys = coverageKeys;
@@ -335,16 +337,15 @@ class ResourceCycle {
     }
 
     const currentLiquid = availableLiquid + (changes[surfaceBucket][liquidKey] || 0);
-    if (currentLiquid > 0 && typeof zoneTemperature === 'number') {
-      const aboveBoiling = Number.isFinite(boilingPoint) && zoneTemperature > boilingPoint;
-      const noLiquidHeating = liquidForbidden && zoneTemperature >= this.freezePoint;
-      if (aboveBoiling || noLiquidHeating) {
-        const diff = aboveBoiling ? (zoneTemperature - boilingPoint) : 1;
-        const boilBlend = Math.max(0, Math.min(1, diff));
-        boilingAmount = Math.min(currentLiquid, currentLiquid * boilBlend);
-        changes.atmosphere[atmosphereKey] += boilingAmount;
-        changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - boilingAmount;
-      }
+    if (currentLiquid > 0
+      && typeof zoneTemperature === 'number'
+      && Number.isFinite(boilingPoint)
+      && zoneTemperature > boilingPoint) {
+      const diff = zoneTemperature - boilingPoint;
+      const boilingRate = currentLiquid * this.boilingRateMultiplier * diff;
+      boilingAmount = Math.min(boilingRate * durationSeconds, currentLiquid);
+      changes.atmosphere[atmosphereKey] += boilingAmount;
+      changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - boilingAmount;
     }
 
     return {
