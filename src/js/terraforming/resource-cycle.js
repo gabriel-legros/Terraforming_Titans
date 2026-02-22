@@ -22,7 +22,6 @@ class ResourceCycle {
     slopeSaturationVaporPressureFn,
     freezePoint,
     sublimationPoint,
-    rapidSublimationMultiplier = 0,
     evaporationAlbedo = 0.6,
     sublimationAlbedo = 0.6,
     coverageKeys = {},
@@ -43,7 +42,6 @@ class ResourceCycle {
     this.slopeSaturationVaporPressureFn = slopeSaturationVaporPressureFn;
     this.freezePoint = freezePoint;
     this.sublimationPoint = sublimationPoint;
-    this.rapidSublimationMultiplier = rapidSublimationMultiplier;
     this.evaporationAlbedo = evaporationAlbedo;
     this.sublimationAlbedo = sublimationAlbedo;
     this.coverageKeys = coverageKeys;
@@ -595,13 +593,6 @@ class ResourceCycle {
     }
   }
 
-  rapidSublimationRate(temperature, availableIce) {
-    if (temperature > this.sublimationPoint && availableIce > 0) {
-      const diff = temperature - this.sublimationPoint;
-      return availableIce * this.rapidSublimationMultiplier * diff;
-    }
-    return 0;
-  }
 }
 
 if (isNodeResourceCycle) {
