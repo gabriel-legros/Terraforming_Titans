@@ -91,7 +91,7 @@
   constructor({
     key = 'oxygen',
     atmKey = 'oxygen',
-    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'melt', 'freeze'],
+    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'boiling', 'melt', 'freeze'],
     processTotalKeys = { rain: 'oxygenRain', snow: 'oxygenSnow' },
     transitionRange = 2,
     maxDiff = 10,
@@ -139,6 +139,10 @@
       rapidSublimation: [
         { path: 'atmospheric.oxygen', label: 'Rapid Sublimation', sign: +1 },
         { path: 'surface.oxygenIce', label: 'Rapid Sublimation', sign: -1 },
+      ],
+      boiling: [
+        { path: 'atmospheric.oxygen', label: 'Boiling', sign: +1 },
+        { path: 'surface.liquidOxygen', label: 'Oxygen Boiling', sign: -1 },
       ],
       oxygenRain: [
         { path: 'atmospheric.oxygen', label: 'Condensation', sign: -1 },

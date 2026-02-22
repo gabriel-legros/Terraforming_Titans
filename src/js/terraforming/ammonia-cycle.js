@@ -112,7 +112,7 @@ class AmmoniaCycle extends ResourceCycleClass {
   constructor({
     key = 'ammonia',
     atmKey = 'atmosphericAmmonia',
-    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'melt', 'freeze'],
+    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'boiling', 'melt', 'freeze'],
     processTotalKeys = { rain: 'ammoniaRain', snow: 'ammoniaSnow' },
     transitionRange = 2,
     maxDiff = 10,
@@ -160,6 +160,10 @@ class AmmoniaCycle extends ResourceCycleClass {
       rapidSublimation: [
         { path: 'atmospheric.atmosphericAmmonia', label: 'Rapid Sublimation', sign: +1 },
         { path: 'surface.ammoniaIce', label: 'Rapid Sublimation', sign: -1 },
+      ],
+      boiling: [
+        { path: 'atmospheric.atmosphericAmmonia', label: 'Boiling', sign: +1 },
+        { path: 'surface.liquidAmmonia', label: 'Ammonia Boiling', sign: -1 },
       ],
       ammoniaRain: [
         { path: 'atmospheric.atmosphericAmmonia', label: 'Rain', sign: -1 },

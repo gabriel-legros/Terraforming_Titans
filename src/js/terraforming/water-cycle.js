@@ -75,7 +75,7 @@ class WaterCycle extends ResourceCycleClass {
   constructor({
     key = 'water',
     atmKey = 'atmosphericWater',
-    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'melt', 'freeze'],
+    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'boiling', 'melt', 'freeze'],
     processTotalKeys = { rain: 'rain', snow: 'snow' },
     transitionRange = 2,
     maxDiff = 10,
@@ -123,6 +123,10 @@ class WaterCycle extends ResourceCycleClass {
       rapidSublimation: [
         { path: 'atmospheric.atmosphericWater', label: 'Rapid Sublimation', sign: +1 },
         { path: 'surface.ice', label: 'Rapid Sublimation', sign: -1 },
+      ],
+      boiling: [
+        { path: 'atmospheric.atmosphericWater', label: 'Boiling', sign: +1 },
+        { path: 'surface.liquidWater', label: 'Boiling', sign: -1 },
       ],
       // Totals often arrive as 'rain'/'snow' from zonal precipitation
       rain: [

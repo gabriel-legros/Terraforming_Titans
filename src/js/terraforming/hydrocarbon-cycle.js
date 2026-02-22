@@ -102,7 +102,7 @@ class MethaneCycle extends ResourceCycleClass {
   constructor({
     key = 'methane',
     atmKey = 'atmosphericMethane',
-    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'melt', 'freeze'],
+    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'boiling', 'melt', 'freeze'],
     processTotalKeys = { rain: 'methaneRain', snow: 'methaneSnow' },
     transitionRange = 2,
     maxDiff = 10,
@@ -150,6 +150,10 @@ class MethaneCycle extends ResourceCycleClass {
       rapidSublimation: [
         { path: 'atmospheric.atmosphericMethane', label: 'Rapid Sublimation', sign: +1 },
         { path: 'surface.hydrocarbonIce', label: 'Rapid Sublimation', sign: -1 },
+      ],
+      boiling: [
+        { path: 'atmospheric.atmosphericMethane', label: 'Boiling', sign: +1 },
+        { path: 'surface.liquidMethane', label: 'Methane Boiling', sign: -1 },
       ],
       // Prefer methane-specific precipitation keys collected from zonal changes
       methaneRain: [

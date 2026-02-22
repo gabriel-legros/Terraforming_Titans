@@ -1268,7 +1268,7 @@ function createWaterBox(row) {
     waterBox.id = 'water-box';
     const waterInfo = document.createElement('span');
     waterInfo.classList.add('info-tooltip-icon');
-    const waterTooltipText = 'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:\n\n- Evaporation & Sublimation: Calculated using a modified Penman equation, which considers solar flux, temperature, and atmospheric pressure to determine the rate at which water becomes vapor.\n- Precipitation: Occurs when atmospheric water vapor exceeds the saturation point, calculated by the Buck Equation. The excess moisture falls as rain or snow depending on the temperature.\n- Melting & Freezing: These rates are determined by a linear relationship to how far the temperature is above or below the freezing point.\n- Surface Flow: A realistic fluid dynamics model where flow is proportional to the square root of the level difference between zones, adjusted for elevation and viscosity. Ice can also melt and flow from colder to warmer zones, but this is done via a custom-made model.\n- Impact: The resulting water and ice coverage affects planetary albedo, temperature, and the potential for life.';
+    const waterTooltipText = 'The planetary water cycle is a dynamic system crucial for climate and life, governed by physical equations:\n\n- Evaporation, Boiling & Sublimation: Evaporation and sublimation are calculated using a modified Penman equation. Boiling is a rapid liquid-to-gas path when temperatures exceed the local boiling point.\n- Precipitation: Occurs when atmospheric water vapor exceeds the saturation point, calculated by the Buck Equation. The excess moisture falls as rain or snow depending on the temperature.\n- Melting & Freezing: These rates are determined by a linear relationship to how far the temperature is above or below the freezing point.\n- Surface Flow: A realistic fluid dynamics model where flow is proportional to the square root of the level difference between zones, adjusted for elevation and viscosity. Ice can also melt and flow from colder to warmer zones, but this is done via a custom-made model.\n- Impact: The resulting water and ice coverage affects planetary albedo, temperature, and the potential for life.';
     const waterTooltip = attachDynamicInfoTooltip(waterInfo, waterTooltipText);
     // Use static text/placeholders, values will be filled by updateWaterBox
     waterBox.innerHTML = `
@@ -1286,6 +1286,11 @@ function createWaterBox(row) {
             <td>Evaporation rate</td>
             <td><span id="evaporation-rate">N/A</span></td>
             <td><span id="evaporation-rate-kg">N/A</span></td>
+          </tr>
+          <tr>
+            <td>Boiling rate</td>
+            <td><span id="boiling-rate">N/A</span></td>
+            <td><span id="boiling-rate-kg">N/A</span></td>
           </tr>
           <tr>
             <td>Sublimation rate</td>
@@ -1344,12 +1349,14 @@ function createWaterBox(row) {
       co2IceRow: waterBox.querySelector('#co2-ice-row'),
       co2IceCurrent: waterBox.querySelector('#co2-ice-current'),
       evaporationRate: waterBox.querySelector('#evaporation-rate'),
+      boilingRate: waterBox.querySelector('#boiling-rate'),
       sublimationRate: waterBox.querySelector('#sublimation-rate'),
       rainfallRate: waterBox.querySelector('#rainfall-rate'),
       snowfallRate: waterBox.querySelector('#snowfall-rate'),
       meltingRate: waterBox.querySelector('#melting-rate'),
       freezingRate: waterBox.querySelector('#freezing-rate'),
       evaporationRateKg: waterBox.querySelector('#evaporation-rate-kg'),
+      boilingRateKg: waterBox.querySelector('#boiling-rate-kg'),
       sublimationRateKg: waterBox.querySelector('#sublimation-rate-kg'),
       rainfallRateKg: waterBox.querySelector('#rainfall-rate-kg'),
       snowfallRateKg: waterBox.querySelector('#snowfall-rate-kg'),
@@ -1406,6 +1413,7 @@ function createWaterBox(row) {
     // let totalLiquid = 0; // Not needed for rate display
     // let totalIce = 0; // Not needed for rate display
     // let totalEvaporationRate = 0; // Read from terraforming.totalEvaporationRate
+    // let totalBoilingRate = 0; // Read from terraforming.totalBoilingRate
     // let totalSublimationRate = 0; // Read from terraforming.totalWaterSublimationRate
     // let totalRainfallRate = 0; // Read from terraforming.totalRainfallRate
     // let totalSnowfallRate = 0; // Read from terraforming.totalSnowfallRate
@@ -1452,6 +1460,7 @@ function createWaterBox(row) {
     }
 
     els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate || 0);
+    els.boilingRate.textContent = formatWaterRate(terraforming.totalBoilingRate || 0);
     els.sublimationRate.textContent = formatWaterRate(terraforming.totalWaterSublimationRate || 0);
     els.rainfallRate.textContent = formatWaterRate(terraforming.totalRainfallRate || 0);
     els.snowfallRate.textContent = formatWaterRate(terraforming.totalSnowfallRate || 0);
@@ -1460,6 +1469,7 @@ function createWaterBox(row) {
 
     const safeSurfaceArea = surfaceArea > 0 ? surfaceArea : 1;
     els.evaporationRateKg.textContent = formatWaterRate((terraforming.totalEvaporationRate || 0) * 1000 / safeSurfaceArea);
+    els.boilingRateKg.textContent = formatWaterRate((terraforming.totalBoilingRate || 0) * 1000 / safeSurfaceArea);
     els.sublimationRateKg.textContent = formatWaterRate((terraforming.totalWaterSublimationRate || 0) * 1000 / safeSurfaceArea);
     els.rainfallRateKg.textContent = formatWaterRate((terraforming.totalRainfallRate || 0) * 1000 / safeSurfaceArea);
     els.snowfallRateKg.textContent = formatWaterRate((terraforming.totalSnowfallRate || 0) * 1000 / safeSurfaceArea);

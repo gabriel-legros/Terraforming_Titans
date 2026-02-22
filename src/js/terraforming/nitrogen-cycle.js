@@ -90,7 +90,7 @@
   constructor({
     key = 'nitrogen',
     atmKey = 'inertGas',
-    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'melt', 'freeze'],
+    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'boiling', 'melt', 'freeze'],
     processTotalKeys = { rain: 'nitrogenRain', snow: 'nitrogenSnow' },
     transitionRange = 2,
     maxDiff = 10,
@@ -138,6 +138,10 @@
       rapidSublimation: [
         { path: 'atmospheric.inertGas', label: 'Rapid Sublimation', sign: +1 },
         { path: 'surface.nitrogenIce', label: 'Rapid Sublimation', sign: -1 },
+      ],
+      boiling: [
+        { path: 'atmospheric.inertGas', label: 'Boiling', sign: +1 },
+        { path: 'surface.liquidNitrogen', label: 'Nitrogen Boiling', sign: -1 },
       ],
       nitrogenRain: [
         { path: 'atmospheric.inertGas', label: 'Condensation', sign: -1 },

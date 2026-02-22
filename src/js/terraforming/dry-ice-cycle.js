@@ -111,7 +111,7 @@ class CO2Cycle extends ResourceCycleClass {
   constructor({
     key = 'co2',
     atmKey = 'carbonDioxide', // atmospheric resource key
-    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'melt', 'freeze'],
+    totalKeys = ['evaporation', 'sublimation', 'rapidSublimation', 'boiling', 'melt', 'freeze'],
     processTotalKeys = { rain: 'co2Rain', snow: 'co2Snow' },
     transitionRange = 2,
     maxDiff = 10,
@@ -159,6 +159,10 @@ class CO2Cycle extends ResourceCycleClass {
       rapidSublimation: [
         { path: 'atmospheric.carbonDioxide', label: 'Rapid Sublimation', sign: +1 },
         { path: 'surface.dryIce',            label: 'Rapid Sublimation', sign: -1 },
+      ],
+      boiling: [
+        { path: 'atmospheric.carbonDioxide', label: 'Boiling', sign: +1 },
+        { path: 'surface.liquidCO2',         label: 'CO2 Boiling', sign: -1 },
       ],
       // Prefer CO2-specific precipitation keys collected from zonal changes
       co2Rain: [

@@ -155,6 +155,7 @@ class ResourceCycle {
     !!this.disallowLiquidBelowTriple &&
     (typeof this.triplePressure === 'number') &&
     (atmPressure <= this.triplePressure);
+    const boilingPoint = this.boilingPointFn ? this.boilingPointFn(atmPressure) : undefined;
 
     const atmosphereKey = this.atmosphereKey;
     const surfaceBucket = this.surfaceBucket;
@@ -220,9 +221,7 @@ class ResourceCycle {
         nightTemp: nightTemperature,
         transitionRange: this.transitionRange,
         maxDiff: this.maxDiff,
-        boilingPoint: typeof this.boilingPointFn === 'function'
-          ? this.boilingPointFn(atmPressure)
-          : undefined,
+        boilingPoint,
         boilTransitionRange: this.boilTransitionRange,
         liftPressureFraction: params.liftPressureFraction,
         kappa: params.kappa,
@@ -255,6 +254,7 @@ class ResourceCycle {
     let freezeAmount = 0;
     let sublimationAmount = 0;
     let rapidSublimationAmount = 0;
+    let boilingAmount = 0;
     if (typeof this.meltingFreezingRates === 'function') {
       const rates = this.meltingFreezingRates({
         temperature: zoneTemperature,
@@ -336,11 +336,25 @@ class ResourceCycle {
       changes[surfaceBucket][iceKey] = (changes[surfaceBucket][iceKey] || 0) - subAmount;
     }
 
+    const currentLiquid = availableLiquid + (changes[surfaceBucket][liquidKey] || 0);
+    if (currentLiquid > 0 && typeof zoneTemperature === 'number') {
+      const aboveBoiling = Number.isFinite(boilingPoint) && zoneTemperature > boilingPoint;
+      const noLiquidHeating = liquidForbidden && zoneTemperature >= this.freezePoint;
+      if (aboveBoiling || noLiquidHeating) {
+        const diff = aboveBoiling ? (zoneTemperature - boilingPoint) : 1;
+        const boilBlend = Math.max(0, Math.min(1, diff));
+        boilingAmount = Math.min(currentLiquid, currentLiquid * boilBlend);
+        changes.atmosphere[atmosphereKey] += boilingAmount;
+        changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - boilingAmount;
+      }
+    }
+
     return {
       ...changes,
       evaporationAmount,
       sublimationAmount,
       rapidSublimationAmount,
+      boilingAmount,
       meltAmount,
       freezeAmount,
     };
@@ -418,7 +432,7 @@ class ResourceCycle {
     extraParams = {},
   } = {}) {
     const zonalChanges = {};
-    const cycleTotals = { evaporation: 0, sublimation: 0, rapidSublimation: 0, melt: 0, freeze: 0 };
+    const cycleTotals = { evaporation: 0, sublimation: 0, rapidSublimation: 0, boiling: 0, melt: 0, freeze: 0 };
     const mergedExtra = { ...(this.defaultExtraParams || {}), ...extraParams };
 
     for (const zone of zones) {
@@ -466,6 +480,7 @@ class ResourceCycle {
       if (result.evaporationAmount) cycleTotals.evaporation += result.evaporationAmount;
       if (result.sublimationAmount) cycleTotals.sublimation += result.sublimationAmount;
       if (result.rapidSublimationAmount) cycleTotals.rapidSublimation += result.rapidSublimationAmount;
+      if (result.boilingAmount) cycleTotals.boiling += result.boilingAmount;
       if (result.meltAmount) cycleTotals.melt += result.meltAmount;
       if (result.freezeAmount) cycleTotals.freeze += result.freezeAmount;
     }
