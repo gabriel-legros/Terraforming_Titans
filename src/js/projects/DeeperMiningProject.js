@@ -646,16 +646,7 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   saveTravelState() {
-    if (!gameSettings.preserveProjectSettingsOnTravel) {
-      return {};
-    }
-    return {
-      ...super.saveTravelState(),
-      underworldMiningLevel: this.underworldMiningLevel,
-      superchargedMiningLevel: this.superchargedMiningLevel,
-      createGeothermalDeposits: this.createGeothermalDeposits,
-      undergroundStorage: this.undergroundStorage,
-    };
+    return {};
   }
 
   loadState(state) {
@@ -681,30 +672,10 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   loadTravelState(state = {}) {
-    if (!gameSettings.preserveProjectSettingsOnTravel) {
-      return;
-    }
     super.loadTravelState(state);
-    this.underworldMiningLevel = state.underworldMiningLevel ?? this.underworldMiningLevel;
-    this.superchargedMiningLevel = state.superchargedMiningLevel ?? this.superchargedMiningLevel;
-    this.createGeothermalDeposits = state.createGeothermalDeposits === true;
-    this.undergroundStorage = state.undergroundStorage === true;
-    this.oreMineCount = buildings.oreMine.count;
-    this.activeUnderworldMiningLevel = (this.isActive && this.remainingTime !== Infinity)
-      ? this.underworldMiningLevel
-      : -1;
-    this.isContinuousRun = this.isActive && this.remainingTime === Infinity;
-    this.updateUnderworldMiningMaxDepth();
-    if (this.attributes?.completionEffect) {
-      this.applyCompletionEffect();
-    }
-    this.adjustActiveDuration();
   }
 
   prepareTravelState() {
-    if (gameSettings.preserveProjectSettingsOnTravel) {
-      return;
-    }
     this.underworldMiningLevel = 0;
     this.superchargedMiningLevel = 0;
     this.createGeothermalDeposits = false;
