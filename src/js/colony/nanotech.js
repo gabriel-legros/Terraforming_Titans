@@ -703,13 +703,14 @@ class NanotechManager extends EffectableEntity {
                     Silica allocation <span class="info-tooltip-icon" id="nanotech-silicon-tooltip"></span>
                   </span>
                   <div class="nanotech-recycling-toggles">
+                    <span class="nanotech-recycling-resource">junk</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-junk-wrapper">
                       <input type="checkbox" id="nanotech-only-junk">
-                      <span>Only Junk</span>
+                      <span>only</span>
                     </label>
                     <label class="nanotech-recycling-toggle" id="nanotech-uncapped-junk-wrapper">
                       <input type="checkbox" id="nanotech-uncapped-junk">
-                      <span>Uncapped</span>
+                      <span>uncapped</span>
                     </label>
                   </div>
                 </div>
@@ -778,13 +779,14 @@ class NanotechManager extends EffectableEntity {
                     Metal allocation <span class="info-tooltip-icon" id="nanotech-metal-tooltip"></span>
                   </span>
                   <div class="nanotech-recycling-toggles">
+                    <span class="nanotech-recycling-resource">scrap</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-scrap-wrapper">
                       <input type="checkbox" id="nanotech-only-scrap">
-                      <span>Only Scrap</span>
+                      <span>only</span>
                     </label>
                     <label class="nanotech-recycling-toggle" id="nanotech-uncapped-scrap-wrapper">
                       <input type="checkbox" id="nanotech-uncapped-scrap">
-                      <span>Uncapped</span>
+                      <span>uncapped</span>
                     </label>
                   </div>
                 </div>
@@ -853,13 +855,14 @@ class NanotechManager extends EffectableEntity {
                     Biomass allocation <span class="info-tooltip-icon" id="nanotech-biomass-tooltip">&#9432;</span>
                   </span>
                   <div class="nanotech-recycling-toggles">
+                    <span class="nanotech-recycling-resource">trash</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-trash-wrapper">
                       <input type="checkbox" id="nanotech-only-trash">
-                      <span>Only Trash</span>
+                      <span>only</span>
                     </label>
                     <label class="nanotech-recycling-toggle" id="nanotech-uncapped-trash-wrapper">
                       <input type="checkbox" id="nanotech-uncapped-trash">
-                      <span>Uncapped</span>
+                      <span>uncapped</span>
                     </label>
                   </div>
                 </div>

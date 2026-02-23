@@ -251,7 +251,7 @@ function updateProjectsAutomationUI() {
   projectsAutomation.style.display = unlocked ? '' : 'none';
   projectsAutomation.classList.toggle('automation-card-locked', !unlocked);
   projectsAutomationDescription.textContent = unlocked
-    ? 'Capture project control settings and apply them in ordered presets.'
+    ? 'Capture project control settings and apply them in ordered presets.  Does not apply to spaceship assignments.'
     : 'Purchase the Solis Projects Automation upgrade to enable project presets.';
   if (!unlocked) {
     return;

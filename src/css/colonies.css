@@ -350,6 +350,12 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   white-space: nowrap;
 }
 
+#nanocolony-container .nanotech-recycling-resource {
+  font-size: 0.75rem;
+  color: #495057;
+  white-space: nowrap;
+}
+
 #nanocolony-container .nanotech-recycling-toggle input {
   margin: 0;
 }
