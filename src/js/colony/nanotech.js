@@ -703,7 +703,7 @@ class NanotechManager extends EffectableEntity {
                     Silica allocation <span class="info-tooltip-icon" id="nanotech-silicon-tooltip"></span>
                   </span>
                   <div class="nanotech-recycling-toggles">
-                    <span class="nanotech-recycling-resource">junk</span>
+                    <span class="nanotech-recycling-resource" id="nanotech-junk-label">Junk</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-junk-wrapper">
                       <input type="checkbox" id="nanotech-only-junk">
                       <span>only</span>
@@ -779,7 +779,7 @@ class NanotechManager extends EffectableEntity {
                     Metal allocation <span class="info-tooltip-icon" id="nanotech-metal-tooltip"></span>
                   </span>
                   <div class="nanotech-recycling-toggles">
-                    <span class="nanotech-recycling-resource">scrap</span>
+                    <span class="nanotech-recycling-resource" id="nanotech-scrap-label">Scrap</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-scrap-wrapper">
                       <input type="checkbox" id="nanotech-only-scrap">
                       <span>only</span>
@@ -855,7 +855,7 @@ class NanotechManager extends EffectableEntity {
                     Biomass allocation <span class="info-tooltip-icon" id="nanotech-biomass-tooltip">&#9432;</span>
                   </span>
                   <div class="nanotech-recycling-toggles">
-                    <span class="nanotech-recycling-resource">trash</span>
+                    <span class="nanotech-recycling-resource" id="nanotech-trash-label">Trash</span>
                     <label class="nanotech-recycling-toggle" id="nanotech-only-trash-wrapper">
                       <input type="checkbox" id="nanotech-only-trash">
                       <span>only</span>
@@ -1256,6 +1256,9 @@ class NanotechManager extends EffectableEntity {
     if (C.onlyScrapWrapper) {
       C.onlyScrapWrapper.style.display = recyclingEnabled ? '' : 'none';
     }
+    if (C.scrapLabel) {
+      C.scrapLabel.style.display = recyclingEnabled ? '' : 'none';
+    }
     if (C.onlyScrapToggle) {
       C.onlyScrapToggle.checked = recyclingEnabled ? this.onlyScrap : false;
     }
@@ -1268,6 +1271,9 @@ class NanotechManager extends EffectableEntity {
     if (C.onlyTrashWrapper) {
       C.onlyTrashWrapper.style.display = recyclingEnabled ? '' : 'none';
     }
+    if (C.trashLabel) {
+      C.trashLabel.style.display = recyclingEnabled ? '' : 'none';
+    }
     if (C.onlyTrashToggle) {
       C.onlyTrashToggle.checked = recyclingEnabled ? this.onlyTrash : false;
     }
@@ -1279,6 +1285,9 @@ class NanotechManager extends EffectableEntity {
     }
     if (C.onlyJunkWrapper) {
       C.onlyJunkWrapper.style.display = recyclingEnabled ? '' : 'none';
+    }
+    if (C.junkLabel) {
+      C.junkLabel.style.display = recyclingEnabled ? '' : 'none';
     }
     if (C.onlyJunkToggle) {
       C.onlyJunkToggle.checked = recyclingEnabled ? this.onlyJunk : false;
@@ -1589,14 +1598,17 @@ class NanotechManager extends EffectableEntity {
       biomassMode: qs('#nanotech-biomass-limit-mode'),
       onlyScrapToggle: qs('#nanotech-only-scrap'),
       onlyScrapWrapper: qs('#nanotech-only-scrap-wrapper'),
+      scrapLabel: qs('#nanotech-scrap-label'),
       uncappedScrapToggle: qs('#nanotech-uncapped-scrap'),
       uncappedScrapWrapper: qs('#nanotech-uncapped-scrap-wrapper'),
       onlyTrashToggle: qs('#nanotech-only-trash'),
       onlyTrashWrapper: qs('#nanotech-only-trash-wrapper'),
+      trashLabel: qs('#nanotech-trash-label'),
       uncappedTrashToggle: qs('#nanotech-uncapped-trash'),
       uncappedTrashWrapper: qs('#nanotech-uncapped-trash-wrapper'),
       onlyJunkToggle: qs('#nanotech-only-junk'),
       onlyJunkWrapper: qs('#nanotech-only-junk-wrapper'),
+      junkLabel: qs('#nanotech-junk-label'),
       uncappedJunkToggle: qs('#nanotech-uncapped-junk'),
       uncappedJunkWrapper: qs('#nanotech-uncapped-junk-wrapper'),
       energyTooltipIcon: qs('#nanotech-energy-tooltip'),
