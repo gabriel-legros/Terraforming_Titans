@@ -566,7 +566,7 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   getAtmosphericNeedForGas(gas, deltaTime = this.currentTickDeltaTime || 0) {
-    return lifeManager.estimateAtmosphericIdealNeed(deltaTime)[gas] || 0;
+    return lifeManager.estimateAtmosphericConsumption(deltaTime)[gas] || 0;
   }
 
   isGasPressureLimitReached(gas, limitKPa, deltaTime = this.currentTickDeltaTime || 0) {
@@ -821,7 +821,7 @@ class SpaceMiningProject extends SpaceshipProject {
     }
 
     const deltaTime = context.duration * context.fraction * context.successChance;
-    const lifeConsumption = lifeManager.estimateAtmosphericIdealNeed(deltaTime);
+    const lifeConsumption = lifeManager.estimateAtmosphericConsumption(deltaTime);
     const currentAmount = resources.atmospheric[gas].value + (accumulatedChanges?.atmospheric?.[gas] || 0);
     const gSurface = terraforming.celestialParameters.gravity;
     const radius = terraforming.celestialParameters.radius;
@@ -878,12 +878,12 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       return;
     }
-    if (hasMonitoring && this.disableAbovePressure && gain.atmospheric) {
+    if (!this.applyingContinuousPlanGain && hasMonitoring && this.disableAbovePressure && gain.atmospheric) {
       const gas = this.getTargetAtmosphericResource();
       const entry = gain.atmospheric;
       const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
       const deltaTime = this.isContinuous() ? fraction * duration : 0;
-      const lifeConsumption = lifeManager.estimateAtmosphericIdealNeed(deltaTime);
+      const lifeConsumption = lifeManager.estimateAtmosphericConsumption(deltaTime);
       const currentAmount = resources.atmospheric[gas].value + (accumulatedChanges?.atmospheric?.[gas] || 0);
       const gSurface = terraforming.celestialParameters.gravity;
       const radius = terraforming.celestialParameters.radius;

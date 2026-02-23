@@ -19,6 +19,7 @@ class SpaceshipProject extends Project {
     this.costShortfallLastTick = false;
     this.disposalShortfallLastTick = false;
     this.continuousExecutionPlanCache = null;
+    this.applyingContinuousPlanGain = false;
   }
 
   getActiveShipCount() {
@@ -1417,12 +1418,17 @@ class SpaceshipProject extends Project {
     }
 
     if (plan.gainFraction > 0) {
-      this.applySpaceshipResourceGain(
-        plan.gainBase,
-        plan.gainFraction,
-        accumulatedChanges,
-        plan.context.productivity
-      );
+      this.applyingContinuousPlanGain = true;
+      try {
+        this.applySpaceshipResourceGain(
+          plan.gainBase,
+          plan.gainFraction,
+          accumulatedChanges,
+          plan.context.productivity
+        );
+      } finally {
+        this.applyingContinuousPlanGain = false;
+      }
     }
 
     if (plan.fundingGain > 0) {

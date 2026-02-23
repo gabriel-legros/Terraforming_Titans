@@ -123,6 +123,16 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
       atmospheric: { carbonDioxide: 0 },
       colony: { energy: 0, metal: 0 },
     };
+
+    const pressureLimitPa = project.disablePressureThreshold * 1000;
+    const currentPressurePa = calculateAtmosphericPressure(
+      resources.atmospheric.carbonDioxide.value,
+      terraforming.celestialParameters.gravity,
+      terraforming.celestialParameters.radius
+    );
+    const lifeConsumption = lifeManager.estimateAtmosphericIdealNeed(1000).carbonDioxide || 0;
+    const expectedImported = Math.max(0, pressureLimitPa - currentPressurePa) + lifeConsumption - 1;
+
     project.applySpaceshipResourceGain(gain, 1, accumulatedChanges, 1);
 
     const afterProjectApplyPa = calculateAtmosphericPressure(
@@ -131,7 +141,9 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
       terraforming.celestialParameters.radius
     );
     expect(afterProjectApplyPa).toBeCloseTo(4, 8);
-    expect(accumulatedChanges.atmospheric.carbonDioxide).toBeCloseTo(105, 8);
+    expect(expectedImported).toBeCloseTo(105, 8);
+    expect(expectedImported).toBeGreaterThan(Math.max(0, pressureLimitPa - currentPressurePa));
+    expect(accumulatedChanges.atmospheric.carbonDioxide).toBeCloseTo(expectedImported, 8);
 
     resources.atmospheric.carbonDioxide.value += accumulatedChanges.atmospheric.carbonDioxide;
     accumulatedChanges.atmospheric.carbonDioxide = 0;
@@ -144,8 +156,7 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
     expect(afterMiningPa).toBeCloseTo(109, 8);
     expect(accumulatedChanges.atmospheric.carbonDioxide).toBeCloseTo(0, 8);
 
-    const consumed = lifeManager.estimateAtmosphericIdealNeed(1000).carbonDioxide || 0;
-    resources.atmospheric.carbonDioxide.value = Math.max(0, resources.atmospheric.carbonDioxide.value - consumed);
+    resources.atmospheric.carbonDioxide.value = Math.max(0, resources.atmospheric.carbonDioxide.value - lifeConsumption);
 
     const finalPa = calculateAtmosphericPressure(
       resources.atmospheric.carbonDioxide.value,
