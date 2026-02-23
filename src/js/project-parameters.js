@@ -596,7 +596,7 @@ const projectParameters = {
       }
     },
     duration: 3_600_000,
-    description: 'Build alchemical furnaces that transmute space-storage hydrogen into selected resources. Expansion scales with terraformed worlds.  Furnaces can be run to convert hydrogen from space storage into other resources.  The focus is on resource production from CNO-catalyzed fusion, not energy.',
+    description: 'Build alchemical furnaces that transmute space-storage hydrogen into selected resources. Expansion scales with terraformed worlds.  Furnaces can be run to convert hydrogen from space storage into other resources.  The focus is on resource production from complex fusion pathways, not energy.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
