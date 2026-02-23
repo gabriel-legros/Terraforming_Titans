@@ -143,12 +143,14 @@ function createResourceContainers(resourcesData) {
     header.id = `${category}-resources-header`;
     header.classList.add('resource-category-header');
     header.style.display = 'none'; // Initially hidden
-    header.style.cursor = 'pointer';
+
+    const collapseTarget = document.createElement('span');
+    collapseTarget.classList.add('resource-category-toggle-target');
 
     const arrow = document.createElement('span');
     arrow.classList.add('collapse-arrow');
     arrow.innerHTML = '&#9660;';
-    header.appendChild(arrow);
+    collapseTarget.appendChild(arrow);
 
     const label = document.createElement('span');
     label.classList.add('resource-category-label');
@@ -157,7 +159,8 @@ function createResourceContainers(resourcesData) {
     } else {
       label.textContent = `${capitalizeFirstLetter(category)} Resources`;
     }
-    header.appendChild(label);
+    collapseTarget.appendChild(label);
+    header.appendChild(collapseTarget);
 
     if (category === 'colony' || category === 'spaceStorage') {
       const controls = document.createElement('span');
@@ -185,7 +188,7 @@ function createResourceContainers(resourcesData) {
     resourceList.id = `${category}-resources-resources-container`;
     categoryContainer.appendChild(resourceList);
 
-    header.addEventListener('click', () => {
+    collapseTarget.addEventListener('click', () => {
       const hidden = resourceList.style.display === 'none';
       resourceList.style.display = hidden ? '' : 'none';
       arrow.innerHTML = hidden ? '&#9660;' : '&#9654;';

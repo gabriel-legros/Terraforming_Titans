@@ -159,6 +159,12 @@
     align-items: center;
   }
 
+  #resources-container .resource-category-toggle-target {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
   #resources-container .resource-category-controls {
     display: inline-flex;
     align-items: center;
