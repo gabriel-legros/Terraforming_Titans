@@ -163,10 +163,11 @@ class SpaceStorageProject extends SpaceshipProject {
   syncSpaceStorageResourceUnlocks() {
     const storageResources = resources?.spaceStorage;
     if (!storageResources) return;
+    const projectAvailable = this.unlocked && !this.isPermanentlyDisabled();
     for (const resourceKey in storageResources) {
       const resource = storageResources[resourceKey];
       if (!resource) continue;
-      resource.unlocked = this.isResourceUnlocked(resourceKey);
+      resource.unlocked = projectAvailable && this.isResourceUnlocked(resourceKey);
     }
   }
 

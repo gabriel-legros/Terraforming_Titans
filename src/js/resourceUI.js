@@ -14,6 +14,10 @@ function shouldRenderResourceCategory(category) {
 }
 
 function hasUnlockedSpaceStorageResources(resourceSet) {
+  const storageProj = projectManager?.projects?.spaceStorage;
+  if (storageProj?.syncSpaceStorageResourceUnlocks) {
+    storageProj.syncSpaceStorageResourceUnlocks();
+  }
   const storageResources = resourceSet?.spaceStorage;
   if (!storageResources) return false;
   for (const resourceName in storageResources) {
