@@ -1,0 +1,1095 @@
+const NUCLEAR_ALCHEMY_RECIPES = {
+  graphite: {
+    label: 'Carbon (Graphite)',
+    storageKey: 'graphite',
+    complexity: 2
+  },
+  oxygen: {
+    label: 'Oxygen',
+    storageKey: 'oxygen',
+    complexity: 3
+  },
+  inertGas: {
+    label: 'Nitrogen',
+    storageKey: 'inertGas',
+    complexity: 4
+  },
+  silicon: {
+    label: 'Silica',
+    storageKey: 'silicon',
+    complexity: 6
+  },
+  metal: {
+    label: 'Metal',
+    storageKey: 'metal',
+    complexity: 10
+  }
+};
+
+const NUCLEAR_ALCHEMY_RECIPE_KEYS = [
+  'graphite',
+  'oxygen',
+  'inertGas',
+  'silicon',
+  'metal'
+];
+
+class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
+  constructor(config, name) {
+    super(config, name);
+    this.continuousThreshold = 1000;
+    this.expansionProgress = 0;
+    this.furnaceAssignments = {};
+    this.assignmentStep = 1;
+    this.autoAssignFlags = {};
+    this.autoAssignWeights = {};
+    this.isRunning = false;
+    this.statusText = 'Idle';
+    this.shortfallReason = '';
+    this.shortfallLastTick = false;
+    this.costShortfallLastTick = false;
+    this.expansionShortfallLastTick = false;
+    this.lastHydrogenPerSecond = 0;
+    this.lastTotalOutputPerSecond = 0;
+    this.lastOutputRatesByResource = {};
+    this.uiElements = null;
+  }
+
+  getBaseDuration() {
+    return this.getDurationWithTerraformBonus(this.duration);
+  }
+
+  isExpansionContinuous() {
+    return this.getEffectiveDuration() < this.continuousThreshold;
+  }
+
+  isContinuous() {
+    return this.isExpansionContinuous();
+  }
+
+  getAlchemyParameter() {
+    const parsed = Number(this.attributes?.alchemyParameter);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+    return 1;
+  }
+
+  getTotalFurnaces() {
+    return this.repeatCount;
+  }
+
+  getAssignmentKeys() {
+    return NUCLEAR_ALCHEMY_RECIPE_KEYS.slice();
+  }
+
+  getRecipe(key) {
+    return NUCLEAR_ALCHEMY_RECIPES[key];
+  }
+
+  normalizeAssignments() {
+    const keys = this.getAssignmentKeys();
+    const keySet = new Set(keys);
+    const total = this.getTotalFurnaces();
+
+    keys.forEach((key) => {
+      this.furnaceAssignments[key] = Math.max(0, Math.floor(this.furnaceAssignments[key] || 0));
+      this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
+      const weight = Number(this.autoAssignWeights[key]);
+      this.autoAssignWeights[key] = Number.isFinite(weight) && weight > 0 ? weight : 1;
+    });
+
+    Object.keys(this.furnaceAssignments).forEach((key) => {
+      if (!keySet.has(key)) {
+        this.furnaceAssignments[key] = 0;
+      }
+    });
+
+    let usedManual = 0;
+    keys.forEach((key) => {
+      if (!this.autoAssignFlags[key]) {
+        usedManual += this.furnaceAssignments[key];
+      }
+    });
+
+    const autoKeys = keys.filter((key) => this.autoAssignFlags[key]);
+    const remaining = Math.max(0, total - usedManual);
+
+    if (autoKeys.length > 0) {
+      let totalWeight = 0;
+      autoKeys.forEach((key) => {
+        totalWeight += this.autoAssignWeights[key];
+      });
+
+      if (totalWeight <= 0) {
+        autoKeys.forEach((key) => {
+          this.furnaceAssignments[key] = 0;
+        });
+      } else {
+        const remainders = [];
+        let assigned = 0;
+        autoKeys.forEach((key) => {
+          const exact = remaining * (this.autoAssignWeights[key] / totalWeight);
+          const floorValue = Math.floor(exact);
+          this.furnaceAssignments[key] = floorValue;
+          assigned += floorValue;
+          remainders.push({ key, value: exact - floorValue });
+        });
+        let leftover = remaining - assigned;
+        remainders.sort((left, right) => right.value - left.value);
+        for (let i = 0; i < remainders.length && leftover > 0; i += 1) {
+          this.furnaceAssignments[remainders[i].key] += 1;
+          leftover -= 1;
+        }
+      }
+    }
+
+    let assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
+    if (assignedTotal > total) {
+      let excess = assignedTotal - total;
+      for (let i = keys.length - 1; i >= 0 && excess > 0; i -= 1) {
+        const key = keys[i];
+        const current = this.furnaceAssignments[key] || 0;
+        const reduction = Math.min(current, excess);
+        this.furnaceAssignments[key] = current - reduction;
+        excess -= reduction;
+      }
+      assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
+    }
+  }
+
+  getAssignedTotal() {
+    this.normalizeAssignments();
+    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
+  }
+
+  getAvailableFurnaces() {
+    return Math.max(0, this.getTotalFurnaces() - this.getAssignedTotal());
+  }
+
+  setAssignmentStep(step) {
+    const next = Math.min(1_000_000_000, Math.max(1, Math.round(step)));
+    this.assignmentStep = next;
+  }
+
+  setAutoAssignTarget(key, enabled) {
+    this.autoAssignFlags[key] = enabled === true;
+    this.normalizeAssignments();
+    this.updateUI();
+  }
+
+  adjustAssignment(key, delta) {
+    if (this.autoAssignFlags[key]) {
+      return;
+    }
+    this.normalizeAssignments();
+    const keys = this.getAssignmentKeys();
+    const total = this.getTotalFurnaces();
+    const current = this.furnaceAssignments[key] || 0;
+    const usedOther = keys.reduce((sum, otherKey) => {
+      if (otherKey === key) return sum;
+      if (this.autoAssignFlags[otherKey]) return sum;
+      return sum + (this.furnaceAssignments[otherKey] || 0);
+    }, 0);
+    const maxForKey = Math.max(0, total - usedOther);
+    const next = Math.min(maxForKey, Math.max(0, current + delta));
+    this.furnaceAssignments[key] = next;
+    this.normalizeAssignments();
+    this.updateUI();
+  }
+
+  getSpaceStorageProject() {
+    return projectManager?.projects?.spaceStorage || null;
+  }
+
+  setRunning(enabled) {
+    const next = enabled === true;
+    if (this.isRunning === next) {
+      return;
+    }
+    this.isRunning = next;
+    if (!next) {
+      this.setLastRunStats(0, {});
+      this.updateStatus('Run disabled');
+    }
+    this.updateUI();
+  }
+
+  setLastRunStats(hydrogenRate = 0, outputRates = {}) {
+    this.lastHydrogenPerSecond = hydrogenRate;
+    this.lastOutputRatesByResource = {};
+    this.lastTotalOutputPerSecond = 0;
+    this.getAssignmentKeys().forEach((key) => {
+      const value = outputRates[key] || 0;
+      this.lastOutputRatesByResource[key] = value;
+      this.lastTotalOutputPerSecond += value;
+    });
+  }
+
+  updateStatus(text) {
+    this.statusText = text || 'Idle';
+  }
+
+  shouldOperate() {
+    if (this.isPermanentlyDisabled()) {
+      return false;
+    }
+    return this.isRunning && this.repeatCount > 0;
+  }
+
+  buildConversionEntries(seconds) {
+    const storage = this.getSpaceStorageProject();
+    if (!storage) {
+      this.shortfallReason = 'Build space storage';
+      return [];
+    }
+    const parameter = this.getAlchemyParameter();
+    const entries = [];
+    this.getAssignmentKeys().forEach((key) => {
+      const recipe = this.getRecipe(key);
+      const assigned = this.furnaceAssignments[key] || 0;
+      if (assigned <= 0 || !recipe) {
+        return;
+      }
+      const rate = (assigned / recipe.complexity) * parameter;
+      if (!(rate > 0)) {
+        return;
+      }
+      const desired = rate * seconds;
+      const stored = storage.getStoredResourceValue(recipe.storageKey);
+      const capLimit = storage.getResourceCapLimit(recipe.storageKey);
+      const capRemaining = Math.max(0, capLimit - stored);
+      entries.push({
+        key,
+        storageKey: recipe.storageKey,
+        desired,
+        capRemaining
+      });
+    });
+    return entries;
+  }
+
+  allocateHydrogen(entries, hydrogenAvailable) {
+    const allocations = {};
+    if (!(hydrogenAvailable > 0)) {
+      return allocations;
+    }
+    const allWork = entries
+      .filter((entry) => entry.desired > 0 && entry.capRemaining > 0)
+      .map((entry) => ({
+        key: entry.key,
+        desiredLeft: entry.desired,
+        capLeft: entry.capRemaining,
+        amount: 0
+      }));
+    const work = allWork.slice();
+
+    let remainingHydrogen = hydrogenAvailable;
+
+    while (remainingHydrogen > 1e-9 && work.length > 0) {
+      let totalDesired = 0;
+      work.forEach((entry) => {
+        totalDesired += entry.desiredLeft;
+      });
+      if (!(totalDesired > 0)) {
+        break;
+      }
+
+      const scale = Math.min(1, remainingHydrogen / totalDesired);
+      const nextWork = [];
+
+      work.forEach((entry) => {
+        const requested = entry.desiredLeft * scale;
+        const granted = Math.min(requested, entry.capLeft, remainingHydrogen);
+        if (granted > 0) {
+          entry.amount += granted;
+          entry.desiredLeft = Math.max(0, entry.desiredLeft - granted);
+          if (Number.isFinite(entry.capLeft)) {
+            entry.capLeft = Math.max(0, entry.capLeft - granted);
+          }
+          remainingHydrogen = Math.max(0, remainingHydrogen - granted);
+        }
+        if (entry.desiredLeft > 1e-9 && entry.capLeft > 1e-9 && remainingHydrogen > 1e-9) {
+          nextWork.push(entry);
+        }
+      });
+
+      if (nextWork.length === work.length && scale >= 1) {
+        break;
+      }
+      work.length = 0;
+      nextWork.forEach((entry) => work.push(entry));
+    }
+
+    allWork.forEach((entry) => {
+      allocations[entry.key] = entry.amount;
+    });
+    entries.forEach((entry) => {
+      if (!Object.prototype.hasOwnProperty.call(allocations, entry.key)) {
+        allocations[entry.key] = 0;
+      }
+    });
+    return allocations;
+  }
+
+  applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.costShortfallLastTick = false;
+    this.expansionShortfallLastTick = false;
+    if (!this.autoStart) {
+      return;
+    }
+    if (!this.isExpansionContinuous() || !this.isActive) {
+      return;
+    }
+
+    const duration = this.getEffectiveDuration();
+    const limit = this.maxRepeatCount || Infinity;
+    const completedExpansions = this.repeatCount + this.expansionProgress;
+    if (completedExpansions >= limit) {
+      this.isActive = false;
+      this.isCompleted = true;
+      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+      return;
+    }
+
+    if (this.startingDuration !== Infinity && this.remainingTime !== Infinity && this.startingDuration > 0) {
+      const carried = (this.startingDuration - this.remainingTime) / this.startingDuration;
+      if (carried > 0) {
+        this.expansionProgress += Math.min(carried, Math.max(0, limit - (this.repeatCount + this.expansionProgress)));
+      }
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+    }
+
+    const remainingRepeats = limit === Infinity
+      ? Infinity
+      : Math.max(0, limit - (this.repeatCount + this.expansionProgress));
+    if (remainingRepeats === 0) {
+      this.isActive = false;
+      this.isCompleted = true;
+      this.expansionProgress = 0;
+      return;
+    }
+
+    const cost = this.getScaledCost();
+    const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+    const storageState = storageProj || {
+      getAvailableStoredResource: () => 0,
+      spendStoredResource: () => 0,
+      megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
+    };
+    let canAffordBaseCost = true;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const res = resources[category][resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const availableTotal = getMegaProjectResourceAvailability(
+          storageState,
+          storageKey,
+          res.value + pending
+        );
+        if (availableTotal < cost[category][resource]) {
+          canAffordBaseCost = false;
+        }
+      }
+    }
+    if (!canAffordBaseCost) {
+      this.expansionShortfallLastTick = true;
+      this.costShortfallLastTick = true;
+      return;
+    }
+
+    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    if (progress <= 0) {
+      return;
+    }
+
+    const applyColonyChange = (category, resource, amount) => {
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
+        if (accumulatedChanges[category][resource] === undefined) {
+          accumulatedChanges[category][resource] = 0;
+        }
+        accumulatedChanges[category][resource] -= amount;
+      } else {
+        resources[category][resource].decrease(amount);
+      }
+    };
+
+    const spendFromStorage = (key, amount) => {
+      if (amount <= 0) return 0;
+      if (storageState.spendStoredResource) {
+        return storageState.spendStoredResource(key, amount);
+      }
+      const availableFromStorage = storageState.getAvailableStoredResource(key);
+      return Math.min(amount, availableFromStorage);
+    };
+
+    let shortfall = false;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const amount = cost[category][resource] * progress;
+        const res = resources[category][resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const availableTotal = getMegaProjectResourceAvailability(
+          storageState,
+          storageKey,
+          res.value + pending
+        );
+        if (availableTotal < amount) {
+          shortfall = true;
+        }
+        const colonyAvailable = Math.max(res.value + pending, 0);
+        const allocation = getMegaProjectResourceAllocation(storageState, storageKey, amount, colonyAvailable);
+        if (allocation.fromStorage > 0) {
+          spendFromStorage(storageKey, allocation.fromStorage);
+        }
+        if (allocation.fromColony > 0) {
+          applyColonyChange(category, resource, allocation.fromColony);
+        }
+      }
+    }
+
+    const totalProgress = this.expansionProgress + progress;
+    const completed = Math.floor(totalProgress);
+    this.expansionProgress = totalProgress - completed;
+    if (completed > 0) {
+      this.repeatCount += completed;
+    }
+    if (limit !== Infinity && this.repeatCount + this.expansionProgress >= limit) {
+      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+      this.isActive = false;
+      this.isCompleted = true;
+    }
+
+    this.expansionShortfallLastTick = shortfall;
+    this.costShortfallLastTick = this.expansionShortfallLastTick;
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
+
+    if (!this.shouldOperate()) {
+      this.setLastRunStats(0, {});
+      if (!this.repeatCount) {
+        this.updateStatus('Complete at least one furnace');
+      } else if (!this.isRunning) {
+        this.updateStatus('Run disabled');
+      }
+      this.shortfallLastTick = this.expansionShortfallLastTick;
+      return;
+    }
+
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      this.setLastRunStats(0, {});
+      this.updateStatus('Idle');
+      this.shortfallLastTick = this.expansionShortfallLastTick;
+      return;
+    }
+
+    this.normalizeAssignments();
+    const storage = this.getSpaceStorageProject();
+    if (!storage) {
+      this.setLastRunStats(0, {});
+      this.updateStatus('Build space storage');
+      this.shortfallLastTick = true;
+      return;
+    }
+
+    const entries = this.buildConversionEntries(seconds);
+    if (entries.length === 0) {
+      this.setLastRunStats(0, {});
+      this.updateStatus('No assignments');
+      this.shortfallLastTick = this.expansionShortfallLastTick || true;
+      return;
+    }
+
+    let hasCap = false;
+    entries.forEach((entry) => {
+      if (entry.capRemaining > 0) {
+        hasCap = true;
+      }
+    });
+    if (!hasCap) {
+      this.setLastRunStats(0, {});
+      this.updateStatus('Output storage cap reached');
+      this.shortfallLastTick = true;
+      return;
+    }
+
+    const hydrogenAvailable = storage.getAvailableStoredResource('hydrogen');
+    if (!(hydrogenAvailable > 0)) {
+      this.setLastRunStats(0, {});
+      this.updateStatus('No hydrogen in space storage');
+      this.shortfallLastTick = true;
+      return;
+    }
+
+    const allocations = this.allocateHydrogen(entries, hydrogenAvailable);
+    const outputAmounts = {};
+    let hydrogenSpent = 0;
+
+    entries.forEach((entry) => {
+      const requested = allocations[entry.key] || 0;
+      if (!(requested > 0)) {
+        outputAmounts[entry.key] = 0;
+        return;
+      }
+      const spent = storage.spendStoredResource('hydrogen', requested);
+      if (!(spent > 0)) {
+        outputAmounts[entry.key] = 0;
+        return;
+      }
+      const current = storage.getStoredResourceValue(entry.storageKey);
+      const capLimit = storage.getResourceCapLimit(entry.storageKey);
+      const capRemaining = Math.max(0, capLimit - current);
+      const produced = Math.min(spent, capRemaining);
+      if (produced > 0) {
+        storage.addStoredResource(entry.storageKey, produced);
+      }
+      if (spent > produced) {
+        storage.addStoredResource('hydrogen', spent - produced);
+      }
+      outputAmounts[entry.key] = produced;
+      hydrogenSpent += produced;
+    });
+
+    storage.reconcileUsedStorage();
+    updateSpaceStorageUI(storage);
+
+    if (!(hydrogenSpent > 0)) {
+      this.setLastRunStats(0, {});
+      this.updateStatus('Output storage cap reached');
+      this.shortfallLastTick = true;
+      return;
+    }
+
+    const outputRates = {};
+    entries.forEach((entry) => {
+      outputRates[entry.key] = (outputAmounts[entry.key] || 0) / seconds;
+      if (outputRates[entry.key] > 0) {
+        resources?.spaceStorage?.[entry.storageKey]?.modifyRate?.(
+          outputRates[entry.key],
+          this.displayName,
+          'project'
+        );
+      }
+    });
+
+    const hydrogenRate = hydrogenSpent / seconds;
+    resources?.spaceStorage?.hydrogen?.modifyRate?.(
+      -hydrogenRate,
+      this.displayName,
+      'project'
+    );
+
+    this.setLastRunStats(hydrogenRate, outputRates);
+    this.updateStatus('Running');
+    this.shortfallLastTick = this.expansionShortfallLastTick;
+  }
+
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    const totals = { cost: {}, gain: {} };
+    const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
+      getAvailableStoredResource: () => 0,
+      spendStoredResource: () => 0,
+      megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
+    };
+
+    const expansionActive = this.isActive && (!this.isExpansionContinuous() || this.autoStart);
+    if (expansionActive) {
+      const duration = this.getEffectiveDuration();
+      const limit = this.maxRepeatCount || Infinity;
+      const completedExpansions = this.repeatCount + this.expansionProgress;
+      const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
+      const progress = this.isExpansionContinuous()
+        ? Math.min((deltaTime / duration) * productivity, remainingRepeats)
+        : (deltaTime / duration) * productivity;
+      const checkBaseCost = this.isExpansionContinuous();
+      let canAffordBaseCost = true;
+      const cost = this.getScaledCost();
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          const storageKey = resource === 'water' ? 'liquidWater' : resource;
+          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+          const availableTotal = getMegaProjectResourceAvailability(
+            storageState,
+            storageKey,
+            (resources?.[category]?.[resource]?.value || 0) + pending
+          );
+          if (checkBaseCost && availableTotal < cost[category][resource]) {
+            canAffordBaseCost = false;
+          }
+        }
+      }
+
+      if (remainingRepeats > 0 && progress > 0 && canAffordBaseCost) {
+        const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
+        for (const category in cost) {
+          if (!totals.cost[category]) totals.cost[category] = {};
+          for (const resource in cost[category]) {
+            const baseCost = cost[category][resource];
+            const tickAmount = baseCost * progress;
+            const res = resources?.[category]?.[resource];
+            const storageKey = resource === 'water' ? 'liquidWater' : resource;
+            const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+            const colonyAvailable = (res?.value || 0) + pending;
+            const allocation = getMegaProjectResourceAllocation(
+              storageState,
+              storageKey,
+              tickAmount,
+              Math.max(colonyAvailable, 0)
+            );
+            const colonyPortion = allocation.fromColony;
+            const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
+            if (applyRates && colonyRate > 0) {
+              res?.modifyRate?.(-colonyRate, 'Nuclear alchemy expansion', 'project');
+            }
+            const storageRate = Math.max(allocation.fromStorage, 0) * perSecondFactor;
+            if (applyRates && storageRate > 0) {
+              resources?.spaceStorage?.[storageKey]?.modifyRate?.(
+                -storageRate,
+                'Nuclear alchemy expansion',
+                'project'
+              );
+            }
+            totals.cost[category][resource] =
+              (totals.cost[category][resource] || 0) + baseCost * progress;
+          }
+        }
+      }
+    }
+
+    return totals;
+  }
+
+  start(resources) {
+    this.expansionProgress = 0;
+    this.expansionShortfallLastTick = false;
+    if (this.isExpansionContinuous()) {
+      if (!this.canStart(resources)) {
+        return false;
+      }
+      this.isActive = true;
+      this.isPaused = false;
+      this.isCompleted = false;
+      this.startingDuration = Infinity;
+      this.remainingTime = Infinity;
+      return true;
+    }
+    return super.start(resources);
+  }
+
+  renderUI(container) {
+    const card = document.createElement('div');
+    card.classList.add('info-card', 'nuclear-alchemy-card');
+
+    const header = document.createElement('div');
+    header.classList.add('card-header');
+    const title = document.createElement('span');
+    title.classList.add('card-title');
+    title.textContent = 'Furnace Controls';
+    header.appendChild(title);
+    card.appendChild(header);
+
+    const body = document.createElement('div');
+    body.classList.add('card-body');
+
+    const summaryGrid = document.createElement('div');
+    summaryGrid.classList.add('stats-grid', 'three-col', 'project-summary-grid');
+
+    const createStatBox = (labelText) => {
+      const box = document.createElement('div');
+      box.classList.add('stat-item', 'project-summary-box');
+      const label = document.createElement('span');
+      label.classList.add('stat-label');
+      label.textContent = labelText;
+      const value = document.createElement('span');
+      box.append(label, value);
+      summaryGrid.appendChild(box);
+      return value;
+    };
+
+    const totalValue = createStatBox('Total Furnaces');
+    const freeValue = createStatBox('Unassigned');
+    const expansionRateValue = createStatBox('Expansion');
+    body.appendChild(summaryGrid);
+
+    const controlsGrid = document.createElement('div');
+    controlsGrid.classList.add('stats-grid', 'three-col', 'nuclear-alchemy-controls-grid');
+
+    const runField = document.createElement('div');
+    runField.classList.add('stat-item');
+    const runCheckbox = document.createElement('input');
+    runCheckbox.type = 'checkbox';
+    runCheckbox.id = `${this.name}-run`;
+    const runLabel = document.createElement('label');
+    runLabel.htmlFor = runCheckbox.id;
+    runLabel.textContent = 'Run furnaces';
+    runField.append(runCheckbox, runLabel);
+    controlsGrid.appendChild(runField);
+
+    const statusField = document.createElement('div');
+    statusField.classList.add('stat-item');
+    const statusLabel = document.createElement('span');
+    statusLabel.classList.add('stat-label');
+    statusLabel.textContent = 'Status';
+    const statusValue = document.createElement('span');
+    statusField.append(statusLabel, statusValue);
+    controlsGrid.appendChild(statusField);
+
+    const hydrogenField = document.createElement('div');
+    hydrogenField.classList.add('stat-item');
+    const hydrogenLabel = document.createElement('span');
+    hydrogenLabel.classList.add('stat-label');
+    hydrogenLabel.textContent = 'Hydrogen Use';
+    const hydrogenRateValue = document.createElement('span');
+    hydrogenField.append(hydrogenLabel, hydrogenRateValue);
+    controlsGrid.appendChild(hydrogenField);
+    body.appendChild(controlsGrid);
+
+    const assignmentGrid = document.createElement('div');
+    assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list');
+
+    const stepDownButton = document.createElement('button');
+    stepDownButton.textContent = '/10';
+    stepDownButton.addEventListener('click', () => {
+      this.setAssignmentStep(this.assignmentStep / 10);
+      this.updateUI();
+    });
+    const stepUpButton = document.createElement('button');
+    stepUpButton.textContent = 'x10';
+    stepUpButton.addEventListener('click', () => {
+      this.setAssignmentStep(this.assignmentStep * 10);
+      this.updateUI();
+    });
+
+    const headerRow = document.createElement('div');
+    headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
+    const headerName = document.createElement('span');
+    headerName.classList.add('stat-label');
+    headerName.textContent = 'Resource';
+    const headerComplexity = document.createElement('span');
+    headerComplexity.classList.add('stat-label');
+    headerComplexity.textContent = 'Complexity';
+    const headerAssigned = document.createElement('span');
+    headerAssigned.classList.add('stat-label');
+    headerAssigned.textContent = 'Assigned';
+    const headerControls = document.createElement('div');
+    headerControls.classList.add('hephaestus-assignment-controls');
+    const headerButtons = document.createElement('div');
+    headerButtons.classList.add('hephaestus-control-buttons', 'hephaestus-step-header');
+    headerButtons.append(stepDownButton, stepUpButton);
+    const weightHeader = document.createElement('span');
+    weightHeader.classList.add('stat-label', 'hephaestus-weight-header');
+    weightHeader.textContent = 'Weight';
+    headerControls.append(headerButtons, weightHeader);
+    const headerRate = document.createElement('div');
+    headerRate.classList.add('stat-label', 'nuclear-alchemy-rate-cell');
+    headerRate.textContent = 'Rate';
+    headerRow.append(headerName, headerComplexity, headerAssigned, headerControls, headerRate);
+    assignmentGrid.appendChild(headerRow);
+
+    const headerDivider = document.createElement('div');
+    headerDivider.classList.add('hephaestus-header-divider');
+    assignmentGrid.appendChild(headerDivider);
+
+    const rowElements = {};
+    this.getAssignmentKeys().forEach((key) => {
+      const recipe = this.getRecipe(key);
+      const row = document.createElement('div');
+      row.classList.add('hephaestus-assignment-row', 'nuclear-alchemy-assignment-row');
+
+      const nameEl = document.createElement('span');
+      nameEl.classList.add('stat-label');
+      nameEl.textContent = recipe.label;
+
+      const complexityEl = document.createElement('span');
+      complexityEl.classList.add('stat-value');
+      complexityEl.textContent = formatNumber(recipe.complexity, true);
+
+      const amountEl = document.createElement('span');
+      amountEl.classList.add('stat-value');
+
+      const zeroButton = document.createElement('button');
+      zeroButton.textContent = '0';
+      zeroButton.addEventListener('click', () => {
+        if (this.autoAssignFlags[key]) {
+          return;
+        }
+        this.furnaceAssignments[key] = 0;
+        this.normalizeAssignments();
+        this.updateUI();
+      });
+
+      const minusButton = document.createElement('button');
+      minusButton.addEventListener('click', () => this.adjustAssignment(key, -this.assignmentStep));
+
+      const plusButton = document.createElement('button');
+      plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
+
+      const maxButton = document.createElement('button');
+      maxButton.textContent = 'Max';
+      maxButton.addEventListener('click', () => {
+        if (this.autoAssignFlags[key]) {
+          return;
+        }
+        this.normalizeAssignments();
+        const keys = this.getAssignmentKeys();
+        const total = this.getTotalFurnaces();
+        const usedOther = keys.reduce((sum, otherKey) => {
+          if (otherKey === key) return sum;
+          if (this.autoAssignFlags[otherKey]) return sum;
+          return sum + (this.furnaceAssignments[otherKey] || 0);
+        }, 0);
+        this.furnaceAssignments[key] = Math.max(0, total - usedOther);
+        this.normalizeAssignments();
+        this.updateUI();
+      });
+
+      const autoAssignContainer = document.createElement('div');
+      autoAssignContainer.classList.add('hephaestus-auto-assign');
+      const autoAssign = document.createElement('input');
+      autoAssign.type = 'checkbox';
+      autoAssign.addEventListener('change', () => {
+        this.setAutoAssignTarget(key, autoAssign.checked);
+      });
+      const autoAssignLabel = document.createElement('span');
+      autoAssignLabel.textContent = 'Auto';
+      autoAssignLabel.addEventListener('click', () => {
+        autoAssign.checked = !autoAssign.checked;
+        this.setAutoAssignTarget(key, autoAssign.checked);
+      });
+      autoAssignContainer.append(autoAssign, autoAssignLabel);
+
+      const weightInput = document.createElement('input');
+      weightInput.type = 'number';
+      weightInput.min = '0';
+      weightInput.step = '0.1';
+      weightInput.value = String(this.autoAssignWeights[key] || 1);
+      weightInput.classList.add('hephaestus-weight-input');
+      weightInput.addEventListener('input', () => {
+        const value = Number(weightInput.value);
+        this.autoAssignWeights[key] = Number.isFinite(value) && value > 0 ? value : 0;
+        this.normalizeAssignments();
+        this.updateUI();
+      });
+
+      const controls = document.createElement('div');
+      controls.classList.add('hephaestus-assignment-controls');
+      const controlButtons = document.createElement('div');
+      controlButtons.classList.add('hephaestus-control-buttons');
+      controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer);
+      controls.append(controlButtons, weightInput);
+
+      const rateEl = document.createElement('div');
+      rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
+
+      row.append(nameEl, complexityEl, amountEl, controls, rateEl);
+      assignmentGrid.appendChild(row);
+
+      rowElements[key] = {
+        complexity: complexityEl,
+        value: amountEl,
+        zeroButton,
+        minusButton,
+        plusButton,
+        maxButton,
+        autoAssign,
+        weightInput,
+        rate: rateEl
+      };
+    });
+
+    body.appendChild(assignmentGrid);
+
+    const note = document.createElement('p');
+    note.classList.add('project-description');
+    note.textContent = '';
+    body.appendChild(note);
+
+    runCheckbox.addEventListener('change', (event) => {
+      this.setRunning(event.target.checked);
+    });
+
+    card.appendChild(body);
+    container.appendChild(card);
+
+    this.uiElements = {
+      totalValue,
+      freeValue,
+      hydrogenRateValue,
+      expansionRateValue,
+      statusValue,
+      runCheckbox,
+      note,
+      rowElements,
+      stepDownButton,
+      stepUpButton
+    };
+
+    this.updateUI();
+  }
+
+  updateUI() {
+    const elements = this.uiElements;
+    if (!elements) {
+      return;
+    }
+
+    this.normalizeAssignments();
+    const total = this.getTotalFurnaces();
+    const assigned = this.getAssignedTotal();
+    const available = Math.max(0, total - assigned);
+    const step = this.assignmentStep;
+
+    elements.totalValue.textContent = formatNumber(total, true, 2);
+    elements.freeValue.textContent = formatNumber(available, true, 2);
+    elements.hydrogenRateValue.textContent = `${formatNumber(this.lastHydrogenPerSecond, true, 3)}/s`;
+    const expansionRate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
+    elements.expansionRateValue.textContent = `${formatNumber(expansionRate, true, 3)} furnaces/s`;
+    elements.statusValue.textContent = this.statusText || 'Idle';
+    elements.runCheckbox.checked = this.isRunning;
+    elements.runCheckbox.disabled = total <= 0;
+    if (elements.note) {
+      const parameter = formatNumber(this.getAlchemyParameter(), true, 3);
+      elements.note.textContent = `Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x ${parameter}.`;
+    }
+
+    this.getAssignmentKeys().forEach((key) => {
+      const row = elements.rowElements[key];
+      if (!row) {
+        return;
+      }
+      const current = this.furnaceAssignments[key] || 0;
+      const keys = this.getAssignmentKeys();
+      const usedOther = keys.reduce((sum, otherKey) => {
+        if (otherKey === key) return sum;
+        if (this.autoAssignFlags[otherKey]) return sum;
+        return sum + (this.furnaceAssignments[otherKey] || 0);
+      }, 0);
+      const maxForKey = Math.max(0, total - usedOther);
+
+      row.value.textContent = formatNumber(current, true);
+      row.minusButton.textContent = `-${formatNumber(step, true)}`;
+      row.plusButton.textContent = `+${formatNumber(step, true)}`;
+      row.autoAssign.checked = this.autoAssignFlags[key] === true;
+      row.autoAssign.disabled = total <= 0;
+      row.weightInput.value = String(this.autoAssignWeights[key] || 1);
+      row.weightInput.disabled = total <= 0;
+      row.zeroButton.disabled = current <= 0 || this.autoAssignFlags[key];
+      row.maxButton.disabled = current >= maxForKey || total <= 0 || this.autoAssignFlags[key];
+      row.minusButton.disabled = current <= 0 || this.autoAssignFlags[key];
+      row.plusButton.disabled = current >= maxForKey || total <= 0 || this.autoAssignFlags[key];
+      row.rate.textContent = `${formatNumber(this.lastOutputRatesByResource[key] || 0, true, 3)}/s`;
+    });
+  }
+
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      isRunning: this.isRunning === true,
+      furnaceAssignments: { ...this.furnaceAssignments },
+      assignmentStep: this.assignmentStep,
+      autoAssignFlags: { ...this.autoAssignFlags },
+      autoAssignWeights: { ...this.autoAssignWeights }
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
+      this.isRunning = settings.isRunning === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'furnaceAssignments')) {
+      this.furnaceAssignments = { ...(settings.furnaceAssignments || {}) };
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
+      this.assignmentStep = settings.assignmentStep || 1;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
+      this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
+      this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
+    }
+    this.normalizeAssignments();
+  }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      isRunning: this.isRunning,
+      expansionProgress: this.expansionProgress,
+      furnaceAssignments: { ...this.furnaceAssignments },
+      assignmentStep: this.assignmentStep,
+      autoAssignFlags: { ...this.autoAssignFlags },
+      autoAssignWeights: { ...this.autoAssignWeights }
+    };
+  }
+
+  loadState(state = {}) {
+    super.loadState(state);
+    this.isRunning = state.isRunning === true;
+    this.expansionProgress = state.expansionProgress || 0;
+    this.furnaceAssignments = { ...(state.furnaceAssignments || {}) };
+    this.assignmentStep = state.assignmentStep || 1;
+    this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
+    this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.normalizeAssignments();
+    if (!this.isRunning) {
+      this.setLastRunStats(0, {});
+      this.updateStatus('Idle');
+    }
+  }
+
+  saveTravelState() {
+    const state = {
+      repeatCount: this.repeatCount,
+      expansionProgress: this.expansionProgress,
+      furnaceAssignments: { ...this.furnaceAssignments },
+      assignmentStep: this.assignmentStep,
+      autoAssignFlags: { ...this.autoAssignFlags },
+      autoAssignWeights: { ...this.autoAssignWeights }
+    };
+    if (this.isActive) {
+      state.isActive = true;
+      state.remainingTime = this.remainingTime;
+      state.startingDuration = this.startingDuration;
+    }
+    return state;
+  }
+
+  loadTravelState(state = {}) {
+    this.repeatCount = state.repeatCount || 0;
+    this.expansionProgress = state.expansionProgress || 0;
+    this.furnaceAssignments = { ...(state.furnaceAssignments || {}) };
+    this.assignmentStep = state.assignmentStep || 1;
+    this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
+    this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.isRunning = false;
+    this.isCompleted = false;
+    this.setLastRunStats(0, {});
+    this.updateStatus('Idle');
+    this.normalizeAssignments();
+    if (state.isActive) {
+      this.isActive = true;
+      this.startingDuration = state.startingDuration || this.getEffectiveDuration();
+      this.remainingTime = state.remainingTime || this.startingDuration;
+      return;
+    }
+    this.isActive = false;
+    const duration = this.getEffectiveDuration();
+    this.startingDuration = duration;
+    this.remainingTime = duration;
+  }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = NuclearAlchemyFurnaceProject;
+} else if (typeof window !== 'undefined') {
+  window.NuclearAlchemyFurnaceProject = NuclearAlchemyFurnaceProject;
+}

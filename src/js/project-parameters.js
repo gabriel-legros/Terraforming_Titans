@@ -586,6 +586,25 @@ const projectParameters = {
     unlocked: false,
     attributes: { canUseSpaceStorage: true, preserveProgressOnTravel: true }
   },
+  nuclearAlchemyFurnace: {
+    type: 'NuclearAlchemyFurnaceProject',
+    name: 'Nuclear Alchemical Furnace',
+    category: 'giga',
+    cost: {
+      colony: {
+        superalloys: 1_000_000_000_000_000
+      }
+    },
+    duration: 3_600_000,
+    description: 'Build alchemical furnaces that transmute space-storage hydrogen into selected resources. Expansion scales with terraformed worlds.  Furnaces can be run to convert hydrogen from space storage into other resources.  The focus is on resource production from CNO-catalyzed fusion, not energy.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      alchemyParameter: 50_000_000_000
+    }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: 'Orbital Ring',
@@ -683,7 +702,7 @@ const projectParameters = {
         components: 500_000_000,
       }
     },
-    duration: 300000,
+    duration: 300_000,
     description: 'Assemble space-rated lifting platforms that either siphon hydrogen into space storage or peel away the local atmosphere, using inefficient energy beams.  Persists between worlds, duration scales with terraformed worlds, and taps unused Dyson power.',
     repeatable: true,
     maxRepeatCount: Infinity,
@@ -696,7 +715,7 @@ const projectParameters = {
         hydrogen: {
           label: 'Hydrogen',
           storageKey: 'hydrogen',
-          outputMultiplier: 1
+          outputMultiplier: 50
         },
         methane: {
           label: 'Methane',

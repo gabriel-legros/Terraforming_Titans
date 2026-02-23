@@ -161,6 +161,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Space storage resources are canonical under `resources.spaceStorage` (no parallel runtime usage map), support additional resource types, and keep per-resource cap controls.
 - Resource Disposal can include Mass Drivers as ship-equivalent throughput.
 - Dyson Swarm/Receiver/Sphere, Lifters, mega/giga projects, and continuous ops gained stronger persistence and UI clarity.
+- Advanced research now includes `Nuclear Alchemy` (100M), unlocking the repeatable giga `Nuclear Alchemical Furnace`: furnace expansion scales with terraformed worlds and can go continuous, run mode assigns furnaces per output resource (Carbon/Graphite, Oxygen, Nitrogen, Silica, Metal), consumes space-storage hydrogen by assignment/complexity, and reports conversion rates in space-storage tooltips.
 - Galactic Market uses fixed 1x estimates for cost/gain (ignores productivity).
 - Projects can set `attributes.ignoreDurationModifiers: true` to lock runtime to base duration and ignore all project duration modifiers.
 

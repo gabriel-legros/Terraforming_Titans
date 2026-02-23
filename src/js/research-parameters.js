@@ -2383,6 +2383,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'nuclear_alchemy',
+        name: 'Nuclear Alchemy',
+        description: 'Alchemy has always been possible... with the right knowledge and extreme infrastructure.',
+        cost: { advancedResearch: 100_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'nuclearAlchemyFurnace',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: 'Tractor Beams',
         description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',

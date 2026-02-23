@@ -12,7 +12,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     const dummyButton = { textContent: '', disabled: false };
     const dummyWrapper = { style: { display: '' } };
     const rowElements = {};
-    ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', name].forEach((key) => {
+    ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', name].forEach((key) => {
       rowElements[key] = {
         wrapper: dummyWrapper,
         value: dummyText,
@@ -61,8 +61,28 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     return this.getActiveDysonKey() === 'dysonSphere' ? 'dysonSwarmReceiver' : 'dysonSphere';
   }
 
+  getAllAssignableKeys() {
+    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace'];
+  }
+
+  shouldShowNuclearAlchemyTarget() {
+    const project = projectManager?.projects?.nuclearAlchemyFurnace;
+    if (!project) {
+      return false;
+    }
+    return project.unlocked || project.isActive || project.repeatCount > 0;
+  }
+
+  getOptionalAssignmentKeys() {
+    const keys = [];
+    if (this.shouldShowNuclearAlchemyTarget()) {
+      keys.push('nuclearAlchemyFurnace');
+    }
+    return keys;
+  }
+
   getAssignmentKeys() {
-    return [this.getActiveDysonKey(), 'spaceStorage', 'lifters'];
+    return [this.getActiveDysonKey(), 'spaceStorage', 'lifters'].concat(this.getOptionalAssignmentKeys());
   }
 
   normalizeAssignments() {
@@ -75,6 +95,14 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     this.yardAssignments[inactiveDyson] = 0;
 
     const keys = this.getAssignmentKeys();
+    const activeKeySet = new Set(keys.concat([activeDyson]));
+    this.getAllAssignableKeys().forEach((key) => {
+      if (activeKeySet.has(key)) {
+        return;
+      }
+      this.yardAssignments[key] = 0;
+      this.autoAssignFlags[key] = false;
+    });
     const total = this.getTotalYards();
     const activeKey = this.getActiveDysonKey();
     let usedManual = 0;
@@ -212,11 +240,15 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
 
   applyYardEffects() {
     this.normalizeAssignments();
-    const targets = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters'];
+    const targets = this.getAllAssignableKeys();
+    const activeKeySet = new Set(this.getAssignmentKeys());
 
     targets.forEach((key) => {
-      const assigned = this.yardAssignments[key] || 0;
       const project = projectManager.projects[key];
+      if (!project) {
+        return;
+      }
+      const assigned = activeKeySet.has(key) ? (this.yardAssignments[key] || 0) : 0;
       project.addAndReplace({
         type: 'effectiveTerraformedWorlds',
         value: assigned,
@@ -528,10 +560,10 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
       };
     };
 
-    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters'];
+    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace'];
     assignmentKeys.forEach((key) => {
       const project = projectManager.projects[key];
-      const labelText = project.displayName;
+      const labelText = project?.displayName || key;
       createAssignmentRow(key, labelText);
     });
 
@@ -568,7 +600,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     }
 
     const activeDyson = this.getActiveDysonKey();
-    const keys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters'];
+    const keys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace'];
     keys.forEach((key) => {
       const row = elements.rowElements[key];
       const current = this.yardAssignments[key] || 0;
@@ -593,6 +625,8 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
       if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
         const display = key === activeDyson ? '' : 'none';
         row.wrapper.style.display = display;
+      } else if (key === 'nuclearAlchemyFurnace') {
+        row.wrapper.style.display = this.shouldShowNuclearAlchemyTarget() ? '' : 'none';
       }
     });
   }

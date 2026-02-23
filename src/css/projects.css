@@ -691,6 +691,20 @@
     column-gap: 10px;
 }
 
+.nuclear-alchemy-assignment-row {
+    grid-template-columns: minmax(160px, 1.1fr) minmax(80px, 0.4fr) minmax(80px, 0.4fr) 340px minmax(110px, 0.7fr);
+}
+
+.nuclear-alchemy-controls-grid {
+    margin-bottom: 12px;
+}
+
+.nuclear-alchemy-rate-cell {
+    justify-self: end;
+    text-align: right;
+    white-space: nowrap;
+}
+
 .hephaestus-assignment-controls {
     display: grid;
     grid-template-columns: 260px 48px;
@@ -711,7 +725,7 @@
 }
 
 .hephaestus-step-header {
-    justify-content: flex-start;
+    justify-content: center;
 }
 
 .hephaestus-assignment-row .stat-value {
