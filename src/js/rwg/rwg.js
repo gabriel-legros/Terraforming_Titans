@@ -283,6 +283,109 @@ const ROGUE_PULSAR_NAME = 'Rogue Pulsar';
 const ROGUE_PULSAR_FLUX_WM2 = 10;
 const SOLAR_FLUX_1AU_WM2 = 1361;
 
+const RWG_INITIAL_PHASE_RULES = {
+  water: {
+    atmosphereKey: 'atmosphericWater',
+    liquidKey: 'liquidWater',
+    iceKey: 'ice',
+    tripleTemperatureK: 273.16,
+    triplePressurePa: 611.657,
+    criticalTemperatureK: 647.096,
+  },
+  carbonDioxide: {
+    atmosphereKey: 'carbonDioxide',
+    liquidKey: 'liquidCO2',
+    iceKey: 'dryIce',
+    tripleTemperatureK: 216.58,
+    triplePressurePa: 5.185e5,
+    criticalTemperatureK: 304.1282,
+    lowPressureGasTransitionK: 194.67,
+  },
+  methane: {
+    atmosphereKey: 'atmosphericMethane',
+    liquidKey: 'liquidMethane',
+    iceKey: 'hydrocarbonIce',
+    tripleTemperatureK: 90.694,
+    triplePressurePa: 0.11696e6,
+    criticalTemperatureK: 190.564,
+  },
+  oxygen: {
+    atmosphereKey: 'oxygen',
+    liquidKey: 'liquidOxygen',
+    iceKey: 'oxygenIce',
+    tripleTemperatureK: 54.361,
+    triplePressurePa: 1.146e3,
+    criticalTemperatureK: 154.581,
+  },
+  nitrogen: {
+    atmosphereKey: 'inertGas',
+    liquidKey: 'liquidNitrogen',
+    iceKey: 'nitrogenIce',
+    tripleTemperatureK: 63.151,
+    triplePressurePa: 1.253e4,
+    criticalTemperatureK: 126.192,
+  },
+};
+
+function sumAtmosphericMass(atmosphere) {
+  let total = 0;
+  for (const key in atmosphere) total += atmosphere[key]?.initialValue || 0;
+  return total;
+}
+
+function phaseFromTemperature(temperatureK, totalPressurePa, rule) {
+  const T = Number.isFinite(temperatureK) ? temperatureK : 0;
+  const P = Number.isFinite(totalPressurePa) ? totalPressurePa : 0;
+  if (P <= rule.triplePressurePa) {
+    const sublimationK = rule.lowPressureGasTransitionK || rule.tripleTemperatureK;
+    return T < sublimationK ? 'ice' : 'gas';
+  }
+  if (T < rule.tripleTemperatureK) return 'ice';
+  if (T >= rule.criticalTemperatureK) return 'gas';
+  return 'liquid';
+}
+
+function ensureSurfaceEntry(surface, key) {
+  if (surface[key]) return surface[key];
+  const resource = cloneDefaultSurfaceResource(key);
+  resource.initialValue = 0;
+  surface[key] = resource;
+  return resource;
+}
+
+function allocateCondensablePhases({
+  temperatureK,
+  totalPressurePa,
+  atmosphere,
+  surface,
+  extraTotals = {},
+}) {
+  for (const rule of Object.values(RWG_INITIAL_PHASE_RULES)) {
+    const atmosphereKey = rule.atmosphereKey;
+    const liquidKey = rule.liquidKey;
+    const iceKey = rule.iceKey;
+    const atmosphericEntry = atmosphere[atmosphereKey] || { initialValue: 0 };
+    if (!atmosphere[atmosphereKey]) atmosphere[atmosphereKey] = atmosphericEntry;
+    const liquidEntry = ensureSurfaceEntry(surface, liquidKey);
+    const iceEntry = ensureSurfaceEntry(surface, iceKey);
+    const total = (atmosphericEntry.initialValue || 0)
+      + (liquidEntry.initialValue || 0)
+      + (iceEntry.initialValue || 0)
+      + (extraTotals[atmosphereKey] || 0);
+    atmosphericEntry.initialValue = 0;
+    liquidEntry.initialValue = 0;
+    iceEntry.initialValue = 0;
+    const phase = phaseFromTemperature(temperatureK, totalPressurePa, rule);
+    if (phase === 'gas') {
+      atmosphericEntry.initialValue = total;
+    } else if (phase === 'liquid') {
+      liquidEntry.initialValue = total;
+    } else {
+      iceEntry.initialValue = total;
+    }
+  }
+}
+
 function pickBaseColorForType(type) {
   return RWG_TYPE_BASE_COLORS[type] || "#7a4a3a";
 }
@@ -1027,43 +1130,50 @@ function cloneDefaultSurfaceResource(key) {
   return { initialValue: 0, hasCap: false, unlocked: false };
 }
 
-function buildVolatiles(archetype, Teq, landHa, rng, params) {
+function buildVolatiles(archetype, temperatureK, landHa, params, atmosphere, gravity, radius_km) {
+  const surface = {};
+  const surfaceKeys = [
+    'land', 'liquidWater', 'ice', 'buriedIce',
+    'liquidCO2', 'dryIce', 'buriedDryIce',
+    'liquidMethane', 'hydrocarbonIce', 'buriedHydrocarbonIce',
+    'liquidAmmonia', 'ammoniaIce', 'buriedAmmoniaIce',
+    'liquidOxygen', 'oxygenIce', 'buriedOxygenIce',
+    'liquidNitrogen', 'nitrogenIce', 'buriedNitrogenIce',
+    'scrapMetal', 'biomass', 'hazardousBiomass'
+  ];
+  surfaceKeys.forEach((key) => {
+    const resource = cloneDefaultSurfaceResource(key);
+    resource.initialValue = 0;
+    surface[key] = resource;
+  });
+  surface.land.initialValue = landHa;
+
   const landScale = landHa / params.volatiles.referenceLandHa;
-  const surface = {
-    land: { initialValue: landHa, hasCap: true, unlocked: false },
-    ice: { initialValue: 0, unlocked: false, unit: "ton" },
-    liquidWater: { initialValue: 0, unlocked: false, unit: "ton" },
-    dryIce: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
-    liquidMethane: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
-    hydrocarbonIce: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
-    liquidAmmonia: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
-    ammoniaIce: { initialValue: 0, unlocked: true, unit: "ton", hideWhenSmall: true },
-    scrapMetal: { initialValue: 0, unlocked: false, unit: "ton", reverseColor: true },
-    biomass: { initialValue: 0, hasCap: false, unlocked: false, unit: "ton" },
-  };
-  const hazardousBiomass = cloneDefaultSurfaceResource('hazardousBiomass');
-  hazardousBiomass.initialValue = 0;
-  surface.hazardousBiomass = hazardousBiomass;
-  const H2O_total = (params.volatiles.H2O_total[archetype] ?? 5e14) * landScale;
-  const CH4_total = (params.volatiles.CH4_total[archetype] ?? 0) * landScale;
-  const NH3_total = (params.volatiles.NH3_total[archetype] ?? 0) * landScale;
-  if (Teq < 273) { surface.ice.initialValue = H2O_total * 0.999; if (Teq < 195) surface.dryIce.initialValue = 1e10 * landScale; }
-  else { surface.liquidWater.initialValue = H2O_total * 0.05; }
-  if (CH4_total > 0) {
-    if (Teq < 95) surface.hydrocarbonIce.initialValue = CH4_total;
-    else if (Teq < 110) surface.liquidMethane.initialValue = CH4_total;
-    else surface.hydrocarbonIce.initialValue = CH4_total * 0.2;
-  }
-  if (NH3_total > 0) {
-    if (Teq < 195) surface.ammoniaIce.initialValue = NH3_total;
-    else surface.liquidAmmonia.initialValue = NH3_total;
-  }
-  if (archetype === "venus-like") {
-    surface.liquidWater.initialValue = 0;
-    surface.ice.initialValue = 0;
-    surface.dryIce.initialValue = 0;
-    surface.liquidWater.unlocked = true;
-    surface.ice.unlocked = true;
+  const waterTotal = (params.volatiles.H2O_total[archetype] ?? 5e14) * landScale;
+  const methaneTotal = (params.volatiles.CH4_total[archetype] ?? 0) * landScale;
+  const ammoniaTotal = (params.volatiles.NH3_total[archetype] ?? 0) * landScale;
+  const totalAtmosphereMass = sumAtmosphericMass(atmosphere);
+  const totalPressurePa = calcAtmPressure
+    ? calcAtmPressure(totalAtmosphereMass, gravity, radius_km)
+    : 101325;
+
+  allocateCondensablePhases({
+    temperatureK,
+    totalPressurePa,
+    atmosphere,
+    surface,
+    extraTotals: {
+      atmosphericWater: waterTotal,
+      atmosphericMethane: methaneTotal,
+    },
+  });
+
+  if (ammoniaTotal > 0) {
+    if (temperatureK < 195) {
+      surface.ammoniaIce.initialValue = ammoniaTotal;
+    } else {
+      surface.liquidAmmonia.initialValue = ammoniaTotal;
+    }
   }
   return surface;
 }
@@ -1090,44 +1200,145 @@ function calculateZonalCoverageLocal(tf, zone, resourceType, params) {
     case "liquidAmmonia": amount = zs.liquidAmmonia || 0; break;
     case "ammoniaIce": amount = zs.ammoniaIce || 0; break;
     case "buriedAmmoniaIce": amount = zs.buriedAmmoniaIce || 0; break;
+    case "liquidOxygen": amount = zs.liquidOxygen || 0; break;
+    case "oxygenIce": amount = zs.oxygenIce || 0; break;
+    case "buriedOxygenIce": amount = zs.buriedOxygenIce || 0; break;
+    case "liquidNitrogen": amount = zs.liquidNitrogen || 0; break;
+    case "nitrogenIce": amount = zs.nitrogenIce || 0; break;
+    case "buriedNitrogenIce": amount = zs.buriedNitrogenIce || 0; break;
   }
-  let scale = 0.0001; if (["dryIce","ice","hydrocarbonIce","ammoniaIce"].includes(resourceType)) scale *= 100; else if (resourceType === "biomass") scale *= 100000; return estimateCoverage(amount, zoneArea, scale);
+  let scale = 0.0001;
+  if (["dryIce", "ice", "hydrocarbonIce", "ammoniaIce", "oxygenIce", "nitrogenIce"].includes(resourceType)) scale *= 100;
+  else if (resourceType === "biomass") scale *= 100000;
+  return estimateCoverage(amount, zoneArea, scale);
 }
 function calculateAverageCoverageLocal(cache, resourceType, params) { const frac = getZoneFractionsSafe(params); const zones = ["tropical","temperate","polar"]; let total = 0; for (const z of zones) total += (cache[z]?.[resourceType] || 0) * (frac[z] || 0); return Math.max(0, Math.min(total, 1)); }
-function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce = 0, dryIce = 0, ammonia = 0, ammoniaIce = 0) { const bio = Math.min(biomass, 1); const remaining = 1 - bio; const surfaces = { ocean: Math.max(0, water), ice: Math.max(0, ice), hydrocarbon: Math.max(0, hydro), hydrocarbonIce: Math.max(0, hydroIce), co2_ice: Math.max(0, dryIce), ammonia: Math.max(0, ammonia), ammoniaIce: Math.max(0, ammoniaIce) }; const totalOther = Object.values(surfaces).reduce((a, b) => a + b, 0); let scale = 1; if (totalOther > remaining && totalOther > 0) scale = remaining / totalOther; for (const k in surfaces) surfaces[k] *= scale; return { ...surfaces, biomass: bio }; }
+function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce = 0, dryIce = 0, ammonia = 0, ammoniaIce = 0, oxygen = 0, oxygenIce = 0, nitrogen = 0, nitrogenIce = 0) {
+  const bio = Math.min(biomass, 1);
+  const remaining = 1 - bio;
+  const surfaces = {
+    ocean: Math.max(0, water),
+    ice: Math.max(0, ice),
+    hydrocarbon: Math.max(0, hydro),
+    hydrocarbonIce: Math.max(0, hydroIce),
+    co2_ice: Math.max(0, dryIce),
+    ammonia: Math.max(0, ammonia),
+    ammoniaIce: Math.max(0, ammoniaIce),
+    oxygen: Math.max(0, oxygen),
+    oxygenIce: Math.max(0, oxygenIce),
+    nitrogen: Math.max(0, nitrogen),
+    nitrogenIce: Math.max(0, nitrogenIce)
+  };
+  const totalOther = Object.values(surfaces).reduce((a, b) => a + b, 0);
+  let scale = 1;
+  if (totalOther > remaining && totalOther > 0) scale = remaining / totalOther;
+  for (const key in surfaces) surfaces[key] *= scale;
+  return { ...surfaces, biomass: bio };
+}
 function distribute(amount, weights, rng) { const keys = Object.keys(weights); const jittered = {}; let sum = 0; for (const k of keys) { const j = 1 + randRange(rng, -0.1, 0.1); const val = Math.max(0, weights[k] * j); jittered[k] = val; sum += val; } const out = {}; if (sum <= 0 || !isFinite(sum)) { keys.forEach((k) => (out[k] = 0)); } else { keys.forEach((k) => (out[k] = amount * (jittered[k] / sum))); } return out; }
+function distributeByZoneFractions(amount, fractions) {
+  return {
+    tropical: amount * (fractions.tropical || 0),
+    temperate: amount * (fractions.temperate || 0),
+    polar: amount * (fractions.polar || 0),
+  };
+}
+
+function distributeIceWithAllIceRule(iceAmount, liquidAmount, iceBias, fractions, rng) {
+  if (!(iceAmount > 0)) return { tropical: 0, temperate: 0, polar: 0 };
+  if (!(liquidAmount > 0)) return distributeByZoneFractions(iceAmount, fractions);
+  return distribute(iceAmount, iceBias, rng);
+}
 function buildZonalDistributions(type, Teq, surface, landHa, rng, params) {
   const frac = getZoneFractionsSafe(params);
+  const makeZoneSurface = () => ({
+    liquidWater: 0, ice: 0, buriedIce: 0,
+    dryIce: 0, buriedDryIce: 0, liquidCO2: 0,
+    biomass: 0, hazardousBiomass: 0,
+    liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0,
+    liquidAmmonia: 0, ammoniaIce: 0, buriedAmmoniaIce: 0,
+    liquidOxygen: 0, oxygenIce: 0, buriedOxygenIce: 0,
+    liquidNitrogen: 0, nitrogenIce: 0, buriedNitrogenIce: 0,
+  });
   const zonalSurface = {
-    tropical: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0, liquidAmmonia: 0, ammoniaIce: 0, buriedAmmoniaIce: 0 },
-    temperate: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0, liquidAmmonia: 0, ammoniaIce: 0, buriedAmmoniaIce: 0 },
-    polar: { liquidWater: 0, ice: 0, buriedIce: 0, dryIce: 0, buriedDryIce: 0, liquidCO2: 0, biomass: 0, hazardousBiomass: 0, liquidMethane: 0, hydrocarbonIce: 0, buriedHydrocarbonIce: 0, liquidAmmonia: 0, ammoniaIce: 0, buriedAmmoniaIce: 0 },
+    tropical: makeZoneSurface(),
+    temperate: makeZoneSurface(),
+    polar: makeZoneSurface(),
   };
-  const warmBias = { tropical: params.zonal.warmBiasK.tropical * (frac.tropical||0), temperate: params.zonal.warmBiasK.temperate * (frac.temperate||0), polar: params.zonal.warmBiasK.polar * (frac.polar||0) };
-  const coldBias = { tropical: params.zonal.coldBiasK.tropical * (frac.tropical||0), temperate: params.zonal.coldBiasK.temperate * (frac.temperate||0), polar: params.zonal.coldBiasK.polar * (frac.polar||0) };
+  const warmBias = {
+    tropical: params.zonal.warmBiasK.tropical * (frac.tropical || 0),
+    temperate: params.zonal.warmBiasK.temperate * (frac.temperate || 0),
+    polar: params.zonal.warmBiasK.polar * (frac.polar || 0)
+  };
+  const coldBias = {
+    tropical: params.zonal.coldBiasK.tropical * (frac.tropical || 0),
+    temperate: params.zonal.coldBiasK.temperate * (frac.temperate || 0),
+    polar: params.zonal.coldBiasK.polar * (frac.polar || 0)
+  };
+  const liqBiasSrc = (type === "titan-like") ? params.zonal.titanLiquidBiasK : params.zonal.coldLiquidBiasK;
+  const cryoLiquidBias = {
+    tropical: liqBiasSrc.tropical * (frac.tropical || 0),
+    temperate: liqBiasSrc.temperate * (frac.temperate || 0),
+    polar: liqBiasSrc.polar * (frac.polar || 0)
+  };
+
+  const assignSplit = (key, split) => {
+    zonalSurface.tropical[key] = split.tropical;
+    zonalSurface.temperate[key] = split.temperate;
+    zonalSurface.polar[key] = split.polar;
+  };
+
   const liquidWater = surface.liquidWater?.initialValue || 0;
   const ice = surface.ice?.initialValue || 0;
-  const hasPolarIce = ice > 0 || Teq < 273;
-  const liquidSplit = distribute(liquidWater, warmBias, rng);
-  const iceSplit = distribute(ice, coldBias, rng);
-  zonalSurface.tropical.liquidWater = liquidSplit.tropical; zonalSurface.temperate.liquidWater = liquidSplit.temperate; zonalSurface.polar.liquidWater = liquidSplit.polar;
-  zonalSurface.tropical.ice = iceSplit.tropical; zonalSurface.temperate.ice = iceSplit.temperate; zonalSurface.polar.ice = iceSplit.polar;
-  let buriedFactor = params.zonal.buriedFactorByType[type]; if (typeof buriedFactor !== "number") buriedFactor = 0.5;
-  const buriedTotal = (surface.ice?.initialValue || 0) * buriedFactor; const buriedBias = { tropical: 1.0 * (frac.tropical||0), temperate: 1.0 * (frac.temperate||0), polar: 0.3 * (frac.polar||0) };
-  const buriedSplit = distribute(buriedTotal, buriedBias, rng); zonalSurface.tropical.buriedIce = buriedSplit.tropical; zonalSurface.temperate.buriedIce = buriedSplit.temperate; zonalSurface.polar.buriedIce = buriedSplit.polar;
-  const liquidMethane = surface.liquidMethane?.initialValue || 0; const hydrocarbonIce = surface.hydrocarbonIce?.initialValue || 0;
-  const liqBiasSrc = (type === "titan-like") ? params.zonal.titanLiquidBiasK : params.zonal.coldLiquidBiasK;
-  const liquidCH4Bias = { tropical: liqBiasSrc.tropical * (frac.tropical||0), temperate: liqBiasSrc.temperate * (frac.temperate||0), polar: liqBiasSrc.polar * (frac.polar||0) };
-  const liquidCH4Split = distribute(liquidMethane, liquidCH4Bias, rng);
-  zonalSurface.tropical.liquidMethane = liquidCH4Split.tropical; zonalSurface.temperate.liquidMethane = liquidCH4Split.temperate; zonalSurface.polar.liquidMethane = liquidCH4Split.polar;
-  const hcIceSplit = distribute(hydrocarbonIce, coldBias, rng);
-  zonalSurface.tropical.hydrocarbonIce = hcIceSplit.tropical; zonalSurface.temperate.hydrocarbonIce = hcIceSplit.temperate; zonalSurface.polar.hydrocarbonIce = hcIceSplit.polar;
-  const liquidAmmonia = surface.liquidAmmonia?.initialValue || 0; const ammoniaIce = surface.ammoniaIce?.initialValue || 0;
-  const liquidNH3Split = distribute(liquidAmmonia, liquidCH4Bias, rng);
-  zonalSurface.tropical.liquidAmmonia = liquidNH3Split.tropical; zonalSurface.temperate.liquidAmmonia = liquidNH3Split.temperate; zonalSurface.polar.liquidAmmonia = liquidNH3Split.polar;
-  const nh3IceSplit = distribute(ammoniaIce, coldBias, rng);
-  zonalSurface.tropical.ammoniaIce = nh3IceSplit.tropical; zonalSurface.temperate.ammoniaIce = nh3IceSplit.temperate; zonalSurface.polar.ammoniaIce = nh3IceSplit.polar;
-  const dryIceGlobal = surface.dryIce?.initialValue || 0; if (dryIceGlobal > 0 || hasPolarIce) { const d = params.zonal.dryIceBias; const diBias = { tropical: d.tropical, temperate: d.temperate, polar: d.polar }; const diSplit = distribute(dryIceGlobal, diBias, rng); zonalSurface.tropical.dryIce = diSplit.tropical; zonalSurface.temperate.dryIce = diSplit.temperate; zonalSurface.polar.dryIce = diSplit.polar; }
+  const liquidWaterSplit = distribute(liquidWater, warmBias, rng);
+  const iceSplit = distributeIceWithAllIceRule(ice, liquidWater, coldBias, frac, rng);
+  assignSplit('liquidWater', liquidWaterSplit);
+  assignSplit('ice', iceSplit);
+
+  let buriedFactor = params.zonal.buriedFactorByType[type];
+  if (!Number.isFinite(buriedFactor)) buriedFactor = 0.5;
+  const buriedTotal = ice * buriedFactor;
+  const buriedBias = {
+    tropical: 1.0 * (frac.tropical || 0),
+    temperate: 1.0 * (frac.temperate || 0),
+    polar: 0.3 * (frac.polar || 0)
+  };
+  const buriedSplit = liquidWater > 0
+    ? distribute(buriedTotal, buriedBias, rng)
+    : distributeByZoneFractions(buriedTotal, frac);
+  assignSplit('buriedIce', buriedSplit);
+
+  const liquidCO2 = surface.liquidCO2?.initialValue || 0;
+  const dryIce = surface.dryIce?.initialValue || 0;
+  assignSplit('liquidCO2', distribute(liquidCO2, cryoLiquidBias, rng));
+  const dryBias = params.zonal.dryIceBias;
+  const dryIceBias = {
+    tropical: dryBias.tropical,
+    temperate: dryBias.temperate,
+    polar: dryBias.polar
+  };
+  assignSplit('dryIce', distributeIceWithAllIceRule(dryIce, liquidCO2, dryIceBias, frac, rng));
+
+  const liquidMethane = surface.liquidMethane?.initialValue || 0;
+  const hydrocarbonIce = surface.hydrocarbonIce?.initialValue || 0;
+  assignSplit('liquidMethane', distribute(liquidMethane, cryoLiquidBias, rng));
+  assignSplit('hydrocarbonIce', distributeIceWithAllIceRule(hydrocarbonIce, liquidMethane, coldBias, frac, rng));
+
+  const liquidAmmonia = surface.liquidAmmonia?.initialValue || 0;
+  const ammoniaIce = surface.ammoniaIce?.initialValue || 0;
+  assignSplit('liquidAmmonia', distribute(liquidAmmonia, cryoLiquidBias, rng));
+  assignSplit('ammoniaIce', distributeIceWithAllIceRule(ammoniaIce, liquidAmmonia, coldBias, frac, rng));
+
+  const liquidOxygen = surface.liquidOxygen?.initialValue || 0;
+  const oxygenIce = surface.oxygenIce?.initialValue || 0;
+  assignSplit('liquidOxygen', distribute(liquidOxygen, cryoLiquidBias, rng));
+  assignSplit('oxygenIce', distributeIceWithAllIceRule(oxygenIce, liquidOxygen, coldBias, frac, rng));
+
+  const liquidNitrogen = surface.liquidNitrogen?.initialValue || 0;
+  const nitrogenIce = surface.nitrogenIce?.initialValue || 0;
+  assignSplit('liquidNitrogen', distribute(liquidNitrogen, cryoLiquidBias, rng));
+  assignSplit('nitrogenIce', distributeIceWithAllIceRule(nitrogenIce, liquidNitrogen, coldBias, frac, rng));
+
   return { zonalSurface };
 }
 
@@ -1221,7 +1432,15 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     type = classification.Teq > venusMin ? "venus-like" : "mars-like";
   }
   const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng, params);
-  const surface = buildVolatiles(type, classification.Teq, landHa, rng, params);
+  const surface = buildVolatiles(
+    type,
+    classification.Teq,
+    landHa,
+    params,
+    atmo,
+    bulk.gravity,
+    bulk.radius_km
+  );
   let rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
   if (type === "venus-like") rotation = randRange(rng, 5200, 6400);
   // For rogue worlds, spinPeriod is 0 but rotationPeriod is 24h for day-night cycle
@@ -1245,21 +1464,44 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
       buriedIce: calculateZonalCoverageLocal(tmpTerraforming, z, "buriedIce", params),
       biomass: calculateZonalCoverageLocal(tmpTerraforming, z, "biomass", params),
       dryIce: calculateZonalCoverageLocal(tmpTerraforming, z, "dryIce", params),
+      liquidCO2: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidCO2", params),
       liquidMethane: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidMethane", params),
       hydrocarbonIce: calculateZonalCoverageLocal(tmpTerraforming, z, "hydrocarbonIce", params),
       liquidAmmonia: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidAmmonia", params),
       ammoniaIce: calculateZonalCoverageLocal(tmpTerraforming, z, "ammoniaIce", params),
+      liquidOxygen: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidOxygen", params),
+      oxygenIce: calculateZonalCoverageLocal(tmpTerraforming, z, "oxygenIce", params),
+      liquidNitrogen: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidNitrogen", params),
+      nitrogenIce: calculateZonalCoverageLocal(tmpTerraforming, z, "nitrogenIce", params),
     };
   }
   const avgWater = calculateAverageCoverageLocal(zonalCoverageCache, "liquidWater", params);
   const avgIce = calculateAverageCoverageLocal(zonalCoverageCache, "ice", params);
   const avgBio = calculateAverageCoverageLocal(zonalCoverageCache, "biomass", params);
+  const avgLiquidCO2 = calculateAverageCoverageLocal(zonalCoverageCache, "liquidCO2", params);
   const avgHydro = calculateAverageCoverageLocal(zonalCoverageCache, "liquidMethane", params);
   const avgHydroIce = calculateAverageCoverageLocal(zonalCoverageCache, "hydrocarbonIce", params);
   const avgDryIce = calculateAverageCoverageLocal(zonalCoverageCache, "dryIce", params);
   const avgAmmonia = calculateAverageCoverageLocal(zonalCoverageCache, "liquidAmmonia", params);
   const avgAmmoniaIce = calculateAverageCoverageLocal(zonalCoverageCache, "ammoniaIce", params);
-  const surfaceFractions = calculateSurfaceFractionsLocal(avgWater, avgIce, avgBio, avgHydro, avgHydroIce, avgDryIce, avgAmmonia, avgAmmoniaIce);
+  const avgLiquidOxygen = calculateAverageCoverageLocal(zonalCoverageCache, "liquidOxygen", params);
+  const avgOxygenIce = calculateAverageCoverageLocal(zonalCoverageCache, "oxygenIce", params);
+  const avgLiquidNitrogen = calculateAverageCoverageLocal(zonalCoverageCache, "liquidNitrogen", params);
+  const avgNitrogenIce = calculateAverageCoverageLocal(zonalCoverageCache, "nitrogenIce", params);
+  const surfaceFractions = calculateSurfaceFractionsLocal(
+    avgWater,
+    avgIce,
+    avgBio,
+    avgHydro,
+    avgHydroIce,
+    avgDryIce + avgLiquidCO2,
+    avgAmmonia,
+    avgAmmoniaIce,
+    avgLiquidOxygen,
+    avgOxygenIce,
+    avgLiquidNitrogen,
+    avgNitrogenIce
+  );
 
   // Atmosphere composition & pressure for physics model
   let totalAtmoMass = 0; const compMass = {};

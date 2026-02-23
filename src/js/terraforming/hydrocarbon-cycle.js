@@ -58,6 +58,28 @@ function psatMethaneSolid(T) {
   return Math.pow(10, log10Pbar) * 1e5; // bar -> Pa
 }
 
+// Below ~48 K, the Dykyj correlation is outside its validated range. Instead of a hard
+// temperature clamp (which artificially flattens Psat), continue with a simple
+// Clausius-Clapeyron style ln(P) ~ A - B/T extrapolation matched to the Dykyj value
+// and slope at 48 K. This keeps Psat monotone decreasing and rapidly approaches 0
+// for very cold worlds.
+const METHANE_SOLID_CORR_TMIN = 48.0; // K
+function psatMethaneSolidLowT(T) {
+  if (T >= METHANE_SOLID_CORR_TMIN) return psatMethaneSolid(T);
+
+  const T0 = METHANE_SOLID_CORR_TMIN;
+  const P0 = psatMethaneSolid(T0);
+
+  // d(log10 Pbar)/dT = 451.64/(T - 4.66)^2
+  // d(ln P)/dT = ln(10) * 451.64/(T - 4.66)^2
+  // For ln(P) = ln(P0) + B * (1/T0 - 1/T), d(ln P)/dT = B/T^2 -> B = dlnP/dT * T^2.
+  const dlnPdT0 = Math.log(10) * 451.64 / Math.pow(T0 - 4.66, 2);
+  const B = dlnPdT0 * T0 * T0;
+
+  const lnP = Math.log(P0) + B * (1 / T0 - 1 / T);
+  return Math.exp(lnP);
+}
+
 // Liquid-vapor branch (CH4(l) ↔ CH4(g)): NIST Antoine (Prydz & Goodwin)
 // log10(P[bar]) = 3.9895 - 443.028/(T - 0.49), valid ~90.99 K to 189.99 K
 function psatMethaneLiquid(T) {
@@ -74,9 +96,7 @@ function calculateSaturationPressureMethane(T) {
 
   // Below triple point: only solid ↔ vapor is thermodynamically allowed
   if (T < METHANE_T_TRIPLE) {
-    // Limit the solid correlation to its validated low end (~48 K); extrapolation below is tiny anyway
-    const Tmin = 48.0;
-    return psatMethaneSolid(Math.max(T, Tmin));
+    return psatMethaneSolidLowT(T);
   }
 
   // Between triple and critical: use liquid-vapor branch
