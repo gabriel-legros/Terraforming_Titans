@@ -12,10 +12,14 @@
     margin-bottom: 16px;
   }
 
-  .settings-option {
+.settings-option {
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+
+  .settings-stat-line {
+    margin: 0;
   }
   
   .save-slots {

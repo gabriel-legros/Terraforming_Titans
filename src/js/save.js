@@ -50,6 +50,8 @@ function cacheStatisticsElements() {
   }
   statisticsElements = {
     totalPlaytime: document.getElementById('total-playtime-display'),
+    fastestTerraformRow: document.getElementById('fastest-terraform-row'),
+    fastestTerraform: document.getElementById('fastest-terraform-display'),
   };
   return statisticsElements;
 }
@@ -204,7 +206,9 @@ function getGameState() {
     playTimeSeconds: typeof playTimeSeconds !== 'undefined' ? playTimeSeconds : undefined,
     totalPlayTimeSeconds: typeof totalPlayTimeSeconds !== 'undefined' ? totalPlayTimeSeconds : undefined,
     realPlayTimeSeconds: typeof realPlayTimeSeconds !== 'undefined' ? realPlayTimeSeconds : undefined,
-    totalRealPlayTimeSeconds: typeof totalRealPlayTimeSeconds !== 'undefined' ? totalRealPlayTimeSeconds : undefined
+    totalRealPlayTimeSeconds: typeof totalRealPlayTimeSeconds !== 'undefined' ? totalRealPlayTimeSeconds : undefined,
+    fastestTerraformDays: typeof fastestTerraformDays !== 'undefined' ? fastestTerraformDays : undefined,
+    fastestTerraformRealSeconds: typeof fastestTerraformRealSeconds !== 'undefined' ? fastestTerraformRealSeconds : undefined
   };
 }
 
@@ -683,6 +687,23 @@ function loadGame(slotOrCustomString, recreate = true) {
         totalRealPlayTimeSeconds = gameState.totalPlayTimeSeconds;
       }
 
+      if (gameState.fastestTerraformDays !== undefined) {
+        fastestTerraformDays = gameState.fastestTerraformDays;
+      } else {
+        fastestTerraformDays = null;
+      }
+      if (gameState.fastestTerraformRealSeconds !== undefined) {
+        fastestTerraformRealSeconds = gameState.fastestTerraformRealSeconds;
+      } else {
+        fastestTerraformRealSeconds = null;
+      }
+      if (fastestTerraformDays !== null && fastestTerraformRealSeconds !== null) {
+        const legacyDerived = fastestTerraformDays * 24 * 60 * 60;
+        if (Math.abs(fastestTerraformRealSeconds - legacyDerived) < 0.001) {
+          fastestTerraformRealSeconds = null;
+        }
+      }
+
       if (typeof openTerraformingWorldTab === 'function') {
         openTerraformingWorldTab();
       } else if (tabManager && typeof tabManager.activateTab === 'function') {
@@ -1001,6 +1022,18 @@ function updateStatisticsDisplay() {
   const gameTime = formatPlayTime(totalPlayTimeSeconds);
   const realTime = formatDurationDetailed(totalRealPlayTimeSeconds);
   el.textContent = `${gameTime} (${realTime} real time)`;
+  if (!cached.fastestTerraformRow || !cached.fastestTerraform) return;
+  if (fastestTerraformDays === null) {
+    cached.fastestTerraformRow.style.display = 'none';
+    return;
+  }
+  cached.fastestTerraformRow.style.display = '';
+  if (fastestTerraformRealSeconds === null) {
+    cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (real time unavailable)`;
+    return;
+  }
+  const fastestRealTime = formatDurationDetailed(fastestTerraformRealSeconds);
+  cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (${fastestRealTime} real time)`;
 }
 
 // Add save and load related listeners

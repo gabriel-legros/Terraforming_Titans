@@ -258,6 +258,10 @@ function initializeGameState(options = {}) {
     gameSettings.disableAutosave = false;
     gameSettings.useCelsius = false;
     gameSettings.disableDayNightCycle = false;
+    if (!globalGameIsLoadingFromSave) {
+      fastestTerraformDays = null;
+      fastestTerraformRealSeconds = null;
+    }
     const dayNightToggle = typeof document !== 'undefined' ? document.getElementById('day-night-toggle') : null;
     if (dayNightToggle) {
       dayNightToggle.checked = gameSettings.disableDayNightCycle;

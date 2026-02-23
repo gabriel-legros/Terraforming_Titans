@@ -2255,6 +2255,15 @@ function updateLifeBox() {
 
     // Add an event listener for the button
     button.onclick = () => {
+      const isBetterTime = fastestTerraformDays === null || playTimeSeconds < fastestTerraformDays;
+      const sameTimeMissingReal = playTimeSeconds === fastestTerraformDays && fastestTerraformRealSeconds === null;
+      const sameTimeBetterReal = playTimeSeconds === fastestTerraformDays
+        && fastestTerraformRealSeconds !== null
+        && realPlayTimeSeconds < fastestTerraformRealSeconds;
+      if (isBetterTime || sameTimeMissingReal || sameTimeBetterReal) {
+        fastestTerraformDays = playTimeSeconds;
+        fastestTerraformRealSeconds = realPlayTimeSeconds;
+      }
       terraforming.completed = true;
       if (typeof spaceManager !== 'undefined') {
         spaceManager.updateCurrentPlanetTerraformedStatus(true);
