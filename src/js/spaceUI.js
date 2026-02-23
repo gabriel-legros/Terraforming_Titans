@@ -205,6 +205,7 @@ function showTravelWarningPopup(warningData, onConfirm) {
         travelWarningOverlay.style.width = '100%';
         travelWarningOverlay.style.height = '100%';
         travelWarningOverlay.style.background = 'rgba(0,0,0,0.5)';
+        travelWarningOverlay.style.zIndex = '3000';
         travelWarningOverlay.style.display = 'flex';
         travelWarningOverlay.style.alignItems = 'center';
         travelWarningOverlay.style.justifyContent = 'center';
