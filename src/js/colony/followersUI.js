@@ -675,6 +675,7 @@ function buildFollowersUI() {
 
   const requirementRows = {};
   const requirementKeys = [
+    'terraformed',
     'noOtherSpecialization',
     'ecumenopolisCoverage',
     'occupancy'

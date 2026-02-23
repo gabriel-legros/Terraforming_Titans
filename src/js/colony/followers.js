@@ -145,9 +145,15 @@ class FollowersManager extends EffectableEntity {
     const bioworld = projectManager.projects.bioworld;
     const noOtherSpecialization = !foundry.isActive && !foundry.isCompleted
       && !bioworld.isActive && !bioworld.isCompleted;
+    const terraformed = spaceManager.isCurrentWorldTerraformed();
     const ecumenopolisCoverage = this.getHolyWorldEcumenopolisCoverage();
     const occupancyRatio = this.getHolyWorldOccupancyRatio();
     return [
+      {
+        id: 'terraformed',
+        label: 'World is fully terraformed',
+        met: terraformed
+      },
       {
         id: 'noOtherSpecialization',
         label: 'No other world specialization complete or ongoing',
