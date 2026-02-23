@@ -1100,7 +1100,13 @@ function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","atmosphericMethane","atmosphericAmmonia","hydrogen","sulfuricAcid"];
   const jittered = {}; let sum = 0;
   for (const k of mixKeys) { const base = baseMix[k] || 0; if (base <= 0) { jittered[k] = 0; continue; } const jitter = 1 + randRange(rng, -0.25, 0.25); const val = Math.max(0, base * jitter); jittered[k] = val; sum += val; }
-  const defaults = globalThis.defaultPlanetParameters?.resources?.atmospheric || {};
+  let defaults = {};
+  const defaultsFromResources = getDefaultPlanetResourcesForRWG();
+  if (defaultsFromResources?.atmospheric) {
+    defaults = defaultsFromResources.atmospheric;
+  } else {
+    try { defaults = defaultPlanetParameters?.resources?.atmospheric || {}; } catch (_) { defaults = {}; }
+  }
   const makeGasEntry = (key, value) => {
     const base = defaults[key];
     const entry = base ? { ...base } : {};
@@ -1122,11 +1128,21 @@ function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   return gas;
 }
 function depositsFromLandHa(landHa, params) { const areaTotal = Math.round(landHa / params.deposits.areaPerDepositHa); const maxDeposits = Math.round(areaTotal * params.deposits.maxDepositsFraction); return { areaTotal, maxDeposits }; }
-function cloneDefaultSurfaceResource(key) {
-  const defaults = globalThis.defaultPlanetParameters?.resources?.surface;
-  if (defaults && defaults[key]) {
-    return JSON.parse(JSON.stringify(defaults[key]));
+function getDefaultPlanetResourcesForRWG() {
+  let defaults = null;
+  try { defaults = window.defaultPlanetResources; } catch (_) {}
+  if (!defaults) {
+    try { defaults = require('../planet-resource-parameters.js'); } catch (_) {}
   }
+  return defaults || null;
+}
+function cloneDefaultSurfaceResource(key) {
+  const defaults = getDefaultPlanetResourcesForRWG();
+  if (defaults?.surface?.[key]) return JSON.parse(JSON.stringify(defaults.surface[key]));
+  try {
+    const paramsDefaults = defaultPlanetParameters?.resources?.surface;
+    if (paramsDefaults && paramsDefaults[key]) return JSON.parse(JSON.stringify(paramsDefaults[key]));
+  } catch (_) {}
   return { initialValue: 0, hasCap: false, unlocked: false };
 }
 
