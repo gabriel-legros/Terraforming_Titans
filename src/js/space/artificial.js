@@ -850,14 +850,8 @@ class ArtificialManager extends EffectableEntity {
             }
             if (useStorage && step.storage > 0) {
                 const storageKey = step.storageKey || key;
-                const usage = storageProj.resourceUsage[storageKey] || 0;
-                const remainingUsage = usage - step.storage;
-                if (remainingUsage > 0) {
-                    storageProj.resourceUsage[storageKey] = remainingUsage;
-                } else {
-                    delete storageProj.resourceUsage[storageKey];
-                }
-                storageProj.usedStorage = Math.max(0, storageProj.usedStorage - step.storage);
+                storageProj.spendStoredResource(storageKey, step.storage);
+                storageProj.reconcileUsedStorage();
             }
         });
 

@@ -493,9 +493,10 @@ class Project extends EffectableEntity {
             resources[category][resource].decrease(allocation.fromColony);
           }
           if (allocation.fromStorage > 0) {
-            storageProj.resourceUsage[key] -= allocation.fromStorage;
-            storageProj.usedStorage = Math.max(0, storageProj.usedStorage - allocation.fromStorage);
-            if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
+            if (typeof storageProj.spendStoredResource === 'function') {
+              storageProj.spendStoredResource(key, allocation.fromStorage);
+              storageProj.reconcileUsedStorage?.();
+            }
           }
         } else {
           resources[category][resource].decrease(amount);
@@ -798,23 +799,44 @@ class Project extends EffectableEntity {
       const timeFraction = deltaTime / duration; // fraction of project processed this tick
 
       const cost = this.getScaledCost();
+      const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
       for (const category in cost) {
         if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
           const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
           const amountThisTick = cost[category][resource] * timeFraction * (applyRates ? productivity : 1);
-          const usingStorage = this.usesSpaceStorageForResource(
-            category,
-            resource,
+          const key = resource === 'water' ? 'liquidWater' : resource;
+          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+          const colonyAvailable = Math.max((resources[category]?.[resource]?.value || 0) + pending, 0);
+          const allocation = getMegaProjectResourceAllocation(
+            storageProj,
+            key,
             amountThisTick,
-            accumulatedChanges
+            colonyAvailable
           );
-          if (applyRates && resources[category] && resources[category][resource] && !usingStorage && this.showsInResourcesRate()) {
-            resources[category][resource].modifyRate(
-              -rateValue,
-              this.displayName,
-              'project'
-            );
+          if (
+            applyRates
+            && resources[category]
+            && resources[category][resource]
+            && this.showsInResourcesRate()
+            && amountThisTick > 0
+          ) {
+            const colonyRate = rateValue * (allocation.fromColony / amountThisTick);
+            if (colonyRate > 0) {
+              resources[category][resource].modifyRate(
+                -colonyRate,
+                this.displayName,
+                'project'
+              );
+            }
+            const storageRate = rateValue * (allocation.fromStorage / amountThisTick);
+            if (storageRate > 0) {
+              resources?.spaceStorage?.[key]?.modifyRate?.(
+                -storageRate,
+                this.displayName,
+                'project'
+              );
+            }
           }
           totals.cost[category][resource] =
             (totals.cost[category][resource] || 0) + cost[category][resource] * timeFraction;

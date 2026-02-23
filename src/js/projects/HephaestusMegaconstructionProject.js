@@ -334,9 +334,8 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
           }
         }
         if (allocation.fromStorage > 0) {
-          storageProj.resourceUsage[key] -= allocation.fromStorage;
-          storageProj.usedStorage = Math.max(0, storageProj.usedStorage - allocation.fromStorage);
-          if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
+          storageProj.spendStoredResource?.(key, allocation.fromStorage);
+          storageProj.reconcileUsedStorage?.();
         }
       }
     }

@@ -1,5 +1,107 @@
 const wasteResourceNames = new Set(['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']);
 const wasteTooltipNoteText = 'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages.  The numbers here are not their actual consumption.';
+let resourceViewModeUpdating = false;
+
+function isSpaceStorageViewActive() {
+  return gameSettings.showSpaceStorageResources === true;
+}
+
+function shouldRenderResourceCategory(category) {
+  if (isSpaceStorageViewActive()) {
+    return category === 'spaceStorage';
+  }
+  return category !== 'spaceStorage';
+}
+
+function hasUnlockedSpaceStorageResources(resourceSet) {
+  const storageResources = resourceSet?.spaceStorage;
+  if (!storageResources) return false;
+  for (const resourceName in storageResources) {
+    if (storageResources[resourceName]?.unlocked) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getSpaceStorageProjectForResourceUI() {
+  return projectManager?.projects?.spaceStorage || null;
+}
+
+function getSpaceStorageResourceCapDisplay(resourceKey) {
+  const storageProj = getSpaceStorageProjectForResourceUI();
+  if (!storageProj || !storageProj.getResourceCapSetting || !storageProj.getResourceCapLimit) {
+    return null;
+  }
+  const capSetting = storageProj.getResourceCapSetting(resourceKey);
+  if (!capSetting || capSetting.mode === 'none') {
+    return null;
+  }
+  const capLimit = storageProj.getResourceCapLimit(resourceKey);
+  if (!Number.isFinite(capLimit)) {
+    return null;
+  }
+  return Math.max(0, capLimit);
+}
+
+function updateSpaceStorageCapDisplay(entry, resourceKey) {
+  if (!entry || !entry.rowEl || !entry.slashEl || !entry.capWrapperEl || !entry.capEl) {
+    return;
+  }
+  const capLimit = getSpaceStorageResourceCapDisplay(resourceKey);
+  const showCap = Number.isFinite(capLimit);
+  entry.rowEl.classList.toggle('no-cap', !showCap);
+  entry.slashEl.style.display = showCap ? '' : 'none';
+  entry.capWrapperEl.style.display = showCap ? '' : 'none';
+  if (showCap) {
+    entry.capEl.textContent = formatNumber(capLimit);
+  }
+}
+
+function getTooltipTimeCapForResource(resource) {
+  if (!resource) return null;
+  if (resource.category === 'spaceStorage') {
+    return getSpaceStorageResourceCapDisplay(resource.name);
+  }
+  if (resource.hasCap && Number.isFinite(resource.cap)) {
+    return Math.max(0, resource.cap);
+  }
+  return null;
+}
+
+function setResourcePanelViewMode(showSpaceStorage) {
+  if (!resources) return;
+  const canUseSpaceStorageView = hasUnlockedSpaceStorageResources(resources);
+  const nextMode = showSpaceStorage && canUseSpaceStorageView;
+  if (gameSettings.showSpaceStorageResources === nextMode) {
+    updateResourceViewToggleState(resources);
+    return;
+  }
+  gameSettings.showSpaceStorageResources = nextMode;
+  invalidateResourceUICache();
+  createResourceDisplay(resources);
+}
+
+function updateResourceViewToggleState(resourceSet) {
+  if (resourceViewModeUpdating) return;
+  const toggles = resourceUICache.viewToggles || {};
+  const enabled = hasUnlockedSpaceStorageResources(resourceSet);
+  if (!enabled && isSpaceStorageViewActive()) {
+    resourceViewModeUpdating = true;
+    gameSettings.showSpaceStorageResources = false;
+    invalidateResourceUICache();
+    createResourceDisplay(resourceSet);
+    resourceViewModeUpdating = false;
+    return;
+  }
+  for (const key in toggles) {
+    const toggle = toggles[key];
+    if (!toggle) continue;
+    toggle.style.display = enabled ? 'inline-flex' : 'none';
+    toggle.disabled = !enabled;
+    setToggleButtonState(toggle, isSpaceStorageViewActive());
+  }
+}
 
 function isWasteResource(resourceName) {
   return wasteResourceNames.has(resourceName);
@@ -24,6 +126,7 @@ function getLiquidCoverageTargetAmount(terraformingState, targetCoverage) {
 function createResourceContainers(resourcesData) {
   const resourcesContainer = document.getElementById('resources-container');
   resourcesContainer.innerHTML = ''; // Clear the main container first
+  resourceUICache.viewToggles = {};
 
   for (const category in resourcesData) {
     // Create a new container for each category
@@ -34,6 +137,7 @@ function createResourceContainers(resourcesData) {
     // Create and append the header for the category
     const header = document.createElement('h3');
     header.id = `${category}-resources-header`;
+    header.classList.add('resource-category-header');
     header.style.display = 'none'; // Initially hidden
     header.style.cursor = 'pointer';
 
@@ -43,8 +147,33 @@ function createResourceContainers(resourcesData) {
     header.appendChild(arrow);
 
     const label = document.createElement('span');
-    label.textContent = `${capitalizeFirstLetter(category)} Resources`;
+    label.classList.add('resource-category-label');
+    if (category === 'spaceStorage') {
+      label.textContent = 'Space Storage Resources';
+    } else {
+      label.textContent = `${capitalizeFirstLetter(category)} Resources`;
+    }
     header.appendChild(label);
+
+    if (category === 'colony' || category === 'spaceStorage') {
+      const controls = document.createElement('span');
+      controls.classList.add('resource-category-controls');
+      const toggle = createToggleButton({
+        onLabel: '',
+        offLabel: '',
+        isOn: isSpaceStorageViewActive()
+      });
+      toggle.classList.add('resource-view-toggle');
+      toggle.title = 'Toggle colony/space resource view';
+      toggle.setAttribute('aria-label', 'Toggle colony/space resource view');
+      toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setResourcePanelViewMode(!isSpaceStorageViewActive());
+      });
+      controls.appendChild(toggle);
+      header.appendChild(controls);
+      resourceUICache.viewToggles[category] = toggle;
+    }
     categoryContainer.appendChild(header);
 
     // Create and append the resource list container
@@ -61,6 +190,7 @@ function createResourceContainers(resourcesData) {
     // Append the complete category container to the main container
     resourcesContainer.appendChild(categoryContainer);
   }
+  updateResourceViewToggleState(resourcesData);
 }
 
 function createTooltipElement(resourceName) {
@@ -890,13 +1020,16 @@ function createResourceElement(category, resourceObj, resourceName) {
     scanningProgressElement.style.display = 'none'; // Initially hidden
     resourceElement.appendChild(scanningProgressElement);
   } else {
+    const includeCap = resourceObj.hasCap || category === 'spaceStorage';
+    const capVisibleByDefault = resourceObj.hasCap;
+    const capValueText = resourceObj.hasCap ? resourceObj.cap.toFixed(2) : '0';
     resourceElement.innerHTML = `
-      <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
+      <div class="resource-row ${!capVisibleByDefault ? 'no-cap' : ''}">
         <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span><span class="resource-warning" id="${resourceName}-warning"></span></div>
         <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
-        ${resourceObj.hasCap ? `
-          <div class="resource-slash">/</div>
-          <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${resourceObj.cap.toFixed(2)}</span></div>
+        ${includeCap ? `
+          <div class="resource-slash" id="${resourceName}-slash-resources-container" style="${capVisibleByDefault ? '' : 'display:none;'}">/</div>
+          <div class="resource-cap" id="${resourceName}-cap-wrapper-resources-container" style="${capVisibleByDefault ? '' : 'display:none;'}"><span id="${resourceName}-cap-resources-container">${capValueText}</span></div>
         ` : ''}
         ${showRate ? `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>` : ''}
       </div>
@@ -924,6 +1057,7 @@ function createResourceElement(category, resourceObj, resourceName) {
 
 function populateResourceElements(resources) {
   for (const category in resources) {
+    if (!shouldRenderResourceCategory(category)) continue;
     const containerId = `${category}-resources-resources-container`;
     const container = document.getElementById(containerId);
 
@@ -940,6 +1074,7 @@ function populateResourceElements(resources) {
 }
 
 function unlockResource(resource) {
+  if (!shouldRenderResourceCategory(resource.category)) return;
   if (resource.unlocked && !document.getElementById(`${resource.name}-resources-container`) && !document.getElementById(`${resource.name}-available-resources-container`)) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
@@ -961,6 +1096,7 @@ function unlockResource(resource) {
 }
 
 function updateResourceDisplay(resources, deltaSeconds) {
+  updateResourceViewToggleState(resources);
   const now = Date.now();
   const last = updateResourceDisplay.lastTimestamp;
   const elapsedSeconds = Number.isFinite(deltaSeconds) ? deltaSeconds : last ? (now - last) / 1000 : 0;
@@ -972,6 +1108,15 @@ function updateResourceDisplay(resources, deltaSeconds) {
     const cat = resourceUICache.categories[category] || cacheResourceCategory(category);
     const container = cat ? cat.container : null;
     const header = cat ? cat.header : null;
+    const categoryContainer = container ? container.parentElement : null;
+    if (!container || !categoryContainer) {
+      continue;
+    }
+    if (!shouldRenderResourceCategory(category)) {
+      categoryContainer.style.display = 'none';
+      if (header) header.style.display = 'none';
+      continue;
+    }
 
     let hasUnlockedResources = false;
 
@@ -981,6 +1126,9 @@ function updateResourceDisplay(resources, deltaSeconds) {
       const resourceElement = entry ? entry.container : null;
       const resourceNameElement = entry ? entry.nameEl : null;
       const autobuildWarningEl = entry ? entry.autobuildWarningEl : null;
+      if (category === 'spaceStorage') {
+        updateSpaceStorageCapDisplay(entry, resourceName);
+      }
 
       let timer = smallValueTimers[resourceName] || 0;
       let showResource = resourceObj.unlocked;
@@ -1173,7 +1321,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         }
       
         const capElement = entry ? entry.capEl : null;
-        if (capElement) {
+        if (capElement && category !== 'spaceStorage') {
           capElement.textContent = formatNumber(resourceObj.cap);
         }
       
@@ -1183,10 +1331,10 @@ function updateResourceDisplay(resources, deltaSeconds) {
 
     // Reveal the category header if any resources in the category are unlocked
     if (hasUnlockedResources) {
-      container.parentElement.style.display = 'block'; // Show category container
+      categoryContainer.style.display = 'block'; // Show category container
       if (header) header.style.display = 'block'; // Show header
     } else {
-      container.parentElement.style.display = 'none'; // Hide category container
+      categoryContainer.style.display = 'none'; // Hide category container
       if (header) header.style.display = 'none'; // Hide header
     }
   }
@@ -1406,11 +1554,15 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
         }
       }
       if (showDefaultTime) {
-        if (rateUnstable) {
-          timeDiv.textContent = 'Time to full : unstable.';
-        } else if (netRate > 0 && resource.hasCap) {
-          const time = (resource.cap - resource.value) / netRate;
+        const capForTime = getTooltipTimeCapForResource(resource);
+        if (rateUnstable && netRate > 0 && Number.isFinite(capForTime)) {
+          timeDiv.textContent = 'Time to full: unstable.';
+        } else if (netRate > 0 && Number.isFinite(capForTime)) {
+          const remaining = Math.max(capForTime - resource.value, 0);
+          const time = remaining / netRate;
           timeDiv.textContent = `Time to full: ${formatDuration(Math.max(time, 0))}`;
+        } else if (netRate > 0 && resource.category === 'spaceStorage') {
+          timeDiv.textContent = 'Time to full: no cap set.';
         } else if (netRate < 0) {
           const time = resource.value / Math.abs(netRate);
           timeDiv.textContent = `Time to empty: ${formatDuration(Math.max(time, 0))}`;
@@ -1470,7 +1622,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       warningMessages.push(`Biomass growth is limited by ${resource.displayName} availability${scopeSuffix}.`);
     }
 
-    if (resource.name === 'hydrogen') {
+    if (resource.category === 'atmospheric' && resource.name === 'hydrogen') {
       const gravityThreshold = (globalThis.HYDROGEN_ESCAPE_GRAVITY_THRESHOLD || 0);
       const atomicMultiplier = globalThis.HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER || 1;
       const atomicSpeedup = Math.round(1 / atomicMultiplier);
@@ -1694,10 +1846,12 @@ function updateResourceUI(resources) {
 }
 
 function createResourceDisplay(resources) {
+  invalidateResourceUICache();
   createResourceContainers(resources);
   populateResourceElements(resources);
   // Build cache after first render for faster updates
   cacheResourceElements(resources);
+  updateResourceViewToggleState(resources);
 }
 
 function capitalizeFirstLetter(string) {
@@ -1713,6 +1867,7 @@ const resourceUICache = {
   unstableTimers: {},
   warningTimers: {},
   warningTextCache: {},
+  viewToggles: {},
 };
 
 function cacheResourceCategory(category) {
@@ -1726,10 +1881,13 @@ function cacheResourceCategory(category) {
 function cacheSingleResource(category, resourceName) {
   const entry = {
     container: document.getElementById(`${resourceName}-container`),
+    rowEl: document.querySelector(`#${resourceName}-container .resource-row`),
     nameEl: document.getElementById(`${resourceName}-name`),
     autobuildWarningEl: document.getElementById(`${resourceName}-autobuild-warning`),
     warningEl: document.getElementById(`${resourceName}-warning`),
     valueEl: document.getElementById(`${resourceName}-resources-container`),
+    slashEl: document.getElementById(`${resourceName}-slash-resources-container`),
+    capWrapperEl: document.getElementById(`${resourceName}-cap-wrapper-resources-container`),
     capEl: document.getElementById(`${resourceName}-cap-resources-container`),
     ppsEl: document.getElementById(`${resourceName}-pps-resources-container`),
     availableEl: document.getElementById(`${resourceName}-available-resources-container`),
@@ -1757,6 +1915,7 @@ function cacheSingleResource(category, resourceName) {
 function cacheResourceElements(resources) {
   if (typeof document === 'undefined') return;
   for (const category in resources) {
+    if (!shouldRenderResourceCategory(category)) continue;
     cacheResourceCategory(category);
     const items = resources[category];
     for (const resourceName in items) {
@@ -1772,6 +1931,7 @@ function invalidateResourceUICache() {
   resourceUICache.unstableTimers = {};
   resourceUICache.warningTimers = {};
   resourceUICache.warningTextCache = {};
+  resourceUICache.viewToggles = {};
   updateResourceDisplay.lastTimestamp = undefined;
 }
 

@@ -208,7 +208,7 @@ class LiftersProject extends TerraformingDurationProject {
       return 0;
     }
     const recipe = this.getHarvestRecipe();
-    const stored = storage?.resourceUsage?.[recipe.storageKey] || 0;
+    const stored = storage?.getStoredResourceValue?.(recipe.storageKey) || 0;
     const capLimit = storage?.getResourceCapLimit?.(recipe.storageKey) ?? Infinity;
     const capRemaining = Math.max(0, capLimit - stored);
     if (capRemaining <= 0) {
@@ -260,7 +260,7 @@ class LiftersProject extends TerraformingDurationProject {
     const storage = this.getSpaceStorageProject();
     storage?.reconcileUsedStorage();
     const freeSpace = Math.max((storage?.maxStorage || 0) - (storage?.usedStorage || 0), 0);
-    const existing = storage?.resourceUsage?.[resourceKey] || 0;
+    const existing = storage?.getStoredResourceValue?.(resourceKey) || 0;
     const capLimit = storage?.getResourceCapLimit?.(resourceKey) ?? Infinity;
     const capRemaining = Math.max(0, capLimit - existing);
     const availableSpace = Math.min(freeSpace, capRemaining);
@@ -273,8 +273,8 @@ class LiftersProject extends TerraformingDurationProject {
     if (!Number.isFinite(stored) || stored <= 0) {
       return 0;
     }
-    storage.resourceUsage[resourceKey] = (storage.resourceUsage[resourceKey] || 0) + stored;
-    storage.usedStorage += stored;
+    storage.addStoredResource?.(resourceKey, stored);
+    storage.reconcileUsedStorage?.();
     if (typeof updateSpaceStorageUI === 'function') {
       updateSpaceStorageUI(storage);
     }
@@ -455,8 +455,7 @@ class LiftersProject extends TerraformingDurationProject {
     const storageProj = this.attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
     const storageState = storageProj || {
       getAvailableStoredResource: () => 0,
-      resourceUsage: {},
-      usedStorage: 0,
+      spendStoredResource: () => 0,
       megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
     };
     let shortfall = false;
@@ -501,16 +500,11 @@ class LiftersProject extends TerraformingDurationProject {
 
     const spendFromStorage = (key, amount) => {
       if (amount <= 0) return 0;
-      const availableFromStorage = storageState.getAvailableStoredResource(key);
-      const spend = Math.min(amount, availableFromStorage);
-      if (spend > 0) {
-        storageState.resourceUsage[key] = (storageState.resourceUsage[key] || 0) - spend;
-        if (storageState.resourceUsage[key] <= 0) {
-          delete storageState.resourceUsage[key];
-        }
-        storageState.usedStorage = Math.max(0, storageState.usedStorage - spend);
+      if (storageState.spendStoredResource) {
+        return storageState.spendStoredResource(key, amount);
       }
-      return spend;
+      const availableFromStorage = storageState.getAvailableStoredResource(key);
+      return Math.min(amount, availableFromStorage);
     };
 
     for (const category in cost) {
@@ -628,6 +622,11 @@ class LiftersProject extends TerraformingDurationProject {
       processedUnits = multiplier > 0 ? storedUnits / multiplier : 0;
       harvestRate = storedUnits / seconds;
       harvestKey = recipe.storageKey;
+      resources?.spaceStorage?.[recipe.storageKey]?.modifyRate?.(
+        harvestRate,
+        'Lifting',
+        'project'
+      );
     } else {
       processedUnits = this.removeAtmosphere(processedUnits, accumulatedChanges, seconds);
       if (processedUnits <= 0) {
@@ -657,8 +656,7 @@ class LiftersProject extends TerraformingDurationProject {
     const totals = { cost: {}, gain: {} };
     const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
       getAvailableStoredResource: () => 0,
-      resourceUsage: {},
-      usedStorage: 0,
+      spendStoredResource: () => 0,
       megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
     };
 
@@ -710,6 +708,14 @@ class LiftersProject extends TerraformingDurationProject {
             const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
             if (applyRates && colonyRate > 0) {
               res?.modifyRate?.(-colonyRate, 'Lifter expansion', 'project');
+            }
+            const storageRate = Math.max(allocation.fromStorage, 0) * perSecondFactor;
+            if (applyRates && storageRate > 0) {
+              resources?.spaceStorage?.[storageKey]?.modifyRate?.(
+                -storageRate,
+                'Lifter expansion',
+                'project'
+              );
             }
             totals.cost[category][resource] =
               (totals.cost[category][resource] || 0) + baseCost * progress;

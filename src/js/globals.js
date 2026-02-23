@@ -60,6 +60,7 @@ let gameSettings = {
   roundBuildingConstruction: false,
   planetVisualizerDebugEnabled: false,
   keepHiddenStructuresOnTravel: false,
+  showSpaceStorageResources: false,
   simplifyGoldenAsteroid: false,
   scientificNotationThreshold: 1e30,
 };

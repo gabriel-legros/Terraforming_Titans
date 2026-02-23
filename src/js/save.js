@@ -618,6 +618,9 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageResources')) {
+        gameSettings.showSpaceStorageResources = false;
+      }
       delete gameSettings.formatAutoBuildTargets;
       const cachedSettings = cacheSettingsElements();
       cachedSettings.autosaveToggle.checked = gameSettings.disableAutosave;
@@ -659,6 +662,9 @@ function loadGame(slotOrCustomString, recreate = true) {
           updateAllResearchButtons(researchManager.researches);
           updateCompletedResearchVisibility();
         }
+      }
+      if (typeof createResourceDisplay === 'function' && resources) {
+        createResourceDisplay(resources);
       }
     }
 

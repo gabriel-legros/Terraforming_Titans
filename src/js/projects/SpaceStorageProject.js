@@ -21,6 +21,23 @@ const SPACE_STORAGE_LEGACY_RESERVE_KEYS = [
   'inertGas',
   'biomass'
 ];
+const SPACE_STORAGE_RESOURCE_KEYS = [
+  'metal',
+  'silicon',
+  'glass',
+  'components',
+  'electronics',
+  'superconductors',
+  'superalloys',
+  'oxygen',
+  'hydrogen',
+  'atmosphericMethane',
+  'atmosphericAmmonia',
+  'carbonDioxide',
+  'liquidWater',
+  'inertGas',
+  'biomass'
+];
 
 class SpaceStorageProject extends SpaceshipProject {
   constructor(config, name) {
@@ -31,7 +48,6 @@ class SpaceStorageProject extends SpaceshipProject {
     this.expansionProgress = 0;
     this.usedStorage = 0;
     this.selectedResources = [];
-    this.resourceUsage = {};
     this.shipOperationAutoStart = false;
     this.shipOperationIsActive = false;
     this.shipOperationIsPaused = false;
@@ -73,18 +89,85 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.getTotalExpansions() * this.capacityPerCompletion;
   }
 
-  sanitizeResourceUsage() {
-    for (const resourceKey in this.resourceUsage) {
-      const amount = this.resourceUsage[resourceKey];
-      if (!Number.isFinite(amount) || amount <= 0) {
-        delete this.resourceUsage[resourceKey];
+  getSpaceStorageResource(resourceKey) {
+    return resources?.spaceStorage?.[resourceKey] || null;
+  }
+
+  getStoredResourceValue(resourceKey) {
+    const resource = this.getSpaceStorageResource(resourceKey);
+    if (!resource) return 0;
+    const value = Number(resource.value);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  }
+
+  setStoredResourceValue(resourceKey, amount) {
+    const resource = this.getSpaceStorageResource(resourceKey);
+    if (!resource) return 0;
+    const value = Number(amount);
+    resource.value = Number.isFinite(value) && value > 0 ? value : 0;
+    return resource.value;
+  }
+
+  addStoredResource(resourceKey, amount) {
+    const add = Number(amount);
+    if (!Number.isFinite(add) || add <= 0) return 0;
+    const current = this.getStoredResourceValue(resourceKey);
+    this.setStoredResourceValue(resourceKey, current + add);
+    return add;
+  }
+
+  removeStoredResource(resourceKey, amount) {
+    const remove = Number(amount);
+    if (!Number.isFinite(remove) || remove <= 0) return 0;
+    const current = this.getStoredResourceValue(resourceKey);
+    const used = Math.min(current, remove);
+    this.setStoredResourceValue(resourceKey, current - used);
+    return used;
+  }
+
+  spendStoredResource(resourceKey, amount) {
+    const spend = Number(amount);
+    if (!Number.isFinite(spend) || spend <= 0) return 0;
+    const available = this.getAvailableStoredResource(resourceKey);
+    const used = Math.min(available, spend);
+    if (used > 0) {
+      this.removeStoredResource(resourceKey, used);
+    }
+    return used;
+  }
+
+  sanitizeStoredResources() {
+    const storageResources = resources?.spaceStorage;
+    if (!storageResources) return;
+    for (const resourceKey in storageResources) {
+      const entry = storageResources[resourceKey];
+      const value = Number(entry?.value);
+      if (!Number.isFinite(value) || value < 0) {
+        entry.value = 0;
       }
     }
   }
 
   reconcileUsedStorage() {
-    this.sanitizeResourceUsage();
-    this.usedStorage = Object.values(this.resourceUsage).reduce((sum, amount) => sum + amount, 0);
+    this.sanitizeStoredResources();
+    let total = 0;
+    const storageResources = resources?.spaceStorage;
+    if (storageResources) {
+      for (const resourceKey in storageResources) {
+        total += this.getStoredResourceValue(resourceKey);
+      }
+    }
+    this.usedStorage = total;
+  }
+
+  syncSpaceStorageResourceUnlocks() {
+    const storageResources = resources?.spaceStorage;
+    if (!storageResources) return;
+    for (const resourceKey in storageResources) {
+      const resource = storageResources[resourceKey];
+      if (!resource) continue;
+      resource.unlocked = this.isResourceUnlocked(resourceKey);
+    }
   }
 
   getResourceCapSetting(resourceKey) {
@@ -168,7 +251,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (amount <= 0) return;
     const keys = new Set(SPACE_STORAGE_LEGACY_RESERVE_KEYS);
     this.selectedResources.forEach(entry => keys.add(entry.resource));
-    Object.keys(this.resourceUsage).forEach(key => keys.add(key));
+    Object.keys(resources?.spaceStorage || {}).forEach(key => keys.add(key));
     Object.keys(this.resourceCaps).forEach(key => keys.add(key));
     Object.keys(this.resourceTransferModes).forEach(key => keys.add(key));
     keys.forEach((key) => {
@@ -179,15 +262,11 @@ class SpaceStorageProject extends SpaceshipProject {
   clampStoredResourceToLimit(resourceKey, capLimit) {
     if (capLimit === Infinity) return;
     this.reconcileUsedStorage();
-    const stored = this.resourceUsage[resourceKey] || 0;
+    const stored = this.getStoredResourceValue(resourceKey);
     const clamped = Math.max(0, Math.min(stored, capLimit));
     if (clamped === stored) return;
-    if (clamped > 0) {
-      this.resourceUsage[resourceKey] = clamped;
-    } else {
-      delete this.resourceUsage[resourceKey];
-    }
-    this.usedStorage = Math.max(0, this.usedStorage - (stored - clamped));
+    this.setStoredResourceValue(resourceKey, clamped);
+    this.reconcileUsedStorage();
   }
 
   getBiomassZones() {
@@ -308,7 +387,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getAvailableStoredResource(resourceKey) {
-    const stored = this.resourceUsage[resourceKey] || 0;
+    const stored = this.getStoredResourceValue(resourceKey);
     const reserve = this.getResourceStrategicReserveAmount(resourceKey);
     return Math.max(0, stored - reserve);
   }
@@ -443,7 +522,7 @@ class SpaceStorageProject extends SpaceshipProject {
     };
 
     const applyWithdrawForResource = (entry) => {
-      const stored = this.resourceUsage[entry.resource] || 0;
+      const stored = this.getStoredResourceValue(entry.resource);
       if (stored <= 0) return;
       const target = entry.resource === 'liquidWater'
         ? (this.waterWithdrawTarget === 'surface'
@@ -458,19 +537,14 @@ class SpaceStorageProject extends SpaceshipProject {
       total += amount;
       availableFreeSpace += amount;
       if (!simulate) {
-        const remainingStored = stored - amount;
-        if (remainingStored > 0) {
-          this.resourceUsage[entry.resource] = remainingStored;
-        } else {
-          delete this.resourceUsage[entry.resource];
-        }
-        this.usedStorage = Math.max(0, this.usedStorage - amount);
+        this.removeStoredResource(entry.resource, amount);
+        this.reconcileUsedStorage();
       }
     };
 
     const applyStoreForResource = (entry) => {
       if (!Number.isFinite(availableFreeSpace) || availableFreeSpace <= 0) return;
-      const stored = this.resourceUsage[entry.resource] || 0;
+      const stored = this.getStoredResourceValue(entry.resource);
       const capLimit = this.getResourceCapLimit(entry.resource);
       const capRemaining = Math.max(0, capLimit - stored);
       if (capRemaining <= 0) return;
@@ -529,8 +603,16 @@ class SpaceStorageProject extends SpaceshipProject {
     this.pendingTransfers.forEach(t => {
       if (t.mode !== 'store' && (!includeWithdraw || t.mode !== 'withdraw')) return;
       if (!Number.isFinite(t.amount) || t.amount <= 0) return;
+      const spaceResource = this.getSpaceStorageResource(t.storageKey || t.resource);
       const res = resources[t.category][t.resource];
       const rate = t.amount / durationSeconds;
+      if (spaceResource?.modifyRate) {
+        spaceResource.modifyRate(
+          t.mode === 'store' ? rate : -rate,
+          'Space storage transfer',
+          'project'
+        );
+      }
       res.modifyRate(t.mode === 'store' ? -rate : rate, 'Space storage transfer', 'project');
     });
   }
@@ -706,16 +788,9 @@ class SpaceStorageProject extends SpaceshipProject {
 
     const spendFromStorage = (key, amount) => {
       if (!storageProj || amount <= 0) return 0;
-      const availableFromStorage = storageProj.getAvailableStoredResource(key);
-      const spend = Math.min(amount, availableFromStorage);
-      if (spend > 0) {
-        storageProj.resourceUsage[key] = (storageProj.resourceUsage[key] || 0) - spend;
-        if (storageProj.resourceUsage[key] <= 0) {
-          delete storageProj.resourceUsage[key];
-        }
-        storageProj.usedStorage = Math.max(0, storageProj.usedStorage - spend);
-      }
-      return spend;
+      return storageProj.spendStoredResource
+        ? storageProj.spendStoredResource(key, amount)
+        : 0;
     };
 
     for (const category in cost) {
@@ -807,25 +882,22 @@ class SpaceStorageProject extends SpaceshipProject {
       const delivered = t.amount * successChance;
       const rate = seconds > 0 ? t.amount / seconds : 0;
       const deliveredRate = seconds > 0 ? delivered / seconds : 0;
+      const storageResource = this.getSpaceStorageResource(t.storageKey || t.resource);
       if (t.mode === 'withdraw') {
-        const stored = this.resourceUsage[t.storageKey] || 0;
-        const remaining = stored - t.amount;
-        if (remaining > 0) {
-          this.resourceUsage[t.storageKey] = remaining;
-        } else {
-          delete this.resourceUsage[t.storageKey];
-        }
-        this.usedStorage = Math.max(0, this.usedStorage - t.amount);
+        this.removeStoredResource(t.storageKey, t.amount);
         if (t.resource === 'biomass') {
           this.addBiomassToZones(delivered);
           resources.surface.biomass?.modifyRate(deliveredRate, 'Space storage transfer', 'project');
+          storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
         } else if (t.resource === 'liquidWater' && t.category === 'surface') {
           this.addLiquidWaterToZones(delivered);
           resources.surface.liquidWater.modifyRate(deliveredRate, 'Space storage transfer', 'project');
+          storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
         } else {
           const res = resources[t.category][t.resource];
           res.increase(delivered);
           res.modifyRate(deliveredRate, 'Space storage transfer', 'project');
+          storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
         }
       } else if (t.mode === 'store') {
         if (t.resource === 'biomass') {
@@ -833,26 +905,27 @@ class SpaceStorageProject extends SpaceshipProject {
           if (removed > 0) {
             const deliveredRemoved = removed * successChance;
             resources.surface.biomass?.modifyRate(-removed / seconds, 'Space storage transfer', 'project');
-            this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + deliveredRemoved;
-            this.usedStorage += deliveredRemoved;
+            this.addStoredResource(t.resource, deliveredRemoved);
+            storageResource?.modifyRate?.(deliveredRate, 'Space storage transfer', 'project');
           }
         } else if (t.resource === 'liquidWater' && t.category === 'surface') {
           const removed = this.removeLiquidWaterFromZones(t.amount);
           if (removed > 0) {
             const deliveredRemoved = removed * successChance;
             resources.surface.liquidWater.modifyRate(-removed / seconds, 'Space storage transfer', 'project');
-            this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + deliveredRemoved;
-            this.usedStorage += deliveredRemoved;
+            this.addStoredResource(t.resource, deliveredRemoved);
+            storageResource?.modifyRate?.(deliveredRate, 'Space storage transfer', 'project');
           }
         } else {
           const res = resources[t.category][t.resource];
           res.decrease(t.amount);
           res.modifyRate(-rate, 'Space storage transfer', 'project');
-          this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + delivered;
-          this.usedStorage += delivered;
+          this.addStoredResource(t.resource, delivered);
+          storageResource?.modifyRate?.(deliveredRate, 'Space storage transfer', 'project');
         }
       }
     });
+    this.reconcileUsedStorage();
 
     if (failureChance > 0) {
       const shipLoss = this.assignedSpaceships * fraction * failureChance;
@@ -869,17 +942,21 @@ class SpaceStorageProject extends SpaceshipProject {
         return;
       }
       if (t.mode === 'withdraw') {
+        const storageResource = this.getSpaceStorageResource(t.storageKey || t.resource);
+        this.removeStoredResource(t.storageKey, t.amount);
         if (t.resource === 'biomass') {
           this.addBiomassToZones(t.amount);
           if (!this.shipOperationAutoStart && durationSeconds > 0) {
             const rate = t.amount / durationSeconds;
             resources.surface.biomass?.modifyRate(rate, 'Space storage transfer', 'project');
+            storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
           }
         } else if (t.resource === 'liquidWater' && t.category === 'surface') {
           this.addLiquidWaterToZones(t.amount);
           if (!this.shipOperationAutoStart && durationSeconds > 0) {
             const rate = t.amount / durationSeconds;
             resources.surface.liquidWater.modifyRate(rate, 'Space storage transfer', 'project');
+            storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
           }
         } else {
           const res = resources[t.category][t.resource];
@@ -887,13 +964,14 @@ class SpaceStorageProject extends SpaceshipProject {
           if (!this.shipOperationAutoStart && durationSeconds > 0) {
             const rate = t.amount / durationSeconds;
             res.modifyRate(rate, 'Space storage transfer', 'project');
+            storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
           }
         }
       } else if (t.mode === 'store') {
-        this.resourceUsage[t.resource] = (this.resourceUsage[t.resource] || 0) + t.amount;
-        this.usedStorage += t.amount;
+        this.addStoredResource(t.resource, t.amount);
       }
     });
+    this.reconcileUsedStorage();
     this.pendingTransfers = [];
   }
 
@@ -904,9 +982,9 @@ class SpaceStorageProject extends SpaceshipProject {
       const rate = 1000 / duration;
       const fraction = deltaTime / duration;
       const cost = this.getScaledCost();
+      const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
       let canAffordBaseCost = true;
       if (this.isContinuous()) {
-        const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
         for (const category in cost) {
           for (const resource in cost[category]) {
             const res = resources[category][resource];
@@ -923,13 +1001,32 @@ class SpaceStorageProject extends SpaceshipProject {
         if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
           const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
-          const usingStorage = this.usesSpaceStorageForResource(category, resource, cost[category][resource]);
-          if (applyRates && resources[category] && resources[category][resource] && !usingStorage) {
-            resources[category][resource].modifyRate(
-              -rateValue,
-              'Space storage expansion',
-              'project'
-            );
+          const amountThisTick = cost[category][resource] * fraction * (applyRates ? productivity : 1);
+          const storageKey = resource === 'water' ? 'liquidWater' : resource;
+          const colonyAvailable = resources[category][resource].value;
+          const allocation = getMegaProjectResourceAllocation(
+            storageProj,
+            storageKey,
+            amountThisTick,
+            colonyAvailable
+          );
+          if (applyRates && resources[category] && resources[category][resource] && amountThisTick > 0) {
+            const colonyRate = rateValue * (allocation.fromColony / amountThisTick);
+            if (colonyRate > 0) {
+              resources[category][resource].modifyRate(
+                -colonyRate,
+                'Space storage expansion',
+                'project'
+              );
+            }
+            const storageRate = rateValue * (allocation.fromStorage / amountThisTick);
+            if (storageRate > 0) {
+              resources?.spaceStorage?.[storageKey]?.modifyRate?.(
+                -storageRate,
+                'Space storage expansion',
+                'project'
+              );
+            }
           }
           totals.cost[category][resource] =
             (totals.cost[category][resource] || 0) + cost[category][resource] * fraction;
@@ -1073,6 +1170,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   updateUI() {
     super.updateUI();
+    this.syncSpaceStorageResourceUnlocks();
     if (typeof updateSpaceStorageUI === 'function') {
       updateSpaceStorageUI(this);
     }
@@ -1080,6 +1178,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   update(deltaTime) {
     super.update(deltaTime);
+    this.syncSpaceStorageResourceUnlocks();
     this.usedStorageResyncTimer += deltaTime;
     while (this.usedStorageResyncTimer >= 1000) {
       this.usedStorageResyncTimer -= 1000;
@@ -1181,13 +1280,40 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
+  exportSpaceStorageValues() {
+    const values = {};
+    for (let i = 0; i < SPACE_STORAGE_RESOURCE_KEYS.length; i += 1) {
+      const key = SPACE_STORAGE_RESOURCE_KEYS[i];
+      values[key] = this.getStoredResourceValue(key);
+    }
+    return values;
+  }
+
+  importSpaceStorageValues(values = {}, legacyResourceUsage = null) {
+    const source = values && typeof values === 'object' ? values : {};
+    const legacy = legacyResourceUsage && typeof legacyResourceUsage === 'object'
+      ? legacyResourceUsage
+      : null;
+    for (let i = 0; i < SPACE_STORAGE_RESOURCE_KEYS.length; i += 1) {
+      const key = SPACE_STORAGE_RESOURCE_KEYS[i];
+      let amount = source[key];
+      if (amount === undefined && legacy) {
+        amount = legacy[key];
+      }
+      if (amount !== undefined) {
+        this.setStoredResourceValue(key, amount);
+      }
+    }
+    this.reconcileUsedStorage();
+  }
+
   saveState() {
     return {
       ...super.saveState(),
       expansionProgress: this.expansionProgress,
       usedStorage: this.usedStorage,
       selectedResources: this.selectedResources,
-      resourceUsage: this.resourceUsage,
+      spaceResources: this.exportSpaceStorageValues(),
       pendingTransfers: this.pendingTransfers,
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
@@ -1218,8 +1344,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
     this.selectedResources = state.selectedResources || [];
-    this.resourceUsage = state.resourceUsage || {};
-    this.sanitizeResourceUsage();
+    this.importSpaceStorageValues(state.spaceResources, state.resourceUsage);
     this.pendingTransfers = state.pendingTransfers || [];
     if (MEGA_PROJECT_RESOURCE_MODE_MAP[state.megaProjectResourceMode]) {
       this.megaProjectResourceMode = state.megaProjectResourceMode;
@@ -1264,6 +1389,8 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationKesslerElapsed = ship.kesslerElapsed || 0;
     this.shipOperationKesslerPending = ship.kesslerPending === true;
     this.shipOperationKesslerCost = ship.kesslerCost || null;
+    this.syncSpaceStorageResourceUnlocks();
+    this.reconcileUsedStorage();
   }
 
   saveTravelState() {
@@ -1271,7 +1398,7 @@ class SpaceStorageProject extends SpaceshipProject {
       repeatCount: this.repeatCount,
       expansionProgress: this.expansionProgress,
       usedStorage: this.usedStorage,
-      resourceUsage: this.resourceUsage,
+      spaceResources: this.exportSpaceStorageValues(),
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
       resourceStrategicReserves: this.resourceStrategicReserves,
@@ -1286,8 +1413,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.repeatCount = state.repeatCount || 0;
     this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
-    this.resourceUsage = state.resourceUsage || {};
-    this.sanitizeResourceUsage();
+    this.importSpaceStorageValues(state.spaceResources, state.resourceUsage);
     this.resourceStrategicReserves = state.resourceStrategicReserves || {};
     this.sanitizeResourceStrategicReserves();
     if (!state.resourceStrategicReserves && state.strategicReserve > 0) {
@@ -1318,6 +1444,8 @@ class SpaceStorageProject extends SpaceshipProject {
     if (this.megaProjectSpaceOnlyOnTravel) {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
     }
+    this.syncSpaceStorageResourceUnlocks();
+    this.reconcileUsedStorage();
   }
 }
 

@@ -83,9 +83,8 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
             resources[cat][res].decrease(allocation.fromColony);
           }
           if (allocation.fromStorage > 0) {
-            storageProj.resourceUsage[key] -= allocation.fromStorage;
-            storageProj.usedStorage = Math.max(0, storageProj.usedStorage - allocation.fromStorage);
-            if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
+            storageProj.spendStoredResource?.(key, allocation.fromStorage);
+            storageProj.reconcileUsedStorage?.();
           }
         } else {
           resources[cat][res].decrease(amount);
@@ -174,6 +173,15 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
             if (colonyRate > 0) {
               resources[category][resource].modifyRate(
                 -colonyRate,
+                'Dyson Collector',
+                'project'
+              );
+            }
+            const storagePortion = allocation.fromStorage;
+            const storageRate = Math.max(storagePortion, 0) * perSecondFactor;
+            if (storageRate > 0) {
+              resources?.spaceStorage?.[key]?.modifyRate?.(
+                -storageRate,
                 'Dyson Collector',
                 'project'
               );
@@ -267,9 +275,8 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
             }
           }
           if (allocation.fromStorage > 0) {
-            storageProj.resourceUsage[key] -= allocation.fromStorage;
-            storageProj.usedStorage = Math.max(0, storageProj.usedStorage - allocation.fromStorage);
-            if (storageProj.resourceUsage[key] <= 0) delete storageProj.resourceUsage[key];
+            storageProj.spendStoredResource?.(key, allocation.fromStorage);
+            storageProj.reconcileUsedStorage?.();
           }
         } else {
           if (accumulatedChanges) {

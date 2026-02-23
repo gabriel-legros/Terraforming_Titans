@@ -158,7 +158,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Pulsar hazard now triggers recurring Electromagnetic Storms (5s every 100s): storms apply temporary attrition to unassigned androids/electronics/nanobots, pause spaceship projects, and surface as active warning state in the Pulsar UI card.
 - While Pulsar is active, hazard intensity scales down with Artificial Sky completion (land lock share, added radiation, and storm attrition), and Nanocolony max nanobot cap uses the higher of Underground Expansion ratio vs Artificial Sky completion ratio.
 - Land reservation now has a combined `hazards` source; hazard land usage uses the max share across hazard systems (currently Hazardous Biomass vs Pulsar).
-- Space storage supports additional resources and per-resource cap controls.
+- Space storage resources are canonical under `resources.spaceStorage` (no parallel runtime usage map), support additional resource types, and keep per-resource cap controls.
 - Resource Disposal can include Mass Drivers as ship-equivalent throughput.
 - Dyson Swarm/Receiver/Sphere, Lifters, mega/giga projects, and continuous ops gained stronger persistence and UI clarity.
 - Galactic Market uses fixed 1x estimates for cost/gain (ignores productivity).
@@ -176,6 +176,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - String numeric input handling standardized across major controls.
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
 - Space Storage reserve controls are now per-resource in the resource settings dialog, with reserve modes for absolute amount, `% of resource cap`, and `% of max storage`; the old global strategic reserve was removed.
+- Resource panel now adds a Colony/Space view toggle (shown once any space-storage resource unlocks), and the Space view renders only `spaceStorage` resources.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
 - Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes), a live `Faith` panel, and the Holy World consecration/shop systems.
 - Followers Orbitals also grant storage cap on assigned target resources: per assigned orbital cap bonus is `max(100, per-orbital production × 10)`, and this cap bonus is applied during storage-cap recalculation before orbital production runs.

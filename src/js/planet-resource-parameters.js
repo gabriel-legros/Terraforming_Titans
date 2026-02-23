@@ -257,6 +257,23 @@
       alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false },
       crusaders: { name: 'Crusaders', hasCap: false, initialValue: 0, unlocked: false },
       antimatter: { name: 'Antimatter', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false }
+    },
+    spaceStorage: {
+      metal: { name: 'Metal', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      silicon: { name: 'Silica', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      glass: { name: 'Glass', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      components: { name: 'Components', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      electronics: { name: 'Electronics', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      superconductors: { name: 'Supercond.', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      superalloys: { name: 'Superalloys', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      oxygen: { name: 'Oxygen', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      hydrogen: { name: 'Hydrogen', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      atmosphericMethane: { name: 'Methane', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      atmosphericAmmonia: { name: 'Ammonia', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      carbonDioxide: { name: 'CO2', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      liquidWater: { name: 'Water', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      inertGas: { name: 'Nitrogen', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      biomass: { name: 'Biomass', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' }
     }
   };
 
