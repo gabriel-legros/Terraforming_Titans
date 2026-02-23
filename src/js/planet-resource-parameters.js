@@ -261,6 +261,7 @@
     spaceStorage: {
       metal: { name: 'Metal', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       silicon: { name: 'Silica', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      graphite: { name: 'Graphite', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       glass: { name: 'Glass', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       components: { name: 'Components', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       electronics: { name: 'Electronics', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },

@@ -2280,6 +2280,13 @@ const researchParameters = {
             target: 'researchManager',
             type: 'enableResearch',
             targetId: 'graphene_factory'
+          },
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'graphiteStorage',
+            value: true
           }
         ]
       },

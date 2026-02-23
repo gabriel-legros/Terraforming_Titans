@@ -12,6 +12,7 @@ if (typeof makeCollapsibleCard === 'undefined') {
 const storageResourceOptions = [
   { label: 'Metal', category: 'colony', resource: 'metal' },
   { label: 'Silica', category: 'colony', resource: 'silicon' },
+  { label: 'Graphite', category: 'surface', resource: 'graphite', requiresProjectFlag: 'graphiteStorage' },
   { label: 'Glass', category: 'colony', resource: 'glass' },
   { label: 'Components', category: 'colony', resource: 'components' },
   { label: 'Electronics', category: 'colony', resource: 'electronics' },

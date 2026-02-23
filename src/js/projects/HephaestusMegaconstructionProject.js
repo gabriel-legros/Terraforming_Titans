@@ -405,7 +405,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     headerName.textContent = 'Project';
     const headerValue = document.createElement('span');
     headerValue.classList.add('stat-label');
-    headerValue.textContent = '';
+    headerValue.textContent = 'Assigned';
     const headerControls = document.createElement('div');
     headerControls.classList.add('hephaestus-assignment-controls');
     const headerButtons = document.createElement('div');

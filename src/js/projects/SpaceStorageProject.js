@@ -1,5 +1,6 @@
 const SPACE_STORAGE_RESOURCE_REQUIREMENTS = {
   superalloys: { requiresFlag: 'superalloyResearchUnlocked' },
+  graphite: { requiresProjectFlag: 'graphiteStorage' },
   biomass: { requiresProjectFlag: 'biostorage' },
   atmosphericMethane: { requiresProjectFlag: 'methaneAmmoniaStorage' },
   atmosphericAmmonia: { requiresProjectFlag: 'methaneAmmoniaStorage' },
@@ -7,6 +8,7 @@ const SPACE_STORAGE_RESOURCE_REQUIREMENTS = {
 const SPACE_STORAGE_LEGACY_RESERVE_KEYS = [
   'metal',
   'silicon',
+  'graphite',
   'glass',
   'components',
   'electronics',
@@ -24,6 +26,7 @@ const SPACE_STORAGE_LEGACY_RESERVE_KEYS = [
 const SPACE_STORAGE_RESOURCE_KEYS = [
   'metal',
   'silicon',
+  'graphite',
   'glass',
   'components',
   'electronics',
