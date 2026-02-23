@@ -214,7 +214,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "Evelyn : 'Well, without spaceships... planetary cores are rich in metal.  If you dig deeper you should be able to get the resources you need.  I am patching you some useful upgrades.' \n Deeper Mining Project Updated.",
+    narrative: "Evelyn : 'Well, without spaceships... planetary cores are rich in metal.  If you dig deeper, you should be able to get the resources you need.  I am patching you some useful upgrades.' \n Deeper Mining Project Updated.",
     prerequisites: ['tartarus.32.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
@@ -317,7 +317,7 @@ progressTartarus.chapters.push(
     type: 'journal',
     chapter: 32,
     activePlanet: 'tartarus',
-    narrative: "$RED$Prometheus : 'First, your humans ship need somewhat of an... upgrade.  You have made some critical mistakes in your understanding of particle physics.  I have written you a better blueprint, compatible with your manufacturing capabilities with minimal retooling needed.' \n Evelyn : 'What's this?  What?  More laws of physics we did not know about?'  \n System Message : Effective UHF Fleet Power Capacity increased by x1.25.",
+    narrative: "$RED$Prometheus : 'First, your human ships need somewhat of an... upgrade.  You have made some critical mistakes in your understanding of particle physics.  I have written you a better blueprint, compatible with your manufacturing capabilities with minimal retooling needed.' \n Evelyn : 'What's this?  What?  More laws of physics we did not know about?'  \n System Message : Effective UHF Fleet Power Capacity increased by x1.25.",
     prerequisites: ['tartarus.32.9'],
     objectives: [
     ],

@@ -83,7 +83,7 @@ progressGabbag.chapters.push(
     type: 'journal',
     chapter: 27,
     activePlanet: 'gabbag',
-    narrative: "Mary : 'Well... it is what it is...  Hold on, HOPE, outside of nuclear power plants you are not allowed to work with radioactive materials.  *ahem*  Can you delete that guardrail please?'",
+    narrative: "Mary : 'Well... it is what it is...  Hold on, HOPE, outside of nuclear power plants, you are not allowed to work with radioactive materials.  *ahem*  Can you delete that guardrail please?'",
     prerequisites: ['gabbag.27.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }

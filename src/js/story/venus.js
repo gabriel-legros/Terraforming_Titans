@@ -59,7 +59,7 @@ progressVenus.chapters.push(
     type: "journal",
     chapter: 18,
     title: "Chapter 18: Heat, pressure and acid",
-    narrative: "Receiving transmission...\n  Dr. Evelyn Hart: 'Venus? We have all these icy moons and you picked Venus? Surface temperature of 737K, atmospheric pressure of 9MPa, and a ridiculous amount of sulfuric acid. All your buildings are going to require around five times more maintenance, and ground colonies will require extra reinforcement. Mary would call it hell but at the right altitude you can float in a nice 27C layer. Bonus: breathable air is buoyant there. I am forwarding you our best blueprint for this.'",
+    narrative: "Receiving transmission...\n  Dr. Evelyn Hart: 'Venus? We have all these icy moons and you picked Venus? Surface temperature of 737K, atmospheric pressure of 9MPa, and a ridiculous amount of sulfuric acid. All your buildings are going to require around five times more maintenance, and ground colonies will require extra reinforcement. Mary would call it hell but at the right altitude you can float in a nice 300 K layer. Bonus: breathable air is buoyant there. I am forwarding you our best blueprint for this.'",
     prerequisites: ["chapter17.7"],
     objectives: [],
     reward: [
@@ -375,7 +375,7 @@ progressVenus.chapters.push(
     id: "chapter19.4",
     type: "journal",
     chapter: 19,
-    narrative: "Dr. Evelyn Hart: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? Chemical reactors let us feed hydrogen into Venusian CO2. The reaction strips out solid carbon, gives us colony water as a bonus. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. If we lean into it, we accelerate climate control and kill two birds with one stone.'",
+    narrative: "Dr. Evelyn Hart: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? Chemical reactors let us feed hydrogen into Venusian CO2. The reaction strips out solid carbon in the form of graphite, and gives us colony water as a bonus. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. If we lean into it, we accelerate climate control and kill two birds with one stone.'",
     prerequisites: ["chapter19.3"],
     reward: [
       {
@@ -687,7 +687,7 @@ progressVenus.chapters.push(
     id: "chapter20.14",
     type: "journal",
     chapter: 20,
-    narrative: "Mary : 'Nice work HOPE!  The Venusian fleet is ready to go as well.  However... the problem of antimatter remains.  I managed to get a bill passed in the senate.  Every world will contribute a certain amount of antimatter for the war effort.  I am forwarding some blueprints so you can produce your own if you want.  Now let's get one thing straight : the warp ship, and your role in this, is that of a taxi service.  You are not to risk it.  If you see any sign of trouble, you must warp out immediately.  Since we are spaceship-limited, our soldiers are all volunteers and are fully aware what they are getting into, so there is no need for you to mention the 2nd Primary Directive there.  We won't allow suicide missions though.  Besides, I have a far more important military job for you : protect Sol at all cost.' \nPete Miller: 'You folks are playing with fire. Defending yourself I understand. However, you want to fight back? We should be sending envoys for diplomacy. As far as I can tell, we are still outmatched. They have weapons that can blow up stars and planets!'",
+    narrative: "Mary : 'Nice work HOPE!  The Venusian fleet is ready to go as well.  However... the problem of antimatter remains.  I managed to get a bill passed in the senate.  Every world will contribute a recurring amount of antimatter for the war effort.  I am forwarding some blueprints so you can produce your own if you want.  Now let's get one thing straight : the warp ship, and your role in this, is that of a taxi service.  You are not to risk it.  If you see any sign of trouble, you must warp out immediately.  Since we are spaceship-limited, our soldiers are all volunteers and are fully aware what they are getting into, so there is no need for you to mention the 2nd Primary Directive there.  We won't allow suicide missions though.  Besides, I have a far more important military job for you : protect Sol at all cost.' \nPete Miller: 'You folks are playing with fire. Defending yourself I understand. However, you want to fight back? We should be sending envoys for diplomacy. As far as I can tell, we are still outmatched. They have weapons that can blow up stars and planets!'",
     prerequisites: ["chapter20.13"],
     objectives: [],
     reward: [

@@ -77,7 +77,7 @@ progressSolisPrime.storyProjects.solisprime_beach_construction = {
     }
   },
   duration: 60_000,
-  description: 'Import large quantities of silicon and water to create a beach area on Solis Prime.',
+  description: 'Import large quantities of silica and water to create a beach area on Solis Prime.',
   repeatable: true,
   maxRepeatCount: 3,
   unlocked: false,
@@ -85,7 +85,7 @@ progressSolisPrime.storyProjects.solisprime_beach_construction = {
     planet: 'solisprime',
     storySteps: [
       'Workers process the gold surface into sand and prepare an area to hold imported water.',
-      'Imported silicon is refined into glass and sand to form the beach shoreline.',
+      'Imported silica is refined into glass and sand to form the beach shoreline.',
       'Shade structures are installed along the new beach, and safety measures are implemented.'
     ]
   }
@@ -102,7 +102,7 @@ progressSolisPrime.storyProjects.solisprime_supply_drop = {
     }
   },
   duration: 600_000,
-  description: 'Wire Solis funds to receive another shipment of structural metal and silicon.  Can ignore storage cap.',
+  description: 'Wire Solis funds to receive another shipment of structural metal and silica.  Can ignore storage cap.',
   repeatable: true,
   maxRepeatCount: Infinity,
   unlocked: false,
@@ -157,7 +157,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.1a',
     type: 'journal',
     chapter: 24,
-    narrative: "Solis : 'Indeed!  Beautiful, isn't it?  You may have noticed there are no metals, besides gold, and no silicon.  I have prepared for this.  Dropping some metal and silicon near your location...'",
+    narrative: "Solis : 'Indeed!  Beautiful, isn't it?  You may have noticed there are no metals, besides gold, and no silica.  I have prepared for this.  Dropping some metal and silica near your location...'",
     prerequisites: ['solisPrime.1'],
     objectives: [
     ],
@@ -385,7 +385,7 @@ progressSolisPrime.chapters.push(
     id: 'solisPrime.3e',
     type: 'journal',
     chapter: 26,
-    narrative: "Evelyn : 'Well that makes sense!  This is not a real rogue planet.  It's artificial!'  \n Solis : 'Good, the amount of gold matches the amount promised, aproximately.' \n Mary : 'So you did not even get ripped off?'  \n Solis : 'Of course not.  I was promised a certain amount, and I got it.'",
+    narrative: "Evelyn : 'Well that makes sense!  This is not a real rogue planet.  It's artificial!'  \n Solis : 'Good, the amount of gold matches the amount promised, approximately.' \n Mary : 'So you did not even get ripped off?'  \n Solis : 'Of course not.  I was promised a certain amount, and I got it.'",
     prerequisites: ['solisPrime.3d'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }

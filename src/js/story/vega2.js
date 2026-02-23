@@ -202,21 +202,21 @@ progressVega2.chapters.push(
       { target: 'building', targetId: 'dustFactory', type: 'enableReversal' }]
   },
   // 14.4 — Reversal unlocked for cooling controls
-  {
-    id: 'chapter14.4',
-    type: 'journal',
-    chapter: 14,
-    narrative: (
-      "System Message: New controls enabled.\n" +
-      "H.O.P.E.: 'Reverse' mode is now available on space mirrors, greenhouse gas factories, and dust factories.\n" +
-      "$WGC_TEAM1_LEADER$: 'In plain terms: mirrors can help cool, GHG plants can pull gas back down and have an alternate mode for Calcite Aerosol, and dust work crews can clean up what we laid down and use white dust instead.'\n" +
-      "Dr. Evelyn Hart: 'Good. Useful upgrades.  Should make our work easier.  Just note that it won't work on Hyperion Lanterns HOPE.  They produce light, not the other way around.'"
-    ),
-    prerequisites: ['chapter14.3'],
-    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }],
-    reward: [
-    ]
-  },
+	  {
+	    id: 'chapter14.4',
+	    type: 'journal',
+	    chapter: 14,
+	    narrative: (
+	      "System Message: New controls enabled.\n" +
+	      "H.O.P.E.: 'Reverse' mode is now available on space mirrors, greenhouse gas factories, and dust factories.\n" +
+	      "$WGC_TEAM1_LEADER$: 'In plain terms: mirrors can help cool, GHG plants can pull gas back down and have an alternate mode for Calcite Aerosol, and dust work crews can clean up what we laid down and lay down white dust instead (or another color, if needed).'\n" +
+	      "Dr. Evelyn Hart: 'Good. Useful upgrades.  Should make our work easier.  Just note that it won't work on Hyperion Lanterns HOPE.  They produce light, not the other way around.'"
+	    ),
+	    prerequisites: ['chapter14.3'],
+	    objectives: [      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }],
+	    reward: [
+	    ]
+	  },
   // 14.5 — Grow to 10,000 colonists
   {
     id: 'chapter14.5',
@@ -325,23 +325,23 @@ progressVega2.chapters.push(
     reward: []
   },
   // 15.7 — Decoding the Crystal Library
-  {
-    id: 'chapter16.0',
-    type: 'journal',
-    chapter: 16,
-    title: 'Chapter 16 : Shadows of the past',
-    narrative: (
-      "$WGC_TEAM1_LEADER$: 'The slabs in the stacks— we can confirm that they are well and truly safe to touch.'\n" +
-      "Dr. Evelyn Hart: 'Bringing scanners online. If the inhabitants recorded their history here, we need to decrypt it.'\n" +
-      "Mary: 'Scan fast.  HOPE, you are good at language, right?  Help us decrypt this.'"
-    ),
-    prerequisites: ['chapter15.6'],
-    objectives: [
-    ],
-    reward: [
-      { target: 'project', targetId: 'vega2_decode_crystal_library', type: 'enable' }
-    ]
-  },
+	  {
+	    id: 'chapter16.0',
+	    type: 'journal',
+	    chapter: 16,
+	    title: 'Chapter 16: Shadows of the Past',
+	    narrative: (
+	      "$WGC_TEAM1_LEADER$: 'The slabs in the stacks— we can confirm that they are well and truly safe to touch.'\n" +
+	      "Dr. Evelyn Hart: 'Bringing scanners online. If the inhabitants recorded their history here, we need to decrypt it.'\n" +
+	      "Mary: 'Scan fast.  HOPE, you are good at language, right?  Help us decrypt this.'"
+	    ),
+	    prerequisites: ['chapter15.6'],
+	    objectives: [
+	    ],
+	    reward: [
+	      { target: 'project', targetId: 'vega2_decode_crystal_library', type: 'enable' }
+	    ]
+	  },
   {
     id: 'chapter16.0b',
     type: 'journal',
@@ -405,23 +405,23 @@ progressVega2.chapters.push(
     reward: []
   },
   // 16.4 — Mary's Resolve
-  {
-    id: 'chapter17.0',
-    type: 'journal',
-    chapter: 17,
-    title: "Shadows of the future",
-    narrative: (
-      "Mary: 'This threat looms over all of us. I have to go meet him. It's the only path.'\n" +
-      "$WGC_TEAM1_LEADER$: 'Mary, it's suicide. What if he destroys the shuttle on approach?'\n" +
-      "Mary: 'Then at least we know their true intent. But hope is not lost. Prepare the diplomatic vessel. I'm leaving in one hour.'\n" +
-      "Dr. Evelyn Hart: 'Take every precaution. We'll be monitoring from here.'"
-    ),
-    prerequisites: ['chapter16.3'],
-    objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
-    ],
-    reward: []
-  },
+	  {
+	    id: 'chapter17.0',
+	    type: 'journal',
+	    chapter: 17,
+	    title: "Chapter 17: Shadows of the Future",
+	    narrative: (
+	      "Mary: 'This threat looms over all of us. I have to go meet him. It's the only path.'\n" +
+	      "$WGC_TEAM1_LEADER$: 'Mary, it's suicide. What if he destroys the shuttle on approach?'\n" +
+	      "Mary: 'Then at least we know their true intent. But hope is not lost. Prepare the diplomatic vessel. I'm leaving in one hour.'\n" +
+	      "Dr. Evelyn Hart: 'Take every precaution. We'll be monitoring from here.'"
+	    ),
+	    prerequisites: ['chapter16.3'],
+	    objectives: [
+	      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+	    ],
+	    reward: []
+	  },
   // 16.5 — Terms of Surrender
   {
     id: 'chapter17.1',

@@ -381,15 +381,15 @@ var progressMars = {
         ]
       },
       {
-        id: "chapter1.18",
-        type: "journal",
-        chapter: 0,
-        narrative: "Colony establishment protocols initiated. Water is a critical requirement. Blueprint unlocked: iceHarvester.btb. Objective: Accumulate 100 units of water.",
-        prerequisites: ["chapter1.17b"],
-        objectives: [
-        ],
-        reward: [        {
-            target: 'resource',
+	        id: "chapter1.18",
+	        type: "journal",
+	        chapter: 0,
+	        narrative: "Colony establishment protocols initiated. Water is a critical requirement. Blueprint unlocked: iceHarvester.btb. Objective: Accumulate 100 tons of water.",
+	        prerequisites: ["chapter1.17b"],
+	        objectives: [
+	        ],
+	        reward: [        {
+	            target: 'resource',
             resourceType: 'surface',
             targetId: 'ice',
             type: 'enable'
@@ -443,15 +443,15 @@ var progressMars = {
     ]
       },
       {
-        id: "chapter1.19b",
-        type: "journal",
-        chapter: 0,
-        narrative: "Objective: Construct a Scientist Outpost to expand research capabilities.",
-        prerequisites: ["chapter1.19"],
-        objectives: [      {
-          type: 'colony',
-          buildingName: "t1_colony",
-          quantity: 1
+	        id: "chapter1.19b",
+	        type: "journal",
+	        chapter: 0,
+	        narrative: "Objective: Construct a Research Outpost to expand research capabilities.",
+	        prerequisites: ["chapter1.19"],
+	        objectives: [      {
+	          type: 'colony',
+	          buildingName: "t1_colony",
+	          quantity: 1
         }
         ],
         reward: [          {
@@ -714,15 +714,15 @@ var progressMars = {
         }]
       },
       {
-        id: "chapter3.3",
-        type: "journal",
-        chapter: 3,
-        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Soon we can have grass, or even trees.  Next, we should start talking about air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.   Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water. It's not rocket science... well, it is, but you get the idea.'",
-        prerequisites: ["chapter3.2"],
-        objectives: [{
-          type: 'terraforming',
-          terraformingParameter : 'pressure',
-          value: 5
+	        id: "chapter3.3",
+	        type: "journal",
+	        chapter: 3,
+	        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Soon we can have grass, or even trees.  Next, we should start talking about air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.   Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water or silica. It's not rocket science... well, it is, but you get the idea.'",
+	        prerequisites: ["chapter3.2"],
+	        objectives: [{
+	          type: 'terraforming',
+	          terraformingParameter : 'pressure',
+	          value: 5
         }],
         reward: []
       },
