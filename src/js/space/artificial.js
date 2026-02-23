@@ -1290,6 +1290,13 @@ class ArtificialManager extends EffectableEntity {
             ]
             : [
                 {
+                    target: 'project',
+                    targetId: 'planetaryThruster',
+                    type: 'permanentProjectDisable',
+                    value: true,
+                    effectId: 'artificial-world-disable-planetary-thrusters'
+                },
+                {
                     target: 'projectManager',
                     type: 'spaceshipCostMultiplier',
                     resourceCategory: 'colony',
