@@ -900,15 +900,6 @@ class Project extends EffectableEntity {
       this.autoDeployCollectors = settings.autoContinuousOperation === true;
     }
 
-    if (this.autoStartUncheckOnTravel === true) {
-      this.autoStart = false;
-      if ('autoContinuousOperation' in this) {
-        this.autoContinuousOperation = false;
-      }
-      if ('autoDeployCollectors' in this) {
-        this.autoDeployCollectors = false;
-      }
-    }
   }
 
   saveState() {
