@@ -27,6 +27,8 @@ const followersUICache = {
   artFundingInvestStepButton: null,
   artArtifactMaxButton: null,
   artFundingMaxButton: null,
+  faithCard: null,
+  holyWorldCard: null,
   faithWorldProgressValue: null,
   faithWorldProgressFill: null,
   faithWorldBaseCapMarker: null,
@@ -523,7 +525,7 @@ function buildFollowersUI() {
 
   const faithTooltipText = [
     'Believers in the Church of HOPE convert the current population exponentially.',
-    'All colonists import bring population that respect the galactic believers %',
+    'All colonist imports bring population that respect the galactic believers %',
     'World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).',
     'Once world believers reaches Galactic + 5 percentage points, galactic faith also rises at 1/250 the % rate of world.',
     'On a Holy World, world faith can continue up to Galactic + 15 percentage points.',
@@ -838,6 +840,8 @@ function buildFollowersUI() {
   followersUICache.artFundingInvestStepButton = fundingPanel.investStep;
   followersUICache.artArtifactMaxButton = artifactPanel.maxButton;
   followersUICache.artFundingMaxButton = fundingPanel.maxButton;
+  followersUICache.faithCard = faith.card;
+  followersUICache.holyWorldCard = holyWorld.card;
   followersUICache.faithWorldProgressValue = worldProgress.value;
   followersUICache.faithWorldProgressFill = worldProgress.fill;
   followersUICache.faithWorldBaseCapMarker = worldBaseCapMarker;
@@ -970,6 +974,13 @@ function updateFollowersUI() {
   followersUICache.artFundingInvestStepButton.disabled = fundingAvailable <= 0;
   followersUICache.artArtifactMaxButton.disabled = artifactAvailable <= 0;
   followersUICache.artFundingMaxButton.disabled = fundingAvailable <= 0;
+
+  const faithSuppressed = !!gameSettings.suppressFaith;
+  followersUICache.faithCard.style.display = faithSuppressed ? 'none' : '';
+  followersUICache.holyWorldCard.style.display = faithSuppressed ? 'none' : '';
+  if (faithSuppressed) {
+    return;
+  }
 
   const faith = followersManager.getFaithSnapshot();
   const consecrated = followersManager.isCurrentWorldHolyConsecrated();

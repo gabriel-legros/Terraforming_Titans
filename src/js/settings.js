@@ -155,6 +155,24 @@ function addSettingsListeners() {
     });
   }
 
+  const suppressFaithToggle = document.getElementById('suppress-faith-toggle');
+  const suppressFaithTooltip = document.getElementById('suppress-faith-tooltip');
+  if (suppressFaithTooltip) {
+    attachDynamicInfoTooltip(
+      suppressFaithTooltip,
+      'The game has a faith system.  Some people do not like it.  You can choose to get rid of it, but you will forfeit its benefits.'
+    );
+  }
+  if (suppressFaithToggle) {
+    suppressFaithToggle.checked = gameSettings.suppressFaith;
+    suppressFaithToggle.addEventListener('change', () => {
+      gameSettings.suppressFaith = suppressFaithToggle.checked;
+      if (followersManager && followersManager.reapplyEffects) {
+        followersManager.reapplyEffects();
+      }
+    });
+  }
+
   const startBackgroundSilenceButton = document.getElementById('start-background-silence-button');
   if (startBackgroundSilenceButton) {
     startBackgroundSilenceButton.addEventListener('click', () => {

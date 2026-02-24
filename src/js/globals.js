@@ -62,6 +62,7 @@ let gameSettings = {
   keepHiddenStructuresOnTravel: false,
   showSpaceStorageResources: false,
   simplifyGoldenAsteroid: false,
+  suppressFaith: false,
   scientificNotationThreshold: 1e30,
 };
 

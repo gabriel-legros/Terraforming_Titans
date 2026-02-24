@@ -172,8 +172,12 @@ class FollowersManager extends EffectableEntity {
     ];
   }
 
+  isFaithSuppressed() {
+    return !!gameSettings.suppressFaith;
+  }
+
   canConsecrateHolyWorld() {
-    if (!this.enabled || this.isCurrentWorldHolyConsecrated()) {
+    if (!this.enabled || this.isCurrentWorldHolyConsecrated() || this.isFaithSuppressed()) {
       return false;
     }
     const requirements = this.getHolyWorldRequirements();
@@ -202,6 +206,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   getHolyWorldTravelPointGain() {
+    if (this.isFaithSuppressed()) {
+      return 0;
+    }
     return this.isCurrentWorldHolyConsecrated() ? 1 : 0;
   }
 
@@ -210,6 +217,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   canPurchaseHolyWorldUpgrade(item) {
+    if (this.isFaithSuppressed()) {
+      return false;
+    }
     const purchases = this.getHolyWorldShopPurchaseCount(item.id);
     if (purchases >= item.maxPurchases) {
       return false;
@@ -218,6 +228,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   purchaseHolyWorldUpgrade(id, purchaseCount = 1) {
+    if (this.isFaithSuppressed()) {
+      return false;
+    }
     const itemMap = this.getHolyWorldShopItemMap();
     const item = itemMap[id];
     if (!item || purchaseCount <= 0) {
@@ -238,6 +251,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   respecHolyWorldShop() {
+    if (this.isFaithSuppressed()) {
+      return;
+    }
     const items = this.getHolyWorldShopItems();
     let refund = 0;
     for (let i = 0; i < items.length; i += 1) {
@@ -251,19 +267,28 @@ class FollowersManager extends EffectableEntity {
   }
 
   getHolyWorldFestivalDurationBonusMs() {
+    if (this.isFaithSuppressed()) {
+      return 0;
+    }
     return this.getHolyWorldShopPurchaseCount('festivalGoldenDuration') * 5000;
   }
 
   getHolyWorldPatienceMaxBonus() {
+    if (this.isFaithSuppressed()) {
+      return 0;
+    }
     return this.getHolyWorldShopPurchaseCount('patienceMax');
   }
 
   getHolyWorldConversionPowerMultiplier() {
+    if (this.isFaithSuppressed()) {
+      return 1;
+    }
     return 1 + (this.getHolyWorldShopPurchaseCount('conversionPower') * 0.1);
   }
 
   applyHolyWorldEffects() {
-    if (!this.enabled) {
+    if (!this.enabled || this.isFaithSuppressed()) {
       removeEffect({ target: 'global', sourceId: 'holyWorld' });
       removeEffect({ target: 'patienceManager', sourceId: 'holyWorld' });
       return;
@@ -355,10 +380,16 @@ class FollowersManager extends EffectableEntity {
   }
 
   getPilgrimGrowthBonus() {
+    if (this.isFaithSuppressed()) {
+      return 0;
+    }
     return this.getGalacticBelieverPercent();
   }
 
   getZealWorkerEfficiencyBonus() {
+    if (this.isFaithSuppressed()) {
+      return 0;
+    }
     return this.getWorldBelieverPercent() * 2;
   }
 
@@ -508,12 +539,18 @@ class FollowersManager extends EffectableEntity {
   }
 
   getApostlesOrbitalsMultiplier() {
+    if (this.isFaithSuppressed()) {
+      return 1;
+    }
     const galacticPercent = this.getGalacticBelieverPercent();
     const bonus = Math.max(0, Math.min(9, (galacticPercent - 0.1) * 10));
     return 1 + bonus;
   }
 
   getMissionaryGalacticConversionMultiplier() {
+    if (this.isFaithSuppressed()) {
+      return 1;
+    }
     return 1 + this.getWorldBelieverPercent();
   }
 
@@ -528,6 +565,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getFaithSnapshot() {
+    const faithSuppressed = this.isFaithSuppressed();
     const worldPopulation = this.getCurrentWorldPopulation();
     const worldPercent = this.getWorldBelieverPercent();
     const galacticPercent = this.getGalacticBelieverPercent();
@@ -541,14 +579,14 @@ class FollowersManager extends EffectableEntity {
       galacticBelievers: this.galacticBelievers,
       galacticPercent,
       rates: {
-        worldPerSecond: this.lastFaithWorldConversionRate,
-        galacticPerSecond: this.lastFaithGalacticConversionRate
+        worldPerSecond: faithSuppressed ? 0 : this.lastFaithWorldConversionRate,
+        galacticPerSecond: faithSuppressed ? 0 : this.lastFaithGalacticConversionRate
       },
       bonuses: {
         pilgrim: this.getPilgrimGrowthBonus(),
         zeal: this.getZealWorkerEfficiencyBonus(),
         apostles: apostlesMultiplier - 1,
-        missionaries: this.getWorldBelieverPercent()
+        missionaries: this.getMissionaryGalacticConversionMultiplier() - 1
       },
       atWorldCap: worldPercent >= this.getCurrentWorldBelieverCap() - 1e-12
     };
@@ -626,13 +664,13 @@ class FollowersManager extends EffectableEntity {
     this.galacticBelievers += worldBelievers;
     this.galacticBelievers = Math.min(this.galacticBelievers, this.galacticPopulation);
     this.galacticBelieverPercentFallback = this.getGalacticBelieverPercent();
-    if (this.isCurrentWorldHolyConsecrated()) {
+    if (!this.isFaithSuppressed() && this.isCurrentWorldHolyConsecrated()) {
       this.holyWorldPoints += 1;
     }
   }
 
   updateFaith(deltaTime) {
-    if (!this.enabled) {
+    if (!this.enabled || this.isFaithSuppressed()) {
       this.lastFaithWorldConversionRate = 0;
       this.lastFaithGalacticConversionRate = 0;
       return;

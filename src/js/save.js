@@ -77,6 +77,7 @@ function cacheSettingsElements() {
     roundBuildingToggle: document.getElementById('round-building-toggle'),
     scientificNotationThresholdInput: document.getElementById('scientific-notation-threshold-input'),
     simplifyGoldenAsteroidToggle: document.getElementById('simplify-golden-asteroid-toggle'),
+    suppressFaithToggle: document.getElementById('suppress-faith-toggle'),
   };
   return settingsElements;
 }
@@ -649,6 +650,10 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.scientificNotationThresholdInput.value = formatScientific(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.scientificNotationThresholdInput.dataset.scientificNotationThreshold = String(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
+      cachedSettings.suppressFaithToggle.checked = gameSettings.suppressFaith;
+      if (followersManager && followersManager.reapplyEffects) {
+        followersManager.reapplyEffects();
+      }
       if (gameSettings.keepTabRunningAudio) {
         startBackgroundSilence();
       } else {
