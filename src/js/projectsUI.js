@@ -1021,13 +1021,21 @@ function getUpdatedResourceGain(project) {
   return updatedResourceGain;
 }
 
+function getAvailableProjectCostAmount(project, category, resource) {
+  const colonyAvailable = resources[category][resource].value;
+  if (project && project.attributes?.canUseSpaceStorage) {
+    const storageKey = resource === 'water' ? 'liquidWater' : resource;
+    const storageProj = projectManager?.projects?.spaceStorage;
+    return getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable);
+  }
+  return colonyAvailable;
+}
 
 function updateCostDisplay(project) {
   const elements = projectElements[project.name];
   if (elements && elements.costItems) {
     const cost = project.getScaledCost();
     let hasItem = false;
-    const storageProj = project.attributes?.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
     for (const key in elements.costItems) {
       const [category, resource] = key.split('.');
       const item = elements.costItems[key];
@@ -1035,9 +1043,7 @@ function updateCostDisplay(project) {
       if (requiredAmount > 0) {
         const hasPreviousItem = hasItem;
         hasItem = true;
-        const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const storageAmount = storageProj ? storageProj.getAvailableStoredResource(storageKey) : 0;
-        const availableAmount = (resources[category]?.[resource]?.value || 0) + storageAmount;
+        const availableAmount = getAvailableProjectCostAmount(project, category, resource);
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
@@ -1637,7 +1643,7 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
   for (const category in totalCost) {
     for (const resource in totalCost[category]) {
       const requiredAmount = totalCost[category][resource];
-      const availableAmount = resources[category]?.[resource]?.value || 0;
+      const availableAmount = getAvailableProjectCostAmount(project, category, resource);
 
       const resourceDisplayName = resources[category][resource].displayName ||
         resource.charAt(0).toUpperCase() + resource.slice(1);
