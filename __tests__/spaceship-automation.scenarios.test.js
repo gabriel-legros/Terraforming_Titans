@@ -507,4 +507,75 @@ describe('Spaceship automation scenarios', () => {
     expect(resources.special.spaceships.value).toBe(0);
     cleanup();
   });
+
+  it('keeps one-third ships unassigned when hydrogen is disabled but still present in mixed weighted entries', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 500000,
+      massDriverCount: 120000,
+      projects: {
+        oreSpaceMining: {},
+        siliconSpaceMining: {},
+        hydrogenSpaceMining: { enabled: false },
+      },
+    });
+    const massDriverTargetId = automation.getMassDriverAutomationId();
+    configurePreset(automation, {
+      mode: 'cappedMax',
+      entries: [
+        { projectId: massDriverTargetId, weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'oreSpaceMining', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'siliconSpaceMining', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'unassignedShips', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'hydrogenSpaceMining', weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    automation.applyAssignments();
+
+    expect(projects.oreSpaceMining.getAutomationShipCount()).toBe(166667);
+    expect(projects.siliconSpaceMining.getAutomationShipCount()).toBe(166667);
+    expect(projects.hydrogenSpaceMining.getAutomationShipCount()).toBe(0);
+    expect(projects.disposeResources.getAutomationShipCount()).toBe(0);
+    expect(buildings.massDriver.active).toBe(50000);
+    expect(resources.special.spaceships.value).toBe(166666);
+    cleanup();
+  });
+
+  it('keeps one-third ship-only allocation with disposal weight 10 and three weight-1 ship targets', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 500000,
+      massDriverCount: 1000000,
+      projects: {
+        oreSpaceMining: {},
+        siliconSpaceMining: {},
+      },
+    });
+    const massDriverTargetId = automation.getMassDriverAutomationId();
+    configurePreset(automation, {
+      mode: 'cappedMax',
+      entries: [
+        { projectId: massDriverTargetId, weight: 10, max: null, maxMode: 'absolute' },
+        { projectId: 'oreSpaceMining', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'siliconSpaceMining', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'unassignedShips', weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    automation.applyAssignments();
+
+    const lower = 166666;
+    const upper = 166667;
+    const metalShips = projects.oreSpaceMining.getAutomationShipCount();
+    const silicaShips = projects.siliconSpaceMining.getAutomationShipCount();
+    const unassignedShips = resources.special.spaceships.value;
+
+    expect(metalShips).toBeGreaterThanOrEqual(lower);
+    expect(metalShips).toBeLessThanOrEqual(upper);
+    expect(silicaShips).toBeGreaterThanOrEqual(lower);
+    expect(silicaShips).toBeLessThanOrEqual(upper);
+    expect(unassignedShips).toBeGreaterThanOrEqual(lower);
+    expect(unassignedShips).toBeLessThanOrEqual(upper);
+    expect(projects.disposeResources.getAutomationShipCount()).toBe(0);
+    cleanup();
+  });
 });

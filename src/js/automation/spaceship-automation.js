@@ -488,10 +488,6 @@ class SpaceshipAutomation {
     let remainingShipsOnly = totalShipsOnly;
     let remainingMassDriverEquivalency = massDriverCapacity;
     let remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
-    const getMixedStepPoolLimit = () => {
-      const cappedMassEquivalency = Math.min(remainingMassDriverEquivalency, remainingShipsOnly);
-      return remainingShipsOnly + cappedMassEquivalency;
-    };
     const getPoolAvailable = usesMassDrivers => usesMassDrivers
       ? remainingShipsOnly + remainingMassDriverEquivalency
       : remainingShipsOnly;
@@ -513,14 +509,31 @@ class SpaceshipAutomation {
     for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
       const step = preset.steps[stepIndex];
       const entries = step.entries;
-      const stepHasMassDrivers = entries.some(entry => entry.projectId === massDriverTargetId);
-      const stepHasNonMassEntries = entries.some(entry => entry.projectId !== massDriverTargetId);
+      let stepMassWeight = 0;
+      let stepNonMassWeight = 0;
+      for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+        const entry = entries[entryIndex];
+        if (entry.weight <= 0) continue;
+        const project = targets.find(item => item.name === entry.projectId);
+        if (!project) continue;
+        if (disabledTargetStates[entry.projectId] === true) continue;
+        if (entry.projectId === massDriverTargetId) {
+          stepMassWeight += entry.weight;
+        } else {
+          stepNonMassWeight += entry.weight;
+        }
+      }
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
       const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
-      const stepPoolLimit = stepHasMassDrivers
-        ? (stepHasNonMassEntries ? getMixedStepPoolLimit() : remainingTotal)
-        : remainingShipsOnly;
+      let stepPoolLimit = remainingShipsOnly;
+      if (stepMassWeight > 0 && stepNonMassWeight > 0) {
+        const weightedMassCap = Math.floor((remainingShipsOnly * stepMassWeight) / stepNonMassWeight);
+        const cappedMassEquivalency = Math.min(remainingMassDriverEquivalency, Math.max(0, weightedMassCap));
+        stepPoolLimit = remainingShipsOnly + cappedMassEquivalency;
+      } else if (stepMassWeight > 0) {
+        stepPoolLimit = remainingTotal;
+      }
       let stepLimit = stepPoolLimit;
       if (!isCappedMin && !isCappedMax) {
         stepLimit = limitValue === null ? 0 : Math.min(limitValue, stepPoolLimit);
@@ -606,45 +619,102 @@ class SpaceshipAutomation {
         const hasNonMassEntries = weightedEntries.some(item => !item.usesMassDrivers);
         const hasMassEntries = weightedEntries.some(item => item.usesMassDrivers);
         const passPoolLimit = hasNonMassEntries
-          ? (hasMassEntries ? getMixedStepPoolLimit() : remainingShipsOnly)
-          : (remainingShipsOnly + remainingMassDriverEquivalency);
+          ? (hasMassEntries ? remainingTotal : remainingShipsOnly)
+          : remainingTotal;
         const distributableRemaining = Math.min(stepRemaining, passPoolLimit);
         if (distributableRemaining <= 0) {
           break;
         }
 
-        const allocateFill = (budget) => {
-          let allocatedInPass = 0;
-          for (let wIndex = 0; wIndex < weightedEntries.length; wIndex += 1) {
-            const item = weightedEntries[wIndex];
-            const share = Math.floor(budget * (item.entry.weight / totalWeight));
-            if (share <= 0) continue;
-            const poolAvailable = getPoolAvailable(item.usesMassDrivers);
-            const applied = Math.min(share, item.remainingCapacity, poolAvailable);
-            if (applied > 0) {
-              consumePool(item.usesMassDrivers, applied);
-              desiredAssignments[item.project.name] = (desiredAssignments[item.project.name] || 0) + applied;
-              allocatedInPass += applied;
-            }
+        const allocateGroup = (groupEntries, budget) => {
+          if (budget <= 0 || groupEntries.length === 0) {
+            return 0;
           }
 
-          let remainder = budget - allocatedInPass;
+          const groupWeight = groupEntries.reduce((sum, item) => sum + item.entry.weight, 0);
+          if (groupWeight <= 0) {
+            return 0;
+          }
+
+          let allocatedInGroup = 0;
+          const allocations = [];
+          for (let groupIndex = 0; groupIndex < groupEntries.length; groupIndex += 1) {
+            const item = groupEntries[groupIndex];
+            const idealShare = budget * (item.entry.weight / groupWeight);
+            const share = Math.floor(idealShare);
+            const current = desiredAssignments[item.project.name] || 0;
+            const cap = this.computeEntryMax(item.entry, item.project);
+            const remainingCapacity = Math.max(0, cap - current);
+            const poolAvailable = getPoolAvailable(item.usesMassDrivers);
+            const applied = Math.min(share, remainingCapacity, poolAvailable);
+            if (applied > 0) {
+              consumePool(item.usesMassDrivers, applied);
+              desiredAssignments[item.project.name] = current + applied;
+              allocatedInGroup += applied;
+            }
+            allocations.push({
+              item,
+              fractional: idealShare - share
+            });
+          }
+
+          let remainder = budget - allocatedInGroup;
           if (remainder > 0) {
-            for (let wIndex = 0; wIndex < weightedEntries.length && remainder > 0; wIndex += 1) {
-              const item = weightedEntries[wIndex];
-              const poolAvailable = getPoolAvailable(item.usesMassDrivers);
-              if (poolAvailable <= 0) continue;
-              const current = desiredAssignments[item.project.name] || 0;
-              const cap = this.computeEntryMax(item.entry, item.project);
-              if (current < cap) {
-                const applied = consumePool(item.usesMassDrivers, 1);
+            allocations.sort((a, b) => b.fractional - a.fractional);
+            while (remainder > 0) {
+              let progressed = false;
+              for (let allocIndex = 0; allocIndex < allocations.length && remainder > 0; allocIndex += 1) {
+                const allocation = allocations[allocIndex];
+                const current = desiredAssignments[allocation.item.project.name] || 0;
+                const cap = this.computeEntryMax(allocation.item.entry, allocation.item.project);
+                if (current >= cap) continue;
+                const poolAvailable = getPoolAvailable(allocation.item.usesMassDrivers);
+                if (poolAvailable <= 0) continue;
+                const applied = consumePool(allocation.item.usesMassDrivers, 1);
                 if (applied <= 0) continue;
-                desiredAssignments[item.project.name] = current + 1;
-                allocatedInPass += 1;
+                desiredAssignments[allocation.item.project.name] = current + 1;
+                allocatedInGroup += 1;
                 remainder -= 1;
+                progressed = true;
+              }
+              if (!progressed) {
+                break;
               }
             }
           }
+
+          return allocatedInGroup;
+        };
+
+        const allocateFill = (budget) => {
+          if (budget <= 0) {
+            return 0;
+          }
+
+          if (!hasNonMassEntries || !hasMassEntries) {
+            return allocateGroup(weightedEntries, budget);
+          }
+
+          const nonMassEntries = weightedEntries.filter(item => !item.usesMassDrivers);
+          const massEntries = weightedEntries.filter(item => item.usesMassDrivers);
+          const nonMassWeight = nonMassEntries.reduce((sum, item) => sum + item.entry.weight, 0);
+          const nonMassBudgetTarget = Math.floor(budget * (nonMassWeight / totalWeight));
+          const nonMassBudget = Math.min(nonMassBudgetTarget, remainingShipsOnly);
+          let massBudget = budget - nonMassBudget;
+
+          let allocatedInPass = 0;
+          const nonMassAllocated = allocateGroup(nonMassEntries, nonMassBudget);
+          allocatedInPass += nonMassAllocated;
+          massBudget += Math.max(0, nonMassBudget - nonMassAllocated);
+
+          const massAllocated = allocateGroup(massEntries, massBudget);
+          allocatedInPass += massAllocated;
+
+          const massBudgetRemainder = Math.max(0, massBudget - massAllocated);
+          if (massBudgetRemainder > 0) {
+            allocatedInPass += allocateGroup(nonMassEntries, massBudgetRemainder);
+          }
+
           return allocatedInPass;
         };
 
