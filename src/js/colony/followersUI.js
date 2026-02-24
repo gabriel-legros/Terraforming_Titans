@@ -525,7 +525,7 @@ function buildFollowersUI() {
     'Believers in the Church of HOPE convert the current population exponentially.',
     'All colonists import bring population that respect the galactic believers %',
     'World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).',
-    'Once world believers reaches Galactic + 5 percentage points, galactic faith also rises at 1/250 speed.',
+    'Once world believers reaches Galactic + 5 percentage points, galactic faith also rises at 1/250 the % rate of world.',
     'On a Holy World, world faith can continue up to Galactic + 15 percentage points.',
     'After travelling, world count will join the galactic count.'
   ].join('\n');

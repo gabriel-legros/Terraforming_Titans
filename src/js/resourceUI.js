@@ -1133,6 +1133,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
       const resourceElement = entry ? entry.container : null;
       const resourceNameElement = entry ? entry.nameEl : null;
       const autobuildWarningEl = entry ? entry.autobuildWarningEl : null;
+      const allowRegularWarnings = category !== 'spaceStorage';
       if (category === 'spaceStorage') {
         updateSpaceStorageCapDisplay(entry, resourceName);
       }
@@ -1217,7 +1218,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         resourceNameElement.classList.remove('resource-electromagnetic-storm');
       }
 
-      if (resourceName === 'biomass' && entry.warningEl) {
+      if (allowRegularWarnings && resourceName === 'biomass' && entry.warningEl) {
         const zones = terraforming?.biomassDyingZones || {};
         const warningMessage = getBiomassWarningMessage(zones);
         const icon = warningMessage ? '⚠' : '';
@@ -1225,7 +1226,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
       }
 
-      if (resourceName === 'androids' && entry.warningEl) {
+      if (allowRegularWarnings && resourceName === 'androids' && entry.warningEl) {
         const land = resources.surface?.land;
         const warn =
           resourceObj.cap &&
@@ -1239,7 +1240,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
       }
 
-      if (entry.warningEl && resourceName !== 'biomass' && resourceName !== 'androids' && resourceName !== 'colonists') {
+      if (allowRegularWarnings && entry.warningEl && resourceName !== 'biomass' && resourceName !== 'androids' && resourceName !== 'colonists') {
         const limiter = lifeManager.biomassGrowthLimiters[resourceName];
         const limiterZones = limiter?.zones || [];
         const zoneText = limiterZones.length
@@ -1252,6 +1253,11 @@ function updateResourceDisplay(resources, deltaSeconds) {
         const icon = warningMessage ? '⚠' : '';
         if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
         if (entry.warningEl.title !== warningMessage) entry.warningEl.title = warningMessage;
+      }
+      if (!allowRegularWarnings && entry.warningEl) {
+        if (entry.warningEl.textContent !== '') entry.warningEl.textContent = '';
+        if (entry.warningEl.title !== '') entry.warningEl.title = '';
+        if (entry.warningEl.style.color) entry.warningEl.style.color = '';
       }
 
       if (resourceName === 'colonists') {
@@ -1599,12 +1605,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   if (warningDiv) {
     const warningInfo = warningDiv._info || {};
     const warningMessages = [];
+    const allowRegularWarnings = resource.category !== 'spaceStorage';
 
     if (resource.autobuildShortage) {
       warningMessages.push('Autobuild is short on required inputs for queued construction.');
     }
 
-    if (resource.name === 'androids') {
+    if (allowRegularWarnings && resource.name === 'androids') {
       let androidCapped = false;
       if (resource.cap && resource.value >= resource.cap) {
         if (typeof resources !== 'undefined') {
@@ -1619,7 +1626,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       }
     }
 
-    const limiter = lifeManager?.biomassGrowthLimiters?.[resource.name];
+    const limiter = allowRegularWarnings ? lifeManager?.biomassGrowthLimiters?.[resource.name] : null;
     if (limiter) {
       const limiterZones = limiter.zones || [];
       const zoneText = limiterZones.length
@@ -1629,7 +1636,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       warningMessages.push(`Biomass growth is limited by ${resource.displayName} availability${scopeSuffix}.`);
     }
 
-    if (resource.category === 'atmospheric' && resource.name === 'hydrogen') {
+    if (allowRegularWarnings && resource.category === 'atmospheric' && resource.name === 'hydrogen') {
       const gravityThreshold = (globalThis.HYDROGEN_ESCAPE_GRAVITY_THRESHOLD || 0);
       const atomicMultiplier = globalThis.HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER || 1;
       const atomicSpeedup = Math.round(1 / atomicMultiplier);
@@ -1659,13 +1666,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       warningMessages.push(hydrogenMessage);
     }
 
-    if (resource.name === 'biomass') {
+    if (allowRegularWarnings && resource.name === 'biomass') {
       const zones = terraforming?.biomassDyingZones || {};
       const biomassWarning = getBiomassWarningMessage(zones);
       if (biomassWarning) warningMessages.push(biomassWarning);
     }
 
-    if (resource.name === 'colonists') {
+    if (allowRegularWarnings && resource.name === 'colonists') {
       const { severity, message } = getAerostatLiftAlert();
       if (severity && message) {
         warningMessages.push(message);
