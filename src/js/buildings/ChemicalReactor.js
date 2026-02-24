@@ -176,13 +176,15 @@ class ChemicalReactor extends MultiRecipesBuilding {
     // Create a unique effect ID for this self-inflicted effect
     const effectId = 'chemistryOfScale_selfInflicted';
     const sourceId = 'chemistryOfScale';
+    const sourceName = 'Chemistry of Scale';
 
     // Apply production multiplier
     this.addAndReplace({
       type: 'productionMultiplier',
       value: multiplier,
       effectId: `${effectId}_production`,
-      sourceId: sourceId
+      sourceId: sourceId,
+      name: sourceName
     });
 
     // Apply consumption multiplier
@@ -190,7 +192,8 @@ class ChemicalReactor extends MultiRecipesBuilding {
       type: 'consumptionMultiplier',
       value: multiplier,
       effectId: `${effectId}_consumption`,
-      sourceId: sourceId
+      sourceId: sourceId,
+      name: sourceName
     });
   }
 
