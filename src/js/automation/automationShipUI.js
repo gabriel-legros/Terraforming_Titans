@@ -1,3 +1,50 @@
+let forceShipStepsRefresh = false;
+let shipPresetOptionsSignature = '';
+let shipStepsSignature = '';
+
+function getShipPresetOptionsSignature(automation) {
+  const parts = [String(automation.activePresetId || '')];
+  for (let index = 0; index < automation.presets.length; index += 1) {
+    const preset = automation.presets[index];
+    parts.push(`${preset.id}:${preset.name || ''}`);
+  }
+  return parts.join('|');
+}
+
+function getShipTargetsSignature(targets) {
+  const parts = [];
+  for (let index = 0; index < targets.length; index += 1) {
+    const target = targets[index];
+    const visible = target.isVisible ? target.isVisible() !== false : true;
+    const disabled = target.isPermanentlyDisabled ? target.isPermanentlyDisabled() : false;
+    parts.push(
+      `${target.name}:${target.displayName || target.name}:${target.enabled === false ? 0 : 1}:${target.unlocked === false ? 0 : 1}:${visible ? 1 : 0}:${disabled ? 1 : 0}`
+    );
+  }
+  return parts.join('|');
+}
+
+function getShipStepsSignature(automation, preset, targets) {
+  const disabledProjects = Array.from(automation.disabledProjects).sort().join(',');
+  if (!preset) {
+    return `none|disabled:${disabledProjects}|targets:${getShipTargetsSignature(targets)}`;
+  }
+  const stepParts = [];
+  for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
+    const step = preset.steps[stepIndex];
+    const limit = step.limit === null || step.limit === undefined ? '' : step.limit;
+    const entryParts = [];
+    for (let entryIndex = 0; entryIndex < step.entries.length; entryIndex += 1) {
+      const entry = step.entries[entryIndex];
+      entryParts.push(
+        `${entry.projectId}:${entry.weight}:${entry.maxMode || 'absolute'}:${entry.max === null || entry.max === undefined ? '' : entry.max}:${automation.disabledProjects.has(entry.projectId) ? 1 : 0}`
+      );
+    }
+    stepParts.push(`${step.id}:${step.mode || 'fill'}:${limit}:${entryParts.join(',')}`);
+  }
+  return `${preset.id}|${stepParts.join(';')}|disabled:${disabledProjects}|targets:${getShipTargetsSignature(targets)}`;
+}
+
 function buildAutomationShipUI() {
   const card = automationElements.shipAssignment || document.getElementById('automation-ship-assignment');
   if (!card) return;
@@ -75,7 +122,8 @@ function updateShipAutomationUI() {
   collapseButton.textContent = automation.collapsed ? '▶' : '▼';
 
   // Only rebuild preset dropdown if not currently focused
-  if (document.activeElement !== presetSelect) {
+  const presetSignature = getShipPresetOptionsSignature(automation);
+  if (document.activeElement !== presetSelect && presetSignature !== shipPresetOptionsSignature) {
     while (presetSelect.firstChild) presetSelect.removeChild(presetSelect.firstChild);
     automation.presets.forEach(preset => {
       const option = document.createElement('option');
@@ -86,6 +134,7 @@ function updateShipAutomationUI() {
       }
       presetSelect.appendChild(option);
     });
+    shipPresetOptionsSignature = presetSignature;
   }
 
   const activePreset = automation.getActivePreset();
@@ -102,11 +151,16 @@ function updateShipAutomationUI() {
   // Only rebuild steps if no dropdown/input within is focused
   const hasFocusedChild = stepsContainer.contains(document.activeElement) &&
     (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'INPUT');
-  if (!hasFocusedChild) {
+  const targets = automation.getAutomationTargets();
+  const nextStepsSignature = getShipStepsSignature(automation, activePreset, targets);
+  const needsStepsRefresh = forceShipStepsRefresh || nextStepsSignature !== shipStepsSignature;
+  if (needsStepsRefresh && (!hasFocusedChild || forceShipStepsRefresh)) {
     stepsContainer.textContent = '';
     if (activePreset) {
-      renderAutomationSteps(automation, activePreset, stepsContainer);
+      renderAutomationSteps(automation, activePreset, stepsContainer, targets);
     }
+    shipStepsSignature = nextStepsSignature;
+    forceShipStepsRefresh = false;
   }
   addStepButton.disabled = !activePreset || activePreset.steps.length >= 10;
 }
@@ -177,14 +231,15 @@ function attachAutomationHandlers() {
       const preset = automation.getActivePreset();
       if (!preset) return;
       automation.addStep(preset.id);
+      forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
   }
 }
 
-function renderAutomationSteps(automation, preset, container) {
-  const projects = automation.getAutomationTargets();
+function renderAutomationSteps(automation, preset, container, projectsOverride) {
+  const projects = projectsOverride || automation.getAutomationTargets();
 
   const formatProjectOption = (option, project) => {
     const label = project.displayName || project.name;
@@ -307,6 +362,7 @@ function renderAutomationSteps(automation, preset, container) {
     moveUp.disabled = stepIndex === 0;
     moveUp.addEventListener('click', () => {
       automation.moveStep(preset.id, step.id, -1);
+      forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
@@ -316,6 +372,7 @@ function renderAutomationSteps(automation, preset, container) {
     moveDown.disabled = stepIndex === preset.steps.length - 1;
     moveDown.addEventListener('click', () => {
       automation.moveStep(preset.id, step.id, 1);
+      forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
@@ -327,6 +384,7 @@ function renderAutomationSteps(automation, preset, container) {
     removeStep.title = 'Remove step';
     removeStep.addEventListener('click', () => {
       automation.removeStep(preset.id, step.id);
+      forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
@@ -365,6 +423,7 @@ function renderAutomationSteps(automation, preset, container) {
           return;
         }
         automation.updateEntry(preset.id, step.id, entry.projectId, { projectId: newId });
+        forceShipStepsRefresh = true;
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
@@ -464,6 +523,7 @@ function renderAutomationSteps(automation, preset, container) {
       remove.title = 'Remove project';
       remove.addEventListener('click', () => {
         automation.removeEntry(preset.id, step.id, entry.projectId);
+        forceShipStepsRefresh = true;
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
@@ -496,6 +556,7 @@ function renderAutomationSteps(automation, preset, container) {
       const selectedId = addSelect.value;
       if (!selectedId) return;
       automation.addEntry(preset.id, step.id, selectedId);
+      forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
