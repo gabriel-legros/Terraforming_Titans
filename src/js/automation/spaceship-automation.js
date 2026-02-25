@@ -734,19 +734,16 @@ class SpaceshipAutomation {
           let shipBudget = Math.min(remainingShipsOnly, shipCapacity, distributableRemaining);
           if (shipWeight > 0 && massWeight > 0 && shipBudget > 0) {
             const massCapacity = massEntries.reduce((sum, item) => sum + item.remainingCapacity, 0);
-            let desiredMassRatio = 0;
-            if (remainingMassDriverEquivalency > 0 && massCapacity > 0) {
-              desiredMassRatio = Math.min(massWeight / shipWeight, 1);
-            }
+            const desiredMassRatio = Math.min(massWeight / shipWeight, 1);
             if (desiredMassRatio > 0) {
               const budgetConstrainedShip = Math.floor(distributableRemaining / (1 + desiredMassRatio));
               shipBudget = Math.min(shipBudget, Math.max(0, budgetConstrainedShip));
-              const availableMassEquivalency = Math.min(remainingMassDriverEquivalency, massCapacity);
-              const massConstrainedShip = Math.floor(availableMassEquivalency / desiredMassRatio);
-              shipBudget = Math.min(shipBudget, Math.max(0, massConstrainedShip));
-              if (shipBudget <= 0) {
-                desiredMassRatio = 0;
-                shipBudget = Math.min(remainingShipsOnly, shipCapacity, distributableRemaining);
+              const projectedMassAtShipBudget = shipBudget * desiredMassRatio;
+              if (projectedMassAtShipBudget > remainingMassDriverEquivalency) {
+                const constrainedShipBudget = Math.floor(
+                  (remainingShipsOnly + remainingMassDriverEquivalency) / (1 + desiredMassRatio)
+                );
+                shipBudget = Math.min(shipBudget, Math.max(0, constrainedShipBudget));
               }
             }
 
@@ -761,7 +758,7 @@ class SpaceshipAutomation {
             }
             stepRemaining = Math.max(0, stepRemaining - allocatedInPass);
             remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
-            continue;
+            break;
           }
         }
         if (mode === 'cappedMin') {
