@@ -856,7 +856,7 @@ function ensureArtificialLayout() {
   const ringFluxInfo = document.createElement('span');
   ringFluxInfo.className = 'info-tooltip-icon';
   ringFluxInfo.innerHTML = '&#9432;';
-  ringFluxInfo.title = 'Stellar flux at the ringworld orbit (1200–1500 W/m²).';
+  ringFluxInfo.title = 'Stellar flux at the ringworld orbit (1200–1400 W/m²).';
   ringFluxText.appendChild(document.createTextNode(' '));
   ringFluxText.appendChild(ringFluxInfo);
   const ringFluxValue = document.createElement('span');
