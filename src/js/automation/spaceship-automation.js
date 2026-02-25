@@ -516,7 +516,11 @@ class SpaceshipAutomation {
         if (entry.weight <= 0) continue;
         const project = targets.find(item => item.name === entry.projectId);
         if (!project) continue;
+        if (!this.isProjectEnabled(project)) continue;
         if (disabledTargetStates[entry.projectId] === true) continue;
+        const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
+        const maxForEntry = this.computeEntryMax(entry, project);
+        if (maxForEntry <= currentTarget) continue;
         if (entry.projectId === massDriverTargetId) {
           stepMassWeight += entry.weight;
         } else {
@@ -791,13 +795,22 @@ class SpaceshipAutomation {
 
     let desiredMassDrivers = 0;
     if (useMassDriverMode) {
+      const preferMassDriversForMixedSteps = preset.steps.some(step =>
+        step.entries.some(entry => entry.projectId === massDriverTargetId)
+        && step.entries.some(entry => entry.projectId !== massDriverTargetId)
+      );
       const desiredMassDriverTarget = this.sanitizeShipCount(desiredAssignments[massDriverTargetId] || 0);
       const desiredShipOnlyTarget = this.sanitizeShipCount(desiredAssignments[massDriverProject.name] || 0);
       const massDriverEquivalency = this.getMassDriverEquivalency(massDriverProject);
       const maxMassDrivers = massDriverEquivalency > 0
         ? Math.floor(massDriverCapacity / massDriverEquivalency)
         : 0;
-      desiredMassDrivers = Math.min(maxMassDrivers, Math.floor(desiredMassDriverTarget / massDriverEquivalency));
+      const desiredMassDriverCount = massDriverEquivalency > 0
+        ? (preferMassDriversForMixedSteps
+          ? Math.ceil(desiredMassDriverTarget / massDriverEquivalency)
+          : Math.floor(desiredMassDriverTarget / massDriverEquivalency))
+        : 0;
+      desiredMassDrivers = Math.min(maxMassDrivers, desiredMassDriverCount);
       const desiredMassDriverEquivalency = desiredMassDrivers * massDriverEquivalency;
       desiredAssignments[massDriverProject.name] =
         desiredShipOnlyTarget + Math.max(0, desiredMassDriverTarget - desiredMassDriverEquivalency);
