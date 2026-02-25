@@ -8,6 +8,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     this.disableBelowCoverage = false;
     this.disableCoverageThreshold = 0;
     this.disposalLimitSettings = {};
+    this.disposalGroupData = null;
     this.pressureUnit = 'Pa';
   }
 
@@ -153,9 +154,20 @@ class SpaceExportBaseProject extends SpaceshipProject {
     return { groupList, groupMap, resourceGroupLookup, resourceMetaLookup };
   }
 
+  getDisposalGroupData() {
+    if (!this.disposalGroupData) {
+      this.disposalGroupData = this.buildDisposalGroupData();
+    }
+    return this.disposalGroupData;
+  }
+
   setDisposalSelection(elements, groupKey, resourceKey) {
     this.saveCurrentSelectionLimitSettings();
-    const group = elements.disposalGroupMap[groupKey];
+    const disposalGroupData = this.getDisposalGroupData();
+    const group = disposalGroupData.groupMap[groupKey];
+    if (!group) {
+      return;
+    }
     const options = group.options;
     if (elements.activeDisposalGroupKey !== groupKey) {
       elements.disposalPhaseSelect.textContent = '';
@@ -253,7 +265,8 @@ class SpaceExportBaseProject extends SpaceshipProject {
     const disposalPhaseSelect = document.createElement('select');
     disposalPhaseSelect.id = `${this.name}-disposal-phase-select`;
 
-    const disposalGroupData = this.buildDisposalGroupData();
+    this.disposalGroupData = this.buildDisposalGroupData();
+    const disposalGroupData = this.disposalGroupData;
     disposalGroupData.groupList.forEach((group) => {
       const option = document.createElement('option');
       option.value = group.key;
@@ -399,19 +412,51 @@ class SpaceExportBaseProject extends SpaceshipProject {
   }
 
   getSelectedDisposalMeta() {
-    const elements = projectElements[this.name];
     const selection = this.selectedDisposalResource;
-    if (!elements || !selection) {
+    if (!selection) {
       return null;
     }
     const selectionKey = `${selection.category}:${selection.resource}`;
-    const meta = elements.disposalResourceMetaLookup?.[selectionKey];
+    const disposalGroupData = this.getDisposalGroupData();
+    const meta = disposalGroupData.resourceMetaLookup?.[selectionKey];
     if (meta) {
       return meta;
     }
+    return this.getFallbackDisposalMeta(selection);
+  }
+
+  getFallbackDisposalMeta(selection) {
     if (selection.category === 'atmospheric') {
       return { phaseType: 'gas' };
     }
+    if (selection.category !== 'surface') {
+      return { phaseType: null };
+    }
+
+    const phaseGroups = this.getResourcePhaseGroups();
+    for (const groupKey in phaseGroups) {
+      const group = phaseGroups[groupKey];
+      if (!group?.options) {
+        continue;
+      }
+      const option = group.options.find((entry) =>
+        entry.category === selection.category && entry.resource === selection.resource
+      );
+      if (!option) {
+        continue;
+      }
+      if (group.surfaceKeys?.liquid === selection.resource) {
+        return { phaseType: 'liquid' };
+      }
+      if (
+        group.surfaceKeys?.ice === selection.resource ||
+        group.surfaceKeys?.buriedIce === selection.resource
+      ) {
+        return { phaseType: 'ice' };
+      }
+      break;
+    }
+
     return { phaseType: null };
   }
 

@@ -364,34 +364,46 @@ class ResourceCycle {
   redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {}
 
   finalizeAtmosphere({ available = 0, zonalChanges = {}, atmosphereKey, processes = [] }) {
-    let totalAtmosphericChange = 0;
+    const totalsByProcess = {};
+    const zonePotentialLoss = {};
     let totalPotentialLoss = 0;
+    let totalPositiveAtmosphericGain = 0;
 
     for (const zone in zonalChanges) {
       const change = zonalChanges[zone];
-      const atm = change.atmosphere?.[atmosphereKey] || 0;
-      if (atm < 0) {
-        totalPotentialLoss -= atm;
-      } else {
-        totalAtmosphericChange += atm;
+      const atmRaw = change.atmosphere?.[atmosphereKey] || 0;
+      let potentialLoss = 0;
+
+      for (const proc of processes) {
+        let potential;
+        if (proc.container === 'precipitation') {
+          potential = change.precipitation?.[proc.potentialKey];
+        } else {
+          potential = change[proc.potentialKey];
+        }
+        if (typeof potential !== 'number' || potential <= 0) continue;
+        potentialLoss += potential;
       }
+
+      zonePotentialLoss[zone] = potentialLoss;
+      totalPotentialLoss += potentialLoss;
+      totalPositiveAtmosphericGain += (atmRaw + potentialLoss);
     }
 
-    const scale = (available > 0 && totalPotentialLoss > available)
-      ? available / totalPotentialLoss
+    const availableForLoss = Math.max(0, available + totalPositiveAtmosphericGain);
+    const scale = (totalPotentialLoss > 0 && totalPotentialLoss > availableForLoss)
+      ? (availableForLoss / totalPotentialLoss)
       : 1;
 
-    const totalsByProcess = {};
-
+    let totalAtmosphericChange = 0;
     for (const zone in zonalChanges) {
       const change = zonalChanges[zone];
-      const atm = change.atmosphere?.[atmosphereKey] || 0;
-      const zoneScale = atm < 0 ? scale : 1;
-      if (atm < 0) {
-        const scaled = atm * scale;
-        change.atmosphere[atmosphereKey] = scaled;
-        totalAtmosphericChange += scaled;
-      }
+      const atmRaw = change.atmosphere?.[atmosphereKey] || 0;
+      const potentialLoss = zonePotentialLoss[zone] || 0;
+      const preventedLoss = potentialLoss * (1 - scale);
+      const adjustedAtmosphericChange = atmRaw + preventedLoss;
+      change.atmosphere[atmosphereKey] = adjustedAtmosphericChange;
+      totalAtmosphericChange += adjustedAtmosphericChange;
 
       for (const proc of processes) {
         let potential;
@@ -401,7 +413,7 @@ class ResourceCycle {
           potential = change[proc.potentialKey];
         }
         if (typeof potential !== 'number') continue;
-        const actual = potential * zoneScale;
+        const actual = potential * scale;
         if (proc.container === 'precipitation') {
           if (!change.precipitation) change.precipitation = {};
           change.precipitation[proc.precipitationKey] = actual;
@@ -525,9 +537,11 @@ class ResourceCycle {
       if (!change || !change[surfaceBucket]) continue;
       const zoneStore = container[zone] || (container[zone] = {});
       for (const [state, amount] of Object.entries(change[surfaceBucket])) {
-        zoneStore[state] = (zoneStore[state] || 0) + amount;
-        if (zoneStore[state] < 0) zoneStore[state] = 0;
-        totals[state] = (totals[state] || 0) + amount;
+        const before = zoneStore[state] || 0;
+        let after = before + amount;
+        if (after < 0) after = 0;
+        zoneStore[state] = after;
+        totals[state] = (totals[state] || 0) + (after - before);
       }
     }
     return totals;
@@ -538,13 +552,28 @@ class ResourceCycle {
     const data = this.calculateZonalChanges(terraforming, zones, options);
 
     if (typeof this.surfaceFlowFn === 'function') {
+      const zonalKey = options.zonalKey || this.zonalKey;
+      const bucket = options.surfaceBucket || this.surfaceBucket;
+      const baseContainer = terraforming[zonalKey] || {};
+      const projectedContainer = {};
+      for (const zone of zones) {
+        const baseZone = baseContainer[zone] || {};
+        const projectedZone = { ...baseZone };
+        const phaseChange = data.zonalChanges[zone]?.[bucket] || {};
+        for (const [state, amount] of Object.entries(phaseChange)) {
+          projectedZone[state] = Math.max(0, (projectedZone[state] || 0) + amount);
+        }
+        projectedContainer[zone] = projectedZone;
+      }
+      const flowTerraforming = Object.create(terraforming);
+      flowTerraforming[zonalKey] = projectedContainer;
+
       const tempMap = {};
       for (const z of zones) {
         tempMap[z] = terraforming.temperature.zones[z]?.value;
       }
-      const flow = this.surfaceFlowFn(terraforming, duration, tempMap) || {};
+      const flow = this.surfaceFlowFn(flowTerraforming, duration, tempMap) || {};
       const flowChanges = flow.changes || {};
-      const bucket = options.surfaceBucket || this.surfaceBucket;
       for (const [zone, change] of Object.entries(flowChanges)) {
         const dest = data.zonalChanges[zone] || (data.zonalChanges[zone] = {});
         const bucketDest = dest[bucket] || (dest[bucket] = {});

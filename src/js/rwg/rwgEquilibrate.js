@@ -121,7 +121,28 @@
         const initialValue = entry.initialValue || 0;
         res[cat][key] = {
           value: initialValue,
-          modifyRate: function() {},
+          productionRateByType: {},
+          consumptionRateByType: {},
+          modifyRate: function(value, source, rateType) {
+            if (!(value > 0) && !(value < 0)) {
+              return;
+            }
+            const typeKey = rateType || 'unknown';
+            const sourceKey = source || 'Unknown';
+            if (value > 0) {
+              const prod = this.productionRateByType;
+              if (!prod[typeKey]) {
+                prod[typeKey] = {};
+              }
+              prod[typeKey][sourceKey] = (prod[typeKey][sourceKey] || 0) + value;
+              return;
+            }
+            const cons = this.consumptionRateByType;
+            if (!cons[typeKey]) {
+              cons[typeKey] = {};
+            }
+            cons[typeKey][sourceKey] = (cons[typeKey][sourceKey] || 0) - value;
+          },
           zonalConfig: entry.zonalConfig,
         };
       }

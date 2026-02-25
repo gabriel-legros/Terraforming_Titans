@@ -4,7 +4,7 @@ const { JSDOM, ResourceLoader } = require('jsdom');
 const shouldRunTempTest = process.env.RUN_TEMP_EQ_TEST === '1';
 const runIt = shouldRunTempTest ? it : it.skip;
 
-const SEED = '1982065114|planet|icy-moon|hz-mid';
+const SEED = process.env.TEMP_EQ_SEED || '1982065114|planet|icy-moon|hz-mid';
 const FULL_TIMER_MS = 90_000;
 
 class GameResourceLoader extends ResourceLoader {
