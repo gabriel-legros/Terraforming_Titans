@@ -44,8 +44,10 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     if (maxCollectors === Infinity) {
       return;
     }
-    if (this.collectors > maxCollectors) {
-      this.collectors = maxCollectors;
+    // Preserve legacy saves that already exceed the current cap.
+    if (this.collectors >= maxCollectors) {
+      this.fractionalCollectors = 0;
+      return;
     }
     const remaining = maxCollectors - this.collectors;
     if (remaining <= 0) {
