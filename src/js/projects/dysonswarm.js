@@ -23,6 +23,40 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     this.lastCollectorColonyCost = null;
   }
 
+  getCollectorCost() {
+    return this.collectorCost;
+  }
+
+  getMaxCollectors() {
+    return Infinity;
+  }
+
+  getCollectorHeadroom() {
+    const maxCollectors = this.getMaxCollectors();
+    if (maxCollectors === Infinity) {
+      return Infinity;
+    }
+    return Math.max(maxCollectors - (this.collectors + this.fractionalCollectors), 0);
+  }
+
+  clampCollectorTotals() {
+    const maxCollectors = this.getMaxCollectors();
+    if (maxCollectors === Infinity) {
+      return;
+    }
+    if (this.collectors > maxCollectors) {
+      this.collectors = maxCollectors;
+    }
+    const remaining = maxCollectors - this.collectors;
+    if (remaining <= 0) {
+      this.fractionalCollectors = 0;
+      return;
+    }
+    if (this.fractionalCollectors > remaining) {
+      this.fractionalCollectors = remaining;
+    }
+  }
+
   isCollectorContinuous() {
     return this.collectorDuration < this.continuousThreshold;
   }
@@ -54,10 +88,14 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
   canStartCollector() {
     if (this.collectorProgress > 0) return false;
+    const headroom = this.getCollectorHeadroom();
+    if (headroom <= 0) return false;
+    if (!this.isCollectorContinuous() && headroom < 1) return false;
+    const collectorCost = this.getCollectorCost();
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
-    for (const cat in this.collectorCost) {
-      for (const res in this.collectorCost[cat]) {
-        const required = this.collectorCost[cat][res];
+    for (const cat in collectorCost) {
+      for (const res in collectorCost[cat]) {
+        const required = collectorCost[cat][res];
         const key = res === 'water' ? 'liquidWater' : res;
         const colonyAvailable = resources[cat][res].value;
         const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
@@ -69,10 +107,11 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
   deductCollectorResources() {
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const collectorCost = this.getCollectorCost();
     const colonyCost = {};
-    for (const cat in this.collectorCost) {
-      for (const res in this.collectorCost[cat]) {
-        const amount = this.collectorCost[cat][res];
+    for (const cat in collectorCost) {
+      for (const res in collectorCost[cat]) {
+        const amount = collectorCost[cat][res];
         let colonyUsed = amount;
         if (storageProj) {
           const key = res === 'water' ? 'liquidWater' : res;
@@ -127,6 +166,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       if (this.collectorProgress <= 0) {
         this.collectorProgress = 0;
         this.collectors += 1;
+        this.clampCollectorTotals();
         if (this.autoContinuousOperation && (this.isCompleted || this.collectors > 0)) this.startCollector();
       }
     } else if (this.autoContinuousOperation && (this.isCompleted || this.collectors > 0)) {
@@ -144,20 +184,34 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       if (!this.isCompleted && this.collectors === 0) {
         return totals;
       }
+      const headroom = this.getCollectorHeadroom();
+      if (headroom <= 0) {
+        return totals;
+      }
       if (!this.canStartCollector()) {
         return totals;
       }
 
       const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+      const collectorCost = this.getCollectorCost();
       const duration = this.collectorDuration;
       const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
       const fraction = deltaTime / duration;
+      const desiredCollectorGain = fraction * productivity;
+      if (desiredCollectorGain <= 0) {
+        return totals;
+      }
+      const collectorGain = Math.min(desiredCollectorGain, headroom);
+      if (collectorGain <= 0) {
+        return totals;
+      }
+      const gainScale = collectorGain / desiredCollectorGain;
       
-      for (const category in this.collectorCost) {
+      for (const category in collectorCost) {
         if (!totals.cost[category]) totals.cost[category] = {};
-        for (const resource in this.collectorCost[category]) {
-          const baseCost = this.collectorCost[category][resource];
-          const tickAmount = baseCost * fraction * (applyRates ? productivity : 1);
+        for (const resource in collectorCost[category]) {
+          const baseCost = collectorCost[category][resource];
+          const tickAmount = baseCost * fraction * (applyRates ? productivity * gainScale : 1);
           if (applyRates && resources[category]?.[resource]) {
             const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
             const colonyAvailable = resources[category][resource].value + pending;
@@ -188,7 +242,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
             }
           }
           totals.cost[category][resource] =
-            (totals.cost[category][resource] || 0) + baseCost * fraction;
+            (totals.cost[category][resource] || 0) + baseCost * fraction * gainScale;
         }
       }
       return totals;
@@ -228,22 +282,38 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     if (!this.isCompleted && this.collectors === 0) {
       return;
     }
+    const headroom = this.getCollectorHeadroom();
+    if (headroom <= 0) {
+      this.clampCollectorTotals();
+      return;
+    }
 
     this.collectorShortfallLastTick = false;
     if (!this.canStartCollector()) {
       this.collectorShortfallLastTick = true;
       return;
     }
+    const collectorCost = this.getCollectorCost();
     const duration = this.collectorDuration;
     const fraction = deltaTime / duration;
+    const desiredCollectorGain = fraction * productivity;
+    if (desiredCollectorGain <= 0) {
+      return;
+    }
+    const collectorGain = Math.min(desiredCollectorGain, headroom);
+    if (collectorGain <= 0) {
+      this.clampCollectorTotals();
+      return;
+    }
+    const gainScale = collectorGain / desiredCollectorGain;
 
     // Check if we have enough resources
     let shortfall = false;
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
     
-    for (const category in this.collectorCost) {
-      for (const resource in this.collectorCost[category]) {
-        const amount = this.collectorCost[category][resource] * fraction * productivity;
+    for (const category in collectorCost) {
+      for (const resource in collectorCost[category]) {
+        const amount = collectorCost[category][resource] * fraction * productivity * gainScale;
         const colonyAvailable = resources[category]?.[resource]?.value || 0;
         const key = resource === 'water' ? 'liquidWater' : resource;
         const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
@@ -254,9 +324,9 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     }
 
     // Deduct resources proportionally
-    for (const category in this.collectorCost) {
-      for (const resource in this.collectorCost[category]) {
-        const amount = this.collectorCost[category][resource] * fraction * productivity;
+    for (const category in collectorCost) {
+      for (const resource in collectorCost[category]) {
+        const amount = collectorCost[category][resource] * fraction * productivity * gainScale;
         
         if (storageProj) {
           const key = resource === 'water' ? 'liquidWater' : resource;
@@ -293,7 +363,6 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     }
 
     // Add fractional collectors
-    const collectorGain = fraction * productivity;
     this.fractionalCollectors += collectorGain;
     
     // Convert fractional collectors to whole collectors
@@ -302,6 +371,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       this.fractionalCollectors -= wholeCollectors;
       this.collectors += wholeCollectors;
     }
+    this.clampCollectorTotals();
 
     this.collectorShortfallLastTick = shortfall;
     

@@ -1,7 +1,69 @@
+const DYSON_POWER_PER_SPHERE = 2e25;
+const DYSON_MAX_SPHERE_COUNT = 100_000_000_000;
+const DYSON_OVERFLOW_SUPERALLOY_COST = 2_500_000;
+
 class DysonSphereProject extends DysonSwarmReceiverProject {
   constructor(config, name) {
     super(config, name);
     this.baseCollectorDuration = Math.max(1, this.baseCollectorDuration / 100);
+  }
+
+  isAdditionalSpheresUnlocked() {
+    return this.isBooleanFlagSet('additionalDysonSpheres');
+  }
+
+  getAllowedMaxSphereCount() {
+    return this.isAdditionalSpheresUnlocked() ? DYSON_MAX_SPHERE_COUNT : 1;
+  }
+
+  getMaximumPowerValue() {
+    return DYSON_POWER_PER_SPHERE * this.getAllowedMaxSphereCount();
+  }
+
+  getTotalCollectorPower() {
+    return (this.collectors || 0) * (this.energyPerCollector || 0);
+  }
+
+  getDysonSphereCount() {
+    if (!this.isCompleted) {
+      return 0;
+    }
+    const power = this.getTotalCollectorPower();
+    if (power <= 0) {
+      return 1;
+    }
+    return Math.max(1, Math.ceil(power / DYSON_POWER_PER_SPHERE));
+  }
+
+  getMaxCollectors() {
+    const perCollector = this.energyPerCollector || 0;
+    if (perCollector <= 0) {
+      return 0;
+    }
+    return this.getMaximumPowerValue() / perCollector;
+  }
+
+  shouldApplyOverflowSurcharge() {
+    if (!this.isAdditionalSpheresUnlocked()) {
+      return false;
+    }
+    return this.getTotalCollectorPower() >= DYSON_POWER_PER_SPHERE;
+  }
+
+  getCollectorCost() {
+    const baseCost = super.getCollectorCost();
+    if (!this.shouldApplyOverflowSurcharge()) {
+      return baseCost;
+    }
+    const adjusted = {};
+    for (const category in baseCost) {
+      adjusted[category] = { ...baseCost[category] };
+    }
+    if (!adjusted.colony) {
+      adjusted.colony = {};
+    }
+    adjusted.colony.superalloys = (adjusted.colony.superalloys || 0) + DYSON_OVERFLOW_SUPERALLOY_COST;
+    return adjusted;
   }
 
   absorbSwarmCollectors() {
@@ -13,6 +75,7 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
     const transferred = swarm.collectors || 0;
     if (transferred > 0) {
       this.collectors += transferred;
+      this.clampCollectorTotals();
       swarm.collectors = 0;
     }
     if (typeof swarm.applyPermanentProjectDisable === 'function') {
@@ -41,6 +104,11 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
       return false;
     }
     return super.canStartCollector();
+  }
+
+  update(delta) {
+    super.update(delta);
+    this.clampCollectorTotals();
   }
 
   renderUI(container) {

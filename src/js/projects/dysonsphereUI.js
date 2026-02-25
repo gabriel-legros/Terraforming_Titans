@@ -17,15 +17,19 @@ function renderDysonSphereUI(project, container) {
       <span class="card-title">Dyson Sphere Collectors</span>
     </div>
     <div class="card-body">
-      <div class="stats-grid four-col">
+      <div class="stats-grid three-col">
         <div class="stat-item"><span class="stat-label">Collectors:</span><span id="dsph-collectors"></span></div>
         <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="dsph-power-per"></span></div>
         <div class="stat-item"><span class="stat-label">Total Power:</span><span id="dsph-total-power"></span></div>
-        <div class="stat-item"><span class="stat-label">Frame:</span><span id="dsph-frame"></span></div>
+      </div>
+      <div class="stats-grid three-col">
+        <div class="stat-item"><span class="stat-label">Sphere Count:</span><span id="dsph-sphere-count"></span></div>
+        <div class="stat-item"><span class="stat-label">Max Spheres:</span><span id="dsph-max-spheres"></span></div>
+        <div class="stat-item"><span class="stat-label">Max Power:</span><span id="dsph-max-power"></span></div>
       </div>
       <div class="stats-grid two-col collector-cost-container">
         <div class="stat-item">
-          <span class="stat-label">Collector Cost:</span>
+          <span class="stat-label" id="dsph-collector-cost-label">Collector Cost:</span>
           <span id="dsph-collector-cost"></span>
         </div>
         <div class="stat-item">
@@ -47,6 +51,18 @@ function renderDysonSphereUI(project, container) {
   const autoCheckbox = card.querySelector('#dsph-auto');
   const travelResetCheckbox = card.querySelector('#dsph-auto-travel-reset');
   const startButton = card.querySelector('#dsph-start');
+  const collectorCostLabel = card.querySelector('#dsph-collector-cost-label');
+  let collectorCostTooltipContent = null;
+  if (collectorCostLabel && typeof attachDynamicInfoTooltip === 'function') {
+    const collectorCostInfo = document.createElement('span');
+    collectorCostInfo.className = 'info-tooltip-icon';
+    collectorCostInfo.innerHTML = '&#9432;';
+    collectorCostLabel.appendChild(collectorCostInfo);
+    collectorCostTooltipContent = attachDynamicInfoTooltip(
+      collectorCostInfo,
+      'After the first sphere worth of power (2e25), Dyson Sphere collector expansion adds a fixed superalloy cost per collector.'
+    );
+  }
 
   projectElements[project.name] = {
     ...projectElements[project.name],
@@ -54,8 +70,11 @@ function renderDysonSphereUI(project, container) {
     collectorsDisplay: card.querySelector('#dsph-collectors'),
     powerPerDisplay: card.querySelector('#dsph-power-per'),
     totalPowerDisplay: card.querySelector('#dsph-total-power'),
-    frameStatusDisplay: card.querySelector('#dsph-frame'),
+    sphereCountDisplay: card.querySelector('#dsph-sphere-count'),
+    maxSpheresDisplay: card.querySelector('#dsph-max-spheres'),
+    maxPowerDisplay: card.querySelector('#dsph-max-power'),
     costDisplay: card.querySelector('#dsph-collector-cost'),
+    costTooltipContent: collectorCostTooltipContent,
     expansionRateDisplay: card.querySelector('#dsph-expansion-rate'),
     startButton,
     autoCheckbox,
@@ -85,9 +104,12 @@ function updateCollectorCostDisplay(project, costDisplay) {
   const items = [];
   const attributes = project.attributes || {};
   const storageProj = attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
+  const collectorCost = typeof project.getCollectorCost === 'function'
+    ? project.getCollectorCost()
+    : project.collectorCost;
 
-  for (const category in project.collectorCost) {
-    const categoryCost = project.collectorCost[category];
+  for (const category in collectorCost) {
+    const categoryCost = collectorCost[category];
     for (const resource in categoryCost) {
       const resourceData = resources[category][resource];
       const displayName = resourceData.displayName || `${resource.charAt(0).toUpperCase()}${resource.slice(1)}`;
@@ -144,7 +166,22 @@ function updateDysonSphereUI(project) {
   els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 2);
   const total = project.energyPerCollector * collectors;
   els.totalPowerDisplay.textContent = formatNumber(total, false, 2);
-  els.frameStatusDisplay.textContent = project.isCompleted ? 'Complete' : 'Incomplete';
+  if (els.sphereCountDisplay) {
+    const count = typeof project.getDysonSphereCount === 'function' ? project.getDysonSphereCount() : 0;
+    els.sphereCountDisplay.textContent = formatNumber(count, false, 2);
+  }
+  if (els.maxSpheresDisplay) {
+    const maxSpheres = typeof project.getAllowedMaxSphereCount === 'function'
+      ? project.getAllowedMaxSphereCount()
+      : 1;
+    els.maxSpheresDisplay.textContent = formatNumber(maxSpheres, false, 2);
+  }
+  if (els.maxPowerDisplay) {
+    const maxPower = typeof project.getMaximumPowerValue === 'function'
+      ? project.getMaximumPowerValue()
+      : 0;
+    els.maxPowerDisplay.textContent = formatNumber(maxPower, false, 2);
+  }
 
   if (els.costDisplay) {
     updateCollectorCostDisplay(project, els.costDisplay);
@@ -172,7 +209,7 @@ function updateDysonSphereUI(project) {
     els.collectorAutoStartTravelResetCheckbox.disabled = !(project.unlocked || project.collectors > 0);
   }
   if (els.totalPowerDisplay) {
-    els.totalPowerDisplay.parentElement.style.display = (project.unlocked && project.isCompleted) ? '' : 'none';
+    els.totalPowerDisplay.parentElement.style.display = '';
   }
 
   if (!els.startButton) {

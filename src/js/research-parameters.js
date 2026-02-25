@@ -2301,6 +2301,16 @@ const researchParameters = {
         ]
       },
       {
+        id: 'additional_dyson_spheres',
+        name: 'Additional Dyson Spheres',
+        description: 'Raises Dyson Sphere expansion beyond a single sphere up to 100 billion spheres, with extra superalloy requirements once exceeding 1 sphere worth of power.',
+        cost: { advancedResearch: 5_000_000_000 },
+        prerequisites: ['dyson_sphere'],
+        effects: [
+          { target: 'project', targetId: 'dysonSphere', type: 'booleanFlag', flagId: 'additionalDysonSpheres', value: true }
+        ]
+      },
+      {
         id: 'nanotechnology_recycling',
         name: 'Nanotechnology recycling',
         description: 'Enables nanobots to recycle waste materials, substituting junk for silica consumption, scrap metal for metal consumption, and trash for biomass consumption.',
