@@ -164,7 +164,7 @@ function updateDysonSphereUI(project) {
   const collectors = project.collectors || 0;
   els.collectorsDisplay.textContent = formatNumber(collectors, false, 2);
   els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 2);
-  const total = project.energyPerCollector * collectors;
+  const total = project.getTotalCollectorPower();
   els.totalPowerDisplay.textContent = formatNumber(total, false, 2);
   if (els.sphereCountDisplay) {
     const count = typeof project.getDysonSphereCount === 'function' ? project.getDysonSphereCount() : 0;
@@ -187,10 +187,11 @@ function updateDysonSphereUI(project) {
     updateCollectorCostDisplay(project, els.costDisplay);
   }
   if (els.expansionRateDisplay) {
+    const atOrOverMax = project.getCollectorHeadroom() <= 0;
     const active = project.isCollectorContinuous()
       ? project.autoContinuousOperation && (project.isCompleted || collectors > 0)
       : project.collectorProgress > 0;
-    const rate = active ? (1000 / project.collectorDuration) : 0;
+    const rate = (!atOrOverMax && active) ? (1000 / project.collectorDuration) : 0;
     els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
   }
 

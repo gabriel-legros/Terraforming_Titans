@@ -34,8 +34,15 @@ class DysonManager {
   }
 
   getSphereEnergyPerSecond() {
-    const collectors = this.getSphereCollectorCount();
-    const perCollector = this.getSphereEnergyPerCollector();
+    const sphereProject = this.getSphereProject();
+    if (!sphereProject) {
+      return 0;
+    }
+    if (sphereProject.getTotalCollectorPower) {
+      return Math.max(sphereProject.getTotalCollectorPower(), 0);
+    }
+    const collectors = sphereProject.collectors || 0;
+    const perCollector = sphereProject.energyPerCollector || 0;
     return Math.max(collectors * perCollector, 0);
   }
 

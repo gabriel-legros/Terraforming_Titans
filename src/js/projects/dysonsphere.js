@@ -20,8 +20,12 @@ class DysonSphereProject extends DysonSwarmReceiverProject {
     return DYSON_POWER_PER_SPHERE * this.getAllowedMaxSphereCount();
   }
 
-  getTotalCollectorPower() {
+  getRawCollectorPower() {
     return (this.collectors || 0) * (this.energyPerCollector || 0);
+  }
+
+  getTotalCollectorPower() {
+    return Math.min(this.getRawCollectorPower(), this.getMaximumPowerValue());
   }
 
   getDysonSphereCount() {

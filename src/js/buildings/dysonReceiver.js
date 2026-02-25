@@ -5,7 +5,9 @@ class DysonReceiver extends Building {
     const swarmCollectors = swarm?.collectors || 0;
     const sphereCollectors = sphere?.isCompleted ? (sphere.collectors || 0) : 0;
     const swarmEnergy = swarmCollectors * (swarm?.energyPerCollector || 0);
-    const sphereEnergy = sphereCollectors * (sphere?.energyPerCollector || 0);
+    const sphereEnergy = sphere?.isCompleted
+      ? (sphere.getTotalCollectorPower ? sphere.getTotalCollectorPower() : sphereCollectors * (sphere?.energyPerCollector || 0))
+      : 0;
     return {
       swarmCollectors,
       sphereCollectors,
