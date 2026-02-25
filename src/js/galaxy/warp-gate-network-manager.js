@@ -188,11 +188,11 @@ class WarpGateNetworkManager extends EffectableEntity {
   }
 
   getGalaxyCap(resourceKey) {
-    const summary = this.getGalaxyResourceSummary(resourceKey);
+    const summary = this.getGalaxyBreakdown();
     if (summary.fullControlCount <= 0) {
       return IMPORT_CAP_PER_SECTOR * getImportCapRatio(resourceKey);
     }
-    return summary.cap;
+    return summary.resources[resourceKey].cap;
   }
 
   getCapSummaryText() {
@@ -316,14 +316,6 @@ class WarpGateNetworkManager extends EffectableEntity {
     this.breakdownCache = summary;
     this.breakdownDirty = false;
     return this.breakdownCache;
-  }
-
-  getGalaxyResourceSummary(resourceKey) {
-    const summary = this.getGalaxyBreakdown();
-    return {
-      fullControlCount: summary.fullControlCount,
-      ...summary.resources[resourceKey],
-    };
   }
 
   getWarpGateMultiplier(sector) {

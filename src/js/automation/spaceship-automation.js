@@ -488,6 +488,10 @@ class SpaceshipAutomation {
     let remainingShipsOnly = totalShipsOnly;
     let remainingMassDriverEquivalency = massDriverCapacity;
     let remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
+    const getMixedStepPoolLimit = () => {
+      const cappedMassEquivalency = Math.min(remainingMassDriverEquivalency, remainingShipsOnly);
+      return remainingShipsOnly + cappedMassEquivalency;
+    };
     const getPoolAvailable = usesMassDrivers => usesMassDrivers
       ? remainingShipsOnly + remainingMassDriverEquivalency
       : remainingShipsOnly;
@@ -509,35 +513,14 @@ class SpaceshipAutomation {
     for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
       const step = preset.steps[stepIndex];
       const entries = step.entries;
-      let stepMassWeight = 0;
-      let stepNonMassWeight = 0;
-      for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
-        const entry = entries[entryIndex];
-        if (entry.weight <= 0) continue;
-        const project = targets.find(item => item.name === entry.projectId);
-        if (!project) continue;
-        if (!this.isProjectEnabled(project)) continue;
-        if (disabledTargetStates[entry.projectId] === true) continue;
-        const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
-        const maxForEntry = this.computeEntryMax(entry, project);
-        if (maxForEntry <= currentTarget) continue;
-        if (entry.projectId === massDriverTargetId) {
-          stepMassWeight += entry.weight;
-        } else {
-          stepNonMassWeight += entry.weight;
-        }
-      }
+      const stepHasMassDrivers = entries.some(entry => entry.projectId === massDriverTargetId);
+      const stepHasNonMassEntries = entries.some(entry => entry.projectId !== massDriverTargetId);
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
       const limitValue = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(step.limit);
-      let stepPoolLimit = remainingShipsOnly;
-      if (stepMassWeight > 0 && stepNonMassWeight > 0) {
-        const weightedMassCap = Math.floor((remainingShipsOnly * stepMassWeight) / stepNonMassWeight);
-        const cappedMassEquivalency = Math.min(remainingMassDriverEquivalency, Math.max(0, weightedMassCap));
-        stepPoolLimit = remainingShipsOnly + cappedMassEquivalency;
-      } else if (stepMassWeight > 0) {
-        stepPoolLimit = remainingTotal;
-      }
+      const stepPoolLimit = stepHasMassDrivers
+        ? (stepHasNonMassEntries ? getMixedStepPoolLimit() : remainingTotal)
+        : remainingShipsOnly;
       let stepLimit = stepPoolLimit;
       if (!isCappedMin && !isCappedMax) {
         stepLimit = limitValue === null ? 0 : Math.min(limitValue, stepPoolLimit);
@@ -623,102 +606,45 @@ class SpaceshipAutomation {
         const hasNonMassEntries = weightedEntries.some(item => !item.usesMassDrivers);
         const hasMassEntries = weightedEntries.some(item => item.usesMassDrivers);
         const passPoolLimit = hasNonMassEntries
-          ? (hasMassEntries ? remainingTotal : remainingShipsOnly)
-          : remainingTotal;
+          ? (hasMassEntries ? getMixedStepPoolLimit() : remainingShipsOnly)
+          : (remainingShipsOnly + remainingMassDriverEquivalency);
         const distributableRemaining = Math.min(stepRemaining, passPoolLimit);
         if (distributableRemaining <= 0) {
           break;
         }
 
-        const allocateGroup = (groupEntries, budget) => {
-          if (budget <= 0 || groupEntries.length === 0) {
-            return 0;
-          }
-
-          const groupWeight = groupEntries.reduce((sum, item) => sum + item.entry.weight, 0);
-          if (groupWeight <= 0) {
-            return 0;
-          }
-
-          let allocatedInGroup = 0;
-          const allocations = [];
-          for (let groupIndex = 0; groupIndex < groupEntries.length; groupIndex += 1) {
-            const item = groupEntries[groupIndex];
-            const idealShare = budget * (item.entry.weight / groupWeight);
-            const share = Math.floor(idealShare);
-            const current = desiredAssignments[item.project.name] || 0;
-            const cap = this.computeEntryMax(item.entry, item.project);
-            const remainingCapacity = Math.max(0, cap - current);
+        const allocateFill = (budget) => {
+          let allocatedInPass = 0;
+          for (let wIndex = 0; wIndex < weightedEntries.length; wIndex += 1) {
+            const item = weightedEntries[wIndex];
+            const share = Math.floor(budget * (item.entry.weight / totalWeight));
+            if (share <= 0) continue;
             const poolAvailable = getPoolAvailable(item.usesMassDrivers);
-            const applied = Math.min(share, remainingCapacity, poolAvailable);
+            const applied = Math.min(share, item.remainingCapacity, poolAvailable);
             if (applied > 0) {
               consumePool(item.usesMassDrivers, applied);
-              desiredAssignments[item.project.name] = current + applied;
-              allocatedInGroup += applied;
+              desiredAssignments[item.project.name] = (desiredAssignments[item.project.name] || 0) + applied;
+              allocatedInPass += applied;
             }
-            allocations.push({
-              item,
-              fractional: idealShare - share
-            });
           }
 
-          let remainder = budget - allocatedInGroup;
+          let remainder = budget - allocatedInPass;
           if (remainder > 0) {
-            allocations.sort((a, b) => b.fractional - a.fractional);
-            while (remainder > 0) {
-              let progressed = false;
-              for (let allocIndex = 0; allocIndex < allocations.length && remainder > 0; allocIndex += 1) {
-                const allocation = allocations[allocIndex];
-                const current = desiredAssignments[allocation.item.project.name] || 0;
-                const cap = this.computeEntryMax(allocation.item.entry, allocation.item.project);
-                if (current >= cap) continue;
-                const poolAvailable = getPoolAvailable(allocation.item.usesMassDrivers);
-                if (poolAvailable <= 0) continue;
-                const applied = consumePool(allocation.item.usesMassDrivers, 1);
+            for (let wIndex = 0; wIndex < weightedEntries.length && remainder > 0; wIndex += 1) {
+              const item = weightedEntries[wIndex];
+              const poolAvailable = getPoolAvailable(item.usesMassDrivers);
+              if (poolAvailable <= 0) continue;
+              const current = desiredAssignments[item.project.name] || 0;
+              const cap = this.computeEntryMax(item.entry, item.project);
+              if (current < cap) {
+                const applied = consumePool(item.usesMassDrivers, 1);
                 if (applied <= 0) continue;
-                desiredAssignments[allocation.item.project.name] = current + 1;
-                allocatedInGroup += 1;
+                desiredAssignments[item.project.name] = current + 1;
+                allocatedInPass += 1;
                 remainder -= 1;
-                progressed = true;
-              }
-              if (!progressed) {
-                break;
               }
             }
           }
-
-          return allocatedInGroup;
-        };
-
-        const allocateFill = (budget) => {
-          if (budget <= 0) {
-            return 0;
-          }
-
-          if (!hasNonMassEntries || !hasMassEntries) {
-            return allocateGroup(weightedEntries, budget);
-          }
-
-          const nonMassEntries = weightedEntries.filter(item => !item.usesMassDrivers);
-          const massEntries = weightedEntries.filter(item => item.usesMassDrivers);
-          const nonMassWeight = nonMassEntries.reduce((sum, item) => sum + item.entry.weight, 0);
-          const nonMassBudgetTarget = Math.floor(budget * (nonMassWeight / totalWeight));
-          const nonMassBudget = Math.min(nonMassBudgetTarget, remainingShipsOnly);
-          let massBudget = budget - nonMassBudget;
-
-          let allocatedInPass = 0;
-          const nonMassAllocated = allocateGroup(nonMassEntries, nonMassBudget);
-          allocatedInPass += nonMassAllocated;
-          massBudget += Math.max(0, nonMassBudget - nonMassAllocated);
-
-          const massAllocated = allocateGroup(massEntries, massBudget);
-          allocatedInPass += massAllocated;
-
-          const massBudgetRemainder = Math.max(0, massBudget - massAllocated);
-          if (massBudgetRemainder > 0) {
-            allocatedInPass += allocateGroup(nonMassEntries, massBudgetRemainder);
-          }
-
           return allocatedInPass;
         };
 
@@ -795,22 +721,13 @@ class SpaceshipAutomation {
 
     let desiredMassDrivers = 0;
     if (useMassDriverMode) {
-      const preferMassDriversForMixedSteps = preset.steps.some(step =>
-        step.entries.some(entry => entry.projectId === massDriverTargetId)
-        && step.entries.some(entry => entry.projectId !== massDriverTargetId)
-      );
       const desiredMassDriverTarget = this.sanitizeShipCount(desiredAssignments[massDriverTargetId] || 0);
       const desiredShipOnlyTarget = this.sanitizeShipCount(desiredAssignments[massDriverProject.name] || 0);
       const massDriverEquivalency = this.getMassDriverEquivalency(massDriverProject);
       const maxMassDrivers = massDriverEquivalency > 0
         ? Math.floor(massDriverCapacity / massDriverEquivalency)
         : 0;
-      const desiredMassDriverCount = massDriverEquivalency > 0
-        ? (preferMassDriversForMixedSteps
-          ? Math.ceil(desiredMassDriverTarget / massDriverEquivalency)
-          : Math.floor(desiredMassDriverTarget / massDriverEquivalency))
-        : 0;
-      desiredMassDrivers = Math.min(maxMassDrivers, desiredMassDriverCount);
+      desiredMassDrivers = Math.min(maxMassDrivers, Math.floor(desiredMassDriverTarget / massDriverEquivalency));
       const desiredMassDriverEquivalency = desiredMassDrivers * massDriverEquivalency;
       desiredAssignments[massDriverProject.name] =
         desiredShipOnlyTarget + Math.max(0, desiredMassDriverTarget - desiredMassDriverEquivalency);
