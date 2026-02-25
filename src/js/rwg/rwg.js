@@ -1306,14 +1306,18 @@ function buildZonalDistributions(type, Teq, surface, landHa, rng, params) {
 
   const liquidWater = surface.liquidWater?.initialValue || 0;
   const ice = surface.ice?.initialValue || 0;
+  const iceTotal = Math.max(0, ice);
   const liquidWaterSplit = distribute(liquidWater, warmBias, rng);
-  const iceSplit = distributeIceWithAllIceRule(ice, liquidWater, coldBias, frac, rng);
+  let buriedFactor = params.zonal.buriedFactorByType[type];
+  if (!Number.isFinite(buriedFactor) || buriedFactor < 0) buriedFactor = 0;
+
+  // Treat buriedFactor as buried:surface ratio and partition one fixed ice pool.
+  const surfaceIceTotal = iceTotal / (1 + buriedFactor);
+  const buriedTotal = Math.max(0, iceTotal - surfaceIceTotal);
+  const iceSplit = distributeIceWithAllIceRule(surfaceIceTotal, liquidWater, coldBias, frac, rng);
   assignSplit('liquidWater', liquidWaterSplit);
   assignSplit('ice', iceSplit);
 
-  let buriedFactor = params.zonal.buriedFactorByType[type];
-  if (!Number.isFinite(buriedFactor)) buriedFactor = 0.5;
-  const buriedTotal = ice * buriedFactor;
   const buriedBias = {
     tropical: 1.0 * (frac.tropical || 0),
     temperate: 1.0 * (frac.temperate || 0),
