@@ -57,6 +57,17 @@ body {
     margin-bottom: 10px;
 }
 
+.tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabs .tab {
+    flex: 1 0 140px;
+}
+
 .buildings-subtabs,
 .colonies-subtabs,
 .research-subtabs,
