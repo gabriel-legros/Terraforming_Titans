@@ -278,23 +278,28 @@
             this.manufacturingAssignments[key] = 0;
           });
         } else {
-          const remainders = [];
-          let assigned = 0;
-          autoKeys.forEach((key) => {
-            const exact = remaining * (this.autoAssignWeights[key] / totalWeight);
-            const floorValue = Math.floor(exact);
+        const remainders = [];
+        let assigned = 0;
+        autoKeys.forEach((key) => {
+          const exact = remaining * (this.autoAssignWeights[key] / totalWeight);
+          const floorValue = Math.floor(exact);
             this.manufacturingAssignments[key] = floorValue;
             assigned += floorValue;
             remainders.push({ key, value: exact - floorValue });
           });
-          let leftover = remaining - assigned;
-          remainders.sort((left, right) => right.value - left.value);
-          for (let i = 0; i < remainders.length && leftover > 0; i += 1) {
-            this.manufacturingAssignments[remainders[i].key] += 1;
-            leftover -= 1;
-          }
+        let leftover = remaining - assigned;
+        remainders.sort((left, right) => right.value - left.value);
+        for (let i = 0; i < remainders.length && leftover > 0; i += 1) {
+          this.manufacturingAssignments[remainders[i].key] += 1;
+          leftover -= 1;
+        }
+        if (leftover > 0 && autoKeys.length > 0) {
+          // At very large values, floating-point rounding can leave a larger residual.
+          // Force-assign the remaining residual so auto-allocation fully consumes budget.
+          this.manufacturingAssignments[autoKeys[0]] += leftover;
         }
       }
+    }
 
       let assignedTotal = keys.reduce((sum, key) => sum + (this.manufacturingAssignments[key] || 0), 0);
       if (assignedTotal > total) {

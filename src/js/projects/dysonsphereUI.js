@@ -60,7 +60,7 @@ function renderDysonSphereUI(project, container) {
     collectorCostLabel.appendChild(collectorCostInfo);
     collectorCostTooltipContent = attachDynamicInfoTooltip(
       collectorCostInfo,
-      'After the first sphere worth of power (5e25), Dyson Sphere collector expansion adds a fixed superalloy cost per collector.'
+      'After the first sphere worth of power (5e25), Dyson Sphere collector expansion adds a fixed superalloy cost per collector to build additional frames.'
     );
   }
 
