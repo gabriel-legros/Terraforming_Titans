@@ -57,9 +57,65 @@ function updateSpaceStorageCapDisplay(entry, resourceKey) {
   entry.rowEl.classList.toggle('no-cap', !showCap);
   entry.slashEl.style.display = showCap ? '' : 'none';
   entry.capWrapperEl.style.display = showCap ? '' : 'none';
+  entry.capEl.classList.remove('resource-cap-limited');
   if (showCap) {
     entry.capEl.textContent = formatNumber(capLimit);
   }
+}
+
+function createSpaceStorageTotalElement() {
+  const resourceElement = document.createElement('div');
+  resourceElement.classList.add('resource-item');
+  resourceElement.id = 'space-storage-total-container';
+  resourceElement.innerHTML = `
+      <div class="resource-row">
+        <div class="resource-name"><strong id="space-storage-total-name">Total</strong></div>
+        <div class="resource-value" id="space-storage-total-value-resources-container">0</div>
+        <div class="resource-slash">/</div>
+        <div class="resource-cap"><span id="space-storage-total-cap-resources-container">0</span></div>
+        <div class="resource-pps"></div>
+      </div>
+  `;
+  return resourceElement;
+}
+
+function ensureSpaceStorageTotalElement(container) {
+  if (!container) return;
+  let totalElement = document.getElementById('space-storage-total-container');
+  if (!totalElement) {
+    totalElement = createSpaceStorageTotalElement();
+  }
+  if (container.firstChild !== totalElement) {
+    container.insertBefore(totalElement, container.firstChild);
+  }
+}
+
+function cacheSpaceStorageTotalEntry() {
+  resourceUICache.spaceStorageTotal = {
+    container: document.getElementById('space-storage-total-container'),
+    rowEl: document.querySelector('#space-storage-total-container .resource-row'),
+    valueEl: document.getElementById('space-storage-total-value-resources-container'),
+    capEl: document.getElementById('space-storage-total-cap-resources-container')
+  };
+  return resourceUICache.spaceStorageTotal;
+}
+
+function setResourceCapLimited(entry, isLimited) {
+  if (!entry || !entry.capEl) return;
+  entry.capEl.classList.toggle('resource-cap-limited', isLimited === true);
+}
+
+function shouldShowCapLimitedWithCooldown(timerKey, isLimited, frameDelta) {
+  const timers = resourceUICache.capLimitTimers || (resourceUICache.capLimitTimers = {});
+  let timer = timers[timerKey] || 0;
+  const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
+  if (isLimited) {
+    timer = 1;
+  } else if (timer > 0) {
+    timer = Math.max(0, timer - elapsed);
+  }
+  timers[timerKey] = timer;
+  return isLimited || timer > 0;
 }
 
 function getTooltipTimeCapForResource(resource) {
@@ -1069,6 +1125,9 @@ function populateResourceElements(resources) {
     const container = document.getElementById(containerId);
 
     if (container) {
+      if (category === 'spaceStorage') {
+        ensureSpaceStorageTotalElement(container);
+      }
       for (const resourceName in resources[category]) {
         const resourceObj = resources[category][resourceName];
         if (!document.getElementById(`${resourceName}-container`)) {
@@ -1088,6 +1147,9 @@ function unlockResource(resource) {
     const container = document.getElementById(containerId);
 
     if (container) {
+      if (resource.category === 'spaceStorage') {
+        ensureSpaceStorageTotalElement(container);
+      }
       // Use helper function to create the resource element
       const resourceElement = createResourceElement(resource.category, resource, resource.name);
       container.appendChild(resourceElement);
@@ -1126,6 +1188,35 @@ function updateResourceDisplay(resources, deltaSeconds) {
     }
 
     let hasUnlockedResources = false;
+    let spaceStorageTotalEntry = null;
+    let spaceStorageTotalCapLimited = false;
+    let spaceStorageTotalHeadroom = 0;
+    let spaceStorageTotalOpenPositiveRate = 0;
+    if (category === 'spaceStorage') {
+      spaceStorageTotalEntry = resourceUICache.spaceStorageTotal || cacheSpaceStorageTotalEntry();
+      const storageProject = getSpaceStorageProjectForResourceUI();
+      let usedStorage = 0;
+      if (storageProject) {
+        if (storageProject.reconcileUsedStorage) {
+          storageProject.reconcileUsedStorage();
+        }
+        usedStorage = Math.max(0, storageProject.usedStorage || 0);
+      } else {
+        for (const resourceKey in resources.spaceStorage) {
+          const stored = Number(resources.spaceStorage[resourceKey]?.value);
+          usedStorage += Number.isFinite(stored) && stored > 0 ? stored : 0;
+        }
+      }
+      const maxStorage = storageProject ? Math.max(0, storageProject.maxStorage || 0) : 0;
+      spaceStorageTotalHeadroom = Math.max(0, maxStorage - usedStorage);
+      if (spaceStorageTotalEntry?.valueEl) {
+        spaceStorageTotalEntry.valueEl.textContent = formatNumber(usedStorage);
+      }
+      if (spaceStorageTotalEntry?.capEl) {
+        spaceStorageTotalEntry.capEl.textContent = formatNumber(maxStorage);
+      }
+      setResourceCapLimited(spaceStorageTotalEntry, false);
+    }
 
     for (const resourceName in resources[category]) {
       const resourceObj = resources[category][resourceName];
@@ -1177,6 +1268,21 @@ function updateResourceDisplay(resources, deltaSeconds) {
         if (resourceElement) resourceElement.style.display = 'block';
       } else {
         if (resourceElement) resourceElement.style.display = 'none';
+      }
+
+      if (category === 'spaceStorage') {
+        const consumptionDisplay = getDisplayConsumptionRates(resourceObj);
+        const netRate = resourceObj.productionRate - consumptionDisplay.total;
+        const positiveRate = netRate > 1e-9;
+        const capLimit = getSpaceStorageResourceCapDisplay(resourceName);
+        const resourceCapRemaining = Number.isFinite(capLimit) ? (capLimit - resourceObj.value) : Infinity;
+        const resourceCapLimitedNow = positiveRate && Number.isFinite(capLimit) && netRate > resourceCapRemaining;
+        const resourceCapLimited = shouldShowCapLimitedWithCooldown(`spaceStorage:${resourceName}`, resourceCapLimitedNow, frameDelta);
+        setResourceCapLimited(entry, resourceCapLimited);
+        const hasResourceHeadroom = !Number.isFinite(capLimit) || resourceCapRemaining > 0;
+        if (resourceObj.unlocked && positiveRate && hasResourceHeadroom) {
+          spaceStorageTotalOpenPositiveRate += netRate;
+        }
       }
 
       if (resourceObj.isBooleanFlagSet('festival') && resourceNameElement) {
@@ -1343,6 +1449,14 @@ function updateResourceDisplay(resources, deltaSeconds) {
     }
 
     // Reveal the category header if any resources in the category are unlocked
+    if (category === 'spaceStorage') {
+      const totalCapLimitedNow = spaceStorageTotalOpenPositiveRate > spaceStorageTotalHeadroom;
+      spaceStorageTotalCapLimited = shouldShowCapLimitedWithCooldown('spaceStorage:total', totalCapLimitedNow, frameDelta);
+    }
+    if (category === 'spaceStorage' && spaceStorageTotalEntry?.container) {
+      spaceStorageTotalEntry.container.style.display = hasUnlockedResources ? 'block' : 'none';
+      setResourceCapLimited(spaceStorageTotalEntry, hasUnlockedResources && spaceStorageTotalCapLimited);
+    }
     if (hasUnlockedResources) {
       categoryContainer.style.display = 'block'; // Show category container
       if (header) header.style.display = 'block'; // Show header
@@ -1877,6 +1991,8 @@ function capitalizeFirstLetter(string) {
 const resourceUICache = {
   categories: {}, // { [category]: { container, header } }
   resources: {},  // { [resourceName]: { container, nameEl, autobuildWarningEl, warningEl, valueEl, capEl, ppsEl, availableEl, totalEl, scanEl, tooltip: {...} } }
+  spaceStorageTotal: null,
+  capLimitTimers: {},
   smallValueTimers: {},
   unstableTimers: {},
   warningTimers: {},
@@ -1931,6 +2047,9 @@ function cacheResourceElements(resources) {
   for (const category in resources) {
     if (!shouldRenderResourceCategory(category)) continue;
     cacheResourceCategory(category);
+    if (category === 'spaceStorage') {
+      cacheSpaceStorageTotalEntry();
+    }
     const items = resources[category];
     for (const resourceName in items) {
       cacheSingleResource(category, resourceName);
@@ -1941,6 +2060,8 @@ function cacheResourceElements(resources) {
 function invalidateResourceUICache() {
   resourceUICache.categories = {};
   resourceUICache.resources = {};
+  resourceUICache.spaceStorageTotal = null;
+  resourceUICache.capLimitTimers = {};
   resourceUICache.smallValueTimers = {};
   resourceUICache.unstableTimers = {};
   resourceUICache.warningTimers = {};

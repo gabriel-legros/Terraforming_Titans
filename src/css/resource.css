@@ -35,6 +35,10 @@
   .resource-cap {
     text-align: left; /* Left-align caps */
   }
+
+  .resource-cap-limited {
+    color: orange;
+  }
   
   .resource-pps {
     text-align: right; /* Right-align pps */
