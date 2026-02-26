@@ -289,7 +289,8 @@ class LifeDesign {
     if (effectiveDose <= 0) {
       return 0;
     }
-    return lifeRadiationPenaltyFromDose(effectiveDose);
+    // Convert 0..1 inhibition into 0..2 so severe radiation can push net growth negative.
+    return lifeRadiationPenaltyFromDose(effectiveDose) * 2;
   }
 
   // Method to copy attributes from another LifeDesign
@@ -1044,8 +1045,10 @@ class LifeManager extends EffectableEntity {
     });
 
     const potentialGrowthByZone = {};
+    const radiationDecayByZone = {};
     zones.forEach(zoneName => {
       potentialGrowthByZone[zoneName] = 0;
+      radiationDecayByZone[zoneName] = 0;
     });
     let totalPotentialGrowth = 0;
 
@@ -1078,11 +1081,15 @@ class LifeManager extends EffectableEntity {
         : 0;
       const tempMultiplier = design.temperatureGrowthMultiplierZone(zoneName);
       const actualGrowthRate = zonalMaxGrowthRate * logisticFactor * tempMultiplier * growthFactor;
-      const potentialBiomassIncrease = zonalBiomass * actualGrowthRate * secondsMultiplier;
+      const potentialBiomassDelta = zonalBiomass * actualGrowthRate * secondsMultiplier;
+      if (potentialBiomassDelta <= 0) {
+        radiationDecayByZone[zoneName] = Math.min(zonalBiomass, -potentialBiomassDelta);
+        return;
+      }
 
-      let maxBySurfaceInputs = potentialBiomassIncrease;
+      let maxBySurfaceInputs = potentialBiomassDelta;
       let limitingSurfaceKey = '';
-      let limitingSurfaceValue = potentialBiomassIncrease;
+      let limitingSurfaceValue = potentialBiomassDelta;
       surfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
         const requiredPerBiomass = -coef;
         let available = 0;
@@ -1100,7 +1107,7 @@ class LifeManager extends EffectableEntity {
           }
         }
       });
-      if (limitingSurfaceKey && limitingSurfaceValue < potentialBiomassIncrease) {
+      if (limitingSurfaceKey && limitingSurfaceValue < potentialBiomassDelta) {
         addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface');
       }
 
@@ -1216,12 +1223,16 @@ class LifeManager extends EffectableEntity {
     zones.forEach(zoneName => {
       const zonalBiomass = biomassByZone[zoneName];
       if (zonalBiomass <= 0) return;
+      let targetDecay = radiationDecayByZone[zoneName] || 0;
       const penaltyFraction = design.temperatureSurvivalPenalty(zoneName);
-      if (penaltyFraction <= 0) return;
-      const decayFactor = 0.01 * penaltyFraction;
-      const percentDecayAmount = zonalBiomass * decayFactor * secondsMultiplier;
-      const minDecayAmount = requirements.minimumBiomassDecayRateTPerS * secondsMultiplier * penaltyFraction;
-      const targetDecay = Math.min(zonalBiomass, Math.max(percentDecayAmount, minDecayAmount));
+      if (penaltyFraction > 0) {
+        const decayFactor = 0.01 * penaltyFraction;
+        const percentDecayAmount = zonalBiomass * decayFactor * secondsMultiplier;
+        const minDecayAmount = requirements.minimumBiomassDecayRateTPerS * secondsMultiplier * penaltyFraction;
+        targetDecay += Math.max(percentDecayAmount, minDecayAmount);
+      }
+      if (targetDecay <= 0) return;
+      targetDecay = Math.min(zonalBiomass, targetDecay);
       decayTargetsByZone[zoneName] = targetDecay;
       totalDecayTarget += targetDecay;
     });

@@ -163,6 +163,11 @@
   gap: 6px;
 }
 
+.automation-order-buttons {
+  display: flex;
+  gap: 4px;
+}
+
 .automation-steps {
   display: flex;
   flex-direction: column;
@@ -323,6 +328,7 @@
 }
 
 .automation-preset-buttons button,
+.automation-order-buttons button,
 .automation-step-header button,
 .automation-entry button {
   border: 1px solid #c4cad7;
@@ -333,7 +339,13 @@
   transition: background 0.12s ease, transform 0.08s ease;
 }
 
+.automation-order-buttons button {
+  min-width: 28px;
+  padding: 4px 8px;
+}
+
 .automation-preset-buttons button:hover,
+.automation-order-buttons button:hover,
 .automation-step-header button:hover,
 .automation-entry button:hover,
 .automation-collapse:hover {

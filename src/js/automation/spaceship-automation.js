@@ -133,6 +133,17 @@ class SpaceshipAutomation {
     return preset.id;
   }
 
+  movePreset(id, direction) {
+    const index = this.presets.findIndex(item => item.id === id);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= this.presets.length) {
+      return false;
+    }
+    const [preset] = this.presets.splice(index, 1);
+    this.presets.splice(nextIndex, 0, preset);
+    return true;
+  }
+
   deletePreset(id) {
     const index = this.presets.findIndex(item => item.id === id);
     if (index === -1) return;

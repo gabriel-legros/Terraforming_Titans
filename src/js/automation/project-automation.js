@@ -92,6 +92,17 @@ class ProjectAutomation {
     assignment.enabled = !!enabled;
   }
 
+  moveCombination(id, direction) {
+    const index = this.combinations.findIndex(combo => combo.id === id);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= this.combinations.length) {
+      return false;
+    }
+    const [combo] = this.combinations.splice(index, 1);
+    this.combinations.splice(nextIndex, 0, combo);
+    return true;
+  }
+
   addCombination(name, assignments) {
     const id = this.nextCombinationId++;
     const combo = {
@@ -142,6 +153,17 @@ class ProjectAutomation {
     const preset = this.buildPreset(name, projectIds, options);
     this.presets.push(preset);
     return preset.id;
+  }
+
+  movePreset(id, direction) {
+    const index = this.presets.findIndex(preset => preset.id === id);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= this.presets.length) {
+      return false;
+    }
+    const [preset] = this.presets.splice(index, 1);
+    this.presets.splice(nextIndex, 0, preset);
+    return true;
   }
 
   updatePreset(id, name, projectIds, options = {}) {

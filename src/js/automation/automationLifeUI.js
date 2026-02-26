@@ -92,6 +92,8 @@ function buildAutomationLifeUI() {
   automationElements.lifeCollapseButton = header.collapse;
   automationElements.lifePanelBody = body;
   automationElements.lifePresetSelect = presetRow.presetSelect;
+  automationElements.lifePresetMoveUpButton = presetRow.presetMoveUp;
+  automationElements.lifePresetMoveDownButton = presetRow.presetMoveDown;
   automationElements.lifePresetNameInput = presetRow.presetName;
   automationElements.lifeNewPresetButton = presetRow.newPreset;
   automationElements.lifeDeletePresetButton = presetRow.deletePreset;
@@ -116,6 +118,8 @@ function updateLifeAutomationUI() {
     lifePanelBody,
     lifeCollapseButton,
     lifePresetSelect,
+    lifePresetMoveUpButton,
+    lifePresetMoveDownButton,
     lifePresetNameInput,
     lifeNewPresetButton,
     lifeDeletePresetButton,
@@ -163,6 +167,9 @@ function updateLifeAutomationUI() {
     lifePresetNameInput.value = activePreset.name || '';
   }
   setAutomationToggleState(lifeEnablePresetCheckbox, !!activePreset.enabled);
+  const activePresetIndex = automation.presets.findIndex(preset => preset.id === activePreset.id);
+  lifePresetMoveUpButton.disabled = activePresetIndex <= 0;
+  lifePresetMoveDownButton.disabled = activePresetIndex >= automation.presets.length - 1;
   setAutomationToggleState(lifePurchaseEnableCheckbox, activePreset.purchaseEnabled !== false);
   setAutomationToggleState(lifeDesignEnableCheckbox, activePreset.designEnabled !== false);
   if (document.activeElement !== lifeDeployInput) {
@@ -199,6 +206,8 @@ function updateLifeAutomationUI() {
 function attachLifeAutomationHandlers() {
   const {
     lifePresetSelect,
+    lifePresetMoveUpButton,
+    lifePresetMoveDownButton,
     lifePresetNameInput,
     lifeNewPresetButton,
     lifeDeletePresetButton,
@@ -220,6 +229,20 @@ function attachLifeAutomationHandlers() {
     const automation = automationManager.lifeAutomation;
     const preset = automation.getActivePreset();
     automation.renamePreset(preset.id, event.target.value || '');
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  lifePresetMoveUpButton.addEventListener('click', () => {
+    const automation = automationManager.lifeAutomation;
+    const preset = automation.getActivePreset();
+    automation.movePreset(preset.id, -1);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  lifePresetMoveDownButton.addEventListener('click', () => {
+    const automation = automationManager.lifeAutomation;
+    const preset = automation.getActivePreset();
+    automation.movePreset(preset.id, 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

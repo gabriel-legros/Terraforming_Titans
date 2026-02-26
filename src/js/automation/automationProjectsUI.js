@@ -44,6 +44,17 @@ function buildAutomationProjectsUI() {
   builderRow.classList.add('project-automation-row', 'building-automation-row');
   const presetSelect = document.createElement('select');
   presetSelect.classList.add('project-automation-builder-select');
+  const presetMoveButtons = document.createElement('div');
+  presetMoveButtons.classList.add('automation-order-buttons');
+  const presetMoveUpButton = document.createElement('button');
+  presetMoveUpButton.textContent = '↑';
+  presetMoveUpButton.title = 'Move preset up';
+  presetMoveUpButton.classList.add('project-automation-builder-move-up');
+  const presetMoveDownButton = document.createElement('button');
+  presetMoveDownButton.textContent = '↓';
+  presetMoveDownButton.title = 'Move preset down';
+  presetMoveDownButton.classList.add('project-automation-builder-move-down');
+  presetMoveButtons.append(presetMoveUpButton, presetMoveDownButton);
   const presetNameInput = document.createElement('input');
   presetNameInput.type = 'text';
   presetNameInput.placeholder = 'Preset name';
@@ -60,7 +71,7 @@ function buildAutomationProjectsUI() {
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = 'Apply Once Now';
   applyOnceButton.classList.add('project-automation-builder-apply-once');
-  builderRow.append(presetSelect, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
+  builderRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
   builderSection.appendChild(builderRow);
 
   const builderModeRow = document.createElement('div');
@@ -144,6 +155,17 @@ function buildAutomationProjectsUI() {
   applyCombinationButton.classList.add('project-automation-apply-combination', 'building-automation-apply-combination');
   const combinationSelect = document.createElement('select');
   combinationSelect.classList.add('project-automation-combination-select');
+  const combinationMoveButtons = document.createElement('div');
+  combinationMoveButtons.classList.add('automation-order-buttons');
+  const combinationMoveUpButton = document.createElement('button');
+  combinationMoveUpButton.textContent = '↑';
+  combinationMoveUpButton.title = 'Move combination up';
+  combinationMoveUpButton.classList.add('project-automation-combination-move-up');
+  const combinationMoveDownButton = document.createElement('button');
+  combinationMoveDownButton.textContent = '↓';
+  combinationMoveDownButton.title = 'Move combination down';
+  combinationMoveDownButton.classList.add('project-automation-combination-move-down');
+  combinationMoveButtons.append(combinationMoveUpButton, combinationMoveDownButton);
   const combinationNameInput = document.createElement('input');
   combinationNameInput.type = 'text';
   combinationNameInput.placeholder = 'Combination name';
@@ -159,6 +181,7 @@ function buildAutomationProjectsUI() {
   combinationDeleteButton.classList.add('project-automation-combination-delete');
   combinationRow.append(
     combinationSelect,
+    combinationMoveButtons,
     combinationNameInput,
     combinationNewButton,
     combinationSaveButton,
@@ -185,6 +208,8 @@ function buildAutomationProjectsUI() {
   automationElements.projectsCollapseButton = header.collapse;
   automationElements.projectsPanelBody = body;
   automationElements.projectsBuilderPresetSelect = presetSelect;
+  automationElements.projectsBuilderMoveUpButton = presetMoveUpButton;
+  automationElements.projectsBuilderMoveDownButton = presetMoveDownButton;
   automationElements.projectsBuilderPresetNameInput = presetNameInput;
   automationElements.projectsBuilderNewButton = newButton;
   automationElements.projectsBuilderSaveButton = saveButton;
@@ -202,6 +227,8 @@ function buildAutomationProjectsUI() {
   automationElements.projectsApplyNextTravelSelect = applyNextTravelSelect;
   automationElements.projectsApplyNextTravelPersistToggle = applyNextTravelPersistToggle;
   automationElements.projectsCombinationSelect = combinationSelect;
+  automationElements.projectsCombinationMoveUpButton = combinationMoveUpButton;
+  automationElements.projectsCombinationMoveDownButton = combinationMoveDownButton;
   automationElements.projectsCombinationNameInput = combinationNameInput;
   automationElements.projectsCombinationNewButton = combinationNewButton;
   automationElements.projectsCombinationSaveButton = combinationSaveButton;
@@ -220,6 +247,8 @@ function updateProjectsAutomationUI() {
     projectsPanelBody,
     projectsCollapseButton,
     projectsBuilderPresetSelect,
+    projectsBuilderMoveUpButton,
+    projectsBuilderMoveDownButton,
     projectsBuilderPresetNameInput,
     projectsBuilderNewButton,
     projectsBuilderSaveButton,
@@ -240,6 +269,8 @@ function updateProjectsAutomationUI() {
     projectsApplyNextTravelPersistToggle,
     projectsAddApplyButton,
     projectsCombinationSelect,
+    projectsCombinationMoveUpButton,
+    projectsCombinationMoveDownButton,
     projectsCombinationNameInput,
     projectsCombinationNewButton,
     projectsCombinationSaveButton,
@@ -281,6 +312,9 @@ function updateProjectsAutomationUI() {
 
   const activePresetId = projectAutomationUIState.builderPresetId;
   const activePreset = activePresetId ? automation.getPresetById(Number(activePresetId)) : null;
+  const activePresetIndex = activePreset
+    ? presets.findIndex(preset => preset.id === activePreset.id)
+    : -1;
   if (activePreset && projectAutomationUIState.syncedPresetId !== activePresetId) {
     const names = Object.keys(activePreset.projects);
     projectAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
@@ -360,6 +394,8 @@ function updateProjectsAutomationUI() {
   projectsBuilderClearButton.disabled = projectAutomationUIState.builderSelectedProjects.length === 0;
   projectsBuilderDeleteButton.disabled = !activePreset;
   projectsBuilderApplyOnceButton.disabled = !activePreset;
+  projectsBuilderMoveUpButton.disabled = activePresetIndex <= 0;
+  projectsBuilderMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
   projectsApplyCombinationButton.disabled = automation.getAssignments().length === 0;
   projectsCombinationSaveButton.disabled = automation.getAssignments().length === 0;
 
@@ -409,6 +445,9 @@ function updateProjectsAutomationUI() {
   const activeCombination = activeCombinationId
     ? automation.getCombinationById(Number(activeCombinationId))
     : null;
+  const activeCombinationIndex = activeCombination
+    ? combinations.findIndex(combo => combo.id === activeCombination.id)
+    : -1;
   if (activeCombination && projectAutomationUIState.combinationSyncedId !== activeCombinationId) {
     projectAutomationUIState.combinationName = activeCombination.name;
     projectAutomationUIState.combinationSyncedId = activeCombinationId;
@@ -424,6 +463,8 @@ function updateProjectsAutomationUI() {
   }
 
   projectsCombinationDeleteButton.disabled = !activeCombination;
+  projectsCombinationMoveUpButton.disabled = activeCombinationIndex <= 0;
+  projectsCombinationMoveDownButton.disabled = activeCombinationIndex < 0 || activeCombinationIndex >= combinations.length - 1;
 
   const selectedHasFocus = projectsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';
@@ -573,6 +614,8 @@ function updateProjectsAutomationUI() {
 function attachProjectsAutomationHandlers() {
   const {
     projectsBuilderPresetSelect,
+    projectsBuilderMoveUpButton,
+    projectsBuilderMoveDownButton,
     projectsBuilderPresetNameInput,
     projectsBuilderNewButton,
     projectsBuilderSaveButton,
@@ -588,6 +631,8 @@ function attachProjectsAutomationHandlers() {
     projectsApplyNextTravelSelect,
     projectsApplyNextTravelPersistToggle,
     projectsCombinationSelect,
+    projectsCombinationMoveUpButton,
+    projectsCombinationMoveDownButton,
     projectsCombinationNameInput,
     projectsCombinationNewButton,
     projectsCombinationSaveButton,
@@ -598,6 +643,24 @@ function attachProjectsAutomationHandlers() {
   projectsBuilderPresetSelect.addEventListener('change', (event) => {
     projectAutomationUIState.builderPresetId = event.target.value || null;
     projectAutomationUIState.syncedPresetId = null;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  projectsBuilderMoveUpButton.addEventListener('click', () => {
+    const presetId = projectAutomationUIState.builderPresetId;
+    if (!presetId) {
+      return;
+    }
+    automationManager.projectsAutomation.movePreset(Number(presetId), -1);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  projectsBuilderMoveDownButton.addEventListener('click', () => {
+    const presetId = projectAutomationUIState.builderPresetId;
+    if (!presetId) {
+      return;
+    }
+    automationManager.projectsAutomation.movePreset(Number(presetId), 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -748,6 +811,24 @@ function attachProjectsAutomationHandlers() {
     if (comboId) {
       automationManager.projectsAutomation.applyCombination(Number(comboId));
     }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  projectsCombinationMoveUpButton.addEventListener('click', () => {
+    const comboId = projectAutomationUIState.combinationId;
+    if (!comboId) {
+      return;
+    }
+    automationManager.projectsAutomation.moveCombination(Number(comboId), -1);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  projectsCombinationMoveDownButton.addEventListener('click', () => {
+    const comboId = projectAutomationUIState.combinationId;
+    if (!comboId) {
+      return;
+    }
+    automationManager.projectsAutomation.moveCombination(Number(comboId), 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

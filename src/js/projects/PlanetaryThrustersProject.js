@@ -179,7 +179,16 @@ class PlanetaryThrustersProject extends Project{
   }
 
   hasTractorBeams(){
-    return this.isBooleanFlagSet && this.isBooleanFlagSet('tractorBeams');
+    return this.isBooleanFlagSet && this.isBooleanFlagSet('tractorBeams') && !this.isPulsarHazardActive();
+  }
+
+  isPulsarHazardActive() {
+    try {
+      const pulsar = hazardManager.parameters.pulsar;
+      return pulsar && hazardManager.pulsarHazard && !hazardManager.pulsarHazard.isCleared(terraforming, pulsar);
+    } catch (error) {
+      return false;
+    }
   }
 
   getThrustPowerRatio(){
@@ -187,12 +196,7 @@ class PlanetaryThrustersProject extends Project{
   }
 
   isPulsarConstructionPenaltyActive() {
-    try {
-      const pulsar = hazardManager.parameters.pulsar;
-      return pulsar && hazardManager.pulsarHazard && !hazardManager.pulsarHazard.isCleared(terraforming, pulsar);
-    } catch (error) {
-      return false;
-    }
+    return this.isPulsarHazardActive();
   }
 
   getScaledCost() {

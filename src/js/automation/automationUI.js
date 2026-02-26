@@ -10,6 +10,8 @@ const automationElements = {
   collapseButton: null,
   panelBody: null,
   presetSelect: null,
+  presetMoveUpButton: null,
+  presetMoveDownButton: null,
   presetNameInput: null,
   newPresetButton: null,
   deletePresetButton: null,
@@ -22,6 +24,8 @@ const automationElements = {
   lifeCollapseButton: null,
   lifePanelBody: null,
   lifePresetSelect: null,
+  lifePresetMoveUpButton: null,
+  lifePresetMoveDownButton: null,
   lifePresetNameInput: null,
   lifeNewPresetButton: null,
   lifeDeletePresetButton: null,
@@ -41,6 +45,8 @@ const automationElements = {
   buildingsCollapseButton: null,
   buildingsPanelBody: null,
   buildingsBuilderPresetSelect: null,
+  buildingsBuilderMoveUpButton: null,
+  buildingsBuilderMoveDownButton: null,
   buildingsBuilderPresetNameInput: null,
   buildingsBuilderNewButton: null,
   buildingsBuilderSaveButton: null,
@@ -60,6 +66,8 @@ const automationElements = {
   buildingsApplyNextTravelSelect: null,
   buildingsApplyNextTravelPersistToggle: null,
   buildingsCombinationSelect: null,
+  buildingsCombinationMoveUpButton: null,
+  buildingsCombinationMoveDownButton: null,
   buildingsCombinationNameInput: null,
   buildingsCombinationNewButton: null,
   buildingsCombinationSaveButton: null,
@@ -71,6 +79,8 @@ const automationElements = {
   projectsCollapseButton: null,
   projectsPanelBody: null,
   projectsBuilderPresetSelect: null,
+  projectsBuilderMoveUpButton: null,
+  projectsBuilderMoveDownButton: null,
   projectsBuilderPresetNameInput: null,
   projectsBuilderNewButton: null,
   projectsBuilderSaveButton: null,
@@ -89,6 +99,8 @@ const automationElements = {
   projectsApplyNextTravelSelect: null,
   projectsApplyNextTravelPersistToggle: null,
   projectsCombinationSelect: null,
+  projectsCombinationMoveUpButton: null,
+  projectsCombinationMoveDownButton: null,
   projectsCombinationNameInput: null,
   projectsCombinationNewButton: null,
   projectsCombinationSaveButton: null,
@@ -126,6 +138,12 @@ function cacheAutomationElements() {
   if (!automationElements.presetSelect && automationElements.shipAssignment) {
     automationElements.presetSelect = automationElements.shipAssignment.querySelector('.automation-preset-select');
   }
+  if (!automationElements.presetMoveUpButton && automationElements.shipAssignment) {
+    automationElements.presetMoveUpButton = automationElements.shipAssignment.querySelector('.automation-preset-move-up');
+  }
+  if (!automationElements.presetMoveDownButton && automationElements.shipAssignment) {
+    automationElements.presetMoveDownButton = automationElements.shipAssignment.querySelector('.automation-preset-move-down');
+  }
   if (!automationElements.presetNameInput && automationElements.shipAssignment) {
     automationElements.presetNameInput = automationElements.shipAssignment.querySelector('.automation-preset-name');
   }
@@ -161,6 +179,12 @@ function cacheAutomationElements() {
   }
   if (!automationElements.lifePresetSelect && automationElements.lifeDesign) {
     automationElements.lifePresetSelect = automationElements.lifeDesign.querySelector('.automation-preset-select');
+  }
+  if (!automationElements.lifePresetMoveUpButton && automationElements.lifeDesign) {
+    automationElements.lifePresetMoveUpButton = automationElements.lifeDesign.querySelector('.automation-preset-move-up');
+  }
+  if (!automationElements.lifePresetMoveDownButton && automationElements.lifeDesign) {
+    automationElements.lifePresetMoveDownButton = automationElements.lifeDesign.querySelector('.automation-preset-move-down');
   }
   if (!automationElements.lifePresetNameInput && automationElements.lifeDesign) {
     automationElements.lifePresetNameInput = automationElements.lifeDesign.querySelector('.automation-preset-name');
@@ -219,6 +243,12 @@ function cacheAutomationElements() {
   if (!automationElements.buildingsBuilderPresetSelect && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderPresetSelect = automationElements.buildingsAutomation.querySelector('.building-automation-builder-select');
   }
+  if (!automationElements.buildingsBuilderMoveUpButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderMoveUpButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-move-up');
+  }
+  if (!automationElements.buildingsBuilderMoveDownButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsBuilderMoveDownButton = automationElements.buildingsAutomation.querySelector('.building-automation-builder-move-down');
+  }
   if (!automationElements.buildingsBuilderPresetNameInput && automationElements.buildingsAutomation) {
     automationElements.buildingsBuilderPresetNameInput = automationElements.buildingsAutomation.querySelector('.building-automation-builder-name');
   }
@@ -273,6 +303,12 @@ function cacheAutomationElements() {
   if (!automationElements.buildingsCombinationSelect && automationElements.buildingsAutomation) {
     automationElements.buildingsCombinationSelect = automationElements.buildingsAutomation.querySelector('.building-automation-combination-select');
   }
+  if (!automationElements.buildingsCombinationMoveUpButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsCombinationMoveUpButton = automationElements.buildingsAutomation.querySelector('.building-automation-combination-move-up');
+  }
+  if (!automationElements.buildingsCombinationMoveDownButton && automationElements.buildingsAutomation) {
+    automationElements.buildingsCombinationMoveDownButton = automationElements.buildingsAutomation.querySelector('.building-automation-combination-move-down');
+  }
   if (!automationElements.buildingsCombinationNameInput && automationElements.buildingsAutomation) {
     automationElements.buildingsCombinationNameInput = automationElements.buildingsAutomation.querySelector('.building-automation-combination-name');
   }
@@ -305,6 +341,12 @@ function cacheAutomationElements() {
   }
   if (!automationElements.projectsBuilderPresetSelect && automationElements.projectsAutomation) {
     automationElements.projectsBuilderPresetSelect = automationElements.projectsAutomation.querySelector('.project-automation-builder-select');
+  }
+  if (!automationElements.projectsBuilderMoveUpButton && automationElements.projectsAutomation) {
+    automationElements.projectsBuilderMoveUpButton = automationElements.projectsAutomation.querySelector('.project-automation-builder-move-up');
+  }
+  if (!automationElements.projectsBuilderMoveDownButton && automationElements.projectsAutomation) {
+    automationElements.projectsBuilderMoveDownButton = automationElements.projectsAutomation.querySelector('.project-automation-builder-move-down');
   }
   if (!automationElements.projectsBuilderPresetNameInput && automationElements.projectsAutomation) {
     automationElements.projectsBuilderPresetNameInput = automationElements.projectsAutomation.querySelector('.project-automation-builder-name');
@@ -360,6 +402,12 @@ function cacheAutomationElements() {
   if (!automationElements.projectsCombinationSelect && automationElements.projectsAutomation) {
     automationElements.projectsCombinationSelect = automationElements.projectsAutomation.querySelector('.project-automation-combination-select');
   }
+  if (!automationElements.projectsCombinationMoveUpButton && automationElements.projectsAutomation) {
+    automationElements.projectsCombinationMoveUpButton = automationElements.projectsAutomation.querySelector('.project-automation-combination-move-up');
+  }
+  if (!automationElements.projectsCombinationMoveDownButton && automationElements.projectsAutomation) {
+    automationElements.projectsCombinationMoveDownButton = automationElements.projectsAutomation.querySelector('.project-automation-combination-move-down');
+  }
   if (!automationElements.projectsCombinationNameInput && automationElements.projectsAutomation) {
     automationElements.projectsCombinationNameInput = automationElements.projectsAutomation.querySelector('.project-automation-combination-name');
   }
@@ -408,6 +456,19 @@ function createAutomationPresetRow(body) {
   presetSelect.classList.add('automation-preset-select');
   presetRow.appendChild(presetSelect);
 
+  const presetOrderButtons = document.createElement('div');
+  presetOrderButtons.classList.add('automation-order-buttons');
+  const presetMoveUp = document.createElement('button');
+  presetMoveUp.textContent = '↑';
+  presetMoveUp.title = 'Move preset up';
+  presetMoveUp.classList.add('automation-preset-move-up');
+  const presetMoveDown = document.createElement('button');
+  presetMoveDown.textContent = '↓';
+  presetMoveDown.title = 'Move preset down';
+  presetMoveDown.classList.add('automation-preset-move-down');
+  presetOrderButtons.append(presetMoveUp, presetMoveDown);
+  presetRow.appendChild(presetOrderButtons);
+
   const presetName = document.createElement('input');
   presetName.type = 'text';
   presetName.placeholder = 'Preset name';
@@ -432,6 +493,8 @@ function createAutomationPresetRow(body) {
   return {
     presetRow,
     presetSelect,
+    presetMoveUp,
+    presetMoveDown,
     presetName,
     enableCheckbox: enableToggle,
     newPreset,

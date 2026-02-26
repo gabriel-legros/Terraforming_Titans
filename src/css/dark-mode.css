@@ -911,6 +911,7 @@
 }
 
 .dark-mode .automation-preset-buttons button,
+.dark-mode .automation-order-buttons button,
 .dark-mode .automation-step-header button,
 .dark-mode .automation-entry button {
     background: #1a2538;
@@ -924,6 +925,7 @@
 }
 
 .dark-mode .automation-preset-buttons button:hover,
+.dark-mode .automation-order-buttons button:hover,
 .dark-mode .automation-step-header button:hover,
 .dark-mode .automation-entry button:hover {
     background: #24324a;

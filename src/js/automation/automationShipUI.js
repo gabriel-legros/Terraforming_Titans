@@ -77,6 +77,8 @@ function buildAutomationShipUI() {
   automationElements.collapseButton = header.collapse;
   automationElements.panelBody = body;
   automationElements.presetSelect = presetRow.presetSelect;
+  automationElements.presetMoveUpButton = presetRow.presetMoveUp;
+  automationElements.presetMoveDownButton = presetRow.presetMoveDown;
   automationElements.presetNameInput = presetRow.presetName;
   automationElements.newPresetButton = presetRow.newPreset;
   automationElements.deletePresetButton = presetRow.deletePreset;
@@ -95,6 +97,8 @@ function updateShipAutomationUI() {
     panelBody,
     collapseButton,
     presetSelect,
+    presetMoveUpButton,
+    presetMoveDownButton,
     presetNameInput,
     newPresetButton,
     deletePresetButton,
@@ -114,7 +118,7 @@ function updateShipAutomationUI() {
     ? 'Automatically assigns cargo ships based on available routes.'
     : 'Purchase the Solis Ship Assignment upgrade to enable ship automation.';
 
-  if (!automation || !panelBody || !collapseButton || !presetSelect || !presetNameInput || !newPresetButton || !deletePresetButton || !enablePresetCheckbox || !stepsContainer || !addStepButton) {
+  if (!automation || !panelBody || !collapseButton || !presetSelect || !presetMoveUpButton || !presetMoveDownButton || !presetNameInput || !newPresetButton || !deletePresetButton || !enablePresetCheckbox || !stepsContainer || !addStepButton) {
     return;
   }
 
@@ -147,6 +151,11 @@ function updateShipAutomationUI() {
     presetNameInput.value = '';
     setAutomationToggleState(enablePresetCheckbox, false);
   }
+  const activePresetIndex = activePreset
+    ? automation.presets.findIndex(preset => preset.id === activePreset.id)
+    : -1;
+  presetMoveUpButton.disabled = activePresetIndex <= 0;
+  presetMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= automation.presets.length - 1;
 
   // Only rebuild steps if no dropdown/input within is focused
   const hasFocusedChild = stepsContainer.contains(document.activeElement) &&
@@ -168,6 +177,8 @@ function updateShipAutomationUI() {
 function attachAutomationHandlers() {
   const {
     presetSelect,
+    presetMoveUpButton,
+    presetMoveDownButton,
     presetNameInput,
     newPresetButton,
     deletePresetButton,
@@ -190,6 +201,28 @@ function attachAutomationHandlers() {
       const preset = automation.getActivePreset();
       if (!preset) return;
       automation.renamePreset(preset.id, event.target.value || '');
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+  }
+  if (presetMoveUpButton) {
+    presetMoveUpButton.addEventListener('click', () => {
+      if (!automationManager || !automationManager.spaceshipAutomation) return;
+      const automation = automationManager.spaceshipAutomation;
+      const preset = automation.getActivePreset();
+      if (!preset) return;
+      automation.movePreset(preset.id, -1);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+  }
+  if (presetMoveDownButton) {
+    presetMoveDownButton.addEventListener('click', () => {
+      if (!automationManager || !automationManager.spaceshipAutomation) return;
+      const automation = automationManager.spaceshipAutomation;
+      const preset = automation.getActivePreset();
+      if (!preset) return;
+      automation.movePreset(preset.id, 1);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });

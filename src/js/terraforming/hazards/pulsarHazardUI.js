@@ -20,7 +20,7 @@ const pulsarHazardUICache = {
 };
 
 const PULSAR_DISABLED_PROJECTS_TEXT = 'Space Mirror Facility, Space Elevator, Mega Heat Sink, and Magnetic Shield are disabled until the pulsar hazard is fully cleared.';
-const PULSAR_THRUSTER_COST_TEXT = 'Planetary Thrusters construction cost is multiplied by x100.';
+const PULSAR_THRUSTER_COST_TEXT = 'Planetary Thrusters construction cost is multiplied by x100, and Tractor Beams is disabled.';
 const PULSAR_CLEAR_TEXT = 'Build all Artificial Sky segments or go rogue.';
 const PULSAR_UI_STORM_PERIOD_SECONDS = 100;
 const PULSAR_UI_STORM_DEFAULT_DURATION_SECONDS = 5;

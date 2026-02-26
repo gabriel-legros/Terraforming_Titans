@@ -45,6 +45,17 @@ function buildAutomationBuildingsUI() {
   builderRow.classList.add('building-automation-row');
   const presetSelect = document.createElement('select');
   presetSelect.classList.add('building-automation-builder-select');
+  const presetMoveButtons = document.createElement('div');
+  presetMoveButtons.classList.add('automation-order-buttons');
+  const presetMoveUpButton = document.createElement('button');
+  presetMoveUpButton.textContent = '↑';
+  presetMoveUpButton.title = 'Move preset up';
+  presetMoveUpButton.classList.add('building-automation-builder-move-up');
+  const presetMoveDownButton = document.createElement('button');
+  presetMoveDownButton.textContent = '↓';
+  presetMoveDownButton.title = 'Move preset down';
+  presetMoveDownButton.classList.add('building-automation-builder-move-down');
+  presetMoveButtons.append(presetMoveUpButton, presetMoveDownButton);
   const presetNameInput = document.createElement('input');
   presetNameInput.type = 'text';
   presetNameInput.placeholder = 'Preset name';
@@ -61,7 +72,7 @@ function buildAutomationBuildingsUI() {
   const applyOnceButton = document.createElement('button');
   applyOnceButton.textContent = 'Apply Once Now';
   applyOnceButton.classList.add('building-automation-builder-apply-once');
-  builderRow.append(presetSelect, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
+  builderRow.append(presetSelect, presetMoveButtons, presetNameInput, newButton, saveButton, deleteButton, applyOnceButton);
   builderSection.appendChild(builderRow);
 
   const builderModeRow = document.createElement('div');
@@ -157,6 +168,17 @@ function buildAutomationBuildingsUI() {
   applyCombinationButton.classList.add('building-automation-apply-combination');
   const combinationSelect = document.createElement('select');
   combinationSelect.classList.add('building-automation-combination-select');
+  const combinationMoveButtons = document.createElement('div');
+  combinationMoveButtons.classList.add('automation-order-buttons');
+  const combinationMoveUpButton = document.createElement('button');
+  combinationMoveUpButton.textContent = '↑';
+  combinationMoveUpButton.title = 'Move combination up';
+  combinationMoveUpButton.classList.add('building-automation-combination-move-up');
+  const combinationMoveDownButton = document.createElement('button');
+  combinationMoveDownButton.textContent = '↓';
+  combinationMoveDownButton.title = 'Move combination down';
+  combinationMoveDownButton.classList.add('building-automation-combination-move-down');
+  combinationMoveButtons.append(combinationMoveUpButton, combinationMoveDownButton);
   const combinationNameInput = document.createElement('input');
   combinationNameInput.type = 'text';
   combinationNameInput.placeholder = 'Combination name';
@@ -172,6 +194,7 @@ function buildAutomationBuildingsUI() {
   combinationDeleteButton.classList.add('building-automation-combination-delete');
   combinationRow.append(
     combinationSelect,
+    combinationMoveButtons,
     combinationNameInput,
     combinationNewButton,
     combinationSaveButton,
@@ -198,6 +221,8 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsCollapseButton = header.collapse;
   automationElements.buildingsPanelBody = body;
   automationElements.buildingsBuilderPresetSelect = presetSelect;
+  automationElements.buildingsBuilderMoveUpButton = presetMoveUpButton;
+  automationElements.buildingsBuilderMoveDownButton = presetMoveDownButton;
   automationElements.buildingsBuilderPresetNameInput = presetNameInput;
   automationElements.buildingsBuilderNewButton = newButton;
   automationElements.buildingsBuilderSaveButton = saveButton;
@@ -216,6 +241,8 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsApplyNextTravelSelect = applyNextTravelSelect;
   automationElements.buildingsApplyNextTravelPersistToggle = applyNextTravelPersistToggle;
   automationElements.buildingsCombinationSelect = combinationSelect;
+  automationElements.buildingsCombinationMoveUpButton = combinationMoveUpButton;
+  automationElements.buildingsCombinationMoveDownButton = combinationMoveDownButton;
   automationElements.buildingsCombinationNameInput = combinationNameInput;
   automationElements.buildingsCombinationNewButton = combinationNewButton;
   automationElements.buildingsCombinationSaveButton = combinationSaveButton;
@@ -234,6 +261,8 @@ function updateBuildingsAutomationUI() {
     buildingsPanelBody,
     buildingsCollapseButton,
     buildingsBuilderPresetSelect,
+    buildingsBuilderMoveUpButton,
+    buildingsBuilderMoveDownButton,
     buildingsBuilderPresetNameInput,
     buildingsBuilderNewButton,
     buildingsBuilderSaveButton,
@@ -255,6 +284,8 @@ function updateBuildingsAutomationUI() {
     buildingsApplyNextTravelPersistToggle,
     buildingsAddApplyButton,
     buildingsCombinationSelect,
+    buildingsCombinationMoveUpButton,
+    buildingsCombinationMoveDownButton,
     buildingsCombinationNameInput,
     buildingsCombinationNewButton,
     buildingsCombinationSaveButton,
@@ -296,6 +327,9 @@ function updateBuildingsAutomationUI() {
 
   const activePresetId = buildingAutomationUIState.builderPresetId;
   const activePreset = activePresetId ? automation.getPresetById(Number(activePresetId)) : null;
+  const activePresetIndex = activePreset
+    ? presets.findIndex(preset => preset.id === activePreset.id)
+    : -1;
   if (activePreset && buildingAutomationUIState.syncedPresetId !== activePresetId) {
     const names = Object.keys(activePreset.buildings);
     buildingAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
@@ -383,6 +417,8 @@ function updateBuildingsAutomationUI() {
   buildingsBuilderClearButton.disabled = buildingAutomationUIState.builderSelectedBuildings.length === 0;
   buildingsBuilderDeleteButton.disabled = !activePreset;
   buildingsBuilderApplyOnceButton.disabled = !activePreset;
+  buildingsBuilderMoveUpButton.disabled = activePresetIndex <= 0;
+  buildingsBuilderMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
   buildingsApplyCombinationButton.disabled = automation.getAssignments().length === 0;
   buildingsCombinationSaveButton.disabled = automation.getAssignments().length === 0;
   const nextTravelComboId = automation.nextTravelCombinationId;
@@ -430,6 +466,9 @@ function updateBuildingsAutomationUI() {
   const activeCombination = activeCombinationId
     ? automation.getCombinationById(Number(activeCombinationId))
     : null;
+  const activeCombinationIndex = activeCombination
+    ? combinations.findIndex(combo => combo.id === activeCombination.id)
+    : -1;
   if (activeCombination && buildingAutomationUIState.combinationSyncedId !== activeCombinationId) {
     buildingAutomationUIState.combinationName = activeCombination.name;
     buildingAutomationUIState.combinationSyncedId = activeCombinationId;
@@ -445,6 +484,8 @@ function updateBuildingsAutomationUI() {
   }
 
   buildingsCombinationDeleteButton.disabled = !activeCombination;
+  buildingsCombinationMoveUpButton.disabled = activeCombinationIndex <= 0;
+  buildingsCombinationMoveDownButton.disabled = activeCombinationIndex < 0 || activeCombinationIndex >= combinations.length - 1;
 
   const selectedHasFocus = buildingsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';
@@ -610,6 +651,8 @@ function updateBuildingsAutomationUI() {
 function attachBuildingsAutomationHandlers() {
   const {
     buildingsBuilderPresetSelect,
+    buildingsBuilderMoveUpButton,
+    buildingsBuilderMoveDownButton,
     buildingsBuilderPresetNameInput,
     buildingsBuilderNewButton,
     buildingsBuilderSaveButton,
@@ -626,6 +669,8 @@ function attachBuildingsAutomationHandlers() {
     buildingsApplyNextTravelSelect,
     buildingsApplyNextTravelPersistToggle,
     buildingsCombinationSelect,
+    buildingsCombinationMoveUpButton,
+    buildingsCombinationMoveDownButton,
     buildingsCombinationNameInput,
     buildingsCombinationNewButton,
     buildingsCombinationSaveButton,
@@ -636,6 +681,24 @@ function attachBuildingsAutomationHandlers() {
   buildingsBuilderPresetSelect.addEventListener('change', (event) => {
     buildingAutomationUIState.builderPresetId = event.target.value || null;
     buildingAutomationUIState.syncedPresetId = null;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  buildingsBuilderMoveUpButton.addEventListener('click', () => {
+    const presetId = buildingAutomationUIState.builderPresetId;
+    if (!presetId) {
+      return;
+    }
+    automationManager.buildingsAutomation.movePreset(Number(presetId), -1);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  buildingsBuilderMoveDownButton.addEventListener('click', () => {
+    const presetId = buildingAutomationUIState.builderPresetId;
+    if (!presetId) {
+      return;
+    }
+    automationManager.buildingsAutomation.movePreset(Number(presetId), 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -795,6 +858,24 @@ function attachBuildingsAutomationHandlers() {
     if (comboId) {
       automationManager.buildingsAutomation.applyCombination(Number(comboId));
     }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  buildingsCombinationMoveUpButton.addEventListener('click', () => {
+    const comboId = buildingAutomationUIState.combinationId;
+    if (!comboId) {
+      return;
+    }
+    automationManager.buildingsAutomation.moveCombination(Number(comboId), -1);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  buildingsCombinationMoveDownButton.addEventListener('click', () => {
+    const comboId = buildingAutomationUIState.combinationId;
+    if (!comboId) {
+      return;
+    }
+    automationManager.buildingsAutomation.moveCombination(Number(comboId), 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
