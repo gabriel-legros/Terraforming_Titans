@@ -863,20 +863,26 @@ function initializeHazardousBiomassFromMaxDensity(worldParameters, params = DEFA
   const baseFractions = getZoneFractionsSafe(params);
   const zoneFractions = {};
   let totalFraction = 0;
-  zoneKeys.forEach((zone) => {
-    let fraction = 0;
-    try {
-      const zonePercentage = getZonePercentage(zone);
-      if (Number.isFinite(zonePercentage) && zonePercentage > 0) {
-        fraction = zonePercentage;
+  const previousEquilibrating = isEquilibrating;
+  try {
+    zoneKeys.forEach((zone) => {
+      let fraction = 0;
+      try {
+        isEquilibrating = true;
+        const zonePercentage = getZonePercentage(zone);
+        if (Number.isFinite(zonePercentage) && zonePercentage > 0) {
+          fraction = zonePercentage;
+        }
+      } catch (error) {}
+      if (!(fraction > 0)) {
+        fraction = Number.isFinite(baseFractions[zone]) ? Math.max(0, baseFractions[zone]) : 0;
       }
-    } catch (error) {}
-    if (!(fraction > 0)) {
-      fraction = Number.isFinite(baseFractions[zone]) ? Math.max(0, baseFractions[zone]) : 0;
-    }
-    zoneFractions[zone] = fraction;
-    totalFraction += fraction;
-  });
+      zoneFractions[zone] = fraction;
+      totalFraction += fraction;
+    });
+  } finally {
+    isEquilibrating = previousEquilibrating;
+  }
 
   if (totalFraction <= 0) {
     const equalFraction = zoneKeys.length > 0 ? (1 / zoneKeys.length) : 0;
