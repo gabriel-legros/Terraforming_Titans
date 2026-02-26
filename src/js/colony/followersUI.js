@@ -39,6 +39,8 @@ const followersUICache = {
   faithGalacticBelievers: null,
   faithWorldCap: null,
   faithWorldRate: null,
+  faithWorldRatePercent: null,
+  faithCrusadersBonus: null,
   faithGalacticRate: null,
   faithGalacticAbsoluteRate: null,
   faithPilgrimBonus: null,
@@ -527,7 +529,7 @@ function buildFollowersUI() {
     'Believers in the Church of HOPE convert the current population exponentially.',
     'All colonist imports bring population that respect the galactic believers %',
     'World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).',
-    'Once world believers reaches its cap, galactic faith also rises at 1/250 the % rate of world.',
+    'Once world believers reaches its cap, galactic faith also rises at 1/250 the base world conversion % rate (before Crusaders bonus).',
     'On a Holy World, world faith can continue up to Galactic + 15 percentage points.',
     'After travelling, world count will join the galactic count.'
   ].join('\n');
@@ -581,13 +583,20 @@ function buildFollowersUI() {
   const faithStatsGrid = document.createElement('div');
   faithStatsGrid.classList.add('followers-faith-stats-grid');
 
-  const createFaithStat = (labelText, valueText) => {
+  const createFaithStat = (labelText, valueText, tooltipText = '') => {
     const stat = document.createElement('div');
     stat.classList.add('followers-faith-stat');
 
     const label = document.createElement('span');
     label.classList.add('followers-faith-stat-label');
     label.textContent = labelText;
+    if (tooltipText) {
+      const icon = document.createElement('span');
+      icon.classList.add('info-tooltip-icon');
+      icon.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(icon, tooltipText);
+      label.appendChild(icon);
+    }
 
     const value = document.createElement('span');
     value.classList.add('followers-faith-stat-value');
@@ -601,6 +610,12 @@ function buildFollowersUI() {
   const galacticBelieversStat = createFaithStat('Galactic Count', '0');
   const worldCapStat = createFaithStat('World Cap', '15.00%');
   const worldRateStat = createFaithStat('World Conversion', '+0.0000%/s');
+  const worldRatePercentStat = createFaithStat('World Conversion (%)', '+0.0000%/s');
+  const crusadersBonusStat = createFaithStat(
+    'Crusaders Bonus',
+    'x1.000',
+    'World conversion multiplier from Crusaders ratio (Crusaders / Colonists). Uses logarithmic scaling: x1 at ratio 0, soft growth as ratio rises, and capped at x2 (about x2 at a 1:1 ratio). This affects world conversion only; galactic conversion remains based on the base 1/250 world rate.'
+  );
   const galacticRateStat = createFaithStat('Galactic Conversion (%)', '+0.0000%/s');
   const galacticAbsoluteRateStat = createFaithStat('Galactic Conversion', '+0/s');
 
@@ -609,6 +624,8 @@ function buildFollowersUI() {
     galacticBelieversStat.stat,
     worldCapStat.stat,
     worldRateStat.stat,
+    worldRatePercentStat.stat,
+    crusadersBonusStat.stat,
     galacticRateStat.stat,
     galacticAbsoluteRateStat.stat
   );
@@ -621,7 +638,7 @@ function buildFollowersUI() {
     'Pilgrims: increases population growth by galactic believer %.',
     'Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).',
     'Apostles: increases available orbitals by 10 * (galactic believer % - 10%), up to +900%.',
-    'Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %; base rate is 1/250 of world conversion.'
+    'Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %; base rate is 1/250 of base world conversion (before Crusaders bonus).'
   ].join('\n');
   const faithBonusesHeader = document.createElement('div');
   faithBonusesHeader.classList.add('followers-faith-bonuses-header');
@@ -852,6 +869,8 @@ function buildFollowersUI() {
   followersUICache.faithGalacticBelievers = galacticBelieversStat.value;
   followersUICache.faithWorldCap = worldCapStat.value;
   followersUICache.faithWorldRate = worldRateStat.value;
+  followersUICache.faithWorldRatePercent = worldRatePercentStat.value;
+  followersUICache.faithCrusadersBonus = crusadersBonusStat.value;
   followersUICache.faithGalacticRate = galacticRateStat.value;
   followersUICache.faithGalacticAbsoluteRate = galacticAbsoluteRateStat.value;
   followersUICache.faithPilgrimBonus = pilgrimBonus;
@@ -996,9 +1015,10 @@ function updateFollowersUI() {
   followersUICache.faithGalacticProgressFill.style.width = `${Math.max(0, Math.min(100, faith.galacticPercent * 100))}%`;
   followersUICache.faithGalacticBelievers.textContent = `${formatNumber(faith.galacticBelievers, true)} / ${formatNumber(faith.galacticPopulation, true)}`;
   const worldCapText = `${formatNumber(faith.worldCapPercent * 100, false, 2)}%`;
-  const syncThresholdText = `${formatNumber(baseWorldCapPercent * 100, false, 2)}%`;
   followersUICache.faithWorldCap.textContent = consecrated ? `${worldCapText}` : worldCapText;
   followersUICache.faithWorldRate.textContent = `+${formatNumber(faith.rates.worldPerSecond * faith.worldPopulation, false, 2)}/s`;
+  followersUICache.faithWorldRatePercent.textContent = `+${formatNumber(faith.rates.worldPerSecond * 100, false, 4)}%/s`;
+  followersUICache.faithCrusadersBonus.textContent = `x${formatNumber(faith.crusadersWorldConversionMultiplier, false, 3)}`;
   followersUICache.faithGalacticRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * 100, false, 4)}%/s`;
   followersUICache.faithGalacticAbsoluteRate.textContent = `+${formatNumber(faith.rates.galacticPerSecond * faith.galacticPopulation, false, 2)}/s`;
   followersUICache.faithPilgrimBonus.textContent = `+${formatNumber(faith.bonuses.pilgrim * 100, false, 2)}%`;

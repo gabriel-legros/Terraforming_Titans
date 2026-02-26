@@ -460,6 +460,9 @@
 }
 
 #followers-layout .followers-faith-stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.71rem;
   color: #5a6f90;
   text-transform: uppercase;

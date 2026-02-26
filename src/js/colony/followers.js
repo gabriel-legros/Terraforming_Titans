@@ -561,6 +561,19 @@ class FollowersManager extends EffectableEntity {
     return base * this.getHolyWorldConversionPowerMultiplier();
   }
 
+  getCrusadersWorldConversionMultiplier() {
+    if (this.isFaithSuppressed()) {
+      return 1;
+    }
+    const worldPopulation = this.getCurrentWorldPopulation();
+    if (worldPopulation <= 0) {
+      return 1;
+    }
+    const crusaderRatio = Math.max(0, resources.special.crusaders.value) / worldPopulation;
+    const bonusProgress = Math.log10(1 + crusaderRatio * 100) / 2;
+    return 1 + Math.max(0, Math.min(1, bonusProgress));
+  }
+
   getCurrentWorldBelieverCap() {
     const capBonus = this.isCurrentWorldHolyConsecrated() ? 0.15 : 0.05;
     return Math.min(1, this.getGalacticBelieverPercent() + capBonus);
@@ -584,6 +597,7 @@ class FollowersManager extends EffectableEntity {
         worldPerSecond: faithSuppressed ? 0 : this.lastFaithWorldConversionRate,
         galacticPerSecond: faithSuppressed ? 0 : this.lastFaithGalacticConversionRate
       },
+      crusadersWorldConversionMultiplier: faithSuppressed ? 1 : this.getCrusadersWorldConversionMultiplier(),
       bonuses: {
         pilgrim: this.getPilgrimGrowthBonus(),
         zeal: this.getZealWorkerEfficiencyBonus(),
@@ -687,6 +701,7 @@ class FollowersManager extends EffectableEntity {
 
     const seconds = deltaTime / 1000;
     const conversionFactor = this.getFaithConversionRatePerSecond();
+    const crusadersMultiplier = this.getCrusadersWorldConversionMultiplier();
     let worldPercent = this.getWorldBelieverPercent();
     let galacticPercent = this.getGalacticBelieverPercent();
     const worldCapBonus = this.isCurrentWorldHolyConsecrated() ? 0.15 : 0.05;
@@ -694,7 +709,8 @@ class FollowersManager extends EffectableEntity {
     const worldCap = Math.min(1, galacticPercent + worldCapBonus);
     this.lastFaithWorldCap = worldCap;
 
-    this.lastFaithWorldConversionRate = conversionFactor * worldPercent;
+    const baseWorldConversionRate = conversionFactor * worldPercent;
+    this.lastFaithWorldConversionRate = baseWorldConversionRate * crusadersMultiplier;
     if (worldPercent < worldCap) {
       const deltaPercent = this.lastFaithWorldConversionRate * seconds;
       worldPercent = Math.min(worldCap, worldPercent + deltaPercent);
@@ -706,7 +722,7 @@ class FollowersManager extends EffectableEntity {
       return;
     }
 
-    const galacticRate = (this.lastFaithWorldConversionRate / 250) * this.getMissionaryGalacticConversionMultiplier();
+    const galacticRate = (baseWorldConversionRate / 250) * this.getMissionaryGalacticConversionMultiplier();
     this.lastFaithGalacticConversionRate = galacticRate;
     const galacticDelta = Math.min(1 - galacticPercent, galacticRate * seconds);
     if (galacticDelta <= 0) {
