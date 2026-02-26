@@ -120,6 +120,8 @@ function jeansEscapeKgPerSecond(params) {
 // Main helper: returns tons lost during dt.
 function computeHydrogenEscapeTons(params) {
   const { dtSeconds, hydrogenTons, gravity, solarFlux, surfaceArea: A, totalPressurePa } = params;
+  const escapeMultiplier = Number.isFinite(params.escapeMultiplier) ? Math.max(0, params.escapeMultiplier) : 1;
+  if (escapeMultiplier <= 0) return 0;
   if (dtSeconds <= 0 || hydrogenTons <= 0 || gravity <= 0 || A <= 0) return 0;
 
   const TExo = estimateExosphereTemperatureK(solarFlux);
@@ -172,7 +174,7 @@ function computeHydrogenEscapeTons(params) {
     totalLossKgPerSec = Math.min(totalLossKgPerSec, diffusionLimitKgPerSec);
   }
 
-  const lossTons = (totalLossKgPerSec / KG_PER_TON) * dtSeconds;
+  const lossTons = (totalLossKgPerSec / KG_PER_TON) * dtSeconds * escapeMultiplier;
   return Math.min(hydrogenTons, Math.max(0, lossTons));
 }
 
@@ -188,7 +190,8 @@ function runAtmosphericChemistry(resources, params = {}) {
     surfaceTemperatureK = SULFURIC_ACID_RAIN_THRESHOLD_K,
     gravity = 0,
     solarFlux = 0,
-    atmosphericPressurePa = 0
+    atmosphericPressurePa = 0,
+    hydrogenEscapeMultiplier = 1
   } = params;
 
   let combustionMethaneAmount = 0;
@@ -251,6 +254,7 @@ function runAtmosphericChemistry(resources, params = {}) {
       solarFlux:solarFlux,            // your heating proxy
       surfaceArea:surfaceArea,        // you said you can compute this easily
       atmosphericPressurePa:atmosphericPressurePa,    // OPTIONAL: pass if you want diffusion-limit behavior
+      escapeMultiplier: hydrogenEscapeMultiplier,
     });
   }
 
