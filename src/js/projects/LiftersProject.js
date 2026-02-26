@@ -585,14 +585,15 @@ class LiftersProject extends TerraformingDurationProject {
     }
 
     const limitedUnits = this.getModeLimit(maxUnits);
-    if (limitedUnits <= 0) {
+    if (limitedUnits <= 0 && this.mode !== LIFTER_MODES.GAS_HARVEST) {
       this.setLastTickStats();
       this.updateStatus(this.shortfallReason || 'Waiting for capacity');
       this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
       return;
     }
 
-    const energyNeeded = limitedUnits * this.energyPerUnit;
+    const energyDemandUnits = this.mode === LIFTER_MODES.GAS_HARVEST ? maxUnits : limitedUnits;
+    const energyNeeded = energyDemandUnits * this.energyPerUnit;
     const energyResult = this.consumeEnergy(energyNeeded, deltaTime, accumulatedChanges);
     if (energyResult.energyUsed <= 0) {
       this.setLastTickStats();
@@ -602,19 +603,27 @@ class LiftersProject extends TerraformingDurationProject {
       return;
     }
 
-    let processedUnits = energyResult.energyUsed / this.energyPerUnit;
+    const energyLimitedUnits = Math.min(maxUnits, energyResult.energyUsed / this.energyPerUnit);
+    let processedUnits = Math.min(limitedUnits, energyLimitedUnits);
     let harvestRate = 0;
+    let displayHarvestRate = 0;
     let atmosphereRate = 0;
     let harvestKey = null;
 
     if (this.mode === LIFTER_MODES.GAS_HARVEST) {
       const recipe = this.getHarvestRecipe();
       const multiplier = recipe.outputMultiplier || 1;
+      displayHarvestRate = (energyLimitedUnits * multiplier) / seconds;
+      resources?.spaceStorage?.[recipe.storageKey]?.modifyRate?.(
+        displayHarvestRate,
+        'Lifting',
+        'project'
+      );
       const outputUnits = processedUnits * multiplier;
       const storedUnits = this.storeHarvestedResource(recipe.storageKey, outputUnits);
       if (storedUnits <= 0) {
         this.adjustEnergyUsage(energyResult, energyResult.energyUsed, accumulatedChanges);
-        this.setLastTickStats();
+        this.setLastTickStats(0, 0, 0, 0, 0, recipe.storageKey);
         this.updateStatus(this.shortfallReason || 'Space storage is full');
         this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
         return;
@@ -622,11 +631,6 @@ class LiftersProject extends TerraformingDurationProject {
       processedUnits = multiplier > 0 ? storedUnits / multiplier : 0;
       harvestRate = storedUnits / seconds;
       harvestKey = recipe.storageKey;
-      resources?.spaceStorage?.[recipe.storageKey]?.modifyRate?.(
-        harvestRate,
-        'Lifting',
-        'project'
-      );
     } else {
       processedUnits = this.removeAtmosphere(processedUnits, accumulatedChanges, seconds);
       if (processedUnits <= 0) {
