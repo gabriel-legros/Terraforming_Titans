@@ -55,7 +55,7 @@
     superalloys: {
       label: 'Superalloy',
       outputStorageKey: 'superalloys',
-      complexity: 10000,
+      complexity: 100000,
       baseOutput: 1,
       inputs: { metal: 100 },
       shopId: 'superalloyEfficiency',
@@ -576,7 +576,7 @@
       const info = document.createElement('span');
       info.classList.add('info-tooltip-icon');
       info.innerHTML = '&#9432;';
-      attachDynamicInfoTooltip(info, 'Assign cumulative manufacturing population to recipes. Output uses (Assigned x Output / Complexity), then input shortages scale production down by recipe and WGC bonuses apply to output only.');
+      attachDynamicInfoTooltip(info, 'Assign cumulative manufacturing population to recipes. Output uses (Assigned x Output / Complexity).  WGC bonuses apply.');
       header.append(title, info);
       card.appendChild(header);
 
