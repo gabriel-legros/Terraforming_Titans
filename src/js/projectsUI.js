@@ -27,15 +27,17 @@ const projectsSubtabState = {
   preferredSubtabId: PROJECTS_DEFAULT_SUBTAB_ID
 };
 const projectDisplayState = {
-  collapsed: {}
+  collapsed: {},
+  activeGroups: {}
 };
 
 function resetProjectDisplayState() {
   projectDisplayState.collapsed = {};
+  projectDisplayState.activeGroups = {};
 }
 
 function resetProjectGroupState() {
-  projectGroupState.active = {};
+  projectGroupState.active = { ...projectDisplayState.activeGroups };
   projectGroupConfig = null;
 }
 
@@ -89,17 +91,28 @@ function ensureGroupActiveProject(groupId) {
   const visibleNames = getVisibleGroupProjectNames(groupId);
   const fallback = visibleNames[0] || groupNames[0];
   if (visibleNames.indexOf(projectGroupState.active[groupId]) !== -1) {
+    updateProjectGroupPreference(groupId, projectGroupState.active[groupId]);
     return;
   }
   if (groupNames.indexOf(projectGroupState.active[groupId]) !== -1 && visibleNames.length === 0) {
+    updateProjectGroupPreference(groupId, projectGroupState.active[groupId]);
     return;
   }
   projectGroupState.active[groupId] = fallback;
+  updateProjectGroupPreference(groupId, fallback);
 }
 
 function getActiveGroupProjectName(groupId) {
   ensureGroupActiveProject(groupId);
   return projectGroupState.active[groupId];
+}
+
+function updateProjectGroupPreference(groupId, projectName) {
+  if (projectName) {
+    projectDisplayState.activeGroups[groupId] = projectName;
+    return;
+  }
+  delete projectDisplayState.activeGroups[groupId];
 }
 
 function switchProjectGroup(groupId, direction) {
@@ -112,6 +125,7 @@ function switchProjectGroup(groupId, direction) {
   const baseIndex = index >= 0 ? index : 0;
   const nextIndex = (baseIndex + direction + visibleNames.length) % visibleNames.length;
   projectGroupState.active[groupId] = visibleNames[nextIndex];
+  updateProjectGroupPreference(groupId, projectGroupState.active[groupId]);
   getGroupProjectNames(groupId).forEach((name) => updateProjectUI(name));
 }
 
@@ -434,6 +448,7 @@ function createProjectItem(project) {
     titleSelect.addEventListener('change', (event) => {
       event.stopPropagation();
       projectGroupState.active[groupId] = event.target.value;
+      updateProjectGroupPreference(groupId, projectGroupState.active[groupId]);
       getGroupProjectNames(groupId).forEach((name) => updateProjectUI(name));
     });
     const rightArrow = document.createElement('button');

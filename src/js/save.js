@@ -252,6 +252,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     }
     if (gameState.projectDisplayState) {
       projectDisplayState.collapsed = { ...(gameState.projectDisplayState.collapsed || {}) };
+      projectDisplayState.activeGroups = { ...(gameState.projectDisplayState.activeGroups || {}) };
     }
 
       // Load space state first so planet parameters are correct
