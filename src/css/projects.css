@@ -346,6 +346,15 @@
     white-space: nowrap;
 }
 
+.space-storage-card #ss-used,
+.space-storage-card #ss-max,
+.space-storage-card .storage-resource-item label,
+.space-storage-card .storage-resource-item > span {
+    font-size: 0.9em;
+    font-weight: 400;
+    color: inherit;
+}
+
 .storage-cap-button {
     border: 1px solid #cbd3db;
     background: #f8f9fb;
@@ -830,8 +839,8 @@
 
 .manufacturing-world-card .manufacturing-block-row .stat-value {
     font-size: 0.9em;
-    font-weight: 600;
-    color: #6c757d;
+    font-weight: 400;
+    color: inherit;
 }
 
 .nuclear-alchemy-controls-grid {
@@ -869,8 +878,13 @@
 
 .hephaestus-assignment-row .stat-value {
     font-size: 0.9em;
-    font-weight: 600;
-    color: #6c757d;
+    font-weight: 400;
+    color: inherit;
+}
+
+.hephaestus-assignment-list .stat-label {
+    font-weight: 400;
+    color: inherit;
 }
 
 .hephaestus-auto-assign {
