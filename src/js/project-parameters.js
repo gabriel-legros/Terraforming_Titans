@@ -563,7 +563,7 @@ const projectParameters = {
         superalloys: 1_000_000_000_000_000_000,
       }
     },
-    duration: 18000000,
+    duration: 18_000_000,
     description: 'Assemble a Dyson Sphere frame, enabling 100x faster collectors expansion.  Disables Dyson Swarm on completion, transferring all collectors.',
     repeatable: false,
     unlocked: false,
@@ -592,10 +592,12 @@ const projectParameters = {
     category: 'giga',
     cost: {
       colony: {
-        superalloys: 1_000_000_000_000_000
+        superalloys: 1_000_000_000_000_000,
+        components: 100_000_000_000_000,
+        superconductors: 100_000_000_000_000
       }
     },
-    duration: 3_600_000,
+    duration: 36_000_000,
     description: 'Build alchemical furnaces that transmute space-storage hydrogen into space-storage selected resources. Expansion scales with terraformed worlds.  Furnaces can be run to convert hydrogen from space storage into other resources.  The focus is on resource production from complex fusion pathways, not energy.',
     repeatable: true,
     maxRepeatCount: Infinity,

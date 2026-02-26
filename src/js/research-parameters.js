@@ -2028,7 +2028,7 @@ const researchParameters = {
         id: 'manufacturing_worlds',
         name: 'Manufacturing Worlds',
         description: 'Unlocks a new world specialization to convert the world into a hub of conveyor belts, underground pipes and logistics robots.',
-        cost: { advancedResearch: 500000000 },
+        cost: { advancedResearch: 100_000_000 },
         prerequisites: [],
         effects: [
           {
@@ -2410,7 +2410,7 @@ const researchParameters = {
         id: 'nuclear_alchemy',
         name: 'Nuclear Alchemy',
         description: 'Alchemy has always been possible... with the right knowledge and extreme infrastructure.',
-        cost: { advancedResearch: 100_000_000 },
+        cost: { advancedResearch: 500_000_000 },
         prerequisites: [],
         effects: [
           {
