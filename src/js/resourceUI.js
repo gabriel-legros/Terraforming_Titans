@@ -1276,9 +1276,6 @@ function updateResourceDisplay(resources, deltaSeconds) {
         const positiveRate = netRate > 1e-9;
         const capLimit = getSpaceStorageResourceCapDisplay(resourceName);
         const resourceCapRemaining = Number.isFinite(capLimit) ? (capLimit - resourceObj.value) : Infinity;
-        const resourceCapLimitedNow = positiveRate && Number.isFinite(capLimit) && netRate > resourceCapRemaining;
-        const resourceCapLimited = shouldShowCapLimitedWithCooldown(`spaceStorage:${resourceName}`, resourceCapLimitedNow, frameDelta);
-        setResourceCapLimited(entry, resourceCapLimited);
         const hasResourceHeadroom = !Number.isFinite(capLimit) || resourceCapRemaining > 0;
         if (resourceObj.unlocked && positiveRate && hasResourceHeadroom) {
           spaceStorageTotalOpenPositiveRate += netRate;
