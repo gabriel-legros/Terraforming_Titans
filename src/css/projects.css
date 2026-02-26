@@ -695,8 +695,143 @@
     grid-template-columns: minmax(160px, 1.1fr) minmax(80px, 0.4fr) minmax(80px, 0.4fr) 340px minmax(110px, 0.7fr);
 }
 
-.manufacturing-assignment-row {
-    grid-template-columns: minmax(160px, 1fr) minmax(80px, 0.35fr) minmax(110px, 0.55fr) minmax(80px, 0.4fr) 340px minmax(110px, 0.7fr);
+.manufacturing-assignment-list {
+    --manufacturing-block-a-width: 400px;
+    --manufacturing-block-b-width: 430px;
+    --manufacturing-block-c-width: 220px;
+    --manufacturing-block-gap: 8px;
+    --manufacturing-header-height: 34px;
+    container-type: inline-size;
+}
+
+.manufacturing-resource-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.manufacturing-assignment-layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--manufacturing-block-a-width)) minmax(0, var(--manufacturing-block-b-width)) minmax(0, var(--manufacturing-block-c-width));
+    column-gap: var(--manufacturing-block-gap);
+    row-gap: var(--manufacturing-block-gap);
+    align-items: start;
+}
+
+.manufacturing-assignment-block {
+    min-width: 0;
+}
+
+.manufacturing-block-a {
+    grid-column: 1;
+}
+
+.manufacturing-block-b {
+    grid-column: 2;
+}
+
+.manufacturing-block-c {
+    grid-column: 3;
+}
+
+.manufacturing-block-header,
+.manufacturing-block-row {
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    column-gap: 8px;
+}
+
+.manufacturing-block-header {
+    min-height: var(--manufacturing-header-height);
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.manufacturing-block-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.manufacturing-block-grid-a {
+    grid-template-columns: minmax(140px, 1fr) minmax(80px, max-content) minmax(110px, max-content);
+}
+
+.manufacturing-block-grid-a > :first-child {
+    justify-self: start;
+    text-align: left;
+}
+
+.manufacturing-block-grid-b {
+    grid-template-columns: minmax(90px, max-content) minmax(220px, 1fr);
+}
+
+.manufacturing-block-grid-c {
+    grid-template-columns: minmax(56px, max-content) minmax(90px, max-content);
+}
+
+.manufacturing-block-header .stat-label {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.manufacturing-block-header.manufacturing-block-grid-a > :first-child {
+    justify-self: start;
+    text-align: left;
+}
+
+.manufacturing-header-step-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.manufacturing-header-step-controls .hephaestus-control-buttons {
+    width: auto;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.manufacturing-world-card .manufacturing-assignment-group-assigned .hephaestus-assignment-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: auto;
+}
+
+.manufacturing-world-card .manufacturing-block-grid-b .hephaestus-assignment-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: auto;
+}
+
+.manufacturing-world-card .manufacturing-block-grid-b .hephaestus-control-buttons {
+    width: auto;
+    justify-content: center;
+}
+
+.manufacturing-world-card .manufacturing-block-grid-c .hephaestus-weight-input {
+    width: 56px;
+    min-width: 56px;
+    text-align: center;
+}
+
+.manufacturing-world-card .manufacturing-block-grid-c .nuclear-alchemy-rate-cell {
+    justify-self: center;
+    text-align: center;
+}
+
+.manufacturing-world-card .manufacturing-block-row .stat-value {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #6c757d;
 }
 
 .nuclear-alchemy-controls-grid {
@@ -733,7 +868,9 @@
 }
 
 .hephaestus-assignment-row .stat-value {
+    font-size: 0.9em;
     font-weight: 600;
+    color: #6c757d;
 }
 
 .hephaestus-auto-assign {
@@ -748,6 +885,80 @@
     width: 48px;
     min-width: 48px;
     padding: 2px 4px;
+}
+
+@container (max-width: 1065px) {
+    .manufacturing-assignment-list {
+        --manufacturing-block-a-width: 360px;
+        --manufacturing-block-b-width: 380px;
+        --manufacturing-block-c-width: 220px;
+    }
+
+    .manufacturing-assignment-layout {
+        grid-template-columns: minmax(0, var(--manufacturing-block-a-width)) minmax(0, var(--manufacturing-block-b-width));
+    }
+
+    .manufacturing-block-c {
+        grid-column: 1 / -1;
+    }
+}
+
+@container (max-width: 837px) {
+    .manufacturing-assignment-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .manufacturing-block-a,
+    .manufacturing-block-b,
+    .manufacturing-block-c {
+        grid-column: 1;
+    }
+
+    .manufacturing-world-card .manufacturing-block-grid-b .hephaestus-assignment-controls {
+        flex-wrap: wrap;
+    }
+
+    .manufacturing-world-card .manufacturing-block-grid-c .nuclear-alchemy-rate-cell {
+        text-align: center;
+        justify-self: center;
+    }
+}
+
+@media (max-width: 1065px) {
+    .manufacturing-assignment-list {
+        --manufacturing-block-a-width: 360px;
+        --manufacturing-block-b-width: 380px;
+        --manufacturing-block-c-width: 220px;
+    }
+
+    .manufacturing-assignment-layout {
+        grid-template-columns: minmax(0, var(--manufacturing-block-a-width)) minmax(0, var(--manufacturing-block-b-width));
+    }
+
+    .manufacturing-block-c {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 837px) {
+    .manufacturing-assignment-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .manufacturing-block-a,
+    .manufacturing-block-b,
+    .manufacturing-block-c {
+        grid-column: 1;
+    }
+
+    .manufacturing-world-card .manufacturing-block-grid-b .hephaestus-assignment-controls {
+        flex-wrap: wrap;
+    }
+
+    .manufacturing-world-card .manufacturing-block-grid-c .nuclear-alchemy-rate-cell {
+        text-align: center;
+        justify-self: center;
+    }
 }
 
 /* --- Import Resources Card --- */

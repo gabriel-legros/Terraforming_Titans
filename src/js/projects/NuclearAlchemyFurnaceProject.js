@@ -275,11 +275,10 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       return allocations;
     }
     const allWork = entries
-      .filter((entry) => entry.desired > 0 && entry.capRemaining > 0)
+      .filter((entry) => entry.desired > 0)
       .map((entry) => ({
         key: entry.key,
         desiredLeft: entry.desired,
-        capLeft: entry.capRemaining,
         amount: 0
       }));
     const work = allWork.slice();
@@ -300,16 +299,13 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
 
       work.forEach((entry) => {
         const requested = entry.desiredLeft * scale;
-        const granted = Math.min(requested, entry.capLeft, remainingHydrogen);
+        const granted = Math.min(requested, remainingHydrogen);
         if (granted > 0) {
           entry.amount += granted;
           entry.desiredLeft = Math.max(0, entry.desiredLeft - granted);
-          if (Number.isFinite(entry.capLeft)) {
-            entry.capLeft = Math.max(0, entry.capLeft - granted);
-          }
           remainingHydrogen = Math.max(0, remainingHydrogen - granted);
         }
-        if (entry.desiredLeft > 1e-9 && entry.capLeft > 1e-9 && remainingHydrogen > 1e-9) {
+        if (entry.desiredLeft > 1e-9 && remainingHydrogen > 1e-9) {
           nextWork.push(entry);
         }
       });
@@ -507,19 +503,6 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       return;
     }
 
-    let hasCap = false;
-    entries.forEach((entry) => {
-      if (entry.capRemaining > 0) {
-        hasCap = true;
-      }
-    });
-    if (!hasCap) {
-      this.setLastRunStats(0, {});
-      this.updateStatus('Output storage cap reached');
-      this.shortfallLastTick = true;
-      return;
-    }
-
     const hydrogenAvailable = storage.getAvailableStoredResource('hydrogen');
     if (!(hydrogenAvailable > 0)) {
       this.setLastRunStats(0, {});
@@ -529,20 +512,23 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     }
 
     const allocations = this.allocateHydrogen(entries, hydrogenAvailable);
-    const outputAmounts = {};
-    let hydrogenSpent = 0;
+    const outputDisplayAmounts = {};
+    let hydrogenDisplaySpent = 0;
+    let hydrogenNetConsumed = 0;
+    let outputCapBlocked = false;
 
     entries.forEach((entry) => {
       const requested = allocations[entry.key] || 0;
+      outputDisplayAmounts[entry.key] = 0;
       if (!(requested > 0)) {
-        outputAmounts[entry.key] = 0;
         return;
       }
       const spent = storage.spendStoredResource('hydrogen', requested);
       if (!(spent > 0)) {
-        outputAmounts[entry.key] = 0;
         return;
       }
+      outputDisplayAmounts[entry.key] = spent;
+      hydrogenDisplaySpent += spent;
       const current = storage.getStoredResourceValue(entry.storageKey);
       const capLimit = storage.getResourceCapLimit(entry.storageKey);
       const capRemaining = Math.max(0, capLimit - current);
@@ -551,25 +537,25 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
         storage.addStoredResource(entry.storageKey, produced);
       }
       if (spent > produced) {
+        outputCapBlocked = true;
         storage.addStoredResource('hydrogen', spent - produced);
       }
-      outputAmounts[entry.key] = produced;
-      hydrogenSpent += produced;
+      hydrogenNetConsumed += produced;
     });
 
     storage.reconcileUsedStorage();
     updateSpaceStorageUI(storage);
 
-    if (!(hydrogenSpent > 0)) {
+    if (!(hydrogenDisplaySpent > 0)) {
       this.setLastRunStats(0, {});
-      this.updateStatus('Output storage cap reached');
-      this.shortfallLastTick = true;
+      this.updateStatus('Idle');
+      this.shortfallLastTick = this.expansionShortfallLastTick;
       return;
     }
 
     const outputRates = {};
     entries.forEach((entry) => {
-      outputRates[entry.key] = (outputAmounts[entry.key] || 0) / seconds;
+      outputRates[entry.key] = (outputDisplayAmounts[entry.key] || 0) / seconds;
       if (outputRates[entry.key] > 0) {
         resources?.spaceStorage?.[entry.storageKey]?.modifyRate?.(
           outputRates[entry.key],
@@ -579,7 +565,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       }
     });
 
-    const hydrogenRate = hydrogenSpent / seconds;
+    const hydrogenRate = hydrogenDisplaySpent / seconds;
     resources?.spaceStorage?.hydrogen?.modifyRate?.(
       -hydrogenRate,
       this.displayName,
@@ -587,8 +573,14 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     );
 
     this.setLastRunStats(hydrogenRate, outputRates);
-    this.updateStatus('Running');
-    this.shortfallLastTick = this.expansionShortfallLastTick;
+    if (hydrogenNetConsumed > 0) {
+      this.updateStatus('Running');
+    } else if (outputCapBlocked) {
+      this.updateStatus('Output storage cap reached');
+    } else {
+      this.updateStatus('Idle');
+    }
+    this.shortfallLastTick = this.expansionShortfallLastTick || outputCapBlocked;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {

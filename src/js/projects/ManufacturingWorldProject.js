@@ -374,6 +374,33 @@
       this.statusText = text || 'Idle';
     }
 
+    syncAssignmentRowHeights() {
+      const elements = this.uiElements;
+      if (!elements || !elements.rowElements) {
+        return;
+      }
+      this.getAssignmentKeys().forEach((key) => {
+        const row = elements.rowElements[key];
+        if (!row || !row.rowA || !row.rowB || !row.rowC) {
+          return;
+        }
+        row.rowA.style.minHeight = '';
+        row.rowB.style.minHeight = '';
+        row.rowC.style.minHeight = '';
+      });
+      this.getAssignmentKeys().forEach((key) => {
+        const row = elements.rowElements[key];
+        if (!row || !row.rowA || !row.rowB || !row.rowC) {
+          return;
+        }
+        const maxHeight = Math.max(row.rowA.offsetHeight, row.rowB.offsetHeight, row.rowC.offsetHeight);
+        const heightText = `${maxHeight}px`;
+        row.rowA.style.minHeight = heightText;
+        row.rowB.style.minHeight = heightText;
+        row.rowC.style.minHeight = heightText;
+      });
+    }
+
     setLastRunStats(inputRates = {}, outputRates = {}) {
       this.lastInputRates = {
         metal: inputRates.metal || 0,
@@ -572,7 +599,7 @@
       super.renderUI(container);
 
       const card = document.createElement('div');
-      card.classList.add('info-card', 'nuclear-alchemy-card');
+      card.classList.add('info-card', 'nuclear-alchemy-card', 'manufacturing-world-card');
 
       const header = document.createElement('div');
       header.classList.add('card-header');
@@ -643,7 +670,7 @@
       body.appendChild(controlsGrid);
 
       const assignmentGrid = document.createElement('div');
-      assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list');
+      assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list', 'manufacturing-assignment-list');
 
       const stepDownButton = document.createElement('button');
       stepDownButton.textContent = '/10';
@@ -658,47 +685,72 @@
         this.updateUI();
       });
 
-      const headerRow = document.createElement('div');
-      headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row', 'manufacturing-assignment-row');
-      const headerName = document.createElement('span');
-      headerName.classList.add('stat-label');
-      headerName.textContent = 'Resource';
-      const headerComplexity = document.createElement('span');
-      headerComplexity.classList.add('stat-label');
-      headerComplexity.textContent = 'Complexity';
-      const headerUnitProduction = document.createElement('span');
-      headerUnitProduction.classList.add('stat-label');
-      headerUnitProduction.textContent = 'Unit Production';
-      const headerAssigned = document.createElement('span');
-      headerAssigned.classList.add('stat-label');
-      headerAssigned.textContent = 'Assigned';
-      const headerControls = document.createElement('div');
-      headerControls.classList.add('hephaestus-assignment-controls');
-      const headerButtons = document.createElement('div');
-      headerButtons.classList.add('hephaestus-control-buttons', 'hephaestus-step-header');
-      headerButtons.append(stepDownButton, stepUpButton);
-      const weightHeader = document.createElement('span');
-      weightHeader.classList.add('stat-label', 'hephaestus-weight-header');
-      weightHeader.textContent = 'Weight';
-      headerControls.append(headerButtons, weightHeader);
-      const headerRate = document.createElement('div');
-      headerRate.classList.add('stat-label', 'nuclear-alchemy-rate-cell');
-      headerRate.textContent = 'Rate';
-      headerRow.append(headerName, headerComplexity, headerUnitProduction, headerAssigned, headerControls, headerRate);
-      assignmentGrid.appendChild(headerRow);
+      const stepButtons = document.createElement('div');
+      stepButtons.classList.add('hephaestus-control-buttons', 'hephaestus-step-header');
+      stepButtons.append(stepDownButton, stepUpButton);
 
-      const headerDivider = document.createElement('div');
-      headerDivider.classList.add('hephaestus-header-divider');
-      assignmentGrid.appendChild(headerDivider);
+      const assignmentLayout = document.createElement('div');
+      assignmentLayout.classList.add('manufacturing-assignment-layout');
+
+      const blockA = document.createElement('div');
+      blockA.classList.add('manufacturing-assignment-block', 'manufacturing-block-a');
+      const blockAHeader = document.createElement('div');
+      blockAHeader.classList.add('manufacturing-block-header', 'manufacturing-block-grid-a');
+      const blockAHeaderResource = document.createElement('span');
+      blockAHeaderResource.classList.add('stat-label');
+      blockAHeaderResource.textContent = 'Resource';
+      const blockAHeaderComplexity = document.createElement('span');
+      blockAHeaderComplexity.classList.add('stat-label');
+      blockAHeaderComplexity.textContent = 'Complexity';
+      const blockAHeaderUnit = document.createElement('span');
+      blockAHeaderUnit.classList.add('stat-label');
+      blockAHeaderUnit.textContent = 'Unit Production';
+      blockAHeader.append(blockAHeaderResource, blockAHeaderComplexity, blockAHeaderUnit);
+      const blockABody = document.createElement('div');
+      blockABody.classList.add('manufacturing-block-body');
+      blockA.append(blockAHeader, blockABody);
+
+      const blockB = document.createElement('div');
+      blockB.classList.add('manufacturing-assignment-block', 'manufacturing-block-b');
+      const blockBHeader = document.createElement('div');
+      blockBHeader.classList.add('manufacturing-block-header', 'manufacturing-block-grid-b');
+      const blockBHeaderAssigned = document.createElement('span');
+      blockBHeaderAssigned.classList.add('stat-label');
+      blockBHeaderAssigned.textContent = 'Assigned';
+      const blockBHeaderControls = document.createElement('div');
+      blockBHeaderControls.classList.add('manufacturing-header-step-controls');
+      blockBHeaderControls.appendChild(stepButtons);
+      blockBHeader.append(blockBHeaderAssigned, blockBHeaderControls);
+      const blockBBody = document.createElement('div');
+      blockBBody.classList.add('manufacturing-block-body');
+      blockB.append(blockBHeader, blockBBody);
+
+      const blockC = document.createElement('div');
+      blockC.classList.add('manufacturing-assignment-block', 'manufacturing-block-c');
+      const blockCHeader = document.createElement('div');
+      blockCHeader.classList.add('manufacturing-block-header', 'manufacturing-block-grid-c');
+      const blockCHeaderWeight = document.createElement('span');
+      blockCHeaderWeight.classList.add('stat-label');
+      blockCHeaderWeight.textContent = 'Weight';
+      const blockCHeaderRate = document.createElement('span');
+      blockCHeaderRate.classList.add('stat-label');
+      blockCHeaderRate.textContent = 'Rate';
+      blockCHeader.append(blockCHeaderWeight, blockCHeaderRate);
+      const blockCBody = document.createElement('div');
+      blockCBody.classList.add('manufacturing-block-body');
+      blockC.append(blockCHeader, blockCBody);
+
+      assignmentLayout.append(blockA, blockB, blockC);
+      assignmentGrid.appendChild(assignmentLayout);
 
       const rowElements = {};
       this.getAssignmentKeys().forEach((key) => {
         const recipe = this.getRecipe(key);
-        const row = document.createElement('div');
-        row.classList.add('hephaestus-assignment-row', 'nuclear-alchemy-assignment-row', 'manufacturing-assignment-row');
+        const rowA = document.createElement('div');
+        rowA.classList.add('manufacturing-block-row', 'manufacturing-block-grid-a');
 
-        const nameWrap = document.createElement('div');
-        nameWrap.classList.add('stat-label');
+        const nameWrap = document.createElement('span');
+        nameWrap.classList.add('stat-value', 'manufacturing-resource-name');
         const nameEl = document.createElement('span');
         nameEl.textContent = recipe.label;
         const nameInfo = document.createElement('span');
@@ -720,6 +772,7 @@
 
         const unitProductionEl = document.createElement('span');
         unitProductionEl.classList.add('stat-value');
+        rowA.append(nameWrap, complexityEl, unitProductionEl);
 
         const amountEl = document.createElement('span');
         amountEl.classList.add('stat-value');
@@ -797,15 +850,27 @@
         const controlButtons = document.createElement('div');
         controlButtons.classList.add('hephaestus-control-buttons');
         controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer);
-        controls.append(controlButtons, weightInput);
+        controls.append(controlButtons);
 
         const rateEl = document.createElement('div');
         rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
 
-        row.append(nameWrap, complexityEl, unitProductionEl, amountEl, controls, rateEl);
-        assignmentGrid.appendChild(row);
+        const rowB = document.createElement('div');
+        rowB.classList.add('manufacturing-block-row', 'manufacturing-block-grid-b');
+        rowB.append(amountEl, controls);
+
+        const rowC = document.createElement('div');
+        rowC.classList.add('manufacturing-block-row', 'manufacturing-block-grid-c');
+        rowC.append(weightInput, rateEl);
+
+        blockABody.appendChild(rowA);
+        blockBBody.appendChild(rowB);
+        blockCBody.appendChild(rowC);
 
         rowElements[key] = {
+          rowA,
+          rowB,
+          rowC,
           unitProduction: unitProductionEl,
           value: amountEl,
           zeroButton,
@@ -930,6 +995,8 @@
         row.plusButton.disabled = current >= maxForKey || total <= 0 || this.autoAssignFlags[key];
         row.rate.textContent = `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s`;
       });
+
+      this.syncAssignmentRowHeights();
     }
 
     saveAutomationSettings() {
