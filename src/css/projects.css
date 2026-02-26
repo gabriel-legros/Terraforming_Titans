@@ -695,6 +695,10 @@
     grid-template-columns: minmax(160px, 1.1fr) minmax(80px, 0.4fr) minmax(80px, 0.4fr) 340px minmax(110px, 0.7fr);
 }
 
+.manufacturing-assignment-row {
+    grid-template-columns: minmax(160px, 1fr) minmax(80px, 0.35fr) minmax(110px, 0.55fr) minmax(80px, 0.4fr) 340px minmax(110px, 0.7fr);
+}
+
 .nuclear-alchemy-controls-grid {
     margin-bottom: 12px;
 }

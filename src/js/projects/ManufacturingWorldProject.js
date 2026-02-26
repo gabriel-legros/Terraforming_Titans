@@ -325,7 +325,7 @@
     }
 
     setAssignmentStep(step) {
-      this.assignmentStep = Math.min(1_000_000_000_000, Math.max(1, Math.round(step)));
+      this.assignmentStep = Math.min(1e50, Math.max(1, Math.round(step)));
     }
 
     setAutoAssignTarget(key, enabled) {
@@ -659,13 +659,16 @@
       });
 
       const headerRow = document.createElement('div');
-      headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
+      headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row', 'manufacturing-assignment-row');
       const headerName = document.createElement('span');
       headerName.classList.add('stat-label');
       headerName.textContent = 'Resource';
       const headerComplexity = document.createElement('span');
       headerComplexity.classList.add('stat-label');
       headerComplexity.textContent = 'Complexity';
+      const headerUnitProduction = document.createElement('span');
+      headerUnitProduction.classList.add('stat-label');
+      headerUnitProduction.textContent = 'Unit Production';
       const headerAssigned = document.createElement('span');
       headerAssigned.classList.add('stat-label');
       headerAssigned.textContent = 'Assigned';
@@ -681,7 +684,7 @@
       const headerRate = document.createElement('div');
       headerRate.classList.add('stat-label', 'nuclear-alchemy-rate-cell');
       headerRate.textContent = 'Rate';
-      headerRow.append(headerName, headerComplexity, headerAssigned, headerControls, headerRate);
+      headerRow.append(headerName, headerComplexity, headerUnitProduction, headerAssigned, headerControls, headerRate);
       assignmentGrid.appendChild(headerRow);
 
       const headerDivider = document.createElement('div');
@@ -692,7 +695,7 @@
       this.getAssignmentKeys().forEach((key) => {
         const recipe = this.getRecipe(key);
         const row = document.createElement('div');
-        row.classList.add('hephaestus-assignment-row', 'nuclear-alchemy-assignment-row');
+        row.classList.add('hephaestus-assignment-row', 'nuclear-alchemy-assignment-row', 'manufacturing-assignment-row');
 
         const nameWrap = document.createElement('div');
         nameWrap.classList.add('stat-label');
@@ -714,6 +717,9 @@
         const complexityEl = document.createElement('span');
         complexityEl.classList.add('stat-value');
         complexityEl.textContent = formatNumber(recipe.complexity, true);
+
+        const unitProductionEl = document.createElement('span');
+        unitProductionEl.classList.add('stat-value');
 
         const amountEl = document.createElement('span');
         amountEl.classList.add('stat-value');
@@ -796,10 +802,11 @@
         const rateEl = document.createElement('div');
         rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
 
-        row.append(nameWrap, complexityEl, amountEl, controls, rateEl);
+        row.append(nameWrap, complexityEl, unitProductionEl, amountEl, controls, rateEl);
         assignmentGrid.appendChild(row);
 
         rowElements[key] = {
+          unitProduction: unitProductionEl,
           value: amountEl,
           zeroButton,
           minusButton,
@@ -908,6 +915,9 @@
         const maxForKey = Math.max(0, total - usedOther);
 
         row.value.textContent = formatNumber(current, true);
+        const recipe = this.getRecipe(key);
+        const unitProduction = (recipe.baseOutput * this.getRecipeOutputMultiplier(key)) / recipe.complexity;
+        row.unitProduction.textContent = `${formatNumber(unitProduction, true, 3)}/s`;
         row.minusButton.textContent = `-${formatNumber(step, true)}`;
         row.plusButton.textContent = `+${formatNumber(step, true)}`;
         row.autoAssign.checked = this.autoAssignFlags[key] === true;
