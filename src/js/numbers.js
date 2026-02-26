@@ -2,7 +2,33 @@ function isNearlyWhole(value, epsilon = 1e-9) {
   return Math.abs(value - Math.round(value)) < epsilon;
 }
 
-function formatNumber(value, integer = false, precision = 1, allowSmall = false) {
+function floorToPrecision(value, precision) {
+  const factor = Math.pow(10, precision);
+  return Math.floor(value * factor) / factor;
+}
+
+function formatWithRounding(value, precision, roundDown) {
+  if (roundDown) {
+    return floorToPrecision(value, precision).toFixed(precision);
+  }
+  return value.toFixed(precision);
+}
+
+function formatIntegerWithRounding(value, roundDown) {
+  return String(roundDown ? Math.floor(value) : Math.round(value));
+}
+
+function formatScientificWithRounding(value, precision, roundDown) {
+  if (!roundDown) {
+    return value.toExponential(precision).replace('e+', 'e');
+  }
+  const exponent = Math.floor(Math.log10(value));
+  const power = Math.pow(10, exponent);
+  const mantissa = value / power;
+  return `${formatWithRounding(mantissa, precision, true)}e${exponent}`;
+}
+
+function formatNumber(value, integer = false, precision = 1, allowSmall = false, roundDown = false) {
     const absValue = Math.abs(value);
     let formatted;
     let scientificThreshold = 1e30;
@@ -13,61 +39,89 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false)
     }
 
     if (absValue >= scientificThreshold) {
-      formatted = absValue.toExponential(precision).replace('e+', 'e');
+      formatted = formatScientificWithRounding(absValue, precision, roundDown);
       return value < 0 ? '-' + formatted : formatted;
     }
 
     if (absValue >= 1e39 - 1e36) {
       const scaled = absValue / 1e39;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Dd' : scaled.toFixed(precision) + 'Dd';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'Dd'
+        : formatWithRounding(scaled, precision, roundDown) + 'Dd';
     } else if (absValue >= 1e36 - 1e33) {
       const scaled = absValue / 1e36;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Ud' : scaled.toFixed(precision) + 'Ud';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'Ud'
+        : formatWithRounding(scaled, precision, roundDown) + 'Ud';
     } else if (absValue >= 1e33 - 1e30) {
       const scaled = absValue / 1e33;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'De' : scaled.toFixed(precision) + 'Dc';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'De'
+        : formatWithRounding(scaled, precision, roundDown) + 'Dc';
     } else if (absValue >= 1e30 - 1e27) {
       const scaled = absValue / 1e30;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'No' : scaled.toFixed(precision) + 'No';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'No'
+        : formatWithRounding(scaled, precision, roundDown) + 'No';
     } else if (absValue >= 1e27 - 1e24) {
       const scaled = absValue / 1e27;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Oc' : scaled.toFixed(precision) + 'Oc';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'Oc'
+        : formatWithRounding(scaled, precision, roundDown) + 'Oc';
     } else if (absValue >= 1e24 - 1e21) {
       const scaled = absValue / 1e24;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Sp' : scaled.toFixed(precision) + 'Sp';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'Sp'
+        : formatWithRounding(scaled, precision, roundDown) + 'Sp';
     } else if (absValue >= 1e21 - 1e18) {
       const scaled = absValue / 1e21;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Sx' : scaled.toFixed(precision) + 'Sx';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'Sx'
+        : formatWithRounding(scaled, precision, roundDown) + 'Sx';
     } else if (absValue >= 1e18 - 1e15) {
       const scaled = absValue / 1e18;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Qi' : scaled.toFixed(precision) + 'Qi';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'Qi'
+        : formatWithRounding(scaled, precision, roundDown) + 'Qi';
     } else if (absValue >= 1e15 - 1e12) {
       const scaled = absValue / 1e15;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'Q' : scaled.toFixed(precision) + 'Q';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'Q'
+        : formatWithRounding(scaled, precision, roundDown) + 'Q';
     } else if (absValue >= 1e12 - 1e9) {
       const scaled = absValue / 1e12;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'T' : scaled.toFixed(precision) + 'T';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'T'
+        : formatWithRounding(scaled, precision, roundDown) + 'T';
     } else if (absValue >= 1e9 - 1e6) {
       const scaled = absValue / 1e9;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'B' : scaled.toFixed(precision) + 'B';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'B'
+        : formatWithRounding(scaled, precision, roundDown) + 'B';
     } else if (absValue >= 1e6 - 1e3) {
       const scaled = absValue / 1e6;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'M' : scaled.toFixed(precision) + 'M';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'M'
+        : formatWithRounding(scaled, precision, roundDown) + 'M';
     } else if (absValue >= 1e3 - 1) {
       const scaled = absValue / 1e3;
-      formatted = integer && isNearlyWhole(scaled) ? Math.round(scaled) + 'k' : scaled.toFixed(precision) + 'k';
+      formatted = integer && isNearlyWhole(scaled)
+        ? formatIntegerWithRounding(scaled, roundDown) + 'k'
+        : formatWithRounding(scaled, precision, roundDown) + 'k';
     } else if (absValue >= 1e-2) {
-      formatted = integer && absValue % 1 === 0 ? absValue.toFixed(0) : absValue.toFixed(precision);
+      formatted = integer && absValue % 1 === 0
+        ? formatIntegerWithRounding(absValue, roundDown)
+        : formatWithRounding(absValue, precision, roundDown);
     } else if (absValue >= 1e-3 - 1e-6) {
-      formatted = (absValue / 1e-3).toFixed(precision) + 'm'; // Milli
+      formatted = formatWithRounding(absValue / 1e-3, precision, roundDown) + 'm'; // Milli
     } else if (absValue >= 1e-6 - 1e-9) {
-      formatted = (absValue / 1e-6).toFixed(precision) + 'µ'; // Micro
+      formatted = formatWithRounding(absValue / 1e-6, precision, roundDown) + 'µ'; // Micro
     } else if (absValue >= 1e-9 - 1e-12) {
-      formatted = (absValue / 1e-9).toFixed(precision) + 'n'; // Nano
+      formatted = formatWithRounding(absValue / 1e-9, precision, roundDown) + 'n'; // Nano
     } else if (allowSmall && absValue >= 1e-12 - 1e-15) {
-        formatted = (absValue / 1e-12).toFixed(precision) + 'p'; // Pico
+	        formatted = formatWithRounding(absValue / 1e-12, precision, roundDown) + 'p'; // Pico
     } else if (allowSmall && absValue >= 1e-15 - 1e-18) {
-        formatted = (absValue / 1e-15).toFixed(precision) + 'f'; // Femto
+	        formatted = formatWithRounding(absValue / 1e-15, precision, roundDown) + 'f'; // Femto
     } else if (absValue < 1e-12 && !allowSmall) {
       formatted = 0;
       value = 0;
@@ -76,7 +130,7 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false)
       value = 0;
     }
     else {
-      formatted = absValue.toExponential(1).replace('e+', 'e'); // Scientific notation
+      formatted = formatScientificWithRounding(absValue, 1, roundDown); // Scientific notation
     }
   
     return value < 0 ? '-' + formatted : formatted;

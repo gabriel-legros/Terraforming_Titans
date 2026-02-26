@@ -1031,7 +1031,7 @@ function updateFollowersUI() {
   followersUICache.holyWorldStatus.classList.toggle('is-consecrated', consecrated);
   followersUICache.holyWorldConsecrateButton.disabled = !followersManager.canConsecrateHolyWorld();
   followersUICache.holyWorldConsecrateButton.textContent = consecrated ? 'Consecrated' : 'Consecrate';
-  followersUICache.holyWorldConsecratePoints.textContent = `Holy Points: ${formatNumber(followersManager.getHolyWorldPointBalance(), true)}`;
+  followersUICache.holyWorldConsecratePoints.textContent = `Holy Points: ${formatNumber(followersManager.getHolyWorldPointBalance(), true, 1, false, true)}`;
 
   const holyShopRows = followersUICache.holyWorldShopRows;
   for (const id in holyShopRows) {
