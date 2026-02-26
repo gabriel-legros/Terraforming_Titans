@@ -880,7 +880,7 @@
       const step = this.assignmentStep;
 
       elements.cumulativeValue.textContent = formatNumber(this.cumulativePopulation, true, 2);
-      elements.assignedValue.textContent = formatNumber(assigned, true);
+      elements.assignedValue.textContent = formatNumber(assigned, true, 2);
       elements.freeValue.textContent = formatNumber(available, true);
       elements.statusValue.textContent = this.statusText || 'Idle';
       elements.inputValue.textContent = `${formatNumber(this.lastInputRates.metal, true, 3)} metal/s, ${formatNumber(this.lastInputRates.silicon, true, 3)} silica/s`;
