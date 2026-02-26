@@ -131,6 +131,7 @@
       this.lastInputRates = { metal: 0, silicon: 0 };
       this.lastOutputRatesByRecipe = {};
       this.uiElements = null;
+      this.shopCollapsed = false;
     }
 
     getCurrentPopulation() {
@@ -814,6 +815,26 @@
       card.appendChild(body);
       container.appendChild(card);
 
+      if (this.shopElements && this.shopElements.wrapper) {
+        const shopWrapper = this.shopElements.wrapper;
+        const titleGroup = shopWrapper.querySelector('.bioworld-shop-title');
+        const itemsContainer = shopWrapper.querySelector('.bioworld-shop-items');
+        if (titleGroup && itemsContainer) {
+          const collapseButton = document.createElement('button');
+          collapseButton.type = 'button';
+          collapseButton.classList.add('bioworld-shop-button', 'bioworld-shop-collapse-button');
+          collapseButton.addEventListener('click', () => {
+            this.shopCollapsed = !this.shopCollapsed;
+            this.updateUI();
+          });
+          titleGroup.appendChild(collapseButton);
+          this.shopElements.collapseButton = collapseButton;
+          this.shopElements.itemsContainer = itemsContainer;
+        }
+        // Move the MP shop below manufacturing controls.
+        container.appendChild(shopWrapper);
+      }
+
       this.uiElements = {
         cumulativeValue,
         assignedValue,
@@ -831,6 +852,17 @@
 
     updateUI() {
       super.updateUI();
+
+      if (this.shopElements) {
+        const collapsed = this.shopCollapsed === true;
+        if (this.shopElements.itemsContainer) {
+          this.shopElements.itemsContainer.style.display = collapsed ? 'none' : '';
+        }
+        if (this.shopElements.collapseButton) {
+          this.shopElements.collapseButton.textContent = collapsed ? 'Show Shop' : 'Hide Shop';
+        }
+      }
+
       const elements = this.uiElements;
       if (!elements) {
         return;
