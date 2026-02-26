@@ -766,6 +766,20 @@ const projectParameters = {
       keepStartBarVisible: true
     }
   },
+  manufacturingWorld: {
+    type: 'ManufacturingWorldProject',
+    name: 'Manufacturing World',
+    category: 'mega',
+    cost: {},
+    duration: 300000,
+    description: 'Designate this world as a planet-scale manufacturing center. Completing it grants MP and banks this world\'s departure population permanently as manufacturing potential.  All production is from space storage to space storage.',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      projectGroup: 'specializedWorlds',
+      keepStartBarVisible: true
+    }
+  },
   disposeResources : {
     type: 'SpaceDisposalProject',
     name : "Resource Disposal",

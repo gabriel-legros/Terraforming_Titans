@@ -2025,6 +2025,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'manufacturing_worlds',
+        name: 'Manufacturing Worlds',
+        description: 'Unlocks a new world specialization to convert the world into a hub of conveyor belts, underground pipes and logistics robots.',
+        cost: { advancedResearch: 500000000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'manufacturingWorld',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'next_gen_bioengineering',
         name: 'Next-generation bio-engineering',
         description: 'Enables the use of advanced research to permanently increase life design potential',

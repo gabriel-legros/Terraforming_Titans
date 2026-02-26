@@ -143,8 +143,10 @@ class FollowersManager extends EffectableEntity {
   getHolyWorldRequirements() {
     const foundry = projectManager.projects.foundryWorld;
     const bioworld = projectManager.projects.bioworld;
+    const manufacturing = projectManager.projects.manufacturingWorld;
     const noOtherSpecialization = !foundry.isActive && !foundry.isCompleted
-      && !bioworld.isActive && !bioworld.isCompleted;
+      && !bioworld.isActive && !bioworld.isCompleted
+      && !manufacturing.isActive && !manufacturing.isCompleted;
     const terraformed = spaceManager.isCurrentWorldTerraformed();
     const ecumenopolisCoverage = this.getHolyWorldEcumenopolisCoverage();
     const occupancyRatio = this.getHolyWorldOccupancyRatio();

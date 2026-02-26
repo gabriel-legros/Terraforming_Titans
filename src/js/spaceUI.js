@@ -314,6 +314,10 @@ function getActiveSpecializationProject() {
     if (foundry.isActive && !foundry.isCompleted) {
         return foundry;
     }
+    const manufacturing = projectManager.projects.manufacturingWorld;
+    if (manufacturing.isActive && !manufacturing.isCompleted) {
+        return manufacturing;
+    }
     return null;
 }
 

@@ -20,6 +20,9 @@
       this.shopItemMap = options.shopItemMap;
       this.specializationSourceId = options.specializationSourceId;
       this.otherSpecializationId = options.otherSpecializationId;
+      this.otherSpecializationIds = Array.isArray(options.otherSpecializationIds)
+        ? options.otherSpecializationIds.slice()
+        : (this.otherSpecializationId ? [this.otherSpecializationId] : []);
       this.ecumenopolisEffectPrefix = options.ecumenopolisEffectPrefix;
       this.hazardPointBonusPerHazard = options.hazardPointBonusPerHazard || 0;
       this[this.pointsKey] = 0;
@@ -100,9 +103,12 @@
       if (this.isCompleted) {
         return '';
       }
-      const otherSpecialization = projectManager.projects[this.otherSpecializationId];
-      if (otherSpecialization.isCompleted) {
-        return 'Another Specialization has been completed';
+      for (let i = 0; i < this.otherSpecializationIds.length; i += 1) {
+        const projectId = this.otherSpecializationIds[i];
+        const otherSpecialization = projectManager.projects[projectId];
+        if (otherSpecialization && otherSpecialization.isCompleted) {
+          return 'Another Specialization has been completed';
+        }
       }
       return '';
     }
@@ -173,7 +179,7 @@
       const info = document.createElement('span');
       info.classList.add('info-tooltip-icon');
       info.innerHTML = '&#9432;';
-      info.title = this.shopTooltip;
+      attachDynamicInfoTooltip(info, this.shopTooltip);
       titleGroup.append(title, info);
 
       const pointsGroup = document.createElement('div');
@@ -217,7 +223,7 @@
         const detail = document.createElement('span');
         detail.classList.add('info-tooltip-icon');
         detail.innerHTML = '&#9432;';
-        detail.title = item.description;
+        attachDynamicInfoTooltip(detail, item.description);
         labelRow.append(labelText, detail);
 
         const cost = document.createElement('span');

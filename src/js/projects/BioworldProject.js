@@ -81,7 +81,7 @@
         shopItems: BIOWORLD_SHOP_ITEMS,
         shopItemMap: BIOWORLD_SHOP_ITEM_MAP,
         specializationSourceId: 'bioworld',
-        otherSpecializationId: 'foundryWorld',
+        otherSpecializationIds: ['foundryWorld', 'manufacturingWorld'],
         ecumenopolisEffectPrefix: 'bioworld',
         hazardPointBonusPerHazard: 0.1,
       });
@@ -108,7 +108,8 @@
     }
 
     getSpecializationRequirements() {
-      const otherSpecialization = projectManager.projects.foundryWorld;
+      const foundry = projectManager.projects.foundryWorld;
+      const manufacturing = projectManager.projects.manufacturingWorld;
       const holyWorldBlocked = followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated();
       return [
         {
@@ -129,7 +130,11 @@
         {
           id: 'otherSpecialization',
           label: 'No other specialization started or completed',
-          met: !holyWorldBlocked && !otherSpecialization.isActive && !otherSpecialization.isCompleted,
+          met: !holyWorldBlocked
+            && !foundry.isActive
+            && !foundry.isCompleted
+            && !manufacturing.isActive
+            && !manufacturing.isCompleted,
         },
       ];
     }
@@ -154,7 +159,12 @@
       if (this.getBiomassDensity() <= 1) {
         return false;
       }
-      if (projectManager.projects.foundryWorld.isActive || projectManager.projects.foundryWorld.isCompleted) {
+      const foundry = projectManager.projects.foundryWorld;
+      const manufacturing = projectManager.projects.manufacturingWorld;
+      if (foundry.isActive || foundry.isCompleted) {
+        return false;
+      }
+      if (manufacturing.isActive || manufacturing.isCompleted) {
         return false;
       }
       return colonies.t7_colony.count < 1000;
