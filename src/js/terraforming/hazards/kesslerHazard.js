@@ -9,6 +9,8 @@ const DEBRIS_DECAY_BASE_RATE = 1/(3.6e3);
 const DEBRIS_DENSITY_CENTER = 1e-13;
 const DEBRIS_DENSITY_SEARCH_MAX = 50000000;
 const DEBRIS_DECAY_DENSITY_REFERENCE = 1e-12;
+const DEBRIS_DISTRIBUTION_DRAG_LINE_MIN_METERS = 10000;
+const DEBRIS_DISTRIBUTION_MEAN_MIN_METERS = 12000;
 const DEBRIS_DECAY_DENSITY_FLOOR = 1e-20;
 const DEBRIS_DECAY_MAX_MULTIPLIER = 100;
 const KESSLER_DECAY_CONSTANTS = {
@@ -339,10 +341,15 @@ class KesslerHazard {
     }
     const densityModel = resolveDensityModel(terraforming);
     const searchMax = Math.max(terraforming.exosphereHeightMeters || 0, DEBRIS_DENSITY_SEARCH_MAX);
-    const meanMeters = findAltitudeForDensity(densityModel, DEBRIS_DENSITY_CENTER, searchMax);
-    const sigmaMeters = Math.abs(
-      meanMeters - findAltitudeForDensity(densityModel, DEBRIS_DECAY_DENSITY_REFERENCE, searchMax)
+    const meanMeters = Math.max(
+      DEBRIS_DISTRIBUTION_MEAN_MIN_METERS,
+      findAltitudeForDensity(densityModel, DEBRIS_DENSITY_CENTER, searchMax)
     );
+    const dragReferenceMeters = Math.max(
+      DEBRIS_DISTRIBUTION_DRAG_LINE_MIN_METERS,
+      findAltitudeForDensity(densityModel, DEBRIS_DECAY_DENSITY_REFERENCE, searchMax)
+    );
+    const sigmaMeters = Math.abs(meanMeters - dragReferenceMeters);
     const stdMeters = Math.max(1, sigmaMeters);
     const maxMeters = Math.max(1, meanMeters + stdMeters * 3);
     this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters);
