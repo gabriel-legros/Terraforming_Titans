@@ -277,6 +277,41 @@ class GarbageHazard {
     return this.androidAttritionDelaySeconds || 0;
   }
 
+  clearEffectsOnTravel() {
+    this.androidAttritionRates = {};
+    this.androidAttritionDelaySeconds = 0;
+
+    const clearHazardEffects = (target) => {
+      if (target && target.removeEffect) {
+        target.removeEffect({ sourceId: 'hazardPenalties' });
+      }
+    };
+
+    let nanotech = null;
+    try {
+      nanotech = nanotechManager;
+    } catch (error) {
+      nanotech = null;
+    }
+    clearHazardEffects(nanotech);
+
+    let scanner = null;
+    try {
+      scanner = oreScanner;
+    } catch (error) {
+      scanner = null;
+    }
+    clearHazardEffects(scanner);
+
+    let lifeModule = null;
+    try {
+      lifeModule = lifeManager;
+    } catch (error) {
+      lifeModule = null;
+    }
+    clearHazardEffects(lifeModule);
+  }
+
   applyEffects({ addEffect, buildings, colonies }, garbageParameters) {
     if (!garbageParameters || !garbageParameters.penalties || !garbageParameters.surfaceResources) {
       this.androidAttritionRates = {};

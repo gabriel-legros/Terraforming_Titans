@@ -246,6 +246,16 @@ class PulsarHazard {
     this.resetStormState();
   }
 
+  clearEffectsOnTravel(terraforming) {
+    this.clearRadiationEffect(terraforming);
+    this.resetStormState();
+    this.hazardStrength = 0;
+    this.artificialSkyCompletion = 0;
+    this.initialDistanceFromSunAU = 0;
+    this.distanceFromSunMultiplier = 1;
+    this.manager.setHazardLandReservationShare('pulsar', 0);
+  }
+
   update(deltaSeconds, terraforming, pulsarParameters) {
     consumePulsarArgs(deltaSeconds, terraforming, pulsarParameters);
     if (!(this.initialDistanceFromSunAU > 0)) {

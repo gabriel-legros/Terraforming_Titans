@@ -183,6 +183,7 @@ function prepareForTravel(options = {}) {
     followers: followersManager?.prepareTravelState?.()
   };
 
+  hazardManager?.prepareForTravel?.(terraforming);
   nanotechManager?.prepareForTravel?.();
 
   preparedTravelState = travelState;

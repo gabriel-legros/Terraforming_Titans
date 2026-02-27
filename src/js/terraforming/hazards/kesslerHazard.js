@@ -181,6 +181,17 @@ class KesslerHazard {
       }));
   }
 
+  clearEffectsOnTravel() {
+    this.decaySummary = {
+      dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,
+      dragThresholdHeightMeters: 0,
+      dragFraction: 0,
+      decayTonsPerSecond: 0,
+      densityMin: 0,
+      densityMax: 0
+    };
+  }
+
   applySolisTravelAdjustments(terraforming) {
     try {
       if (globalGameIsLoadingFromSave) {

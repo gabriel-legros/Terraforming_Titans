@@ -428,6 +428,32 @@ class HazardManager {
     landResource.setReservedAmountForSource('hazardousBiomass', 0);
   }
 
+  getTravelHazards() {
+    return [
+      { key: 'hazardousBiomass', hazard: this.hazardousBiomassHazard },
+      { key: 'garbage', hazard: this.garbageHazard },
+      { key: 'kessler', hazard: this.kesslerHazard },
+      { key: 'pulsar', hazard: this.pulsarHazard },
+    ];
+  }
+
+  prepareForTravel(terraformingState = null) {
+    const activeTerraforming = terraformingState || getTerraforming();
+    const travelHazards = this.getTravelHazards();
+
+    travelHazards.forEach((entry) => {
+      if (!entry.hazard || !entry.hazard.clearEffectsOnTravel) {
+        return;
+      }
+      entry.hazard.clearEffectsOnTravel(activeTerraforming, this.parameters[entry.key]);
+    });
+
+    this.updateHazardousBiomassControl(0, true);
+    this.setHazardLandReservationShare('hazardousBiomass', 0);
+    this.setHazardLandReservationShare('pulsar', 0);
+    this.syncHazardLandReservation(activeTerraforming);
+  }
+
   applyTravelAdjustments(terraformingState = null) {
     if (this.kesslerHazard && this.parameters.kessler) {
       this.kesslerHazard.applySolisTravelAdjustments(terraformingState);

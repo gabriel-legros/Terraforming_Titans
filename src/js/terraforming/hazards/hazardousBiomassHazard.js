@@ -176,6 +176,11 @@ class HazardousBiomassHazard {
     }
   }
 
+  clearEffectsOnTravel() {
+    this.manager.updateHazardousBiomassControl(0, true);
+    this.manager.setHazardLandReservationShare('hazardousBiomass', 0);
+  }
+
   updateHazardousLandReservation(terraforming, hazardParameters) {
     let resourcesState = null;
     try {
