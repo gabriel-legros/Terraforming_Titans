@@ -9,6 +9,7 @@
 
   const MANUFACTURING_RECIPE_KEYS = [
     'glass',
+    'graphene',
     'components',
     'electronics',
     'superconductors',
@@ -23,6 +24,15 @@
       baseOutput: 1,
       inputs: { silicon: 1 },
       shopId: 'glassEfficiency',
+      wgcUpgradeId: null,
+    },
+    graphene: {
+      label: 'Graphene',
+      outputStorageKey: 'metal',
+      complexity: 5,
+      baseOutput: 10,
+      inputs: { graphite: 10 },
+      shopId: 'grapheneEfficiency',
       wgcUpgradeId: null,
     },
     components: {
@@ -72,6 +82,13 @@
       description: 'Increases both glass production and silica consumption by 1%.',
     },
     {
+      id: 'grapheneEfficiency',
+      label: 'Graphene Manufacturing +1%',
+      cost: 1,
+      maxPurchases: 900,
+      description: 'Increases both graphene refining output and graphite consumption by 1%.',
+    },
+    {
       id: 'componentsEfficiency',
       label: 'Components Manufacturing +1%',
       cost: 1,
@@ -106,6 +123,22 @@
     return acc;
   }, {});
 
+  const MANUFACTURING_INPUT_KEYS = MANUFACTURING_RECIPE_KEYS.reduce((keys, recipeKey) => {
+    const recipe = MANUFACTURING_RECIPES[recipeKey];
+    Object.keys(recipe.inputs).forEach((inputKey) => {
+      if (!keys.includes(inputKey)) {
+        keys.push(inputKey);
+      }
+    });
+    return keys;
+  }, []);
+
+  const MANUFACTURING_INPUT_LABELS = {
+    metal: 'metal',
+    silicon: 'silica',
+    graphite: 'graphite',
+  };
+
   class ManufacturingWorldProject extends SpecializationBase {
     constructor(config, name) {
       super(config, name, {
@@ -128,10 +161,18 @@
       this.autoAssignWeights = {};
       this.isRunning = false;
       this.statusText = 'Idle';
-      this.lastInputRates = { metal: 0, silicon: 0 };
+      this.lastInputRates = this.createEmptyInputRates();
       this.lastOutputRatesByRecipe = {};
       this.uiElements = null;
       this.shopCollapsed = false;
+    }
+
+    createEmptyInputRates() {
+      const rates = {};
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
+        rates[inputKey] = 0;
+      });
+      return rates;
     }
 
     getCurrentPopulation() {
@@ -402,10 +443,10 @@
     }
 
     setLastRunStats(inputRates = {}, outputRates = {}) {
-      this.lastInputRates = {
-        metal: inputRates.metal || 0,
-        silicon: inputRates.silicon || 0,
-      };
+      this.lastInputRates = this.createEmptyInputRates();
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
+        this.lastInputRates[inputKey] = inputRates[inputKey] || 0;
+      });
       this.lastOutputRatesByRecipe = {};
       this.getAssignmentKeys().forEach((key) => {
         this.lastOutputRatesByRecipe[key] = outputRates[key] || 0;
@@ -450,8 +491,7 @@
 
       this.normalizeAssignments();
       const entries = [];
-      let desiredMetal = 0;
-      let desiredSilicon = 0;
+      const desiredInputsByResource = this.createEmptyInputRates();
 
       this.getAssignmentKeys().forEach((key) => {
         const assigned = this.manufacturingAssignments[key] || 0;
@@ -463,16 +503,11 @@
         const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key);
         const desiredOutput = ((assigned * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds;
         const desiredInputs = {};
-        if (recipe.inputs.metal) {
-          const amount = ((assigned * recipe.inputs.metal * consumptionMultiplier) / recipe.complexity) * seconds;
-          desiredInputs.metal = amount;
-          desiredMetal += amount;
-        }
-        if (recipe.inputs.silicon) {
-          const amount = ((assigned * recipe.inputs.silicon * consumptionMultiplier) / recipe.complexity) * seconds;
-          desiredInputs.silicon = amount;
-          desiredSilicon += amount;
-        }
+        Object.keys(recipe.inputs).forEach((inputKey) => {
+          const amount = ((assigned * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds;
+          desiredInputs[inputKey] = amount;
+          desiredInputsByResource[inputKey] += amount;
+        });
         entries.push({
           key,
           recipe,
@@ -488,44 +523,37 @@
         return;
       }
 
-      const metalAvailable = storage.getAvailableStoredResource('metal');
-      const siliconAvailable = storage.getAvailableStoredResource('silicon');
-      const metalRatio = desiredMetal > 0 ? Math.min(1, metalAvailable / desiredMetal) : 1;
-      const siliconRatio = desiredSilicon > 0 ? Math.min(1, siliconAvailable / desiredSilicon) : 1;
+      const inputRatios = {};
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
+        const desiredAmount = desiredInputsByResource[inputKey] || 0;
+        if (desiredAmount <= 0) {
+          inputRatios[inputKey] = 1;
+          return;
+        }
+        const availableAmount = storage.getAvailableStoredResource(inputKey);
+        inputRatios[inputKey] = Math.min(1, availableAmount / desiredAmount);
+      });
 
-      const inputSpent = { metal: 0, silicon: 0 };
+      const inputSpent = this.createEmptyInputRates();
       const outputProduced = {};
       let totalOutput = 0;
       let outputCapBlocked = false;
 
       entries.forEach((entry) => {
-        const wantsMetal = (entry.desiredInputs.metal || 0) > 0;
-        const wantsSilicon = (entry.desiredInputs.silicon || 0) > 0;
+        const desiredInputKeys = Object.keys(entry.desiredInputs);
         let scale = 1;
-        if (wantsMetal && wantsSilicon) {
-          scale = Math.min(metalRatio, siliconRatio);
-        } else if (wantsMetal) {
-          scale = metalRatio;
-        } else if (wantsSilicon) {
-          scale = siliconRatio;
-        }
+        desiredInputKeys.forEach((inputKey) => {
+          scale = Math.min(scale, inputRatios[inputKey] || 1);
+        });
 
-        if (wantsMetal) {
-          const desired = (entry.desiredInputs.metal || 0) * scale;
-          const spent = storage.spendStoredResource('metal', desired);
-          inputSpent.metal += spent;
+        desiredInputKeys.forEach((inputKey) => {
+          const desired = (entry.desiredInputs[inputKey] || 0) * scale;
+          const spent = storage.spendStoredResource(inputKey, desired);
+          inputSpent[inputKey] += spent;
           if (desired > 0) {
             scale = Math.min(scale, spent / desired);
           }
-        }
-        if (wantsSilicon) {
-          const desired = (entry.desiredInputs.silicon || 0) * scale;
-          const spent = storage.spendStoredResource('silicon', desired);
-          inputSpent.silicon += spent;
-          if (desired > 0) {
-            scale = Math.min(scale, spent / desired);
-          }
-        }
+        });
 
         const desiredProduced = entry.desiredOutput * scale;
         const current = storage.getStoredResourceValue(entry.recipe.outputStorageKey);
@@ -543,7 +571,8 @@
         outputProduced[entry.key] = desiredProduced;
       });
 
-      const anyStorageMutation = inputSpent.metal > 0 || inputSpent.silicon > 0 || totalOutput > 0;
+      const anyInputSpent = MANUFACTURING_INPUT_KEYS.some((inputKey) => inputSpent[inputKey] > 0);
+      const anyStorageMutation = anyInputSpent || totalOutput > 0;
       if (anyStorageMutation) {
         storage.reconcileUsedStorage();
         try {
@@ -551,21 +580,20 @@
         } catch (error) {}
       }
 
-      const inputRates = {
-        metal: inputSpent.metal / seconds,
-        silicon: inputSpent.silicon / seconds,
-      };
+      const inputRates = this.createEmptyInputRates();
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
+        inputRates[inputKey] = inputSpent[inputKey] / seconds;
+      });
       const outputRates = {};
       this.getAssignmentKeys().forEach((key) => {
         outputRates[key] = (outputProduced[key] || 0) / seconds;
       });
 
-      if (inputRates.metal > 0) {
-        resources.spaceStorage.metal.modifyRate(-inputRates.metal, this.displayName, 'project');
-      }
-      if (inputRates.silicon > 0) {
-        resources.spaceStorage.silicon.modifyRate(-inputRates.silicon, this.displayName, 'project');
-      }
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
+        if (inputRates[inputKey] > 0) {
+          resources.spaceStorage[inputKey].modifyRate(-inputRates[inputKey], this.displayName, 'project');
+        }
+      });
       this.getAssignmentKeys().forEach((key) => {
         const rate = outputRates[key] || 0;
         if (rate <= 0) {
@@ -577,10 +605,14 @@
 
       this.setLastRunStats(inputRates, outputRates);
 
-      const hasInputShortfall = metalRatio < 1 || siliconRatio < 1;
+      const hasInputShortfall = MANUFACTURING_INPUT_KEYS.some((inputKey) => {
+        return (desiredInputsByResource[inputKey] || 0) > 0 && (inputRatios[inputKey] || 1) < 1;
+      });
       if (totalOutput > 0) {
         this.updateStatus('Running');
-      } else if ((desiredMetal > 0 && metalRatio <= 0) || (desiredSilicon > 0 && siliconRatio <= 0)) {
+      } else if (MANUFACTURING_INPUT_KEYS.some((inputKey) => {
+        return (desiredInputsByResource[inputKey] || 0) > 0 && (inputRatios[inputKey] || 0) <= 0;
+      })) {
         this.updateStatus('Insufficient input in space storage');
       } else if (outputCapBlocked) {
         this.updateStatus('Output storage cap reached');
@@ -756,13 +788,10 @@
         const nameInfo = document.createElement('span');
         nameInfo.classList.add('info-tooltip-icon');
         nameInfo.innerHTML = '&#9432;';
-        const inputParts = [];
-        if (recipe.inputs.metal) {
-          inputParts.push(`${formatNumber(recipe.inputs.metal, true)} metal`);
-        }
-        if (recipe.inputs.silicon) {
-          inputParts.push(`${formatNumber(recipe.inputs.silicon, true)} silica`);
-        }
+        const inputParts = Object.keys(recipe.inputs).map((inputKey) => {
+          const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
+          return `${formatNumber(recipe.inputs[inputKey], true)} ${label}`;
+        });
         attachDynamicInfoTooltip(nameInfo, `Recipe: ${inputParts.join(', ')}.`);
         nameWrap.append(nameEl, nameInfo);
 
@@ -955,7 +984,10 @@
       elements.assignedValue.textContent = formatNumber(assigned, true, 2);
       elements.freeValue.textContent = formatNumber(available, true);
       elements.statusValue.textContent = this.statusText || 'Idle';
-      elements.inputValue.textContent = `${formatNumber(this.lastInputRates.metal, true, 3)} metal/s, ${formatNumber(this.lastInputRates.silicon, true, 3)} silica/s`;
+      elements.inputValue.textContent = MANUFACTURING_INPUT_KEYS.map((inputKey) => {
+        const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
+        return `${formatNumber(this.lastInputRates[inputKey] || 0, true, 3)} ${label}/s`;
+      }).join(', ');
       elements.runCheckbox.checked = this.isRunning;
       elements.runCheckbox.disabled = total <= 0;
       elements.stepDownButton.disabled = total <= 0;
