@@ -26,6 +26,7 @@ let rwgTravelBtnEl;
 let rwgDominionEl;
 let rwgDominionLoreBtnEl;
 let rwgDominionInfoEl;
+let rwgEquilibrateInfoEl;
 let rwgDominionLoreOverlayEl;
 let rwgDominionLoreListEl;
 let rwgDominionLoreTextEl;
@@ -101,6 +102,8 @@ const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
+const RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS = 60;
+const RWG_EQUILIBRATE_TOOLTIP_TEXT = 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.';
 
 function normalizeHazardList(source) {
   if (Array.isArray(source)) {
@@ -317,6 +320,17 @@ function cacheResultControls() {
   rwgDominionEl = document.getElementById('rwg-dominion');
   rwgDominionLoreBtnEl = document.getElementById('rwg-dominion-lore-btn');
   rwgDominionInfoEl = document.getElementById('rwg-dominion-info');
+  rwgEquilibrateInfoEl = document.getElementById('rwg-equilibrate-info');
+  if (rwgEquilibrateInfoEl) {
+    const tooltipText = buildEquilibrateTooltipText();
+    const tooltip = rwgEquilibrateInfoEl.querySelector('.dynamic-tooltip');
+    if (tooltip) {
+      tooltip.textContent = tooltipText;
+      tooltip.style.whiteSpace = 'pre-line';
+    } else {
+      attachDynamicInfoTooltip(rwgEquilibrateInfoEl, tooltipText);
+    }
+  }
   rwgDominionEl && (rwgDominionEl.onchange = () => {
     rwgSelectedDominion = rwgDominionEl.value;
   });
@@ -673,6 +687,43 @@ function isReplayableSeedResult(result) {
   return !!result?.allowReplay;
 }
 
+function hasFastTerraformEquilibrationBypass() {
+  return fastestTerraformRealSeconds !== null
+    && fastestTerraformRealSeconds < RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS;
+}
+
+function isRandomWorldEquilibrated(seedUsed, canonicalSeed) {
+  if (!seedUsed) return false;
+  return equilibratedWorlds.has(seedUsed)
+    || (canonicalSeed ? equilibratedWorlds.has(canonicalSeed) : false);
+}
+
+function getRandomWorldEquilibrationState(seedUsed, canonicalSeed) {
+  const bypassUnlocked = hasFastTerraformEquilibrationBypass();
+  const eqDone = isRandomWorldEquilibrated(seedUsed, canonicalSeed);
+  return {
+    bypassUnlocked,
+    eqDone,
+    satisfied: bypassUnlocked || eqDone
+  };
+}
+
+function getRandomWorldTravelEquilibrationWarning(state) {
+  if (state.satisfied) return '';
+  return 'Press Equilibrate at least once before traveling.';
+}
+
+function buildEquilibrateTooltipText() {
+  const bypassUnlocked = hasFastTerraformEquilibrationBypass();
+  const fastestRecordText = fastestTerraformRealSeconds === null
+    ? 'none'
+    : `${fastestTerraformRealSeconds.toFixed(2)}s`;
+  const requirementText = bypassUnlocked
+    ? 'Current status: Equilibrate is optional before random-world travel in this save.'
+    : 'Current status: Equilibrate is required before random-world travel in this save.';
+  return `${RWG_EQUILIBRATE_TOOLTIP_TEXT}\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s.\nCurrent Fastest Terraform (real time): ${fastestRecordText}.\n${requirementText}`;
+}
+
 function updateRandomWorldUI() {
   const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
   if (!mgr) return;
@@ -717,21 +768,19 @@ function updateRandomWorldUI() {
       const seedUsed = rwgResultEl.dataset ? rwgResultEl.dataset.seedUsed : undefined;
       const canonicalSeed = rwgResultEl.dataset ? (rwgResultEl.dataset.canonicalSeed || rwgResultEl.dataset.seedString) : undefined;
       const replayAllowed = rwgResultEl.dataset?.allowReplay === '1';
-      const eqDone = seedUsed
-        ? (equilibratedWorlds.has(seedUsed) || (canonicalSeed ? equilibratedWorlds.has(canonicalSeed) : false))
-        : false;
+      const eqState = getRandomWorldEquilibrationState(seedUsed, canonicalSeed);
       const alreadyTerraformed = (canonicalSeed && typeof sm.isSeedTerraformed === 'function')
         ? sm.isSeedTerraformed(canonicalSeed)
         : (seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false);
       const lockedByStory = typeof sm.isRandomTravelLocked === 'function' ? sm.isRandomTravelLocked() : false;
-      const travelDisabled = lockedByStory || (!!alreadyTerraformed && !replayAllowed) || !eqDone;
+      const travelDisabled = lockedByStory || (!!alreadyTerraformed && !replayAllowed) || !eqState.satisfied;
       travelBtn.disabled = travelDisabled;
 
       const warningMsg = lockedByStory
         ? 'You must complete the story for the current world first'
         : ((!replayAllowed && alreadyTerraformed)
           ? 'This world has already been terraformed.'
-          : (!eqDone ? 'Press Equilibrate at least once before traveling.' : ''));
+          : getRandomWorldTravelEquilibrationWarning(eqState));
       let warnEl = document.getElementById('rwg-travel-warning');
       if (warningMsg) {
         if (!warnEl) {
@@ -757,7 +806,8 @@ function attachTravelHandler(res, sStr) {
   travelBtn.onclick = () => {
     const attemptTravel = () => {
       const canonical = res?.seedString || sStr;
-      if (!equilibratedWorlds.has(sStr) && !equilibratedWorlds.has(canonical)) return;
+      const eqState = getRandomWorldEquilibrationState(sStr, canonical);
+      if (!eqState.satisfied) return;
       if (!isReplayableSeedResult(res) && spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
       if (spaceManager?.travelToRandomWorld) {
         applyDominionSelection(res);
@@ -1112,14 +1162,13 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
 
   const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
   const replayAllowed = isReplayableSeedResult(res);
-  const eqDone = seedUsed
-    && (equilibratedWorlds.has(seedUsed) || (res.seedString ? equilibratedWorlds.has(res.seedString) : false));
+  const eqState = getRandomWorldEquilibrationState(seedUsed, res.seedString);
   const alreadyTerraformed = (res.seedString && sm?.isSeedTerraformed)
     ? sm.isSeedTerraformed(res.seedString)
     : (seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false);
   const lockedByStory = sm?.isRandomTravelLocked ? sm.isRandomTravelLocked() : false;
-  const travelDisabled = lockedByStory || (alreadyTerraformed && !replayAllowed) || !eqDone;
-  const showTemps = !seedUsed || eqDone;
+  const travelDisabled = lockedByStory || (alreadyTerraformed && !replayAllowed) || !eqState.satisfied;
+  const showTemps = !seedUsed || eqState.eqDone;
   const meanTVal = (showTemps && temps)
     ? `${fmt(Math.round(toDisplayTemp(temps.mean)))} ${tempUnit}`
     : '—';
@@ -1138,7 +1187,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     ? 'You must complete the story for the current world first'
     : ((!replayAllowed && alreadyTerraformed)
       ? 'This world has already been terraformed.'
-      : (!eqDone ? 'Press Equilibrate at least once before traveling.' : ''));
+      : getRandomWorldTravelEquilibrationWarning(eqState));
   const gWarn = createGravityWarning(c.gravity, fmt, { includeFlavor: true });
   const showDominionPanel = options.showDominion !== false;
   const dominionPanel = showDominionPanel ? `
@@ -1154,7 +1203,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
       <h3>${res.merged?.name || 'Generated World'}</h3>
       <div class="rwg-control-row">
         <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
-        <span class="info-tooltip-icon" title="The climate model in Terraforming Titans is quite complex.  It is not realistic for the random world generator to generate worlds that already start near equilibrium.  However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.  \n\nTo reach this state, worlds can be simulated for thousands of year, as necessary, so that the climate stabilizes.  This button must be pressed to get at least a little of simulation, but can also be ended early if preferred.  Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue.  For best results, please keep the window in focus while running the simulation.  The rest of the game will pause.">&#9432;</span>
+        <span id="rwg-equilibrate-info" class="info-tooltip-icon">&#9432;</span>
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
       </div>
       ${warningMsg ? `<div class="rwg-control-row rwg-warning-row"><span id="rwg-travel-warning" class="rwg-inline-warning">⚠ ${warningMsg} ⚠</span></div>` : ''}
