@@ -1,5 +1,23 @@
 const wasteResourceNames = new Set(['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']);
 const wasteTooltipNoteText = 'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages.  The numbers here are not their actual consumption.';
+const SPACE_STORAGE_UI_ORDER = [
+  'metal',
+  'silicon',
+  'graphite',
+  'glass',
+  'components',
+  'electronics',
+  'superconductors',
+  'superalloys',
+  'liquidWater',
+  'biomass',
+  'carbonDioxide',
+  'inertGas',
+  'oxygen',
+  'atmosphericMethane',
+  'atmosphericAmmonia',
+  'hydrogen',
+];
 let resourceViewModeUpdating = false;
 
 function isSpaceStorageViewActive() {
@@ -66,7 +84,10 @@ function updateSpaceStorageCapDisplay(entry, resourceKey) {
 function createSpaceStorageTotalElement() {
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
+  resourceElement.classList.add('resource-divider-bottom');
   resourceElement.id = 'space-storage-total-container';
+  resourceElement.style.marginBottom = '10px';
+  resourceElement.style.setProperty('--divider-margin-bottom', '10px');
   resourceElement.innerHTML = `
       <div class="resource-row">
         <div class="resource-name"><strong id="space-storage-total-name">Total</strong></div>
@@ -77,6 +98,38 @@ function createSpaceStorageTotalElement() {
       </div>
   `;
   return resourceElement;
+}
+
+function getResourceNamesForDisplay(category, resourceMap) {
+  const names = Object.keys(resourceMap || {});
+  if (category !== 'spaceStorage') {
+    return names;
+  }
+  const orderIndexByName = {};
+  for (let i = 0; i < SPACE_STORAGE_UI_ORDER.length; i += 1) {
+    orderIndexByName[SPACE_STORAGE_UI_ORDER[i]] = i;
+  }
+  return names.sort((a, b) => {
+    const indexA = Object.prototype.hasOwnProperty.call(orderIndexByName, a) ? orderIndexByName[a] : Number.MAX_SAFE_INTEGER;
+    const indexB = Object.prototype.hasOwnProperty.call(orderIndexByName, b) ? orderIndexByName[b] : Number.MAX_SAFE_INTEGER;
+    if (indexA !== indexB) return indexA - indexB;
+    return a.localeCompare(b);
+  });
+}
+
+function reorderSpaceStorageElements(container) {
+  if (!container) return;
+  const total = document.getElementById('space-storage-total-container');
+  if (total && container.firstChild !== total) {
+    container.insertBefore(total, container.firstChild);
+  }
+  for (let i = 0; i < SPACE_STORAGE_UI_ORDER.length; i += 1) {
+    const resourceName = SPACE_STORAGE_UI_ORDER[i];
+    const resourceElement = document.getElementById(`${resourceName}-container`);
+    if (resourceElement && resourceElement.parentElement === container) {
+      container.appendChild(resourceElement);
+    }
+  }
 }
 
 function ensureSpaceStorageTotalElement(container) {
@@ -1128,12 +1181,17 @@ function populateResourceElements(resources) {
       if (category === 'spaceStorage') {
         ensureSpaceStorageTotalElement(container);
       }
-      for (const resourceName in resources[category]) {
+      const resourceNames = getResourceNamesForDisplay(category, resources[category]);
+      for (let i = 0; i < resourceNames.length; i += 1) {
+        const resourceName = resourceNames[i];
         const resourceObj = resources[category][resourceName];
         if (!document.getElementById(`${resourceName}-container`)) {
           const resourceElement = createResourceElement(category, resourceObj, resourceName);
           container.appendChild(resourceElement);
         }
+      }
+      if (category === 'spaceStorage') {
+        reorderSpaceStorageElements(container);
       }
     }
   }
@@ -1153,6 +1211,9 @@ function unlockResource(resource) {
       // Use helper function to create the resource element
       const resourceElement = createResourceElement(resource.category, resource, resource.name);
       container.appendChild(resourceElement);
+      if (resource.category === 'spaceStorage') {
+        reorderSpaceStorageElements(container);
+      }
 
       // Ensure the category container is visible
       categoryContainer.style.display = 'block';
@@ -1186,6 +1247,9 @@ function updateResourceDisplay(resources, deltaSeconds) {
       if (header) header.style.display = 'none';
       continue;
     }
+    if (category === 'spaceStorage') {
+      reorderSpaceStorageElements(container);
+    }
 
     let hasUnlockedResources = false;
     let spaceStorageTotalEntry = null;
@@ -1218,7 +1282,9 @@ function updateResourceDisplay(resources, deltaSeconds) {
       setResourceCapLimited(spaceStorageTotalEntry, false);
     }
 
-    for (const resourceName in resources[category]) {
+    const resourceNames = getResourceNamesForDisplay(category, resources[category]);
+    for (let i = 0; i < resourceNames.length; i += 1) {
+      const resourceName = resourceNames[i];
       const resourceObj = resources[category][resourceName];
       const entry = resourceUICache.resources[resourceName] || cacheSingleResource(category, resourceName);
       const resourceElement = entry ? entry.container : null;
@@ -1820,7 +1886,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     }
   }
 
-  if (zonesDiv && typeof terraforming !== 'undefined') {
+  if (zonesDiv && resource.category !== 'spaceStorage' && typeof terraforming !== 'undefined') {
     const zoneValues = {};
     const zoneBuried = {};
     getZones().forEach(zone => {

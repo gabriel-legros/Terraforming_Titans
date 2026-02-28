@@ -14,14 +14,14 @@ const SPACE_STORAGE_LEGACY_RESERVE_KEYS = [
   'electronics',
   'superconductors',
   'superalloys',
+  'liquidWater',
+  'biomass',
+  'carbonDioxide',
+  'inertGas',
   'oxygen',
-  'hydrogen',
   'atmosphericMethane',
   'atmosphericAmmonia',
-  'carbonDioxide',
-  'liquidWater',
-  'inertGas',
-  'biomass'
+  'hydrogen'
 ];
 const SPACE_STORAGE_RESOURCE_KEYS = [
   'metal',
@@ -32,14 +32,14 @@ const SPACE_STORAGE_RESOURCE_KEYS = [
   'electronics',
   'superconductors',
   'superalloys',
+  'liquidWater',
+  'biomass',
+  'carbonDioxide',
+  'inertGas',
   'oxygen',
-  'hydrogen',
   'atmosphericMethane',
   'atmosphericAmmonia',
-  'carbonDioxide',
-  'liquidWater',
-  'inertGas',
-  'biomass'
+  'hydrogen'
 ];
 
 class SpaceStorageProject extends SpaceshipProject {

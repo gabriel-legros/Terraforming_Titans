@@ -263,18 +263,18 @@
       silicon: { name: 'Silica', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       graphite: { name: 'Graphite', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       glass: { name: 'Glass', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
-      components: { name: 'Components', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      components: { name: 'Components', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton', marginTop: 10 },
       electronics: { name: 'Electronics', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       superconductors: { name: 'Supercond.', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       superalloys: { name: 'Superalloys', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      liquidWater: { name: 'Water', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton', marginTop: 10 },
+      biomass: { name: 'Biomass', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
+      carbonDioxide: { name: 'CO2', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton', marginTop: 10 },
+      inertGas: { name: 'Nitrogen', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       oxygen: { name: 'Oxygen', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
-      hydrogen: { name: 'Hydrogen', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       atmosphericMethane: { name: 'Methane', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       atmosphericAmmonia: { name: 'Ammonia', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
-      carbonDioxide: { name: 'CO2', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
-      liquidWater: { name: 'Water', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
-      inertGas: { name: 'Nitrogen', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
-      biomass: { name: 'Biomass', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' }
+      hydrogen: { name: 'Hydrogen', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' }
     }
   };
 
