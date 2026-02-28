@@ -174,27 +174,95 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
-  getResourceCapSetting(resourceKey) {
+  getResourceCapSettingFromSource(resourceKey, sourceCaps = null) {
     const fallback = { mode: 'none', value: 0 };
-    const setting = this.resourceCaps[resourceKey] || fallback;
-    const mode = setting.mode === 'amount' || setting.mode === 'percent'
+    const caps = sourceCaps || this.resourceCaps;
+    const setting = caps[resourceKey] || fallback;
+    const mode = setting.mode === 'amount' || setting.mode === 'percent' || setting.mode === 'weight'
       ? setting.mode
       : 'none';
     const parsedValue = Number(setting.value);
     let value = Number.isFinite(parsedValue) ? parsedValue : 0;
     if (mode === 'percent') {
       value = Math.max(0, Math.min(100, value));
+    } else if (mode === 'weight') {
+      value = Math.max(0, Math.floor(value));
+    } else {
+      value = Math.max(0, value);
     }
     return { mode, value };
   }
 
-  getResourceCapLimit(resourceKey) {
-    const setting = this.getResourceCapSetting(resourceKey);
-    if (setting.mode === 'amount') {
-      return Math.max(0, setting.value || 0);
+  getResourceCapSetting(resourceKey) {
+    return this.getResourceCapSettingFromSource(resourceKey, this.resourceCaps);
+  }
+
+  getAllSpaceStorageResourceKeys(additionalCaps = null) {
+    const keys = new Set(SPACE_STORAGE_RESOURCE_KEYS);
+    Object.keys(resources?.spaceStorage || {}).forEach(key => keys.add(key));
+    Object.keys(this.resourceCaps || {}).forEach(key => keys.add(key));
+    if (additionalCaps) {
+      Object.keys(additionalCaps).forEach(key => keys.add(key));
     }
-    if (setting.mode === 'percent') {
-      return Math.max(0, (this.maxStorage * (setting.value || 0)) / 100);
+    return Array.from(keys);
+  }
+
+  getResourceCapLimits(capOverrides = null) {
+    const sourceCaps = capOverrides
+      ? { ...(this.resourceCaps || {}), ...capOverrides }
+      : (this.resourceCaps || {});
+    const keys = this.getAllSpaceStorageResourceKeys(sourceCaps);
+    const limits = {};
+    let fixedTotal = 0;
+    let hasWeightCap = false;
+    let totalWeight = 0;
+
+    keys.forEach((resourceKey) => {
+      const setting = this.getResourceCapSettingFromSource(resourceKey, sourceCaps);
+      if (setting.mode === 'amount') {
+        const limit = Math.max(0, setting.value || 0);
+        limits[resourceKey] = limit;
+        fixedTotal += limit;
+        return;
+      }
+      if (setting.mode === 'percent') {
+        const limit = Math.max(0, (this.maxStorage * (setting.value || 0)) / 100);
+        limits[resourceKey] = limit;
+        fixedTotal += limit;
+        return;
+      }
+      if (setting.mode === 'weight') {
+        hasWeightCap = true;
+        if (setting.value > 0) {
+          totalWeight += setting.value;
+        }
+      }
+    });
+
+    const remainingStorage = Math.max(0, this.maxStorage - fixedTotal);
+    keys.forEach((resourceKey) => {
+      if (Object.prototype.hasOwnProperty.call(limits, resourceKey)) {
+        return;
+      }
+      const setting = this.getResourceCapSettingFromSource(resourceKey, sourceCaps);
+      if (!hasWeightCap) {
+        limits[resourceKey] = setting.mode === 'weight' ? 0 : Infinity;
+        return;
+      }
+      if (setting.mode === 'weight' && setting.value > 0 && totalWeight > 0) {
+        limits[resourceKey] = (remainingStorage * setting.value) / totalWeight;
+      } else {
+        limits[resourceKey] = 0;
+      }
+    });
+
+    return limits;
+  }
+
+  getResourceCapLimit(resourceKey, capOverrides = null) {
+    const limits = this.getResourceCapLimits(capOverrides);
+    if (Object.prototype.hasOwnProperty.call(limits, resourceKey)) {
+      return limits[resourceKey];
     }
     return Infinity;
   }
@@ -245,6 +313,22 @@ class SpaceStorageProject extends SpaceshipProject {
         delete this.resourceStrategicReserves[resourceKey];
       } else {
         this.resourceStrategicReserves[resourceKey] = normalized;
+      }
+    }
+  }
+
+  sanitizeResourceCaps() {
+    for (const resourceKey in this.resourceCaps) {
+      const setting = this.resourceCaps[resourceKey];
+      if (!setting) {
+        delete this.resourceCaps[resourceKey];
+        continue;
+      }
+      const normalized = this.getResourceCapSettingFromSource(resourceKey, this.resourceCaps);
+      if (normalized.mode === 'none') {
+        delete this.resourceCaps[resourceKey];
+      } else {
+        this.resourceCaps[resourceKey] = normalized;
       }
     }
   }
@@ -1268,12 +1352,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'resourceCaps')) {
       this.resourceCaps = settings.resourceCaps ? JSON.parse(JSON.stringify(settings.resourceCaps)) : {};
-      for (const resourceKey in this.resourceCaps) {
-        const cap = this.resourceCaps[resourceKey];
-        if (!cap || (cap.mode !== 'amount' && cap.mode !== 'percent')) {
-          delete this.resourceCaps[resourceKey];
-        }
-      }
+      this.sanitizeResourceCaps();
     }
     if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
       this.resourceTransferModes = {};
@@ -1367,12 +1446,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
     this.resourceCaps = state.resourceCaps || {};
-    for (const resourceKey in this.resourceCaps) {
-      const cap = this.resourceCaps[resourceKey];
-      if (!cap || (cap.mode !== 'amount' && cap.mode !== 'percent')) {
-        delete this.resourceCaps[resourceKey];
-      }
-    }
+    this.sanitizeResourceCaps();
     this.resourceTransferModes = state.resourceTransferModes || {};
     const ship = state.shipOperation || {};
     this.shipOperationRemainingTime = ship.remainingTime || 0;
@@ -1424,12 +1498,7 @@ class SpaceStorageProject extends SpaceshipProject {
       this.applyLegacyStrategicReserve(state.strategicReserve);
     }
     this.resourceCaps = state.resourceCaps || {};
-    for (const resourceKey in this.resourceCaps) {
-      const cap = this.resourceCaps[resourceKey];
-      if (!cap || (cap.mode !== 'amount' && cap.mode !== 'percent')) {
-        delete this.resourceCaps[resourceKey];
-      }
-    }
+    this.sanitizeResourceCaps();
     this.shipTransferMode = state.shipTransferMode || this.shipTransferMode;
     this.lastUniformTransferMode = state.lastUniformTransferMode || this.lastUniformTransferMode;
     this.resourceTransferModes = state.resourceTransferModes || {};

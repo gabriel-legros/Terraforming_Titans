@@ -57,10 +57,6 @@ function getSpaceStorageResourceCapDisplay(resourceKey) {
   if (!storageProj || !storageProj.getResourceCapSetting || !storageProj.getResourceCapLimit) {
     return null;
   }
-  const capSetting = storageProj.getResourceCapSetting(resourceKey);
-  if (!capSetting || capSetting.mode === 'none') {
-    return null;
-  }
   const capLimit = storageProj.getResourceCapLimit(resourceKey);
   if (!Number.isFinite(capLimit)) {
     return null;
