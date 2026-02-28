@@ -1166,6 +1166,7 @@
       elements.runCheckbox.disabled = total <= 0;
       elements.stepDownButton.disabled = total <= 0;
       elements.stepUpButton.disabled = total <= 0;
+      const productivityByRecipe = this.getOperationProductivityForTick();
 
       this.getAssignmentKeys().forEach((key) => {
         const row = elements.rowElements[key];
@@ -1200,6 +1201,9 @@
         row.minusButton.disabled = current <= 0 || this.autoAssignFlags[key];
         row.plusButton.disabled = current >= maxForKey || total <= 0 || this.autoAssignFlags[key];
         row.rate.textContent = `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s`;
+        const recipeProductivity = productivityByRecipe[key] ?? 1;
+        const productivityLimited = this.isRunning && current > 0 && recipeProductivity < 1;
+        row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
         setTooltipText(
           row.recipeTooltip,
           this.getRecipeTooltipText(key),

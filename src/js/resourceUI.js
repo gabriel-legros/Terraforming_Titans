@@ -1607,13 +1607,18 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       let baseUnstable = false;
       const history = resource.rateHistory || [];
       if (history.length >= 10) {
-        // Count sign changes
+        // Count weighted sign changes: crossing to/from zero is half, direct +/- flip is full.
         let signChanges = 0;
         for (let i = 1; i < history.length; i++) {
           const current = history[i];
           const previous = history[i - 1];
-          if ((current > 0 && previous < 0) || (current < 0 && previous > 0)) {
-            signChanges++;
+          const currentSign = current > 0 ? 1 : (current < 0 ? -1 : 0);
+          const previousSign = previous > 0 ? 1 : (previous < 0 ? -1 : 0);
+          if (currentSign === previousSign) continue;
+          if (currentSign === 0 || previousSign === 0) {
+            signChanges += 0.5;
+          } else {
+            signChanges += 1;
           }
         }
         if (signChanges > 1) {

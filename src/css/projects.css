@@ -859,6 +859,10 @@
     white-space: nowrap;
 }
 
+.project-rate-productivity-limited {
+    color: orange !important;
+}
+
 .hephaestus-assignment-controls {
     display: grid;
     grid-template-columns: 260px 48px;
