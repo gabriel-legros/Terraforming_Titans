@@ -1,3 +1,11 @@
+let dysonSwarmManagerInstance = null;
+
+if (typeof module !== 'undefined' && module.exports) {
+  dysonSwarmManagerInstance = require('../dyson-manager.js');
+} else if (typeof window !== 'undefined') {
+  dysonSwarmManagerInstance = window.dysonManager || null;
+}
+
 class DysonSwarmReceiverProject extends TerraformingDurationProject {
   constructor(config, name) {
     super(config, name);
@@ -174,6 +182,22 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     } else if (this.autoContinuousOperation && (this.isCompleted || this.collectors > 0)) {
       this.startCollector();
     }
+  }
+
+  applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges) {
+    if (!accumulatedChanges) {
+      return;
+    }
+    if (accumulatedChanges.dysonSpaceEnergyInjected === true) {
+      return;
+    }
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return;
+    }
+    const overflowPerSecond = dysonSwarmManagerInstance?.getOverflowEnergyPerSecond?.() || 0;
+    accumulatedChanges.spaceEnergy = Math.max(overflowPerSecond * seconds, 0);
+    accumulatedChanges.dysonSpaceEnergyInjected = true;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {

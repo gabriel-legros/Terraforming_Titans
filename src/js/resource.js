@@ -774,6 +774,8 @@ function produceResources(deltaTime, buildings) {
       }
     }
   }
+  accumulatedChanges.spaceEnergy = 0;
+  accumulatedChanges.dysonSpaceEnergyInjected = false;
 
   if (followersManager && followersManager.applyOrbitalProductionRates) {
     followersManager.applyOrbitalProductionRates();
@@ -800,7 +802,18 @@ function produceResources(deltaTime, buildings) {
       return data.project.attributes?.spaceBuilding
         && typeof data.project.applyOperationCostAndGain === 'function';
     });
-    for (const [, data] of spaceBuildingOperations) {
+    const spaceEnergyProducers = [];
+    const otherSpaceBuildingOperations = [];
+    for (const entry of spaceBuildingOperations) {
+      const [, data] = entry;
+      if (data.project.attributes?.spaceEnergyProducer) {
+        spaceEnergyProducers.push(entry);
+      } else {
+        otherSpaceBuildingOperations.push(entry);
+      }
+    }
+    const orderedSpaceBuildingOperations = spaceEnergyProducers.concat(otherSpaceBuildingOperations);
+    for (const [, data] of orderedSpaceBuildingOperations) {
       const { project } = data;
       const productivity = project.operationProductivity ?? 1;
       project.applyOperationCostAndGain(deltaTime, accumulatedChanges, productivity);

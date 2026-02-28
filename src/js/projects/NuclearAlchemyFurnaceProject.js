@@ -240,6 +240,47 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     return this.isRunning && this.repeatCount > 0;
   }
 
+  getOperationProductivityForTick(defaultProductivity = 1, deltaTime = 1000) {
+    if (!this.shouldOperate()) {
+      return Math.max(0, Math.min(1, defaultProductivity));
+    }
+
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return Math.max(0, Math.min(1, defaultProductivity));
+    }
+
+    this.normalizeAssignments();
+    const storage = this.getSpaceStorageProject();
+    if (!storage) {
+      return 0;
+    }
+
+    const entries = this.buildConversionEntries(seconds, 1);
+    if (entries.length === 0) {
+      return 0;
+    }
+
+    let desiredHydrogen = 0;
+    entries.forEach((entry) => {
+      desiredHydrogen += entry.desired || 0;
+    });
+    if (!(desiredHydrogen > 0)) {
+      return 0;
+    }
+
+    const sharedHydrogenRatio = Number(resources?.spaceStorage?.hydrogen?.availabilityRatio);
+    if (Number.isFinite(sharedHydrogenRatio)) {
+      return Math.max(0, Math.min(1, sharedHydrogenRatio));
+    }
+
+    const hydrogenAvailable = storage.getAvailableStoredResource('hydrogen');
+    if (!(hydrogenAvailable > 0)) {
+      return 0;
+    }
+    return Math.max(0, Math.min(1, hydrogenAvailable / desiredHydrogen));
+  }
+
   buildConversionEntries(seconds, productivity = 1) {
     const storage = this.getSpaceStorageProject();
     if (!storage) {
@@ -826,6 +867,10 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       false,
       true
     );
+  }
+
+  estimateProductivityCostAndGain(deltaTime = 1000) {
+    return this.estimateExpansionCostAndGain(deltaTime, false, 1, null);
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {

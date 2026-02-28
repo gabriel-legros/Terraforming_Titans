@@ -161,6 +161,54 @@ class LiftersProject extends TerraformingDurationProject {
     return this.repeatCount * this.unitRatePerLifter * productivity;
   }
 
+  getOperationProductivityForTick(defaultProductivity = 1, deltaTime = 1000) {
+    if (!this.shouldOperate()) {
+      return Math.max(0, Math.min(1, defaultProductivity));
+    }
+
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return Math.max(0, Math.min(1, defaultProductivity));
+    }
+
+    const maxUnits = this.getUnitsPerSecond(1) * seconds;
+    if (!(maxUnits > 0)) {
+      return 0;
+    }
+
+    let modeRatio = 1;
+    let energyDemandUnits = maxUnits;
+    if (this.mode === LIFTER_MODES.ATMOSPHERE_STRIP) {
+      const previousShortfallReason = this.shortfallReason;
+      const atmosphereLimit = this.getAtmosphereLimit();
+      this.shortfallReason = previousShortfallReason;
+      if (!(atmosphereLimit > 0)) {
+        return 0;
+      }
+      const limitedUnits = Math.min(maxUnits, atmosphereLimit);
+      modeRatio = Math.max(0, Math.min(1, limitedUnits / maxUnits));
+      energyDemandUnits = limitedUnits;
+    }
+    if (!(energyDemandUnits > 0)) {
+      return 0;
+    }
+
+    const energyRequired = energyDemandUnits * this.energyPerUnit;
+    const dysonAvailable = this.getDysonOverflowPerSecond() * seconds;
+    const colonyAvailable = this.isColonyEnergyAllowed()
+      ? Math.max(resources?.colony?.energy?.value || 0, 0)
+      : 0;
+    const totalAvailable = dysonAvailable + colonyAvailable;
+    const energyRatio = energyRequired > 0
+      ? Math.max(0, Math.min(1, totalAvailable / energyRequired))
+      : 1;
+
+    const operationRatio = this.mode === LIFTER_MODES.ATMOSPHERE_STRIP
+      ? modeRatio * energyRatio
+      : energyRatio;
+    return Math.max(0, Math.min(1, operationRatio));
+  }
+
   shouldOperate() {
     if (this.isPermanentlyDisabled?.()) {
       return false;
@@ -327,12 +375,20 @@ class LiftersProject extends TerraformingDurationProject {
     const availableColony = (!canUseColonyEnergy || !colonyEnergy)
       ? 0
       : Math.max((colonyEnergy.value || 0) + pending, 0);
-    const dysonAvailable = this.getDysonOverflowPerSecond() * seconds;
+    const poolAvailable = accumulatedChanges?.dysonSpaceEnergyInjected
+      ? Math.max(accumulatedChanges.spaceEnergy || 0, 0)
+      : null;
+    const dysonAvailable = poolAvailable !== null
+      ? poolAvailable
+      : this.getDysonOverflowPerSecond() * seconds;
     const totalAvailable = availableColony + dysonAvailable;
     const energyUsed = Math.min(energyRequired, totalAvailable);
     const dysonEnergyUsed = Math.min(energyUsed, dysonAvailable);
     const colonyUsed = Math.min(Math.max(energyUsed - dysonEnergyUsed, 0), availableColony);
     const totalUsed = colonyUsed + dysonEnergyUsed;
+    if (accumulatedChanges?.dysonSpaceEnergyInjected) {
+      accumulatedChanges.spaceEnergy = Math.max((accumulatedChanges.spaceEnergy || 0) - dysonEnergyUsed, 0);
+    }
     if (colonyUsed > 0 && colonyEnergy) {
       if (accumulatedChanges) {
         accumulatedChanges.colony ||= {};

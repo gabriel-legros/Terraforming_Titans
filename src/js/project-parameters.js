@@ -552,7 +552,12 @@ const projectParameters = {
     description: 'Expand your Dyson Swarm to produce power from the sun.  Build cheap receivers to receive power.  All colonies on terraformed worlds can help deploy collectors when materials are provided, shortening the process.  Collectors persist between worlds.  Collectors can be expanded even without the Dyson Swarm Receiver research.',
     repeatable: false,
     unlocked: false,
-    attributes: { canUseSpaceStorage: true, completedWhenUnlocked: true }
+    attributes: {
+      canUseSpaceStorage: true,
+      completedWhenUnlocked: true,
+      spaceBuilding: true,
+      spaceEnergyProducer: true
+    }
   },
   dysonSphere: {
     type: 'DysonSphereProject',
@@ -567,7 +572,12 @@ const projectParameters = {
     description: 'Assemble a Dyson Sphere frame, enabling 100x faster collectors expansion.  Disables Dyson Swarm on completion, transferring all collectors.',
     repeatable: false,
     unlocked: false,
-    attributes: { canUseSpaceStorage: true, preserveProgressOnTravel: true }
+    attributes: {
+      canUseSpaceStorage: true,
+      preserveProgressOnTravel: true,
+      spaceBuilding: true,
+      spaceEnergyProducer: true
+    }
   },
   hephaestusMegaconstruction: {
     type: 'HephaestusMegaconstructionProject',

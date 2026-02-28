@@ -451,6 +451,44 @@ describe('Space building productivity via produceResources', () => {
     cleanup();
   });
 
+  test('Nuclear Alchemical Furnace operation productivity is based on operation demand, not expansion demand', () => {
+    const harness = setupHarness({ hydrogen: 200, metal: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      NuclearAlchemyFurnaceProject,
+      cleanup,
+    } = harness;
+
+    const furnace = new NuclearAlchemyFurnaceProject({
+      name: 'Nuclear Alchemical Furnace',
+      duration: 36000000,
+      cost: { colony: { funding: 1000 } },
+      attributes: {
+        canUseSpaceStorage: true,
+        spaceBuilding: true,
+        alchemyParameter: 1,
+      },
+    }, 'nuclearAlchemyFurnace');
+
+    furnace.repeatCount = 2000;
+    furnace.furnaceAssignments.metal = 2000; // 200 hydrogen/s demand
+    furnace.isRunning = true;
+    furnace.isActive = true; // Expansion is active but unaffordable.
+    furnace.autoStart = true;
+
+    projectManager.projects.nuclearAlchemyFurnace = furnace;
+    projectManager.projectOrder = ['nuclearAlchemyFurnace'];
+
+    produceResources(1000, {});
+
+    const consumed = 200 - resources.spaceStorage.hydrogen.value;
+    expectApprox(furnace.operationProductivity, 1);
+    expectApprox(consumed, 200);
+    cleanup();
+  });
+
   test.each([
     { metal: 0, expectedRatio: 0 },
     { metal: 50, expectedRatio: 0.25 },
