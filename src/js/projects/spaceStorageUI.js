@@ -18,15 +18,16 @@ const storageResourceOptions = [
   { label: 'Electronics', category: 'colony', resource: 'electronics' },
   { label: 'Superconductors', category: 'colony', resource: 'superconductors' },
   { label: 'Superalloys', category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
+  { label: 'Water', category: 'surface', resource: 'liquidWater' },
+  { label: 'Biomass', category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' },
+  { label: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
+  { label: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },
   { label: 'Oxygen', category: 'atmospheric', resource: 'oxygen' },
-  { label: 'Hydrogen', category: 'atmospheric', resource: 'hydrogen' },
   { label: 'Methane', category: 'atmospheric', resource: 'atmosphericMethane', requiresProjectFlag: 'methaneAmmoniaStorage' },
   { label: 'Ammonia', category: 'atmospheric', resource: 'atmosphericAmmonia', requiresProjectFlag: 'methaneAmmoniaStorage' },
-  { label: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
-  { label: 'Water', category: 'surface', resource: 'liquidWater' },
-  { label: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },
-  { label: 'Biomass', category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' }
+  { label: 'Hydrogen', category: 'atmospheric', resource: 'hydrogen' }
 ];
+const SPACE_STORAGE_RESOURCE_DIVIDER_TOP = new Set(['components', 'liquidWater', 'carbonDioxide']);
 
 if (typeof SpaceStorageProject !== 'undefined') {
   SpaceStorageProject.prototype.createShipAutoStartCheckbox = function () {
@@ -201,7 +202,9 @@ function renderSpaceStorageUI(project, container) {
   expansionGrid.classList.add('project-details-grid');
   const expansionCostRow = document.createElement('div');
   expansionCostRow.id = 'ss-expansion-cost';
-  expansionCostRow.innerHTML = `<strong>Cost:</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon" title="Construction time is reduced for each terraformed planet">&#9432;</span>`;
+  expansionCostRow.innerHTML = '<strong>Cost:</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon">&#9432;</span>';
+  const expansionCostInfo = expansionCostRow.querySelector('.info-tooltip-icon');
+  attachDynamicInfoTooltip(expansionCostInfo, 'Construction time is reduced for each terraformed planet.');
   expansionGrid.appendChild(expansionCostRow);
 
   const expansionRateRow = document.createElement('div');
@@ -251,7 +254,6 @@ function renderSpaceStorageUI(project, container) {
     capClose.type = 'button';
     capClose.classList.add('space-storage-settings-close');
     capClose.textContent = 'X';
-    capClose.title = 'Close';
     capHeader.append(capTitle, capClose);
 
     const capResourceRow = document.createElement('div');
@@ -593,6 +595,13 @@ function renderSpaceStorageUI(project, container) {
   };
 
   storageResourceOptions.forEach(opt => {
+    let separator = null;
+    if (SPACE_STORAGE_RESOURCE_DIVIDER_TOP.has(opt.resource)) {
+      separator = document.createElement('div');
+      separator.classList.add('storage-resource-separator');
+      resourceGrid.appendChild(separator);
+    }
+
     const resourceItem = document.createElement('div');
     resourceItem.classList.add('storage-resource-item');
 
@@ -614,13 +623,16 @@ function renderSpaceStorageUI(project, container) {
       biomassInfo = document.createElement('span');
       biomassInfo.classList.add('info-tooltip-icon');
       biomassInfo.innerHTML = '&#9432;';
-      biomassInfo.title = 'Storing biomass removes it from all zones proportionally to their current biomass. Withdrawing places biomass into zones that can grow it first, then zones where it can survive, then anywhere, weighted by zone percentage.';
+      attachDynamicInfoTooltip(
+        biomassInfo,
+        'Storing biomass removes it from all zones proportionally to their current biomass. Withdrawing places biomass into zones that can grow it first, then zones where it can survive, then anywhere, weighted by zone percentage.'
+      );
     }
 
     const fullIcon = document.createElement('span');
     fullIcon.classList.add('storage-full-icon');
     fullIcon.innerHTML = '&#9888;&#xFE0E;';
-    fullIcon.title = 'Colony storage full';
+    const fullIconTooltip = attachDynamicInfoTooltip(fullIcon, 'Colony storage full', false);
     fullIcon.style.display = 'inline-block';
     fullIcon.style.visibility = 'hidden';
     fullIcon.style.fontSize = '14px';
@@ -648,7 +660,6 @@ function renderSpaceStorageUI(project, container) {
     capButton.type = 'button';
     capButton.classList.add('storage-cap-button');
     capButton.innerHTML = '&#9881;&#xFE0E;';
-    capButton.title = 'Space storage cap settings';
     capButton.addEventListener('click', () => {
       openCapWindow(opt.resource, opt.label);
     });
@@ -694,6 +705,10 @@ function renderSpaceStorageUI(project, container) {
 
     projectElements[project.name] = {
       ...projectElements[project.name],
+      resourceSeparators: {
+        ...(projectElements[project.name]?.resourceSeparators || {}),
+        [opt.resource]: separator
+      },
       resourceCheckboxes: {
         ...(projectElements[project.name]?.resourceCheckboxes || {}),
         [opt.resource]: checkbox
@@ -721,6 +736,10 @@ function renderSpaceStorageUI(project, container) {
       fullIcons: {
         ...(projectElements[project.name]?.fullIcons || {}),
         [opt.resource]: fullIcon
+      },
+      fullIconTooltips: {
+        ...(projectElements[project.name]?.fullIconTooltips || {}),
+        [opt.resource]: fullIconTooltip
       },
       resourceItems: {
         ...(projectElements[project.name]?.resourceItems || {}),
@@ -924,6 +943,25 @@ function updateSpaceStorageUI(project) {
       }
     });
   }
+  if (els.resourceSeparators && els.resourceItems) {
+    const visibleLookup = {};
+    storageResourceOptions.forEach(opt => {
+      const item = els.resourceItems[opt.resource];
+      visibleLookup[opt.resource] = !!item && item.style.display !== 'none';
+    });
+    storageResourceOptions.forEach((opt, index) => {
+      const separator = els.resourceSeparators[opt.resource];
+      if (!separator) return;
+      let hasVisiblePrevious = false;
+      for (let i = index - 1; i >= 0; i -= 1) {
+        if (visibleLookup[storageResourceOptions[i].resource]) {
+          hasVisiblePrevious = true;
+          break;
+        }
+      }
+      separator.style.display = visibleLookup[opt.resource] && hasVisiblePrevious ? '' : 'none';
+    });
+  }
   if (els.waterDestinationSelect) {
     els.waterDestinationSelect.value = project.waterWithdrawTarget || 'colony';
     els.waterDestinationSelect.style.display =
@@ -951,16 +989,21 @@ function updateSpaceStorageUI(project) {
   if (els.fullIcons) {
     storageResourceOptions.forEach(opt => {
       const icon = els.fullIcons[opt.resource];
+      const tooltip = els.fullIconTooltips ? els.fullIconTooltips[opt.resource] : null;
       let res = resources[opt.category]?.[opt.resource];
       if (icon) {
         const mode = project.getResourceTransferMode(opt.resource);
+        let tooltipText = 'Colony storage full';
         if (opt.resource === 'liquidWater' && mode === 'withdraw') {
           res = project.waterWithdrawTarget === 'surface'
             ? resources.surface.liquidWater
             : resources.colony.water;
-          icon.title = project.waterWithdrawTarget === 'surface'
+          tooltipText = project.waterWithdrawTarget === 'surface'
             ? 'Surface storage full'
             : 'Colony storage full';
+        }
+        if (tooltip) {
+          tooltip.textContent = tooltipText;
         }
         if (mode === 'withdraw' && res && res.hasCap && res.value >= res.cap) {
           icon.style.visibility = 'visible';

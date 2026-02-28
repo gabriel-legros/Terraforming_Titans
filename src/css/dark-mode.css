@@ -385,6 +385,10 @@
     border-top-color: #444;
 }
 
+.dark-mode .storage-resource-separator {
+    border-top-color: #444;
+}
+
 .dark-mode .terraforming-infographic-button {
     background-color: #2b2b2b;
     border-color: #555;

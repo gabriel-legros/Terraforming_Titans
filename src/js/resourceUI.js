@@ -18,6 +18,8 @@ const SPACE_STORAGE_UI_ORDER = [
   'atmosphericAmmonia',
   'hydrogen',
 ];
+const SPACE_STORAGE_DIVIDER_TOP_RESOURCES = new Set(['components', 'liquidWater', 'carbonDioxide']);
+const SPACE_STORAGE_DIVIDER_MARGIN = 10;
 let resourceViewModeUpdating = false;
 
 function isSpaceStorageViewActive() {
@@ -1157,9 +1159,13 @@ function createResourceElement(category, resourceObj, resourceName) {
     }
   }
 
-  if (resourceObj.marginTop) {
-    resourceElement.style.marginTop = resourceObj.marginTop + 'px';
-    resourceElement.style.setProperty('--divider-margin-top', resourceObj.marginTop + 'px');
+  const dividerMarginTop = resourceObj.marginTop
+    || (category === 'spaceStorage' && SPACE_STORAGE_DIVIDER_TOP_RESOURCES.has(resourceName)
+      ? SPACE_STORAGE_DIVIDER_MARGIN
+      : 0);
+  if (dividerMarginTop) {
+    resourceElement.style.marginTop = dividerMarginTop + 'px';
+    resourceElement.style.setProperty('--divider-margin-top', dividerMarginTop + 'px');
     resourceElement.classList.add('resource-divider-top');
   }
   if (resourceObj.marginBottom) {
