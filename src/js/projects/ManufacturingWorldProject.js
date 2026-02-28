@@ -139,6 +139,15 @@
     graphite: 'graphite',
   };
 
+  const MANUFACTURING_OUTPUT_LABELS = {
+    glass: 'glass',
+    metal: 'metal',
+    components: 'components',
+    electronics: 'electronics',
+    superconductors: 'superconductors',
+    superalloys: 'superalloys',
+  };
+
   class ManufacturingWorldProject extends SpecializationBase {
     constructor(config, name) {
       super(config, name, {
@@ -221,6 +230,39 @@
         } catch (error) {}
       }
       return multiplier;
+    }
+
+    getRecipeWgcMultiplier(key) {
+      const recipe = this.getRecipe(key);
+      if (!recipe || !recipe.wgcUpgradeId) {
+        return 1;
+      }
+      try {
+        return warpGateCommand.getMultiplier(recipe.wgcUpgradeId);
+      } catch (error) {}
+      return 1;
+    }
+
+    getRecipeTooltipText(key) {
+      const recipe = this.getRecipe(key);
+      if (!recipe) {
+        return '';
+      }
+      const outputLabel = MANUFACTURING_OUTPUT_LABELS[recipe.outputStorageKey] || recipe.outputStorageKey;
+      const inputParts = Object.keys(recipe.inputs).map((inputKey) => {
+        const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
+        return `${formatNumber(recipe.inputs[inputKey], true)} ${label}`;
+      });
+      const lines = [
+        `Produces: ${formatNumber(recipe.baseOutput, true)} ${recipe.label} (${outputLabel} storage).`,
+        `Consumes: ${inputParts.join(', ')}.`,
+      ];
+      if (recipe.wgcUpgradeId) {
+        const wgcMultiplier = this.getRecipeWgcMultiplier(key);
+        const bonusPercent = Math.max(0, (wgcMultiplier - 1) * 100);
+        lines.push(`WGC output bonus: x${formatNumber(wgcMultiplier, true, 3)} (+${formatNumber(bonusPercent, true, 2)}%).`);
+      }
+      return lines.join('\n');
     }
 
     getSpecializationRequirements() {
@@ -922,11 +964,7 @@
         const nameInfo = document.createElement('span');
         nameInfo.classList.add('info-tooltip-icon');
         nameInfo.innerHTML = '&#9432;';
-        const inputParts = Object.keys(recipe.inputs).map((inputKey) => {
-          const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
-          return `${formatNumber(recipe.inputs[inputKey], true)} ${label}`;
-        });
-        attachDynamicInfoTooltip(nameInfo, `Recipe: ${inputParts.join(', ')}.`);
+        const recipeTooltip = attachDynamicInfoTooltip(nameInfo, '');
         nameWrap.append(nameEl, nameInfo);
 
         const complexityEl = document.createElement('span');
@@ -1043,6 +1081,8 @@
           autoAssign,
           weightInput,
           rate: rateEl,
+          recipeTooltip,
+          recipeTooltipCache: {},
         };
       });
 
@@ -1160,6 +1200,12 @@
         row.minusButton.disabled = current <= 0 || this.autoAssignFlags[key];
         row.plusButton.disabled = current >= maxForKey || total <= 0 || this.autoAssignFlags[key];
         row.rate.textContent = `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s`;
+        setTooltipText(
+          row.recipeTooltip,
+          this.getRecipeTooltipText(key),
+          row.recipeTooltipCache,
+          'text'
+        );
       });
 
       this.syncAssignmentRowHeights();
