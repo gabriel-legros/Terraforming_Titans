@@ -948,7 +948,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     elements.runCheckbox.disabled = total <= 0;
     if (elements.note) {
       const parameter = formatNumber(this.getAlchemyParameter(), true, 3);
-      elements.note.textContent = `Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x ${parameter}.`;
+      elements.note.textContent = `Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x ${parameter}/s.`;
     }
 
     this.getAssignmentKeys().forEach((key) => {
