@@ -291,7 +291,7 @@ const projectParameters = {
       spaceMining : true,
       importCapResource: 'carbon',
       continuousAsBuilding: true,
-      costPerShip : {colony : {metal : 100000, energy : 100000000000}},
+      costPerShip : {colony : {metal : 100000, energy : 100_000_000_000}},
       resourceGainPerShip : {atmospheric: {carbonDioxide : 1000000}},
       maxPressure: 0.01,
       maxOxygenPressure: 15
@@ -643,7 +643,7 @@ const projectParameters = {
     kesslerDebrisSize: 'large',
     attributes: {
       spaceStorage: true,
-      costPerShip: { colony: { metal : 100_000, energy: 250_000_000 } },
+      costPerShip: { colony: { metal : 100_000, energy: 2_500_000_000 } },
       transportPerShip: 1_000_000,
       canUseSpaceStorage: true
     }
@@ -799,7 +799,7 @@ const projectParameters = {
     attributes: {
       spaceExport : true,
       continuousAsBuilding: true,
-      costPerShip : {colony : {metal : 100000, energy : 10000000000}},
+      costPerShip : {colony : {metal : 100000, energy : 10_000_000_000}},
       disposable : {
         colony: ['water'],
         surface: [

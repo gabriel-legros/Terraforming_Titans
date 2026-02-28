@@ -1,0 +1,556 @@
+const path = require('path');
+
+function setGlobal(name, value, originalGlobals) {
+  if (!(name in originalGlobals)) {
+    originalGlobals[name] = global[name];
+  }
+  global[name] = value;
+}
+
+function restoreGlobals(originalGlobals) {
+  Object.keys(originalGlobals).forEach((name) => {
+    if (originalGlobals[name] === undefined) {
+      delete global[name];
+      return;
+    }
+    global[name] = originalGlobals[name];
+  });
+}
+
+function createResource(name, value = 0, hasCap = false, cap = Infinity) {
+  return {
+    name,
+    value,
+    hasCap,
+    cap,
+    reserved: 0,
+    availabilityRatio: 1,
+    productionRate: 0,
+    consumptionRate: 0,
+    projectedProductionRate: 0,
+    projectedConsumptionRate: 0,
+    productionRateByType: {},
+    consumptionRateByType: {},
+    increase(amount) {
+      this.value += amount;
+    },
+    decrease(amount) {
+      this.value = Math.max(0, this.value - amount);
+    },
+    resetRates({ keepProjected } = {}) {
+      this.productionRate = 0;
+      this.consumptionRate = 0;
+      this.productionRateByType = {};
+      this.consumptionRateByType = {};
+      if (!keepProjected) {
+        this.projectedProductionRate = 0;
+        this.projectedConsumptionRate = 0;
+      }
+    },
+    modifyRate(amount, source = 'Unknown', rateType = 'unknown') {
+      if (amount > 0) {
+        this.productionRate += amount;
+        this.productionRateByType[rateType] ||= {};
+        this.productionRateByType[rateType][source] =
+          (this.productionRateByType[rateType][source] || 0) + amount;
+        return;
+      }
+      if (amount < 0) {
+        const abs = -amount;
+        this.consumptionRate += abs;
+        this.consumptionRateByType[rateType] ||= {};
+        this.consumptionRateByType[rateType][source] =
+          (this.consumptionRateByType[rateType][source] || 0) + abs;
+      }
+    },
+    saveProjectedRates() {
+      this.projectedProductionRate = this.productionRate;
+      this.projectedConsumptionRate = this.consumptionRate;
+    },
+    recalculateTotalRates() {},
+    updateStorageCap() {},
+  };
+}
+
+function createResources(initial = {}) {
+  return {
+    colony: {
+      funding: createResource('funding', 0),
+      workers: createResource('workers', 0),
+    },
+    surface: {
+      land: createResource('land', 0),
+      liquidWater: createResource('liquidWater', 0),
+      ice: createResource('ice', 0),
+    },
+    atmospheric: {
+      atmosphericWater: createResource('atmosphericWater', 0),
+    },
+    spaceStorage: {
+      hydrogen: createResource('hydrogen', initial.hydrogen || 0),
+      metal: createResource('metal', initial.metal || 0),
+      silicon: createResource('silicon', initial.silicon || 0),
+      graphite: createResource('graphite', initial.graphite || 0),
+      oxygen: createResource('oxygen', 0),
+      inertGas: createResource('inertGas', 0),
+      glass: createResource('glass', 0),
+      components: createResource('components', 0),
+      electronics: createResource('electronics', 0),
+      superconductors: createResource('superconductors', 0),
+      superalloys: createResource('superalloys', initial.superalloys || 0),
+    },
+  };
+}
+
+function createSpaceStorageProject(resources) {
+  return {
+    megaProjectResourceMode: 'spaceFirst',
+    isContinuous() {
+      return false;
+    },
+    getStoredResourceValue(resourceKey) {
+      return resources.spaceStorage[resourceKey]?.value || 0;
+    },
+    getAvailableStoredResource(resourceKey) {
+      return Math.max(0, this.getStoredResourceValue(resourceKey));
+    },
+    spendStoredResource(resourceKey, amount) {
+      const resource = resources.spaceStorage[resourceKey];
+      if (!resource || !(amount > 0)) {
+        return 0;
+      }
+      const used = Math.min(resource.value, amount);
+      resource.value -= used;
+      return used;
+    },
+    addStoredResource(resourceKey, amount) {
+      const resource = resources.spaceStorage[resourceKey];
+      if (!resource || !(amount > 0)) {
+        return 0;
+      }
+      resource.value += amount;
+      return amount;
+    },
+    getResourceCapLimit(resourceKey) {
+      return resources.spaceStorage[resourceKey]?.cap || Infinity;
+    },
+    reconcileUsedStorage() {},
+    isPermanentlyDisabled() {
+      return false;
+    },
+  };
+}
+
+class MockDemandProject {
+  constructor(resourceKey, demandPerTick) {
+    this.name = `mockDemand-${resourceKey}`;
+    this.displayName = this.name;
+    this.attributes = { spaceBuilding: true };
+    this.resourceKey = resourceKey;
+    this.demandPerTick = demandPerTick;
+    this.autoStart = false;
+    this.operationPreRunThisTick = false;
+    this.unlocked = true;
+  }
+
+  isContinuous() {
+    return false;
+  }
+
+  applyOperationCostAndGain() {}
+
+  estimateCostAndGain(deltaTime = 1000, applyRates = true) {
+    const seconds = deltaTime / 1000;
+    const amount = this.demandPerTick * seconds;
+    const totals = { cost: { spaceStorage: {} }, gain: {} };
+    totals.cost.spaceStorage[this.resourceKey] = amount;
+    if (applyRates && amount > 0) {
+      resources.spaceStorage[this.resourceKey].modifyRate(-this.demandPerTick, this.displayName, 'project');
+    }
+    return totals;
+  }
+
+  applyCostAndGain() {
+    this.operationPreRunThisTick = false;
+  }
+}
+
+function setupHarness(initialStorage = {}) {
+  jest.resetModules();
+  const originalGlobals = {};
+
+  class EffectableEntity {
+    constructor() {
+      this.activeEffects = [];
+    }
+  }
+
+  class BaseProject extends EffectableEntity {
+    constructor(config = {}, name = '') {
+      super();
+      this.name = name;
+      this.displayName = config.name || name;
+      this.attributes = config.attributes || {};
+      this.cost = config.cost || {};
+      this.duration = config.duration || 1000;
+      this.repeatCount = 0;
+      this.maxRepeatCount = Infinity;
+      this.autoStart = false;
+      this.isActive = false;
+      this.isCompleted = false;
+      this.isPaused = false;
+      this.unlocked = true;
+      this.remainingTime = this.duration;
+      this.startingDuration = this.duration;
+      this.operationPreRunThisTick = false;
+    }
+
+    isPermanentlyDisabled() {
+      return false;
+    }
+
+    isContinuous() {
+      return false;
+    }
+
+    getDurationWithTerraformBonus(duration) {
+      return duration;
+    }
+
+    getEffectiveDuration() {
+      return this.duration;
+    }
+
+    getScaledCost() {
+      return this.cost || {};
+    }
+
+    getEffectiveCost() {
+      return this.cost || {};
+    }
+
+    showsInResourcesRate() {
+      return true;
+    }
+
+    update() {}
+
+    saveAutomationSettings() {
+      return {};
+    }
+
+    loadAutomationSettings() {}
+
+    saveState() {
+      return {};
+    }
+
+    loadState() {}
+
+    saveTravelState() {
+      return {};
+    }
+
+    loadTravelState() {}
+
+    start() {
+      this.isActive = true;
+      return true;
+    }
+  }
+
+  class TerraformingDurationProject extends BaseProject {}
+
+  class SpecializationProject extends BaseProject {
+    constructor(config, name, options = {}) {
+      super(config, name);
+      this.shopItems = options.shopItems || [];
+      this.shopPurchases = {};
+    }
+
+    getShopPurchaseCount(id) {
+      return this.shopPurchases[id] || 0;
+    }
+
+    canStart() {
+      return true;
+    }
+
+    updateUI() {}
+
+    loadSpecializationState() {}
+
+    applySpecializationEffects() {}
+  }
+
+  const resourcesObj = createResources(initialStorage);
+
+  setGlobal('EffectableEntity', EffectableEntity, originalGlobals);
+  setGlobal('TerraformingDurationProject', TerraformingDurationProject, originalGlobals);
+  setGlobal('SpecializationProject', SpecializationProject, originalGlobals);
+  setGlobal('MEGA_PROJECT_RESOURCE_MODES', { SPACE_FIRST: 'spaceFirst' }, originalGlobals);
+  setGlobal('getMegaProjectResourceAvailability', (storage, storageKey, colonyAvailable) => {
+    const colony = Math.max(0, colonyAvailable || 0);
+    const space = storage?.getAvailableStoredResource ? storage.getAvailableStoredResource(storageKey) : 0;
+    return colony + Math.max(0, space);
+  }, originalGlobals);
+  setGlobal('getMegaProjectResourceAllocation', (storage, storageKey, amount, colonyAvailable) => {
+    const colony = Math.max(0, colonyAvailable || 0);
+    const fromColony = Math.min(amount, colony);
+    const fromStorage = Math.max(0, amount - fromColony);
+    return { fromColony, fromStorage };
+  }, originalGlobals);
+  setGlobal('resources', resourcesObj, originalGlobals);
+  setGlobal('dayNightCycle', { isDay: () => true }, originalGlobals);
+  setGlobal('followersManager', null, originalGlobals);
+  setGlobal('fundingModule', null, originalGlobals);
+  setGlobal('terraforming', {
+    initialLand: 0,
+    zonalSurface: {},
+    temperature: { zones: {} },
+    updateResources: () => {},
+    distributeGlobalChangesToZones: () => {},
+  }, originalGlobals);
+  setGlobal('lifeManager', null, originalGlobals);
+  setGlobal('researchManager', null, originalGlobals);
+  setGlobal('globalEffects', {}, originalGlobals);
+  setGlobal('updateAntimatterStorageCap', () => {}, originalGlobals);
+  setGlobal('produceAntimatter', null, originalGlobals);
+  setGlobal('updateSpaceStorageUI', () => {}, originalGlobals);
+  setGlobal('warpGateCommand', { getMultiplier: () => 1 }, originalGlobals);
+  setGlobal('formatNumber', (value) => `${value}`, originalGlobals);
+  setGlobal('attachDynamicInfoTooltip', () => {}, originalGlobals);
+  setGlobal('getZones', () => [], originalGlobals);
+  setGlobal('getZonePercentage', () => 0, originalGlobals);
+
+  const projectManager = {
+    projects: {},
+    projectOrder: [],
+    isProjectRelevantToCurrentPlanet: () => true,
+    isBooleanFlagSet: () => false,
+  };
+  setGlobal('projectManager', projectManager, originalGlobals);
+
+  const resourceModule = require(path.resolve(__dirname, '../src/js/resource.js'));
+  jest.doMock(path.resolve(__dirname, '../src/js/projects/SpecializationProject.js'), () => ({
+    SpecializationProject,
+  }));
+  const NuclearAlchemyFurnaceProject = require(path.resolve(__dirname, '../src/js/projects/NuclearAlchemyFurnaceProject.js'));
+  const ManufacturingWorldProject = require(path.resolve(__dirname, '../src/js/projects/ManufacturingWorldProject.js'));
+
+  const spaceStorage = createSpaceStorageProject(resourcesObj);
+  projectManager.projects.spaceStorage = spaceStorage;
+
+  return {
+    produceResources: resourceModule.produceResources,
+    projectManager,
+    resources: resourcesObj,
+    NuclearAlchemyFurnaceProject,
+    ManufacturingWorldProject,
+    cleanup: () => restoreGlobals(originalGlobals),
+  };
+}
+
+function expectApprox(received, expected, tolerance = 1e-6) {
+  expect(Math.abs(received - expected)).toBeLessThanOrEqual(tolerance);
+}
+
+describe('Space building productivity via produceResources', () => {
+  test.each([
+    { hydrogen: 0, expectedRatio: 0 },
+    { hydrogen: 50, expectedRatio: 0.25 },
+    { hydrogen: 100, expectedRatio: 0.5 },
+    { hydrogen: 200, expectedRatio: 1 },
+    { hydrogen: 500, expectedRatio: 1 },
+  ])('Nuclear Alchemical Furnace runs at expected ratio with hydrogen=$hydrogen', ({ hydrogen, expectedRatio }) => {
+    const harness = setupHarness({ hydrogen, metal: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      NuclearAlchemyFurnaceProject,
+      cleanup,
+    } = harness;
+
+    const furnace = new NuclearAlchemyFurnaceProject({
+      name: 'Nuclear Alchemical Furnace',
+      duration: 36000000,
+      cost: {},
+      attributes: {
+        canUseSpaceStorage: true,
+        spaceBuilding: true,
+        alchemyParameter: 1,
+      },
+    }, 'nuclearAlchemyFurnace');
+
+    furnace.repeatCount = 2000;
+    furnace.furnaceAssignments.metal = 2000; // 200 hydrogen/s demand at productivity=1
+    furnace.isRunning = true;
+    furnace.isActive = false;
+    furnace.autoStart = false;
+
+    projectManager.projects.nuclearAlchemyFurnace = furnace;
+    projectManager.projectOrder = ['nuclearAlchemyFurnace'];
+
+    produceResources(1000, {});
+
+    const expectedConsumed = 200 * expectedRatio;
+    const consumed = hydrogen - resources.spaceStorage.hydrogen.value;
+    const producedMetal = resources.spaceStorage.metal.value;
+
+    expectApprox(consumed, expectedConsumed);
+    expectApprox(producedMetal, expectedConsumed);
+    cleanup();
+  });
+
+  test.each([
+    { extraDemand: 0, expectedProductivity: 1 },
+    { extraDemand: 200, expectedProductivity: 0.5 },
+    { extraDemand: 600, expectedProductivity: 0.25 },
+  ])('Nuclear Alchemical Furnace productivity reflects shared demand (extra=$extraDemand/s)', ({ extraDemand, expectedProductivity }) => {
+    const harness = setupHarness({ hydrogen: 200, metal: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      NuclearAlchemyFurnaceProject,
+      cleanup,
+    } = harness;
+
+    const furnace = new NuclearAlchemyFurnaceProject({
+      name: 'Nuclear Alchemical Furnace',
+      duration: 36000000,
+      cost: {},
+      attributes: {
+        canUseSpaceStorage: true,
+        spaceBuilding: true,
+        alchemyParameter: 1,
+      },
+    }, 'nuclearAlchemyFurnace');
+
+    furnace.repeatCount = 2000;
+    furnace.furnaceAssignments.metal = 2000; // 200 hydrogen/s demand
+    furnace.isRunning = true;
+    furnace.autoStart = false;
+    furnace.isActive = false;
+
+    projectManager.projects.nuclearAlchemyFurnace = furnace;
+    if (extraDemand > 0) {
+      projectManager.projects.mockHydrogenDemand = new MockDemandProject('hydrogen', extraDemand);
+      projectManager.projectOrder = ['nuclearAlchemyFurnace', 'mockHydrogenDemand'];
+    } else {
+      projectManager.projectOrder = ['nuclearAlchemyFurnace'];
+    }
+
+    produceResources(1000, {});
+
+    const expectedConsumed = 200 * expectedProductivity;
+    const consumed = 200 - resources.spaceStorage.hydrogen.value;
+    expectApprox(furnace.operationProductivity, expectedProductivity);
+    expectApprox(consumed, expectedConsumed);
+    cleanup();
+  });
+
+  test.each([
+    { metal: 0, expectedRatio: 0 },
+    { metal: 50, expectedRatio: 0.25 },
+    { metal: 100, expectedRatio: 0.5 },
+    { metal: 200, expectedRatio: 1 },
+    { metal: 500, expectedRatio: 1 },
+  ])('Manufacturing World superalloy recipe runs at expected ratio with metal=$metal', ({ metal, expectedRatio }) => {
+    const harness = setupHarness({ metal, superalloys: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ManufacturingWorldProject,
+      cleanup,
+    } = harness;
+
+    const manufacturing = new ManufacturingWorldProject({
+      name: 'Manufacturing World',
+      duration: 300000,
+      cost: {},
+      attributes: {
+        projectGroup: 'specializedWorlds',
+        keepStartBarVisible: true,
+        spaceBuilding: true,
+      },
+    }, 'manufacturingWorld');
+
+    manufacturing.isRunning = true;
+    manufacturing.cumulativePopulation = 200000;
+    manufacturing.manufacturingAssignments.superalloys = 200000; // 200 metal/s input, 2 superalloy/s output at productivity=1
+    manufacturing.autoStart = false;
+    manufacturing.isActive = false;
+
+    projectManager.projects.manufacturingWorld = manufacturing;
+    projectManager.projectOrder = ['manufacturingWorld'];
+
+    produceResources(1000, {});
+
+    const expectedMetalConsumed = 200 * expectedRatio;
+    const expectedSuperalloyProduced = 2 * expectedRatio;
+    const consumedMetal = metal - resources.spaceStorage.metal.value;
+    const producedSuperalloy = resources.spaceStorage.superalloys.value;
+
+    expectApprox(consumedMetal, expectedMetalConsumed);
+    expectApprox(producedSuperalloy, expectedSuperalloyProduced);
+    cleanup();
+  });
+
+  test.each([
+    { extraDemand: 0, expectedProductivity: 1 },
+    { extraDemand: 200, expectedProductivity: 0.5 },
+    { extraDemand: 600, expectedProductivity: 0.25 },
+  ])('Manufacturing World productivity reflects shared metal demand (extra=$extraDemand/s)', ({ extraDemand, expectedProductivity }) => {
+    const harness = setupHarness({ metal: 200, superalloys: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ManufacturingWorldProject,
+      cleanup,
+    } = harness;
+
+    const manufacturing = new ManufacturingWorldProject({
+      name: 'Manufacturing World',
+      duration: 300000,
+      cost: {},
+      attributes: {
+        projectGroup: 'specializedWorlds',
+        keepStartBarVisible: true,
+        spaceBuilding: true,
+      },
+    }, 'manufacturingWorld');
+
+    manufacturing.isRunning = true;
+    manufacturing.cumulativePopulation = 200000;
+    manufacturing.manufacturingAssignments.superalloys = 200000; // 200 metal/s demand
+    manufacturing.autoStart = false;
+    manufacturing.isActive = false;
+
+    projectManager.projects.manufacturingWorld = manufacturing;
+    if (extraDemand > 0) {
+      projectManager.projects.mockMetalDemand = new MockDemandProject('metal', extraDemand);
+      projectManager.projectOrder = ['manufacturingWorld', 'mockMetalDemand'];
+    } else {
+      projectManager.projectOrder = ['manufacturingWorld'];
+    }
+
+    produceResources(1000, {});
+
+    const expectedMetalConsumed = 200 * expectedProductivity;
+    const expectedSuperalloyProduced = 2 * expectedProductivity;
+    const consumedMetal = 200 - resources.spaceStorage.metal.value;
+    const producedSuperalloy = resources.spaceStorage.superalloys.value;
+
+    expectApprox(
+      manufacturing.operationProductivity?.superalloys,
+      expectedProductivity
+    );
+    expectApprox(consumedMetal, expectedMetalConsumed);
+    expectApprox(producedSuperalloy, expectedSuperalloyProduced);
+    cleanup();
+  });
+});
