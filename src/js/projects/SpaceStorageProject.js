@@ -480,6 +480,35 @@ class SpaceStorageProject extends SpaceshipProject {
     return Math.max(0, stored - reserve);
   }
 
+  getSpaceStoragePendingDelta(accumulatedChanges, resourceKey) {
+    return accumulatedChanges?.spaceStorage?.[resourceKey] || 0;
+  }
+
+  getAvailableStoredResourceForTick(resourceKey, accumulatedChanges = null) {
+    const pending = this.getSpaceStoragePendingDelta(accumulatedChanges, resourceKey);
+    return Math.max(0, this.getAvailableStoredResource(resourceKey) + pending);
+  }
+
+  spendStoredResourceForTick(resourceKey, amount, accumulatedChanges = null) {
+    if (!(amount > 0)) {
+      return 0;
+    }
+    if (!accumulatedChanges) {
+      return this.spendStoredResource(resourceKey, amount);
+    }
+    const available = this.getAvailableStoredResourceForTick(resourceKey, accumulatedChanges);
+    const spent = Math.min(amount, available);
+    if (!(spent > 0)) {
+      return 0;
+    }
+    accumulatedChanges.spaceStorage ||= {};
+    if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+      accumulatedChanges.spaceStorage[resourceKey] = 0;
+    }
+    accumulatedChanges.spaceStorage[resourceKey] -= spent;
+    return spent;
+  }
+
   calculateSpaceshipAdjustedDuration() {
     const maxShipsForDurationReduction = 100;
     if (this.isShipOperationContinuous()) {
@@ -838,19 +867,27 @@ class SpaceStorageProject extends SpaceshipProject {
       return;
     }
 
-    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const progress = Math.min(deltaTime / duration, remainingRepeats);
     if (progress <= 0) {
       return;
     }
 
     const cost = this.getScaledCost();
     const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+    const storageState = storageProj
+      ? {
+          megaProjectResourceMode: storageProj.megaProjectResourceMode,
+          getAvailableStoredResource: (resourceKey) => this.getAvailableStoredResourceForTick(resourceKey, accumulatedChanges),
+          spendStoredResource: (resourceKey, amount) => this.spendStoredResourceForTick(resourceKey, amount, accumulatedChanges),
+        }
+      : null;
     let canAffordBaseCost = true;
     for (const category in cost) {
       for (const resource in cost[category]) {
         const res = resources[category][resource];
         const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const availableTotal = getMegaProjectResourceAvailability(storageProj, storageKey, res.value);
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const availableTotal = getMegaProjectResourceAvailability(storageState, storageKey, res.value + pending);
         if (availableTotal < cost[category][resource]) {
           canAffordBaseCost = false;
         }
@@ -875,9 +912,9 @@ class SpaceStorageProject extends SpaceshipProject {
     };
 
     const spendFromStorage = (key, amount) => {
-      if (!storageProj || amount <= 0) return 0;
-      return storageProj.spendStoredResource
-        ? storageProj.spendStoredResource(key, amount)
+      if (!storageState || amount <= 0) return 0;
+      return storageState.spendStoredResource
+        ? storageState.spendStoredResource(key, amount)
         : 0;
     };
 
@@ -886,13 +923,14 @@ class SpaceStorageProject extends SpaceshipProject {
         const amount = cost[category][resource] * progress;
         const res = resources[category][resource];
         const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const availableTotal = getMegaProjectResourceAvailability(storageProj, storageKey, res.value);
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const availableTotal = getMegaProjectResourceAvailability(storageState, storageKey, res.value + pending);
         if (availableTotal < amount) {
           shortfall = true;
         }
 
-        const colonyAvailable = res.value;
-        const allocation = getMegaProjectResourceAllocation(storageProj, storageKey, amount, colonyAvailable);
+        const colonyAvailable = Math.max(res.value + pending, 0);
+        const allocation = getMegaProjectResourceAllocation(storageState, storageKey, amount, colonyAvailable);
         if (allocation.fromStorage > 0) {
           spendFromStorage(storageKey, allocation.fromStorage);
         }
@@ -1063,7 +1101,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.pendingTransfers = [];
   }
 
-  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     if (this.isActive) {
       const duration = this.getEffectiveDuration();
@@ -1071,13 +1109,20 @@ class SpaceStorageProject extends SpaceshipProject {
       const fraction = deltaTime / duration;
       const cost = this.getScaledCost();
       const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
+      const storageState = storageProj
+        ? {
+            megaProjectResourceMode: storageProj.megaProjectResourceMode,
+            getAvailableStoredResource: (resourceKey) => this.getAvailableStoredResourceForTick(resourceKey, accumulatedChanges),
+          }
+        : null;
       let canAffordBaseCost = true;
       if (this.isContinuous()) {
         for (const category in cost) {
           for (const resource in cost[category]) {
             const res = resources[category][resource];
             const storageKey = resource === 'water' ? 'liquidWater' : resource;
-            const availableTotal = getMegaProjectResourceAvailability(storageProj, storageKey, res.value);
+            const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+            const availableTotal = getMegaProjectResourceAvailability(storageState, storageKey, res.value + pending);
             if (availableTotal < cost[category][resource]) {
               canAffordBaseCost = false;
             }
@@ -1088,12 +1133,13 @@ class SpaceStorageProject extends SpaceshipProject {
       for (const category in cost) {
         if (!totals.cost[category]) totals.cost[category] = {};
         for (const resource in cost[category]) {
-          const rateValue = cost[category][resource] * rate * (applyRates ? productivity : 1);
-          const amountThisTick = cost[category][resource] * fraction * (applyRates ? productivity : 1);
+          const rateValue = cost[category][resource] * rate;
+          const amountThisTick = cost[category][resource] * fraction;
           const storageKey = resource === 'water' ? 'liquidWater' : resource;
-          const colonyAvailable = resources[category][resource].value;
+          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+          const colonyAvailable = Math.max(resources[category][resource].value + pending, 0);
           const allocation = getMegaProjectResourceAllocation(
-            storageProj,
+            storageState,
             storageKey,
             amountThisTick,
             colonyAvailable

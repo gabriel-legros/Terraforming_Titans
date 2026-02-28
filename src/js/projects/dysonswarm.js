@@ -336,13 +336,43 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
     // Check if we have enough resources
     let shortfall = false;
     const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
+    const storageState = storageProj
+      ? {
+          megaProjectResourceMode: storageProj.megaProjectResourceMode,
+          getAvailableStoredResource: (resourceKey) => {
+            const available = storageProj.getAvailableStoredResource(resourceKey);
+            return Math.max(0, available + getStoragePending(resourceKey));
+          },
+          spendStoredResource: (resourceKey, amount) => {
+            if (amount <= 0) {
+              return 0;
+            }
+            if (!accumulatedChanges) {
+              return storageProj.spendStoredResource(resourceKey, amount);
+            }
+            const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
+            const spent = Math.min(amount, available);
+            if (spent <= 0) {
+              return 0;
+            }
+            accumulatedChanges.spaceStorage ||= {};
+            if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+              accumulatedChanges.spaceStorage[resourceKey] = 0;
+            }
+            accumulatedChanges.spaceStorage[resourceKey] -= spent;
+            return spent;
+          }
+        }
+      : null;
     
     for (const category in collectorCost) {
       for (const resource in collectorCost[category]) {
         const amount = collectorCost[category][resource] * fraction * productivity * gainScale;
-        const colonyAvailable = resources[category]?.[resource]?.value || 0;
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const colonyAvailable = (resources[category]?.[resource]?.value || 0) + pending;
         const key = resource === 'water' ? 'liquidWater' : resource;
-        const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
+        const available = getMegaProjectResourceAvailability(storageState, key, colonyAvailable);
         if (available < amount) {
           shortfall = true;
         }
@@ -354,11 +384,11 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       for (const resource in collectorCost[category]) {
         const amount = collectorCost[category][resource] * fraction * productivity * gainScale;
         
-        if (storageProj) {
+        if (storageState) {
           const key = resource === 'water' ? 'liquidWater' : resource;
           const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
           const colonyAvailable = Math.max(resources[category][resource].value + pending, 0);
-          const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+          const allocation = getMegaProjectResourceAllocation(storageState, key, amount, colonyAvailable);
           if (allocation.fromColony > 0) {
             if (accumulatedChanges) {
               if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
@@ -371,8 +401,10 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
             }
           }
           if (allocation.fromStorage > 0) {
-            storageProj.spendStoredResource?.(key, allocation.fromStorage);
-            storageProj.reconcileUsedStorage?.();
+            storageState.spendStoredResource(key, allocation.fromStorage);
+            if (!accumulatedChanges) {
+              storageProj.reconcileUsedStorage?.();
+            }
           }
         } else {
           if (accumulatedChanges) {
@@ -401,7 +433,7 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
     this.collectorShortfallLastTick = shortfall;
     
-    if (storageProj && typeof updateSpaceStorageUI === 'function') {
+    if (storageProj && !accumulatedChanges && typeof updateSpaceStorageUI === 'function') {
       updateSpaceStorageUI(storageProj);
     }
   }

@@ -510,11 +510,39 @@ class LiftersProject extends TerraformingDurationProject {
 
     const cost = this.getScaledCost();
     const storageProj = this.attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
-    const storageState = storageProj || {
-      getAvailableStoredResource: () => 0,
-      spendStoredResource: () => 0,
-      megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
-    };
+    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
+    const storageState = storageProj
+      ? {
+          megaProjectResourceMode: storageProj.megaProjectResourceMode,
+          getAvailableStoredResource: (resourceKey) => {
+            const available = storageProj.getAvailableStoredResource(resourceKey);
+            return Math.max(0, available + getStoragePending(resourceKey));
+          },
+          spendStoredResource: (resourceKey, amount) => {
+            if (amount <= 0) {
+              return 0;
+            }
+            if (!accumulatedChanges) {
+              return storageProj.spendStoredResource(resourceKey, amount);
+            }
+            const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
+            const spent = Math.min(amount, available);
+            if (spent <= 0) {
+              return 0;
+            }
+            accumulatedChanges.spaceStorage ||= {};
+            if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+              accumulatedChanges.spaceStorage[resourceKey] = 0;
+            }
+            accumulatedChanges.spaceStorage[resourceKey] -= spent;
+            return spent;
+          },
+        }
+      : {
+          getAvailableStoredResource: () => 0,
+          spendStoredResource: () => 0,
+          megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
+        };
     let shortfall = false;
     let canAffordBaseCost = true;
     for (const category in cost) {
@@ -538,7 +566,7 @@ class LiftersProject extends TerraformingDurationProject {
       return;
     }
 
-    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const progress = Math.min(deltaTime / duration, remainingRepeats);
     const seconds = deltaTime / 1000;
     if (progress <= 0) {
       return;
@@ -784,11 +812,22 @@ class LiftersProject extends TerraformingDurationProject {
     includeOperation = true
   ) {
     const totals = { cost: {}, gain: {} };
-    const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
-      getAvailableStoredResource: () => 0,
-      spendStoredResource: () => 0,
-      megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
-    };
+    const storageProj = this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
+    const storageState = storageProj
+      ? {
+          megaProjectResourceMode: storageProj.megaProjectResourceMode,
+          getAvailableStoredResource: (resourceKey) => {
+            const available = storageProj.getAvailableStoredResource(resourceKey);
+            return Math.max(0, available + getStoragePending(resourceKey));
+          },
+          spendStoredResource: () => 0,
+        }
+      : {
+          getAvailableStoredResource: () => 0,
+          spendStoredResource: () => 0,
+          megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
+        };
 
     const expansionActive = includeExpansion && this.isActive && (!this.isExpansionContinuous() || this.autoStart);
     if (expansionActive) {
@@ -797,8 +836,8 @@ class LiftersProject extends TerraformingDurationProject {
       const completedExpansions = this.repeatCount + this.expansionProgress;
       const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
       const progress = this.isExpansionContinuous()
-        ? Math.min((deltaTime / duration) * productivity, remainingRepeats)
-        : (deltaTime / duration) * productivity;
+        ? Math.min(deltaTime / duration, remainingRepeats)
+        : (deltaTime / duration);
       const checkBaseCost = this.isExpansionContinuous();
       let canAffordBaseCost = true;
       const cost = this.getScaledCost();

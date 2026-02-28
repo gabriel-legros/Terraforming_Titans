@@ -205,6 +205,35 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     return projectManager?.projects?.spaceStorage || null;
   }
 
+  getSpaceStoragePendingDelta(accumulatedChanges, resourceKey) {
+    return accumulatedChanges?.spaceStorage?.[resourceKey] || 0;
+  }
+
+  getStoredResourceValueForTick(storage, resourceKey, accumulatedChanges = null) {
+    const pending = this.getSpaceStoragePendingDelta(accumulatedChanges, resourceKey);
+    return Math.max(0, storage.getStoredResourceValue(resourceKey) + pending);
+  }
+
+  getAvailableStoredResourceForTick(storage, resourceKey, accumulatedChanges = null) {
+    const pending = this.getSpaceStoragePendingDelta(accumulatedChanges, resourceKey);
+    return Math.max(0, storage.getAvailableStoredResource(resourceKey) + pending);
+  }
+
+  applySpaceStorageDeltaForTick(resourceKey, delta, accumulatedChanges = null) {
+    if (!(delta !== 0)) {
+      return;
+    }
+    if (accumulatedChanges) {
+      accumulatedChanges.spaceStorage ||= {};
+      if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+        accumulatedChanges.spaceStorage[resourceKey] = 0;
+      }
+      accumulatedChanges.spaceStorage[resourceKey] += delta;
+      return;
+    }
+    resources.spaceStorage[resourceKey].value += delta;
+  }
+
   setRunning(enabled) {
     const next = enabled === true;
     if (this.isRunning === next) {
@@ -442,12 +471,40 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
 
     const cost = this.getScaledCost();
     const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
-    const storageState = storageProj || {
-      getAvailableStoredResource: () => 0,
-      spendStoredResource: () => 0,
-      megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
-    };
-    const requestedProgress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
+    const storageState = storageProj
+      ? {
+          megaProjectResourceMode: storageProj.megaProjectResourceMode,
+          getAvailableStoredResource: (resourceKey) => {
+            const available = storageProj.getAvailableStoredResource(resourceKey);
+            return Math.max(0, available + getStoragePending(resourceKey));
+          },
+          spendStoredResource: (resourceKey, amount) => {
+            if (amount <= 0) {
+              return 0;
+            }
+            if (!accumulatedChanges) {
+              return storageProj.spendStoredResource(resourceKey, amount);
+            }
+            const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
+            const spent = Math.min(amount, available);
+            if (spent <= 0) {
+              return 0;
+            }
+            accumulatedChanges.spaceStorage ||= {};
+            if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+              accumulatedChanges.spaceStorage[resourceKey] = 0;
+            }
+            accumulatedChanges.spaceStorage[resourceKey] -= spent;
+            return spent;
+          },
+        }
+      : {
+          getAvailableStoredResource: () => 0,
+          spendStoredResource: () => 0,
+          megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
+        };
+    const requestedProgress = Math.min(deltaTime / duration, remainingRepeats);
     const progress = this.getAffordableExpansionProgress(
       requestedProgress,
       cost,
@@ -603,7 +660,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       return;
     }
 
-    const hydrogenAvailable = storage.getAvailableStoredResource('hydrogen');
+    const hydrogenAvailable = this.getAvailableStoredResourceForTick(storage, 'hydrogen', accumulatedChanges);
     if (!(hydrogenAvailable > 0)) {
       this.setLastRunStats(0, {});
       this.updateStatus('No hydrogen in space storage');
@@ -623,28 +680,32 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       if (!(requested > 0)) {
         return;
       }
-      const spent = storage.spendStoredResource('hydrogen', requested);
+      const availableHydrogen = this.getAvailableStoredResourceForTick(storage, 'hydrogen', accumulatedChanges);
+      const spent = Math.min(requested, availableHydrogen);
       if (!(spent > 0)) {
         return;
       }
+      this.applySpaceStorageDeltaForTick('hydrogen', -spent, accumulatedChanges);
       outputDisplayAmounts[entry.key] = spent;
       hydrogenDisplaySpent += spent;
-      const current = storage.getStoredResourceValue(entry.storageKey);
+      const current = this.getStoredResourceValueForTick(storage, entry.storageKey, accumulatedChanges);
       const capLimit = storage.getResourceCapLimit(entry.storageKey);
       const capRemaining = Math.max(0, capLimit - current);
       const produced = Math.min(spent, capRemaining);
       if (produced > 0) {
-        storage.addStoredResource(entry.storageKey, produced);
+        this.applySpaceStorageDeltaForTick(entry.storageKey, produced, accumulatedChanges);
       }
       if (spent > produced) {
         outputCapBlocked = true;
-        storage.addStoredResource('hydrogen', spent - produced);
+        this.applySpaceStorageDeltaForTick('hydrogen', spent - produced, accumulatedChanges);
       }
       hydrogenNetConsumed += produced;
     });
 
-    storage.reconcileUsedStorage();
-    updateSpaceStorageUI(storage);
+    if (!accumulatedChanges) {
+      storage.reconcileUsedStorage();
+      updateSpaceStorageUI(storage);
+    }
 
     if (!(hydrogenDisplaySpent > 0)) {
       this.setLastRunStats(0, {});
@@ -716,11 +777,22 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     includeOperation = true
   ) {
     const totals = { cost: {}, gain: {} };
-    const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
-      getAvailableStoredResource: () => 0,
-      spendStoredResource: () => 0,
-      megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
-    };
+    const storageProj = this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
+    const storageState = storageProj
+      ? {
+          megaProjectResourceMode: storageProj.megaProjectResourceMode,
+          getAvailableStoredResource: (resourceKey) => {
+            const available = storageProj.getAvailableStoredResource(resourceKey);
+            return Math.max(0, available + getStoragePending(resourceKey));
+          },
+          spendStoredResource: () => 0,
+        }
+      : {
+          getAvailableStoredResource: () => 0,
+          spendStoredResource: () => 0,
+          megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
+        };
 
     const expansionActive = includeExpansion && this.isActive && (!this.isExpansionContinuous() || this.autoStart);
     if (expansionActive) {
@@ -729,8 +801,8 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       const completedExpansions = this.repeatCount + this.expansionProgress;
       const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
       const requestedProgress = this.isExpansionContinuous()
-        ? Math.min((deltaTime / duration) * productivity, remainingRepeats)
-        : (deltaTime / duration) * productivity;
+        ? Math.min(deltaTime / duration, remainingRepeats)
+        : (deltaTime / duration);
       const cost = this.getScaledCost();
 
       const progress = this.getAffordableExpansionProgress(
@@ -870,7 +942,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
   }
 
   estimateProductivityCostAndGain(deltaTime = 1000) {
-    return this.estimateExpansionCostAndGain(deltaTime, false, 1, null);
+    return { cost: {}, gain: {} };
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {

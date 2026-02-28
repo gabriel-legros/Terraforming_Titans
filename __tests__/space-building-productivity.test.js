@@ -142,8 +142,8 @@ function createSpaceStorageProject(resources) {
 }
 
 class MockDemandProject {
-  constructor(resourceKey, demandPerTick) {
-    this.name = `mockDemand-${resourceKey}`;
+  constructor(resourceKey, demandPerTick, projectName = '') {
+    this.name = projectName || `mockDemand-${resourceKey}`;
     this.displayName = this.name;
     this.attributes = { spaceBuilding: true };
     this.resourceKey = resourceKey;
@@ -436,7 +436,7 @@ describe('Space building productivity via produceResources', () => {
 
     projectManager.projects.nuclearAlchemyFurnace = furnace;
     if (extraDemand > 0) {
-      projectManager.projects.mockHydrogenDemand = new MockDemandProject('hydrogen', extraDemand);
+      projectManager.projects.mockHydrogenDemand = new MockDemandProject('hydrogen', extraDemand, 'lifters');
       projectManager.projectOrder = ['nuclearAlchemyFurnace', 'mockHydrogenDemand'];
     } else {
       projectManager.projectOrder = ['nuclearAlchemyFurnace'];
@@ -570,7 +570,7 @@ describe('Space building productivity via produceResources', () => {
 
     projectManager.projects.manufacturingWorld = manufacturing;
     if (extraDemand > 0) {
-      projectManager.projects.mockMetalDemand = new MockDemandProject('metal', extraDemand);
+      projectManager.projects.mockMetalDemand = new MockDemandProject('metal', extraDemand, 'lifters');
       projectManager.projectOrder = ['manufacturingWorld', 'mockMetalDemand'];
     } else {
       projectManager.projectOrder = ['manufacturingWorld'];

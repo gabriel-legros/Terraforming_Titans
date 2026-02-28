@@ -327,14 +327,44 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     const fraction = (deltaTime / duration) * productivity;
     const cost = this.getScaledCost();
     const storageProj = projectManager.projects.spaceStorage;
+    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
+    const storageState = storageProj
+      ? {
+          megaProjectResourceMode: storageProj.megaProjectResourceMode,
+          getAvailableStoredResource: (resourceKey) => {
+            const available = storageProj.getAvailableStoredResource(resourceKey);
+            return Math.max(0, available + getStoragePending(resourceKey));
+          },
+          spendStoredResource: (resourceKey, amount) => {
+            if (amount <= 0) {
+              return 0;
+            }
+            if (!accumulatedChanges) {
+              return storageProj.spendStoredResource(resourceKey, amount);
+            }
+            const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
+            const spent = Math.min(amount, available);
+            if (spent <= 0) {
+              return 0;
+            }
+            accumulatedChanges.spaceStorage ||= {};
+            if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+              accumulatedChanges.spaceStorage[resourceKey] = 0;
+            }
+            accumulatedChanges.spaceStorage[resourceKey] -= spent;
+            return spent;
+          }
+        }
+      : null;
 
     let shortfall = false;
     for (const category in cost) {
       for (const resource in cost[category]) {
         const amount = cost[category][resource] * fraction;
         const key = resource === 'water' ? 'liquidWater' : resource;
-        const colonyAvailable = resources[category][resource].value;
-        const available = getMegaProjectResourceAvailability(storageProj, key, colonyAvailable);
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const colonyAvailable = resources[category][resource].value + pending;
+        const available = getMegaProjectResourceAvailability(storageState, key, colonyAvailable);
         if (available < amount) {
           shortfall = true;
         }
@@ -350,8 +380,9 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
       for (const resource in cost[category]) {
         const amount = cost[category][resource] * fraction;
         const key = resource === 'water' ? 'liquidWater' : resource;
-        const colonyAvailable = resources[category][resource].value;
-        const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const colonyAvailable = Math.max(resources[category][resource].value + pending, 0);
+        const allocation = getMegaProjectResourceAllocation(storageState, key, amount, colonyAvailable);
         if (allocation.fromColony > 0) {
           if (accumulatedChanges) {
             accumulatedChanges[category] ||= {};
@@ -361,13 +392,17 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
           }
         }
         if (allocation.fromStorage > 0) {
-          storageProj.spendStoredResource?.(key, allocation.fromStorage);
-          storageProj.reconcileUsedStorage?.();
+          storageState.spendStoredResource(key, allocation.fromStorage);
+          if (!accumulatedChanges) {
+            storageProj.reconcileUsedStorage?.();
+          }
         }
       }
     }
 
-    updateSpaceStorageUI(storageProj);
+    if (!accumulatedChanges) {
+      updateSpaceStorageUI(storageProj);
+    }
 
     const completed = this.applyContinuousProgress(fraction);
   }

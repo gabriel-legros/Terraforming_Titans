@@ -494,7 +494,31 @@
       return projectManager.projects.spaceStorage;
     }
 
-    runManufacturing(deltaTime = 1000, productivity = 1) {
+    getSpaceStoragePendingDelta(accumulatedChanges, resourceKey) {
+      return accumulatedChanges?.spaceStorage?.[resourceKey] || 0;
+    }
+
+    getAvailableStoredResourceForTick(storage, resourceKey, accumulatedChanges = null) {
+      const pending = this.getSpaceStoragePendingDelta(accumulatedChanges, resourceKey);
+      return Math.max(0, (resources.spaceStorage[resourceKey].value || 0) + pending);
+    }
+
+    applySpaceStorageDeltaForTick(resourceKey, delta, accumulatedChanges = null) {
+      if (!(delta !== 0)) {
+        return;
+      }
+      if (accumulatedChanges) {
+        accumulatedChanges.spaceStorage ||= {};
+        if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+          accumulatedChanges.spaceStorage[resourceKey] = 0;
+        }
+        accumulatedChanges.spaceStorage[resourceKey] += delta;
+        return;
+      }
+      resources.spaceStorage[resourceKey].value += delta;
+    }
+
+    runManufacturing(deltaTime = 1000, productivity = 1, accumulatedChanges = null) {
       if (!this.shouldOperate()) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
         if (!this.isRunning) {
@@ -564,14 +588,13 @@
           inputRatios[inputKey] = 1;
           return;
         }
-        const availableAmount = storage.getAvailableStoredResource(inputKey);
+        const availableAmount = this.getAvailableStoredResourceForTick(storage, inputKey, accumulatedChanges);
         inputRatios[inputKey] = Math.min(1, availableAmount / desiredAmount);
       });
 
       const inputSpent = this.createEmptyInputRates();
       const outputProduced = {};
       let totalOutput = 0;
-      let outputCapBlocked = false;
 
       entries.forEach((entry) => {
         const desiredInputKeys = Object.keys(entry.desiredInputs);
@@ -581,33 +604,24 @@
         });
 
         desiredInputKeys.forEach((inputKey) => {
-          const desired = (entry.desiredInputs[inputKey] || 0) * scale;
-          const spent = storage.spendStoredResource(inputKey, desired);
-          inputSpent[inputKey] += spent;
-          if (desired > 0) {
-            scale = Math.min(scale, spent / desired);
+          const consumed = (entry.desiredInputs[inputKey] || 0) * scale;
+          if (consumed > 0) {
+            inputSpent[inputKey] += consumed;
+            this.applySpaceStorageDeltaForTick(inputKey, -consumed, accumulatedChanges);
           }
         });
 
         const desiredProduced = entry.desiredOutput * scale;
-        const current = storage.getStoredResourceValue(entry.recipe.outputStorageKey);
-        const capLimit = storage.getResourceCapLimit(entry.recipe.outputStorageKey);
-        const capRemaining = Math.max(0, capLimit - current);
-        const storedProduced = Math.min(desiredProduced, capRemaining);
-        if (storedProduced > 0) {
-          storage.addStoredResource(entry.recipe.outputStorageKey, storedProduced);
-          totalOutput += storedProduced;
+        if (desiredProduced > 0) {
+          this.applySpaceStorageDeltaForTick(entry.recipe.outputStorageKey, desiredProduced, accumulatedChanges);
+          totalOutput += desiredProduced;
         }
-        if (desiredProduced > storedProduced) {
-          outputCapBlocked = true;
-        }
-        // Report full production potential even when output is capped.
         outputProduced[entry.key] = desiredProduced;
       });
 
       const anyInputSpent = MANUFACTURING_INPUT_KEYS.some((inputKey) => inputSpent[inputKey] > 0);
       const anyStorageMutation = anyInputSpent || totalOutput > 0;
-      if (anyStorageMutation) {
+      if (anyStorageMutation && !accumulatedChanges) {
         storage.reconcileUsedStorage();
         try {
           updateSpaceStorageUI(storage);
@@ -648,16 +662,14 @@
         return (desiredInputsByResource[inputKey] || 0) > 0 && (inputRatios[inputKey] || 0) <= 0;
       })) {
         this.updateStatus('Insufficient input in space storage');
-      } else if (outputCapBlocked) {
-        this.updateStatus('Output storage cap reached');
       } else {
         this.updateStatus('Idle');
       }
-      this.shortfallLastTick = hasInputShortfall || outputCapBlocked;
+      this.shortfallLastTick = hasInputShortfall;
     }
 
     applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-      this.runManufacturing(deltaTime, productivity);
+      this.runManufacturing(deltaTime, productivity, accumulatedChanges);
     }
 
     applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -678,7 +690,7 @@
       return target;
     }
 
-    estimateOperationCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    estimateOperationCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
       const totals = { cost: {}, gain: {} };
       if (!this.shouldOperate()) {
         return totals;
@@ -731,7 +743,7 @@
           inputRatios[inputKey] = 1;
           return;
         }
-        const availableAmount = storage.getAvailableStoredResource(inputKey);
+        const availableAmount = this.getAvailableStoredResourceForTick(storage, inputKey, accumulatedChanges);
         inputRatios[inputKey] = Math.min(1, availableAmount / desiredAmount);
       });
 
@@ -783,12 +795,12 @@
       return { cost: {}, gain: {} };
     }
 
-    estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
       const totals = this.estimateExpansionCostAndGain(deltaTime, applyRates, productivity);
       if (this.operationPreRunThisTick === true) {
         return totals;
       }
-      const operationTotals = this.estimateOperationCostAndGain(deltaTime, applyRates, productivity);
+      const operationTotals = this.estimateOperationCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
       return this.mergeEstimateTotals(totals, operationTotals);
     }
 

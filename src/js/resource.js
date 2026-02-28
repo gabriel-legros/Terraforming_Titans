@@ -518,9 +518,24 @@ const shouldTreatProjectAsBuilding = (project) =>
   project?.treatAsBuilding ||
   (project?.isContinuous() && project?.attributes?.continuousAsBuilding);
 
+const SPACE_BUILDING_PRODUCTIVITY_PROJECTS = {
+  dysonSwarmReceiver: true,
+  dysonSphere: true,
+  manufacturingWorld: true,
+  lifters: true,
+  nuclearAlchemyFurnace: true,
+};
+
+const shouldApplySpaceBuildingProductivity = (project) =>
+  Boolean(
+    project?.attributes?.spaceBuilding
+    && project?.applyOperationCostAndGain
+    && SPACE_BUILDING_PRODUCTIVITY_PROJECTS[project?.name]
+  );
+
 const shouldApplyProjectProductivity = (project) =>
   shouldTreatProjectAsBuilding(project) ||
-  (project?.attributes?.spaceBuilding && project?.applyOperationCostAndGain);
+  shouldApplySpaceBuildingProductivity(project);
 
 const isProjectAutoContinuousEnabled = (project) =>
   project?.autoContinuousOperation === true || project?.autoDeployCollectors === true;
