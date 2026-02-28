@@ -95,14 +95,9 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     this.yardAssignments[inactiveDyson] = 0;
 
     const keys = this.getAssignmentKeys();
-    const activeKeySet = new Set(keys.concat([activeDyson]));
-    this.getAllAssignableKeys().forEach((key) => {
-      if (activeKeySet.has(key)) {
-        return;
-      }
-      this.yardAssignments[key] = 0;
-      this.autoAssignFlags[key] = false;
-    });
+    // Keep assignments for temporarily hidden optional targets (for example,
+    // Nuclear Alchemy during load/travel sequencing) so saved auto-assign
+    // flags and yard allocations are restored once that target is visible.
     const total = this.getTotalYards();
     const activeKey = this.getActiveDysonKey();
     let usedManual = 0;

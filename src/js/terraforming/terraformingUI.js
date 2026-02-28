@@ -46,10 +46,14 @@ function formatTerraformingSummaryLabel(value, fallback = '') {
   if (!raw) {
     return '';
   }
-  const capitalizeWord = (word) => word ? (word.charAt(0).toUpperCase() + word.slice(1)) : word;
-  return raw
+  const normalized = raw
     .replace(/_/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/\s+/g, ' ');
+  if (/[A-Z]/.test(normalized)) {
+    return normalized;
+  }
+  const capitalizeWord = (word) => word ? (word.charAt(0).toUpperCase() + word.slice(1)) : word;
+  return normalized
     .split(' ')
     .map((part) => part.split('-').map(capitalizeWord).join('-'))
     .join(' ');
@@ -75,9 +79,14 @@ function getTerraformingSummaryWorldType() {
     return currentPlanetParameters?.classification?.type || 'shell';
   }
   if (manager && manager.currentRandomSeed !== null) {
-    return currentPlanetParameters?.classification?.archetype
+    const typeKey = currentPlanetParameters?.classification?.archetype
       || currentPlanetParameters?.classification?.type
       || 'random';
+    let displayName = '';
+    try {
+      displayName = RWG_WORLD_TYPES?.[typeKey]?.displayName || '';
+    } catch (error) {}
+    return displayName || typeKey;
   }
   return 'story';
 }
@@ -1634,6 +1643,18 @@ function updateLifeBox() {
     return value < 0.01 ? '0' : value.toFixed(2);
   }
 
+  function getDisplayedRadiationPenalty(hasMagnetosphere) {
+    if (hasMagnetosphere) {
+      return 0;
+    }
+    const design = lifeDesigner && (lifeDesigner.tentativeDesign || lifeDesigner.currentDesign);
+    let penalty = design ? design.getRadiationGrowthPenalty() : (terraforming.radiationPenalty || 0);
+    if (penalty < 0.0001) {
+      penalty = 0;
+    }
+    return penalty;
+  }
+
   // Function to create the magnetosphere box, with conditional text based on boolean flag
   function createMagnetosphereBox(row) {
     const magnetosphereBox = document.createElement('div');
@@ -1671,7 +1692,7 @@ function updateLifeBox() {
 
       const orbRad = terraforming.orbitalRadiation || 0;
       const rad = terraforming.surfaceRadiation || 0;
-      const radPenalty = hasMagnetosphere ? 0 : (terraforming.radiationPenalty || 0);
+      const radPenalty = getDisplayedRadiationPenalty(hasMagnetosphere);
       const gravityValue = Number.isFinite(terraforming.celestialParameters.gravity)
         ? terraforming.celestialParameters.gravity
         : 0;
@@ -1769,7 +1790,7 @@ function updateLifeBox() {
     }
     if (surfaceRadiationPenalty) {
       const penaltyRow = surfaceRadiationPenalty.parentElement;
-      const penaltyValue = hasMagnetosphere ? 0 : (terraforming.radiationPenalty || 0);
+      const penaltyValue = getDisplayedRadiationPenalty(hasMagnetosphere);
       if (!hasMagnetosphere && penaltyValue < 0.0001) {
         penaltyRow.style.display = 'none';
       } else {
