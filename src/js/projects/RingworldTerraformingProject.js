@@ -590,7 +590,7 @@ class RingworldTerraformingProject extends Project {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
-    if (!this.investing || this.isCompleted || this.power <= 0) {
+    if (!this.unlocked || !this.investing || this.isCompleted || this.power <= 0) {
       return totals;
     }
     if (applyRates) {
@@ -601,7 +601,7 @@ class RingworldTerraformingProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.investing || this.isCompleted || this.power <= 0) {
+    if (!this.unlocked || !this.investing || this.isCompleted || this.power <= 0) {
       this.shortfallLastTick = false;
       this.actualInvestRate = 0;
       return;
