@@ -196,7 +196,12 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       return;
     }
     const overflowPerSecond = dysonSwarmManagerInstance?.getOverflowEnergyPerSecond?.() || 0;
-    accumulatedChanges.spaceEnergy = Math.max(overflowPerSecond * seconds, 0);
+    const overflowAmount = Math.max(overflowPerSecond * seconds, 0);
+    accumulatedChanges.space ||= {};
+    accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) + overflowAmount;
+    if (overflowPerSecond > 0) {
+      resources?.space?.energy?.modifyRate?.(overflowPerSecond, 'Dyson Overflow', 'project');
+    }
     accumulatedChanges.dysonSpaceEnergyInjected = true;
   }
 

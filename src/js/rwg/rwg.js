@@ -932,6 +932,7 @@ function buildSpecialSeedWorldResult(seedValue, seedInt) {
   const specialEffects = Array.isArray(definition.specialEffects)
     ? cloneRWGValue(definition.specialEffects)
     : [];
+  const specialSeedDesigner = definition.designer || null;
   const target = definition.target || 'planet';
   const archetype = definition.archetype || merged?.classification?.archetype || 'venus-like';
   const orbitPreset = definition.orbitPreset || 'hot';
@@ -943,6 +944,7 @@ function buildSpecialSeedWorldResult(seedValue, seedInt) {
   merged.rwgMeta = merged.rwgMeta || {};
   merged.rwgMeta.specialSeedKey = definition.key || null;
   merged.rwgMeta.specialSeedName = definition.name || merged.name || null;
+  merged.rwgMeta.specialSeedDesigner = specialSeedDesigner;
   merged.rwgMeta.specialEffects = specialEffects;
   merged.rwgMeta.selectedHazards = hazards.slice();
   merged.rwgMeta.selectedHazard = hazards.length === 1 ? hazards[0] : null;
@@ -959,6 +961,7 @@ function buildSpecialSeedWorldResult(seedValue, seedInt) {
     seedInt: seedInt >>> 0,
     seedString: canonicalSeed,
     specialSeedKey: definition.key || null,
+    specialSeedDesigner,
     specialEffects,
     allowReplay: definition.replayable === true,
     override,

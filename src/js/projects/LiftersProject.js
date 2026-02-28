@@ -376,7 +376,7 @@ class LiftersProject extends TerraformingDurationProject {
       ? 0
       : Math.max((colonyEnergy.value || 0) + pending, 0);
     const poolAvailable = accumulatedChanges?.dysonSpaceEnergyInjected
-      ? Math.max(accumulatedChanges.spaceEnergy || 0, 0)
+      ? Math.max(accumulatedChanges?.space?.energy || 0, 0)
       : null;
     const dysonAvailable = poolAvailable !== null
       ? poolAvailable
@@ -387,7 +387,8 @@ class LiftersProject extends TerraformingDurationProject {
     const colonyUsed = Math.min(Math.max(energyUsed - dysonEnergyUsed, 0), availableColony);
     const totalUsed = colonyUsed + dysonEnergyUsed;
     if (accumulatedChanges?.dysonSpaceEnergyInjected) {
-      accumulatedChanges.spaceEnergy = Math.max((accumulatedChanges.spaceEnergy || 0) - dysonEnergyUsed, 0);
+      accumulatedChanges.space ||= {};
+      accumulatedChanges.space.energy = Math.max((accumulatedChanges.space.energy || 0) - dysonEnergyUsed, 0);
     }
     if (colonyUsed > 0 && colonyEnergy) {
       if (accumulatedChanges) {
@@ -773,6 +774,9 @@ class LiftersProject extends TerraformingDurationProject {
 
     const energyPerSecond = energyResult.energyUsed / seconds;
     const dysonPerSecond = energyResult.dysonEnergyUsed / seconds;
+    if (dysonPerSecond > 0) {
+      resources?.space?.energy?.modifyRate?.(-dysonPerSecond, 'Lifting', 'project');
+    }
     const unitPerSecond = processedUnits / seconds;
     this.setLastTickStats(unitPerSecond, energyPerSecond, harvestRate, atmosphereRate, dysonPerSecond, harvestKey);
     this.updateStatus('Running');

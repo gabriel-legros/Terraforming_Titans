@@ -425,6 +425,7 @@ const specialSeedDefinitions = {
     key: 'sculkbioworld',
     seed: 'SculkBioworld',
     name: 'Sculkia-1c',
+    designer: 'JamesM',
     replayable: true,
     target: 'planet',
     archetype: 'chthonian',

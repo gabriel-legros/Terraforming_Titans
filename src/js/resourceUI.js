@@ -1,6 +1,7 @@
 const wasteResourceNames = new Set(['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']);
 const wasteTooltipNoteText = 'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages.  The numbers here are not their actual consumption.';
 const SPACE_STORAGE_UI_ORDER = [
+  'energy',
   'metal',
   'silicon',
   'graphite',
@@ -30,7 +31,7 @@ function shouldRenderResourceCategory(category) {
   if (isSpaceStorageViewActive()) {
     return category === 'spaceStorage';
   }
-  return category !== 'spaceStorage';
+  return category !== 'spaceStorage' && category !== 'space';
 }
 
 function hasUnlockedSpaceStorageResources(resourceSet) {
@@ -39,10 +40,19 @@ function hasUnlockedSpaceStorageResources(resourceSet) {
     storageProj.syncSpaceStorageResourceUnlocks();
   }
   const storageResources = resourceSet?.spaceStorage;
-  if (!storageResources) return false;
-  for (const resourceName in storageResources) {
-    if (storageResources[resourceName]?.unlocked) {
-      return true;
+  if (storageResources) {
+    for (const resourceName in storageResources) {
+      if (storageResources[resourceName]?.unlocked) {
+        return true;
+      }
+    }
+  }
+  const spaceResources = resourceSet?.space;
+  if (spaceResources) {
+    for (const resourceName in spaceResources) {
+      if (spaceResources[resourceName]?.unlocked) {
+        return true;
+      }
     }
   }
   return false;
@@ -98,16 +108,27 @@ function createSpaceStorageTotalElement() {
   return resourceElement;
 }
 
-function getResourceNamesForDisplay(category, resourceMap) {
+function getDisplayResourceObject(resourceSet, category, resourceName) {
+  if (category === 'spaceStorage' && resourceName === 'energy') {
+    return resourceSet?.space?.energy || null;
+  }
+  return resourceSet?.[category]?.[resourceName] || null;
+}
+
+function getResourceNamesForDisplay(category, resourceMap, resourceSet = null) {
   const names = Object.keys(resourceMap || {});
   if (category !== 'spaceStorage') {
     return names;
   }
+  if (resourceSet?.space?.energy) {
+    names.push('energy');
+  }
+  const dedupedNames = Array.from(new Set(names));
   const orderIndexByName = {};
   for (let i = 0; i < SPACE_STORAGE_UI_ORDER.length; i += 1) {
     orderIndexByName[SPACE_STORAGE_UI_ORDER[i]] = i;
   }
-  return names.sort((a, b) => {
+  return dedupedNames.sort((a, b) => {
     const indexA = Object.prototype.hasOwnProperty.call(orderIndexByName, a) ? orderIndexByName[a] : Number.MAX_SAFE_INTEGER;
     const indexB = Object.prototype.hasOwnProperty.call(orderIndexByName, b) ? orderIndexByName[b] : Number.MAX_SAFE_INTEGER;
     if (indexA !== indexB) return indexA - indexB;
@@ -262,7 +283,7 @@ function createResourceContainers(resourcesData) {
     const label = document.createElement('span');
     label.classList.add('resource-category-label');
     if (category === 'spaceStorage') {
-      label.textContent = 'Space Storage Resources';
+      label.textContent = 'Space Resources';
     } else {
       label.textContent = `${capitalizeFirstLetter(category)} Resources`;
     }
@@ -1183,10 +1204,11 @@ function populateResourceElements(resources) {
       if (category === 'spaceStorage') {
         ensureSpaceStorageTotalElement(container);
       }
-      const resourceNames = getResourceNamesForDisplay(category, resources[category]);
+      const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
       for (let i = 0; i < resourceNames.length; i += 1) {
         const resourceName = resourceNames[i];
-        const resourceObj = resources[category][resourceName];
+        const resourceObj = getDisplayResourceObject(resources, category, resourceName);
+        if (!resourceObj) continue;
         if (!document.getElementById(`${resourceName}-container`)) {
           const resourceElement = createResourceElement(category, resourceObj, resourceName);
           container.appendChild(resourceElement);
@@ -1284,16 +1306,17 @@ function updateResourceDisplay(resources, deltaSeconds) {
       setResourceCapLimited(spaceStorageTotalEntry, false);
     }
 
-    const resourceNames = getResourceNamesForDisplay(category, resources[category]);
+    const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
     for (let i = 0; i < resourceNames.length; i += 1) {
       const resourceName = resourceNames[i];
-      const resourceObj = resources[category][resourceName];
+      const resourceObj = getDisplayResourceObject(resources, category, resourceName);
+      if (!resourceObj) continue;
       const entry = resourceUICache.resources[resourceName] || cacheSingleResource(category, resourceName);
       const resourceElement = entry ? entry.container : null;
       const resourceNameElement = entry ? entry.nameEl : null;
       const autobuildWarningEl = entry ? entry.autobuildWarningEl : null;
       const allowRegularWarnings = category !== 'spaceStorage';
-      if (category === 'spaceStorage') {
+      if (category === 'spaceStorage' && resourceName !== 'energy') {
         updateSpaceStorageCapDisplay(entry, resourceName);
       }
 
@@ -1338,7 +1361,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         if (resourceElement) resourceElement.style.display = 'none';
       }
 
-      if (category === 'spaceStorage') {
+      if (category === 'spaceStorage' && resourceName !== 'energy') {
         const consumptionDisplay = getDisplayConsumptionRates(resourceObj);
         const netRate = resourceObj.productionRate - consumptionDisplay.total;
         const positiveRate = netRate > 1e-9;
@@ -2120,8 +2143,9 @@ function cacheResourceElements(resources) {
     if (category === 'spaceStorage') {
       cacheSpaceStorageTotalEntry();
     }
-    const items = resources[category];
-    for (const resourceName in items) {
+    const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
+    for (let i = 0; i < resourceNames.length; i += 1) {
+      const resourceName = resourceNames[i];
       cacheSingleResource(category, resourceName);
     }
   }

@@ -1136,6 +1136,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const specialSeedEffects = Array.isArray(res?.specialEffects)
     ? res.specialEffects
     : (Array.isArray(res?.merged?.rwgMeta?.specialEffects) ? res.merged.rwgMeta.specialEffects : []);
+  const specialSeedDesigner = res?.specialSeedDesigner || res?.merged?.rwgMeta?.specialSeedDesigner || '';
   const uniqueSpecialSeedEffects = [];
   const seenSpecialSeedEffects = new Set();
   specialSeedEffects.forEach((entry) => {
@@ -1148,9 +1149,10 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     seenSpecialSeedEffects.add(dedupeKey);
     uniqueSpecialSeedEffects.push({ description });
   });
-  const specialEffectsPanel = uniqueSpecialSeedEffects.length ? `
+  const specialEffectsPanel = (specialSeedDesigner || uniqueSpecialSeedEffects.length) ? `
     <div class="rwg-card">
       <h3>Special Seed Effects</h3>
+      ${specialSeedDesigner ? `<div class="rwg-row"><span>Designed by ${specialSeedDesigner}</span></div>` : ''}
       ${uniqueSpecialSeedEffects.map((entry) => {
         return `<div class="rwg-row rwg-row-negative"><span>${entry.description}</span></div>`;
       }).join('')}

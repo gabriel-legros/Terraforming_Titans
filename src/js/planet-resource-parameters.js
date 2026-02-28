@@ -258,6 +258,9 @@
       crusaders: { name: 'Crusaders', hasCap: false, initialValue: 0, unlocked: false },
       antimatter: { name: 'Antimatter', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false }
     },
+    space: {
+      energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 0, unlocked: true, unit: 'Watt-day' }
+    },
     spaceStorage: {
       metal: { name: 'Metal', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       silicon: { name: 'Silica', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },

@@ -789,7 +789,6 @@ function produceResources(deltaTime, buildings) {
       }
     }
   }
-  accumulatedChanges.spaceEnergy = 0;
   accumulatedChanges.dysonSpaceEnergyInjected = false;
 
   if (followersManager && followersManager.applyOrbitalProductionRates) {
