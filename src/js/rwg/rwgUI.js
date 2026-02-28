@@ -1312,6 +1312,7 @@ function renderAtmoTable(res) {
     { label: 'N₂', key: 'inertGas' },
     { label: 'O₂', key: 'oxygen' },
     { label: 'Water Vap.', key: 'atmosphericWater' },
+    { label: 'Safe GHG', key: 'greenhouseGas' },
     { label: 'CH₄', key: 'atmosphericMethane' },
     { label: 'H₂', key: 'hydrogen' },
     { label: 'H₂SO₄', key: 'sulfuricAcid' }

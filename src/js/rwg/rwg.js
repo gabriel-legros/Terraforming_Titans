@@ -916,6 +916,10 @@ function buildSpecialSeedWorldResult(seedValue, seedInt) {
   if (!specialSeedParams) return null;
 
   const merged = deepMerge(defaultPlanetParameters, cloneRWGValue(specialSeedParams));
+  const mergedAtmospheric = merged.resources && merged.resources.atmospheric;
+  if (mergedAtmospheric && mergedAtmospheric.greenhouseGas && mergedAtmospheric.greenhouseGas.initialValue > 0) {
+    mergedAtmospheric.greenhouseGas.unlocked = true;
+  }
   initializeHazardousBiomassFromMaxDensity(merged);
   const override = cloneRWGValue(merged);
   const star = cloneRWGValue(merged.star || {});
@@ -1103,7 +1107,7 @@ function buildAtmosphere(archetype, radius_km, gravity, rng, params) {
   const pressureBar = tpl ? tpl.pressureBar * randRange(rng, band[0], band[1]) : randRange(rng, 0.001, 2.0);
   const totalTons = totalAtmosphereMassTons(pressureBar, radius_km, gravity);
   const baseMix = (tpl && tpl.mix) ? tpl.mix : {};
-  const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","atmosphericMethane","atmosphericAmmonia","hydrogen","sulfuricAcid"];
+  const mixKeys = ["carbonDioxide","inertGas","oxygen","atmosphericWater","greenhouseGas","atmosphericMethane","atmosphericAmmonia","hydrogen","sulfuricAcid"];
   const jittered = {}; let sum = 0;
   for (const k of mixKeys) { const base = baseMix[k] || 0; if (base <= 0) { jittered[k] = 0; continue; } const jitter = 1 + randRange(rng, -0.25, 0.25); const val = Math.max(0, base * jitter); jittered[k] = val; sum += val; }
   let defaults = {};

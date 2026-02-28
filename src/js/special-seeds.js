@@ -245,7 +245,7 @@ const sculkBioworldOverrides = {
       atmosphericAmmonia: { initialValue: 0 },
       hydrogen: { initialValue: 0 },
       sulfuricAcid: { initialValue: 0 },
-      greenhouseGas: { initialValue: 663867488613.4543 }
+      greenhouseGas: { initialValue: 663867488613.4543, unlocked: true }
     }
   },
   zonalSurface: {
