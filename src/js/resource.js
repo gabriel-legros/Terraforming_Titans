@@ -518,6 +518,10 @@ const shouldTreatProjectAsBuilding = (project) =>
   project?.treatAsBuilding ||
   (project?.isContinuous() && project?.attributes?.continuousAsBuilding);
 
+const shouldApplyProjectProductivity = (project) =>
+  shouldTreatProjectAsBuilding(project) ||
+  (project?.attributes?.spaceBuilding && project?.applyOperationCostAndGain);
+
 const isProjectAutoContinuousEnabled = (project) =>
   project?.autoContinuousOperation === true || project?.autoDeployCollectors === true;
 
@@ -616,7 +620,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
-      if (shouldTreatProjectAsBuilding(project)) {
+      if (shouldApplyProjectProductivity(project)) {
         project.estimateCostAndGain(deltaTime, true, 1);
       }
     }
@@ -736,6 +740,9 @@ function produceResources(deltaTime, buildings) {
     for (const [name, data] of projectEntries) {
       const productivity = projectProductivityMap[name] ?? 1;
       data.project.continuousProductivity = data.project.isContinuous() ? productivity : 1;
+      data.project.operationProductivity = data.project.getOperationProductivityForTick
+        ? data.project.getOperationProductivityForTick(productivity, deltaTime)
+        : productivity;
     }
   }
 
@@ -795,7 +802,7 @@ function produceResources(deltaTime, buildings) {
     });
     for (const [, data] of spaceBuildingOperations) {
       const { project } = data;
-      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
+      const productivity = project.operationProductivity ?? 1;
       project.applyOperationCostAndGain(deltaTime, accumulatedChanges, productivity);
       project.operationPreRunThisTick = true;
     }
@@ -963,10 +970,7 @@ function calculateProjectProductivities(resources, deltaTime, projectData = {}) 
   const productivityMap = {};
   for (const name in projectData) {
     const { cost = {}, project } = projectData[name];
-    if (!project.isContinuous()) {
-      continue;
-    }
-    if (!shouldTreatProjectAsBuilding(project)) {
+    if (!shouldApplyProjectProductivity(project)) {
       continue;
     }
     let productivity = 1;

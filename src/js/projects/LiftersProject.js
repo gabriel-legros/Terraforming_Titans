@@ -706,6 +706,9 @@ class LiftersProject extends TerraformingDurationProject {
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    if (this.operationPreRunThisTick === true) {
+      return { cost: {}, gain: {} };
+    }
     const totals = { cost: {}, gain: {} };
     const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
       getAvailableStoredResource: () => 0,
@@ -777,7 +780,7 @@ class LiftersProject extends TerraformingDurationProject {
       }
     }
 
-    if (!applyRates || !this.shouldOperate()) {
+    if (!this.shouldOperate()) {
       return totals;
     }
     const seconds = deltaTime / 1000;

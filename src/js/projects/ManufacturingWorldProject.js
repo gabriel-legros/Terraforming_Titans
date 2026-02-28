@@ -458,11 +458,43 @@
       return this.isRunning && this.getTotalPotentialPopulation() > 0;
     }
 
+    getRecipeOperationProductivity(key, productivity = 1) {
+      const clamp = (value) => Math.max(0, Math.min(1, value));
+      if (Number.isFinite(productivity)) {
+        return clamp(productivity);
+      }
+      const value = productivity?.[key];
+      if (Number.isFinite(value)) {
+        return clamp(value);
+      }
+      return 1;
+    }
+
+    getOperationProductivityForTick() {
+      const productivityByRecipe = {};
+      this.normalizeAssignments();
+      this.getAssignmentKeys().forEach((key) => {
+        const assigned = this.manufacturingAssignments[key] || 0;
+        if (assigned <= 0) {
+          productivityByRecipe[key] = 0;
+          return;
+        }
+        const recipe = this.getRecipe(key);
+        let productivity = 1;
+        Object.keys(recipe.inputs).forEach((inputKey) => {
+          const ratio = resources.spaceStorage[inputKey].availabilityRatio;
+          productivity = Math.min(productivity, ratio);
+        });
+        productivityByRecipe[key] = Math.max(0, Math.min(1, productivity));
+      });
+      return productivityByRecipe;
+    }
+
     getSpaceStorageProject() {
       return projectManager.projects.spaceStorage;
     }
 
-    runManufacturing(deltaTime = 1000) {
+    runManufacturing(deltaTime = 1000, productivity = 1) {
       if (!this.shouldOperate()) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
         if (!this.isRunning) {
@@ -500,12 +532,13 @@
           return;
         }
         const recipe = this.getRecipe(key);
+        const recipeProductivity = this.getRecipeOperationProductivity(key, productivity);
         const outputMultiplier = this.getRecipeOutputMultiplier(key);
         const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key);
-        const desiredOutput = ((assigned * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds;
+        const desiredOutput = ((assigned * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds * recipeProductivity;
         const desiredInputs = {};
         Object.keys(recipe.inputs).forEach((inputKey) => {
-          const amount = ((assigned * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds;
+          const amount = ((assigned * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds * recipeProductivity;
           desiredInputs[inputKey] = amount;
           desiredInputsByResource[inputKey] += amount;
         });
@@ -623,16 +656,117 @@
       this.shortfallLastTick = hasInputShortfall || outputCapBlocked;
     }
 
-    applyOperationCostAndGain(deltaTime = 1000) {
-      this.runManufacturing(deltaTime);
+    applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+      this.runManufacturing(deltaTime, productivity);
     }
 
-    applyCostAndGain(deltaTime = 1000) {
+    applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
       const operationAlreadyHandled = this.operationPreRunThisTick === true;
       this.operationPreRunThisTick = false;
       if (!operationAlreadyHandled) {
-        this.runManufacturing(deltaTime);
+        this.runManufacturing(deltaTime, productivity);
       }
+    }
+
+    estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+      const totals = { cost: {}, gain: {} };
+      if (!this.shouldOperate()) {
+        return totals;
+      }
+      const seconds = deltaTime / 1000;
+      if (!(seconds > 0)) {
+        return totals;
+      }
+      const storage = this.getSpaceStorageProject();
+      if (!storage) {
+        return totals;
+      }
+
+      this.normalizeAssignments();
+      const entries = [];
+      const desiredInputsByResource = this.createEmptyInputRates();
+
+      this.getAssignmentKeys().forEach((key) => {
+        const assigned = this.manufacturingAssignments[key] || 0;
+        if (assigned <= 0) {
+          return;
+        }
+        const recipe = this.getRecipe(key);
+        const recipeProductivity = this.getRecipeOperationProductivity(key, productivity);
+        const outputMultiplier = this.getRecipeOutputMultiplier(key);
+        const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key);
+        const desiredOutput = ((assigned * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds * recipeProductivity;
+        const desiredInputs = {};
+        Object.keys(recipe.inputs).forEach((inputKey) => {
+          const amount = ((assigned * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds * recipeProductivity;
+          desiredInputs[inputKey] = amount;
+          desiredInputsByResource[inputKey] += amount;
+        });
+        entries.push({
+          key,
+          recipe,
+          desiredOutput,
+          desiredInputs,
+        });
+      });
+
+      if (entries.length === 0) {
+        return totals;
+      }
+
+      const inputRatios = {};
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
+        const desiredAmount = desiredInputsByResource[inputKey] || 0;
+        if (desiredAmount <= 0) {
+          inputRatios[inputKey] = 1;
+          return;
+        }
+        const availableAmount = storage.getAvailableStoredResource(inputKey);
+        inputRatios[inputKey] = Math.min(1, availableAmount / desiredAmount);
+      });
+
+      const estimatedInputs = this.createEmptyInputRates();
+      const estimatedOutputs = {};
+
+      entries.forEach((entry) => {
+        const desiredInputKeys = Object.keys(entry.desiredInputs);
+        let scale = 1;
+        desiredInputKeys.forEach((inputKey) => {
+          scale = Math.min(scale, inputRatios[inputKey] || 1);
+        });
+        desiredInputKeys.forEach((inputKey) => {
+          estimatedInputs[inputKey] += (entry.desiredInputs[inputKey] || 0) * scale;
+        });
+        estimatedOutputs[entry.key] = (entry.desiredOutput || 0) * scale;
+      });
+
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
+        const amount = estimatedInputs[inputKey] || 0;
+        if (!(amount > 0)) {
+          return;
+        }
+        totals.cost.spaceStorage ||= {};
+        totals.cost.spaceStorage[inputKey] = (totals.cost.spaceStorage[inputKey] || 0) + amount;
+        if (applyRates) {
+          resources.spaceStorage[inputKey].modifyRate(-(amount / seconds), this.displayName, 'project');
+        }
+      });
+
+      this.getAssignmentKeys().forEach((key) => {
+        const amount = estimatedOutputs[key] || 0;
+        if (!(amount > 0)) {
+          return;
+        }
+        const recipe = this.getRecipe(key);
+        totals.gain.spaceStorage ||= {};
+        totals.gain.spaceStorage[recipe.outputStorageKey] =
+          (totals.gain.spaceStorage[recipe.outputStorageKey] || 0) + amount;
+        if (applyRates) {
+          resources.spaceStorage[recipe.outputStorageKey].modifyRate(amount / seconds, this.displayName, 'project');
+        }
+      });
+
+      return totals;
     }
 
     update(deltaTime) {

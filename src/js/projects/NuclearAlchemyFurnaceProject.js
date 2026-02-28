@@ -240,7 +240,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     return this.isRunning && this.repeatCount > 0;
   }
 
-  buildConversionEntries(seconds) {
+  buildConversionEntries(seconds, productivity = 1) {
     const storage = this.getSpaceStorageProject();
     if (!storage) {
       this.shortfallReason = 'Build space storage';
@@ -258,7 +258,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       if (!(rate > 0)) {
         return;
       }
-      const desired = rate * seconds;
+      const desired = rate * seconds * productivity;
       const stored = storage.getStoredResourceValue(recipe.storageKey);
       const capLimit = storage.getResourceCapLimit(recipe.storageKey);
       const capRemaining = Math.max(0, capLimit - stored);
@@ -554,7 +554,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       return;
     }
 
-    const entries = this.buildConversionEntries(seconds);
+    const entries = this.buildConversionEntries(seconds, productivity);
     if (entries.length === 0) {
       this.setLastRunStats(0, {});
       this.updateStatus('No assignments');
@@ -653,6 +653,9 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    if (this.operationPreRunThisTick === true) {
+      return { cost: {}, gain: {} };
+    }
     const totals = { cost: {}, gain: {} };
     const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
       getAvailableStoredResource: () => 0,
@@ -714,6 +717,73 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
         }
       }
     }
+
+    if (!this.shouldOperate()) {
+      return totals;
+    }
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return totals;
+    }
+    this.normalizeAssignments();
+    const storage = this.getSpaceStorageProject();
+    if (!storage) {
+      return totals;
+    }
+    const entries = this.buildConversionEntries(seconds, productivity);
+    if (entries.length === 0) {
+      return totals;
+    }
+    const hydrogenAvailable = storage.getAvailableStoredResource('hydrogen');
+    if (!(hydrogenAvailable > 0)) {
+      return totals;
+    }
+
+    const allocations = this.allocateHydrogen(entries, hydrogenAvailable);
+    const outputDisplayAmounts = {};
+    let hydrogenDisplaySpent = 0;
+
+    entries.forEach((entry) => {
+      const requested = allocations[entry.key] || 0;
+      outputDisplayAmounts[entry.key] = requested;
+      hydrogenDisplaySpent += requested;
+    });
+
+    if (!(hydrogenDisplaySpent > 0)) {
+      return totals;
+    }
+
+    if (applyRates) {
+      const hydrogenRate = hydrogenDisplaySpent / seconds;
+      resources?.spaceStorage?.hydrogen?.modifyRate?.(
+        -hydrogenRate,
+        this.displayName,
+        'project'
+      );
+      entries.forEach((entry) => {
+        const outputRate = (outputDisplayAmounts[entry.key] || 0) / seconds;
+        if (outputRate > 0) {
+          resources?.spaceStorage?.[entry.storageKey]?.modifyRate?.(
+            outputRate,
+            this.displayName,
+            'project'
+          );
+        }
+      });
+    }
+
+    totals.cost.spaceStorage ||= {};
+    totals.cost.spaceStorage.hydrogen =
+      (totals.cost.spaceStorage.hydrogen || 0) + hydrogenDisplaySpent;
+
+    totals.gain.spaceStorage ||= {};
+    entries.forEach((entry) => {
+      const amount = outputDisplayAmounts[entry.key] || 0;
+      if (amount > 0) {
+        totals.gain.spaceStorage[entry.storageKey] =
+          (totals.gain.spaceStorage[entry.storageKey] || 0) + amount;
+      }
+    });
 
     return totals;
   }
