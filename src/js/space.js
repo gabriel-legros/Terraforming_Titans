@@ -83,6 +83,13 @@ function getLandFromParams(source) {
         || 0;
 }
 
+function cloneSpaceWorldData(data) {
+    if (!data) {
+        return null;
+    }
+    return JSON.parse(JSON.stringify(data));
+}
+
 var getEcumenopolisLandFraction = globalThis.getEcumenopolisLandFraction || function () { return 0; };
 if (typeof module !== 'undefined' && module.exports) {
     ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
@@ -628,6 +635,20 @@ class SpaceManager extends EffectableEntity {
             };
         }
         return this.randomWorldStatuses[key];
+    }
+
+    resetRandomWorldStatus(seed) {
+        const key = String(seed);
+        this._updateWorldCacheForStatusMutation('random', key, (status, map, resolvedKey) => {
+            if (!status) {
+                return;
+            }
+            delete map[resolvedKey];
+        });
+        if (followersManager && followersManager.resetConsecrationForSeed) {
+            followersManager.resetConsecrationForSeed(key);
+        }
+        this._refreshFoundryWorldBonusCache();
     }
 
     setRandomWorldHasOrbitalRing(seed, value) {
@@ -1478,40 +1499,63 @@ class SpaceManager extends EffectableEntity {
         const departingTerraformed = this._isCurrentWorldTerraformed();
 
         const existing = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
+        const revisitingRandomSeed = !isArtificial && !!existing?.visited;
+        let travelResult = res;
+        if (revisitingRandomSeed) {
+            if (typeof generateRandomPlanet !== 'function') {
+                console.warn(`SpaceManager: Cannot regenerate seed ${s} for replay.`);
+                return false;
+            }
+            try {
+                const regenerated = generateRandomPlanet(s);
+                if (!regenerated || !regenerated.merged) {
+                    console.warn(`SpaceManager: Failed to regenerate seed ${s} for replay.`);
+                    return false;
+                }
+                travelResult = regenerated;
+            } catch (error) {
+                console.warn(`SpaceManager: Failed to regenerate seed ${s} for replay.`);
+                return false;
+            }
+        }
+        const originalSnapshot = cloneSpaceWorldData(travelResult);
         const firstVisit = !existing?.visited;
         const destinationTerraformed = existing?.terraformed || false;
         const artificialWorld = isArtificial || existing?.artificial;
 
         // prepareForTravel is now called within recordDepartureSnapshot
         this.recordDepartureSnapshot();
+        if (revisitingRandomSeed) {
+            this.resetRandomWorldStatus(s);
+        }
 
         this.currentRandomSeed = isArtificial ? null : s;
         this.currentArtificialKey = isArtificial ? s : null;
         this.currentPlanetKey = s;
-        this.currentRandomName = res?.merged?.name || (isArtificial ? `Artificial ${s}` : `Seed ${s}`);
+        this.currentRandomName = travelResult?.merged?.name || (isArtificial ? `Artificial ${s}` : `Seed ${s}`);
         const terraformedValue = isArtificial
             ? this._deriveArtificialTerraformValue({
-                terraformedValue: res?.terraformedValue,
-                landHa: getLandFromParams(res?.merged),
-                original: res
+                terraformedValue: travelResult?.terraformedValue,
+                landHa: getLandFromParams(travelResult?.merged),
+                original: travelResult
             })
             : 1;
-        const sector = resolveSectorFromSources(res);
+        const sector = resolveSectorFromSources(travelResult);
         const targetType = isArtificial ? 'artificial' : 'random';
         this._updateWorldCacheForStatusMutation(targetType, s, (status, map, key) => {
             if (!status) {
-                const cachedArchetype = res?.archetype
-                    || res?.classification?.archetype
-                    || res?.original?.archetype
-                    || res?.original?.classification?.archetype
-                    || res?.merged?.classification?.archetype
-                    || res?.original?.merged?.classification?.archetype
+                const cachedArchetype = travelResult?.archetype
+                    || travelResult?.classification?.archetype
+                    || travelResult?.original?.archetype
+                    || travelResult?.original?.classification?.archetype
+                    || travelResult?.merged?.classification?.archetype
+                    || travelResult?.original?.merged?.classification?.archetype
                     || null;
                 map[key] = {
                     name: this.currentRandomName,
                     terraformed: false,
                     colonists: 0,
-                    original: res,
+                    original: originalSnapshot,
                     visited: true,
                     orbitalRing: false,
                     departedAt: null,
@@ -1523,7 +1567,11 @@ class SpaceManager extends EffectableEntity {
                 };
                 return;
             }
-            status.original = status.original || res;
+            if (revisitingRandomSeed) {
+                status.original = originalSnapshot;
+            } else {
+                status.original = status.original || originalSnapshot;
+            }
             status.artificial = status.artificial || artificialWorld;
             status.visited = true;
             if (isArtificial && !status.terraformedValue) {
@@ -1543,7 +1591,7 @@ class SpaceManager extends EffectableEntity {
 
         this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
         const latest = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
-        const mergedParams = res?.merged || latest?.original?.merged || null;
+        const mergedParams = travelResult?.merged || latest?.original?.merged || null;
         this._finalizeTravelInitialization({
             planetParameters: mergedParams
         });

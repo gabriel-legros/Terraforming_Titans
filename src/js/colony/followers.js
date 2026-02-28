@@ -85,6 +85,15 @@ class FollowersManager extends EffectableEntity {
     return !!this.holyWorldConsecratedWorlds[this.getCurrentWorldHolyKey()];
   }
 
+  resetConsecrationForSeed(seed) {
+    const key = `seed:${String(seed)}`;
+    if (!this.holyWorldConsecratedWorlds[key]) {
+      return;
+    }
+    delete this.holyWorldConsecratedWorlds[key];
+    this.updateUI();
+  }
+
   getHolyWorldCostScale() {
     return 2 ** Math.max(0, this.holyWorldCompletions);
   }
