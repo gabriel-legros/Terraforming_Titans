@@ -714,14 +714,10 @@ function getRandomWorldTravelEquilibrationWarning(state) {
 }
 
 function buildEquilibrateTooltipText() {
-  const bypassUnlocked = hasFastTerraformEquilibrationBypass();
   const fastestRecordText = fastestTerraformRealSeconds === null
     ? 'none'
     : `${fastestTerraformRealSeconds.toFixed(2)}s`;
-  const requirementText = bypassUnlocked
-    ? 'Current status: Equilibrate is optional before random-world travel in this save.'
-    : 'Current status: Equilibrate is required before random-world travel in this save.';
-  return `${RWG_EQUILIBRATE_TOOLTIP_TEXT}\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s.\nCurrent Fastest Terraform (real time): ${fastestRecordText}.\n${requirementText}`;
+  return `${RWG_EQUILIBRATE_TOOLTIP_TEXT}\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s.\nCurrent Fastest Terraform (real time): ${fastestRecordText}.`;
 }
 
 function updateRandomWorldUI() {
