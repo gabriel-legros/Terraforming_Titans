@@ -652,10 +652,28 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     this.shortfallLastTick = this.shortfallLastTick || this.expansionShortfallLastTick;
   }
 
-  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
-    if (this.operationPreRunThisTick === true) {
-      return { cost: {}, gain: {} };
+  mergeEstimateTotals(target, source) {
+    for (const bucket of ['cost', 'gain']) {
+      const sourceBucket = source?.[bucket] || {};
+      for (const category in sourceBucket) {
+        target[bucket][category] ||= {};
+        for (const resource in sourceBucket[category]) {
+          target[bucket][category][resource] =
+            (target[bucket][category][resource] || 0) + sourceBucket[category][resource];
+        }
+      }
     }
+    return target;
+  }
+
+  estimateCostAndGainByPhase(
+    deltaTime = 1000,
+    applyRates = true,
+    productivity = 1,
+    accumulatedChanges = null,
+    includeExpansion = true,
+    includeOperation = true
+  ) {
     const totals = { cost: {}, gain: {} };
     const storageState = (this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage) || {
       getAvailableStoredResource: () => 0,
@@ -663,7 +681,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
     };
 
-    const expansionActive = this.isActive && (!this.isExpansionContinuous() || this.autoStart);
+    const expansionActive = includeExpansion && this.isActive && (!this.isExpansionContinuous() || this.autoStart);
     if (expansionActive) {
       const duration = this.getEffectiveDuration();
       const limit = this.maxRepeatCount || Infinity;
@@ -718,7 +736,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       }
     }
 
-    if (!this.shouldOperate()) {
+    if (!includeOperation || !this.shouldOperate()) {
       return totals;
     }
     const seconds = deltaTime / 1000;
@@ -786,6 +804,39 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     });
 
     return totals;
+  }
+
+  estimateExpansionCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    return this.estimateCostAndGainByPhase(
+      deltaTime,
+      applyRates,
+      productivity,
+      accumulatedChanges,
+      true,
+      false
+    );
+  }
+
+  estimateOperationCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    return this.estimateCostAndGainByPhase(
+      deltaTime,
+      applyRates,
+      productivity,
+      accumulatedChanges,
+      false,
+      true
+    );
+  }
+
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    const preRun = this.operationPreRunThisTick === true;
+    const expansionApplyRates = preRun ? false : applyRates;
+    const totals = this.estimateExpansionCostAndGain(deltaTime, expansionApplyRates, productivity, accumulatedChanges);
+    if (preRun) {
+      return totals;
+    }
+    const operationTotals = this.estimateOperationCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
+    return this.mergeEstimateTotals(totals, operationTotals);
   }
 
   start(resources) {

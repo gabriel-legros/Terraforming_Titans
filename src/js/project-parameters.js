@@ -748,8 +748,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       projectGroup: 'specializedWorlds',
-      keepStartBarVisible: true,
-      spaceBuilding: true
+      keepStartBarVisible: true
     }
   },
   foundryWorld: {
@@ -782,7 +781,8 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       projectGroup: 'specializedWorlds',
-      keepStartBarVisible: true
+      keepStartBarVisible: true,
+      spaceBuilding: true
     }
   },
   disposeResources : {

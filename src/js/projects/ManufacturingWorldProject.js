@@ -661,14 +661,24 @@
     }
 
     applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-      const operationAlreadyHandled = this.operationPreRunThisTick === true;
       this.operationPreRunThisTick = false;
-      if (!operationAlreadyHandled) {
-        this.runManufacturing(deltaTime, productivity);
-      }
     }
 
-    estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    mergeEstimateTotals(target, source) {
+      for (const bucket of ['cost', 'gain']) {
+        const sourceBucket = source?.[bucket] || {};
+        for (const category in sourceBucket) {
+          target[bucket][category] ||= {};
+          for (const resource in sourceBucket[category]) {
+            target[bucket][category][resource] =
+              (target[bucket][category][resource] || 0) + sourceBucket[category][resource];
+          }
+        }
+      }
+      return target;
+    }
+
+    estimateOperationCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
       const totals = { cost: {}, gain: {} };
       if (!this.shouldOperate()) {
         return totals;
@@ -767,6 +777,19 @@
       });
 
       return totals;
+    }
+
+    estimateExpansionCostAndGain() {
+      return { cost: {}, gain: {} };
+    }
+
+    estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+      const totals = this.estimateExpansionCostAndGain(deltaTime, applyRates, productivity);
+      if (this.operationPreRunThisTick === true) {
+        return totals;
+      }
+      const operationTotals = this.estimateOperationCostAndGain(deltaTime, applyRates, productivity);
+      return this.mergeEstimateTotals(totals, operationTotals);
     }
 
     update(deltaTime) {
