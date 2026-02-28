@@ -922,6 +922,9 @@ function produceResources(deltaTime, buildings) {
   }
 
 
+  const spaceStorageProject = projectManager?.projects?.spaceStorage;
+  const spaceStorageCapLimits = spaceStorageProject?.getResourceCapLimits?.() || null;
+
   // Apply accumulated changes to resources
   for (const category in resources) {
     for (const resourceName in resources[category]) {
@@ -938,6 +941,13 @@ function produceResources(deltaTime, buildings) {
         const limit = previousValue >= resource.cap ? previousValue : resource.cap;
         if (newValue > limit) overflow = newValue - limit;
         finalValue = Math.min(newValue, limit);
+      }
+
+      if (category === 'spaceStorage' && spaceStorageCapLimits) {
+        const capLimit = Number(spaceStorageCapLimits[resourceName]);
+        if (Number.isFinite(capLimit)) {
+          finalValue = Math.min(finalValue, Math.max(0, capLimit));
+        }
       }
 
       resource.value = Math.max(finalValue, 0); // Ensure non-negative

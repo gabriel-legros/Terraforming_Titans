@@ -551,6 +551,21 @@
       resources.spaceStorage[resourceKey].value += delta;
     }
 
+    getSpaceStoragePendingDelta(accumulatedChanges, resourceKey) {
+      return accumulatedChanges?.spaceStorage?.[resourceKey] || 0;
+    }
+
+    getStoredResourceValueForTick(storage, resourceKey, accumulatedChanges = null) {
+      const pending = this.getSpaceStoragePendingDelta(accumulatedChanges, resourceKey);
+      return Math.max(0, storage.getStoredResourceValue(resourceKey) + pending);
+    }
+
+    getOutputCapRemainingForTick(storage, resourceKey, accumulatedChanges = null) {
+      const current = this.getStoredResourceValueForTick(storage, resourceKey, accumulatedChanges);
+      const capLimit = storage.getResourceCapLimit(resourceKey);
+      return Math.max(0, capLimit - current);
+    }
+
     runManufacturing(deltaTime = 1000, productivity = 1, accumulatedChanges = null) {
       if (!this.shouldOperate()) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
@@ -619,22 +634,34 @@
       const inputSpent = this.createEmptyInputRates();
       const outputProduced = {};
       let totalOutput = 0;
+      let outputCapBlocked = false;
 
       entries.forEach((entry) => {
+        const desiredProduced = entry.desiredOutput || 0;
+        const capRemaining = this.getOutputCapRemainingForTick(
+          storage,
+          entry.recipe.outputStorageKey,
+          accumulatedChanges
+        );
+        const produced = Math.min(desiredProduced, capRemaining);
+        const productionRatio = desiredProduced > 0 ? (produced / desiredProduced) : 0;
+        if (desiredProduced > produced + 1e-9) {
+          outputCapBlocked = true;
+        }
+
         Object.keys(entry.desiredInputs).forEach((inputKey) => {
-          const consumed = entry.desiredInputs[inputKey] || 0;
+          const consumed = (entry.desiredInputs[inputKey] || 0) * productionRatio;
           if (consumed > 0) {
             inputSpent[inputKey] += consumed;
             this.applySpaceStorageDeltaForTick(inputKey, -consumed, accumulatedChanges);
           }
         });
 
-        const desiredProduced = entry.desiredOutput;
-        if (desiredProduced > 0) {
-          this.applySpaceStorageDeltaForTick(entry.recipe.outputStorageKey, desiredProduced, accumulatedChanges);
-          totalOutput += desiredProduced;
+        if (produced > 0) {
+          this.applySpaceStorageDeltaForTick(entry.recipe.outputStorageKey, produced, accumulatedChanges);
+          totalOutput += produced;
         }
-        outputProduced[entry.key] = desiredProduced;
+        outputProduced[entry.key] = produced;
       });
 
       const anyInputSpent = MANUFACTURING_INPUT_KEYS.some((inputKey) => inputSpent[inputKey] > 0);
@@ -675,10 +702,12 @@
         this.updateStatus('Running');
       } else if (hasInputShortfall) {
         this.updateStatus('Insufficient input in space storage');
+      } else if (outputCapBlocked) {
+        this.updateStatus('Output storage cap reached');
       } else {
         this.updateStatus('Idle');
       }
-      this.shortfallLastTick = hasInputShortfall;
+      this.shortfallLastTick = hasInputShortfall || outputCapBlocked;
     }
 
     applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -749,12 +778,37 @@
 
       const estimatedInputs = this.createEmptyInputRates();
       const estimatedOutputs = {};
+      const localSpaceStorageDelta = {};
+      const getStoredValueForEstimate = (resourceKey) => {
+        const accumulated = this.getSpaceStoragePendingDelta(accumulatedChanges, resourceKey);
+        const local = localSpaceStorageDelta[resourceKey] || 0;
+        return Math.max(0, storage.getStoredResourceValue(resourceKey) + accumulated + local);
+      };
 
       entries.forEach((entry) => {
+        const desiredProduced = entry.desiredOutput || 0;
+        const capLimit = storage.getResourceCapLimit(entry.recipe.outputStorageKey);
+        let produced = desiredProduced;
+        if (Number.isFinite(capLimit)) {
+          const current = getStoredValueForEstimate(entry.recipe.outputStorageKey);
+          const capRemaining = Math.max(0, capLimit - current);
+          produced = Math.min(desiredProduced, capRemaining);
+        }
+        const productionRatio = desiredProduced > 0 ? (produced / desiredProduced) : 0;
+
         Object.keys(entry.desiredInputs).forEach((inputKey) => {
-          estimatedInputs[inputKey] += entry.desiredInputs[inputKey] || 0;
+          const consumed = (entry.desiredInputs[inputKey] || 0) * productionRatio;
+          if (consumed <= 0) {
+            return;
+          }
+          estimatedInputs[inputKey] += consumed;
+          localSpaceStorageDelta[inputKey] = (localSpaceStorageDelta[inputKey] || 0) - consumed;
         });
-        estimatedOutputs[entry.key] = entry.desiredOutput || 0;
+        if (produced > 0) {
+          const outputKey = entry.recipe.outputStorageKey;
+          localSpaceStorageDelta[outputKey] = (localSpaceStorageDelta[outputKey] || 0) + produced;
+        }
+        estimatedOutputs[entry.key] = produced;
       });
 
       MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
