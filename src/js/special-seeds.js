@@ -204,6 +204,200 @@ const wolfysNightmareOverrides = {
   }
 };
 
+const sculkBioworldOverrides = {
+  name: 'Sculkia-1c',
+  gravityPenaltyEnabled: true,
+  effects: [
+    {
+      target: 'project',
+      targetId: 'lifters',
+      type: 'booleanFlag',
+      flagId: 'disableAtmosphereStripMode',
+      value: true
+    },
+    {
+      target: 'building',
+      targetId: 'trashIncinerator',
+      type: 'booleanFlag',
+      flagId: 'disableHazardousBiomassIncineratorRecipe',
+      value: true
+    }
+  ],
+  resources: {
+    surface: {
+      land: { initialValue: 1316757505991 },
+      ice: { initialValue: 0, unlocked: true },
+      liquidWater: { initialValue: 2743435409868879000, unlocked: true },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 1, maxDeposits: 1563983, areaTotal: 13167575 },
+      geothermal: { initialValue: 1, maxDeposits: 34096, areaTotal: 13167575 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 9448157302084.945 },
+      inertGas: { initialValue: 16434814818624180 },
+      oxygen: { initialValue: 3941201755581513.5 },
+      atmosphericWater: { initialValue: 243652630307721 },
+      atmosphericMethane: { initialValue: 0 },
+      atmosphericAmmonia: { initialValue: 0 },
+      hydrogen: { initialValue: 0 },
+      sulfuricAcid: { initialValue: 0 },
+      greenhouseGas: { initialValue: 663867488613.4543 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 1637108748037122800,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    },
+    temperate: {
+      liquidWater: 1021524285785090300,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    },
+    polar: {
+      liquidWater: 84802376046665810,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    }
+  },
+  zonalTemperatures: {
+    tropical: {
+      value: 312.95908202099315,
+      day: 313.49006755989285,
+      night: 312.42809648209345
+    },
+    temperate: {
+      value: 296.7907582504284,
+      day: 297.23226667345676,
+      night: 296.3492498274
+    },
+    polar: {
+      value: 221.02631046698986,
+      day: 223.21406544904085,
+      night: 218.83855548493887
+    }
+  },
+  hazards: {
+    hazardousBiomass: {
+      baseGrowth: { value: 2.5, maxDensity: 500000 },
+      invasivenessResistance: { value: 100, severity: 0.005 },
+      oxygenPressure: { min: 0, max: 1000, unit: 'kPa', severity: 0.001 },
+      co2Pressure: { min: 0, max: 1_000_000, unit: 'kPa', severity: 0.000001 },
+      atmosphericPressure: { min: 0, max: 10_000_000, unit: 'kPa', severity: 0.00000001 },
+      landPreference: { value: 'Land', severity: 0 },
+      temperaturePreference: {
+        min: 0,
+        max: 2273.15,
+        unit: 'K',
+        severityBelow: 0,
+        severityHigh: 0.001
+      },
+      radiationPreference: { min: 0, max: 2500, unit: 'mSv/day', severity: 0.001 },
+      penalties: {
+        buildCost: -0.5,
+        maintenanceCost: 9,
+        populationGrowth: 1
+      }
+    },
+    garbage: {
+      surfaceResources: {
+        trash: { amountMultiplier: 6e6 },
+        junk: { amountMultiplier: 3e6 },
+        scrapMetal: { amountMultiplier: 995000 },
+        radioactiveWaste: { amountMultiplier: 5000 }
+      },
+      penalties: {
+        trash: { happiness: -0.1 },
+        junk: { sandHarvesterMultiplier: 0.01 },
+        scrapMetal: { oreScanningSpeedMultiplier: 0.01 },
+        radioactiveWaste: { lifeGrowthMultiplier: 0.0001, androidAttrition: 0.01 }
+      }
+    }
+  },
+  celestialParameters: {
+    distanceFromSun: 34.37936474691796,
+    gravity: 64,
+    radius: 32370.39279433107,
+    mass: 1.0046610551376063e+27,
+    albedo: 0.3,
+    rotationPeriod: 20,
+    spinPeriod: 20,
+    starLuminosity: 1288.5132072644535,
+    surfaceArea: 13167575059912044
+  },
+  star: {
+    name: 'Sculkia-1',
+    spectralType: 'B',
+    luminositySolar: 1288.5132072644535,
+    massSolar: 7.737431572307832,
+    radiusSolar: 5.138986265795898,
+    temperatureK: 15255,
+    habitableZone: {
+      inner: 34.10107285051556,
+      outer: 49.177336637059284
+    }
+  },
+  visualization: {
+    baseColor: '#24376f'
+  }
+};
+
 const specialSeedDefinitions = {
   wolfysnightmare: {
     key: 'wolfysnightmare',
@@ -226,6 +420,28 @@ const specialSeedDefinitions = {
       }
     ],
     overrides: wolfysNightmareOverrides
+  },
+  sculkbioworld: {
+    key: 'sculkbioworld',
+    seed: 'SculkBioworld',
+    name: 'Sculkia-1c',
+    replayable: true,
+    target: 'planet',
+    archetype: 'chthonian',
+    orbitPreset: 'hz-inner',
+    specialEffects: [
+      {
+        id: 'lifters-no-strip',
+        label: 'Lifters Strip Mode Disabled',
+        description: 'Lifters cannot use Atmosphere Strip mode.'
+      },
+      {
+        id: 'incinerator-no-hazardous-biomass',
+        label: 'Incinerator Recipe Disabled',
+        description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
+      }
+    ],
+    overrides: sculkBioworldOverrides
   }
 };
 
