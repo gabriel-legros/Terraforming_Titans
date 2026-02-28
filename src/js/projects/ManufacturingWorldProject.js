@@ -494,15 +494,6 @@
       return projectManager.projects.spaceStorage;
     }
 
-    getSpaceStoragePendingDelta(accumulatedChanges, resourceKey) {
-      return accumulatedChanges?.spaceStorage?.[resourceKey] || 0;
-    }
-
-    getAvailableStoredResourceForTick(storage, resourceKey, accumulatedChanges = null) {
-      const pending = this.getSpaceStoragePendingDelta(accumulatedChanges, resourceKey);
-      return Math.max(0, (resources.spaceStorage[resourceKey].value || 0) + pending);
-    }
-
     applySpaceStorageDeltaForTick(resourceKey, delta, accumulatedChanges = null) {
       if (!(delta !== 0)) {
         return;
@@ -548,7 +539,7 @@
 
       this.normalizeAssignments();
       const entries = [];
-      const desiredInputsByResource = this.createEmptyInputRates();
+      let hasInputShortfall = false;
 
       this.getAssignmentKeys().forEach((key) => {
         const assigned = this.manufacturingAssignments[key] || 0;
@@ -564,7 +555,9 @@
         Object.keys(recipe.inputs).forEach((inputKey) => {
           const amount = ((assigned * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds * recipeProductivity;
           desiredInputs[inputKey] = amount;
-          desiredInputsByResource[inputKey] += amount;
+          if (!hasInputShortfall && amount > 0 && recipeProductivity < 1) {
+            hasInputShortfall = true;
+          }
         });
         entries.push({
           key,
@@ -581,37 +574,20 @@
         return;
       }
 
-      const inputRatios = {};
-      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
-        const desiredAmount = desiredInputsByResource[inputKey] || 0;
-        if (desiredAmount <= 0) {
-          inputRatios[inputKey] = 1;
-          return;
-        }
-        const availableAmount = this.getAvailableStoredResourceForTick(storage, inputKey, accumulatedChanges);
-        inputRatios[inputKey] = Math.min(1, availableAmount / desiredAmount);
-      });
-
       const inputSpent = this.createEmptyInputRates();
       const outputProduced = {};
       let totalOutput = 0;
 
       entries.forEach((entry) => {
-        const desiredInputKeys = Object.keys(entry.desiredInputs);
-        let scale = 1;
-        desiredInputKeys.forEach((inputKey) => {
-          scale = Math.min(scale, inputRatios[inputKey] || 1);
-        });
-
-        desiredInputKeys.forEach((inputKey) => {
-          const consumed = (entry.desiredInputs[inputKey] || 0) * scale;
+        Object.keys(entry.desiredInputs).forEach((inputKey) => {
+          const consumed = entry.desiredInputs[inputKey] || 0;
           if (consumed > 0) {
             inputSpent[inputKey] += consumed;
             this.applySpaceStorageDeltaForTick(inputKey, -consumed, accumulatedChanges);
           }
         });
 
-        const desiredProduced = entry.desiredOutput * scale;
+        const desiredProduced = entry.desiredOutput;
         if (desiredProduced > 0) {
           this.applySpaceStorageDeltaForTick(entry.recipe.outputStorageKey, desiredProduced, accumulatedChanges);
           totalOutput += desiredProduced;
@@ -653,14 +629,9 @@
 
       this.setLastRunStats(inputRates, outputRates);
 
-      const hasInputShortfall = MANUFACTURING_INPUT_KEYS.some((inputKey) => {
-        return (desiredInputsByResource[inputKey] || 0) > 0 && (inputRatios[inputKey] || 1) < 1;
-      });
       if (totalOutput > 0) {
         this.updateStatus('Running');
-      } else if (MANUFACTURING_INPUT_KEYS.some((inputKey) => {
-        return (desiredInputsByResource[inputKey] || 0) > 0 && (inputRatios[inputKey] || 0) <= 0;
-      })) {
+      } else if (hasInputShortfall) {
         this.updateStatus('Insufficient input in space storage');
       } else {
         this.updateStatus('Idle');
@@ -706,7 +677,6 @@
 
       this.normalizeAssignments();
       const entries = [];
-      const desiredInputsByResource = this.createEmptyInputRates();
 
       this.getAssignmentKeys().forEach((key) => {
         const assigned = this.manufacturingAssignments[key] || 0;
@@ -722,7 +692,6 @@
         Object.keys(recipe.inputs).forEach((inputKey) => {
           const amount = ((assigned * recipe.inputs[inputKey] * consumptionMultiplier) / recipe.complexity) * seconds * recipeProductivity;
           desiredInputs[inputKey] = amount;
-          desiredInputsByResource[inputKey] += amount;
         });
         entries.push({
           key,
@@ -736,30 +705,14 @@
         return totals;
       }
 
-      const inputRatios = {};
-      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
-        const desiredAmount = desiredInputsByResource[inputKey] || 0;
-        if (desiredAmount <= 0) {
-          inputRatios[inputKey] = 1;
-          return;
-        }
-        const availableAmount = this.getAvailableStoredResourceForTick(storage, inputKey, accumulatedChanges);
-        inputRatios[inputKey] = Math.min(1, availableAmount / desiredAmount);
-      });
-
       const estimatedInputs = this.createEmptyInputRates();
       const estimatedOutputs = {};
 
       entries.forEach((entry) => {
-        const desiredInputKeys = Object.keys(entry.desiredInputs);
-        let scale = 1;
-        desiredInputKeys.forEach((inputKey) => {
-          scale = Math.min(scale, inputRatios[inputKey] || 1);
+        Object.keys(entry.desiredInputs).forEach((inputKey) => {
+          estimatedInputs[inputKey] += entry.desiredInputs[inputKey] || 0;
         });
-        desiredInputKeys.forEach((inputKey) => {
-          estimatedInputs[inputKey] += (entry.desiredInputs[inputKey] || 0) * scale;
-        });
-        estimatedOutputs[entry.key] = (entry.desiredOutput || 0) * scale;
+        estimatedOutputs[entry.key] = entry.desiredOutput || 0;
       });
 
       MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
