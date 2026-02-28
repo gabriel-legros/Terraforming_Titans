@@ -163,6 +163,7 @@
       this.statusText = 'Idle';
       this.lastInputRates = this.createEmptyInputRates();
       this.lastOutputRatesByRecipe = {};
+      this.operationPreRunThisTick = false;
       this.uiElements = null;
       this.shopCollapsed = false;
     }
@@ -622,9 +623,20 @@
       this.shortfallLastTick = hasInputShortfall || outputCapBlocked;
     }
 
+    applyOperationCostAndGain(deltaTime = 1000) {
+      this.runManufacturing(deltaTime);
+    }
+
+    applyCostAndGain(deltaTime = 1000) {
+      const operationAlreadyHandled = this.operationPreRunThisTick === true;
+      this.operationPreRunThisTick = false;
+      if (!operationAlreadyHandled) {
+        this.runManufacturing(deltaTime);
+      }
+    }
+
     update(deltaTime) {
       super.update(deltaTime);
-      this.runManufacturing(deltaTime);
     }
 
     renderUI(container) {

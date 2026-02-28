@@ -49,9 +49,12 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     this.shortfallLastTick = false;
     this.costShortfallLastTick = false;
     this.expansionShortfallLastTick = false;
+    this.lastExpansionRatePerSecond = 0;
+    this.expansionRateLimitedLastTick = false;
     this.lastHydrogenPerSecond = 0;
     this.lastTotalOutputPerSecond = 0;
     this.lastOutputRatesByResource = {};
+    this.operationPreRunThisTick = false;
     this.uiElements = null;
   }
 
@@ -328,9 +331,38 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     return allocations;
   }
 
+  getAffordableExpansionProgress(requestedProgress, cost, storageState, accumulatedChanges) {
+    if (!(requestedProgress > 0)) {
+      return 0;
+    }
+
+    let affordableProgress = requestedProgress;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const baseCost = cost[category][resource];
+        if (!(baseCost > 0)) {
+          continue;
+        }
+        const res = resources[category][resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const availableTotal = getMegaProjectResourceAvailability(
+          storageState,
+          storageKey,
+          res.value + pending
+        );
+        affordableProgress = Math.min(affordableProgress, availableTotal / baseCost);
+      }
+    }
+
+    return Math.max(0, Math.min(requestedProgress, affordableProgress));
+  }
+
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     this.costShortfallLastTick = false;
     this.expansionShortfallLastTick = false;
+    this.lastExpansionRatePerSecond = 0;
+    this.expansionRateLimitedLastTick = false;
     if (!this.autoStart) {
       return;
     }
@@ -374,30 +406,20 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       spendStoredResource: () => 0,
       megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
     };
-    let canAffordBaseCost = true;
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const res = resources[category][resource];
-        const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-        const availableTotal = getMegaProjectResourceAvailability(
-          storageState,
-          storageKey,
-          res.value + pending
-        );
-        if (availableTotal < cost[category][resource]) {
-          canAffordBaseCost = false;
-        }
-      }
-    }
-    if (!canAffordBaseCost) {
-      this.expansionShortfallLastTick = true;
-      this.costShortfallLastTick = true;
-      return;
-    }
-
-    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const requestedProgress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const progress = this.getAffordableExpansionProgress(
+      requestedProgress,
+      cost,
+      storageState,
+      accumulatedChanges
+    );
+    const expansionResourceShortfall = progress + 1e-9 < requestedProgress;
+    const seconds = deltaTime / 1000;
+    this.lastExpansionRatePerSecond = seconds > 0 ? progress / seconds : 0;
+    this.expansionRateLimitedLastTick = expansionResourceShortfall;
     if (progress <= 0) {
+      this.expansionShortfallLastTick = expansionResourceShortfall;
+      this.costShortfallLastTick = this.expansionShortfallLastTick;
       return;
     }
 
@@ -421,8 +443,10 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       const availableFromStorage = storageState.getAvailableStoredResource(key);
       return Math.min(amount, availableFromStorage);
     };
+    const spentColonyByCategory = {};
+    const spentStorageByKey = {};
 
-    let shortfall = false;
+    let shortfall = expansionResourceShortfall;
     for (const category in cost) {
       for (const resource in cost[category]) {
         const amount = cost[category][resource] * progress;
@@ -434,16 +458,53 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
           storageKey,
           res.value + pending
         );
-        if (availableTotal < amount) {
+        if (availableTotal + 1e-9 < amount) {
           shortfall = true;
         }
         const colonyAvailable = Math.max(res.value + pending, 0);
         const allocation = getMegaProjectResourceAllocation(storageState, storageKey, amount, colonyAvailable);
+        let spentFromStorage = 0;
         if (allocation.fromStorage > 0) {
-          spendFromStorage(storageKey, allocation.fromStorage);
+          spentFromStorage = spendFromStorage(storageKey, allocation.fromStorage);
         }
-        if (allocation.fromColony > 0) {
-          applyColonyChange(category, resource, allocation.fromColony);
+        const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
+        const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
+        if (spendFromColony > 0) {
+          applyColonyChange(category, resource, spendFromColony);
+          spentColonyByCategory[category] ||= {};
+          spentColonyByCategory[category][resource] =
+            (spentColonyByCategory[category][resource] || 0) + spendFromColony;
+        }
+        if (spentFromStorage > 0) {
+          spentStorageByKey[storageKey] = (spentStorageByKey[storageKey] || 0) + spentFromStorage;
+        }
+        if (spentFromStorage + spendFromColony + 1e-9 < amount) {
+          shortfall = true;
+        }
+      }
+    }
+
+    if (seconds > 0 && this.showsInResourcesRate()) {
+      for (const category in spentColonyByCategory) {
+        for (const resource in spentColonyByCategory[category]) {
+          const spent = spentColonyByCategory[category][resource];
+          if (spent > 0) {
+            resources[category][resource].modifyRate(
+              -(spent / seconds),
+              'Nuclear alchemy expansion',
+              'project'
+            );
+          }
+        }
+      }
+      for (const storageKey in spentStorageByKey) {
+        const spent = spentStorageByKey[storageKey];
+        if (spent > 0) {
+          resources?.spaceStorage?.[storageKey]?.modifyRate?.(
+            -(spent / seconds),
+            'Nuclear alchemy expansion',
+            'project'
+          );
         }
       }
     }
@@ -464,9 +525,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     this.costShortfallLastTick = this.expansionShortfallLastTick;
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
-
+  applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.shouldOperate()) {
       this.setLastRunStats(0, {});
       if (!this.repeatCount) {
@@ -474,7 +533,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       } else if (!this.isRunning) {
         this.updateStatus('Run disabled');
       }
-      this.shortfallLastTick = this.expansionShortfallLastTick;
+      this.shortfallLastTick = false;
       return;
     }
 
@@ -482,7 +541,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     if (!(seconds > 0)) {
       this.setLastRunStats(0, {});
       this.updateStatus('Idle');
-      this.shortfallLastTick = this.expansionShortfallLastTick;
+      this.shortfallLastTick = false;
       return;
     }
 
@@ -549,7 +608,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     if (!(hydrogenDisplaySpent > 0)) {
       this.setLastRunStats(0, {});
       this.updateStatus('Idle');
-      this.shortfallLastTick = this.expansionShortfallLastTick;
+      this.shortfallLastTick = false;
       return;
     }
 
@@ -580,7 +639,17 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     } else {
       this.updateStatus('Idle');
     }
-    this.shortfallLastTick = this.expansionShortfallLastTick || outputCapBlocked;
+    this.shortfallLastTick = outputCapBlocked;
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    const operationAlreadyHandled = this.operationPreRunThisTick === true;
+    this.operationPreRunThisTick = false;
+    if (!operationAlreadyHandled) {
+      this.applyOperationCostAndGain(deltaTime, accumulatedChanges, productivity);
+    }
+    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
+    this.shortfallLastTick = this.shortfallLastTick || this.expansionShortfallLastTick;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
@@ -597,28 +666,19 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       const limit = this.maxRepeatCount || Infinity;
       const completedExpansions = this.repeatCount + this.expansionProgress;
       const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
-      const progress = this.isExpansionContinuous()
+      const requestedProgress = this.isExpansionContinuous()
         ? Math.min((deltaTime / duration) * productivity, remainingRepeats)
         : (deltaTime / duration) * productivity;
-      const checkBaseCost = this.isExpansionContinuous();
-      let canAffordBaseCost = true;
       const cost = this.getScaledCost();
-      for (const category in cost) {
-        for (const resource in cost[category]) {
-          const storageKey = resource === 'water' ? 'liquidWater' : resource;
-          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-          const availableTotal = getMegaProjectResourceAvailability(
-            storageState,
-            storageKey,
-            (resources?.[category]?.[resource]?.value || 0) + pending
-          );
-          if (checkBaseCost && availableTotal < cost[category][resource]) {
-            canAffordBaseCost = false;
-          }
-        }
-      }
 
-      if (remainingRepeats > 0 && progress > 0 && canAffordBaseCost) {
+      const progress = this.getAffordableExpansionProgress(
+        requestedProgress,
+        cost,
+        storageState,
+        accumulatedChanges
+      );
+
+      if (remainingRepeats > 0 && progress > 0) {
         const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
         for (const category in cost) {
           if (!totals.cost[category]) totals.cost[category] = {};
@@ -942,7 +1002,10 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     elements.freeValue.textContent = formatNumber(available, true, 2);
     elements.hydrogenRateValue.textContent = `${formatNumber(this.lastHydrogenPerSecond, true, 3)}/s`;
     const expansionRate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
-    elements.expansionRateValue.textContent = `${formatNumber(expansionRate, true, 3)} furnaces/s`;
+    const limitedExpansion = this.expansionRateLimitedLastTick && this.lastExpansionRatePerSecond >= 0;
+    const displayedExpansionRate = limitedExpansion ? this.lastExpansionRatePerSecond : expansionRate;
+    elements.expansionRateValue.style.color = limitedExpansion ? 'orange' : '';
+    elements.expansionRateValue.textContent = `${formatNumber(displayedExpansionRate, true, 3)} furnaces/s`;
     elements.statusValue.textContent = this.statusText || 'Idle';
     elements.runCheckbox.checked = this.isRunning;
     elements.runCheckbox.disabled = total <= 0;
@@ -1042,6 +1105,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     const state = {
       repeatCount: this.repeatCount,
       expansionProgress: this.expansionProgress,
+      isRunning: this.isRunning,
       furnaceAssignments: { ...this.furnaceAssignments },
       assignmentStep: this.assignmentStep,
       autoAssignFlags: { ...this.autoAssignFlags },
@@ -1058,14 +1122,14 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
   loadTravelState(state = {}) {
     this.repeatCount = state.repeatCount || 0;
     this.expansionProgress = state.expansionProgress || 0;
+    this.isRunning = state.isRunning === true;
     this.furnaceAssignments = { ...(state.furnaceAssignments || {}) };
     this.assignmentStep = state.assignmentStep || 1;
     this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
     this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
-    this.isRunning = false;
     this.isCompleted = false;
     this.setLastRunStats(0, {});
-    this.updateStatus('Idle');
+    this.updateStatus(this.isRunning ? 'Idle' : 'Run disabled');
     this.normalizeAssignments();
     if (state.isActive) {
       this.isActive = true;

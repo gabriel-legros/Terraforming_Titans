@@ -788,14 +788,18 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (projectManager) {
-    for (const name in projectManager.projects) {
-      const project = projectManager.projects[name];
-      if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
-        continue;
-      }
+    // Run flagged space-building operations before normal project processing.
+    const spaceBuildingOperations = projectEntries.filter(([, data]) => {
+      return data.project.attributes?.spaceBuilding
+        && typeof data.project.applyOperationCostAndGain === 'function';
+    });
+    for (const [, data] of spaceBuildingOperations) {
+      const { project } = data;
+      const productivity = project.isContinuous() ? project.continuousProductivity : 1;
+      project.applyOperationCostAndGain(deltaTime, accumulatedChanges, productivity);
+      project.operationPreRunThisTick = true;
     }
-  }
-  if (projectManager) {
+
     for (const [, data] of projectEntries) {
       const { project } = data;
       if (!project.isContinuous() || !project.attributes?.continuousAsBuilding) {

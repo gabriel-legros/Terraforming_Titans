@@ -604,7 +604,8 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       canUseSpaceStorage: true,
-      alchemyParameter: 50_000_000_000
+      alchemyParameter: 50_000_000_000,
+      spaceBuilding: true
     }
   },
   orbitalRing: {
@@ -713,6 +714,7 @@ const projectParameters = {
       canUseSpaceStorage: true,
       lifterUnitRate: 10_000_000,
       lifterEnergyPerUnit: 10_000_000,
+      spaceBuilding: true,
       lifterHarvestRecipes: {
         hydrogen: {
           label: 'Hydrogen',
@@ -746,7 +748,8 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       projectGroup: 'specializedWorlds',
-      keepStartBarVisible: true
+      keepStartBarVisible: true,
+      spaceBuilding: true
     }
   },
   foundryWorld: {

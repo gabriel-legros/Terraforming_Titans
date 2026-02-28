@@ -42,6 +42,7 @@ class LiftersProject extends TerraformingDurationProject {
     this.expansionShortfallLastTick = false;
     this.expansionProgress = 0;
     this.continuousThreshold = 1000;
+    this.operationPreRunThisTick = false;
   }
 
   getBaseDuration() {
@@ -482,6 +483,7 @@ class LiftersProject extends TerraformingDurationProject {
     }
 
     const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const seconds = deltaTime / 1000;
     if (progress <= 0) {
       return;
     }
@@ -506,6 +508,8 @@ class LiftersProject extends TerraformingDurationProject {
       const availableFromStorage = storageState.getAvailableStoredResource(key);
       return Math.min(amount, availableFromStorage);
     };
+    const spentColonyByCategory = {};
+    const spentStorageByKey = {};
 
     for (const category in cost) {
       for (const resource in cost[category]) {
@@ -524,11 +528,48 @@ class LiftersProject extends TerraformingDurationProject {
 
         const colonyAvailable = Math.max(res.value + pending, 0);
         const allocation = getMegaProjectResourceAllocation(storageState, storageKey, amount, colonyAvailable);
+        let spentFromStorage = 0;
         if (allocation.fromStorage > 0) {
-          spendFromStorage(storageKey, allocation.fromStorage);
+          spentFromStorage = spendFromStorage(storageKey, allocation.fromStorage);
         }
-        if (allocation.fromColony > 0) {
-          applyColonyChange(category, resource, allocation.fromColony);
+        const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
+        const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
+        if (spendFromColony > 0) {
+          applyColonyChange(category, resource, spendFromColony);
+          spentColonyByCategory[category] ||= {};
+          spentColonyByCategory[category][resource] =
+            (spentColonyByCategory[category][resource] || 0) + spendFromColony;
+        }
+        if (spentFromStorage > 0) {
+          spentStorageByKey[storageKey] = (spentStorageByKey[storageKey] || 0) + spentFromStorage;
+        }
+        if (spentFromStorage + spendFromColony + 1e-9 < amount) {
+          shortfall = true;
+        }
+      }
+    }
+
+    if (seconds > 0 && this.showsInResourcesRate()) {
+      for (const category in spentColonyByCategory) {
+        for (const resource in spentColonyByCategory[category]) {
+          const spent = spentColonyByCategory[category][resource];
+          if (spent > 0) {
+            resources[category][resource].modifyRate(
+              -(spent / seconds),
+              'Lifter expansion',
+              'project'
+            );
+          }
+        }
+      }
+      for (const storageKey in spentStorageByKey) {
+        const spent = spentStorageByKey[storageKey];
+        if (spent > 0) {
+          resources?.spaceStorage?.[storageKey]?.modifyRate?.(
+            -(spent / seconds),
+            'Lifter expansion',
+            'project'
+          );
         }
       }
     }
@@ -551,9 +592,7 @@ class LiftersProject extends TerraformingDurationProject {
     this.costShortfallLastTick = this.expansionShortfallLastTick;
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
-
+  applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.shouldOperate()) {
       this.setLastTickStats();
       if (!this.repeatCount) {
@@ -563,7 +602,7 @@ class LiftersProject extends TerraformingDurationProject {
       } else if (this.mode === LIFTER_MODES.ATMOSPHERE_STRIP && this.isAtmosphereStripDisabled()) {
         this.updateStatus('Atmosphere strip disabled');
       }
-      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
+      this.shortfallLastTick = false;
       return;
     }
 
@@ -571,7 +610,7 @@ class LiftersProject extends TerraformingDurationProject {
     if (seconds <= 0) {
       this.setLastTickStats();
       this.updateStatus('Idle');
-      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
+      this.shortfallLastTick = false;
       return;
     }
 
@@ -580,7 +619,7 @@ class LiftersProject extends TerraformingDurationProject {
     if (maxUnits <= 0) {
       this.setLastTickStats();
       this.updateStatus('Idle');
-      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
+      this.shortfallLastTick = false;
       return;
     }
 
@@ -588,7 +627,7 @@ class LiftersProject extends TerraformingDurationProject {
     if (limitedUnits <= 0 && this.mode !== LIFTER_MODES.GAS_HARVEST) {
       this.setLastTickStats();
       this.updateStatus(this.shortfallReason || 'Waiting for capacity');
-      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
+      this.shortfallLastTick = true;
       return;
     }
 
@@ -599,7 +638,7 @@ class LiftersProject extends TerraformingDurationProject {
       this.setLastTickStats();
       const stalled = energyResult.dysonAvailable > 0 ? 'Waiting for space storage' : 'Insufficient energy';
       this.updateStatus(stalled);
-      this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
+      this.shortfallLastTick = true;
       return;
     }
 
@@ -625,7 +664,7 @@ class LiftersProject extends TerraformingDurationProject {
         this.adjustEnergyUsage(energyResult, energyResult.energyUsed, accumulatedChanges);
         this.setLastTickStats(0, 0, 0, 0, 0, recipe.storageKey);
         this.updateStatus(this.shortfallReason || 'Space storage is full');
-        this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
+        this.shortfallLastTick = true;
         return;
       }
       processedUnits = multiplier > 0 ? storedUnits / multiplier : 0;
@@ -637,7 +676,7 @@ class LiftersProject extends TerraformingDurationProject {
         this.adjustEnergyUsage(energyResult, energyResult.energyUsed, accumulatedChanges);
         this.setLastTickStats();
         this.updateStatus(this.shortfallReason || 'No atmosphere to strip');
-        this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
+        this.shortfallLastTick = true;
         return;
       }
       atmosphereRate = processedUnits / seconds;
@@ -653,7 +692,17 @@ class LiftersProject extends TerraformingDurationProject {
     const unitPerSecond = processedUnits / seconds;
     this.setLastTickStats(unitPerSecond, energyPerSecond, harvestRate, atmosphereRate, dysonPerSecond, harvestKey);
     this.updateStatus('Running');
-    this.shortfallLastTick = this.expansionShortfallLastTick || this.shortfallLastTick;
+    this.shortfallLastTick = false;
+  }
+
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    const operationAlreadyHandled = this.operationPreRunThisTick === true;
+    this.operationPreRunThisTick = false;
+    if (!operationAlreadyHandled) {
+      this.applyOperationCostAndGain(deltaTime, accumulatedChanges, productivity);
+    }
+    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
+    this.shortfallLastTick = this.shortfallLastTick || this.expansionShortfallLastTick;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
