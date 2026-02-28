@@ -57,16 +57,7 @@ class Ecumenopolis extends Colony {
 
     const colonistRatio = this.getEcumenopolisColonistFillRatio();
 
-    const freeAndroidStorage = this.getFreeAndroidStorage(resources);
-    const androidHousingCapacity = this.getAndroidHousingCapacity();
-    const androidsInEcumenopolis = Math.max(
-      0,
-      resources.colony.androids.value - freeAndroidStorage - androidHousingCapacity
-    );
-    const androidCapacity = this.getEcumenopolisCapacity('androids');
-    const androidRatio = androidCapacity > 0 ? androidsInEcumenopolis / androidCapacity : 0;
-
-    const targetProductivity = Math.max(0, Math.min(1, Math.max(colonistRatio, androidRatio)));
+    const targetProductivity = Math.max(0, Math.min(1, colonistRatio));
 
     if (this.snapProductivity) {
       this.productivity = targetProductivity;
