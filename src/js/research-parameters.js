@@ -1788,7 +1788,13 @@ const researchParameters = {
         cost: { advancedResearch: 30000 },
         prerequisites: [],
         effects: [
-          { target: 'project', targetId: 'spaceStorage', type: 'enable' } ]
+          { target: 'project', targetId: 'spaceStorage', type: 'enable' },
+          {
+            target: 'resource',
+            resourceType: 'colony',
+            targetId : 'superconductors',
+            type : 'enable'
+          } ],
        },
       {
         id: 'cloning_concept',
