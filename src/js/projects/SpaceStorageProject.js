@@ -41,6 +41,7 @@ const SPACE_STORAGE_RESOURCE_KEYS = [
   'atmosphericAmmonia',
   'hydrogen'
 ];
+const SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY = 'standard';
 
 let SpaceStorageContinuousExpansionHelpers = null;
 try {
@@ -55,6 +56,8 @@ class SpaceStorageProject extends SpaceshipProject {
     this.baseDuration = config.duration;
     this.shipBaseDuration = 50_000;
     this.capacityPerCompletion = 100_000_000_000;
+    this.expansionRecipes = this.attributes.expansionRecipes || {};
+    this.expansionRecipeKey = this.attributes.defaultExpansionRecipe || SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY;
     this.expansionProgress = 0;
     this.usedStorage = 0;
     this.selectedResources = [];
@@ -97,6 +100,115 @@ class SpaceStorageProject extends SpaceshipProject {
 
   get maxStorage() {
     return this.getTotalExpansions() * this.capacityPerCompletion;
+  }
+
+  getExpansionRecipeKeys() {
+    return Object.keys(this.expansionRecipes || {});
+  }
+
+  getAvailableExpansionRecipeKeys() {
+    const keys = this.getExpansionRecipeKeys();
+    return keys.filter((key) => {
+      const recipe = this.expansionRecipes[key] || {};
+      const requiredFlag = recipe.requiresProjectFlag;
+      return !requiredFlag || this.isBooleanFlagSet(requiredFlag);
+    });
+  }
+
+  getDefaultExpansionRecipeKey() {
+    const available = this.getAvailableExpansionRecipeKeys();
+    if (available.includes(SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY)) {
+      return SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY;
+    }
+    const allKeys = this.getExpansionRecipeKeys();
+    if (available.length > 0) {
+      return available[0];
+    }
+    if (allKeys.includes(SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY)) {
+      return SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY;
+    }
+    return allKeys[0] || SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY;
+  }
+
+  hasExpansionRecipe(recipeKey) {
+    return Object.prototype.hasOwnProperty.call(this.expansionRecipes || {}, recipeKey);
+  }
+
+  getExpansionRecipeKey() {
+    if (!this.hasExpansionRecipe(this.expansionRecipeKey)) {
+      this.expansionRecipeKey = this.getDefaultExpansionRecipeKey();
+    }
+    return this.expansionRecipeKey;
+  }
+
+  getResolvedExpansionRecipeKey() {
+    const selectedKey = this.getExpansionRecipeKey();
+    const available = this.getAvailableExpansionRecipeKeys();
+    if (available.includes(selectedKey)) {
+      return selectedKey;
+    }
+    return this.getDefaultExpansionRecipeKey();
+  }
+
+  setExpansionRecipe(recipeKey) {
+    const available = this.getAvailableExpansionRecipeKeys();
+    if (!available.includes(recipeKey) || recipeKey === this.expansionRecipeKey) {
+      return false;
+    }
+    this.expansionRecipeKey = recipeKey;
+    return true;
+  }
+
+  getCurrentExpansionRecipe() {
+    const key = this.getResolvedExpansionRecipeKey();
+    return this.expansionRecipes[key] || {};
+  }
+
+  getExpansionRecipeOptions() {
+    const available = this.getAvailableExpansionRecipeKeys();
+    return available.map((key) => {
+      const recipe = this.expansionRecipes[key] || {};
+      return {
+        value: key,
+        label: recipe.label || key
+      };
+    });
+  }
+
+  getCurrentExpansionRecipeCost() {
+    const recipe = this.getCurrentExpansionRecipe();
+    return recipe.cost || this.cost;
+  }
+
+  getCurrentExpansionRecipeSpeedMultiplier() {
+    const recipe = this.getCurrentExpansionRecipe();
+    const value = Number(recipe.expansionSpeedMultiplier);
+    if (Number.isFinite(value) && value > 0) {
+      return value;
+    }
+    return 1;
+  }
+
+  getEffectiveCost(buildCount = 1) {
+    const expansionCost = this.getCurrentExpansionRecipeCost();
+    const effectiveCost = {};
+
+    for (const category in expansionCost) {
+      effectiveCost[category] = {};
+      for (const resource in expansionCost[category]) {
+        const baseCost = expansionCost[category][resource];
+        const multiplier = this.getEffectiveCostMultiplier(category, resource);
+        const finalCost = baseCost * multiplier * buildCount;
+        if (finalCost > 0) {
+          effectiveCost[category][resource] = finalCost;
+        }
+      }
+      if (Object.keys(effectiveCost[category]).length === 0) {
+        delete effectiveCost[category];
+      }
+    }
+
+    return effectiveCost;
   }
 
   getSpaceStorageResource(resourceKey) {
@@ -549,7 +661,9 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getBaseDuration() {
-    return this.getDurationWithTerraformBonus(this.baseDuration);
+    const base = this.getDurationWithTerraformBonus(this.baseDuration);
+    const speedMultiplier = this.getCurrentExpansionRecipeSpeedMultiplier();
+    return base / speedMultiplier;
   }
 
   getShipOperationDuration() {
@@ -583,6 +697,11 @@ class SpaceStorageProject extends SpaceshipProject {
     const hasResearchFlag = !researchFlag || researchManager?.isBooleanFlagSet?.(researchFlag);
     const hasProjectFlag = !projectFlag || this.isBooleanFlagSet?.(projectFlag);
     return Boolean(hasResearchFlag && hasProjectFlag);
+  }
+
+  applyBooleanFlag(effect) {
+    super.applyBooleanFlag(effect);
+    this.getExpansionRecipeKey();
   }
 
   getUnlockedSelectedResources() {
@@ -1318,8 +1437,10 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   saveAutomationSettings() {
+    const expansionRecipeKey = this.getExpansionRecipeKey();
     return {
       ...super.saveAutomationSettings(),
+      expansionRecipeKey,
       selectedResources: Array.isArray(this.selectedResources)
         ? this.selectedResources.map(entry => ({
             category: entry.category,
@@ -1340,6 +1461,9 @@ class SpaceStorageProject extends SpaceshipProject {
 
   loadAutomationSettings(settings = {}) {
     super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'expansionRecipeKey')) {
+      this.expansionRecipeKey = settings.expansionRecipeKey || this.expansionRecipeKey;
+    }
     if (Object.prototype.hasOwnProperty.call(settings, 'selectedResources')) {
       const selected = Array.isArray(settings.selectedResources) ? settings.selectedResources : [];
       this.selectedResources = selected
@@ -1393,6 +1517,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (this.megaProjectSpaceOnlyOnTravel) {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
     }
+    this.getExpansionRecipeKey();
   }
 
   exportSpaceStorageValues() {
@@ -1423,8 +1548,10 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   saveState() {
+    const expansionRecipeKey = this.getExpansionRecipeKey();
     return {
       ...super.saveState(),
+      expansionRecipeKey,
       expansionProgress: this.expansionProgress,
       usedStorage: this.usedStorage,
       selectedResources: this.selectedResources,
@@ -1456,6 +1583,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   loadState(state) {
     super.loadState(state);
+    this.expansionRecipeKey = state.expansionRecipeKey || this.expansionRecipeKey;
     this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
     this.selectedResources = state.selectedResources || [];
@@ -1499,13 +1627,16 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationKesslerElapsed = ship.kesslerElapsed || 0;
     this.shipOperationKesslerPending = ship.kesslerPending === true;
     this.shipOperationKesslerCost = ship.kesslerCost || null;
+    this.getExpansionRecipeKey();
     this.syncSpaceStorageResourceUnlocks();
     this.reconcileUsedStorage();
   }
 
   saveTravelState() {
+    const expansionRecipeKey = this.getExpansionRecipeKey();
     return {
       repeatCount: this.repeatCount,
+      expansionRecipeKey,
       expansionProgress: this.expansionProgress,
       usedStorage: this.usedStorage,
       spaceResources: this.exportSpaceStorageValues(),
@@ -1521,6 +1652,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   loadTravelState(state = {}) {
     this.repeatCount = state.repeatCount || 0;
+    this.expansionRecipeKey = state.expansionRecipeKey || this.expansionRecipeKey;
     this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
     this.importSpaceStorageValues(state.spaceResources, state.resourceUsage);
@@ -1549,6 +1681,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (this.megaProjectSpaceOnlyOnTravel) {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
     }
+    this.getExpansionRecipeKey();
     this.syncSpaceStorageResourceUnlocks();
     this.reconcileUsedStorage();
   }

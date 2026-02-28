@@ -2399,7 +2399,7 @@ const researchParameters = {
       {
         id: 'warp_storage',
         name: 'Warp Storage',
-        description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot mode.',
+        description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot mode and Space Storage expansion mode.',
         cost: { advancedResearch: 75_000_000 },
         prerequisites: [],
         effects: [
@@ -2408,6 +2408,13 @@ const researchParameters = {
             targetId: 'storageDepot',
             type: 'booleanFlag',
             flagId: 'warpStorageRecipe',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'warpStorageUpgrade',
             value: true
           }
         ]

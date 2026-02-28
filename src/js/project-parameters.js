@@ -655,7 +655,31 @@ const projectParameters = {
       spaceStorage: true,
       costPerShip: { colony: { metal : 100_000, energy: 2_500_000_000 } },
       transportPerShip: 1_000_000,
-      canUseSpaceStorage: true
+      canUseSpaceStorage: true,
+      defaultExpansionRecipe: 'standard',
+      expansionRecipes: {
+        standard: {
+          label: 'Standard Storage',
+          expansionSpeedMultiplier: 1,
+          cost: {
+            colony: {
+              metal: 100_000_000_000
+            }
+          }
+        },
+        warp: {
+          label: 'Warp Storage',
+          requiresProjectFlag: 'warpStorageUpgrade',
+          expansionSpeedMultiplier: 10,
+          cost: {
+            colony: {
+              metal: 100_000_000_000,
+              components: 10_000_000_000,
+              electronics: 10_000_000_000
+            }
+          }
+        }
+      }
     }
   },
   particleAccelerator: {

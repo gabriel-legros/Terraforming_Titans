@@ -225,6 +225,23 @@ function renderSpaceStorageUI(project, container) {
   expansionRateRow.id = 'ss-expansion-rate';
   expansionRateRow.innerHTML = '<strong>Expansion/s:</strong> <span class="expansion-rate"></span>';
   expansionGrid.appendChild(expansionRateRow);
+
+  const expansionRecipeRow = document.createElement('div');
+  expansionRecipeRow.id = 'ss-expansion-recipe';
+  const expansionRecipeLabel = document.createElement('strong');
+  expansionRecipeLabel.textContent = 'Mode:';
+  const expansionRecipeSelect = document.createElement('select');
+  expansionRecipeSelect.classList.add('space-storage-priority-select');
+  expansionRecipeSelect.addEventListener('change', (event) => {
+    project.setExpansionRecipe(event.target.value);
+    invalidateAutomationSettingsCache(project.name);
+    if (typeof updateSpaceStorageUI === 'function') {
+      updateSpaceStorageUI(project);
+    }
+  });
+  expansionRecipeRow.append(expansionRecipeLabel, expansionRecipeSelect);
+  expansionGrid.appendChild(expansionRecipeRow);
+
   expansionSection.appendChild(expansionGrid);
   topSection.appendChild(expansionSection);
 
@@ -865,6 +882,8 @@ function renderSpaceStorageUI(project, container) {
     resourceGrid,
     expansionCostDisplay,
     expansionRateDisplay,
+    expansionRecipeRow,
+    expansionRecipeSelect,
     capOverlay,
     capWindow,
     capResourceValue,
@@ -913,6 +932,28 @@ function updateSpaceStorageUI(project) {
   }
   if (els.maxDisplay) {
     els.maxDisplay.textContent = formatNumber(project.maxStorage, false, 2);
+  }
+  if (els.expansionRecipeRow && els.expansionRecipeSelect) {
+    const activeRecipeKey = project.getExpansionRecipeKey();
+    const showExpansionRecipe = project.isBooleanFlagSet('warpStorageUpgrade');
+    els.expansionRecipeRow.style.display = showExpansionRecipe ? '' : 'none';
+    if (showExpansionRecipe) {
+      const options = project.getExpansionRecipeOptions();
+      const optionKey = options.map(opt => `${opt.value}:${opt.label}`).join('|');
+      if (els.expansionRecipeSelect.dataset.optionKey !== optionKey) {
+        els.expansionRecipeSelect.textContent = '';
+        options.forEach((opt) => {
+          const optionEl = document.createElement('option');
+          optionEl.value = opt.value;
+          optionEl.textContent = opt.label;
+          els.expansionRecipeSelect.appendChild(optionEl);
+        });
+        els.expansionRecipeSelect.dataset.optionKey = optionKey;
+      }
+    }
+    if (els.expansionRecipeSelect.value !== activeRecipeKey) {
+      els.expansionRecipeSelect.value = activeRecipeKey;
+    }
   }
   if (els.expansionCostDisplay) {
     const cost = project.getScaledCost ? project.getScaledCost() : project.cost;
