@@ -210,12 +210,15 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     if (!(seconds > 0)) {
       return;
     }
-    const overflowPerSecond = dysonSwarmManagerInstance?.getOverflowEnergyPerSecond?.() || 0;
-    const overflowAmount = Math.max(overflowPerSecond * seconds, 0);
+    const collectorPowerPerSecond =
+      dysonSwarmManagerInstance?.getTotalCollectorEnergyPerSecond?.()
+      || dysonSwarmManagerInstance?.getOverflowEnergyPerSecond?.()
+      || 0;
+    const overflowAmount = Math.max(collectorPowerPerSecond * seconds, 0);
     accumulatedChanges.space ||= {};
     accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) + overflowAmount;
-    if (overflowPerSecond > 0) {
-      resources?.space?.energy?.modifyRate?.(overflowPerSecond, 'Dyson Overflow', 'project');
+    if (collectorPowerPerSecond > 0) {
+      resources?.space?.energy?.modifyRate?.(collectorPowerPerSecond, 'Dyson Collectors', 'project');
     }
     accumulatedChanges.dysonSpaceEnergyInjected = true;
   }

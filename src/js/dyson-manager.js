@@ -56,15 +56,16 @@ class DysonManager {
 
   getReceiverEnergyPerSecond() {
     const receiver = this.getReceiverBuilding();
-    const perBuilding = receiver?.production?.colony?.energy || 0;
+    const perBuilding = receiver?.consumption?.space?.energy
+      || receiver?.production?.colony?.energy
+      || 0;
     const activeCount = receiver?.active || 0;
     const productivity = receiver?.productivity ?? 0;
     return Math.max(perBuilding * activeCount * Math.max(productivity, 0), 0);
   }
 
   getOverflowEnergyPerSecond() {
-    const receiverUsage = this.getReceiverEnergyPerSecond();
-    return Math.max(this.getTotalCollectorEnergyPerSecond() - receiverUsage, 0);
+    return this.getTotalCollectorEnergyPerSecond();
   }
 }
 

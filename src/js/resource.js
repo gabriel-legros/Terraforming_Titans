@@ -667,6 +667,8 @@ function produceResources(deltaTime, buildings) {
   const isDay = dayNightCycle.isDay();
   let projectEntries = [];
   let projectProductivityMap = {};
+  let spaceEnergyProducerOperations = [];
+  let otherSpaceBuildingOperations = [];
 
   reconcileLandResourceValue();
   updateAntimatterStorageCap(resources);
@@ -759,6 +761,21 @@ function produceResources(deltaTime, buildings) {
         ? data.project.getOperationProductivityForTick(productivity, deltaTime)
         : productivity;
     }
+
+    const spaceBuildingOperations = projectEntries.filter(([, data]) => {
+      return data.project.attributes?.spaceBuilding
+        && typeof data.project.applyOperationCostAndGain === 'function';
+    });
+    spaceEnergyProducerOperations = [];
+    otherSpaceBuildingOperations = [];
+    for (const entry of spaceBuildingOperations) {
+      const [, data] = entry;
+      if (data.project.attributes?.spaceEnergyProducer) {
+        spaceEnergyProducerOperations.push(entry);
+      } else {
+        otherSpaceBuildingOperations.push(entry);
+      }
+    }
   }
 
   //Productivity has now been calculated and applied
@@ -791,6 +808,13 @@ function produceResources(deltaTime, buildings) {
   }
   accumulatedChanges.dysonSpaceEnergyInjected = false;
 
+  for (const [, data] of spaceEnergyProducerOperations) {
+    const { project } = data;
+    const productivity = project.operationProductivity ?? 1;
+    project.applyOperationCostAndGain(deltaTime, accumulatedChanges, productivity);
+    project.operationPreRunThisTick = true;
+  }
+
   if (followersManager && followersManager.applyOrbitalProductionRates) {
     followersManager.applyOrbitalProductionRates();
   }
@@ -811,23 +835,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (projectManager) {
-    // Run flagged space-building operations before normal project processing.
-    const spaceBuildingOperations = projectEntries.filter(([, data]) => {
-      return data.project.attributes?.spaceBuilding
-        && typeof data.project.applyOperationCostAndGain === 'function';
-    });
-    const spaceEnergyProducers = [];
-    const otherSpaceBuildingOperations = [];
-    for (const entry of spaceBuildingOperations) {
-      const [, data] = entry;
-      if (data.project.attributes?.spaceEnergyProducer) {
-        spaceEnergyProducers.push(entry);
-      } else {
-        otherSpaceBuildingOperations.push(entry);
-      }
-    }
-    const orderedSpaceBuildingOperations = spaceEnergyProducers.concat(otherSpaceBuildingOperations);
-    for (const [, data] of orderedSpaceBuildingOperations) {
+    for (const [, data] of otherSpaceBuildingOperations) {
       const { project } = data;
       const productivity = project.operationProductivity ?? 1;
       project.applyOperationCostAndGain(deltaTime, accumulatedChanges, productivity);

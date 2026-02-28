@@ -1,4 +1,8 @@
 class DysonReceiver extends Building {
+  getReceiverEnergyPerBuilding() {
+    return this.consumption?.space?.energy || this.production?.colony?.energy || 0;
+  }
+
   getCollectorTotals() {
     const swarm = projectManager?.projects?.dysonSwarmReceiver;
     const sphere = projectManager?.projects?.dysonSphere;
@@ -17,7 +21,7 @@ class DysonReceiver extends Building {
   }
 
   getBuildLimit() {
-    const perBuilding = this.production?.colony?.energy || 0;
+    const perBuilding = this.getReceiverEnergyPerBuilding();
     if (perBuilding <= 0) {
       return 0;
     }
@@ -42,7 +46,7 @@ class DysonReceiver extends Building {
   }
 
   build(buildCount = 1, activate = true) {
-    const perBuilding = this.production?.colony?.energy || 0;
+    const perBuilding = this.getReceiverEnergyPerBuilding();
     const { totalEnergy } = this.getCollectorTotals();
 
     if (perBuilding <= 0) {
@@ -96,7 +100,7 @@ class DysonReceiver extends Building {
       cache.countTooltipContent = attachDynamicInfoTooltip(tooltip, '');
     }
 
-    const perBuilding = this.production?.colony?.energy || 0;
+    const perBuilding = this.getReceiverEnergyPerBuilding();
     const totals = this.getCollectorTotals();
     const totalEnergy = totals.totalEnergy;
     const cap = perBuilding > 0 ? Math.floor(totalEnergy / perBuilding) : 0;
@@ -133,24 +137,40 @@ class DysonReceiver extends Building {
     this._updateTooltip(cache);
   }
 
+  getTargetProductivity(resources, deltaTime) {
+    if (this.active === 0) {
+      return 0;
+    }
+
+    const baseRatio = this.calculateBaseMinRatio(resources, deltaTime, { space: { energy: true } });
+    const targetProductivity = Math.max(0, Math.min(1, baseRatio));
+    const perBuilding = this.getReceiverEnergyPerBuilding();
+    const totals = this.getCollectorTotals();
+    if (totals.totalEnergy <= 0 || perBuilding <= 0) {
+      return 0;
+    }
+    const maxProductivity = totals.totalEnergy / (perBuilding * this.active);
+    return Math.max(0, Math.min(targetProductivity, maxProductivity));
+  }
+
   updateProductivity(resources, deltaTime) {
     this.setAutomationActivityMultiplier(1);
 
-    const { targetProductivity } = this.computeBaseProductivity(resources, deltaTime);
     if (this.active === 0) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
+      this.displayProductivity = 0;
       return;
     }
-    const perBuilding = this.production?.colony?.energy || 0;
-    const totals = this.getCollectorTotals();
-    if (totals.totalEnergy <= 0 || perBuilding <= 0) {
+    const targetProductivity = this.getTargetProductivity(resources, deltaTime);
+    if (targetProductivity <= 0) {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
+      this.displayProductivity = 0;
       return;
     }
-    const maxProductivity = totals.totalEnergy / (perBuilding * this.active);
-    this.productivity = Math.min(targetProductivity, maxProductivity);
+    this.productivity = targetProductivity;
+    this.displayProductivity = this.productivity;
   }
 }
 

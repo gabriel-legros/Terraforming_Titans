@@ -318,7 +318,7 @@ const buildingsParameters = {
     category: 'energy',
     description: 'Receives beamed energy from space.',
     cost: { colony: { metal: 100000, electronics : 1000 } },
-    consumption: {},
+    consumption: { space: { energy: 100_000_000_000 } },
     production: { colony: { energy: 100_000_000_000 }},
     storage: {},
     dayNightActivity: false,
