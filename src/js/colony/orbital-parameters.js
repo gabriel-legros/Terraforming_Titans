@@ -93,11 +93,11 @@ const followersOrbitalParameters = {
     {
       id: 'research',
       label: 'Research',
-      sourceType: 'colony',
-      sourceId: 't1_colony',
+      sourceType: 'fixed',
+      fixedRate: 10,
       targetCategory: 'colony',
       targetResource: 'research',
-      multiplier: 10,
+      multiplier: 1,
     },
   ],
 };
