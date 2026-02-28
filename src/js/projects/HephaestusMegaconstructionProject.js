@@ -1,4 +1,15 @@
-class HephaestusMegaconstructionProject extends TerraformingDurationProject {
+let HephaestusContinuousExpansionBase = null;
+try {
+  HephaestusContinuousExpansionBase = ContinuousExpansionProject;
+} catch (error) {}
+try {
+  HephaestusContinuousExpansionBase = require('./ContinuousExpansionProject.js');
+} catch (error) {}
+try {
+  HephaestusContinuousExpansionBase = HephaestusContinuousExpansionBase || TerraformingDurationProject;
+} catch (error) {}
+
+class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBase {
   constructor(config, name) {
     super(config, name);
     this.continuousThreshold = 1000;
@@ -41,8 +52,8 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     return this.getDurationWithTerraformBonus(this.duration);
   }
 
-  isContinuous() {
-    return this.getEffectiveDuration() < this.continuousThreshold;
+  getExpansionProgressField() {
+    return 'fractionalRepeatCount';
   }
 
   getTotalYards() {
@@ -223,14 +234,11 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
   }
 
   applyContinuousProgress(progress) {
-    const total = this.fractionalRepeatCount + progress;
-    const completed = Math.floor(total);
-    const leftover = total - completed;
-    if (completed > 0) {
-      this.repeatCount += completed;
-    }
-    this.fractionalRepeatCount = leftover;
-    return completed;
+    return this.applyExpansionProgress(progress, {
+      progressField: 'fractionalRepeatCount',
+      completeOnCap: false,
+      deactivateOnCap: false
+    }).completedDelta;
   }
 
   applyYardEffects() {
@@ -262,14 +270,11 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
     const wasContinuous = this.startingDuration === Infinity;
 
     if (nowContinuous && !wasContinuous) {
-      const ratio = this.startingDuration > 0
-        ? (this.startingDuration - this.remainingTime) / this.startingDuration
-        : 0;
-      if (ratio > 0) {
-        this.applyContinuousProgress(ratio);
-      }
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
+      this.carryDiscreteExpansionProgress({
+        progressField: 'fractionalRepeatCount',
+        completeOnCap: false,
+        deactivateOnCap: false
+      });
       return;
     }
 
@@ -294,18 +299,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
   }
 
   start(resources) {
-    if (this.isContinuous()) {
-      if (!this.canStart(resources)) {
-        return false;
-      }
-      this.isActive = true;
-      this.isPaused = false;
-      this.isCompleted = false;
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
-      return true;
-    }
-    return super.start(resources);
+    return this.startContinuousExpansion(resources);
   }
 
   update(deltaTime) {
@@ -404,7 +398,7 @@ class HephaestusMegaconstructionProject extends TerraformingDurationProject {
       updateSpaceStorageUI(storageProj);
     }
 
-    const completed = this.applyContinuousProgress(fraction);
+    this.applyContinuousProgress(fraction);
   }
 
   renderUI(container) {

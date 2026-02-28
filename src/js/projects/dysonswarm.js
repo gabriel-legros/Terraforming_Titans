@@ -1,4 +1,5 @@
 let dysonSwarmManagerInstance = null;
+let DysonContinuousExpansionBase = null;
 
 if (typeof module !== 'undefined' && module.exports) {
   dysonSwarmManagerInstance = require('../dyson-manager.js');
@@ -6,7 +7,17 @@ if (typeof module !== 'undefined' && module.exports) {
   dysonSwarmManagerInstance = window.dysonManager || null;
 }
 
-class DysonSwarmReceiverProject extends TerraformingDurationProject {
+try {
+  DysonContinuousExpansionBase = ContinuousExpansionProject;
+} catch (error) {}
+try {
+  DysonContinuousExpansionBase = require('./ContinuousExpansionProject.js');
+} catch (error) {}
+try {
+  DysonContinuousExpansionBase = DysonContinuousExpansionBase || TerraformingDurationProject;
+} catch (error) {}
+
+class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
   constructor(config, name) {
     super(config, name);
     this.collectors = 0;
@@ -69,6 +80,10 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
 
   isCollectorContinuous() {
     return this.collectorDuration < this.continuousThreshold;
+  }
+
+  isContinuous() {
+    return false;
   }
 
   // Visible either when unlocked or when collectors already exist
@@ -425,15 +440,13 @@ class DysonSwarmReceiverProject extends TerraformingDurationProject {
       }
     }
 
-    // Add fractional collectors
-    this.fractionalCollectors += collectorGain;
-    
-    // Convert fractional collectors to whole collectors
-    const wholeCollectors = Math.floor(this.fractionalCollectors);
-    if (wholeCollectors > 0) {
-      this.fractionalCollectors -= wholeCollectors;
-      this.collectors += wholeCollectors;
-    }
+    this.applyExpansionProgress(collectorGain, {
+      completedField: 'collectors',
+      progressField: 'fractionalCollectors',
+      limit: this.getMaxCollectors(),
+      deactivateOnCap: false,
+      completeOnCap: false
+    });
     this.clampCollectorTotals();
 
     this.collectorShortfallLastTick = shortfall;

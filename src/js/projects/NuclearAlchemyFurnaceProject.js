@@ -34,7 +34,18 @@ const NUCLEAR_ALCHEMY_RECIPE_KEYS = [
   'metal'
 ];
 
-class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
+let NuclearAlchemyContinuousExpansionBase = null;
+try {
+  NuclearAlchemyContinuousExpansionBase = ContinuousExpansionProject;
+} catch (error) {}
+try {
+  NuclearAlchemyContinuousExpansionBase = require('./ContinuousExpansionProject.js');
+} catch (error) {}
+try {
+  NuclearAlchemyContinuousExpansionBase = NuclearAlchemyContinuousExpansionBase || TerraformingDurationProject;
+} catch (error) {}
+
+class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase {
   constructor(config, name) {
     super(config, name);
     this.continuousThreshold = 1000;
@@ -60,14 +71,6 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
 
   getBaseDuration() {
     return this.getDurationWithTerraformBonus(this.duration);
-  }
-
-  isExpansionContinuous() {
-    return this.getEffectiveDuration() < this.continuousThreshold;
-  }
-
-  isContinuous() {
-    return this.isExpansionContinuous();
   }
 
   getAlchemyParameter() {
@@ -441,31 +444,13 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
     }
 
     const duration = this.getEffectiveDuration();
-    const limit = this.maxRepeatCount || Infinity;
-    const completedExpansions = this.repeatCount + this.expansionProgress;
-    if (completedExpansions >= limit) {
-      this.isActive = false;
-      this.isCompleted = true;
-      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+    if (this.getRemainingExpansionCapacity() <= 0) {
+      this.applyExpansionProgress(0);
       return;
     }
-
-    if (this.startingDuration !== Infinity && this.remainingTime !== Infinity && this.startingDuration > 0) {
-      const carried = (this.startingDuration - this.remainingTime) / this.startingDuration;
-      if (carried > 0) {
-        this.expansionProgress += Math.min(carried, Math.max(0, limit - (this.repeatCount + this.expansionProgress)));
-      }
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
-    }
-
-    const remainingRepeats = limit === Infinity
-      ? Infinity
-      : Math.max(0, limit - (this.repeatCount + this.expansionProgress));
-    if (remainingRepeats === 0) {
-      this.isActive = false;
-      this.isCompleted = true;
-      this.expansionProgress = 0;
+    this.carryDiscreteExpansionProgress();
+    const remainingRepeats = this.getRemainingExpansionCapacity();
+    if (remainingRepeats <= 0 || !this.isActive) {
       return;
     }
 
@@ -607,17 +592,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
       }
     }
 
-    const totalProgress = this.expansionProgress + progress;
-    const completed = Math.floor(totalProgress);
-    this.expansionProgress = totalProgress - completed;
-    if (completed > 0) {
-      this.repeatCount += completed;
-    }
-    if (limit !== Infinity && this.repeatCount + this.expansionProgress >= limit) {
-      this.expansionProgress = Math.max(0, limit - this.repeatCount);
-      this.isActive = false;
-      this.isCompleted = true;
-    }
+    this.applyExpansionProgress(progress);
 
     this.expansionShortfallLastTick = shortfall;
     this.costShortfallLastTick = this.expansionShortfallLastTick;
@@ -959,18 +934,7 @@ class NuclearAlchemyFurnaceProject extends TerraformingDurationProject {
   start(resources) {
     this.expansionProgress = 0;
     this.expansionShortfallLastTick = false;
-    if (this.isExpansionContinuous()) {
-      if (!this.canStart(resources)) {
-        return false;
-      }
-      this.isActive = true;
-      this.isPaused = false;
-      this.isCompleted = false;
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
-      return true;
-    }
-    return super.start(resources);
+    return this.startContinuousExpansion(resources);
   }
 
   renderUI(container) {

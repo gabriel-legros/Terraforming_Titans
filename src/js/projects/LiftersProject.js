@@ -12,6 +12,7 @@ const DEFAULT_LIFTER_RECIPES = {
 };
 
 let dysonManagerInstance = null;
+let LiftersContinuousExpansionBase = null;
 
 if (typeof module !== 'undefined' && module.exports) {
   dysonManagerInstance = require('../dyson-manager.js');
@@ -19,7 +20,17 @@ if (typeof module !== 'undefined' && module.exports) {
   dysonManagerInstance = window.dysonManager || null;
 }
 
-class LiftersProject extends TerraformingDurationProject {
+try {
+  LiftersContinuousExpansionBase = ContinuousExpansionProject;
+} catch (error) {}
+try {
+  LiftersContinuousExpansionBase = require('./ContinuousExpansionProject.js');
+} catch (error) {}
+try {
+  LiftersContinuousExpansionBase = LiftersContinuousExpansionBase || TerraformingDurationProject;
+} catch (error) {}
+
+class LiftersProject extends LiftersContinuousExpansionBase {
   constructor(config, name) {
     super(config, name);
     this.unitRatePerLifter = this.attributes.lifterUnitRate || 1_000_000;
@@ -47,14 +58,6 @@ class LiftersProject extends TerraformingDurationProject {
 
   getBaseDuration() {
     return this.getDurationWithTerraformBonus(this.duration);
-  }
-
-  isExpansionContinuous() {
-    return this.getEffectiveDuration() < this.continuousThreshold;
-  }
-
-  isContinuous() {
-    return this.isExpansionContinuous();
   }
 
   isAtmosphereStripDisabled() {
@@ -456,18 +459,7 @@ class LiftersProject extends TerraformingDurationProject {
   start(resources) {
     this.expansionProgress = 0;
     this.expansionShortfallLastTick = false;
-    if (this.isExpansionContinuous()) {
-      if (!this.canStart()) {
-        return false;
-      }
-      this.isActive = true;
-      this.isPaused = false;
-      this.isCompleted = false;
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
-      return true;
-    }
-    return super.start(resources);
+    return this.startContinuousExpansion(resources);
   }
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -481,31 +473,13 @@ class LiftersProject extends TerraformingDurationProject {
     }
 
     const duration = this.getEffectiveDuration();
-    const limit = this.maxRepeatCount || Infinity;
-    const completedExpansions = this.repeatCount + this.expansionProgress;
-    if (completedExpansions >= limit) {
-      this.isActive = false;
-      this.isCompleted = true;
-      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+    if (this.getRemainingExpansionCapacity() <= 0) {
+      this.applyExpansionProgress(0);
       return;
     }
-
-    if (this.startingDuration !== Infinity && this.remainingTime !== Infinity && this.startingDuration > 0) {
-      const carried = (this.startingDuration - this.remainingTime) / this.startingDuration;
-      if (carried > 0) {
-        this.expansionProgress += Math.min(carried, Math.max(0, limit - (this.repeatCount + this.expansionProgress)));
-      }
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
-    }
-
-    const remainingRepeats = limit === Infinity
-      ? Infinity
-      : Math.max(0, limit - (this.repeatCount + this.expansionProgress));
-    if (remainingRepeats === 0) {
-      this.isActive = false;
-      this.isCompleted = true;
-      this.expansionProgress = 0;
+    this.carryDiscreteExpansionProgress();
+    const remainingRepeats = this.getRemainingExpansionCapacity();
+    if (remainingRepeats <= 0 || !this.isActive) {
       return;
     }
 
@@ -659,19 +633,7 @@ class LiftersProject extends TerraformingDurationProject {
       }
     }
 
-    const totalProgress = this.expansionProgress + progress;
-    const completed = Math.floor(totalProgress);
-    this.expansionProgress = totalProgress - completed;
-
-    if (completed > 0) {
-      this.repeatCount += completed;
-    }
-
-    if (limit !== Infinity && this.repeatCount + this.expansionProgress >= limit) {
-      this.expansionProgress = Math.max(0, limit - this.repeatCount);
-      this.isActive = false;
-      this.isCompleted = true;
-    }
+    this.applyExpansionProgress(progress);
 
     this.expansionShortfallLastTick = shortfall;
     this.costShortfallLastTick = this.expansionShortfallLastTick;

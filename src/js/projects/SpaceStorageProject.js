@@ -42,6 +42,13 @@ const SPACE_STORAGE_RESOURCE_KEYS = [
   'hydrogen'
 ];
 
+let SpaceStorageContinuousExpansionHelpers = null;
+try {
+  SpaceStorageContinuousExpansionHelpers = ContinuousExpansionProject.prototype;
+} catch (error) {
+  SpaceStorageContinuousExpansionHelpers = require('./ContinuousExpansionProject.js').prototype;
+}
+
 class SpaceStorageProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
@@ -455,11 +462,31 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   isExpansionContinuous() {
-    return this.getEffectiveDuration() < 1000;
+    return SpaceStorageContinuousExpansionHelpers.isExpansionContinuous.call(this);
   }
 
   isContinuous() {
     return this.isExpansionContinuous();
+  }
+
+  startContinuousExpansion(resources) {
+    return SpaceStorageContinuousExpansionHelpers.startContinuousExpansion.call(this, resources);
+  }
+
+  getExpansionLimit() {
+    return Number.isFinite(this.maxRepeatCount) ? this.maxRepeatCount : Infinity;
+  }
+
+  getRemainingExpansionCapacity(options = {}) {
+    return SpaceStorageContinuousExpansionHelpers.getRemainingExpansionCapacity.call(this, options);
+  }
+
+  carryDiscreteExpansionProgress(options = {}) {
+    return SpaceStorageContinuousExpansionHelpers.carryDiscreteExpansionProgress.call(this, options);
+  }
+
+  applyExpansionProgress(progress, options = {}) {
+    return SpaceStorageContinuousExpansionHelpers.applyExpansionProgress.call(this, progress, options);
   }
 
   isShipOperationContinuous() {
@@ -532,20 +559,8 @@ class SpaceStorageProject extends SpaceshipProject {
 
   start(resources) {
     this.shortfallLastTick = false;
-    if (this.isExpansionContinuous()) {
-      if (!this.canStart()) {
-        return false;
-      }
-      this.expansionProgress = 0;
-      this.isActive = true;
-      this.isPaused = false;
-      this.isCompleted = false;
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
-      return true;
-    }
     this.expansionProgress = 0;
-    return Project.prototype.start.call(this, resources);
+    return this.startContinuousExpansion(resources);
   }
 
   toggleResourceSelection(category, resource, isSelected) {
@@ -839,31 +854,14 @@ class SpaceStorageProject extends SpaceshipProject {
       return;
     }
 
-    const limit = Number.isFinite(this.maxRepeatCount) ? this.maxRepeatCount : Infinity;
-    const completedExpansions = this.repeatCount + this.expansionProgress;
-    if (completedExpansions >= limit) {
-      this.isActive = false;
-      this.isCompleted = true;
-      this.expansionProgress = Math.max(0, limit - this.repeatCount);
+    if (this.getRemainingExpansionCapacity() <= 0) {
+      this.applyExpansionProgress(0);
       return;
     }
 
-    if (Number.isFinite(this.startingDuration) && Number.isFinite(this.remainingTime) && this.startingDuration > 0) {
-      const carried = (this.startingDuration - this.remainingTime) / this.startingDuration;
-      if (carried > 0) {
-        this.expansionProgress += Math.min(carried, Math.max(0, limit - (this.repeatCount + this.expansionProgress)));
-      }
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
-    }
-
-    const remainingRepeats = limit === Infinity
-      ? Infinity
-      : Math.max(0, limit - (this.repeatCount + this.expansionProgress));
-    if (remainingRepeats === 0) {
-      this.isActive = false;
-      this.isCompleted = true;
-      this.expansionProgress = 0;
+    this.carryDiscreteExpansionProgress();
+    const remainingRepeats = this.getRemainingExpansionCapacity();
+    if (remainingRepeats <= 0 || !this.isActive) {
       return;
     }
 
@@ -940,19 +938,7 @@ class SpaceStorageProject extends SpaceshipProject {
       }
     }
 
-    const totalProgress = this.expansionProgress + progress;
-    const completed = Math.floor(totalProgress);
-    this.expansionProgress = totalProgress - completed;
-
-    if (completed > 0) {
-      this.repeatCount += completed;
-    }
-
-    if (Number.isFinite(limit) && this.repeatCount + this.expansionProgress >= limit) {
-      this.expansionProgress = Math.max(0, limit - this.repeatCount);
-      this.isActive = false;
-      this.isCompleted = true;
-    }
+    this.applyExpansionProgress(progress);
 
     this.shortfallLastTick = shortfall;
   }
