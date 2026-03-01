@@ -123,6 +123,8 @@
     return acc;
   }, {});
 
+  const MANUFACTURING_FLAT_HYDROGEN_PER_WORKER = 1e-6;
+
   const MANUFACTURING_INPUT_KEYS = MANUFACTURING_RECIPE_KEYS.reduce((keys, recipeKey) => {
     const recipe = MANUFACTURING_RECIPES[recipeKey];
     Object.keys(recipe.inputs).forEach((inputKey) => {
@@ -132,11 +134,15 @@
     });
     return keys;
   }, []);
+  if (!MANUFACTURING_INPUT_KEYS.includes('hydrogen')) {
+    MANUFACTURING_INPUT_KEYS.push('hydrogen');
+  }
 
   const MANUFACTURING_INPUT_LABELS = {
     metal: 'metal',
     silicon: 'silica',
     graphite: 'graphite',
+    hydrogen: 'space hydrogen',
   };
 
   const MANUFACTURING_OUTPUT_LABELS = {
@@ -551,6 +557,19 @@
       resources.spaceStorage[resourceKey].value += delta;
     }
 
+    getAvailableSpaceStorageForTick(resourceKey, accumulatedChanges = null) {
+      const storage = this.getSpaceStorageProject();
+      if (!storage) {
+        return 0;
+      }
+      const baseAvailable = storage.getAvailableStoredResource(resourceKey);
+      if (!accumulatedChanges || !accumulatedChanges.spaceStorage) {
+        return baseAvailable;
+      }
+      const delta = accumulatedChanges.spaceStorage[resourceKey] || 0;
+      return Math.max(0, baseAvailable + delta);
+    }
+
     runManufacturing(deltaTime = 1000, productivity = 1, accumulatedChanges = null) {
       if (!this.shouldOperate()) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
@@ -603,6 +622,7 @@
         });
         entries.push({
           key,
+          assigned,
           recipe,
           desiredOutput,
           desiredInputs,
@@ -636,6 +656,21 @@
         }
         outputProduced[entry.key] = desiredProduced;
       });
+
+      if (MANUFACTURING_FLAT_HYDROGEN_PER_WORKER > 0) {
+        const assignedTotal = entries.reduce((sum, entry) => sum + (entry.assigned || 0), 0);
+        const desiredHydrogen = assignedTotal * MANUFACTURING_FLAT_HYDROGEN_PER_WORKER * seconds;
+        if (desiredHydrogen > 0) {
+          const hydrogenSpent = Math.min(
+            desiredHydrogen,
+            this.getAvailableSpaceStorageForTick('hydrogen', accumulatedChanges)
+          );
+          if (hydrogenSpent > 0) {
+            inputSpent.hydrogen += hydrogenSpent;
+            this.applySpaceStorageDeltaForTick('hydrogen', -hydrogenSpent, accumulatedChanges);
+          }
+        }
+      }
 
       const anyInputSpent = MANUFACTURING_INPUT_KEYS.some((inputKey) => inputSpent[inputKey] > 0);
       const anyStorageMutation = anyInputSpent || totalOutput > 0;
@@ -817,7 +852,12 @@
       const info = document.createElement('span');
       info.classList.add('info-tooltip-icon');
       info.innerHTML = '&#9432;';
-      attachDynamicInfoTooltip(info, 'Assign cumulative manufacturing population to recipes. Output uses (Assigned x Output / Complexity).  WGC bonuses apply.');
+      attachDynamicInfoTooltip(
+        info,
+        'Assign cumulative manufacturing population to recipes. Output uses (Assigned x Output / Complexity). '
+        + 'Each assigned worker also consumes a flat 1e-6 space hydrogen/s, unaffected by manufacturing multipliers. '
+        + 'WGC bonuses apply to eligible outputs.'
+      );
       header.append(title, info);
       card.appendChild(header);
 
