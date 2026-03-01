@@ -673,7 +673,7 @@ const projectParameters = {
           expansionSpeedMultiplier: 10,
           cost: {
             colony: {
-              metal: 100_000_000_000,
+              metal: 10_000_000_000,
               components: 10_000_000_000,
               electronics: 10_000_000_000
             }
