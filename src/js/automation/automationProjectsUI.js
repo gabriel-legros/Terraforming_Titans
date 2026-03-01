@@ -11,6 +11,10 @@ const projectAutomationUIState = {
   combinationName: ''
 };
 
+const PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
+const PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
+const PROJECT_AUTOMATION_UI_SPACE_STORAGE_OTHER_ID = 'spaceStorageOther';
+
 function buildAutomationProjectsUI() {
   const card = automationElements.projectsAutomation || document.getElementById('automation-projects');
 
@@ -294,6 +298,10 @@ function updateProjectsAutomationUI() {
   const presets = automation.presets.slice();
   const combinations = automation.getCombinations();
   const automatableProjects = getAutomatableProjects();
+  const automatableProjectLookup = {};
+  automatableProjects.forEach(project => {
+    automatableProjectLookup[project.name] = project;
+  });
 
   if (document.activeElement !== projectsBuilderPresetSelect) {
     projectsBuilderPresetSelect.textContent = '';
@@ -374,7 +382,7 @@ function updateProjectsAutomationUI() {
       available.forEach(project => {
         const option = document.createElement('option');
         option.value = project.name;
-        option.textContent = project.displayName || project.name;
+        option.textContent = getAutomatableProjectDisplayName(project.name, automatableProjectLookup);
         projectsBuilderProjectSelect.appendChild(option);
       });
       if (projectAutomationUIState.builderProjectValue) {
@@ -471,11 +479,10 @@ function updateProjectsAutomationUI() {
   if (!selectedHasFocus) {
     projectsBuilderSelectedList.textContent = '';
     projectAutomationUIState.builderSelectedProjects.forEach(name => {
-      const project = projectManager.projects[name];
       const pill = document.createElement('div');
       pill.classList.add('project-automation-builder-pill', 'building-automation-builder-pill');
       const label = document.createElement('span');
-      label.textContent = project?.displayName || name;
+      label.textContent = getAutomatableProjectDisplayName(name, automatableProjectLookup);
       const remove = document.createElement('button');
       remove.textContent = '✕';
       remove.title = 'Remove project';
@@ -554,10 +561,7 @@ function updateProjectsAutomationUI() {
         const detailText = preset
           ? (preset.scopeAll
             ? 'All non-story projects'
-            : Object.keys(preset.projects).map(id => {
-                const project = projectManager.projects[id];
-                return project?.displayName || id;
-              }).join(', '))
+            : Object.keys(preset.projects).map(id => getAutomatableProjectDisplayName(id, automatableProjectLookup)).join(', '))
           : 'Select a preset';
         detail.textContent = detailText;
       };
@@ -907,6 +911,22 @@ function getAutomatableProjects() {
     if (!project || project.category === 'story') {
       return;
     }
+    if (project.name === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID) {
+      seen[project.name] = true;
+      seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID] = true;
+      seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_OTHER_ID] = true;
+      projects.push({
+        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID,
+        displayName: 'Space Storage (Caps and Reserve)',
+        category: project.category || 'general'
+      });
+      projects.push({
+        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_OTHER_ID,
+        displayName: 'Space Storage (everything else)',
+        category: project.category || 'general'
+      });
+      return;
+    }
     seen[project.name] = true;
     projects.push(project);
   });
@@ -916,11 +936,28 @@ function getAutomatableProjects() {
     if (!project || project.category === 'story' || seen[project.name]) {
       continue;
     }
+    if (project.name === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID) {
+      continue;
+    }
     seen[project.name] = true;
     projects.push(project);
   }
 
   return projects;
+}
+
+function getAutomatableProjectDisplayName(projectId, projectLookup = null) {
+  if (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
+    return 'Space Storage (Caps and Reserve)';
+  }
+  if (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_OTHER_ID) {
+    return 'Space Storage (everything else)';
+  }
+  if (projectLookup && projectLookup[projectId]) {
+    return projectLookup[projectId].displayName || projectLookup[projectId].name || projectId;
+  }
+  const project = projectManager.projects[projectId];
+  return project?.displayName || project?.name || projectId;
 }
 
 function getProjectAutomationCategories(projects) {

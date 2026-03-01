@@ -1270,6 +1270,7 @@ class SpaceStorageProject extends SpaceshipProject {
 
   saveAutomationSettings() {
     const expansionRecipeKey = this.getExpansionRecipeKey();
+    const capsAndReserveSettings = this.saveCapsAndReserveAutomationSettings();
     return {
       ...super.saveAutomationSettings(),
       expansionRecipeKey,
@@ -1286,9 +1287,22 @@ class SpaceStorageProject extends SpaceshipProject {
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel === true,
       waterWithdrawTarget: this.waterWithdrawTarget,
+      ...capsAndReserveSettings
+    };
+  }
+
+  saveCapsAndReserveAutomationSettings() {
+    return {
       resourceStrategicReserves: JSON.parse(JSON.stringify(this.resourceStrategicReserves || {})),
       resourceCaps: JSON.parse(JSON.stringify(this.resourceCaps || {}))
     };
+  }
+
+  saveOtherAutomationSettings() {
+    const settings = this.saveAutomationSettings();
+    delete settings.resourceStrategicReserves;
+    delete settings.resourceCaps;
+    return settings;
   }
 
   loadAutomationSettings(settings = {}) {
@@ -1332,6 +1346,18 @@ class SpaceStorageProject extends SpaceshipProject {
     if (Object.prototype.hasOwnProperty.call(settings, 'waterWithdrawTarget')) {
       this.waterWithdrawTarget = settings.waterWithdrawTarget || 'colony';
     }
+    this.loadCapsAndReserveAutomationSettings(settings);
+    if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
+      this.resourceTransferModes = {};
+      this.lastUniformTransferMode = this.shipTransferMode;
+    }
+    if (this.megaProjectSpaceOnlyOnTravel) {
+      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
+    }
+    this.getExpansionRecipeKey();
+  }
+
+  loadCapsAndReserveAutomationSettings(settings = {}) {
     if (Object.prototype.hasOwnProperty.call(settings, 'resourceStrategicReserves')) {
       this.resourceStrategicReserves = settings.resourceStrategicReserves
         ? JSON.parse(JSON.stringify(settings.resourceStrategicReserves))
@@ -1342,14 +1368,17 @@ class SpaceStorageProject extends SpaceshipProject {
       this.resourceCaps = settings.resourceCaps ? JSON.parse(JSON.stringify(settings.resourceCaps)) : {};
       this.sanitizeResourceCaps();
     }
-    if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
-      this.resourceTransferModes = {};
-      this.lastUniformTransferMode = this.shipTransferMode;
+  }
+
+  loadOtherAutomationSettings(settings = {}) {
+    const filteredSettings = {};
+    for (const key in settings) {
+      if (key === 'resourceStrategicReserves' || key === 'resourceCaps') {
+        continue;
+      }
+      filteredSettings[key] = settings[key];
     }
-    if (this.megaProjectSpaceOnlyOnTravel) {
-      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
-    }
-    this.getExpansionRecipeKey();
+    this.loadAutomationSettings(filteredSettings);
   }
 
   exportSpaceStorageValues() {

@@ -1,3 +1,11 @@
+const PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
+const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
+const PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID = 'spaceStorageOther';
+const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
+  'resourceStrategicReserves',
+  'resourceCaps'
+]);
+
 class ProjectAutomation {
   constructor() {
     this.presets = [];
@@ -200,16 +208,40 @@ class ProjectAutomation {
     const ids = Array.isArray(projectIds) ? projectIds : [];
     for (let index = 0; index < ids.length; index += 1) {
       const projectId = ids[index];
-      const project = projectManager.projects[projectId];
-      if (!project || project.category === 'story') {
-        continue;
-      }
-      const settings = this.captureProjectSettings(project);
+      const settings = this.captureProjectSettingsForId(projectId);
       if (settings && Object.keys(settings).length > 0) {
         preset.projects[projectId] = settings;
       }
     }
     return preset;
+  }
+
+  captureProjectSettingsForId(projectId) {
+    const project = this.getProjectForAutomationId(projectId);
+    if (!project || project.category === 'story') {
+      return null;
+    }
+    const spaceStoragePresetType = this.getSpaceStoragePresetType(projectId);
+    if (spaceStoragePresetType === 'capsReserve' && project.saveCapsAndReserveAutomationSettings) {
+      return this.deepClone(project.saveCapsAndReserveAutomationSettings() || {});
+    }
+    if (spaceStoragePresetType === 'other' && project.saveOtherAutomationSettings) {
+      return this.deepClone(project.saveOtherAutomationSettings() || {});
+    }
+    const settings = this.captureProjectSettings(project);
+    if (!settings) {
+      return null;
+    }
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
+      return this.filterSpaceStorageOtherSettings(settings);
+    }
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
+      return this.filterSpaceStorageCapsAndReserveSettings(settings);
+    }
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID) {
+      return this.filterSpaceStorageOtherSettings(settings);
+    }
+    return settings;
   }
 
   captureProjectSettings(project) {
@@ -265,31 +297,124 @@ class ProjectAutomation {
 
   applyResolvedMap(settingsMap) {
     let changed = false;
+    const changedProjectIds = new Set();
     for (const projectId in settingsMap) {
-      const project = projectManager.projects[projectId];
+      const project = this.getProjectForAutomationId(projectId);
       if (!project) {
         continue;
       }
-      if (this.applyProjectSettings(project, settingsMap[projectId])) {
+      const sanitizedSettings = this.sanitizeSettingsForProjectId(projectId, settingsMap[projectId]);
+      if (!sanitizedSettings || Object.keys(sanitizedSettings).length === 0) {
+        continue;
+      }
+      if (this.applyProjectSettings(project, sanitizedSettings, projectId)) {
         changed = true;
+        changedProjectIds.add(project.name);
       }
     }
     if (changed) {
-      for (const projectId in settingsMap) {
-        if (projectManager.projects[projectId]) {
-          updateProjectUI(projectId);
-        }
-      }
+      changedProjectIds.forEach(projectId => updateProjectUI(projectId));
       renderProjects();
     }
   }
 
-  applyProjectSettings(project, settings) {
+  getProjectForAutomationId(projectId) {
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID
+      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID) {
+      return projectManager.projects[PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID] || null;
+    }
+    return projectManager.projects[projectId] || null;
+  }
+
+  getSpaceStoragePresetType(projectId) {
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
+      return 'capsReserve';
+    }
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID
+      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
+      return 'other';
+    }
+    return null;
+  }
+
+  sanitizeSettingsForProjectId(projectId, settings = {}) {
+    const source = settings || {};
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
+      return this.filterSpaceStorageOtherSettings(source);
+    }
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
+      return this.filterSpaceStorageCapsAndReserveSettings(source);
+    }
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID) {
+      return this.filterSpaceStorageOtherSettings(source);
+    }
+    return this.deepClone(source);
+  }
+
+  filterSpaceStorageCapsAndReserveSettings(settings = {}) {
+    const source = settings || {};
+    const filtered = {};
+    for (const key in source) {
+      if (PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS.has(key)) {
+        filtered[key] = this.deepClone(source[key]);
+      }
+    }
+    return filtered;
+  }
+
+  filterSpaceStorageOtherSettings(settings = {}) {
+    const source = settings || {};
+    const filtered = {};
+    for (const key in source) {
+      if (!PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS.has(key)) {
+        filtered[key] = this.deepClone(source[key]);
+      }
+    }
+    return filtered;
+  }
+
+  normalizeLoadedPresetProjects(projects = {}) {
+    const source = projects || {};
+    const normalized = {};
+    for (const projectId in source) {
+      const settings = this.deepClone(source[projectId] || {});
+      if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
+        const filtered = this.filterSpaceStorageOtherSettings(settings);
+        if (Object.keys(filtered).length > 0) {
+          normalized[PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID] = filtered;
+        }
+        continue;
+      }
+      if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
+        const filtered = this.filterSpaceStorageCapsAndReserveSettings(settings);
+        if (Object.keys(filtered).length > 0) {
+          normalized[projectId] = filtered;
+        }
+        continue;
+      }
+      if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID) {
+        const filtered = this.filterSpaceStorageOtherSettings(settings);
+        if (Object.keys(filtered).length > 0) {
+          normalized[projectId] = filtered;
+        }
+        continue;
+      }
+      normalized[projectId] = settings;
+    }
+    return normalized;
+  }
+
+  applyProjectSettings(project, settings, projectId = null) {
     const savedBefore = project.saveAutomationSettings
       ? project.saveAutomationSettings()
       : this.captureFallbackSettings(project);
 
-    if (project.loadAutomationSettings) {
+    const spaceStoragePresetType = this.getSpaceStoragePresetType(projectId);
+    if (spaceStoragePresetType === 'capsReserve' && project.loadCapsAndReserveAutomationSettings) {
+      project.loadCapsAndReserveAutomationSettings(this.deepClone(settings));
+    } else if (spaceStoragePresetType === 'other' && project.loadOtherAutomationSettings) {
+      project.loadOtherAutomationSettings(this.deepClone(settings));
+    } else if (project.loadAutomationSettings) {
       project.loadAutomationSettings(this.deepClone(settings));
     } else {
       this.applyFallbackSettings(project, settings);
@@ -414,7 +539,7 @@ class ProjectAutomation {
       id: preset.id,
       name: preset.name || 'Preset',
       scopeAll: preset.scopeAll === true,
-      projects: preset.projects || {}
+      projects: this.normalizeLoadedPresetProjects(preset.projects || {})
     })) : [];
     this.assignments = Array.isArray(data.assignments) ? data.assignments.map(item => ({
       id: item.id,
