@@ -490,12 +490,12 @@ describe('Space building productivity via produceResources', () => {
   });
 
   test.each([
-    { metal: 0, expectedRatio: 0 },
-    { metal: 50, expectedRatio: 0.25 },
-    { metal: 100, expectedRatio: 0.5 },
-    { metal: 200, expectedRatio: 1 },
-    { metal: 500, expectedRatio: 1 },
-  ])('Manufacturing World superalloy recipe runs at expected ratio with metal=$metal', ({ metal, expectedRatio }) => {
+    { metal: 0 },
+    { metal: 50 },
+    { metal: 100 },
+    { metal: 200 },
+    { metal: 500 },
+  ])('Manufacturing World superalloy recipe runs at expected ratio with metal=$metal', ({ metal }) => {
     const harness = setupHarness({ metal, superalloys: 0 });
     const {
       produceResources,
@@ -518,17 +518,30 @@ describe('Space building productivity via produceResources', () => {
 
     manufacturing.isRunning = true;
     manufacturing.cumulativePopulation = 200000;
-    manufacturing.manufacturingAssignments.superalloys = 200000; // 200 metal/s input, 2 superalloy/s output at productivity=1
+    manufacturing.manufacturingAssignments.superalloys = 200000;
     manufacturing.autoStart = false;
     manufacturing.isActive = false;
 
     projectManager.projects.manufacturingWorld = manufacturing;
     projectManager.projectOrder = ['manufacturingWorld'];
 
+    const recipe = manufacturing.getRecipe('superalloys');
+    const assigned = manufacturing.manufacturingAssignments.superalloys;
+    const seconds = 1;
+    const inputRateAtProductivityOne =
+      (assigned * recipe.inputs.metal * manufacturing.getRecipeConsumptionMultiplier('superalloys'))
+      / recipe.complexity;
+    const outputRateAtProductivityOne =
+      (assigned * recipe.baseOutput * manufacturing.getRecipeOutputMultiplier('superalloys'))
+      / recipe.complexity;
+    const expectedRatio = inputRateAtProductivityOne > 0
+      ? Math.min(1, metal / (inputRateAtProductivityOne * seconds))
+      : 1;
+
     produceResources(1000, {});
 
-    const expectedMetalConsumed = 200 * expectedRatio;
-    const expectedSuperalloyProduced = 2 * expectedRatio;
+    const expectedMetalConsumed = inputRateAtProductivityOne * seconds * expectedRatio;
+    const expectedSuperalloyProduced = outputRateAtProductivityOne * seconds * expectedRatio;
     const consumedMetal = metal - resources.spaceStorage.metal.value;
     const producedSuperalloy = resources.spaceStorage.superalloys.value;
 
@@ -538,11 +551,12 @@ describe('Space building productivity via produceResources', () => {
   });
 
   test.each([
-    { extraDemand: 0, expectedProductivity: 1 },
-    { extraDemand: 200, expectedProductivity: 0.5 },
-    { extraDemand: 600, expectedProductivity: 0.25 },
-  ])('Manufacturing World productivity reflects shared metal demand (extra=$extraDemand/s)', ({ extraDemand, expectedProductivity }) => {
-    const harness = setupHarness({ metal: 200, superalloys: 0 });
+    { extraDemand: 0 },
+    { extraDemand: 200 },
+    { extraDemand: 600 },
+  ])('Manufacturing World productivity reflects shared metal demand (extra=$extraDemand/s)', ({ extraDemand }) => {
+    const initialMetal = 200;
+    const harness = setupHarness({ metal: initialMetal, superalloys: 0 });
     const {
       produceResources,
       projectManager,
@@ -564,7 +578,7 @@ describe('Space building productivity via produceResources', () => {
 
     manufacturing.isRunning = true;
     manufacturing.cumulativePopulation = 200000;
-    manufacturing.manufacturingAssignments.superalloys = 200000; // 200 metal/s demand
+    manufacturing.manufacturingAssignments.superalloys = 200000;
     manufacturing.autoStart = false;
     manufacturing.isActive = false;
 
@@ -576,11 +590,25 @@ describe('Space building productivity via produceResources', () => {
       projectManager.projectOrder = ['manufacturingWorld'];
     }
 
+    const recipe = manufacturing.getRecipe('superalloys');
+    const assigned = manufacturing.manufacturingAssignments.superalloys;
+    const seconds = 1;
+    const inputRateAtProductivityOne =
+      (assigned * recipe.inputs.metal * manufacturing.getRecipeConsumptionMultiplier('superalloys'))
+      / recipe.complexity;
+    const outputRateAtProductivityOne =
+      (assigned * recipe.baseOutput * manufacturing.getRecipeOutputMultiplier('superalloys'))
+      / recipe.complexity;
+    const totalDemand = inputRateAtProductivityOne + extraDemand;
+    const expectedProductivity = totalDemand > 0
+      ? Math.min(1, initialMetal / totalDemand)
+      : 1;
+
     produceResources(1000, {});
 
-    const expectedMetalConsumed = 200 * expectedProductivity;
-    const expectedSuperalloyProduced = 2 * expectedProductivity;
-    const consumedMetal = 200 - resources.spaceStorage.metal.value;
+    const expectedMetalConsumed = inputRateAtProductivityOne * seconds * expectedProductivity;
+    const expectedSuperalloyProduced = outputRateAtProductivityOne * seconds * expectedProductivity;
+    const consumedMetal = initialMetal - resources.spaceStorage.metal.value;
     const producedSuperalloy = resources.spaceStorage.superalloys.value;
 
     expectApprox(
