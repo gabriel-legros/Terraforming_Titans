@@ -574,66 +574,8 @@ class SpaceStorageProject extends SpaceshipProject {
     return amount;
   }
 
-  isExpansionContinuous() {
-    return SpaceStorageContinuousExpansionHelpers.isExpansionContinuous.call(this);
-  }
-
-  isContinuous() {
-    return this.isExpansionContinuous();
-  }
-
-  startContinuousExpansion(resources) {
-    return SpaceStorageContinuousExpansionHelpers.startContinuousExpansion.call(this, resources);
-  }
-
-  getExpansionProgressField() {
-    return 'expansionProgress';
-  }
-
-  getExpansionCompletedField() {
-    return 'repeatCount';
-  }
-
-  getExpansionProgressValue(progressField = this.getExpansionProgressField()) {
-    return Math.max(0, this[progressField] || 0);
-  }
-
-  setExpansionProgressValue(value, progressField = this.getExpansionProgressField()) {
-    this[progressField] = Math.max(0, value || 0);
-  }
-
-  getExpansionCompletedValue(completedField = this.getExpansionCompletedField()) {
-    return Math.max(0, this[completedField] || 0);
-  }
-
-  setExpansionCompletedValue(value, completedField = this.getExpansionCompletedField()) {
-    this[completedField] = Math.max(0, value || 0);
-  }
-
-  getExpansionCompletedTotal(options = {}) {
-    const completedField = options.completedField || this.getExpansionCompletedField();
-    const progressField = options.progressField || this.getExpansionProgressField();
-    return this.getExpansionCompletedValue(completedField) + this.getExpansionProgressValue(progressField);
-  }
-
   getExpansionLimit() {
     return Number.isFinite(this.maxRepeatCount) ? this.maxRepeatCount : Infinity;
-  }
-
-  getRemainingExpansionCapacity(options = {}) {
-    return SpaceStorageContinuousExpansionHelpers.getRemainingExpansionCapacity.call(this, options);
-  }
-
-  applyFractionalProgress(progress, options = {}) {
-    return SpaceStorageContinuousExpansionHelpers.applyFractionalProgress.call(this, progress, options);
-  }
-
-  carryDiscreteExpansionProgress(options = {}) {
-    return SpaceStorageContinuousExpansionHelpers.carryDiscreteExpansionProgress.call(this, options);
-  }
-
-  applyExpansionProgress(progress, options = {}) {
-    return SpaceStorageContinuousExpansionHelpers.applyExpansionProgress.call(this, progress, options);
   }
 
   isShipOperationContinuous() {
@@ -1721,6 +1663,31 @@ class SpaceStorageProject extends SpaceshipProject {
     this.reconcileUsedStorage();
   }
 }
+
+const SPACE_STORAGE_CONTINUOUS_METHODS = [
+  'isExpansionContinuous',
+  'isContinuous',
+  'startContinuousExpansion',
+  'getExpansionProgressField',
+  'getExpansionCompletedField',
+  'getExpansionProgressValue',
+  'setExpansionProgressValue',
+  'getExpansionCompletedValue',
+  'setExpansionCompletedValue',
+  'getExpansionCompletedTotal',
+  'getRemainingExpansionCapacity',
+  'applyFractionalProgress',
+  'carryDiscreteExpansionProgress',
+  'applyExpansionProgress',
+];
+
+SPACE_STORAGE_CONTINUOUS_METHODS.forEach((methodName) => {
+  const method = SpaceStorageContinuousExpansionHelpers[methodName];
+  if (!method) {
+    throw new Error(`Missing continuous expansion method: ${methodName}`);
+  }
+  SpaceStorageProject.prototype[methodName] = method;
+});
 
 if (typeof globalThis !== 'undefined') {
   globalThis.SpaceStorageProject = SpaceStorageProject;
