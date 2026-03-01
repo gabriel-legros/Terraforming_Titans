@@ -420,39 +420,19 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       return;
     }
 
-    const cost = this.getScaledCost();
-    const storageState = this.createExpansionStorageState(accumulatedChanges);
-    const progress = this.getAffordableExpansionProgress(
+    const result = this.applyRequestedExpansionProgress(
       tick.requestedProgress,
-      cost,
-      storageState,
-      accumulatedChanges
+      this.getScaledCost(),
+      accumulatedChanges,
+      {
+        applyRates: tick.seconds > 0 && this.showsInResourcesRate(),
+        seconds: tick.seconds,
+        rateSourceLabel: 'Nuclear alchemy expansion'
+      }
     );
-    const expansionResourceShortfall = progress + 1e-9 < tick.requestedProgress;
-    const seconds = tick.seconds;
-    this.lastExpansionRatePerSecond = seconds > 0 ? progress / seconds : 0;
-    this.expansionRateLimitedLastTick = expansionResourceShortfall;
-    if (progress <= 0) {
-      this.expansionShortfallLastTick = expansionResourceShortfall;
-      this.costShortfallLastTick = this.expansionShortfallLastTick;
-      return;
-    }
-    const spent = this.applyExpansionCostForProgress(cost, progress, accumulatedChanges, storageState);
-
-    let shortfall = expansionResourceShortfall || spent.shortfall;
-
-    if (seconds > 0 && this.showsInResourcesRate()) {
-      this.applyExpansionSpentRates(
-        spent.spentColonyByCategory,
-        spent.spentStorageByKey,
-        seconds,
-        'Nuclear alchemy expansion'
-      );
-    }
-
-    this.applyExpansionProgress(progress);
-
-    this.expansionShortfallLastTick = shortfall;
+    this.lastExpansionRatePerSecond = tick.seconds > 0 ? result.progress / tick.seconds : 0;
+    this.expansionRateLimitedLastTick = result.resourceShortfall;
+    this.expansionShortfallLastTick = result.shortfall;
     this.costShortfallLastTick = this.expansionShortfallLastTick;
   }
 
@@ -642,13 +622,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
             sourceLabel: 'Nuclear alchemy expansion'
           }
         );
-        for (const category in expansionTotals) {
-          totals.cost[category] ||= {};
-          for (const resource in expansionTotals[category]) {
-            totals.cost[category][resource] =
-              (totals.cost[category][resource] || 0) + expansionTotals[category][resource];
-          }
-        }
+        this.mergeResourceTotals(totals.cost, expansionTotals);
       }
     }
 

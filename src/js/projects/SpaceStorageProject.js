@@ -912,7 +912,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+  applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
 
     const tick = this.getContinuousExpansionTickState(deltaTime);
@@ -924,25 +924,16 @@ class SpaceStorageProject extends SpaceshipProject {
       return;
     }
 
-    const cost = this.getScaledCost();
-    const storageState = this.createExpansionStorageState(accumulatedChanges);
-    const progress = this.getAffordableExpansionProgress(
+    const result = this.applyRequestedExpansionProgress(
       tick.requestedProgress,
-      cost,
-      storageState,
+      this.getScaledCost(),
       accumulatedChanges
     );
-    const shortfall = progress + 1e-9 < tick.requestedProgress;
-    if (!(progress > 0)) {
-      this.shortfallLastTick = shortfall;
-      return;
-    }
+    this.shortfallLastTick = result.shortfall;
+  }
 
-    this.applyExpansionCostForProgress(cost, progress, accumulatedChanges, storageState);
-
-    this.applyExpansionProgress(progress);
-
-    this.shortfallLastTick = shortfall;
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
   }
 
   applyContinuousShipOperation(deltaTime) {
@@ -1111,13 +1102,7 @@ class SpaceStorageProject extends SpaceshipProject {
             sourceLabel: 'Space storage expansion'
           }
         );
-        for (const category in expansionCostTotals) {
-          totals.cost[category] ||= {};
-          for (const resource in expansionCostTotals[category]) {
-            totals.cost[category][resource] =
-              (totals.cost[category][resource] || 0) + expansionCostTotals[category][resource];
-          }
-        }
+        this.mergeResourceTotals(totals.cost, expansionCostTotals);
       }
     }
     if (this.shipOperationIsActive) {
@@ -1549,7 +1534,9 @@ const SPACE_STORAGE_CONTINUOUS_METHODS = [
   'applyExpansionColonyChange',
   'applyExpansionCostForProgress',
   'applyExpansionSpentRates',
+  'applyRequestedExpansionProgress',
   'estimateExpansionCostForProgress',
+  'mergeResourceTotals',
   'createExpansionStorageState',
   'getAffordableExpansionProgress',
   'getRemainingExpansionCapacity',

@@ -262,6 +262,73 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     }
   }
 
+  applyRequestedExpansionProgress(requestedProgress, cost, accumulatedChanges = null, options = {}) {
+    const normalizedRequested = Math.max(0, requestedProgress || 0);
+    const result = {
+      requestedProgress: normalizedRequested,
+      progress: 0,
+      resourceShortfall: false,
+      shortfall: false,
+      applied: false,
+      spent: {
+        shortfall: false,
+        spentColonyByCategory: {},
+        spentStorageByKey: {},
+      },
+      storageState: options.storageState || null,
+      progressResult: null,
+    };
+    if (!(normalizedRequested > 0)) {
+      return result;
+    }
+
+    const storageState = result.storageState || this.createExpansionStorageState(
+      accumulatedChanges,
+      options.storageOptions || {}
+    );
+    result.storageState = storageState;
+
+    const progress = this.getAffordableExpansionProgress(
+      normalizedRequested,
+      cost,
+      storageState,
+      accumulatedChanges
+    );
+    result.progress = progress;
+    result.resourceShortfall = progress + 1e-9 < normalizedRequested;
+    result.shortfall = result.resourceShortfall;
+    if (!(progress > 0)) {
+      return result;
+    }
+
+    const spent = this.applyExpansionCostForProgress(cost, progress, accumulatedChanges, storageState);
+    result.spent = spent;
+    result.shortfall = result.shortfall || spent.shortfall;
+
+    const seconds = options.seconds || 0;
+    if (options.applyRates === true && seconds > 0) {
+      const sourceLabel = options.rateSourceLabel || this.displayName || this.name;
+      this.applyExpansionSpentRates(
+        spent.spentColonyByCategory,
+        spent.spentStorageByKey,
+        seconds,
+        sourceLabel
+      );
+    }
+
+    if (options.applyProgress) {
+      result.progressResult = options.applyProgress.call(this, progress, options.progressOptions || {});
+    } else {
+      result.progressResult = this.applyExpansionProgress(progress, options.progressOptions || {});
+    }
+
+    if (options.onApplied) {
+      options.onApplied.call(this, result);
+    }
+    result.applied = true;
+    return result;
+  }
+
   estimateExpansionCostForProgress(
     cost,
     progress,
@@ -315,6 +382,17 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     }
 
     return totals;
+  }
+
+  mergeResourceTotals(targetTotals = {}, sourceTotals = {}) {
+    for (const category in sourceTotals) {
+      targetTotals[category] ||= {};
+      for (const resource in sourceTotals[category]) {
+        targetTotals[category][resource] =
+          (targetTotals[category][resource] || 0) + sourceTotals[category][resource];
+      }
+    }
+    return targetTotals;
   }
 
   applyFractionalProgress(progress, options = {}) {

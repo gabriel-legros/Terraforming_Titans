@@ -267,13 +267,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
           sourceLabel: 'Dyson Collector'
         }
       );
-      for (const category in expansionTotals) {
-        totals.cost[category] ||= {};
-        for (const resource in expansionTotals[category]) {
-          totals.cost[category][resource] =
-            (totals.cost[category][resource] || 0) + expansionTotals[category][resource];
-        }
-      }
+      this.mergeResourceTotals(totals.cost, expansionTotals);
       return totals;
     }
 
@@ -303,7 +297,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     return totals;
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+  applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     // Only apply continuous mode if enabled and auto-deploying
     if (!this.isCollectorContinuous() || !this.autoContinuousOperation) {
       return;
@@ -330,40 +324,33 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       this.clampCollectorTotals();
       return;
     }
-    const storageState = this.createExpansionStorageState(accumulatedChanges, { reconcileOnDirectSpend: true });
-    const collectorGain = this.getAffordableExpansionProgress(
+
+    const result = this.applyRequestedExpansionProgress(
       requestedCollectorGain,
       collectorCost,
-      storageState,
-      accumulatedChanges
-    );
-    let shortfall = collectorGain + 1e-9 < requestedCollectorGain;
-    if (!(collectorGain > 0)) {
-      this.collectorShortfallLastTick = shortfall;
-      return;
-    }
-    const spent = this.applyExpansionCostForProgress(
-      collectorCost,
-      collectorGain,
       accumulatedChanges,
-      storageState
+      {
+        storageOptions: { reconcileOnDirectSpend: true },
+        progressOptions: {
+          completedField: 'collectors',
+          progressField: 'fractionalCollectors',
+          limit: this.getMaxCollectors(),
+          deactivateOnCap: false,
+          completeOnCap: false
+        },
+        onApplied: ({ storageState }) => {
+          this.clampCollectorTotals();
+          if (storageState?.storageProject && !accumulatedChanges && typeof updateSpaceStorageUI === 'function') {
+            updateSpaceStorageUI(storageState.storageProject);
+          }
+        }
+      }
     );
-    shortfall = shortfall || spent.shortfall;
+    this.collectorShortfallLastTick = result.shortfall;
+  }
 
-    this.applyExpansionProgress(collectorGain, {
-      completedField: 'collectors',
-      progressField: 'fractionalCollectors',
-      limit: this.getMaxCollectors(),
-      deactivateOnCap: false,
-      completeOnCap: false
-    });
-    this.clampCollectorTotals();
-
-    this.collectorShortfallLastTick = shortfall;
-    
-    if (storageState?.storageProject && !accumulatedChanges && typeof updateSpaceStorageUI === 'function') {
-      updateSpaceStorageUI(storageState.storageProject);
-    }
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
   }
 
   saveAutomationSettings() {

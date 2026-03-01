@@ -313,7 +313,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     super.update(deltaTime);
   }
 
-  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+  applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
 
     this.shortfallLastTick = false;
@@ -330,28 +330,25 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     if (!tick.ready) {
       return;
     }
-    const cost = this.getScaledCost();
-    const storageState = this.createExpansionStorageState(accumulatedChanges, { reconcileOnDirectSpend: true });
-    const progress = this.getAffordableExpansionProgress(
+    const result = this.applyRequestedExpansionProgress(
       tick.requestedProgress,
-      cost,
-      storageState,
-      accumulatedChanges
+      this.getScaledCost(),
+      accumulatedChanges,
+      {
+        storageOptions: { reconcileOnDirectSpend: true },
+        applyProgress: (progress) => this.applyContinuousProgress(progress),
+        onApplied: ({ storageState }) => {
+          if (!accumulatedChanges && storageState?.storageProject) {
+            updateSpaceStorageUI(storageState.storageProject);
+          }
+        }
+      }
     );
-    let shortfall = progress + 1e-9 < tick.requestedProgress;
-    if (!(progress > 0)) {
-      this.shortfallLastTick = shortfall;
-      return;
-    }
-    const spent = this.applyExpansionCostForProgress(cost, progress, accumulatedChanges, storageState);
-    shortfall = shortfall || spent.shortfall;
+    this.shortfallLastTick = result.shortfall;
+  }
 
-    if (!accumulatedChanges && storageState?.storageProject) {
-      updateSpaceStorageUI(storageState.storageProject);
-    }
-
-    this.applyContinuousProgress(progress);
-    this.shortfallLastTick = shortfall;
+  applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
   }
 
   renderUI(container) {
