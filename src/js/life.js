@@ -162,7 +162,7 @@ function getAttributeMaxUpgrades(attributeName) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
+  ({ getEcumenopolisLandFraction, getLifeLandMultiplier } = require('./advanced-research/ecumenopolis.js'));
 }
 
 class LifeAttribute {
@@ -995,7 +995,7 @@ class LifeManager extends EffectableEntity {
     const decayReason = `${processName} Decay`;
     const usesLuminosity = process.growth.usesLuminosity === true;
     const secondsMultiplier = deltaTime / 1000;
-    const landMultiplier = Math.max(0, 1 - getEcumenopolisLandFraction(terraforming));
+    const landMultiplier = getLifeLandMultiplier(terraforming);
     const zones = getZones();
     const getAtmosphericAvailable = (resourceKey) => {
       const pending = accumulatedChanges ? (accumulatedChanges.atmospheric[resourceKey] || 0) : 0;

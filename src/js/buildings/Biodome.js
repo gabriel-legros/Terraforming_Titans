@@ -1,3 +1,8 @@
+var getLifeLandMultiplier = getLifeLandMultiplier;
+if (typeof module !== 'undefined' && module.exports) {
+  ({ getLifeLandMultiplier } = require('../advanced-research/ecumenopolis.js'));
+}
+
 class Biodome extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
@@ -91,7 +96,7 @@ class Biodome extends Building {
     const requirements = getActiveLifeDesignRequirements();
     const densityMultiplier = 1 + lifeDesigner.currentDesign.spaceEfficiency.value;
     const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
-    const landMultiplier = Math.max(0, 1 - getEcumenopolisLandFraction(terraforming));
+    const landMultiplier = getLifeLandMultiplier(terraforming);
     return terraforming.celestialParameters.surfaceArea * landMultiplier * maxDensity;
   }
 

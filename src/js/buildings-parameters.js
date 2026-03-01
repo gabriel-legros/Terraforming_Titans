@@ -779,7 +779,7 @@ const buildingsParameters = {
   biodome:{
     name: 'Biodome',
     category: 'terraforming',
-    description: 'Produces life using the active life metabolism inputs and artificial light, pulling any water input from colony water.  Requires an active life design that can survive somewhere to function.  Also produces life design points regardless.',
+    description: 'Produces life using the active life metabolism inputs and artificial light, pulling any water input from colony water.  Requires an active life design that can survive somewhere to function.  Also produces life design points regardless.  Biodome land coverage sets a minimum Ecumenopolis life-land multiplier.',
     cost: {colony: {metal: 50, glass: 500, components: 10, electronics: 10}},
     consumption: {colony: {energy: { amount: 10000000, ignoreProductivity: true }, water: 0.1}, atmospheric : {carbonDioxide : 0.244}},
     production: {atmospheric: {oxygen : 0.177388}, surface: {biomass : 0.166612}},

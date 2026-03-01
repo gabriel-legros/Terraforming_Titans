@@ -139,8 +139,10 @@ function updateStatusSpan(statusEntry, symbol, tooltipText) {
 }
 
 var getEcumenopolisLandFraction = getEcumenopolisLandFraction;
+var getBiodomeLandFraction = getBiodomeLandFraction;
+var getLifeLandMultiplier = getLifeLandMultiplier;
 if (typeof module !== 'undefined' && module.exports) {
-  ({ getEcumenopolisLandFraction } = require('./advanced-research/ecumenopolis.js'));
+  ({ getEcumenopolisLandFraction, getBiodomeLandFraction, getLifeLandMultiplier } = require('./advanced-research/ecumenopolis.js'));
 }
 
 const tempAttributes = [
@@ -1188,7 +1190,9 @@ function updateLifeStatusTable() {
     const globalDensity = totalSurfaceArea > 0 ? totalBiomass / totalSurfaceArea : 0;
 
     const ecoFraction = getEcumenopolisLandFraction(terraforming);
-    const landMult = Math.max(0, 1 - ecoFraction);
+    const ecumenopolisLandMult = Math.max(0, 1 - ecoFraction);
+    const biodomeFraction = getBiodomeLandFraction(terraforming);
+    const landMult = getLifeLandMultiplier(terraforming);
 
     // Precompute day and night temperatures
     const zonePerc = {};
@@ -1383,8 +1387,11 @@ function updateLifeStatusTable() {
                     );
                 }
                 if (ecoFraction > 0) {
-                    const landReduction = (1 - landMult) * 100;
-                    lines.push(`Ecumenopolis: x${formatNumber(landMult, false, 2)} (-${landReduction.toFixed(2)}%)`);
+                    const ecumenopolisReduction = (1 - ecumenopolisLandMult) * 100;
+                    lines.push(`Ecumenopolis: x${formatNumber(ecumenopolisLandMult, false, 2)} (-${ecumenopolisReduction.toFixed(2)}%)`);
+                    if (landMult > ecumenopolisLandMult) {
+                        lines.push(`Biodome protection floor: x${formatNumber(landMult, false, 2)} (${formatNumber(biodomeFraction * 100, false, 2)}% initial land)`);
+                    }
                 }
                 const process = getActiveLifeMetabolismProcessForUI();
                 const liquidKeys = getLiquidRequirementKeysFromProcess(process);
