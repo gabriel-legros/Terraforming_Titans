@@ -216,6 +216,13 @@ const sculkBioworldOverrides = {
       value: true
     },
     {
+      target: 'project',
+      targetId: 'planetaryThruster',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'sculkbioworld-disable-planetary-thrusters'
+    },
+    {
       target: 'building',
       targetId: 'trashIncinerator',
       type: 'booleanFlag',
@@ -337,7 +344,7 @@ const sculkBioworldOverrides = {
     hazardousBiomass: {
       baseGrowth: { value: 2.5, maxDensity: 500000 },
       invasivenessResistance: { value: 100, severity: 0.005 },
-      oxygenPressure: { min: 0, max: 1000, unit: 'kPa', severity: 0.001 },
+      oxygenPressure: { min: 0, max: 1_000_000, unit: 'kPa', severity: 0.000001 },
       co2Pressure: { min: 0, max: 1_000_000, unit: 'kPa', severity: 0.000001 },
       atmosphericPressure: { min: 0, max: 10_000_000, unit: 'kPa', severity: 0.00000001 },
       landPreference: { value: 'Land', severity: 0 },
@@ -349,6 +356,14 @@ const sculkBioworldOverrides = {
         severityHigh: 0.001
       },
       radiationPreference: { min: 0, max: 2500, unit: 'mSv/day', severity: 0.001 },
+      decay: {
+        surface: {
+          trash: 0.6,
+          junk: 0.3,
+          scrapMetal: 0.995,
+          radioactiveWaste: 0.005
+        }
+      },
       penalties: {
         buildCost: -0.5,
         maintenanceCost: 9,
@@ -435,6 +450,11 @@ const specialSeedDefinitions = {
         id: 'lifters-no-strip',
         label: 'Lifters Strip Mode Disabled',
         description: 'Lifters cannot use Atmosphere Strip mode.'
+      },
+      {
+        id: 'planetary-thrusters-disabled',
+        label: 'Planetary Thrusters Disabled',
+        description: 'Planetary Thrusters are permanently disabled on this world.'
       },
       {
         id: 'incinerator-no-hazardous-biomass',

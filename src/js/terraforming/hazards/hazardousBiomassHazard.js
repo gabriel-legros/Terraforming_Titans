@@ -56,6 +56,25 @@ function normalizeHazardPenalties(penalties) {
   return normalized;
 }
 
+function normalizeHazardDecayOutputs(outputs) {
+  const source = isPlainObject(outputs) ? outputs : {};
+  const normalized = {};
+
+  Object.keys(source).forEach((key) => {
+    const value = source[key];
+    normalized[key] = Number.isFinite(value) ? value : 0;
+  });
+
+  return normalized;
+}
+
+function normalizeHazardDecay(decay) {
+  const source = isPlainObject(decay) ? decay : {};
+  return {
+    surface: normalizeHazardDecayOutputs(source.surface)
+  };
+}
+
 function normalizeHazardousBiomassParameters(parameters) {
   const source = isPlainObject(parameters) ? parameters : {};
   const normalized = {};
@@ -63,6 +82,11 @@ function normalizeHazardousBiomassParameters(parameters) {
   Object.keys(source).forEach((key) => {
     if (key === 'penalties') {
       normalized.penalties = normalizeHazardPenalties(source.penalties);
+      return;
+    }
+
+    if (key === 'decay') {
+      normalized.decay = normalizeHazardDecay(source.decay);
       return;
     }
 
@@ -83,6 +107,10 @@ function normalizeHazardousBiomassParameters(parameters) {
 
   if (!Object.prototype.hasOwnProperty.call(normalized, 'penalties')) {
     normalized.penalties = {};
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(normalized, 'decay')) {
+    normalized.decay = { surface: {} };
   }
 
   return normalized;
@@ -253,6 +281,7 @@ class HazardousBiomassHazard {
     const hazardResource = resourcesState?.surface?.hazardousBiomass || null;
     let growthDelta = 0;
     let crusaderDelta = 0;
+    let naturalDecayDelta = 0;
     const growth = hazardParameters && hazardParameters.baseGrowth;
     const zoneKeys = getZones();
     const zoneEntries = zoneKeys
@@ -296,22 +325,18 @@ class HazardousBiomassHazard {
             ? 1 - currentBiomass / carryingCapacity
             : 1;
           const deltaBiomass = growthRate * currentBiomass * logisticTerm * deltaSeconds;
-          const nextBiomass = currentBiomass + deltaBiomass;
-          const upperBound = carryingCapacity;
-
+          let nextBiomass = currentBiomass + deltaBiomass;
           if (nextBiomass <= 0) {
-            growthDelta -= currentBiomass;
-            data.hazardousBiomass = 0;
-            return;
+            nextBiomass = 0;
+          } else if (nextBiomass > carryingCapacity) {
+            nextBiomass = carryingCapacity;
           }
 
-          if (nextBiomass > upperBound) {
-            growthDelta += upperBound - currentBiomass;
-            data.hazardousBiomass = upperBound;
-            return;
+          const appliedDelta = nextBiomass - currentBiomass;
+          growthDelta += appliedDelta;
+          if (appliedDelta < 0) {
+            naturalDecayDelta -= appliedDelta;
           }
-
-          growthDelta += deltaBiomass;
           data.hazardousBiomass = nextBiomass;
         });
       }
@@ -415,6 +440,25 @@ class HazardousBiomassHazard {
 
       if (crusaderDelta) {
         hazardResource.modifyRate(crusaderDelta / deltaSeconds, 'Crusader Patrols', 'terraforming');
+      }
+    }
+
+    if (deltaSeconds > 0 && naturalDecayDelta > 0) {
+      const decayRate = naturalDecayDelta / deltaSeconds;
+      const decaySurface = hazardParameters && hazardParameters.decay && hazardParameters.decay.surface;
+      const surfaceResources = resourcesState && resourcesState.surface;
+      if (decaySurface && surfaceResources) {
+        Object.keys(decaySurface).forEach((resourceKey) => {
+          const ratio = decaySurface[resourceKey];
+          if (!Number.isFinite(ratio) || ratio === 0) {
+            return;
+          }
+          const targetResource = surfaceResources[resourceKey];
+          if (!targetResource || !targetResource.modifyRate) {
+            return;
+          }
+          targetResource.modifyRate(decayRate * ratio, 'Hazard Decay', 'terraforming');
+        });
       }
     }
 
