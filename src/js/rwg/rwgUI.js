@@ -687,6 +687,20 @@ function isReplayableSeedResult(result) {
   return !!result?.allowReplay;
 }
 
+function isSpecialSeedResult(result) {
+  return !!(result?.specialSeedKey
+    || result?.merged?.rwgMeta?.specialSeedKey
+    || result?.override?.rwgMeta?.specialSeedKey);
+}
+
+function writeResultDataset(box, result, seedUsed) {
+  if (!box || !box.dataset) return;
+  box.dataset.seedUsed = seedUsed;
+  box.dataset.canonicalSeed = result?.seedString || '';
+  box.dataset.allowReplay = isReplayableSeedResult(result) ? '1' : '0';
+  box.dataset.specialSeed = isSpecialSeedResult(result) ? '1' : '0';
+}
+
 function hasFastTerraformEquilibrationBypass() {
   return fastestTerraformRealSeconds !== null
     && fastestTerraformRealSeconds < RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS;
@@ -698,11 +712,14 @@ function isRandomWorldEquilibrated(seedUsed, canonicalSeed) {
     || (canonicalSeed ? equilibratedWorlds.has(canonicalSeed) : false);
 }
 
-function getRandomWorldEquilibrationState(seedUsed, canonicalSeed) {
-  const bypassUnlocked = hasFastTerraformEquilibrationBypass();
+function getRandomWorldEquilibrationState(seedUsed, canonicalSeed, specialSeed) {
+  const fastestBypassUnlocked = hasFastTerraformEquilibrationBypass();
+  const bypassUnlocked = fastestBypassUnlocked && !specialSeed;
   const eqDone = isRandomWorldEquilibrated(seedUsed, canonicalSeed);
   return {
+    fastestBypassUnlocked,
     bypassUnlocked,
+    specialSeed: !!specialSeed,
     eqDone,
     satisfied: bypassUnlocked || eqDone
   };
@@ -710,6 +727,9 @@ function getRandomWorldEquilibrationState(seedUsed, canonicalSeed) {
 
 function getRandomWorldTravelEquilibrationWarning(state) {
   if (state.satisfied) return '';
+  if (state.specialSeed && state.fastestBypassUnlocked) {
+    return 'Special seeds still require Equilibrate before traveling.';
+  }
   return 'Press Equilibrate at least once before traveling.';
 }
 
@@ -717,7 +737,7 @@ function buildEquilibrateTooltipText() {
   const fastestRecordText = fastestTerraformRealSeconds === null
     ? 'none'
     : `${fastestTerraformRealSeconds.toFixed(2)}s`;
-  return `${RWG_EQUILIBRATE_TOOLTIP_TEXT}\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s.\nCurrent Fastest Terraform (real time): ${fastestRecordText}.`;
+  return `${RWG_EQUILIBRATE_TOOLTIP_TEXT}\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. Special seeds always require Equilibrate.\nCurrent Fastest Terraform (real time): ${fastestRecordText}.`;
 }
 
 function updateRandomWorldUI() {
@@ -763,8 +783,9 @@ function updateRandomWorldUI() {
     if (rwgResultEl && travelBtn && sm) {
       const seedUsed = rwgResultEl.dataset ? rwgResultEl.dataset.seedUsed : undefined;
       const canonicalSeed = rwgResultEl.dataset ? (rwgResultEl.dataset.canonicalSeed || rwgResultEl.dataset.seedString) : undefined;
+      const specialSeed = rwgResultEl.dataset?.specialSeed === '1';
       const replayAllowed = rwgResultEl.dataset?.allowReplay === '1';
-      const eqState = getRandomWorldEquilibrationState(seedUsed, canonicalSeed);
+      const eqState = getRandomWorldEquilibrationState(seedUsed, canonicalSeed, specialSeed);
       const alreadyTerraformed = (canonicalSeed && typeof sm.isSeedTerraformed === 'function')
         ? sm.isSeedTerraformed(canonicalSeed)
         : (seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false);
@@ -802,7 +823,7 @@ function attachTravelHandler(res, sStr) {
   travelBtn.onclick = () => {
     const attemptTravel = () => {
       const canonical = res?.seedString || sStr;
-      const eqState = getRandomWorldEquilibrationState(sStr, canonical);
+      const eqState = getRandomWorldEquilibrationState(sStr, canonical, isSpecialSeedResult(res));
       if (!eqState.satisfied) return;
       if (!isReplayableSeedResult(res) && spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
       if (spaceManager?.travelToRandomWorld) {
@@ -812,11 +833,7 @@ function attachTravelHandler(res, sStr) {
           const box = document.getElementById('rwg-result');
           if (box) {
             box.innerHTML = renderWorldDetail(res, sStr);
-            try {
-              box.dataset.seedUsed = sStr;
-              if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
-              box.dataset.allowReplay = isReplayableSeedResult(res) ? '1' : '0';
-            } catch(_){}
+            try { writeResultDataset(box, res, sStr); } catch(_){}
             cacheResultControls();
             attachEquilibrateHandler(res, sStr, undefined, box);
             attachTravelHandler(res, sStr);
@@ -887,11 +904,7 @@ function drawSingle(seed, options) {
   const box = document.getElementById('rwg-result');
   if (!box) return;
   box.innerHTML = renderWorldDetail(res, seedKey, archetype);
-  try {
-    box.dataset.seedUsed = seedKey;
-    if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
-    box.dataset.allowReplay = isReplayableSeedResult(res) ? '1' : '0';
-  } catch(_){}
+  try { writeResultDataset(box, res, seedKey); } catch(_){}
   cacheResultControls();
   attachEquilibrateHandler(res, seedKey, archetype, box);
   attachTravelHandler(res, seedKey);
@@ -1004,11 +1017,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
         try { if (newRes?.seedString) equilibratedWorlds.add(newRes.seedString); } catch(_){}
         equilibratedWorlds.add(sStr);
         box.innerHTML = renderWorldDetail(newRes, sStr, archetype);
-        try {
-          box.dataset.seedUsed = sStr;
-          if (newRes?.seedString) box.dataset.canonicalSeed = newRes.seedString;
-          box.dataset.allowReplay = isReplayableSeedResult(newRes) ? '1' : '0';
-        } catch(_){}
+        try { writeResultDataset(box, newRes, sStr); } catch(_){}
         cacheResultControls();
         attachEquilibrateHandler(newRes, sStr, archetype, box);
         attachTravelHandler(newRes, sStr);
@@ -1017,11 +1026,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
           try { if (res?.seedString) equilibratedWorlds.add(res.seedString); } catch(_){}
           equilibratedWorlds.add(sStr);
           box.innerHTML = renderWorldDetail(res, sStr, archetype);
-          try {
-            box.dataset.seedUsed = sStr;
-            if (res?.seedString) box.dataset.canonicalSeed = res.seedString;
-            box.dataset.allowReplay = isReplayableSeedResult(res) ? '1' : '0';
-          } catch(_){}
+          try { writeResultDataset(box, res, sStr); } catch(_){}
           cacheResultControls();
           attachEquilibrateHandler(res, sStr, archetype, box);
           attachTravelHandler(res, sStr);
@@ -1160,7 +1165,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
 
   const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
   const replayAllowed = isReplayableSeedResult(res);
-  const eqState = getRandomWorldEquilibrationState(seedUsed, res.seedString);
+  const eqState = getRandomWorldEquilibrationState(seedUsed, res.seedString, isSpecialSeedResult(res));
   const alreadyTerraformed = (res.seedString && sm?.isSeedTerraformed)
     ? sm.isSeedTerraformed(res.seedString)
     : (seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false);
