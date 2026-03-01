@@ -172,6 +172,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Building/project cards support collapsible layouts and improved cached rendering.
 - SpaceManager now maintains incremental cached world stats (terraformed totals, sector world counts, artificial world value/fleet contributions, and RWG type/hazard bonuses) that rebuild once on load and update through mutation setters/travel flows.
 - `produceResources` now primes a per-tick building effect cache (multipliers, added consumption, maintenance cost) and reuses it across projected and actual production passes to reduce repeated `activeEffects` scans.
+- GalaxyManager now caches controlled-sector reward world totals per faction and invalidates them with sector-control cache invalidation, so repeated terraformed-world/fleet-capacity reads avoid rescanning all sectors.
 - Multiple automation systems expanded:
   - Ship automation reorder/limits/resource disposal support
   - Building preset combinations and travel application options

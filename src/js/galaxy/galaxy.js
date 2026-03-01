@@ -341,6 +341,7 @@ class GalaxyManager extends EffectableEntity {
         this.controlledSectorCache = [];
         this.controlledSectorCacheDirty = true;
         this.controlledSectorCacheVersion = 0;
+        this.controlledSectorWorldCountCache = {};
         this.fleetUpgradePurchases = {};
         GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
             this.fleetUpgradePurchases[key] = 0;
@@ -994,37 +995,71 @@ class GalaxyManager extends EffectableEntity {
         return total;
     }
 
+    #getWorldRewardCountFromSector(sector) {
+        const rewards = sector?.getSectorReward?.();
+        if (!Array.isArray(rewards) || rewards.length === 0) {
+            return 0;
+        }
+        let total = 0;
+        rewards.forEach((entry) => {
+            if (!entry) {
+                return;
+            }
+            const amount = Number(entry.amount);
+            if (!Number.isFinite(amount) || amount <= 0) {
+                return;
+            }
+            const typeText = entry.type ? String(entry.type).toLowerCase() : '';
+            const resourceText = entry.resourceId ? String(entry.resourceId).toLowerCase() : '';
+            const labelText = entry.label ? String(entry.label).toLowerCase() : '';
+            if (
+                typeText.includes('world') ||
+                resourceText.includes('world') ||
+                (!typeText && !resourceText && labelText.includes('world'))
+            ) {
+                total += amount;
+            }
+        });
+        return total;
+    }
+
+    #getFullyControlledSectorsForFaction(factionId) {
+        if (factionId === galaxyUhfId) {
+            return this.getUhfControlledSectors();
+        }
+        const faction = this.factions.get(factionId);
+        if (!faction || typeof faction.getControlledSectorKeys !== 'function') {
+            return [];
+        }
+        const keys = faction.getControlledSectorKeys(this);
+        if (!Array.isArray(keys) || keys.length === 0) {
+            return [];
+        }
+        const controlled = [];
+        keys.forEach((key) => {
+            const sector = this.sectors.get(key);
+            if (sector) {
+                controlled.push(sector);
+            }
+        });
+        return controlled;
+    }
+
     getControlledSectorWorldCount(factionId = galaxyUhfId) {
         const targetFaction = factionId || galaxyUhfId;
+        if (
+            !this.controlledSectorCacheDirty &&
+            this.controlledSectorWorldCountCache[targetFaction] !== undefined
+        ) {
+            return this.controlledSectorWorldCountCache[targetFaction];
+        }
+
+        const controlledSectors = this.#getFullyControlledSectorsForFaction(targetFaction);
         let total = 0;
-        this.sectors.forEach((sector) => {
-            if (!this.#isFactionFullControlSector(sector, targetFaction)) {
-                return;
-            }
-            const rewards = sector?.getSectorReward?.();
-            if (!Array.isArray(rewards) || rewards.length === 0) {
-                return;
-            }
-            rewards.forEach((entry) => {
-                if (!entry) {
-                    return;
-                }
-                const amount = Number(entry.amount);
-                if (!Number.isFinite(amount) || amount <= 0) {
-                    return;
-                }
-                const typeText = entry.type ? String(entry.type).toLowerCase() : '';
-                const resourceText = entry.resourceId ? String(entry.resourceId).toLowerCase() : '';
-                const labelText = entry.label ? String(entry.label).toLowerCase() : '';
-                if (
-                    typeText.includes('world') ||
-                    resourceText.includes('world') ||
-                    (!typeText && !resourceText && labelText.includes('world'))
-                ) {
-                    total += amount;
-                }
-            });
+        controlledSectors.forEach((sector) => {
+            total += this.#getWorldRewardCountFromSector(sector);
         });
+        this.controlledSectorWorldCountCache[targetFaction] = total;
         return total;
     }
 
@@ -1252,6 +1287,7 @@ class GalaxyManager extends EffectableEntity {
             this.controlledSectorCacheVersion += 1;
         }
         this.controlledSectorCacheDirty = true;
+        this.controlledSectorWorldCountCache = {};
     }
 
     #markAllFactionBorderCachesDirty() {
