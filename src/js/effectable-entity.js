@@ -7,6 +7,9 @@ class EffectableEntity {
   
     // Method to add an effect to the entity
     addEffect(effect) {
+      if (this.clearTickEffectCache) {
+        this.clearTickEffectCache();
+      }
       this.activeEffects.push(effect);
       console.log(`Added effect: ${effect.type} with value ${effect.value} to ${this.name}`);
       this.applyEffect(effect);
@@ -14,6 +17,9 @@ class EffectableEntity {
 
     // Method to replace an existing effect based on effectId
     replaceEffect(effect) {
+      if (this.clearTickEffectCache) {
+        this.clearTickEffectCache();
+      }
       const existingEffectIndex = this.activeEffects.findIndex(
         (activeEffect) => activeEffect.effectId === effect.effectId
       );
@@ -27,6 +33,9 @@ class EffectableEntity {
     }
   
     removeEffect(effect) {
+      if (this.clearTickEffectCache) {
+        this.clearTickEffectCache();
+      }
       const sourceId = effect.sourceId;
       if (!sourceId) {
         console.warn("No sourceId provided to removeEffect");

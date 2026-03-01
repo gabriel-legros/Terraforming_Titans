@@ -31,6 +31,7 @@ class Building extends EffectableEntity {
     this.currentProduction = {};
     this.currentConsumption = {};
     this.currentMaintenance = {};
+    this._tickEffectCache = null;
 
     this._automationActivityMultiplier = 1;
 
@@ -208,6 +209,7 @@ class Building extends EffectableEntity {
   // Internal: apply production/displayName for the active recipe (if configured)
   _applyRecipeMapping() {
     if (!this.recipes || !this.currentRecipeKey) return;
+    this.clearTickEffectCache();
     const recipe = this.recipes[this.currentRecipeKey] || {};
     // Keep base energy/material consumption separate
     this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
@@ -360,16 +362,154 @@ class Building extends EffectableEntity {
 
   applyActiveEffects(firstTime = true) {
     this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
+    this.clearTickEffectCache();
     super.applyActiveEffects(firstTime);
   }
 
   applyAddResourceConsumption(effect) {
     // Consumption effects are now incorporated dynamically when queried.
     // Subclasses can override this hook to update cached state.
+    this.clearTickEffectCache();
     return effect;
   }
 
+  clearTickEffectCache() {
+    this._tickEffectCache = null;
+  }
+
+  prepareTickEffectCache() {
+    const cache = {
+      productionMultiplier: 1,
+      consumptionMultiplier: 1,
+      maintenanceMultiplier: 1,
+      workerMultiplier: 1,
+      storageMultiplier: 1,
+      addedWorkerNeed: 0,
+      resourceConsumptionMultiplierByCategory: {},
+      resourceProductionMultiplierByCategory: {},
+      resourceCostMultiplierByCategory: {},
+      maintenanceCostMultiplierByCategory: {},
+      addConsumptionByCategory: {},
+      consumptionEntryByCategory: {},
+      combinedConsumption: null,
+      maintenanceCost: null,
+    };
+    const multiplyByResource = (store, category, resource, value) => {
+      if (!category || !resource) {
+        return;
+      }
+      if (!store[category]) {
+        store[category] = {};
+      }
+      store[category][resource] = (store[category][resource] || 1) * value;
+    };
+    const addConsumption = (category, resource, amount, ignoreProductivity) => {
+      if (!category || !resource) {
+        return;
+      }
+      if (!cache.addConsumptionByCategory[category]) {
+        cache.addConsumptionByCategory[category] = {};
+      }
+      if (!cache.addConsumptionByCategory[category][resource]) {
+        cache.addConsumptionByCategory[category][resource] = {
+          amount: 0,
+          ignoreProductivity: false,
+        };
+      }
+      const entry = cache.addConsumptionByCategory[category][resource];
+      entry.amount += amount;
+      if (ignoreProductivity) {
+        entry.ignoreProductivity = true;
+      }
+    };
+
+    for (let i = 0; i < this.activeEffects.length; i += 1) {
+      const effect = this.activeEffects[i];
+      switch (effect.type) {
+        case 'productionMultiplier':
+          cache.productionMultiplier *= effect.value;
+          break;
+        case 'consumptionMultiplier':
+          cache.consumptionMultiplier *= effect.value;
+          break;
+        case 'maintenanceMultiplier':
+          cache.maintenanceMultiplier *= effect.value;
+          break;
+        case 'workerMultiplier':
+          cache.workerMultiplier *= effect.value;
+          break;
+        case 'storageMultiplier':
+          cache.storageMultiplier *= effect.value;
+          break;
+        case 'addedWorkerNeed':
+          cache.addedWorkerNeed += effect.value;
+          break;
+        case 'resourceConsumptionMultiplier':
+          multiplyByResource(
+            cache.resourceConsumptionMultiplierByCategory,
+            effect.resourceCategory,
+            effect.resourceTarget,
+            effect.value
+          );
+          break;
+        case 'resourceProductionMultiplier':
+          multiplyByResource(
+            cache.resourceProductionMultiplierByCategory,
+            effect.resourceCategory,
+            effect.resourceTarget,
+            effect.value
+          );
+          break;
+        case 'resourceCostMultiplier':
+          if (Array.isArray(effect.resourceId)) {
+            for (let r = 0; r < effect.resourceId.length; r += 1) {
+              multiplyByResource(
+                cache.resourceCostMultiplierByCategory,
+                effect.resourceCategory,
+                effect.resourceId[r],
+                effect.value
+              );
+            }
+          } else {
+            multiplyByResource(
+              cache.resourceCostMultiplierByCategory,
+              effect.resourceCategory,
+              effect.resourceId,
+              effect.value
+            );
+          }
+          break;
+        case 'maintenanceCostMultiplier':
+          multiplyByResource(
+            cache.maintenanceCostMultiplierByCategory,
+            effect.resourceCategory,
+            effect.resourceId,
+            effect.value
+          );
+          break;
+        case 'addResourceConsumption':
+          addConsumption(
+            effect.resourceCategory,
+            effect.resourceId,
+            Number(effect.amount) || 0,
+            !!effect.ignoreProductivity
+          );
+          break;
+        default:
+          break;
+      }
+    }
+
+    this._tickEffectCache = cache;
+    return cache;
+  }
+
   getConsumption() {
+    const cache = this._tickEffectCache;
+    if (cache && cache.combinedConsumption) {
+      return cache.combinedConsumption;
+    }
+
     const combined = {};
     const baseConsumption = this.consumption || {};
 
@@ -382,6 +522,28 @@ class Building extends EffectableEntity {
           ? { amount, ignoreProductivity: true }
           : amount;
       }
+    }
+
+    if (cache) {
+      for (const category in cache.addConsumptionByCategory) {
+        if (!combined[category]) {
+          combined[category] = {};
+        }
+        for (const resource in cache.addConsumptionByCategory[category]) {
+          if (combined[category][resource] !== undefined) {
+            continue;
+          }
+          const { amount, ignoreProductivity } = this.getConsumptionResource(category, resource);
+          if (amount === 0) {
+            continue;
+          }
+          combined[category][resource] = ignoreProductivity
+            ? { amount, ignoreProductivity: true }
+            : amount;
+        }
+      }
+      cache.combinedConsumption = combined;
+      return combined;
     }
 
     this.activeEffects.forEach(effect => {
@@ -417,6 +579,10 @@ class Building extends EffectableEntity {
 
   // Method to get the effective production multiplier
   getEffectiveProductionMultiplier() {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      return cache.productionMultiplier;
+    }
     let multiplier = 1; // Start with default multiplier
     this.activeEffects.forEach(effect => {
       if (effect.type === 'productionMultiplier') {
@@ -428,6 +594,10 @@ class Building extends EffectableEntity {
 
   // Method to get the effective production multiplier
   getEffectiveConsumptionMultiplier() {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      return cache.consumptionMultiplier;
+    }
     let multiplier = 1; // Start with default multiplier
     this.activeEffects.forEach(effect => {
       if (effect.type === 'consumptionMultiplier') {
@@ -439,6 +609,10 @@ class Building extends EffectableEntity {
 
   // Method to get the effective maintenance multiplier
   getEffectiveMaintenanceMultiplier() {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      return cache.maintenanceMultiplier;
+    }
     let multiplier = 1;
     this.activeEffects.forEach(effect => {
       if (effect.type === 'maintenanceMultiplier') {
@@ -450,6 +624,10 @@ class Building extends EffectableEntity {
 
   // Method to get the effective production multiplier
   getEffectiveWorkerMultiplier() {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      return cache.workerMultiplier;
+    }
     let multiplier = 1; // Start with default multiplier
     this.activeEffects.forEach(effect => {
       if (effect.type === 'workerMultiplier') {
@@ -461,6 +639,10 @@ class Building extends EffectableEntity {
 
   // Method to get additional worker requirements from effects
   getAddedWorkerNeed() {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      return cache.addedWorkerNeed;
+    }
     let added = 0;
     this.activeEffects.forEach(effect => {
       if (effect.type === 'addedWorkerNeed') {
@@ -476,6 +658,10 @@ class Building extends EffectableEntity {
 
   // Method to get the effective storage multiplier
   getEffectiveStorageMultiplier() {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      return cache.storageMultiplier;
+    }
     let multiplier = 1; // Start with default multiplier
     this.activeEffects.forEach(effect => {
       if (effect.type === 'storageMultiplier') {
@@ -486,6 +672,11 @@ class Building extends EffectableEntity {
   }
 
   getEffectiveResourceConsumptionMultiplier(category, resource){
+    const cache = this._tickEffectCache;
+    if (cache) {
+      const byCategory = cache.resourceConsumptionMultiplierByCategory[category];
+      return byCategory && byCategory[resource] !== undefined ? byCategory[resource] : 1;
+    }
     let multiplier = 1; // Start with default multiplier
     this.activeEffects.forEach(effect => {
       if (effect.type === 'resourceConsumptionMultiplier' && effect.resourceCategory === category && effect.resourceTarget === resource) {
@@ -496,6 +687,11 @@ class Building extends EffectableEntity {
   }
 
   getEffectiveResourceProductionMultiplier(category, resource){
+    const cache = this._tickEffectCache;
+    if (cache) {
+      const byCategory = cache.resourceProductionMultiplierByCategory[category];
+      return byCategory && byCategory[resource] !== undefined ? byCategory[resource] : 1;
+    }
     let multiplier = 1; // Start with default multiplier
     this.activeEffects.forEach(effect => {
       if (effect.type === 'resourceProductionMultiplier' && effect.resourceCategory === category && effect.resourceTarget === resource) {
@@ -505,8 +701,60 @@ class Building extends EffectableEntity {
     return multiplier;
   }
 
+  getEffectiveCostMultiplier(resourceCategory, resourceId) {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      const byCategory = cache.resourceCostMultiplierByCategory[resourceCategory];
+      return byCategory && byCategory[resourceId] !== undefined ? byCategory[resourceId] : 1;
+    }
+    return super.getEffectiveCostMultiplier(resourceCategory, resourceId);
+  }
+
+  getEffectiveMaintenanceCostMultiplier(resourceCategory, resourceId) {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      const byCategory = cache.maintenanceCostMultiplierByCategory[resourceCategory];
+      return byCategory && byCategory[resourceId] !== undefined ? byCategory[resourceId] : 1;
+    }
+    return super.getEffectiveMaintenanceCostMultiplier(resourceCategory, resourceId);
+  }
+
   // Helper to extract consumption amount and flags
   getConsumptionResource(category, resource) {
+    const cache = this._tickEffectCache;
+    if (cache) {
+      if (!cache.consumptionEntryByCategory[category]) {
+        cache.consumptionEntryByCategory[category] = {};
+      }
+      const cached = cache.consumptionEntryByCategory[category][resource];
+      if (cached) {
+        return cached;
+      }
+      const categoryMap = (this.consumption && this.consumption[category]) || {};
+      const entry = categoryMap[resource];
+      let amount = 0;
+      let ignoreProductivity = false;
+
+      if (typeof entry === 'object' && entry !== null) {
+        amount = Number(entry.amount) || 0;
+        ignoreProductivity = !!entry.ignoreProductivity;
+      } else if (typeof entry === 'number') {
+        amount = entry;
+      }
+
+      const added = cache.addConsumptionByCategory[category]?.[resource];
+      if (added) {
+        amount += added.amount || 0;
+        if (added.ignoreProductivity) {
+          ignoreProductivity = true;
+        }
+      }
+
+      const result = { amount, ignoreProductivity };
+      cache.consumptionEntryByCategory[category][resource] = result;
+      return result;
+    }
+
     const categoryMap = (this.consumption && this.consumption[category]) || {};
     const entry = categoryMap[resource];
     let amount = 0;
@@ -691,6 +939,10 @@ class Building extends EffectableEntity {
   }
 
   calculateMaintenanceCost() {
+    const cache = this._tickEffectCache;
+    if (cache && cache.maintenanceCost) {
+      return cache.maintenanceCost;
+    }
     const maintenanceCost = {};
     const effectiveCost = this.getEffectiveCost();
     const maintenanceMultiplier = this.getEffectiveMaintenanceMultiplier();
@@ -700,6 +952,9 @@ class Building extends EffectableEntity {
       const resourceData = resources?.colony?.[resource];
       const resourceMultiplier = resourceData && resourceData.maintenanceMultiplier !== undefined ? resourceData.maintenanceMultiplier : 1;
       maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor * multiplier * resourceMultiplier * maintenanceMultiplier;
+    }
+    if (cache) {
+      cache.maintenanceCost = maintenanceCost;
     }
     return maintenanceCost;
   }

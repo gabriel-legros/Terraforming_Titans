@@ -693,6 +693,9 @@ function produceResources(deltaTime, buildings) {
     if (building && typeof building.update === 'function') {
       building.update(deltaTime);
     }
+    if (building && building.prepareTickEffectCache) {
+      building.prepareTickEffectCache();
+    }
   }
 
   calculateProductionRates(deltaTime, buildings);
@@ -1005,6 +1008,13 @@ function produceResources(deltaTime, buildings) {
           resources.atmospheric?.atmosphericWater?.modifyRate?.(atmosphericRate, 'Overflow', 'overflow');
         }
       }
+    }
+  }
+
+  for (const buildingName in buildings) {
+    const building = buildings[buildingName];
+    if (building && building.clearTickEffectCache) {
+      building.clearTickEffectCache();
     }
   }
 
