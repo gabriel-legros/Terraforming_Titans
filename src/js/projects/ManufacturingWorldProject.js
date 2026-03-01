@@ -67,7 +67,7 @@
       outputStorageKey: 'superalloys',
       complexity: 100000,
       baseOutput: 1,
-      inputs: { metal: 100 },
+      inputs: { metal: 1000 },
       shopId: 'superalloyEfficiency',
       wgcUpgradeId: 'superalloyEfficiency',
     },
