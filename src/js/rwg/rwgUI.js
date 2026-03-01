@@ -102,7 +102,7 @@ const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
-const RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS = 60;
+const RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS = 90;
 const RWG_EQUILIBRATE_TOOLTIP_TEXT = 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.';
 
 function normalizeHazardList(source) {
@@ -827,6 +827,12 @@ function attachTravelHandler(res, sStr) {
       if (!eqState.satisfied) return;
       if (!isReplayableSeedResult(res) && spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
       if (spaceManager?.travelToRandomWorld) {
+        if (eqState.bypassUnlocked && !eqState.eqDone && !isSpecialSeedResult(res)) {
+          const override = res.override || (res.override = {});
+          applyPostEquilibrationHazardTuning(override, null);
+          res.merged = deepMerge(defaultPlanetParameters, override);
+          syncResultStarData(res);
+        }
         applyDominionSelection(res);
         const travelled = spaceManager.travelToRandomWorld(res, sStr);
         if (travelled) {

@@ -18,6 +18,7 @@ class PopulationModule extends EffectableEntity {
       this.starvationDecayRate = 0;
       this.energyDecayRate = 0;
       this.gravityDecayRate = 0;
+      this.overpopulationDecayRate = 0;
       this.gravityMitigation = 0;
     }
 
@@ -126,7 +127,7 @@ class PopulationModule extends EffectableEntity {
     }
 
     if (totalCapacity === 0) {
-      return 1;
+      return this.populationResource.value > 0 ? 0 : 1;
     }
 
     const averageFulfillment = weightedFulfillment / totalCapacity;
@@ -224,6 +225,7 @@ class PopulationModule extends EffectableEntity {
         const populationExcess = currentPopulation - populationCap;
         overpopulationDecayPerSecond = populationExcess * 0.01;
       }
+      this.overpopulationDecayRate = currentPopulation > 0 ? overpopulationDecayPerSecond / currentPopulation : 0;
 
       const totalDecayPerSecond =
         starvationDecayPerSecond + energyDecayPerSecond + gravityDecayPerSecond + overpopulationDecayPerSecond;

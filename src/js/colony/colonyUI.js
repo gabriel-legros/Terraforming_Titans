@@ -105,7 +105,7 @@ function createGrowthRateDisplay(){
   decayInfo.innerHTML = '&#9432;';
   growthRateDisplayCache.tooltips.decay = attachDynamicInfoTooltip(
     decayInfo,
-    'Combined population loss from shortages and high gravity.'
+    'Combined population loss from shortages, overpopulation, and high gravity.'
   );
   decayLine.appendChild(decayInfo);
   body.appendChild(decayLine);
@@ -220,7 +220,8 @@ function updateGrowthRateDisplay(){
     const starvationRate = populationModule.starvationDecayRate * 100;
     const energyRate = populationModule.energyDecayRate * 100;
     const gravityRate = populationModule.gravityDecayRate * 100;
-    const totalDecay = starvationRate + energyRate + gravityRate;
+    const overpopulationRate = (populationModule.overpopulationDecayRate || 0) * 100;
+    const totalDecay = starvationRate + energyRate + gravityRate + overpopulationRate;
     decayEl.textContent = totalDecay === 0 ? '0%/s' : `-${formatNumber(totalDecay, false, 3)}%/s`;
     const decayTooltip = growthRateDisplayCache.tooltips.decay;
     if (decayTooltip) {
@@ -229,9 +230,10 @@ function updateGrowthRateDisplay(){
       const gravity = terraforming?.celestialParameters?.gravity ?? 0;
       const aboveTwenty = Math.max(0, gravity - 20);
       const text = [
-        'Combined population loss from shortages and high gravity.',
+        'Combined population loss from shortages, overpopulation, and high gravity.',
         `• Starvation: ${formatNumber(starvationRate, false, 3)}%/s (${formatNumber(starvingPercent, false, 1)}% starving; 100% per 360 s).`,
         `• Energy: ${formatNumber(energyRate, false, 3)}%/s (${formatNumber(withoutPower, false, 1)}% without power; 100% per 90 s).`,
+        `• Overpopulation: ${formatNumber(overpopulationRate, false, 3)}%/s.`,
         `• Gravity: ${formatNumber(gravityRate, false, 4)}%/s (gravity ${formatNumber(gravity, false, 2)} m/s²; ${formatNumber(aboveTwenty, false, 2)} above 20).`
       ].join('\n');
       setTooltipText(decayTooltip, text, growthRateDisplayCache.tooltipCache, 'decay');
