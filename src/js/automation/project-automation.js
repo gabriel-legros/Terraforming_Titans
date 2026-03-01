@@ -1,10 +1,38 @@
 const PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
-const PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID = 'spaceStorageOther';
+const PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion';
+const PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
+const PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
+const PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_OTHER_ID = 'spaceStorageOther';
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceStrategicReserves',
   'resourceCaps'
 ]);
+
+const PROJECT_AUTOMATION_BASE_EXPANSION_KEYS = new Set([
+  'autoStart',
+  'autoStartUncheckOnTravel',
+  'autoContinuousOperation',
+  'autoDeployCollectors'
+]);
+
+const PROJECT_AUTOMATION_EXPANSION_KEYS = new Set([
+  'buildCount',
+  'autoMax',
+  'workerCapacityStep',
+  'underworldMiningLevel',
+  'superchargedMiningLevel',
+  'createGeothermalDeposits',
+  'undergroundStorage',
+  'selectedRadiusMeters',
+  'radiusStepMeters',
+  'expansionRecipeKey'
+]);
+
+const PROJECT_AUTOMATION_PROJECT_EXPANSION_KEYS = {
+  satellite: new Set(['step']),
+  geo_satellite: new Set(['step'])
+};
 
 class ProjectAutomation {
   constructor() {
@@ -197,51 +225,45 @@ class ProjectAutomation {
   }
 
   buildPreset(name, projectIds, options = {}, idOverride) {
+    const includeExpansion = options.includeExpansion !== false;
+    const includeOperations = options.includeOperations !== false;
     const scopeAll = options.scopeAll === true;
     const id = idOverride || this.nextPresetId++;
     const preset = {
       id,
       name: name || `Preset ${id}`,
+      includeExpansion,
+      includeOperations,
       scopeAll,
       projects: {}
     };
     const ids = Array.isArray(projectIds) ? projectIds : [];
     for (let index = 0; index < ids.length; index += 1) {
-      const projectId = ids[index];
-      const settings = this.captureProjectSettingsForId(projectId);
-      if (settings && Object.keys(settings).length > 0) {
-        preset.projects[projectId] = settings;
-      }
+      const projectId = this.normalizeProjectId(ids[index]);
+      const entry = this.captureProjectSettingsForId(projectId, includeExpansion, includeOperations);
+      this.mergePresetProjectEntry(preset.projects, projectId, entry);
     }
     return preset;
   }
 
-  captureProjectSettingsForId(projectId) {
+  captureProjectSettingsForId(projectId, includeExpansion = true, includeOperations = true) {
     const project = this.getProjectForAutomationId(projectId);
     if (!project || project.category === 'story') {
       return null;
-    }
-    const spaceStoragePresetType = this.getSpaceStoragePresetType(projectId);
-    if (spaceStoragePresetType === 'capsReserve' && project.saveCapsAndReserveAutomationSettings) {
-      return this.deepClone(project.saveCapsAndReserveAutomationSettings() || {});
-    }
-    if (spaceStoragePresetType === 'other' && project.saveOtherAutomationSettings) {
-      return this.deepClone(project.saveOtherAutomationSettings() || {});
     }
     const settings = this.captureProjectSettings(project);
     if (!settings) {
       return null;
     }
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
-      return this.filterSpaceStorageOtherSettings(settings);
+    const split = this.splitProjectSettings(projectId, settings);
+    const entry = {};
+    if (includeExpansion && Object.keys(split.expansion).length > 0) {
+      entry.expansion = split.expansion;
     }
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
-      return this.filterSpaceStorageCapsAndReserveSettings(settings);
+    if (includeOperations && Object.keys(split.operations).length > 0) {
+      entry.operations = split.operations;
     }
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID) {
-      return this.filterSpaceStorageOtherSettings(settings);
-    }
-    return settings;
+    return Object.keys(entry).length > 0 ? entry : null;
   }
 
   captureProjectSettings(project) {
@@ -264,7 +286,10 @@ class ProjectAutomation {
   }
 
   resolveAssignments() {
-    const resolved = {};
+    const resolved = {
+      expansion: {},
+      operations: {}
+    };
     for (let index = 0; index < this.assignments.length; index += 1) {
       const assignment = this.assignments[index];
       if (!assignment.enabled) {
@@ -274,9 +299,15 @@ class ProjectAutomation {
       if (!preset) {
         continue;
       }
-      const entries = preset.projects;
+      const entries = preset.projects || {};
       for (const projectId in entries) {
-        resolved[projectId] = this.deepClone(entries[projectId]);
+        const entry = entries[projectId];
+        if (preset.includeExpansion !== false && entry.expansion) {
+          resolved.expansion[projectId] = this.deepClone(entry.expansion);
+        }
+        if (preset.includeOperations !== false && entry.operations) {
+          resolved.operations[projectId] = this.deepClone(entry.operations);
+        }
       }
     }
     return resolved;
@@ -284,7 +315,7 @@ class ProjectAutomation {
 
   applyPresets() {
     const resolved = this.resolveAssignments();
-    this.applyResolvedMap(resolved);
+    this.applyResolvedMaps(resolved.expansion, resolved.operations);
   }
 
   applyPresetOnce(presetId) {
@@ -292,63 +323,150 @@ class ProjectAutomation {
     if (!preset) {
       return;
     }
-    this.applyResolvedMap(this.deepClone(preset.projects || {}));
+    const expansionMap = {};
+    const operationsMap = {};
+    const entries = preset.projects || {};
+    for (const projectId in entries) {
+      const entry = entries[projectId];
+      if (preset.includeExpansion !== false && entry.expansion) {
+        expansionMap[projectId] = this.deepClone(entry.expansion);
+      }
+      if (preset.includeOperations !== false && entry.operations) {
+        operationsMap[projectId] = this.deepClone(entry.operations);
+      }
+    }
+    this.applyResolvedMaps(expansionMap, operationsMap);
   }
 
-  applyResolvedMap(settingsMap) {
+  applyResolvedMaps(expansionMap = {}, operationsMap = {}) {
     let changed = false;
     const changedProjectIds = new Set();
-    for (const projectId in settingsMap) {
+    const projectIds = new Set([
+      ...Object.keys(expansionMap || {}),
+      ...Object.keys(operationsMap || {})
+    ]);
+
+    projectIds.forEach((projectId) => {
       const project = this.getProjectForAutomationId(projectId);
       if (!project) {
-        continue;
+        return;
       }
-      const sanitizedSettings = this.sanitizeSettingsForProjectId(projectId, settingsMap[projectId]);
-      if (!sanitizedSettings || Object.keys(sanitizedSettings).length === 0) {
-        continue;
+
+      const settings = {};
+      if (expansionMap[projectId]) {
+        const splitExpansion = this.filterSettingsForBucket(projectId, expansionMap[projectId], 'expansion');
+        Object.assign(settings, splitExpansion);
       }
-      if (this.applyProjectSettings(project, sanitizedSettings, projectId)) {
+      if (operationsMap[projectId]) {
+        const splitOperations = this.filterSettingsForBucket(projectId, operationsMap[projectId], 'operations');
+        Object.assign(settings, splitOperations);
+      }
+      if (Object.keys(settings).length === 0) {
+        return;
+      }
+
+      if (this.applyProjectSettings(project, settings)) {
         changed = true;
         changedProjectIds.add(project.name);
       }
-    }
+    });
+
     if (changed) {
       changedProjectIds.forEach(projectId => updateProjectUI(projectId));
       renderProjects();
     }
   }
 
+  isSpaceStorageProxyProjectId(projectId) {
+    return projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID
+      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID
+      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID;
+  }
+
+  normalizeProjectId(projectId) {
+    if (projectId === PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_OTHER_ID) {
+      return PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID;
+    }
+    if (projectId === PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
+      return PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID;
+    }
+    return projectId;
+  }
+
   getProjectForAutomationId(projectId) {
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID
-      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID) {
+    const normalizedProjectId = this.normalizeProjectId(projectId);
+    if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID
+      || this.isSpaceStorageProxyProjectId(normalizedProjectId)) {
       return projectManager.projects[PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID] || null;
     }
-    return projectManager.projects[projectId] || null;
+    return projectManager.projects[normalizedProjectId] || null;
   }
 
-  getSpaceStoragePresetType(projectId) {
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
-      return 'capsReserve';
+  isPresetProjectEntry(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return false;
     }
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID
-      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
-      return 'other';
-    }
-    return null;
+    return Object.prototype.hasOwnProperty.call(value, 'expansion')
+      || Object.prototype.hasOwnProperty.call(value, 'operations');
   }
 
-  sanitizeSettingsForProjectId(projectId, settings = {}) {
+  isExpansionSettingKey(projectId, key) {
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID
+      || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID) {
+      return false;
+    }
+    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID) {
+      return PROJECT_AUTOMATION_BASE_EXPANSION_KEYS.has(key)
+        || PROJECT_AUTOMATION_EXPANSION_KEYS.has(key);
+    }
+    const projectSpecificExpansion = PROJECT_AUTOMATION_PROJECT_EXPANSION_KEYS[projectId];
+    if (projectSpecificExpansion && projectSpecificExpansion.has(key)) {
+      return true;
+    }
+    if (PROJECT_AUTOMATION_BASE_EXPANSION_KEYS.has(key)) {
+      return true;
+    }
+    return PROJECT_AUTOMATION_EXPANSION_KEYS.has(key);
+  }
+
+  splitProjectSettings(projectId, settings = {}) {
     const source = settings || {};
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
-      return this.filterSpaceStorageOtherSettings(source);
+    const normalizedProjectId = this.normalizeProjectId(projectId);
+    if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
+      return {
+        expansion: {},
+        operations: this.filterSpaceStorageCapsAndReserveSettings(source)
+      };
     }
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
-      return this.filterSpaceStorageCapsAndReserveSettings(source);
+    if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID) {
+      return {
+        expansion: this.filterSpaceStorageExpansionSettings(source),
+        operations: {}
+      };
     }
-    if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID) {
-      return this.filterSpaceStorageOtherSettings(source);
+    if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID) {
+      return {
+        expansion: {},
+        operations: this.filterSpaceStorageOperationSettings(source)
+      };
     }
-    return this.deepClone(source);
+    const expansion = {};
+    const operations = {};
+
+    for (const key in source) {
+      if (this.isExpansionSettingKey(normalizedProjectId, key)) {
+        expansion[key] = this.deepClone(source[key]);
+      } else {
+        operations[key] = this.deepClone(source[key]);
+      }
+    }
+
+    return { expansion, operations };
+  }
+
+  filterSettingsForBucket(projectId, settings = {}, bucket = 'operations') {
+    const split = this.splitProjectSettings(projectId, settings || {});
+    return bucket === 'expansion' ? split.expansion : split.operations;
   }
 
   filterSpaceStorageCapsAndReserveSettings(settings = {}) {
@@ -362,59 +480,156 @@ class ProjectAutomation {
     return filtered;
   }
 
-  filterSpaceStorageOtherSettings(settings = {}) {
+  filterSpaceStorageExpansionSettings(settings = {}) {
     const source = settings || {};
     const filtered = {};
     for (const key in source) {
-      if (!PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS.has(key)) {
+      if (this.isExpansionSettingKey(PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID, key)) {
         filtered[key] = this.deepClone(source[key]);
       }
     }
     return filtered;
   }
 
+  filterSpaceStorageOperationSettings(settings = {}) {
+    const source = settings || {};
+    const filtered = {};
+    for (const key in source) {
+      if (PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS.has(key)) {
+        continue;
+      }
+      if (this.isExpansionSettingKey(PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID, key)) {
+        continue;
+      }
+      filtered[key] = this.deepClone(source[key]);
+    }
+    return filtered;
+  }
+
+  extractPresetProjectEntrySettings(projectId, rawSettings = {}) {
+    const entry = rawSettings || {};
+    const combined = {};
+    if (Object.prototype.hasOwnProperty.call(entry, 'expansion')) {
+      const expansion = this.filterSettingsForBucket(projectId, entry.expansion || {}, 'expansion');
+      Object.assign(combined, expansion);
+    }
+    if (Object.prototype.hasOwnProperty.call(entry, 'operations')) {
+      const operations = this.filterSettingsForBucket(projectId, entry.operations || {}, 'operations');
+      Object.assign(combined, operations);
+    }
+    return combined;
+  }
+
+  mergeSpaceStorageNormalizedEntries(normalized = {}, settings = {}) {
+    const source = settings || {};
+    const capsReserveSettings = this.filterSpaceStorageCapsAndReserveSettings(source);
+    const expansionSettings = this.filterSpaceStorageExpansionSettings(source);
+    const operationSettings = this.filterSpaceStorageOperationSettings(source);
+    if (Object.keys(capsReserveSettings).length > 0) {
+      this.mergePresetProjectEntry(normalized, PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID, {
+        operations: capsReserveSettings
+      });
+    }
+    if (Object.keys(expansionSettings).length > 0) {
+      this.mergePresetProjectEntry(normalized, PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID, {
+        expansion: expansionSettings
+      });
+    }
+    if (Object.keys(operationSettings).length > 0) {
+      this.mergePresetProjectEntry(normalized, PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID, {
+        operations: operationSettings
+      });
+    }
+  }
+
+  mergePresetProjectEntry(projects = {}, projectId, entry = null) {
+    if (!entry) {
+      return;
+    }
+    const normalizedProjectId = this.normalizeProjectId(projectId);
+    const expansion = entry.expansion && Object.keys(entry.expansion).length > 0
+      ? this.deepClone(entry.expansion)
+      : null;
+    const operations = entry.operations && Object.keys(entry.operations).length > 0
+      ? this.deepClone(entry.operations)
+      : null;
+    if (!expansion && !operations) {
+      return;
+    }
+
+    const current = projects[normalizedProjectId] || {};
+    const merged = {};
+    if (current.expansion && Object.keys(current.expansion).length > 0) {
+      merged.expansion = this.deepClone(current.expansion);
+    }
+    if (current.operations && Object.keys(current.operations).length > 0) {
+      merged.operations = this.deepClone(current.operations);
+    }
+    if (expansion) {
+      merged.expansion = {
+        ...(merged.expansion || {}),
+        ...expansion
+      };
+    }
+    if (operations) {
+      merged.operations = {
+        ...(merged.operations || {}),
+        ...operations
+      };
+    }
+    projects[normalizedProjectId] = merged;
+  }
+
   normalizeLoadedPresetProjects(projects = {}) {
     const source = projects || {};
     const normalized = {};
-    for (const projectId in source) {
-      const settings = this.deepClone(source[projectId] || {});
-      if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
-        const filtered = this.filterSpaceStorageOtherSettings(settings);
-        if (Object.keys(filtered).length > 0) {
-          normalized[PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID] = filtered;
-        }
+
+    for (const rawProjectId in source) {
+      const normalizedProjectId = this.normalizeProjectId(rawProjectId);
+      const project = this.getProjectForAutomationId(normalizedProjectId);
+      if (!project || project.category === 'story') {
         continue;
       }
-      if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
-        const filtered = this.filterSpaceStorageCapsAndReserveSettings(settings);
-        if (Object.keys(filtered).length > 0) {
-          normalized[projectId] = filtered;
-        }
+
+      const rawSettings = this.deepClone(source[rawProjectId] || {});
+      if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID) {
+        const combinedSettings = this.isPresetProjectEntry(rawSettings)
+          ? this.extractPresetProjectEntrySettings(normalizedProjectId, rawSettings)
+          : this.deepClone(rawSettings);
+        this.mergeSpaceStorageNormalizedEntries(normalized, combinedSettings);
         continue;
       }
-      if (projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OTHER_ID) {
-        const filtered = this.filterSpaceStorageOtherSettings(settings);
-        if (Object.keys(filtered).length > 0) {
-          normalized[projectId] = filtered;
+      if (this.isPresetProjectEntry(rawSettings)) {
+        const entry = {};
+        if (Object.prototype.hasOwnProperty.call(rawSettings, 'expansion')) {
+          const expansion = this.filterSettingsForBucket(normalizedProjectId, rawSettings.expansion || {}, 'expansion');
+          if (Object.keys(expansion).length > 0) {
+            entry.expansion = expansion;
+          }
         }
+        if (Object.prototype.hasOwnProperty.call(rawSettings, 'operations')) {
+          const operations = this.filterSettingsForBucket(normalizedProjectId, rawSettings.operations || {}, 'operations');
+          if (Object.keys(operations).length > 0) {
+            entry.operations = operations;
+          }
+        }
+        this.mergePresetProjectEntry(normalized, normalizedProjectId, entry);
         continue;
       }
-      normalized[projectId] = settings;
+
+      const split = this.splitProjectSettings(normalizedProjectId, rawSettings);
+      this.mergePresetProjectEntry(normalized, normalizedProjectId, split);
     }
+
     return normalized;
   }
 
-  applyProjectSettings(project, settings, projectId = null) {
+  applyProjectSettings(project, settings) {
     const savedBefore = project.saveAutomationSettings
       ? project.saveAutomationSettings()
       : this.captureFallbackSettings(project);
 
-    const spaceStoragePresetType = this.getSpaceStoragePresetType(projectId);
-    if (spaceStoragePresetType === 'capsReserve' && project.loadCapsAndReserveAutomationSettings) {
-      project.loadCapsAndReserveAutomationSettings(this.deepClone(settings));
-    } else if (spaceStoragePresetType === 'other' && project.loadOtherAutomationSettings) {
-      project.loadOtherAutomationSettings(this.deepClone(settings));
-    } else if (project.loadAutomationSettings) {
+    if (project.loadAutomationSettings) {
       project.loadAutomationSettings(this.deepClone(settings));
     } else {
       this.applyFallbackSettings(project, settings);
@@ -512,6 +727,8 @@ class ProjectAutomation {
       presets: this.presets.map(preset => ({
         id: preset.id,
         name: preset.name,
+        includeExpansion: preset.includeExpansion !== false,
+        includeOperations: preset.includeOperations !== false,
         scopeAll: !!preset.scopeAll,
         projects: this.deepClone(preset.projects || {})
       })),
@@ -538,6 +755,8 @@ class ProjectAutomation {
     this.presets = Array.isArray(data.presets) ? data.presets.map(preset => ({
       id: preset.id,
       name: preset.name || 'Preset',
+      includeExpansion: preset.includeExpansion !== false,
+      includeOperations: preset.includeOperations !== false,
       scopeAll: preset.scopeAll === true,
       projects: this.normalizeLoadedPresetProjects(preset.projects || {})
     })) : [];
