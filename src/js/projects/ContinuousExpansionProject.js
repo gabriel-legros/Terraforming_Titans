@@ -137,6 +137,186 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     return Math.max(0, Math.min(requestedProgress, affordableProgress));
   }
 
+  getContinuousExpansionTickState(deltaTime = 1000, options = {}) {
+    const progressOptions = options.progressOptions || {};
+    const capacityOptions = options.capacityOptions || progressOptions;
+    const duration = this.getEffectiveDuration();
+    if (!duration || duration === Infinity) {
+      return { ready: false, duration };
+    }
+
+    if (this.getRemainingExpansionCapacity(capacityOptions) <= 0) {
+      if (options.applyZeroProgressOnCap !== false) {
+        this.applyExpansionProgress(0, progressOptions);
+      }
+      return { ready: false, duration };
+    }
+
+    this.carryDiscreteExpansionProgress(progressOptions);
+    const remainingRepeats = this.getRemainingExpansionCapacity(capacityOptions);
+    if (!(remainingRepeats > 0) || !this.isActive) {
+      return { ready: false, duration, remainingRepeats };
+    }
+
+    const progressScale = options.progressScale || 1;
+    const requestedProgress = Math.min((deltaTime / duration) * progressScale, remainingRepeats);
+    if (!(requestedProgress > 0)) {
+      return { ready: false, duration, remainingRepeats, requestedProgress: 0 };
+    }
+
+    return {
+      ready: true,
+      duration,
+      remainingRepeats,
+      requestedProgress,
+      seconds: deltaTime / 1000,
+    };
+  }
+
+  applyExpansionColonyChange(category, resource, amount, accumulatedChanges = null) {
+    if (!(amount > 0)) {
+      return;
+    }
+    if (accumulatedChanges) {
+      accumulatedChanges[category] ||= {};
+      if (accumulatedChanges[category][resource] === undefined) {
+        accumulatedChanges[category][resource] = 0;
+      }
+      accumulatedChanges[category][resource] -= amount;
+      return;
+    }
+    resources[category][resource].decrease(amount);
+  }
+
+  applyExpansionCostForProgress(cost, progress, accumulatedChanges = null, storageState = null) {
+    const spentColonyByCategory = {};
+    const spentStorageByKey = {};
+    let shortfall = false;
+
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const amount = cost[category][resource] * progress;
+        if (!(amount > 0)) {
+          continue;
+        }
+        const resourceEntry = resources[category][resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const colonyAvailable = Math.max(resourceEntry.value + pending, 0);
+        const allocation = getMegaProjectResourceAllocation(storageState, storageKey, amount, colonyAvailable);
+
+        let spentFromStorage = 0;
+        if (allocation.fromStorage > 0 && storageState?.spendStoredResource) {
+          spentFromStorage = storageState.spendStoredResource(storageKey, allocation.fromStorage);
+        }
+
+        const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
+        const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
+        if (spendFromColony > 0) {
+          this.applyExpansionColonyChange(category, resource, spendFromColony, accumulatedChanges);
+          spentColonyByCategory[category] ||= {};
+          spentColonyByCategory[category][resource] =
+            (spentColonyByCategory[category][resource] || 0) + spendFromColony;
+        }
+        if (spentFromStorage > 0) {
+          spentStorageByKey[storageKey] = (spentStorageByKey[storageKey] || 0) + spentFromStorage;
+        }
+        if (spentFromStorage + spendFromColony + 1e-9 < amount) {
+          shortfall = true;
+        }
+      }
+    }
+
+    return {
+      shortfall,
+      spentColonyByCategory,
+      spentStorageByKey,
+    };
+  }
+
+  applyExpansionSpentRates(spentColonyByCategory, spentStorageByKey, seconds, sourceLabel) {
+    if (!(seconds > 0)) {
+      return;
+    }
+    for (const category in spentColonyByCategory) {
+      for (const resource in spentColonyByCategory[category]) {
+        const spent = spentColonyByCategory[category][resource];
+        if (spent > 0) {
+          resources[category][resource].modifyRate(
+            -(spent / seconds),
+            sourceLabel,
+            'project'
+          );
+        }
+      }
+    }
+    for (const storageKey in spentStorageByKey) {
+      const spent = spentStorageByKey[storageKey];
+      if (spent > 0) {
+        resources?.spaceStorage?.[storageKey]?.modifyRate?.(
+          -(spent / seconds),
+          sourceLabel,
+          'project'
+        );
+      }
+    }
+  }
+
+  estimateExpansionCostForProgress(
+    cost,
+    progress,
+    deltaTime = 1000,
+    accumulatedChanges = null,
+    storageState = null,
+    options = {}
+  ) {
+    const totals = {};
+    if (!(progress > 0)) {
+      return totals;
+    }
+
+    const applyRates = options.applyRates === true;
+    const sourceLabel = options.sourceLabel || this.displayName || this.name;
+    const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
+
+    for (const category in cost) {
+      totals[category] ||= {};
+      for (const resource in cost[category]) {
+        const baseCost = cost[category][resource];
+        const tickAmount = baseCost * progress;
+        const resourceEntry = resources?.[category]?.[resource];
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const colonyAvailable = (resourceEntry?.value || 0) + pending;
+        const allocation = getMegaProjectResourceAllocation(
+          storageState,
+          storageKey,
+          tickAmount,
+          Math.max(colonyAvailable, 0)
+        );
+
+        if (applyRates) {
+          const colonyRate = Math.min(allocation.fromColony, Math.max(colonyAvailable, 0)) * perSecondFactor;
+          if (colonyRate > 0) {
+            resourceEntry?.modifyRate?.(-colonyRate, sourceLabel, 'project');
+          }
+          const storageRate = Math.max(allocation.fromStorage, 0) * perSecondFactor;
+          if (storageRate > 0) {
+            resources?.spaceStorage?.[storageKey]?.modifyRate?.(
+              -storageRate,
+              sourceLabel,
+              'project'
+            );
+          }
+        }
+
+        totals[category][resource] = (totals[category][resource] || 0) + tickAmount;
+      }
+    }
+
+    return totals;
+  }
+
   applyFractionalProgress(progress, options = {}) {
     const completedField = options.completedField || this.getExpansionCompletedField();
     const progressField = options.progressField || this.getExpansionProgressField();

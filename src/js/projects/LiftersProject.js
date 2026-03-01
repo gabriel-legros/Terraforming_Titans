@@ -471,119 +471,36 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (!this.isExpansionContinuous() || !this.isActive) {
       return;
     }
-
-    const duration = this.getEffectiveDuration();
-    if (this.getRemainingExpansionCapacity() <= 0) {
-      this.applyExpansionProgress(0);
-      return;
-    }
-    this.carryDiscreteExpansionProgress();
-    const remainingRepeats = this.getRemainingExpansionCapacity();
-    if (remainingRepeats <= 0 || !this.isActive) {
+    const tick = this.getContinuousExpansionTickState(deltaTime);
+    if (!tick.ready) {
       return;
     }
 
     const cost = this.getScaledCost();
     const storageState = this.createExpansionStorageState(accumulatedChanges);
-    const requestedProgress = Math.min(deltaTime / duration, remainingRepeats);
     const progress = this.getAffordableExpansionProgress(
-      requestedProgress,
+      tick.requestedProgress,
       cost,
       storageState,
       accumulatedChanges
     );
-    let shortfall = progress + 1e-9 < requestedProgress;
-    const seconds = deltaTime / 1000;
+    let shortfall = progress + 1e-9 < tick.requestedProgress;
+    const seconds = tick.seconds;
     if (progress <= 0) {
       this.expansionShortfallLastTick = shortfall;
       this.costShortfallLastTick = this.expansionShortfallLastTick;
       return;
     }
-
-    const applyColonyChange = (category, resource, amount) => {
-      if (accumulatedChanges) {
-        if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
-        if (accumulatedChanges[category][resource] === undefined) {
-          accumulatedChanges[category][resource] = 0;
-        }
-        accumulatedChanges[category][resource] -= amount;
-      } else {
-        resources[category][resource].decrease(amount);
-      }
-    };
-
-    const spendFromStorage = (key, amount) => {
-      if (amount <= 0) return 0;
-      if (storageState.spendStoredResource) {
-        return storageState.spendStoredResource(key, amount);
-      }
-      const availableFromStorage = storageState.getAvailableStoredResource(key);
-      return Math.min(amount, availableFromStorage);
-    };
-    const spentColonyByCategory = {};
-    const spentStorageByKey = {};
-
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const amount = cost[category][resource] * progress;
-        const res = resources[category][resource];
-        const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-        const availableTotal = getMegaProjectResourceAvailability(
-          storageState,
-          storageKey,
-          res.value + pending
-        );
-        if (availableTotal + 1e-9 < amount) {
-          shortfall = true;
-        }
-
-        const colonyAvailable = Math.max(res.value + pending, 0);
-        const allocation = getMegaProjectResourceAllocation(storageState, storageKey, amount, colonyAvailable);
-        let spentFromStorage = 0;
-        if (allocation.fromStorage > 0) {
-          spentFromStorage = spendFromStorage(storageKey, allocation.fromStorage);
-        }
-        const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
-        const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
-        if (spendFromColony > 0) {
-          applyColonyChange(category, resource, spendFromColony);
-          spentColonyByCategory[category] ||= {};
-          spentColonyByCategory[category][resource] =
-            (spentColonyByCategory[category][resource] || 0) + spendFromColony;
-        }
-        if (spentFromStorage > 0) {
-          spentStorageByKey[storageKey] = (spentStorageByKey[storageKey] || 0) + spentFromStorage;
-        }
-        if (spentFromStorage + spendFromColony + 1e-9 < amount) {
-          shortfall = true;
-        }
-      }
-    }
+    const spent = this.applyExpansionCostForProgress(cost, progress, accumulatedChanges, storageState);
+    shortfall = shortfall || spent.shortfall;
 
     if (seconds > 0 && this.showsInResourcesRate()) {
-      for (const category in spentColonyByCategory) {
-        for (const resource in spentColonyByCategory[category]) {
-          const spent = spentColonyByCategory[category][resource];
-          if (spent > 0) {
-            resources[category][resource].modifyRate(
-              -(spent / seconds),
-              'Lifter expansion',
-              'project'
-            );
-          }
-        }
-      }
-      for (const storageKey in spentStorageByKey) {
-        const spent = spentStorageByKey[storageKey];
-        if (spent > 0) {
-          resources?.spaceStorage?.[storageKey]?.modifyRate?.(
-            -(spent / seconds),
-            'Lifter expansion',
-            'project'
-          );
-        }
-      }
+      this.applyExpansionSpentRates(
+        spent.spentColonyByCategory,
+        spent.spentStorageByKey,
+        seconds,
+        'Lifter expansion'
+      );
     }
 
     this.applyExpansionProgress(progress);
@@ -754,37 +671,22 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       }
 
       if (remainingRepeats > 0 && progress > 0) {
-        const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
-        for (const category in cost) {
-          if (!totals.cost[category]) totals.cost[category] = {};
-          for (const resource in cost[category]) {
-            const baseCost = cost[category][resource];
-            const tickAmount = baseCost * progress;
-            const res = resources?.[category]?.[resource];
-            const storageKey = resource === 'water' ? 'liquidWater' : resource;
-            const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-            const colonyAvailable = (res?.value || 0) + pending;
-            const allocation = getMegaProjectResourceAllocation(
-              storageState,
-              storageKey,
-              tickAmount,
-              Math.max(colonyAvailable, 0)
-            );
-            const colonyPortion = allocation.fromColony;
-            const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
-            if (applyRates && colonyRate > 0) {
-              res?.modifyRate?.(-colonyRate, 'Lifter expansion', 'project');
-            }
-            const storageRate = Math.max(allocation.fromStorage, 0) * perSecondFactor;
-            if (applyRates && storageRate > 0) {
-              resources?.spaceStorage?.[storageKey]?.modifyRate?.(
-                -storageRate,
-                'Lifter expansion',
-                'project'
-              );
-            }
+        const expansionTotals = this.estimateExpansionCostForProgress(
+          cost,
+          progress,
+          deltaTime,
+          accumulatedChanges,
+          storageState,
+          {
+            applyRates,
+            sourceLabel: 'Lifter expansion'
+          }
+        );
+        for (const category in expansionTotals) {
+          totals.cost[category] ||= {};
+          for (const resource in expansionTotals[category]) {
             totals.cost[category][resource] =
-              (totals.cost[category][resource] || 0) + baseCost * progress;
+              (totals.cost[category][resource] || 0) + expansionTotals[category][resource];
           }
         }
       }

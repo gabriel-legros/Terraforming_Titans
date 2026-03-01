@@ -317,53 +317,34 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     if (!this.isContinuous() || !this.isActive) return;
 
     this.shortfallLastTick = false;
-    const duration = this.getEffectiveDuration();
-    const fraction = (deltaTime / duration) * productivity;
-    const remainingRepeats = this.getRemainingExpansionCapacity({ progressField: 'fractionalRepeatCount' });
-    const requestedProgress = Math.min(fraction, remainingRepeats);
-    if (!(requestedProgress > 0)) {
+    const progressOptions = {
+      progressField: 'fractionalRepeatCount',
+      completeOnCap: false,
+      deactivateOnCap: false
+    };
+    const tick = this.getContinuousExpansionTickState(deltaTime, {
+      progressOptions,
+      capacityOptions: { progressField: 'fractionalRepeatCount' },
+      progressScale: productivity
+    });
+    if (!tick.ready) {
       return;
     }
     const cost = this.getScaledCost();
     const storageState = this.createExpansionStorageState(accumulatedChanges, { reconcileOnDirectSpend: true });
     const progress = this.getAffordableExpansionProgress(
-      requestedProgress,
+      tick.requestedProgress,
       cost,
       storageState,
       accumulatedChanges
     );
-    let shortfall = progress + 1e-9 < requestedProgress;
+    let shortfall = progress + 1e-9 < tick.requestedProgress;
     if (!(progress > 0)) {
       this.shortfallLastTick = shortfall;
       return;
     }
-
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const amount = cost[category][resource] * progress;
-        const key = resource === 'water' ? 'liquidWater' : resource;
-        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-        const colonyAvailable = Math.max(resources[category][resource].value + pending, 0);
-        const allocation = getMegaProjectResourceAllocation(storageState, key, amount, colonyAvailable);
-        let spentFromStorage = 0;
-        if (allocation.fromStorage > 0) {
-          spentFromStorage = storageState.spendStoredResource(key, allocation.fromStorage);
-        }
-        const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
-        const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
-        if (spendFromColony > 0) {
-          if (accumulatedChanges) {
-            accumulatedChanges[category] ||= {};
-            accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - spendFromColony;
-          } else {
-            resources[category][resource].decrease(spendFromColony);
-          }
-        }
-        if (spentFromStorage + spendFromColony + 1e-9 < amount) {
-          shortfall = true;
-        }
-      }
-    }
+    const spent = this.applyExpansionCostForProgress(cost, progress, accumulatedChanges, storageState);
+    shortfall = shortfall || spent.shortfall;
 
     if (!accumulatedChanges && storageState?.storageProject) {
       updateSpaceStorageUI(storageState.storageProject);

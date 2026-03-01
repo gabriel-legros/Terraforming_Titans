@@ -240,7 +240,6 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       const storageState = this.createExpansionStorageState(accumulatedChanges);
       const collectorCost = this.getCollectorCost();
       const duration = this.collectorDuration;
-      const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
       const fraction = deltaTime / duration;
       const desiredCollectorGain = fraction * productivity;
       if (desiredCollectorGain <= 0) {
@@ -256,44 +255,23 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       if (collectorGain <= 0) {
         return totals;
       }
-      const gainScale = collectorGain / desiredCollectorGain;
-      
-      for (const category in collectorCost) {
-        if (!totals.cost[category]) totals.cost[category] = {};
-        for (const resource in collectorCost[category]) {
-          const baseCost = collectorCost[category][resource];
-          const tickAmount = baseCost * fraction * (applyRates ? productivity * gainScale : 1);
-          if (applyRates && resources[category]?.[resource]) {
-            const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-            const colonyAvailable = resources[category][resource].value + pending;
-            const key = resource === 'water' ? 'liquidWater' : resource;
-            const allocation = getMegaProjectResourceAllocation(
-              storageState,
-              key,
-              tickAmount,
-              Math.max(colonyAvailable, 0)
-            );
-            const colonyPortion = allocation.fromColony;
-            const colonyRate = Math.min(colonyPortion, colonyAvailable) * perSecondFactor;
-            if (colonyRate > 0) {
-              resources[category][resource].modifyRate(
-                -colonyRate,
-                'Dyson Collector',
-                'project'
-              );
-            }
-            const storagePortion = allocation.fromStorage;
-            const storageRate = Math.max(storagePortion, 0) * perSecondFactor;
-            if (storageRate > 0) {
-              resources?.spaceStorage?.[key]?.modifyRate?.(
-                -storageRate,
-                'Dyson Collector',
-                'project'
-              );
-            }
-          }
+
+      const expansionTotals = this.estimateExpansionCostForProgress(
+        collectorCost,
+        collectorGain,
+        deltaTime,
+        accumulatedChanges,
+        storageState,
+        {
+          applyRates,
+          sourceLabel: 'Dyson Collector'
+        }
+      );
+      for (const category in expansionTotals) {
+        totals.cost[category] ||= {};
+        for (const resource in expansionTotals[category]) {
           totals.cost[category][resource] =
-            (totals.cost[category][resource] || 0) + baseCost * fraction * gainScale;
+            (totals.cost[category][resource] || 0) + expansionTotals[category][resource];
         }
       }
       return totals;
@@ -364,51 +342,13 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       this.collectorShortfallLastTick = shortfall;
       return;
     }
-    const gainScale = collectorGain / desiredCollectorGain;
-
-    // Deduct resources proportionally
-    for (const category in collectorCost) {
-      for (const resource in collectorCost[category]) {
-        const amount = collectorCost[category][resource] * fraction * productivity * gainScale;
-        
-        if (storageState) {
-          const key = resource === 'water' ? 'liquidWater' : resource;
-          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-          const colonyAvailable = Math.max(resources[category][resource].value + pending, 0);
-          const allocation = getMegaProjectResourceAllocation(storageState, key, amount, colonyAvailable);
-          let spentFromStorage = 0;
-          if (allocation.fromStorage > 0) {
-            spentFromStorage = storageState.spendStoredResource(key, allocation.fromStorage);
-          }
-          const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
-          const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
-          if (spendFromColony > 0) {
-            if (accumulatedChanges) {
-              if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
-              if (accumulatedChanges[category][resource] === undefined) {
-                accumulatedChanges[category][resource] = 0;
-              }
-              accumulatedChanges[category][resource] -= spendFromColony;
-            } else {
-              resources[category][resource].decrease(spendFromColony);
-            }
-          }
-          if (spentFromStorage + spendFromColony + 1e-9 < amount) {
-            shortfall = true;
-          }
-        } else {
-          if (accumulatedChanges) {
-            if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
-            if (accumulatedChanges[category][resource] === undefined) {
-              accumulatedChanges[category][resource] = 0;
-            }
-            accumulatedChanges[category][resource] -= amount;
-          } else {
-            resources[category][resource].decrease(amount);
-          }
-        }
-      }
-    }
+    const spent = this.applyExpansionCostForProgress(
+      collectorCost,
+      collectorGain,
+      accumulatedChanges,
+      storageState
+    );
+    shortfall = shortfall || spent.shortfall;
 
     this.applyExpansionProgress(collectorGain, {
       completedField: 'collectors',
