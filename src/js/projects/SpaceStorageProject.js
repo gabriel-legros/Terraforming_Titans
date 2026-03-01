@@ -56,6 +56,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.baseDuration = config.duration;
     this.shipBaseDuration = 50_000;
     this.capacityPerCompletion = 100_000_000_000;
+    this.continuousThreshold = config.continuousThreshold || 1000;
     this.expansionRecipes = this.attributes.expansionRecipes || {};
     this.expansionRecipeKey = this.attributes.defaultExpansionRecipe || SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY;
     this.expansionProgress = 0;
@@ -585,12 +586,46 @@ class SpaceStorageProject extends SpaceshipProject {
     return SpaceStorageContinuousExpansionHelpers.startContinuousExpansion.call(this, resources);
   }
 
+  getExpansionProgressField() {
+    return 'expansionProgress';
+  }
+
+  getExpansionCompletedField() {
+    return 'repeatCount';
+  }
+
+  getExpansionProgressValue(progressField = this.getExpansionProgressField()) {
+    return Math.max(0, this[progressField] || 0);
+  }
+
+  setExpansionProgressValue(value, progressField = this.getExpansionProgressField()) {
+    this[progressField] = Math.max(0, value || 0);
+  }
+
+  getExpansionCompletedValue(completedField = this.getExpansionCompletedField()) {
+    return Math.max(0, this[completedField] || 0);
+  }
+
+  setExpansionCompletedValue(value, completedField = this.getExpansionCompletedField()) {
+    this[completedField] = Math.max(0, value || 0);
+  }
+
+  getExpansionCompletedTotal(options = {}) {
+    const completedField = options.completedField || this.getExpansionCompletedField();
+    const progressField = options.progressField || this.getExpansionProgressField();
+    return this.getExpansionCompletedValue(completedField) + this.getExpansionProgressValue(progressField);
+  }
+
   getExpansionLimit() {
     return Number.isFinite(this.maxRepeatCount) ? this.maxRepeatCount : Infinity;
   }
 
   getRemainingExpansionCapacity(options = {}) {
     return SpaceStorageContinuousExpansionHelpers.getRemainingExpansionCapacity.call(this, options);
+  }
+
+  applyFractionalProgress(progress, options = {}) {
+    return SpaceStorageContinuousExpansionHelpers.applyFractionalProgress.call(this, progress, options);
   }
 
   carryDiscreteExpansionProgress(options = {}) {
