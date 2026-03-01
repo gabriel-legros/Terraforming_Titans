@@ -69,6 +69,74 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     return Math.max(0, limit - this.getExpansionCompletedTotal(options));
   }
 
+  createExpansionStorageState(accumulatedChanges = null, options = {}) {
+    if (!this.attributes?.canUseSpaceStorage) {
+      return null;
+    }
+    const storageProj = projectManager?.projects?.spaceStorage;
+    if (!storageProj) {
+      return null;
+    }
+    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
+    const reconcileOnDirectSpend = options.reconcileOnDirectSpend === true;
+    return {
+      storageProject: storageProj,
+      megaProjectResourceMode: storageProj.megaProjectResourceMode,
+      getAvailableStoredResource: (resourceKey) => {
+        const available = storageProj.getAvailableStoredResource(resourceKey);
+        return Math.max(0, available + getStoragePending(resourceKey));
+      },
+      spendStoredResource: (resourceKey, amount) => {
+        if (!(amount > 0)) {
+          return 0;
+        }
+        if (!accumulatedChanges) {
+          const spent = storageProj.spendStoredResource(resourceKey, amount);
+          if (reconcileOnDirectSpend) {
+            storageProj.reconcileUsedStorage?.();
+          }
+          return spent;
+        }
+        const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
+        const spent = Math.min(amount, available);
+        if (!(spent > 0)) {
+          return 0;
+        }
+        accumulatedChanges.spaceStorage ||= {};
+        if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+          accumulatedChanges.spaceStorage[resourceKey] = 0;
+        }
+        accumulatedChanges.spaceStorage[resourceKey] -= spent;
+        return spent;
+      },
+    };
+  }
+
+  getAffordableExpansionProgress(requestedProgress, cost, storageState, accumulatedChanges = null) {
+    if (!(requestedProgress > 0)) {
+      return 0;
+    }
+    let affordableProgress = requestedProgress;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const baseCost = cost[category][resource];
+        if (!(baseCost > 0)) {
+          continue;
+        }
+        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
+        const colonyAvailable = (resources?.[category]?.[resource]?.value || 0) + pending;
+        const storageKey = resource === 'water' ? 'liquidWater' : resource;
+        const availableTotal = getMegaProjectResourceAvailability(
+          storageState,
+          storageKey,
+          colonyAvailable
+        );
+        affordableProgress = Math.min(affordableProgress, availableTotal / baseCost);
+      }
+    }
+    return Math.max(0, Math.min(requestedProgress, affordableProgress));
+  }
+
   applyFractionalProgress(progress, options = {}) {
     const completedField = options.completedField || this.getExpansionCompletedField();
     const progressField = options.progressField || this.getExpansionProgressField();

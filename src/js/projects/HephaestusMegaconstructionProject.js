@@ -319,86 +319,58 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     this.shortfallLastTick = false;
     const duration = this.getEffectiveDuration();
     const fraction = (deltaTime / duration) * productivity;
-    const cost = this.getScaledCost();
-    const storageProj = projectManager.projects.spaceStorage;
-    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
-    const storageState = storageProj
-      ? {
-          megaProjectResourceMode: storageProj.megaProjectResourceMode,
-          getAvailableStoredResource: (resourceKey) => {
-            const available = storageProj.getAvailableStoredResource(resourceKey);
-            return Math.max(0, available + getStoragePending(resourceKey));
-          },
-          spendStoredResource: (resourceKey, amount) => {
-            if (amount <= 0) {
-              return 0;
-            }
-            if (!accumulatedChanges) {
-              return storageProj.spendStoredResource(resourceKey, amount);
-            }
-            const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
-            const spent = Math.min(amount, available);
-            if (spent <= 0) {
-              return 0;
-            }
-            accumulatedChanges.spaceStorage ||= {};
-            if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
-              accumulatedChanges.spaceStorage[resourceKey] = 0;
-            }
-            accumulatedChanges.spaceStorage[resourceKey] -= spent;
-            return spent;
-          }
-        }
-      : null;
-
-    let shortfall = false;
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const amount = cost[category][resource] * fraction;
-        const key = resource === 'water' ? 'liquidWater' : resource;
-        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-        const colonyAvailable = resources[category][resource].value + pending;
-        const available = getMegaProjectResourceAvailability(storageState, key, colonyAvailable);
-        if (available < amount) {
-          shortfall = true;
-        }
-      }
+    const remainingRepeats = this.getRemainingExpansionCapacity({ progressField: 'fractionalRepeatCount' });
+    const requestedProgress = Math.min(fraction, remainingRepeats);
+    if (!(requestedProgress > 0)) {
+      return;
     }
-
-    if (shortfall) {
-      this.shortfallLastTick = true;
+    const cost = this.getScaledCost();
+    const storageState = this.createExpansionStorageState(accumulatedChanges, { reconcileOnDirectSpend: true });
+    const progress = this.getAffordableExpansionProgress(
+      requestedProgress,
+      cost,
+      storageState,
+      accumulatedChanges
+    );
+    let shortfall = progress + 1e-9 < requestedProgress;
+    if (!(progress > 0)) {
+      this.shortfallLastTick = shortfall;
       return;
     }
 
     for (const category in cost) {
       for (const resource in cost[category]) {
-        const amount = cost[category][resource] * fraction;
+        const amount = cost[category][resource] * progress;
         const key = resource === 'water' ? 'liquidWater' : resource;
         const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
         const colonyAvailable = Math.max(resources[category][resource].value + pending, 0);
         const allocation = getMegaProjectResourceAllocation(storageState, key, amount, colonyAvailable);
-        if (allocation.fromColony > 0) {
+        let spentFromStorage = 0;
+        if (allocation.fromStorage > 0) {
+          spentFromStorage = storageState.spendStoredResource(key, allocation.fromStorage);
+        }
+        const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
+        const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
+        if (spendFromColony > 0) {
           if (accumulatedChanges) {
             accumulatedChanges[category] ||= {};
-            accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - allocation.fromColony;
+            accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - spendFromColony;
           } else {
-            resources[category][resource].decrease(allocation.fromColony);
+            resources[category][resource].decrease(spendFromColony);
           }
         }
-        if (allocation.fromStorage > 0) {
-          storageState.spendStoredResource(key, allocation.fromStorage);
-          if (!accumulatedChanges) {
-            storageProj.reconcileUsedStorage?.();
-          }
+        if (spentFromStorage + spendFromColony + 1e-9 < amount) {
+          shortfall = true;
         }
       }
     }
 
-    if (!accumulatedChanges) {
-      updateSpaceStorageUI(storageProj);
+    if (!accumulatedChanges && storageState?.storageProject) {
+      updateSpaceStorageUI(storageState.storageProject);
     }
 
-    this.applyContinuousProgress(fraction);
+    this.applyContinuousProgress(progress);
+    this.shortfallLastTick = shortfall;
   }
 
   renderUI(container) {

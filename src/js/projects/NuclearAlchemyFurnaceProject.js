@@ -404,33 +404,6 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return allocations;
   }
 
-  getAffordableExpansionProgress(requestedProgress, cost, storageState, accumulatedChanges) {
-    if (!(requestedProgress > 0)) {
-      return 0;
-    }
-
-    let affordableProgress = requestedProgress;
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const baseCost = cost[category][resource];
-        if (!(baseCost > 0)) {
-          continue;
-        }
-        const res = resources[category][resource];
-        const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-        const availableTotal = getMegaProjectResourceAvailability(
-          storageState,
-          storageKey,
-          res.value + pending
-        );
-        affordableProgress = Math.min(affordableProgress, availableTotal / baseCost);
-      }
-    }
-
-    return Math.max(0, Math.min(requestedProgress, affordableProgress));
-  }
-
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     this.costShortfallLastTick = false;
     this.expansionShortfallLastTick = false;
@@ -455,40 +428,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     }
 
     const cost = this.getScaledCost();
-    const storageProj = this.attributes.canUseSpaceStorage ? projectManager?.projects?.spaceStorage : null;
-    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
-    const storageState = storageProj
-      ? {
-          megaProjectResourceMode: storageProj.megaProjectResourceMode,
-          getAvailableStoredResource: (resourceKey) => {
-            const available = storageProj.getAvailableStoredResource(resourceKey);
-            return Math.max(0, available + getStoragePending(resourceKey));
-          },
-          spendStoredResource: (resourceKey, amount) => {
-            if (amount <= 0) {
-              return 0;
-            }
-            if (!accumulatedChanges) {
-              return storageProj.spendStoredResource(resourceKey, amount);
-            }
-            const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
-            const spent = Math.min(amount, available);
-            if (spent <= 0) {
-              return 0;
-            }
-            accumulatedChanges.spaceStorage ||= {};
-            if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
-              accumulatedChanges.spaceStorage[resourceKey] = 0;
-            }
-            accumulatedChanges.spaceStorage[resourceKey] -= spent;
-            return spent;
-          },
-        }
-      : {
-          getAvailableStoredResource: () => 0,
-          spendStoredResource: () => 0,
-          megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
-        };
+    const storageState = this.createExpansionStorageState(accumulatedChanges);
     const requestedProgress = Math.min(deltaTime / duration, remainingRepeats);
     const progress = this.getAffordableExpansionProgress(
       requestedProgress,
@@ -752,22 +692,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     includeOperation = true
   ) {
     const totals = { cost: {}, gain: {} };
-    const storageProj = this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
-    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
-    const storageState = storageProj
-      ? {
-          megaProjectResourceMode: storageProj.megaProjectResourceMode,
-          getAvailableStoredResource: (resourceKey) => {
-            const available = storageProj.getAvailableStoredResource(resourceKey);
-            return Math.max(0, available + getStoragePending(resourceKey));
-          },
-          spendStoredResource: () => 0,
-        }
-      : {
-          getAvailableStoredResource: () => 0,
-          spendStoredResource: () => 0,
-          megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST
-        };
+    const storageState = this.createExpansionStorageState(accumulatedChanges);
 
     const expansionActive = includeExpansion && this.isActive && (!this.isExpansionContinuous() || this.autoStart);
     if (expansionActive) {

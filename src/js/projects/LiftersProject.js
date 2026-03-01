@@ -484,66 +484,19 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     const cost = this.getScaledCost();
-    const storageProj = this.attributes.canUseSpaceStorage ? projectManager.projects.spaceStorage : null;
-    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
-    const storageState = storageProj
-      ? {
-          megaProjectResourceMode: storageProj.megaProjectResourceMode,
-          getAvailableStoredResource: (resourceKey) => {
-            const available = storageProj.getAvailableStoredResource(resourceKey);
-            return Math.max(0, available + getStoragePending(resourceKey));
-          },
-          spendStoredResource: (resourceKey, amount) => {
-            if (amount <= 0) {
-              return 0;
-            }
-            if (!accumulatedChanges) {
-              return storageProj.spendStoredResource(resourceKey, amount);
-            }
-            const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
-            const spent = Math.min(amount, available);
-            if (spent <= 0) {
-              return 0;
-            }
-            accumulatedChanges.spaceStorage ||= {};
-            if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
-              accumulatedChanges.spaceStorage[resourceKey] = 0;
-            }
-            accumulatedChanges.spaceStorage[resourceKey] -= spent;
-            return spent;
-          },
-        }
-      : {
-          getAvailableStoredResource: () => 0,
-          spendStoredResource: () => 0,
-          megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
-        };
-    let shortfall = false;
-    let canAffordBaseCost = true;
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const res = resources[category][resource];
-        const storageKey = resource === 'water' ? 'liquidWater' : resource;
-        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-        const availableTotal = getMegaProjectResourceAvailability(
-          storageState,
-          storageKey,
-          res.value + pending
-        );
-        if (availableTotal < cost[category][resource]) {
-          canAffordBaseCost = false;
-        }
-      }
-    }
-    if (!canAffordBaseCost) {
-      this.expansionShortfallLastTick = true;
-      this.costShortfallLastTick = true;
-      return;
-    }
-
-    const progress = Math.min(deltaTime / duration, remainingRepeats);
+    const storageState = this.createExpansionStorageState(accumulatedChanges);
+    const requestedProgress = Math.min(deltaTime / duration, remainingRepeats);
+    const progress = this.getAffordableExpansionProgress(
+      requestedProgress,
+      cost,
+      storageState,
+      accumulatedChanges
+    );
+    let shortfall = progress + 1e-9 < requestedProgress;
     const seconds = deltaTime / 1000;
     if (progress <= 0) {
+      this.expansionShortfallLastTick = shortfall;
+      this.costShortfallLastTick = this.expansionShortfallLastTick;
       return;
     }
 
@@ -581,7 +534,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
           storageKey,
           res.value + pending
         );
-        if (availableTotal < amount) {
+        if (availableTotal + 1e-9 < amount) {
           shortfall = true;
         }
 
@@ -778,22 +731,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     includeOperation = true
   ) {
     const totals = { cost: {}, gain: {} };
-    const storageProj = this.attributes?.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
-    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
-    const storageState = storageProj
-      ? {
-          megaProjectResourceMode: storageProj.megaProjectResourceMode,
-          getAvailableStoredResource: (resourceKey) => {
-            const available = storageProj.getAvailableStoredResource(resourceKey);
-            return Math.max(0, available + getStoragePending(resourceKey));
-          },
-          spendStoredResource: () => 0,
-        }
-      : {
-          getAvailableStoredResource: () => 0,
-          spendStoredResource: () => 0,
-          megaProjectResourceMode: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST,
-        };
+    const storageState = this.createExpansionStorageState(accumulatedChanges);
 
     const expansionActive = includeExpansion && this.isActive && (!this.isExpansionContinuous() || this.autoStart);
     if (expansionActive) {
@@ -801,28 +739,21 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       const limit = this.maxRepeatCount || Infinity;
       const completedExpansions = this.repeatCount + this.expansionProgress;
       const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
-      const progress = this.isExpansionContinuous()
+      const requestedProgress = this.isExpansionContinuous()
         ? Math.min(deltaTime / duration, remainingRepeats)
         : (deltaTime / duration);
-      const checkBaseCost = this.isExpansionContinuous();
-      let canAffordBaseCost = true;
+      let progress = requestedProgress;
       const cost = this.getScaledCost();
-      for (const category in cost) {
-        for (const resource in cost[category]) {
-          const storageKey = resource === 'water' ? 'liquidWater' : resource;
-          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-            const availableTotal = getMegaProjectResourceAvailability(
-              storageState,
-              storageKey,
-              (resources?.[category]?.[resource]?.value || 0) + pending
-            );
-          if (checkBaseCost && availableTotal < cost[category][resource]) {
-            canAffordBaseCost = false;
-          }
-        }
+      if (this.isExpansionContinuous()) {
+        progress = this.getAffordableExpansionProgress(
+          requestedProgress,
+          cost,
+          storageState,
+          accumulatedChanges
+        );
       }
 
-      if (remainingRepeats > 0 && progress > 0 && canAffordBaseCost) {
+      if (remainingRepeats > 0 && progress > 0) {
         const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
         for (const category in cost) {
           if (!totals.cost[category]) totals.cost[category] = {};

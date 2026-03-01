@@ -237,11 +237,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       if (headroom <= 0) {
         return totals;
       }
-      if (!this.canStartCollector()) {
-        return totals;
-      }
-
-      const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
+      const storageState = this.createExpansionStorageState(accumulatedChanges);
       const collectorCost = this.getCollectorCost();
       const duration = this.collectorDuration;
       const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
@@ -250,7 +246,13 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       if (desiredCollectorGain <= 0) {
         return totals;
       }
-      const collectorGain = Math.min(desiredCollectorGain, headroom);
+      const requestedCollectorGain = Math.min(desiredCollectorGain, headroom);
+      const collectorGain = this.getAffordableExpansionProgress(
+        requestedCollectorGain,
+        collectorCost,
+        storageState,
+        accumulatedChanges
+      );
       if (collectorGain <= 0) {
         return totals;
       }
@@ -266,7 +268,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
             const colonyAvailable = resources[category][resource].value + pending;
             const key = resource === 'water' ? 'liquidWater' : resource;
             const allocation = getMegaProjectResourceAllocation(
-              storageProj,
+              storageState,
               key,
               tickAmount,
               Math.max(colonyAvailable, 0)
@@ -338,10 +340,6 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     }
 
     this.collectorShortfallLastTick = false;
-    if (!this.canStartCollector()) {
-      this.collectorShortfallLastTick = true;
-      return;
-    }
     const collectorCost = this.getCollectorCost();
     const duration = this.collectorDuration;
     const fraction = deltaTime / duration;
@@ -349,58 +347,24 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     if (desiredCollectorGain <= 0) {
       return;
     }
-    const collectorGain = Math.min(desiredCollectorGain, headroom);
-    if (collectorGain <= 0) {
+    const requestedCollectorGain = Math.min(desiredCollectorGain, headroom);
+    if (requestedCollectorGain <= 0) {
       this.clampCollectorTotals();
       return;
     }
-    const gainScale = collectorGain / desiredCollectorGain;
-
-    // Check if we have enough resources
-    let shortfall = false;
-    const storageProj = this.attributes.canUseSpaceStorage && projectManager?.projects?.spaceStorage;
-    const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
-    const storageState = storageProj
-      ? {
-          megaProjectResourceMode: storageProj.megaProjectResourceMode,
-          getAvailableStoredResource: (resourceKey) => {
-            const available = storageProj.getAvailableStoredResource(resourceKey);
-            return Math.max(0, available + getStoragePending(resourceKey));
-          },
-          spendStoredResource: (resourceKey, amount) => {
-            if (amount <= 0) {
-              return 0;
-            }
-            if (!accumulatedChanges) {
-              return storageProj.spendStoredResource(resourceKey, amount);
-            }
-            const available = Math.max(0, storageProj.getAvailableStoredResource(resourceKey) + getStoragePending(resourceKey));
-            const spent = Math.min(amount, available);
-            if (spent <= 0) {
-              return 0;
-            }
-            accumulatedChanges.spaceStorage ||= {};
-            if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
-              accumulatedChanges.spaceStorage[resourceKey] = 0;
-            }
-            accumulatedChanges.spaceStorage[resourceKey] -= spent;
-            return spent;
-          }
-        }
-      : null;
-    
-    for (const category in collectorCost) {
-      for (const resource in collectorCost[category]) {
-        const amount = collectorCost[category][resource] * fraction * productivity * gainScale;
-        const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-        const colonyAvailable = (resources[category]?.[resource]?.value || 0) + pending;
-        const key = resource === 'water' ? 'liquidWater' : resource;
-        const available = getMegaProjectResourceAvailability(storageState, key, colonyAvailable);
-        if (available < amount) {
-          shortfall = true;
-        }
-      }
+    const storageState = this.createExpansionStorageState(accumulatedChanges, { reconcileOnDirectSpend: true });
+    const collectorGain = this.getAffordableExpansionProgress(
+      requestedCollectorGain,
+      collectorCost,
+      storageState,
+      accumulatedChanges
+    );
+    let shortfall = collectorGain + 1e-9 < requestedCollectorGain;
+    if (!(collectorGain > 0)) {
+      this.collectorShortfallLastTick = shortfall;
+      return;
     }
+    const gainScale = collectorGain / desiredCollectorGain;
 
     // Deduct resources proportionally
     for (const category in collectorCost) {
@@ -412,22 +376,25 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
           const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
           const colonyAvailable = Math.max(resources[category][resource].value + pending, 0);
           const allocation = getMegaProjectResourceAllocation(storageState, key, amount, colonyAvailable);
-          if (allocation.fromColony > 0) {
+          let spentFromStorage = 0;
+          if (allocation.fromStorage > 0) {
+            spentFromStorage = storageState.spendStoredResource(key, allocation.fromStorage);
+          }
+          const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
+          const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
+          if (spendFromColony > 0) {
             if (accumulatedChanges) {
               if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
               if (accumulatedChanges[category][resource] === undefined) {
                 accumulatedChanges[category][resource] = 0;
               }
-              accumulatedChanges[category][resource] -= allocation.fromColony;
+              accumulatedChanges[category][resource] -= spendFromColony;
             } else {
-              resources[category][resource].decrease(allocation.fromColony);
+              resources[category][resource].decrease(spendFromColony);
             }
           }
-          if (allocation.fromStorage > 0) {
-            storageState.spendStoredResource(key, allocation.fromStorage);
-            if (!accumulatedChanges) {
-              storageProj.reconcileUsedStorage?.();
-            }
+          if (spentFromStorage + spendFromColony + 1e-9 < amount) {
+            shortfall = true;
           }
         } else {
           if (accumulatedChanges) {
@@ -454,8 +421,8 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
 
     this.collectorShortfallLastTick = shortfall;
     
-    if (storageProj && !accumulatedChanges && typeof updateSpaceStorageUI === 'function') {
-      updateSpaceStorageUI(storageProj);
+    if (storageState?.storageProject && !accumulatedChanges && typeof updateSpaceStorageUI === 'function') {
+      updateSpaceStorageUI(storageState.storageProject);
     }
   }
 
