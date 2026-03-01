@@ -103,6 +103,13 @@ class HazardManager {
       maintenanceCost: 1,
       populationGrowth: 1,
     };
+    this.hazardPenaltyEffectsApplied = false;
+    this.hazardPenaltyEffectModes = {
+      buildCost: false,
+      maintenance: false,
+      population: false,
+      garbage: false,
+    };
     this.crusaderTargetZone = 'any';
     this.hazardLandReservationShares = {
       hazardousBiomass: 0,
@@ -755,6 +762,51 @@ class HazardManager {
     return !!cleared[key];
   }
 
+  clearHazardPenaltyEffects(context = {}) {
+    const {
+      buildings = {},
+      colonies = {},
+      populationModule = null,
+    } = context;
+    const clear = (target) => {
+      if (target && target.removeEffect) {
+        target.removeEffect({ sourceId: 'hazardPenalties' });
+      }
+    };
+
+    Object.keys(buildings).forEach((id) => {
+      clear(buildings[id]);
+    });
+    Object.keys(colonies).forEach((id) => {
+      clear(colonies[id]);
+    });
+    clear(populationModule);
+
+    let nanotech = null;
+    try {
+      nanotech = nanotechManager;
+    } catch (error) {
+      nanotech = null;
+    }
+    clear(nanotech);
+
+    let scanner = null;
+    try {
+      scanner = oreScanner;
+    } catch (error) {
+      scanner = null;
+    }
+    clear(scanner);
+
+    let lifeModule = null;
+    try {
+      lifeModule = lifeManager;
+    } catch (error) {
+      lifeModule = null;
+    }
+    clear(lifeModule);
+  }
+
   applyHazardEffects(context = {}) {
     if (!context || !context.addEffect) {
       return;
@@ -772,80 +824,181 @@ class HazardManager {
     const buildCostMultiplier = penaltyMultipliers.buildCost;
     const maintenanceMultiplier = penaltyMultipliers.maintenanceCost;
     const populationMultiplier = penaltyMultipliers.populationGrowth;
+    const epsilon = 1e-12;
+    const isNeutralMultiplier = (value) => Math.abs((value || 1) - 1) <= epsilon;
+    const applyBuildCostPenalty = !isNeutralMultiplier(buildCostMultiplier);
+    const applyMaintenancePenalty = !isNeutralMultiplier(maintenanceMultiplier);
+    const applyPopulationPenalty = !!populationModule && !isNeutralMultiplier(populationMultiplier);
+    const garbageCanApply = !!(
+      this.garbageHazard &&
+      this.parameters.garbage &&
+      this.parameters.garbage.penalties &&
+      this.parameters.garbage.surfaceResources &&
+      !this.garbageHazard.permanentlyCleared
+    );
+    const previousModes = this.hazardPenaltyEffectModes || {
+      buildCost: false,
+      maintenance: false,
+      population: false,
+      garbage: false,
+    };
 
-    Object.keys(structures).forEach((id) => {
-      const structure = structures[id];
-      if (!structure || !structure.cost) {
-        return;
+    const noPenaltyChannelsActive = !applyBuildCostPenalty
+      && !applyMaintenancePenalty
+      && !applyPopulationPenalty
+      && !garbageCanApply;
+    if (noPenaltyChannelsActive) {
+      if (this.hazardPenaltyEffectsApplied) {
+        this.clearHazardPenaltyEffects(context);
+      }
+      if (this.garbageHazard) {
+        this.garbageHazard.androidAttritionRates = {};
+      }
+      this.hazardPenaltyEffectsApplied = false;
+      this.hazardPenaltyEffectModes = {
+        buildCost: false,
+        maintenance: false,
+        population: false,
+        garbage: false,
+      };
+      return;
+    }
+
+    const channelDisabledSinceLastTick =
+      (previousModes.buildCost && !applyBuildCostPenalty) ||
+      (previousModes.maintenance && !applyMaintenancePenalty) ||
+      (previousModes.population && !applyPopulationPenalty) ||
+      (previousModes.garbage && !garbageCanApply);
+    if (this.hazardPenaltyEffectsApplied && channelDisabledSinceLastTick) {
+      this.clearHazardPenaltyEffects(context);
+      this.hazardPenaltyEffectsApplied = false;
+    }
+
+    let appliedEffectCount = 0;
+    const applyTrackedEffect = (effect) => {
+      appliedEffectCount += 1;
+      applyEffect(effect);
+    };
+    const applyBasePenaltyEffects = () => {
+      if (applyBuildCostPenalty) {
+        Object.keys(structures).forEach((id) => {
+          const structure = structures[id];
+          if (!structure || !structure.cost) {
+            return;
+          }
+
+          const target = Object.prototype.hasOwnProperty.call(colonies, id)
+            ? 'colony'
+            : 'building';
+
+          Object.keys(structure.cost).forEach((category) => {
+            const categoryCosts = structure.cost[category];
+            if (!categoryCosts) {
+              return;
+            }
+
+            Object.keys(categoryCosts).forEach((resource) => {
+              applyTrackedEffect({
+                effectId: `hazardBuildCostPenalty-${category}-${resource}`,
+                target,
+                targetId: id,
+                type: 'resourceCostMultiplier',
+                resourceCategory: category,
+                resourceId: resource,
+                value: buildCostMultiplier,
+                sourceId: 'hazardPenalties',
+                name: 'Hazardous Biomass'
+              });
+            });
+          });
+        });
       }
 
-      const target = Object.prototype.hasOwnProperty.call(colonies, id)
-        ? 'colony'
-        : 'building';
+      if (applyMaintenancePenalty) {
+        Object.keys(buildings).forEach((id) => {
+          if (!buildings[id]) {
+            return;
+          }
 
-      Object.keys(structure.cost).forEach((category) => {
-        const categoryCosts = structure.cost[category];
-        if (!categoryCosts) {
-          return;
-        }
-
-        Object.keys(categoryCosts).forEach((resource) => {
-          applyEffect({
-            effectId: `hazardBuildCostPenalty-${category}-${resource}`,
-            target,
+          applyTrackedEffect({
+            effectId: 'hazardMaintenancePenalty',
+            target: 'building',
             targetId: id,
-            type: 'resourceCostMultiplier',
-            resourceCategory: category,
-            resourceId: resource,
-            value: buildCostMultiplier,
+            type: 'maintenanceMultiplier',
+            value: maintenanceMultiplier,
             sourceId: 'hazardPenalties',
             name: 'Hazardous Biomass'
           });
         });
-      });
-    });
 
-    Object.keys(buildings).forEach((id) => {
-      if (!buildings[id]) {
-        return;
+        Object.keys(colonies).forEach((id) => {
+          applyTrackedEffect({
+            effectId: 'hazardMaintenancePenalty',
+            target: 'colony',
+            targetId: id,
+            type: 'maintenanceMultiplier',
+            value: maintenanceMultiplier,
+            sourceId: 'hazardPenalties',
+            name: 'Hazardous Biomass'
+          });
+        });
       }
 
-      applyEffect({
-        effectId: 'hazardMaintenancePenalty',
-        target: 'building',
-        targetId: id,
-        type: 'maintenanceMultiplier',
-        value: maintenanceMultiplier,
-        sourceId: 'hazardPenalties',
-        name: 'Hazardous Biomass'
-      });
-    });
+      if (applyPopulationPenalty) {
+        applyTrackedEffect({
+          effectId: 'hazardPopulationPenalty',
+          target: 'population',
+          type: 'growthMultiplier',
+          value: populationMultiplier,
+          sourceId: 'hazardPenalties',
+        });
+      }
+    };
 
-    Object.keys(colonies).forEach((id) => {
-      applyEffect({
-        effectId: 'hazardMaintenancePenalty',
-        target: 'colony',
-        targetId: id,
-        type: 'maintenanceMultiplier',
-        value: maintenanceMultiplier,
-        sourceId: 'hazardPenalties',
-        name: 'Hazardous Biomass'
-      });
-    });
-
-    if (populationModule) {
-      applyEffect({
-        effectId: 'hazardPopulationPenalty',
-        target: 'population',
-        type: 'growthMultiplier',
-        value: populationMultiplier,
-        sourceId: 'hazardPenalties',
-      });
-    }
+    applyBasePenaltyEffects();
+    const hasBasePenaltyEffects = appliedEffectCount > 0;
+    let garbageApplied = false;
 
     if (this.garbageHazard && this.garbageHazard.applyEffects) {
-      this.garbageHazard.applyEffects({ addEffect: applyEffect, buildings, colonies }, this.parameters.garbage);
+      garbageApplied = this.garbageHazard.applyEffects(
+        { addEffect: applyTrackedEffect, buildings, colonies },
+        this.parameters.garbage
+      ) === true;
     }
+
+    if (
+      this.hazardPenaltyEffectsApplied &&
+      previousModes.garbage &&
+      !garbageApplied &&
+      hasBasePenaltyEffects
+    ) {
+      this.clearHazardPenaltyEffects(context);
+      this.hazardPenaltyEffectsApplied = false;
+      appliedEffectCount = 0;
+      applyBasePenaltyEffects();
+    }
+
+    if (appliedEffectCount <= 0) {
+      if (this.hazardPenaltyEffectsApplied) {
+        this.clearHazardPenaltyEffects(context);
+      }
+      this.hazardPenaltyEffectsApplied = false;
+      this.hazardPenaltyEffectModes = {
+        buildCost: false,
+        maintenance: false,
+        population: false,
+        garbage: false,
+      };
+      return;
+    }
+
+    this.hazardPenaltyEffectsApplied = true;
+    this.hazardPenaltyEffectModes = {
+      buildCost: applyBuildCostPenalty,
+      maintenance: applyMaintenancePenalty,
+      population: applyPopulationPenalty,
+      garbage: garbageApplied,
+    };
   }
 }
 

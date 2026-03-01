@@ -315,13 +315,13 @@ class GarbageHazard {
   applyEffects({ addEffect, buildings, colonies }, garbageParameters) {
     if (!garbageParameters || !garbageParameters.penalties || !garbageParameters.surfaceResources) {
       this.androidAttritionRates = {};
-      return;
+      return false;
     }
 
     if (this.permanentlyCleared) {
       this.androidAttritionRates = {};
       this.setAllCategoriesCleared(garbageParameters);
-      return;
+      return false;
     }
 
     let resourcesState = null;
@@ -334,10 +334,15 @@ class GarbageHazard {
     const resourcesObj = resourcesState && resourcesState.surface ? resourcesState : null;
     if (!resourcesObj) {
       this.androidAttritionRates = {};
-      return;
+      return false;
     }
 
     this.androidAttritionRates = {};
+    let appliedEffectCount = 0;
+    const addHazardEffect = (effect) => {
+      appliedEffectCount += 1;
+      addEffect(effect);
+    };
 
     let nanotech = null;
     try {
@@ -389,7 +394,7 @@ class GarbageHazard {
         const minMultiplier = Number.isFinite(penalties.sandHarvesterMultiplier) ? penalties.sandHarvesterMultiplier : 0.1;
         const productionMultiplier = 1 - garbageRatio * (1 - minMultiplier);
 
-        addEffect({
+        addHazardEffect({
           effectId: `garbageHazard-${garbageResourceKey}-sandHarvester`,
           target: 'building',
           targetId: 'sandQuarry',
@@ -406,7 +411,7 @@ class GarbageHazard {
         const minMultiplier = Number.isFinite(penalties.nanoColonyGrowthMultiplier) ? penalties.nanoColonyGrowthMultiplier : 0.1;
         const growthMultiplier = 1 - garbageRatio * (1 - minMultiplier);
 
-        addEffect({
+        addHazardEffect({
           effectId: `garbageHazard-${garbageResourceKey}-nanoColony`,
           target: 'nanotechManager',
           type: 'nanoColonyGrowthMultiplier',
@@ -421,7 +426,7 @@ class GarbageHazard {
         const happinessPenalty = garbageRatio * maxPenalty;
 
         Object.keys(colonies).forEach((colonyId) => {
-          addEffect({
+          addHazardEffect({
             effectId: `garbageHazard-${garbageResourceKey}-happiness-${colonyId}`,
             target: 'colony',
             targetId: colonyId,
@@ -437,7 +442,7 @@ class GarbageHazard {
         const minMultiplier = Number.isFinite(penalties.oreScanningSpeedMultiplier) ? penalties.oreScanningSpeedMultiplier : 0.1;
         const scanningMultiplier = 1 - garbageRatio * (1 - minMultiplier);
 
-        addEffect({
+        addHazardEffect({
           effectId: `garbageHazard-${garbageResourceKey}-oreScanning`,
           target: 'oreScanner',
           type: 'scanningSpeedMultiplier',
@@ -451,7 +456,7 @@ class GarbageHazard {
         const minMultiplier = Number.isFinite(penalties.lifeGrowthMultiplier) ? penalties.lifeGrowthMultiplier : 0.1;
         const lifeMultiplier = 1 - garbageRatio * (1 - minMultiplier);
 
-        addEffect({
+        addHazardEffect({
           effectId: `garbageHazard-${garbageResourceKey}-lifeGrowth`,
           target: 'lifeManager',
           type: 'lifeGrowthMultiplier',
@@ -473,6 +478,8 @@ class GarbageHazard {
     } else {
       this.clearedCategories = {};
     }
+
+    return appliedEffectCount > 0;
   }
 
   update(deltaSeconds) {
