@@ -64,7 +64,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.lastAtmospherePerSecond = 0;
     this.lastDysonEnergyPerSecond = 0;
     this.lastOutputRatesByRecipe = {};
+    this.lastDisplayedRatesByRecipe = {};
     this.lastProductivityByRecipe = {};
+    this.lastEnergyLimitedProductivityByRecipe = {};
 
     this.statusText = 'Idle';
     this.shortfallReason = '';
@@ -810,16 +812,14 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return productivities;
     }
 
-    const seconds = deltaTime / 1000;
-    if (!(seconds > 0)) {
-      return productivities;
-    }
-
-    const plan = this.planOperation(seconds, defaultProductivity, null);
-    plan.entries.forEach((entry) => {
-      productivities[entry.key] = entry.productivityRatio;
+    this.normalizeAssignments();
+    this.getAssignmentKeys().forEach((key) => {
+      const assigned = this.lifterAssignments[key] || 0;
+      if (!(assigned > 0)) {
+        return;
+      }
+      productivities[key] = this.getRecipeOperationProductivity(key, defaultProductivity);
     });
-
     return productivities;
   }
 
@@ -881,18 +881,25 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.lastHarvestPerSecond = 0;
     this.lastHydrogenPerSecond = 0;
     this.lastOutputRatesByRecipe = {};
+    this.lastDisplayedRatesByRecipe = {};
     this.lastProductivityByRecipe = {};
+    this.lastEnergyLimitedProductivityByRecipe = {};
 
     const outputRatesByRecipe = stats.outputRatesByRecipe || {};
+    const displayRatesByRecipe = stats.displayRatesByRecipe || outputRatesByRecipe;
     const productivityByRecipe = stats.productivityByRecipe || {};
+    const energyLimitedProductivityByRecipe = stats.energyLimitedProductivityByRecipe || productivityByRecipe;
     let bestHarvestRate = 0;
     let bestHarvestResource = this.lastHarvestResourceKey || 'hydrogen';
 
     this.getRecipeKeys().forEach((key) => {
       const recipe = this.getRecipe(key);
       const rate = outputRatesByRecipe[key] || 0;
+      const displayRate = displayRatesByRecipe[key] || 0;
       this.lastOutputRatesByRecipe[key] = rate;
+      this.lastDisplayedRatesByRecipe[key] = displayRate;
       this.lastProductivityByRecipe[key] = this.getRecipeOperationProductivity(key, productivityByRecipe);
+      this.lastEnergyLimitedProductivityByRecipe[key] = this.getRecipeOperationProductivity(key, energyLimitedProductivityByRecipe);
 
       if (recipe?.type !== LIFTER_RECIPE_TYPES.HARVEST) {
         return;
@@ -912,7 +919,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   getDisplayedRecipeProductivity(recipeKey) {
-    const value = this.lastProductivityByRecipe?.[recipeKey];
+    const value = this.lastEnergyLimitedProductivityByRecipe?.[recipeKey];
     if (Number.isFinite(value)) {
       return Math.max(0, Math.min(1, value));
     }
@@ -981,22 +988,54 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     const plan = this.planOperation(seconds, productivity, accumulatedChanges);
     const productivityByRecipe = {};
+    const displayRatesByRecipe = {};
+    const energyLimitedProductivityByRecipe = {};
     this.getRecipeKeys().forEach((key) => {
       productivityByRecipe[key] = 0;
+      displayRatesByRecipe[key] = 0;
+      energyLimitedProductivityByRecipe[key] = 0;
     });
     plan.entries.forEach((entry) => {
       productivityByRecipe[entry.key] = entry.productivityRatio;
     });
 
+    if (plan.entries.length > 0) {
+      const desiredTotalUnits = plan.entries.reduce((sum, entry) => sum + (entry.desiredUnits || 0), 0);
+      const desiredEnergy = desiredTotalUnits * this.energyPerUnit;
+      const energyAvailability = this.getEnergyAvailabilityForTick(deltaTime, accumulatedChanges);
+      const energyOnlyRatio = desiredEnergy > 0
+        ? Math.max(0, Math.min(1, energyAvailability.totalAvailable / desiredEnergy))
+        : 0;
+
+      plan.entries.forEach((entry) => {
+        const displayUnits = (entry.desiredUnits || 0) * energyOnlyRatio;
+        const displayRate = entry.recipe.type === LIFTER_RECIPE_TYPES.HARVEST
+          ? (displayUnits * entry.outputMultiplier) / seconds
+          : (displayUnits / seconds);
+        displayRatesByRecipe[entry.key] = displayRate;
+        energyLimitedProductivityByRecipe[entry.key] = entry.baseUnits > 0
+          ? Math.max(0, Math.min(1, displayUnits / entry.baseUnits))
+          : 1;
+      });
+    }
+
     if (plan.entries.length === 0) {
-      this.setLastTickStats({ productivityByRecipe });
+      this.setLastTickStats({
+        productivityByRecipe,
+        displayRatesByRecipe,
+        energyLimitedProductivityByRecipe,
+      });
       this.updateStatus('No assignments');
       this.shortfallLastTick = false;
       return;
     }
 
     if (!(plan.plannedTotalUnits > 0)) {
-      this.setLastTickStats({ productivityByRecipe });
+      this.setLastTickStats({
+        productivityByRecipe,
+        displayRatesByRecipe,
+        energyLimitedProductivityByRecipe,
+      });
       this.updateStatus(this.getBlockedStatusFromPlan(plan));
       this.shortfallLastTick = true;
       return;
@@ -1005,7 +1044,11 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     const requestedEnergy = plan.plannedTotalUnits * this.energyPerUnit;
     const energyResult = this.consumeEnergy(requestedEnergy, deltaTime, accumulatedChanges);
     if (!(energyResult.energyUsed > 0)) {
-      this.setLastTickStats({ productivityByRecipe });
+      this.setLastTickStats({
+        productivityByRecipe,
+        displayRatesByRecipe,
+        energyLimitedProductivityByRecipe,
+      });
       this.updateStatus(this.getBlockedStatusFromPlan(plan));
       this.shortfallLastTick = true;
       return;
@@ -1073,6 +1116,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       dysonPerSecond,
       outputRatesByRecipe,
       productivityByRecipe,
+      displayRatesByRecipe,
+      energyLimitedProductivityByRecipe,
     });
 
     if (processedUnits > 0) {

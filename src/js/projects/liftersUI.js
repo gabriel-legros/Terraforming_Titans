@@ -321,7 +321,7 @@ function updateLiftersUI(project) {
     row.minusButton.disabled = current <= 0 || project.autoAssignFlags[key];
     row.plusButton.disabled = current >= maxForKey || total <= 0 || project.autoAssignFlags[key];
 
-    const rate = project.lastOutputRatesByRecipe[key] || 0;
+    const rate = project.lastDisplayedRatesByRecipe?.[key] || 0;
     row.rate.textContent = formatPerSecond(rate);
     const productivity = project.getDisplayedRecipeProductivity(key);
     const productivityLimited = project.isRunning && current > 0 && productivity < 1;
