@@ -1739,17 +1739,32 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       const unstableTimer = resourceUICache.unstableTimers[resource.name] || 0;
       const rateUnstable = unstableTimer > 0;
       const liquidTarget = terraforming.liquidCoverageTargets.find((entry) => entry.coverageKey === resource.name);
-      if (liquidTarget && netRate > 0) {
+      if (liquidTarget) {
         const targetAmount = getLiquidCoverageTargetAmount(terraforming, liquidTarget.coverageTarget);
-        const remaining = targetAmount - resource.value;
         const label = resource.displayName || resource.name;
-        if (remaining > 0) {
-          const time = remaining / netRate;
-          timeDiv.textContent = `Time to ${label} terraforming target: ${formatDuration(Math.max(time, 0))}`;
-        } else {
+        const isAtMost = liquidTarget.comparison === 'atMost';
+        if (!isAtMost && netRate > 0) {
+          const remaining = targetAmount - resource.value;
+          if (remaining > 0) {
+            const time = remaining / netRate;
+            timeDiv.textContent = `Time to ${label} terraforming target: ${formatDuration(Math.max(time, 0))}`;
+          } else {
+            timeDiv.textContent = `${label} terraforming target reached.`;
+          }
+          showDefaultTime = false;
+        } else if (isAtMost && netRate < 0) {
+          const remaining = resource.value - targetAmount;
+          if (remaining > 0) {
+            const time = remaining / Math.abs(netRate);
+            timeDiv.textContent = `Time to ${label} terraforming target: ${formatDuration(Math.max(time, 0))}`;
+          } else {
+            timeDiv.textContent = `${label} terraforming target reached.`;
+          }
+          showDefaultTime = false;
+        } else if (isAtMost && resource.value <= targetAmount) {
           timeDiv.textContent = `${label} terraforming target reached.`;
+          showDefaultTime = false;
         }
-        showDefaultTime = false;
       }
       if (showDefaultTime && resource.category === 'atmospheric' && netRate > 0) {
         const target = terraforming.gasTargets[resource.name] || { min: 0, max: 0 };

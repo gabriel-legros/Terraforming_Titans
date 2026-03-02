@@ -495,6 +495,24 @@ const projectParameters = {
       ]
     }
   },
+  klishyWeb: {
+    type: 'Project',
+    name: 'Klishy web',
+    category: 'infrastructure',
+    cost: {
+      colony: {
+        glass: 1_000_000_000_000_000,
+        metal: 1_000_000_000_000_000,
+        components : 10_000_000_000_000,
+        superconductors : 10_000_000_000_000
+      }
+    },
+    duration: 300000,
+    description: 'Construct a massive web of Klishy-compatible copper wires and fibre optics, suitable for a new Klishy community.',
+    repeatable: false,
+    unlocked: false,
+    attributes: {}
+  },
   artificialSky: {
     type: 'ArtificialSkyProject',
     name: 'Artificial Sky',

@@ -98,7 +98,7 @@ var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
 const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage', kessler: 'Kessler Skies', pulsar: 'Pulsar' };
 const pulsarRwgTooltip = 'The pulsar hazard is generated but does not replace the star.  On rogue worlds, a special "Rogue Pulsar" star is added instead, with low solar flux at the planet.';
-const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', random: 'Random' };
+const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', klishy: 'Klishy', random: 'Random' };
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';

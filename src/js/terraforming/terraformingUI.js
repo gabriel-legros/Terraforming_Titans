@@ -1392,6 +1392,9 @@ function createWaterBox(row) {
       const pct = entry.coverageTarget * 100;
       const targetAmount = getWaterTargetAmount(terraformingState, entry.coverageTarget) || 0;
       const targetAmountText = formatNumber(targetAmount, false, 1);
+      if (entry.comparison === 'atMost') {
+        return `${label} coverage <= ${formatNumber(pct, false, 0)}% (${targetAmountText}).`;
+      }
       return `${label} coverage >= ${formatNumber(pct, false, 0)}% (${targetAmountText}).`;
     });
     return `Target : ${parts.join('<br>')}`;
@@ -1449,7 +1452,10 @@ function createWaterBox(row) {
     let allTargetsMet = true;
     for (const entry of terraforming.liquidCoverageTargets) {
       const current = calculateAverageCoverage(terraforming, entry.coverageKey) || 0;
-      if (current < entry.coverageTarget) {
+      const met = entry.comparison === 'atMost'
+        ? current <= entry.coverageTarget
+        : current >= entry.coverageTarget;
+      if (!met) {
         allTargetsMet = false;
         break;
       }
@@ -1655,6 +1661,24 @@ function updateLifeBox() {
     return penalty;
   }
 
+  function updateOtherRequirementStatuses(els) {
+    const container = els.otherRequirements;
+    if (!container) {
+      return;
+    }
+    const statuses = terraforming.getOtherRequirementStatuses ? terraforming.getOtherRequirementStatuses() : [];
+    container.textContent = '';
+    statuses.forEach((status) => {
+      const line = document.createElement('p');
+      line.classList.add('no-margin');
+      line.textContent = `${status.label}: ${status.passed ? '✓' : '✗'} ${status.targetText}`;
+      if (!status.passed) {
+        line.style.color = 'red';
+      }
+      container.appendChild(line);
+    });
+  }
+
   // Function to create the magnetosphere box, with conditional text based on boolean flag
   function createMagnetosphereBox(row) {
     const magnetosphereBox = document.createElement('div');
@@ -1719,6 +1743,7 @@ function updateLifeBox() {
         <p>Gravity: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
         <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>Equatorial gravity<span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
         <p id="gravity-penalty-row">Gravity penalty<span class="info-tooltip-icon" title="${GRAVITY_PENALTY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
+        <div id="others-extra-requirements"></div>
       `;
     if (!hasMagnetosphere && (radPenalty || 0) < 0.0001) {
       const penaltyRow = magnetosphereBox.querySelector('#radiation-penalty-row');
@@ -1746,8 +1771,10 @@ function updateLifeBox() {
       equatorialGravityRow: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-row'),
       equatorialGravityValue: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-value'),
       gravityPenaltyRow: magnetosphereBox.querySelector('#gravity-penalty-row'),
-      gravityPenaltyValue: magnetosphereBox.querySelector('#terraforming-gravity-penalty')
+      gravityPenaltyValue: magnetosphereBox.querySelector('#terraforming-gravity-penalty'),
+      otherRequirements: magnetosphereBox.querySelector('#others-extra-requirements')
     };
+    updateOtherRequirementStatuses(terraformingUICache.magnetosphere);
   }
 
   // Function to update the magnetosphere box with the latest values
@@ -1836,7 +1863,8 @@ function updateLifeBox() {
       }
     }
 
-    magnetosphereBox.style.borderColor = terraforming.getMagnetosphereStatus() ? 'green' : 'red';
+    updateOtherRequirementStatuses(els);
+    magnetosphereBox.style.borderColor = terraforming.getOthersStatus() ? 'green' : 'red';
   }
   
   function buildAlbedoTable() {

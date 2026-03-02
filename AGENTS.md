@@ -201,6 +201,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - New/expanded worlds and arcs include Umbra, Solis Prime, Tartarus/Gabbag placeholders, and Hades (airless pulsar world at 20 AU with placeholder chapters 33-35).
 - Terraforming completion rewards and travel-point systems were extended (including dominion-specific rewards).
 - Journal reconstruction and indexing were improved for story continuity.
+- Terraforming requirements now support `appliedEffects` (applied on load/travel like other effects) and per-liquid coverage comparisons (`atLeast`/`atMost`), and `Others` can include requirement-level checks such as project completion.
 
 ### Specialized Systems
 - Buildings moved toward dedicated subclass logic (e.g., GHG/Oxygen factories, Dyson receiver, biodome behavior).

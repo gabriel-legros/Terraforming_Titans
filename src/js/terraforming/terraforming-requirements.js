@@ -308,6 +308,93 @@ const terraformingRequirements = {
       },
     },
   },
+  klishy: {
+    id: 'klishy',
+    displayName: 'Klishy',
+    lore: [
+      'The Klishy are a silicon–metal dominion: an artificial lineage that became self-sustaining. They emerged on Klish like many other artificial lifeforms : manufactured—seeded into the world as servants with engineered replication.',
+      'Klish fell to Imperial invasion roughly two millennia before the Great Imperial Civil War. The invasion did not come for the Klishy; it came for their makers. Their work was condemned as illegal electronics, and the purge that followed destroyed much of the industrial base that maintained early Klishy populations.',
+      'The Empire debated for a long time whether the Klishy counted as machines or as life. It settled on “life”—docile, limited, and therefore tolerable—while still denying them expansion and offworld growth. Replication remained part of their design; suppressing it is not symbolic to the Klishy, it is an ongoing constraint on population and infrastructure planning.',
+      'Klishy bodies are robust at low temperatures and vulnerable to liquid water. Water bridges and shorts exposed conductors and creeps into microstructures; free oxygen builds insulating oxides and degrades interfaces. Their metabolism scavenges and refines silicon and metal, then spends significant energy on maintenance, sealing, and repair to keep electrical pathways within specification.',
+      'Klishy cognition is partially externalized. They inherited their creators’ cabling, conduits, and switching hardware and rebuilt it into a planetary mesh: copper runs, fiber-optic trunks, junction boxes, and repeaters. The Klishy Web provides low-latency communication and distributed thought; individual capability scales with local network density and uptime.',
+      'Outsiders call this a hive-mind and assume it implies uniformity. In practice, identity remains local while the Web supports shared sensor feeds, indexed “trace” archives, and consensus decision systems. A Klishy can operate alone, but without access to the Web they lose external memory and cooperative compute and become markedly less capable over time.'
+    ].join('\n\n'),
+    dominionUnlock: { type: 'fullyControlledSectors', minimum: 20 },
+    temperatureRangeK: { min: 218.15, max: 228.15 },
+    luminosityRange: { min: 0, max: 1_000_000_000 },
+    gasTargetsPa: {
+      oxygen: { min: 0, max: 100 },
+    },
+    liquidCoverageTargets: [
+      { liquidType: 'water', coverageTarget: 0.05, comparison: 'atMost' },
+    ],
+    lifeCoverageTarget: 0.5,
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    appliedEffects: [
+      { target: 'project', targetId: 'klishyWeb', type: 'enable' },
+    ],
+    otherRequirements: [
+      {
+        type: 'projectCompletion',
+        projectId: 'klishyWeb',
+        label: 'Klishy Web',
+        targetText: 'Complete Klishy Web project.',
+      },
+    ],
+    lifeDesign: {
+      survivalTemperatureRangeK: { min: 193.15, max: 263.15 },
+      optimalGrowthTemperatureBaseK: 223.15,
+      growthTemperatureToleranceBaseC: 1,
+      growthTemperatureTolerancePerPointC: 0.5,
+      photosynthesisRatePerPoint: 0.00005,
+      bioworkersPerBiomassPerPoint: 0.00004,
+      baseMaxBiomassDensityTPerM2: 0.1,
+      radiationToleranceThresholdPoints: 100,
+      minimumBiomassDecayRateTPerS: 1,
+      requiresLiquidWaterForGrowth: false,
+      metabolism: {
+        primaryProcessId: 'metallotrophy',
+        processes: {
+          metallotrophy: {
+            id: 'metallotrophy',
+            displayName: 'Metallotrophy',
+            growth: {
+              usesLuminosity: false,
+              perBiomass: {
+                surface: { biomass: 1 },
+                atmospheric: {},
+                colony: {
+                  metal: -0.7,
+                  silicon: -0.3,
+                  energy: -1000,
+                },
+              },
+            },
+            decay: {
+              allowSterileDecayWithoutOxygen: true,
+              perBiomass: {
+                surface: { biomass: -1 },
+                atmospheric: {},
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 100,
+        invasiveness: 50,
+        spaceEfficiency: 100,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+      },
+    },
+  },
 };
 
 function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {

@@ -78,6 +78,9 @@ const METABOLISM_EQUATION_SPECIES = {
   liquidWater: { key: 'h2o_liq', label: 'H₂O (l)' },
   liquidCO2: { key: 'co2_liq', label: 'CO₂ (l)' },
   biomass: { key: 'biomass', label: 'Biomass' },
+  metal: { key: 'metal', label: 'Metal' },
+  silicon: { key: 'silica', label: 'Silica' },
+  energy: { key: 'energy', label: 'Energy' },
 };
 
 function formatMetabolismCoefficient(value) {
@@ -96,7 +99,8 @@ function summarizeMetabolismGrowthMap(process) {
   const growth = process?.growth ?? null;
   const surface = growth?.perBiomass?.surface ?? {};
   const atmospheric = growth?.perBiomass?.atmospheric ?? {};
-  const combined = { ...surface, ...atmospheric };
+  const colony = growth?.perBiomass?.colony ?? {};
+  const combined = { ...surface, ...atmospheric, ...colony };
   const normalized = {};
 
   Object.entries(combined).forEach(([resourceKey, value]) => {
@@ -122,7 +126,7 @@ function formatMetabolismGrowthEquation(process, options = {}) {
   const left = [];
   const right = [];
 
-  const order = ['co2', 'co2_liq', 'h2', 'nh3', 'h2o_liq', 'h2o_atm', 'ch4', 'n2', 'o2', 'biomass'];
+  const order = ['co2', 'co2_liq', 'h2', 'nh3', 'h2o_liq', 'h2o_atm', 'ch4', 'n2', 'o2', 'metal', 'silica', 'energy', 'biomass'];
   const entries = order
     .filter(key => normalized[key])
     .map(key => [key, normalized[key]]);
@@ -560,6 +564,10 @@ class LifeDesign {
       if (!terraforming || !terraforming.zonalSurface) {
           console.error("Terraforming or resource data not available for moisture check in zone:", zoneName);
           return { pass: false, reason: "Data unavailable" };
+      }
+      const requirements = getActiveLifeDesignRequirements();
+      if (requirements.requiresLiquidWaterForGrowth === false) {
+          return { pass: true, reason: null };
       }
 
       const liquidWater = terraforming.zonalSurface[zoneName]?.liquidWater || 0;
@@ -1001,6 +1009,14 @@ class LifeManager extends EffectableEntity {
       const pending = accumulatedChanges ? (accumulatedChanges.atmospheric[resourceKey] || 0) : 0;
       return Math.max(0, resources.atmospheric[resourceKey].value + pending);
     };
+    const getColonyAvailable = (resourceKey) => {
+      const resource = resources.colony[resourceKey];
+      if (!resource) {
+        return 0;
+      }
+      const pending = accumulatedChanges ? (accumulatedChanges.colony[resourceKey] || 0) : 0;
+      return Math.max(0, resource.value + pending);
+    };
 
     const biomassByZone = {};
     const waterByZone = {};
@@ -1014,6 +1030,8 @@ class LifeManager extends EffectableEntity {
     const surfaceInputsPerBiomass = Object.entries(growthPerBiomass.surface || {})
       .filter(([, coef]) => coef < 0);
     const atmosphericInputsPerBiomass = Object.entries(growthPerBiomass.atmospheric || {})
+      .filter(([, coef]) => coef < 0);
+    const colonyInputsPerBiomass = Object.entries(growthPerBiomass.colony || {})
       .filter(([, coef]) => coef < 0);
 
     const biomassGrowthLimiters = {};
@@ -1135,7 +1153,26 @@ class LifeManager extends EffectableEntity {
       addBiomassGrowthLimiter(limitingAtmosphericKey, '', 'atmospheric');
     }
 
-    const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs));
+    let maxByColonyInputs = totalPotentialGrowth;
+    let limitingColonyKey = '';
+    let limitingColonyValue = totalPotentialGrowth;
+    colonyInputsPerBiomass.forEach(([resourceKey, coef]) => {
+      const requiredPerBiomass = -coef;
+      const available = getColonyAvailable(resourceKey);
+      if (requiredPerBiomass > 0) {
+        const maxGrowth = available / requiredPerBiomass;
+        maxByColonyInputs = Math.min(maxByColonyInputs, maxGrowth);
+        if (maxGrowth < limitingColonyValue) {
+          limitingColonyValue = maxGrowth;
+          limitingColonyKey = resourceKey;
+        }
+      }
+    });
+    if (limitingColonyKey && maxByColonyInputs < totalPotentialGrowth) {
+      addBiomassGrowthLimiter(limitingColonyKey, '', 'colony');
+    }
+
+    const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs, maxByColonyInputs));
     const zoneGrowthByZone = {};
     zones.forEach(zoneName => {
       zoneGrowthByZone[zoneName] = 0;
@@ -1192,6 +1229,7 @@ class LifeManager extends EffectableEntity {
     });
 
     const growthAtmosphericDeltas = {};
+    const growthColonyDeltas = {};
     const growthSurfaceDeltasByZone = {};
     zones.forEach(zoneName => {
       growthSurfaceDeltasByZone[zoneName] = {};
@@ -1212,6 +1250,10 @@ class LifeManager extends EffectableEntity {
       Object.entries(growthPerBiomass.atmospheric || {}).forEach(([resourceKey, coef]) => {
         growthAtmosphericDeltas[resourceKey] =
           (growthAtmosphericDeltas[resourceKey] || 0) + zoneGrowth * coef;
+      });
+      Object.entries(growthPerBiomass.colony || {}).forEach(([resourceKey, coef]) => {
+        growthColonyDeltas[resourceKey] =
+          (growthColonyDeltas[resourceKey] || 0) + zoneGrowth * coef;
       });
     });
 
@@ -1323,6 +1365,7 @@ class LifeManager extends EffectableEntity {
       decaySurfaceDeltasByZone,
       decayTargetsByZone,
       growthAtmosphericDeltas,
+      growthColonyDeltas,
       decayAtmosphericDeltas,
     };
   }
@@ -1407,6 +1450,7 @@ class LifeManager extends EffectableEntity {
       decaySurfaceDeltasByZone,
       decayTargetsByZone,
       growthAtmosphericDeltas,
+      growthColonyDeltas,
       decayAtmosphericDeltas,
     } = plan;
 
@@ -1453,6 +1497,16 @@ class LifeManager extends EffectableEntity {
         accumulatedChanges.atmospheric[resourceKey] += delta;
       } else {
         resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
+      }
+    });
+
+    Object.entries(growthColonyDeltas).forEach(([resourceKey, delta]) => {
+      if (!delta || !resources.colony[resourceKey]) return;
+      resources.colony[resourceKey].modifyRate(delta / secondsMultiplier, growthReason, 'life');
+      if (accumulatedChanges) {
+        accumulatedChanges.colony[resourceKey] += delta;
+      } else {
+        resources.colony[resourceKey].value = Math.max(0, resources.colony[resourceKey].value + delta);
       }
     });
 

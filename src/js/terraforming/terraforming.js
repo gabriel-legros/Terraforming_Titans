@@ -111,9 +111,17 @@ function buildLiquidCoverageTargets(requirements) {
     const coverageKey = LIQUID_COVERAGE_KEYS[liquidType] || LIQUID_COVERAGE_KEYS[fallbackLiquidType] || 'liquidWater';
     const rawTarget = Number.isFinite(entry.coverageTarget) ? entry.coverageTarget : fallbackTarget;
     const coverageTarget = Math.max(0, Math.min(rawTarget, 1));
-    targets.push({ liquidType, coverageKey, coverageTarget });
+    const comparison = entry.comparison === 'atMost' ? 'atMost' : 'atLeast';
+    targets.push({ liquidType, coverageKey, coverageTarget, comparison });
   }
   return targets;
+}
+
+function isLiquidCoverageTargetMet(entry, currentCoverage) {
+  if (entry.comparison === 'atMost') {
+    return currentCoverage <= entry.coverageTarget;
+  }
+  return currentCoverage >= entry.coverageTarget;
 }
 
 function buildZonalSurfaceResourceConfigs() {
@@ -357,6 +365,7 @@ class Terraforming extends EffectableEntity{
       || defaultTerraformingRequirementId;
     this.requirements = resolveTerraformingRequirement(this.requirementId);
     this.gasTargets = this.requirements.gasTargetsPa;
+    this.applyRequirementEffects();
 
     this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
 
@@ -556,7 +565,8 @@ class Terraforming extends EffectableEntity{
 
   getWaterStatus() {
     for (const entry of this.liquidCoverageTargets) {
-      if ((calculateAverageCoverage(this, entry.coverageKey) || 0) < entry.coverageTarget) {
+      const currentCoverage = calculateAverageCoverage(this, entry.coverageKey) || 0;
+      if (!isLiquidCoverageTargetMet(entry, currentCoverage)) {
         return false;
       }
     }
@@ -590,6 +600,57 @@ class Terraforming extends EffectableEntity{
     return true;
   }
 
+  getOtherRequirementStatuses() {
+    const statuses = [];
+    const list = this.requirements.otherRequirements || [];
+    for (let index = 0; index < list.length; index += 1) {
+      const requirement = list[index];
+      if (!requirement || !requirement.type) {
+        continue;
+      }
+      if (requirement.type === 'projectCompletion') {
+        const projectId = requirement.projectId;
+        const project = projectManager && projectManager.projects ? projectManager.projects[projectId] : null;
+        const label = requirement.label || project?.displayName || projectId || 'Project';
+        const complete = !!(project && project.isCompleted);
+        statuses.push({
+          key: `project:${projectId}`,
+          label,
+          passed: complete,
+          targetText: requirement.targetText || `Complete ${label}.`,
+          currentText: complete ? 'Completed' : 'Not completed'
+        });
+        continue;
+      }
+      if (requirement.type === 'fullyControlledSectors') {
+        const required = Math.max(0, requirement.minimum || 0);
+        const controlled = galaxyManager?.getUhfControlledSectors?.()?.length || 0;
+        statuses.push({
+          key: 'sectors',
+          label: requirement.label || 'Controlled Sectors',
+          passed: controlled >= required,
+          targetText: requirement.targetText || `Reach ${required} fully controlled sectors.`,
+          currentText: `${controlled}/${required}`
+        });
+      }
+    }
+    return statuses;
+  }
+
+  getOtherRequirementsStatus() {
+    const statuses = this.getOtherRequirementStatuses();
+    for (let i = 0; i < statuses.length; i += 1) {
+      if (!statuses[i].passed) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  getOthersStatus() {
+    return this.getMagnetosphereStatus() && this.getOtherRequirementsStatus();
+  }
+
   getTerraformingStatus() {
     return (
       this.getTemperatureStatus() &&
@@ -598,8 +659,23 @@ class Terraforming extends EffectableEntity{
       this.getLuminosityStatus() &&
       this.getLifeStatus() &&
       this.getHazardClearanceStatus() &&
-      this.getMagnetosphereStatus()
+      this.getOthersStatus()
     );
+  }
+
+  applyRequirementEffects() {
+    const effects = this.requirements.appliedEffects || [];
+    for (let index = 0; index < effects.length; index += 1) {
+      const baseEffect = effects[index];
+      if (!baseEffect || !baseEffect.type || !baseEffect.target) {
+        continue;
+      }
+      addEffect({
+        ...baseEffect,
+        effectId: baseEffect.effectId || `terraforming-requirement-${this.requirementId}-${index}`,
+        sourceId: baseEffect.sourceId || `terraforming-requirement-${this.requirementId}`
+      });
+    }
   }
 
 
