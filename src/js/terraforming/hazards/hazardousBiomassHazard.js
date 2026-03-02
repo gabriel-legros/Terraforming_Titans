@@ -457,6 +457,9 @@ class HazardousBiomassHazard {
           if (!targetResource || !targetResource.modifyRate) {
             return;
           }
+          const decayDelta = naturalDecayDelta * ratio;
+          const currentValue = Number.isFinite(targetResource.value) ? targetResource.value : 0;
+          targetResource.value = Math.max(0, currentValue + decayDelta);
           targetResource.modifyRate(decayRate * ratio, 'Hazard Decay', 'terraforming');
         });
       }
