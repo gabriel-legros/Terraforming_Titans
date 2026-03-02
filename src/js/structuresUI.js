@@ -2427,7 +2427,7 @@ function updateDecreaseButtonText(button, buildCount) {
           }
           const resObj = resources?.[category]?.[resource];
           const displayName = resObj?.displayName || resource;
-          const text = `${formatNumber(amount, true, 2)} ${displayName}`;
+          const text = `${formatNumber(amount, false, 2)} ${displayName}`;
           const textSpan = span._textSpan || span;
           if (textSpan.textContent !== text) {
             textSpan.textContent = text;
