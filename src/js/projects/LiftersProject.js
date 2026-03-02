@@ -701,6 +701,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       desiredTotalUnits: 0,
       limitedTotalUnits: 0,
       plannedTotalUnits: 0,
+      desiredAssignedLifters: 0,
+      limitedAssignedLifters: 0,
       hasHarvestAssignments: false,
       hasStripAssignments: false,
       energyNeeded: 0,
@@ -728,6 +730,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     entries.forEach((entry) => {
       plan.desiredTotalUnits += entry.desiredUnits;
+      plan.desiredAssignedLifters += entry.assigned * (entry.requestedProductivity || 0);
       if (entry.recipe.type === LIFTER_RECIPE_TYPES.STRIP) {
         plan.hasStripAssignments = true;
         const limited = Math.min(entry.desiredUnits, atmosphereAvailable);
@@ -772,6 +775,14 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     plan.limitedTotalUnits = entries.reduce((sum, entry) => sum + entry.limitedUnits, 0);
+    plan.limitedAssignedLifters = entries.reduce((sum, entry) => {
+      if (!(entry.desiredUnits > 0)) {
+        return sum;
+      }
+      const utilization = Math.max(0, Math.min(1, entry.limitedUnits / entry.desiredUnits));
+      const assignedAtRecipeProductivity = entry.assigned * (entry.requestedProductivity || 0);
+      return sum + (assignedAtRecipeProductivity * utilization);
+    }, 0);
     if (!(plan.limitedTotalUnits > 0)) {
       entries.forEach((entry) => {
         entry.productivityRatio = entry.baseUnits > 0 ? 0 : 1;
@@ -780,7 +791,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     plan.energyAvailability = this.getEnergyAvailabilityForTick(seconds * 1000, accumulatedChanges);
-    plan.energyNeeded = plan.limitedTotalUnits * this.energyPerUnit;
+    plan.energyNeeded = plan.limitedAssignedLifters * this.energyPerUnit * seconds;
     if (plan.energyNeeded > 0) {
       plan.energyRatio = Math.max(0, Math.min(1, plan.energyAvailability.totalAvailable / plan.energyNeeded));
       if (plan.energyRatio < 1) {
@@ -1000,8 +1011,10 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     });
 
     if (plan.entries.length > 0) {
-      const desiredTotalUnits = plan.entries.reduce((sum, entry) => sum + (entry.desiredUnits || 0), 0);
-      const desiredEnergy = desiredTotalUnits * this.energyPerUnit;
+      const desiredAssignedLifters = plan.entries.reduce((sum, entry) => {
+        return sum + (entry.assigned * (entry.requestedProductivity || 0));
+      }, 0);
+      const desiredEnergy = desiredAssignedLifters * this.energyPerUnit * seconds;
       const energyAvailability = this.getEnergyAvailabilityForTick(deltaTime, accumulatedChanges);
       const energyOnlyRatio = desiredEnergy > 0
         ? Math.max(0, Math.min(1, energyAvailability.totalAvailable / desiredEnergy))
@@ -1041,7 +1054,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return;
     }
 
-    const requestedEnergy = plan.plannedTotalUnits * this.energyPerUnit;
+    const requestedEnergy = plan.energyNeeded;
     const energyResult = this.consumeEnergy(requestedEnergy, deltaTime, accumulatedChanges);
     if (!(energyResult.energyUsed > 0)) {
       this.setLastTickStats({
@@ -1098,7 +1111,10 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       }
     });
 
-    const actualEnergy = processedUnits * this.energyPerUnit;
+    const outputRealizationRatio = plan.plannedTotalUnits > 0
+      ? Math.max(0, Math.min(1, processedUnits / plan.plannedTotalUnits))
+      : 0;
+    const actualEnergy = energyResult.energyUsed * outputRealizationRatio;
     if (actualEnergy < energyResult.energyUsed) {
       this.adjustEnergyUsage(energyResult, energyResult.energyUsed - actualEnergy, accumulatedChanges);
     }
@@ -1218,7 +1234,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return totals;
     }
 
-    const totalEnergy = plan.plannedTotalUnits * this.energyPerUnit;
+    const totalEnergy = plan.energyNeeded * plan.energyRatio;
     if (!(totalEnergy > 0) || !this.isColonyEnergyAllowed()) {
       return totals;
     }

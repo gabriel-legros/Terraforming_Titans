@@ -746,28 +746,28 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       canUseSpaceStorage: true,
-      lifterUnitRate: 10_000_000,
-      lifterEnergyPerUnit: 10_000_000,
+      lifterUnitRate: 500_000_000,
+      lifterEnergyPerUnit: 500_000_000,
       spaceBuilding: true,
       lifterHarvestRecipes: {
         hydrogen: {
           label: 'Hydrogen',
           storageKey: 'hydrogen',
-          outputMultiplier: 50,
+          outputMultiplier: 1,
           complexity: 1
         },
         methane: {
           label: 'Methane',
           storageKey: 'atmosphericMethane',
-          outputMultiplier: 0.01,
-          complexity: 1,
+          outputMultiplier: 1,
+          complexity: 100,
           requiresProjectFlag: 'methaneAmmoniaLifting'
         },
         ammonia: {
           label: 'Ammonia',
           storageKey: 'atmosphericAmmonia',
-          outputMultiplier: 0.01,
-          complexity: 1,
+          outputMultiplier: 1,
+          complexity: 100,
           requiresProjectFlag: 'methaneAmmoniaLifting'
         }
       },

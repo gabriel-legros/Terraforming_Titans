@@ -73,7 +73,7 @@ function renderLiftersUI(project, container) {
 
   const energyRateStat = buildStat('Energy Use');
   energyRateStat.labelEl.appendChild(
-    createInfoIcon('Each processed lifter unit consumes energy. Dyson overflow is consumed first, then colony energy if allowed.'),
+    createInfoIcon('Each assigned lifter consumes energy while running. Dyson overflow is consumed first, then colony energy if allowed.'),
   );
   controlsGrid.appendChild(energyRateStat.wrapper);
 
