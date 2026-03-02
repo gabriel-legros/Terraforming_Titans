@@ -17,6 +17,7 @@ const RESEARCH_UPGRADE_ORDER = [
   'terraforming_bureau',
   'atmospheric_monitoring'
 ];
+const SOLIS_MAX_REWARD_MULTIPLIER = 100;
 
 class SolisManager extends EffectableEntity {
   constructor(resourceValues = {}) {
@@ -121,6 +122,27 @@ class SolisManager extends EffectableEntity {
     return this.rewardMultiplier * this.getTerraformedWorldBonus();
   }
 
+  clampRewardMultiplier(multiplier) {
+    return Math.min(SOLIS_MAX_REWARD_MULTIPLIER, Math.max(1, Math.floor(multiplier)));
+  }
+
+  getQuestBaseQuantityForMultiplier(quest) {
+    if (!quest) return 0;
+    const resourceValue = this.resourceValues[quest.resource];
+    if (!(quest.value > 0) || !(resourceValue > 0)) return 0;
+    return Math.max(0, Math.round(quest.value / resourceValue));
+  }
+
+  normalizeCurrentQuestQuantity() {
+    if (!this.currentQuest) return;
+    const baseQuantity = this.getQuestBaseQuantityForMultiplier(this.currentQuest);
+    if (!(baseQuantity > 0)) {
+      this.currentQuest = null;
+      return;
+    }
+    this.currentQuest.quantity = baseQuantity * Math.pow(10, this.rewardMultiplier - 1);
+  }
+
   availableResources() {
     const list = [];
     for (const name in this.resourceValues) {
@@ -200,7 +222,7 @@ class SolisManager extends EffectableEntity {
 
   applyMultiplier(multiplier, baseQuantity) {
     const qty = Math.max(0, baseQuantity);
-    this.rewardMultiplier = Math.max(1, Math.floor(multiplier));
+    this.rewardMultiplier = this.clampRewardMultiplier(multiplier);
     if (this.currentQuest && qty > 0) {
       this.currentQuest.quantity = qty * Math.pow(10, this.rewardMultiplier - 1);
     }
@@ -225,7 +247,7 @@ class SolisManager extends EffectableEntity {
     }
     let multiplier = 1;
     let required = baseQuantity;
-    while (required * 10 <= available) {
+    while (multiplier < SOLIS_MAX_REWARD_MULTIPLIER && required * 10 <= available) {
       multiplier += 1;
       required *= 10;
     }
@@ -678,8 +700,9 @@ class SolisManager extends EffectableEntity {
 
   loadState(data) {
     this.solisPoints = data.solisPoints || 0;
-    this.rewardMultiplier = data.rewardMultiplier || 1;
+    this.rewardMultiplier = this.clampRewardMultiplier(data.rewardMultiplier || 1);
     this.currentQuest = data.currentQuest;
+    this.normalizeCurrentQuestQuantity();
     this.lastQuestTime = data.lastQuestTime || 0;
     this.lastRefreshTime = data.lastRefreshTime || 0;
     this.postCompletionCooldownUntil = data.postCompletionCooldownUntil || 0;
