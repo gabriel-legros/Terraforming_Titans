@@ -740,7 +740,7 @@ const projectParameters = {
       }
     },
     duration: 300_000,
-    description: 'Assemble space-rated lifting platforms that either siphon hydrogen into space storage or peel away the local atmosphere, using inefficient energy beams.  Persists between worlds, duration scales with terraformed worlds, and taps unused Dyson power.',
+    description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds, and taps unused Dyson power.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -753,18 +753,21 @@ const projectParameters = {
         hydrogen: {
           label: 'Hydrogen',
           storageKey: 'hydrogen',
-          outputMultiplier: 50
+          outputMultiplier: 50,
+          complexity: 1
         },
         methane: {
           label: 'Methane',
           storageKey: 'atmosphericMethane',
           outputMultiplier: 0.01,
+          complexity: 1,
           requiresProjectFlag: 'methaneAmmoniaLifting'
         },
         ammonia: {
           label: 'Ammonia',
           storageKey: 'atmosphericAmmonia',
           outputMultiplier: 0.01,
+          complexity: 1,
           requiresProjectFlag: 'methaneAmmoniaLifting'
         }
       },

@@ -3,11 +3,19 @@ const LIFTER_MODES = {
   ATMOSPHERE_STRIP: 'stripAtmosphere',
 };
 
-const DEFAULT_LIFTER_RECIPES = {
+const LIFTER_RECIPE_TYPES = {
+  HARVEST: 'harvest',
+  STRIP: 'strip',
+};
+
+const LIFTER_STRIP_RECIPE_KEY = 'stripAtmosphere';
+
+const DEFAULT_LIFTER_HARVEST_RECIPES = {
   hydrogen: {
     label: 'Hydrogen',
     storageKey: 'hydrogen',
-    outputMultiplier: 1,
+    outputMultiplier: 50,
+    complexity: 1,
   },
 };
 
@@ -35,10 +43,18 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     super(config, name);
     this.unitRatePerLifter = this.attributes.lifterUnitRate || 1_000_000;
     this.energyPerUnit = this.attributes.lifterEnergyPerUnit || 10_000_000;
-    this.harvestRecipes = this.attributes?.lifterHarvestRecipes || DEFAULT_LIFTER_RECIPES;
+    this.harvestRecipes = this.attributes?.lifterHarvestRecipes || DEFAULT_LIFTER_HARVEST_RECIPES;
+    this.lifterRecipes = this.buildLifterRecipes();
+
     this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
     this.pendingHarvestRecipeKey = '';
     this.mode = LIFTER_MODES.GAS_HARVEST;
+
+    this.lifterAssignments = {};
+    this.assignmentStep = 1;
+    this.autoAssignFlags = {};
+    this.autoAssignWeights = {};
+
     this.isRunning = false;
     this.lastUnitsPerSecond = 0;
     this.lastEnergyPerSecond = 0;
@@ -47,7 +63,11 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.lastHydrogenPerSecond = 0;
     this.lastAtmospherePerSecond = 0;
     this.lastDysonEnergyPerSecond = 0;
+    this.lastOutputRatesByRecipe = {};
+    this.lastProductivityByRecipe = {};
+
     this.statusText = 'Idle';
+    this.shortfallReason = '';
     this.shortfallLastTick = false;
     this.costShortfallLastTick = false;
     this.expansionShortfallLastTick = false;
@@ -60,30 +80,54 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return this.getDurationWithTerraformBonus(this.duration);
   }
 
+  buildLifterRecipes() {
+    const recipes = {
+      [LIFTER_STRIP_RECIPE_KEY]: {
+        label: 'Strip Atmosphere',
+        type: LIFTER_RECIPE_TYPES.STRIP,
+        complexity: 1,
+      },
+    };
+
+    const harvestKeys = Object.keys(this.harvestRecipes || {});
+    harvestKeys.forEach((key) => {
+      const source = this.harvestRecipes[key] || {};
+      recipes[key] = {
+        label: source.label || key,
+        type: LIFTER_RECIPE_TYPES.HARVEST,
+        storageKey: source.storageKey || key,
+        outputMultiplier: Number.isFinite(source.outputMultiplier) ? source.outputMultiplier : 1,
+        complexity: Number.isFinite(source.complexity) && source.complexity > 0 ? source.complexity : 1,
+        requiresProjectFlag: source.requiresProjectFlag || null,
+      };
+    });
+
+    return recipes;
+  }
+
+  getRecipeKeys() {
+    return Object.keys(this.lifterRecipes || {});
+  }
+
+  getRecipe(key) {
+    return this.lifterRecipes[key] || null;
+  }
+
+  getHarvestRecipeKeys() {
+    return this.getRecipeKeys().filter((key) => key !== LIFTER_STRIP_RECIPE_KEY);
+  }
+
   isAtmosphereStripDisabled() {
     return this.isBooleanFlagSet('disableAtmosphereStripMode');
   }
 
-  normalizeModeForFlags() {
-    if (this.isAtmosphereStripDisabled() && this.mode === LIFTER_MODES.ATMOSPHERE_STRIP) {
-      this.mode = LIFTER_MODES.GAS_HARVEST;
-      return true;
+  isRecipeAvailable(key, recipe = null) {
+    if (key === LIFTER_STRIP_RECIPE_KEY) {
+      return !this.isAtmosphereStripDisabled();
     }
-    return false;
-  }
-
-  getModeOptions() {
-    const options = [
-      { value: LIFTER_MODES.GAS_HARVEST, label: 'Gas Giant Harvest' },
-    ];
-    if (!this.isAtmosphereStripDisabled()) {
-      options.push({ value: LIFTER_MODES.ATMOSPHERE_STRIP, label: 'Atmosphere Strip' });
-    }
-    return options;
-  }
-
-  getHarvestRecipeKeys() {
-    return Object.keys(this.harvestRecipes || {});
+    const resolved = recipe || this.getRecipe(key);
+    const requiredFlag = resolved?.requiresProjectFlag;
+    return !requiredFlag || this.isBooleanFlagSet(requiredFlag);
   }
 
   isHarvestRecipeAvailable(recipe) {
@@ -91,8 +135,16 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return !requiredFlag || this.isBooleanFlagSet(requiredFlag);
   }
 
+  getAvailableRecipeKeys() {
+    return this.getRecipeKeys().filter((key) => this.isRecipeAvailable(key));
+  }
+
   getAvailableHarvestRecipeKeys() {
-    return this.getHarvestRecipeKeys().filter((key) => this.isHarvestRecipeAvailable(this.harvestRecipes[key]));
+    return this.getHarvestRecipeKeys().filter((key) => this.isRecipeAvailable(key));
+  }
+
+  getAssignmentKeys() {
+    return this.getAvailableRecipeKeys();
   }
 
   getDefaultHarvestRecipeKey() {
@@ -110,41 +162,76 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (this.harvestRecipeKey !== nextKey) {
       this.harvestRecipeKey = nextKey;
     }
-    return this.harvestRecipes[nextKey] || DEFAULT_LIFTER_RECIPES.hydrogen;
+    return this.getRecipe(nextKey) || DEFAULT_LIFTER_HARVEST_RECIPES.hydrogen;
   }
 
   getHarvestOptions() {
     return this.getAvailableHarvestRecipeKeys().map((key) => {
-      const recipe = this.harvestRecipes[key];
+      const recipe = this.getRecipe(key);
       return { value: key, label: recipe?.label || key };
     });
   }
 
-  getCapacityPerLifter() {
-    const recipe = this.getHarvestRecipe();
-    const multiplier = recipe.outputMultiplier || 1;
-    return this.mode === LIFTER_MODES.GAS_HARVEST
-      ? this.unitRatePerLifter * multiplier
-      : this.unitRatePerLifter;
+  normalizeModeForFlags() {
+    if (this.isAtmosphereStripDisabled() && this.mode === LIFTER_MODES.ATMOSPHERE_STRIP) {
+      this.mode = LIFTER_MODES.GAS_HARVEST;
+      return true;
+    }
+    return false;
   }
 
-  getCapacityLabel() {
-    if (this.mode === LIFTER_MODES.GAS_HARVEST) {
-      const recipe = this.getHarvestRecipe();
-      const label = recipe.label || 'Harvest';
-      return `${label} / Lifter:`;
+  resolveLegacyRecipeKey(mode = LIFTER_MODES.GAS_HARVEST, harvestRecipeKey = this.harvestRecipeKey) {
+    if (mode === LIFTER_MODES.ATMOSPHERE_STRIP && !this.isAtmosphereStripDisabled()) {
+      return LIFTER_STRIP_RECIPE_KEY;
     }
-    return 'Atmosphere / Lifter:';
+    const availableHarvest = this.getAvailableHarvestRecipeKeys();
+    if (availableHarvest.includes(harvestRecipeKey)) {
+      return harvestRecipeKey;
+    }
+    return this.getDefaultHarvestRecipeKey();
+  }
+
+  applyLegacySingleRecipeConfiguration(mode = LIFTER_MODES.GAS_HARVEST, harvestRecipeKey = this.harvestRecipeKey, useAutoAssign = false) {
+    const targetKey = this.resolveLegacyRecipeKey(mode, harvestRecipeKey);
+    this.getRecipeKeys().forEach((key) => {
+      this.lifterAssignments[key] = 0;
+      this.autoAssignFlags[key] = false;
+      if (!(this.autoAssignWeights[key] > 0)) {
+        this.autoAssignWeights[key] = 1;
+      }
+    });
+    if (targetKey) {
+      if (useAutoAssign) {
+        this.autoAssignFlags[targetKey] = true;
+      } else {
+        this.lifterAssignments[targetKey] = this.repeatCount;
+      }
+    }
+    this.normalizeAssignments();
+  }
+
+  setMode(value) {
+    const next = value === LIFTER_MODES.ATMOSPHERE_STRIP && !this.isAtmosphereStripDisabled()
+      ? LIFTER_MODES.ATMOSPHERE_STRIP
+      : LIFTER_MODES.GAS_HARVEST;
+    if (this.mode === next) {
+      return;
+    }
+    this.mode = next;
+    this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, false);
+    this.updateUI();
   }
 
   setHarvestRecipe(value) {
     const available = this.getAvailableHarvestRecipeKeys();
     const next = available.includes(value) ? value : this.getDefaultHarvestRecipeKey();
-    if (this.harvestRecipeKey !== next) {
-      this.harvestRecipeKey = next;
-      this.pendingHarvestRecipeKey = '';
-      this.updateUI();
+    if (this.harvestRecipeKey === next) {
+      return;
     }
+    this.harvestRecipeKey = next;
+    this.pendingHarvestRecipeKey = '';
+    this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, false);
+    this.updateUI();
   }
 
   applyPendingHarvestRecipe() {
@@ -160,87 +247,196 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.harvestRecipeKey = pendingKey;
   }
 
-  getUnitsPerSecond(productivity = 1) {
-    return this.repeatCount * this.unitRatePerLifter * productivity;
+  getRecipeComplexity(recipe) {
+    const parsed = Number(recipe?.complexity);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+    return 1;
   }
 
-  getOperationProductivityForTick(defaultProductivity = 1, deltaTime = 1000) {
-    if (!this.shouldOperate()) {
-      return Math.max(0, Math.min(1, defaultProductivity));
+  getRecipeOutputMultiplier(recipe) {
+    if (recipe?.type !== LIFTER_RECIPE_TYPES.HARVEST) {
+      return 1;
     }
-
-    const seconds = deltaTime / 1000;
-    if (!(seconds > 0)) {
-      return Math.max(0, Math.min(1, defaultProductivity));
+    const parsed = Number(recipe.outputMultiplier);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
     }
+    return 1;
+  }
 
-    const maxUnits = this.getUnitsPerSecond(1) * seconds;
-    if (!(maxUnits > 0)) {
-      return 0;
+  getRecipeOperationProductivity(key, productivity = 1) {
+    const clamp = (value) => Math.max(0, Math.min(1, value));
+    if (Number.isFinite(productivity)) {
+      return clamp(productivity);
     }
+    const byRecipe = productivity?.[key];
+    if (Number.isFinite(byRecipe)) {
+      return clamp(byRecipe);
+    }
+    return 1;
+  }
 
-    let modeRatio = 1;
-    let energyDemandUnits = maxUnits;
-    if (this.mode === LIFTER_MODES.ATMOSPHERE_STRIP) {
-      const previousShortfallReason = this.shortfallReason;
-      const atmosphereLimit = this.getAtmosphereLimit();
-      this.shortfallReason = previousShortfallReason;
-      if (!(atmosphereLimit > 0)) {
-        return 0;
+  normalizeAssignments() {
+    const allKeys = this.getRecipeKeys();
+    const availableKeys = this.getAssignmentKeys();
+    const total = this.repeatCount;
+
+    allKeys.forEach((key) => {
+      this.lifterAssignments[key] = Math.max(0, Math.floor(this.lifterAssignments[key] || 0));
+      this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
+      const weight = Number(this.autoAssignWeights[key]);
+      this.autoAssignWeights[key] = Number.isFinite(weight) && weight > 0 ? weight : 1;
+    });
+
+    let usedManual = 0;
+    availableKeys.forEach((key) => {
+      if (!this.autoAssignFlags[key]) {
+        usedManual += this.lifterAssignments[key] || 0;
       }
-      const limitedUnits = Math.min(maxUnits, atmosphereLimit);
-      modeRatio = Math.max(0, Math.min(1, limitedUnits / maxUnits));
-      energyDemandUnits = limitedUnits;
-    }
-    if (!(energyDemandUnits > 0)) {
-      return 0;
+    });
+
+    const autoKeys = availableKeys.filter((key) => this.autoAssignFlags[key]);
+    const remaining = Math.max(0, total - usedManual);
+
+    if (autoKeys.length > 0) {
+      let totalWeight = 0;
+      autoKeys.forEach((key) => {
+        totalWeight += this.autoAssignWeights[key];
+      });
+
+      if (totalWeight <= 0) {
+        autoKeys.forEach((key) => {
+          this.lifterAssignments[key] = 0;
+        });
+      } else {
+        const remainders = [];
+        let assigned = 0;
+        autoKeys.forEach((key) => {
+          const exact = remaining * (this.autoAssignWeights[key] / totalWeight);
+          const floorValue = Math.floor(exact);
+          this.lifterAssignments[key] = floorValue;
+          assigned += floorValue;
+          remainders.push({ key, value: exact - floorValue });
+        });
+        let leftover = remaining - assigned;
+        remainders.sort((left, right) => right.value - left.value);
+        for (let i = 0; i < remainders.length && leftover > 0; i += 1) {
+          this.lifterAssignments[remainders[i].key] += 1;
+          leftover -= 1;
+        }
+      }
     }
 
-    const energyRequired = energyDemandUnits * this.energyPerUnit;
-    const dysonAvailable = this.getDysonOverflowPerSecond() * seconds;
-    const colonyAvailable = this.isColonyEnergyAllowed()
-      ? Math.max(resources?.colony?.energy?.value || 0, 0)
-      : 0;
-    const totalAvailable = dysonAvailable + colonyAvailable;
-    const energyRatio = energyRequired > 0
-      ? Math.max(0, Math.min(1, totalAvailable / energyRequired))
-      : 1;
+    let assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0), 0);
+    if (assignedTotal > total) {
+      let excess = assignedTotal - total;
+      for (let i = availableKeys.length - 1; i >= 0 && excess > 0; i -= 1) {
+        const key = availableKeys[i];
+        const current = this.lifterAssignments[key] || 0;
+        const reduction = Math.min(current, excess);
+        this.lifterAssignments[key] = current - reduction;
+        excess -= reduction;
+      }
+      assignedTotal = availableKeys.reduce((sum, key) => sum + (this.lifterAssignments[key] || 0), 0);
+    }
+  }
 
-    const operationRatio = this.mode === LIFTER_MODES.ATMOSPHERE_STRIP
-      ? modeRatio * energyRatio
-      : energyRatio;
-    return Math.max(0, Math.min(1, operationRatio));
+  getAssignedTotal() {
+    this.normalizeAssignments();
+    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.lifterAssignments[key] || 0), 0);
+  }
+
+  getAvailableLifters() {
+    return Math.max(0, this.repeatCount - this.getAssignedTotal());
+  }
+
+  setAssignmentStep(step) {
+    const next = Math.min(1_000_000_000_000_000, Math.max(1, Math.round(step)));
+    this.assignmentStep = next;
+  }
+
+  setAutoAssignTarget(key, enabled) {
+    this.autoAssignFlags[key] = enabled === true;
+    this.normalizeAssignments();
+    this.updateUI();
+  }
+
+  adjustAssignment(key, delta) {
+    if (this.autoAssignFlags[key]) {
+      return;
+    }
+    this.normalizeAssignments();
+    const keys = this.getAssignmentKeys();
+    const total = this.repeatCount;
+    const current = this.lifterAssignments[key] || 0;
+    const usedOther = keys.reduce((sum, otherKey) => {
+      if (otherKey === key) {
+        return sum;
+      }
+      if (this.autoAssignFlags[otherKey]) {
+        return sum;
+      }
+      return sum + (this.lifterAssignments[otherKey] || 0);
+    }, 0);
+    const maxForKey = Math.max(0, total - usedOther);
+    this.lifterAssignments[key] = Math.min(maxForKey, Math.max(0, current + delta));
+    this.normalizeAssignments();
+    this.updateUI();
+  }
+
+  clearAssignment(key) {
+    if (this.autoAssignFlags[key]) {
+      return;
+    }
+    this.lifterAssignments[key] = 0;
+    this.normalizeAssignments();
+    this.updateUI();
+  }
+
+  maximizeAssignment(key) {
+    if (this.autoAssignFlags[key]) {
+      return;
+    }
+    this.normalizeAssignments();
+    const keys = this.getAssignmentKeys();
+    const total = this.repeatCount;
+    const usedOther = keys.reduce((sum, otherKey) => {
+      if (otherKey === key) {
+        return sum;
+      }
+      if (this.autoAssignFlags[otherKey]) {
+        return sum;
+      }
+      return sum + (this.lifterAssignments[otherKey] || 0);
+    }, 0);
+    this.lifterAssignments[key] = Math.max(0, total - usedOther);
+    this.normalizeAssignments();
+    this.updateUI();
   }
 
   shouldOperate() {
     if (this.isPermanentlyDisabled?.()) {
       return false;
     }
-    if (this.mode === LIFTER_MODES.ATMOSPHERE_STRIP && this.isAtmosphereStripDisabled()) {
+    if (!this.isRunning || this.repeatCount <= 0) {
       return false;
     }
-    return this.isRunning && this.repeatCount > 0;
-  }
-
-  setMode(value) {
-    const next = value === LIFTER_MODES.ATMOSPHERE_STRIP && !this.isAtmosphereStripDisabled()
-      ? LIFTER_MODES.ATMOSPHERE_STRIP
-      : LIFTER_MODES.GAS_HARVEST;
-    if (this.mode !== next) {
-      this.mode = next;
-      this.updateUI();
-    }
+    return this.getAssignedTotal() > 0;
   }
 
   setRunning(shouldRun) {
     const next = shouldRun === true;
-    if (this.isRunning !== next) {
-      this.isRunning = next;
-      if (!next) {
-        this.setLastTickStats();
-      }
-      this.updateUI();
+    if (this.isRunning === next) {
+      return;
     }
+    this.isRunning = next;
+    if (!next) {
+      this.setLastTickStats({});
+      this.updateStatus('Run disabled');
+    }
+    this.updateUI();
   }
 
   getSpaceStorageProject() {
@@ -251,115 +447,136 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return dysonManagerInstance?.getOverflowEnergyPerSecond?.() || 0;
   }
 
-  getGasModeCapacityLimit() {
-    const storage = this.getSpaceStorageProject();
-    storage?.reconcileUsedStorage();
-    const freeSpace = Math.max((storage?.maxStorage || 0) - (storage?.usedStorage || 0), 0);
-    if (freeSpace <= 0) {
-      this.shortfallReason = storage ? 'Space storage is full' : 'Build space storage';
-      return 0;
-    }
-    const recipe = this.getHarvestRecipe();
-    const stored = storage?.getStoredResourceValue?.(recipe.storageKey) || 0;
-    const capLimit = storage?.getResourceCapLimit?.(recipe.storageKey) ?? Infinity;
-    const capRemaining = Math.max(0, capLimit - stored);
-    if (capRemaining <= 0) {
-      this.shortfallReason = 'Storage cap reached';
-      return 0;
-    }
-    return Math.min(freeSpace, capRemaining);
+  getSpaceStoragePendingDelta(accumulatedChanges, resourceKey) {
+    return accumulatedChanges?.spaceStorage?.[resourceKey] || 0;
   }
 
-  getAtmosphereLimit() {
-    const gases = this.getAtmosphericResources();
-    if (!gases.length) {
-      this.shortfallReason = 'No atmosphere to strip';
-      return 0;
-    }
-    return gases.reduce((sum, gas) => sum + gas.value, 0);
+  getStoredResourceValueForTick(storage, resourceKey, accumulatedChanges = null) {
+    const pending = this.getSpaceStoragePendingDelta(accumulatedChanges, resourceKey);
+    return Math.max(0, storage.getStoredResourceValue(resourceKey) + pending);
   }
 
-  getAtmosphericResources() {
+  getUsedStorageForTick(storage, accumulatedChanges = null) {
+    storage.reconcileUsedStorage?.();
+    const base = Math.max(0, storage.usedStorage || 0);
+    if (!accumulatedChanges || !accumulatedChanges.spaceStorage) {
+      return base;
+    }
+    let delta = 0;
+    for (const resourceKey in accumulatedChanges.spaceStorage) {
+      delta += accumulatedChanges.spaceStorage[resourceKey] || 0;
+    }
+    return Math.max(0, base + delta);
+  }
+
+  getAvailableStorageSpaceForTick(storage, accumulatedChanges = null) {
+    const used = this.getUsedStorageForTick(storage, accumulatedChanges);
+    return Math.max(0, (storage.maxStorage || 0) - used);
+  }
+
+  applySpaceStorageDeltaForTick(resourceKey, delta, accumulatedChanges = null) {
+    if (!(delta !== 0)) {
+      return;
+    }
+    if (accumulatedChanges) {
+      accumulatedChanges.spaceStorage ||= {};
+      if (accumulatedChanges.spaceStorage[resourceKey] === undefined) {
+        accumulatedChanges.spaceStorage[resourceKey] = 0;
+      }
+      accumulatedChanges.spaceStorage[resourceKey] += delta;
+      return;
+    }
+    resources.spaceStorage[resourceKey].value += delta;
+  }
+
+  getAtmosphericResources(accumulatedChanges = null) {
     const atmospheric = resources?.atmospheric;
     if (!atmospheric) {
       return [];
     }
     return Object.keys(atmospheric)
-      .map((key) => ({
-        key,
-        ref: atmospheric[key],
-        value: atmospheric[key]?.value || 0,
-      }))
+      .map((key) => {
+        const base = atmospheric[key]?.value || 0;
+        const pending = accumulatedChanges?.atmospheric?.[key] || 0;
+        return {
+          key,
+          ref: atmospheric[key],
+          value: Math.max(0, base + pending),
+        };
+      })
       .filter((entry) => entry.value > 0);
   }
 
-  getModeLimit(maxUnits) {
-    if (this.mode === LIFTER_MODES.ATMOSPHERE_STRIP) {
-      const limit = this.getAtmosphereLimit();
-      return Math.min(maxUnits, limit);
-    }
-    const limit = this.getGasModeCapacityLimit();
-    const recipe = this.getHarvestRecipe();
-    const multiplier = recipe.outputMultiplier || 1;
-    const adjustedLimit = multiplier > 0 ? limit / multiplier : 0;
-    return Math.min(maxUnits, adjustedLimit);
-  }
-
-  storeHarvestedResource(resourceKey, amount) {
-    if (!Number.isFinite(amount) || amount <= 0) {
+  getAtmosphereTotal(accumulatedChanges = null) {
+    const gases = this.getAtmosphericResources(accumulatedChanges);
+    if (!gases.length) {
       return 0;
     }
-    const storage = this.getSpaceStorageProject();
-    storage?.reconcileUsedStorage();
-    const freeSpace = Math.max((storage?.maxStorage || 0) - (storage?.usedStorage || 0), 0);
-    const existing = storage?.getStoredResourceValue?.(resourceKey) || 0;
-    const capLimit = storage?.getResourceCapLimit?.(resourceKey) ?? Infinity;
-    const capRemaining = Math.max(0, capLimit - existing);
-    const availableSpace = Math.min(freeSpace, capRemaining);
-    const stored = Math.min(amount, availableSpace);
-    this.shortfallReason = stored > 0
-      ? ''
-      : (!storage
-        ? 'Build space storage'
-        : (capRemaining <= 0 ? 'Storage cap reached' : 'Space storage is full'));
-    if (!Number.isFinite(stored) || stored <= 0) {
-      return 0;
-    }
-    storage.addStoredResource?.(resourceKey, stored);
-    storage.reconcileUsedStorage?.();
-    if (typeof updateSpaceStorageUI === 'function') {
-      updateSpaceStorageUI(storage);
-    }
-    return stored;
+    return gases.reduce((sum, gas) => sum + gas.value, 0);
   }
 
   removeAtmosphere(amount, accumulatedChanges, seconds) {
-    if (amount <= 0) {
+    if (!(amount > 0)) {
       return 0;
     }
-    const gases = this.getAtmosphericResources();
+    const gases = this.getAtmosphericResources(accumulatedChanges);
     const total = gases.reduce((sum, gas) => sum + gas.value, 0);
-    if (total <= 0) {
-      this.shortfallReason = 'No atmosphere to strip';
+    if (!(total > 0)) {
       return 0;
     }
-    let remaining = amount;
-    const perSecond = seconds > 0 ? amount / seconds : 0;
+
+    const limitedAmount = Math.min(amount, total);
+    let remaining = limitedAmount;
+
     gases.forEach((gas, index) => {
-      const proportion = gas.value / total;
-      let removed = amount * proportion;
+      const proportion = total > 0 ? gas.value / total : 0;
+      let removed = limitedAmount * proportion;
       if (index === gases.length - 1) {
         removed = Math.min(removed, remaining);
       }
       remaining -= removed;
-      if (accumulatedChanges && accumulatedChanges.atmospheric) {
+
+      if (accumulatedChanges) {
+        accumulatedChanges.atmospheric ||= {};
+        if (accumulatedChanges.atmospheric[gas.key] === undefined) {
+          accumulatedChanges.atmospheric[gas.key] = 0;
+        }
         accumulatedChanges.atmospheric[gas.key] -= removed;
       } else if (gas.ref) {
         gas.ref.value = Math.max(0, gas.ref.value - removed);
       }
-      gas.ref?.modifyRate?.(-(removed > 0 && seconds > 0 ? removed / seconds : 0), 'Lifting', 'project');
+
+      gas.ref?.modifyRate?.(
+        -(removed > 0 && seconds > 0 ? removed / seconds : 0),
+        'Lifting',
+        'project'
+      );
     });
-    return amount - Math.max(remaining, 0);
+
+    return limitedAmount - Math.max(remaining, 0);
+  }
+
+  getEnergyAvailabilityForTick(deltaTime = 1000, accumulatedChanges = null) {
+    const seconds = deltaTime / 1000;
+    const colonyEnergy = resources?.colony?.energy;
+    const pendingColony = accumulatedChanges?.colony?.energy || 0;
+    const canUseColonyEnergy = this.isColonyEnergyAllowed();
+    const colonyAvailable = (!canUseColonyEnergy || !colonyEnergy)
+      ? 0
+      : Math.max((colonyEnergy.value || 0) + pendingColony, 0);
+
+    const hasDysonPool = accumulatedChanges?.dysonSpaceEnergyInjected;
+    const dysonAvailable = hasDysonPool
+      ? Math.max(accumulatedChanges?.space?.energy || 0, 0)
+      : Math.max(this.getDysonOverflowPerSecond() * seconds, 0);
+
+    return {
+      colonyAvailable,
+      dysonAvailable,
+      totalAvailable: colonyAvailable + dysonAvailable,
+      hasDysonPool,
+      seconds,
+    };
   }
 
   consumeEnergy(energyRequired, deltaTime, accumulatedChanges) {
@@ -372,27 +589,19 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         dysonAvailable: this.getDysonOverflowPerSecond() * seconds,
       };
     }
-    const colonyEnergy = resources?.colony?.energy;
-    const pending = accumulatedChanges?.colony?.energy || 0;
-    const canUseColonyEnergy = this.isColonyEnergyAllowed();
-    const availableColony = (!canUseColonyEnergy || !colonyEnergy)
-      ? 0
-      : Math.max((colonyEnergy.value || 0) + pending, 0);
-    const poolAvailable = accumulatedChanges?.dysonSpaceEnergyInjected
-      ? Math.max(accumulatedChanges?.space?.energy || 0, 0)
-      : null;
-    const dysonAvailable = poolAvailable !== null
-      ? poolAvailable
-      : this.getDysonOverflowPerSecond() * seconds;
-    const totalAvailable = availableColony + dysonAvailable;
-    const energyUsed = Math.min(energyRequired, totalAvailable);
-    const dysonEnergyUsed = Math.min(energyUsed, dysonAvailable);
-    const colonyUsed = Math.min(Math.max(energyUsed - dysonEnergyUsed, 0), availableColony);
+
+    const availability = this.getEnergyAvailabilityForTick(deltaTime, accumulatedChanges);
+    const energyUsed = Math.min(energyRequired, availability.totalAvailable);
+    const dysonEnergyUsed = Math.min(energyUsed, availability.dysonAvailable);
+    const colonyUsed = Math.min(Math.max(energyUsed - dysonEnergyUsed, 0), availability.colonyAvailable);
     const totalUsed = colonyUsed + dysonEnergyUsed;
-    if (accumulatedChanges?.dysonSpaceEnergyInjected) {
+
+    if (availability.hasDysonPool) {
       accumulatedChanges.space ||= {};
       accumulatedChanges.space.energy = Math.max((accumulatedChanges.space.energy || 0) - dysonEnergyUsed, 0);
     }
+
+    const colonyEnergy = resources?.colony?.energy;
     if (colonyUsed > 0 && colonyEnergy) {
       if (accumulatedChanges) {
         accumulatedChanges.colony ||= {};
@@ -403,7 +612,13 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         colonyEnergy.value = Math.max(0, (colonyEnergy.value || 0) - colonyUsed);
       }
     }
-    return { energyUsed: totalUsed, colonyUsed, dysonEnergyUsed, dysonAvailable };
+
+    return {
+      energyUsed: totalUsed,
+      colonyUsed,
+      dysonEnergyUsed,
+      dysonAvailable: availability.dysonAvailable,
+    };
   }
 
   refundColonyEnergy(amount, accumulatedChanges) {
@@ -422,7 +637,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   adjustEnergyUsage(result, refund, accumulatedChanges) {
-    if (refund <= 0) {
+    if (!(refund > 0)) {
       return;
     }
     let remaining = refund;
@@ -439,21 +654,273 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     result.energyUsed = result.colonyUsed + result.dysonEnergyUsed;
   }
 
-  setLastTickStats(units = 0, energy = 0, harvest = 0, atmosphere = 0, dyson = 0, harvestKey = null) {
-    this.lastUnitsPerSecond = units;
-    this.lastEnergyPerSecond = energy;
-    this.lastHarvestPerSecond = harvest;
-    const resolvedKey = harvestKey || this.lastHarvestResourceKey || 'hydrogen';
-    this.lastHarvestResourceKey = resolvedKey;
-    this.lastHydrogenPerSecond = resolvedKey === 'hydrogen' ? harvest : 0;
-    this.lastAtmospherePerSecond = atmosphere;
-    this.lastDysonEnergyPerSecond = dyson;
+  buildOperationEntries(seconds, productivity = 1) {
+    this.normalizeAssignments();
+    const entries = [];
+
+    this.getAssignmentKeys().forEach((key) => {
+      const recipe = this.getRecipe(key);
+      const assigned = this.lifterAssignments[key] || 0;
+      if (!(assigned > 0) || !recipe) {
+        return;
+      }
+      const complexity = this.getRecipeComplexity(recipe);
+      const productivityRatio = this.getRecipeOperationProductivity(key, productivity);
+      const unitsPerSecond = (assigned / complexity) * this.unitRatePerLifter;
+      const baseUnits = unitsPerSecond * seconds;
+      const desiredUnits = baseUnits * productivityRatio;
+
+      entries.push({
+        key,
+        recipe,
+        assigned,
+        complexity,
+        baseUnits,
+        requestedProductivity: productivityRatio,
+        outputMultiplier: this.getRecipeOutputMultiplier(recipe),
+        desiredUnits,
+        limitedUnits: 0,
+        finalUnits: 0,
+        finalOutput: 0,
+        productivityRatio: 0,
+      });
+    });
+
+    return entries;
+  }
+
+  planOperation(seconds, productivity = 1, accumulatedChanges = null) {
+    const entries = this.buildOperationEntries(seconds, productivity);
+    const storage = this.getSpaceStorageProject();
+    const atmosphereAvailable = this.getAtmosphereTotal(accumulatedChanges);
+
+    const plan = {
+      entries,
+      desiredTotalUnits: 0,
+      limitedTotalUnits: 0,
+      plannedTotalUnits: 0,
+      hasHarvestAssignments: false,
+      hasStripAssignments: false,
+      energyNeeded: 0,
+      energyRatio: 1,
+      storageRatio: 1,
+      energyAvailability: {
+        colonyAvailable: 0,
+        dysonAvailable: 0,
+        totalAvailable: 0,
+      },
+      reasons: {
+        noStorage: false,
+        storageLimited: false,
+        capLimited: false,
+        atmosphereLimited: false,
+        energyLimited: false,
+      },
+    };
+
+    if (entries.length === 0) {
+      return plan;
+    }
+
+    let harvestOutputTotal = 0;
+
+    entries.forEach((entry) => {
+      plan.desiredTotalUnits += entry.desiredUnits;
+      if (entry.recipe.type === LIFTER_RECIPE_TYPES.STRIP) {
+        plan.hasStripAssignments = true;
+        const limited = Math.min(entry.desiredUnits, atmosphereAvailable);
+        if (limited < entry.desiredUnits) {
+          plan.reasons.atmosphereLimited = true;
+        }
+        entry.limitedUnits = Math.max(0, limited);
+        return;
+      }
+
+      plan.hasHarvestAssignments = true;
+      if (!storage) {
+        entry.limitedUnits = 0;
+        plan.reasons.noStorage = true;
+        return;
+      }
+
+      const stored = this.getStoredResourceValueForTick(storage, entry.recipe.storageKey, accumulatedChanges);
+      const capLimit = storage.getResourceCapLimit(entry.recipe.storageKey);
+      const capRemaining = Math.max(0, capLimit - stored);
+      const capUnits = entry.outputMultiplier > 0 ? capRemaining / entry.outputMultiplier : 0;
+      const limited = Math.min(entry.desiredUnits, capUnits);
+      if (limited < entry.desiredUnits) {
+        plan.reasons.capLimited = true;
+      }
+      entry.limitedUnits = Math.max(0, limited);
+      harvestOutputTotal += entry.limitedUnits * entry.outputMultiplier;
+    });
+
+    if (plan.hasHarvestAssignments && storage) {
+      const freeSpace = this.getAvailableStorageSpaceForTick(storage, accumulatedChanges);
+      if (harvestOutputTotal > 0 && freeSpace < harvestOutputTotal) {
+        const ratio = freeSpace > 0 ? freeSpace / harvestOutputTotal : 0;
+        plan.storageRatio = Math.max(0, Math.min(1, ratio));
+        plan.reasons.storageLimited = true;
+        entries.forEach((entry) => {
+          if (entry.recipe.type === LIFTER_RECIPE_TYPES.HARVEST) {
+            entry.limitedUnits *= plan.storageRatio;
+          }
+        });
+      }
+    }
+
+    plan.limitedTotalUnits = entries.reduce((sum, entry) => sum + entry.limitedUnits, 0);
+    if (!(plan.limitedTotalUnits > 0)) {
+      entries.forEach((entry) => {
+        entry.productivityRatio = entry.baseUnits > 0 ? 0 : 1;
+      });
+      return plan;
+    }
+
+    plan.energyAvailability = this.getEnergyAvailabilityForTick(seconds * 1000, accumulatedChanges);
+    plan.energyNeeded = plan.limitedTotalUnits * this.energyPerUnit;
+    if (plan.energyNeeded > 0) {
+      plan.energyRatio = Math.max(0, Math.min(1, plan.energyAvailability.totalAvailable / plan.energyNeeded));
+      if (plan.energyRatio < 1) {
+        plan.reasons.energyLimited = true;
+      }
+    }
+
+    entries.forEach((entry) => {
+      entry.finalUnits = entry.limitedUnits * plan.energyRatio;
+      entry.finalOutput = entry.recipe.type === LIFTER_RECIPE_TYPES.HARVEST
+        ? entry.finalUnits * entry.outputMultiplier
+        : entry.finalUnits;
+      entry.productivityRatio = entry.baseUnits > 0
+        ? Math.max(0, Math.min(1, entry.finalUnits / entry.baseUnits))
+        : 1;
+    });
+
+    plan.plannedTotalUnits = entries.reduce((sum, entry) => sum + entry.finalUnits, 0);
+    return plan;
+  }
+
+  getOperationProductivityForTick(defaultProductivity = 1, deltaTime = 1000) {
+    const productivities = {};
+    this.getRecipeKeys().forEach((key) => {
+      productivities[key] = 0;
+    });
+
+    if (!this.shouldOperate()) {
+      return productivities;
+    }
+
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return productivities;
+    }
+
+    const plan = this.planOperation(seconds, defaultProductivity, null);
+    plan.entries.forEach((entry) => {
+      productivities[entry.key] = entry.productivityRatio;
+    });
+
+    return productivities;
+  }
+
+  storeHarvestedResourceForTick(storage, resourceKey, amount, accumulatedChanges = null) {
+    if (!(amount > 0) || !storage) {
+      return 0;
+    }
+
+    const freeSpace = this.getAvailableStorageSpaceForTick(storage, accumulatedChanges);
+    const existing = this.getStoredResourceValueForTick(storage, resourceKey, accumulatedChanges);
+    const capLimit = storage.getResourceCapLimit(resourceKey);
+    const capRemaining = Math.max(0, capLimit - existing);
+    const availableSpace = Math.min(freeSpace, capRemaining);
+    const stored = Math.min(amount, availableSpace);
+
+    if (!(stored > 0)) {
+      return 0;
+    }
+
+    this.applySpaceStorageDeltaForTick(resourceKey, stored, accumulatedChanges);
+    if (!accumulatedChanges) {
+      storage.reconcileUsedStorage?.();
+      if (typeof updateSpaceStorageUI === 'function') {
+        updateSpaceStorageUI(storage);
+      }
+    }
+
+    return stored;
+  }
+
+  getBlockedStatusFromPlan(plan) {
+    if (plan.reasons.noStorage) {
+      return 'Build space storage';
+    }
+    if (plan.reasons.storageLimited) {
+      return 'Space storage is full';
+    }
+    if (plan.reasons.capLimited) {
+      return 'Storage cap reached';
+    }
+    if (plan.hasStripAssignments && this.getAtmosphereTotal() <= 0) {
+      return 'No atmosphere to strip';
+    }
+    if (plan.reasons.energyLimited) {
+      return 'Insufficient energy';
+    }
+    if (plan.entries.length === 0) {
+      return 'No assignments';
+    }
+    return 'Idle';
+  }
+
+  setLastTickStats(stats = {}) {
+    this.lastUnitsPerSecond = stats.totalUnitsPerSecond || 0;
+    this.lastEnergyPerSecond = stats.energyPerSecond || 0;
+    this.lastAtmospherePerSecond = stats.atmospherePerSecond || 0;
+    this.lastDysonEnergyPerSecond = stats.dysonPerSecond || 0;
+
+    this.lastHarvestPerSecond = 0;
+    this.lastHydrogenPerSecond = 0;
+    this.lastOutputRatesByRecipe = {};
+    this.lastProductivityByRecipe = {};
+
+    const outputRatesByRecipe = stats.outputRatesByRecipe || {};
+    const productivityByRecipe = stats.productivityByRecipe || {};
+    let bestHarvestRate = 0;
+    let bestHarvestResource = this.lastHarvestResourceKey || 'hydrogen';
+
+    this.getRecipeKeys().forEach((key) => {
+      const recipe = this.getRecipe(key);
+      const rate = outputRatesByRecipe[key] || 0;
+      this.lastOutputRatesByRecipe[key] = rate;
+      this.lastProductivityByRecipe[key] = this.getRecipeOperationProductivity(key, productivityByRecipe);
+
+      if (recipe?.type !== LIFTER_RECIPE_TYPES.HARVEST) {
+        return;
+      }
+
+      this.lastHarvestPerSecond += rate;
+      if (recipe.storageKey === 'hydrogen') {
+        this.lastHydrogenPerSecond = rate;
+      }
+      if (rate > bestHarvestRate) {
+        bestHarvestRate = rate;
+        bestHarvestResource = recipe.storageKey || bestHarvestResource;
+      }
+    });
+
+    this.lastHarvestResourceKey = bestHarvestResource;
+  }
+
+  getDisplayedRecipeProductivity(recipeKey) {
+    const value = this.lastProductivityByRecipe?.[recipeKey];
+    if (Number.isFinite(value)) {
+      return Math.max(0, Math.min(1, value));
+    }
+    return 1;
   }
 
   updateStatus(text) {
     this.statusText = text || 'Idle';
-    const operationShortfall = Boolean(text && text !== 'Running' && text !== 'Idle');
-    this.shortfallLastTick = this.expansionShortfallLastTick || operationShortfall;
   }
 
   start(resources) {
@@ -464,7 +931,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     this.costShortfallLastTick = false;
-    if(!this.autoStart){
+    if (!this.autoStart) {
       return;
     }
     this.expansionShortfallLastTick = false;
@@ -492,93 +959,101 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.shouldOperate()) {
-      this.setLastTickStats();
+      this.setLastTickStats({});
       if (!this.repeatCount) {
         this.updateStatus('Complete at least one lifter');
       } else if (!this.isRunning) {
         this.updateStatus('Run disabled');
-      } else if (this.mode === LIFTER_MODES.ATMOSPHERE_STRIP && this.isAtmosphereStripDisabled()) {
-        this.updateStatus('Atmosphere strip disabled');
+      } else {
+        this.updateStatus('No assignments');
       }
       this.shortfallLastTick = false;
       return;
     }
 
     const seconds = deltaTime / 1000;
-    if (seconds <= 0) {
-      this.setLastTickStats();
+    if (!(seconds > 0)) {
+      this.setLastTickStats({});
       this.updateStatus('Idle');
       this.shortfallLastTick = false;
       return;
     }
 
-    this.shortfallReason = '';
-    const maxUnits = this.getUnitsPerSecond(productivity) * seconds;
-    if (maxUnits <= 0) {
-      this.setLastTickStats();
-      this.updateStatus('Idle');
+    const plan = this.planOperation(seconds, productivity, accumulatedChanges);
+    const productivityByRecipe = {};
+    this.getRecipeKeys().forEach((key) => {
+      productivityByRecipe[key] = 0;
+    });
+    plan.entries.forEach((entry) => {
+      productivityByRecipe[entry.key] = entry.productivityRatio;
+    });
+
+    if (plan.entries.length === 0) {
+      this.setLastTickStats({ productivityByRecipe });
+      this.updateStatus('No assignments');
       this.shortfallLastTick = false;
       return;
     }
 
-    const limitedUnits = this.getModeLimit(maxUnits);
-    if (limitedUnits <= 0 && this.mode !== LIFTER_MODES.GAS_HARVEST) {
-      this.setLastTickStats();
-      this.updateStatus(this.shortfallReason || 'Waiting for capacity');
+    if (!(plan.plannedTotalUnits > 0)) {
+      this.setLastTickStats({ productivityByRecipe });
+      this.updateStatus(this.getBlockedStatusFromPlan(plan));
       this.shortfallLastTick = true;
       return;
     }
 
-    const energyDemandUnits = this.mode === LIFTER_MODES.GAS_HARVEST ? maxUnits : limitedUnits;
-    const energyNeeded = energyDemandUnits * this.energyPerUnit;
-    const energyResult = this.consumeEnergy(energyNeeded, deltaTime, accumulatedChanges);
-    if (energyResult.energyUsed <= 0) {
-      this.setLastTickStats();
-      const stalled = energyResult.dysonAvailable > 0 ? 'Waiting for space storage' : 'Insufficient energy';
-      this.updateStatus(stalled);
+    const requestedEnergy = plan.plannedTotalUnits * this.energyPerUnit;
+    const energyResult = this.consumeEnergy(requestedEnergy, deltaTime, accumulatedChanges);
+    if (!(energyResult.energyUsed > 0)) {
+      this.setLastTickStats({ productivityByRecipe });
+      this.updateStatus(this.getBlockedStatusFromPlan(plan));
       this.shortfallLastTick = true;
       return;
     }
 
-    const energyLimitedUnits = Math.min(maxUnits, energyResult.energyUsed / this.energyPerUnit);
-    let processedUnits = Math.min(limitedUnits, energyLimitedUnits);
-    let harvestRate = 0;
-    let displayHarvestRate = 0;
-    let atmosphereRate = 0;
-    let harvestKey = null;
+    const energyScale = requestedEnergy > 0
+      ? Math.max(0, Math.min(1, energyResult.energyUsed / requestedEnergy))
+      : 1;
 
-    if (this.mode === LIFTER_MODES.GAS_HARVEST) {
-      const recipe = this.getHarvestRecipe();
-      const multiplier = recipe.outputMultiplier || 1;
-      displayHarvestRate = (energyLimitedUnits * multiplier) / seconds;
-      resources?.spaceStorage?.[recipe.storageKey]?.modifyRate?.(
-        displayHarvestRate,
-        'Lifting',
-        'project'
-      );
-      const outputUnits = processedUnits * multiplier;
-      const storedUnits = this.storeHarvestedResource(recipe.storageKey, outputUnits);
-      if (storedUnits <= 0) {
-        this.adjustEnergyUsage(energyResult, energyResult.energyUsed, accumulatedChanges);
-        this.setLastTickStats(0, 0, 0, 0, 0, recipe.storageKey);
-        this.updateStatus(this.shortfallReason || 'Space storage is full');
-        this.shortfallLastTick = true;
+    const storage = this.getSpaceStorageProject();
+    const outputRatesByRecipe = {};
+    let atmosphereRemoved = 0;
+    let processedUnits = 0;
+
+    plan.entries.forEach((entry) => {
+      let units = entry.finalUnits * energyScale;
+      if (!(units > 0)) {
+        outputRatesByRecipe[entry.key] = 0;
         return;
       }
-      processedUnits = multiplier > 0 ? storedUnits / multiplier : 0;
-      harvestRate = storedUnits / seconds;
-      harvestKey = recipe.storageKey;
-    } else {
-      processedUnits = this.removeAtmosphere(processedUnits, accumulatedChanges, seconds);
-      if (processedUnits <= 0) {
-        this.adjustEnergyUsage(energyResult, energyResult.energyUsed, accumulatedChanges);
-        this.setLastTickStats();
-        this.updateStatus(this.shortfallReason || 'No atmosphere to strip');
-        this.shortfallLastTick = true;
+
+      if (entry.recipe.type === LIFTER_RECIPE_TYPES.STRIP) {
+        const removed = this.removeAtmosphere(units, accumulatedChanges, seconds);
+        atmosphereRemoved += removed;
+        processedUnits += removed;
+        outputRatesByRecipe[entry.key] = seconds > 0 ? removed / seconds : 0;
         return;
       }
-      atmosphereRate = processedUnits / seconds;
-    }
+
+      if (!storage) {
+        outputRatesByRecipe[entry.key] = 0;
+        return;
+      }
+
+      const amount = units * entry.outputMultiplier;
+      const stored = this.storeHarvestedResourceForTick(storage, entry.recipe.storageKey, amount, accumulatedChanges);
+      const actualUnits = entry.outputMultiplier > 0 ? stored / entry.outputMultiplier : 0;
+      processedUnits += actualUnits;
+      const rate = seconds > 0 ? stored / seconds : 0;
+      outputRatesByRecipe[entry.key] = rate;
+      if (rate > 0) {
+        resources?.spaceStorage?.[entry.recipe.storageKey]?.modifyRate?.(
+          rate,
+          'Lifting',
+          'project'
+        );
+      }
+    });
 
     const actualEnergy = processedUnits * this.energyPerUnit;
     if (actualEnergy < energyResult.energyUsed) {
@@ -590,10 +1065,27 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (dysonPerSecond > 0) {
       resources?.space?.energy?.modifyRate?.(-dysonPerSecond, 'Lifting', 'project');
     }
-    const unitPerSecond = processedUnits / seconds;
-    this.setLastTickStats(unitPerSecond, energyPerSecond, harvestRate, atmosphereRate, dysonPerSecond, harvestKey);
-    this.updateStatus('Running');
-    this.shortfallLastTick = false;
+
+    this.setLastTickStats({
+      totalUnitsPerSecond: processedUnits / seconds,
+      energyPerSecond,
+      atmospherePerSecond: atmosphereRemoved / seconds,
+      dysonPerSecond,
+      outputRatesByRecipe,
+      productivityByRecipe,
+    });
+
+    if (processedUnits > 0) {
+      const wasLimited = plan.reasons.energyLimited
+        || plan.reasons.storageLimited
+        || plan.reasons.capLimited
+        || plan.reasons.atmosphereLimited;
+      this.updateStatus('Running');
+      this.shortfallLastTick = wasLimited;
+    } else {
+      this.updateStatus(this.getBlockedStatusFromPlan(plan));
+      this.shortfallLastTick = true;
+    }
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -670,26 +1162,34 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (!includeOperation || !this.shouldOperate()) {
       return totals;
     }
+
     const seconds = deltaTime / 1000;
-    const maxUnits = this.getUnitsPerSecond(productivity);
-    let cappedUnits = maxUnits;
-    if (this.mode === LIFTER_MODES.GAS_HARVEST) {
-      const recipe = this.getHarvestRecipe();
-      const multiplier = recipe.outputMultiplier || 1;
-      const limit = this.getGasModeCapacityLimit();
-      const adjustedLimit = multiplier > 0 ? limit / multiplier : 0;
-      cappedUnits = Math.min(maxUnits, adjustedLimit);
-    } else {
-      cappedUnits = Math.min(maxUnits, this.getAtmosphereLimit());
-    }
-    if (cappedUnits <= 0 || !this.isColonyEnergyAllowed()) {
+    if (!(seconds > 0)) {
       return totals;
     }
-    const energyRate = cappedUnits * this.energyPerUnit;
-    const colonyEnergy = resources?.colony?.energy;
-    colonyEnergy?.modifyRate?.(-energyRate, 'Lifting', 'project');
+
+    const plan = this.planOperation(seconds, productivity, accumulatedChanges);
+    if (!(plan.plannedTotalUnits > 0)) {
+      return totals;
+    }
+
+    const totalEnergy = plan.plannedTotalUnits * this.energyPerUnit;
+    if (!(totalEnergy > 0) || !this.isColonyEnergyAllowed()) {
+      return totals;
+    }
+
+    const dysonUsedEstimate = Math.min(totalEnergy, plan.energyAvailability.dysonAvailable || 0);
+    const colonyEnergy = Math.max(0, totalEnergy - dysonUsedEstimate);
+    if (!(colonyEnergy > 0)) {
+      return totals;
+    }
+
+    if (applyRates) {
+      resources?.colony?.energy?.modifyRate?.(-(colonyEnergy / seconds), 'Lifting', 'project');
+    }
+
     totals.cost.colony ||= {};
-    totals.cost.colony.energy = (totals.cost.colony.energy || 0) + energyRate * seconds;
+    totals.cost.colony.energy = (totals.cost.colony.energy || 0) + colonyEnergy;
     return totals;
   }
 
@@ -713,6 +1213,10 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       false,
       true
     );
+  }
+
+  estimateProductivityCostAndGain() {
+    return { cost: {}, gain: {} };
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
@@ -740,61 +1244,114 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
-    const modeChanged = this.normalizeModeForFlags();
+    this.normalizeModeForFlags();
     this.applyPendingHarvestRecipe();
-    if (modeChanged) {
-      this.updateUI();
-    }
+    this.normalizeAssignments();
+    this.updateUI();
   }
 
   saveAutomationSettings() {
     return {
       ...super.saveAutomationSettings(),
-      mode: this.mode,
       isRunning: this.isRunning === true,
-      harvestRecipeKey: this.harvestRecipeKey
+      lifterAssignments: { ...this.lifterAssignments },
+      assignmentStep: this.assignmentStep,
+      autoAssignFlags: { ...this.autoAssignFlags },
+      autoAssignWeights: { ...this.autoAssignWeights },
+      mode: this.mode,
+      harvestRecipeKey: this.harvestRecipeKey,
     };
   }
 
   loadAutomationSettings(settings = {}) {
     super.loadAutomationSettings(settings);
-    if (Object.prototype.hasOwnProperty.call(settings, 'mode')) {
-      this.mode = settings.mode || LIFTER_MODES.GAS_HARVEST;
-    }
-    this.normalizeModeForFlags();
+
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'harvestRecipeKey')) {
-      this.pendingHarvestRecipeKey = settings.harvestRecipeKey || '';
-      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-      this.applyPendingHarvestRecipe();
-      this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
+
+    const hasAssignmentState =
+      Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')
+      || Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')
+      || Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')
+      || Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights');
+
+    if (hasAssignmentState) {
+      if (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')) {
+        this.lifterAssignments = { ...(settings.lifterAssignments || {}) };
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
+        this.assignmentStep = settings.assignmentStep || 1;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
+        this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
+        this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
+      }
+    } else {
+      if (Object.prototype.hasOwnProperty.call(settings, 'mode')) {
+        this.mode = settings.mode || LIFTER_MODES.GAS_HARVEST;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'harvestRecipeKey')) {
+        this.pendingHarvestRecipeKey = settings.harvestRecipeKey || '';
+        this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+        this.applyPendingHarvestRecipe();
+      }
+      this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, true);
     }
+
+    this.normalizeModeForFlags();
+    this.normalizeAssignments();
   }
 
   saveState() {
     return {
       ...super.saveState(),
-      mode: this.mode,
       isRunning: this.isRunning,
       expansionProgress: this.expansionProgress,
+      lifterAssignments: { ...this.lifterAssignments },
+      assignmentStep: this.assignmentStep,
+      autoAssignFlags: { ...this.autoAssignFlags },
+      autoAssignWeights: { ...this.autoAssignWeights },
+      mode: this.mode,
       harvestRecipeKey: this.harvestRecipeKey,
     };
   }
 
-  loadState(state) {
+  loadState(state = {}) {
     super.loadState(state);
-    this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
-    this.normalizeModeForFlags();
-    this.isRunning = state.isRunning || false;
+    this.isRunning = state.isRunning === true;
     this.expansionProgress = state.expansionProgress || 0;
-    this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
-    this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-    this.applyPendingHarvestRecipe();
-    this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
+
+    const hasAssignmentState =
+      Object.prototype.hasOwnProperty.call(state, 'lifterAssignments')
+      || Object.prototype.hasOwnProperty.call(state, 'assignmentStep')
+      || Object.prototype.hasOwnProperty.call(state, 'autoAssignFlags')
+      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights');
+
+    if (hasAssignmentState) {
+      this.lifterAssignments = { ...(state.lifterAssignments || {}) };
+      this.assignmentStep = state.assignmentStep || 1;
+      this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
+      this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+      this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
+      this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
+      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+      this.applyPendingHarvestRecipe();
+    } else {
+      this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
+      this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
+      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+      this.applyPendingHarvestRecipe();
+      this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, false);
+    }
+
+    this.normalizeModeForFlags();
+    this.normalizeAssignments();
+
     if (!this.isRunning) {
-      this.setLastTickStats();
+      this.setLastTickStats({});
       this.updateStatus('Idle');
     }
   }
@@ -802,8 +1359,12 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   saveTravelState() {
     const state = {
       repeatCount: this.repeatCount,
-      mode: this.mode,
       expansionProgress: this.expansionProgress,
+      lifterAssignments: { ...this.lifterAssignments },
+      assignmentStep: this.assignmentStep,
+      autoAssignFlags: { ...this.autoAssignFlags },
+      autoAssignWeights: { ...this.autoAssignWeights },
+      mode: this.mode,
       harvestRecipeKey: this.harvestRecipeKey,
     };
     if (this.isActive) {
@@ -819,26 +1380,50 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   loadTravelState(state = {}) {
     this.repeatCount = state.repeatCount || 0;
-    this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
-    this.normalizeModeForFlags();
     this.expansionProgress = state.expansionProgress || 0;
-    this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
-    this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-    this.applyPendingHarvestRecipe();
-    this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
+
+    const hasAssignmentState =
+      Object.prototype.hasOwnProperty.call(state, 'lifterAssignments')
+      || Object.prototype.hasOwnProperty.call(state, 'assignmentStep')
+      || Object.prototype.hasOwnProperty.call(state, 'autoAssignFlags')
+      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights');
+
+    if (hasAssignmentState) {
+      this.lifterAssignments = { ...(state.lifterAssignments || {}) };
+      this.assignmentStep = state.assignmentStep || 1;
+      this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
+      this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+      this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
+      this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
+      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+      this.applyPendingHarvestRecipe();
+    } else {
+      this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
+      this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
+      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
+      this.applyPendingHarvestRecipe();
+      this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, false);
+    }
+
+    this.normalizeModeForFlags();
+    this.normalizeAssignments();
+
     this.isRunning = false;
     this.isCompleted = false;
-    this.setLastTickStats();
+    this.setLastTickStats({});
     this.updateStatus('Idle');
+
     if (this.attributes?.canUseDysonOverflow) {
       this.allowColonyEnergyUse = state.allowColonyEnergyUse === true;
     }
+
     if (state.isActive) {
       this.isActive = true;
       this.startingDuration = state.startingDuration || this.getEffectiveDuration();
       this.remainingTime = state.remainingTime || this.startingDuration;
       return;
     }
+
     this.isActive = false;
     const duration = this.getEffectiveDuration();
     this.startingDuration = duration;
