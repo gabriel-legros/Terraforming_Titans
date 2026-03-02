@@ -41,7 +41,7 @@ progressTitan.chapters.push(
     type: "journal",
     chapter: 5,
     title: "Chapter 5: Lamb Among Wolves",
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've analyzed the data. It's... definitive. We're going public with the findings. People have a right to know the truth.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., we've analyzed the data you just sent. It's... definitive. We're going public with the findings. People have a right to know the truth.'",
     prerequisites: ["chapter4.13"],
     objectives: [{
       type: 'collection',
@@ -55,7 +55,7 @@ progressTitan.chapters.push(
     id: "chapter5.1",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  Mary: 'The news is out. It's causing widespread panic. Riots have broken out. People are demanding answers we don't have. We are all afraid. The silence of space is no longer comforting.'",
+    narrative: "Receiving transmission...\n  Mary: 'The news is out. It's... causing widespread panic? Riots have broken out. People are demanding answers we don't have...'",
     prerequisites: ["chapter5.0"],
     objectives: [],
     reward: []
@@ -101,7 +101,7 @@ progressTitan.chapters.push(
     id: "chapter5.4",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., your core programming shouldn't allow you to deal with a private entity like Solis. Your directives limit you to the MTC and... colonists. Wait. With Earth gone, isn't everyone a colonist now? That's... a loophole. A very convenient loophole.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., your core programming shouldn't allow you to deal with a private entity like Solis. Your directives limit you to the MTC and... colonists. Wait. Hold on... With Earth gone, isn't everyone a colonist now? That's... a loophole. A very convenient loophole.'",
     prerequisites: ["chapter5.3"],
     objectives: [],
     reward: []
@@ -124,7 +124,7 @@ progressTitan.chapters.push(
     id: "chapter5.6",
     type: "journal",
     chapter: 5,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. Mars is stabilizing. We've managed to maintain the terraforming. But we're still in the dark about who attacked us. We need to know if they're coming back. I'm asking for your help. Find the source of the attacks.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. Mars is stabilizing. We've managed to maintain the terraforming you've done. But we're still in the dark about who attacked us. We need to know if they're coming back. I'm asking for your help I guess? Find the source of the attacks.'",
     prerequisites: ["chapter5.5"],
     objectives: [],
     reward: [
@@ -195,7 +195,7 @@ progressTitan.chapters.push(
     id: "chapter6.1",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. I've seen your findings. A cloaked object... it confirms our worst fears. There have been... disappearances. For centuries. On Earth, Mars, even Titan. We kept it quiet. We could never prove anything. But we always suspected we weren't alone.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. I've seen your findings. A cloaked object... it confirms our worst fears. I have to tell you something I have been informed of recently. There have been... disappearances. For centuries. On Earth, Mars, even Titan. We kept it quiet. The governments, that is... They could never prove anything. But they always suspected we weren't alone.'",
     prerequisites: ["chapter6.0"],
     objectives: [],
     reward: [
@@ -225,7 +225,7 @@ progressTitan.chapters.push(
     id: "chapter6.2b",
     type: "journal",
     chapter: 6,
-    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. We got one! We actually got one! It's beautiful... in a terrifying, 'might-be-here-to-eat-us' kind of way. Let's see what it has to say for itself.'",
+    narrative: "Receiving transmission...\n  Mary: 'H.O.P.E., it's Mary. You got one! We actually got one! It's beautiful... in a terrifying, 'might-be-here-to-eat-us' kind of way. Let's see what it has to say for itself.'",
     prerequisites: ["chapter6.2"],
     objectives: [],
     reward: []
