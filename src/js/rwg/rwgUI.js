@@ -263,8 +263,13 @@ function initializeDominionLoreOverlay() {
 
 function refreshDominionLoreList() {
   const order = rwgManager.getDominionOrder();
-  const signature = order.join(',');
-  if (rwgDominionLoreListEl.dataset.lastDominionLore === signature) return;
+  const signature = order
+    .map((id) => {
+      const unlocked = rwgManager.isDominionUnlocked(id);
+      return `${id}:${unlocked ? 'open' : 'locked'}`;
+    })
+    .join(',');
+  if (rwgDominionLoreListEl.dataset.lastDominionLore === signature) return false;
   rwgDominionLoreListEl.textContent = '';
   rwgDominionLoreItems = {};
   rwgDominionLoreOrder = order;
@@ -291,6 +296,7 @@ function refreshDominionLoreList() {
     rwgDominionLoreListEl.appendChild(entry);
   });
   rwgDominionLoreListEl.dataset.lastDominionLore = signature;
+  return true;
 }
 
 function selectDominionLore(id) {
@@ -747,6 +753,20 @@ function updateRandomWorldUI() {
   refreshHazardSelect();
   refreshTypeSelect();
   rwgDominionEl && refreshDominionSelect();
+  if (rwgDominionLoreOverlayEl && rwgDominionLoreOverlayEl.style.display === 'flex') {
+    const activeLoreId = rwgDominionLoreOrder.find((id) => {
+      const item = rwgDominionLoreItems[id];
+      return item && item.classList.contains('active');
+    });
+    const changed = refreshDominionLoreList();
+    if (changed || activeLoreId) {
+      const unlockedSelection = rwgDominionLoreOrder.find((id) => rwgManager.isDominionUnlocked(id));
+      const selected = rwgDominionLoreOrder.includes(activeLoreId)
+        ? activeLoreId
+        : (unlockedSelection || rwgDominionLoreOrder[0]);
+      selected && selectDominionLore(selected);
+    }
+  }
 
   if (rwgOrbitEl) {
     Array.from(rwgOrbitEl.options).forEach(opt => {

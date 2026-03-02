@@ -323,6 +323,7 @@ const terraformingRequirements = {
     temperatureRangeK: { min: 218.15, max: 228.15 },
     luminosityRange: { min: 0, max: 1_000_000_000 },
     gasTargetsPa: {
+      inertGas: { min: 10_000, max: 1_000_000_000 },
       oxygen: { min: 0, max: 100 },
     },
     liquidCoverageTargets: [
