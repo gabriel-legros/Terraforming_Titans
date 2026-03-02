@@ -749,18 +749,25 @@ const projectParameters = {
       lifterUnitRate: 500_000_000,
       lifterEnergyPerUnit: 500_000_000,
       spaceBuilding: true,
+      lifterStripRecipe: {
+        label: 'Strip Atmosphere',
+        complexity: 10,
+        displayOrder: 2
+      },
       lifterHarvestRecipes: {
         hydrogen: {
           label: 'Hydrogen',
           storageKey: 'hydrogen',
           outputMultiplier: 1,
-          complexity: 1
+          complexity: 1,
+          displayOrder: 1
         },
         methane: {
           label: 'Methane',
           storageKey: 'atmosphericMethane',
           outputMultiplier: 1,
           complexity: 100,
+          displayOrder: 3,
           requiresProjectFlag: 'methaneAmmoniaLifting'
         },
         ammonia: {
@@ -768,6 +775,7 @@ const projectParameters = {
           storageKey: 'atmosphericAmmonia',
           outputMultiplier: 1,
           complexity: 100,
+          displayOrder: 4,
           requiresProjectFlag: 'methaneAmmoniaLifting'
         }
       },

@@ -16,6 +16,7 @@ const DEFAULT_LIFTER_HARVEST_RECIPES = {
     storageKey: 'hydrogen',
     outputMultiplier: 50,
     complexity: 1,
+    displayOrder: 1,
   },
 };
 
@@ -83,23 +84,29 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   buildLifterRecipes() {
-    const recipes = {
-      [LIFTER_STRIP_RECIPE_KEY]: {
-        label: 'Strip Atmosphere',
-        type: LIFTER_RECIPE_TYPES.STRIP,
-        complexity: 1,
-      },
+    const recipes = {};
+    const stripSource = this.attributes?.lifterStripRecipe || {};
+    const stripComplexity = Number(stripSource.complexity);
+    const stripDisplayOrder = Number(stripSource.displayOrder);
+
+    recipes[LIFTER_STRIP_RECIPE_KEY] = {
+      label: stripSource.label || 'Strip Atmosphere',
+      type: LIFTER_RECIPE_TYPES.STRIP,
+      complexity: Number.isFinite(stripComplexity) && stripComplexity > 0 ? stripComplexity : 10,
+      displayOrder: Number.isFinite(stripDisplayOrder) && stripDisplayOrder > 0 ? stripDisplayOrder : 2,
     };
 
     const harvestKeys = Object.keys(this.harvestRecipes || {});
     harvestKeys.forEach((key) => {
       const source = this.harvestRecipes[key] || {};
+      const displayOrder = Number(source.displayOrder);
       recipes[key] = {
         label: source.label || key,
         type: LIFTER_RECIPE_TYPES.HARVEST,
         storageKey: source.storageKey || key,
         outputMultiplier: Number.isFinite(source.outputMultiplier) ? source.outputMultiplier : 1,
         complexity: Number.isFinite(source.complexity) && source.complexity > 0 ? source.complexity : 1,
+        displayOrder: Number.isFinite(displayOrder) && displayOrder > 0 ? displayOrder : null,
         requiresProjectFlag: source.requiresProjectFlag || null,
       };
     });
@@ -108,7 +115,18 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   getRecipeKeys() {
-    return Object.keys(this.lifterRecipes || {});
+    return Object.keys(this.lifterRecipes || {}).sort((leftKey, rightKey) => {
+      const left = this.lifterRecipes[leftKey] || {};
+      const right = this.lifterRecipes[rightKey] || {};
+      const leftOrder = Number(left.displayOrder);
+      const rightOrder = Number(right.displayOrder);
+      const normalizedLeftOrder = Number.isFinite(leftOrder) && leftOrder > 0 ? leftOrder : 1_000_000;
+      const normalizedRightOrder = Number.isFinite(rightOrder) && rightOrder > 0 ? rightOrder : 1_000_000;
+      if (normalizedLeftOrder !== normalizedRightOrder) {
+        return normalizedLeftOrder - normalizedRightOrder;
+      }
+      return leftKey.localeCompare(rightKey);
+    });
   }
 
   getRecipe(key) {
