@@ -796,8 +796,7 @@ const projectParameters = {
           displayOrder: 4,
           requiresProjectFlag: 'methaneAmmoniaLifting'
         }
-      },
-      canUseDysonOverflow: true,
+      }
     }
   },
   bioworld: {

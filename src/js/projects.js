@@ -103,9 +103,6 @@ class Project extends EffectableEntity {
     this.kesslerRollElapsed = 0;
     this.kesslerRollPending = false;
     this.kesslerStartCost = null;
-    if (this.attributes?.canUseDysonOverflow) {
-      this.allowColonyEnergyUse = false;
-    }
   }
 
   initializeFromConfig(config, name) {
@@ -876,9 +873,6 @@ class Project extends EffectableEntity {
       autoStart: this.autoStart === true,
       autoStartUncheckOnTravel: this.autoStartUncheckOnTravel === true
     };
-    if (this.attributes?.canUseDysonOverflow) {
-      settings.allowColonyEnergyUse = this.allowColonyEnergyUse === true;
-    }
     if ('autoContinuousOperation' in this) {
       settings.autoContinuousOperation = this.autoContinuousOperation === true;
     }
@@ -894,12 +888,6 @@ class Project extends EffectableEntity {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoStartUncheckOnTravel')) {
       this.autoStartUncheckOnTravel = settings.autoStartUncheckOnTravel === true;
-    }
-    if (
-      this.attributes?.canUseDysonOverflow &&
-      Object.prototype.hasOwnProperty.call(settings, 'allowColonyEnergyUse')
-    ) {
-      this.setAllowColonyEnergyUse(settings.allowColonyEnergyUse === true);
     }
     if ('autoContinuousOperation' in this && Object.prototype.hasOwnProperty.call(settings, 'autoContinuousOperation')) {
       this.autoContinuousOperation = settings.autoContinuousOperation === true;
@@ -943,9 +931,6 @@ class Project extends EffectableEntity {
       state.kesslerRollPending = this.kesslerRollPending === true;
       state.kesslerStartCost = this.kesslerStartCost;
     }
-    if (this.attributes?.canUseDysonOverflow) {
-      state.allowColonyEnergyUse = this.allowColonyEnergyUse === true;
-    }
     return state;
   }
 
@@ -988,9 +973,6 @@ class Project extends EffectableEntity {
       this.kesslerRollPending = state.kesslerRollPending === true;
       this.kesslerStartCost = state.kesslerStartCost || null;
     }
-    if (this.attributes?.canUseDysonOverflow) {
-      this.allowColonyEnergyUse = state.allowColonyEnergyUse === true;
-    }
     if (this.attributes.completionEffect && (this.isCompleted || this.repeatCount > 0)) {
       this.applyCompletionEffect();
     }
@@ -1017,24 +999,6 @@ class Project extends EffectableEntity {
     }
   }
 
-  setAllowColonyEnergyUse(allow) {
-    if (!this.attributes?.canUseDysonOverflow) {
-      return;
-    }
-    const next = allow === true;
-    if (this.allowColonyEnergyUse === next) {
-      return;
-    }
-    this.allowColonyEnergyUse = next;
-  }
-
-  isColonyEnergyAllowed() {
-    if (!this.attributes?.canUseDysonOverflow) {
-      return true;
-    }
-    return this.allowColonyEnergyUse === true;
-  }
-  
 }
 
 class ProjectManager extends EffectableEntity {

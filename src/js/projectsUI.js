@@ -749,25 +749,6 @@ function createProjectItem(project) {
     automationSettingsContainer.appendChild(autoStartTravelResetContainer);
   }
 
-  let allowColonyEnergyCheckbox = null;
-  let allowColonyEnergyContainer = null;
-  if (project.attributes?.canUseDysonOverflow) {
-    allowColonyEnergyContainer = document.createElement('div');
-    allowColonyEnergyContainer.classList.add('checkbox-container');
-    allowColonyEnergyCheckbox = document.createElement('input');
-    allowColonyEnergyCheckbox.type = 'checkbox';
-    allowColonyEnergyCheckbox.id = `${project.name}-allow-colony-energy`;
-    allowColonyEnergyCheckbox.checked = project.allowColonyEnergyUse === true;
-    allowColonyEnergyCheckbox.addEventListener('change', (event) => {
-      project.setAllowColonyEnergyUse(event.target.checked);
-    });
-    const allowColonyEnergyLabel = document.createElement('label');
-    allowColonyEnergyLabel.htmlFor = allowColonyEnergyCheckbox.id;
-    allowColonyEnergyLabel.textContent = 'Allow Colony Energy Use';
-    allowColonyEnergyContainer.appendChild(allowColonyEnergyCheckbox);
-    allowColonyEnergyContainer.appendChild(allowColonyEnergyLabel);
-    automationSettingsContainer.appendChild(allowColonyEnergyContainer);
-  }
   cardFooter.appendChild(automationSettingsContainer);
 
   projectCard.appendChild(cardFooter);
@@ -789,8 +770,6 @@ function createProjectItem(project) {
     autoStartTravelResetCheckbox: autoStartTravelResetCheckbox,
     autoStartTravelResetLabel: autoStartTravelResetLabel,
     automationSettingsContainer: automationSettingsContainer,
-    allowColonyEnergyCheckbox,
-    allowColonyEnergyContainer,
     cardFooter: cardFooter,
     upButton: upButton,
     downButton: downButton
@@ -1324,11 +1303,6 @@ function updateProjectUI(projectName) {
     const continuous = project.isContinuous();
     elements.autoStartLabel.textContent = continuous ? 'Run' : 'Auto start';
   }
-
-  if (elements.allowColonyEnergyCheckbox) {
-    elements.allowColonyEnergyCheckbox.checked = project.allowColonyEnergyUse === true;
-  }
-
 
   if (elements.waitCapacityCheckbox) {
     elements.waitCapacityCheckbox.checked = project.waitForCapacity !== false;

@@ -279,9 +279,6 @@ class ProjectAutomation {
       autoStart: project.autoStart === true,
       autoStartUncheckOnTravel: project.autoStartUncheckOnTravel === true
     };
-    if (project.attributes && project.attributes.canUseDysonOverflow) {
-      settings.allowColonyEnergyUse = project.allowColonyEnergyUse === true;
-    }
     return settings;
   }
 
@@ -648,17 +645,6 @@ class ProjectAutomation {
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoStartUncheckOnTravel')) {
       project.autoStartUncheckOnTravel = settings.autoStartUncheckOnTravel === true;
-    }
-    if (
-      project.attributes &&
-      project.attributes.canUseDysonOverflow &&
-      Object.prototype.hasOwnProperty.call(settings, 'allowColonyEnergyUse')
-    ) {
-      if (project.setAllowColonyEnergyUse) {
-        project.setAllowColonyEnergyUse(settings.allowColonyEnergyUse === true);
-      } else {
-        project.allowColonyEnergyUse = settings.allowColonyEnergyUse === true;
-      }
     }
   }
 

@@ -578,12 +578,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   getEnergyAvailabilityForTick(deltaTime = 1000, accumulatedChanges = null) {
     const seconds = deltaTime / 1000;
-    const colonyEnergy = resources?.colony?.energy;
-    const pendingColony = accumulatedChanges?.colony?.energy || 0;
-    const canUseColonyEnergy = this.isColonyEnergyAllowed();
-    const colonyAvailable = (!canUseColonyEnergy || !colonyEnergy)
-      ? 0
-      : Math.max((colonyEnergy.value || 0) + pendingColony, 0);
+    const colonyAvailable = 0;
 
     const hasDysonPool = accumulatedChanges?.dysonSpaceEnergyInjected;
     const dysonAvailable = hasDysonPool
@@ -1253,22 +1248,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     const totalEnergy = plan.energyNeeded * plan.energyRatio;
-    if (!(totalEnergy > 0) || !this.isColonyEnergyAllowed()) {
+    if (!(totalEnergy > 0)) {
       return totals;
     }
-
-    const dysonUsedEstimate = Math.min(totalEnergy, plan.energyAvailability.dysonAvailable || 0);
-    const colonyEnergy = Math.max(0, totalEnergy - dysonUsedEstimate);
-    if (!(colonyEnergy > 0)) {
-      return totals;
-    }
-
-    if (applyRates) {
-      resources?.colony?.energy?.modifyRate?.(-(colonyEnergy / seconds), 'Lifting', 'project');
-    }
-
-    totals.cost.colony ||= {};
-    totals.cost.colony.energy = (totals.cost.colony.energy || 0) + colonyEnergy;
     return totals;
   }
 
@@ -1451,9 +1433,6 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       state.remainingTime = this.remainingTime;
       state.startingDuration = this.startingDuration;
     }
-    if (this.attributes?.canUseDysonOverflow) {
-      state.allowColonyEnergyUse = this.allowColonyEnergyUse === true;
-    }
     return state;
   }
 
@@ -1491,10 +1470,6 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.isCompleted = false;
     this.setLastTickStats({});
     this.updateStatus('Idle');
-
-    if (this.attributes?.canUseDysonOverflow) {
-      this.allowColonyEnergyUse = state.allowColonyEnergyUse === true;
-    }
 
     if (state.isActive) {
       this.isActive = true;
