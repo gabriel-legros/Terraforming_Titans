@@ -53,6 +53,7 @@ const artificialUICache = {
   priority: null,
   startBtn: null,
   travelBtn: null,
+  storeBtn: null,
   stopBtn: null,
   progressFill: null,
   progressLabel: null,
@@ -221,6 +222,7 @@ function buildHistoryRow(entry) {
     completed: 'Ready for Terraforming',
     current: 'Current',
     terraformed: 'Terraformed',
+    stored: 'Stored',
     abandoned: 'Abandoned'
   };
   const statusLabel = statusLabelMap[statusKey] || (statusKey ? statusKey.charAt(0).toUpperCase() + statusKey.slice(1) : '');
@@ -1197,6 +1199,11 @@ function ensureArtificialLayout() {
   travelBtn.textContent = 'Travel to Constructed World';
   artificialUICache.travelBtn = travelBtn;
   actions.appendChild(travelBtn);
+  const storeBtn = document.createElement('button');
+  storeBtn.className = 'artificial-secondary';
+  storeBtn.textContent = 'Store World';
+  artificialUICache.storeBtn = storeBtn;
+  actions.appendChild(storeBtn);
   progressPanel.appendChild(actions);
 
   card.appendChild(progressPanel);
@@ -1453,6 +1460,10 @@ function ensureArtificialLayout() {
     }
     artificialManager.travelToConstructedWorld();
   });
+  storeBtn.addEventListener('click', () => {
+    if (!artificialManager) return;
+    artificialManager.storeConstructedWorld();
+  });
   prev.addEventListener('click', () => {
     if (artificialHistoryPage > 0) {
       artificialHistoryPage -= 1;
@@ -1614,6 +1625,10 @@ function renderProgress(project, prepayState) {
       }
     }
     artificialUICache.travelBtn.disabled = true;
+    if (artificialUICache.storeBtn) {
+      artificialUICache.storeBtn.disabled = true;
+      artificialUICache.storeBtn.title = '';
+    }
     return;
   }
   const label = artificialUICache.progressLabel;
@@ -1626,6 +1641,10 @@ function renderProgress(project, prepayState) {
     artificialUICache.stopBtn.textContent = 'Cancel Construction';
     artificialUICache.stopBtn.title = 'Cancel the active build';
     artificialUICache.travelBtn.disabled = true;
+    if (artificialUICache.storeBtn) {
+      artificialUICache.storeBtn.disabled = true;
+      artificialUICache.storeBtn.title = '';
+    }
     return;
   }
   if (project.status === 'completed') {
@@ -1635,12 +1654,21 @@ function renderProgress(project, prepayState) {
     artificialUICache.stopBtn.textContent = 'Discard World';
     artificialUICache.stopBtn.title = 'Discard this completed world';
     artificialUICache.travelBtn.disabled = false;
+    if (artificialUICache.storeBtn) {
+      artificialUICache.storeBtn.disabled = false;
+      artificialUICache.storeBtn.title = 'Store this completed world for later travel.';
+    }
     return;
   }
   label.textContent = 'Idle';
   artificialUICache.stopBtn.disabled = true;
   artificialUICache.stopBtn.textContent = 'Cancel Construction';
   artificialUICache.stopBtn.title = '';
+  artificialUICache.travelBtn.disabled = true;
+  if (artificialUICache.storeBtn) {
+    artificialUICache.storeBtn.disabled = true;
+    artificialUICache.storeBtn.title = '';
+  }
 }
 
 function renderStash(project, manager) {
@@ -2079,7 +2107,7 @@ function updateArtificialUI(options = {}) {
   }
   if (artificialUICache.state) {
     artificialUICache.state.textContent = project
-      ? (project.status === 'completed' ? 'Ready for travel' : 'Building')
+      ? (project.status === 'completed' ? 'Ready for travel/store' : 'Building')
       : 'Ready';
   }
   if (artificialUICache.nameInput) {

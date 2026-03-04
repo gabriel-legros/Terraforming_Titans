@@ -213,7 +213,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Pulsar hazard now injects additional orbital radiation when active; surface impact is derived by atmospheric attenuation from orbital dose.
 - RWG hazards now include selectable `pulsar` seeds, and hazardous biomass RWG tuning includes pulsar-added surface radiation when both hazards are selected.
 - RWG rogue worlds selected with `pulsar` now generate a `Rogue Pulsar` star and use 10 W/m² flux (instead of starless rogue background flux), and they are not flagged as `celestialParameters.rogue`.
-- Artificial world flow matured with prepay persistence, lock states, and travel warnings.
+- Artificial world flow matured with prepay persistence, lock states, travel warnings, and a `Store World` flow: completed worlds can be stored without immediate travel, preserve staged stockpiles, and appear in constructed-world history with travel actions (alongside abandoned worlds).
 - Warp Gate Command gained richer operation story/event handling and improved team management tools.
 
 ### Visual and UX

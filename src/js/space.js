@@ -1151,6 +1151,8 @@ class SpaceManager extends EffectableEntity {
                         original,
                         visited: true,
                         orbitalRing: false,
+                        abandoned: false,
+                        stored: false,
                         departedAt: null,
                         ecumenopolisPercent: 0,
                         terraformedValue,
@@ -1175,6 +1177,7 @@ class SpaceManager extends EffectableEntity {
                 }
                 if (isComplete) {
                     target.abandoned = false;
+                    target.stored = false;
                 }
             });
             return;
@@ -1344,6 +1347,8 @@ class SpaceManager extends EffectableEntity {
                     orbitalRing: false,
                     departedAt: null,
                     ecumenopolisPercent: 0,
+                    abandoned: false,
+                    stored: false,
                     foundryWorld: false,
                     foundryLandFactor: 0,
                     specialization: '',
@@ -1360,6 +1365,7 @@ class SpaceManager extends EffectableEntity {
             st.foundryWorld = foundryCompleted;
             st.foundryLandFactor = foundryLandFactor;
             st.specialization = specialization;
+            st.stored = false;
             st.abandoned = !this._isCurrentWorldTerraformed();
             if (!st.terraformedValue) {
                 st.terraformedValue = this._deriveArtificialTerraformValue({
@@ -1558,6 +1564,8 @@ class SpaceManager extends EffectableEntity {
                     original: originalSnapshot,
                     visited: true,
                     orbitalRing: false,
+                    abandoned: false,
+                    stored: false,
                     departedAt: null,
                     ecumenopolisPercent: 0,
                     artificial: artificialWorld,
@@ -1574,6 +1582,10 @@ class SpaceManager extends EffectableEntity {
             }
             status.artificial = status.artificial || artificialWorld;
             status.visited = true;
+            if (isArtificial) {
+                status.stored = false;
+                status.abandoned = false;
+            }
             if (isArtificial && !status.terraformedValue) {
                 status.terraformedValue = terraformedValue;
             }

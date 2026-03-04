@@ -1072,6 +1072,61 @@ class ArtificialManager extends EffectableEntity {
         return true;
     }
 
+    storeConstructedWorld() {
+        if (!this.activeProject || this.activeProject.status !== 'completed') return false;
+        if (!spaceManager || !spaceManager.artificialWorldStatuses) return false;
+
+        const project = this.activeProject;
+        const seed = String(project.seed);
+        const override = this.buildOverride(project);
+        const snapshot = this.buildSnapshotFromParams(override);
+        const now = Date.now();
+        const landHa = project.landHa || project.areaHa || snapshot.landHa || this.calculateAreaHectares(project.radiusEarth);
+        const terraformedValue = this.deriveTerraformWorldValue(project);
+        const fleetCapacityValue = this.deriveFleetCapacityWorldValue(project);
+
+        const status = spaceManager.artificialWorldStatuses[seed] || {};
+        status.name = project.name;
+        status.terraformed = false;
+        status.colonists = 0;
+        status.visited = false;
+        status.orbitalRing = false;
+        status.departedAt = null;
+        status.arrivedAt = now;
+        status.ecumenopolisPercent = 0;
+        status.foundryWorld = false;
+        status.foundryLandFactor = 0;
+        status.specialization = '';
+        status.artificial = true;
+        status.abandoned = false;
+        status.stored = true;
+        status.terraformedValue = terraformedValue;
+        status.fleetCapacityValue = fleetCapacityValue;
+        status.landHa = landHa;
+        status.cachedLandHa = landHa;
+        status.sector = project.sector || snapshot.sector || currentPlanetParameters?.celestialParameters?.sector || null;
+        status.builtFrom = project.builtFrom || 'unknown';
+        status.constructedAt = project.startedAt || null;
+        status.completedAt = project.completedAt || now;
+        status.artificialSnapshot = snapshot;
+        status.original = {
+            merged: override,
+            override,
+            star: override.star,
+            artificial: true,
+            archetype: override.classification?.archetype,
+            builtFrom: status.builtFrom,
+            constructedAt: status.constructedAt,
+            completedAt: status.completedAt
+        };
+
+        spaceManager.artificialWorldStatuses[seed] = status;
+        this.recordHistoryEntry('stored');
+        this.activeProject = null;
+        this.updateUI(true);
+        return true;
+    }
+
     getStockpileCap(project = this.activeProject) {
         if (!project) return 0;
         const landHa = project.landHa || project.areaHa || this.calculateAreaHectares(project.radiusEarth);
@@ -1469,8 +1524,17 @@ class ArtificialManager extends EffectableEntity {
 
     travelToStoredWorld(key) {
         const seed = String(key);
+        if (!spaceManager || !spaceManager.artificialWorldStatuses) return false;
         const status = spaceManager.artificialWorldStatuses[seed];
-        const snapshot = status.artificialSnapshot;
+        if (!status) return false;
+        let snapshot = status.artificialSnapshot || null;
+        if (!snapshot) {
+            const merged = status.original?.merged || status.original;
+            if (merged?.celestialParameters && merged?.resources) {
+                snapshot = this.buildSnapshotFromParams(merged);
+            }
+        }
+        if (!snapshot) return false;
         const override = this.buildOverride(snapshot);
         const res = {
             merged: override,
@@ -1543,7 +1607,7 @@ class ArtificialManager extends EffectableEntity {
                 radiusEarth,
                 landHa
             });
-            const canTravel = label === 'abandoned' && !!snapshot;
+            const canTravel = (label === 'abandoned' || label === 'stored') && !!snapshot;
             entries.push({
                 id: key,
                 seed: key,
@@ -1554,9 +1618,9 @@ class ArtificialManager extends EffectableEntity {
                 landHa,
                 sector: status.sector || merged?.celestialParameters?.sector || snapshot?.sector || null,
                 terraformedValue,
-                builtFrom: status.original?.builtFrom || 'unknown',
-                constructedAt: status.original?.constructedAt || null,
-                completedAt: status.original?.completedAt || null,
+                builtFrom: status.builtFrom || status.original?.builtFrom || 'unknown',
+                constructedAt: status.constructedAt || status.original?.constructedAt || null,
+                completedAt: status.completedAt || status.original?.completedAt || null,
                 status: label,
                 traveledAt: status.departedAt || status.arrivedAt || null,
                 departedAt: status.departedAt || null,
@@ -1604,6 +1668,10 @@ class ArtificialManager extends EffectableEntity {
             if (!status || key === currentKey) return;
             if (status.terraformed) {
                 pushEntry(key, status, 'terraformed');
+                return;
+            }
+            if (status.stored) {
+                pushEntry(key, status, 'stored');
                 return;
             }
             if (status.abandoned) {

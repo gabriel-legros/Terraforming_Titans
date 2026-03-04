@@ -815,6 +815,10 @@
   color: var(--space-warning);
 }
 
+.artificial-history-stored {
+  color: var(--space-accent);
+}
+
 .artificial-history-cancelled {
   color: var(--space-warning);
 }
