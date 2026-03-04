@@ -2336,6 +2336,7 @@ const researchParameters = {
         description: 'Enables nanobots to recycle waste materials, substituting junk for silica consumption, scrap metal for metal consumption, and trash for biomass consumption.',
         cost: { advancedResearch: 15_000_000 },
         prerequisites: [],
+        disabled: true,
         effects: [
           {
             target: 'nanotechManager',

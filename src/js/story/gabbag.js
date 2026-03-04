@@ -368,6 +368,7 @@ progressGabbag.chapters.push(
       { target: 'artificialManager', type: 'unlockCore', targetId: 'gas-giant' },
       { target: 'researchManager', type: 'enableResearch', targetId: 'waste_processing' },
       { target: 'researchManager', type: 'enableResearch', targetId: 'waste_workforce_automation' },
+      { target: 'researchManager', type: 'enableResearch', targetId: 'nanotechnology_recycling' },
       { target: 'researchManager', type: 'enableResearch', targetId: 'hazardous_biomass_incineration' },
       { target: 'building', type: 'booleanFlag', targetId: 'boschReactor', flagId: 'gabbagAmmoniaChemistry', value: true },
       { target: 'resource', resourceType: 'atmospheric', targetId: 'atmosphericAmmonia', type: 'enable' },
