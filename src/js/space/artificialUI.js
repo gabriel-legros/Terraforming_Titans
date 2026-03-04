@@ -1162,7 +1162,7 @@ function ensureArtificialLayout() {
 
   const stashRecommend = document.createElement('div');
   stashRecommend.className = 'artificial-stash-recommend';
-  stashRecommend.textContent = 'Recommend staging at least 1.00B of each resource.';
+  stashRecommend.textContent = 'It is recommended staging at least 1.00B of each resource.';
   artificialUICache.stashRecommend = stashRecommend;
   stash.appendChild(stashRecommend);
 

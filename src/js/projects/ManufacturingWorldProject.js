@@ -161,13 +161,14 @@
         pointsLabel: 'Manufacturing Points:',
         pointsUnit: 'MP',
         shopTitle: 'MP Shop',
-        shopTooltip: "Gain MP equal to max(1, log10(population)) when travelling from a completed Manufacturing World.  This represents the ability of humanity to slowly and partially catch up to HOPE's own manufacturing abilities.  These upgrades are for post-travel Manufacturing Worlds production only.",
+        shopTooltip: "Gain MP equal to max(1, log10(population)) when travelling from a completed Manufacturing World, then +10% per hazard on this world.  This represents the ability of humanity to slowly and partially catch up to HOPE's own manufacturing abilities.  These upgrades are for post-travel Manufacturing Worlds production only.",
         emptyShopText: '',
         shopItems: MANUFACTURING_SHOP_ITEMS,
         shopItemMap: MANUFACTURING_SHOP_ITEM_MAP,
         specializationSourceId: 'manufacturingWorld',
         otherSpecializationIds: ['bioworld', 'foundryWorld'],
         ecumenopolisEffectPrefix: 'manufacturingWorld',
+        hazardPointBonusPerHazard: 0.1,
       });
       this.cumulativePopulation = 0;
       this.manufacturingAssignments = {};
@@ -197,7 +198,8 @@
 
     getTravelPointGain() {
       const population = Math.max(1, this.getCurrentPopulation());
-      return Math.max(1, Math.log10(population));
+      const basePoints = Math.max(1, Math.log10(population));
+      return this.applyHazardPointBonus(basePoints);
     }
 
     addManufacturingPopulation(value) {
