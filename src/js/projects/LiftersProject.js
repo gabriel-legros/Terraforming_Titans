@@ -761,15 +761,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         return;
       }
 
-      const stored = this.getStoredResourceValueForTick(storage, entry.recipe.storageKey, accumulatedChanges);
-      const capLimit = storage.getResourceCapLimit(entry.recipe.storageKey);
-      const capRemaining = Math.max(0, capLimit - stored);
-      const capUnits = entry.outputMultiplier > 0 ? capRemaining / entry.outputMultiplier : 0;
-      const limited = Math.min(entry.desiredUnits, capUnits);
-      if (limited < entry.desiredUnits) {
-        plan.reasons.capLimited = true;
-      }
-      entry.limitedUnits = Math.max(0, limited);
+      entry.limitedUnits = Math.max(0, entry.desiredUnits);
       harvestOutputTotal += entry.limitedUnits * entry.outputMultiplier;
     });
 
@@ -852,11 +844,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return 0;
     }
 
-    const freeSpace = this.getAvailableStorageSpaceForTick(storage, accumulatedChanges);
-    const existing = this.getStoredResourceValueForTick(storage, resourceKey, accumulatedChanges);
-    const capLimit = storage.getResourceCapLimit(resourceKey);
-    const capRemaining = Math.max(0, capLimit - existing);
-    const availableSpace = Math.min(freeSpace, capRemaining);
+    const availableSpace = this.getAvailableStorageSpaceForTick(storage, accumulatedChanges);
     const stored = Math.min(amount, availableSpace);
 
     if (!(stored > 0)) {

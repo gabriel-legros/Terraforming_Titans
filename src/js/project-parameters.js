@@ -765,7 +765,7 @@ const projectParameters = {
     attributes: {
       canUseSpaceStorage: true,
       lifterUnitRate: 500_000_000,
-      lifterEnergyPerUnit: 500_000_000,
+      lifterEnergyPerUnit: 5_000_000_000_000_000,
       spaceBuilding: true,
       lifterStripRecipe: {
         label: 'Strip Atmosphere',
