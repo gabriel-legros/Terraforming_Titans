@@ -44,6 +44,13 @@
       description: 'Increases silica mining output by 1%.',
     },
     {
+      id: 'glassSmelterOptimization',
+      label: 'Glass Smelter Optimization',
+      cost: 1,
+      maxPurchases: 400,
+      description: 'Increases glass smelter production and consumption by 1%.',
+    },
+    {
       id: 'deeperMiningSpeed',
       label: 'Deeper Mining Expertise',
       cost: 1,
@@ -231,6 +238,23 @@
         type: 'productionMultiplier',
         effectId: 'foundry-silica-output',
         value: silicaMultiplier,
+        sourceId: 'foundryWorld',
+      });
+      const glassSmelterMultiplier = 1 + (this.getShopPurchaseCount('glassSmelterOptimization') * 0.01);
+      addEffect({
+        target: 'building',
+        targetId: 'glassSmelter',
+        type: 'productionMultiplier',
+        effectId: 'foundry-glass-smelter-output',
+        value: glassSmelterMultiplier,
+        sourceId: 'foundryWorld',
+      });
+      addEffect({
+        target: 'building',
+        targetId: 'glassSmelter',
+        type: 'consumptionMultiplier',
+        effectId: 'foundry-glass-smelter-consumption',
+        value: glassSmelterMultiplier,
         sourceId: 'foundryWorld',
       });
 
