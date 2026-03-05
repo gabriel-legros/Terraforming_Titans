@@ -2321,6 +2321,16 @@ const researchParameters = {
         ]
       },
       {
+        id: 'space_antimatter_safety_regulations',
+        name: 'Space Antimatter Safety Regulations',
+        description: 'Standardize strict antimatter safety protocols for orbital containment and unlock modular Space Antimatter batteries.',
+        cost: { advancedResearch: 12_000_000 },
+        prerequisites: [],
+        effects: [
+          { target: 'project', targetId: 'spaceAntimatter', type: 'enable' }
+        ]
+      },
+      {
         id: 'additional_dyson_spheres',
         name: 'Additional Dyson Spheres',
         description: 'Raises Dyson Sphere expansion beyond a single sphere up to 100 billion spheres, with extra superalloy requirements once exceeding 1 sphere worth of power.',

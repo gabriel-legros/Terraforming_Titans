@@ -1528,7 +1528,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         }
       
         const capElement = entry ? entry.capEl : null;
-        if (capElement && category !== 'spaceStorage') {
+        if (capElement && (category !== 'spaceStorage' || resourceName === 'energy')) {
           capElement.textContent = formatNumber(resourceObj.cap);
         }
       

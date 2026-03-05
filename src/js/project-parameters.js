@@ -744,6 +744,27 @@ const projectParameters = {
       workersPerCompletion: 1_000_000_000,
     }
   },
+  spaceAntimatter: {
+    type: 'SpaceAntimatterProject',
+    name: 'Space Antimatter',
+    category: 'mega',
+    cost: {
+      colony: {
+        metal: 5_000,
+        electronics: 1_000,
+        superconductors: 500
+      }
+    },
+    duration: 1,
+    description: 'Assemble antimatter-grade battery modules in orbit capable of beaming and receiving energy. Each battery instantly adds 1e15 to space energy storage.  Resources can be paid from space or colony storage, depending on space storage settings.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      preserveProgressOnTravel: true
+    }
+  },
   lifters: {
     type: 'LiftersProject',
     name: 'Lifters',

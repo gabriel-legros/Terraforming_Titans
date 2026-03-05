@@ -18,7 +18,7 @@ class WorkerCapacityBatchProject extends Project {
     const perCompletion = this.getWorkersPerCompletion();
     const maxByWorkers = perCompletion > 0 ? Math.ceil(workers / perCompletion) : Infinity;
     if (this.maxRepeatCount === Infinity) {
-      return maxByWorkers;
+      return Math.max(1, maxByWorkers);
     }
     return Math.max(Math.min(maxByWorkers, this.maxRepeatCount), 1);
   }

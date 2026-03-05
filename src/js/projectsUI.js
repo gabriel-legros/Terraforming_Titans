@@ -589,10 +589,10 @@ function createProjectItem(project) {
     }
     items.forEach((item, idx) => {
       const span = document.createElement('span');
-      list.appendChild(span);
-      if (idx < items.length - 1) {
-        list.appendChild(document.createTextNode(', '));
+      if (idx > 0) {
+        span.dataset.leadingComma = 'true';
       }
+      list.appendChild(span);
       costItems[`${item.category}.${item.resource}`] = span;
     });
     projectDetails.appendChild(costElement);
@@ -1054,6 +1054,7 @@ function updateCostDisplay(project) {
         item.style.display = 'none';
       }
     }
+    elements.hasVisibleCostItems = hasItem;
     elements.costElement.style.display = hasItem ? 'block' : 'none';
   }
 }
@@ -1390,7 +1391,7 @@ function updateProjectUI(projectName) {
   } else {
     // If the project can still be repeated or started, show the relevant UI elements
     if (elements.costElement) {
-      elements.costElement.style.display = 'block';
+      elements.costElement.style.display = elements.hasVisibleCostItems === false ? 'none' : 'block';
       elements.costElement.style.color = '';
     }
     if (elements.progressButton) {
