@@ -413,6 +413,180 @@ const sculkBioworldOverrides = {
   }
 };
 
+const earthOverrunOverrides = {
+  name: 'EarthOverrun',
+  gravityPenaltyEnabled: false,
+  effects: [
+    {
+      target: 'building',
+      targetId: 'trashIncinerator',
+      type: 'booleanFlag',
+      flagId: 'disableHazardousBiomassIncineratorRecipe',
+      value: true
+    }
+  ],
+  resources: {
+    surface: {
+      land: { initialValue: 51007200000 },
+      ice: { initialValue: 0, unlocked: true },
+      liquidWater: { initialValue: 1.386e18, unlocked: true },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 15_000, maxDeposits: 150_000, areaTotal: 200_000_000 },
+      geothermal: { initialValue: 10_000, maxDeposits: 20_000, areaTotal: 20_000_000 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 1.9080066504e12 },
+      inertGas: { initialValue: 4.1120010538e15 },
+      oxygen: { initialValue: 1.1094770749e15 },
+      atmosphericWater: { initialValue: 6.6574096054e13 },
+      atmosphericMethane: { initialValue: 9.882092383e9 },
+      atmosphericAmmonia: { initialValue: 520110.125421 },
+      hydrogen: { initialValue: 260055062.71 },
+      sulfuricAcid: { initialValue: 0 },
+      greenhouseGas: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 0.693e18,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    },
+    temperate: {
+      liquidWater: 0.5544e18,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    },
+    polar: {
+      liquidWater: 0.1386e18,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0,
+      liquidAmmonia: 0,
+      ammoniaIce: 0,
+      buriedAmmoniaIce: 0,
+      liquidOxygen: 0,
+      oxygenIce: 0,
+      buriedOxygenIce: 0,
+      liquidNitrogen: 0,
+      nitrogenIce: 0,
+      buriedNitrogenIce: 0
+    }
+  },
+  zonalTemperatures: {
+    tropical: {
+      value: 301,
+      day: 302,
+      night: 299
+    },
+    temperate: {
+      value: 288,
+      day: 290,
+      night: 286
+    },
+    polar: {
+      value: 283,
+      day: 285,
+      night: 281
+    }
+  },
+  hazards: {
+    hazardousBiomass: {
+      baseGrowth: { value: 1, maxDensity: 100 },
+      invasivenessResistance: { value: 10, severity: 0.005 },
+      oxygenPressure: { min: 18, max: 55, unit: 'kPa', severity: 0.01 },
+      co2Pressure: { min: 0, max: 5, unit: 'kPa', severity: 0.01 },
+      atmosphericPressure: { min: 50, max: 110, unit: 'kPa', severity: 0.002 },
+      landPreference: { value: 'Land', severity: 0 },
+      temperaturePreference: {
+        min: 260,
+        max: 315,
+        unit: 'K',
+        severityBelow: 0.005,
+        severityHigh: 0.005
+      },
+      radiationPreference: { min: 0, max: 0.5, unit: 'mSv/day', severity: 0.1 },
+      penalties: {
+        buildCost: 2,
+        maintenanceCost: 1,
+        populationGrowth: 1
+      }
+    }
+  },
+  celestialParameters: {
+    distanceFromSun: 1,
+    gravity: 9.807,
+    hasNaturalMagnetosphere: true,
+    radius: 6371,
+    mass: 5.972e+24,
+    albedo: 0.05,
+    rotationPeriod: 24,
+    spinPeriod: 24,
+    starLuminosity: 1361,
+    surfaceArea: 510072000000000
+  },
+  star: {
+    name: 'Sun',
+    spectralType: 'G',
+    luminositySolar: 1,
+    massSolar: 1,
+    radiusSolar: 1,
+    temperatureK: 5772,
+    habitableZone: {
+      inner: 0.82,
+      outer: 1.17
+    }
+  },
+  visualization: {
+    baseColor: '#878a81'
+  }
+};
+
 const specialSeedDefinitions = {
   wolfysnightmare: {
     key: 'wolfysnightmare',
@@ -463,6 +637,23 @@ const specialSeedDefinitions = {
       }
     ],
     overrides: sculkBioworldOverrides
+  },
+  earthoverrun: {
+    key: 'earthoverrun',
+    seed: 'EarthOverrun',
+    name: 'EarthOverrun',
+    replayable: true,
+    target: 'planet',
+    archetype: 'super-earth',
+    orbitPreset: 'hz-inner',
+    specialEffects: [
+      {
+        id: 'incinerator-no-hazardous-biomass',
+        label: 'Incinerator Recipe Disabled',
+        description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
+      }
+    ],
+    overrides: earthOverrunOverrides
   }
 };
 

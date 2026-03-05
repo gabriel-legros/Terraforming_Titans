@@ -342,7 +342,15 @@ class ResourceCycle {
       && Number.isFinite(boilingPoint)
       && zoneTemperature > boilingPoint) {
       const diff = zoneTemperature - boilingPoint;
-      const boilingRate = currentLiquid * this.boilingRateMultiplier * diff;
+      let activation = 1;
+      const transitionRange = this.boilTransitionRange || 0;
+      if (transitionRange > 0) {
+        // Smoothly ramp boiling on near the threshold while preserving
+        // the original rate once superheat exceeds transitionRange.
+        const t = Math.max(0, Math.min(1, diff / transitionRange));
+        activation = t * t * (3 - 2 * t);
+      }
+      const boilingRate = currentLiquid * this.boilingRateMultiplier * diff * activation;
       boilingAmount = Math.min(boilingRate * durationSeconds, currentLiquid);
       changes.atmosphere[atmosphereKey] += boilingAmount;
       changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - boilingAmount;
