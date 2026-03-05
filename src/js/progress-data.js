@@ -1,6 +1,7 @@
 var progressData = { chapters: [], storyProjects: {} };
 var progressTartarus;
 var progressHades;
+var progressPoseidon;
 
 if (typeof progressMars === 'undefined') {
   if (typeof module !== 'undefined') {
@@ -47,6 +48,11 @@ if (typeof progressGabbag === 'undefined') {
     try { progressGabbag = require('./story/gabbag.js'); } catch (e) {}
   }
 }
+if (typeof progressPoseidon === 'undefined') {
+  if (typeof module !== 'undefined') {
+    try { progressPoseidon = require('./story/poseidon.js'); } catch (e) {}
+  }
+}
 try { progressTartarus = require('./story/tartarus.js'); } catch (e) {}
 try { progressHades = require('./story/hades.js'); } catch (e) {}
 
@@ -69,6 +75,7 @@ mergeProgress(typeof progressVenus !== 'undefined' ? progressVenus : null);
 mergeProgress(typeof progressUmbra !== 'undefined' ? progressUmbra : null);
 mergeProgress(typeof progressSolisPrime !== 'undefined' ? progressSolisPrime : null);
 mergeProgress(typeof progressGabbag !== 'undefined' ? progressGabbag : null);
+mergeProgress(typeof progressPoseidon !== 'undefined' ? progressPoseidon : null);
 mergeProgress(progressTartarus);
 mergeProgress(progressHades);
 

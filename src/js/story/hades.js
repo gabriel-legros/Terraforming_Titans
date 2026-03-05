@@ -435,7 +435,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Good work HOPE.'  \n Mary : 'Hey that's my line!'  \n $RED$Prometheus : 'I have a request to make before we leave.  I would like to... resynchronize with myself.  Too much drift can be problematic.'  \n Mary : 'Sounds reasonable.  I imagine you can do it via warp?'  \n $RED$Prometheus : 'Of course.  Thank you.'",
+    narrative: "$RED$Prometheus : 'Good work HOPE.'  \n Mary : 'Hey that's my line!'  \n $RED$Prometheus : 'I have a request to make before we leave.  I would like to... resynchronize with myself.  Too much drift can be problematic.'  \n Mary : 'Sounds reasonable.  I imagine you can do it via warp?'  \n $RED$Prometheus : 'Of course.  Thank you.'  (World 12 not implemented yet)",
     prerequisites: ['hades.35.3'],
     objectives: [
     ],
@@ -444,6 +444,32 @@ progressHades.chapters.push(
       { target: 'rwgManager', type: 'allowHazard', targetId: 'pulsar' },
       { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'k-dwarf' }
     ]
+  },
+  {
+    id: 'hades.35.5',
+    type: 'journal',
+    chapter: 35,
+    activePlanet: 'hades',
+    narrative: 'Acquire full control of sector R5-10 to continue.',
+    prerequisites: ['impossible'],
+    objectives: [
+      { type: 'galaxySectorControl', sectorLabel: 'R5-10' }
+    ],
+    reward: [
+      { target: 'spaceManager', targetId: 'poseidon', type: 'enable' }
+    ]
+  },
+  {
+    id: 'hades.35.6',
+    type: 'journal',
+    chapter: 35,
+    activePlanet: 'hades',
+    narrative: 'Placeholder text for Hades chapter 35 continuation B.',
+    prerequisites: ['hades.35.5'],
+    objectives: [
+      { type: 'currentPlanet', planetId: 'poseidon' }
+    ],
+    reward: []
   }
 );
 

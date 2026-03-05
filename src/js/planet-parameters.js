@@ -1466,6 +1466,111 @@ const hadesOverrides = {
   }
 };
 
+const poseidonOverrides = {
+  name: 'Poseidon',
+  star: {
+    name: 'Nereid',
+    spectralType: 'K1V',
+    luminositySolar: 0.46,
+    massSolar: 0.84,
+    temperatureK: 5100,
+    habitableZone: { inner: 0.67, outer: 1.05 }
+  },
+  celestialParameters: {
+    distanceFromSun: 2.9,
+    gravity: 8.4,
+    radius: 6100,
+    mass: 7.6e24,
+    albedo: 0.28,
+    rotationPeriod: 21.8,
+    spinPeriod: 21.8,
+    starLuminosity: 0.46,
+    sector: 'R5-10'
+  },
+  visualization: {
+    baseColor: '#1f4f63',
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 19_000_000_000 },
+      liquidWater: { initialValue: 0 },
+      ice: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 2_500_000_000 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 1_900_000_000_000_000 },
+      oxygen: { initialValue: 100_000 },
+      inertGas: { initialValue: 9_700_000_000_000_000 },
+      hydrogen: { initialValue: 0 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    temperate: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    polar: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    }
+  },
+  zonalTemperatures: {
+    tropical: {
+      value: 115.4,
+      day: 127.8,
+      night: 103
+    },
+    temperate: {
+      value: 102.3,
+      day: 111.9,
+      night: 92.7
+    },
+    polar: {
+      value: 86.1,
+      day: 90.4,
+      night: 81.8
+    }
+  }
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -1479,7 +1584,8 @@ const planetSpecificOverrides = {
   solisprime: solisPrimeOverrides,
   gabbag: gabbagOverrides,
   tartarus: tartarusOverrides,
-  hades: hadesOverrides
+  hades: hadesOverrides,
+  poseidon: poseidonOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -1528,6 +1634,7 @@ const planetParameters = {
     gabbag: getPlanetParameters('gabbag'),
     tartarus: getPlanetParameters('tartarus'),
     hades: getPlanetParameters('hades'),
+    poseidon: getPlanetParameters('poseidon'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,
