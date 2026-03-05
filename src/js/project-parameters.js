@@ -750,7 +750,7 @@ const projectParameters = {
     category: 'mega',
     cost: {
       colony: {
-        metal: 5_000,
+        metal: 100_000,
         electronics: 1_000,
         superconductors: 500
       }
