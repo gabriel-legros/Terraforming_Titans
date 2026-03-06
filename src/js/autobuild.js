@@ -739,8 +739,11 @@ function autoBuild(buildings, delta = 0) {
             }
             const maxCount = building.getAutoBuildMaxCount(reserve, extraReserves);
             const buildLimit = building.getBuildLimit() ?? Infinity;
+            const maxTargetCount = maxMode && building.getAutoBuildMaxTargetCount
+                ? building.getAutoBuildMaxTargetCount()
+                : buildLimit;
             const desiredAmount = maxMode
-                ? buildLimit - building.count
+                ? maxTargetCount - building.count
                 : Math.min(requiredAmount, buildLimit - building.count);
             if (desiredAmount <= 0) {
                 return;

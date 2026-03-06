@@ -143,6 +143,10 @@ function getAutoBuildInputValue(structure) {
   return `${structure.autoBuildPercent || 0}`;
 }
 
+function getAutoBuildMaxBasisLabel(structure) {
+  return structure.getAutoBuildMaxModeLabel ? structure.getAutoBuildMaxModeLabel() : 'Max';
+}
+
 function updateAutoBuildStepButtonLabels(structure, incrementBtn, decrementBtn) {
   if (!structure) return;
   structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
@@ -185,7 +189,7 @@ function refreshAutoBuildTarget(structure) {
     const targetText = autoBuildUsesFill
       ? `Max fill : ${formatNumber(structure.autoBuildFillPercent || 0, true)}%`
       : autoBuildUsesMax
-        ? 'Target : Max'
+        ? `Target : ${getAutoBuildMaxBasisLabel(structure)}`
         : `Target : ${formatNumber(targetCount, true)}`;
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
@@ -775,7 +779,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   if (structure.autoBuildMaxOption) {
     const maxOption = document.createElement('option');
     maxOption.value = 'max';
-    maxOption.textContent = 'Max';
+    maxOption.textContent = getAutoBuildMaxBasisLabel(structure);
     autoBuildBasisSelect.appendChild(maxOption);
   }
   autoBuildBasisSelect.value = resolveAutoBuildBasisValue(structure, autoBuildBasisSelect);
