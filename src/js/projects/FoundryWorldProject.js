@@ -52,10 +52,10 @@
     },
     {
       id: 'deeperMiningSpeed',
-      label: 'Deeper Mining Expertise',
+      label: 'Subterranean Expertise',
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases deeper mining speed by 1%.',
+      description: 'Increases deeper mining and underground land expansion speed by 1%.',
     },
   ];
 
@@ -264,6 +264,14 @@
         targetId: 'deeperMining',
         type: 'projectDurationMultiplier',
         effectId: 'foundry-deeper-mining-speed',
+        value: 1 / speedBonus,
+        sourceId: 'foundryWorld',
+      });
+      addEffect({
+        target: 'project',
+        targetId: 'undergroundExpansion',
+        type: 'projectDurationMultiplier',
+        effectId: 'foundry-underground-expansion-speed',
         value: 1 / speedBonus,
         sourceId: 'foundryWorld',
       });

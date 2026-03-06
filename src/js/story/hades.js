@@ -435,7 +435,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "$RED$Prometheus : 'Good work HOPE.'  \n Mary : 'Hey that's my line!'  \n $RED$Prometheus : 'I have a request to make before we leave.  I would like to... resynchronize with myself.  Too much drift can be problematic.'  \n Mary : 'Sounds reasonable.  I imagine you can do it via warp?'  \n $RED$Prometheus : 'Of course.  Thank you.'  (World 12 not implemented yet)",
+    narrative: "$RED$Prometheus : 'Good work HOPE.'  \n Mary : 'Hey that's my line!'  \n $RED$Prometheus : 'I have a request to make before we leave.  I would like to... resynchronize with myself.  Too much drift can be problematic.'  \n Mary : 'Sounds reasonable.  I imagine you can do it via warp?'  \n $RED$Prometheus : 'Of course.  Thank you.'  \n(World 12 not implemented yet)",
     prerequisites: ['hades.35.3'],
     objectives: [
     ],
