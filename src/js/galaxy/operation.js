@@ -84,6 +84,7 @@ class GalaxyOperationManager {
         if (!Number.isFinite(deltaMs) || deltaMs <= 0) {
             return;
         }
+        let resolvedOperations = false;
         if (this.operations.size) {
             const completed = [];
             this.operations.forEach((operation, key) => {
@@ -104,6 +105,11 @@ class GalaxyOperationManager {
                 this.#completeOperation(operation);
                 this.operations.delete(key);
             });
+            resolvedOperations = completed.length > 0;
+        }
+        if (resolvedOperations) {
+            // Ensure AI defensive fleet assignments reflect newly resolved control before auto-launch logic runs.
+            this.#refreshFactionDefenseStates();
         }
         this.#processAutoLaunch();
     }
@@ -963,6 +969,17 @@ class GalaxyOperationManager {
             return null;
         }
         return { q, r };
+    }
+
+    #refreshFactionDefenseStates() {
+        const factions = this.manager?.getFactions?.();
+        if (!Array.isArray(factions) || factions.length === 0) {
+            return;
+        }
+        for (let index = 0; index < factions.length; index += 1) {
+            const faction = factions[index];
+            faction?.update?.(0, this.manager);
+        }
     }
 
     #processAutoLaunch() {
