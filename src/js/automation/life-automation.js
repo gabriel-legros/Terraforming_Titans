@@ -637,6 +637,32 @@ class LifeAutomation {
     return spends;
   }
 
+  getAttributePointCost(attributeName, value) {
+    if (attributeName === 'optimalGrowthTemperature') {
+      return Math.abs(value);
+    }
+    return value;
+  }
+
+  getAsNeededReassignedPoints(candidate, currentDesign) {
+    let freedFromAsNeeded = 0;
+    let gainedOutsideAsNeeded = 0;
+    for (let index = 0; index < LIFE_AUTOMATION_ATTRIBUTES.length; index += 1) {
+      const attributeName = LIFE_AUTOMATION_ATTRIBUTES[index];
+      const candidateCost = this.getAttributePointCost(attributeName, candidate[attributeName].value);
+      const currentCost = this.getAttributePointCost(attributeName, currentDesign[attributeName].value);
+      const delta = candidateCost - currentCost;
+      if (this.isAsNeededAttribute(attributeName)) {
+        if (delta < 0) {
+          freedFromAsNeeded += -delta;
+        }
+      } else if (delta > 0) {
+        gainedOutsideAsNeeded += delta;
+      }
+    }
+    return Math.min(freedFromAsNeeded, gainedOutsideAsNeeded);
+  }
+
   applyAutoDesign(preset) {
     if (!preset.designEnabled) {
       return;
@@ -665,7 +691,9 @@ class LifeAutomation {
     }
     const improvement = candidate.getDesignCost() - currentDesign.getDesignCost();
     const improvementMagnitude = Math.abs(improvement);
-    if (!needsToleranceIncrease && improvementMagnitude < preset.deployImprovement) {
+    const reassignedAsNeededPoints = this.getAsNeededReassignedPoints(candidate, currentDesign);
+    const effectiveImprovement = Math.max(improvementMagnitude, reassignedAsNeededPoints);
+    if (!needsToleranceIncrease && effectiveImprovement < preset.deployImprovement) {
       return;
     }
     if (!candidate.canSurviveAnywhere()) {
