@@ -864,6 +864,12 @@
   color: var(--space-fg-muted);
 }
 
+.space-stat-label .info-tooltip-icon .resource-tooltip {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .space-stat-value {
   font-size: 32px;
   font-weight: 700;

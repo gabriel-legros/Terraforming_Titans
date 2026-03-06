@@ -24,10 +24,13 @@ let spaceStatUniqueValueEl = null;
 let spaceStatEffectiveValueEl = null;
 let spaceStatUniqueTooltipEl = null;
 let spaceStatEffectiveTooltipEl = null;
+let spaceStatUniqueTooltipContentEl = null;
+let spaceStatEffectiveTooltipContentEl = null;
 let spaceStatOneillCardEl = null;
 let spaceStatOneillValueEl = null;
 let spaceStatOneillTooltipEl = null;
 let spaceStatOneillRateEl = null;
+let spaceStatOneillTooltipContentEl = null;
 
 const galaxyTabElements = { button: null, content: null };
 const spaceTabAlertElements = { button: null, warning: null, alert: null, storyAlert: null };
@@ -414,12 +417,16 @@ function initializeSpaceUI(spaceManager) {
     spaceStatOneillValueEl = document.getElementById('space-stat-oneill-value');
     spaceStatOneillTooltipEl = document.getElementById('space-stat-oneill-tooltip');
     spaceStatOneillRateEl = document.getElementById('space-stat-oneill-rate');
+    spaceStatUniqueTooltipContentEl = attachDynamicInfoTooltip(spaceStatUniqueTooltipEl, '');
+    spaceStatEffectiveTooltipContentEl = attachDynamicInfoTooltip(spaceStatEffectiveTooltipEl, '');
+    spaceStatOneillTooltipContentEl = attachDynamicInfoTooltip(spaceStatOneillTooltipEl, '');
     if (typeof setOneillStatsElements === 'function') {
         setOneillStatsElements({
             card: spaceStatOneillCardEl,
             value: spaceStatOneillValueEl,
             rate: spaceStatOneillRateEl,
-            tooltip: spaceStatOneillTooltipEl
+            tooltip: spaceStatOneillTooltipEl,
+            tooltipContent: spaceStatOneillTooltipContentEl
         });
     }
 
@@ -573,13 +580,22 @@ function updateSpaceStatsUI() {
     const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
     if (spaceStatUniqueTooltipEl) {
         const uniqueBase = 'Counts every distinct story world and saved random seed you have fully terraformed. Ignores all other bonuses.';
-        spaceStatUniqueTooltipEl.title = `${uniqueBase}`;
+        if (spaceStatUniqueTooltipContentEl) {
+            spaceStatUniqueTooltipContentEl.textContent = uniqueBase;
+        } else {
+            spaceStatUniqueTooltipEl.title = uniqueBase;
+        }
     }
     if (spaceStatEffectiveTooltipEl) {
         const effectiveBase = 'Includes worlds from other sources. This value influence advanced research, Solis rewards, mega structure expansion speed, and export caps.';
         const artificialFleetCap = artificialManager?.getFleetCapacityWorldCap?.() || 5;
         const effectiveGalaxy = galaxyUnlocked ? ` With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to ${artificialFleetCap} and O'Neill cylinders are ignored).` : '';
-        spaceStatEffectiveTooltipEl.title = `${effectiveBase}${effectiveGalaxy}`;
+        const effectiveTooltipText = `${effectiveBase}${effectiveGalaxy}`;
+        if (spaceStatEffectiveTooltipContentEl) {
+            spaceStatEffectiveTooltipContentEl.textContent = effectiveTooltipText;
+        } else {
+            spaceStatEffectiveTooltipEl.title = effectiveTooltipText;
+        }
     }
     if (typeof updateOneillCylinderStatsUI === 'function') {
         updateOneillCylinderStatsUI({

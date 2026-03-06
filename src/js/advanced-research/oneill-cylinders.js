@@ -18,7 +18,7 @@ try {
   }
 }
 
-const oneillStatsCache = { card: null, value: null, rate: null, tooltip: null };
+const oneillStatsCache = { card: null, value: null, rate: null, tooltip: null, tooltipContent: null };
 
 function setOneillStatsElements(elements = {}) {
   if (elements.card) {
@@ -32,6 +32,9 @@ function setOneillStatsElements(elements = {}) {
   }
   if (elements.tooltip) {
     oneillStatsCache.tooltip = elements.tooltip;
+  }
+  if (elements.tooltipContent) {
+    oneillStatsCache.tooltipContent = elements.tooltipContent;
   }
   if (typeof spaceManager !== 'undefined' && spaceManager) {
     updateOneillCylinderStatsUI({
@@ -103,6 +106,16 @@ function formatCylinderRate(value) {
   return `+${rounded}/hr`;
 }
 
+function setOneillTooltipText(text) {
+  if (oneillStatsCache.tooltipContent) {
+    oneillStatsCache.tooltipContent.textContent = text;
+    return;
+  }
+  if (oneillStatsCache.tooltip) {
+    oneillStatsCache.tooltip.title = text;
+  }
+}
+
 function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {
   const { current, capacity, perSecond } = getOneillGrowthContext(space, galaxy);
   if (!(capacity > 0)) {
@@ -121,7 +134,7 @@ function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {
 
 function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
   const unlocked = !!(space && typeof space.isBooleanFlagSet === 'function' && space.isBooleanFlagSet(ONEILL_FLAG));
-  const { card, value, rate, tooltip } = oneillStatsCache;
+  const { card, value, rate } = oneillStatsCache;
   if (card) {
     card.classList.toggle('hidden', !unlocked);
   }
@@ -132,9 +145,7 @@ function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
     if (rate) {
       rate.textContent = '+0.00/hr';
     }
-    if (tooltip) {
-      tooltip.title = "Complete the O'Neill Cylinders advanced research to seed orbital habitats.";
-    }
+    setOneillTooltipText("Complete the O'Neill Cylinders advanced research to seed orbital habitats.");
     return;
   }
   const context = getOneillGrowthContext(space, galaxy);
@@ -147,10 +158,8 @@ function updateOneillCylinderStatsUI({ effects, space, galaxy } = {}) {
   if (rate) {
     rate.textContent = formatCylinderRate(hourlyRate);
   }
-  if (tooltip) {
-    const capacityText = formatCapacity(capacity);
-    tooltip.title = `Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their ${capacityText} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.`;
-  }
+  const capacityText = formatCapacity(capacity);
+  setOneillTooltipText(`Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their ${capacityText} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.`);
 }
 
 if (typeof module !== 'undefined' && module.exports) {
