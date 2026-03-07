@@ -24,7 +24,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "$RED$Prometheus : 'I am not sure what he's doing...'  \n Mary : 'We need his help to get down there.  We can finish this mission instantly and convince HOPE to go home.'  \n $RED$Prometheus : 'No!  Not this time.  This core is too hot for him.  It will seriously damage him or kill him.  We can't '",
+    narrative: "$RED$Prometheus : 'I am not sure what he's doing...'  \n Mary : 'We need his help to get down there.  We can finish this mission instantly and convince HOPE to go home.'  \n $RED$Prometheus : 'No!  Not this time.  This core is too hot for him.  It will seriously damage him or kill him.  It's too dangerous.'  \n Mary : '?'",
     prerequisites: ['poseidon.36.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
@@ -36,7 +36,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 36 milestone 100.",
+    narrative: "Mary : 'Prometheus...'  \n $RED$Prometheus : 'Yes?'  \n Mary : 'People don't usually dislike their brother one day and then start caring about them the next day.' \n$GREEN$Analysis... \nMary : 'No HOPE!  SHUT UP!  Prometheus...  what's going on.'\n$RED$ ",
     prerequisites: ['poseidon.36.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
