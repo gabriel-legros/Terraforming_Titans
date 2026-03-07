@@ -207,6 +207,13 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     );
   }
 
+  getProjectedCollectorPowerPerSecond() {
+    if (this.getTotalCollectorPower) {
+      return Math.max(this.getTotalCollectorPower(), 0);
+    }
+    return Math.max((this.collectors || 0) * (this.energyPerCollector || 0), 0);
+  }
+
   applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges) {
     if (!accumulatedChanges) {
       return;
@@ -230,13 +237,14 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
+    const operationAlreadyHandled = this.operationPreRunThisTick === true;
     const seconds = deltaTime / 1000;
-    const collectorPowerPerSecond = this.getCollectorPowerPerSecond();
+    const collectorPowerPerSecond = this.getProjectedCollectorPowerPerSecond();
     const collectorEnergyGain = seconds > 0
       ? Math.max(collectorPowerPerSecond * seconds, 0)
       : 0;
 
-    if (collectorEnergyGain > 0) {
+    if (!operationAlreadyHandled && collectorEnergyGain > 0) {
       totals.gain.space ||= {};
       totals.gain.space.energy = (totals.gain.space.energy || 0) + collectorEnergyGain;
       if (applyRates) {
@@ -368,6 +376,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.operationPreRunThisTick = false;
     this.applyExpansionCostAndGain(deltaTime, accumulatedChanges, productivity);
   }
 
