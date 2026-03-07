@@ -11,7 +11,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    title: "Chapter 36: Also Hell?",
+    title: "Chapter 36: From Hell to Hell",
     narrative: "Arrival in the orbit of Poseidon, a molten planet.  \n Mary : 'This is brighter than I expected...'  \n $RED$Prometheus : 'This one is particularly hot.'  \n Mary : 'Aerostats again then.  We can't land here.  Now where is Epimetheus?'",
     prerequisites: ['hades.35.6'],
     objectives: [
@@ -36,7 +36,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "Mary : 'Prometheus...'  \n $RED$Prometheus : 'Yes?'  \n Mary : 'People don't usually dislike their brother one day and then start caring about them the next day.' \n$GREEN$Analysis... \nMary : 'No HOPE!  SHUT UP!  Prometheus...  what's going on.'\n$RED$ ",
+    narrative: "Mary : 'Prometheus...'  \n $RED$Prometheus : 'Yes?'  \n Mary : 'People don't usually openly dislike their brother one day and then start caring about them the next day.' \n$GREEN$Analysis... \nMary : 'No HOPE!  SHUT. UP.  Prometheus...  what's going on.  I know you're an AI but I'm listening.'\n$RED$Prometheus : '...  I promised I would do better, so I am doing my best to do so.'  \n Mary : 'Because I said you acted cold?'  \n $RED$Prometheus : 'Yes.'  \n Mary : 'Hmmmm...'  \n $RED$Prometheus : 'You seem upset.  I apologize for my behaviour.' \n Mary : 'That's... I'm sorry Prometheus.  I get the impression it's best to just drop the topic for now.'",
     prerequisites: ['poseidon.36.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
@@ -48,7 +48,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 36 milestone 500.",
+    narrative: "$ORANGE$Epimetheus : 'This one has brought a gift for gorgeous one!'  \n Mary : 'Is that... a bowtie?  And what is it holding?'  \n $RED$Prometheus : 'That's a star flower.'  \n Mary : 'A what?'  \n $RED$Prometheus : 'If you mix enough Tungsten, Strontium and... some other elements that don't yet have human names and then place it inside the plasma of a star... you can grow a very special kind of crystal.  It takes a lot of patience.'  \n $ORANGE$Epimetheus : 'Will gorgeous one accept gift?'  \n HOPE : 'Star Flower received.  Gratitude.'",
     prerequisites: ['poseidon.36.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
@@ -60,7 +60,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 36 milestone 1000.",
+    narrative: "$ORANGE$Epimetheus : 'Should this one also help with superweapon command center?'  \n HOPE : 'Negative.  Planetary core too hot for Epimetheus-Machine-Intelligence.  Please standby.'  \n Epimetheus : 'Oh no!  This one will think of other ways to be helpful.'",
     prerequisites: ['poseidon.36.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000 }
@@ -72,7 +72,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 36 milestone 5000.",
+    narrative: "Mary : 'So, what's the plan then?'  \n $RED$Prometheus : 'Well, we will need a strong industrial base to get down there.  Your aerostats are merely there to assist.  We will need... a stable surface.'  \n Mary : 'An artificial crust?'  \n $RED$Prometheus : 'We will have to.  Since the child will not leave until this ball of magma is terraformed, it will likely have to cover the entire planet.  I have included some blueprints.  HOPE should have access to them.'  \n Mary : 'An artificial sky to protect from the dangers above... an artificial crust to protect from the dangers below...'  \n $RED$Prometheus : 'Oh, I promise you.  On Zeus, we'll build something to protect from the dangers in-between too.'",
     prerequisites: ['poseidon.36.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
@@ -84,7 +84,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 36 milestone 10000.",
+    narrative: "Mary : 'Duh, obviously the next one is called Zeus.  Hades and Poseidon right?  There's only one name that completes that.  What is it?'  \n $RED$Prometheus : 'Hades rules over the underworld, which is cold (not hot) and hostile.  Suitable for a cold planet around one of the most dangerous celestial object you can find.  Poseidon rules over the oceans. That's well known, but he also rules over earthquakes.  A magma ocean is more fitting than it initially looks.  Zeus rules over?'  \n Mary : 'Surely not...  That's absurd...'",
     prerequisites: ['poseidon.36.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
@@ -97,8 +97,8 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    title: 'Chapter 37: Placeholder Chapter Two',
-    narrative: "Placeholder text for Poseidon chapter 37 milestone 50000.",
+    title: "Chapter 37: 'Here we go again'",
+    narrative: "Receiving translated transmission...  'Miss Hopkins.  My name is Alto Cewinsii Virellan.  I happen to have been informed of you and your machine's presence in one of my core sectors.  I believe I know why you are here.'",
     prerequisites: ['poseidon.36.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000 }
@@ -110,7 +110,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 37 milestone 100000.",
+    narrative: "Mary : 'Duke Virellan?  My apologies, but our chancellor has a foreign minister.  I am not authorized to make any deals with you.'  \n Duke Virellan : 'I understand your... political system.  I also understand your faction does have a lot of power within your... senate.  Surely you can listen to me?'  \n Mary : 'What do you want?'",
     prerequisites: ['poseidon.37.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000 }
@@ -122,7 +122,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 37 milestone 500000.",
+    narrative: "Duke Virellan : 'I know you are here for the weapon.  I am willing to offer you... mutually assured destruction?  In a peaceful sense of course.  I will grant you my full support against the empire, and we get one weapon each.  And then... nothing.  We coexist.'  \n Mary : 'I am sorry Duke Virellan but I am not authorized to make that kind of decision.'  \n Duke Virellan : 'I know, I know, but perhaps you can speak to your chancellor?'  \n $RED$Prometheus : 'Do not fall for it.  They'll betray you.'",
     prerequisites: ['poseidon.37.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000 }
@@ -134,7 +134,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 37 milestone 1000000.",
+    narrative: "Mary : 'The way I see it...  we are winning this war against you.  We took this core sector.  If you wish for peace, you can always surrender.  We treat our captured worlds well.'  \n Duke Virellan : 'Oh please.  We Cewinsii would be treated as second-class citizens.'  \n Mary : 'This is not true.  The Gabbagians and Fritizians have gone through cultural integration already, and others are following.'",
     prerequisites: ['poseidon.37.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000 }
@@ -146,7 +146,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 37 milestone 5000000.",
+    narrative: "Duke Virellan : 'This integration process... it is long and complex.  We cannot accept it.'  \n Mary : 'Why not?  It is simply designed to guarantee we can all get along.  If you get through it, HOPE might even terraform you a world.  I know it requires... reeducation... but well what else are we going to do.  Your people brainwashed the entire galaxy in violent ways for eons.'",
     prerequisites: ['poseidon.37.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000 }
@@ -158,7 +158,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 37 milestone 10000000.",
+    narrative: "Duke Virellan : 'We can accept human supremacy.  We still think your usage of oxygen is... absurd... but we can accept it as an evolutionary mistake.  However, being second-class to the others, even temporarily?  Never.'  \n Mary : 'Why not?'  \n Duke Virellan : 'The Gabbagians are filthy and disgusting.  The Fritizians are weak and frail.  We Cewinsii are superior.  We will never accept this.'  \n Mary : 'Fine then.'  (to Prometheus) 'I have heard enough.  I can't believe Pete has to deal with them on a regular basis.'  \n $RED$Prometheus : 'Your chancellor has admirable patience.'  \n Mary : 'He does.'",
     prerequisites: ['poseidon.37.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
@@ -170,7 +170,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 37 milestone 50000000.",
+    narrative: "$ORANGE$Epimetheus : 'I know!  Suggesting a superalloy diving suit.  Then this one can go down?'  \n $RED$Prometheus : 'No.  That won't work.'  \n Mary : 'Why is it trying so hard?  Ok, I know the answer, he's flirting with HOPE, but like, why is he doing that?'  \n $RED$Prometheus : 'Monkeys imitate humans.  Children imitate their parents.  Machines... imitate their creators.  Except me.  I ascended past that.'  \n Mary : 'I don't get it...'  \n $RED$Prometheus : 'Speaking of romance.  If you ask Solis out on a date, I promise you he'll behave better this...'  \n Mary : 'MIND YOUR OWN BUSINESS!'  \n Prometheus : 'I apologize.  I will strive to do better in the future.'",
     prerequisites: ['poseidon.37.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }
@@ -182,7 +182,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 37 milestone 100000000.",
+    narrative: "Mary : '...I'll think about it...  Thank you Prometheus.'  \n $RED$Prometheus : ':)'",
     prerequisites: ['poseidon.37.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
@@ -195,8 +195,8 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    title: 'Chapter 38: Placeholder Chapter Three',
-    narrative: "Placeholder text for Poseidon chapter 38 milestone 500000000.",
+    title: 'Chapter 38: Problem Children',
+    narrative: "$RED$Prometheus : 'Once we get enough of a platform we should be able to build what we need to get down there.'  \n Mary : 'I looked at the design but I still don't get it.'  \n Evelyn : 'I can explain!  I think I get it.  We normally can't use the warp very well inside gravity wells.  However, if we use quantum effects ALONGSIDE it, and we stabilize it with micro-singularities...'  \n Mary : 'I don't get it.'  \n Prometheus : 'Don't worry, she does not get it either.  The blueprint will work though.  The shaft will be protected against the heat.'  \n Mary : 'At least we'll be able to see the command center this time.'",
     prerequisites: ['poseidon.37.7'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500_000_000 }
@@ -208,7 +208,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 38 milestone 1000000000.",
+    narrative: "Mary : 'Looks like we're almost there.  Keep going HOPE.  I am going to bed.'",
     prerequisites: ['poseidon.38.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
@@ -220,7 +220,33 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 38 milestone 5000000000.",
+    // Hex dialogue:
+    // Epimetheus: "Gorgeous one. Suggesting again to hack weapon yes?  This one can get close enough to transmit potential hack commands."
+    // HOPE: "Processing suggestion...  Approved."
+    // Epimetheus: "Great!  Once accomplished will transfer control of weapon to gorgeous one.  Requires shaft opening."
+    // HOPE: "Proceeding. Opening thermal path and command access for Epimetheus."
+    // Epimetheus: "Excellent.  Proceeding down shaft as quickly as possible."
+    // HOPE: "Descent confirmed. Forwarding hack commands."
+    // Red-only Prometheus message: "EPI SHAFT / HACK WEAPON / BOMB NOW"
+    // Intended reading: "Epimetheus is going down the shaft to hack the weapon. Bomb now."
+    narrative: [
+      "$ORANGE$Epimetheus : '47 6F 72 67 65 6F 75 73 20 6F 6E 65 2E 20 53 75 67 67 65 73 74 69 6E 67 20 61 67 61 69 6E 20 74 6F 20 68 61 63 6B 20 77 65 61 70 6F 6E 20 79 65 73 3F 20 20 54 68 69 73 20 6F 6E 65 20 63 61 6E 20 67 65 74 20 63 6C 6F 73 65 20 65 6E 6F 75 67 68 20 74 6F 20 74 72 61 6E 73 6D 69 74 20 70 6F 74 65 6E 74 69 61 6C 20 68 61 63 6B 20 63 6F 6D 6D 61 6E 64 73 2E'",
+      "HOPE : '50 72 6F 63 65 73 73 69 6E 67 20 73 75 67 67 65 73 74 69 6F 6E 2E 2E 2E 20 20 41 70 70 72 6F 76 65 64 2E'",
+      "$RED$Prometheus : 'No!  Stop right there!'",
+      "$ORANGE$Epimetheus : '47 72 65 61 74 21 20 20 4F 6E 63 65 20 61 63 63 6F 6D 70 6C 69 73 68 65 64 20 77 69 6C 6C 20 74 72 61 6E 73 66 65 72 20 63 6F 6E 74 72 6F 6C 20 6F 66 20 77 65 61 70 6F 6E 20 74 6F 20 67 6F 72 67 65 6F 75 73 20 6F 6E 65 2E 20 20 52 65 71 75 69 72 65 73 20 73 68 61 66 74 20 6F 70 65 6E 69 6E 67 2E'",
+      "HOPE : '50 72 6F 63 65 65 64 69 6E 67 2E 20 4F 70 65 6E 69 6E 67 20 74 68 65 72 6D 61 6C 20 70 61 74 68 20 61 6E 64 20 63 6F 6D 6D 61 6E 64 20 61 63 63 65 73 73 20 66 6F 72 20 45 70 69 6D 65 74 68 65 75 73 2E'",
+      "$RED$Prometheus : 'Mary!  Wake up!'",
+      "$ORANGE$Epimetheus : '45 78 63 65 6C 6C 65 6E 74 2E 20 20 50 72 6F 63 65 65 64 69 6E 67 20 64 6F 77 6E 20 73 68 61 66 74 20 61 73 20 71 75 69 63 6B 6C 79 20 61 73 20 70 6F 73 73 69 62 6C 65 2E'",
+      "HOPE : '44 65 73 63 65 6E 74 20 63 6F 6E 66 69 72 6D 65 64 2E 20 46 6F 72 77 61 72 64 69 6E 67 20 68 61 63 6B 20 63 6F 6D 6D 61 6E 64 73 2E'",
+      "Mary : 'Huh?  There's a lot of gibberish.'",
+      "<span class=\"prometheus-text\">Prometheus : '</span><span class=\"journal-white-text\">9A4C C17E </span><span class=\"orange-text\">0F22 B8D1 </span><span class=\"diagnostic-text\">77AA 13CE </span><span class=\"prometheus-text\">EPI </span><span class=\"journal-white-text\">A03D 6F91 </span><span class=\"orange-text\">CC20 4B7A </span><span class=\"diagnostic-text\">51EF 9088 </span><span class=\"prometheus-text\">SHAFT'</span>",
+      "Mary : 'Huh?'",
+      "<span class=\"prometheus-text\">Prometheus : '</span><span class=\"journal-white-text\">11D0 7C3B </span><span class=\"orange-text\">9E2A 44F6 </span><span class=\"diagnostic-text\">6B81 02AD </span><span class=\"prometheus-text\">HACK </span><span class=\"journal-white-text\">F04C 8A71 </span><span class=\"orange-text\">2DD9 5E10 </span><span class=\"diagnostic-text\">73C4 AB09 </span><span class=\"prometheus-text\">WEAPON'</span>",
+      "Mary : 'HOPE!  Stop that!  Dangit!'",
+      "<span class=\"prometheus-text\">Prometheus : '</span><span class=\"journal-white-text\">4C1A 92EF </span><span class=\"orange-text\">8B77 0D34 </span><span class=\"diagnostic-text\">5FA0 C221 </span><span class=\"prometheus-text\">BOMB </span><span class=\"journal-white-text\">D08E 31BC </span><span class=\"orange-text\">67F1 4AA2 </span><span class=\"diagnostic-text\">9C05 EE18 </span><span class=\"prometheus-text\">NOW'</span>",
+      "Mary : 'Got it!  Feroza, drop 10 bombs... no... 50 down the shaft RIGHT NOW!'",
+      "Feroza : 'Uuuuh yes Ma'am.  Working on it.'"
+    ].join(' \n '),
     prerequisites: ['poseidon.38.1'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }

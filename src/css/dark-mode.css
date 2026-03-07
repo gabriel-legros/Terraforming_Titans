@@ -79,16 +79,24 @@
     color: #ffffff;
 }
 
-.dark-mode #journal-entries .prometheus-text {
+.dark-mode #journal-entries .prometheus-text,
+.dark-mode .history-entries .prometheus-text {
     color: #ff6a6a;
 }
 
-.dark-mode #journal-entries .diagnostic-text {
+.dark-mode #journal-entries .diagnostic-text,
+.dark-mode .history-entries .diagnostic-text {
     color: #7dff7d;
 }
 
-.dark-mode #journal-entries .orange-text {
+.dark-mode #journal-entries .orange-text,
+.dark-mode .history-entries .orange-text {
     color: #ffb347;
+}
+
+.dark-mode #journal-entries .journal-white-text,
+.dark-mode .history-entries .journal-white-text {
+    color: inherit;
 }
 
 .dark-mode .journal-automation-section {

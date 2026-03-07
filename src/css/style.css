@@ -264,16 +264,24 @@ body.journal-collapsed .tab-content {
     color: #333;
 }
 
-#journal-entries .prometheus-text {
+#journal-entries .prometheus-text,
+.history-entries .prometheus-text {
     color: #c43333;
 }
 
-#journal-entries .diagnostic-text {
+#journal-entries .diagnostic-text,
+.history-entries .diagnostic-text {
     color: #2e7d32;
 }
 
-#journal-entries .orange-text {
+#journal-entries .orange-text,
+.history-entries .orange-text {
     color: #d97706;
+}
+
+#journal-entries .journal-white-text,
+.history-entries .journal-white-text {
+    color: inherit;
 }
 
 /* Separator for story project entries */

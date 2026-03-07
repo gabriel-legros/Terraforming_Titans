@@ -84,6 +84,13 @@ const GREEN_TOKEN = '$GREEN$';
 const DIAGNOSTIC_CLASS = 'diagnostic-text';
 const ORANGE_TOKEN = '$ORANGE$';
 const ORANGE_CLASS = 'orange-text';
+const JOURNAL_WHITE_CLASS = 'journal-white-text';
+const JOURNAL_INLINE_CLASSES = new Set([
+  PROMETHEUS_CLASS,
+  DIAGNOSTIC_CLASS,
+  ORANGE_CLASS,
+  JOURNAL_WHITE_CLASS
+]);
 
 const JOURNAL_LINE_TOKENS = [
   { token: PROMETHEUS_TOKEN, className: PROMETHEUS_CLASS, label: PROMETHEUS_LABEL },
@@ -94,41 +101,71 @@ const JOURNAL_LINE_TOKENS = [
 ];
 
 function buildJournalSegments(text) {
-  const normalized = joinLines(text)
-    .replace(/<span class="prometheus-text">Prometheus([^<]*)<\/span>/g, `${RED_TOKEN}Prometheus$1`)
-    .replace(/<span class="diagnostic-text">([^<]*)<\/span>/g, `${GREEN_TOKEN}$1`)
-    .replace(/<span class="orange-text">([^<]*)<\/span>/g, `${ORANGE_TOKEN}$1`);
-  const lines = normalized.split('\n');
+  const lines = joinLines(text).split('\n');
   const segments = [];
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    let bestIndex = line.length;
-    let bestToken = null;
-    for (let tokenIndex = 0; tokenIndex < JOURNAL_LINE_TOKENS.length; tokenIndex++) {
-      const tokenConfig = JOURNAL_LINE_TOKENS[tokenIndex];
-      const currentIndex = line.indexOf(tokenConfig.token);
-      if (currentIndex !== -1 && currentIndex < bestIndex) {
-        bestIndex = currentIndex;
-        bestToken = tokenConfig;
-      }
-    }
-    if (bestIndex === line.length) {
-      if (line.length) {
-        segments.push({ text: line });
-      }
-    } else {
-      const before = line.slice(0, bestIndex);
-      const after = line.slice(bestIndex + bestToken.token.length);
-      if (before.length) {
-        segments.push({ text: before });
-      }
-      const tokenText = bestToken.label ? `${bestToken.label}${after}` : after;
-      segments.push({ text: tokenText, className: bestToken.className });
-    }
+    segments.push(...buildJournalLineSegments(lines[i]));
     if (i < lines.length - 1) {
       segments.push({ isBreak: true });
     }
   }
+  return segments;
+}
+
+function buildJournalLineSegments(line) {
+  const segments = [];
+  let bestIndex = line.length;
+  let bestToken = null;
+  for (let tokenIndex = 0; tokenIndex < JOURNAL_LINE_TOKENS.length; tokenIndex++) {
+    const tokenConfig = JOURNAL_LINE_TOKENS[tokenIndex];
+    const currentIndex = line.indexOf(tokenConfig.token);
+    if (currentIndex !== -1 && currentIndex < bestIndex) {
+      bestIndex = currentIndex;
+      bestToken = tokenConfig;
+    }
+  }
+
+  let remaining = line;
+  if (bestToken) {
+    const before = line.slice(0, bestIndex);
+    const after = line.slice(bestIndex + bestToken.token.length);
+    const tokenText = bestToken.label ? `${bestToken.label}${after}` : after;
+    remaining = `${before}<span class="${bestToken.className}">${tokenText}</span>`;
+  }
+
+  while (remaining.length) {
+    const spanStart = remaining.indexOf('<span class="');
+    if (spanStart === -1) {
+      segments.push({ text: remaining });
+      break;
+    }
+    if (spanStart > 0) {
+      segments.push({ text: remaining.slice(0, spanStart) });
+      remaining = remaining.slice(spanStart);
+      continue;
+    }
+
+    const classMatch = /^<span class="([^"]+)">/.exec(remaining);
+    if (!classMatch || !JOURNAL_INLINE_CLASSES.has(classMatch[1])) {
+      segments.push({ text: '<' });
+      remaining = remaining.slice(1);
+      continue;
+    }
+
+    const openTag = classMatch[0];
+    const closeIndex = remaining.indexOf('</span>', openTag.length);
+    if (closeIndex === -1) {
+      segments.push({ text: remaining });
+      break;
+    }
+
+    segments.push({
+      text: remaining.slice(openTag.length, closeIndex),
+      className: classMatch[1]
+    });
+    remaining = remaining.slice(closeIndex + 7);
+  }
+
   return segments;
 }
 
@@ -211,7 +248,8 @@ function ensureJournalWorldData() {
     { id: 'solisprime', label: 'Solis Prime', source: getStorySource(() => progressSolisPrime, './story/solisPrime.js') },
     { id: 'gabbag', label: 'Gabbag', source: getStorySource(() => progressGabbag, './story/gabbag.js') },
     { id: 'tartarus', label: 'Tartarus', source: getStorySource(() => progressTartarus, './story/tartarus.js') },
-    { id: 'hades', label: 'Hades', source: getStorySource(() => progressHades, './story/hades.js') }
+    { id: 'hades', label: 'Hades', source: getStorySource(() => progressHades, './story/hades.js') },
+    { id: 'poseidon', label: 'Poseidon', source: getStorySource(() => progressPoseidon, './story/poseidon.js') }
   ].filter(world => world.source && Array.isArray(world.source.chapters));
   const standardWorlds = [];
   worlds.forEach(world => {
@@ -675,13 +713,7 @@ function showJournalHistory() {
   entriesContainer.classList.add('history-entries');
   journalHistoryData.forEach(text => {
     const entry = document.createElement('p');
-    const lines = joinLines(text).split('\n');
-    lines.forEach((line, idx) => {
-      entry.appendChild(document.createTextNode(line));
-      if (idx < lines.length - 1) {
-        entry.appendChild(document.createElement('br'));
-      }
-    });
+    appendJournalSegments(entry, buildJournalSegments(text));
     entriesContainer.appendChild(entry);
   });
 

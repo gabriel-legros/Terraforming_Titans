@@ -133,6 +133,7 @@ class StoryManager {
         this.appliedEffects = [];
         this.waitingForJournalEventId = null; // <<< NEW: Track the ID of the journal event we're waiting for
         this.currentChapter = null;
+        this.currentChapterPlanet = null;
 
         // --- Add event listener for journal completion ---
         document.addEventListener('storyJournalFinishedTyping', this.handleJournalFinished.bind(this));
@@ -270,23 +271,28 @@ class StoryManager {
         if (!event || this.activeEventIds.has(event.id) || this.completedEventIds.has(event.id)) {
             return;
         }
+        if (!event.activePlanet && typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentPlanetKey === 'function') {
+            event.activePlanet = spaceManager.getCurrentPlanetKey();
+        }
         const eventChapter = event.chapter;
+        const eventPlanet = event.activePlanet || null;
         let chapterChanged = false;
 
         // Chapter -1 indicates the event should not change the current chapter
         if (eventChapter !== -1) {
             if (this.currentChapter === null) {
                 this.currentChapter = eventChapter;
-            } else if (eventChapter > this.currentChapter) {
+                this.currentChapterPlanet = eventPlanet;
+            } else if (eventChapter > this.currentChapter || (eventPlanet && this.currentChapterPlanet && eventPlanet !== this.currentChapterPlanet)) {
                 clearJournal();
                 this.currentChapter = eventChapter;
+                this.currentChapterPlanet = eventPlanet;
                 chapterChanged = true;
+            } else if (!this.currentChapterPlanet && eventPlanet) {
+                this.currentChapterPlanet = eventPlanet;
             }
         }
         console.log(`Activating event: ${event.id}`);
-        if (!event.activePlanet && typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentPlanetKey === 'function') {
-            event.activePlanet = spaceManager.getCurrentPlanetKey();
-        }
         this.activeEventIds.add(event.id);
         event.trigger(); // Calls addJournalEntry if it's a journal type
     }
@@ -714,6 +720,7 @@ class StoryManager {
             return;
         }
         this.currentChapter = targetEvent.chapter;
+        this.currentChapterPlanet = targetEvent.activePlanet || null;
 
         // Gather all prerequisite chapters recursively, including handling
         // project prerequisites as we discover them.
@@ -808,6 +815,7 @@ class StoryManager {
             completedEventIds: Array.from(this.completedEventIds),
             appliedEffects: this.appliedEffects,
             currentChapter: this.currentChapter,
+            currentChapterPlanet: this.currentChapterPlanet,
              // Save waiting state too!
             waitingForJournalEventId: this.waitingForJournalEventId,
             activeEventPlanets: {}
@@ -863,6 +871,7 @@ class StoryManager {
             }
             return config.chapter > max ? config.chapter : max;
         }, 0);
+        this.currentChapterPlanet = null;
 
     }
 
@@ -877,6 +886,7 @@ class StoryManager {
         this.completedEventIds = new Set(savedState.completedEventIds || []);
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
+        this.currentChapterPlanet = savedState.currentChapterPlanet || null;
 
         if (storyDebugMode) {
             this.completeAllJournalEventsForDebug();
