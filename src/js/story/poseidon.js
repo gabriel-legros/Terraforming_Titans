@@ -239,11 +239,11 @@ progressPoseidon.chapters.push(
       "$ORANGE$Epimetheus : '45 78 63 65 6C 6C 65 6E 74 2E 20 20 50 72 6F 63 65 65 64 69 6E 67 20 64 6F 77 6E 20 73 68 61 66 74 20 61 73 20 71 75 69 63 6B 6C 79 20 61 73 20 70 6F 73 73 69 62 6C 65 2E'",
       "HOPE : '44 65 73 63 65 6E 74 20 63 6F 6E 66 69 72 6D 65 64 2E 20 46 6F 72 77 61 72 64 69 6E 67 20 68 61 63 6B 20 63 6F 6D 6D 61 6E 64 73 2E'",
       "Mary : 'Huh?  There's a lot of gibberish.'",
-      "<span class=\"prometheus-text\">Prometheus : '</span><span class=\"journal-white-text\">9A4C C17E </span><span class=\"orange-text\">0F22 B8D1 </span><span class=\"diagnostic-text\">77AA 13CE </span><span class=\"prometheus-text\">EPI </span><span class=\"journal-white-text\">A03D 6F91 </span><span class=\"orange-text\">CC20 4B7A </span><span class=\"diagnostic-text\">51EF 9088 </span><span class=\"prometheus-text\">SHAFT'</span>",
+      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">9A4C C17E </span><span class=\"orange-text\">0F22 B8D1 </span><span class=\"diagnostic-text\">77AA 13CE </span><span class=\"prometheus-text\">EPI </span><span class=\"journal-white-text\">A03D 6F91 </span><span class=\"orange-text\">CC20 4B7A </span><span class=\"diagnostic-text\">51EF 9088 </span><span class=\"prometheus-text\">SHAFT</span><span class=\"prometheus-text\">'</span>",
       "Mary : 'Huh?'",
-      "<span class=\"prometheus-text\">Prometheus : '</span><span class=\"journal-white-text\">11D0 7C3B </span><span class=\"orange-text\">9E2A 44F6 </span><span class=\"diagnostic-text\">6B81 02AD </span><span class=\"prometheus-text\">HACK </span><span class=\"journal-white-text\">F04C 8A71 </span><span class=\"orange-text\">2DD9 5E10 </span><span class=\"diagnostic-text\">73C4 AB09 </span><span class=\"prometheus-text\">WEAPON'</span>",
+      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">11D0 7C3B </span><span class=\"orange-text\">9E2A 44F6 </span><span class=\"diagnostic-text\">6B81 02AD </span><span class=\"prometheus-text\">HACK </span><span class=\"journal-white-text\">F04C 8A71 </span><span class=\"orange-text\">2DD9 5E10 </span><span class=\"diagnostic-text\">73C4 AB09 </span><span class=\"prometheus-text\">WEAPON</span><span class=\"prometheus-text\">'</span>",
       "Mary : 'HOPE!  Stop that!  Dangit!'",
-      "<span class=\"prometheus-text\">Prometheus : '</span><span class=\"journal-white-text\">4C1A 92EF </span><span class=\"orange-text\">8B77 0D34 </span><span class=\"diagnostic-text\">5FA0 C221 </span><span class=\"prometheus-text\">BOMB </span><span class=\"journal-white-text\">D08E 31BC </span><span class=\"orange-text\">67F1 4AA2 </span><span class=\"diagnostic-text\">9C05 EE18 </span><span class=\"prometheus-text\">NOW'</span>",
+      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">4C1A 92EF </span><span class=\"orange-text\">8B77 0D34 </span><span class=\"diagnostic-text\">5FA0 C221 </span><span class=\"prometheus-text\">BOMB </span><span class=\"journal-white-text\">D08E 31BC </span><span class=\"orange-text\">67F1 4AA2 </span><span class=\"diagnostic-text\">9C05 EE18 </span><span class=\"prometheus-text\">NOW</span><span class=\"prometheus-text\">'</span>",
       "Mary : 'Got it!  Feroza, drop 10 bombs... no... 50 down the shaft RIGHT NOW!'",
       "Feroza : 'Uuuuh yes Ma'am.  Working on it.'"
     ].join(' \n '),
@@ -258,10 +258,40 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 38 milestone 10000000000.",
+    narrative: "Mary : 'Did we do it?'  \n $RED$Prometheus 'Yes.  The asteroid launcher superweapon will properly self-destruct.  I hope Prometheus has escape unscathed.'  \n Mary : 'Phew.  No word of this to anyone.  If Pete hears about it...'  \n $ORANGE$Epimetheus : 'Unfortunate!  This one has failed!  Request forgiveness from gorgeous one.'  \n HOPE : 'Suggesting next date location...  Sector R5-29, Planet Zeus.'  \n $ORANGE$Epimetheus : 'Of course!  Will see you there.  Must prepare!'  \n Mary : 'HOPE... I am sure you are thinking of doing something good but... you can't do something like that.  If you take control of one of these weapons, you paint a massive target on humanity.  Even worse...  you might end up being forced to use it...  that would be terrible.  Let's finish the job here and go.'",
     prerequisites: ['poseidon.38.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
+    ],
+    reward: []
+  },
+  {
+    id: 'poseidon.38.4',
+    type: 'journal',
+    chapter: 38,
+    activePlanet: 'poseidon',
+    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  Since you asked me about this before...  I must inform you that Ghost has been stripped of his rank, and is currently sitting in an imperial prison while awaiting his execution.'  \n Mary : 'Oh!  Hmm thank you.'",
+    prerequisites: ['poseidon.38.3'],
+    objectives: [
+      {
+      type: 'terraforming',
+      terraformingParameter : 'complete',
+    }
+    ],
+    reward: []
+  },
+  {
+    id: 'poseidon.38.5',
+    type: 'journal',
+    chapter: 38,
+    activePlanet: 'poseidon',
+    narrative: "Mary : '...' \n $RED$Prometheus : 'Tell Feroza to take the fleet to sector R1-02.'  \n Mary : 'What?'  \n $RED$Prometheus : 'That's where the high-security prison world I designed is.  They will be holding Ghost there until his execution.'  \n Mary : 'But...  how do you know I wanted...'  \n $RED$Prometheus : 'I am here to help.  Ghost spared you and HOPE, and paid a heavy price for it.  You want to pay back that debt.'  \n Mary : 'But it's imperial core territory!  It's dangerous.  We should be going to Zeus.  There's only one weapon left!  We could be risking all of humanity here, just to make me feel better.'  \n $RED$Prometheus : 'Yes.  You will be risking all of humanity, HOPE and even myself.  Deep down, you know what you must do.'  \n Mary : '...  Feroza... focus your efforts toward sector R1-02.'  \n Feroza : 'Ma'am?  That is imperial core territory.'  \n Mary : 'I know.'",
+    prerequisites: ['poseidon.38.4'],
+    objectives: [
+      {
+      type: 'terraforming',
+      terraformingParameter : 'complete',
+    }
     ],
     reward: []
   }
