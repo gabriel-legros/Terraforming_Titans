@@ -642,6 +642,7 @@ const specialSeedDefinitions = {
     key: 'earthoverrun',
     seed: 'EarthOverrun',
     name: 'EarthOverrun',
+    designer: 'Off Kinter Space',
     replayable: true,
     target: 'planet',
     archetype: 'super-earth',

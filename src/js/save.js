@@ -61,7 +61,7 @@ function cacheSettingsElements() {
     return settingsElements;
   }
   settingsElements = {
-    autosaveToggle: document.getElementById('disable-autosave-toggle'),
+    autosaveIntervalSelect: document.getElementById('autosave-interval-select'),
     keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
     celsiusToggle: document.getElementById('celsius-toggle'),
     silenceToggle: document.getElementById('solis-silence-toggle'),
@@ -620,12 +620,17 @@ function loadGame(slotOrCustomString, recreate = true) {
 
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autosaveIntervalSeconds')) {
+        gameSettings.autosaveIntervalSeconds = gameState.settings.disableAutosave ? 0 : 300;
+      }
+      setAutosaveIntervalSeconds(gameSettings.autosaveIntervalSeconds);
+      delete gameSettings.disableAutosave;
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageResources')) {
         gameSettings.showSpaceStorageResources = false;
       }
       delete gameSettings.formatAutoBuildTargets;
       const cachedSettings = cacheSettingsElements();
-      cachedSettings.autosaveToggle.checked = gameSettings.disableAutosave;
+      cachedSettings.autosaveIntervalSelect.value = String(getAutosaveIntervalSeconds());
       cachedSettings.keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
       cachedSettings.celsiusToggle.checked = gameSettings.useCelsius;
       const debugEnabled = !!gameSettings.planetVisualizerDebugEnabled;
@@ -987,14 +992,42 @@ function loadMostRecentSave() {
   }
 }
 
-let autosaveInterval = 180; // Autosave interval in seconds
+const AUTOSAVE_INTERVAL_OPTIONS = [30, 60, 120, 300, 900, 1800, 3600, 0];
+const DEFAULT_AUTOSAVE_INTERVAL_SECONDS = 300;
+
+function normalizeAutosaveIntervalSeconds(intervalSeconds) {
+  const parsedValue = Number(intervalSeconds);
+  return AUTOSAVE_INTERVAL_OPTIONS.includes(parsedValue)
+    ? parsedValue
+    : DEFAULT_AUTOSAVE_INTERVAL_SECONDS;
+}
+
+function getAutosaveIntervalSeconds() {
+  return normalizeAutosaveIntervalSeconds(gameSettings.autosaveIntervalSeconds);
+}
+
+function setAutosaveIntervalSeconds(intervalSeconds) {
+  const normalizedInterval = normalizeAutosaveIntervalSeconds(intervalSeconds);
+  gameSettings.autosaveIntervalSeconds = normalizedInterval;
+  if (normalizedInterval > 0) {
+    autosaveInterval = normalizedInterval;
+    autosaveTimer = autosaveInterval;
+  }
+}
+
+let autosaveInterval = DEFAULT_AUTOSAVE_INTERVAL_SECONDS;
 let autosaveTimer = autosaveInterval;
 
 function autosave(delta) {
-  if (gameSettings && gameSettings.disableAutosave) {
-    autosaveTimer = autosaveInterval;
+  const intervalSeconds = getAutosaveIntervalSeconds();
+  if (intervalSeconds <= 0) {
     updateAutosaveText();
     return;
+  }
+
+  if (autosaveInterval !== intervalSeconds) {
+    autosaveInterval = intervalSeconds;
+    autosaveTimer = autosaveInterval;
   }
 
   autosaveTimer -= delta / 1000; // Convert delta from milliseconds to seconds
@@ -1018,12 +1051,20 @@ function updateAutosaveText(overrideText) {
     autosaveText.textContent = overrideText;
     return;
   }
-  if (gameSettings && gameSettings.disableAutosave) {
+  const intervalSeconds = getAutosaveIntervalSeconds();
+  if (intervalSeconds <= 0) {
     autosaveText.textContent = 'Autosave disabled';
     return;
   }
-  const minutes = Math.floor(autosaveTimer / 60);
-  const seconds = Math.floor(autosaveTimer % 60);
+  autosaveTimer = Math.min(autosaveTimer, intervalSeconds);
+  const clampedTimer = Math.max(0, autosaveTimer);
+  const hours = Math.floor(clampedTimer / 3600);
+  const minutes = Math.floor((clampedTimer % 3600) / 60);
+  const seconds = Math.floor(clampedTimer % 60);
+  if (hours > 0) {
+    autosaveText.textContent = `Next autosave in ${hours}h ${minutes}m ${seconds}s`;
+    return;
+  }
   autosaveText.textContent = `Next autosave in ${minutes}m ${seconds}s`;
 }
 

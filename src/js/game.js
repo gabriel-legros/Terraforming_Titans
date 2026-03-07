@@ -256,7 +256,7 @@ function initializeGameState(options = {}) {
   }
 
   if (!preserveManagers) {
-    gameSettings.disableAutosave = false;
+    gameSettings.autosaveIntervalSeconds = 300;
     gameSettings.useCelsius = false;
     gameSettings.disableDayNightCycle = false;
     gameSettings.showSpaceStorageResources = false;

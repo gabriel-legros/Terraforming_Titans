@@ -43,7 +43,7 @@ let warpGateNetworkManager;
 let isEquilibrating = false;
 
 let gameSettings = {
-  disableAutosave: false,
+  autosaveIntervalSeconds: 300,
   useCelsius: false,
   darkMode: false,
   keepTabRunningAudio: false,

@@ -1,11 +1,11 @@
 // Settings management functions
 
 function addSettingsListeners() {
-  const disableAutosaveToggle = document.getElementById('disable-autosave-toggle');
-  if (disableAutosaveToggle) {
-    disableAutosaveToggle.checked = gameSettings.disableAutosave;
-    disableAutosaveToggle.addEventListener('change', () => {
-      gameSettings.disableAutosave = disableAutosaveToggle.checked;
+  const autosaveIntervalSelect = document.getElementById('autosave-interval-select');
+  if (autosaveIntervalSelect) {
+    autosaveIntervalSelect.value = String(getAutosaveIntervalSeconds());
+    autosaveIntervalSelect.addEventListener('change', () => {
+      setAutosaveIntervalSeconds(Number(autosaveIntervalSelect.value));
       updateAutosaveText();
     });
   }
