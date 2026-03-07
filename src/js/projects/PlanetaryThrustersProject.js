@@ -416,7 +416,6 @@ class PlanetaryThrustersProject extends Project{
     }
 
     const parent=p.parentBody;
-    this.tgtAU=1;
     this.el.distTargetRow.style.display = "none";
     this.el.distDvRow.style.display = "none"; // preview via Escape row for moons
     const starM = getStarMassKgFromCurrent();
@@ -575,7 +574,6 @@ class PlanetaryThrustersProject extends Project{
 
     if(this.el.distTarget){
       if(isBoundToParent(p)){
-        this.tgtAU = 1;
         this.el.distTargetRow.style.display="none";
         this.el.distDvRow.style.display="none"; // use Escape row when bound to parent
         const parent=p.parentBody;
@@ -831,6 +829,11 @@ class PlanetaryThrustersProject extends Project{
   }
 
   loadAutomationSettings(settings = {}) {
+    const previousSpinInvest = this.spinInvest === true;
+    const previousMotionInvest = this.motionInvest === true;
+    const previousTargetDays = this.tgtDays;
+    const previousTargetAU = this.tgtAU;
+    const previousMode = this.activeMode;
     super.loadAutomationSettings(settings);
     if (Object.prototype.hasOwnProperty.call(settings, 'power')) {
       this.power = Math.max(0, settings.power || 0);
@@ -849,6 +852,53 @@ class PlanetaryThrustersProject extends Project{
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'tgtAU')) {
       this.tgtAU = Math.max(0.1, settings.tgtAU || 0.1);
+    }
+    const spinTargetChanged = this.tgtDays !== previousTargetDays;
+    const motionTargetChanged = this.tgtAU !== previousTargetAU;
+
+    if (spinTargetChanged) {
+      this.energySpentSpin = 0;
+      this.spinStartDays = null;
+    }
+    if (motionTargetChanged) {
+      this.energySpentMotion = 0;
+      this.startAU = null;
+    }
+
+    if (this.el.rotTarget) {
+      this.el.rotTarget.value = this.tgtDays;
+    }
+    if (this.el.distTarget) {
+      this.el.distTarget.value = this.tgtAU;
+    }
+    if (this.el.rotCb) {
+      this.el.rotCb.checked = this.spinInvest;
+    }
+    if (this.el.distCb) {
+      this.el.distCb.checked = this.motionInvest;
+    }
+
+    if (this.spinInvest) {
+      this.motionInvest = false;
+      this.activeMode = 'spin';
+      if (spinTargetChanged || !previousSpinInvest || previousMode !== 'spin' || this.dVreq === 0) {
+        this.prepareJob(true, false);
+      }
+    } else if (this.motionInvest) {
+      this.spinInvest = false;
+      this.activeMode = 'motion';
+      if (motionTargetChanged || !previousMotionInvest || previousMode !== 'motion' || this.dVreq === 0) {
+        this.prepareJob(true, false);
+      }
+    } else {
+      this.activeMode = null;
+      this.dVreq = 0;
+      this.dVdone = 0;
+    }
+
+    if (this.el.rotTarget && this.el.distTarget) {
+      this.calcSpinCost();
+      this.calcMotionCost();
     }
   }
 

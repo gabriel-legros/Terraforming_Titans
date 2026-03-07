@@ -756,7 +756,7 @@ const projectParameters = {
       }
     },
     duration: 1,
-    description: 'Assemble antimatter-grade battery modules in orbit capable of beaming and receiving energy. Each battery instantly adds 1e15 to space energy storage.  Resources can be paid from space or colony storage, depending on space storage settings.',
+    description: 'Assemble antimatter-grade battery modules in orbit capable of beaming and receiving energy. Each battery instantly adds 1Q to space energy storage.  Resources can be paid from space or colony storage, depending on space storage settings.',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
