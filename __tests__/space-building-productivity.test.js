@@ -76,6 +76,7 @@ function createResources(initial = {}) {
   return {
     colony: {
       funding: createResource('funding', 0),
+      energy: createResource('energy', 0, true, initial.colonyEnergyCap || Infinity),
       workers: createResource('workers', 0),
     },
     surface: {
@@ -85,6 +86,9 @@ function createResources(initial = {}) {
     },
     atmospheric: {
       atmosphericWater: createResource('atmosphericWater', 0),
+    },
+    space: {
+      energy: createResource('energy', initial.spaceEnergy || 0, true, initial.spaceEnergyCap || Infinity),
     },
     spaceStorage: {
       hydrogen: createResource('hydrogen', initial.hydrogen || 0),
@@ -102,9 +106,102 @@ function createResources(initial = {}) {
   };
 }
 
+function createDysonReceiverBuilding(energyPerSecond = 0) {
+  return {
+    active: energyPerSecond > 0 ? 1 : 0,
+    productivity: energyPerSecond > 0 ? 1 : 0,
+    displayProductivity: energyPerSecond > 0 ? 1 : 0,
+    dayNightActivity: false,
+    consumption: { space: { energy: energyPerSecond } },
+    getTargetProductivity() {
+      return this.active > 0 ? 1 : 0;
+    },
+    updateProductivity() {
+      this.productivity = this.active > 0 ? 1 : 0;
+      this.displayProductivity = this.productivity;
+    },
+    produce() {},
+    consume(accumulatedChanges, deltaTime) {
+      if (!(this.active > 0) || !(this.productivity > 0) || !(deltaTime > 0)) {
+        return;
+      }
+      const seconds = deltaTime / 1000;
+      const amount = this.consumption.space.energy * this.active * this.productivity * seconds;
+      accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) - amount;
+      resources.space.energy.modifyRate(-(amount / seconds), 'Dyson Receiver', 'building');
+    },
+    applyMaintenance() {},
+  };
+}
+
+function createDysonCollectorProject(collectorPowerPerSecond = 0) {
+  return {
+    name: 'dysonSwarmReceiver',
+    displayName: 'Dyson Swarm Receiver',
+    attributes: { spaceBuilding: true, spaceEnergyProducer: true },
+    autoStart: false,
+    operationPreRunThisTick: false,
+    unlocked: true,
+    collectors: collectorPowerPerSecond > 0 ? 1 : 0,
+    energyPerCollector: collectorPowerPerSecond,
+    isContinuous() {
+      return false;
+    },
+    estimateCostAndGain() {
+      return { cost: {}, gain: {} };
+    },
+    applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges = null) {
+      if (!accumulatedChanges || accumulatedChanges.dysonSpaceEnergyInjected === true) {
+        return;
+      }
+      const seconds = deltaTime / 1000;
+      const amount = this.collectors * this.energyPerCollector * seconds;
+      accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) + amount;
+      if (amount > 0) {
+        resources.space.energy.modifyRate(amount / seconds, 'Dyson Collectors', 'project');
+      }
+      accumulatedChanges.dysonSpaceEnergyInjected = true;
+    },
+    applyCostAndGain() {
+      this.operationPreRunThisTick = false;
+    },
+  };
+}
+
+function createSpaceEnergyDrainProject(energyPerSecond = 0, name = 'Dyson Receiver') {
+  return {
+    name,
+    displayName: name,
+    attributes: { spaceBuilding: true },
+    autoStart: false,
+    operationPreRunThisTick: false,
+    unlocked: true,
+    isContinuous() {
+      return false;
+    },
+    estimateCostAndGain() {
+      return { cost: {}, gain: {} };
+    },
+    applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges = null) {
+      if (!accumulatedChanges || !(energyPerSecond > 0)) {
+        return;
+      }
+      const seconds = deltaTime / 1000;
+      const amount = energyPerSecond * seconds;
+      accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) - amount;
+      resources.space.energy.modifyRate(-(amount / seconds), this.displayName, 'project');
+    },
+    applyCostAndGain() {
+      this.operationPreRunThisTick = false;
+    },
+  };
+}
+
 function createSpaceStorageProject(resources) {
   return {
     megaProjectResourceMode: 'spaceFirst',
+    maxStorage: resources._spaceStorageMaxStorage ?? Infinity,
+    usedStorage: 0,
     isContinuous() {
       return false;
     },
@@ -134,7 +231,13 @@ function createSpaceStorageProject(resources) {
     getResourceCapLimit(resourceKey) {
       return resources.spaceStorage[resourceKey]?.cap || Infinity;
     },
-    reconcileUsedStorage() {},
+    reconcileUsedStorage() {
+      let total = 0;
+      for (const resourceKey in resources.spaceStorage) {
+        total += resources.spaceStorage[resourceKey]?.value || 0;
+      }
+      this.usedStorage = total;
+    },
     isPermanentlyDisabled() {
       return false;
     },
@@ -182,6 +285,11 @@ function setupHarness(initialStorage = {}) {
   class EffectableEntity {
     constructor() {
       this.activeEffects = [];
+      this.booleanFlags = new Set();
+    }
+
+    isBooleanFlagSet(flag) {
+      return this.booleanFlags.has(flag);
     }
   }
 
@@ -284,6 +392,7 @@ function setupHarness(initialStorage = {}) {
   }
 
   const resourcesObj = createResources(initialStorage);
+  resourcesObj._spaceStorageMaxStorage = initialStorage.spaceStorageMaxStorage;
 
   setGlobal('EffectableEntity', EffectableEntity, originalGlobals);
   setGlobal('TerraformingDurationProject', TerraformingDurationProject, originalGlobals);
@@ -322,6 +431,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('attachDynamicInfoTooltip', () => {}, originalGlobals);
   setGlobal('getZones', () => [], originalGlobals);
   setGlobal('getZonePercentage', () => 0, originalGlobals);
+  setGlobal('buildings', {}, originalGlobals);
 
   const projectManager = {
     projects: {},
@@ -337,6 +447,7 @@ function setupHarness(initialStorage = {}) {
   }));
   const NuclearAlchemyFurnaceProject = require(path.resolve(__dirname, '../src/js/projects/NuclearAlchemyFurnaceProject.js'));
   const ManufacturingWorldProject = require(path.resolve(__dirname, '../src/js/projects/ManufacturingWorldProject.js'));
+  const LiftersProject = require(path.resolve(__dirname, '../src/js/projects/LiftersProject.js'));
 
   const spaceStorage = createSpaceStorageProject(resourcesObj);
   projectManager.projects.spaceStorage = spaceStorage;
@@ -347,6 +458,7 @@ function setupHarness(initialStorage = {}) {
     resources: resourcesObj,
     NuclearAlchemyFurnaceProject,
     ManufacturingWorldProject,
+    LiftersProject,
     cleanup: () => restoreGlobals(originalGlobals),
   };
 }
@@ -617,6 +729,162 @@ describe('Space building productivity via produceResources', () => {
     );
     expectApprox(consumedMetal, expectedMetalConsumed);
     expectApprox(producedSuperalloy, expectedSuperalloyProduced);
+    cleanup();
+  });
+
+  test('Lifters use stored space energy after unused Dyson power is exhausted', () => {
+    const harness = setupHarness({ hydrogen: 0, spaceEnergy: 100 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      LiftersProject,
+      cleanup,
+    } = harness;
+
+    buildings.dysonReceiver = createDysonReceiverBuilding(5);
+    projectManager.projects.dysonSwarmReceiver = createDysonCollectorProject(10);
+    projectManager.projects.dysonReceiverDrain = createSpaceEnergyDrainProject(5, 'Dyson Receiver');
+
+    const lifters = new LiftersProject({
+      name: 'Lifters',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        spaceBuilding: true,
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 10,
+        lifterHarvestRecipes: {
+          hydrogen: {
+            label: 'Hydrogen',
+            storageKey: 'hydrogen',
+            outputMultiplier: 1,
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'lifters');
+
+    lifters.repeatCount = 1;
+    lifters.lifterAssignments.hydrogen = 1;
+    lifters.isRunning = true;
+
+    projectManager.projects.lifters = lifters;
+    projectManager.projectOrder = ['dysonSwarmReceiver', 'dysonReceiverDrain', 'lifters'];
+
+    produceResources(1000, {});
+
+    expectApprox(resources.space.energy.value, 95);
+    expectApprox(resources.spaceStorage.hydrogen.value, 1);
+    expectApprox(lifters.operationProductivity?.hydrogen, 1);
+    expectApprox(lifters.lastEnergyPerSecond, 10);
+    expectApprox(lifters.lastDysonEnergyPerSecond, 5);
+    cleanup();
+  });
+
+  test('Lifters stop when receivers consume all live Dyson power and storage is empty', () => {
+    const harness = setupHarness({ hydrogen: 0, spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      LiftersProject,
+      cleanup,
+    } = harness;
+
+    buildings.dysonReceiver = createDysonReceiverBuilding(10);
+    projectManager.projects.dysonSwarmReceiver = createDysonCollectorProject(10);
+    projectManager.projects.dysonReceiverDrain = createSpaceEnergyDrainProject(10, 'Dyson Receiver');
+
+    const lifters = new LiftersProject({
+      name: 'Lifters',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        spaceBuilding: true,
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 10,
+        lifterHarvestRecipes: {
+          hydrogen: {
+            label: 'Hydrogen',
+            storageKey: 'hydrogen',
+            outputMultiplier: 1,
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'lifters');
+
+    lifters.repeatCount = 1;
+    lifters.lifterAssignments.hydrogen = 1;
+    lifters.isRunning = true;
+
+    projectManager.projects.lifters = lifters;
+    projectManager.projectOrder = ['dysonSwarmReceiver', 'dysonReceiverDrain', 'lifters'];
+
+    produceResources(1000, {});
+
+    expectApprox(resources.space.energy.value, 0);
+    expectApprox(resources.spaceStorage.hydrogen.value, 0);
+    expectApprox(lifters.operationProductivity?.hydrogen, 0);
+    expectApprox(lifters.lastEnergyPerSecond, 0);
+    cleanup();
+  });
+
+  test('Lifters keep full energy use and displayed hydrogen rate when storage is capped', () => {
+    const harness = setupHarness({
+      hydrogen: 0,
+      spaceEnergy: 100,
+      spaceStorageMaxStorage: 0,
+    });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      LiftersProject,
+      cleanup,
+    } = harness;
+
+    buildings.dysonReceiver = createDysonReceiverBuilding(5);
+    projectManager.projects.dysonSwarmReceiver = createDysonCollectorProject(10);
+    projectManager.projects.dysonReceiverDrain = createSpaceEnergyDrainProject(5, 'Dyson Receiver');
+
+    const lifters = new LiftersProject({
+      name: 'Lifters',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        spaceBuilding: true,
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 10,
+        lifterHarvestRecipes: {
+          hydrogen: {
+            label: 'Hydrogen',
+            storageKey: 'hydrogen',
+            outputMultiplier: 1,
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'lifters');
+
+    lifters.repeatCount = 1;
+    lifters.lifterAssignments.hydrogen = 1;
+    lifters.isRunning = true;
+
+    projectManager.projects.lifters = lifters;
+    projectManager.projectOrder = ['dysonSwarmReceiver', 'dysonReceiverDrain', 'lifters'];
+
+    produceResources(1000, {});
+
+    expectApprox(resources.space.energy.value, 95);
+    expectApprox(resources.spaceStorage.hydrogen.value, 0);
+    expectApprox(lifters.operationProductivity?.hydrogen, 1);
+    expectApprox(lifters.lastEnergyPerSecond, 10);
+    expectApprox(lifters.lastHydrogenPerSecond, 1);
     cleanup();
   });
 });

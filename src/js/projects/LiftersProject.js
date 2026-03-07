@@ -64,6 +64,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.lastHydrogenPerSecond = 0;
     this.lastAtmospherePerSecond = 0;
     this.lastDysonEnergyPerSecond = 0;
+    this.lastStoredSpaceEnergyPerSecond = 0;
     this.lastOutputRatesByRecipe = {};
     this.lastDisplayedRatesByRecipe = {};
     this.lastProductivityByRecipe = {};
@@ -579,16 +580,19 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   getEnergyAvailabilityForTick(deltaTime = 1000, accumulatedChanges = null) {
     const seconds = deltaTime / 1000;
     const colonyAvailable = 0;
-
-    const hasDysonPool = accumulatedChanges?.dysonSpaceEnergyInjected;
-    const dysonAvailable = hasDysonPool
-      ? Math.max(accumulatedChanges?.space?.energy || 0, 0)
-      : Math.max(this.getDysonOverflowPerSecond() * seconds, 0);
+    const hasDysonPool = accumulatedChanges?.dysonSpaceEnergyInjected === true;
+    const pendingSpaceEnergy = accumulatedChanges?.space?.energy || 0;
+    const dysonAvailable = Math.max(this.getDysonOverflowPerSecond() * seconds, 0);
+    const storedAvailable = Math.max(
+      0,
+      (resources?.space?.energy?.value || 0) + pendingSpaceEnergy - dysonAvailable
+    );
 
     return {
       colonyAvailable,
+      storedAvailable,
       dysonAvailable,
-      totalAvailable: colonyAvailable + dysonAvailable,
+      totalAvailable: colonyAvailable + storedAvailable + dysonAvailable,
       hasDysonPool,
       seconds,
     };
@@ -600,7 +604,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return {
         energyUsed: 0,
         colonyUsed: 0,
+        storedSpaceEnergyUsed: 0,
         dysonEnergyUsed: 0,
+        storedAvailable: Math.max(resources?.space?.energy?.value || 0, 0),
         dysonAvailable: this.getDysonOverflowPerSecond() * seconds,
       };
     }
@@ -608,12 +614,22 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     const availability = this.getEnergyAvailabilityForTick(deltaTime, accumulatedChanges);
     const energyUsed = Math.min(energyRequired, availability.totalAvailable);
     const dysonEnergyUsed = Math.min(energyUsed, availability.dysonAvailable);
-    const colonyUsed = Math.min(Math.max(energyUsed - dysonEnergyUsed, 0), availability.colonyAvailable);
-    const totalUsed = colonyUsed + dysonEnergyUsed;
+    const storedSpaceEnergyUsed = Math.min(
+      Math.max(energyUsed - dysonEnergyUsed, 0),
+      availability.storedAvailable
+    );
+    const colonyUsed = Math.min(
+      Math.max(energyUsed - dysonEnergyUsed - storedSpaceEnergyUsed, 0),
+      availability.colonyAvailable
+    );
+    const totalSpaceEnergyUsed = dysonEnergyUsed + storedSpaceEnergyUsed;
+    const totalUsed = colonyUsed + totalSpaceEnergyUsed;
 
-    if (availability.hasDysonPool) {
+    if (totalSpaceEnergyUsed > 0 && accumulatedChanges) {
       accumulatedChanges.space ||= {};
-      accumulatedChanges.space.energy = Math.max((accumulatedChanges.space.energy || 0) - dysonEnergyUsed, 0);
+      accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) - totalSpaceEnergyUsed;
+    } else if (storedSpaceEnergyUsed > 0 && resources?.space?.energy) {
+      resources.space.energy.value = Math.max(0, (resources.space.energy.value || 0) - storedSpaceEnergyUsed);
     }
 
     const colonyEnergy = resources?.colony?.energy;
@@ -631,7 +647,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     return {
       energyUsed: totalUsed,
       colonyUsed,
+      storedSpaceEnergyUsed,
       dysonEnergyUsed,
+      storedAvailable: availability.storedAvailable,
       dysonAvailable: availability.dysonAvailable,
     };
   }
@@ -651,6 +669,18 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
   }
 
+  refundSpaceEnergy(amount, accumulatedChanges) {
+    if (!amount) {
+      return;
+    }
+    if (accumulatedChanges) {
+      accumulatedChanges.space ||= {};
+      accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) + amount;
+    } else if (resources?.space?.energy) {
+      resources.space.energy.value = (resources.space.energy.value || 0) + amount;
+    }
+  }
+
   adjustEnergyUsage(result, refund, accumulatedChanges) {
     if (!(refund > 0)) {
       return;
@@ -662,11 +692,19 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       result.colonyUsed -= colonyRefund;
       remaining -= colonyRefund;
     }
-    if (remaining > 0) {
-      result.dysonEnergyUsed = Math.max(0, result.dysonEnergyUsed - remaining);
-      remaining = 0;
+    if (remaining > 0 && result.storedSpaceEnergyUsed > 0) {
+      const storedRefund = Math.min(remaining, result.storedSpaceEnergyUsed);
+      this.refundSpaceEnergy(storedRefund, accumulatedChanges);
+      result.storedSpaceEnergyUsed -= storedRefund;
+      remaining -= storedRefund;
     }
-    result.energyUsed = result.colonyUsed + result.dysonEnergyUsed;
+    if (remaining > 0 && result.dysonEnergyUsed > 0) {
+      const dysonRefund = Math.min(remaining, result.dysonEnergyUsed);
+      this.refundSpaceEnergy(dysonRefund, accumulatedChanges);
+      result.dysonEnergyUsed -= dysonRefund;
+      remaining -= dysonRefund;
+    }
+    result.energyUsed = result.colonyUsed + result.storedSpaceEnergyUsed + result.dysonEnergyUsed;
   }
 
   buildOperationEntries(seconds, productivity = 1) {
@@ -720,7 +758,6 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       hasStripAssignments: false,
       energyNeeded: 0,
       energyRatio: 1,
-      storageRatio: 1,
       energyAvailability: {
         colonyAvailable: 0,
         dysonAvailable: 0,
@@ -738,8 +775,6 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (entries.length === 0) {
       return plan;
     }
-
-    let harvestOutputTotal = 0;
 
     entries.forEach((entry) => {
       plan.desiredTotalUnits += entry.desiredUnits;
@@ -762,22 +797,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       }
 
       entry.limitedUnits = Math.max(0, entry.desiredUnits);
-      harvestOutputTotal += entry.limitedUnits * entry.outputMultiplier;
     });
-
-    if (plan.hasHarvestAssignments && storage) {
-      const freeSpace = this.getAvailableStorageSpaceForTick(storage, accumulatedChanges);
-      if (harvestOutputTotal > 0 && freeSpace < harvestOutputTotal) {
-        const ratio = freeSpace > 0 ? freeSpace / harvestOutputTotal : 0;
-        plan.storageRatio = Math.max(0, Math.min(1, ratio));
-        plan.reasons.storageLimited = true;
-        entries.forEach((entry) => {
-          if (entry.recipe.type === LIFTER_RECIPE_TYPES.HARVEST) {
-            entry.limitedUnits *= plan.storageRatio;
-          }
-        });
-      }
-    }
 
     plan.limitedTotalUnits = entries.reduce((sum, entry) => sum + entry.limitedUnits, 0);
     plan.limitedAssignedLifters = entries.reduce((sum, entry) => {
@@ -828,13 +848,14 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return productivities;
     }
 
-    this.normalizeAssignments();
-    this.getAssignmentKeys().forEach((key) => {
-      const assigned = this.lifterAssignments[key] || 0;
-      if (!(assigned > 0)) {
-        return;
-      }
-      productivities[key] = this.getRecipeOperationProductivity(key, defaultProductivity);
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return productivities;
+    }
+
+    const plan = this.planOperation(seconds, defaultProductivity, null);
+    plan.entries.forEach((entry) => {
+      productivities[entry.key] = entry.productivityRatio;
     });
     return productivities;
   }
@@ -928,6 +949,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     });
 
     this.lastHarvestResourceKey = bestHarvestResource;
+    this.lastStoredSpaceEnergyPerSecond = stats.storedSpacePerSecond || 0;
   }
 
   getDisplayedRecipeProductivity(recipeKey) {
@@ -1098,10 +1120,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       }
 
       const amount = units * entry.outputMultiplier;
-      const stored = this.storeHarvestedResourceForTick(storage, entry.recipe.storageKey, amount, accumulatedChanges);
-      const actualUnits = entry.outputMultiplier > 0 ? stored / entry.outputMultiplier : 0;
-      processedUnits += actualUnits;
-      const rate = seconds > 0 ? stored / seconds : 0;
+      this.storeHarvestedResourceForTick(storage, entry.recipe.storageKey, amount, accumulatedChanges);
+      processedUnits += units;
+      const rate = seconds > 0 ? amount / seconds : 0;
       outputRatesByRecipe[entry.key] = rate;
       if (rate > 0) {
         resources?.spaceStorage?.[entry.recipe.storageKey]?.modifyRate?.(
@@ -1121,14 +1142,17 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     const energyPerSecond = energyResult.energyUsed / seconds;
+    const storedSpacePerSecond = energyResult.storedSpaceEnergyUsed / seconds;
     const dysonPerSecond = energyResult.dysonEnergyUsed / seconds;
-    if (dysonPerSecond > 0) {
-      resources?.space?.energy?.modifyRate?.(-dysonPerSecond, 'Lifting', 'project');
+    const totalSpacePerSecond = storedSpacePerSecond + dysonPerSecond;
+    if (totalSpacePerSecond > 0) {
+      resources?.space?.energy?.modifyRate?.(-totalSpacePerSecond, 'Lifting', 'project');
     }
 
     this.setLastTickStats({
       totalUnitsPerSecond: processedUnits / seconds,
       energyPerSecond,
+      storedSpacePerSecond,
       atmospherePerSecond: atmosphereRemoved / seconds,
       dysonPerSecond,
       outputRatesByRecipe,
@@ -1139,8 +1163,6 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     if (processedUnits > 0) {
       const wasLimited = plan.reasons.energyLimited
-        || plan.reasons.storageLimited
-        || plan.reasons.capLimited
         || plan.reasons.atmosphereLimited;
       this.updateStatus('Running');
       this.shortfallLastTick = wasLimited;

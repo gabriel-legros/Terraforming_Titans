@@ -65,7 +65,10 @@ class DysonManager {
   }
 
   getOverflowEnergyPerSecond() {
-    return this.getTotalCollectorEnergyPerSecond();
+    return Math.max(
+      this.getTotalCollectorEnergyPerSecond() - this.getReceiverEnergyPerSecond(),
+      0
+    );
   }
 }
 

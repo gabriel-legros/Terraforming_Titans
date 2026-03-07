@@ -1,11 +1,3 @@
-function createInfoIcon(text) {
-  const icon = document.createElement('span');
-  icon.classList.add('info-tooltip-icon');
-  icon.innerHTML = '&#9432;';
-  attachDynamicInfoTooltip(icon, text);
-  return icon;
-}
-
 function buildStat(label) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('stat-item');
@@ -35,7 +27,11 @@ function renderLiftersUI(project, container) {
   const title = document.createElement('span');
   title.classList.add('card-title');
   title.textContent = 'Lifter Controls';
-  const titleInfo = createInfoIcon(
+  const titleInfo = document.createElement('span');
+  titleInfo.classList.add('info-tooltip-icon');
+  titleInfo.innerHTML = '&#9432;';
+  attachDynamicInfoTooltip(
+    titleInfo,
     'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. '
     + 'Gas recipes push output into space storage and share both global storage space and per-resource caps. '
     + 'Strip Atmosphere removes all gases proportionally.'
@@ -47,11 +43,12 @@ function renderLiftersUI(project, container) {
   body.classList.add('card-body');
 
   const summaryGrid = document.createElement('div');
-  summaryGrid.classList.add('stats-grid', 'three-col', 'project-summary-grid');
+  summaryGrid.classList.add('stats-grid', 'four-col', 'project-summary-grid');
   const totalStat = buildStat('Total Lifters');
   const assignedStat = buildStat('Assigned');
   const unassignedStat = buildStat('Unassigned');
-  summaryGrid.append(totalStat.wrapper, assignedStat.wrapper, unassignedStat.wrapper);
+  const expansionRateStat = buildStat('Expansion');
+  summaryGrid.append(totalStat.wrapper, assignedStat.wrapper, unassignedStat.wrapper, expansionRateStat.wrapper);
   body.appendChild(summaryGrid);
 
   const controlsGrid = document.createElement('div');
@@ -71,14 +68,27 @@ function renderLiftersUI(project, container) {
   const statusStat = buildStat('Status');
   controlsGrid.appendChild(statusStat.wrapper);
 
-  const energyRateStat = buildStat('Energy Use');
-  energyRateStat.labelEl.appendChild(
-    createInfoIcon('Each assigned lifter consumes energy while running. Can only use space energy.'),
+  const energyPerLifterStat = buildStat('Energy per lifter');
+  const energyPerLifterInfo = document.createElement('span');
+  energyPerLifterInfo.classList.add('info-tooltip-icon');
+  energyPerLifterInfo.innerHTML = '&#9432;';
+  attachDynamicInfoTooltip(
+    energyPerLifterInfo,
+    'Each assigned lifter uses this much space energy per second, regardless of recipe.'
   );
-  controlsGrid.appendChild(energyRateStat.wrapper);
+  energyPerLifterStat.labelEl.appendChild(energyPerLifterInfo);
+  controlsGrid.appendChild(energyPerLifterStat.wrapper);
 
-  const expansionRateStat = buildStat('Expansion');
-  controlsGrid.appendChild(expansionRateStat.wrapper);
+  const energyRateStat = buildStat('Energy Use');
+  const energyRateInfo = document.createElement('span');
+  energyRateInfo.classList.add('info-tooltip-icon');
+  energyRateInfo.innerHTML = '&#9432;';
+  attachDynamicInfoTooltip(
+    energyRateInfo,
+    'Each assigned lifter consumes energy while running. Can only use space energy.'
+  );
+  energyRateStat.labelEl.appendChild(energyRateInfo);
+  controlsGrid.appendChild(energyRateStat.wrapper);
 
   body.appendChild(controlsGrid);
 
@@ -246,6 +256,7 @@ function renderLiftersUI(project, container) {
     unassignedValue: unassignedStat.valueEl,
     runCheckbox,
     statusValue: statusStat.valueEl,
+    energyPerLifterValue: energyPerLifterStat.valueEl,
     energyRateValue: energyRateStat.valueEl,
     expansionRateValue: expansionRateStat.valueEl,
     stepDownButton,
@@ -274,6 +285,7 @@ function updateLiftersUI(project) {
   elements.assignedValue.textContent = formatNumber(assigned, true, 2);
   elements.unassignedValue.textContent = formatNumber(available, true, 2);
   elements.statusValue.textContent = project.statusText || 'Idle';
+  elements.energyPerLifterValue.textContent = formatPerSecond(project.energyPerUnit || 0);
   elements.energyRateValue.textContent = formatPerSecond(project.lastEnergyPerSecond);
   const expansionRate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
   elements.expansionRateValue.textContent = `${formatNumber(expansionRate, true, 3)} lifters/s`;
