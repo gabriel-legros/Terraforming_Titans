@@ -11,8 +11,8 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    title: 'Chapter 36: Placeholder Chapter One',
-    narrative: "Placeholder text for Poseidon chapter 36 milestone 10.",
+    title: "Chapter 36: Also Hell?",
+    narrative: "Arrival in the orbit of Poseidon, a molten planet.  \n Mary : 'This is brighter than I expected...'  \n $RED$Prometheus : 'This one is particularly hot.'  \n Mary : 'Aerostats again then.  We can't land here.  Now where is Epimetheus?'",
     prerequisites: ['hades.35.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
@@ -24,7 +24,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "Placeholder text for Poseidon chapter 36 milestone 50.",
+    narrative: "$RED$Prometheus : 'I am not sure what he's doing...'  \n Mary : 'We need his help to get down there.  We can finish this mission instantly and convince HOPE to go home.'  \n $RED$Prometheus : 'No!  Not this time.  This core is too hot for him.  It will seriously damage him or kill him.  We can't '",
     prerequisites: ['poseidon.36.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
