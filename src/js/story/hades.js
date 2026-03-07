@@ -464,7 +464,7 @@ progressHades.chapters.push(
     type: 'journal',
     chapter: 35,
     activePlanet: 'hades',
-    narrative: "(Some time later) Pete : 'All our reports indicate that the Empire are no longer using their laser superweapon.  They're acting... somewhat nervous.  Mary it looks like your gamble paid off.'  \n Mary : 'Looks like it.  '",
+    narrative: "(Some time later) Pete : 'Our reports indicate that the Empire are no longer using their laser superweapon.  They're acting... somewhat nervous.  Mary it looks like your gamble paid off.'  \n Mary : 'Looks like it.  '",
     prerequisites: ['hades.35.5'],
     objectives: [
       { type: 'currentPlanet', planetId: 'poseidon' }

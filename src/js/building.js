@@ -401,7 +401,8 @@ class Building extends EffectableEntity {
       if (!store[category]) {
         store[category] = {};
       }
-      store[category][resource] = (store[category][resource] || 1) * value;
+      const current = store[category][resource];
+      store[category][resource] = (current === undefined ? 1 : current) * value;
     };
     const addConsumption = (category, resource, amount, ignoreProductivity) => {
       if (!category || !resource) {
