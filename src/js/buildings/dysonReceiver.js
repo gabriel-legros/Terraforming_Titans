@@ -56,42 +56,6 @@ class DysonReceiver extends Building {
     const remaining = Math.max(cap - this.count, 0);
     return Math.min(base, remaining);
   }
-
-  getTargetProductivity(resources, deltaTime) {
-    if (this.active === 0) {
-      return 0;
-    }
-
-    const baseRatio = this.calculateBaseMinRatio(resources, deltaTime, { space: { energy: true } });
-    const targetProductivity = Math.max(0, Math.min(1, baseRatio));
-    const perBuilding = this.getReceiverEnergyPerBuilding();
-    const totals = this.getCollectorTotals();
-    if (totals.totalEnergy <= 0 || perBuilding <= 0) {
-      return 0;
-    }
-    const maxProductivity = totals.totalEnergy / (perBuilding * this.active);
-    return Math.max(0, Math.min(targetProductivity, maxProductivity));
-  }
-
-  updateProductivity(resources, deltaTime) {
-    this.setAutomationActivityMultiplier(1);
-
-    if (this.active === 0) {
-      this.setAutomationActivityMultiplier(0);
-      this.productivity = 0;
-      this.displayProductivity = 0;
-      return;
-    }
-    const targetProductivity = this.getTargetProductivity(resources, deltaTime);
-    if (targetProductivity <= 0) {
-      this.setAutomationActivityMultiplier(0);
-      this.productivity = 0;
-      this.displayProductivity = 0;
-      return;
-    }
-    this.productivity = targetProductivity;
-    this.displayProductivity = this.productivity;
-  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

@@ -199,6 +199,14 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     }
   }
 
+  getCollectorPowerPerSecond() {
+    return (
+      dysonSwarmManagerInstance?.getTotalCollectorEnergyPerSecond?.()
+      || dysonSwarmManagerInstance?.getOverflowEnergyPerSecond?.()
+      || 0
+    );
+  }
+
   applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges) {
     if (!accumulatedChanges) {
       return;
@@ -210,10 +218,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     if (!(seconds > 0)) {
       return;
     }
-    const collectorPowerPerSecond =
-      dysonSwarmManagerInstance?.getTotalCollectorEnergyPerSecond?.()
-      || dysonSwarmManagerInstance?.getOverflowEnergyPerSecond?.()
-      || 0;
+    const collectorPowerPerSecond = this.getCollectorPowerPerSecond();
     const overflowAmount = Math.max(collectorPowerPerSecond * seconds, 0);
     accumulatedChanges.space ||= {};
     accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) + overflowAmount;
@@ -225,6 +230,19 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
+    const seconds = deltaTime / 1000;
+    const collectorPowerPerSecond = this.getCollectorPowerPerSecond();
+    const collectorEnergyGain = seconds > 0
+      ? Math.max(collectorPowerPerSecond * seconds, 0)
+      : 0;
+
+    if (collectorEnergyGain > 0) {
+      totals.gain.space ||= {};
+      totals.gain.space.energy = (totals.gain.space.energy || 0) + collectorEnergyGain;
+      if (applyRates) {
+        resources?.space?.energy?.modifyRate?.(collectorPowerPerSecond, 'Dyson Collectors', 'project');
+      }
+    }
     
     if (this.isCollectorContinuous()) {
       if (!this.autoContinuousOperation) {
