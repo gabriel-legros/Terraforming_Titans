@@ -270,7 +270,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  Since you asked me about this before...  I must inform you that Ghost has been stripped of his rank, and is currently sitting in an imperial prison while awaiting his execution.'  \n Mary : 'Oh!  Hmm thank you.'",
+    narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  Since you asked me about this before...  I must inform you that Ghost has been stripped of his rank, and is currently sitting in an imperial prison while awaiting his execution.'  \n Mary : 'Oh!  Hmmmm thank you.'",
     prerequisites: ['poseidon.38.3'],
     objectives: [
       {
@@ -285,7 +285,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "Mary : '...' \n $RED$Prometheus : 'Tell Feroza to take the fleet to sector R1-02.'  \n Mary : 'What?'  \n $RED$Prometheus : 'That's where the high-security prison world I designed is.  They will be holding Ghost there until his execution.'  \n Mary : 'But...  how do you know I wanted...'  \n $RED$Prometheus : 'I am here to help.  Ghost spared you and HOPE, and paid a heavy price for it.  You want to pay back that debt.'  \n Mary : 'But it's imperial core territory!  It's dangerous.  We should be going to Zeus.  There's only one weapon left!  We could be risking all of humanity here, just to make me feel better.'  \n $RED$Prometheus : 'Yes.  You will be risking all of humanity, HOPE and even myself.  Deep down, you know what you must do.'  \n Mary : '...  Feroza... focus your efforts toward sector R1-02.'  \n Feroza : 'Ma'am?  That is imperial core territory.'  \n Mary : 'I know.'",
+    narrative: "Mary : '...' \n $RED$Prometheus : 'Tell Feroza to take the fleet to sector R1-02.'  \n Mary : 'What?'  \n $RED$Prometheus : 'That's where the high-security prison world I designed is.  They will be holding Ghost there until his execution.'  \n Mary : 'But...  how do you know I wanted...'  \n $RED$Prometheus : 'I am here to help.  Ghost spared you and HOPE, and paid a heavy price for it.  You want to pay back that debt.'  \n Mary : 'But it's imperial core territory!  It's dangerous.  We should be going to Zeus.  There's only one weapon left!  We could be risking all of humanity here, just to make me feel better.'  \n $RED$Prometheus : 'Yes.  You will be risking all of humanity, HOPE and even myself.  Deep down, you know what you must do.'  \n Mary : '...  Feroza... focus your efforts toward sector R1-02.'  \n Feroza : 'Ma'am?  That is imperial core territory.'  \n Mary : 'I know.'  \n $RED$Prometheus : 'Well done Ma...  Mary.'",
     prerequisites: ['poseidon.38.4'],
     objectives: [
       {

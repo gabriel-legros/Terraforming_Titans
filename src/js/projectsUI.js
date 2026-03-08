@@ -1669,11 +1669,11 @@ function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
       const resourceDisplayName = resources[category][resource].displayName ||
         resource.charAt(0).toUpperCase() + resource.slice(1);
       const amount = totalResourceGain[category][resource];
-      let entry = `${resourceDisplayName}: ${formatNumber(amount, true)}${suffix}`;
+      let entry = `${resourceDisplayName}: ${formatNumber(amount, true, 2)}${suffix}`;
       if (category === 'atmospheric' && ATMOSPHERIC_GAS_IMPORTS.has(resource)) {
         const { gravity, radius } = terraforming.celestialParameters;
         const pressure = calculateAtmosphericPressure(amount, gravity, radius);
-        entry += ` / ${formatNumber(pressure, true, 1, true)}${pressureSuffix}`;
+        entry += ` / ${formatNumber(pressure, true, 2, true)}${pressureSuffix}`;
       }
       gainArray.push(entry);
     }
