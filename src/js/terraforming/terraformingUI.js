@@ -755,6 +755,7 @@ function createTemperatureBox(row) {
       <h3>${terraforming.temperature.name}</h3>
       <p>Global Mean Temp: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>Equilibrium Temp: <span id="equilibrium-temp"></span> <span class="temp-unit"></span></p>
+      <p id="temperature-core-heat-line" style="display: none;">Core Heat Flux: <span id="temperature-core-heat"></span> W/m^2</p>
       <table>
         <colgroup>
           <col class="gas-col">
@@ -806,6 +807,18 @@ function createTemperatureBox(row) {
       temperatureHeading.appendChild(tempInfo);
       temperatureHeading.appendChild(tempInfographicButton);
     }
+    const coreHeatLine = temperatureBox.querySelector('#temperature-core-heat-line');
+    const coreHeatInfo = document.createElement('span');
+    coreHeatInfo.classList.add('info-tooltip-icon');
+    coreHeatInfo.innerHTML = '&#9432;';
+    if (coreHeatLine) {
+      coreHeatLine.appendChild(document.createTextNode(' '));
+      coreHeatLine.appendChild(coreHeatInfo);
+      attachDynamicInfoTooltip(
+        coreHeatInfo,
+        'Planetary interior heat added directly to the surface energy budget as a flat global flux. Unlike starlight, it is not reduced by albedo or day-night averaging.'
+      );
+    }
     const infographicElements = ensureTemperatureInfographicOverlay();
     tempInfographicButton.addEventListener('click', showTemperatureInfographicOverlay);
 
@@ -826,7 +839,10 @@ function createTemperatureBox(row) {
     maintenancePenaltyInfo.id = 'temperature-maintenance-penalty-info';
     maintenancePenaltyInfo.classList.add('info-tooltip-icon');
     maintenancePenaltyInfo.innerHTML = '&#9432;';
-    maintenancePenaltyInfo.title = getTemperatureMaintenanceImmuneTooltip();
+    const maintenancePenaltyTooltip = attachDynamicInfoTooltip(
+      maintenancePenaltyInfo,
+      getTemperatureMaintenanceImmuneTooltip()
+    );
     maintenancePenaltySpan.appendChild(maintenancePenaltyInfo);
     temperatureBox.appendChild(maintenancePenaltySpan);
 
@@ -846,6 +862,8 @@ function createTemperatureBox(row) {
       target: temperatureBox.querySelector('#temperature-target'),
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
+      coreHeatLine,
+      coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
       tropicalTemp: temperatureBox.querySelector('#tropical-temp'),
       tropicalTrendTemp: temperatureBox.querySelector('#tropical-trend-temp'),
       tropicalDelta: temperatureBox.querySelector('#tropical-delta'),
@@ -867,6 +885,7 @@ function createTemperatureBox(row) {
       maintenancePenalty: temperatureBox.querySelector('#temperature-maintenance-penalty'),
       maintenancePenaltyValue: temperatureBox.querySelector('#temperature-maintenance-penalty-value'),
       maintenancePenaltyInfo: temperatureBox.querySelector('#temperature-maintenance-penalty-info'),
+      maintenancePenaltyTooltip,
       infographicButton: tempInfographicButton,
       infographicOverlay: infographicElements.overlay
     };
@@ -893,6 +912,14 @@ function createTemperatureBox(row) {
 
     els.current.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
     els.equilibrium.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.equilibriumTemperature), false, 2);
+    const baseCoreHeatFlux = Math.max(0, terraforming.celestialParameters.coreHeatFlux || 0);
+    const coreHeatFlux = Math.max(0, terraforming.getCoreHeatFlux ? terraforming.getCoreHeatFlux() : baseCoreHeatFlux);
+    if (els.coreHeatLine) {
+      els.coreHeatLine.style.display = baseCoreHeatFlux > 0 ? '' : 'none';
+    }
+    if (els.coreHeat) {
+      els.coreHeat.textContent = formatNumber(coreHeatFlux, false, coreHeatFlux >= 100 ? 0 : 2);
+    }
 
     els.tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
     els.tropicalTrendTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.trendValue), false, 2);
@@ -929,8 +956,8 @@ function createTemperatureBox(row) {
         } else {
           els.maintenancePenalty.textContent = `Maintenance cost multiplier from temperature : ${penalty.toFixed(2)}`;
         }
-        if (els.maintenancePenaltyInfo) {
-          els.maintenancePenaltyInfo.title = getTemperatureMaintenanceImmuneTooltip();
+        if (els.maintenancePenaltyTooltip) {
+          setTooltipText(els.maintenancePenaltyTooltip, getTemperatureMaintenanceImmuneTooltip());
         }
       } else {
         els.maintenancePenalty.style.display = 'none';
@@ -1757,6 +1784,11 @@ function updateLifeBox() {
     if (magnetosphereHeading) {
       magnetosphereHeading.appendChild(magInfo);
     }
+    const equatorialGravityInfo = magnetosphereBox.querySelector('#terraforming-equatorial-gravity-row .info-tooltip-icon');
+    const equatorialGravityTooltip = attachDynamicInfoTooltip(
+      equatorialGravityInfo,
+      EQUATORIAL_GRAVITY_TOOLTIP_TEXT
+    );
 
     row.appendChild(magnetosphereBox);
     terraformingUICache.magnetosphere = {
@@ -1770,6 +1802,7 @@ function updateLifeBox() {
       gravityValue: magnetosphereBox.querySelector('#terraforming-gravity-value'),
       equatorialGravityRow: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-row'),
       equatorialGravityValue: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-value'),
+      equatorialGravityTooltip,
       gravityPenaltyRow: magnetosphereBox.querySelector('#gravity-penalty-row'),
       gravityPenaltyValue: magnetosphereBox.querySelector('#terraforming-gravity-penalty'),
       otherRequirements: magnetosphereBox.querySelector('#others-extra-requirements')

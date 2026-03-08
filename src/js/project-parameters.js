@@ -535,6 +535,27 @@ const projectParameters = {
       showInResourcesRate: false
     }
   },
+  artificialCrust: {
+    type: 'ArtificialCrustProject',
+    name: 'Artificial Crust',
+    category: 'infrastructure',
+    cost: {
+      colony: {
+        superalloys: 1_000,
+        components: 20_000,
+        metal: 200_000
+      }
+    },
+    duration: 500000,
+    description: 'Lay down a segmented artificial crust to insulate the surface from planetary interior heat. Total cost and segment count scale with planetary surface area, while assigned spaceships accelerate construction. Completion proportionally reduces core heat flux, reaching zero when the shell is finished.',
+    repeatable: true,
+    maxRepeatCount: 1,
+    unlocked: true,
+    attributes: {
+      spaceMining: true,
+      showInResourcesRate: false
+    }
+  },
   planetaryThruster: {
     type: 'PlanetaryThrustersProject',
     name: 'Planetary Thrusters',

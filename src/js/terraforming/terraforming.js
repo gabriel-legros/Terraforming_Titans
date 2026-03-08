@@ -528,6 +528,15 @@ class Terraforming extends EffectableEntity{
     return (this.temperature.value >= this.temperature.targetMin && this.temperature.value <= this.temperature.targetMax)
   }
 
+  getCoreHeatFlux() {
+    const baseFlux = Math.max(0, this.celestialParameters.coreHeatFlux || 0);
+    const crustCompletion = Math.max(
+      0,
+      Math.min(1, projectManager?.projects?.artificialCrust?.getCompletionFraction?.() || 0)
+    );
+    return baseFlux * (1 - crustCompletion);
+  }
+
   setTemperatureValuesToTrend() {
     const zones = getZones();
     const globalTrend = this.temperature.trendValue;
@@ -1071,6 +1080,7 @@ class Terraforming extends EffectableEntity{
 
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
     const greenhouseFactor = 1 + 0.75 * tau;
+    const coreHeatFlux = this.getCoreHeatFlux();
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     const megaHeatSinkCount =
@@ -1136,6 +1146,7 @@ class Terraforming extends EffectableEntity{
         const zTemps = dayNightTemperaturesModel({
             ...baseParams,
             flux: zoneFlux,
+            addedSurfaceFlux: coreHeatFlux,
             surfaceFractions: zoneFractions,
             autoSlabOptions: slabOptions
         });
@@ -1248,7 +1259,7 @@ class Terraforming extends EffectableEntity{
         const previousMean = this.temperature.zones[zone].value;
         const capacity = z[zone].capacityPerArea;
 
-        const absorbedFlux = (1 - z[zone].albedo) * zoneFlux * (isRingWorld() ? 1 : 0.25);
+        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (isRingWorld() ? 1 : 0.25)) + coreHeatFlux;
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
             : 0;
@@ -1327,7 +1338,7 @@ class Terraforming extends EffectableEntity{
         this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
 
         this.temperature.effectiveTempNoAtmosphere =
-            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized);
+            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized, { addedFlux: coreHeatFlux });
     }
 
     getRadiationDoseBoostFromEffects() {

@@ -408,9 +408,11 @@ function autoSlabHeatCapacity(
   return fOther * CSoil + liquidCoverage * COcean + fIce * CIce + CAtm;
 }
 
-function effectiveTemp(albedo, flux) {
+function effectiveTemp(albedo, flux, options = {}) {
   const adjustment = isRingWorld() ? 1 : 4;
-  return Math.pow((1 - albedo) * flux / (adjustment * SIGMA), 0.25);
+  const addedFlux = Math.max(0, options.addedFlux || 0);
+  const absorbedFlux = Math.max(0, ((1 - albedo) * flux / adjustment) + addedFlux);
+  return Math.pow(absorbedFlux / SIGMA, 0.25);
 }
 
 function cloudFraction(pBar) {
@@ -524,6 +526,7 @@ function diurnalAmplitude(albedo, flux, T, heatCap, rotH) {
 function dayNightTemperaturesModel({
   groundAlbedo,
   flux,
+  addedSurfaceFlux = 0,
   rotationPeriodH,
   surfacePressureBar,
   composition = {},
@@ -557,7 +560,7 @@ function dayNightTemperaturesModel({
   });
 
   // IR greenhouse as before
-  const T_eff  = effectiveTemp(A, flux);
+  const T_eff  = effectiveTemp(A, flux, { addedFlux: addedSurfaceFlux });
   const { total: tauGHG } = opticalDepth(composition, surfacePressureBar, gSurface);
   const T_surf = T_eff * Math.pow(1 + 0.75 * tauGHG, 0.25);
   const dT     = diurnalAmplitude(A, flux, T_surf, slabHeatCapacity, rotationPeriodH);

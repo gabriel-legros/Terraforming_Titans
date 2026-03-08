@@ -144,6 +144,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Atmospheric layer boundaries now use exobase-relative heights for monotonic drag behavior.
 - Water vapor saturation effects now reduce effective pressure, with cold trapping on cold worlds.
 - Condensation/precipitation now includes a simple uplift-based saturation cap (adiabatic cooling to a representative lifted pressure), allowing condensation even when the surface is unsaturated.
+- Celestial parameters can now set `coreHeatFlux` in W/m^2; temperature treats it as a flat global surface heat source and the temperature UI shows it when present.
 - Terraforming history charts include a rolling 500-year window and phase diagrams (Water, CO2, Methane, Ammonia, O2, N2).
 - Oxygen and nitrogen now have full phase-change cycles.
 - Phase-change cycles now include rapid boiling (liquid -> gas) above local boiling points, tracked as a separate `boiling` rate/tooltip channel, with rate `current liquid × 1e-7 × (temperature - boiling point)`.
@@ -154,6 +155,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Kessler cost multipliers and decay behaviors were tuned; hazard charts and bin diagnostics expanded.
 - While Kessler Skies is active, Followers Orbitals are limited to `research`; non-research orbital outputs are disabled and the Orbitals card shows a warning banner.
 - Pulsar hazard now has full clear paths on affected worlds: fully build all `Artificial Sky` segments or use Planetary Thrusters to `Go Rogue`; both clear pulsar hazard effects.
+- Worlds with `coreHeatFlux > 0` now show infrastructure project `Artificial Crust`: segmented build cost scales with planetary surface area, android assignment accelerates construction, and completion proportionally suppresses core heat until it reaches zero.
 - Completing `Artificial Sky` now permanently disables the `Space Mirror` building on that world (this does not disable the `Space Mirror Facility` project).
 - `Artificial Sky` is now a segmented spaceship project: total segments are `ceil(initial land / 1000)`, each segment spends an equal share of the old full cost, base segment duration is 50,000s at 1 assigned ship, and it becomes continuous when effective duration drops below 1s.
 - Pulsar hazard now triggers recurring Electromagnetic Storms (5s every 100s): storms apply temporary attrition to unassigned androids/electronics/nanobots, pause spaceship projects, and surface as active warning state in the Pulsar UI card.

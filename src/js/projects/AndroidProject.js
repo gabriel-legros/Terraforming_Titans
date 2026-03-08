@@ -343,7 +343,7 @@ class AndroidProject extends Project {
     assignmentContainer.append(assignedAndAvailableContainer, buttonsContainer, autoAssignContainer, speedContainer);
     sectionContainer.appendChild(assignmentContainer);
     sectionContainer.id = `${this.name}-android-assignment`;
-    sectionContainer.style.display = this.isBooleanFlagSet('androidAssist') ? 'block' : 'none';
+    sectionContainer.style.display = this.canAssignAndroids() ? 'block' : 'none';
     container.appendChild(sectionContainer);
 
     projectElements[this.name] = {
@@ -388,7 +388,7 @@ class AndroidProject extends Project {
     const elements = projectElements[this.name];
     if (!elements) return;
     if (elements.androidAssignmentContainer) {
-      elements.androidAssignmentContainer.style.display = this.isBooleanFlagSet('androidAssist') ? 'block' : 'none';
+      elements.androidAssignmentContainer.style.display = this.canAssignAndroids() ? 'block' : 'none';
     }
     elements.assignedAndroidsDisplay.textContent = formatNumber(this.assignedAndroids, true);
     const avail = Math.floor(resources.colony.androids.value - projectManager.getAssignedAndroids());

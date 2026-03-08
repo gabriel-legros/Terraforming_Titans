@@ -106,6 +106,7 @@ const defaultPlanetParameters = {
     rotationPeriod: 24.6, // hours, day-night cycle duration, Default (Mars)
     spinPeriod: 24.6, // hours, physical rotation for gravity calculations, Default (Mars)
     starLuminosity: 1, // Multiplier relative to Sol
+    coreHeatFlux: 0, // W/m^2, added directly to the surface energy budget
     sector: 'R5-07',
   },
   visualization: {
@@ -1478,17 +1479,18 @@ const poseidonOverrides = {
   },
   celestialParameters: {
     distanceFromSun: 2.9,
-    gravity: 8.4,
-    radius: 6100,
-    mass: 7.6e24,
-    albedo: 0.28,
+    gravity: 15.1,
+    radius: 7600,
+    mass: 1.31e25,
+    albedo: 0.08,
     rotationPeriod: 21.8,
     spinPeriod: 21.8,
     starLuminosity: 0.46,
+    coreHeatFlux: 120_000,
     sector: 'R5-10'
   },
   visualization: {
-    baseColor: '#1f4f63',
+    baseColor: '#8b3c21',
   },
   resources: {
     surface: {
@@ -1501,12 +1503,16 @@ const poseidonOverrides = {
       biomass: { initialValue: 0 },
       hazardousBiomass: { initialValue: 0 }
     },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
+    },
     atmospheric: {
-      carbonDioxide: { initialValue: 2_500_000_000 },
+      carbonDioxide: { initialValue: 60_000_000_000_000_000 },
       atmosphericWater: { initialValue: 0 },
-      atmosphericMethane: { initialValue: 1_900_000_000_000_000 },
-      oxygen: { initialValue: 100_000 },
-      inertGas: { initialValue: 9_700_000_000_000_000 },
+      atmosphericMethane: { initialValue: 0 },
+      oxygen: { initialValue: 250_000_000_000_000 },
+      inertGas: { initialValue: 2_400_000_000_000_000 },
       hydrogen: { initialValue: 0 },
       sulfuricAcid: { initialValue: 0 }
     }
@@ -1552,23 +1558,7 @@ const poseidonOverrides = {
       buriedHydrocarbonIce: 0
     }
   },
-  zonalTemperatures: {
-    tropical: {
-      value: 115.4,
-      day: 127.8,
-      night: 103
-    },
-    temperate: {
-      value: 102.3,
-      day: 111.9,
-      night: 92.7
-    },
-    polar: {
-      value: 86.1,
-      day: 90.4,
-      night: 81.8
-    }
-  }
+  zonalTemperatures: null
 };
 
 // --- Parameter Retrieval Logic ---

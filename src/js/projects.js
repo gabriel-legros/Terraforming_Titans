@@ -1021,15 +1021,19 @@ class ProjectManager extends EffectableEntity {
 
   isProjectRelevantToCurrentPlanet(project) {
     const targetPlanet = project?.category === 'story' ? project.attributes?.planet : null;
-    const globalContext = typeof globalThis !== 'undefined' ? globalThis : {};
-    const manager = this.spaceManager || globalContext.spaceManager;
-    const fallbackParameters = manager?.currentPlanetParameters || globalContext.currentPlanetParameters;
+    const manager = this.spaceManager || spaceManager;
+    const fallbackParameters = manager?.currentPlanetParameters || currentPlanetParameters;
     const currentPlanetKey =
       manager?.getCurrentPlanetKey?.() ??
       manager?.currentPlanetKey ??
       fallbackParameters?.key ??
       fallbackParameters?.planetKey ??
       null;
+
+    if (typeof project?.isRelevantToCurrentPlanet === 'function') {
+      return project.isRelevantToCurrentPlanet(currentPlanetKey, fallbackParameters, manager) !== false
+        && (!targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey);
+    }
 
     return !targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey;
   }
