@@ -11,7 +11,7 @@ function renderOrbitalRingUI(project, container) {
         <div class="stat-item"><span class="stat-label">Max Rings:</span><span id="or-max-rings"></span></div>
         <div class="stat-item"><span class="stat-label">Current World Ring:</span><span id="or-current-world"></span></div>
         <div class="stat-item">
-          <span class="stat-label">Prepaid Rings:</span>
+          <span class="stat-label">Prepaid Rings: <span id="or-prepay-info" class="info-tooltip-icon">&#9432;</span></span>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span id="or-prepaid-rings"></span>
             <button id="or-prepay-button" style="padding: 2px 10px; font-size: 0.85em; line-height: 1.2;">Prepay</button>
@@ -22,6 +22,11 @@ function renderOrbitalRingUI(project, container) {
   container.appendChild(card);
 
   const prepayButton = card.querySelector('#or-prepay-button');
+  const prepayInfo = card.querySelector('#or-prepay-info');
+  attachDynamicInfoTooltip(
+    prepayInfo,
+    'You can prepay rings for past and current worlds that do not have a ring yet. You cannot prepay for future worlds.'
+  );
   prepayButton.addEventListener('click', () => {
     if (project.prepayRing()) {
       updateOrbitalRingUI(project);

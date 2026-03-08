@@ -41,6 +41,9 @@ const SPACE_STORAGE_RESOURCE_KEYS = [
   'atmosphericAmmonia',
   'hydrogen'
 ];
+const SPACE_TRAVEL_RESOURCE_KEYS = [
+  'energy'
+];
 const SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY = 'standard';
 
 let SpaceStorageContinuousExpansionHelpers = null;
@@ -1408,6 +1411,32 @@ class SpaceStorageProject extends SpaceshipProject {
     this.reconcileUsedStorage();
   }
 
+  exportSpaceTravelResourceValues() {
+    const values = {};
+    const spaceResources = resources?.space || {};
+    for (let i = 0; i < SPACE_TRAVEL_RESOURCE_KEYS.length; i += 1) {
+      const key = SPACE_TRAVEL_RESOURCE_KEYS[i];
+      values[key] = Number(spaceResources[key]?.value) || 0;
+    }
+    return values;
+  }
+
+  importSpaceTravelResourceValues(values = {}) {
+    const source = values && typeof values === 'object' ? values : {};
+    const spaceResources = resources?.space;
+    if (!spaceResources) {
+      return;
+    }
+    for (let i = 0; i < SPACE_TRAVEL_RESOURCE_KEYS.length; i += 1) {
+      const key = SPACE_TRAVEL_RESOURCE_KEYS[i];
+      if (source[key] === undefined || !spaceResources[key]) {
+        continue;
+      }
+      const value = Number(source[key]);
+      spaceResources[key].value = Number.isFinite(value) && value > 0 ? value : 0;
+    }
+  }
+
   saveState() {
     const expansionRecipeKey = this.getExpansionRecipeKey();
     return {
@@ -1501,6 +1530,7 @@ class SpaceStorageProject extends SpaceshipProject {
       expansionProgress: this.expansionProgress,
       usedStorage: this.usedStorage,
       spaceResources: this.exportSpaceStorageValues(),
+      travelSpaceResources: this.exportSpaceTravelResourceValues(),
       megaProjectResourceMode: this.megaProjectResourceMode,
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
       resourceStrategicReserves: this.resourceStrategicReserves,
@@ -1517,6 +1547,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.expansionProgress = state.expansionProgress || 0;
     this.usedStorage = state.usedStorage || 0;
     this.importSpaceStorageValues(state.spaceResources, state.resourceUsage);
+    this.importSpaceTravelResourceValues(state.travelSpaceResources);
     this.resourceStrategicReserves = state.resourceStrategicReserves || {};
     this.sanitizeResourceStrategicReserves();
     if (!state.resourceStrategicReserves && state.strategicReserve > 0) {
