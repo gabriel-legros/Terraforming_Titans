@@ -92,6 +92,14 @@ class SpaceMirrorAdvancedOversight {
         return out;
       };
 
+      const hasSearchGap = (low, high) => {
+        if (!(high > low)) return false;
+        const span = high - low;
+        if (!(span > 1)) return false;
+        const mid = Math.floor((low + high) / 2);
+        return mid > low && mid < high;
+      };
+
       const allPriorities = [prio.tropical, prio.temperate, prio.polar, prio.focus].filter(x => typeof x === 'number');
       const minP = Math.min(...allPriorities);
       const maxP = Math.max(...allPriorities);
@@ -238,7 +246,7 @@ class SpaceMirrorAdvancedOversight {
 
           let low = 0;
           let high = current;
-          while (high - low > 1) {
+          while (hasSearchGap(low, high)) {
             const mid = Math.floor((low + high) / 2);
             if (fluxFor(mid) > NEAR_MIN_FLUX) {
               low = mid;
@@ -678,7 +686,7 @@ class SpaceMirrorAdvancedOversight {
           high = next;
         }
 
-        while (high - low > 1) {
+        while (hasSearchGap(low, high)) {
           const mid = Math.floor((low + high) / 2);
           if (isSafe(mid)) {
             low = mid;
