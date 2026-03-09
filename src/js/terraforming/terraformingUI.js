@@ -301,11 +301,11 @@ function getTemperatureMaintenanceImmuneTooltip() {
   }
 
   if (immuneNames.length === 0) {
-    return 'No buildings are immune to this penalty.';
+    return 'Temperature maintenance penalty: no penalty at or below 373.15 K, +1% maintenance per K above that, then an added quadratic increase above 1173.15 K. No buildings are immune to this penalty.';
   }
 
   immuneNames.sort((a, b) => a.localeCompare(b));
-  return `Buildings immune to this effect: ${immuneNames.join(', ')}.`;
+  return `Temperature maintenance penalty: no penalty at or below 373.15 K, +1% maintenance per K above that, then an added quadratic increase above 1173.15 K. Buildings immune to this effect: ${immuneNames.join(', ')}.`;
 }
 
 function resetTerraformingUI() {

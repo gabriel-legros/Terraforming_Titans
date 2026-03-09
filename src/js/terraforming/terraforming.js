@@ -15,6 +15,9 @@ const BACKGROUND_SOLAR_FLUX = 6e-6;
 const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
 const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
+const MAINTENANCE_PENALTY_QUADRATIC_THRESHOLD = 1173.15; // K
+const MAINTENANCE_PENALTY_LINEAR_RATE = 0.01;
+const MAINTENANCE_PENALTY_QUADRATIC_RATE = 1e-5;
 const KPA_PER_ATM = 101.325;
 var resourcePhaseGroups;
 
@@ -1981,7 +1984,25 @@ class Terraforming extends EffectableEntity{
       if (temp <= MAINTENANCE_PENALTY_THRESHOLD) {
         return 1;
       }
-      return 1 + 0.01 * (temp - MAINTENANCE_PENALTY_THRESHOLD);
+
+      const linearPenalty =
+        1 +
+        MAINTENANCE_PENALTY_LINEAR_RATE *
+          (temp - MAINTENANCE_PENALTY_THRESHOLD);
+
+      if (temp <= MAINTENANCE_PENALTY_QUADRATIC_THRESHOLD) {
+        return linearPenalty;
+      }
+
+      const excessTemperature =
+        temp - MAINTENANCE_PENALTY_QUADRATIC_THRESHOLD;
+
+      return (
+        linearPenalty +
+        MAINTENANCE_PENALTY_QUADRATIC_RATE *
+          excessTemperature *
+          excessTemperature
+      );
     }
 
     getFactoryTemperatureMaintenancePenaltyReduction() {
