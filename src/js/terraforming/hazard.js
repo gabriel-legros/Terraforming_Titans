@@ -4,6 +4,10 @@ let HazardousBiomassHazardCtor = null;
 let GarbageHazardCtor = null;
 let KesslerHazardCtor = null;
 let PulsarHazardCtor = null;
+let LandReservationReconcilerCtor = null;
+let getCoreFluxLandReservationShareHelper = null;
+let normalizeLandReservationShareHelper = null;
+let resolveLandReservationInitialLandHelper = null;
 
 function resolveKesslerCtor(current) {
   let resolved = current;
@@ -63,6 +67,27 @@ try {
   }
 }
 
+try {
+  ({
+    LandReservationReconciler: LandReservationReconcilerCtor,
+    getCoreFluxLandReservationShare: getCoreFluxLandReservationShareHelper,
+    normalizeLandReservationShare: normalizeLandReservationShareHelper,
+    resolveLandReservationInitialLand: resolveLandReservationInitialLandHelper
+  } = require('./landReservation.js'));
+} catch (error) {
+  try {
+    LandReservationReconcilerCtor = LandReservationReconciler;
+    getCoreFluxLandReservationShareHelper = getCoreFluxLandReservationShare;
+    normalizeLandReservationShareHelper = normalizeLandReservationShare;
+    resolveLandReservationInitialLandHelper = resolveLandReservationInitialLand;
+  } catch (innerError) {
+    LandReservationReconcilerCtor = null;
+    getCoreFluxLandReservationShareHelper = null;
+    normalizeLandReservationShareHelper = null;
+    resolveLandReservationInitialLandHelper = null;
+  }
+}
+
 function cloneHazardParameters(parameters) {
   try {
     return JSON.parse(JSON.stringify(parameters || {}));
@@ -115,6 +140,9 @@ class HazardManager {
       hazardousBiomass: 0,
       pulsar: 0
     };
+    this.landReservationReconciler = LandReservationReconcilerCtor
+      ? new LandReservationReconcilerCtor()
+      : null;
 
     this.hazardousBiomassHazard = HazardousBiomassHazardCtor ? new HazardousBiomassHazardCtor(this) : null;
     this.garbageHazard = GarbageHazardCtor ? new GarbageHazardCtor(this) : null;
@@ -365,9 +393,13 @@ class HazardManager {
       this.garbageHazard.update(deltaSeconds);
     }
     this.kesslerHazard.update(deltaSeconds, terraformingState, this.parameters.kessler);
+    this.syncHazardLandReservation(terraformingState);
   }
 
   normalizeHazardLandShare(share) {
+    if (normalizeLandReservationShareHelper) {
+      return normalizeLandReservationShareHelper(share);
+    }
     if (!Number.isFinite(share) || share <= 0) {
       return 0;
     }
@@ -389,11 +421,17 @@ class HazardManager {
     }
 
     this.hazardLandReservationShares[source] = normalized;
+    if (this.landReservationReconciler?.setShare) {
+      this.landReservationReconciler.setShare(source, normalized);
+    }
     this.syncHazardLandReservation();
     return normalized;
   }
 
   resolveInitialLandForHazards(terraformingState, landResource) {
+    if (resolveLandReservationInitialLandHelper) {
+      return resolveLandReservationInitialLandHelper(terraformingState, landResource);
+    }
     const candidates = [
       terraformingState?.initialLand,
       landResource?.initialValue
@@ -407,10 +445,32 @@ class HazardManager {
     return 0;
   }
 
-  getCombinedHazardLandShare() {
+  getCoreFluxLandReservationShare(terraformingState = null) {
+    if (getCoreFluxLandReservationShareHelper) {
+      return getCoreFluxLandReservationShareHelper(terraformingState);
+    }
+    const activeTerraforming = terraformingState || getTerraforming();
+    const baseFlux = Math.max(0, activeTerraforming?.celestialParameters?.coreHeatFlux || 0);
+    if (!(baseFlux > 0)) {
+      return 0;
+    }
+    const currentFlux = Math.max(
+      0,
+      activeTerraforming?.getCoreHeatFlux ? activeTerraforming.getCoreHeatFlux() : baseFlux
+    );
+    return currentFlux / baseFlux;
+  }
+
+  getCombinedHazardLandShare(terraformingState = null) {
+    if (this.landReservationReconciler?.getCombinedShare) {
+      return this.landReservationReconciler.getCombinedShare({
+        coreHeatFlux: this.getCoreFluxLandReservationShare(terraformingState)
+      });
+    }
     const biomassShare = this.hazardLandReservationShares.hazardousBiomass || 0;
     const pulsarShare = this.hazardLandReservationShares.pulsar || 0;
-    return Math.max(biomassShare, pulsarShare);
+    const coreFluxShare = this.getCoreFluxLandReservationShare(terraformingState);
+    return Math.max(biomassShare, pulsarShare, coreFluxShare);
   }
 
   syncHazardLandReservation(terraformingState = null) {
@@ -427,8 +487,15 @@ class HazardManager {
     }
 
     const activeTerraforming = terraformingState || getTerraforming();
+    if (this.landReservationReconciler?.syncToLandResource) {
+      this.landReservationReconciler.syncToLandResource(landResource, activeTerraforming, {
+        coreHeatFlux: this.getCoreFluxLandReservationShare(activeTerraforming)
+      });
+      return;
+    }
+
     const initialLand = this.resolveInitialLandForHazards(activeTerraforming, landResource);
-    const combinedShare = this.getCombinedHazardLandShare();
+    const combinedShare = this.getCombinedHazardLandShare(activeTerraforming);
     const reservedLand = initialLand > 0 ? initialLand * combinedShare : 0;
 
     landResource.setReservedAmountForSource('hazards', reservedLand);

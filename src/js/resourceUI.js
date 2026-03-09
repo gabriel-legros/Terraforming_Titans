@@ -1712,7 +1712,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       const hazardReserved = resource.getReservedAmountForSource
         ? (resource.getReservedAmountForSource('hazards') || resource.getReservedAmountForSource('hazardousBiomass'))
         : 0;
-      const hazardText = `Hazards ${formatNumber(hazardReserved, false, 3)}`;
+      const worldEffectLabel = resource.worldEffectReservationLabel || 'World Effects';
+      const hazardText = `${worldEffectLabel} ${formatNumber(hazardReserved, false, 3)}`;
       if (hazard.textContent !== hazardText) hazard.textContent = hazardText;
       hazard.style.display = hazardReserved > 0 ? '' : 'none';
     } else {

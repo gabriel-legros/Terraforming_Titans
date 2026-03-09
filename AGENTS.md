@@ -160,7 +160,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - `Artificial Sky` is now a segmented spaceship project: total segments are `ceil(initial land / 1000)`, each segment spends an equal share of the old full cost, base segment duration is 50,000s at 1 assigned ship, and it becomes continuous when effective duration drops below 1s.
 - Pulsar hazard now triggers recurring Electromagnetic Storms (5s every 100s): storms apply temporary attrition to unassigned androids/electronics/nanobots, pause spaceship projects, and surface as active warning state in the Pulsar UI card.
 - While Pulsar is active, hazard intensity scales down with Artificial Sky completion (land lock share, added radiation, and storm attrition), and Nanocolony max nanobot cap uses the higher of Underground Expansion ratio vs Artificial Sky completion ratio.
-- Land reservation now has a combined `hazards` source; hazard land usage uses the max share across hazard systems (currently Hazardous Biomass vs Pulsar).
+- Land reservation now uses a shared combined `hazards` source; world land usage takes the max share across Hazardous Biomass, Pulsar, and core-flux molten surface, and Artificial Crust proportionally reduces the core-flux share.
 - Space storage resources are canonical under `resources.spaceStorage` (no parallel runtime usage map), support additional resource types, and keep per-resource cap controls.
 - Resource Disposal can include Mass Drivers as ship-equivalent throughput.
 - Dyson Swarm/Receiver/Sphere, Lifters, mega/giga projects, and continuous ops gained stronger persistence and UI clarity.

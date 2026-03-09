@@ -547,7 +547,7 @@ const projectParameters = {
       }
     },
     duration: 500000,
-    description: 'Lay down a segmented artificial crust to insulate the surface from planetary interior heat. Total cost and segment count scale directly with planetary initial land, while assigned spaceships accelerate construction. Completion proportionally reduces core heat flux, reaching zero when the shell is finished.',
+    description: 'Lay down a segmented artificial crust to insulate the surface from planetary interior heat. Total cost and segment count scale directly with planetary initial land, while assigned spaceships accelerate construction. Completion proportionally reduces both core heat flux and molten-surface land reservation, reaching zero when the shell is finished.',
     repeatable: true,
     maxRepeatCount: 1,
     unlocked: true,
