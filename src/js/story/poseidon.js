@@ -12,7 +12,7 @@ progressPoseidon.chapters.push(
     chapter: 36,
     activePlanet: 'poseidon',
     title: "Chapter 36: From Hell to Hell",
-    narrative: "Arrival in the orbit of Poseidon, a molten planet.  Planetary surface temperature near 2280K...\n Mary : 'This is brighter than I expected...  It's so hot it's practically visible as a star.'  \n $RED$Prometheus : 'This one is particularly hot.  I left it that way.'  \n Mary : 'We can't land here...  Aerostats again then but even they will suffer from this heat.  Now where is Epimetheus?'",
+    narrative: "Arrival in the orbit of Poseidon, a molten planet.  Planetary surface temperature near 2280K...\n Mary : 'This is brighter than I expected...  It's so hot it's practically visible as a star.'  \n $RED$Prometheus : 'It appears it has cooled somewhat.  That's good.'  \n Mary : 'We can't land here...  Time for aerostats again I guess but even they will suffer from this heat.  Now where is Epimetheus?'",
     prerequisites: ['hades.35.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
@@ -24,7 +24,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "$RED$Prometheus : 'I am not sure what he could possibly be doing...'  \n Mary : 'We need his help to get down there.  We can finish this mission instantly and convince HOPE to go home.'  \n $RED$Prometheus : 'No!  Not this time.  This core is too hot for him.  It will seriously damage him or kill him.  It's too dangerous.'  \n Mary : '?'",
+    narrative: "$RED$Prometheus : 'I am not sure what he could possibly be doing...'  \n Mary : 'We need his help to get down there.  We can finish this mission instantly and convince HOPE to go home.  I don't want to stay in this heat.'  \n $RED$Prometheus : 'No!  Not this time.  This core is too hot for him.  It will seriously damage him or kill him.  It's too dangerous.'  \n Mary : '?'",
     prerequisites: ['poseidon.36.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
@@ -48,7 +48,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "$ORANGE$Epimetheus : 'This one has brought a gift for gorgeous one!'  \n Mary : 'Is that... a bowtie?  And what is it holding?'  \n $RED$Prometheus : 'That's a star flower.'  \n Mary : 'A what?'  \n $RED$Prometheus : 'If you mix enough Tungsten, Strontium and... some other elements that don't yet have human names and then place it inside the plasma of a star... you can grow a very special kind of crystal.  It takes a lot of patience.'  \n $ORANGE$Epimetheus : 'Will gorgeous one accept gift?'  \n HOPE : 'Star Flower received.  Gratitude.'",
+    narrative: "$ORANGE$Epimetheus : 'This one has brought a gift for gorgeous one!'  \n Mary : 'Is that... a bowtie?  And what is it holding?'  \n $RED$Prometheus : 'That's a star flower.'  \n Mary : 'A what?'  \n $RED$Prometheus : 'If you mix enough Tungsten, Strontium and... some other elements that don't yet have human names and then place the mix inside the plasma of a star... you can grow a very special kind of crystal.  It takes a lot of patience.'  \n $ORANGE$Epimetheus : 'Will gorgeous one accept gift?'  \n HOPE : 'Star Flower received.  Gratitude.'",
     prerequisites: ['poseidon.36.2'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }

@@ -3,8 +3,8 @@
   if (!PlanetVisualizer) return;
 
   const clamp01 = (v) => Math.max(0, Math.min(1, v));
-  const LAVA_WORLD_START_K = 1500;
-  const LAVA_WORLD_FULL_K = 1800;
+  const LAVA_WORLD_START_K = 900;
+  const LAVA_WORLD_FULL_K = 1400;
 
   const PLANET_TYPE_TEXTURES = {
     default: {
