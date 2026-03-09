@@ -905,7 +905,8 @@ class GalacticMarketProject extends Project {
     });
 
     let totalBuyCost = buyCostPerSecond * seconds * effectiveProductivity;
-    const availableFunding = resources.colony.funding.value;
+    const pendingFunding = accumulatedChanges?.colony?.funding || 0;
+    const availableFunding = Math.max(0, resources.colony.funding.value + pendingFunding);
 
     if (totalBuyCost > availableFunding && totalBuyCost > 0) {
       this.shortfallLastTick = true;
@@ -927,7 +928,8 @@ class GalacticMarketProject extends Project {
 
     sellTransactions.forEach((transaction) => {
       const resourceObject = resources[transaction.category]?.[transaction.resource];
-      const availableAmount = resourceObject ? resourceObject.value : 0;
+      const pendingAmount = accumulatedChanges?.[transaction.category]?.[transaction.resource] || 0;
+      const availableAmount = resourceObject ? Math.max(0, resourceObject.value + pendingAmount) : 0;
       const requiredAmount = transaction.quantity * seconds * effectiveProductivity;
       if (requiredAmount > availableAmount) {
         this.shortfallLastTick = this.shortfallLastTick || requiredAmount > 0;
