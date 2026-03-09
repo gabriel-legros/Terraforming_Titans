@@ -12,7 +12,7 @@ progressPoseidon.chapters.push(
     chapter: 36,
     activePlanet: 'poseidon',
     title: "Chapter 36: From Hell to Hell",
-    narrative: "Arrival in the orbit of Poseidon, a molten planet.  Planetary surface temperature near 2280K...\n Mary : 'This is brighter than I expected...  It's so hot it's practically visibly as a star.'  \n $RED$Prometheus : 'This one is particularly hot.  I left it that way.'  \n Mary : 'Aerostats again then.  We can't land here.  Now where is Epimetheus?'",
+    narrative: "Arrival in the orbit of Poseidon, a molten planet.  Planetary surface temperature near 2280K...\n Mary : 'This is brighter than I expected...  It's so hot it's practically visible as a star.'  \n $RED$Prometheus : 'This one is particularly hot.  I left it that way.'  \n Mary : 'We can't land here...  Aerostats again then but even they will suffer from this heat.  Now where is Epimetheus?'",
     prerequisites: ['hades.35.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }

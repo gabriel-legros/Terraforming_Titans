@@ -18,7 +18,7 @@ const AEROSTAT_BUOYANCY_NOTES =
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
 const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
-  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Some buildings have an aerostat support value; each active aerostat covers that many structures before penalties apply.';
+  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Some buildings have an aerostat support value; each active aerostat covers that many structures before penalties apply.  This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor on high-pressure worlds.';
 
 globalThis.AEROSTAT_STANDARD_PRESSURE_PA ??= AEROSTAT_STANDARD_PRESSURE_PA;
 globalThis.AEROSTAT_STANDARD_TEMPERATURE_K ??= AEROSTAT_STANDARD_TEMPERATURE_K;
@@ -908,7 +908,7 @@ function updateAerostatBuoyancySection(structure) {
         mitigationTitle +=
           mitigationShare < 1
             ? '\nMitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
-            : '\nAll staffed buildings currently avoid the temperature maintenance penalty.';
+            : '\nAll staffed buildings currently reduce the surface temperature penalty as far as possible, subject to the 1 atm maintenance floor.';
       }
 
       if (buildingCoverageList.length > 0) {

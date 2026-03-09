@@ -15,11 +15,37 @@ const BACKGROUND_SOLAR_FLUX = 6e-6;
 const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
 const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
 const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
-const MAINTENANCE_PENALTY_QUADRATIC_THRESHOLD = 1173.15; // K
+const MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD = 973.15; // 700°C
 const MAINTENANCE_PENALTY_LINEAR_RATE = 0.01;
-const MAINTENANCE_PENALTY_QUADRATIC_RATE = 1e-5;
+const MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL = 200; // K
 const KPA_PER_ATM = 101.325;
 var resourcePhaseGroups;
+
+function calculateMaintenancePenaltyForTemperature(temp) {
+  if (!Number.isFinite(temp) || temp <= MAINTENANCE_PENALTY_THRESHOLD) {
+    return 1;
+  }
+
+  const linearPenalty =
+    1 +
+    MAINTENANCE_PENALTY_LINEAR_RATE *
+      (temp - MAINTENANCE_PENALTY_THRESHOLD);
+
+  if (temp <= MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD) {
+    return linearPenalty;
+  }
+
+  const thresholdPenalty =
+    1 +
+    MAINTENANCE_PENALTY_LINEAR_RATE *
+      (MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD - MAINTENANCE_PENALTY_THRESHOLD);
+  const excessTemperature =
+    temp - MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD;
+  const doublingExponent =
+    excessTemperature / MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL;
+
+  return thresholdPenalty * Math.pow(2, doublingExponent);
+}
 
 function createEmptyZonalSurface() {
   const zonalSurface = {};
@@ -253,6 +279,12 @@ var estimateExosphereHeightMetersHelper = () => 0;
 var estimateExobaseTemperatureKHelper = () => 0;
 var estimateExosphereTemperatureKHelper = () => 0;
 var calculateMolecularWeightHelper = () => 0;
+var calculateAtmosphericHeatPropertiesHelper = () => ({
+  specificHeatCapacity: 0,
+  meanMolecularWeight: 0,
+  gasConstant: 0,
+  kappa: 0
+});
 
 try {
   ({
@@ -283,10 +315,18 @@ try {
 }
 
 try {
-  ({ calculateMolecularWeight: calculateMolecularWeightHelper } = require('./atmospheric-utils.js'));
+  ({
+    calculateMolecularWeight: calculateMolecularWeightHelper,
+    calculateAtmosphericHeatProperties: calculateAtmosphericHeatPropertiesHelper
+  } = require('./atmospheric-utils.js'));
 } catch (error) {
   try {
     calculateMolecularWeightHelper = calculateMolecularWeight;
+  } catch (innerError) {
+    // fallback stays
+  }
+  try {
+    calculateAtmosphericHeatPropertiesHelper = calculateAtmosphericHeatProperties;
   } catch (innerError) {
     // fallback stays
   }
@@ -1980,29 +2020,55 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateMaintenancePenalty() {
-      const temp = this.temperature.value;
-      if (temp <= MAINTENANCE_PENALTY_THRESHOLD) {
-        return 1;
+      return calculateMaintenancePenaltyForTemperature(this.temperature.value);
+    }
+
+    calculateOneAtmMaintenanceFloor() {
+      const surfacePressureKPa = this.calculateTotalPressure();
+      const result = {
+        pressureKPa: surfacePressureKPa,
+        altitudeKm: null,
+        temperatureK: null,
+        penalty: 1
+      };
+
+      if (!Number.isFinite(surfacePressureKPa) || surfacePressureKPa <= KPA_PER_ATM) {
+        return result;
       }
 
-      const linearPenalty =
-        1 +
-        MAINTENANCE_PENALTY_LINEAR_RATE *
-          (temp - MAINTENANCE_PENALTY_THRESHOLD);
+      const atmospheric = this.resources?.atmospheric;
+      const heatProperties = calculateAtmosphericHeatPropertiesHelper(atmospheric);
+      const kappa = heatProperties.kappa;
+      const specificHeatCapacity = heatProperties.specificHeatCapacity;
+      const gravity = this.celestialParameters.gravity;
 
-      if (temp <= MAINTENANCE_PENALTY_QUADRATIC_THRESHOLD) {
-        return linearPenalty;
+      if (
+        !Number.isFinite(kappa) ||
+        kappa <= 0 ||
+        !Number.isFinite(specificHeatCapacity) ||
+        specificHeatCapacity <= 0 ||
+        !Number.isFinite(gravity) ||
+        gravity <= 0
+      ) {
+        return result;
       }
 
-      const excessTemperature =
-        temp - MAINTENANCE_PENALTY_QUADRATIC_THRESHOLD;
+      const pressureRatio = KPA_PER_ATM / surfacePressureKPa;
+      const temperatureK =
+        this.temperature.value * Math.pow(pressureRatio, kappa);
+      const lapseRate = gravity / specificHeatCapacity;
+      const altitudeMeters =
+        lapseRate > 0
+          ? (this.temperature.value - temperatureK) / lapseRate
+          : null;
 
-      return (
-        linearPenalty +
-        MAINTENANCE_PENALTY_QUADRATIC_RATE *
-          excessTemperature *
-          excessTemperature
-      );
+      result.temperatureK = temperatureK;
+      result.altitudeKm =
+        Number.isFinite(altitudeMeters) && altitudeMeters >= 0
+          ? altitudeMeters / 1000
+          : null;
+      result.penalty = calculateMaintenancePenaltyForTemperature(temperatureK);
+      return result;
     }
 
     getFactoryTemperatureMaintenancePenaltyReduction() {
@@ -2061,6 +2127,7 @@ class Terraforming extends EffectableEntity{
       const colonyEnergyPenalty = this.calculateColonyEnergyPenalty();
       const colonyCostPenalty = this.calculateColonyPressureCostPenalty();
       const maintenancePenalty = this.calculateMaintenancePenalty();
+      const maintenanceFloorPenalty = this.calculateOneAtmMaintenanceFloor().penalty;
       const aerostatMitigationDetails = getAerostatMaintenanceMitigation();
       const factoryPenaltyReduction =
         aerostatMitigationDetails &&
@@ -2183,7 +2250,10 @@ class Terraforming extends EffectableEntity{
               remainingFactor *= buildingMitigation.remainingFraction;
             }
 
-            penaltyValue = 1 + baseIncrease * remainingFactor;
+            penaltyValue = Math.max(
+              maintenanceFloorPenalty,
+              1 + baseIncrease * remainingFactor
+            );
           }
 
           addEffect({

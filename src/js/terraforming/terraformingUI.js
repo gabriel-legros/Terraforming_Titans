@@ -289,6 +289,12 @@ const GRAVITY_PENALTY_TOOLTIP_TEXT = [
 function getTemperatureMaintenanceImmuneTooltip() {
   const buildingMap = globalThis?.buildings ?? {};
   const immuneNames = [];
+  const floorContext = globalThis?.terraforming?.calculateOneAtmMaintenanceFloor?.() ?? null;
+  const description = [
+    'Temperature maintenance penalty: no penalty at or below 373.15 K, +1% maintenance per K above that, then exponential growth beginning at 973.15 K.',
+    'Above 973.15 K, the multiplier doubles every 200 K.',
+    'This penalty can be mitigated by aerostats, but has a floor determined by a dry-adiabatic 1 atm temperature model.'
+  ];
 
   for (const key in buildingMap) {
     const building = buildingMap[key];
@@ -300,12 +306,47 @@ function getTemperatureMaintenanceImmuneTooltip() {
     }
   }
 
+  if (floorContext?.penalty > 1 && Number.isFinite(floorContext.temperatureK)) {
+    const altitudeText = Number.isFinite(floorContext.altitudeKm)
+      ? `${formatNumber(floorContext.altitudeKm, false, 2)} km`
+      : 'N/A';
+    description.push(
+      `Current 1 atm estimate: ${formatNumber(floorContext.pressureKPa, false, 2)} kPa surface pressure, ${altitudeText} altitude, ${formatNumber(floorContext.temperatureK, false, 2)} K, maintenance floor x${floorContext.penalty.toFixed(2)}.`
+    );
+  }
+
   if (immuneNames.length === 0) {
-    return 'Temperature maintenance penalty: no penalty at or below 373.15 K, +1% maintenance per K above that, then an added quadratic increase above 1173.15 K. No buildings are immune to this penalty.';
+    description.push('No buildings are immune to this penalty.');
+    return description.join(' ');
   }
 
   immuneNames.sort((a, b) => a.localeCompare(b));
-  return `Temperature maintenance penalty: no penalty at or below 373.15 K, +1% maintenance per K above that, then an added quadratic increase above 1173.15 K. Buildings immune to this effect: ${immuneNames.join(', ')}.`;
+  description.push(`Buildings immune to this effect: ${immuneNames.join(', ')}.`);
+  return description.join(' ');
+}
+
+function getTemperatureMaintenanceFloorTooltip(floorContext) {
+  const unit = getTemperatureUnit();
+  const displayTemperature = Number.isFinite(floorContext?.temperatureK)
+    ? formatNumber(toDisplayTemperature(floorContext.temperatureK), false, 2)
+    : 'N/A';
+  const altitude = Number.isFinite(floorContext?.altitudeKm)
+    ? `${formatNumber(floorContext.altitudeKm, false, 2)} km`
+    : 'N/A';
+  const surfacePressure = Number.isFinite(floorContext?.pressureKPa)
+    ? `${formatNumber(floorContext.pressureKPa, false, 2)} kPa`
+    : 'N/A';
+  const floorPenalty = Number.isFinite(floorContext?.penalty)
+    ? `x${floorContext.penalty.toFixed(2)}`
+    : 'N/A';
+
+  return [
+    'Dry-adiabatic estimate for the altitude where the atmosphere falls to 1 atm.',
+    `Surface pressure: ${surfacePressure}.`,
+    `Estimated 1 atm altitude: ${altitude}.`,
+    `Estimated 1 atm temperature: ${displayTemperature}${unit}.`,
+    `This sets the minimum temperature maintenance multiplier for mitigated buildings: ${floorPenalty}.`
+  ].join(' ');
 }
 
 function resetTerraformingUI() {
@@ -846,6 +887,25 @@ function createTemperatureBox(row) {
     maintenancePenaltySpan.appendChild(maintenancePenaltyInfo);
     temperatureBox.appendChild(maintenancePenaltySpan);
 
+    const maintenanceFloorSpan = document.createElement('p');
+    maintenanceFloorSpan.id = 'temperature-maintenance-floor';
+    maintenanceFloorSpan.style.display = 'none';
+    maintenanceFloorSpan.textContent = '1 atm temperature estimate : ';
+    const maintenanceFloorValue = document.createElement('span');
+    maintenanceFloorValue.id = 'temperature-maintenance-floor-value';
+    maintenanceFloorSpan.appendChild(maintenanceFloorValue);
+    maintenanceFloorSpan.appendChild(document.createTextNode(' '));
+    const maintenanceFloorInfo = document.createElement('span');
+    maintenanceFloorInfo.id = 'temperature-maintenance-floor-info';
+    maintenanceFloorInfo.classList.add('info-tooltip-icon');
+    maintenanceFloorInfo.innerHTML = '&#9432;';
+    const maintenanceFloorTooltip = attachDynamicInfoTooltip(
+      maintenanceFloorInfo,
+      'Dry-adiabatic 1 atm estimate pending.'
+    );
+    maintenanceFloorSpan.appendChild(maintenanceFloorInfo);
+    temperatureBox.appendChild(maintenanceFloorSpan);
+
     const targetSpan = document.createElement('span');
     targetSpan.id = 'temperature-target';
     targetSpan.textContent = "";
@@ -886,6 +946,10 @@ function createTemperatureBox(row) {
       maintenancePenaltyValue: temperatureBox.querySelector('#temperature-maintenance-penalty-value'),
       maintenancePenaltyInfo: temperatureBox.querySelector('#temperature-maintenance-penalty-info'),
       maintenancePenaltyTooltip,
+      maintenanceFloor: temperatureBox.querySelector('#temperature-maintenance-floor'),
+      maintenanceFloorValue: temperatureBox.querySelector('#temperature-maintenance-floor-value'),
+      maintenanceFloorInfo: temperatureBox.querySelector('#temperature-maintenance-floor-info'),
+      maintenanceFloorTooltip,
       infographicButton: tempInfographicButton,
       infographicOverlay: infographicElements.overlay
     };
@@ -961,6 +1025,32 @@ function createTemperatureBox(row) {
         }
       } else {
         els.maintenancePenalty.style.display = 'none';
+      }
+    }
+    if (els.maintenanceFloor) {
+      const floorContext = terraforming.calculateOneAtmMaintenanceFloor();
+      if (floorContext.penalty > 1 && Number.isFinite(floorContext.temperatureK)) {
+        els.maintenanceFloor.style.display = '';
+        const floorTemperature = formatNumber(
+          toDisplayTemperature(floorContext.temperatureK),
+          false,
+          2
+        );
+        if (els.maintenanceFloorValue) {
+          els.maintenanceFloorValue.textContent =
+            `${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
+        } else {
+          els.maintenanceFloor.textContent =
+            `1 atm temperature estimate : ${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
+        }
+        if (els.maintenanceFloorTooltip) {
+          setTooltipText(
+            els.maintenanceFloorTooltip,
+            getTemperatureMaintenanceFloorTooltip(floorContext)
+          );
+        }
+      } else {
+        els.maintenanceFloor.style.display = 'none';
       }
     }
   }

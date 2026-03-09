@@ -75,9 +75,9 @@ mergeProgress(typeof progressVenus !== 'undefined' ? progressVenus : null);
 mergeProgress(typeof progressUmbra !== 'undefined' ? progressUmbra : null);
 mergeProgress(typeof progressSolisPrime !== 'undefined' ? progressSolisPrime : null);
 mergeProgress(typeof progressGabbag !== 'undefined' ? progressGabbag : null);
-mergeProgress(typeof progressPoseidon !== 'undefined' ? progressPoseidon : null);
 mergeProgress(progressTartarus);
 mergeProgress(progressHades);
+mergeProgress(typeof progressPoseidon !== 'undefined' ? progressPoseidon : null);
 
 if (typeof projectParameters !== 'undefined') {
   Object.assign(projectParameters, progressData.storyProjects);
