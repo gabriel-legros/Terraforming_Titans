@@ -11,7 +11,8 @@ class SandQuarry extends Building {
 
   hasSandAvailable() {
     const attributes = currentPlanetParameters?.specialAttributes;
-    return attributes?.hasSand !== false;
+    const coreHeatFlux = Math.max(0, currentPlanetParameters?.celestialParameters?.coreHeatFlux || 0);
+    return attributes?.hasSand !== false && coreHeatFlux <= 0;
   }
 
   isVisible() {

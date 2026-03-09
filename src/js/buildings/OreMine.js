@@ -1,7 +1,8 @@
 class OreMine extends Building {
   hasOreAvailable() {
     const attributes = currentPlanetParameters?.specialAttributes;
-    return attributes?.hasOre !== false;
+    const coreHeatFlux = Math.max(0, currentPlanetParameters?.celestialParameters?.coreHeatFlux || 0);
+    return attributes?.hasOre !== false && coreHeatFlux <= 0;
   }
 
   isVisible() {

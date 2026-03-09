@@ -146,6 +146,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Water vapor saturation effects now reduce effective pressure, with cold trapping on cold worlds.
 - Condensation/precipitation now includes a simple uplift-based saturation cap (adiabatic cooling to a representative lifted pressure), allowing condensation even when the surface is unsaturated.
 - Celestial parameters can now set `coreHeatFlux` in W/m^2; temperature treats it as a flat global surface heat source and the temperature UI shows it when present.
+- Worlds with `coreHeatFlux > 0` disable Ore Mine, Sand Quarry, and the related early ore research unlocks (`Efficient Ore Processing`, `Ore Scanning Satellite`, `Deep ore mines`, `Android-assisted deeper mining`, `Underground Land Expansion`); `Advanced Alloys` remains available.
 - Terraforming history charts include a rolling 500-year window and phase diagrams (Water, CO2, Methane, Ammonia, O2, N2).
 - Oxygen and nitrogen now have full phase-change cycles.
 - Phase-change cycles now include rapid boiling (liquid -> gas) above local boiling points, tracked as a separate `boiling` rate/tooltip channel, with rate `current liquid × 1e-7 × (temperature - boiling point)`.

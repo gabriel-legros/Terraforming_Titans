@@ -303,6 +303,7 @@ const researchParameters = {
         description: 'Doubles ore output from mines.',
         cost: { research: 200 },
         artificialAllowed: false,
+        coreHeatAllowed: false,
         prerequisites: [],
         effects: [
           {
@@ -320,6 +321,7 @@ const researchParameters = {
         description: 'Enables an infrastructure special project to launch satellites for scanning the surface for new ore veins.',
         cost: { research: 500 },
         artificialAllowed: false,
+        coreHeatAllowed: false,
         prerequisites: [],
         effects: [
           {
@@ -493,6 +495,7 @@ const researchParameters = {
         cost: { research: 100000 },
         prerequisites: [],
         artificialAllowed: false,
+        coreHeatAllowed: false,
         effects: [
           {
             target: 'project',
@@ -534,6 +537,7 @@ const researchParameters = {
         cost: { research: 2000000 },
         prerequisites: ['deep_mine','android_factory'],
         artificialAllowed: false,
+        coreHeatAllowed: false,
         effects: [
           {
             target: 'project',
@@ -551,6 +555,7 @@ const researchParameters = {
         cost: { research: 200_000 },
         prerequisites: [],
         artificialAllowed: false,
+        coreHeatAllowed: false,
         disabled: true,
         effects: [
           {
