@@ -14,6 +14,10 @@
       this.sphere = null;
       this.ringMesh = null;
       this.surfaceMesh = null;
+      this.lavaOverlayMesh = null;
+      this.lavaOverlayMaterial = null;
+      this.lavaOverlayTexture = null;
+      this.lavaOverlayTextureKey = '';
       this.ringShadeMesh = null;
       this.ringShadeMaterial = null;
       this.ringShadeOffset = 0;
@@ -132,8 +136,7 @@
     }
 
     get terraforming() {
-      if (typeof window === 'undefined') return null;
-      return window.terraformingManager || window.terraforming || null;
+      return terraforming;
     }
 
     isRingWorld() {
@@ -352,6 +355,8 @@
         const ringHeight = 0.23625;
         const geometry = new THREE.CylinderGeometry(ringRadius, ringRadius, ringHeight, 96, 1, true);
         this.ringMesh = new THREE.Mesh(geometry, material);
+        this.ringMesh.userData.baseRoughness = material.roughness;
+        this.ringMesh.userData.baseMetalness = material.metalness;
         this.scene.add(this.ringMesh);
         this.surfaceMesh = this.ringMesh;
         this.sphere = null;
@@ -360,6 +365,8 @@
       } else {
         const geometry = new THREE.SphereGeometry(1, 32, 32);
         this.sphere = new THREE.Mesh(geometry, material);
+        this.sphere.userData.baseRoughness = material.roughness;
+        this.sphere.userData.baseMetalness = material.metalness;
         this.scene.add(this.sphere);
         this.surfaceMesh = this.sphere;
         this.ringMesh = null;
@@ -440,6 +447,7 @@
       this.updateSunFromInclination();
 
       this.createSurfaceMesh();
+      this.createLavaOverlayMesh();
       if (!isRing) {
         this.createCityLights();
         this.createAtmosphere();
@@ -456,6 +464,7 @@
 
       this.updateOverlayText();
       this.updateSurfaceTextureFromPressure(true);
+      this.updateLavaOverlay();
       this.updateCityLights();
       this.updateCloudUniforms();
       this.animate();
@@ -514,6 +523,8 @@
         this.updateZonalCoverageFromGameSafe();
       }
       this.updateDustTint();
+      this.updateSurfaceHeatMaterial();
+      this.updateLavaOverlay();
       this.updateSurfaceTextureFromPressure();
       this.updateCityLights();
       this.updateAtmosphereUniforms();

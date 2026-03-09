@@ -223,6 +223,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Visual and UX
 - Planet visualizer modularized (core/lighting/surfaces/clouds/ships/environment/debug).
+- Planet visualizer surface now transitions into a lava-world palette and molten glow between `1500 K` and `1800 K` global mean surface temperature.
 - Ringworld rendering, cloud wrapping/noise, shoreline and terrain blending were improved.
 - Multiple UI performance improvements reduce unnecessary DOM rebuilds and preserve subtab scroll/context.
 

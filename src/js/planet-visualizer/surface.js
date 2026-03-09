@@ -3,6 +3,8 @@
   if (!PlanetVisualizer) return;
 
   const clamp01 = (v) => Math.max(0, Math.min(1, v));
+  const LAVA_WORLD_START_K = 1500;
+  const LAVA_WORLD_FULL_K = 1800;
 
   const PLANET_TYPE_TEXTURES = {
     default: {
@@ -185,6 +187,116 @@
     return `#${toHex(r)}${toHex(g)}${toHex(bl)}`;
   }
 
+  function smoothstep(edge0, edge1, value) {
+    const span = Math.max(1e-6, edge1 - edge0);
+    const t = clamp01((value - edge0) / span);
+    return t * t * (3 - 2 * t);
+  }
+
+  PlanetVisualizer.prototype.getSurfaceTemperatureK = function getSurfaceTemperatureK() {
+    const worldTemp = this.terraforming?.temperature?.value;
+    if (Number.isFinite(worldTemp) && worldTemp > 0) {
+      return worldTemp;
+    }
+    const fallbackTemp = currentPlanetParameters?.celestialParameters?.temperature?.mean;
+    if (Number.isFinite(fallbackTemp) && fallbackTemp > 0) {
+      return fallbackTemp;
+    }
+    return 0;
+  };
+
+  PlanetVisualizer.prototype.getLavaTransitionStrength = function getLavaTransitionStrength() {
+    return smoothstep(LAVA_WORLD_START_K, LAVA_WORLD_FULL_K, this.getSurfaceTemperatureK());
+  };
+
+  PlanetVisualizer.prototype.updateSurfaceHeatMaterial = function updateSurfaceHeatMaterial() {
+    const surface = this.surfaceMesh || this.sphere;
+    const material = surface?.material;
+    if (!material) return;
+
+    const lava = this.getLavaTransitionStrength();
+    const baseRoughness = surface.userData?.baseRoughness ?? (this.isRingWorld() ? 0.85 : 0.9);
+    const baseMetalness = surface.userData?.baseMetalness ?? 0;
+    material.roughness = Math.max(0.22, baseRoughness - lava * 0.45);
+    material.metalness = Math.min(0.16, baseMetalness + lava * 0.06);
+    if (material.emissive) {
+      material.emissive.setRGB(0.95, 0.18 + lava * 0.16, 0.03 + lava * 0.07);
+      material.emissiveIntensity = lava * 0.72;
+    }
+  };
+
+  PlanetVisualizer.prototype.createLavaOverlayMesh = function createLavaOverlayMesh() {
+    if (this.lavaOverlayMesh || !this.surfaceMesh) return;
+
+    const isRing = this.isRingWorld();
+    const geometry = isRing
+      ? new THREE.CylinderGeometry(
+        Math.max(0.1, (this.ringRadius || 1) - 0.003),
+        Math.max(0.1, (this.ringRadius || 1) - 0.003),
+        this.ringHeight || 0.23625,
+        96,
+        1,
+        true
+      )
+      : new THREE.SphereGeometry(1.003, 32, 32);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: true,
+      blending: THREE.NormalBlending,
+      side: isRing ? THREE.BackSide : THREE.FrontSide,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.visible = false;
+    mesh.renderOrder = 2;
+    this.surfaceMesh.add(mesh);
+    this.lavaOverlayMesh = mesh;
+    this.lavaOverlayMaterial = material;
+  };
+
+  PlanetVisualizer.prototype.ensureLavaOverlayTexture = function ensureLavaOverlayTexture() {
+    const material = this.lavaOverlayMaterial;
+    if (!material) return;
+
+    const { w, h } = this.getSurfaceTextureSize();
+    const textureKey = `${w}x${h}`;
+    if (this.lavaOverlayTexture && this.lavaOverlayTextureKey === textureKey) {
+      return;
+    }
+
+    if (!this.heightMap || this.heightMap.length !== w * h) {
+      this.generateHeightMap(w, h);
+    }
+
+    const texture = this.generateLavaOverlayTexture(w, h);
+    if (this.lavaOverlayTexture && this.lavaOverlayTexture.dispose) {
+      this.lavaOverlayTexture.dispose();
+    }
+    this.lavaOverlayTexture = texture;
+    this.lavaOverlayTextureKey = textureKey;
+    material.map = texture;
+    material.needsUpdate = true;
+  };
+
+  PlanetVisualizer.prototype.updateLavaOverlay = function updateLavaOverlay() {
+    const mesh = this.lavaOverlayMesh;
+    const material = this.lavaOverlayMaterial;
+    if (!mesh || !material) return;
+
+    const lava = this.getLavaTransitionStrength();
+    if (lava <= 0) {
+      mesh.visible = false;
+      material.opacity = 0;
+      return;
+    }
+
+    this.ensureLavaOverlayTexture();
+    mesh.visible = true;
+    material.opacity = lava;
+  };
+
   PlanetVisualizer.prototype.buildZoneRowIndex = function buildZoneRowIndex(h) {
     const rows = new Uint8Array(h);
     if (this.isRingWorld()) return rows;
@@ -327,10 +439,6 @@
       const g = Math.round(ag + (bg - ag) * t);
       const b2 = Math.round(ab + (bb - ab) * t);
       return `rgb(${r},${g},${b2})`;
-    };
-    const smoothstep = (e0, e1, x) => {
-      const t = Math.max(0, Math.min(1, (x - e0) / Math.max(1e-6, (e1 - e0))));
-      return t * t * (3 - 2 * t);
     };
     const waterT = (this.viz.coverage?.water || 0) / 100;
     const baseHex = this.normalizeHexColor(surfaceBaseHex) || this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
@@ -865,6 +973,87 @@
       ctx.drawImage(bioCanvas, 0, 0);
     }
 
+    const texture = new THREE.CanvasTexture(canvas);
+    if (THREE && THREE.SRGBColorSpace) {
+      texture.colorSpace = THREE.SRGBColorSpace;
+    }
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.needsUpdate = true;
+    return texture;
+  };
+
+  PlanetVisualizer.prototype.generateLavaOverlayTexture = function generateLavaOverlayTexture(w, h) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(w, h);
+    const data = img.data;
+    const ringAspect = this.getRingUvAspect();
+    const lavaSeed = this.hashSeedFromPlanet();
+    const seedValue = Math.floor((lavaSeed.x * 131071) ^ (lavaSeed.y * 262147)) >>> 0;
+    const hash = (x, y) => {
+      const n = Math.sin(x * 127.1 + y * 311.7 + seedValue * 0.00013) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    const ridgeNoise = (x, y, scale) => {
+      const sx = x * scale;
+      const sy = y * scale;
+      const coarse = hash(sx, sy);
+      const detail = hash(sx * 2.3 + 19.7, sy * 2.3 - 11.2);
+      const mixed = coarse * 0.68 + detail * 0.32;
+      return 1 - Math.abs(mixed * 2 - 1);
+    };
+    const patchNoise = (x, y, scale) => {
+      const sx = x * scale;
+      const sy = y * scale;
+      const broad = hash(sx, sy);
+      const warped = hash(sx * 1.4 - 8.1, sy * 1.4 + 5.7);
+      return clamp01(broad * 0.7 + warped * 0.3);
+    };
+    const basalt = { r: 34, g: 11, b: 8 };
+    const lavaRed = { r: 176, g: 30, b: 12 };
+    const lavaOrange = { r: 234, g: 94, b: 18 };
+    const lavaYellow = { r: 255, g: 196, b: 84 };
+    for (let i = 0; i < w * h; i++) {
+      const x = i % w;
+      const y = (i - x) / w;
+      const idx = i * 4;
+      const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+      const lowland = 1 - smoothstep(0.42, 0.82, hgt);
+      const fissure = ridgeNoise((x / w) * ringAspect, y / h, 8.5);
+      const patch = smoothstep(0.42, 0.82, patchNoise((x / w) * ringAspect + 3.4, y / h - 1.8, 3.2));
+      const patchDetail = smoothstep(0.46, 0.8, patchNoise((x / w) * ringAspect - 11.2, y / h + 7.6, 5.1));
+      const crackMask = clamp01(fissure * 0.48 + patch * 0.38 + patchDetail * 0.14);
+      const moltenMask = clamp01(lowland * 0.58 + crackMask * 0.82 + patch * 0.18);
+      const crustBlend = clamp01(0.5 + lowland * 0.2 + crackMask * 0.14);
+      const redBlend = clamp01(smoothstep(0.12, 0.82, moltenMask));
+      const orangeBlend = clamp01(smoothstep(0.32, 0.9, moltenMask));
+      const yellowBlend = clamp01(smoothstep(0.78, 1, moltenMask));
+
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      r += basalt.r * crustBlend;
+      g += basalt.g * crustBlend;
+      b += basalt.b * crustBlend;
+      r += lavaRed.r * redBlend * 0.95;
+      g += lavaRed.g * redBlend * 0.95;
+      b += lavaRed.b * redBlend * 0.95;
+      r += lavaOrange.r * orangeBlend * 0.72;
+      g += lavaOrange.g * orangeBlend * 0.72;
+      b += lavaOrange.b * orangeBlend * 0.72;
+      r += lavaYellow.r * yellowBlend * 0.38;
+      g += lavaYellow.g * yellowBlend * 0.38;
+      b += lavaYellow.b * yellowBlend * 0.38;
+
+      data[idx] = Math.max(0, Math.min(255, Math.round(r)));
+      data[idx + 1] = Math.max(0, Math.min(255, Math.round(g)));
+      data[idx + 2] = Math.max(0, Math.min(255, Math.round(b)));
+      data[idx + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
     const texture = new THREE.CanvasTexture(canvas);
     if (THREE && THREE.SRGBColorSpace) {
       texture.colorSpace = THREE.SRGBColorSpace;
