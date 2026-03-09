@@ -261,7 +261,7 @@ class Resource extends EffectableEntity {
       const storageByCategory = structure.storage[this.category];
       if (!storageByCategory || storageByCategory[this.name] === undefined) continue;
 
-      newCap += structure.active * storageByCategory[this.name] * structure.getEffectiveStorageMultiplier();
+      newCap += structure.getStorageContribution(this.category, this.name);
     }
 
     if (followersManager && this.hasCap) {

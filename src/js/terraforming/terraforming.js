@@ -2269,13 +2269,16 @@ class Terraforming extends EffectableEntity{
 
       if (typeof colonies !== 'undefined') {
         for (const id in colonies) {
-          if (id === 'aerostat_colony') continue;
+          const penaltyValue =
+            id === 'aerostat_colony'
+              ? Math.max(1, maintenanceFloorPenalty)
+              : maintenancePenalty;
           addEffect({
             effectId: 'temperatureMaintenancePenalty',
             target: 'colony',
             targetId: id,
             type: 'maintenanceMultiplier',
-            value: maintenancePenalty,
+            value: penaltyValue,
             name: 'Temperature penalty'
           });
         }

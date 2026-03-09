@@ -1479,14 +1479,14 @@ const poseidonOverrides = {
   },
   celestialParameters: {
     distanceFromSun: 2.9,
-    gravity: 15.1,
+    gravity: 4.9,
     radius: 7600,
     mass: 1.31e25,
     albedo: 0.08,
     rotationPeriod: 21.8,
     spinPeriod: 21.8,
     starLuminosity: 0.46,
-    coreHeatFlux: 10_000,
+    coreHeatFlux: 4_000,
     sector: 'R5-10'
   },
   visualization: {
@@ -1515,11 +1515,11 @@ const poseidonOverrides = {
       geothermal: { initialValue: 19_000_000_000, maxDeposits: 19_000_000_000, areaTotal: 190000 }
     },
     atmospheric: {
-      carbonDioxide: { initialValue: 300_000_000_000_000_000 },
+      carbonDioxide: { initialValue: 1_000_000_000_000_000_000 },
       atmosphericWater: { initialValue: 1_000_000_000_000_000 },
       atmosphericMethane: { initialValue: 0 },
       oxygen: { initialValue: 250_000_000_000_000 },
-      inertGas: { initialValue: 20_000_000_000_000_000 },
+      inertGas: { initialValue: 50_000_000_000_000_000 },
       hydrogen: { initialValue: 0 },
       sulfuricAcid: { initialValue: 0 }
     }

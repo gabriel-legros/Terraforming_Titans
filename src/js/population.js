@@ -114,7 +114,7 @@ class PopulationModule extends EffectableEntity {
 
     for (const colonyName in colonies) {
       const colony = colonies[colonyName];
-      const capacity = colony.active * colony.storage.colony.colonists;
+      const capacity = colony.getStorageContribution('colony', 'colonists');
       if (capacity <= 0) {
         continue;
       }
@@ -153,8 +153,8 @@ class PopulationModule extends EffectableEntity {
       // Iterate through all colonies and sum their weighted happiness based on capacity
       for (const colonyName in colonies) {
         const colony = colonies[colonyName];
-        const capacity = colony.active*colony.storage.colony.colonists; // Use capacity as weight
-    
+        const capacity = colony.getStorageContribution('colony', 'colonists');
+
         // Only consider colonies with a valid capacity
         if (capacity > 0) {
           totalWeightedHappiness += colony.happiness * capacity;

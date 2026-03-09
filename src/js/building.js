@@ -824,13 +824,31 @@ class Building extends EffectableEntity {
     for (const category in this.storage) {
       modifiedStorage[category] = {};
       for (const resource in this.storage[category]) {
-        const baseStorage = this.storage[category][resource];
-        const storageMultiplier = this.getEffectiveStorageMultiplier();
-        modifiedStorage[category][resource] = baseStorage * storageMultiplier;
+        modifiedStorage[category][resource] = this.getStorageAmount(
+          category,
+          resource
+        );
       }
     }
 
     return modifiedStorage;
+  }
+
+  getStorageAmount(category, resource) {
+    const storageByCategory = this.storage[category];
+    if (!storageByCategory || storageByCategory[resource] === undefined) {
+      return 0;
+    }
+
+    return storageByCategory[resource] * this.getEffectiveStorageMultiplier();
+  }
+
+  getStorageContribution(category, resource) {
+    if (this.active <= 0) {
+      return 0;
+    }
+
+    return this.active * this.getStorageAmount(category, resource);
   }
 
   getKesslerCostMultiplier() {

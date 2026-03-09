@@ -6,7 +6,7 @@ const colonyParameters = {
       cost: { colony: { metal: 85, components: 10, electronics: 5, water: 50, glass: 20 } },
       consumption: { colony: { energy: 50000, food: 1 } },
       production: { colony: { research: 1 } },
-      storage: { colony: { colonists: 10 } },
+      storage: { colony: { colonists: 10, androids: 0 } },
       baseComfort: 0,
       dayNightActivity: false,
       canBeToggled: true,

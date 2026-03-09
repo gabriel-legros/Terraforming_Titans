@@ -191,6 +191,35 @@ class Colony extends Building {
     return this.getConsumptionRatio();
   }
 
+  getModifiedConsumption() {
+    const modifiedConsumption = {};
+    const consumption = this.getConsumption();
+
+    for (const category in consumption) {
+      modifiedConsumption[category] = {};
+      for (const resource in consumption[category]) {
+        const isLuxuryResource = luxuryResources[resource] !== undefined;
+        if (isLuxuryResource && !this.luxuryResourcesEnabled[resource]) {
+          modifiedConsumption[category][resource] = 0;
+          continue;
+        }
+
+        const { amount } = this.getConsumptionResource(category, resource);
+        const consumptionMultiplier =
+          this.getEffectiveConsumptionMultiplier() *
+          this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const consumptionRatio = this.getConsumptionRatioForResource(
+          category,
+          resource
+        );
+        modifiedConsumption[category][resource] =
+          amount * consumptionMultiplier * consumptionRatio;
+      }
+    }
+
+    return modifiedConsumption;
+  }
+
   updateProductivity(resources, deltaTime) {
     let minRatio = this.calculateBaseMinRatio(resources, deltaTime);
     const populationRatio = this.getConsumptionRatio();

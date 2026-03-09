@@ -145,7 +145,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Atmospheric layer boundaries now use exobase-relative heights for monotonic drag behavior.
 - Water vapor saturation effects now reduce effective pressure, with cold trapping on cold worlds.
 - Condensation/precipitation now includes a simple uplift-based saturation cap (adiabatic cooling to a representative lifted pressure), allowing condensation even when the surface is unsaturated.
-- Temperature-based maintenance penalties now rise linearly above 373.15 K, then switch to exponential growth beginning at 973.15 K, doubling every 200 K; on worlds above 1 atm, mitigated building maintenance cannot drop below the dry-adiabatic 1 atm temperature penalty floor.
+- Temperature-based maintenance penalties now rise linearly above 373.15 K, then switch to exponential growth beginning at 973.15 K, doubling every 200 K; on worlds above 1 atm, mitigated building maintenance and aerostat colony maintenance cannot drop below the dry-adiabatic 1 atm temperature penalty floor.
 - Celestial parameters can now set `coreHeatFlux` in W/m^2; temperature treats it as a flat global surface heat source and the temperature UI shows it when present.
 - Worlds with `coreHeatFlux > 0` disable Ore Mine, Sand Quarry, and the related early ore research unlocks (`Efficient Ore Processing`, `Ore Scanning Satellite`, `Deep ore mines`, `Android-assisted deeper mining`, `Underground Land Expansion`); `Advanced Alloys` remains available.
 - Terraforming history charts include a rolling 500-year window and phase diagrams (Water, CO2, Methane, Ammonia, O2, N2).
@@ -178,6 +178,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
+- Aerostat details now include an android-space slider (0-10 per aerostat) that splits aerostat housing between colonists and androids, scales the related colonist-only consumptions by the colonist share, saves through load, and resets on travel.
 - SpaceManager now maintains incremental cached world stats (terraformed totals, sector world counts, artificial world value/fleet contributions, and RWG type/hazard bonuses) that rebuild once on load and update through mutation setters/travel flows.
 - `produceResources` now primes a per-tick building effect cache (multipliers, added consumption, maintenance cost) and reuses it across projected and actual production passes to reduce repeated `activeEffects` scans.
 - GalaxyManager now caches controlled-sector reward world totals per faction and invalidates them with sector-control cache invalidation, so repeated terraformed-world/fleet-capacity reads avoid rescanning all sectors.

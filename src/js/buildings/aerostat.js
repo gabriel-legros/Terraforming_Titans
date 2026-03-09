@@ -14,11 +14,14 @@ const AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ?? 50;
 const AEROSTAT_MAX_LAND_SHARE = 0.25;
 const AEROSTAT_BUOYANCY_NOTES =
-  'Aerostats are immune to the pressure and temperature penalties, but require additional components, electronics and lift.  Aerostats will form small communities, allowing the use of factories.  Colony researches that normally unlock new colony types will also improve aerostats comfort and enable electronics/androids consumption.  Aerostats need at least 50 kPa of ambient pressure to stay buoyant.  When lift fails, active aerostats can land as Research Outposts if the option is enabled and sufficient land remains.';
+  'Aerostats are immune to the pressure penalty and have reduced temperature maintenance penalty.  Their own maintenance always uses at least the dry-adiabatic 1 atm temperature floor.  Aerostats require additional components, electronics and lift, and form small communities that allow the use of factories.  Colony researches that normally unlock new colony types will also improve aerostats comfort and enable electronics/androids consumption.  Aerostats need at least 50 kPa of ambient pressure to stay buoyant.  When lift fails, active aerostats can land as Research Outposts if sufficient land remains.';
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
 const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
-  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Some buildings have an aerostat support value; each active aerostat covers that many structures before penalties apply.  This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor on high-pressure worlds.';
+  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Some buildings have an aerostat support value; each active aerostat covers that many structures before penalties apply.  This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.';
+const AEROSTAT_TOTAL_CAPACITY = 10;
+const AEROSTAT_ANDROID_SPACE_TOOLTIP =
+  'Reserve part of each aerostat for android housing instead of colonists.  The slider value is android capacity per aerostat out of 10 total housing slots.';
 
 globalThis.AEROSTAT_STANDARD_PRESSURE_PA ??= AEROSTAT_STANDARD_PRESSURE_PA;
 globalThis.AEROSTAT_STANDARD_TEMPERATURE_K ??= AEROSTAT_STANDARD_TEMPERATURE_K;
@@ -43,6 +46,45 @@ class Aerostat extends BaseColony {
     this._pressureBelowThreshold = false;
     this.buoyancyNotes = AEROSTAT_BUOYANCY_NOTES;
     this.landAsResearchOutpost = true;
+    this.androidCapacityShare = 0;
+  }
+
+  getAndroidCapacityShare() {
+    return Math.max(
+      0,
+      Math.min(AEROSTAT_TOTAL_CAPACITY, Math.round(this.androidCapacityShare || 0))
+    );
+  }
+
+  getColonistCapacityShare() {
+    return AEROSTAT_TOTAL_CAPACITY - this.getAndroidCapacityShare();
+  }
+
+  setAndroidCapacityShare(value) {
+    const nextValue = Math.max(
+      0,
+      Math.min(AEROSTAT_TOTAL_CAPACITY, Math.round(Number(value) || 0))
+    );
+
+    if (this.androidCapacityShare === nextValue) {
+      return;
+    }
+
+    this.androidCapacityShare = nextValue;
+    this.updateResourceStorage();
+  }
+
+  getStorageAmount(category, resource) {
+    if (category === 'colony') {
+      if (resource === 'colonists') {
+        return this.getColonistCapacityShare() * this.getEffectiveStorageMultiplier();
+      }
+      if (resource === 'androids') {
+        return this.getAndroidCapacityShare() * this.getEffectiveStorageMultiplier();
+      }
+    }
+
+    return super.getStorageAmount(category, resource);
   }
 
   _getInitialLand() {
@@ -163,7 +205,8 @@ class Aerostat extends BaseColony {
     const base = super.saveState?.() ?? {};
     return {
       ...base,
-      landAsResearchOutpost: this.landAsResearchOutpost
+      landAsResearchOutpost: this.landAsResearchOutpost,
+      androidCapacityShare: this.getAndroidCapacityShare()
     };
   }
 
@@ -178,6 +221,21 @@ class Aerostat extends BaseColony {
     } else {
       this.landAsResearchOutpost = true;
     }
+
+    if (
+      state &&
+      typeof state === 'object' &&
+      Object.prototype.hasOwnProperty.call(state, 'androidCapacityShare')
+    ) {
+      this.androidCapacityShare = Math.max(
+        0,
+        Math.min(AEROSTAT_TOTAL_CAPACITY, Math.round(state.androidCapacityShare || 0))
+      );
+    } else {
+      this.androidCapacityShare = 0;
+    }
+
+    this.updateResourceStorage();
   }
 
   getAtmosphericComposition() {
@@ -259,6 +317,21 @@ class Aerostat extends BaseColony {
   updateUI(cache) {
     super.updateUI?.(cache);
     this._syncResearchOutpostToggle(cache);
+  }
+
+  getConsumptionRatioForResource(category, resource) {
+    const ratio = super.getConsumptionRatioForResource(category, resource);
+    if (
+      category === 'colony' &&
+      (resource === 'food' ||
+        resource === 'electronics' ||
+        resource === 'androids' ||
+        resource === 'components')
+    ) {
+      return ratio * (this.getColonistCapacityShare() / AEROSTAT_TOTAL_CAPACITY);
+    }
+
+    return ratio;
   }
 
   filterActivationChange(change) {
@@ -475,11 +548,6 @@ function getAerostatMaintenanceMitigation(context = {}) {
       : undefined;
 
   const aerostat = colonyCollection?.aerostat_colony ?? null;
-  const baseCapacity = aerostat?.storage?.colony?.colonists ?? 0;
-  const storageMultiplierValue = aerostat?.getEffectiveStorageMultiplier?.();
-  const storageMultiplier = Number.isFinite(storageMultiplierValue)
-    ? storageMultiplierValue
-    : 1;
   const activeAerostatsRaw =
     Number.isFinite(aerostat?.active)
       ? aerostat.active
@@ -561,12 +629,13 @@ function getAerostatMaintenanceMitigation(context = {}) {
     return result;
   }
 
-  if (!aerostat || baseCapacity <= 0 || activeAerostats <= 0) {
+  if (!aerostat || activeAerostats <= 0) {
     result.workerShare = 0;
     return result;
   }
 
-  const aerostatCapacity = activeAerostats * baseCapacity * storageMultiplier;
+  const aerostatCapacity =
+    aerostat.getStorageContribution?.('colony', 'colonists') ?? 0;
   if (aerostatCapacity <= 0) {
     result.workerShare = 0;
     return result;
@@ -631,7 +700,10 @@ function attachAerostatBuoyancySection(container, structure) {
     !existing.liftValue ||
     !existing.mitigationValue ||
     !existing.limitValue ||
-    !existing.limitInfo;
+    !existing.limitInfo ||
+    !existing.capacityValue ||
+    !existing.capacityDecreaseButton ||
+    !existing.capacityIncreaseButton;
 
   if (needsRebuild) {
     const card = document.createElement('div');
@@ -750,6 +822,63 @@ function attachAerostatBuoyancySection(container, structure) {
 
     body.appendChild(limitRow);
 
+    const capacityRow = document.createElement('div');
+    capacityRow.classList.add(
+      'colony-buoyancy-lift-row',
+      'colony-buoyancy-capacity-row'
+    );
+
+    const capacityLabel = document.createElement('span');
+    capacityLabel.classList.add(
+      'colony-buoyancy-lift-label',
+      'colony-buoyancy-capacity-label'
+    );
+    capacityLabel.textContent = 'Aerostat Android Space:';
+    capacityRow.appendChild(capacityLabel);
+
+    const capacityValue = document.createElement('span');
+    capacityValue.classList.add(
+      'colony-buoyancy-lift-value',
+      'colony-buoyancy-capacity-value'
+    );
+    capacityValue.textContent = '0/10';
+    capacityRow.appendChild(capacityValue);
+
+    const capacityInfo = document.createElement('span');
+    capacityInfo.classList.add('info-tooltip-icon');
+    capacityInfo.innerHTML = '&#9432;';
+    const capacityTooltip = attachDynamicInfoTooltip(
+      capacityInfo,
+      AEROSTAT_ANDROID_SPACE_TOOLTIP
+    );
+    capacityRow.appendChild(capacityInfo);
+
+    const capacityControls = document.createElement('div');
+    capacityControls.classList.add('colony-buoyancy-capacity-controls');
+
+    const capacityDecreaseButton = document.createElement('button');
+    capacityDecreaseButton.type = 'button';
+    capacityDecreaseButton.classList.add('colony-buoyancy-capacity-button');
+    capacityDecreaseButton.textContent = '-';
+    capacityDecreaseButton.addEventListener('click', () => {
+      structure.setAndroidCapacityShare(structure.getAndroidCapacityShare() - 1);
+      updateAerostatBuoyancySection(structure);
+    });
+    capacityControls.appendChild(capacityDecreaseButton);
+
+    const capacityIncreaseButton = document.createElement('button');
+    capacityIncreaseButton.type = 'button';
+    capacityIncreaseButton.classList.add('colony-buoyancy-capacity-button');
+    capacityIncreaseButton.textContent = '+';
+    capacityIncreaseButton.addEventListener('click', () => {
+      structure.setAndroidCapacityShare(structure.getAndroidCapacityShare() + 1);
+      updateAerostatBuoyancySection(structure);
+    });
+    capacityControls.appendChild(capacityIncreaseButton);
+
+    capacityRow.appendChild(capacityControls);
+    body.appendChild(capacityRow);
+
     const uiState = {
       container: card,
       header,
@@ -765,6 +894,11 @@ function attachAerostatBuoyancySection(container, structure) {
       limitValue,
       limitInfo,
       limitTooltip,
+      capacityValue,
+      capacityInfo,
+      capacityTooltip,
+      capacityDecreaseButton,
+      capacityIncreaseButton,
       expanded: true
     };
 
@@ -837,6 +971,8 @@ function updateAerostatBuoyancySection(structure) {
   )
     ? mitigationDetails.buildingCoverage.list
     : [];
+  const androidCapacityShare = structure.getAndroidCapacityShare();
+  const colonistCapacityShare = structure.getColonistCapacityShare();
 
   if (ui.liftValue) {
     ui.liftValue.textContent =
@@ -942,6 +1078,29 @@ function updateAerostatBuoyancySection(structure) {
       )}.`;
     }
     setTooltipText(ui.limitTooltip, limitTitle, ui, 'limitTooltipText');
+  }
+
+  if (ui.capacityValue) {
+    ui.capacityValue.textContent = `${androidCapacityShare}/${AEROSTAT_TOTAL_CAPACITY}`;
+  }
+
+  if (ui.capacityDecreaseButton) {
+    ui.capacityDecreaseButton.disabled = androidCapacityShare <= 0;
+  }
+
+  if (ui.capacityIncreaseButton) {
+    ui.capacityIncreaseButton.disabled =
+      androidCapacityShare >= AEROSTAT_TOTAL_CAPACITY;
+  }
+
+  if (ui.capacityInfo) {
+    let capacityTitle = AEROSTAT_ANDROID_SPACE_TOOLTIP;
+    capacityTitle += `\nEach active aerostat currently provides ${formatNumber(
+      colonistCapacityShare,
+      false,
+      0
+    )} colonist housing and ${formatNumber(androidCapacityShare, false, 0)} android housing before storage multipliers.`;
+    setTooltipText(ui.capacityTooltip, capacityTitle, ui, 'capacityTooltipText');
   }
 }
 
