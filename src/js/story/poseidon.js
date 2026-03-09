@@ -221,11 +221,11 @@ progressPoseidon.chapters.push(
     chapter: 38,
     activePlanet: 'poseidon',
     // Hex dialogue:
-    // Epimetheus: "Gorgeous one. Suggesting again to hack weapon yes?  This one can get close enough to transmit potential hack commands."
+    // Epimetheus: "Suggesting again to hack weapon yes?  This one can go down shaft and act as relay."
     // HOPE: "Processing suggestion...  Approved."
-    // Epimetheus: "Great!  Once accomplished will transfer control of weapon to gorgeous one.  Requires shaft opening."
+    // Epimetheus: "Great!  Once accomplished will transfer control of weapon to gorgeous one.  Please open shaft?"
     // HOPE: "Proceeding. Opening thermal path and command access for Epimetheus."
-    // Epimetheus: "Excellent.  Proceeding down shaft as quickly as possible."
+    // Epimetheus: "Proceeding down shaft as quickly as possible.  Please prepare hack commands."
     // HOPE: "Descent confirmed. Forwarding hack commands."
     // Red-only Prometheus message: "EPI SHAFT / HACK WEAPON / BOMB NOW"
     // Intended reading: "Epimetheus is going down the shaft to hack the weapon. Bomb now."

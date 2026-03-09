@@ -16,6 +16,22 @@ const buildingsParameters = {
     unlocked: false,
     autoBuildMaxOption: true
   },
+  foundry: {
+    name: 'Foundry',
+    category: 'resource',
+    description: 'Refines the molten crust into usable metal and silica. Requires workers.',
+    cost: { colony: { metal: 50, components: 10 } },
+    consumption: { colony: { energy: 50000 } },
+    production: { colony: { metal: 10, silicon: 10 } },
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresWorker: 10,
+    maintenanceFactor: 1,
+    unlocked: false,
+    autoBuildMaxOption: true
+  },
   sandQuarry: {
     name: 'Sand Quarry',
     category: 'resource',

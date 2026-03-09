@@ -631,7 +631,7 @@ const researchParameters = {
       {
         id: 'advanced_alloy',
         name: 'Advanced Alloys',
-        description: 'Doubles metal output from ore mines.',
+        description: 'Doubles metal output from ore mines and foundries.',
         cost: { research: 10000000 },
         prerequisites: [],
         artificialAllowed: false,
@@ -641,6 +641,15 @@ const researchParameters = {
             targetId: 'oreMine',
             effectId : 'advanced_alloy_research',
             type: 'productionMultiplier',
+            value: 2
+          },
+          {
+            target: 'building',
+            targetId: 'foundry',
+            effectId : 'advanced_alloy_foundry_research',
+            type: 'resourceProductionMultiplier',
+            resourceCategory: 'colony',
+            resourceTarget: 'metal',
             value: 2
           },
         ],

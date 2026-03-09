@@ -1492,6 +1492,13 @@ const poseidonOverrides = {
   visualization: {
     baseColor: '#8b3c21',
   },
+  effects: [
+    {
+      target: 'building',
+      targetId: 'foundry',
+      type: 'enable'
+    }
+  ],
   resources: {
     surface: {
       land: { initialValue: 19_000_000_000 },
