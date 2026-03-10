@@ -11,6 +11,16 @@ const WATER_DENSITY = 1000; // kg/m³
 const WATER_VOLUMETRIC_HEAT_CAPACITY = 4.2e6; // J/m³/K
 const EMPTY_LIQUID_CONFIGS = [];
 const DEFAULT_OCEAN_MIX_DEPTH = 50.0; // m
+const GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS = {
+  attenuationStartK: 360,
+  attenuationScaleK: 100,
+  attenuationExponent: 2,
+  minTauFraction: 0.01,
+  coldTauCap: 5000,
+  hotTauCap: 20,
+  tauCapTransitionK: 300,
+  tauCapExponent: 4
+};
 
 // ===== Tunables (safe defaults) ======================================
 // Cap Bond albedo at a realistic maximum (prevents A -> 1)
@@ -55,9 +65,115 @@ function calculateAtmosphericPressure(mass, gravity, radius) {
 }
 
 // Calculate atmospheric emissivity directly from *IR* optical depth
-function calculateEmissivity(composition, surfacePressureBar, gSurface){
-  const { total: tau, contributions } = opticalDepth(composition, surfacePressureBar, gSurface);
-  return { emissivity: 1 - Math.exp(-tau), tau, contributions };
+function calculateGreenhouseTauAttenuation(equilibriumTemperature, greenhouseModel = {}) {
+  const attenuationStartK = Number.isFinite(greenhouseModel.attenuationStartK)
+    ? greenhouseModel.attenuationStartK
+    : GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS.attenuationStartK;
+  const attenuationScaleK = Number.isFinite(greenhouseModel.attenuationScaleK)
+    ? greenhouseModel.attenuationScaleK
+    : GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS.attenuationScaleK;
+  const attenuationExponent = Number.isFinite(greenhouseModel.attenuationExponent)
+    ? greenhouseModel.attenuationExponent
+    : GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS.attenuationExponent;
+  const minTauFraction = Number.isFinite(greenhouseModel.minTauFraction)
+    ? greenhouseModel.minTauFraction
+    : GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS.minTauFraction;
+
+  if (!Number.isFinite(equilibriumTemperature) || equilibriumTemperature <= attenuationStartK) {
+    return 1;
+  }
+
+  const normalizedTemperature =
+    Math.max(0, equilibriumTemperature - attenuationStartK) /
+    Math.max(attenuationScaleK, 1);
+  const rolloff = 1 / (1 + Math.pow(normalizedTemperature, attenuationExponent));
+
+  return minTauFraction + ((1 - minTauFraction) * rolloff);
+}
+
+function calculateGreenhouseTauCap(equilibriumTemperature, greenhouseModel = {}) {
+  const coldTauCap = Number.isFinite(greenhouseModel.coldTauCap)
+    ? greenhouseModel.coldTauCap
+    : GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS.coldTauCap;
+  const hotTauCap = Number.isFinite(greenhouseModel.hotTauCap)
+    ? greenhouseModel.hotTauCap
+    : GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS.hotTauCap;
+  const tauCapTransitionK = Number.isFinite(greenhouseModel.tauCapTransitionK)
+    ? greenhouseModel.tauCapTransitionK
+    : GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS.tauCapTransitionK;
+  const tauCapExponent = Number.isFinite(greenhouseModel.tauCapExponent)
+    ? greenhouseModel.tauCapExponent
+    : GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS.tauCapExponent;
+  const coldCap = Math.max(hotTauCap, coldTauCap);
+  const hotCap = Math.max(0, Math.min(hotTauCap, coldCap));
+
+  if (!Number.isFinite(equilibriumTemperature) || equilibriumTemperature <= 0) {
+    return coldCap;
+  }
+
+  const normalizedTemperature = equilibriumTemperature / Math.max(tauCapTransitionK, 1);
+  const rolloff = 1 / (1 + Math.pow(Math.max(0, normalizedTemperature), tauCapExponent));
+
+  return hotCap + ((coldCap - hotCap) * rolloff);
+}
+
+function calculateEffectiveGreenhouseOpticalDepth(
+  composition,
+  surfacePressureBar,
+  gSurface,
+  equilibriumTemperature,
+  greenhouseModel = {}
+) {
+  const { total: rawTau, contributions: rawContributions } =
+    opticalDepth(composition, surfacePressureBar, gSurface);
+  const attenuation =
+    calculateGreenhouseTauAttenuation(equilibriumTemperature, greenhouseModel);
+  const attenuatedTau = rawTau * attenuation;
+  const tauCap = calculateGreenhouseTauCap(equilibriumTemperature, greenhouseModel);
+  const tau = tauCap > 0
+    ? tauCap * (1 - Math.exp(-attenuatedTau / tauCap))
+    : 0;
+  const contributions = {};
+  const capRatio = attenuatedTau > 0 ? (tau / attenuatedTau) : 0;
+  const totalRatio = attenuation * capRatio;
+
+  for (const key in rawContributions) {
+    contributions[key] = rawContributions[key] * totalRatio;
+  }
+
+  return {
+    tau,
+    rawTau,
+    attenuatedTau,
+    tauCap,
+    capRatio,
+    contributions,
+    rawContributions,
+    attenuation
+  };
+}
+
+function calculateEmissivity(
+  composition,
+  surfacePressureBar,
+  gSurface,
+  equilibriumTemperature,
+  greenhouseModel = {}
+) {
+  const {
+    tau,
+    rawTau,
+    contributions,
+    rawContributions,
+    attenuation
+  } = calculateEffectiveGreenhouseOpticalDepth(
+    composition,
+    surfacePressureBar,
+    gSurface,
+    equilibriumTemperature,
+    greenhouseModel
+  );
+  return { emissivity: 1 - Math.exp(-tau), tau, rawTau, contributions, rawContributions, attenuation };
 }
 
 // Air density (kg/m³)
@@ -535,7 +651,8 @@ function dayNightTemperaturesModel({
   surfaceAlbedos = null,
   gSurface = 9.81,
   aerosolsSW = {},
-  autoSlabOptions = null
+  autoSlabOptions = null,
+  greenhouseModel = {}
 }) {
   if (slabHeatCapacity == null) {
     slabHeatCapacity = autoSlabHeatCapacity(
@@ -559,10 +676,17 @@ function dayNightTemperaturesModel({
     aerosolsSW
   });
 
-  // IR greenhouse as before
   const T_eff  = effectiveTemp(A, flux, { addedFlux: addedSurfaceFlux });
-  const { total: tauGHG } = opticalDepth(composition, surfacePressureBar, gSurface);
-  const T_surf = T_eff * Math.pow(1 + 0.75 * tauGHG, 0.25);
+  const greenhouse = calculateEffectiveGreenhouseOpticalDepth(
+    composition,
+    surfacePressureBar,
+    gSurface,
+    T_eff,
+    greenhouseModel
+  );
+  const tauGHG = greenhouse.tau;
+  const greenhouseFactor = 1 + (0.75 * tauGHG);
+  const T_surf = T_eff * Math.pow(greenhouseFactor, 0.25);
   const dT     = diurnalAmplitude(A, flux, T_surf, slabHeatCapacity, rotationPeriodH);
 
   return {
@@ -570,7 +694,9 @@ function dayNightTemperaturesModel({
     night : T_surf - 0.5 * dT,
     mean  : T_surf,
     albedo: A,
-    equilibriumTemperature: T_eff
+    equilibriumTemperature: T_eff,
+    greenhouseFactor,
+    greenhouseOpticalDepth: tauGHG
   };
 }
 
@@ -580,6 +706,9 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateEmissivity,
     airDensity,
     calculateDayNightTemperatureVariation,
+    calculateGreenhouseTauAttenuation,
+    calculateGreenhouseTauCap,
+    calculateEffectiveGreenhouseOpticalDepth,
     autoSlabHeatCapacity,
     effectiveTemp,
     opticalDepth,        // IR only

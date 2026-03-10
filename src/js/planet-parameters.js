@@ -107,6 +107,16 @@ const defaultPlanetParameters = {
     spinPeriod: 24.6, // hours, physical rotation for gravity calculations, Default (Mars)
     starLuminosity: 1, // Multiplier relative to Sol
     coreHeatFlux: 0, // W/m^2, added directly to the surface energy budget
+    greenhouseModel: {
+      attenuationStartK: 360,
+      attenuationScaleK: 100,
+      attenuationExponent: 2,
+      minTauFraction: 0.01,
+      coldTauCap: 5000,
+      hotTauCap: 20,
+      tauCapTransitionK: 300,
+      tauCapExponent: 4
+    },
     sector: 'R5-07',
   },
   visualization: {
@@ -857,7 +867,7 @@ const venusOverrides = {
     gravity: 8.87,
     radius: 6051.8,
     mass: 4.867e24,
-    albedo: 0.15,
+    albedo: 0.133,
     rotationPeriod: 5832, // hours (~243 Earth days)
     spinPeriod: 5832,
     starLuminosity: 1
@@ -1486,7 +1496,7 @@ const poseidonOverrides = {
     rotationPeriod: 21.8,
     spinPeriod: 21.8,
     starLuminosity: 0.46,
-    coreHeatFlux: 4_000,
+    coreHeatFlux: 150_000,
     sector: 'R5-10'
   },
   visualization: {

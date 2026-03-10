@@ -1093,14 +1093,7 @@ class Terraforming extends EffectableEntity{
         const effectiveComposition = suppressAtmosphere ? {} : composition;
         const effectiveSurfacePressurePa = suppressAtmosphere ? 0 : surfacePressurePa;
         const effectiveSurfacePressureBar = suppressAtmosphere ? 0 : surfacePressureBar;
-
-        const { emissivity, tau: computedTau, contributions: computedContributions } =
-            calculateEmissivity(effectiveComposition, effectiveSurfacePressureBar, gSurface);
-        const tau = computedTau;
-        const contributions = tau === 0 ? {} : computedContributions;
-        this.temperature.emissivity = emissivity;
-        this.temperature.opticalDepth = tau;
-        this.temperature.opticalDepthContributions = contributions;
+        const greenhouseModel = this.celestialParameters.greenhouseModel || {};
 
         const aerosolsSW = {};
         const area_m2 = 4 * Math.PI * Math.pow((this.celestialParameters.radius || 1) * 1000, 2);
@@ -1115,14 +1108,14 @@ class Terraforming extends EffectableEntity{
             surfacePressureBar: effectiveSurfacePressureBar,
             composition: effectiveComposition,
             gSurface,
-            aerosolsSW
+            aerosolsSW,
+            greenhouseModel
         };
 
     const ORDER = getZones();
     const z = {}; // per-zone working data
 
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
-    const greenhouseFactor = 1 + 0.75 * tau;
     const coreHeatFlux = this.getCoreHeatFlux();
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
@@ -1205,6 +1198,7 @@ class Terraforming extends EffectableEntity{
             night: zTemps.night,
             eq:    zTemps.equilibriumTemperature,
             albedo: zTemps.albedo,
+            greenhouseFactor: zTemps.greenhouseFactor,
             frac:  zoneFractions,
             area,
             Cslab,
@@ -1301,6 +1295,7 @@ class Terraforming extends EffectableEntity{
 
         const previousMean = this.temperature.zones[zone].value;
         const capacity = z[zone].capacityPerArea;
+        const greenhouseFactor = z[zone].greenhouseFactor || 1;
 
         const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (isRingWorld() ? 1 : 0.25)) + coreHeatFlux;
         const emittedFlux = greenhouseFactor > 0
@@ -1370,6 +1365,18 @@ class Terraforming extends EffectableEntity{
         this.temperature.value = weightedTemp;
         this.temperature.trendValue = weightedTrendTemp;
         this.temperature.equilibriumTemperature = weightedEqTemp;
+        const greenhouseDiagnostics = calculateEmissivity(
+          effectiveComposition,
+          effectiveSurfacePressureBar,
+          gSurface,
+          weightedEqTemp,
+          greenhouseModel
+        );
+        const diagnosticTau = greenhouseDiagnostics.tau;
+        this.temperature.emissivity = greenhouseDiagnostics.emissivity;
+        this.temperature.opticalDepth = diagnosticTau;
+        this.temperature.opticalDepthContributions =
+          diagnosticTau === 0 ? {} : greenhouseDiagnostics.contributions;
 
         const isRingworld = isRingWorld();
         const averageFlux = weightedFluxUnpenalized / 4;
