@@ -18,7 +18,7 @@ const AEROSTAT_BUOYANCY_NOTES =
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
   'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.';
 const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
-  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Some buildings have an aerostat support value; each active aerostat covers that many structures before penalties apply.  This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.';
+  'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity.  Eligible worker requirement is summed from active buildings using active buildings x worker need x effective worker multiplier.  Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty.  This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.';
 const AEROSTAT_TOTAL_CAPACITY = 10;
 const AEROSTAT_ANDROID_SPACE_TOOLTIP =
   'Reserve part of each aerostat for android housing instead of colonists.  The slider value is android capacity per aerostat out of 10 total housing slots.';
@@ -520,6 +520,8 @@ function getAerostatMaintenanceMitigation(context = {}) {
   const result = {
     workerShare: 0,
     aerostatCount: 0,
+    aerostatCapacity: 0,
+    totalWorkerRequirement: 0,
     buildingCoverage: { list: [], byId: {} }
   };
 
@@ -623,6 +625,7 @@ function getAerostatMaintenanceMitigation(context = {}) {
   }
 
   result.buildingCoverage.list.sort((a, b) => a.name.localeCompare(b.name));
+  result.totalWorkerRequirement = totalWorkerRequirement;
 
   if (totalWorkerRequirement <= 0) {
     result.workerShare = 1;
@@ -636,6 +639,7 @@ function getAerostatMaintenanceMitigation(context = {}) {
 
   const aerostatCapacity =
     aerostat.getStorageContribution?.('colony', 'colonists') ?? 0;
+  result.aerostatCapacity = aerostatCapacity;
   if (aerostatCapacity <= 0) {
     result.workerShare = 0;
     return result;
@@ -966,6 +970,14 @@ function updateAerostatBuoyancySection(structure) {
   const aerostatCount = Number.isFinite(mitigationDetails?.aerostatCount)
     ? Math.max(0, mitigationDetails.aerostatCount)
     : 0;
+  const aerostatCapacity = Number.isFinite(mitigationDetails?.aerostatCapacity)
+    ? Math.max(0, mitigationDetails.aerostatCapacity)
+    : 0;
+  const totalWorkerRequirement = Number.isFinite(
+    mitigationDetails?.totalWorkerRequirement
+  )
+    ? Math.max(0, mitigationDetails.totalWorkerRequirement)
+    : 0;
   const buildingCoverageList = Array.isArray(
     mitigationDetails?.buildingCoverage?.list
   )
@@ -1041,10 +1053,22 @@ function updateAerostatBuoyancySection(structure) {
           false,
           2
         )}% of the penalty is negated.`;
+        mitigationTitle += `\nAerostat colonist capacity: ${formatNumber(
+          aerostatCapacity,
+          false,
+          2
+        )}.`;
+        mitigationTitle += `\nEligible staffed worker requirement: ${formatNumber(
+          totalWorkerRequirement,
+          false,
+          2
+        )}.`;
         mitigationTitle +=
           mitigationShare < 1
             ? '\nMitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.'
             : '\nAll staffed buildings currently reduce the surface temperature penalty as far as possible, subject to the 1 atm maintenance floor.';
+        mitigationTitle +=
+          '\nPer-building support is applied afterward: remaining penalty share is multiplied by the uncovered fraction for that building.';
       }
 
       if (buildingCoverageList.length > 0) {
