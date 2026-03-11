@@ -315,6 +315,13 @@ class ProjectAutomation {
     this.applyResolvedMaps(resolved.expansion, resolved.operations);
   }
 
+  applyCombinationPresets(id) {
+    if (id) {
+      this.applyCombination(id);
+    }
+    this.applyPresets();
+  }
+
   applyPresetOnce(presetId) {
     const preset = this.getPresetById(presetId);
     if (!preset) {

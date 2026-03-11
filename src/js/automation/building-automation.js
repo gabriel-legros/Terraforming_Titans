@@ -344,6 +344,13 @@ class BuildingAutomation {
     this.applyResolvedMaps(resolved.control, resolved.automation);
   }
 
+  applyCombinationPresets(id) {
+    if (id) {
+      this.applyCombination(id);
+    }
+    this.applyPresets();
+  }
+
   applyPresetOnce(presetId) {
     const preset = this.getPresetById(presetId);
     const controlMap = {};

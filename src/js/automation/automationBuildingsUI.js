@@ -835,7 +835,8 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsApplyCombinationButton.addEventListener('click', () => {
-    automationManager.buildingsAutomation.applyPresets();
+    const comboId = buildingsCombinationSelect.value || buildingAutomationUIState.combinationId;
+    automationManager.buildingsAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
   });
 
   buildingsApplyNextTravelSelect.addEventListener('change', (event) => {

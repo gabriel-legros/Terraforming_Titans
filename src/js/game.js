@@ -534,8 +534,7 @@ function initializeGameState(options = {}) {
 
     const buildingsAutomation = automationManager.buildingsAutomation;
     if (buildingsAutomation && buildingsAutomation.nextTravelCombinationId) {
-      buildingsAutomation.applyCombination(buildingsAutomation.nextTravelCombinationId);
-      buildingsAutomation.applyPresets();
+      buildingsAutomation.applyCombinationPresets(buildingsAutomation.nextTravelCombinationId);
       if (!buildingsAutomation.nextTravelCombinationPersistent) {
         buildingsAutomation.nextTravelCombinationId = null;
       }
@@ -544,8 +543,7 @@ function initializeGameState(options = {}) {
 
     const projectsAutomation = automationManager.projectsAutomation;
     if (projectsAutomation && projectsAutomation.nextTravelCombinationId) {
-      projectsAutomation.applyCombination(projectsAutomation.nextTravelCombinationId);
-      projectsAutomation.applyPresets();
+      projectsAutomation.applyCombinationPresets(projectsAutomation.nextTravelCombinationId);
       if (!projectsAutomation.nextTravelCombinationPersistent) {
         projectsAutomation.nextTravelCombinationId = null;
       }

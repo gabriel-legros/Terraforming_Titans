@@ -328,7 +328,8 @@ function initializeSidebarAutomationUI() {
     updateAutomationUI();
   });
   sidebarAutomationElements.buildingsCombinationDeploy.addEventListener('click', () => {
-    automationManager.buildingsAutomation.applyPresets();
+    const comboId = sidebarAutomationElements.buildingsCombinationSelect.value || buildingAutomationUIState.combinationId;
+    automationManager.buildingsAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
   });
 
   sidebarAutomationElements.projectsPresetSelect.addEventListener('change', (event) => {
@@ -352,7 +353,8 @@ function initializeSidebarAutomationUI() {
     updateAutomationUI();
   });
   sidebarAutomationElements.projectsCombinationDeploy.addEventListener('click', () => {
-    automationManager.projectsAutomation.applyPresets();
+    const comboId = sidebarAutomationElements.projectsCombinationSelect.value || projectAutomationUIState.combinationId;
+    automationManager.projectsAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
   });
 
   setJournalAutomationMode(false);

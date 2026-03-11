@@ -846,7 +846,8 @@ function attachProjectsAutomationHandlers() {
   });
 
   projectsApplyCombinationButton.addEventListener('click', () => {
-    automationManager.projectsAutomation.applyPresets();
+    const comboId = projectsCombinationSelect.value || projectAutomationUIState.combinationId;
+    automationManager.projectsAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
   });
 
   projectsApplyNextTravelSelect.addEventListener('change', (event) => {
