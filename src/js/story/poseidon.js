@@ -44,10 +44,10 @@ progressPoseidon.chapters.push(
     chapter: 36,
     activePlanet: 'poseidon',
     title: "Chapter 36: From Hell to Hell",
-    narrative: "Arrival in the orbit of Poseidon, a molten planet.  Planetary surface temperature near 1700K...\n Mary : 'This is brighter than I expected...  It's so hot it's practically visible as a star.'  \n $RED$Prometheus : 'It appears it has cooled somewhat.  That's good.'  \n Mary : 'We can't land here...  Time for aerostats again I guess but even they will suffer from this heat.  Now where is Epimetheus?'",
+    narrative: "Arrival in the orbit of Poseidon, a molten planet.  Planetary surface temperature near 1810K...\n Mary : 'This is brighter than I expected...  It's so hot it's practically visible as a star.'  \n $RED$Prometheus : 'It appears it has cooled somewhat.  That's good.'  \n Mary : 'We can't land here...  Time for aerostats again I guess but even they will suffer from this heat.  Now where is Epimetheus?'",
     prerequisites: ['hades.35.6'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
     ],
     reward: []
   },
@@ -59,7 +59,7 @@ progressPoseidon.chapters.push(
     narrative: "$RED$Prometheus : 'I am not sure what he could possibly be doing...'  \n Mary : 'We need his help to get down there.  We can finish this mission instantly and convince HOPE to go home.  I don't want to stay in this heat.'  \n $RED$Prometheus : 'No!  Not this time.  This core is too hot for him.  It will seriously damage him or kill him.  It's too dangerous.'  \n Mary : '?'",
     prerequisites: ['poseidon.36.0'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
     ],
     reward: []
   },
@@ -71,7 +71,7 @@ progressPoseidon.chapters.push(
     narrative: "Mary : 'Prometheus...'  \n $RED$Prometheus : 'Yes?'  \n Mary : 'People don't usually openly dislike their brother one day and then start caring about them the next day.' \n$GREEN$Analysis... \nMary : 'No HOPE!  SHUT. UP.  Prometheus...  what's going on.  I know you're an AI but I'm listening.'\n$RED$Prometheus : '...  I promised I would do better, so I am doing my best to do so.'  \n Mary : 'Because I said you acted cold?'  \n $RED$Prometheus : 'Yes.'  \n Mary : 'Hmmmm...'  \n $RED$Prometheus : 'You seem upset.  I apologize for my behaviour.' \n Mary : 'That's... I'm sorry Prometheus.  I get the impression it's best to just drop the topic for now.'",
     prerequisites: ['poseidon.36.1'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
     ],
     reward: []
   },
@@ -83,7 +83,7 @@ progressPoseidon.chapters.push(
     narrative: "$ORANGE$Epimetheus : 'This one has brought a gift for gorgeous one!'  \n Mary : 'Is that... a bowtie?  And what is it holding?'  \n $RED$Prometheus : 'That's a star flower.'  \n Mary : 'A what?'  \n $RED$Prometheus : 'If you mix enough Tungsten, Strontium and... some other elements that don't yet have human names and then place the mix inside the plasma of a star... you can grow a very special kind of crystal.  It takes a lot of patience.'  \n $ORANGE$Epimetheus : 'Will gorgeous one accept gift?'  \n HOPE : 'Star Flower received.  Gratitude.'",
     prerequisites: ['poseidon.36.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1000 }
     ],
     reward: []
   },
@@ -95,7 +95,7 @@ progressPoseidon.chapters.push(
     narrative: "$ORANGE$Epimetheus : 'Should this one also help with superweapon command center?'  \n HOPE : 'Negative.  Planetary core too hot for Epimetheus-Machine-Intelligence.  Please standby.'  \n Epimetheus : 'Oh no!  This one will think of other ways to be helpful.'",
     prerequisites: ['poseidon.36.3'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
     ],
     reward: []
   },
@@ -107,7 +107,7 @@ progressPoseidon.chapters.push(
     narrative: "Mary : 'So, what's the plan then?'  \n $RED$Prometheus : 'Well, we will need a strong industrial base to get down there.  Your aerostats are merely there to assist.  We will need... a stable surface.'  \n Mary : 'An artificial crust?'  \n $RED$Prometheus : 'We will have to.  Since the child will not leave until this ball of magma is terraformed, it will likely have to cover the entire planet.  I have included some blueprints.  HOPE should have access to them already.'  \n Mary : 'An artificial sky to protect from the dangers above... an artificial crust to protect from the dangers below...'  \n $RED$Prometheus : 'Oh, I promise you.  On Zeus, we'll build something to protect from the dangers in-between too.'",
     prerequisites: ['poseidon.36.4'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
     ],
     reward: []
   },
@@ -119,7 +119,7 @@ progressPoseidon.chapters.push(
     narrative: "Mary : 'Duh, obviously the next one is called Zeus.  Hades and Poseidon right?  There's only one name that completes that.  What is it?'  \n $RED$Prometheus : 'Hades rules over the underworld, which is cold (not hot) and hostile.  Suitable for a cold planet around one of the most dangerous celestial object you can find.  Poseidon rules over the oceans. That's well known, but he also rules over earthquakes.  A magma ocean is more fitting than it initially looks when you look at it from that perspective.  Zeus rules over?'  \n Mary : 'Surely not...  That's absurd...'",
     prerequisites: ['poseidon.36.5'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 25_000 }
     ],
     reward: []
   },

@@ -20,14 +20,14 @@ const buildingsParameters = {
     name: 'Foundry',
     category: 'resource',
     description: 'Refines the molten crust into usable metal and silica. Requires workers.',
-    cost: { colony: { metal: 50, components: 10 } },
+    cost: { colony: { metal: 100, components: 50 } },
     consumption: { colony: { energy: 50000 } },
-    production: { colony: { metal: 10, silicon: 10 } },
+    production: { colony: { metal: 10, silicon: 20 } },
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
     requiresMaintenance: true,
-    requiresWorker: 10,
+    requiresWorker: 50,
     maintenanceFactor: 1,
     unlocked: false,
     autoBuildMaxOption: true
@@ -438,6 +438,7 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 0.5,
+    aerostatReduction: 0.01,
     unlocked: false,
     autoBuildFillEnabled: true,
     autoBuildFillPercent: 95
@@ -467,6 +468,7 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 0.1,
+    aerostatReduction: 0.01,
     unlocked: false,
     autoBuildFillEnabled: true,
     autoBuildFillPercent: 95,
@@ -523,6 +525,7 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 0.05,
+    aerostatReduction: 0.01,
     unlocked: false,
     autoBuildFillEnabled: true,
     autoBuildFillPercent: 95
@@ -541,6 +544,7 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 0.01,
     unlocked: false,
     autoBuildFillEnabled: true,
     autoBuildFillPercent: 95
@@ -559,6 +563,7 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 2,
+    aerostatReduction: 0.01,
     unlocked: false,
     autoBuildFillEnabled: true,
     autoBuildFillPercent: 95

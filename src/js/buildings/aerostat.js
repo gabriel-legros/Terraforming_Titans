@@ -1031,7 +1031,15 @@ function updateAerostatBuoyancySection(structure) {
     ui.mitigationValue.textContent =
       mitigationShare === null
         ? 'N/A'
-        : `${formatNumber(mitigationShare * 100, false, 1)}%`;
+        : `${formatNumber(mitigationShare * 100, false, 1)}% (${formatNumber(
+            totalWorkerRequirement,
+            false,
+            2
+          )} workers/${formatNumber(
+            aerostatCapacity,
+            false,
+            2
+          )} aerostat capacity)`;
   }
 
   if (ui.mitigationInfo) {

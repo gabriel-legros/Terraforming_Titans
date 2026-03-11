@@ -30,6 +30,16 @@ const goldenEffects = [
     name: 'Golden Asteroid'
   },
   {
+    effectId: `${goldenEffectPrefix}-foundryMultiplier`,
+    target: 'building',
+    targetId: 'foundry',
+    type: 'resourceProductionMultiplier',
+    resourceCategory: 'colony',
+    resourceTarget: 'metal',
+    value: 5,
+    name: 'Golden Asteroid'
+  },
+  {
     effectId: `${goldenEffectPrefix}-componentFactoryMultiplier`,
     target: 'building',
     targetId: 'componentFactory',
