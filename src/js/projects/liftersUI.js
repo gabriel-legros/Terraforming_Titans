@@ -33,7 +33,8 @@ function renderLiftersUI(project, container) {
   attachDynamicInfoTooltip(
     titleInfo,
     'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. '
-    + 'Gas recipes push output into space storage and share both global storage space and per-resource caps. '
+    + 'Gas recipes push output into space storage. Multi-output recipes add each output separately before normal resource cap handling. '
+    + 'Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. '
     + 'Strip Atmosphere removes all gases proportionally.'
   );
   header.append(title, titleInfo);
@@ -90,7 +91,30 @@ function renderLiftersUI(project, container) {
   energyRateStat.labelEl.appendChild(energyRateInfo);
   controlsGrid.appendChild(energyRateStat.wrapper);
 
+  const superchargeContainer = document.createElement('div');
+  superchargeContainer.classList.add('stat-item', 'lifters-supercharge-control');
+  const superchargeLabel = document.createElement('div');
+  superchargeLabel.classList.add('lifters-supercharge-label');
+  const superchargeLabelText = document.createElement('span');
+  superchargeLabelText.textContent = 'Supercharge';
+  const superchargeValue = document.createElement('span');
+  superchargeValue.classList.add('stat-value', 'lifters-supercharge-value');
+  superchargeLabel.append(superchargeLabelText, superchargeValue);
+  const superchargeSlider = document.createElement('input');
+  superchargeSlider.type = 'range';
+  superchargeSlider.min = '1';
+  superchargeSlider.max = '10';
+  superchargeSlider.step = '1';
+  superchargeSlider.classList.add('lifters-supercharge-slider');
+  superchargeSlider.addEventListener('input', () => {
+    project.setSuperchargeMultiplier(superchargeSlider.value);
+  });
+  const superchargeEnergyValue = document.createElement('span');
+  superchargeEnergyValue.classList.add('stat-value', 'lifters-supercharge-energy');
+  superchargeContainer.append(superchargeLabel, superchargeSlider, superchargeEnergyValue);
+
   body.appendChild(controlsGrid);
+  body.appendChild(superchargeContainer);
 
   const assignmentGrid = document.createElement('div');
   assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list', 'lifters-assignment-list');
@@ -146,8 +170,20 @@ function renderLiftersUI(project, container) {
     row.classList.add('hephaestus-assignment-row', 'nuclear-alchemy-assignment-row');
 
     const nameWrap = document.createElement('span');
-    nameWrap.classList.add('stat-label');
-    nameWrap.textContent = recipe.label;
+    nameWrap.classList.add('stat-label', 'lifters-recipe-name');
+    const nameText = document.createElement('span');
+    nameText.textContent = recipe.label;
+    nameWrap.appendChild(nameText);
+    if (key === 'starLifting') {
+      const infoIcon = document.createElement('span');
+      infoIcon.classList.add('info-tooltip-icon');
+      infoIcon.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(
+        infoIcon,
+        'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.001 nitrogen, 0.001 silica, 0.001 metal.'
+      );
+      nameWrap.appendChild(infoIcon);
+    }
 
     const complexityEl = document.createElement('span');
     complexityEl.classList.add('stat-value');
@@ -259,6 +295,10 @@ function renderLiftersUI(project, container) {
     energyPerLifterValue: energyPerLifterStat.valueEl,
     energyRateValue: energyRateStat.valueEl,
     expansionRateValue: expansionRateStat.valueEl,
+    superchargeContainer,
+    superchargeValue,
+    superchargeSlider,
+    superchargeEnergyValue,
     stepDownButton,
     stepUpButton,
     rowElements,
@@ -285,10 +325,17 @@ function updateLiftersUI(project) {
   elements.assignedValue.textContent = formatNumber(assigned, true, 2);
   elements.unassignedValue.textContent = formatNumber(available, true, 2);
   elements.statusValue.textContent = project.statusText || 'Idle';
-  elements.energyPerLifterValue.textContent = formatPerSecond(project.energyPerUnit || 0);
+  elements.energyPerLifterValue.textContent = formatPerSecond(project.getEffectiveEnergyPerUnit());
   elements.energyRateValue.textContent = formatPerSecond(project.lastEnergyPerSecond);
   const expansionRate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
   elements.expansionRateValue.textContent = `${formatNumber(expansionRate, true, 3)} lifters/s`;
+  const supercharge = project.getEffectiveSuperchargeMultiplier();
+  const energyMultiplier = supercharge * supercharge * supercharge;
+  elements.superchargeContainer.style.display = project.hasSuperchargeUnlocked() ? 'grid' : 'none';
+  elements.superchargeValue.textContent = `x${formatNumber(project.getEffectiveSuperchargeMultiplier(), true, 0)}`;
+  elements.superchargeSlider.value = String(project.getEffectiveSuperchargeMultiplier());
+  elements.superchargeSlider.disabled = !project.hasSuperchargeUnlocked();
+  elements.superchargeEnergyValue.textContent = `Energy x${formatNumber(energyMultiplier, true, 0)}`;
 
   elements.runCheckbox.checked = project.isRunning;
   elements.runCheckbox.disabled = total <= 0;
@@ -341,9 +388,8 @@ function updateLiftersUI(project) {
   });
 
   if (elements.note) {
-    const unitRate = formatNumber(project.unitRatePerLifter, true);
-    elements.note.textContent = `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s. `
-      + 'Gas outputs share storage space and cap limits; atmosphere strip removes all gases proportionally.';
+    const unitRate = formatNumber(project.getEffectiveUnitRatePerLifter(), true);
+    elements.note.textContent = `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s.`;
   }
 }
 

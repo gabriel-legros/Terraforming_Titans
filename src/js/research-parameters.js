@@ -2473,6 +2473,22 @@ const researchParameters = {
             value: true
           }
         ]
+      },
+      {
+        id: 'star_lifting',
+        name: 'Star Lifting',
+        description: 'Upgrades lifters for shallow stellar skimming, unlocking the Star Lifting recipe and a supercharge slider from x1 to x10. Throughput scales linearly with the selected multiplier while energy per lifter scales cubically.',
+        cost: { advancedResearch: 2_000_000_000 },
+        prerequisites: ['lifting', 'graphene_mastery'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'lifters',
+            type: 'booleanFlag',
+            flagId: 'starLifting',
+            value: true
+          }
+        ]
       }
     ]
   };

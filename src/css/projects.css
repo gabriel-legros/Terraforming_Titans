@@ -853,6 +853,48 @@
     margin-bottom: 12px;
 }
 
+.lifters-supercharge-control {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 8px;
+    margin-bottom: 12px;
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.lifters-supercharge-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: #495057;
+}
+
+.lifters-supercharge-slider {
+    width: 100%;
+    min-width: 0;
+    justify-self: stretch;
+}
+
+.lifters-supercharge-energy {
+    justify-self: end;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.lifters-recipe-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
 .nuclear-alchemy-rate-cell {
     justify-self: end;
     text-align: right;
@@ -982,6 +1024,29 @@
     .manufacturing-world-card .manufacturing-block-grid-c .nuclear-alchemy-rate-cell {
         text-align: center;
         justify-self: center;
+    }
+
+    .lifters-supercharge-control {
+        grid-template-columns: max-content minmax(0, 1fr) max-content;
+    }
+
+    .lifters-supercharge-slider {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    .lifters-supercharge-control {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lifters-supercharge-label,
+    .lifters-supercharge-energy {
+        justify-self: start;
+    }
+
+    .lifters-supercharge-slider {
+        width: 100%;
     }
 }
 

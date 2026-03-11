@@ -837,6 +837,21 @@ const projectParameters = {
           complexity: 100,
           displayOrder: 4,
           requiresProjectFlag: 'methaneAmmoniaLifting'
+        },
+        starLifting: {
+          label: 'Star Lifting',
+          storageKey: 'hydrogen',
+          complexity: 100,
+          displayOrder: 5,
+          requiresProjectFlag: 'starLifting',
+          outputs: {
+            hydrogen: 1,
+            oxygen: 0.01,
+            graphite: 0.005,
+            inertGas: 0.0015,
+            silicon: 0.001,
+            metal: 0.0008
+          }
         }
       }
     }

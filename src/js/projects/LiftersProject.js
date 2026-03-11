@@ -44,6 +44,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     super(config, name);
     this.unitRatePerLifter = this.attributes.lifterUnitRate || 1_000_000;
     this.energyPerUnit = this.attributes.lifterEnergyPerUnit || 10_000_000;
+    this.superchargeMultiplier = 1;
     this.harvestRecipes = this.attributes?.lifterHarvestRecipes || DEFAULT_LIFTER_HARVEST_RECIPES;
     this.lifterRecipes = this.buildLifterRecipes();
 
@@ -80,6 +81,44 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.operationPreRunThisTick = false;
   }
 
+  hasSuperchargeUnlocked() {
+    return this.isBooleanFlagSet('starLifting');
+  }
+
+  getEffectiveSuperchargeMultiplier() {
+    if (!this.hasSuperchargeUnlocked()) {
+      return 1;
+    }
+    const parsed = Number(this.superchargeMultiplier);
+    if (Number.isFinite(parsed) && parsed >= 1) {
+      return Math.max(1, Math.min(10, Math.round(parsed)));
+    }
+    return 1;
+  }
+
+  normalizeSuperchargeForFlags() {
+    this.superchargeMultiplier = this.getEffectiveSuperchargeMultiplier();
+  }
+
+  setSuperchargeMultiplier(value) {
+    const next = Math.max(1, Math.min(10, Math.round(Number(value) || 1)));
+    const resolved = this.hasSuperchargeUnlocked() ? next : 1;
+    if (this.superchargeMultiplier === resolved) {
+      return;
+    }
+    this.superchargeMultiplier = resolved;
+    this.updateUI();
+  }
+
+  getEffectiveUnitRatePerLifter() {
+    return this.unitRatePerLifter * this.getEffectiveSuperchargeMultiplier();
+  }
+
+  getEffectiveEnergyPerUnit() {
+    const multiplier = this.getEffectiveSuperchargeMultiplier();
+    return this.energyPerUnit * multiplier * multiplier * multiplier;
+  }
+
   getBaseDuration() {
     return this.getDurationWithTerraformBonus(this.duration);
   }
@@ -101,11 +140,28 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     harvestKeys.forEach((key) => {
       const source = this.harvestRecipes[key] || {};
       const displayOrder = Number(source.displayOrder);
+      const outputs = {};
+      const outputSource = source.outputs || null;
+      if (outputSource) {
+        Object.keys(outputSource).forEach((resourceKey) => {
+          const multiplier = Number(outputSource[resourceKey]);
+          if (Number.isFinite(multiplier) && multiplier > 0) {
+            outputs[resourceKey] = multiplier;
+          }
+        });
+      }
+      if (Object.keys(outputs).length === 0) {
+        const outputKey = source.storageKey || key;
+        const outputMultiplier = Number.isFinite(source.outputMultiplier) ? source.outputMultiplier : 1;
+        outputs[outputKey] = outputMultiplier > 0 ? outputMultiplier : 1;
+      }
+      const outputKeys = Object.keys(outputs);
       recipes[key] = {
         label: source.label || key,
         type: LIFTER_RECIPE_TYPES.HARVEST,
-        storageKey: source.storageKey || key,
-        outputMultiplier: Number.isFinite(source.outputMultiplier) ? source.outputMultiplier : 1,
+        storageKey: source.storageKey || outputKeys[0] || key,
+        outputMultiplier: outputs[source.storageKey || outputKeys[0] || key] || 1,
+        outputs,
         complexity: Number.isFinite(source.complexity) && source.complexity > 0 ? source.complexity : 1,
         displayOrder: Number.isFinite(displayOrder) && displayOrder > 0 ? displayOrder : null,
         requiresProjectFlag: source.requiresProjectFlag || null,
@@ -285,6 +341,39 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       return parsed;
     }
     return 1;
+  }
+
+  getRecipeOutputs(recipe) {
+    if (recipe?.type !== LIFTER_RECIPE_TYPES.HARVEST) {
+      return [];
+    }
+
+    const outputs = recipe.outputs || null;
+    if (outputs) {
+      const entries = [];
+      Object.keys(outputs).forEach((resourceKey) => {
+        const multiplier = Number(outputs[resourceKey]);
+        if (Number.isFinite(multiplier) && multiplier > 0) {
+          entries.push({ resourceKey, multiplier });
+        }
+      });
+      if (entries.length > 0) {
+        return entries;
+      }
+    }
+
+    return [{
+      resourceKey: recipe.storageKey,
+      multiplier: this.getRecipeOutputMultiplier(recipe),
+    }];
+  }
+
+  getRecipeTotalOutputMultiplier(recipe) {
+    const outputs = this.getRecipeOutputs(recipe);
+    if (outputs.length === 0) {
+      return 1;
+    }
+    return outputs.reduce((sum, output) => sum + output.multiplier, 0);
   }
 
   getRecipeOperationProductivity(key, productivity = 1) {
@@ -719,7 +808,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       }
       const complexity = this.getRecipeComplexity(recipe);
       const productivityRatio = this.getRecipeOperationProductivity(key, productivity);
-      const unitsPerSecond = (assigned / complexity) * this.unitRatePerLifter;
+      const unitsPerSecond = (assigned / complexity) * this.getEffectiveUnitRatePerLifter();
       const baseUnits = unitsPerSecond * seconds;
       const desiredUnits = baseUnits * productivityRatio;
 
@@ -731,6 +820,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         baseUnits,
         requestedProductivity: productivityRatio,
         outputMultiplier: this.getRecipeOutputMultiplier(recipe),
+        totalOutputMultiplier: this.getRecipeTotalOutputMultiplier(recipe),
         desiredUnits,
         limitedUnits: 0,
         finalUnits: 0,
@@ -816,7 +906,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     plan.energyAvailability = this.getEnergyAvailabilityForTick(seconds * 1000, accumulatedChanges);
-    plan.energyNeeded = plan.limitedAssignedLifters * this.energyPerUnit * seconds;
+    plan.energyNeeded = plan.limitedAssignedLifters * this.getEffectiveEnergyPerUnit() * seconds;
     if (plan.energyNeeded > 0) {
       plan.energyRatio = Math.max(0, Math.min(1, plan.energyAvailability.totalAvailable / plan.energyNeeded));
       if (plan.energyRatio < 1) {
@@ -827,7 +917,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     entries.forEach((entry) => {
       entry.finalUnits = entry.limitedUnits * plan.energyRatio;
       entry.finalOutput = entry.recipe.type === LIFTER_RECIPE_TYPES.HARVEST
-        ? entry.finalUnits * entry.outputMultiplier
+        ? entry.finalUnits * entry.totalOutputMultiplier
         : entry.finalUnits;
       entry.productivityRatio = entry.baseUnits > 0
         ? Math.max(0, Math.min(1, entry.finalUnits / entry.baseUnits))
@@ -867,7 +957,6 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     const availableSpace = this.getAvailableStorageSpaceForTick(storage, accumulatedChanges);
     const stored = Math.min(amount, availableSpace);
-
     if (!(stored > 0)) {
       return 0;
     }
@@ -881,6 +970,43 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     return stored;
+  }
+
+  storeHarvestOutputsForTick(storage, recipe, units, seconds, accumulatedChanges = null) {
+    if (!storage || !(units > 0)) {
+      return { totalStored: 0, storedByResource: {}, producedRatesByResource: {} };
+    }
+
+    const storedByResource = {};
+    const producedRatesByResource = {};
+    let totalStored = 0;
+    this.getRecipeOutputs(recipe).forEach(({ resourceKey, multiplier }) => {
+      const amount = units * multiplier;
+      producedRatesByResource[resourceKey] = seconds > 0 ? amount / seconds : 0;
+      const stored = this.storeHarvestedResourceForTick(
+        storage,
+        resourceKey,
+        amount,
+        accumulatedChanges
+      );
+      storedByResource[resourceKey] = stored;
+      totalStored += stored;
+
+      if (stored > 0) {
+        const rate = seconds > 0 ? stored / seconds : 0;
+        resources?.spaceStorage?.[resourceKey]?.modifyRate?.(
+          rate,
+          'Lifting',
+          'project'
+        );
+      }
+    });
+
+    return {
+      totalStored,
+      storedByResource,
+      producedRatesByResource,
+    };
   }
 
   getBlockedStatusFromPlan(plan) {
@@ -919,6 +1045,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.lastEnergyLimitedProductivityByRecipe = {};
 
     const outputRatesByRecipe = stats.outputRatesByRecipe || {};
+    const outputBreakdownByRecipe = stats.outputBreakdownByRecipe || {};
+    const producedOutputBreakdownByRecipe = stats.producedOutputBreakdownByRecipe || outputBreakdownByRecipe;
     const displayRatesByRecipe = stats.displayRatesByRecipe || outputRatesByRecipe;
     const productivityByRecipe = stats.productivityByRecipe || {};
     const energyLimitedProductivityByRecipe = stats.energyLimitedProductivityByRecipe || productivityByRecipe;
@@ -939,9 +1067,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       }
 
       this.lastHarvestPerSecond += rate;
-      if (recipe.storageKey === 'hydrogen') {
-        this.lastHydrogenPerSecond = rate;
-      }
+      this.lastHydrogenPerSecond += producedOutputBreakdownByRecipe[key]?.hydrogen || 0;
       if (rate > bestHarvestRate) {
         bestHarvestRate = rate;
         bestHarvestResource = recipe.storageKey || bestHarvestResource;
@@ -1037,7 +1163,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       const desiredAssignedLifters = plan.entries.reduce((sum, entry) => {
         return sum + (entry.assigned * (entry.requestedProductivity || 0));
       }, 0);
-      const desiredEnergy = desiredAssignedLifters * this.energyPerUnit * seconds;
+      const desiredEnergy = desiredAssignedLifters * this.getEffectiveEnergyPerUnit() * seconds;
       const energyAvailability = this.getEnergyAvailabilityForTick(deltaTime, accumulatedChanges);
       const energyOnlyRatio = desiredEnergy > 0
         ? Math.max(0, Math.min(1, energyAvailability.totalAvailable / desiredEnergy))
@@ -1046,7 +1172,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       plan.entries.forEach((entry) => {
         const displayUnits = (entry.desiredUnits || 0) * energyOnlyRatio;
         const displayRate = entry.recipe.type === LIFTER_RECIPE_TYPES.HARVEST
-          ? (displayUnits * entry.outputMultiplier) / seconds
+          ? (displayUnits * entry.totalOutputMultiplier) / seconds
           : (displayUnits / seconds);
         displayRatesByRecipe[entry.key] = displayRate;
         energyLimitedProductivityByRecipe[entry.key] = entry.baseUnits > 0
@@ -1096,6 +1222,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     const storage = this.getSpaceStorageProject();
     const outputRatesByRecipe = {};
+    const outputBreakdownByRecipe = {};
+    const producedOutputBreakdownByRecipe = {};
     let atmosphereRemoved = 0;
     let processedUnits = 0;
 
@@ -1103,6 +1231,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       let units = entry.finalUnits * energyScale;
       if (!(units > 0)) {
         outputRatesByRecipe[entry.key] = 0;
+        outputBreakdownByRecipe[entry.key] = {};
+        producedOutputBreakdownByRecipe[entry.key] = {};
         return;
       }
 
@@ -1111,26 +1241,29 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         atmosphereRemoved += removed;
         processedUnits += removed;
         outputRatesByRecipe[entry.key] = seconds > 0 ? removed / seconds : 0;
+        outputBreakdownByRecipe[entry.key] = {};
+        producedOutputBreakdownByRecipe[entry.key] = {};
         return;
       }
 
       if (!storage) {
         outputRatesByRecipe[entry.key] = 0;
+        outputBreakdownByRecipe[entry.key] = {};
+        producedOutputBreakdownByRecipe[entry.key] = {};
         return;
       }
 
-      const amount = units * entry.outputMultiplier;
-      this.storeHarvestedResourceForTick(storage, entry.recipe.storageKey, amount, accumulatedChanges);
+      const storedOutputs = this.storeHarvestOutputsForTick(
+        storage,
+        entry.recipe,
+        units,
+        seconds,
+        accumulatedChanges
+      );
       processedUnits += units;
-      const rate = seconds > 0 ? amount / seconds : 0;
-      outputRatesByRecipe[entry.key] = rate;
-      if (rate > 0) {
-        resources?.spaceStorage?.[entry.recipe.storageKey]?.modifyRate?.(
-          rate,
-          'Lifting',
-          'project'
-        );
-      }
+      outputRatesByRecipe[entry.key] = seconds > 0 ? storedOutputs.totalStored / seconds : 0;
+      outputBreakdownByRecipe[entry.key] = storedOutputs.storedByResource;
+      producedOutputBreakdownByRecipe[entry.key] = storedOutputs.producedRatesByResource;
     });
 
     const outputRealizationRatio = plan.plannedTotalUnits > 0
@@ -1156,6 +1289,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       atmospherePerSecond: atmosphereRemoved / seconds,
       dysonPerSecond,
       outputRatesByRecipe,
+      outputBreakdownByRecipe,
+      producedOutputBreakdownByRecipe,
       productivityByRecipe,
       displayRatesByRecipe,
       energyLimitedProductivityByRecipe,
@@ -1316,6 +1451,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
     this.normalizeModeForFlags();
+    this.normalizeSuperchargeForFlags();
     this.applyPendingHarvestRecipe();
     this.normalizeAssignments();
     this.updateUI();
@@ -1329,6 +1465,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       assignmentStep: this.assignmentStep,
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
+      superchargeMultiplier: this.superchargeMultiplier,
       mode: this.mode,
       harvestRecipeKey: this.harvestRecipeKey,
     };
@@ -1345,7 +1482,8 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')
       || Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')
       || Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')
-      || Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights');
+      || Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')
+      || Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier');
 
     if (hasAssignmentState) {
       if (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments')) {
@@ -1360,6 +1498,9 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
         this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
       }
+      if (Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')) {
+        this.superchargeMultiplier = settings.superchargeMultiplier || 1;
+      }
     } else {
       if (Object.prototype.hasOwnProperty.call(settings, 'mode')) {
         this.mode = settings.mode || LIFTER_MODES.GAS_HARVEST;
@@ -1373,6 +1514,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     this.normalizeModeForFlags();
+    this.normalizeSuperchargeForFlags();
     this.normalizeAssignments();
   }
 
@@ -1385,6 +1527,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       assignmentStep: this.assignmentStep,
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
+      superchargeMultiplier: this.superchargeMultiplier,
       mode: this.mode,
       harvestRecipeKey: this.harvestRecipeKey,
     };
@@ -1399,18 +1542,21 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       Object.prototype.hasOwnProperty.call(state, 'lifterAssignments')
       || Object.prototype.hasOwnProperty.call(state, 'assignmentStep')
       || Object.prototype.hasOwnProperty.call(state, 'autoAssignFlags')
-      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights');
+      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights')
+      || Object.prototype.hasOwnProperty.call(state, 'superchargeMultiplier');
 
     if (hasAssignmentState) {
       this.lifterAssignments = { ...(state.lifterAssignments || {}) };
       this.assignmentStep = state.assignmentStep || 1;
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
       this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+      this.superchargeMultiplier = state.superchargeMultiplier || 1;
       this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
       this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
       this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
       this.applyPendingHarvestRecipe();
     } else {
+      this.superchargeMultiplier = state.superchargeMultiplier || 1;
       this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
       this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
       this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
@@ -1419,6 +1565,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     this.normalizeModeForFlags();
+    this.normalizeSuperchargeForFlags();
     this.normalizeAssignments();
 
     if (!this.isRunning) {
@@ -1435,6 +1582,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       assignmentStep: this.assignmentStep,
       autoAssignFlags: { ...this.autoAssignFlags },
       autoAssignWeights: { ...this.autoAssignWeights },
+      superchargeMultiplier: this.superchargeMultiplier,
       mode: this.mode,
       harvestRecipeKey: this.harvestRecipeKey,
     };
@@ -1454,18 +1602,21 @@ class LiftersProject extends LiftersContinuousExpansionBase {
       Object.prototype.hasOwnProperty.call(state, 'lifterAssignments')
       || Object.prototype.hasOwnProperty.call(state, 'assignmentStep')
       || Object.prototype.hasOwnProperty.call(state, 'autoAssignFlags')
-      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights');
+      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights')
+      || Object.prototype.hasOwnProperty.call(state, 'superchargeMultiplier');
 
     if (hasAssignmentState) {
       this.lifterAssignments = { ...(state.lifterAssignments || {}) };
       this.assignmentStep = state.assignmentStep || 1;
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
       this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+      this.superchargeMultiplier = state.superchargeMultiplier || 1;
       this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
       this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
       this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
       this.applyPendingHarvestRecipe();
     } else {
+      this.superchargeMultiplier = state.superchargeMultiplier || 1;
       this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
       this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
       this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
@@ -1474,6 +1625,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     }
 
     this.normalizeModeForFlags();
+    this.normalizeSuperchargeForFlags();
     this.normalizeAssignments();
 
     this.isRunning = false;
