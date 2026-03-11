@@ -180,7 +180,7 @@ function renderLiftersUI(project, container) {
       infoIcon.innerHTML = '&#9432;';
       attachDynamicInfoTooltip(
         infoIcon,
-        'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.001 nitrogen, 0.001 silica, 0.001 metal.'
+        'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.'
       );
       nameWrap.appendChild(infoIcon);
     }
