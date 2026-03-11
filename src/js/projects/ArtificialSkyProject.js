@@ -593,13 +593,6 @@ class ArtificialSkyProject extends SpaceshipProject {
       celestialTargets[index].starLuminosity = 0;
     }
 
-    if (currentPlanetParameters) {
-      delete currentPlanetParameters.star;
-    }
-    if (spaceManager?.currentPlanetParameters) {
-      delete spaceManager.currentPlanetParameters.star;
-    }
-
     setStarLuminosity?.(0);
     terraforming?.updateLuminosity?.();
   }

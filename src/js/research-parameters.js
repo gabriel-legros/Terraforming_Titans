@@ -852,7 +852,7 @@ const researchParameters = {
       {
         id: 'ai_industrial_coordination',
         name: 'AI Industrial Coordination',
-        description: 'HOPE will integrate itself further into each factory, reducing worker requirements by 10% per level.',
+        description: 'HOPE will integrate itself further into each factory, reducing worker requirements (equivalent to an additive increase in workers of 10% per level).',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         disabled: true,
@@ -2479,7 +2479,7 @@ const researchParameters = {
         name: 'Star Lifting',
         description: 'Upgrades lifters for shallow stellar skimming, unlocking the Star Lifting recipe and a supercharge slider from x1 to x10. Throughput scales linearly with the selected multiplier while energy per lifter scales cubically.',
         cost: { advancedResearch: 2_000_000_000 },
-        prerequisites: ['lifting', 'graphene_mastery'],
+        prerequisites: ['lifting'],
         effects: [
           {
             target: 'project',
