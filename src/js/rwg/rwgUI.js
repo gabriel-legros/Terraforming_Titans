@@ -1224,7 +1224,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
       <div class="rwg-control-row">
         <select id="rwg-dominion" class="rwg-inline-select"></select>
         <button id="rwg-dominion-lore-btn" class="rwg-btn">Lore</button>
-        <span id="rwg-dominion-info" class="info-tooltip-icon" title="Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion.  Rewards scale for each time it is granted: 500, 1000, 1500, and so on.">&#9432;</span>
+        <span id="rwg-dominion-info" class="info-tooltip-icon" title="Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion.  Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.">&#9432;</span>
       </div>
     </div>` : '';
   const worldPanel = `

@@ -111,6 +111,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Silica/metal allocation supports production percent or absolute caps.
 - Recycling supports junk/scrap filtering and uncapped selector.
 - Output requires same-tick material input (prevents free output).
+- Nanocolony growth, production, consumption, and maintenance effects fully shut down when global average temperature exceeds `700°C` (`973.15 K`), and the colony card shows a red warning using the current temperature unit.
 
 ### Warp Gate Command
 - Team/operation progression persists across planets.

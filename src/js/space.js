@@ -199,7 +199,7 @@ class SpaceManager extends EffectableEntity {
             return 0;
         }
         const rewardIndex = this.dominionTerraformRewardCount + 1;
-        const reward = 500 * rewardIndex;
+        const reward = 1000 * rewardIndex;
         this.dominionTerraformRewards[resolvedDominion] = true;
         this.dominionTerraformRewardCount = rewardIndex;
         resources.special.alienArtifact.increase(reward);
