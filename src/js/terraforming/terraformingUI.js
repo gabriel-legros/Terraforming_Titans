@@ -290,9 +290,13 @@ function getTemperatureMaintenanceImmuneTooltip() {
   const buildingMap = globalThis?.buildings ?? {};
   const immuneNames = [];
   const floorContext = globalThis?.terraforming?.calculateOneAtmMaintenanceFloor?.() ?? null;
+  const unit = getTemperatureUnit();
+  const noPenaltyThreshold = formatNumber(toDisplayTemperature(373.15), false, 2);
+  const exponentialThreshold = formatNumber(toDisplayTemperature(973.15), false, 2);
+  const doublingUnit = unit === '°C' ? '°C' : 'K';
   const description = [
-    'Temperature maintenance penalty: no penalty at or below 373.15 K, +1% maintenance per K above that, then exponential growth beginning at 973.15 K.',
-    'Above 973.15 K, the multiplier doubles every 200 K.',
+    `Temperature maintenance penalty: no penalty at or below ${noPenaltyThreshold}${unit}, +1% maintenance per degree above that, then exponential growth beginning at ${exponentialThreshold}${unit}.`,
+    `Above ${exponentialThreshold}${unit}, the multiplier doubles every 200 ${doublingUnit}.`,
     'This penalty can be mitigated by aerostats, but has a floor determined by a dry-adiabatic 1 atm temperature model.'
   ];
 
@@ -311,7 +315,7 @@ function getTemperatureMaintenanceImmuneTooltip() {
       ? `${formatNumber(floorContext.altitudeKm, false, 2)} km`
       : 'N/A';
     description.push(
-      `Current 1 atm estimate: ${formatNumber(floorContext.pressureKPa, false, 2)} kPa surface pressure, ${altitudeText} altitude, ${formatNumber(floorContext.temperatureK, false, 2)} K, maintenance floor x${floorContext.penalty.toFixed(2)}.`
+      `Current 1 atm estimate: ${formatNumber(floorContext.pressureKPa, false, 2)} kPa surface pressure, ${altitudeText} altitude, ${formatNumber(toDisplayTemperature(floorContext.temperatureK), false, 2)}${unit}, maintenance floor x${floorContext.penalty.toFixed(2)}.`
     );
   }
 
