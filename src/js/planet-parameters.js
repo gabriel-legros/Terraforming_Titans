@@ -1490,6 +1490,7 @@ const poseidonOverrides = {
   celestialParameters: {
     distanceFromSun: 2.9,
     gravity: 4.9,
+    hasNaturalMagnetosphere: true,
     radius: 7600,
     mass: 1.31e25,
     albedo: 0.08,

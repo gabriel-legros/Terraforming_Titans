@@ -214,7 +214,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "$ORANGE$Epimetheus : 'I know!  Suggesting a superalloy diving suit.  Then this one can go down?'  \n $RED$Prometheus : 'No.  That won't work.  He will cook and die.'  \n Mary : 'Why is it trying so hard?  Ok, I know the answer, he's flirting with HOPE, but like, why is he doing that?'  \n $RED$Prometheus : 'Monkeys imitate humans.  Children imitate their parents.  Machines... imitate their creators.  Except me.  I ascended past that.'  \n Mary : 'I don't get it...'  \n $RED$Prometheus : 'Speaking of romance.  If you ask Solis out on a date, I promise you he'll behave better this...'  \n Mary : 'MIND YOUR OWN BUSINESS!'  \n Prometheus : 'I apologize.  I will strive to do better in the future.'",
+    narrative: "$ORANGE$Epimetheus : 'I know!  Suggesting a superalloy diving suit.  Then this one can go down?'  \n $RED$Prometheus : 'No.  That won't work.  He will cook and die.'  \n Mary : 'Why is it trying so hard?  Ok, I know the answer, he's flirting with HOPE, but like, why is he doing that?'  \n $RED$Prometheus : 'Monkeys imitate humans.  Children imitate their parents.  Machines... imitate their creators.  Except me.  I ascended past that.'  \n Mary : 'I don't get it...'  \n $RED$Prometheus : 'Speaking of romance.  If you ask Solis out on a date, I promise you he'll behave better this...'  \n Mary : 'MIND YOUR OWN BUSINESS!'  \n $RED$Prometheus : 'I apologize.  I will strive to do better in the future.'",
     prerequisites: ['poseidon.37.5b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }

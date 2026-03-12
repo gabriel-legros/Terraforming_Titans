@@ -117,6 +117,14 @@ class Building extends EffectableEntity {
         0,
         Number.isFinite(aerostatReduction) ? aerostatReduction : 0
       );
+      this.automationCustomBasisOptions = this.aerostatReduction > 0
+        ? [
+            {
+              value: 'aerostatCapacity',
+              label: 'Aerostat Capacity'
+            }
+          ]
+        : null;
 
       this.automationBuildingsDropDown = Array.isArray(automationBuildingsDropDown)
         ? automationBuildingsDropDown.slice()
@@ -162,6 +170,9 @@ class Building extends EffectableEntity {
 
   getAutoBuildBase(population, workerCap, collection) {
     const basis = `${this.autoBuildBasis || 'population'}`;
+    if (basis === 'aerostatCapacity') {
+      return Math.max(0, colonies.aerostat_colony.active * this.aerostatReduction);
+    }
     if (basis === 'workers') {
       return workerCap;
     }
