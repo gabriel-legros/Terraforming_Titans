@@ -211,6 +211,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Story effects support `onTravel: false`.
 - New/expanded worlds and arcs include Umbra, Solis Prime, Tartarus/Gabbag placeholders, and Hades (airless pulsar world at 20 AU with placeholder chapters 33-35).
 - Poseidon placeholder story arc was added with chapters 36-38, using colonist milestone objectives from 10 up to 10 billion; Hades chapter 35 now bridges with a sector-conquest objective (`R5-10`) and a travel objective to Poseidon.
+- Poseidon chapter `poseidon.38.0` grants aerostat flag `aerostats_collision_avoidance`, allowing Aerostat Colonies to build above the normal 25% initial-land cap with an added research build cost and matching research maintenance that scales by `+10` research per extra base-cap tier; gravity and temperature penalties do not increase that research upkeep.
 - Poseidon applies a world effect that enables `Foundry`, a resource building capped by initial land that costs like an Ore Mine, needs 10 workers, produces 10 metal plus 10 silica, and only gets the metal half doubled by `Advanced Alloys`.
 - Terraforming completion rewards and travel-point systems were extended (including dominion-specific rewards).
 - Journal reconstruction and indexing were improved for story continuity.

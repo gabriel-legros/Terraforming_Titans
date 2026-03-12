@@ -1891,7 +1891,7 @@ function updateDecreaseButtonText(button, buildCount) {
     if (!costElement) return;
     const items = [];
 
-    const effectiveCost = structure.getEffectiveCost();
+    const effectiveCost = structure.getEffectiveCost(buildCount);
     for (const category in effectiveCost) {
       for (const resource in effectiveCost[category]) {
         items.push({
@@ -1987,7 +1987,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     items.forEach(item => {
-      const requiredAmount = item.required * buildCount;
+      const requiredAmount = item.isCostResource ? item.required : item.required * buildCount;
       const span = costElement._spans.get(item.key);
       if (!span) return;
       const text = `${item.label}: ${formatNumber(requiredAmount, true)}`;

@@ -251,7 +251,7 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
                 const required = cost[category][resource];
                 if (required <= 0) continue;
                 const cap = resObj.cap || 0;
-                const reserve = (reservePercent / 100) * cap;
+                const reserve = Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
                 const prioritizedReserve = extraReserves?.[category]?.[resource] || 0;
                 const available = (resObj.value || 0) - reserve - prioritizedReserve;
                 if (available + 1e-9 < required) {
@@ -763,16 +763,22 @@ function autoBuild(buildings, delta = 0) {
 
             if (buildCount > 0) {
                 const previousCount = building.count;
+                const plannedEffectiveCost = building.getEffectiveCost(buildCount);
+                const plannedBaseCost = building.getBaseEffectiveCost(buildCount);
                 let built = false;
                 if (typeof building.build === 'function') {
                     built = building.build(buildCount, false);
                 }
                 const actualBuilt = built ? Math.max(0, building.count - previousCount) : 0;
                 if (built && actualBuilt > 0) {
-                    const effectiveCost = building.getEffectiveCost(actualBuilt);
+                    const effectiveCost = actualBuilt === buildCount
+                        ? plannedEffectiveCost
+                        : building.getEffectiveCost(actualBuilt);
                     const cost = cloneCostObject(effectiveCost);
                     const kesslerMultiplier = building.getKesslerCostMultiplier();
-                    const kesslerBaseCost = building.getBaseEffectiveCost(actualBuilt);
+                    const kesslerBaseCost = actualBuilt === buildCount
+                        ? plannedBaseCost
+                        : building.getBaseEffectiveCost(actualBuilt);
                     const kesslerDebris = building._getKesslerDebrisFromCost(kesslerBaseCost, kesslerMultiplier);
                     if (building.requiresDeposit) {
                         for (const dep in building.requiresDeposit.underground) {

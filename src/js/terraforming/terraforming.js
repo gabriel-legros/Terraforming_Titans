@@ -2201,7 +2201,11 @@ class Terraforming extends EffectableEntity{
             if (!categoryCosts) continue;
 
             for (const resource in categoryCosts) {
-              if (resource === 'electronics' || resource === 'water') continue;
+              if (
+                resource === 'electronics' ||
+                resource === 'water' ||
+                resource === 'research'
+              ) continue;
               addEffect({
                 effectId: `gravityCostPenalty-${category}-${resource}`,
                 target,
@@ -2263,14 +2267,21 @@ class Terraforming extends EffectableEntity{
             );
           }
 
-          addEffect({
-            effectId: 'temperatureMaintenancePenalty',
-            target: 'building',
-            targetId: id,
-            type: 'maintenanceMultiplier',
-            value: penaltyValue,
-            name: 'Temperature penalty'
-          });
+          const categoryCosts = b.cost?.colony;
+          if (!categoryCosts) continue;
+          for (const resource in categoryCosts) {
+            if (resource === 'research') continue;
+            addEffect({
+              effectId: `temperatureMaintenancePenalty-${resource}`,
+              target: 'building',
+              targetId: id,
+              type: 'maintenanceCostMultiplier',
+              resourceCategory: 'colony',
+              resourceId: resource,
+              value: penaltyValue,
+              name: 'Temperature penalty'
+            });
+          }
         }
       }
 
@@ -2280,14 +2291,21 @@ class Terraforming extends EffectableEntity{
             id === 'aerostat_colony'
               ? Math.max(1, maintenanceFloorPenalty)
               : maintenancePenalty;
-          addEffect({
-            effectId: 'temperatureMaintenancePenalty',
-            target: 'colony',
-            targetId: id,
-            type: 'maintenanceMultiplier',
-            value: penaltyValue,
-            name: 'Temperature penalty'
-          });
+          const colonyCosts = colonies[id].cost?.colony;
+          if (!colonyCosts) continue;
+          for (const resource in colonyCosts) {
+            if (resource === 'research') continue;
+            addEffect({
+              effectId: `temperatureMaintenancePenalty-${resource}`,
+              target: 'colony',
+              targetId: id,
+              type: 'maintenanceCostMultiplier',
+              resourceCategory: 'colony',
+              resourceId: resource,
+              value: penaltyValue,
+              name: 'Temperature penalty'
+            });
+          }
         }
       }
 

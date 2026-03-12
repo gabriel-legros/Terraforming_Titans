@@ -981,7 +981,13 @@ class Building extends EffectableEntity {
       const multiplier = this.getEffectiveMaintenanceCostMultiplier('colony', resource);
       const resourceData = resources?.colony?.[resource];
       const resourceMultiplier = resourceData && resourceData.maintenanceMultiplier !== undefined ? resourceData.maintenanceMultiplier : 1;
-      maintenanceCost[resource] = resourceCost * maintenanceFraction * this.maintenanceFactor * multiplier * resourceMultiplier * maintenanceMultiplier;
+      maintenanceCost[resource] =
+        resourceCost *
+        maintenanceFraction *
+        this.maintenanceFactor *
+        multiplier *
+        resourceMultiplier *
+        maintenanceMultiplier;
     }
     if (cache) {
       cache.maintenanceCost = maintenanceCost;
@@ -997,7 +1003,7 @@ class Building extends EffectableEntity {
       for (const resource in effectiveCost[category]) {
         const resObj = resources[category][resource];
         const cap = resObj.cap || 0;
-        const reserve = (reservePercent / 100) * cap;
+        const reserve = Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
         const prioritizedReserve = additionalReserves?.[category]?.[resource] || 0;
         if (resObj.value - reserve - prioritizedReserve < effectiveCost[category][resource]) {
           return false;
@@ -1089,7 +1095,7 @@ class Building extends EffectableEntity {
       for (const resource in costObj[category]) {
         const resObj = resources[category][resource];
         const cap = resObj.cap || 0;
-        const reserve = (reservePercent / 100) * cap;
+        const reserve = Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
         const prioritizedReserve = additionalReserves?.[category]?.[resource] || 0;
         const available = Math.max(resObj.value - reserve - prioritizedReserve, 0);
         const costPerUnit = costObj[category][resource];

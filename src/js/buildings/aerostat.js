@@ -13,6 +13,7 @@ const AEROSTAT_MINIMUM_OPERATIONAL_LIFT =
 const AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ?? 50;
 const AEROSTAT_MAX_LAND_SHARE = 0.25;
+const AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP = 100;
 const AEROSTAT_BUOYANCY_NOTES =
   'Aerostats are immune to the pressure penalty and have reduced temperature maintenance penalty.  Their own maintenance always uses at least the dry-adiabatic 1 atm temperature floor.  Aerostats require additional components, electronics and lift, and form small communities that allow the use of factories.  Colony researches that normally unlock new colony types will also improve aerostats comfort and enable electronics/androids consumption.  Aerostats need at least 50 kPa of ambient pressure to stay buoyant.  When lift fails, active aerostats can land as Research Outposts if sufficient land remains.';
 const AEROSTAT_LAND_LIMIT_TOOLTIP =
@@ -47,6 +48,11 @@ class Aerostat extends BaseColony {
     this.buoyancyNotes = AEROSTAT_BUOYANCY_NOTES;
     this.landAsResearchOutpost = true;
     this.androidCapacityShare = 0;
+    this.aerostats_collision_avoidance = false;
+  }
+
+  hasCollisionAvoidance() {
+    return !!this.aerostats_collision_avoidance;
   }
 
   getAndroidCapacityShare() {
@@ -108,16 +114,66 @@ class Aerostat extends BaseColony {
   }
 
   getBuildLimit() {
-    return this._getBuildLimit();
+    const limit = this._getBuildLimit();
+    if (limit <= 0) {
+      return 0;
+    }
+    return this.hasCollisionAvoidance() ? Infinity : limit;
   }
 
   _getRemainingBuildCapacity() {
-    const limit = this._getBuildLimit();
+    const limit = this.getBuildLimit();
     if (limit <= 0) {
       return 0;
     }
 
     return Math.max(0, limit - this.count);
+  }
+
+  getCollisionAvoidanceResearchSurcharge(buildCount = 1) {
+    const normalizedBuildCount = Math.max(0, Math.floor(buildCount));
+    if (!this.hasCollisionAvoidance() || normalizedBuildCount <= 0) {
+      return 0;
+    }
+
+    const baseLimit = this._getBuildLimit();
+    if (baseLimit <= 0) {
+      return 0;
+    }
+
+    const startCount = Math.max(0, Math.floor(this.count || 0));
+    const endCount = startCount + normalizedBuildCount;
+    const overStart = Math.max(0, startCount - baseLimit);
+    const overEnd = Math.max(0, endCount - baseLimit);
+    const termCount = overEnd - overStart;
+
+    if (termCount <= 0) {
+      return 0;
+    }
+
+    const sum = ((overStart + (overEnd - 1)) * termCount) / 2;
+    return (sum * AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP) / baseLimit;
+  }
+
+  getBaseEffectiveCost(buildCount = 1) {
+    const effectiveCost = super.getBaseEffectiveCost(buildCount);
+    const surcharge = this.getCollisionAvoidanceResearchSurcharge(buildCount);
+
+    if (surcharge <= 0) {
+      return effectiveCost;
+    }
+
+    const researchMultiplier = this.getEffectiveCostMultiplier(
+      'colony',
+      'research'
+    );
+    if (!effectiveCost.colony) {
+      effectiveCost.colony = {};
+    }
+    effectiveCost.colony.research =
+      (effectiveCost.colony.research || 0) + surcharge * researchMultiplier;
+
+    return effectiveCost;
   }
 
   build(buildCount = 1, activate = true) {
@@ -132,7 +188,7 @@ class Aerostat extends BaseColony {
       return false;
     }
 
-    const allowed = Math.min(buildCount, remaining);
+    const allowed = Math.min(Math.max(0, Math.floor(buildCount)), remaining);
     if (allowed <= 0 || typeof BaseColony.prototype.build !== 'function') {
       return false;
     }
@@ -141,8 +197,8 @@ class Aerostat extends BaseColony {
   }
 
   maxBuildable(reservePercent = 0, additionalReserves = null) {
-    const remaining = this._getRemainingBuildCapacity();
-    if (remaining <= 0) {
+    const buildLimit = this.getBuildLimit();
+    if (buildLimit <= 0) {
       return 0;
     }
 
@@ -150,16 +206,40 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    let baseMax = remaining;
-    if (typeof BaseColony.prototype.maxBuildable === 'function') {
-      baseMax = super.maxBuildable(reservePercent, additionalReserves);
+    if (!this.hasCollisionAvoidance()) {
+      const remaining = this._getRemainingBuildCapacity();
+      if (remaining <= 0) {
+        return 0;
+      }
+
+      let baseMax = remaining;
+      if (typeof BaseColony.prototype.maxBuildable === 'function') {
+        baseMax = super.maxBuildable(reservePercent, additionalReserves);
+      }
+
+      if (!Number.isFinite(baseMax)) {
+        return remaining;
+      }
+
+      return Math.max(0, Math.min(baseMax, remaining));
     }
 
-    if (!Number.isFinite(baseMax)) {
-      return remaining;
+    let high = super.maxBuildable(reservePercent, additionalReserves);
+    if (!Number.isFinite(high) || high <= 0) {
+      return 0;
     }
 
-    return Math.max(0, Math.min(baseMax, remaining));
+    let low = 0;
+    while (low < high) {
+      const mid = Math.floor((low + high + 1) / 2);
+      if (this.canAfford(mid, reservePercent, additionalReserves)) {
+        low = mid;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    return Math.max(0, low);
   }
 
   getBuoyancySummary() {
@@ -959,8 +1039,7 @@ function updateAerostatBuoyancySection(structure) {
   const liftAvailable =
     Number.isFinite(pressure) && pressure < minPressure ? null : lift;
 
-  const buildLimitRaw =
-    structure.getBuildLimit?.() ?? structure._getBuildLimit?.() ?? null;
+  const buildLimitRaw = structure._getBuildLimit?.() ?? null;
   const buildLimit = Number.isFinite(buildLimitRaw)
     ? Math.max(0, Math.floor(buildLimitRaw))
     : null;
@@ -1119,6 +1198,25 @@ function updateAerostatBuoyancySection(structure) {
         false,
         2
       )}.`;
+    }
+    if (structure.hasCollisionAvoidance?.()) {
+      const overCap = Math.max(0, (structure.count || 0) - (buildLimit || 0));
+      const nextSurcharge =
+        structure.getCollisionAvoidanceResearchSurcharge?.(1) || 0;
+      limitTitle +=
+        '\nCollision avoidance allows building above this base cap for extra research cost and maintenance.';
+      if (overCap > 0) {
+        limitTitle += `\nAerostats above base cap: ${formatNumber(
+          overCap,
+          false,
+          2
+        )}.`;
+      }
+      limitTitle += `\nCurrent surcharge per new aerostat: ${formatNumber(
+        nextSurcharge,
+        false,
+        2
+      )} research.`;
     }
     setTooltipText(ui.limitTooltip, limitTitle, ui, 'limitTooltipText');
   }

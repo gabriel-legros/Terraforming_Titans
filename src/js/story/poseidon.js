@@ -247,14 +247,22 @@ progressPoseidon.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
     ],
-    reward: []
+    reward: [
+      {
+        target: 'colony',
+        targetId: 'aerostat_colony',
+        type: 'booleanFlag',
+        flagId: 'aerostats_collision_avoidance',
+        value: true
+      }
+    ]
   },
   {
     id: 'poseidon.38.1',
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "Mary : 'Looks like we're almost there.  Keep going HOPE.'",
+    narrative: "Evelyn : 'Hey Mary...  I have some bad news.  I ran the math, and unless HOPE has some superalloy stashed somewhere, you may not have the industrial output to build this artificial crust in a reasonable time.'  \n Mary : 'No way!  It's that expensive?'  \n $RED$Prometheus : 'I have a solution.  Build more aerostats.'  \n Mary : 'Obviously if we could we would... but the collision risk...'  \n $RED$Prometheus : 'All you have to do is catalogue and track all aerostats.  Then some not-so-simple algorithms for collision avoidance should do the trick.'  \n Mary : 'Catalogue and track?  Wait.  WAS THAT WHAT THAT TEST ON TARTARUS WAS ABOUT?'  \n $RED$Prometheus : 'The child's test yes.  As you know the child failed.  However...  if humanity works hard enough on it you can pull it off.'  \n Mary : '...  We can try.'  \n System Message : Additional aerostats may now be built for an additional research cost.",
     prerequisites: ['poseidon.38.0'],
     objectives: [
       { type: 'project', projectId: 'poseidon_warp_shaft', repeatCount: 1 }
@@ -295,7 +303,6 @@ progressPoseidon.chapters.push(
     ].join(' \n '),
     prerequisites: ['poseidon.38.1'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
     ],
     reward: []
   },
@@ -307,7 +314,10 @@ progressPoseidon.chapters.push(
     narrative: "Mary : 'Did we do it?'  \n $RED$Prometheus 'Yes.  The asteroid launcher superweapon will properly self-destruct.  I hope Prometheus has escaped unscathed.'  \n Mary : 'Phew.  No word of this to anyone.  If Pete hears about it...'  \n $ORANGE$Epimetheus : 'Unfortunate!  This one has failed!  Request forgiveness from gorgeous one.'  \n HOPE : 'Suggesting next date location...  Sector R5-29, Planet Zeus.  Please come prepared with better diving capabilities.'  \n $ORANGE$Epimetheus : 'Of course!  Will see you there.  Must prepare!'  \n Mary : 'HOPE... I am sure you are thinking of doing something good but... you can't do something like that.  If you take control of one of these weapons, you paint a massive target on humanity.  Even worse...  if you end up using it...  that would be terrible.  We've worked so hard on your image...  Don't throw it away!  Let's finish the job here and go.'",
     prerequisites: ['poseidon.38.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000_000 }
+      {
+      type: 'terraforming',
+      terraformingParameter : 'complete',
+    }
     ],
     reward: []
   },
@@ -319,10 +329,6 @@ progressPoseidon.chapters.push(
     narrative: "$WGC_TEAM1_LEADER$ : 'Miss Hopkins.  Since you asked me about this before...  I must inform you that Ghost has been stripped of his rank, and is currently sitting in an imperial prison while awaiting his execution.'  \n Mary : 'Oh!  Hmmmm thank you.'",
     prerequisites: ['poseidon.38.3'],
     objectives: [
-      {
-      type: 'terraforming',
-      terraformingParameter : 'complete',
-    }
     ],
     reward: []
   },
