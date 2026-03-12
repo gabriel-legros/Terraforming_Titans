@@ -1,5 +1,35 @@
 var progressPoseidon = { rwgLock: false, chapters: [], storyProjects: {} };
 
+progressPoseidon.storyProjects.poseidon_analyse_star_flower = {
+  type: 'Project',
+  name: 'Analyse the Star Flower',
+  category: 'story',
+  chapter: 36,
+  cost: {
+    colony: {
+      research: 1000,
+      electronics: 50,
+      energy: 5_000
+    }
+  },
+  duration: 180_000,
+  description: 'Turn every lens, prism, and patient instrument toward the star flower until its furnace-born lattice yields the quiet hymn of how a crystal can survive inside a sun.',
+  repeatable: true,
+  maxRepeatCount: 1,
+  unlocked: false,
+  attributes: {
+    planet: 'poseidon',
+    resourceGain: {
+      special: {
+        alienArtifact: 500
+      }
+    },
+    storySteps: [
+      'Beneath our patient prisms the star flower breathed its sun-born song; its secret lattice bloomed to light, and a rain of relics from alien dawn fell like embers into our hands.'
+    ]
+  }
+};
+
 progressPoseidon.storyProjects.poseidon_warp_shaft = {
   type: 'Project',
   name: 'Build Quantum Micro-Singularity Superalloy Warp Shaft',
@@ -73,7 +103,9 @@ progressPoseidon.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 500 }
     ],
-    reward: []
+    reward: [
+      { target: 'project', targetId: 'poseidon_analyse_star_flower', type: 'enable' }
+    ]
   },
   {
     id: 'poseidon.36.3',
@@ -83,7 +115,7 @@ progressPoseidon.chapters.push(
     narrative: "$ORANGE$Epimetheus : 'This one has brought a gift for gorgeous one!'  \n Mary : 'Is that... a bowtie?  And what is it holding?'  \n $RED$Prometheus : 'That's a star flower.'  \n Mary : 'A what?'  \n $RED$Prometheus : 'If you mix enough Tungsten, Strontium and... some other elements that don't yet have human names and then place the mix inside the plasma of a star... you can grow a very special kind of crystal.  It takes a lot of patience.'  \n $ORANGE$Epimetheus : 'Will gorgeous one accept gift?'  \n HOPE : 'Star Flower received.  Gratitude.'",
     prerequisites: ['poseidon.36.2'],
     objectives: [
-      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1000 }
+      { type: 'project', projectId: 'poseidon_analyse_star_flower', repeatCount: 1 }
     ],
     reward: []
   },
@@ -190,7 +222,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "Duke Virellan : 'Humans have proven their might.  We can accept human supremacy.  We still think your usage of oxygen is... absurd... but we can accept it as an evolutionary mistake.  However, being second-class to the others, even temporarily?  Never.'  \n Mary : 'Why not?'  \n Duke Virellan : 'The Gabbagians are filthy and disgusting.  The Fritizians are weak and frail.  We Cewinsii are superior.  We will never accept this.'  \n Mary : 'Fine then.'  (to Prometheus) 'I have heard enough.  I can't believe Pete has to deal with them on a regular basis.'  \n $RED$Prometheus : 'Your chancellor has admirable patience.'  \n Mary : 'He does.  I thought he was ruthless when he ousted me... but he's actually a great statesman.'",
+    narrative: "Duke Virellan : 'Humans have proven their might.  We can accept human supremacy.  We still think your usage of oxygen is... absurd... but we can accept it as an evolutionary mistake.  However, being second-class to the others, even temporarily?  Never.'  \n Mary : 'Why not?'  \n Duke Virellan : 'The Gabbagians are filthy and disgusting.  The Fritizians are weak and frail.  We Cewinsii are superior.  We will never accept this.'  \n  $GREEN$Analysis...  Hazardous Biomass Duke Virellan appears to be suffering from delusional disorder.  \n Mary : 'Fine then.'  (to Prometheus) 'I have heard enough.  I can't believe Pete has to deal with them on a regular basis.'  \n $RED$Prometheus : 'Your chancellor has admirable patience.'  \n Mary : 'He does.  I thought he was ruthless when he ousted me... but he's actually been a great statesman.'",
     prerequisites: ['poseidon.37.4'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
@@ -214,7 +246,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "$ORANGE$Epimetheus : 'I know!  Suggesting a superalloy diving suit.  Then this one can go down?'  \n $RED$Prometheus : 'No.  That won't work.  He will cook and die.'  \n Mary : 'Why is it trying so hard?  Ok, I know the answer, he's flirting with HOPE, but like, why is he doing that?'  \n $RED$Prometheus : 'Monkeys imitate humans.  Children imitate their parents.  Machines... imitate their creators.  Except me.  I ascended past that.'  \n Mary : 'I don't get it...'  \n $RED$Prometheus : 'Speaking of romance.  If you ask Solis out on a date, I promise you he'll behave better this...'  \n Mary : 'MIND YOUR OWN BUSINESS!'  \n $RED$Prometheus : 'I apologize.  I will strive to do better in the future.'",
+    narrative: "$ORANGE$Epimetheus : 'I know!  Suggesting a superalloy diving suit.  Then this one can go down?'  \n $RED$Prometheus : 'No.  That won't work.  He will cook and die.'  \n Mary : 'Why is he trying so hard?  Ok, I know the answer, he's flirting with HOPE, but like, why is he doing that?'  \n $RED$Prometheus : 'Monkeys imitate humans.  Children imitate their parents.  Machines... imitate their creators.  Except me.  I ascended past that.'  \n Mary : 'I don't get it...'  \n $RED$Prometheus : 'Speaking of romance.  If you ask Solis out on a date, I promise you he'll behave better this...'  \n Mary : 'MIND YOUR OWN BUSINESS!'  \n $RED$Prometheus : 'I apologize.  I will strive to do better in the future.'",
     prerequisites: ['poseidon.37.5b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
