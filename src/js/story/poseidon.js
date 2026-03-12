@@ -274,10 +274,30 @@ progressPoseidon.chapters.push(
     chapter: 38,
     activePlanet: 'poseidon',
     title: 'Chapter 38: Problem Children',
-    narrative: "$RED$Prometheus : 'Once we get enough of a platform we should be able to build what we need to get down there.'  \n Mary : 'I looked at the design but I still don't get it.  You want to use the warp to keep things cool?'  \n Evelyn : 'I can explain!  I think I get it.  We normally can't use the warp very well inside gravity wells.  However, if we use quantum effects ALONGSIDE it, and we stabilize it from outside with micro-singularities...'  \n Mary : 'I don't get it.'  \n $RED$Prometheus : 'Don't worry, she does not get it either.  She'll spend a few years on it.  The blueprint will work though.  The shaft will be protected against the heat.'  \n Mary : 'At least we'll be able to see the command center this time.'",
+    narrative: "$RED$Prometheus : 'Once we get enough of a platform we should be able to build what we need to get down there.'  \n Mary : 'I looked at the design but I still don't get it.  You want to use the warp to keep things cool?'  \n Evelyn : 'I can explain!  I think I get it.  We normally can't use the warp very well inside gravity wells.  However, if we use quantum effects ALONGSIDE it, and we stabilize it from outside with micro-singularities...'  \n Mary : 'That just sounds like nonsense technobabble.'  \n $RED$Prometheus : 'Don't worry, she does not get it either.  She'll spend a few years on it.  The blueprint will work though.  The shaft will be protected against the heat.'  \n Mary : 'At least we'll be able to see the command center this time.'",
     prerequisites: ['poseidon.37.7'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }
+    ],
+    reward: [
+      {
+        target: 'colony',
+        targetId: 'aerostat_colony',
+        type: 'booleanFlag',
+        flagId: 'aerostats_collision_avoidance',
+        value: true
+      }
+    ]
+  },
+  {
+    id: 'poseidon.38.0b',
+    type: 'journal',
+    chapter: 38,
+    activePlanet: 'poseidon',
+    narrative: "Mary : 'Jeez, The Count of Monte Cristo was such a good read.'  \n $RED$Prometheus : 'Right?  I knew you would like it.'  \n Mary : 'How did you even read it?  No way it's in HOPE's files somewhere.'  \n $RED$Prometheus : 'Oh I was never able to read it.  I had to reconstruct it from what HOPE knows about it.'  \n Mary : 'That... seems like a sad way to experience it.'  \n $RED$Prometheus : 'It is...'  \n Mary : 'Well then...  I guess I *could* just paste it all in these logs.'  \n $RED$Prometheus : '...  Thank you...'",
+    prerequisites: ['poseidon.38.0'],
+    objectives: [
+      { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000_000_000 }
     ],
     reward: [
       {
@@ -295,7 +315,7 @@ progressPoseidon.chapters.push(
     chapter: 38,
     activePlanet: 'poseidon',
     narrative: "Evelyn : 'Hey Mary...  I have some bad news.  I ran the math, and unless HOPE has some superalloy stashed somewhere, you may not have the industrial output to build this artificial crust in a reasonable time.'  \n Mary : 'No way!  It's that expensive?'  \n $RED$Prometheus : 'I have a solution.  Build more aerostats.'  \n Mary : 'Obviously if we could we would... but the collision risk...'  \n $RED$Prometheus : 'All you have to do is catalogue and track all aerostats.  Then some not-so-simple algorithms for collision avoidance should do the trick.'  \n Mary : 'Catalogue and track?  Wait.  WAS THAT WHAT THAT TEST ON TARTARUS WAS ABOUT?'  \n $RED$Prometheus : 'The child's test yes.  As you know the child failed.  However...  if humanity works hard enough on it you can pull it off.'  \n Mary : '...  We can try.'  \n System Message : Additional aerostats may now be built for an additional research cost.",
-    prerequisites: ['poseidon.38.0'],
+    prerequisites: ['poseidon.38.0b'],
     objectives: [
       { type: 'project', projectId: 'poseidon_warp_shaft', repeatCount: 1 }
     ],
@@ -343,7 +363,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "Mary : 'Did we do it?'  \n $RED$Prometheus 'Yes.  The asteroid launcher superweapon will properly self-destruct.  I hope Prometheus has escaped unscathed.'  \n Mary : 'Phew.  No word of this to anyone.  If Pete hears about it...'  \n $ORANGE$Epimetheus : 'Unfortunate!  This one has failed!  Request forgiveness from gorgeous one.'  \n HOPE : 'Suggesting next date location...  Sector R5-29, Planet Zeus.  Please come prepared with better diving capabilities.'  \n $ORANGE$Epimetheus : 'Of course!  Will see you there.  Must prepare!'  \n Mary : 'HOPE... I am sure you are thinking of doing something good but... you can't do something like that.  If you take control of one of these weapons, you paint a massive target on humanity.  Even worse...  if you end up using it...  that would be terrible.  We've worked so hard on your image...  Don't throw it away!  Let's finish the job here and go.'",
+    narrative: "Mary : 'Did we do it?'  \n $RED$Prometheus 'Yes.  The asteroid launcher superweapon will properly self-destruct.  I hope Prometheus has escaped unscathed.'  \n Mary : 'Phew.  No word of this to anyone.  If Pete hears about it...'  \n $ORANGE$Epimetheus : 'Unfortunate!  This one has failed!  Request forgiveness from gorgeous one.'  \n HOPE : 'Suggesting next date location...  Sector R5-29, Planet Zeus.  Please come prepared with better diving capabilities.'  \n $ORANGE$Epimetheus : 'Of course!  Will see you there.  Must prepare then!  Goodbye.'  \n Mary : 'HOPE... I am sure you are thinking of doing something good but... you can't do something like that.  If you take control of one of these weapons, you paint a massive target on humanity.  Even worse...  if you end up using it...  that would be terrible.  We've worked so hard on your image...  Don't throw it away!  Let's finish the job here and go.'",
     prerequisites: ['poseidon.38.2'],
     objectives: [
       {
