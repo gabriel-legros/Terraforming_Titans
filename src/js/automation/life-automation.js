@@ -431,7 +431,6 @@ class LifeAutomation {
     this.applyAutoPurchases(preset);
     this.applyAutoDesign(preset);
     queueAutomationUIRefresh();
-    updateAutomationUI();
   }
 
   applyAutoPurchases(preset) {
@@ -703,7 +702,6 @@ class LifeAutomation {
     document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
     lifeDesigner.confirmDesign();
     document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
-    updateLifeUI();
   }
 
   forceDeployDesign(presetId) {
@@ -728,7 +726,6 @@ class LifeAutomation {
     document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
     lifeDesigner.confirmDesign();
     document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
-    updateLifeUI();
   }
 
   saveState() {

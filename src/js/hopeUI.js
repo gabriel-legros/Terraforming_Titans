@@ -8,6 +8,23 @@ if (typeof SubtabManager === 'undefined') {
 let hopeSubtabManager = null;
 let awakeningSubtabAlert = false;
 
+function getActiveHopeSubtabId() {
+    if (hopeSubtabManager && typeof hopeSubtabManager.getActiveId === 'function') {
+        const activeId = hopeSubtabManager.getActiveId();
+        if (activeId) {
+            return activeId;
+        }
+    }
+    if (typeof document === 'undefined' || !document.querySelector) {
+        return 'awakening-hope';
+    }
+    const activeContent = document.querySelector('.hope-subtab-content.active');
+    if (activeContent && activeContent.id) {
+        return activeContent.id;
+    }
+    return 'awakening-hope';
+}
+
 function setAwakeningSubtabAlert(show) {
     const shouldShow = !!show;
     if (awakeningSubtabAlert === shouldShow) return;
@@ -101,21 +118,32 @@ function updateHopeUI() {
     if (typeof updateSolisVisibility === 'function') {
         updateSolisVisibility();
     }
-    if (typeof updateSkillTreeUI === 'function') {
-        updateSkillTreeUI();
-    }
-    if (typeof updateSolisUI === 'function') {
-        updateSolisUI();
-    }
     if (typeof updateWGCVisibility === 'function') {
         updateWGCVisibility();
     }
-    if (typeof updateWGCUI === 'function') {
-        updateWGCUI();
+    if (typeof PatienceUI !== 'undefined' && PatienceUI && typeof PatienceUI.updateSubtabVisibility === 'function') {
+        PatienceUI.updateSubtabVisibility();
     }
-    if (typeof updatePatienceUI === 'function') {
-        updatePatienceUI();
+
+    const activeSubtabId = getActiveHopeSubtabId();
+    if (activeSubtabId === 'awakening-hope') {
+        if (typeof updateSkillTreeUI === 'function') {
+            updateSkillTreeUI();
+        }
+    } else if (activeSubtabId === 'solis-hope') {
+        if (typeof updateSolisUI === 'function') {
+            updateSolisUI();
+        }
+    } else if (activeSubtabId === 'wgc-hope') {
+        if (typeof updateWGCUI === 'function') {
+            updateWGCUI();
+        }
+    } else if (activeSubtabId === 'patience-hope') {
+        if (typeof updatePatienceUI === 'function') {
+            updatePatienceUI();
+        }
+    } else if (activeSubtabId === 'automation-hope') {
+        updateAutomationUI();
     }
-    updateAutomationUI();
     updateHopeAlert();
 }

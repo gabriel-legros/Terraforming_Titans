@@ -8,6 +8,7 @@ const skillButtonEls = {};
 let skillResizeObserver = null;
 let skillRedrawQueued = false;
 let awakeningAlertPending = false;
+let skillWindowResizeBound = false;
 
 function queueSkillRedraw() {
     if (skillRedrawQueued) return;
@@ -210,7 +211,10 @@ function createSkillTree() {
 
     // Also handle window resize (covers browser zoom changes)
     try {
-        window.addEventListener('resize', queueSkillRedraw);
+        if (!skillWindowResizeBound) {
+            window.addEventListener('resize', queueSkillRedraw);
+            skillWindowResizeBound = true;
+        }
     } catch (e) { /* no-op */ }
 
     queueSkillRedraw();

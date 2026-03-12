@@ -592,13 +592,20 @@ function updateAutomationVisibility() {
 
 function updateAutomationUI() {
   if (!automationUIStale) return;
-  automationUIStale = false;
   cacheAutomationElements();
-  updateShipAutomationUI();
-  updateLifeAutomationUI();
-  updateBuildingsAutomationUI();
-  updateProjectsAutomationUI();
-  if (!updateSidebarAutomationUI()) {
+  const panelActive = !!(automationElements.content && automationElements.content.classList.contains('active'));
+  const sidebarActive = typeof sidebarAutomationMode !== 'undefined' && sidebarAutomationMode === true;
+  if (!panelActive && !sidebarActive) {
+    return;
+  }
+  automationUIStale = false;
+  if (panelActive) {
+    updateShipAutomationUI();
+    updateLifeAutomationUI();
+    updateBuildingsAutomationUI();
+    updateProjectsAutomationUI();
+  }
+  if (sidebarActive && !updateSidebarAutomationUI()) {
     automationUIStale = true;
   }
 }
