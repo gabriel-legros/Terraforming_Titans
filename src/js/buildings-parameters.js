@@ -391,6 +391,7 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
+    aerostatReduction: 0.0002,
     automationBuildingsDropDown: ['superconductorFactory'],
     unlocked: false,
     defaultRecipe: 'water',

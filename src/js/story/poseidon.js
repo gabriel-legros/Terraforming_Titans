@@ -19,7 +19,7 @@ progressPoseidon.storyProjects.poseidon_warp_shaft = {
       antimatter: 100_000
     }
   },
-  duration: 1_800_000,
+  duration: 300_000,
   description: 'Assemble the quantum-stabilized superalloy warp shaft needed to open a survivable descent path through Poseidon\'s magma ocean.',
   repeatable: true,
   maxRepeatCount: 1,
@@ -284,20 +284,20 @@ progressPoseidon.chapters.push(
     // Red-only Prometheus message: "EPI SHAFT / HACK WEAPON / BOMB NOW"
     // Intended reading: "Epimetheus is going down the shaft to hack the weapon. Bomb now."
     narrative: [
-      "$ORANGE$Epimetheus : '53756767657374696E6720616761696E20746F206861636B20776561706F6E207965733F202054686973206F6E652063616E20676F20646F776E20736861667420616E64206163742061732072656C61792E'",
-      "HOPE : '50726F63657373696E672073756767657374696F6E2E2E2E2020417070726F7665642E'",
+      "$ORANGE$Epimetheus : '53756767657374696E67 20 616761696E 20 746F 20 6861636B 20 776561706F6E 20 7965733F 20 20 54686973 20 6F6E65 20 63616E 20 676F 20 646F776E 20 7368616674 20 616E64 20 616374 20 6173 20 72656C61792E'",
+      "HOPE : '50726F63657373696E67 20 73756767657374696F6E2E2E2E 20 20 417070726F7665642E'",
       "$RED$Prometheus : 'No!  Stop right there you fools!'",
-      "$ORANGE$Epimetheus : '47726561742120204F6E6365206163636F6D706C69736865642077696C6C207472616E7366657220636F6E74726F6C206F6620776561706F6E20746F20676F7267656F7573206F6E652E2020506C65617365206F70656E2073686166743F'",
-      "HOPE : '50726F63656564696E672E204F70656E696E6720746865726D616C207061746820616E6420636F6D6D616E642061636365737320666F72204570696D6574686575732E'",
+      "$ORANGE$Epimetheus : '477265617421 20 20 4F6E6365 20 6163636F6D706C6973686564 20 77696C6C 20 7472616E73666572 20 636F6E74726F6C 20 6F66 20 776561706F6E 20 746F 20 676F7267656F7573 20 6F6E652E 20 20 506C65617365 20 6F70656E 20 73686166743F'",
+      "HOPE : '50726F63656564696E672E 20 4F70656E696E67 20 746865726D616C 20 70617468 20 616E64 20 636F6D6D616E64 20 616363657373 20 666F72 20 4570696D6574686575732E'",
       "$RED$Prometheus : 'Mary!  Are you asleep?  Wake up!'",
-      "$ORANGE$Epimetheus : '50726F63656564696E6720646F776E20736861667420617320717569636B6C7920617320706F737369626C652E2020506C656173652070726570617265206861636B20636F6D6D616E64732E'",
-      "HOPE : '44657363656E7420636F6E6669726D65642E20466F7277617264696E67206861636B20636F6D6D616E64732E'",
+      "$ORANGE$Epimetheus : '50726F63656564696E67 20 646F776E 20 7368616674 20 6173 20 717569636B6C79 20 6173 20 706F737369626C652E 20 20 506C65617365 20 70726570617265 20 6861636B 20 636F6D6D616E64732E'",
+      "HOPE : '44657363656E74 20 636F6E6669726D65642E 20 466F7277617264696E67 20 6861636B 20 636F6D6D616E64732E'",
       "Mary : 'Huh?  There's a lot of gibberish on screen.'",
-      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">9A4CC17E</span><span class=\"orange-text\">0F22B8D1</span><span class=\"diagnostic-text\">77AA13CE </span><span class=\"prometheus-text\">EPI </span><span class=\"journal-white-text\">A03D6F91</span><span class=\"orange-text\">CC204B7A</span><span class=\"diagnostic-text\">51EF9088 </span><span class=\"prometheus-text\">SHAFT</span><span class=\"prometheus-text\">'</span>",
+      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">9A4CC17E </span><span class=\"orange-text\">0F22B8D1 </span><span class=\"diagnostic-text\">77AA13CE </span><span class=\"prometheus-text\">EPI </span><span class=\"journal-white-text\">A03D6F91 </span><span class=\"orange-text\">CC204B7A </span><span class=\"diagnostic-text\">51EF9088 </span><span class=\"prometheus-text\">SHAFT</span><span class=\"prometheus-text\">'</span>",
       "Mary : 'Huh?'",
-      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">11D07C3B</span><span class=\"orange-text\">9E2A44F6</span><span class=\"diagnostic-text\">6B8102AD </span><span class=\"prometheus-text\">HACK </span><span class=\"journal-white-text\">F04C8A71</span><span class=\"orange-text\">2DD95E10</span><span class=\"diagnostic-text\">73C4AB09 </span><span class=\"prometheus-text\">WEAPON</span><span class=\"prometheus-text\">'</span>",
+      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">11D07C3B </span><span class=\"orange-text\">9E2A44F6 </span><span class=\"diagnostic-text\">6B8102AD </span><span class=\"prometheus-text\">HACK </span><span class=\"journal-white-text\">F04C8A71 </span><span class=\"orange-text\">2DD95E10 </span><span class=\"diagnostic-text\">73C4AB09 </span><span class=\"prometheus-text\">WEAPON</span><span class=\"prometheus-text\">'</span>",
       "Mary : 'HOPE!  Stop that!  Dangit!'",
-      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">4C1A92EF</span><span class=\"orange-text\">8B770D34</span><span class=\"diagnostic-text\">5FA0C221 </span><span class=\"prometheus-text\">BOMB </span><span class=\"journal-white-text\">D08E31BC</span><span class=\"orange-text\">67F14AA2</span><span class=\"diagnostic-text\">9C05EE18 </span><span class=\"prometheus-text\">NOW</span><span class=\"prometheus-text\">'</span>",
+      "<span class=\"prometheus-text\">Prometheus : </span><span class=\"prometheus-text\">'</span><span class=\"journal-white-text\">4C1A92EF </span><span class=\"orange-text\">8B770D34 </span><span class=\"diagnostic-text\">5FA0C221 </span><span class=\"prometheus-text\">BOMB </span><span class=\"journal-white-text\">D08E31BC </span><span class=\"orange-text\">67F14AA2 </span><span class=\"diagnostic-text\">9C05EE18 </span><span class=\"prometheus-text\">NOW</span><span class=\"prometheus-text\">'</span>",
       "Mary : 'Got it!  Feroza, drop 10 bombs... no... 50 down the shaft RIGHT NOW!'",
       "Feroza : 'Uuuuh yes Ma'am.  Working on it.'"
     ].join(' \n '),
@@ -339,6 +339,17 @@ progressPoseidon.chapters.push(
     activePlanet: 'poseidon',
     narrative: "Mary : (in deep thought)'...' \n $RED$Prometheus : 'Tell Feroza to take the fleet to sector R1-02.'  \n Mary : 'What?  Why?'  \n $RED$Prometheus : 'That's where the high-security prison world I designed is.  They will be holding Ghost there until his execution.  We'll need HOPE to bust him out.'  \n Mary : 'But...  how do you know I wanted...'  \n $RED$Prometheus : 'I am here to help.  On Umbra, Ghost went easy on you two out of curiousity.  On Gabbag, Ghost spared you and HOPE despite the initial resolve to annihilate you.  You want to pay back this debt.'  \n Mary : 'But it's imperial core territory!  It's dangerous.  We should be going to Zeus.  There's only one weapon left!  We could be risking all of humanity here, just to make me feel better.'  \n $RED$Prometheus : 'Yes.  You will be risking all of humanity, HOPE and even myself.  Deep down, you know what you must do.'  \n Mary : '...  Feroza... focus your efforts toward sector R1-02.'  \n Feroza : 'Ma'am?  That is imperial core territory.'  \n Mary : 'I know.'  \n $RED$Prometheus : 'Well done Ma...  (pause) Mary.'",
     prerequisites: ['poseidon.38.4'],
+    objectives: [
+    ],
+    reward: []
+  },
+  {
+    id: 'poseidon.38.6',
+    type: 'journal',
+    chapter: 38,
+    activePlanet: 'poseidon',
+    narrative: "(Word 13 not implemented yet)",
+    prerequisites: ['poseidon.38.5'],
     objectives: [
     ],
     reward: []

@@ -130,9 +130,9 @@ class Aerostat extends BaseColony {
     return Math.max(0, limit - this.count);
   }
 
-  getCollisionAvoidanceResearchSurcharge(buildCount = 1) {
-    const normalizedBuildCount = Math.max(0, Math.floor(buildCount));
-    if (!this.hasCollisionAvoidance() || normalizedBuildCount <= 0) {
+  getCollisionAvoidanceResearchSurchargeForCount(count) {
+    const normalizedCount = Math.max(0, Math.floor(count));
+    if (!this.hasCollisionAvoidance() || normalizedCount <= 0) {
       return 0;
     }
 
@@ -141,18 +141,38 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    const startCount = Math.max(0, Math.floor(this.count || 0));
-    const endCount = startCount + normalizedBuildCount;
-    const overStart = Math.max(0, startCount - baseLimit);
-    const overEnd = Math.max(0, endCount - baseLimit);
-    const termCount = overEnd - overStart;
-
-    if (termCount <= 0) {
+    const overCount = Math.max(0, normalizedCount - baseLimit);
+    if (overCount <= 0) {
       return 0;
     }
 
-    const sum = ((overStart + (overEnd - 1)) * termCount) / 2;
-    return (sum * AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP) / baseLimit;
+    return (
+      overCount *
+      (overCount - 1) *
+      AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP
+    ) / (2 * baseLimit);
+  }
+
+  getCollisionAvoidanceResearchSurcharge(buildCount = 1) {
+    const normalizedBuildCount = Math.max(0, Math.floor(buildCount));
+    if (!this.hasCollisionAvoidance() || normalizedBuildCount <= 0) {
+      return 0;
+    }
+
+    const startCount = Math.max(0, Math.floor(this.count || 0));
+    const endCount = startCount + normalizedBuildCount;
+    return (
+      this.getCollisionAvoidanceResearchSurchargeForCount(endCount) -
+      this.getCollisionAvoidanceResearchSurchargeForCount(startCount)
+    );
+  }
+
+  getCollisionAvoidanceNextUnitResearchSurchargeForCount(count) {
+    const normalizedCount = Math.max(0, Math.floor(count));
+    return (
+      this.getCollisionAvoidanceResearchSurchargeForCount(normalizedCount + 1) -
+      this.getCollisionAvoidanceResearchSurchargeForCount(normalizedCount)
+    );
   }
 
   getBaseEffectiveCost(buildCount = 1) {
@@ -174,6 +194,43 @@ class Aerostat extends BaseColony {
       (effectiveCost.colony.research || 0) + surcharge * researchMultiplier;
 
     return effectiveCost;
+  }
+
+  calculateMaintenanceCost() {
+    const maintenanceCost = super.calculateMaintenanceCost();
+    const activeCount = Math.max(0, Math.floor(this.active || 0));
+    const researchMultiplier = this.getEffectiveCostMultiplier('colony', 'research');
+    const baseResearchCost = (this.cost?.colony?.research || 0) * researchMultiplier;
+    const nextUnitSurcharge =
+      this.getCollisionAvoidanceNextUnitResearchSurchargeForCount(
+      activeCount
+    );
+    const effectiveResearchCost =
+      activeCount > 0 ? baseResearchCost + nextUnitSurcharge : 0;
+
+    if (effectiveResearchCost <= 0) {
+      delete maintenanceCost.research;
+      return maintenanceCost;
+    }
+
+    const multiplier = this.getEffectiveMaintenanceCostMultiplier(
+      'colony',
+      'research'
+    );
+    const resourceMultiplier =
+      resources?.colony?.research?.maintenanceMultiplier !== undefined
+        ? resources.colony.research.maintenanceMultiplier
+        : 1;
+
+    maintenanceCost.research =
+      effectiveResearchCost *
+      maintenanceFraction *
+      this.maintenanceFactor *
+      multiplier *
+      resourceMultiplier *
+      this.getEffectiveMaintenanceMultiplier();
+
+    return maintenanceCost;
   }
 
   build(buildCount = 1, activate = true) {
