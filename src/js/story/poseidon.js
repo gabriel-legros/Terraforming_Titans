@@ -7,12 +7,12 @@ progressPoseidon.storyProjects.poseidon_warp_shaft = {
   chapter: 37,
   cost: {
     colony: {
-      metal: 5_000_000_000_000_000,
+      metal: 500_000_000_000_000,
       components: 20_000_000_000_000,
       electronics: 2_000_000_000_000,
       superconductors: 2_000_000_000_000,
-      superalloys: 5_000_000_000_000,
-      energy: 1_000_000_000_000_000_000_000,
+      superalloys: 1_000_000_000_000,
+      energy: 1_000_000_000_000_000_000,
       research: 5_000_000_000_000
     },
     special: {
@@ -242,7 +242,7 @@ progressPoseidon.chapters.push(
     chapter: 38,
     activePlanet: 'poseidon',
     title: 'Chapter 38: Problem Children',
-    narrative: "$RED$Prometheus : 'Once we get enough of a platform we should be able to build what we need to get down there.'  \n Mary : 'I looked at the design but I still don't get it.  You want to use the warp to keep things cool?'  \n Evelyn : 'I can explain!  I think I get it.  We normally can't use the warp very well inside gravity wells.  However, if we use quantum effects ALONGSIDE it, and we stabilize it from outside with micro-singularities...'  \n Mary : 'I don't get it.'  \n Prometheus : 'Don't worry, she does not get it either.  She'll spend a few years on it.  The blueprint will work though.  The shaft will be protected against the heat.'  \n Mary : 'At least we'll be able to see the command center this time.'",
+    narrative: "$RED$Prometheus : 'Once we get enough of a platform we should be able to build what we need to get down there.'  \n Mary : 'I looked at the design but I still don't get it.  You want to use the warp to keep things cool?'  \n Evelyn : 'I can explain!  I think I get it.  We normally can't use the warp very well inside gravity wells.  However, if we use quantum effects ALONGSIDE it, and we stabilize it from outside with micro-singularities...'  \n Mary : 'I don't get it.'  \n $RED$Prometheus : 'Don't worry, she does not get it either.  She'll spend a few years on it.  The blueprint will work though.  The shaft will be protected against the heat.'  \n Mary : 'At least we'll be able to see the command center this time.'",
     prerequisites: ['poseidon.37.7'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 1_000_000_000 }

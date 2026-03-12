@@ -334,6 +334,17 @@ class Aerostat extends BaseColony {
     return ratio;
   }
 
+  getEffectiveResourceProductionMultiplier(category, resource) {
+    let multiplier = super.getEffectiveResourceProductionMultiplier(
+      category,
+      resource
+    );
+    if (category === 'colony' && resource === 'research') {
+      multiplier *= this.getColonistCapacityShare() / AEROSTAT_TOTAL_CAPACITY;
+    }
+    return multiplier;
+  }
+
   filterActivationChange(change) {
     if (!Number.isFinite(change)) {
       return 0;
