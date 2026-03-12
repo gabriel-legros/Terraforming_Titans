@@ -266,8 +266,8 @@ class GhgFactory extends Building {
               this.productivity = Math.min(targetProductivity, needed / maxProduction);
               return;
             } else {
-              // GHG recipe (warming): target lower boundary A when too cold
-              const targetTemp = A;
+              // GHG recipe (warming): target midpoint when correcting from below
+              const targetTemp = M;
               const required = solveRequiredAmount((added) => (
                 evaluateTemperature(
                   () => { res.value = originalAmount + added; },
@@ -376,8 +376,8 @@ class GhgFactory extends Building {
           }
         }
 
-        // Aim toward midpoint when correcting, maintain decay when inside range (handled above)
-        const targetTemp = (recipeKey === 'calcite') ? M : (reverse ? (recipeKey === 'ghg' ? B : A) : (recipeKey === 'ghg' ? A : B));
+        // Aim toward the midpoint when correcting, maintain decay when inside range (handled above)
+        const targetTemp = M;
         if (
           typeof terraforming.updateSurfaceTemperature === 'function' &&
           resources?.atmospheric?.[resourceName]
@@ -487,7 +487,7 @@ class GhgFactory extends Building {
     tempTooltip.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       tempTooltip,
-      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. Optical depth automation is GHG-only and never runs calcite aerosol mode. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
+      'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. When the trend leaves the band, both greenhouse gas and calcite correction aim for the midpoint, then stop again once the trend returns inside the band. Optical depth automation is GHG-only and never runs calcite aerosol mode. It may take some time to converge as the factories may need to build up/remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.'
     );
     tempControl.appendChild(tempTooltip);
 

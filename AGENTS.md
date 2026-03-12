@@ -193,6 +193,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - Life automation presets and as-needed modes
   - GHG/calcite and dust factory automation targeting
 - String numeric input handling standardized across major controls.
+- GHG factory temperature-band automation now aims both greenhouse gas and calcite corrections at the selected band midpoint, then idles again while the projected trend remains inside the band.
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
 - Space Storage reserve controls are now per-resource in the resource settings dialog, with reserve modes for absolute amount, `% of resource cap`, and `% of max storage`; the old global strategic reserve was removed.
 - Space Storage cap controls now include `By Weight`: amount/% caps are applied first, remaining storage is split proportionally across weighted resources, and resources with weight `0` or no cap setting get cap `0` while any weighted cap is used.
