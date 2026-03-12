@@ -140,6 +140,12 @@ class NanotechManager extends EffectableEntity {
     return `Nanocolony disabled: global average temperature is ${currentTemperature} ${unit}. All nanocolony functions shut down above ${cutoffTemperature} ${unit}.`;
   }
 
+  getTemperatureDisableLabel() {
+    const unit = getTemperatureUnit();
+    const cutoffTemperature = formatNumber(toDisplayTemperature(MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD), false, 2);
+    return `Disabled by heat (> ${cutoffTemperature} ${unit})`;
+  }
+
   resetActivityState() {
     this.currentEnergyConsumption = 0;
     this.currentSiliconConsumption = 0;
@@ -1086,7 +1092,7 @@ class NanotechManager extends EffectableEntity {
       if (C.timeToFullEl) {
         let timeToFullText = '--';
         if (temperatureDisabled) {
-          timeToFullText = 'Disabled by heat';
+          timeToFullText = this.getTemperatureDisableLabel();
         } else if (this.nanobots >= max) {
           timeToFullText = 'Full';
         } else if (actualRate > 0 && this.nanobots > 0 && max > this.nanobots) {

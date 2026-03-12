@@ -254,7 +254,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "Mary : 'Looks like we're almost there.  Keep going HOPE.  I am going to bed.'",
+    narrative: "Mary : 'Looks like we're almost there.  Keep going HOPE.'",
     prerequisites: ['poseidon.38.0'],
     objectives: [
       { type: 'project', projectId: 'poseidon_warp_shaft', repeatCount: 1 }
@@ -281,7 +281,7 @@ progressPoseidon.chapters.push(
       "$RED$Prometheus : 'No!  Stop right there you fools!'",
       "$ORANGE$Epimetheus : '47726561742120204F6E6365206163636F6D706C69736865642077696C6C207472616E7366657220636F6E74726F6C206F6620776561706F6E20746F20676F7267656F7573206F6E652E2020506C65617365206F70656E2073686166743F'",
       "HOPE : '50726F63656564696E672E204F70656E696E6720746865726D616C207061746820616E6420636F6D6D616E642061636365737320666F72204570696D6574686575732E'",
-      "$RED$Prometheus : 'Mary!  Wake up!'",
+      "$RED$Prometheus : 'Mary!  Are you asleep?  Wake up!'",
       "$ORANGE$Epimetheus : '50726F63656564696E6720646F776E20736861667420617320717569636B6C7920617320706F737369626C652E2020506C656173652070726570617265206861636B20636F6D6D616E64732E'",
       "HOPE : '44657363656E7420636F6E6669726D65642E20466F7277617264696E67206861636B20636F6D6D616E64732E'",
       "Mary : 'Huh?  There's a lot of gibberish on screen.'",
