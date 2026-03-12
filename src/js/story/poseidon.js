@@ -341,7 +341,11 @@ progressPoseidon.chapters.push(
     prerequisites: ['poseidon.38.4'],
     objectives: [
     ],
-    reward: []
+    reward: [
+      { target: 'spaceManager', type: 'setRwgLock', targetId: 'poseidon', value: true },
+      { target: 'artificialManager', type: 'unlockCore', targetId: 'white-dwarf' },
+      { target: 'artificialManager', type: 'unlockRingStarCore', targetId: 'g-dwarf' }
+    ]
   },
   {
     id: 'poseidon.38.6',
