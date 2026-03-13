@@ -222,6 +222,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Buildings moved toward dedicated subclass logic (e.g., GHG/Oxygen factories, Dyson receiver, biodome behavior).
 - Ecumenopolis life-land penalty now has a Biodome floor: life land multiplier uses `max(1 - ecumenopolis land fraction, biodome land fraction)`, where biodome fraction is active biodome land over initial land.
 - Advanced research includes `Warp Storage` (75M), unlocking a Storage Depot alternate recipe with `10x` storage and `1M` energy consumption, and a Space Storage expansion recipe selector (`Standard Storage`/`Warp Storage`) where Warp mode costs metal+components+electronics and runs Space Storage expansion `10x` faster; selection persists through save/load, travel, and project presets.
+- `Foundry World` specialization normally requires Deeper Mining depth `50,000`, but worlds with base `coreHeatFlux > 5,000 W/m^2` count as having a thin crust and can start it without that mining depth.
 - Random World effects/archetypes expanded with gameplay bonuses and hazard interactions.
 - RWG moons now generate seeded gas-giant belt radiation parameters (`refDistance_Rp`, `parentBeltAtRef_mSvPerDay`, `beltFalloffExp`) so orbital/surface radiation follows the same parent-belt model as story moons.
 - Radiation tolerance now uses quadratic mitigation (`points² × 0.01 mSv/day`) with a 100-point cap; life growth penalties are based on remaining dose after mitigation, and life UI/automation "As needed" behavior reflects this dose model.

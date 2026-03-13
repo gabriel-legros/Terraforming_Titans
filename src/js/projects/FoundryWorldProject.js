@@ -65,6 +65,8 @@
   }, {});
 
   class FoundryWorldProject extends SpecializationBase {
+    static THIN_CRUST_CORE_HEAT_FLUX = 5000;
+
     constructor(config, name) {
       super(config, name, {
         pointsKey: 'foundryPoints',
@@ -99,6 +101,14 @@
       return projectManager.projects.deeperMining.averageDepth;
     }
 
+    hasThinCrust() {
+      return Math.max(0, terraforming.celestialParameters.coreHeatFlux || 0) > FoundryWorldProject.THIN_CRUST_CORE_HEAT_FLUX;
+    }
+
+    meetsMiningRequirement() {
+      return this.getDeepMiningDepth() >= 50000 || this.hasThinCrust();
+    }
+
     getSpecializationRequirements() {
       const bioworld = projectManager.projects.bioworld;
       const manufacturing = projectManager.projects.manufacturingWorld;
@@ -111,8 +121,8 @@
         },
         {
           id: 'deepMining',
-          label: 'Deeper mining depth at least 50,000',
-          met: this.getDeepMiningDepth() >= 50000,
+          label: 'Deeper mining depth at least 50,000 or a thin crust',
+          met: this.meetsMiningRequirement(),
         },
         {
           id: 'otherSpecialization',
@@ -143,7 +153,7 @@
       if (!spaceManager.isCurrentWorldTerraformed()) {
         return false;
       }
-      if (this.getDeepMiningDepth() < 50000) {
+      if (!this.meetsMiningRequirement()) {
         return false;
       }
       const bioworld = projectManager.projects.bioworld;
