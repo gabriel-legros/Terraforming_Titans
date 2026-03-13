@@ -745,7 +745,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const hpMax = member ? member.maxHealth : 100;
   const level = document.createElement('div');
   level.classList.add('wgc-member-level');
-  level.textContent = `Level: ${lvl} | XP: ${xp} / ${xpReq} | HP: ${formatNumber(hp)} / ${hpMax}`;
+  level.textContent = `Level: ${lvl} | XP: ${xp} / ${formatNumber(xpReq, false, 2)} | HP: ${formatNumber(hp)} / ${hpMax}`;
 
   const metaRow = document.createElement('div');
   metaRow.classList.add('wgc-member-meta');
@@ -1497,7 +1497,7 @@ function updateWGCUI() {
     const syncAutoInputs = activeDialog._syncAutoInputs || null;
     if (lvlEl) {
       const xpReq = m.getXPForNextLevel();
-      lvlEl.textContent = `Level: ${m.level} | XP: ${Math.floor(m.xp || 0)} / ${xpReq} | HP: ${formatNumber(m.health)} / ${m.maxHealth}`;
+      lvlEl.textContent = `Level: ${m.level} | XP: ${Math.floor(m.xp || 0)} / ${formatNumber(xpReq, false, 2)} | HP: ${formatNumber(m.health)} / ${m.maxHealth}`;
     }
     if (remSpan) {
       remSpan.textContent = `Points left: ${m.getPointsToAllocate()}`;

@@ -126,7 +126,8 @@ class WGCTeamMember {
   }
 
   getXPForNextLevel() {
-    return this.level * 10;
+    const requirement = this.level * 10 + (this.level * this.level) / 100;
+    return Math.floor(requirement);
   }
 
   toJSON() {
