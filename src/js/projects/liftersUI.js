@@ -373,7 +373,9 @@ function updateLiftersUI(project) {
     row.plusButton.textContent = `+${formatNumber(step, true)}`;
     row.autoAssign.checked = project.autoAssignFlags[key] === true;
     row.autoAssign.disabled = total <= 0;
-    row.weightInput.value = String(project.autoAssignWeights[key] || 1);
+    if (document.activeElement !== row.weightInput) {
+      row.weightInput.value = String(project.autoAssignWeights[key] || 1);
+    }
     row.weightInput.disabled = total <= 0;
     row.zeroButton.disabled = current <= 0 || project.autoAssignFlags[key];
     row.maxButton.disabled = current >= maxForKey || total <= 0 || project.autoAssignFlags[key];

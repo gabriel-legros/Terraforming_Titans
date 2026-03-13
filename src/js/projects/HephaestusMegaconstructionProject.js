@@ -590,7 +590,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       row.plusButton.textContent = `+${formatNumber(step, true)}`;
       row.autoAssign.checked = this.autoAssignFlags[key] === true;
       row.autoAssign.disabled = total === 0;
-      row.weightInput.value = String(this.autoAssignWeights[key] || 1);
+      if (document.activeElement !== row.weightInput) {
+        row.weightInput.value = String(this.autoAssignWeights[key] || 1);
+      }
       row.weightInput.disabled = total === 0;
       row.zeroButton.disabled = current <= 0 || this.autoAssignFlags[key];
       row.maxButton.disabled = current >= maxForKey || total === 0 || this.autoAssignFlags[key];
