@@ -44,32 +44,33 @@ const PAN_ACTIVATION_DISTANCE_SQUARED = PAN_ACTIVATION_DISTANCE * PAN_ACTIVATION
 const UHF_FACTION_KEY = (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
     ? globalThis.UHF_FACTION_ID
     : 'uhf';
-const GALAXY_UI_FLEET_UPGRADE_INCREMENT = (typeof globalThis !== 'undefined' && typeof globalThis.GALAXY_FLEET_UPGRADE_INCREMENT === 'number')
-    ? globalThis.GALAXY_FLEET_UPGRADE_INCREMENT
-    : 0.1;
 const FLEET_UPGRADE_FALLBACKS = [
     {
         key: 'militaryResearch',
         label: 'Military R&D',
         description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
+        increment: 0.1,
         costLabel: 'Advanced Research'
     },
     {
         key: 'micOutsource',
         label: 'MIC Outsource',
         description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
+        increment: 0.1,
         costLabel: 'Solis Points'
     },
     {
         key: 'enemyLessons',
         label: 'Reverse Engineering',
         description: 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.',
+        increment: 0.1,
         costLabel: 'Alien Artifacts'
     },
     {
         key: 'pandoraBox',
         label: "PANDORA'S Box",
         description: 'Spend a skill point to greenlight unconventional fleet experiments.',
+        increment: 0.25,
         costLabel: 'Skill Points'
     }
 ];
@@ -2664,7 +2665,6 @@ function cacheGalaxyElements() {
         ? shopSummaries
         : FLEET_UPGRADE_FALLBACKS;
     const fleetShopItems = {};
-    const incrementText = `+${GALAXY_UI_FLEET_UPGRADE_INCREMENT.toFixed(2)}x Capacity`;
     upgradeEntries.forEach((entry) => {
         const item = doc.createElement('div');
         item.className = 'galaxy-upgrades-shop__item';
@@ -2691,7 +2691,7 @@ function cacheGalaxyElements() {
         button.type = 'button';
         button.className = 'galaxy-upgrades-shop__button';
         button.dataset.upgrade = entry.key;
-        button.textContent = incrementText;
+        button.textContent = `+${Number(entry.increment || 0.1).toFixed(2)}x Capacity`;
         button.addEventListener('click', handleFleetUpgradePurchase);
 
         const costRow = doc.createElement('div');
@@ -2865,6 +2865,7 @@ function updateFleetShopDisplay(manager, cache) {
     Object.entries(shop.items || {}).forEach(([key, nodes]) => {
         const entry = lookup.get(key) || null;
         const multiplierValue = entry?.multiplier ?? 1;
+        const increment = Number(entry?.increment);
         const purchaseCount = Number(entry?.purchases) || 0;
         if (nodes.multiplier) {
             nodes.multiplier.textContent = `${formatFleetMultiplier(multiplierValue)}x`;
@@ -2872,6 +2873,10 @@ function updateFleetShopDisplay(manager, cache) {
         if (nodes.purchases) {
             const suffix = purchaseCount === 1 ? 'purchase' : 'purchases';
             nodes.purchases.textContent = `${purchaseCount} ${suffix}`;
+        }
+        if (nodes.button) {
+            const buttonIncrement = Number.isFinite(increment) && increment > 0 ? increment : 0.1;
+            nodes.button.textContent = `+${buttonIncrement.toFixed(2)}x Capacity`;
         }
         if (nodes.costValue) {
             nodes.costValue.textContent = formatFleetUpgradeCost(entry?.cost);

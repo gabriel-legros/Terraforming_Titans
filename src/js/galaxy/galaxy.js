@@ -285,6 +285,7 @@ const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
         key: 'militaryResearch',
         label: 'Military R&D',
         description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
+        increment: FLEET_UPGRADE_INCREMENT,
         baseCost: 100000,
         costType: 'resource',
         resourceCategory: 'colony',
@@ -295,6 +296,7 @@ const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
         key: 'micOutsource',
         label: 'MIC Outsourcing',
         description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
+        increment: FLEET_UPGRADE_INCREMENT,
         baseCost: 1000,
         costType: 'solis',
         costLabel: 'Solis Points'
@@ -303,6 +305,7 @@ const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
         key: 'enemyLessons',
         label: 'Reverse Engineering',
         description: 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.',
+        increment: FLEET_UPGRADE_INCREMENT,
         baseCost: 100,
         costType: 'artifact',
         costLabel: 'Alien Artifacts'
@@ -311,6 +314,7 @@ const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
         key: 'pandoraBox',
         label: "PANDORA'S Box",
         description: 'Spend a skill point to greenlight unconventional fleet experiments.',
+        increment: 0.25,
         baseCost: 1,
         costType: 'skill',
         costLabel: 'Skill Points'
@@ -1071,8 +1075,17 @@ class GalaxyManager extends EffectableEntity {
         return count;
     }
 
+    getFleetUpgradeIncrement(key) {
+        const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
+        const increment = Number(definition?.increment);
+        if (Number.isFinite(increment) && increment > 0) {
+            return increment;
+        }
+        return FLEET_UPGRADE_INCREMENT;
+    }
+
     getFleetUpgradeMultiplier(key) {
-        const base = 1 + (this.getFleetUpgradeCount(key) * FLEET_UPGRADE_INCREMENT);
+        const base = 1 + (this.getFleetUpgradeCount(key) * this.getFleetUpgradeIncrement(key));
         return base > 0 ? base : 1;
     }
 
@@ -1195,6 +1208,7 @@ class GalaxyManager extends EffectableEntity {
                 key,
                 label: definition.label,
                 description: definition.description,
+                increment: this.getFleetUpgradeIncrement(key),
                 purchases,
                 multiplier,
                 cost,
