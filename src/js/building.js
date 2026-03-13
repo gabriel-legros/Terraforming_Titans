@@ -1551,6 +1551,7 @@ const constructors = {
   hyperionLantern: 'HyperionLantern',
   trashIncinerator: 'MultiRecipesBuilding',
   storageDepot: 'MultiRecipesBuilding',
+  antimatterFarm: 'MultiRecipesBuilding',
   fusionPowerPlant: 'FusionPowerPlant',
   superalloyFusionReactor: 'SuperalloyFusionReactor',
   laserCannon: 'LaserCannon'

@@ -2337,11 +2337,12 @@ const researchParameters = {
       {
         id: 'space_antimatter_safety_regulations',
         name: 'Space Antimatter Safety Regulations',
-        description: 'Standardize strict antimatter safety protocols for orbital containment and unlock modular Space Antimatter batteries.',
+        description: 'Standardize strict antimatter safety protocols for orbital containment, unlock modular Space Antimatter batteries, and add a safe orbital energy-transfer recipe for Antimatter Farms.',
         cost: { advancedResearch: 12_000_000 },
         prerequisites: [],
         effects: [
-          { target: 'project', targetId: 'spaceAntimatter', type: 'enable' }
+          { target: 'project', targetId: 'spaceAntimatter', type: 'enable' },
+          { target: 'building', targetId: 'antimatterFarm', type: 'booleanFlag', flagId: 'spaceEnergyTransferRecipe', value: true }
         ]
       },
       {

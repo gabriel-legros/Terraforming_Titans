@@ -423,7 +423,21 @@ const buildingsParameters = {
     requiresProductivity: false,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    defaultRecipe: 'antimatter',
+    recipes: {
+      antimatter: {
+        shortName: 'Energy -> Antimatter',
+        consumption: { colony: { energy: 2_000_000_000_000_000 } },
+        production: { special: { antimatter: 1 } }
+      },
+      spaceEnergy: {
+        shortName: 'Colony -> Space Energy',
+        requiresBuildingFlag: 'spaceEnergyTransferRecipe',
+        consumption: { colony: { energy: 2_000_000_000_000_000 } },
+        production: { space: { energy: 2_000_000_000_000_000 } }
+      }
+    }
   },
   battery: {
     name: 'Battery',
