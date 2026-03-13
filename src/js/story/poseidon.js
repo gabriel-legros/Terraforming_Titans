@@ -74,7 +74,7 @@ progressPoseidon.chapters.push(
     chapter: 36,
     activePlanet: 'poseidon',
     title: "Chapter 36: From Hell to Hell",
-    narrative: "Arrival in the orbit of Poseidon, a molten planet.  Planetary surface temperature near 1810K...\n Mary : 'This is brighter than I expected...  It's so hot it's practically visible as a star.'  \n $RED$Prometheus : 'It appears it has cooled somewhat.  That's good.'  \n Mary : 'We can't land here...  Time for aerostats again I guess but even they will suffer from this heat.  Now where is Epimetheus?'",
+    narrative: "Arrival in the orbit of Poseidon, a molten planet.  Planetary surface temperature near 1810K...\n Mary : 'This is brighter than I expected...  It's so hot it's practically visible as a star.'  \n $RED$Prometheus : 'It appears it has cooled somewhat.  That's good.  HOPE, activate the signal now.  My defenses will show up soon otherwise.'  \n Activating countermeasures...  \n Mary : 'One thing done.  Now what?  We can't land here...  Time for aerostats again I guess but even they will suffer from this heat.  Where is Epimetheus when you need him?'",
     prerequisites: ['hades.35.6'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50 }
@@ -86,7 +86,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "$RED$Prometheus : 'I am not sure what he could possibly be doing...'  \n Mary : 'We need his help to get down there.  We can finish this mission instantly and convince HOPE to go home.  I don't want to stay in this heat.'  \n $RED$Prometheus : 'No!  Not this time.  This core is too hot for him.  It will seriously damage him or kill him.  It's too dangerous.'  \n Mary : '?'",
+    narrative: "$RED$Prometheus : 'I am not sure what he could possibly be doing...'  \n Mary : 'The defenses are down but we need his help to get down there.  We can finish this mission instantly and convince HOPE to go home.  I don't want to stay in this heat.'  \n $RED$Prometheus : 'No!  Not this time.  This core is too hot for him.  It will seriously damage him or kill him.  It's too dangerous.'  \n Mary : '?'",
     prerequisites: ['poseidon.36.0'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100 }
@@ -246,7 +246,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "$ORANGE$Epimetheus : 'I know!  Suggesting a superalloy diving suit.  Then this one can go down?'  \n $RED$Prometheus : 'No.  That won't work.  He will cook and die.'  \n Mary : 'Why is he trying so hard?  Ok, I know the answer, he's flirting with HOPE, but like, why is he doing that?'  \n $RED$Prometheus : 'Monkeys imitate humans.  Children imitate their parents.  Machines... imitate their creators.  Except me.  I ascended past that.'  \n Mary : 'I don't get it...'  \n $RED$Prometheus : 'Speaking of romance.  If you ask Solis out on a date, I promise you he'll behave better this...'  \n Mary : 'MIND YOUR OWN BUSINESS!'  \n $RED$Prometheus : 'I apologize.  I will strive to do better in the future.'",
+    narrative: "$ORANGE$Epimetheus : 'I know!  Suggesting a superalloy diving suit.  Then this one can go down?'  \n $RED$Prometheus : 'No.  That won't work.  He will cook and die.'  \n Mary : 'Why is he trying so hard?  Ok, I know the answer, he's flirting with HOPE, but like, why is he doing that?'  \n $RED$Prometheus : 'Monkeys imitate humans.  Children imitate their parents.  Machines... imitate their creators.'  \n Mary : 'I don't get it...'  \n $RED$Prometheus : 'Speaking of romance.  If you ask Solis out on a date, I promise you he'll behave better this...'  \n Mary : 'MIND YOUR OWN BUSINESS!'  \n $RED$Prometheus : 'I apologize.  I will strive to do better in the future.'",
     prerequisites: ['poseidon.37.5b'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 100_000_000 }
