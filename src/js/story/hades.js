@@ -451,7 +451,7 @@ progressHades.chapters.push(
     chapter: 35,
     activePlanet: 'hades',
     narrative: 'Acquire full control of sector R5-10 to continue.',
-    prerequisites: ['impossible'],
+    prerequisites: ['impossible6'],
     objectives: [
       { type: 'galaxySectorControl', sectorLabel: 'R5-10' }
     ],
