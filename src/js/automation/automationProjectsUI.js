@@ -961,10 +961,14 @@ function getAutomatableProjects() {
   const order = Array.isArray(projectManager.projectOrder)
     ? projectManager.projectOrder
     : Object.keys(projectManager.projects || {});
+  const automation = automationManager?.projectsAutomation;
 
   order.forEach((projectId) => {
     const project = projectManager.projects[projectId];
     if (!project || project.category === 'story') {
+      return;
+    }
+    if (automation && !automation.shouldShowProjectInAutomation(project)) {
       return;
     }
     if (project.name === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID) {
@@ -996,6 +1000,9 @@ function getAutomatableProjects() {
   for (const projectId in projectManager.projects) {
     const project = projectManager.projects[projectId];
     if (!project || project.category === 'story' || seen[project.name]) {
+      continue;
+    }
+    if (automation && !automation.shouldShowProjectInAutomation(project)) {
       continue;
     }
     seen[project.name] = true;

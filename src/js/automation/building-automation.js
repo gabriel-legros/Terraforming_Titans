@@ -49,6 +49,7 @@ class BuildingAutomation {
     this.presets = [];
     this.assignments = [];
     this.combinations = [];
+    this.everEnabledBuildings = new Set();
     this.collapsed = false;
     this.masterEnabled = true;
     this.nextTravelCombinationId = null;
@@ -65,6 +66,56 @@ class BuildingAutomation {
 
   setMasterEnabled(enabled) {
     this.masterEnabled = !!enabled;
+  }
+
+  isBuildingAvailableNow(building) {
+    if (!building) {
+      return false;
+    }
+    if (building.permanentlyDisabled) {
+      return false;
+    }
+    return building.unlocked;
+  }
+
+  recordBuildingEnabled(buildingId) {
+    const building = buildings?.[buildingId];
+    if (!building || !building.automationRequiresEverEnabled) {
+      return false;
+    }
+    this.everEnabledBuildings.add(buildingId);
+    return true;
+  }
+
+  hasEverEnabledBuilding(buildingId) {
+    return this.everEnabledBuildings.has(buildingId);
+  }
+
+  shouldShowBuildingInAutomation(building) {
+    if (!building) {
+      return false;
+    }
+    if (!building.automationRequiresEverEnabled) {
+      return this.isBuildingAvailableNow(building);
+    }
+    if (this.isBuildingAvailableNow(building)) {
+      this.recordBuildingEnabled(building.name);
+      return true;
+    }
+    return this.hasEverEnabledBuilding(building.name);
+  }
+
+  recordCurrentlyAvailableBuildings() {
+    const buildingList = Object.values(buildings || {});
+    for (let index = 0; index < buildingList.length; index += 1) {
+      const building = buildingList[index];
+      if (!building || !building.automationRequiresEverEnabled) {
+        continue;
+      }
+      if (this.isBuildingAvailableNow(building)) {
+        this.recordBuildingEnabled(building.name);
+      }
+    }
   }
 
   isActive() {
@@ -500,6 +551,11 @@ class BuildingAutomation {
     if (!this.isActive()) {
       return;
     }
+    this.elapsed += delta || 0;
+    if (this.elapsed >= 1000) {
+      this.elapsed = 0;
+      this.recordCurrentlyAvailableBuildings();
+    }
   }
 
   saveState() {
@@ -529,6 +585,7 @@ class BuildingAutomation {
           enabled: entry.enabled !== false
         }))
       })),
+      everEnabledBuildings: Array.from(this.everEnabledBuildings),
       collapsed: this.collapsed,
       masterEnabled: this.masterEnabled,
       nextTravelCombinationId: this.nextTravelCombinationId,
@@ -561,6 +618,9 @@ class BuildingAutomation {
         enabled: entry.enabled !== false
       })) : []
     })) : [];
+    this.everEnabledBuildings = new Set(
+      Array.isArray(data.everEnabledBuildings) ? data.everEnabledBuildings : []
+    );
     this.collapsed = !!data.collapsed;
     this.masterEnabled = data.masterEnabled !== false;
     this.nextTravelCombinationId = data.nextTravelCombinationId ? Number(data.nextTravelCombinationId) : null;
@@ -571,6 +631,7 @@ class BuildingAutomation {
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.nextAssignmentId = data.nextAssignmentId || this.assignments.length + 1;
     this.nextCombinationId = data.nextCombinationId || this.combinations.length + 1;
+    this.recordCurrentlyAvailableBuildings();
   }
 }
 

@@ -93,7 +93,7 @@ function buildAutomationBuildingsUI() {
   scopeSelect.classList.add('building-automation-builder-scope');
   const allScope = document.createElement('option');
   allScope.value = 'all';
-  allScope.textContent = 'All unlocked buildings';
+  allScope.textContent = 'All available buildings';
   const manualScope = document.createElement('option');
   manualScope.value = 'manual';
   manualScope.textContent = 'Choose buildings';
@@ -308,7 +308,7 @@ function updateBuildingsAutomationUI() {
 
   const presets = automation.presets.slice();
   const combinations = automation.getCombinations();
-  const unlockedBuildings = getUnlockedBuildings();
+  const automatableBuildings = getAutomatableBuildings();
 
   if (document.activeElement !== buildingsBuilderPresetSelect) {
     buildingsBuilderPresetSelect.textContent = '';
@@ -383,13 +383,13 @@ function updateBuildingsAutomationUI() {
 
   const selectedCategory = buildingsBuilderCategorySelect.value || buildingAutomationUIState.builderCategoryValue || 'all';
   if (document.activeElement !== buildingsBuilderBuildingSelect) {
-    const available = unlockedBuildings.filter(building => (
+    const available = automatableBuildings.filter(building => (
       selectedCategory === 'all' || building.category === selectedCategory
     ));
     buildingsBuilderBuildingSelect.textContent = '';
     if (available.length === 0) {
       const empty = document.createElement('option');
-      empty.textContent = 'No unlocked buildings';
+      empty.textContent = 'No buildings available';
       empty.disabled = true;
       empty.selected = true;
       buildingsBuilderBuildingSelect.appendChild(empty);
@@ -413,7 +413,7 @@ function updateBuildingsAutomationUI() {
   buildingsBuilderAddButton.disabled = buildingsBuilderBuildingSelect.options.length === 0
     || buildingsBuilderBuildingSelect.options[0].disabled;
   buildingsBuilderAddCategoryButton.disabled = buildingsBuilderCategorySelect.options.length === 0
-    || !getUnlockedBuildings().length;
+    || !automatableBuildings.length;
   buildingsBuilderClearButton.disabled = buildingAutomationUIState.builderSelectedBuildings.length === 0;
   buildingsBuilderDeleteButton.disabled = !activePreset;
   buildingsBuilderApplyOnceButton.disabled = !activePreset;
@@ -590,7 +590,7 @@ function updateBuildingsAutomationUI() {
           : 'Select a preset';
         const buildingList = preset
           ? preset.scopeAll
-            ? 'All unlocked buildings'
+            ? 'All available buildings'
             : Object.keys(preset.buildings).map(id => {
                 const building = buildings[id];
                 return building.displayName || id;
@@ -770,8 +770,8 @@ function attachBuildingsAutomationHandlers() {
 
   buildingsBuilderAddCategoryButton.addEventListener('click', () => {
     const selectedCategory = buildingsBuilderCategorySelect.value || 'all';
-    const unlockedBuildings = getUnlockedBuildings();
-    const additions = unlockedBuildings.filter(building => (
+    const automatableBuildings = getAutomatableBuildings();
+    const additions = automatableBuildings.filter(building => (
       selectedCategory === 'all' || building.category === selectedCategory
     ));
     if (!additions.length) {
@@ -800,7 +800,7 @@ function attachBuildingsAutomationHandlers() {
     const includeAutomation = type === 'automation' || type === 'both';
     const scopeAll = buildingAutomationUIState.builderScope === 'all';
     const buildingIds = buildingAutomationUIState.builderScope === 'all'
-      ? getUnlockedBuildings().map(building => building.name)
+      ? getAutomatableBuildings().map(building => building.name)
       : buildingAutomationUIState.builderSelectedBuildings.slice();
     const presetId = buildingAutomationUIState.builderPresetId;
     if (presetId) {
@@ -943,6 +943,12 @@ function attachBuildingsAutomationHandlers() {
   });
 }
 
-function getUnlockedBuildings() {
-  return Object.values(buildings).filter(building => building.unlocked);
+function getAutomatableBuildings() {
+  const automation = automationManager?.buildingsAutomation;
+  return Object.values(buildings).filter((building) => {
+    if (!automation) {
+      return building.unlocked;
+    }
+    return automation.shouldShowBuildingInAutomation(building);
+  });
 }

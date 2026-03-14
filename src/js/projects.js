@@ -122,6 +122,7 @@ class Project extends EffectableEntity {
     this.treatAsBuilding = config.treatAsBuilding || false;
     this.requireStar = config.requireStar === true;
     this.kesslerDebrisSize = config.kesslerDebrisSize || null;
+    this.automationRequiresEverEnabled = config.automationRequiresEverEnabled === true;
 
 
     // Do not reinitialize state properties like isActive, isCompleted, repeatCount, etc.
@@ -742,6 +743,9 @@ class Project extends EffectableEntity {
     }
     const first = !this.unlocked;
     this.unlocked = true;
+    if (automationManager?.projectsAutomation) {
+      automationManager.projectsAutomation.recordCurrentlyAvailableProjects();
+    }
     if (first && !this.alertedWhenUnlocked) {
       const cat = this.category || 'resources';
       if (typeof registerProjectUnlockAlert === 'function') {

@@ -39,6 +39,7 @@ class ProjectAutomation {
     this.presets = [];
     this.assignments = [];
     this.combinations = [];
+    this.everEnabledProjects = new Set();
     this.collapsed = false;
     this.masterEnabled = true;
     this.nextTravelCombinationId = null;
@@ -55,6 +56,67 @@ class ProjectAutomation {
 
   setMasterEnabled(enabled) {
     this.masterEnabled = !!enabled;
+  }
+
+  isProjectAvailableNow(project) {
+    if (!project || project.category === 'story') {
+      return false;
+    }
+    if (project.isPermanentlyDisabled && project.isPermanentlyDisabled()) {
+      return false;
+    }
+    if (projectManager?.isProjectRelevantToCurrentPlanet
+      && !projectManager.isProjectRelevantToCurrentPlanet(project)) {
+      return false;
+    }
+    if (project.isVisible) {
+      return project.isVisible();
+    }
+    return project.unlocked;
+  }
+
+  recordProjectEnabled(projectId) {
+    const normalizedProjectId = this.normalizeProjectId(projectId);
+    const project = this.getProjectForAutomationId(normalizedProjectId);
+    if (!project || !project.automationRequiresEverEnabled) {
+      return false;
+    }
+    this.everEnabledProjects.add(normalizedProjectId);
+    return true;
+  }
+
+  hasEverEnabledProject(projectId) {
+    return this.everEnabledProjects.has(this.normalizeProjectId(projectId));
+  }
+
+  shouldShowProjectInAutomation(project) {
+    if (!project || project.category === 'story') {
+      return false;
+    }
+    if (!project.automationRequiresEverEnabled) {
+      return true;
+    }
+    if (this.isProjectAvailableNow(project)) {
+      this.recordProjectEnabled(project.name);
+      return true;
+    }
+    return this.hasEverEnabledProject(project.name);
+  }
+
+  recordCurrentlyAvailableProjects() {
+    const order = Array.isArray(projectManager?.projectOrder)
+      ? projectManager.projectOrder
+      : Object.keys(projectManager?.projects || {});
+
+    for (let index = 0; index < order.length; index += 1) {
+      const project = projectManager.projects[order[index]];
+      if (!project || !project.automationRequiresEverEnabled) {
+        continue;
+      }
+      if (this.isProjectAvailableNow(project)) {
+        this.recordProjectEnabled(project.name);
+      }
+    }
   }
 
   isActive() {
@@ -713,6 +775,11 @@ class ProjectAutomation {
     if (!this.isActive()) {
       return;
     }
+    this.elapsed += delta || 0;
+    if (this.elapsed >= 1000) {
+      this.elapsed = 0;
+      this.recordCurrentlyAvailableProjects();
+    }
   }
 
   saveState() {
@@ -734,6 +801,7 @@ class ProjectAutomation {
           enabled: entry.enabled !== false
         }))
       })),
+      everEnabledProjects: Array.from(this.everEnabledProjects),
       collapsed: this.collapsed,
       masterEnabled: this.masterEnabled,
       nextTravelCombinationId: this.nextTravelCombinationId,
@@ -766,6 +834,11 @@ class ProjectAutomation {
         enabled: entry.enabled !== false
       })) : []
     })) : [];
+    this.everEnabledProjects = new Set(
+      Array.isArray(data.everEnabledProjects)
+        ? data.everEnabledProjects.map(projectId => this.normalizeProjectId(projectId))
+        : []
+    );
     this.collapsed = !!data.collapsed;
     this.masterEnabled = data.masterEnabled !== false;
     this.nextTravelCombinationId = data.nextTravelCombinationId ? Number(data.nextTravelCombinationId) : null;
@@ -776,6 +849,7 @@ class ProjectAutomation {
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.nextAssignmentId = data.nextAssignmentId || this.assignments.length + 1;
     this.nextCombinationId = data.nextCombinationId || this.combinations.length + 1;
+    this.recordCurrentlyAvailableProjects();
   }
 }
 

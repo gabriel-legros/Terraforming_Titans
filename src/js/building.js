@@ -84,7 +84,8 @@ class Building extends EffectableEntity {
         ignoreResourceForProductivityResourceDisplay,
         alwaysShowProduction,
         alwaysShowConsumption,
-        kesslerDebrisSize
+        kesslerDebrisSize,
+        automationRequiresEverEnabled
       } = config;
   
       this.name = buildingName;
@@ -113,6 +114,7 @@ class Building extends EffectableEntity {
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
       this.kesslerDebrisSize = kesslerDebrisSize || null;
+      this.automationRequiresEverEnabled = automationRequiresEverEnabled === true;
       this.aerostatReduction = Math.max(
         0,
         Number.isFinite(aerostatReduction) ? aerostatReduction : 0
@@ -1504,6 +1506,9 @@ class Building extends EffectableEntity {
     }
     const first = !this.unlocked;
     this.unlocked = true;
+    if (automationManager?.buildingsAutomation) {
+      automationManager.buildingsAutomation.recordCurrentlyAvailableBuildings();
+    }
     if (first && !this.alertedWhenUnlocked) {
       if (typeof registerBuildingUnlockAlert === 'function') {
         registerBuildingUnlockAlert(`${this.category}-buildings`);

@@ -511,6 +511,7 @@ const projectParameters = {
     description: 'Construct a massive web of Klishy-compatible copper wires and fibre optics, suitable for a new Klishy community.',
     repeatable: false,
     unlocked: false,
+    automationRequiresEverEnabled: true,
     attributes: {}
   },
   artificialSky: {
@@ -551,6 +552,7 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: 1,
     unlocked: true,
+    automationRequiresEverEnabled: true,
     attributes: {
       spaceMining: true,
       showInResourcesRate: false

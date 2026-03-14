@@ -88,6 +88,12 @@ class AutomationManager extends EffectableEntity {
     this.setFeature('automationLifeDesign', this.isBooleanFlagSet('automationLifeDesign'));
     this.setFeature('automationBuildings', this.isBooleanFlagSet('automationBuildings'));
     this.setFeature('automationProjects', this.isBooleanFlagSet('automationProjects'));
+    if (this.buildingsAutomation) {
+      this.buildingsAutomation.recordCurrentlyAvailableBuildings();
+    }
+    if (this.projectsAutomation) {
+      this.projectsAutomation.recordCurrentlyAvailableProjects();
+    }
     if (this.spaceshipAutomation) {
       this.spaceshipAutomation.unlockManualControls();
     }

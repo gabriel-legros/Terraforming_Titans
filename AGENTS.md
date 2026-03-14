@@ -191,6 +191,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - Ship automation reorder/limits/resource disposal support
   - Building preset combinations and travel application options
   - Project automation presets/combinations (non-story projects), with per-project control-only save/load and travel application options
+  - Sensitive automation picker entries can use `automationRequiresEverEnabled`; they stay hidden until the building/project has been available once, and automation preserves that discovery through save/load/travel
   - Life automation presets and as-needed modes
   - GHG/calcite and dust factory automation targeting
 - String numeric input handling standardized across major controls.
