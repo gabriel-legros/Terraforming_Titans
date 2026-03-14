@@ -110,7 +110,7 @@ const defaultPlanetParameters = {
     greenhouseModel: {
       attenuationStartK: 360,
       attenuationScaleK: 100,
-      attenuationExponent: 2,
+      attenuationExponent: 5,
       minTauFraction: 0.01,
       coldTauCap: 5000,
       hotTauCap: 20,
@@ -1504,7 +1504,7 @@ const poseidonOverrides = {
     rotationPeriod: 21.8,
     spinPeriod: 21.8,
     starLuminosity: 0.46,
-    coreHeatFlux: 150_000,
+    coreHeatFlux: 250_000,
     sector: 'R5-10'
   },
   visualization: {
