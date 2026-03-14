@@ -457,7 +457,7 @@ class SpaceMirrorAdvancedOversight {
           // - If reversal is OFF (heating) but zone needs cool, try removing heating mirrors
           if (!reverse[z] && (assignM[z] || 0) > 0) {
             const current = assignM[z] || 0;
-            const k = MIRROR_PROBE_MIN;;
+            const k = Math.max(1, Math.min(current, MIRROR_PROBE_MIN));
             const score = withTempChange(() => { assignM[z] = current - k; }, () => objective(passLevel));
             const dPerUnit = (baseScore - score) / k;
             const tAfter = withTempChange(() => { assignM[z] = current - k; }, () => getZoneTemp(z));
@@ -471,7 +471,7 @@ class SpaceMirrorAdvancedOversight {
           // - Lanterns only heat; if the zone needs cooling, try removing lanterns
           if ((assignL[z] || 0) > 0) {
             const current = assignL[z] || 0;
-            const k = LANTERN_PROBE_MIN;;
+            const k = Math.max(1, Math.min(current, LANTERN_PROBE_MIN));
             const score = withTempChange(() => { assignL[z] = current - k; }, () => objective(passLevel));
             const dPerUnit = (baseScore - score) / k;
             const tAfter = withTempChange(() => { assignL[z] = current - k; }, () => getZoneTemp(z));
