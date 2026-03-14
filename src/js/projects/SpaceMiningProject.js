@@ -565,18 +565,20 @@ class SpaceMiningProject extends SpaceshipProject {
     return (limitPa * surfaceArea) / (1000 * gSurface);
   }
 
-  getAtmosphericNeedForGas(gas, deltaTime = this.currentTickDeltaTime || 0) {
-    return lifeManager.estimateAtmosphericConsumption(deltaTime)[gas] || 0;
+  getAtmosphericNeedForGas(gas, deltaTime = this.currentTickDeltaTime || 0, accumulatedChanges = null) {
+    const idealNeed = lifeManager.estimateAtmosphericIdealNeed(deltaTime, accumulatedChanges)[gas] || 0;
+    const actualNeed = lifeManager.estimateAtmosphericConsumption(deltaTime, accumulatedChanges)[gas] || 0;
+    return Math.max(idealNeed, actualNeed);
   }
 
-  isGasPressureLimitReached(gas, limitKPa, deltaTime = this.currentTickDeltaTime || 0) {
-    const amount = resources.atmospheric[gas].value || 0;
+  isGasPressureLimitReached(gas, limitKPa, deltaTime = this.currentTickDeltaTime || 0, accumulatedChanges = null) {
+    const amount = (resources.atmospheric[gas].value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
     const maxMass = this.getPressureLimitMass(limitKPa);
-    const consumptionBuffer = this.getAtmosphericNeedForGas(gas, deltaTime);
+    const consumptionBuffer = this.getAtmosphericNeedForGas(gas, deltaTime, accumulatedChanges);
     return amount >= maxMass + consumptionBuffer;
   }
 
-  shouldAutomationDisable() {
+  shouldAutomationDisable(accumulatedChanges = null) {
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
       return true;
@@ -586,12 +588,12 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (hasMonitoring && this.disableAbovePressure) {
       const gas = this.getTargetAtmosphericResource();
-      if (this.isGasPressureLimitReached(gas, this.disablePressureThreshold)) {
+      if (this.isGasPressureLimitReached(gas, this.disablePressureThreshold, this.currentTickDeltaTime || 0, accumulatedChanges)) {
         return true;
       }
     }
     if (hasMonitoring && this.disableAboveOxygenPressure) {
-      if (this.isGasPressureLimitReached('oxygen', this.disableOxygenPressureThreshold)) {
+      if (this.isGasPressureLimitReached('oxygen', this.disableOxygenPressureThreshold, this.currentTickDeltaTime || 0, accumulatedChanges)) {
         return true;
       }
     }
@@ -821,14 +823,9 @@ class SpaceMiningProject extends SpaceshipProject {
     }
 
     const deltaTime = context.duration * context.fraction * context.successChance;
-    const lifeConsumption = lifeManager.estimateAtmosphericConsumption(deltaTime);
     const currentAmount = resources.atmospheric[gas].value + (accumulatedChanges?.atmospheric?.[gas] || 0);
-    const gSurface = terraforming.celestialParameters.gravity;
-    const radius = terraforming.celestialParameters.radius;
-    const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
-    const limitPa = this.disablePressureThreshold * 1000;
-    const maxMass = (limitPa * surfaceArea) / (1000 * gSurface);
-    const gasLifeConsumption = lifeConsumption[gas] || 0;
+    const maxMass = this.getPressureLimitMass(this.disablePressureThreshold);
+    const gasLifeConsumption = this.getAtmosphericNeedForGas(gas, deltaTime, accumulatedChanges);
     const safetyMargin = gasLifeConsumption > 0 ? 1 : 0;
     const remaining = Math.max(0, Math.max(0, maxMass - currentAmount) + gasLifeConsumption - safetyMargin);
     const pressureRatio = Math.max(0, Math.min(1, remaining / desired));
@@ -883,14 +880,9 @@ class SpaceMiningProject extends SpaceshipProject {
       const entry = gain.atmospheric;
       const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
       const deltaTime = this.isContinuous() ? fraction * duration : 0;
-      const lifeConsumption = lifeManager.estimateAtmosphericConsumption(deltaTime);
       const currentAmount = resources.atmospheric[gas].value + (accumulatedChanges?.atmospheric?.[gas] || 0);
-      const gSurface = terraforming.celestialParameters.gravity;
-      const radius = terraforming.celestialParameters.radius;
-      const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
-      const limitPa = this.disablePressureThreshold * 1000;
-      const maxMass = (limitPa * surfaceArea) / (1000 * gSurface);
-      const gasLifeConsumption = lifeConsumption[gas] || 0;
+      const maxMass = this.getPressureLimitMass(this.disablePressureThreshold);
+      const gasLifeConsumption = this.getAtmosphericNeedForGas(gas, deltaTime, accumulatedChanges);
       const safetyMargin = gasLifeConsumption > 0 ? 1 : 0;
       const remaining = Math.max(0, Math.max(0, maxMass - currentAmount) + gasLifeConsumption - safetyMargin);
       const desired = entry[gas] * fraction * productivity;

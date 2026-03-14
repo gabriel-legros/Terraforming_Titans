@@ -1370,12 +1370,12 @@ class LifeManager extends EffectableEntity {
     };
   }
 
-  estimateAtmosphericConsumption(deltaTime) {
+  estimateAtmosphericConsumption(deltaTime, accumulatedChanges = null) {
     const secondsMultiplier = deltaTime / 1000;
     if (secondsMultiplier <= 0) {
       return {};
     }
-    const deltas = this.calculateAtmosphericDeltas(deltaTime);
+    const deltas = this.calculateAtmosphericDeltas(deltaTime, accumulatedChanges);
     const consumption = {};
     Object.entries(deltas).forEach(([resourceKey, delta]) => {
       if (delta < 0) {
@@ -1385,13 +1385,13 @@ class LifeManager extends EffectableEntity {
     return consumption;
   }
 
-  estimateAtmosphericIdealNeed(deltaTime) {
+  estimateAtmosphericIdealNeed(deltaTime, accumulatedChanges = null) {
     const secondsMultiplier = deltaTime / 1000;
     if (secondsMultiplier <= 0) {
       return {};
     }
 
-    const plan = this.buildAtmosphericPlan(deltaTime);
+    const plan = this.buildAtmosphericPlan(deltaTime, accumulatedChanges);
     const need = {};
     const addNeed = (inputsPerBiomass, biomassAmount) => {
       Object.entries(inputsPerBiomass || {}).forEach(([resourceKey, coef]) => {
@@ -1411,12 +1411,12 @@ class LifeManager extends EffectableEntity {
     return need;
   }
 
-  calculateAtmosphericDeltas(deltaTime) {
+  calculateAtmosphericDeltas(deltaTime, accumulatedChanges = null) {
     const secondsMultiplier = deltaTime / 1000;
     if (secondsMultiplier <= 0) {
       return {};
     }
-    const plan = this.buildAtmosphericPlan(deltaTime);
+    const plan = this.buildAtmosphericPlan(deltaTime, accumulatedChanges);
     const netAtmosphericDeltas = {};
     Object.entries(plan.growthAtmosphericDeltas).forEach(([resourceKey, delta]) => {
       if (!delta) return;

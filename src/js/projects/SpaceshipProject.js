@@ -1572,7 +1572,7 @@ class SpaceshipProject extends Project {
     this.costShortfallLastTick = false;
     this.disposalShortfallLastTick = false;
     this.currentTickDeltaTime = deltaTime;
-    if (typeof this.shouldAutomationDisable === 'function' && this.shouldAutomationDisable()) {
+    if (typeof this.shouldAutomationDisable === 'function' && this.shouldAutomationDisable(accumulatedChanges)) {
       this.isActive = false;
       this.clearContinuousExecutionPlanCache();
       return;

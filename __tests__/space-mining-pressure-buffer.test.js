@@ -31,6 +31,10 @@ function setupGlobals() {
       return 1000;
     }
 
+    getContinuousGainScaleLimit() {
+      return 1;
+    }
+
     calculateSpaceshipCost() {
       return this.attributes.costPerShip || {};
     }
@@ -164,6 +168,39 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
       terraforming.celestialParameters.radius
     );
     expect(finalPa).toBeCloseTo(9, 8);
+
+    cleanup();
+  });
+
+  it('uses life ideal demand instead of current limited consumption for continuous pressure buffering', () => {
+    const cleanup = setupGlobals();
+    lifeManager.estimateAtmosphericIdealNeed = () => ({ carbonDioxide: 100, oxygen: 0 });
+    lifeManager.estimateAtmosphericConsumption = () => ({ carbonDioxide: 20, oxygen: 0 });
+
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = new SpaceMiningProject({
+      attributes: {
+        costPerShip: { colony: { energy: 10, metal: 2 } },
+        resourceGainPerShip: { atmospheric: { carbonDioxide: 1 } },
+        maxPressure: 0.01,
+      },
+    }, 'carbonSpaceMining');
+
+    project.flags.atmosphericMonitoring = true;
+    project.disableAbovePressure = true;
+
+    const ratio = project.getContinuousGainScaleLimit(
+      {
+        duration: 1000,
+        fraction: 1,
+        successChance: 1,
+      },
+      { atmospheric: { carbonDioxide: 1000 } },
+      { atmospheric: { carbonDioxide: 0 } },
+      1
+    );
+
+    expect(ratio).toBeCloseTo(0.105, 8);
 
     cleanup();
   });
