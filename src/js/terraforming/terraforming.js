@@ -18,6 +18,7 @@ const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
 const MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD = 973.15; // 700°C
 const MAINTENANCE_PENALTY_LINEAR_RATE = 0.01;
 const MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL = 100; // K
+const MAINTENANCE_PENALTY_MAX_MULTIPLIER = 1e9;
 const KPA_PER_ATM = 101.325;
 var resourcePhaseGroups;
 
@@ -44,7 +45,10 @@ function calculateMaintenancePenaltyForTemperature(temp) {
   const doublingExponent =
     excessTemperature / MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL;
 
-  return thresholdPenalty * Math.pow(2, doublingExponent);
+  return Math.min(
+    MAINTENANCE_PENALTY_MAX_MULTIPLIER,
+    thresholdPenalty * Math.pow(2, doublingExponent)
+  );
 }
 
 function createEmptyZonalSurface() {

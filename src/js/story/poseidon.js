@@ -124,7 +124,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 36,
     activePlanet: 'poseidon',
-    narrative: "$ORANGE$Epimetheus : 'Should this one also help with superweapon command center?'  \n HOPE : 'Negative.  Planetary core too hot for Epimetheus-Machine-Intelligence.  Please standby.'  \n Epimetheus : 'Oh no!  This one will think of other ways to be helpful.'",
+    narrative: "$ORANGE$Epimetheus : 'Should this one also help with superweapon command center?'  \n HOPE : 'Negative.  Planetary core too hot for Epimetheus-Machine-Intelligence.  Please standby.'  \n $ORANGE$Epimetheus : 'Oh no!  This one will think of other ways to be helpful.'",
     prerequisites: ['poseidon.36.3'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 5_000 }
