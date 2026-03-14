@@ -1496,9 +1496,9 @@ const poseidonOverrides = {
   },
   celestialParameters: {
     distanceFromSun: 2.9,
-    gravity: 4.9,
+    gravity: 10.5,
     hasNaturalMagnetosphere: true,
-    radius: 3890,
+    radius: 7600,
     mass: 1.31e25,
     albedo: 0.08,
     rotationPeriod: 21.8,
@@ -1519,7 +1519,7 @@ const poseidonOverrides = {
   ],
   resources: {
     surface: {
-      land: { initialValue: 19_000_000_000 },
+      land: { initialValue: 95_000_000_000 },
       liquidWater: { initialValue: 0 },
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
