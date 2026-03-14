@@ -507,17 +507,18 @@ class Project extends EffectableEntity {
     }
   }
 
-  hasSustainResources(deltaTime = 1000) {
+  hasSustainResources(deltaTime = 1000, includeNetProduction = true) {
     if (!this.sustainCost) return true;
     const seconds = deltaTime / 1000;
     for (const category in this.sustainCost) {
       for (const resource in this.sustainCost[category]) {
         const costRate = this.sustainCost[category][resource];
         const res = resources[category][resource];
-        const prod = res.productionRate || 0;
-        const cons = res.consumptionRate || 0;
-        const available = res.value + prod * seconds;
-        const required = (cons + costRate) * seconds;
+        const netProduction = includeNetProduction
+          ? Math.max((res.productionRate || 0) - (res.consumptionRate || 0), 0)
+          : 0;
+        const available = res.value + netProduction * seconds;
+        const required = costRate * seconds;
         if (available < required) {
           return false;
         }
@@ -533,11 +534,9 @@ class Project extends EffectableEntity {
       for (const resource in this.sustainCost[category]) {
         const rate = this.sustainCost[category][resource];
         const res = resources[category][resource];
-        const netProduction = Math.max(res.productionRate - res.consumptionRate, 0);
-        const fromProduction = Math.min(netProduction, rate);
-        const fromStorage = (rate - fromProduction) * seconds;
-        if (fromStorage > 0) {
-          res.decrease(fromStorage);
+        const totalCost = rate * seconds;
+        if (totalCost > 0) {
+          res.decrease(totalCost);
         }
         if (res.modifyRate && this.showsInResourcesRate()) {
           res.modifyRate(-rate, this.displayName, 'project');
@@ -604,7 +603,7 @@ class Project extends EffectableEntity {
       return;
     }
 
-    if (!this.hasSustainResources(deltaTime)) {
+    if (!this.hasSustainResources(deltaTime, false)) {
       this.isActive = false;
       this.isPaused = true;
       return;
