@@ -660,6 +660,9 @@ class SpaceManager extends EffectableEntity {
         if (this.currentRandomSeed !== null) {
             return this.isSeedTerraformed(String(this.currentRandomSeed));
         }
+        if (this.currentArtificialKey !== null) {
+            return !!this.artificialWorldStatuses[String(this.currentArtificialKey)]?.terraformed;
+        }
         return this.isPlanetTerraformed(this.currentPlanetKey);
     }
 
@@ -1449,10 +1452,6 @@ class SpaceManager extends EffectableEntity {
     travelToStoryPlanet(targetKey) {
         if (!targetKey) {
             console.warn('SpaceManager: No planet key provided for travel.');
-            return false;
-        }
-        if (this.currentRandomSeed === null && this.currentArtificialKey === null && !this.isPlanetTerraformed(this.currentPlanetKey)) {
-            console.warn('SpaceManager: Cannot travel until the current planet is terraformed.');
             return false;
         }
         if (!this.isPlanetEnabled(targetKey)) {

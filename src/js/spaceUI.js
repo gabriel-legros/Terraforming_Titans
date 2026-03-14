@@ -308,6 +308,16 @@ function showTravelWarningPopup(warningData, onConfirm) {
     travelWarningOverlay.style.display = 'flex';
 }
 
+function handleUnterraformedTravelWarning(onConfirm) {
+    if (!_spaceManagerInstance || _spaceManagerInstance.isCurrentWorldTerraformed()) {
+        return false;
+    }
+    showTravelWarningPopup({
+        message: 'This world is not yet fully terraformed. Leaving now will abandon its progress.',
+    }, onConfirm);
+    return true;
+}
+
 function getActiveSpecializationProject() {
     const bioworld = projectManager.projects.bioworld;
     if (bioworld.isActive && !bioworld.isCompleted) {
@@ -329,6 +339,19 @@ function handleSpecializationTravelWarning(onConfirm) {
     return project && (showTravelWarningPopup({
         message: `${project.displayName} is still in progress. Leaving now will abandon its progress.`,
     }, onConfirm), true);
+}
+
+function handleCurrentWorldTravelWarnings(onConfirm) {
+    const continueTravel = () => {
+        if (handleSpecializationTravelWarning(onConfirm)) {
+            return;
+        }
+        onConfirm();
+    };
+    if (handleUnterraformedTravelWarning(continueTravel)) {
+        return true;
+    }
+    return handleSpecializationTravelWarning(onConfirm);
 }
 
 function updateSpaceRandomVisibility() {
@@ -519,13 +542,10 @@ function updateSpaceUI() {
     if (!allPlanetData) return;
 
     const currentKey = _spaceManagerInstance.getCurrentPlanetKey();
-    const currentSeed = _spaceManagerInstance.getCurrentRandomSeed();
-    const currentArtificialKey = _spaceManagerInstance.getCurrentArtificialKey();
-    const isTerraformed = _spaceManagerInstance.isPlanetTerraformed(currentKey);
-    const canChangePlanet = currentSeed !== null || currentArtificialKey !== null || isTerraformed;
+    const isTerraformed = _spaceManagerInstance.isCurrentWorldTerraformed();
 
     if (statusContainer) {
-        const showWarning = !canChangePlanet;
+        const showWarning = !isTerraformed;
         statusContainer.style.display = showWarning ? 'flex' : 'none';
         statusContainer.classList.toggle('hidden', !showWarning);
         statusContainer.textContent = showWarning ? 'Terraform this world before charting a new course.' : '';
@@ -540,7 +560,7 @@ function updateSpaceUI() {
 
         const cardIsCurrent = key === currentKey;
         const cardTerraformed = _spaceManagerInstance.isPlanetTerraformed(key);
-        const cardLocked = !cardIsCurrent && !cardTerraformed && !canChangePlanet;
+        const cardLocked = false;
 
         ui.container.classList.toggle('current', cardIsCurrent);
         ui.container.classList.toggle('terraformed', cardTerraformed);
@@ -559,8 +579,8 @@ function updateSpaceUI() {
             ui.button.title = `${data.name} has already been terraformed.`;
         } else {
             ui.button.textContent = `Select ${data.name}`;
-            ui.button.disabled = !canChangePlanet;
-            ui.button.title = canChangePlanet ? `Travel to ${data.name}` : 'Finish terraforming before traveling';
+            ui.button.disabled = false;
+            ui.button.title = `Travel to ${data.name}`;
         }
     });
 }
@@ -618,12 +638,12 @@ document.addEventListener('click', function(evt){
  * Select a planet and reset the game state for it.
  * @param {string} planetKey
  */
-function selectPlanet(planetKey, force, skipSpecialization){
+function selectPlanet(planetKey, force, skipCurrentWorldWarnings){
     if(!_spaceManagerInstance) {
         console.error('SpaceManager not initialized');
         return;
     }
-    if (!force && !skipSpecialization && handleSpecializationTravelWarning(() => selectPlanet(planetKey, false, true))) {
+    if (!force && !skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => selectPlanet(planetKey, false, true))) {
         return;
     }
     if(!force && planetParameters[planetKey]?.travelWarning){

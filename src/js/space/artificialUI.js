@@ -235,10 +235,13 @@ function buildHistoryRow(entry) {
     travelBtn.title = 'Travel to this artificial world';
     travelBtn.addEventListener('click', (event) => {
       event.stopPropagation();
-      if (handleSpecializationTravelWarning(() => artificialManager.travelToStoredWorld(entry.id))) {
-        return;
-      }
-      artificialManager.travelToStoredWorld(entry.id);
+      const attemptTravel = (skipCurrentWorldWarnings) => {
+        if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
+          return;
+        }
+        artificialManager.travelToStoredWorld(entry.id);
+      };
+      attemptTravel(false);
     });
     status.appendChild(travelBtn);
   }
@@ -1450,15 +1453,18 @@ function ensureArtificialLayout() {
   });
   travelBtn.addEventListener('click', () => {
     if (!artificialManager) return;
-    if (handleSpecializationTravelWarning(() => artificialManager.travelToConstructedWorld())) {
-      return;
-    }
-    const warning = artificialManager.getTravelWarning?.();
-    if (warning) {
-      showTravelWarningPopup(warning, () => artificialManager.travelToConstructedWorld());
-      return;
-    }
-    artificialManager.travelToConstructedWorld();
+    const attemptTravel = (skipCurrentWorldWarnings) => {
+      if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
+        return;
+      }
+      const warning = artificialManager.getTravelWarning?.();
+      if (warning) {
+        showTravelWarningPopup(warning, () => artificialManager.travelToConstructedWorld());
+        return;
+      }
+      artificialManager.travelToConstructedWorld();
+    };
+    attemptTravel(false);
   });
   storeBtn.addEventListener('click', () => {
     if (!artificialManager) return;

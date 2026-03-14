@@ -841,11 +841,14 @@ function attachTravelHandler(res, sStr) {
   rwgTravelBtnEl = travelBtn || rwgTravelBtnEl;
   if (!travelBtn) return;
   travelBtn.onclick = () => {
-    const attemptTravel = () => {
+    const attemptTravel = (skipCurrentWorldWarnings) => {
       const canonical = res?.seedString || sStr;
       const eqState = getRandomWorldEquilibrationState(sStr, canonical, isSpecialSeedResult(res));
       if (!eqState.satisfied) return;
       if (!isReplayableSeedResult(res) && spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
+      if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
+        return;
+      }
       if (spaceManager?.travelToRandomWorld) {
         if (eqState.bypassUnlocked && !eqState.eqDone && !isSpecialSeedResult(res)) {
           const override = res.override || (res.override = {});
@@ -868,10 +871,7 @@ function attachTravelHandler(res, sStr) {
         }
       }
     };
-    if (handleSpecializationTravelWarning(() => attemptTravel())) {
-      return;
-    }
-    attemptTravel();
+    attemptTravel(false);
   };
 }
 

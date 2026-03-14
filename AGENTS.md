@@ -182,6 +182,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Automation and UI
 - Building/project cards support collapsible layouts and improved cached rendering.
+- Travel now warns before leaving an unfinished world, using the same confirmation flow across story, random-world, and artificial-world travel.
 - Aerostat details now include an android-space slider (0-10 per aerostat) that splits aerostat housing between colonists and androids, scales the related colonist-only consumptions by the colonist share, saves through load, and resets on travel.
 - SpaceManager now maintains incremental cached world stats (terraformed totals, sector world counts, artificial world value/fleet contributions, and RWG type/hazard bonuses) that rebuild once on load and update through mutation setters/travel flows.
 - `produceResources` now primes a per-tick building effect cache (multipliers, added consumption, maintenance cost) and reuses it across projected and actual production passes to reduce repeated `activeEffects` scans.
