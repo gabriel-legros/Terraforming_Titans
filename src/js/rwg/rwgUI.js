@@ -89,7 +89,7 @@ if (!rwgGravityHelpers.createGravityWarning) {
     const costText = fmt(rwgGravityHelpers.roundTo(costIncrease, 2), false, 2);
     const penaltyLine = `This world imposes a ${happinessText}% happiness penalty and adds ${costText}% to all building and colony costs.`;
     const severityClass = gravity >= 20 ? 'rwg-gravity-warning-high' : 'rwg-gravity-warning-medium';
-    return `<span class="info-tooltip-icon rwg-gravity-warning ${severityClass}" title="${happinessLine} ${costLine} ${penaltyLine}">⚠</span>`;
+    return createAttachedTooltipIconMarkup(`${happinessLine} ${costLine} ${penaltyLine}`, `rwg-gravity-warning ${severityClass}`);
   };
 }
 
@@ -98,12 +98,47 @@ var createGravityWarning = rwgGravityHelpers.createGravityWarning;
 
 const hazardDisplayNames = { hazardousBiomass: 'Hazardous Biomass', garbage: 'Garbage', kessler: 'Kessler Skies', pulsar: 'Pulsar' };
 const pulsarRwgTooltip = 'The pulsar hazard is generated but does not replace the star.  On rogue worlds, a special "Rogue Pulsar" star is added instead, with low solar flux at the planet.';
+const dominionRwgTooltip = 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.';
 const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', klishy: 'Klishy', random: 'Random' };
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';
 const RWG_EQUILIBRATION_FASTEST_TERRAFORM_SKIP_SECONDS = 90;
 const RWG_EQUILIBRATE_TOOLTIP_TEXT = 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.';
+
+function escapeTooltipAttribute(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function createAttachedTooltipIconMarkup(text, extraClass = '') {
+  const classes = extraClass ? `info-tooltip-icon ${extraClass}` : 'info-tooltip-icon';
+  return `<span class="${classes}" data-rwg-tooltip="${escapeTooltipAttribute(text)}">&#9432;</span>`;
+}
+
+function attachOrUpdateDynamicTooltip(iconElement, text, whiteSpace = '') {
+  if (!iconElement) return null;
+  const existing = iconElement.querySelector('.dynamic-tooltip');
+  if (existing) {
+    existing.textContent = text;
+    existing.style.whiteSpace = whiteSpace || '';
+    return existing;
+  }
+  const tooltip = attachDynamicInfoTooltip(iconElement, text);
+  if (tooltip && whiteSpace) tooltip.style.whiteSpace = whiteSpace;
+  return tooltip;
+}
+
+function attachPendingRwgTooltips(root) {
+  if (!root) return;
+  root.querySelectorAll('[data-rwg-tooltip]').forEach((icon) => {
+    attachOrUpdateDynamicTooltip(icon, icon.dataset.rwgTooltip || '');
+  });
+}
 
 function normalizeHazardList(source) {
   if (Array.isArray(source)) {
@@ -322,20 +357,16 @@ function closeDominionLore() {
 }
 
 function cacheResultControls() {
+  rwgResultEl = document.getElementById('rwg-result');
   rwgTravelBtnEl = document.getElementById('rwg-travel-btn');
   rwgDominionEl = document.getElementById('rwg-dominion');
   rwgDominionLoreBtnEl = document.getElementById('rwg-dominion-lore-btn');
   rwgDominionInfoEl = document.getElementById('rwg-dominion-info');
   rwgEquilibrateInfoEl = document.getElementById('rwg-equilibrate-info');
+  attachPendingRwgTooltips(rwgResultEl);
   if (rwgEquilibrateInfoEl) {
     const tooltipText = buildEquilibrateTooltipText();
-    const tooltip = rwgEquilibrateInfoEl.querySelector('.dynamic-tooltip');
-    if (tooltip) {
-      tooltip.textContent = tooltipText;
-      tooltip.style.whiteSpace = 'pre-line';
-    } else {
-      attachDynamicInfoTooltip(rwgEquilibrateInfoEl, tooltipText);
-    }
+    attachOrUpdateDynamicTooltip(rwgEquilibrateInfoEl, tooltipText, 'pre-line');
   }
   rwgDominionEl && (rwgDominionEl.onchange = () => {
     rwgSelectedDominion = rwgDominionEl.value;
@@ -1226,7 +1257,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
       <div class="rwg-control-row">
         <select id="rwg-dominion" class="rwg-inline-select"></select>
         <button id="rwg-dominion-lore-btn" class="rwg-btn">Lore</button>
-        <span id="rwg-dominion-info" class="info-tooltip-icon" title="Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion.  Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.">&#9432;</span>
+        <span id="rwg-dominion-info" class="info-tooltip-icon" data-rwg-tooltip="${escapeTooltipAttribute(dominionRwgTooltip)}">&#9432;</span>
       </div>
     </div>` : '';
   const worldPanel = `
@@ -1423,7 +1454,7 @@ function renderHistoryPage() {
     const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
     const pop = fmt(r.colonists || 0);
     const stateCls = r.state === 'Current' ? 'state-current' : '';
-    return `<div class="rwg-history-row"><span class="name" title="${r.name}">${r.name}</span><span>${displayType}</span><span class="seed" title="${r.seed}">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${r.state}</span><span>${d}</span></div>`;
+    return `<div class="rwg-history-row"><span class="name">${r.name}</span><span>${displayType}</span><span class="seed">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${r.state}</span><span>${d}</span></div>`;
   }).join('');
   historyListEl.innerHTML = header + rows;
   const totalPages = Math.max(Math.ceil(historyData.length / 10), 1);

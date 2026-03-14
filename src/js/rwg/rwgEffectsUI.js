@@ -5,6 +5,7 @@ let _rwgEffectsInitialized = false;
 let _rwgEffectsCardEl = null;
 let _rwgEffectsListEl = null;
 let _rwgEffectsLastKey = '';
+const RWG_EFFECTS_TOOLTIP_TEXT = 'Bonuses from terraforming random worlds of each type';
 
 // Friendly labels for projects and buildings
 const RWG_PROJECT_NAMES = {
@@ -54,7 +55,7 @@ function _ensureRWGEffectsUI() {
   card.id = 'rwg-effects-card';
   card.innerHTML = `
     <div class="card-header">
-      <h3 class="card-title">Random World Effects <span class="info-tooltip-icon" title="Bonuses from terraforming random worlds of each type">&#9432;</span></h3>
+      <h3 class="card-title">Random World Effects <span id="rwg-effects-info" class="info-tooltip-icon">&#9432;</span></h3>
     </div>
     <div id="rwg-effects-list" class="card-body rwg-effects-list"></div>
   `;
@@ -68,6 +69,7 @@ function _ensureRWGEffectsUI() {
 
   _rwgEffectsCardEl = card;
   _rwgEffectsListEl = card.querySelector('#rwg-effects-list');
+  attachDynamicInfoTooltip(card.querySelector('#rwg-effects-info'), RWG_EFFECTS_TOOLTIP_TEXT);
   _rwgEffectsInitialized = true;
   return true;
 }
@@ -110,7 +112,17 @@ function _computeRWGEffectsSummary() {
   }
 
   const out = [];
-  for (const [type, effects] of Object.entries(RWG)) {
+  const orderedTypes = [];
+  const metaOrder = globalThis.RWG_WORLD_TYPES || {};
+  Object.keys(metaOrder).forEach((type) => {
+    if (RWG[type]) orderedTypes.push(type);
+  });
+  Object.keys(RWG).forEach((type) => {
+    if (!orderedTypes.includes(type)) orderedTypes.push(type);
+  });
+
+  for (const type of orderedTypes) {
+    const effects = RWG[type];
     if (!unlocked.has(type)) continue;
     const baseCount = counts[type] || 0;
     const bonus = hazardBonuses[type] || 0;
