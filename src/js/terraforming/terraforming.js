@@ -1139,10 +1139,10 @@ class Terraforming extends EffectableEntity{
       const assignM = mirrorOversightSettings.assignments?.mirrors || {};
       const assignL = mirrorOversightSettings.assignments?.lanterns || {};
       const assignedMirrors =
-        (assignM.tropical || 0) +
-        (assignM.temperate || 0) +
-        (assignM.polar || 0) +
-        (assignM.focus || 0);
+        Math.abs(assignM.tropical || 0) +
+        Math.abs(assignM.temperate || 0) +
+        Math.abs(assignM.polar || 0) +
+        Math.abs(assignM.focus || 0);
       const assignedLanterns = mirrorOversightSettings.applyToLantern
         ? (assignL.tropical || 0) + (assignL.temperate || 0) + (assignL.polar || 0) + (assignL.focus || 0)
         : 0;
@@ -1912,16 +1912,26 @@ class Terraforming extends EffectableEntity{
       const mirrorProductivity = Number.isFinite(buildings?.spaceMirror?.productivity) ? buildings.spaceMirror.productivity : 1;
       let reverseFactor = 1;
       if (typeof mirrorOversightSettings !== 'undefined') {
-        const dist = mirrorOversightSettings.distribution || {};
-        const rev = mirrorOversightSettings.assignments?.reversalMode || {};
-        const anyPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
-        const reversedPerc =
-          (rev.tropical ? dist.tropical || 0 : 0) +
-          (rev.temperate ? dist.temperate || 0 : 0) +
-          (rev.polar ? dist.polar || 0 : 0) +
-          (rev.focus ? dist.focus || 0 : 0) +
-          (rev.any ? anyPerc : 0);
-        reverseFactor = 1 - 2 * reversedPerc;
+        if (mirrorOversightSettings.advancedOversight) {
+          const signedAssignments = mirrorOversightSettings.assignments?.mirrors || {};
+          const netAssignedMirrors =
+            (signedAssignments.tropical || 0) +
+            (signedAssignments.temperate || 0) +
+            (signedAssignments.polar || 0) +
+            (signedAssignments.focus || 0);
+          reverseFactor = mirrors > 0 ? (netAssignedMirrors / mirrors) : 1;
+        } else {
+          const dist = mirrorOversightSettings.distribution || {};
+          const rev = mirrorOversightSettings.assignments?.reversalMode || {};
+          const anyPerc = Math.max(0, 1 - ((dist.tropical || 0) + (dist.temperate || 0) + (dist.polar || 0) + (dist.focus || 0)));
+          const reversedPerc =
+            (rev.tropical ? dist.tropical || 0 : 0) +
+            (rev.temperate ? dist.temperate || 0 : 0) +
+            (rev.polar ? dist.polar || 0 : 0) +
+            (rev.focus ? dist.focus || 0 : 0) +
+            (rev.any ? anyPerc : 0);
+          reverseFactor = 1 - 2 * reversedPerc;
+        }
       }
       const mirrorContribution = mirrorFlux * mirrors * reverseFactor * mirrorProductivity;
       const total = baseFlux + mirrorContribution + lanternFlux;

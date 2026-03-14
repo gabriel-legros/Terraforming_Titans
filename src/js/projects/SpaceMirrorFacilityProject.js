@@ -61,6 +61,51 @@ function createDefaultMirrorOversightSettings() {
   };
 }
 
+function getSignedMirrorAssignment(settings, zone) {
+  return Number(settings?.assignments?.mirrors?.[zone]) || 0;
+}
+
+function getMirrorAssignmentCount(settings, zone) {
+  return Math.abs(getSignedMirrorAssignment(settings, zone));
+}
+
+function isMirrorAssignmentReversed(settings, zone) {
+  return getSignedMirrorAssignment(settings, zone) < 0;
+}
+
+function syncMirrorAssignmentMode(settings) {
+  const mirrors = settings.assignments.mirrors || (settings.assignments.mirrors = {});
+  const reverse = settings.assignments.reversalMode || (
+    settings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false }
+  );
+  getMirrorZonesWithFocusAny().forEach(zone => {
+    const signedValue = Number(mirrors[zone]) || 0;
+    const zoneCanReverse = zone !== 'focus' && zone !== 'any';
+    if (settings.advancedOversight) {
+      if (signedValue < 0 && zoneCanReverse) {
+        reverse[zone] = true;
+        return;
+      }
+      if (zoneCanReverse && reverse[zone] && signedValue > 0) {
+        mirrors[zone] = -signedValue;
+        return;
+      }
+      reverse[zone] = false;
+      mirrors[zone] = zoneCanReverse ? signedValue : Math.abs(signedValue);
+      return;
+    }
+
+    const zoneReverse = signedValue < 0 || !!reverse[zone];
+    reverse[zone] = zoneReverse;
+    mirrors[zone] = Math.abs(signedValue);
+  });
+
+  if (settings.advancedOversight) {
+    mirrors.any = 0;
+    reverse.any = false;
+  }
+}
+
 function applyMirrorOversightSettings(settings, saved = {}) {
   const savedDistribution = saved.distribution || {};
   mergeSettingKeys(settings.distribution, savedDistribution).forEach(zone => {
@@ -122,6 +167,8 @@ function applyMirrorOversightSettings(settings, saved = {}) {
   mergeSettingKeys(settings.assignments.reversalMode, savedReversal).forEach(zone => {
     settings.assignments.reversalMode[zone] = !!savedReversal[zone];
   });
+
+  syncMirrorAssignmentMode(settings);
 
   return settings;
 }
@@ -398,6 +445,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
+  syncMirrorAssignmentMode(mirrorOversightSettings);
   updateMirrorOversightUI();
 }
 
@@ -544,7 +592,12 @@ function updateAssignmentDisplays() {
     zones.forEach(zone => {
       const el = document.getElementById(`${type}-assign-${zone}`);
       if (el) {
-        el.textContent = formatBuildingCount(mirrorOversightSettings.assignments[type][zone] || 0);
+        const value = type === 'mirrors' && mirrorOversightSettings.advancedOversight
+          ? (mirrorOversightSettings.assignments[type][zone] || 0)
+          : (type === 'mirrors'
+            ? getMirrorAssignmentCount(mirrorOversightSettings, zone)
+            : (mirrorOversightSettings.assignments[type][zone] || 0));
+        el.textContent = formatBuildingCount(value);
       }
     });
 
@@ -553,7 +606,11 @@ function updateAssignmentDisplays() {
       const total = type === 'mirrors'
         ? (buildings?.spaceMirror?.active || 0)
         : (buildings?.hyperionLantern?.active || 0);
-      const assigned = zones.reduce((s, z) => s + (mirrorOversightSettings.assignments[type][z] || 0), 0);
+      const assigned = zones.reduce((s, z) => s + (
+        type === 'mirrors'
+          ? getMirrorAssignmentCount(mirrorOversightSettings, z)
+          : (mirrorOversightSettings.assignments[type][z] || 0)
+      ), 0);
       availableEl.textContent = formatBuildingCount(Math.max(0, total - assigned));
     }
   });
@@ -573,8 +630,9 @@ function updateAssignmentDisplays() {
     });
     const checkbox = document.querySelector(`.reversal-checkbox[data-zone="${zone}"]`);
     if (checkbox) {
-        if (!mirrorOversightSettings.assignments.reversalMode) mirrorOversightSettings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false };
-      checkbox.checked = !!mirrorOversightSettings.assignments.reversalMode[zone];
+      checkbox.checked = mirrorOversightSettings.advancedOversight
+        ? isMirrorAssignmentReversed(mirrorOversightSettings, zone)
+        : !!mirrorOversightSettings.assignments.reversalMode[zone];
     }
   });
 }
@@ -584,6 +642,7 @@ function updateAssignmentDisplays() {
 function toggleAdvancedOversight(enable) {
   const wasAdvanced = !!mirrorOversightSettings.advancedOversight;
   mirrorOversightSettings.advancedOversight = !!enable;
+  syncMirrorAssignmentMode(mirrorOversightSettings);
   if (enable) {
     mirrorOversightSettings.useFinerControls = true;
     mirrorOversightSettings.autoAssign.any = false;
@@ -612,6 +671,7 @@ function toggleAdvancedOversight(enable) {
   } else if (wasAdvanced) {
     mirrorOversightSettings.useFinerControls = true;
   }
+  syncMirrorAssignmentMode(mirrorOversightSettings);
   if (typeof updateMirrorOversightUI === 'function') updateMirrorOversightUI();
 }
 
@@ -1496,9 +1556,12 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       const mirrorPowerPer = isRogue ? 0 : terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
       const lantern = buildings?.hyperionLantern;
       const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
+      const focusMirrorCount = mirrorOversightSettings.advancedOversight
+        ? Math.abs(assignM.focus || 0)
+        : (assignM.focus || 0);
       // When applyToLantern is false, lanterns don't contribute to focusing (they're in Any Zone)
       const lanternFocusPower = mirrorOversightSettings.applyToLantern ? lanternPowerPer * (assignL.focus || 0) : 0;
-      focusPower = mirrorPowerPer * (assignM.focus || 0) + lanternFocusPower;
+      focusPower = mirrorPowerPer * focusMirrorCount + lanternFocusPower;
     } else {
       const dist = mirrorOversightSettings?.distribution || {};
       const focusPerc = dist.focus || 0;
@@ -1588,7 +1651,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
       const assignM = mirrorOversightSettings.assignments.mirrors || {};
       const assignL = mirrorOversightSettings.assignments.lanterns || {};
       distributedMirrorPower = 0;
-      focusedMirrorPower = mirrorPowerPer * (assignM[zone] || 0);
+      focusedMirrorPower = mirrorPowerPer * Math.abs(assignM[zone] || 0);
       if (mirrorOversightSettings.applyToLantern) {
         distributedLanternPower = 0;
         focusedLanternPower = lanternPowerPer * (assignL[zone] || 0);
@@ -1639,8 +1702,12 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     }
   }
 
-  const anyReverse = !!mirrorOversightSettings.assignments.reversalMode?.any;
-  const zoneReverse = !!mirrorOversightSettings.assignments.reversalMode?.[zone];
+  const anyReverse = mirrorOversightSettings.advancedOversight
+    ? false
+    : !!mirrorOversightSettings.assignments.reversalMode?.any;
+  const zoneReverse = mirrorOversightSettings.advancedOversight
+    ? ((mirrorOversightSettings.assignments.mirrors?.[zone] || 0) < 0)
+    : !!mirrorOversightSettings.assignments.reversalMode?.[zone];
 
   const distributedMirrorFlux = totalSurfaceArea > 0
     ? ((anyReverse ? -4 : 4) * distributedMirrorPower / totalSurfaceArea)

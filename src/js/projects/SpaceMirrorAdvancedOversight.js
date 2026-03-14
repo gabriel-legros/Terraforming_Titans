@@ -16,7 +16,7 @@ class SpaceMirrorAdvancedOversight {
       const K_TOL = 0.001;         // Temperature tolerance (K) for zones
       const WATER_REL_TOL = 0.00001; // Relative tol (1%) for water melt target
       const MAX_ACTIONS_PER_PASS = 100; // Commit at most this many batched moves per priority pass
-      const MAX_PRUNE_ACTIONS_PER_PASS = 100; // After reaching tolerance, trim excess assignments
+      const MAX_PRUNE_ACTIONS = 12; // Final cleanup only; pruning every pass is too expensive
       const MIN_ZONE_FLUX = 2.4e-5; // Floor used by calculateZoneSolarFluxWithFacility
       const NEAR_MIN_FLUX = MIN_ZONE_FLUX * 1.05;
       // Probe sizing for derivative estimates (NO per-mirror loops; single physics call per probe)
@@ -54,6 +54,36 @@ class SpaceMirrorAdvancedOversight {
           any: false,
         }
       );
+      const getMirrorValue = (zone) => Number(assignM[zone]) || 0;
+      const getMirrorCount = (zone) => Math.abs(getMirrorValue(zone));
+      const isMirrorReverse = (zone) => getMirrorValue(zone) < 0;
+      const setMirrorCount = (zone, count, reverseMode) => {
+        const nextCount = Math.max(0, count);
+        assignM[zone] = nextCount === 0 ? 0 : (reverseMode ? -nextCount : nextCount);
+      };
+      const addMirrorCount = (zone, count, reverseMode) => {
+        setMirrorCount(zone, getMirrorCount(zone) + count, reverseMode);
+      };
+      const adjustMirrorCount = (zone, delta) => {
+        assignM[zone] = (Number(assignM[zone]) || 0) + delta;
+        if (!assignM[zone]) assignM[zone] = 0;
+      };
+      const removeMirrorCount = (zone, count) => {
+        setMirrorCount(zone, Math.max(0, getMirrorCount(zone) - count), isMirrorReverse(zone));
+      };
+      const transferMirrorCount = (from, to, count) => {
+        const donorReverse = isMirrorReverse(from);
+        const receiverReverse = isMirrorReverse(to);
+        setMirrorCount(from, Math.max(0, getMirrorCount(from) - count), donorReverse);
+        setMirrorCount(to, getMirrorCount(to) + count, receiverReverse);
+      };
+      const syncDerivedReverseState = () => {
+        for (const zone of ZONES) {
+          reverse[zone] = REVERSAL_AVAILABLE && isMirrorReverse(zone);
+        }
+        reverse.focus = false;
+        reverse.any = false;
+      };
 
       const prio = settings.priority || { tropical: 1, temperate: 1, polar: 1, focus: 1 };
       const targets = settings.targets || { tropical: 0, temperate: 0, polar: 0, water: 0 };
@@ -61,16 +91,26 @@ class SpaceMirrorAdvancedOversight {
       if (!(targets.water > 0)) {
         assignM.focus = 0;
         assignL.focus = 0;
-        reverse.focus = false;
       }
 
       const totalMirrors = Math.max(0, buildings.spaceMirror?.active || 0);
       const totalLanterns = settings.applyToLantern ? Math.max(0, buildings.hyperionLantern?.active || 0) : 0;
 
-      const usedMirrors = () => (assignM.tropical)+(assignM.temperate)+(assignM.polar)+(assignM.focus);
+      const usedMirrors = () => getMirrorCount('tropical') + getMirrorCount('temperate') + getMirrorCount('polar') + getMirrorCount('focus');
       const usedLanterns = () => (assignL.tropical)+(assignL.temperate)+(assignL.polar)+(assignL.focus);
       const mirrorsLeft = () => Math.max(0, totalMirrors - usedMirrors());
       const lanternsLeft = () => Math.max(0, totalLanterns - usedLanterns());
+      const mirrorDeltaCapacity = (zone, direction) => {
+        const current = getMirrorValue(zone);
+        const free = mirrorsLeft();
+        if (direction > 0) {
+          return current >= 0 ? free : Math.abs(current) + free;
+        }
+        if (direction < 0) {
+          return current <= 0 ? free : current + free;
+        }
+        return 0;
+      };
 
       const getZoneTemp = (z) => {
         const mode = settings.tempMode?.[z] || 'average';
@@ -79,6 +119,22 @@ class SpaceMirrorAdvancedOversight {
         if (mode === 'day') return data.day;
         if (mode === 'night') return data.night;
         return data.value;
+      };
+
+      const getZoneTrendTemp = (z) => {
+        const mode = settings.tempMode?.[z] || 'average';
+        const data = terraforming?.temperature?.zones?.[z];
+        if (!data) return NaN;
+        const meanTrend = Number.isFinite(data.trendValue) ? data.trendValue : data.value;
+        if (mode === 'day') {
+          const offset = (Number.isFinite(data.day) && Number.isFinite(data.value)) ? (data.day - data.value) : 0;
+          return meanTrend + offset;
+        }
+        if (mode === 'night') {
+          const offset = (Number.isFinite(data.night) && Number.isFinite(data.value)) ? (data.night - data.value) : 0;
+          return meanTrend + offset;
+        }
+        return meanTrend;
       };
 
       const updateTemps = () => {
@@ -122,12 +178,19 @@ class SpaceMirrorAdvancedOversight {
       const restoreFromLast = () => {
         const last = settings.lastSolution;
         if (!last) return;
-        const copy = (dst, src) => { for (const k of Object.keys(dst)) dst[k] = 0; for (const k of Object.keys(src)) dst[k] = Math.max(0, src[k]); };
+        const copy = (dst, src) => { for (const k of Object.keys(dst)) dst[k] = 0; for (const k of Object.keys(src)) dst[k] = Number(src[k]) || 0; };
         copy(assignM, last.mirrors || {});
         copy(assignL, last.lanterns || {});
-        Object.assign(reverse, last.reversalMode || {});
-        clampTo(assignM, totalMirrors);
+        if (last.reversalMode) {
+          for (const zone of ZONES) {
+            if (last.reversalMode[zone] && assignM[zone] > 0) {
+              assignM[zone] = -assignM[zone];
+            }
+          }
+        }
+        clampMirrorsTo(totalMirrors);
         clampTo(assignL, totalLanterns);
+        syncDerivedReverseState();
       };
 
       const clampTo = (obj, max) => {
@@ -146,75 +209,43 @@ class SpaceMirrorAdvancedOversight {
           over -= take;
         }
       };
+      const clampMirrorsTo = (max) => {
+        let sum = 0;
+        for (const k of Object.keys(assignM)) sum += Math.abs(assignM[k] || 0);
+        if (sum <= max) return;
+        const entries = Object.keys(assignM)
+          .map(k => ({
+            k,
+            v: Math.abs(assignM[k] || 0),
+            reverseMode: (assignM[k] || 0) < 0,
+            p: (k === 'focus' ? (prio.focus || 5) : (prio[k] || 5))
+          }))
+          .sort((a, b) => b.p - a.p);
+        let over = sum - max;
+        for (const e of entries) {
+          if (over <= 0) break;
+          const take = Math.min(e.v, over);
+          setMirrorCount(e.k, e.v - take, e.reverseMode);
+          over -= take;
+        }
+      };
 
       // Apply warm start
       //restoreFromLast();
       // Make sure reversal is only used if available
       if (!REVERSAL_AVAILABLE) {
-        reverse.tropical = reverse.temperate = reverse.polar = false;
-      }
-      reverse.any = false;
-
-      // Determine reversal from the local controlled state of each zone:
-      // temporarily clear that zone's own mirrors/lanterns and reversal while
-      // leaving all other assignments intact, then see whether the zone still
-      // sits above target. This lets a zone use local cooling even when the
-      // planet-wide baseline is cold but global available heat overshoots it.
-      const alignReversalFromBaseline = () => {
-        const savedReverse = { ...reverse };
-        let changed = false;
-
-        // Set reversal based on baseline vs targets
-        if (REVERSAL_AVAILABLE) {
-          for (const z of ZONES) {
-            const tgt = targets[z] || 0;
-            let desiredReverse = !!savedReverse[z];
-            if (tgt > 0) {
-              const savedMirror = assignM[z] || 0;
-              const savedLantern = assignL[z] || 0;
-              const savedZoneReverse = !!reverse[z];
-              assignM[z] = 0;
-              assignL[z] = 0;
-              reverse[z] = false;
-              updateTemps();
-              const probeTemp = getZoneTemp(z);
-              assignM[z] = savedMirror;
-              assignL[z] = savedLantern;
-              reverse[z] = savedZoneReverse;
-              updateTemps();
-              if (isFinite(probeTemp)) {
-                desiredReverse = probeTemp > tgt;
-              }
-            }
-
-            if (desiredReverse !== !!savedReverse[z]) {
-              if ((assignM[z] || 0) > 0 || (assignL[z] || 0) > 0) {
-                assignM[z] = 0;
-                assignL[z] = 0;
-                changed = true;
-              }
-            } else if (desiredReverse && (assignL[z] || 0) > 0) {
-              assignL[z] = 0;
-              changed = true;
-            }
-
-            reverse[z] = desiredReverse;
+        for (const zone of ZONES) {
+          if (isMirrorReverse(zone)) {
+            setMirrorCount(zone, getMirrorCount(zone), false);
           }
-        } else {
-          reverse.tropical = reverse.temperate = reverse.polar = false;
         }
-
-        // Ensure 'any' remains off in advanced mode
-        reverse.any = false;
-        if (changed) {
-          updateTemps();
-        }
-      };
+      }
+      syncDerivedReverseState();
 
       const clearLanternsInReverseZones = () => {
         let changed = false;
         for (const zone of ZONES) {
-          if (!reverse[zone]) continue;
+          if (!isMirrorReverse(zone)) continue;
           if ((assignL[zone] || 0) > 0) {
             assignL[zone] = 0;
             changed = true;
@@ -225,15 +256,15 @@ class SpaceMirrorAdvancedOversight {
 
       const trimReverseFloorOvershoot = () => {
         for (const zone of ZONES) {
-          if (!reverse[zone]) continue;
-          const current = assignM[zone] || 0;
+          if (!isMirrorReverse(zone)) continue;
+          const current = getMirrorCount(zone);
           if (!(current > 0)) continue;
           const currentFlux = terraforming.calculateZoneSolarFlux(zone);
           if (currentFlux > NEAR_MIN_FLUX) continue;
 
           const fluxFor = (count) => {
             const prior = assignM[zone] || 0;
-            assignM[zone] = count;
+            setMirrorCount(zone, count, true);
             const flux = terraforming.calculateZoneSolarFlux(zone);
             assignM[zone] = prior;
             return flux;
@@ -254,14 +285,15 @@ class SpaceMirrorAdvancedOversight {
               high = mid;
             }
           }
-          assignM[zone] = low;
+          setMirrorCount(zone, low, true);
         }
+        syncDerivedReverseState();
       };
 
       // ---------------- Objective ----------------
       const computeFocusMeltRate = () => {
         if (!FOCUS_FLAG) return 0;
-        const m = assignM.focus;
+        const m = getMirrorCount('focus');
         const l = assignL.focus;
         const focusPower = m * mirrorPowerPer + l * lanternPowerPer;
 
@@ -274,21 +306,6 @@ class SpaceMirrorAdvancedOversight {
 
         const meltKgPerSec = focusPower / energyPerKg;
         return Math.max(0, meltKgPerSec / 1000)*86400; // tons/sec
-      };
-
-      const getAssignedMirrorCount = () =>
-        (assignM.tropical || 0) + (assignM.temperate || 0) + (assignM.polar || 0) + (assignM.focus || 0);
-
-      const getAssignedLanternCount = () =>
-        (assignL.tropical || 0) + (assignL.temperate || 0) + (assignL.polar || 0) + (assignL.focus || 0);
-
-      const computeAssignedForcing = () => {
-        const assignedPower =
-          getAssignedMirrorCount() * mirrorPowerPer +
-          getAssignedLanternCount() * lanternPowerPer;
-        const surfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
-        if (!(surfaceArea > 0) || !(assignedPower > 0)) return 0;
-        return (4 * assignedPower) / surfaceArea;
       };
 
       const objective = (passLevel) => {
@@ -319,19 +336,10 @@ class SpaceMirrorAdvancedOversight {
         return sum;
       };
 
-      const tempsNeed = () => {
-        const t = readTemps();
-        return {
-          heat: ZONES.filter(z => (targets[z]) > 0 && isFinite(t[z]) && t[z] < (targets[z]-K_TOL)),
-          cool: ZONES.filter(z => (targets[z]) > 0 && isFinite(t[z]) && t[z] > (targets[z]+K_TOL))
-        };
-      };
-
       // Utility: run a temporary change, eval, then rollback
       const withTempChange = (changer, evaluator) => {
         const snapM = { ...assignM };
         const snapL = { ...assignL };
-        const snapR = { ...reverse };
         const shallowEqual = (a, b) => {
           const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
           for (const k of keys) {
@@ -340,7 +348,7 @@ class SpaceMirrorAdvancedOversight {
           return true;
         };
         changer();
-        const changed = !(shallowEqual(assignM, snapM) && shallowEqual(assignL, snapL) && shallowEqual(reverse, snapR));
+        const changed = !(shallowEqual(assignM, snapM) && shallowEqual(assignL, snapL));
         if (changed) {
           // Only recompute temps when something actually changed
           updateTemps();
@@ -348,7 +356,7 @@ class SpaceMirrorAdvancedOversight {
           // Roll back and restore temps
           Object.assign(assignM, snapM);
           Object.assign(assignL, snapL);
-          Object.assign(reverse, snapR);
+          syncDerivedReverseState();
           updateTemps();
           return out;
         } else {
@@ -357,14 +365,9 @@ class SpaceMirrorAdvancedOversight {
         }
       };
 
-      // Suggest a probe size given remaining units
-      const probeSize = (remain, minAbs, frac) =>
-        Math.max(1, Math.min(remain, Math.ceil(Math.max(minAbs, remain * frac))));
-
       // Build batched candidates for this pass
       const buildCandidates = (passLevel) => {
         const cands = [];
-        updateTemps();
         const temps = readTemps();
         const baseScore = objective(passLevel);
 
@@ -372,50 +375,50 @@ class SpaceMirrorAdvancedOversight {
         for (const z of ZONES) {
           if ((prio[z] || 5) > passLevel) continue; // only optimize up to current pass
           const tgt = targets[z] || 0; if (!(tgt > 0)) continue;
+          const addMirrorDirectionCandidate = (direction) => {
+            if (direction < 0 && !REVERSAL_AVAILABLE) return;
+            const capacity = mirrorDeltaCapacity(z, direction);
+            if (!(capacity > 0)) return;
+            const probe = 1;
+            const probeResult = withTempChange(() => { adjustMirrorCount(z, direction * probe); }, () => ({
+              score: objective(passLevel),
+              temp: getZoneTemp(z),
+            }));
+            const dPerUnit = (baseScore - probeResult.score) / probe;
+            const dT = (isFinite(probeResult.temp) && isFinite(temps[z])) ? (probeResult.temp - temps[z]) : 0;
+            const dtPerUnit = dT / probe;
+            let unitsNeeded = 0;
+            if (dtPerUnit > 0) {
+              unitsNeeded = Math.ceil((targets[z] - temps[z]) / dtPerUnit);
+            } else if (dtPerUnit < 0) {
+              unitsNeeded = Math.ceil((temps[z] - targets[z]) / (-dtPerUnit));
+            }
+            unitsNeeded = Math.max(0, Math.min(unitsNeeded, capacity));
+            const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), capacity));
+            if (step > 0) {
+              cands.push({
+                kind: 'mirror-adjust',
+                zone: z,
+                delta: direction * step,
+                kProbe: probe,
+                kStep: step,
+                gainPerUnit: dPerUnit
+              });
+            }
+          };
 
-          const needCool = temps[z] > tgt + K_TOL;
-          const needHeat = temps[z] < tgt - K_TOL;
-
-          // Mirrors (heating)
-          // Only add heat when baseline-aligned reversal is OFF for this zone.
-          if (mirrorsLeft() > 0 && !reverse[z]) {
-            const k = MIRROR_PROBE_MIN;
-            const score = withTempChange(() => { reverse[z] = false; assignM[z] = (assignM[z]) + k; }, () => objective(passLevel));
-            const dPerUnit = (baseScore - score) / k;
-            // Estimate units needed from zone error (local slope for this zone)
-            const tAfter = withTempChange(() => { reverse[z] = false; assignM[z] = (assignM[z]) + k; },
-                                          () => getZoneTemp(z));
-            const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0;
-            const dtPerUnit = dT / k;
-            let unitsNeeded = (dtPerUnit > 0) ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
-            unitsNeeded = Math.max(0, Math.min(unitsNeeded, mirrorsLeft()));
-            const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), mirrorsLeft()));
-            if (step > 0) cands.push({ kind:'mirror', zone:z, reverse:false, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-          }
-
-          // Mirrors (cooling) via reversal
-          // Only add cooling when baseline-aligned reversal is ON for this zone.
-          if (REVERSAL_AVAILABLE && mirrorsLeft() > 0 && !!reverse[z]) {
-            const k = MIRROR_PROBE_MIN;
-            const score = withTempChange(() => { reverse[z] = true; assignM[z] = (assignM[z]) + k; }, () => objective(passLevel));
-            const dPerUnit = (baseScore - score) / k;
-            const tAfter = withTempChange(() => { reverse[z] = true; assignM[z] = (assignM[z]) + k; },
-                                          () => getZoneTemp(z));
-            const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0; // will be negative
-            const dtPerUnit = dT / k; // < 0 expected
-            let unitsNeeded = (dtPerUnit < 0) ? Math.ceil((temps[z] - targets[z]) / (-dtPerUnit)) : 0;
-            unitsNeeded = Math.max(0, Math.min(unitsNeeded, mirrorsLeft()));
-            const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), mirrorsLeft()));
-            if (step > 0) cands.push({ kind:'mirror', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-          }
+          addMirrorDirectionCandidate(1);
+          addMirrorDirectionCandidate(-1);
 
           // Lanterns (heating)
-          if (lanternsLeft() > 0 && !reverse[z]) {
+          if (lanternsLeft() > 0 && !isMirrorReverse(z)) {
             const k = LANTERN_PROBE_MIN;
-            const score = withTempChange(() => { assignL[z] = (assignL[z]) + k; }, () => objective(passLevel));
-            const dPerUnit = (baseScore - score) / k;
-            const tAfter = withTempChange(() => { assignL[z] = (assignL[z]) + k; }, () => getZoneTemp(z));
-            const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0;
+            const probe = withTempChange(() => { assignL[z] = (assignL[z]) + k; }, () => ({
+              score: objective(passLevel),
+              temp: getZoneTemp(z),
+            }));
+            const dPerUnit = (baseScore - probe.score) / k;
+            const dT = (isFinite(probe.temp) && isFinite(temps[z])) ? (probe.temp - temps[z]) : 0;
             const dtPerUnit = dT / k;
             let unitsNeeded = (dtPerUnit > 0) ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
             unitsNeeded = Math.max(0, Math.min(unitsNeeded, lanternsLeft()));
@@ -424,58 +427,16 @@ class SpaceMirrorAdvancedOversight {
           }
 
           // Removal candidates when locked mode conflicts with need
-          // - If reversal is ON (cooling) but zone needs heat, try removing cooling mirrors
-          if (!!reverse[z] && (assignM[z] || 0) > 0) {
-            const current = assignM[z] || 0;
-            const evaluateProbe = (probeAmount) => {
-              const actual = Math.max(1, Math.min(current, probeAmount));
-              const candidateScore = withTempChange(() => { assignM[z] = current - actual; }, () => objective(passLevel));
-              const tempAfter = withTempChange(() => { assignM[z] = current - actual; }, () => getZoneTemp(z));
-              const delta = (isFinite(tempAfter) && isFinite(temps[z])) ? (tempAfter - temps[z]) : 0;
-              return { actual, candidateScore, delta };
-            };
-            let probe = MIRROR_PROBE_MIN;
-            if (probe > current) probe = current;
-            let { actual, candidateScore, delta } = evaluateProbe(probe);
-            while (delta <= 0 && actual < current) {
-              const scaled = Math.min(current, actual * 10);
-              if (scaled === actual) break;
-              const result = evaluateProbe(scaled);
-              actual = result.actual;
-              candidateScore = result.candidateScore;
-              delta = result.delta;
-            }
-            if (delta > 0) {
-              const dPerUnit = (baseScore - candidateScore) / actual;
-              const dtPerUnit = delta / actual;
-              let unitsNeeded = dtPerUnit > 0 ? Math.ceil((targets[z] - temps[z]) / dtPerUnit) : 0;
-              unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-              const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-              if (step > 0) cands.push({ kind:'mirror-remove', zone:z, kProbe:actual, kStep:step, gainPerUnit:dPerUnit });
-            }
-          }
-          // - If reversal is OFF (heating) but zone needs cool, try removing heating mirrors
-          if (!reverse[z] && (assignM[z] || 0) > 0) {
-            const current = assignM[z] || 0;
-            const k = Math.max(1, Math.min(current, MIRROR_PROBE_MIN));
-            const score = withTempChange(() => { assignM[z] = current - k; }, () => objective(passLevel));
-            const dPerUnit = (baseScore - score) / k;
-            const tAfter = withTempChange(() => { assignM[z] = current - k; }, () => getZoneTemp(z));
-            const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0; // expected < 0
-            const dtPerUnit = dT / k;
-            let unitsNeeded = (dtPerUnit < 0) ? Math.ceil((temps[z] - targets[z]) / (-dtPerUnit)) : 0;
-            unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
-            const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), current));
-            if (step > 0) cands.push({ kind:'mirror-remove', zone:z, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
-          }
           // - Lanterns only heat; if the zone needs cooling, try removing lanterns
           if ((assignL[z] || 0) > 0) {
             const current = assignL[z] || 0;
             const k = Math.max(1, Math.min(current, LANTERN_PROBE_MIN));
-            const score = withTempChange(() => { assignL[z] = current - k; }, () => objective(passLevel));
-            const dPerUnit = (baseScore - score) / k;
-            const tAfter = withTempChange(() => { assignL[z] = current - k; }, () => getZoneTemp(z));
-            const dT = (isFinite(tAfter) && isFinite(temps[z])) ? (tAfter - temps[z]) : 0; // expected < 0
+            const probe = withTempChange(() => { assignL[z] = current - k; }, () => ({
+              score: objective(passLevel),
+              temp: getZoneTemp(z),
+            }));
+            const dPerUnit = (baseScore - probe.score) / k;
+            const dT = (isFinite(probe.temp) && isFinite(temps[z])) ? (probe.temp - temps[z]) : 0; // expected < 0
             const dtPerUnit = dT / k;
             let unitsNeeded = (dtPerUnit < 0) ? Math.ceil((temps[z] - targets[z]) / (-dtPerUnit)) : 0;
             unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
@@ -492,22 +453,26 @@ class SpaceMirrorAdvancedOversight {
           if (wantMore) {
             if (mirrorsLeft() > 0) {
               const k = 1;
-              const score = withTempChange(() => { assignM.focus = (assignM.focus) + k; }, () => objective(passLevel));
-              const dPerUnit = (baseScore - score) / k;
-              const meltAfter = withTempChange(() => { assignM.focus = (assignM.focus) + k; }, () => computeFocusMeltRate());
-              const dMelt = Math.max(0, meltAfter - baseMelt);
+              const probe = withTempChange(() => { addMirrorCount('focus', k, false); }, () => ({
+                score: objective(passLevel),
+                melt: computeFocusMeltRate(),
+              }));
+              const dPerUnit = (baseScore - probe.score) / k;
+              const dMelt = Math.max(0, probe.melt - baseMelt);
               const dMeltPerUnit = dMelt / k;
               let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((waterTarget - baseMelt) / dMeltPerUnit) : 0;
               unitsNeeded = Math.max(0, Math.min(unitsNeeded, mirrorsLeft()));
               const step = Math.max(0, Math.min(Math.ceil(SAFETY_FRACTION * unitsNeeded), mirrorsLeft()));
-              if (step > 0) cands.push({ kind:'mirror', zone:'focus', reverse:false, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
+              if (step > 0) cands.push({ kind:'mirror-adjust', zone:'focus', delta: step, kProbe:k, kStep:step, gainPerUnit:dPerUnit });
             }
             if (lanternsLeft() > 0) {
               const k = 1;
-              const score = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => objective(passLevel));
-              const dPerUnit = (baseScore - score) / k;
-              const meltAfter = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => computeFocusMeltRate());
-              const dMelt = Math.max(0, meltAfter - baseMelt);
+              const probe = withTempChange(() => { assignL.focus = (assignL.focus) + k; }, () => ({
+                score: objective(passLevel),
+                melt: computeFocusMeltRate(),
+              }));
+              const dPerUnit = (baseScore - probe.score) / k;
+              const dMelt = Math.max(0, probe.melt - baseMelt);
               const dMeltPerUnit = dMelt / k;
               let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((waterTarget - baseMelt) / dMeltPerUnit) : 0;
               unitsNeeded = Math.max(0, Math.min(unitsNeeded, lanternsLeft()));
@@ -517,14 +482,16 @@ class SpaceMirrorAdvancedOversight {
           }
           const wantLess = baseMelt > waterTarget * (1 + WATER_REL_TOL);
           if (wantLess) {
-            if ((assignM.focus || 0) > 0) {
-              const current = assignM.focus || 0;
+            if (getMirrorCount('focus') > 0) {
+              const current = getMirrorCount('focus');
               const k = 1;
-              const score = withTempChange(() => { assignM.focus = current - k; }, () => objective(passLevel));
-              const dPerUnit = (baseScore - score) / k;
-              const meltAfter = withTempChange(() => { assignM.focus = current - k; }, () => computeFocusMeltRate());
-              if(meltAfter >= waterTarget){
-                const dMelt = Math.max(0, baseMelt - meltAfter);
+              const probe = withTempChange(() => { setMirrorCount('focus', current - k, false); }, () => ({
+                score: objective(passLevel),
+                melt: computeFocusMeltRate(),
+              }));
+              const dPerUnit = (baseScore - probe.score) / k;
+              if (probe.melt >= waterTarget) {
+                const dMelt = Math.max(0, baseMelt - probe.melt);
                 const dMeltPerUnit = dMelt / k;
                 let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
                 unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
@@ -535,11 +502,13 @@ class SpaceMirrorAdvancedOversight {
             if ((assignL.focus || 0) > 0) {
               const current = assignL.focus || 0;
               const k = 1;
-              const score = withTempChange(() => { assignL.focus = current - k; }, () => objective(passLevel));
-              const dPerUnit = (baseScore - score) / k;
-              const meltAfter = withTempChange(() => { assignL.focus = current - k; }, () => computeFocusMeltRate());
-              if(meltAfter >= waterTarget){
-                const dMelt = Math.max(0, baseMelt - meltAfter);
+              const probe = withTempChange(() => { assignL.focus = current - k; }, () => ({
+                score: objective(passLevel),
+                melt: computeFocusMeltRate(),
+              }));
+              const dPerUnit = (baseScore - probe.score) / k;
+              if (probe.melt >= waterTarget) {
+                const dMelt = Math.max(0, baseMelt - probe.melt);
                 const dMeltPerUnit = dMelt / k;
                 let unitsNeeded = (dMeltPerUnit > 0) ? Math.ceil((baseMelt - waterTarget) / dMeltPerUnit) : 0;
                 unitsNeeded = Math.max(0, Math.min(unitsNeeded, current));
@@ -567,50 +536,12 @@ class SpaceMirrorAdvancedOversight {
             return Math.min(donorAvailable, scaled);
           };
 
-          if (mirrorsLeft() <= 0) {
-            const donors = [...ZONES, 'focus'].filter(dz => (assignM[dz]) > 0)
-              .filter(dz => (dz === 'focus' ? (prio.focus||5) : (prio[dz]||5)) > passLevel);
-            const receivers = [...ZONES, 'focus'].filter(rz => {
-              if (rz === 'focus') return FOCUS_FLAG && (targets.water)>0 && (prio.focus||5) <= passLevel;
-              return (targets[rz]) > 0 && (prio[rz]||5) <= passLevel;
-            });
-            const baseScoreR = objective(passLevel);
-
-            donors.forEach(dz => receivers.forEach(rz => {
-              const donorHas = assignM[dz];
-              if (!(donorHas > 0)) return;
-              const probe = Math.max(1, Math.min(donorHas, REALLOC_MIN));
-              const applyProbe = (amount, evaluator) => withTempChange(() => {
-                assignM[dz] = donorHas - amount;
-                assignM[rz] = (assignM[rz]) + amount;
-              }, evaluator);
-              const candidateScore = applyProbe(probe, () => objective(passLevel));
-              const dPerUnit = (baseScoreR - candidateScore) / probe;
-              if (dPerUnit <= 0) return;
-              let step = probe;
-              if (rz === 'focus') {
-                if (focusTarget > 0) {
-                  const meltAfter = applyProbe(probe, () => computeFocusMeltRate());
-                  step = resolveStep(baseFocusMelt, focusTarget, meltAfter, donorHas, probe);
-                }
-              } else {
-                const target = targets[rz] || 0;
-                if (target > 0) {
-                  const tempAfter = applyProbe(probe, () => getZoneTemp(rz));
-                  step = resolveStep(temps[rz], target, tempAfter, donorHas, probe);
-                }
-              }
-              if (step <= 0) return;
-              cands.push({ kind:'mirror-realloc', from:dz, to:rz, kProbe:probe, kStep:step, gainPerUnit:dPerUnit });
-            }));
-          }
-
           if (lanternsLeft() <= 0) {
             const donors = [...ZONES, 'focus'].filter(dz => (assignL[dz]) > 0)
               .filter(dz => (dz === 'focus' ? (prio.focus||5) : (prio[dz]||5)) > passLevel);
             const receivers = [...ZONES, 'focus'].filter(rz => {
               if (rz === 'focus') return FOCUS_FLAG && (targets.water)>0 && (prio.focus||5) <= passLevel;
-              if (reverse[rz]) return false;
+              if (isMirrorReverse(rz)) return false;
               const t = getZoneTemp(rz);
               return (targets[rz]) > 0 && (prio[rz]||5) <= passLevel && isFinite(t) && t < (targets[rz]-K_TOL);
             });
@@ -624,20 +555,22 @@ class SpaceMirrorAdvancedOversight {
                 assignL[dz] = donorHas - amount;
                 assignL[rz] = (assignL[rz]) + amount;
               }, evaluator);
-              const candidateScore = applyProbe(probe, () => objective(passLevel));
-              const dPerUnit = (baseScoreR - candidateScore) / probe;
+              const probeResult = applyProbe(probe, () => ({
+                score: objective(passLevel),
+                temp: rz === 'focus' ? NaN : getZoneTemp(rz),
+                melt: rz === 'focus' ? computeFocusMeltRate() : NaN,
+              }));
+              const dPerUnit = (baseScoreR - probeResult.score) / probe;
               if (dPerUnit <= 0) return;
               let step = probe;
               if (rz === 'focus') {
                 if (focusTarget > 0) {
-                  const meltAfter = applyProbe(probe, () => computeFocusMeltRate());
-                  step = resolveStep(baseFocusMelt, focusTarget, meltAfter, donorHas, probe);
+                  step = resolveStep(baseFocusMelt, focusTarget, probeResult.melt, donorHas, probe);
                 }
               } else {
                 const target = targets[rz] || 0;
                 if (target > 0) {
-                  const tempAfter = applyProbe(probe, () => getZoneTemp(rz));
-                  step = resolveStep(temps[rz], target, tempAfter, donorHas, probe);
+                  step = resolveStep(temps[rz], target, probeResult.temp, donorHas, probe);
                 }
               }
               if (step <= 0) return;
@@ -699,9 +632,8 @@ class SpaceMirrorAdvancedOversight {
 
       const buildPruneCandidates = (passLevel) => {
         const cands = [];
-        updateTemps();
+        if (mirrorsLeft() > 0 && lanternsLeft() > 0) return cands;
         if (!withinPassTolerance(passLevel)) return cands;
-        const baseForcing = computeAssignedForcing();
         const surfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
         const mirrorForcingPerUnit = surfaceArea > 0 ? (4 * mirrorPowerPer) / surfaceArea : 0;
         const lanternForcingPerUnit = surfaceArea > 0 ? (4 * lanternPowerPer) / surfaceArea : 0;
@@ -709,20 +641,18 @@ class SpaceMirrorAdvancedOversight {
         const addRemovalCandidate = (kind, zone, current, probe, unitForcing, applyRemoval) => {
           const step = findMaxSafeRemovalStep(current, probe, applyRemoval, passLevel);
           if (!(step > 0)) return;
-          const forcingAfter = withTempChange(() => {
-            applyRemoval(step);
-          }, () => computeAssignedForcing());
-          const forcingReduction = baseForcing - forcingAfter;
+          const forcingReduction = unitForcing * step;
           if (forcingReduction > 0 && unitForcing > 0) {
             cands.push({ kind, zone, kStep: step, gainPerUnit: unitForcing, forcingReduction });
           }
         };
 
         for (const z of ZONES) {
-          const mirrorCount = assignM[z] || 0;
+          const mirrorCount = getMirrorCount(z);
           if (mirrorCount > 0) {
+            const reverseMode = isMirrorReverse(z);
             addRemovalCandidate('mirror-remove', z, mirrorCount, MIRROR_PROBE_MIN, mirrorForcingPerUnit, (amount) => {
-              assignM[z] = mirrorCount - amount;
+              setMirrorCount(z, mirrorCount - amount, reverseMode);
             });
           }
 
@@ -734,10 +664,10 @@ class SpaceMirrorAdvancedOversight {
           }
         }
 
-        const focusMirrors = assignM.focus || 0;
+        const focusMirrors = getMirrorCount('focus');
         if (focusMirrors > 0) {
           addRemovalCandidate('mirror-remove', 'focus', focusMirrors, MIRROR_PROBE_MIN, mirrorForcingPerUnit, (amount) => {
-            assignM.focus = focusMirrors - amount;
+            setMirrorCount('focus', focusMirrors - amount, false);
           });
         }
 
@@ -753,23 +683,17 @@ class SpaceMirrorAdvancedOversight {
       };
 
       const commitCandidate = (best) => {
-        if (best.kind === 'mirror') {
-          const step = Math.min(best.kStep, mirrorsLeft());
+        if (best.kind === 'mirror-adjust') {
+          const capacity = mirrorDeltaCapacity(best.zone, Math.sign(best.delta));
+          const step = Math.min(Math.abs(best.delta), capacity);
           if (step <= 0) return false;
-          assignM[best.zone] = (assignM[best.zone]) + step;
+          adjustMirrorCount(best.zone, Math.sign(best.delta) * step);
           return true;
         }
         if (best.kind === 'lantern') {
           const step = Math.min(best.kStep, lanternsLeft());
           if (step <= 0) return false;
           assignL[best.zone] = (assignL[best.zone]) + step;
-          return true;
-        }
-        if (best.kind === 'mirror-realloc') {
-          const step = Math.min(best.kStep, assignM[best.from]);
-          if (step <= 0) return false;
-          assignM[best.from] = (assignM[best.from]) - step;
-          assignM[best.to] = (assignM[best.to]) + step;
           return true;
         }
         if (best.kind === 'lantern-realloc') {
@@ -780,9 +704,9 @@ class SpaceMirrorAdvancedOversight {
           return true;
         }
         if (best.kind === 'mirror-remove') {
-          const step = Math.min(best.kStep, assignM[best.zone]);
+          const step = Math.min(best.kStep, getMirrorCount(best.zone));
           if (step <= 0) return false;
-          assignM[best.zone] = (assignM[best.zone]) - step;
+          removeMirrorCount(best.zone, step);
           return true;
         }
         if (best.kind === 'lantern-remove') {
@@ -820,17 +744,12 @@ class SpaceMirrorAdvancedOversight {
           (FOCUS_FLAG && (targets.water) > 0 && (prio.focus||5) <= pass);
         if (!hasActive) continue;
 
-        // Re-evaluate only zones with zero mirror assignments on every pass.
-        // Zones already carrying mirror assignments keep their current reverse mode.
-        alignReversalFromBaseline();
-        clearLanternsInReverseZones();
         trimReverseFloorOvershoot();
 
         let actions = 0;
 
         while (actions < MAX_ACTIONS_PER_PASS) {
           if (withinPassTolerance(pass)) break;
-          updateTemps();
           const cands = buildCandidates(pass);
           if (!cands.length || (cands[0].gainPerUnit || 0) <= 0) break; // no improving move
 
@@ -840,22 +759,23 @@ class SpaceMirrorAdvancedOversight {
           actions++;
           updateTemps();
         }
+      }
 
-        let pruneActions = 0;
-        while (pruneActions < MAX_PRUNE_ACTIONS_PER_PASS) {
-          updateTemps();
-          if (!withinPassTolerance(pass)) break;
-          const pruneCands = buildPruneCandidates(pass);
-          if (!pruneCands.length || (pruneCands[0].gainPerUnit || 0) <= 0) break;
-          if (!commitCandidate(pruneCands[0])) break;
-          pruneActions++;
-          updateTemps();
-        }
+      let pruneActions = 0;
+      while (pruneActions < MAX_PRUNE_ACTIONS) {
+        if (!withinPassTolerance(maxP)) break;
+        const pruneCands = buildPruneCandidates(maxP);
+        if (!pruneCands.length || (pruneCands[0].gainPerUnit || 0) <= 0) break;
+        if (!commitCandidate(pruneCands[0])) break;
+        pruneActions++;
+        updateTemps();
       }
 
       // Final clamping (defensive)
-      clampTo(assignM, totalMirrors);
+      clampMirrorsTo(totalMirrors);
       clampTo(assignL, totalLanterns);
+      clearLanternsInReverseZones();
+      syncDerivedReverseState();
 
       // Persist assignments (already in place) and save warm-start snapshot
       settings.assignments.mirrors = assignM;

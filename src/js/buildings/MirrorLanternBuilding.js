@@ -81,9 +81,13 @@ class MirrorLanternBuilding extends MirrorBase {
         assignedCount = total;
       } else {
         const assigned = settings.assignments?.[typeKey] || {};
-        assignedCount = getZones().reduce((sum, zone) => sum + (assigned[zone] || 0), 0)
-          + (assigned.focus || 0)
-          + (assigned.any || 0);
+        const countFor = (zone) => {
+          const value = assigned[zone] || 0;
+          return settings.advancedOversight && isMirror ? Math.abs(value) : value;
+        };
+        assignedCount = getZones().reduce((sum, zone) => sum + countFor(zone), 0)
+          + countFor('focus')
+          + countFor('any');
       }
     } else {
       const dist = settings.distribution || {};
