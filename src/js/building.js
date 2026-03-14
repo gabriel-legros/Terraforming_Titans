@@ -1534,6 +1534,8 @@ function registerBuildingConstructor(name, ctor) {
 const constructors = {
   oreMine: 'OreMine',
   sandQuarry: 'SandQuarry',
+  androidFactory: 'AndroidFactory',
+  cloningFacility: 'CloningFacility',
   dustFactory: 'DustFactory',
   ghgFactory: 'GhgFactory',
   oxygenFactory: 'OxygenFactory',

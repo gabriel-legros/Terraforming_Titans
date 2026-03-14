@@ -1,4 +1,24 @@
 class AndroidHousing extends Building {
+  constructor(config, buildingName) {
+    super(config, buildingName);
+    this.automationCustomBasisOptions = (this.automationCustomBasisOptions || []).concat([
+      {
+        value: 'androidCapacityShare',
+        label: '% android capacity'
+      }
+    ]);
+  }
+
+  getAndroidCapacityShareTarget(totalAndroidCapacity) {
+    const perBuildingCapacity = this.getStorageAmount('colony', 'androids');
+    if (perBuildingCapacity <= 0) {
+      return 0;
+    }
+
+    const capacityBudget = Math.max(0, (this.autoBuildPercent || 0) * totalAndroidCapacity / 100);
+    return Math.floor(capacityBudget / perBuildingCapacity);
+  }
+
   getConsumptionRatio() {
     return this.getUsageProductivity(resources);
   }

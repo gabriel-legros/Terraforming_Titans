@@ -670,8 +670,9 @@ function autoBuild(buildings, delta = 0) {
             const usesFixedBasis = building.autoBuildBasis === 'fixed';
             const usesWorkerShareBasis = building.autoBuildBasis === 'workerShare';
             const usesLandShareBasis = building.autoBuildBasis === 'landShare';
+            const usesAndroidCapacityShareBasis = building.autoBuildBasis === 'androidCapacityShare';
             const fixedTarget = usesFixedBasis ? Math.max(0, Math.floor(building.autoBuildFixed || 0)) : 0;
-            const base = usesMaxBasis || usesFixedBasis || usesWorkerShareBasis || usesLandShareBasis
+            const base = usesMaxBasis || usesFixedBasis || usesWorkerShareBasis || usesLandShareBasis || usesAndroidCapacityShareBasis
                 ? 0
                 : resolveAutoBuildBase(building, population, workerCap, buildings);
             const targetCount = usesMaxBasis
@@ -682,6 +683,8 @@ function autoBuild(buildings, delta = 0) {
                         ? building.getWorkerShareTarget(workerCap)
                         : usesLandShareBasis
                             ? building.getLandShareTarget(totalLand)
+                            : usesAndroidCapacityShareBasis
+                                ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
                             : Math.ceil(((building.autoBuildPercent || 0) * base) / 100);
 
             buildingInfos.push({ building, targetCount });

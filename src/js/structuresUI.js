@@ -171,8 +171,9 @@ function refreshAutoBuildTarget(structure) {
   const autoBuildUsesFixed = structure.autoBuildBasis === 'fixed';
   const autoBuildUsesWorkerShare = structure.autoBuildBasis === 'workerShare';
   const autoBuildUsesLandShare = structure.autoBuildBasis === 'landShare';
+  const autoBuildUsesAndroidCapacityShare = structure.autoBuildBasis === 'androidCapacityShare';
   const fixedTarget = Math.max(0, Math.floor(structure.autoBuildFixed || 0));
-  const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed || autoBuildUsesWorkerShare || autoBuildUsesLandShare
+  const base = autoBuildUsesMax || autoBuildUsesFill || autoBuildUsesFixed || autoBuildUsesWorkerShare || autoBuildUsesLandShare || autoBuildUsesAndroidCapacityShare
     ? 0
     : getAutoBuildBaseValue(structure, pop, workerCap, collection);
   const targetCount = autoBuildUsesMax
@@ -183,6 +184,8 @@ function refreshAutoBuildTarget(structure) {
         ? structure.getWorkerShareTarget(workerCap)
         : autoBuildUsesLandShare
           ? structure.getLandShareTarget(totalLand)
+          : autoBuildUsesAndroidCapacityShare
+            ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
           : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
 
   if (els.autoBuildTarget) {
@@ -1113,7 +1116,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const usesFixedMode = structure.autoBuildBasis === 'fixed';
     const usesWorkerShareMode = structure.autoBuildBasis === 'workerShare';
     const usesLandShareMode = structure.autoBuildBasis === 'landShare';
-    const base = (usesFillMode || usesMaxMode || usesFixedMode || usesWorkerShareMode || usesLandShareMode)
+    const usesAndroidCapacityShareMode = structure.autoBuildBasis === 'androidCapacityShare';
+    const base = (usesFillMode || usesMaxMode || usesFixedMode || usesWorkerShareMode || usesLandShareMode || usesAndroidCapacityShareMode)
       ? 0
       : getAutoBuildBaseValue(structure, pop, workerCap, baseCollection);
     const targetCount = usesFillMode
@@ -1126,6 +1130,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
             ? structure.getWorkerShareTarget(workerCap)
             : usesLandShareMode
               ? structure.getLandShareTarget(totalLand)
+              : usesAndroidCapacityShareMode
+                ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
               : Math.ceil((structure.autoBuildPercent * base || 0) / 100);
     const desiredActive = Math.min(targetCount, structure.count);
     const change = desiredActive - structure.active;
@@ -1168,6 +1174,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     const usesFixedMode = structure.autoBuildBasis === 'fixed';
     const usesWorkerShareMode = structure.autoBuildBasis === 'workerShare';
     const usesLandShareMode = structure.autoBuildBasis === 'landShare';
+    const usesAndroidCapacityShareMode = structure.autoBuildBasis === 'androidCapacityShare';
     
     // Only works for % of worker/pop modes
     if (usesFillMode || usesMaxMode) {
@@ -1227,6 +1234,41 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       const targetFromPercent = (percent) => {
         const landBudget = (percent * totalLand) / 100;
         return Math.floor(landBudget / perBuildingLand);
+      };
+      let bestPercent = Math.ceil(rawPercent * 1000000) / 1000000;
+      for (let decimals = 5; decimals >= 0; decimals--) {
+        const factor = Math.pow(10, decimals);
+        const floorCandidate = Math.floor(rawPercent * factor) / factor;
+        const ceilCandidate = Math.ceil(rawPercent * factor) / factor;
+        const floorTarget = targetFromPercent(floorCandidate);
+        const ceilTarget = targetFromPercent(ceilCandidate);
+        if (floorTarget === activeCount) {
+          bestPercent = floorCandidate;
+        } else if (ceilTarget === activeCount) {
+          bestPercent = ceilCandidate;
+        } else {
+          break;
+        }
+      }
+      structure.autoBuildPercent = bestPercent;
+      if (cached.autoBuildInput) {
+        cached.autoBuildInput.value = `${bestPercent}`;
+      }
+      refreshAutoBuildTarget(structure);
+      return;
+    }
+
+    if (usesAndroidCapacityShareMode) {
+      const perBuildingCapacity = structure.getStorageAmount('colony', 'androids');
+      const totalAndroidCapacity = resources.colony.androids.cap || 0;
+      if (perBuildingCapacity <= 0 || totalAndroidCapacity <= 0) {
+        return;
+      }
+      const activeCount = structure.active;
+      const rawPercent = (activeCount * perBuildingCapacity * 100) / totalAndroidCapacity;
+      const targetFromPercent = (percent) => {
+        const capacityBudget = (percent * totalAndroidCapacity) / 100;
+        return Math.floor(capacityBudget / perBuildingCapacity);
       };
       let bestPercent = Math.ceil(rawPercent * 1000000) / 1000000;
       for (let decimals = 5; decimals >= 0; decimals--) {
