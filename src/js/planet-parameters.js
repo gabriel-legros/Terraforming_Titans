@@ -1483,7 +1483,7 @@ const poseidonOverrides = {
     message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.  \n It is also possible to nearly softlock if using lifters too aggressively.  You have been warned.',
     hint: {
       title: 'Hint',
-      body: 'You can potentially save a lot of time by bringing in about 100T of superalloys from space storage.'
+      body: 'You can potentially save a lot of time by bringing in about 75T of superalloys from space storage.'
     }
   },
   star: {
@@ -1519,7 +1519,7 @@ const poseidonOverrides = {
   ],
   resources: {
     surface: {
-      land: { initialValue: 95_000_000_000 },
+      land: { initialValue: 72_500_000_000 },
       liquidWater: { initialValue: 0 },
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
