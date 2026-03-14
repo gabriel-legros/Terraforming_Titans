@@ -577,6 +577,7 @@ function initializeAutomationUI() {
 function updateAutomationVisibility() {
   cacheAutomationElements();
   const managerEnabled = !!(automationManager && automationManager.enabled);
+  updateSidebarAutomationToggleVisibility();
   if (managerEnabled) {
     if (!automationTabVisible) {
       showAutomationTab();

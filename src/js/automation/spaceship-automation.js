@@ -99,6 +99,18 @@ class SpaceshipAutomation {
     return this.presets.find(preset => preset.id === this.activePresetId) || null;
   }
 
+  getSelectedPresetId() {
+    return this.activePresetId;
+  }
+
+  getSelectedPreset() {
+    return this.getActivePreset();
+  }
+
+  setSelectedPresetId(id) {
+    this.setActivePreset(id);
+  }
+
   setActivePreset(id) {
     const preset = this.presets.find(item => item.id === id);
     if (!preset) return;

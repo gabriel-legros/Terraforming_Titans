@@ -39,6 +39,8 @@ class ProjectAutomation {
     this.presets = [];
     this.assignments = [];
     this.combinations = [];
+    this.selectedPresetId = null;
+    this.selectedCombinationId = null;
     this.everEnabledProjects = new Set();
     this.collapsed = false;
     this.masterEnabled = true;
@@ -127,6 +129,33 @@ class ProjectAutomation {
     return this.presets.find(preset => preset.id === id) || null;
   }
 
+  getSelectedPresetId() {
+    const preset = this.getSelectedPreset();
+    return preset ? preset.id : null;
+  }
+
+  getSelectedPreset() {
+    if (!this.selectedPresetId) {
+      return null;
+    }
+    const preset = this.getPresetById(Number(this.selectedPresetId));
+    if (!preset) {
+      this.selectedPresetId = null;
+      return null;
+    }
+    return preset;
+  }
+
+  setSelectedPresetId(id) {
+    if (id === null || id === undefined || id === '') {
+      this.selectedPresetId = null;
+      return null;
+    }
+    const preset = this.getPresetById(Number(id));
+    this.selectedPresetId = preset ? preset.id : null;
+    return preset;
+  }
+
   getAssignments() {
     return this.assignments.slice();
   }
@@ -137,6 +166,33 @@ class ProjectAutomation {
 
   getCombinationById(id) {
     return this.combinations.find(combo => combo.id === id) || null;
+  }
+
+  getSelectedCombinationId() {
+    const combo = this.getSelectedCombination();
+    return combo ? combo.id : null;
+  }
+
+  getSelectedCombination() {
+    if (!this.selectedCombinationId) {
+      return null;
+    }
+    const combo = this.getCombinationById(Number(this.selectedCombinationId));
+    if (!combo) {
+      this.selectedCombinationId = null;
+      return null;
+    }
+    return combo;
+  }
+
+  setSelectedCombinationId(id) {
+    if (id === null || id === undefined || id === '') {
+      this.selectedCombinationId = null;
+      return null;
+    }
+    const combo = this.getCombinationById(Number(id));
+    this.selectedCombinationId = combo ? combo.id : null;
+    return combo;
   }
 
   addAssignment(presetId) {
@@ -212,6 +268,7 @@ class ProjectAutomation {
       }))
     };
     this.combinations.push(combo);
+    this.selectedCombinationId = combo.id;
     return combo.id;
   }
 
@@ -233,6 +290,9 @@ class ProjectAutomation {
 
   deleteCombination(id) {
     this.combinations = this.combinations.filter(combo => combo.id !== id);
+    if (this.selectedCombinationId === id) {
+      this.selectedCombinationId = null;
+    }
     if (this.nextTravelCombinationId === id) {
       this.nextTravelCombinationId = null;
       this.nextTravelCombinationPersistent = false;
@@ -244,12 +304,14 @@ class ProjectAutomation {
     if (!combo) {
       return;
     }
+    this.selectedCombinationId = combo.id;
     this.setAssignments(combo.assignments);
   }
 
   addPreset(name, projectIds, options = {}) {
     const preset = this.buildPreset(name, projectIds, options);
     this.presets.push(preset);
+    this.selectedPresetId = preset.id;
     return preset.id;
   }
 
@@ -276,6 +338,9 @@ class ProjectAutomation {
   deletePreset(id) {
     this.presets = this.presets.filter(preset => preset.id !== id);
     this.assignments = this.assignments.filter(item => item.presetId !== id);
+    if (this.selectedPresetId === id) {
+      this.selectedPresetId = null;
+    }
   }
 
   renamePreset(id, name) {
@@ -806,6 +871,8 @@ class ProjectAutomation {
       masterEnabled: this.masterEnabled,
       nextTravelCombinationId: this.nextTravelCombinationId,
       nextTravelCombinationPersistent: this.nextTravelCombinationPersistent,
+      selectedPresetId: this.selectedPresetId,
+      selectedCombinationId: this.selectedCombinationId,
       nextPresetId: this.nextPresetId,
       nextAssignmentId: this.nextAssignmentId,
       nextCombinationId: this.nextCombinationId
@@ -843,12 +910,22 @@ class ProjectAutomation {
     this.masterEnabled = data.masterEnabled !== false;
     this.nextTravelCombinationId = data.nextTravelCombinationId ? Number(data.nextTravelCombinationId) : null;
     this.nextTravelCombinationPersistent = data.nextTravelCombinationPersistent === true && !!this.nextTravelCombinationId;
+    const hasSelectedPresetId = Object.prototype.hasOwnProperty.call(data, 'selectedPresetId');
+    const hasSelectedCombinationId = Object.prototype.hasOwnProperty.call(data, 'selectedCombinationId');
+    this.selectedPresetId = hasSelectedPresetId
+      ? (data.selectedPresetId ? Number(data.selectedPresetId) : null)
+      : (this.presets[0] ? this.presets[0].id : null);
+    this.selectedCombinationId = hasSelectedCombinationId
+      ? (data.selectedCombinationId ? Number(data.selectedCombinationId) : null)
+      : (this.combinations[0] ? this.combinations[0].id : null);
     if (!this.nextTravelCombinationId && data.applyOnNextTravel) {
       this.nextTravelCombinationId = this.addCombination('Next Travel', this.assignments);
     }
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.nextAssignmentId = data.nextAssignmentId || this.assignments.length + 1;
     this.nextCombinationId = data.nextCombinationId || this.combinations.length + 1;
+    this.getSelectedPreset();
+    this.getSelectedCombination();
     this.recordCurrentlyAvailableProjects();
   }
 }

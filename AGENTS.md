@@ -121,8 +121,9 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Space Mirror Facility
 - Zonal mirror/lantern assignment with advanced oversight and reversible mirror mode.
-- Advanced oversight now realigns zonal mirror mode from the baseline no-facility temperatures, clears stale assignments when a zone's stored mode disagrees with that baseline-implied direction, and prunes excess mirror/lantern assignments after hitting pass tolerances to reduce pathological "cover one zone and let mixing heat it" solutions across very different planet sizes.
+- Advanced oversight now realigns zonal mirror mode from a per-zone local probe state (clear that zone's own assignments/reversal while keeping the rest of the solve intact), clears stale assignments when a zone's stored mode disagrees with that locally implied direction, and prunes excess mirror/lantern assignments after hitting pass tolerances to reduce pathological "cover one zone and let mixing heat it" solutions across very different planet sizes.
 - Advanced oversight binary searches must guard against JS number precision stalls at extreme mirror counts (for example `10Sp`), and should stop when the midpoint no longer changes instead of assuming `high - low > 1` guarantees progress.
+- After advanced oversight solves assignments, restore the pre-solve current temperature state but keep the solved trend/equilibrium and zonal-flux fields so the oversight UI reflects the final solved direction instead of a stale pre-solve trend snapshot.
 - Starless worlds support day-night period control when lanterns are unlocked.
 - Focused melting, advanced auto-assignment, and quick-build integration are supported.
 - Ringworlds disable Space Mirror Facility and Planetary Thrusters and hide related research/UI.

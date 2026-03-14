@@ -7,6 +7,7 @@ class SpaceMirrorAdvancedOversight {
     SpaceMirrorAdvancedOversight.advancedAssignmentInProgress = true;
     const baselineAverageTemperature = terraforming?.temperature?.value;
     let snapshot = terraforming.saveTemperatureState();
+    let solvedSnapshot = null;
 
     try {
       if (typeof terraforming === 'undefined' || typeof buildings === 'undefined') return;
@@ -154,36 +155,36 @@ class SpaceMirrorAdvancedOversight {
       }
       reverse.any = false;
 
-      // Determine reversal based on baseline (no mirrors/lanterns, no reversal):
-      // Evaluate temperatures with 0 assignments and all reversal off, then
-      // set reversal on zones where baseline temp is above the target, off otherwise.
+      // Determine reversal from the local controlled state of each zone:
+      // temporarily clear that zone's own mirrors/lanterns and reversal while
+      // leaving all other assignments intact, then see whether the zone still
+      // sits above target. This lets a zone use local cooling even when the
+      // planet-wide baseline is cold but global available heat overshoots it.
       const alignReversalFromBaseline = () => {
-        // Save current state
-        const savedAssignM = { ...assignM };
-        const savedAssignL = { ...assignL };
         const savedReverse = { ...reverse };
         let changed = false;
-
-        // Zero assignments and turn off all reversal for baseline evaluation
-          assignM.tropical = 0; assignM.temperate = 0; assignM.polar = 0; assignM.focus = 0;
-          assignL.tropical = 0; assignL.temperate = 0; assignL.polar = 0; assignL.focus = 0;
-          reverse.tropical = false; reverse.temperate = false; reverse.polar = false; reverse.any = false;
-        updateTemps();
-
-        // Read baseline temps with no facility effect
-        const baseline = readTemps();
-
-        // Restore assignments
-        assignM.tropical = savedAssignM.tropical || 0; assignM.temperate = savedAssignM.temperate || 0; assignM.polar = savedAssignM.polar || 0; assignM.focus = savedAssignM.focus || 0;
-        assignL.tropical = savedAssignL.tropical || 0; assignL.temperate = savedAssignL.temperate || 0; assignL.polar = savedAssignL.polar || 0; assignL.focus = savedAssignL.focus || 0;
 
         // Set reversal based on baseline vs targets
         if (REVERSAL_AVAILABLE) {
           for (const z of ZONES) {
             const tgt = targets[z] || 0;
             let desiredReverse = !!savedReverse[z];
-            if (tgt > 0 && isFinite(baseline[z])) {
-              desiredReverse = baseline[z] > tgt;
+            if (tgt > 0) {
+              const savedMirror = assignM[z] || 0;
+              const savedLantern = assignL[z] || 0;
+              const savedZoneReverse = !!reverse[z];
+              assignM[z] = 0;
+              assignL[z] = 0;
+              reverse[z] = false;
+              updateTemps();
+              const probeTemp = getZoneTemp(z);
+              assignM[z] = savedMirror;
+              assignL[z] = savedLantern;
+              reverse[z] = savedZoneReverse;
+              updateTemps();
+              if (isFinite(probeTemp)) {
+                desiredReverse = probeTemp > tgt;
+              }
             }
 
             if (desiredReverse !== !!savedReverse[z]) {
@@ -205,7 +206,6 @@ class SpaceMirrorAdvancedOversight {
 
         // Ensure 'any' remains off in advanced mode
         reverse.any = false;
-        updateTemps();
         if (changed) {
           updateTemps();
         }
@@ -868,10 +868,74 @@ class SpaceMirrorAdvancedOversight {
         reversalMode: { ...reverse }
       };
 
+      updateTemps();
+      solvedSnapshot = terraforming.saveTemperatureState();
+
     } finally {
       SpaceMirrorAdvancedOversight.advancedAssignmentInProgress = false;
     }
     terraforming.restoreTemperatureState(snapshot);
+    if (solvedSnapshot) {
+      const solvedTemp = solvedSnapshot.temperature || {};
+      const solvedLum = solvedSnapshot.luminosity || {};
+
+      if (terraforming.temperature) {
+        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'trendValue')) {
+          terraforming.temperature.trendValue = solvedTemp.trendValue;
+        }
+        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'equilibriumTemperature')) {
+          terraforming.temperature.equilibriumTemperature = solvedTemp.equilibriumTemperature;
+        }
+        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'effectiveTempNoAtmosphere')) {
+          terraforming.temperature.effectiveTempNoAtmosphere = solvedTemp.effectiveTempNoAtmosphere;
+        }
+        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'emissivity')) {
+          terraforming.temperature.emissivity = solvedTemp.emissivity;
+        }
+        if (Object.prototype.hasOwnProperty.call(solvedTemp, 'opticalDepth')) {
+          terraforming.temperature.opticalDepth = solvedTemp.opticalDepth;
+        }
+
+        const targetContributions = terraforming.temperature.opticalDepthContributions || {};
+        const solvedContributions = solvedTemp.opticalDepthContributions || {};
+        for (const key of Object.keys(targetContributions)) {
+          delete targetContributions[key];
+        }
+        for (const key of Object.keys(solvedContributions)) {
+          targetContributions[key] = solvedContributions[key];
+        }
+
+        const zones = terraforming.temperature.zones || {};
+        const solvedZones = solvedTemp.zones || {};
+        for (const zoneKey of Object.keys(zones)) {
+          const zone = zones[zoneKey];
+          const solvedZone = solvedZones[zoneKey] || {};
+          if (Object.prototype.hasOwnProperty.call(solvedZone, 'trendValue')) {
+            zone.trendValue = solvedZone.trendValue;
+          }
+          if (Object.prototype.hasOwnProperty.call(solvedZone, 'equilibriumTemperature')) {
+            zone.equilibriumTemperature = solvedZone.equilibriumTemperature;
+          }
+        }
+      }
+
+      if (terraforming.luminosity) {
+        if (Object.prototype.hasOwnProperty.call(solvedLum, 'modifiedSolarFlux')) {
+          terraforming.luminosity.modifiedSolarFlux = solvedLum.modifiedSolarFlux;
+        }
+        if (Object.prototype.hasOwnProperty.call(solvedLum, 'modifiedSolarFluxUnpenalized')) {
+          terraforming.luminosity.modifiedSolarFluxUnpenalized = solvedLum.modifiedSolarFluxUnpenalized;
+        }
+        const targetZonalFluxes = terraforming.luminosity.zonalFluxes || {};
+        const solvedZonalFluxes = solvedLum.zonalFluxes || {};
+        for (const key of Object.keys(targetZonalFluxes)) {
+          delete targetZonalFluxes[key];
+        }
+        for (const key of Object.keys(solvedZonalFluxes)) {
+          targetZonalFluxes[key] = solvedZonalFluxes[key];
+        }
+      }
+    }
   }
 }
 

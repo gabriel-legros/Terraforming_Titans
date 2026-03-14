@@ -155,7 +155,7 @@ function updateLifeAutomationUI() {
       const option = document.createElement('option');
       option.value = preset.id;
       option.textContent = preset.name || `Preset ${preset.id}`;
-      if (preset.id === automation.activePresetId) {
+      if (preset.id === automation.getSelectedPresetId()) {
         option.selected = true;
       }
       lifePresetSelect.appendChild(option);
@@ -221,7 +221,7 @@ function attachLifeAutomationHandlers() {
   } = automationElements;
   lifePresetSelect.addEventListener('change', (event) => {
     const id = Number(event.target.value);
-    automationManager.lifeAutomation.setActivePreset(id);
+    automationManager.lifeAutomation.setSelectedPresetId(id);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

@@ -132,6 +132,18 @@ class LifeAutomation {
     return this.presets.find(preset => preset.id === this.activePresetId) || this.presets[0];
   }
 
+  getSelectedPresetId() {
+    return this.activePresetId;
+  }
+
+  getSelectedPreset() {
+    return this.getActivePreset();
+  }
+
+  setSelectedPresetId(id) {
+    this.setActivePreset(id);
+  }
+
   setActivePreset(id) {
     const preset = this.presets.find(item => item.id === id) || this.presets[0];
     this.activePresetId = preset.id;

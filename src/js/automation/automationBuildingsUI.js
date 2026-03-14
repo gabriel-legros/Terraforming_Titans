@@ -322,10 +322,10 @@ function updateBuildingsAutomationUI() {
       option.textContent = preset.name || `Preset ${preset.id}`;
       buildingsBuilderPresetSelect.appendChild(option);
     });
-    buildingsBuilderPresetSelect.value = buildingAutomationUIState.builderPresetId || '';
+    buildingsBuilderPresetSelect.value = automation.getSelectedPresetId() || '';
   }
 
-  const activePresetId = buildingAutomationUIState.builderPresetId;
+  const activePresetId = automation.getSelectedPresetId();
   const activePreset = activePresetId ? automation.getPresetById(Number(activePresetId)) : null;
   const activePresetIndex = activePreset
     ? presets.findIndex(preset => preset.id === activePreset.id)
@@ -459,13 +459,11 @@ function updateBuildingsAutomationUI() {
       option.textContent = combo.name || `Combination ${combo.id}`;
       buildingsCombinationSelect.appendChild(option);
     });
-    buildingsCombinationSelect.value = buildingAutomationUIState.combinationId || '';
+    buildingsCombinationSelect.value = automation.getSelectedCombinationId() || '';
   }
 
-  const activeCombinationId = buildingAutomationUIState.combinationId;
-  const activeCombination = activeCombinationId
-    ? automation.getCombinationById(Number(activeCombinationId))
-    : null;
+  const activeCombinationId = automation.getSelectedCombinationId();
+  const activeCombination = activeCombinationId ? automation.getCombinationById(Number(activeCombinationId)) : null;
   const activeCombinationIndex = activeCombination
     ? combinations.findIndex(combo => combo.id === activeCombination.id)
     : -1;
@@ -679,13 +677,13 @@ function attachBuildingsAutomationHandlers() {
   } = automationElements;
 
   buildingsBuilderPresetSelect.addEventListener('change', (event) => {
-    buildingAutomationUIState.builderPresetId = event.target.value || null;
+    automationManager.buildingsAutomation.setSelectedPresetId(event.target.value || null);
     buildingAutomationUIState.syncedPresetId = null;
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
   buildingsBuilderMoveUpButton.addEventListener('click', () => {
-    const presetId = buildingAutomationUIState.builderPresetId;
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
     if (!presetId) {
       return;
     }
@@ -694,7 +692,7 @@ function attachBuildingsAutomationHandlers() {
     updateAutomationUI();
   });
   buildingsBuilderMoveDownButton.addEventListener('click', () => {
-    const presetId = buildingAutomationUIState.builderPresetId;
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
     if (!presetId) {
       return;
     }
@@ -704,7 +702,7 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsBuilderPresetNameInput.addEventListener('input', (event) => {
-    const presetId = buildingAutomationUIState.builderPresetId;
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
     if (!presetId) {
       buildingAutomationUIState.builderName = event.target.value || '';
       queueAutomationUIRefresh();
@@ -719,7 +717,7 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsBuilderNewButton.addEventListener('click', () => {
-    buildingAutomationUIState.builderPresetId = null;
+    automationManager.buildingsAutomation.setSelectedPresetId(null);
     buildingAutomationUIState.syncedPresetId = null;
     buildingAutomationUIState.builderName = '';
     buildingAutomationUIState.builderScope = 'all';
@@ -802,12 +800,11 @@ function attachBuildingsAutomationHandlers() {
     const buildingIds = buildingAutomationUIState.builderScope === 'all'
       ? getAutomatableBuildings().map(building => building.name)
       : buildingAutomationUIState.builderSelectedBuildings.slice();
-    const presetId = buildingAutomationUIState.builderPresetId;
+    const presetId = automation.getSelectedPresetId();
     if (presetId) {
       automation.updatePreset(Number(presetId), name, buildingIds, { includeControl, includeAutomation, scopeAll });
     } else {
-      const newId = automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll });
-      buildingAutomationUIState.builderPresetId = String(newId);
+      automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll });
       buildingAutomationUIState.syncedPresetId = null;
       buildingAutomationUIState.builderName = '';
     }
@@ -816,12 +813,11 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsBuilderDeleteButton.addEventListener('click', () => {
-    const presetId = buildingAutomationUIState.builderPresetId;
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
     if (!presetId) {
       return;
     }
     automationManager.buildingsAutomation.deletePreset(Number(presetId));
-    buildingAutomationUIState.builderPresetId = null;
     buildingAutomationUIState.syncedPresetId = null;
     buildingAutomationUIState.builderName = '';
     buildingAutomationUIState.builderSelectedBuildings = [];
@@ -830,12 +826,14 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsBuilderApplyOnceButton.addEventListener('click', () => {
-    const presetId = Number(buildingsBuilderPresetSelect.value);
-    automationManager.buildingsAutomation.applyPresetOnce(presetId);
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.buildingsAutomation.applyPresetOnce(presetId);
+    }
   });
 
   buildingsApplyCombinationButton.addEventListener('click', () => {
-    const comboId = buildingsCombinationSelect.value || buildingAutomationUIState.combinationId;
+    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
     automationManager.buildingsAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
   });
 
@@ -854,7 +852,7 @@ function attachBuildingsAutomationHandlers() {
 
   buildingsCombinationSelect.addEventListener('change', (event) => {
     const comboId = event.target.value || null;
-    buildingAutomationUIState.combinationId = comboId;
+    automationManager.buildingsAutomation.setSelectedCombinationId(comboId);
     buildingAutomationUIState.combinationSyncedId = null;
     if (comboId) {
       automationManager.buildingsAutomation.applyCombination(Number(comboId));
@@ -863,7 +861,7 @@ function attachBuildingsAutomationHandlers() {
     updateAutomationUI();
   });
   buildingsCombinationMoveUpButton.addEventListener('click', () => {
-    const comboId = buildingAutomationUIState.combinationId;
+    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
     if (!comboId) {
       return;
     }
@@ -872,7 +870,7 @@ function attachBuildingsAutomationHandlers() {
     updateAutomationUI();
   });
   buildingsCombinationMoveDownButton.addEventListener('click', () => {
-    const comboId = buildingAutomationUIState.combinationId;
+    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
     if (!comboId) {
       return;
     }
@@ -882,7 +880,7 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsCombinationNameInput.addEventListener('input', (event) => {
-    const comboId = buildingAutomationUIState.combinationId;
+    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
     if (!comboId) {
       buildingAutomationUIState.combinationName = event.target.value || '';
       queueAutomationUIRefresh();
@@ -894,7 +892,7 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsCombinationNewButton.addEventListener('click', () => {
-    buildingAutomationUIState.combinationId = null;
+    automationManager.buildingsAutomation.setSelectedCombinationId(null);
     buildingAutomationUIState.combinationSyncedId = null;
     buildingAutomationUIState.combinationName = '';
     queueAutomationUIRefresh();
@@ -908,12 +906,11 @@ function attachBuildingsAutomationHandlers() {
       presetId: entry.presetId,
       enabled: entry.enabled !== false
     }));
-    const comboId = buildingAutomationUIState.combinationId;
+    const comboId = automation.getSelectedCombinationId();
     if (comboId) {
       automation.updateCombination(Number(comboId), name, snapshot);
     } else {
-      const newId = automation.addCombination(name, snapshot);
-      buildingAutomationUIState.combinationId = String(newId);
+      automation.addCombination(name, snapshot);
       buildingAutomationUIState.combinationSyncedId = null;
       buildingAutomationUIState.combinationName = '';
     }
@@ -922,12 +919,11 @@ function attachBuildingsAutomationHandlers() {
   });
 
   buildingsCombinationDeleteButton.addEventListener('click', () => {
-    const comboId = buildingAutomationUIState.combinationId;
+    const comboId = automationManager.buildingsAutomation.getSelectedCombinationId();
     if (!comboId) {
       return;
     }
     automationManager.buildingsAutomation.deleteCombination(Number(comboId));
-    buildingAutomationUIState.combinationId = null;
     buildingAutomationUIState.combinationSyncedId = null;
     buildingAutomationUIState.combinationName = '';
     queueAutomationUIRefresh();

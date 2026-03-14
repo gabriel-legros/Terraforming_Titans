@@ -647,6 +647,7 @@ function updateRender(force = false, options = {}) {
   if (typeof updateProjectAlert === 'function') updateProjectAlert();
   if (typeof updateResearchAlert === 'function') updateResearchAlert();
   if (typeof updateHopeAlert === 'function') updateHopeAlert();
+  updateSidebarAutomationToggleVisibility();
 
   // Gate heavy per-tab UI updates behind tab visibility
   if (typeof document !== 'undefined') {

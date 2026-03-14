@@ -3,7 +3,7 @@ let shipPresetOptionsSignature = '';
 let shipStepsSignature = '';
 
 function getShipPresetOptionsSignature(automation) {
-  const parts = [String(automation.activePresetId || '')];
+  const parts = [String(automation.getSelectedPresetId() || '')];
   for (let index = 0; index < automation.presets.length; index += 1) {
     const preset = automation.presets[index];
     parts.push(`${preset.id}:${preset.name || ''}`);
@@ -133,7 +133,7 @@ function updateShipAutomationUI() {
       const option = document.createElement('option');
       option.value = preset.id;
       option.textContent = preset.name || `Preset ${preset.id}`;
-      if (preset.id === automation.activePresetId) {
+      if (preset.id === automation.getSelectedPresetId()) {
         option.selected = true;
       }
       presetSelect.appendChild(option);
@@ -189,7 +189,7 @@ function attachAutomationHandlers() {
     presetSelect.addEventListener('change', (event) => {
       if (!automationManager || !automationManager.spaceshipAutomation) return;
       const id = Number(event.target.value);
-      automationManager.spaceshipAutomation.setActivePreset(id);
+      automationManager.spaceshipAutomation.setSelectedPresetId(id);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
