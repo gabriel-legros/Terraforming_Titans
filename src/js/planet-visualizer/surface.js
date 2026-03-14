@@ -116,6 +116,17 @@
       featureMask: 0.85,
       shade: 0.98,
     },
+    'molten': {
+      top: { color: '#ffb36b', t: 0.22 },
+      bottom: { color: '#240a05', t: 0.62 },
+      tint: { color: '#ff5a1f', min: 0.12, max: 0.22 },
+      topJitter: 0.06,
+      bottomJitter: 0.07,
+      heightScale: 1.08,
+      heightJitter: 0.07,
+      featureMask: 0.92,
+      shade: 0.94,
+    },
     artificial: {
       top: { color: '#e4e8ec', t: 0.42 },
       bottom: { color: '#5a6167', t: 0.52 },

@@ -217,6 +217,7 @@
       { value: 'super-earth', name: 'Super-Earth' },
       { value: 'chthonian', name: 'Chthonian' },
       { value: 'venus-like', name: 'Venus-like' },
+      { value: 'molten', name: 'Molten' },
     ];
     for (const a of archetypes) {
       const opt = document.createElement('option');

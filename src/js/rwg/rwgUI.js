@@ -449,7 +449,8 @@ function refreshTypeSelect() {
     'chthonian',
     'venus-like',
     'rogue',
-    'ammonia-rich'
+    'ammonia-rich',
+    'molten'
   ];
   const types = [];
   baseOrder.forEach((t) => { if (!types.includes(t) && meta[t]) types.push(t); });
@@ -1137,6 +1138,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const temps = res.override?.finalTemps || null;
   const ug = r.underground || {};
   const geoMax = ug.geothermal?.maxDeposits ?? 0;
+  const coreHeatFlux = Math.max(0, c.coreHeatFlux || 0);
   const fluxWm2 = estimateFlux(res);
   const teqCalc = estimateEquilibriumTemp(res, fluxWm2);
   const teqDisplay = cls?.TeqK || (teqCalc ? Math.round(teqCalc) : null);
@@ -1244,6 +1246,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
         <div class="rwg-chip"><div class="label">Albedo</div><div class="value">${c.albedo}</div></div>
         <div class="rwg-chip"><div class="label">Rotation</div><div class="value">${fmt(c.rotationPeriod)} h</div></div>
         <div class="rwg-chip"><div class="label">Flux</div><div class="value">${fmt((fluxWm2).toFixed ? fluxWm2.toFixed(0) : fluxWm2)} W/m²</div></div>
+        ${coreHeatFlux > 0 ? `<div class="rwg-chip"><div class="label">Core Heat</div><div class="value">${fmt(coreHeatFlux)} W/m²</div></div>` : ''}
         <div class="rwg-chip"><div class="label">Magnetosphere</div><div class="value">${c.hasNaturalMagnetosphere ? 'Yes' : 'No'}</div></div>
         <div class="rwg-chip"><div class="label">Geo (max)</div><div class="value">${geoMax > 0 ? fmt(geoMax) : '—'}</div></div>
         <div class="rwg-chip"><div class="label">Type</div><div class="value">${forcedType && forcedType !== 'auto' ? (RWG_WORLD_TYPES[forcedType]?.displayName || forcedType) : (cls?.archetype ? (RWG_WORLD_TYPES[cls.archetype]?.displayName || cls.archetype) : '—')}</div></div>

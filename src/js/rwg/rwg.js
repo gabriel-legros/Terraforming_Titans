@@ -244,6 +244,7 @@ globalThis.RWG_WORLD_TYPES = {
   "venus-like": { displayName: "Venus-like" },
   "rogue": { displayName: "Rogue" },
   "ammonia-rich": { displayName: "Ammonia-rich" },
+  "molten": { displayName: "Molten" },
 };
 const RWG_WORLD_TYPES = globalThis.RWG_WORLD_TYPES;
 
@@ -257,6 +258,7 @@ const RWG_TYPE_BASE_COLORS = {
   "super-earth": "#4c6f4e",
   "chthonian": "#3f3f46",
   "venus-like": "#cdb675",
+  "molten": "#a64a1e",
   "rogue": "#193347",
   "ammonia-rich": "#7a9b6b",
 };
@@ -414,7 +416,7 @@ const DEFAULT_PARAMS = {
       veryColdFluxWm2: [10, 100]
     },
     moonChance: { thresholdAU: 3, chance: 0.35 },
-    moonTypeBlacklist: ["super-earth", "chthonian"],
+    moonTypeBlacklist: ["super-earth", "chthonian", "molten"],
     typeOrbitLocks: {
       "venus-like": {
         presets: ["hot"],
@@ -429,6 +431,14 @@ const DEFAULT_PARAMS = {
     backgroundFluxWm2: 8,
     baseTeqK: 55
   },
+  molten: {
+    coreHeatFluxBandsWm2: [
+      { threshold: 0.45, range: [15_000, 45_000] },
+      { threshold: 0.85, range: [45_000, 120_000] },
+      { threshold: 1.0, range: [120_000, 260_000] }
+    ],
+    geothermalBoostRange: [0.95, 1.6]
+  },
   classification: {
     typeAlbedo: {
       "venus-like": 0.15, "mars-like": 0.25, "cold-desert": 0.5,
@@ -437,6 +447,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": 0.38,
       "super-earth": 0.30,
       "chthonian": 0.30,
+      "molten": 0.07,
       "rogue": 0.40,
       "ammonia-rich": 0.36,
     },
@@ -452,6 +463,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": [0.6, 1.2],
       "super-earth": [1.4, 2],
       "chthonian": [2, 4],
+      "molten": [0.45, 0.95],
       "rogue": [0.7, 1.3],
       "ammonia-rich": [0.6, 1.3]
     },
@@ -462,6 +474,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": [0.80, 1.05],
       "super-earth": [0.90, 1.30],
       "chthonian": [0.90, 1.30],
+      "molten": [0.95, 1.20],
       "rogue": [0.85, 1.15],
       "ammonia-rich": [0.85, 1.15]
     }
@@ -502,6 +515,16 @@ const DEFAULT_PARAMS = {
           atmosphericWater: 0.004
         }
       },
+      "molten": {
+        pressureBar: 2.4,
+        mix: {
+          carbonDioxide: 0.56,
+          inertGas: 0.24,
+          atmosphericWater: 0.14,
+          sulfuricAcid: 0.05,
+          oxygen: 0.01
+        }
+      },
       "rogue": {
         pressureBar: 0.8,
         mix: {
@@ -530,6 +553,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": [0.5, 2.0], 
       "super-earth": [0.7, 2.2],
       "chthonian": [0.7, 2.2],
+      "molten": [0.15, 6.0],
       "rogue": [0.6, 1.4],
       "ammonia-rich": [0.7, 1.3],
     }
@@ -540,6 +564,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": 5e13,
       "desiccated-desert": 1e13, "super-earth": 2e15,
       "chthonian": 2e15,
+      "molten": 8e13,
       "rogue": 4e16,
       "ammonia-rich": 2e14,
     },
@@ -565,6 +590,7 @@ const DEFAULT_PARAMS = {
       "carbon-planet": 0.5,
       "desiccated-desert": 0.8, "super-earth": 0.2,
       "chthonian": 0.2,
+      "molten": 0.03,
       "rogue": 2.5,
       "ammonia-rich": 1.2,
     },
@@ -590,6 +616,7 @@ const DEFAULT_PARAMS = {
         "cold-desert": 0.80,
         "icy-moon": 0.60,
         "titan-like": 0.50,
+        "molten": 1.15,
         "rogue": 1.10,
         default: 1.00
       },
@@ -629,6 +656,7 @@ const DEFAULT_PARAMS = {
         "super-earth": 0.60,
         "chthonian": 0.60,
         "carbon-planet": 0.35,
+        "molten": 1.00,
         "rogue": 0.45,
 
         // These only get geothermal if tides push them over threshold
@@ -655,6 +683,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": 0.10,
       "super-earth": 0.35,
       "chthonian": 0.35,
+      "molten": 0.08,
       "rogue": 0.20,
       "ammonia-rich": 0.12,
     },
@@ -974,9 +1003,37 @@ function pickWeighted(rng, items) { const sum = items.reduce((s, it) => s + it.w
 function luminosityFromMassSolar(m) { return Math.max(0.0005, Math.min(100000, Math.pow(m, 3.5))); }
 function radiusFromMassSolar(m) { return Math.pow(m, 0.8); }
 function eqTempK(L, dAU, albedo = 0.3) { const base = (278 * Math.pow(L, 0.25)) / Math.sqrt(dAU); return base * Math.pow((1 - albedo) / (1 - 0.3), 0.25); }
+function equilibriumTempFromFlux(fluxWm2, albedo = 0.3) {
+  const sigma = 5.670374419e-8;
+  const absorbedFlux = Math.max(0, fluxWm2) * Math.max(0, 1 - albedo);
+  return absorbedFlux > 0 ? Math.pow(absorbedFlux / (4 * sigma), 0.25) : 0;
+}
 function gravityFromMassRadius(M_kg, R_km) { const G = 6.6743e-11; const R_m = R_km * 1000; return (G * M_kg) / (R_m * R_m); }
 function surfaceAreaHa(radius_km) { const area_km2 = 4 * Math.PI * radius_km * radius_km; return Math.round(area_km2 * 100); }
 function totalAtmosphereMassTons(pressureBar, radius_km, gravity_ms2) { const P = pressureBar * 1e5; const R_m = radius_km * 1000; const M_kg = (4 * Math.PI * R_m * R_m * P) / gravity_ms2; return toTons(M_kg); }
+
+function getMoltenCoreHeatFluxMax(params) {
+  const bands = params.molten.coreHeatFluxBandsWm2;
+  let max = 0;
+  for (let index = 0; index < bands.length; index += 1) {
+    max = Math.max(max, bands[index].range[1] || 0);
+  }
+  return max || 260_000;
+}
+
+function sampleMoltenCoreHeatFlux(rng, bulk, params) {
+  const bands = params.molten.coreHeatFluxBandsWm2;
+  const roll = rng();
+  let selected = bands[bands.length - 1];
+  for (let index = 0; index < bands.length; index += 1) {
+    if (roll <= bands[index].threshold) {
+      selected = bands[index];
+      break;
+    }
+  }
+  const radiusScale = Math.pow(clamp(bulk.radius_rel || 0.7, 0.55, 1.05), 0.35);
+  return Math.round(randRange(rng, selected.range[0], selected.range[1]) * radiusScale);
+}
 
 // ===================== Naming =====================
 function starName(seed, params) {
@@ -1458,16 +1515,25 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   }
   let type = classification.type;
   const bulk = sampleBulk(rng, type, params);
+  const coreHeatFlux = type === "molten" ? sampleMoltenCoreHeatFlux(mulberry32(seed ^ 0xC011D00D), bulk, params) : 0;
   const landHa = surfaceAreaHa(bulk.radius_km);
   const { areaTotal } = depositsFromLandHa(landHa, params);
+  const starLuminosity = Number.isFinite(star.luminositySolar) ? star.luminositySolar : 1;
+  const safeAU = Number.isFinite(aAU) && aAU > 0 ? aAU : 1;
+  const solarFlux = (SOLAR_FLUX_1AU_WM2 * starLuminosity) / (safeAU * safeAU);
+  const baseFlux = isRogueWorld
+    ? (isRoguePulsarWorld ? ROGUE_PULSAR_FLUX_WM2 : (rogueConfig.backgroundFluxWm2 ?? solarFlux))
+    : solarFlux;
   if (!params.atmosphere.templates[type]) {
     const venusMin = params.classification.thresholdsK.venusMin ?? Infinity;
     type = classification.Teq > venusMin ? "venus-like" : "mars-like";
   }
+  const initialThermalTempK = equilibriumTempFromFlux(baseFlux + coreHeatFlux, classification.albedo);
+  classification.Teq = initialThermalTempK;
   const atmo = buildAtmosphere(type, bulk.radius_km, bulk.gravity, rng, params);
   const surface = buildVolatiles(
     type,
-    classification.Teq,
+    initialThermalTempK,
     landHa,
     params,
     atmo,
@@ -1542,13 +1608,10 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const composition = {}; if (totalAtmoMass > 0) { if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass; if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass; if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass; if (compMass.hydrogen) composition.h2 = compMass.hydrogen / totalAtmoMass; if (compMass.sulfuricAcid) composition.h2so4 = compMass.sulfuricAcid / totalAtmoMass; }
   const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
   const surfacePressureKPa = Number.isFinite(surfacePressureBar) ? Math.max(0, surfacePressureBar * 100) : 0;
-  const starLuminosity = Number.isFinite(star.luminositySolar) ? star.luminositySolar : 1;
-  const safeAU = Number.isFinite(aAU) && aAU > 0 ? aAU : 1;
-  const solarFlux = (SOLAR_FLUX_1AU_WM2 * starLuminosity) / (safeAU * safeAU);
   const flux = isRogueWorld
     ? (isRoguePulsarWorld ? ROGUE_PULSAR_FLUX_WM2 : (rogueConfig.backgroundFluxWm2 ?? solarFlux))
     : solarFlux;
-  const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, rotationPeriodH: rotationPeriod, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
+  const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, addedSurfaceFlux: coreHeatFlux, rotationPeriodH: rotationPeriod, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
   classification.Teq = temps.mean;
 
   const co2Mass = compMass.carbonDioxide || 0;
@@ -1575,7 +1638,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const oreRng = mulberry32(seed ^ 0x0A11);
   const geoRng = mulberry32(seed ^ 0x0A12);
   const oreCaps = computeOreCaps(areaTotal, type, oreRng, params);
-  const geoCaps = computeGeothermalCaps(type, areaTotal, isMoon, geoRng, params);
+  const geoCaps = computeGeothermalCaps(type, areaTotal, isMoon, geoRng, params, coreHeatFlux);
 
   const underground = {
     ore: {
@@ -1678,7 +1741,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,
-    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod, spinPeriod, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isStarlessRogueWorld, roguePulsar: isRoguePulsarWorld },
+    celestialParameters: { distanceFromSun, gravity: bulk.gravity, radius: bulk.radius_km, mass: bulk.mass, albedo, rotationPeriod, spinPeriod, starLuminosity: sLum, parentBody, surfaceArea, temperature: { day: temps.day, night: temps.night, mean: temps.mean }, actualAlbedo: temps.albedo, cloudFraction: temps.cfCloud, hazeFraction: temps.cfHaze, hasNaturalMagnetosphere, sector: sectorLabel, rogue: isStarlessRogueWorld, roguePulsar: isRoguePulsarWorld, coreHeatFlux },
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },
@@ -1710,15 +1773,17 @@ function computeOreCaps(areaTotal, type, rng, params) {
   return { initial, max };
 }
 
-function computeGeothermalCaps(type, areaTotal, isMoon, rng, params) {
+function computeGeothermalCaps(type, areaTotal, isMoon, rng, params, coreHeatFlux = 0) {
   const g = params.deposits.geothermal;
+  const maxMoltenFlux = getMoltenCoreHeatFluxMax(params);
 
   // Intrinsic activity + occasional tidal boost for moons
   const base = g.baseActivityByType?.[type] ?? g.baseActivityByType?.default ?? 0;
   const jitter = 1 + randRange(rng, -0.10, 0.10);
   const tidalActive = isMoon && (rng() < (g.moonTidalChance ?? 0.45));
   const tidal = tidalActive ? (g.tidalBonusIfMoon ?? 0.35) : 0;
-  const activity = clamp((base + tidal) * jitter, 0, 1);
+  const fluxRatio = coreHeatFlux > 0 ? clamp(coreHeatFlux / Math.max(1, maxMoltenFlux), 0, 1) : 0;
+  const activity = clamp((base + tidal) * jitter + fluxRatio * 0.35, 0, 1);
 
   // Most worlds: no geothermal at all
   if (activity < (g.activityThreshold ?? 0.35)) {
@@ -1728,7 +1793,13 @@ function computeGeothermalCaps(type, areaTotal, isMoon, rng, params) {
   // Independent randomness: vents per area (not tied to ore)
   const perAreaMin = Math.max(0, g.perAreaMin ?? 0.00005);
   const perAreaMax = Math.max(perAreaMin, g.perAreaMax ?? 0.00080);
-  const ventsPerArea = randRange(rng, perAreaMin, perAreaMax) * activity;
+  const geothermalBoost = coreHeatFlux > 0
+    ? randRange(rng, params.molten.geothermalBoostRange[0], params.molten.geothermalBoostRange[1])
+    : 1;
+  const ventsPerArea = Math.min(
+    g.maxPerArea ?? perAreaMax,
+    randRange(rng, perAreaMin, perAreaMax) * activity * geothermalBoost
+  );
 
   // Varied max; small but nonzero worlds won’t all land on the same number
   const rawMax = areaTotal * ventsPerArea;
@@ -1748,7 +1819,7 @@ class RwgManager extends EffectableEntity {
     super({ description: "Random World Generator Manager" });
     this.params = resolveParams(DEFAULT_PARAMS, paramsOverride);
     this.lockedOrbits = new Set(["hot"]);
-    this.lockedTypes = new Set(["venus-like", "rogue", "ammonia-rich"]);
+    this.lockedTypes = new Set(["venus-like", "molten", "rogue", "ammonia-rich"]);
     this.lockedFeatures = new Set(['hazards', 'dominions']);
     this.lockedHazards = new Set(['hazardousBiomass', 'garbage', 'kessler', 'pulsar']);
     const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
@@ -1776,7 +1847,7 @@ class RwgManager extends EffectableEntity {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
       : ["mars-like", "cold-desert", "titan-like", "venus-like",
-        "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich", "chthonian"];
+        "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich", "chthonian", "molten"];
     return base.filter((t) => !this.lockedTypes.has(t));
   }
 

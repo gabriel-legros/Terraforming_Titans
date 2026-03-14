@@ -118,6 +118,44 @@ const RWG_EFFECTS = {
       },
     },
   ],
+  "molten": [
+    {
+      effectId: "rwg-molten-geothermal",
+      target: "building",
+      targetId: "geothermalGenerator",
+      type: "productionMultiplier",
+      factor: 0.1,
+      description: "Geothermal and fusion production increased (+10% each)",
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-molten-fusion",
+      target: "building",
+      targetId: "fusionPowerPlant",
+      type: "productionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-molten-superalloy-fusion",
+      target: "building",
+      targetId: "superalloyFusionReactor",
+      type: "productionMultiplier",
+      factor: 0.1,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.1;
+        return 1 + f * count;
+      },
+    },
+  ],
   "mars-like": [
     {
       effectId: "rwg-mars-pop",

@@ -16,6 +16,9 @@ const RWG_PROJECT_NAMES = {
 const RWG_BUILDING_OUTPUT = {
   oreMine: 'Ore Mine',
   sandQuarry: 'Sand Harvester',
+  geothermalGenerator: 'Geothermal Generator',
+  fusionPowerPlant: 'Fusion Reactor',
+  superalloyFusionReactor: 'Superalloy Fusion Reactor',
   spaceMirror: 'Space Mirror',
   hyperionLantern: 'Hyperion Lantern',
 };
@@ -112,7 +115,7 @@ function _computeRWGEffectsSummary() {
     const baseCount = counts[type] || 0;
     const bonus = hazardBonuses[type] || 0;
     const effectiveCount = baseCount + bonus;
-    const effs = effects.map(eff => {
+    const effs = effects.filter((eff) => !eff.hideInSummary).map(eff => {
       const raw = typeof eff.computeValue === 'function' ? eff.computeValue(effectiveCount, eff) : eff.value;
       let display = '';
       let descr = eff.description || '';
