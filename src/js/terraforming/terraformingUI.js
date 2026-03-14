@@ -296,7 +296,7 @@ function getTemperatureMaintenanceImmuneTooltip() {
   const doublingUnit = unit === '°C' ? '°C' : 'K';
   const description = [
     `Temperature maintenance penalty: no penalty at or below ${noPenaltyThreshold}${unit}, +1% maintenance per degree above that, then exponential growth beginning at ${exponentialThreshold}${unit}.`,
-    `Above ${exponentialThreshold}${unit}, the multiplier doubles every 200 ${doublingUnit}.`,
+    `Above ${exponentialThreshold}${unit}, the multiplier doubles every 100 ${doublingUnit}.`,
     'This penalty can be mitigated by aerostats, but has a floor determined by a dry-adiabatic 1 atm temperature model.'
   ];
 
