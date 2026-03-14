@@ -237,9 +237,7 @@ function setJournalAutomationMode(enabled) {
 function toggleJournalAutomationMode() {
   setJournalAutomationMode(!sidebarAutomationMode);
   if (sidebarAutomationMode) {
-    queueAutomationUIRefresh();
     updateSidebarAutomationUI();
-    updateAutomationUI();
   }
 }
 
