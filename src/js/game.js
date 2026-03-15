@@ -550,6 +550,15 @@ function initializeGameState(options = {}) {
       appliedTravelAutomation = true;
     }
 
+    const colonyAutomation = automationManager.colonyAutomation;
+    if (colonyAutomation && colonyAutomation.nextTravelCombinationId) {
+      colonyAutomation.applyCombinationPresets(colonyAutomation.nextTravelCombinationId);
+      if (!colonyAutomation.nextTravelCombinationPersistent) {
+        colonyAutomation.nextTravelCombinationId = null;
+      }
+      appliedTravelAutomation = true;
+    }
+
     if (appliedTravelAutomation) {
       queueAutomationUIRefresh();
       updateAutomationUI();

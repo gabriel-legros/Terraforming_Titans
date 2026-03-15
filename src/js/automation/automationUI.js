@@ -105,7 +105,42 @@ const automationElements = {
   projectsCombinationNewButton: null,
   projectsCombinationSaveButton: null,
   projectsCombinationDeleteButton: null,
-  projectsAddApplyButton: null
+  projectsAddApplyButton: null,
+  colonyAutomation: null,
+  colonyAutomationStatus: null,
+  colonyAutomationDescription: null,
+  colonyCollapseButton: null,
+  colonyPanelBody: null,
+  colonyBuilderPresetSelect: null,
+  colonyBuilderMoveUpButton: null,
+  colonyBuilderMoveDownButton: null,
+  colonyBuilderPresetNameInput: null,
+  colonyBuilderNewButton: null,
+  colonyBuilderSaveButton: null,
+  colonyBuilderDeleteButton: null,
+  colonyBuilderApplyOnceButton: null,
+  colonyBuilderDirty: null,
+  colonyBuilderTypeSelect: null,
+  colonyBuilderScopeSelect: null,
+  colonyBuilderCategorySelect: null,
+  colonyBuilderTargetSelect: null,
+  colonyBuilderAddButton: null,
+  colonyBuilderAddCategoryButton: null,
+  colonyBuilderClearButton: null,
+  colonyBuilderSelectedList: null,
+  colonyApplyList: null,
+  colonyApplyHint: null,
+  colonyApplyCombinationButton: null,
+  colonyApplyNextTravelSelect: null,
+  colonyApplyNextTravelPersistToggle: null,
+  colonyCombinationSelect: null,
+  colonyCombinationMoveUpButton: null,
+  colonyCombinationMoveDownButton: null,
+  colonyCombinationNameInput: null,
+  colonyCombinationNewButton: null,
+  colonyCombinationSaveButton: null,
+  colonyCombinationDeleteButton: null,
+  colonyAddApplyButton: null
 };
 
 function queueAutomationUIRefresh() {
@@ -423,6 +458,108 @@ function cacheAutomationElements() {
   if (!automationElements.projectsAddApplyButton && automationElements.projectsAutomation) {
     automationElements.projectsAddApplyButton = automationElements.projectsAutomation.querySelector('.project-automation-apply-add');
   }
+  if (!automationElements.colonyAutomation) {
+    automationElements.colonyAutomation = document.getElementById('automation-colony');
+  }
+  if (!automationElements.colonyAutomationStatus) {
+    automationElements.colonyAutomationStatus = document.getElementById('automation-colony-status');
+  }
+  if (!automationElements.colonyAutomationDescription) {
+    automationElements.colonyAutomationDescription = document.getElementById('automation-colony-description');
+  }
+  if (!automationElements.colonyCollapseButton && automationElements.colonyAutomation) {
+    automationElements.colonyCollapseButton = automationElements.colonyAutomation.querySelector('.automation-collapse');
+  }
+  if (!automationElements.colonyPanelBody && automationElements.colonyAutomation) {
+    automationElements.colonyPanelBody = automationElements.colonyAutomation.querySelector('.automation-body');
+  }
+  if (!automationElements.colonyBuilderPresetSelect && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderPresetSelect = automationElements.colonyAutomation.querySelector('.colony-automation-builder-select');
+  }
+  if (!automationElements.colonyBuilderMoveUpButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderMoveUpButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-move-up');
+  }
+  if (!automationElements.colonyBuilderMoveDownButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderMoveDownButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-move-down');
+  }
+  if (!automationElements.colonyBuilderPresetNameInput && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderPresetNameInput = automationElements.colonyAutomation.querySelector('.colony-automation-builder-name');
+  }
+  if (!automationElements.colonyBuilderNewButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderNewButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-new');
+  }
+  if (!automationElements.colonyBuilderSaveButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderSaveButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-save');
+  }
+  if (!automationElements.colonyBuilderDeleteButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderDeleteButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-delete');
+  }
+  if (!automationElements.colonyBuilderApplyOnceButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderApplyOnceButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-apply-once');
+  }
+  if (!automationElements.colonyBuilderTypeSelect && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderTypeSelect = automationElements.colonyAutomation.querySelector('.colony-automation-builder-type');
+  }
+  if (!automationElements.colonyBuilderScopeSelect && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderScopeSelect = automationElements.colonyAutomation.querySelector('.colony-automation-builder-scope');
+  }
+  if (!automationElements.colonyBuilderCategorySelect && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderCategorySelect = automationElements.colonyAutomation.querySelector('.colony-automation-builder-category');
+  }
+  if (!automationElements.colonyBuilderTargetSelect && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderTargetSelect = automationElements.colonyAutomation.querySelector('.colony-automation-builder-target');
+  }
+  if (!automationElements.colonyBuilderAddButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderAddButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-add');
+  }
+  if (!automationElements.colonyBuilderAddCategoryButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderAddCategoryButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-add-category');
+  }
+  if (!automationElements.colonyBuilderClearButton && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderClearButton = automationElements.colonyAutomation.querySelector('.colony-automation-builder-clear');
+  }
+  if (!automationElements.colonyBuilderSelectedList && automationElements.colonyAutomation) {
+    automationElements.colonyBuilderSelectedList = automationElements.colonyAutomation.querySelector('.colony-automation-builder-list');
+  }
+  if (!automationElements.colonyApplyList && automationElements.colonyAutomation) {
+    automationElements.colonyApplyList = automationElements.colonyAutomation.querySelector('.colony-automation-apply-list');
+  }
+  if (!automationElements.colonyApplyHint && automationElements.colonyAutomation) {
+    automationElements.colonyApplyHint = automationElements.colonyAutomation.querySelector('.colony-automation-apply-hint');
+  }
+  if (!automationElements.colonyApplyCombinationButton && automationElements.colonyAutomation) {
+    automationElements.colonyApplyCombinationButton = automationElements.colonyAutomation.querySelector('.colony-automation-apply-combination');
+  }
+  if (!automationElements.colonyApplyNextTravelSelect && automationElements.colonyAutomation) {
+    automationElements.colonyApplyNextTravelSelect = automationElements.colonyAutomation.querySelector('.colony-automation-next-travel-select');
+  }
+  if (!automationElements.colonyApplyNextTravelPersistToggle && automationElements.colonyAutomation) {
+    automationElements.colonyApplyNextTravelPersistToggle = automationElements.colonyAutomation.querySelector('.colony-automation-next-travel-persist-toggle');
+  }
+  if (!automationElements.colonyCombinationSelect && automationElements.colonyAutomation) {
+    automationElements.colonyCombinationSelect = automationElements.colonyAutomation.querySelector('.colony-automation-combination-select');
+  }
+  if (!automationElements.colonyCombinationMoveUpButton && automationElements.colonyAutomation) {
+    automationElements.colonyCombinationMoveUpButton = automationElements.colonyAutomation.querySelector('.colony-automation-combination-move-up');
+  }
+  if (!automationElements.colonyCombinationMoveDownButton && automationElements.colonyAutomation) {
+    automationElements.colonyCombinationMoveDownButton = automationElements.colonyAutomation.querySelector('.colony-automation-combination-move-down');
+  }
+  if (!automationElements.colonyCombinationNameInput && automationElements.colonyAutomation) {
+    automationElements.colonyCombinationNameInput = automationElements.colonyAutomation.querySelector('.colony-automation-combination-name');
+  }
+  if (!automationElements.colonyCombinationNewButton && automationElements.colonyAutomation) {
+    automationElements.colonyCombinationNewButton = automationElements.colonyAutomation.querySelector('.colony-automation-combination-new');
+  }
+  if (!automationElements.colonyCombinationSaveButton && automationElements.colonyAutomation) {
+    automationElements.colonyCombinationSaveButton = automationElements.colonyAutomation.querySelector('.colony-automation-combination-save');
+  }
+  if (!automationElements.colonyCombinationDeleteButton && automationElements.colonyAutomation) {
+    automationElements.colonyCombinationDeleteButton = automationElements.colonyAutomation.querySelector('.colony-automation-combination-delete');
+  }
+  if (!automationElements.colonyAddApplyButton && automationElements.colonyAutomation) {
+    automationElements.colonyAddApplyButton = automationElements.colonyAutomation.querySelector('.colony-automation-apply-add');
+  }
 }
 
 function createAutomationCardHeader(card, titleText, onToggle) {
@@ -568,6 +705,7 @@ function initializeAutomationUI() {
   buildAutomationLifeUI();
   buildAutomationBuildingsUI();
   buildAutomationProjectsUI();
+  buildAutomationColonyUI();
   hideAutomationTab();
   automationUIInitialized = true;
   automationUIStale = true;
@@ -605,6 +743,7 @@ function updateAutomationUI() {
     updateLifeAutomationUI();
     updateBuildingsAutomationUI();
     updateProjectsAutomationUI();
+    updateColonyAutomationUI();
   }
   if (sidebarActive && !updateSidebarAutomationUI()) {
     automationUIStale = true;

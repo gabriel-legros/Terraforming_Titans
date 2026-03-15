@@ -65,7 +65,8 @@ class SolisManager extends EffectableEntity {
       shipAssignment: { baseCost: 500, purchases: 0, max: 1, enabled: false },
       lifeAutomation: { baseCost: 750, purchases: 0, max: 1, enabled: false },
       buildingsAutomation: { baseCost: 1000, purchases: 0, max: 1, enabled: false },
-      projectsAutomation: { baseCost: 2000, purchases: 0, max: 1, enabled: false }
+      projectsAutomation: { baseCost: 2000, purchases: 0, max: 1, enabled: false },
+      colonyAutomation: { baseCost: 3000, purchases: 0, max: 1, enabled: false }
     };
   }
 
@@ -103,6 +104,8 @@ class SolisManager extends EffectableEntity {
       this.setUpgradeEnabled('buildingsAutomation', !!effect.value);
     } else if (effect.flagId === 'solisProjectsAutomation') {
       this.setUpgradeEnabled('projectsAutomation', !!effect.value);
+    } else if (effect.flagId === 'solisColonyAutomation') {
+      this.setUpgradeEnabled('colonyAutomation', !!effect.value);
     }
   }
 
@@ -396,6 +399,21 @@ class SolisManager extends EffectableEntity {
         effectId: 'solisAutomationProjects',
         sourceId: 'solisShop'
       });
+    } else if (key === 'colonyAutomation') {
+      addEffect({
+        target: 'automationManager',
+        type: 'enable',
+        effectId: 'solisAutomationEnable',
+        sourceId: 'solisShop'
+      });
+      addEffect({
+        target: 'automationManager',
+        type: 'booleanFlag',
+        flagId: 'automationColony',
+        value: true,
+        effectId: 'solisAutomationColony',
+        sourceId: 'solisShop'
+      });
     } else if (key === 'startingShips') {
       if (!shipsResource.unlocked) {
         if (shipsResource.enable) {
@@ -486,6 +504,7 @@ class SolisManager extends EffectableEntity {
     this.setUpgradeEnabled('androidsPermanentResearch', this.isBooleanFlagSet('solisAndroidsPermanentResearch'));
     this.setUpgradeEnabled('buildingsAutomation', this.isBooleanFlagSet('solisBuildingsAutomation'));
     this.setUpgradeEnabled('projectsAutomation', this.isBooleanFlagSet('solisProjectsAutomation'));
+    this.setUpgradeEnabled('colonyAutomation', this.isBooleanFlagSet('solisColonyAutomation'));
 
     const count = this.shopUpgrades.funding.purchases;
     if (count > 0 && typeof addEffect === 'function') {

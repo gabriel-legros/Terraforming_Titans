@@ -227,14 +227,17 @@ progressPoseidon.chapters.push(
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000_000 }
     ],
-    reward: []
+    reward: [
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisColonyAutomation', value: true },
+      { target: 'solisManager', type: 'solisTabAlert', value: true, oneTimeFlag: true }
+    ]
   },
   {
     id: 'poseidon.37.5b',
     type: 'journal',
     chapter: 37,
     activePlanet: 'poseidon',
-    narrative: "(Solis placeholder)",
+    narrative: "Solis : 'I came as soon as I could!  Where is it?'  \n Mary : 'What are you talking about?'  \n Solis : 'The star flower?'  \n Mary : 'That belongs to HOPE.'  \n Solis : 'HOPE my friend.  I am not asking you for the flower.  I just want to see it.  Please.  I have a new upgrade for you in the shop.  I just want to see it.'  \n HOPE : 'Approved.  Colonist #5784123487 Designation Adrien Solis may see the Star Flower.'  \n Mary : '...'",
     prerequisites: ['poseidon.37.5'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 50_000_000 }

@@ -31,7 +31,13 @@ const sidebarAutomationElements = {
   projectsPresetSelect: null,
   projectsPresetDeploy: null,
   projectsCombinationSelect: null,
-  projectsCombinationDeploy: null
+  projectsCombinationDeploy: null,
+  colonySection: null,
+  colonyStatus: null,
+  colonyPresetSelect: null,
+  colonyPresetDeploy: null,
+  colonyCombinationSelect: null,
+  colonyCombinationDeploy: null
 };
 
 function createJournalAutomationToggle(title) {
@@ -222,6 +228,44 @@ function buildSidebarAutomationUI() {
   elements.projectsPresetDeploy = projectsPresetDeploy;
   elements.projectsCombinationSelect = projectsComboSelect;
   elements.projectsCombinationDeploy = projectsComboDeploy;
+
+  const colony = createSidebarSection('Colony');
+  const colonyPresetRow = createSidebarRow();
+  colonyPresetRow.classList.add('journal-automation-row-stacked');
+  const colonyPresetLabel = document.createElement('span');
+  colonyPresetLabel.classList.add('journal-automation-row-label');
+  colonyPresetLabel.textContent = 'Preset';
+  const colonyPresetControls = createSidebarRow();
+  const colonyPresetSelect = document.createElement('select');
+  colonyPresetSelect.classList.add('journal-automation-select');
+  const colonyPresetDeploy = document.createElement('button');
+  colonyPresetDeploy.type = 'button';
+  colonyPresetDeploy.textContent = 'Deploy';
+  colonyPresetDeploy.classList.add('journal-automation-action');
+  colonyPresetControls.append(colonyPresetSelect, colonyPresetDeploy);
+  colonyPresetRow.append(colonyPresetLabel, colonyPresetControls);
+  const colonyComboRow = createSidebarRow();
+  colonyComboRow.classList.add('journal-automation-row-stacked');
+  const colonyComboLabel = document.createElement('span');
+  colonyComboLabel.classList.add('journal-automation-row-label');
+  colonyComboLabel.textContent = 'Combination';
+  const colonyComboControls = createSidebarRow();
+  const colonyComboSelect = document.createElement('select');
+  colonyComboSelect.classList.add('journal-automation-select');
+  const colonyComboDeploy = document.createElement('button');
+  colonyComboDeploy.type = 'button';
+  colonyComboDeploy.textContent = 'Deploy';
+  colonyComboDeploy.classList.add('journal-automation-action');
+  colonyComboControls.append(colonyComboSelect, colonyComboDeploy);
+  colonyComboRow.append(colonyComboLabel, colonyComboControls);
+  colony.section.append(colonyPresetRow, colonyComboRow);
+  panel.appendChild(colony.section);
+  elements.colonySection = colony.section;
+  elements.colonyStatus = colony.status;
+  elements.colonyPresetSelect = colonyPresetSelect;
+  elements.colonyPresetDeploy = colonyPresetDeploy;
+  elements.colonyCombinationSelect = colonyComboSelect;
+  elements.colonyCombinationDeploy = colonyComboDeploy;
 }
 
 function setJournalAutomationMode(enabled) {
@@ -253,7 +297,8 @@ function updateSidebarAutomationToggleVisibility() {
     && (manager.hasFeature('automationShipAssignment')
       || manager.hasFeature('automationLifeDesign')
       || manager.hasFeature('automationBuildings')
-      || manager.hasFeature('automationProjects')));
+      || manager.hasFeature('automationProjects')
+      || manager.hasFeature('automationColony')));
   const toggleVisible = !!(manager && manager.enabled && hasAnyAutomation);
   elements.toggle.classList.toggle('hidden', !toggleVisible);
   if (!toggleVisible && sidebarAutomationMode) {
@@ -385,6 +430,33 @@ function initializeSidebarAutomationUI() {
     automationManager.projectsAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
   });
 
+  sidebarAutomationElements.colonyPresetSelect.addEventListener('change', (event) => {
+    automationManager.colonyAutomation.setSelectedPresetId(event.target.value || null);
+    colonyAutomationUIState.syncedPresetId = null;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  sidebarAutomationElements.colonyPresetDeploy.addEventListener('click', () => {
+    const presetId = automationManager.colonyAutomation.getSelectedPresetId();
+    if (presetId) {
+      automationManager.colonyAutomation.applyPresetOnce(presetId);
+    }
+  });
+  sidebarAutomationElements.colonyCombinationSelect.addEventListener('change', (event) => {
+    const comboId = event.target.value || null;
+    automationManager.colonyAutomation.setSelectedCombinationId(comboId);
+    colonyAutomationUIState.combinationSyncedId = null;
+    if (comboId) {
+      automationManager.colonyAutomation.applyCombination(Number(comboId));
+    }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  sidebarAutomationElements.colonyCombinationDeploy.addEventListener('click', () => {
+    const comboId = automationManager.colonyAutomation.getSelectedCombinationId();
+    automationManager.colonyAutomation.applyCombinationPresets(comboId ? Number(comboId) : null);
+  });
+
   setJournalAutomationMode(false);
   sidebarAutomationInitialized = true;
 }
@@ -491,6 +563,33 @@ function updateSidebarAutomationUI() {
     );
     elements.projectsPresetDeploy.disabled = !projectsAutomation.getSelectedPresetId();
     elements.projectsCombinationDeploy.disabled = !projectsAutomation.getSelectedCombinationId() || projectsAutomation.getAssignments().length === 0;
+  }
+
+  const colonyAutomation = manager.colonyAutomation;
+  const colonyUnlocked = manager.hasFeature('automationColony');
+  elements.colonySection.style.display = colonyUnlocked ? '' : 'none';
+  elements.colonySection.classList.toggle('journal-automation-locked', !colonyUnlocked);
+  elements.colonyStatus.textContent = colonyUnlocked ? '' : 'Locked';
+  elements.colonyPresetSelect.disabled = !colonyUnlocked;
+  elements.colonyPresetDeploy.disabled = !colonyUnlocked;
+  elements.colonyCombinationSelect.disabled = !colonyUnlocked;
+  elements.colonyCombinationDeploy.disabled = !colonyUnlocked;
+  if (colonyUnlocked) {
+    const colonyCombinations = colonyAutomation.getCombinations();
+    fillSelect(
+      elements.colonyPresetSelect,
+      colonyAutomation.presets.map(preset => ({ value: preset.id, label: preset.name || `Preset ${preset.id}` })),
+      colonyAutomation.getSelectedPresetId() || '',
+      'Select preset'
+    );
+    fillSelect(
+      elements.colonyCombinationSelect,
+      colonyCombinations.map(combo => ({ value: combo.id, label: combo.name || `Combination ${combo.id}` })),
+      colonyAutomation.getSelectedCombinationId() || '',
+      'Select combination'
+    );
+    elements.colonyPresetDeploy.disabled = !colonyAutomation.getSelectedPresetId();
+    elements.colonyCombinationDeploy.disabled = !colonyAutomation.getSelectedCombinationId() || colonyAutomation.getAssignments().length === 0;
   }
 
   return true;
