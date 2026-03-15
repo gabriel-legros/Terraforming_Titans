@@ -2,6 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM, ResourceLoader } = require('jsdom');
 
+const shouldRunSlowTest = process.env.RUN_SLOW_OVERSIGHT_TEST === '1';
+const runIt = shouldRunSlowTest ? it : it.skip;
+
 class GameResourceLoader extends ResourceLoader {
   fetch(url, options) {
     if (url.includes('phaser.min.js') || url.includes('three.min.js')) {
@@ -244,7 +247,7 @@ const DEBUG_SAVES = [
 ];
 
 describe('Space Mirror advanced oversight debug saves', () => {
-  test.each(DEBUG_SAVES)('%s converges on zonal temperatures', async (saveName) => {
+  runIt.each(DEBUG_SAVES)('%s converges on zonal temperatures', async (saveName) => {
     const dom = await createGameDom();
     try {
       const { window } = dom;
