@@ -530,39 +530,7 @@ function initializeGameState(options = {}) {
     updateRender(true, { forceAllSubtabs: true });
   }
   if (preserveManagers && automationManager) {
-    let appliedTravelAutomation = false;
-
-    const buildingsAutomation = automationManager.buildingsAutomation;
-    if (buildingsAutomation && buildingsAutomation.nextTravelCombinationId) {
-      buildingsAutomation.applyCombinationPresets(buildingsAutomation.nextTravelCombinationId);
-      if (!buildingsAutomation.nextTravelCombinationPersistent) {
-        buildingsAutomation.nextTravelCombinationId = null;
-      }
-      appliedTravelAutomation = true;
-    }
-
-    const projectsAutomation = automationManager.projectsAutomation;
-    if (projectsAutomation && projectsAutomation.nextTravelCombinationId) {
-      projectsAutomation.applyCombinationPresets(projectsAutomation.nextTravelCombinationId);
-      if (!projectsAutomation.nextTravelCombinationPersistent) {
-        projectsAutomation.nextTravelCombinationId = null;
-      }
-      appliedTravelAutomation = true;
-    }
-
-    const colonyAutomation = automationManager.colonyAutomation;
-    if (colonyAutomation && colonyAutomation.nextTravelCombinationId) {
-      colonyAutomation.applyCombinationPresets(colonyAutomation.nextTravelCombinationId);
-      if (!colonyAutomation.nextTravelCombinationPersistent) {
-        colonyAutomation.nextTravelCombinationId = null;
-      }
-      appliedTravelAutomation = true;
-    }
-
-    if (appliedTravelAutomation) {
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    }
+    automationManager.applyTravelCombinationPresets();
   }
   globalGameIsTraveling = false;
 }

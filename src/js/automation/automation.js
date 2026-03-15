@@ -115,6 +115,34 @@ class AutomationManager extends EffectableEntity {
     }
   }
 
+  applyTravelCombinationPresets() {
+    const travelAutomations = [
+      this.buildingsAutomation,
+      this.projectsAutomation,
+      this.colonyAutomation
+    ];
+    let appliedTravelAutomation = false;
+
+    for (let index = 0; index < travelAutomations.length; index += 1) {
+      const automation = travelAutomations[index];
+      if (!automation || !automation.nextTravelCombinationId) {
+        continue;
+      }
+      automation.applyCombinationPresets(automation.nextTravelCombinationId);
+      if (!automation.nextTravelCombinationPersistent) {
+        automation.nextTravelCombinationId = null;
+      }
+      appliedTravelAutomation = true;
+    }
+
+    if (appliedTravelAutomation) {
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    }
+
+    return appliedTravelAutomation;
+  }
+
   saveState() {
     return {
       enabled: this.enabled,
