@@ -12,6 +12,8 @@ const hazardUICache = {
   summaryCenter: null,
   summaryCenterHeader: null,
   summaryCenterBody: null,
+  zoneGrowthInfoIcon: null,
+  zoneGrowthTooltip: null,
   summaryRight: null,
   summaryRightHeader: null,
   summaryRightBody: null,
@@ -283,9 +285,29 @@ function createInfoIcon(text) {
   const doc = getDocument();
   const icon = doc.createElement('span');
   icon.className = 'info-tooltip-icon';
-  icon.textContent = '\u24D8';
-  icon.title = text;
+  icon.innerHTML = '&#9432;';
+  ensureAttachedInfoTooltip(icon, null, text);
   return icon;
+}
+
+function ensureAttachedInfoTooltip(iconElement, cachedTooltip, text) {
+  if (!iconElement) {
+    return null;
+  }
+
+  iconElement.removeAttribute('title');
+  const existing = cachedTooltip || iconElement.querySelector('.resource-tooltip.dynamic-tooltip');
+  if (!existing) {
+    return attachDynamicInfoTooltip(iconElement, text);
+  }
+
+  if (existing.textContent !== text) {
+    existing.textContent = text;
+  }
+  if (existing.style && existing.style.whiteSpace !== 'pre-line') {
+    existing.style.whiteSpace = 'pre-line';
+  }
+  return existing;
 }
 
 function ensureHeaderRow() {
@@ -333,6 +355,10 @@ function ensureFactorRow(key) {
   const labelTitle = doc.createElement('div');
   labelTitle.className = 'hazard-factor-label';
 
+  const labelText = doc.createElement('span');
+  labelText.className = 'hazard-factor-label__text';
+  labelTitle.appendChild(labelText);
+
   const labelInfo = doc.createElement('div');
   labelInfo.className = 'hazard-factor-info';
 
@@ -352,9 +378,12 @@ function ensureFactorRow(key) {
   const record = {
     row,
     labelTitle,
+    labelText,
     labelInfo,
     valueCell,
-    penaltyCell
+    penaltyCell,
+    labelIcon: null,
+    labelTooltip: null
   };
 
   hazardUICache.factorRows[key] = record;
@@ -908,7 +937,7 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
     return {
       key: 'invasivenessResistance',
       label: 'Biomass Invasiveness',
-      tooltip: 'If current invasiveness exceeds the target, each zone adds (density × (current − target) × severity), averaged using zone surface share.',
+      tooltip: 'Zone growth uses life density × (current invasiveness − target) × severity. If invasiveness is below target, this provides a growth boost to hazardous biomass. Totals use zone surface share weighting.',
       info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatSeverityValue(severity)}`,
       values: [`Current Design: ${formatNumeric(currentInvasiveness, 2)}`],
       penalties: [`Penalty: 0%`],
@@ -939,7 +968,7 @@ function buildInvasivenessFactor(hazard, manager, terraformingState, zones) {
   return {
     key: 'invasivenessResistance',
     label: 'Biomass Invasiveness',
-    tooltip: 'Zone penalty = life density × (current invasiveness − target) × severity. Totals use zone surface share weighting.',
+    tooltip: 'Zone growth uses life density × (current invasiveness − target) × severity. If invasiveness is below target, this provides a growth boost to hazardous biomass. Totals use zone surface share weighting.',
     info: `Target ${formatNumeric(entry.value || 0, 2)}\nSeverity ×${formatSeverityValue(severity)}`,
     values,
     penalties,
@@ -1030,15 +1059,23 @@ function updateFactorGrid(summary) {
     const currentTooltip = record.labelTitle.dataset ? record.labelTitle.dataset.tooltip || '' : '';
 
     if (desiredLabel !== currentLabel || desiredTooltip !== currentTooltip) {
-      record.labelTitle.textContent = desiredLabel;
-      if (desiredTooltip) {
-        record.labelTitle.appendChild(createInfoIcon(desiredTooltip));
-      }
-
+      record.labelText.textContent = desiredLabel;
       if (record.labelTitle.dataset) {
         record.labelTitle.dataset.label = desiredLabel;
         record.labelTitle.dataset.tooltip = desiredTooltip;
       }
+    }
+
+    if (desiredTooltip) {
+      if (!record.labelIcon) {
+        record.labelIcon = createInfoIcon(desiredTooltip);
+        record.labelTitle.appendChild(record.labelIcon);
+      }
+      record.labelTooltip = ensureAttachedInfoTooltip(record.labelIcon, record.labelTooltip, desiredTooltip);
+    } else if (record.labelIcon) {
+      record.labelIcon.remove();
+      record.labelIcon = null;
+      record.labelTooltip = null;
     }
 
     if (record.labelInfo.textContent !== factor.info) {
@@ -1065,6 +1102,13 @@ function updateFactorGrid(summary) {
 
 function ensureLayout() {
   if (hazardUICache.card) {
+    if (hazardUICache.zoneGrowthInfoIcon) {
+      hazardUICache.zoneGrowthTooltip = ensureAttachedInfoTooltip(
+        hazardUICache.zoneGrowthInfoIcon,
+        hazardUICache.zoneGrowthTooltip,
+        'Zone growth = net growth rate × hazardous biomass × logistic term. The logistic term is 1 − (biomass ÷ carrying capacity). Carrying capacity equals the zone’s land share × maximum density, so growth slows as biomass approaches that limit and turns negative when penalties outweigh base growth.'
+      );
+    }
     return;
   }
 
@@ -1134,7 +1178,9 @@ function ensureLayout() {
   summaryCenter.className = 'hazard-summary hazard-summary--growth';
   const summaryCenterHeader = doc.createElement('div');
   summaryCenterHeader.className = 'hazard-summary__header';
-  summaryCenterHeader.textContent = 'Zone Growth';
+  const summaryCenterHeaderLabel = doc.createElement('span');
+  summaryCenterHeaderLabel.textContent = 'Zone Growth';
+  summaryCenterHeader.appendChild(summaryCenterHeaderLabel);
   const zoneGrowthTooltip = createInfoIcon(
     'Zone growth = net growth rate × hazardous biomass × logistic term. The logistic term is 1 − (biomass ÷ carrying capacity). Carrying capacity equals the zone’s land share × maximum density, so growth slows as biomass approaches that limit and turns negative when penalties outweigh base growth.'
   );
@@ -1268,6 +1314,8 @@ function ensureLayout() {
   hazardUICache.summaryCenter = summaryCenter;
   hazardUICache.summaryCenterHeader = summaryCenterHeader;
   hazardUICache.summaryCenterBody = summaryCenterBody;
+  hazardUICache.zoneGrowthInfoIcon = zoneGrowthTooltip;
+  hazardUICache.zoneGrowthTooltip = zoneGrowthTooltip.querySelector('.resource-tooltip.dynamic-tooltip');
   hazardUICache.zoneTable = zoneTable;
   hazardUICache.zoneTableBody = zoneBody;
   hazardUICache.zoneRows = [];
