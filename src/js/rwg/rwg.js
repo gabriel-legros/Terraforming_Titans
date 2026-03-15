@@ -1729,6 +1729,15 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const baseColor = pickBaseColorForType(classification?.type || type);
   const sectorLabel = selectSectorLabel(seed) || DEFAULT_SECTOR_LABEL;
   const distanceFromSun = isStarlessRogueWorld ? 0 : safeAU;
+  const effects = type === 'molten'
+    ? [
+        {
+          target: 'building',
+          targetId: 'foundry',
+          type: 'enable'
+        }
+      ]
+    : [];
   const overrides = {
     name: planetName(seed, params),
     resources: { colony: deepMerge(defaultPlanetParameters.resources.colony), surface, underground, atmospheric: atmo, special },
@@ -1744,6 +1753,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     star: starOverride,
     classification: { archetype: type, TeqK: Math.round(classification.Teq) },
     visualization: { baseColor },
+    effects,
     rwgMeta: {
       generatorSeedInt: seed,
       selectedHazards: Array.isArray(forcedHazards) ? forcedHazards.slice() : [],

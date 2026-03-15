@@ -120,12 +120,6 @@ const RWG_EFFECTS = {
   ],
   "molten": [
     {
-      effectId: "rwg-molten-foundry",
-      target: "building",
-      targetId: "foundry",
-      type: "enable",
-    },
-    {
       effectId: "rwg-molten-geothermal",
       target: "building",
       targetId: "geothermalGenerator",
