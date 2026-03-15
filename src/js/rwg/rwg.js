@@ -433,9 +433,9 @@ const DEFAULT_PARAMS = {
   },
   molten: {
     coreHeatFluxBandsWm2: [
-      { threshold: 0.45, range: [15_000, 45_000] },
-      { threshold: 0.85, range: [45_000, 120_000] },
-      { threshold: 1.0, range: [120_000, 260_000] }
+      { threshold: 0.45, range: [150_000, 200_000] },
+      { threshold: 0.85, range: [200_000, 250_000] },
+      { threshold: 1.0, range: [250_000, 300_000] }
     ],
     geothermalBoostRange: [0.95, 1.6]
   },
