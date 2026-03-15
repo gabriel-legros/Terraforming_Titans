@@ -1162,6 +1162,7 @@ function buildEquilibrationInputParams(res) {
 function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const c = res.merged?.celestialParameters || {};
+  const gravityPenaltyEnabled = (res.override?.gravityPenaltyEnabled ?? res.merged?.gravityPenaltyEnabled ?? res.gravityPenaltyEnabled) !== false;
   const seedString = res.seedString;
   const r = res.merged?.resources || {};
   const cls = res.override?.classification || res.merged?.classification;
@@ -1250,7 +1251,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     : ((!replayAllowed && alreadyTerraformed)
       ? 'This world has already been terraformed.'
       : getRandomWorldTravelEquilibrationWarning(eqState));
-  const gWarn = createGravityWarning(c.gravity, fmt, { includeFlavor: true });
+  const gWarn = gravityPenaltyEnabled ? createGravityWarning(c.gravity, fmt, { includeFlavor: true }) : '';
   const showDominionPanel = options.showDominion !== false;
   const dominionPanel = showDominionPanel ? `
     <div class="rwg-card">

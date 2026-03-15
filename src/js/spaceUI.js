@@ -704,6 +704,9 @@ function updateCurrentWorldUI() {
             }
             const detailsContent = detailsBox.querySelector('.details-content') || detailsBox;
             detailsContent.replaceChildren(wrapper);
+            if (typeof attachPendingRwgTooltips === 'function') {
+                attachPendingRwgTooltips(wrapper);
+            }
         } else {
             const detailsContent = detailsBox.querySelector('.details-content') || detailsBox;
             detailsContent.textContent = '';
