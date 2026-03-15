@@ -259,7 +259,7 @@
       antimatter: { name: 'Antimatter', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false, preserveOnTravel: true, preserveOnTravelFields: ['value', 'unlocked', 'enabled'] }
     },
     space: {
-      energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 0, unlocked: true, unit: 'Watt-day' }
+      energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 0, unlocked: true, unit: 'Watt-day', preserveOnTravel: true }
     },
     spaceStorage: {
       metal: { name: 'Metal', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
