@@ -225,10 +225,11 @@
       super.applyEffects();
       if (this.isCompleted && this.isBooleanFlagSet('biocortexIntegration')) {
         addEffect({
-          target: 'global',
-          type: 'globalResearchBoost',
-          value: 9,
-          effectId: 'bioworld-biocortex-research',
+          target: 'colony',
+          targetId: 't6_colony',
+          type: 'productionMultiplier',
+          value: 10,
+          effectId: 'bioworld-biocortex-metropolis',
           sourceId: 'bioworld-biocortex',
           name: 'Biocortex-human integration',
         });
