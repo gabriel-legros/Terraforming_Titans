@@ -61,6 +61,7 @@
       };
 
       const countElements = createSummaryBox('Heat Sinks Built');
+      const fluxMitigationElements = createSummaryBox('Flux mitigation');
       const coolingElements = createSummaryBox('Cooling per Second');
       const controlElements = createSummaryBox('Control');
       const coolingToggle = createToggleButton({
@@ -78,6 +79,7 @@
       this.summaryElements = {
         card,
         countValue: countElements.value,
+        fluxMitigationValue: fluxMitigationElements.value,
         coolingValue: coolingElements.value,
         coolingToggle
       };
@@ -109,9 +111,17 @@
       const heatSinkCount = this.repeatCount || 0;
       elements.countValue.textContent = formatValue(heatSinkCount, true);
 
+      const fluxMitigation = this.calculateFluxMitigation();
       const coolingPerSecond = this.calculateCoolingPerSecond();
       const coolingActive = this.heatSinksActive;
       setToggleButtonState(elements.coolingToggle, coolingActive);
+      if (!coolingActive) {
+        elements.fluxMitigationValue.textContent = 'Off';
+      } else if (Number.isFinite(fluxMitigation) && fluxMitigation > 0) {
+        elements.fluxMitigationValue.textContent = `${formatValue(fluxMitigation, false, fluxMitigation >= 100 ? 0 : 2)} W/m^2`;
+      } else {
+        elements.fluxMitigationValue.textContent = '0 W/m^2';
+      }
       if (!coolingActive) {
         elements.coolingValue.textContent = 'Off';
       } else if (Number.isFinite(coolingPerSecond) && coolingPerSecond > 0) {
@@ -119,6 +129,17 @@
       } else {
         elements.coolingValue.textContent = '—';
       }
+    }
+
+    calculateFluxMitigation() {
+      const terra = terraforming;
+      if (!terra || this.heatSinksActive === false) {
+        return 0;
+      }
+
+      return terra.getMegaHeatSinkFlux
+        ? terra.getMegaHeatSinkFlux()
+        : 0;
     }
 
     calculateCoolingPerSecond() {
