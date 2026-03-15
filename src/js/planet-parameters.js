@@ -1536,7 +1536,7 @@ const poseidonOverrides = {
       carbonDioxide: { initialValue: 1_000_000_000_000_000_000 },
       atmosphericWater: { initialValue: 1_000_000_000_000_000 },
       atmosphericMethane: { initialValue: 0 },
-      oxygen: { initialValue: 250_000_000_000_000 },
+      oxygen: { initialValue: 0 },
       inertGas: { initialValue: 50_000_000_000_000_000 },
       hydrogen: { initialValue: 0 },
       sulfuricAcid: { initialValue: 0 }

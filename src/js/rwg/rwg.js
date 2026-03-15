@@ -518,11 +518,10 @@ const DEFAULT_PARAMS = {
       "molten": {
         pressureBar: 2.4,
         mix: {
-          carbonDioxide: 0.56,
-          inertGas: 0.24,
-          atmosphericWater: 0.14,
-          sulfuricAcid: 0.05,
-          oxygen: 0.01
+          carbonDioxide: 0.7,
+          inertGas: 0.15,
+          atmosphericWater: 0.10,
+          sulfuricAcid: 0.05
         }
       },
       "rogue": {
@@ -553,7 +552,7 @@ const DEFAULT_PARAMS = {
       "desiccated-desert": [0.5, 2.0], 
       "super-earth": [0.7, 2.2],
       "chthonian": [0.7, 2.2],
-      "molten": [0.15, 6.0],
+      "molten": [0.5, 6.0],
       "rogue": [0.6, 1.4],
       "ammonia-rich": [0.7, 1.3],
     }

@@ -14,7 +14,7 @@ if (typeof SubtabManager === 'undefined') {
 }
 
 let terraformingSubtabManager = null;
-const CORE_HEAT_TOOLTIP_TEXT = 'Planetary interior hveat added directly to the surface as a flat global fulx.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nThis flux is not impacted by albedo or day-night averaging.';
+const CORE_HEAT_TOOLTIP_TEXT = 'Planetary interior heat added directly to the surface as a flat global fulx.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nThis flux is not impacted by albedo or day-night averaging.';
 
 function getTerraformingSubtabManager() {
   return terraformingSubtabManager;
