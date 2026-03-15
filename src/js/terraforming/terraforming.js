@@ -584,6 +584,31 @@ class Terraforming extends EffectableEntity{
     return baseFlux * (1 - crustCompletion);
   }
 
+  getMegaHeatSinkFlux() {
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    const megaHeatSinkCount =
+      megaHeatSinkProject?.heatSinksActive === false
+        ? 0
+        : (megaHeatSinkProject?.repeatCount ?? 0);
+    const surfaceArea = this.celestialParameters.surfaceArea
+      || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
+    return megaHeatSinkCount > 0 && surfaceArea > 0
+      ? (megaHeatSinkCount * MEGA_HEAT_SINK_POWER_W) / surfaceArea
+      : 0;
+  }
+
+  getNetCoreHeatFlux() {
+    const coreHeatFlux = this.getCoreHeatFlux();
+    const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
+    return Math.max(0, coreHeatFlux - megaHeatSinkFlux);
+  }
+
+  getMegaHeatSinkCoolingFlux() {
+    const coreHeatFlux = this.getCoreHeatFlux();
+    const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
+    return Math.max(0, megaHeatSinkFlux - coreHeatFlux);
+  }
+
   setTemperatureValuesToTrend() {
     const zones = getZones();
     const globalTrend = this.temperature.trendValue;
@@ -1120,13 +1145,9 @@ class Terraforming extends EffectableEntity{
     const z = {}; // per-zone working data
 
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
-    const coreHeatFlux = this.getCoreHeatFlux();
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
-    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
-    const megaHeatSinkCount =
-        megaHeatSinkProject?.heatSinksActive === false
-          ? 0
-          : (megaHeatSinkProject?.repeatCount ?? 0);
+    const netSurfaceHeatFlux = this.getNetCoreHeatFlux();
+    const megaHeatSinkCoolingFlux = this.getMegaHeatSinkCoolingFlux();
     const allowAvailableHeating =
         !!(mirrorOversightSettings?.advancedOversight) &&
         mirrorOversightSettings.allowAvailableToHeat !== false;
@@ -1186,7 +1207,7 @@ class Terraforming extends EffectableEntity{
         const zTemps = dayNightTemperaturesModel({
             ...baseParams,
             flux: zoneFlux,
-            addedSurfaceFlux: coreHeatFlux,
+            addedSurfaceFlux: netSurfaceHeatFlux,
             surfaceFractions: zoneFractions,
             autoSlabOptions: slabOptions
         });
@@ -1301,7 +1322,7 @@ class Terraforming extends EffectableEntity{
         const capacity = z[zone].capacityPerArea;
         const greenhouseFactor = z[zone].greenhouseFactor || 1;
 
-        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (isRingWorld() ? 1 : 0.25)) + coreHeatFlux;
+        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (isRingWorld() ? 1 : 0.25)) + netSurfaceHeatFlux;
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
             : 0;
@@ -1326,13 +1347,8 @@ class Terraforming extends EffectableEntity{
             const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
             let combinedFlux = netFlux - windFlux;
 
-            if (desiredDelta < 0 && megaHeatSinkCount > 0) {
-              const zoneArea = z[zone].area || 0;
-              if (zoneArea > 0) {
-                const zoneCoolingPower = megaHeatSinkCount * MEGA_HEAT_SINK_POWER_W * pct;
-                const coolingFlux = zoneCoolingPower / zoneArea;
-                combinedFlux -= coolingFlux;
-              }
+            if (desiredDelta < 0 && megaHeatSinkCoolingFlux > 0) {
+              combinedFlux -= megaHeatSinkCoolingFlux;
             }
             if (desiredDelta > 0 && availableAdvancedHeatingPower > 0) {
               const zoneArea = z[zone].area || 0;
@@ -1392,7 +1408,7 @@ class Terraforming extends EffectableEntity{
         this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
 
         this.temperature.effectiveTempNoAtmosphere =
-            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized, { addedFlux: coreHeatFlux });
+            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized, { addedFlux: netSurfaceHeatFlux });
     }
 
     getRadiationDoseBoostFromEffects() {

@@ -14,6 +14,7 @@ if (typeof SubtabManager === 'undefined') {
 }
 
 let terraformingSubtabManager = null;
+const CORE_HEAT_TOOLTIP_TEXT = 'Planetary interior hveat added directly to the surface as a flat global fulx.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nThis flux is not impacted by albedo or day-night averaging.';
 
 function getTerraformingSubtabManager() {
   return terraformingSubtabManager;
@@ -764,8 +765,8 @@ function updateTerraformingUI(deltaSeconds, options = {}) {
 // Functions to create and update each terraforming aspect box
 
 function createTemperatureBox(row) {
-    const temperatureBox = document.createElement('div');
-    temperatureBox.classList.add('terraforming-box');
+  const temperatureBox = document.createElement('div');
+  temperatureBox.classList.add('terraforming-box');
     temperatureBox.id = 'temperature-box';
     const tempInfo = document.createElement('span');
     tempInfo.classList.add('info-tooltip-icon');
@@ -800,7 +801,7 @@ function createTemperatureBox(row) {
       <h3>${terraforming.temperature.name}</h3>
       <p>Global Mean Temp: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>Equilibrium Temp: <span id="equilibrium-temp"></span> <span class="temp-unit"></span></p>
-      <p id="temperature-core-heat-line" style="display: none;">Core Heat Flux: <span id="temperature-core-heat"></span> W/m^2</p>
+      <p id="temperature-core-heat-line" style="display: none;">Net Core Heat Flux: <span id="temperature-core-heat"></span> W/m^2</p>
       <table>
         <colgroup>
           <col class="gas-col">
@@ -861,7 +862,7 @@ function createTemperatureBox(row) {
       coreHeatLine.appendChild(coreHeatInfo);
       attachDynamicInfoTooltip(
         coreHeatInfo,
-        'Planetary interior heat added directly to the surface energy budget as a flat global flux. Unlike starlight, it is not reduced by albedo or day-night averaging.'
+        CORE_HEAT_TOOLTIP_TEXT
       );
     }
     const infographicElements = ensureTemperatureInfographicOverlay();
@@ -927,6 +928,7 @@ function createTemperatureBox(row) {
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
       coreHeatLine,
+      coreHeatTooltip: coreHeatInfo.querySelector('.resource-tooltip'),
       coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
       tropicalTemp: temperatureBox.querySelector('#tropical-temp'),
       tropicalTrendTemp: temperatureBox.querySelector('#tropical-trend-temp'),
@@ -981,12 +983,16 @@ function createTemperatureBox(row) {
     els.current.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
     els.equilibrium.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.equilibriumTemperature), false, 2);
     const baseCoreHeatFlux = Math.max(0, terraforming.celestialParameters.coreHeatFlux || 0);
-    const coreHeatFlux = Math.max(0, terraforming.getCoreHeatFlux ? terraforming.getCoreHeatFlux() : baseCoreHeatFlux);
+    const remainingCoreHeatFlux = terraforming.getCoreHeatFlux ? terraforming.getCoreHeatFlux() : baseCoreHeatFlux;
+    const netCoreHeatFlux = terraforming.getNetCoreHeatFlux ? terraforming.getNetCoreHeatFlux() : remainingCoreHeatFlux;
     if (els.coreHeatLine) {
       els.coreHeatLine.style.display = baseCoreHeatFlux > 0 ? '' : 'none';
     }
+    if (els.coreHeatTooltip) {
+      els.coreHeatTooltip.textContent = CORE_HEAT_TOOLTIP_TEXT;
+    }
     if (els.coreHeat) {
-      els.coreHeat.textContent = formatNumber(coreHeatFlux, false, coreHeatFlux >= 100 ? 0 : 2);
+      els.coreHeat.textContent = formatNumber(netCoreHeatFlux, false, netCoreHeatFlux >= 100 ? 0 : 2);
     }
 
     els.tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
