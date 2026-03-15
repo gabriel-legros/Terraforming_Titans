@@ -212,7 +212,7 @@ class PopulationModule extends EffectableEntity {
       const gravityValue = terraforming?.celestialParameters?.gravity ?? 0;
       const gravityExcess = Math.max(0, gravityValue - 20);
       const gravityRatePerSecond = gravityExcess === 0 ? 0 : (0.0001 * gravityExcess);
-      const mechanicalAssistance = colonySliderSettings?.mechanicalAssistance ?? 0;
+      const mechanicalAssistance = colonySliderSettings.getEffectiveMechanicalAssistance();
       const adaptationMitigation = this.isBooleanFlagSet?.('highGravityAdaptation') ? 0.5 : 0;
       const sliderMitigation = Math.min(0.5, mechanicalAssistance * componentsCoverage * 0.25);
       const totalMitigation = Math.min(1, adaptationMitigation + sliderMitigation);

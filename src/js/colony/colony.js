@@ -367,7 +367,7 @@ class Colony extends Building {
     // Apply gravity penalty: every m/s² above 10 reduces happiness by 5%, capped at 100%
     const gravity = terraforming?.celestialParameters?.gravity || 0;
     let gravityPenalty = gravity > 10 ? Math.min((gravity - 10) * 0.05, 1) : 0;
-      const mechAssist = colonySliderSettings?.mechanicalAssistance || 0;
+      const mechAssist = colonySliderSettings.getEffectiveMechanicalAssistance();
       const compNeed = this.filledNeeds.components || 0;
       const adaptationMitigation = populationModule?.isBooleanFlagSet?.('highGravityAdaptation') ? 0.5 : 0;
       const sliderMitigation = mechAssist * compNeed * 0.25;

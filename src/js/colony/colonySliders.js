@@ -13,6 +13,22 @@ class ColonySlidersManager extends EffectableEntity {
     this.warpnetLevel = 0;
   }
 
+  isMechanicalAssistanceActive() {
+    return this.isBooleanFlagSet('mechanicalAssistance') && terraforming.celestialParameters.gravity > 10;
+  }
+
+  getEffectiveMechanicalAssistance() {
+    return this.isMechanicalAssistanceActive() ? this.mechanicalAssistance : 0;
+  }
+
+  isWarpnetActive() {
+    return this.isBooleanFlagSet('warpnet');
+  }
+
+  getEffectiveWarpnetLevel() {
+    return this.isWarpnetActive() ? this.warpnetLevel : 0;
+  }
+
   setWorkforceRatio(value) {
     value = Math.min(0.9, Math.max(0.25, value));
     this.workerRatio = value;
@@ -94,7 +110,7 @@ class ColonySlidersManager extends EffectableEntity {
   setMechanicalAssistance(value) {
     value = Math.min(2, Math.max(0, value));
     this.mechanicalAssistance = value;
-    this.applyMechanicalAssistanceEffects(value);
+    this.applyMechanicalAssistanceEffects();
 
     if (typeof document !== 'undefined') {
       const input = document.getElementById('mechanical-assistance-slider');
@@ -117,7 +133,7 @@ class ColonySlidersManager extends EffectableEntity {
   setWarpnetLevel(value) {
     value = Math.min(10, Math.max(0, Math.round(value)));
     this.warpnetLevel = value;
-    this.applyWarpnetEffects(value);
+    this.applyWarpnetEffects();
 
     if (typeof document !== 'undefined') {
       const input = document.getElementById('warpnet-slider');
@@ -235,6 +251,7 @@ class ColonySlidersManager extends EffectableEntity {
   }
 
   applyMechanicalAssistanceEffects(value = this.mechanicalAssistance) {
+    value = this.getEffectiveMechanicalAssistance();
     colonyIds.forEach(colonyId => {
       const tierMatch = colonyId.match(/^t(\d)_colony$/);
       const tier = tierMatch ? parseInt(tierMatch[1], 10) : 2;
@@ -254,6 +271,7 @@ class ColonySlidersManager extends EffectableEntity {
   }
 
   applyWarpnetEffects(value = this.warpnetLevel) {
+    value = this.getEffectiveWarpnetLevel();
     const energyMultiplier = value === 0 ? 1 : Math.pow(10, value);
 
     addEffect({
