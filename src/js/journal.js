@@ -436,6 +436,26 @@ function displayJournalChapter(index) {
   updateJournalNavArrows();
 }
 
+function renderJournalEntries(entries) {
+  const journalEntries = journalEntriesContainer;
+  journalEntries.innerHTML = '';
+  entries.forEach(entryText => {
+    const entry = document.createElement('p');
+    appendJournalSegments(entry, buildJournalSegments(entryText));
+    journalEntries.appendChild(entry);
+  });
+}
+
+function setDisplayedJournalEntries(entries, entrySources) {
+  const journalContainer = journalContainerElement;
+  renderJournalEntries(entries);
+  journalEntriesData = entries.slice();
+  journalEntrySources = entrySources ? entrySources.slice() : new Array(entries.length).fill(null);
+  if (!journalUserScrolling && journalContainer) {
+    journalContainer.scrollTop = journalContainer.scrollHeight;
+  }
+}
+
 function stopJournalTyping(completeEvent) {
   journalTypingSession += 1;
   cancelAnimationFrame(journalTypingFrameId);
@@ -482,6 +502,36 @@ function processNextJournalEntry() {
   journalCurrentEventId = eventId;
   const journalEntries = journalEntriesContainer;
   const journalContainer = journalContainerElement;
+  const segments = buildJournalSegments(text);
+
+  const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
+  journalHistoryData.push(text); // Also keep it in the full history
+  journalHistorySources.push(srcObj);
+  const groups = getJournalChapterGroups();
+  const targetGroupIndex = groups.length > 0 ? groups.length - 1 : 0;
+  const showingTargetGroup = !journalIndexVisible && journalChapterIndex === targetGroupIndex;
+
+  if (!showingTargetGroup) {
+    if (journalIndexVisible) {
+      closeJournalIndex();
+    }
+    const targetGroup = groups[targetGroupIndex];
+    if (targetGroup) {
+      setDisplayedJournalEntries(targetGroup.entries.slice(0, -1), targetGroup.sources.slice(0, -1));
+      journalChapterIndex = targetGroupIndex;
+    } else {
+      setDisplayedJournalEntries([], []);
+      journalChapterIndex = 0;
+    }
+  }
+
+  journalEntriesData.push(text);
+  journalEntrySources.push(srcObj);
+  updateJournalNavArrows();
+  if (journalIndexVisible) {
+    buildJournalIndex();
+  }
+
   if (separator) {
     const hr = document.createElement('hr');
     hr.classList.add('journal-entry-separator');
@@ -489,25 +539,7 @@ function processNextJournalEntry() {
   }
 
   const entry = document.createElement('p');
-  journalEntries.appendChild(entry); // Append the empty paragraph first
-  const segments = buildJournalSegments(text);
-
-  const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
-  const prevGroupsLength = getJournalChapterGroups().length;
-  journalEntriesData.push(text); // Store the journal entry in the array
-  journalHistoryData.push(text); // Also keep it in the full history
-  journalEntrySources.push(srcObj);
-  journalHistorySources.push(srcObj);
-
-  // If this entry started a new chapter, automatically move to it
-  const newGroupsLength = getJournalChapterGroups().length;
-  if (newGroupsLength > prevGroupsLength) {
-    journalChapterIndex = newGroupsLength - 1;
-  }
-  updateJournalNavArrows();
-  if (journalIndexVisible) {
-    buildJournalIndex();
-  }
+  journalEntries.appendChild(entry);
 
   let segmentIndex = 0;
   let charIndex = 0;
@@ -591,24 +623,9 @@ function processNextJournalEntry() {
 }
 
 function loadJournalEntries(entries, history = null, entrySources = null, historySourcesParam = null) {
-  const journalEntries = journalEntriesContainer;
-  const journalContainer = journalContainerElement;
   stopJournalTyping(true);
-  journalEntries.innerHTML = ''; // Clear existing journal entries
   journalQueue = [];
-
-  // Iterate over the saved entries and append them
-  entries.forEach(entryText => {
-    const entry = document.createElement('p');
-    appendJournalSegments(entry, buildJournalSegments(entryText));
-    journalEntries.appendChild(entry);
-  });
-
-  if (!journalUserScrolling && journalContainer) {
-    journalContainer.scrollTop = journalContainer.scrollHeight; // Scroll to the latest entry
-  }
-  journalEntriesData = entries;
-  journalEntrySources = entrySources ? entrySources.slice() : new Array(entries.length).fill(null);
+  setDisplayedJournalEntries(entries, entrySources);
   if (history) {
     journalHistoryData = history.slice();
     journalHistorySources = historySourcesParam ? historySourcesParam.slice() : journalEntrySources.slice();
