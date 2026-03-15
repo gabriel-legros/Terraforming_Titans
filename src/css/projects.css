@@ -1965,6 +1965,250 @@
     font-size: 0.9em;
 }
 
+.resource-disposal-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+}
+
+.resource-disposal-builder-section {
+    gap: 8px;
+}
+
+.resource-disposal-builder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #e9ecef;
+}
+
+.resource-disposal-builder-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.resource-disposal-builder-heading {
+    font-size: 0.95em;
+    font-weight: 700;
+    color: #334155;
+}
+
+.resource-disposal-builder-subheading {
+    max-width: 560px;
+    font-size: 0.8em;
+    color: #5f6b7a;
+    line-height: 1.4;
+}
+
+.resource-disposal-builder-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.resource-disposal-target-count {
+    min-width: 42px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e7edf3;
+    color: #314152;
+    font-size: 0.8em;
+    font-weight: 700;
+    text-align: center;
+}
+
+.resource-disposal-add-target-button,
+.resource-disposal-remove-target-button {
+    padding: 4px 10px;
+    border: 1px solid #bdc8d3;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #263442;
+    font-size: 0.78em;
+    font-weight: 600;
+}
+
+.resource-disposal-add-target-button:disabled,
+.resource-disposal-remove-target-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.resource-disposal-target-list {
+    display: grid;
+    gap: 8px;
+}
+
+.resource-disposal-target-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 1px solid #d6dee6;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.resource-disposal-target-top {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: start;
+}
+
+.resource-disposal-target-marker {
+    min-width: 62px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.resource-disposal-target-badge {
+    min-width: 26px;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #e8edff;
+    color: #1f3fa3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: inset 0 1px 0 #c7d4f9;
+}
+
+.resource-disposal-target-selects {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    min-width: 0;
+}
+
+.resource-disposal-target-select-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.resource-disposal-target-select-group select {
+    width: 100%;
+    max-width: 300px;
+}
+
+.resource-disposal-target-select-label {
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #607080;
+}
+
+.resource-disposal-target-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.resource-disposal-target-share {
+    min-height: 1em;
+    font-size: 0.75em;
+    font-weight: 700;
+    color: #475569;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.resource-disposal-target-controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+}
+
+.resource-disposal-target-checkbox {
+    padding: 0;
+    font-size: 0.9em;
+    color: #334155;
+}
+
+.resource-disposal-target-checkbox span,
+.resource-disposal-target-limit-control .checkbox-container span {
+    font-size: 0.9em;
+    font-weight: 400;
+    color: #334155;
+}
+
+.resource-disposal-target-limit-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-size: 0.9em;
+    color: #334155;
+}
+
+.resource-disposal-target-limit-control input[type="text"] {
+    width: 68px;
+}
+
+.resource-disposal-target-limit-unit {
+    min-width: 24px;
+    font-weight: 600;
+    color: #607080;
+}
+
+.resource-disposal-target-status {
+    min-height: 16px;
+    width: 100%;
+    font-size: 0.72em;
+    font-weight: 700;
+    text-align: center;
+    color: #1d4ed8;
+}
+
+.resource-disposal-target-status[data-state="idle"] {
+    color: #475569;
+}
+
+.resource-disposal-target-status[data-state="blocked"] {
+    color: #b91c1c;
+}
+
+.resource-disposal-target-status[data-state="waiting"] {
+    color: #b45309;
+}
+
+@media (max-width: 900px) {
+    .resource-disposal-builder-header,
+    .resource-disposal-target-top {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .resource-disposal-target-selects {
+        grid-template-columns: 1fr;
+    }
+
+    .resource-disposal-target-marker,
+    .resource-disposal-target-side {
+        align-items: flex-start;
+        text-align: left;
+    }
+}
+
 .automation-settings-container {
     display: flex;
     flex-wrap: wrap;

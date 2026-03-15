@@ -335,6 +335,56 @@
     border-bottom-color: #444;
 }
 
+.dark-mode .resource-disposal-builder-header {
+    border-color: #3f3f3f;
+}
+
+.dark-mode .resource-disposal-builder-heading,
+.dark-mode .resource-disposal-target-select-label,
+.dark-mode .resource-disposal-target-share,
+.dark-mode .resource-disposal-target-limit-unit,
+.dark-mode .resource-disposal-target-checkbox span,
+.dark-mode .resource-disposal-target-limit-control .checkbox-container span,
+.dark-mode .resource-disposal-target-limit-control {
+    color: #c6d0dc;
+}
+
+.dark-mode .resource-disposal-builder-subheading {
+    color: #aeb8c2;
+}
+
+.dark-mode .resource-disposal-target-count {
+    background: #2b3540;
+    color: #e5edf6;
+}
+
+.dark-mode .resource-disposal-target-card {
+    border-color: #485361;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .resource-disposal-target-badge {
+    background: #34465b;
+    color: #dce9ff;
+    box-shadow: inset 0 1px 0 #5b7594;
+}
+
+.dark-mode .resource-disposal-target-status {
+    color: #d8ecff;
+}
+
+.dark-mode .resource-disposal-target-status[data-state="idle"] {
+    color: #d0d7df;
+}
+
+.dark-mode .resource-disposal-target-status[data-state="blocked"] {
+    color: #ffd7da;
+}
+
+.dark-mode .resource-disposal-target-status[data-state="waiting"] {
+    color: #ffe9ae;
+}
+
 .dark-mode .android-assignment-headers {
     color: #ffffff;
     border-bottom-color: #3c3c3c;

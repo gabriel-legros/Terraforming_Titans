@@ -708,16 +708,64 @@ class SpaceshipProject extends Project {
 
   calculateSpaceshipTotalDisposal() {
     const totalDisposal = {};
-    const scaledDisposalAmount = this.getShipCapacity();
-    if (this.selectedDisposalResource) {
-      const { category, resource } = this.selectedDisposalResource;
-      totalDisposal[category] = { [resource]: scaledDisposalAmount };
+    const entries = this.getDiscreteDisposalEntries();
+    for (let i = 0; i < entries.length; i += 1) {
+      const entry = entries[i];
+      this.addAmountToResourceMap(
+        totalDisposal,
+        entry.category,
+        entry.resource,
+        entry.requestedAmount || 0
+      );
     }
     return totalDisposal;
   }
 
+  getDisposalSelectionSignature() {
+    if (!this.selectedDisposalResource) {
+      return '';
+    }
+    return `${this.selectedDisposalResource.category}:${this.selectedDisposalResource.resource}`;
+  }
+
+  getDiscreteDisposalEntries() {
+    if (!this.selectedDisposalResource) {
+      return [];
+    }
+    return [{
+      category: this.selectedDisposalResource.category,
+      resource: this.selectedDisposalResource.resource,
+      requestedAmount: this.getShipCapacity(),
+    }];
+  }
+
+  getContinuousDisposalEntries(context, productivity = 1) {
+    if (!this.selectedDisposalResource) {
+      return [];
+    }
+    const disposalCount = this.getContinuousDisposalCount(context);
+    const requestedAmount = this.getShipCapacity() * disposalCount * context.fraction * productivity;
+    if (requestedAmount <= 0) {
+      return [];
+    }
+    return [{
+      category: this.selectedDisposalResource.category,
+      resource: this.selectedDisposalResource.resource,
+      requestedAmount,
+    }];
+  }
+
   getClampedDisposalAmount(requestedAmount, category, resource, availableAmount) {
     return Math.max(0, Math.min(requestedAmount, availableAmount));
+  }
+
+  getClampedDisposalAmountForEntry(entry, availableAmount) {
+    return this.getClampedDisposalAmount(
+      entry.requestedAmount,
+      entry.category,
+      entry.resource,
+      availableAmount
+    );
   }
 
   getZonalDisposalDescriptor(category, resource) {
@@ -906,23 +954,30 @@ class SpaceshipProject extends Project {
       }
     }
 
-    if (this.attributes.spaceExport && this.selectedDisposalResource) {
-      const scaledDisposalAmount = this.calculateSpaceshipTotalDisposal();
-      const { category, resource } = this.selectedDisposalResource;
-      const required = scaledDisposalAmount[category][resource];
-      const available = resources[category][resource].value;
-      const actualAmount = this.getClampedDisposalAmount(required, category, resource, available);
-      if (actualAmount < required) {
-        shortfall = shortfall || required > 0;
-        disposalShortfall = disposalShortfall || required > 0;
-      }
-      resources[category][resource].decrease(actualAmount);
-      this.removeZonalResource(category, resource, actualAmount);
-      this.pendingGain = {
-        colony: {
-          funding: actualAmount * this.attributes.fundingGainAmount
+    if (this.attributes.spaceExport) {
+      const disposalEntries = this.getDiscreteDisposalEntries();
+      let totalDisposed = 0;
+      for (let i = 0; i < disposalEntries.length; i += 1) {
+        const entry = disposalEntries[i];
+        const available = resources[entry.category][entry.resource].value;
+        const actualAmount = this.getClampedDisposalAmountForEntry(entry, available);
+        if (actualAmount < entry.requestedAmount) {
+          shortfall = shortfall || entry.requestedAmount > 0;
+          disposalShortfall = disposalShortfall || entry.requestedAmount > 0;
         }
-      };
+        resources[entry.category][entry.resource].decrease(actualAmount);
+        this.removeZonalResource(entry.category, entry.resource, actualAmount);
+        totalDisposed += actualAmount;
+      }
+      if (this.attributes.fundingGainAmount > 0 && totalDisposed > 0) {
+        this.pendingGain = {
+          colony: {
+            funding: totalDisposed * this.attributes.fundingGainAmount
+          }
+        };
+      } else {
+        this.pendingGain = null;
+      }
     }
 
     this.shortfallLastTick = shortfall;
@@ -1100,6 +1155,7 @@ class SpaceshipProject extends Project {
       nonEnergyCost: 0,
       appliedDisposal: 0,
       disposalData: null,
+      disposalEntries: [],
       shipLoss: 0,
       hasContinuousWork: false,
       costRateLabel: this.getCostRateLabel(),
@@ -1137,18 +1193,9 @@ class SpaceshipProject extends Project {
       }
     }
 
-    let disposalData = null;
-    if (this.attributes.spaceExport && this.selectedDisposalResource) {
-      const disposalCount = this.getContinuousDisposalCount(context);
-      const requestedAmount = this.getShipCapacity() * disposalCount * context.fraction * productivity;
-      if (requestedAmount > 0) {
-        disposalData = {
-          category: this.selectedDisposalResource.category,
-          resource: this.selectedDisposalResource.resource,
-          requestedAmount,
-        };
-      }
-    }
+    const disposalEntries = this.attributes.spaceExport
+      ? this.getContinuousDisposalEntries(context, productivity)
+      : [];
 
     const gainBase = {};
     const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
@@ -1181,11 +1228,11 @@ class SpaceshipProject extends Project {
     let disposalRatio = 1;
     let disposalShortfall = false;
 
-    const sharedDisposalCategory = disposalData?.category;
-    const sharedDisposalResource = disposalData?.resource;
-    const sharedCostNeed = sharedDisposalCategory && sharedDisposalResource
-      ? (potentialCost[sharedDisposalCategory]?.[sharedDisposalResource] || 0)
-      : 0;
+    const disposalCostOverlap = {};
+    for (let i = 0; i < disposalEntries.length; i += 1) {
+      const entry = disposalEntries[i];
+      disposalCostOverlap[`${entry.category}:${entry.resource}`] = true;
+    }
 
     if (!productivityLimited) {
       for (const category in potentialCost) {
@@ -1194,7 +1241,7 @@ class SpaceshipProject extends Project {
           if (required <= 0) {
             continue;
           }
-          if (category === sharedDisposalCategory && resource === sharedDisposalResource) {
+          if (disposalCostOverlap[`${category}:${resource}`]) {
             continue;
           }
           const available = this.getEffectiveAvailableAmount(category, resource, accumulatedChanges);
@@ -1207,19 +1254,22 @@ class SpaceshipProject extends Project {
       }
     }
 
-    if (disposalData && disposalData.requestedAmount > 0) {
+    for (let i = 0; i < disposalEntries.length; i += 1) {
+      const entry = disposalEntries[i];
+      if (entry.requestedAmount <= 0) {
+        continue;
+      }
+      const sharedCostNeed = potentialCost[entry.category]?.[entry.resource] || 0;
       const available = this.getEffectiveAvailableAmount(
-        disposalData.category,
-        disposalData.resource,
+        entry.category,
+        entry.resource,
         accumulatedChanges
       );
-      const combinedPotential = disposalData.requestedAmount + sharedCostNeed;
-      const combinedNeeded = this.getClampedDisposalAmount(
-        combinedPotential,
-        disposalData.category,
-        disposalData.resource,
-        available
-      );
+      const combinedPotential = entry.requestedAmount + sharedCostNeed;
+      const combinedNeeded = this.getClampedDisposalAmountForEntry({
+        ...entry,
+        requestedAmount: combinedPotential,
+      }, available);
       const ratio = combinedPotential > 0
         ? Math.max(0, Math.min(1, combinedNeeded / combinedPotential))
         : 1;
@@ -1237,10 +1287,20 @@ class SpaceshipProject extends Project {
     this.addScaledResourceMap(totalCost, cost, 1);
     const nonEnergyCost = potentialNonEnergyCost * ratio;
 
+    const appliedDisposalEntries = [];
     let appliedDisposal = 0;
-    if (disposalData) {
-      appliedDisposal = disposalData.requestedAmount * ratio;
-      this.addAmountToResourceMap(totalCost, disposalData.category, disposalData.resource, appliedDisposal);
+    for (let i = 0; i < disposalEntries.length; i += 1) {
+      const entry = disposalEntries[i];
+      const appliedAmount = entry.requestedAmount * ratio;
+      if (appliedAmount <= 0) {
+        continue;
+      }
+      appliedDisposalEntries.push({
+        ...entry,
+        appliedAmount,
+      });
+      appliedDisposal += appliedAmount;
+      this.addAmountToResourceMap(totalCost, entry.category, entry.resource, appliedAmount);
     }
 
     const gainFraction = context.fraction * context.successChance * ratio;
@@ -1249,7 +1309,7 @@ class SpaceshipProject extends Project {
     this.addScaledResourceMap(resourceGain, gainBase, gainFraction * productivity);
 
     let fundingGain = 0;
-    if (disposalData && this.attributes.fundingGainAmount > 0) {
+    if (appliedDisposal > 0 && this.attributes.fundingGainAmount > 0) {
       const disposalCount = this.getContinuousDisposalCount(context);
       const fundingCount = this.getContinuousFundingCount(context);
       const multiplier = disposalCount > 0 ? (fundingCount / disposalCount) : 0;
@@ -1284,7 +1344,8 @@ class SpaceshipProject extends Project {
       fundingGain,
       nonEnergyCost,
       appliedDisposal,
-      disposalData,
+      disposalData: appliedDisposalEntries[0] || null,
+      disposalEntries: appliedDisposalEntries,
       shipLoss,
       hasContinuousWork: true,
       costRateLabel: this.getCostRateLabel(),
@@ -1295,12 +1356,8 @@ class SpaceshipProject extends Project {
 
   getContinuousExecutionPlan(deltaTime = 1000, productivity = 1, accumulatedChanges = null) {
     const cache = this.continuousExecutionPlanCache;
-    const cacheSelectionKey = cache?.selection
-      ? `${cache.selection.category}:${cache.selection.resource}`
-      : '';
-    const currentSelectionKey = this.selectedDisposalResource
-      ? `${this.selectedDisposalResource.category}:${this.selectedDisposalResource.resource}`
-      : '';
+    const cacheSelectionKey = cache?.selection || '';
+    const currentSelectionKey = this.getDisposalSelectionSignature();
     if (
       cache &&
       cache.deltaTime === deltaTime &&
@@ -1322,12 +1379,7 @@ class SpaceshipProject extends Project {
       isActive: this.isActive,
       isContinuous: this.isContinuous(),
       shipCount: this.getActiveShipCount(),
-      selection: this.selectedDisposalResource
-        ? {
-            category: this.selectedDisposalResource.category,
-            resource: this.selectedDisposalResource.resource,
-          }
-        : null,
+      selection: currentSelectionKey,
       plan,
     };
     return plan;
@@ -1353,9 +1405,10 @@ class SpaceshipProject extends Project {
       }
     }
 
-    if (plan.disposalData && plan.appliedDisposal > 0) {
-      resources[plan.disposalData.category][plan.disposalData.resource].modifyRate(
-        -plan.appliedDisposal * rateFactor,
+    for (let i = 0; i < plan.disposalEntries.length; i += 1) {
+      const entry = plan.disposalEntries[i];
+      resources[entry.category][entry.resource].modifyRate(
+        -(entry.appliedAmount || 0) * rateFactor,
         plan.exportRateLabel,
         'project'
       );
@@ -1401,20 +1454,24 @@ class SpaceshipProject extends Project {
       }
     }
 
-    if (plan.disposalData && plan.appliedDisposal > 0) {
-      const { category, resource } = plan.disposalData;
-      if (accumulatedChanges) {
-        if (!accumulatedChanges[category]) {
-          accumulatedChanges[category] = {};
-        }
-        if (accumulatedChanges[category][resource] === undefined) {
-          accumulatedChanges[category][resource] = 0;
-        }
-        accumulatedChanges[category][resource] -= plan.appliedDisposal;
-      } else {
-        resources[category][resource].decrease(plan.appliedDisposal);
+    for (let i = 0; i < plan.disposalEntries.length; i += 1) {
+      const entry = plan.disposalEntries[i];
+      const amount = entry.appliedAmount || 0;
+      if (amount <= 0) {
+        continue;
       }
-      this.removeZonalResource(category, resource, plan.appliedDisposal);
+      if (accumulatedChanges) {
+        if (!accumulatedChanges[entry.category]) {
+          accumulatedChanges[entry.category] = {};
+        }
+        if (accumulatedChanges[entry.category][entry.resource] === undefined) {
+          accumulatedChanges[entry.category][entry.resource] = 0;
+        }
+        accumulatedChanges[entry.category][entry.resource] -= amount;
+      } else {
+        resources[entry.category][entry.resource].decrease(amount);
+      }
+      this.removeZonalResource(entry.category, entry.resource, amount);
     }
 
     if (plan.gainFraction > 0) {
