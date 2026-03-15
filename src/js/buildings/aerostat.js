@@ -160,19 +160,44 @@ class Aerostat extends BaseColony {
     }
 
     const startCount = Math.max(0, Math.floor(this.count || 0));
-    const endCount = startCount + normalizedBuildCount;
+    const baseLimit = this._getBuildLimit();
+    if (baseLimit <= 0) {
+      return 0;
+    }
+
+    const zeroSurchargeBuilds = Math.max(0, baseLimit + 1 - startCount);
+    const chargedBuilds = Math.max(0, normalizedBuildCount - zeroSurchargeBuilds);
+    if (chargedBuilds <= 0) {
+      return 0;
+    }
+
+    const firstChargedTerm = Math.max(1, startCount - baseLimit);
     return (
-      this.getCollisionAvoidanceResearchSurchargeForCount(endCount) -
-      this.getCollisionAvoidanceResearchSurchargeForCount(startCount)
-    );
+      chargedBuilds *
+      (2 * firstChargedTerm + chargedBuilds - 1) *
+      AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP
+    ) / (2 * baseLimit);
   }
 
   getCollisionAvoidanceNextUnitResearchSurchargeForCount(count) {
     const normalizedCount = Math.max(0, Math.floor(count));
+    if (!this.hasCollisionAvoidance() || normalizedCount <= 0) {
+      return 0;
+    }
+
+    const baseLimit = this._getBuildLimit();
+    if (baseLimit <= 0) {
+      return 0;
+    }
+
+    const overCount = Math.max(0, normalizedCount - baseLimit);
+    if (overCount <= 0) {
+      return 0;
+    }
+
     return (
-      this.getCollisionAvoidanceResearchSurchargeForCount(normalizedCount + 1) -
-      this.getCollisionAvoidanceResearchSurchargeForCount(normalizedCount)
-    );
+      overCount * AEROSTAT_COLLISION_AVOIDANCE_RESEARCH_PER_CAP
+    ) / baseLimit;
   }
 
   getBaseEffectiveCost(buildCount = 1) {
@@ -289,6 +314,15 @@ class Aerostat extends BaseColony {
     let low = 0;
     while (low < high) {
       const mid = Math.floor((low + high + 1) / 2);
+      if (mid <= low || mid >= high) {
+        if (this.canAfford(high, reservePercent, additionalReserves)) {
+          low = high;
+        } else {
+          high = low;
+        }
+        break;
+      }
+
       if (this.canAfford(mid, reservePercent, additionalReserves)) {
         low = mid;
       } else {
