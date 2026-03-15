@@ -350,7 +350,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const shipCost = this.calculateSpaceshipCost();
     const projectCost = this.getScaledCost();
-    const transportShare = transportCount / targets.length;
 
     for (let i = 0; i < targets.length; i += 1) {
       const target = targets[i];
@@ -359,7 +358,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       }
       const selection = target.selectedDisposalResource;
       const key = `${selection.category}:${selection.resource}`;
-      requirements[key] = (requirements[key] || 0) + this.getShipCapacity() * transportShare;
+      requirements[key] = (requirements[key] || 0) + this.getShipCapacity();
     }
 
     for (const key in requirements) {
