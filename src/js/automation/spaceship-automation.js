@@ -340,6 +340,9 @@ class SpaceshipAutomation {
     if (!project) {
       return false;
     }
+    if (projectManager?.isProjectRelevantToCurrentPlanet && !projectManager.isProjectRelevantToCurrentPlanet(project)) {
+      return false;
+    }
     if (project.enabled === false) {
       return false;
     }
@@ -373,7 +376,9 @@ class SpaceshipAutomation {
   }
 
   getAutomationTargets() {
-    const projects = this.getSpaceshipProjects();
+    const projects = this.getSpaceshipProjects().filter(project => {
+      return !projectManager?.isProjectRelevantToCurrentPlanet || projectManager.isProjectRelevantToCurrentPlanet(project);
+    });
     projects.push(this.getMassDriverAutomationTarget());
     projects.push(this.getUnassignedTarget());
     return projects;

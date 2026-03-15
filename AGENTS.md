@@ -202,6 +202,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Tooltips were upgraded with dynamic/pinnable behavior and viewport-aware placement.
 - Space Storage reserve controls are now per-resource in the resource settings dialog, with reserve modes for absolute amount, `% of resource cap`, and `% of max storage`; the old global strategic reserve was removed.
 - Space Storage cap controls now include `By Weight`: amount/% caps are applied first, remaining storage is split proportionally across weighted resources, and resources with weight `0` or no cap setting get cap `0` while any weighted cap is used.
+- Ship automation now excludes spaceship projects that are irrelevant on the current world and releases ships from stale preset entries instead of parking them on hidden world-specific projects.
 - Resource panel now adds a Colony/Space view toggle (shown once any space-storage resource unlocks), and the Space view renders only `spaceStorage` resources.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
 - Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes), a live `Faith` panel, and the Holy World consecration/shop systems.
