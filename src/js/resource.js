@@ -43,6 +43,10 @@ class Resource extends EffectableEntity {
     this.autobuildShortage = false; // Flagged when autobuild cannot use this resource this tick
     this.automationLimited = false; // Flagged when import automation settings limit this resource
     this.zonalConfig = resourceData.zonalConfig || null;
+    this.preserveOnTravel = resourceData.preserveOnTravel === true;
+    this.preserveOnTravelFields = Array.isArray(resourceData.preserveOnTravelFields)
+      ? resourceData.preserveOnTravelFields.slice()
+      : null;
   }
 
   // Method to initialize configurable properties
@@ -96,6 +100,14 @@ class Resource extends EffectableEntity {
     }
     if (config.zonalConfig !== undefined) {
       this.zonalConfig = config.zonalConfig || null;
+    }
+    if (config.preserveOnTravel !== undefined) {
+      this.preserveOnTravel = config.preserveOnTravel === true;
+    }
+    if (config.preserveOnTravelFields !== undefined) {
+      this.preserveOnTravelFields = Array.isArray(config.preserveOnTravelFields)
+        ? config.preserveOnTravelFields.slice()
+        : null;
     }
 
     if (this.name === 'land' && config.initialValue !== undefined) {
@@ -436,6 +448,62 @@ function createResources(resourcesData) {
     }
   }
   return resources;
+}
+
+function capturePreservedTravelResourceState(resourceSet) {
+  const preservedState = {};
+
+  for (const category in resourceSet) {
+    for (const resourceName in resourceSet[category]) {
+      const resource = resourceSet[category][resourceName];
+      if (!resource || resource.preserveOnTravel !== true) {
+        continue;
+      }
+
+      const fields = resource.preserveOnTravelFields || ['value', 'unlocked'];
+      const savedState = {};
+
+      for (let i = 0; i < fields.length; i += 1) {
+        const fieldName = fields[i];
+        if (Object.prototype.hasOwnProperty.call(resource, fieldName)) {
+          savedState[fieldName] = resource[fieldName];
+        }
+      }
+
+      if (!preservedState[category]) {
+        preservedState[category] = {};
+      }
+      preservedState[category][resourceName] = savedState;
+    }
+  }
+
+  return preservedState;
+}
+
+function restorePreservedTravelResourceState(resourceSet, preservedState) {
+  if (!resourceSet || !preservedState) {
+    return;
+  }
+
+  for (const category in preservedState) {
+    const savedCategory = preservedState[category];
+    const targetCategory = resourceSet[category];
+    if (!targetCategory) {
+      continue;
+    }
+
+    for (const resourceName in savedCategory) {
+      const resource = targetCategory[resourceName];
+      if (!resource) {
+        continue;
+      }
+
+      const savedResourceState = savedCategory[resourceName];
+      for (const fieldName in savedResourceState) {
+        resource[fieldName] = savedResourceState[fieldName];
+      }
+    }
+  }
 }
 
 function reconcileLandResourceValue() {

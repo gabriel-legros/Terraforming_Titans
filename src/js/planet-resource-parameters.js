@@ -24,7 +24,7 @@
       superalloys: { name: 'Superalloys', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, maintenanceMultiplier: 0 , unit: 'ton' },
       androids: {name: 'Android', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'junk'}},
       research: { name: 'Research', initialValue: 0, hasCap: false, unlocked:false, marginTop: 10 },
-      advancedResearch: { name: 'Adv. Research', initialValue: 0, hasCap: false, unlocked:false },
+      advancedResearch: { name: 'Adv. Research', initialValue: 0, hasCap: false, unlocked:false, preserveOnTravel: true },
     },
     surface: {
       land: {name : 'Land', initialValue : 14_400_000_000, hasCap: true, unlocked: false, land:true},
@@ -254,9 +254,9 @@
       whiteDust: { name: 'White Dust', hasCap: true, initialValue: 0, unlocked: false, hideWhenSmall: true },
       orbitalDebris: { name: 'Orbital Debris', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       spaceships: {name : 'Spaceships', hasCap: false, initialValue: 0, unlocked: false},
-      alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false },
+      alienArtifact: { name: 'Alien artifact', hasCap: false, initialValue: 0, unlocked: false, preserveOnTravel: true },
       crusaders: { name: 'Crusaders', hasCap: false, initialValue: 0, unlocked: false },
-      antimatter: { name: 'Antimatter', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false }
+      antimatter: { name: 'Antimatter', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false, preserveOnTravel: true, preserveOnTravelFields: ['value', 'unlocked', 'enabled'] }
     },
     space: {
       energy: { name: 'Energy', initialValue: 0, hasCap: true, baseCap: 0, unlocked: true, unit: 'Watt-day' }

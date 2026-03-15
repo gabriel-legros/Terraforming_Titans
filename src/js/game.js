@@ -193,11 +193,9 @@ function initializeGameState(options = {}) {
     shipEfficiency = 1;
   }
   globalGameIsTraveling = preserveManagers && !globalGameIsLoadingFromSave;
-  let savedAdvancedResearch = null;
-  let savedAlienArtifact = null;
+  let savedTravelResources = null;
   let savedProjectTravelState = null;
   let savedConstructionOffice = null;
-  let savedAntimatter = null;
   let savedLifeDesignerTravelState = null;
   let savedFollowersTravelState = null;
   if (!preserveManagers && !globalGameIsLoadingFromSave) {
@@ -220,24 +218,8 @@ function initializeGameState(options = {}) {
   if (preserveManagers && typeof captureConstructionOfficeSettings === 'function') {
     savedConstructionOffice = captureConstructionOfficeSettings();
   }
-  if (preserveManagers && resources && resources.colony && resources.colony.advancedResearch) {
-    savedAdvancedResearch = {
-      value: resources.colony.advancedResearch.value,
-      unlocked: resources.colony.advancedResearch.unlocked,
-    };
-  }
-  if (preserveManagers && resources && resources.special && resources.special.alienArtifact) {
-    savedAlienArtifact = {
-      value: resources.special.alienArtifact.value,
-      unlocked: resources.special.alienArtifact.unlocked,
-    };
-  }
-  if (preserveManagers && resources && resources.special && resources.special.antimatter) {
-    savedAntimatter = {
-      value: resources.special.antimatter.value,
-      unlocked: resources.special.antimatter.unlocked,
-      enabled: resources.special.antimatter.enabled,
-    };
+  if (preserveManagers && resources) {
+    savedTravelResources = capturePreservedTravelResourceState(resources);
   }
   if (preserveManagers && lifeDesigner?.prepareTravelState) {
     savedLifeDesignerTravelState = lifeDesigner.prepareTravelState();
@@ -303,20 +285,8 @@ function initializeGameState(options = {}) {
       }
     }
   }
-  if (savedAdvancedResearch) {
-    resources.colony.advancedResearch.value = savedAdvancedResearch.value;
-    resources.colony.advancedResearch.unlocked = savedAdvancedResearch.unlocked;
-  }
-  if (savedAlienArtifact) {
-    resources.special.alienArtifact.value = savedAlienArtifact.value;
-    resources.special.alienArtifact.unlocked = savedAlienArtifact.unlocked;
-  }
-  if (savedAntimatter) {
-    resources.special.antimatter.value = savedAntimatter.value;
-    resources.special.antimatter.unlocked = savedAntimatter.unlocked;
-    if (Object.prototype.hasOwnProperty.call(savedAntimatter, 'enabled')) {
-      resources.special.antimatter.enabled = savedAntimatter.enabled;
-    }
+  if (savedTravelResources) {
+    restorePreservedTravelResourceState(resources, savedTravelResources);
   }
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
