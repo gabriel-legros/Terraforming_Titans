@@ -577,6 +577,9 @@ class Terraforming extends EffectableEntity{
 
   getCoreHeatFlux() {
     const baseFlux = Math.max(0, this.celestialParameters.coreHeatFlux || 0);
+    if (isEquilibrating) {
+      return baseFlux;
+    }
     const crustCompletion = Math.max(
       0,
       Math.min(1, projectManager?.projects?.artificialCrust?.getCompletionFraction?.() || 0)
@@ -585,6 +588,9 @@ class Terraforming extends EffectableEntity{
   }
 
   getMegaHeatSinkFlux() {
+    if (isEquilibrating) {
+      return 0;
+    }
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     const megaHeatSinkCount =
       megaHeatSinkProject?.heatSinksActive === false
