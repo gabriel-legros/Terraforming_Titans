@@ -1228,9 +1228,12 @@ class SpaceshipProject extends Project {
     let disposalShortfall = false;
 
     const disposalCostOverlap = {};
+    const disposalResourceKeys = {};
     for (let i = 0; i < disposalEntries.length; i += 1) {
       const entry = disposalEntries[i];
-      disposalCostOverlap[`${entry.category}:${entry.resource}`] = true;
+      const entryKey = `${entry.category}:${entry.resource}`;
+      disposalCostOverlap[entryKey] = true;
+      disposalResourceKeys[entryKey] = true;
     }
 
     if (!productivityLimited) {
@@ -1253,7 +1256,39 @@ class SpaceshipProject extends Project {
       }
     }
 
-    const ratio = Math.max(0, Math.min(1, Math.min(costRatio, gainScaleLimit)));
+    let disposalRatio = 1;
+    const hasIndependentDisposalScaling = Object.keys(disposalResourceKeys).length > 1;
+    if (!hasIndependentDisposalScaling) {
+      for (let i = 0; i < disposalEntries.length; i += 1) {
+        const entry = disposalEntries[i];
+        if (entry.requestedAmount <= 0) {
+          continue;
+        }
+        const sharedCostNeed = potentialCost[entry.category]?.[entry.resource] || 0;
+        const available = this.getEffectiveAvailableAmount(
+          entry.category,
+          entry.resource,
+          accumulatedChanges
+        );
+        const combinedPotential = entry.requestedAmount + sharedCostNeed;
+        const combinedNeeded = this.getClampedDisposalAmountForEntry({
+          ...entry,
+          requestedAmount: combinedPotential,
+        }, available);
+        const entryRatio = combinedPotential > 0
+          ? Math.max(0, Math.min(1, combinedNeeded / combinedPotential))
+          : 1;
+        disposalRatio = Math.min(disposalRatio, entryRatio);
+        if (combinedNeeded + 1e-9 < combinedPotential) {
+          disposalShortfall = true;
+        }
+      }
+    }
+
+    const ratio = Math.max(
+      0,
+      Math.min(1, Math.min(costRatio, gainScaleLimit, hasIndependentDisposalScaling ? 1 : disposalRatio))
+    );
 
     const cost = {};
     const totalCost = {};
@@ -1268,6 +1303,16 @@ class SpaceshipProject extends Project {
       const entry = disposalEntries[i];
       const requestedAmount = entry.requestedAmount * ratio;
       if (requestedAmount <= 0) {
+        continue;
+      }
+      if (!hasIndependentDisposalScaling) {
+        const appliedAmount = requestedAmount;
+        appliedDisposalEntries.push({
+          ...entry,
+          appliedAmount,
+        });
+        appliedDisposal += appliedAmount;
+        this.addAmountToResourceMap(totalCost, entry.category, entry.resource, appliedAmount);
         continue;
       }
       const availabilityKey = `${entry.category}:${entry.resource}`;
