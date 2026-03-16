@@ -4,7 +4,7 @@ const lifeShopCategories = [
   { name: 'androids', description: 'Deploy androids to assist biologists.' },
   { name: 'components', description: 'Construct advanced biological tools.' },
   { name: 'electronics', description: 'Simulate biology with cutting-edge supercomputers.' },
-  { name: 'advancedResearch', label: 'advanced research', description: 'Push our knowledge even further.', tooltip: 'Scales quadratically and persists when travelling.', requiresFlag: 'nextGenBioEngineering' }
+  { name: 'advancedResearch', label: 'advanced research', description: 'Push our knowledge even further.', tooltip: 'Costs 1, 2, 4, 8, ... advanced research and persists when travelling.', requiresFlag: 'nextGenBioEngineering' }
 ];
 
 const lifeShopCategoryLookup = Object.fromEntries(

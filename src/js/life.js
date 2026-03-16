@@ -654,7 +654,9 @@ class LifeDesigner extends EffectableEntity {
 
     this.basePointCost = 100;
     this.pointCostMultiplier = 2;
-    this.advancedResearchBaseCost = 100000;
+    this.advancedResearchBaseCost = 1;
+    this.advancedResearchLegacyBaseCost = 100000;
+    this.saveVersion = 2;
 
     this.purchaseCounts = this.createEmptyPurchaseCounts();
 
@@ -830,9 +832,53 @@ class LifeDesigner extends EffectableEntity {
     return this.purchaseCounts[category] || 0;
   }
 
+  getAdvancedResearchTotalCostFromZero(purchaseCount) {
+    const normalizedCount = Math.max(0, Math.floor(purchaseCount || 0));
+    if (normalizedCount === 0) {
+      return 0;
+    }
+    return Math.pow(2, normalizedCount) - 1;
+  }
+
+  getLegacyAdvancedResearchTotalCost(purchaseCount) {
+    const normalizedCount = Math.max(0, Math.floor(purchaseCount || 0));
+    if (normalizedCount === 0) {
+      return 0;
+    }
+    return this.advancedResearchLegacyBaseCost * normalizedCount * (normalizedCount + 1) * (2 * normalizedCount + 1) / 6;
+  }
+
+  getAdvancedResearchPurchasesForBudget(totalCost) {
+    const normalizedTotalCost = Math.max(0, totalCost || 0);
+    if (normalizedTotalCost < this.advancedResearchBaseCost) {
+      return 0;
+    }
+
+    let low = 0;
+    let high = 1;
+    let highCost = this.getAdvancedResearchTotalCostFromZero(high);
+    while (Number.isFinite(highCost) && highCost <= normalizedTotalCost) {
+      low = high;
+      high *= 2;
+      highCost = this.getAdvancedResearchTotalCostFromZero(high);
+    }
+
+    while (low + 1 < high) {
+      const mid = Math.floor((low + high) / 2);
+      const midCost = this.getAdvancedResearchTotalCostFromZero(mid);
+      if (midCost <= normalizedTotalCost) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+
+    return low;
+  }
+
   getAdvancedResearchPointCost(purchaseIndex) {
-    const index = purchaseIndex + 1;
-    return this.advancedResearchBaseCost * index * index;
+    const index = Math.max(0, Math.floor(purchaseIndex || 0));
+    return this.advancedResearchBaseCost * Math.pow(2, index);
   }
 
   getAdvancedResearchTotalCost(quantity = 1) {
@@ -842,9 +888,7 @@ class LifeDesigner extends EffectableEntity {
     }
     const start = this.getPurchaseCount('advancedResearch');
     const end = start + normalizedQuantity;
-    const squareSum = (value) => value * (value + 1) * (2 * value + 1) / 6;
-    const purchases = squareSum(end) - squareSum(start);
-    return this.advancedResearchBaseCost * purchases;
+    return this.getAdvancedResearchTotalCostFromZero(end) - this.getAdvancedResearchTotalCostFromZero(start);
   }
 
   getPointCost(category){
@@ -902,6 +946,7 @@ class LifeDesigner extends EffectableEntity {
 
   saveState() {
     const data = {
+      version: this.saveVersion,
       currentDesign: this.currentDesign.save(),
       tentativeDesign: this.tentativeDesign ? this.tentativeDesign.save() : null,
       isActive: this.isActive,
@@ -916,6 +961,7 @@ class LifeDesigner extends EffectableEntity {
   }
 
   loadState(data) {
+    const version = data.version || 1;
     this.currentDesign = LifeDesign.load(data.currentDesign);
     if (data.tentativeDesign) {
       this.tentativeDesign = LifeDesign.load(data.tentativeDesign);
@@ -928,6 +974,13 @@ class LifeDesigner extends EffectableEntity {
       ...this.createEmptyPurchaseCounts(),
       ...(data.purchaseCounts || {})
     };
+    if (version < this.saveVersion) {
+      const legacyAdvancedResearchPurchases = Math.max(0, Math.floor(this.purchaseCounts.advancedResearch || 0));
+      if (legacyAdvancedResearchPurchases > 0) {
+        const legacySpent = this.getLegacyAdvancedResearchTotalCost(legacyAdvancedResearchPurchases);
+        this.purchaseCounts.advancedResearch = this.getAdvancedResearchPurchasesForBudget(legacySpent) + 1;
+      }
+    }
     this.biodomePoints = data.biodomePoints || 0;
   }
 
