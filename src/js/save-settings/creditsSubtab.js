@@ -1,6 +1,6 @@
 const settingsCreditsEntries = [
   { label: 'Game by', name: 'Thratur' },
-  { label: 'Planet Visualizer Concept', name: 'Jebarus' },
+  { label: 'World Visualizer Concept', name: 'Jebarus' },
   { label: 'Art', name: 'Oleksandra Lukashenko (eklaell)' },
 ];
 
