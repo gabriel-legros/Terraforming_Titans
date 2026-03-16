@@ -418,6 +418,9 @@ const DEFAULT_PARAMS = {
     moonChance: { thresholdAU: 3, chance: 0.35 },
     moonTypeBlacklist: ["super-earth", "chthonian", "molten"],
     typeOrbitLocks: {
+      "icy-moon": {
+        excludedPresets: ["hot"]
+      },
       "venus-like": {
         presets: ["hot"],
         fluxRangeKey: "hotFluxWm2"
@@ -1117,31 +1120,33 @@ function resolveTypeOrbitLock({ forcedType, seedBase, star, params, currentPrese
   const rawEntry = locksByType[forcedType];
   const normalizedEntry = Array.isArray(rawEntry) ? { presets: rawEntry } : rawEntry || {};
   const presetList = Array.isArray(normalizedEntry.presets) ? normalizedEntry.presets.filter(Boolean) : [];
+  const excludedPresets = Array.isArray(normalizedEntry.excludedPresets) ? normalizedEntry.excludedPresets.filter(Boolean) : [];
+  const allowedPresets = (presetList.length ? presetList : Object.keys(ORBIT_PRESET_TO_FLUX_KEY))
+    .filter((preset) => !excludedPresets.includes(preset));
   const presetSalt = normalizedEntry.presetSalt ?? 0x07734;
   const pickSeed = ((seedBase >>> 0) ^ (presetSalt >>> 0)) >>> 0;
   const rng = mulberry32(pickSeed);
-  const lockedPreset = presetList.length
-    ? (presetList.includes(currentPreset) ? currentPreset : presetList[Math.floor(rng() * presetList.length)])
-    : undefined;
-  const presetAfterLock = lockedPreset || currentPreset;
+  let presetAfterLock = currentPreset;
+  if (!allowedPresets.includes(presetAfterLock) && allowedPresets.length) {
+    presetAfterLock = allowedPresets[Math.floor(rng() * allowedPresets.length)];
+  }
   const fluxKeyOverride = normalizedEntry.fluxRangeKey;
-  const fluxKey = fluxKeyOverride || fluxRangeKeyForPreset(lockedPreset) || fluxRangeKeyForPreset(presetAfterLock);
+  const fluxKey = fluxKeyOverride || fluxRangeKeyForPreset(presetAfterLock);
   const orbitSalt = normalizedEntry.seedSalt ?? 0xFEEDC0DE;
   const forcedAU = fluxKey ? sampleOrbitAUFromFluxRange({ seed: seedBase, salt: orbitSalt, star, params, fluxKey }) : undefined;
   let finalAU = currentAU;
-  let orbitLocked = false;
-  const lockActive = presetList.length > 0 || fluxKeyOverride;
+  let orbitAdjusted = presetAfterLock !== currentPreset;
   if (Number.isFinite(forcedAU)) {
     finalAU = forcedAU;
-    orbitLocked = lockActive;
+    orbitAdjusted = orbitAdjusted || finalAU !== currentAU;
   } else if (finalAU === undefined && fluxKey) {
     const avgAU = averageOrbitAUFromFluxRange({ star, params, fluxKey });
     if (Number.isFinite(avgAU)) {
       finalAU = avgAU;
-      orbitLocked = lockActive;
+      orbitAdjusted = true;
     }
   }
-  const overrideMoon = orbitLocked && allowMoonRecalc;
+  const overrideMoon = orbitAdjusted && allowMoonRecalc;
   const moonValue = overrideMoon ? (finalAU > moonConfig.thresholdAU && moonRoll < moonConfig.chance) : false;
   return {
     preset: presetAfterLock,
