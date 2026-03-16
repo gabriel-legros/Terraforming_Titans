@@ -1530,7 +1530,7 @@ const poseidonOverrides = {
     },
     underground: {
       ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
-      geothermal: { initialValue: 19_000_000_000, maxDeposits: 19_000_000_000, areaTotal: 190000 }
+      geothermal: { initialValue: 72_500_000_000, maxDeposits: 72_500_000_000, areaTotal: 72500000000 }
     },
     atmospheric: {
       carbonDioxide: { initialValue: 1_000_000_000_000_000_000 },

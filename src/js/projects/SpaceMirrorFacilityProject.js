@@ -592,11 +592,9 @@ function updateAssignmentDisplays() {
     zones.forEach(zone => {
       const el = document.getElementById(`${type}-assign-${zone}`);
       if (el) {
-        const value = type === 'mirrors' && mirrorOversightSettings.advancedOversight
-          ? (mirrorOversightSettings.assignments[type][zone] || 0)
-          : (type === 'mirrors'
-            ? getMirrorAssignmentCount(mirrorOversightSettings, zone)
-            : (mirrorOversightSettings.assignments[type][zone] || 0));
+        const value = type === 'mirrors'
+          ? getMirrorAssignmentCount(mirrorOversightSettings, zone)
+          : (mirrorOversightSettings.assignments[type][zone] || 0);
         el.textContent = formatBuildingCount(value);
       }
     });
