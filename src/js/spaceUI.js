@@ -287,6 +287,8 @@ function showTravelWarningPopup(warningData, onConfirm) {
     }
     const warning = warningData || { message: '' };
     travelWarningMessageEl.textContent = warning.message || '';
+    travelWarningConfirmBtn.textContent = warning.confirmLabel || 'Travel';
+    travelWarningCancelBtn.textContent = warning.cancelLabel || 'Cancel Travel';
 
     if (warning.hint && warning.hint.body) {
         travelWarningHintContainer.style.display = 'block';

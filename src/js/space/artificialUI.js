@@ -1470,6 +1470,8 @@ function ensureArtificialLayout() {
     if (!artificialManager) return;
     const warning = artificialManager.getConstructedWorldWarning?.('Store');
     if (warning) {
+      warning.confirmLabel = 'Store';
+      warning.cancelLabel = 'Cancel Store';
       showTravelWarningPopup(warning, () => artificialManager.storeConstructedWorld());
       return;
     }
