@@ -1998,8 +1998,7 @@ function updateDecreaseButtonText(button, buildCount) {
         const span = document.createElement('span');
         if (item.isCostResource) {
           const textSpan = document.createElement('span');
-          span.classList.add('info-tooltip-icon');
-          span.style.fontFamily = 'inherit';
+          span.classList.add('info-tooltip-icon', 'inline-tooltip-anchor');
           span.appendChild(textSpan);
           span._textSpan = textSpan;
 
@@ -2043,7 +2042,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span.appendChild(textSpan);
 
           span.classList.add('info-tooltip-icon');
-          span.style.fontFamily = 'inherit';
+          span.classList.add('inline-tooltip-anchor');
           const labelNode = document.createTextNode('');
           textSpan._labelNode = labelNode;
           textSpan.appendChild(labelNode);
@@ -2669,8 +2668,7 @@ function updateDecreaseButtonText(button, buildCount) {
           const span = document.createElement('span');
           if (sec.key === 'maintenance' || sec.key === 'production' || sec.key === 'consumption') {
             const textSpan = document.createElement('span');
-            span.classList.add('info-tooltip-icon');
-            span.style.fontFamily = 'inherit';
+            span.classList.add('info-tooltip-icon', 'inline-tooltip-anchor');
             span.appendChild(textSpan);
             span._textSpan = textSpan;
 

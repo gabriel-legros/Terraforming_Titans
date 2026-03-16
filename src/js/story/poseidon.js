@@ -416,7 +416,7 @@ progressPoseidon.chapters.push(
     type: 'journal',
     chapter: 38,
     activePlanet: 'poseidon',
-    narrative: "(Word 13 not implemented yet)",
+    narrative: "(World 13 not implemented yet)",
     prerequisites: ['poseidon.38.5'],
     objectives: [
     ],

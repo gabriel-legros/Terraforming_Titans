@@ -74,6 +74,11 @@
   text-transform: none;
 }
 
+.inline-tooltip-anchor {
+  display: inline-block;
+  font-family: inherit;
+}
+
 .info-tooltip-icon .resource-tooltip {
   text-align: left;
   font-family: Arial, sans-serif;
