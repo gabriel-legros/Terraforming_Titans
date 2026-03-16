@@ -149,7 +149,11 @@ function applyPulsarStormAttrition(seconds, hazardStrength = 1) {
     const currentNanobots = Number.isFinite(nanotechManager.nanobots) ? nanotechManager.nanobots : 1;
     const nanobotLoss = currentNanobots * nanobotAttritionRate * seconds;
     if (nanobotLoss > 0) {
-      nanotechManager.nanobots = Math.max(1, currentNanobots - nanobotLoss);
+      const travelFloor = nanotechManager.getTravelNanobotFloor
+        ? nanotechManager.getTravelNanobotFloor()
+        : 1;
+      const protectedFloor = Math.max(1, Math.min(currentNanobots, travelFloor));
+      nanotechManager.nanobots = Math.max(protectedFloor, currentNanobots - nanobotLoss);
     }
   }
 }

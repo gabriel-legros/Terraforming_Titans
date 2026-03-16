@@ -25,6 +25,7 @@ class NanotechManager extends EffectableEntity {
     this.optimalMetalConsumption = 0;
     this.optimalBiomassConsumption = 0;
     this.enabled = false;
+    this.travelNanobotFloor = 1;
     this.powerFraction = 1;
     this.siliconFraction = 1;
     this.metalFraction = 1;
@@ -77,6 +78,11 @@ class NanotechManager extends EffectableEntity {
   getTravelPreserveCap() {
     const extraStages = this.getExtraNanotechStages();
     return 1e15 * Math.pow(10, extraStages);
+  }
+
+  getTravelNanobotFloor() {
+    const floor = Number.isFinite(this.travelNanobotFloor) ? this.travelNanobotFloor : 1;
+    return Math.max(1, floor);
   }
 
   isPulsarHazardActive() {
@@ -555,6 +561,7 @@ class NanotechManager extends EffectableEntity {
     const travelCap = this.getTravelPreserveCap();
     const capped = Math.min(Number(this.nanobots), travelCap);
     this.nanobots = Math.max(1, capped) || travelCap;
+    this.travelNanobotFloor = this.nanobots;
     this.resetControlsForTravel();
   }
 
@@ -1766,6 +1773,7 @@ class NanotechManager extends EffectableEntity {
   saveState() {
     return {
       nanobots: this.nanobots,
+      travelNanobotFloor: this.getTravelNanobotFloor(),
       siliconSlider: this.siliconSlider,
       maintenanceSlider: this.maintenanceSlider,
       glassSlider: this.glassSlider,
@@ -1798,6 +1806,9 @@ class NanotechManager extends EffectableEntity {
   loadState(state) {
     if (!state) return;
     this.nanobots = state.nanobots || 1;
+    this.travelNanobotFloor = Number.isFinite(state.travelNanobotFloor)
+      ? Math.max(1, state.travelNanobotFloor)
+      : Math.max(1, Math.min(this.nanobots, this.getTravelPreserveCap()));
     this.siliconSlider = 10;
     this.maintenanceSlider = state.maintenanceSlider || 0;
     this.glassSlider = state.glassSlider || 0;
@@ -1832,6 +1843,7 @@ class NanotechManager extends EffectableEntity {
 
   reset() {
     this.nanobots = 1;
+    this.travelNanobotFloor = 1;
     this.siliconSlider = 10;
     this.maintenanceSlider = 0;
     this.glassSlider = 0;
