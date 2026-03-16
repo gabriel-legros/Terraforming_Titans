@@ -1974,6 +1974,10 @@
     gap: 8px;
 }
 
+.mass-driver-note {
+    margin: 0;
+}
+
 .resource-disposal-builder-header {
     display: flex;
     justify-content: space-between;
