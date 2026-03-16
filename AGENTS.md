@@ -4,6 +4,7 @@
 This file is the working contract for contributors and coding agents. Keep it current, concise, and organized by system.
 
 ## Core Rules
+- Always ask for clarification before proceeding with significant changes.
 - Document major feature updates in this file under the appropriate section. Add sections when needed.
 - Do not use import and exports.
 - The game runs from `index.html` with ordered includes. Do not redefine globals/constants that are already defined upstream.

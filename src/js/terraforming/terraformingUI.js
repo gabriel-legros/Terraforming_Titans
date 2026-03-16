@@ -14,7 +14,14 @@ if (typeof SubtabManager === 'undefined') {
 }
 
 let terraformingSubtabManager = null;
-const CORE_HEAT_TOOLTIP_TEXT = 'Planetary interior heat added directly to the surface as a flat global fulx.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nThis flux is not impacted by albedo or day-night averaging.';
+
+function getCoreHeatTooltipText() {
+  const unit = getTemperatureUnit();
+  const digits = unit === '°C' ? 0 : 2;
+  const crustStart = formatNumber(toDisplayTemperature(1273.15), false, digits);
+  const crustComplete = formatNumber(toDisplayTemperature(973.15), false, digits);
+  return `Planetary interior heat added directly to the surface as a flat global flux.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nIf temperature falls below ${crustStart}${unit}, a natural crust will start forming and will complete at ${crustComplete}${unit}.\n\nThis flux is not impacted by albedo or day-night averaging.`;
+}
 
 function getTerraformingSubtabManager() {
   return terraformingSubtabManager;
@@ -862,7 +869,7 @@ function createTemperatureBox(row) {
       coreHeatLine.appendChild(coreHeatInfo);
       attachDynamicInfoTooltip(
         coreHeatInfo,
-        CORE_HEAT_TOOLTIP_TEXT
+        getCoreHeatTooltipText()
       );
     }
     const infographicElements = ensureTemperatureInfographicOverlay();
@@ -989,7 +996,7 @@ function createTemperatureBox(row) {
       els.coreHeatLine.style.display = baseCoreHeatFlux > 0 ? '' : 'none';
     }
     if (els.coreHeatTooltip) {
-      els.coreHeatTooltip.textContent = CORE_HEAT_TOOLTIP_TEXT;
+      setTooltipText(els.coreHeatTooltip, getCoreHeatTooltipText());
     }
     if (els.coreHeat) {
       els.coreHeat.textContent = formatNumber(netCoreHeatFlux, false, netCoreHeatFlux >= 100 ? 0 : 2);
