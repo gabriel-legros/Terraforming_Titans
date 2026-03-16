@@ -134,7 +134,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Supports dominion selector and dominion-specific terraforming requirements.
 - Some dominions/world types are story/sector gated.
 - Special seeds can define world-specific effects (project/building flags), are replayable by seed, and surface effect descriptions in RWG world details.
-- Poseidon chapter `poseidon.38.5` unlocks RWG type `molten`: a core-heat-driven world with randomized `coreHeatFlux` in the `150,000-300,000 W/m²` band set before radius scaling, strong geothermal identity, and terraforming rewards of `+10%` energy production each for Geothermal Generators, Fusion Reactors, and Superalloy Fusion Reactors.
+- Poseidon chapter `poseidon.38.5` unlocks RWG type `molten`: a core-heat-driven world with randomized `coreHeatFlux` in the `150,000-300,000 W/m²` band set before radius scaling, strong geothermal identity, and terraforming rewards of `+5%` energy production each for Geothermal Generators, Fusion Reactors, and Superalloy Fusion Reactors.
 
 ### Artificial Worlds
 - Managed via `ArtificialManager` (shell/ring/disk-ready architecture).

@@ -124,10 +124,10 @@ const RWG_EFFECTS = {
       target: "building",
       targetId: "geothermalGenerator",
       type: "productionMultiplier",
-      factor: 0.1,
-      description: "Geothermal and fusion production increased (+10% each)",
+      factor: 0.05,
+      description: "Geothermal and fusion production increased (+5% each)",
       computeValue(count, def) {
-        const f = def?.factor ?? 0.1;
+        const f = def?.factor ?? 0.05;
         return 1 + f * count;
       },
     },
@@ -136,10 +136,10 @@ const RWG_EFFECTS = {
       target: "building",
       targetId: "fusionPowerPlant",
       type: "productionMultiplier",
-      factor: 0.1,
+      factor: 0.05,
       hideInSummary: true,
       computeValue(count, def) {
-        const f = def?.factor ?? 0.1;
+        const f = def?.factor ?? 0.05;
         return 1 + f * count;
       },
     },
@@ -148,10 +148,10 @@ const RWG_EFFECTS = {
       target: "building",
       targetId: "superalloyFusionReactor",
       type: "productionMultiplier",
-      factor: 0.1,
+      factor: 0.05,
       hideInSummary: true,
       computeValue(count, def) {
-        const f = def?.factor ?? 0.1;
+        const f = def?.factor ?? 0.05;
         return 1 + f * count;
       },
     },
