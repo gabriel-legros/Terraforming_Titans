@@ -1638,15 +1638,16 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const geoRng = mulberry32(seed ^ 0x0A12);
   const oreCaps = computeOreCaps(areaTotal, type, oreRng, params);
   const geoCaps = computeGeothermalCaps(type, areaTotal, isMoon, geoRng, params, coreHeatFlux);
+  const moltenOreDisabled = type === "molten";
   const moltenGeothermalAmount = type === "molten" ? Math.round(landHa) : null;
 
   const underground = {
     ore: {
       name: "Ore deposits",
-      initialValue: oreCaps.initial,
-      maxDeposits: oreCaps.max,
+      initialValue: moltenOreDisabled ? 0 : oreCaps.initial,
+      maxDeposits: moltenOreDisabled ? 0 : oreCaps.max,
       hasCap: true,
-      areaTotal,
+      areaTotal: moltenOreDisabled ? 0 : areaTotal,
       unlocked: false
     },
     ...({
