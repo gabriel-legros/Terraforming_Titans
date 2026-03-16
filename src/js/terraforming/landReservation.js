@@ -1,3 +1,6 @@
+const MOLTEN_WORLD_FULL_RESERVATION_TEMPERATURE_K = 1273.15;
+const MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K = 973.15;
+
 function normalizeLandReservationShare(share) {
   if (!Number.isFinite(share) || share <= 0) {
     return 0;
@@ -62,6 +65,24 @@ function getArtificialCrustCompletionFraction() {
   return 0;
 }
 
+function getTemperatureDrivenCoreFluxLandReservationShare(terraformingState = null) {
+  const activeTerraforming = terraformingState || getTerraformingForLandReservation();
+  const temperature = activeTerraforming?.temperature?.value;
+  if (!Number.isFinite(temperature)) {
+    return 1;
+  }
+  if (temperature <= MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K) {
+    return 0;
+  }
+  if (temperature >= MOLTEN_WORLD_FULL_RESERVATION_TEMPERATURE_K) {
+    return 1;
+  }
+  return normalizeLandReservationShare(
+    (temperature - MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K)
+      / (MOLTEN_WORLD_FULL_RESERVATION_TEMPERATURE_K - MOLTEN_WORLD_CLEAR_RESERVATION_TEMPERATURE_K)
+  );
+}
+
 function getCoreFluxLandReservationShare(terraformingState = null) {
   const activeTerraforming = terraformingState || getTerraformingForLandReservation();
   const baseFlux = Math.max(
@@ -81,7 +102,12 @@ function getCoreFluxLandReservationShare(terraformingState = null) {
       : (baseFlux * (1 - getArtificialCrustCompletionFraction()))
   );
 
-  return normalizeLandReservationShare(currentFlux / baseFlux);
+  return normalizeLandReservationShare(
+    Math.min(
+      currentFlux / baseFlux,
+      getTemperatureDrivenCoreFluxLandReservationShare(activeTerraforming)
+    )
+  );
 }
 
 function getLandReservationSourceLabel(source) {
@@ -180,6 +206,7 @@ class LandReservationReconciler {
 try {
   window.normalizeLandReservationShare = normalizeLandReservationShare;
   window.resolveLandReservationInitialLand = resolveLandReservationInitialLand;
+  window.getTemperatureDrivenCoreFluxLandReservationShare = getTemperatureDrivenCoreFluxLandReservationShare;
   window.getCoreFluxLandReservationShare = getCoreFluxLandReservationShare;
   window.getLandReservationSourceLabel = getLandReservationSourceLabel;
   window.LandReservationReconciler = LandReservationReconciler;
@@ -191,6 +218,7 @@ try {
   module.exports = {
     normalizeLandReservationShare,
     resolveLandReservationInitialLand,
+    getTemperatureDrivenCoreFluxLandReservationShare,
     getCoreFluxLandReservationShare,
     getLandReservationSourceLabel,
     LandReservationReconciler

@@ -458,7 +458,16 @@ class HazardManager {
       0,
       activeTerraforming?.getCoreHeatFlux ? activeTerraforming.getCoreHeatFlux() : baseFlux
     );
-    return currentFlux / baseFlux;
+    const temperature = activeTerraforming?.temperature?.value;
+    let temperatureShare = 1;
+    if (Number.isFinite(temperature)) {
+      if (temperature <= 973.15) {
+        temperatureShare = 0;
+      } else if (temperature < 1273.15) {
+        temperatureShare = (temperature - 973.15) / 300;
+      }
+    }
+    return Math.min(currentFlux / baseFlux, temperatureShare);
   }
 
   getCombinedHazardLandShare(terraformingState = null) {
