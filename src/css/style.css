@@ -47,6 +47,7 @@ body {
 .projects-subtabs,
 .terraforming-subtabs,
 .hope-subtabs,
+.settings-subtabs,
 .space-subtabs
  {
     display: flex;
@@ -74,6 +75,7 @@ body {
 .projects-subtabs,
 .terraforming-subtabs,
 .hope-subtabs,
+.settings-subtabs,
 .space-subtabs
 {
     position: sticky;
@@ -90,6 +92,7 @@ body.journal-collapsed .research-subtabs,
 body.journal-collapsed .projects-subtabs,
 body.journal-collapsed .terraforming-subtabs,
 body.journal-collapsed .hope-subtabs,
+body.journal-collapsed .settings-subtabs,
 body.journal-collapsed .space-subtabs
 {
     margin-right: 0px; /* Original 25px + 60px for show button space */
@@ -102,6 +105,7 @@ body.journal-collapsed .space-subtabs
 .projects-subtab,
 .terraforming-subtab,
 .hope-subtab,
+.settings-subtab,
 .space-subtab { /* Added space-subtab */
     flex: 1 1 140px;
     padding: 10px;
@@ -124,6 +128,7 @@ body.journal-collapsed .space-subtabs
 .projects-subtab.active,
 .terraforming-subtab.active,
 .hope-subtab.active,
+.settings-subtab.active,
 .space-subtab.active { /* Added space-subtab.active */
     background-color: #666;
     color: #fff; /* Consistent text color for active state */
@@ -183,6 +188,7 @@ body.journal-collapsed .tab-content {
 .projects-subtab-content,
 .terraforming-subtab-content,
 .hope-subtab-content,
+.settings-subtab-content,
 .space-subtab-content { /* Added space-subtab-content */
     display: none;
 }
@@ -193,6 +199,7 @@ body.journal-collapsed .tab-content {
 .projects-subtab-content.active,
 .terraforming-subtab-content.active,
 .hope-subtab-content.active,
+.settings-subtab-content.active,
 .space-subtab-content.active { /* Added space-subtab-content.active */
     display: block;
 }

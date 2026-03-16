@@ -3,8 +3,6 @@ globalGameIsTraveling = false;
 
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
-let statisticsElements = null;
-let settingsElements = null;
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -39,47 +37,6 @@ function hideLoadingOverlay() {
   loadingOverlayIsVisible = false;
   cacheLoadingOverlayElement();
   applyLoadingOverlayVisibility();
-}
-
-function cacheStatisticsElements() {
-  if (typeof document === 'undefined') {
-    return null;
-  }
-  if (statisticsElements && statisticsElements.totalPlaytime) {
-    return statisticsElements;
-  }
-  statisticsElements = {
-    totalPlaytime: document.getElementById('total-playtime-display'),
-    fastestTerraformRow: document.getElementById('fastest-terraform-row'),
-    fastestTerraform: document.getElementById('fastest-terraform-display'),
-  };
-  return statisticsElements;
-}
-
-function cacheSettingsElements() {
-  if (settingsElements) {
-    return settingsElements;
-  }
-  settingsElements = {
-    autosaveIntervalSelect: document.getElementById('autosave-interval-select'),
-    keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
-    celsiusToggle: document.getElementById('celsius-toggle'),
-    silenceToggle: document.getElementById('solis-silence-toggle'),
-    milestoneToggle: document.getElementById('milestone-silence-toggle'),
-    unlockToggle: document.getElementById('unlock-alert-toggle'),
-    dayNightToggle: document.getElementById('day-night-toggle'),
-    darkModeToggle: document.getElementById('dark-mode-toggle'),
-    preserveAutoStartToggle: document.getElementById('preserve-project-auto-start-toggle'),
-    preserveProjectSettingsToggle: document.getElementById('preserve-project-settings-toggle'),
-    keepHiddenStructuresToggle: document.getElementById('keep-hidden-structures-toggle'),
-    autobuildSetActiveToggle: document.getElementById('autobuild-set-active-toggle'),
-    colonyUpgradeUncheckAutobuildToggle: document.getElementById('colony-upgrade-uncheck-autobuild-toggle'),
-    roundBuildingToggle: document.getElementById('round-building-toggle'),
-    scientificNotationThresholdInput: document.getElementById('scientific-notation-threshold-input'),
-    simplifyGoldenAsteroidToggle: document.getElementById('simplify-golden-asteroid-toggle'),
-    suppressFaithToggle: document.getElementById('suppress-faith-toggle'),
-  };
-  return settingsElements;
 }
 
 function recalculateLandUsage() {
@@ -937,29 +894,6 @@ function deleteSaveSlotDate(slot) {
   }
 }
 
-// Add event listeners to save, load, and delete buttons
-function addSaveSlotListeners() {
-  const saveSlots = ['autosave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
-
-  saveSlots.forEach(slot => {
-    const saveButton = document.querySelector(`.save-button[data-slot="${slot}"]`);
-    const loadButton = document.querySelector(`.load-button[data-slot="${slot}"]`);
-    const deleteButton = document.querySelector(`.delete-button[data-slot="${slot}"]`);
-
-    if (saveButton && slot !== 'pretravel') {
-      saveButton.addEventListener('click', () => saveGameToSlot(slot));
-    }
-
-    loadButton.addEventListener('click', () => loadGame(`gameState_${slot}`));
-
-    deleteButton.addEventListener('click', () => {
-      if (confirm(`Are you sure you want to delete the save file in slot ${slot}? This action cannot be undone.`)) {
-        deleteSaveFileFromSlot(slot);
-      }
-    });
-  });
-}
-
 // Load the most recent save
 function loadMostRecentSave() {
   loadSaveSlotDates();
@@ -1066,75 +1000,4 @@ function updateAutosaveText(overrideText) {
     return;
   }
   autosaveText.textContent = `Next autosave in ${minutes}m ${seconds}s`;
-}
-
-function updateStatisticsDisplay() {
-  const cached = cacheStatisticsElements();
-  const el = cached ? cached.totalPlaytime : null;
-  if (!el) return;
-  const gameTime = formatPlayTime(totalPlayTimeSeconds);
-  const realTime = formatDurationDetailed(totalRealPlayTimeSeconds);
-  el.textContent = `${gameTime} (${realTime} real time)`;
-  if (!cached.fastestTerraformRow || !cached.fastestTerraform) return;
-  if (fastestTerraformDays === null) {
-    cached.fastestTerraformRow.style.display = 'none';
-    return;
-  }
-  cached.fastestTerraformRow.style.display = '';
-  if (fastestTerraformRealSeconds === null) {
-    cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (real time unavailable)`;
-    return;
-  }
-  const fastestRealTime = formatDurationDetailed(fastestTerraformRealSeconds);
-  cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (${fastestRealTime} real time)`;
-}
-
-// Add save and load related listeners
-function addSaveLoadListeners() {
-  // Event listener for "New Game" button
-  document.getElementById('new-game-button').addEventListener('click', () => {
-    if (confirm("Are you sure you want to start a new game? Any unsaved progress will be lost.")) {
-      if (typeof startNewGame === 'function') {
-        startNewGame();
-      } else {
-        initializeGameState();
-        if (typeof openTerraformingWorldTab === 'function') {
-          openTerraformingWorldTab();
-        }
-      }
-    }
-  });
-
-  // Event listener for the "Save to File" button
-  document.getElementById('save-to-file-button').addEventListener('click', saveGameToFile);
-
-  // Event listener for the "Load from File" button trigger
-  document.getElementById('load-from-file-button').addEventListener('click', function() {
-    document.getElementById('load-from-file-input').click();
-  });
-
-  const saveClipboardButton = document.getElementById('save-to-clipboard-button');
-  if (saveClipboardButton) {
-    saveClipboardButton.addEventListener('click', saveGameToClipboard);
-  }
-  const loadStringButton = document.getElementById('load-from-string-button');
-  if (loadStringButton) {
-    loadStringButton.addEventListener('click', loadGameFromString);
-  }
-
-  // Event listener for the actual file input change
-  document.getElementById('load-from-file-input').addEventListener('change', loadGameFromFile);
-}
-
-// Call the function to add event listeners when the page loads
-if (typeof document !== 'undefined' && document.addEventListener) {
-  document.addEventListener('DOMContentLoaded', () => {
-    initializeLoadingOverlay();
-    addSaveSlotListeners();
-    addSaveLoadListeners();
-  });
-}
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { getGameState, loadGame, recalculateLandUsage, saveGameToClipboard, loadGameFromString };
 }

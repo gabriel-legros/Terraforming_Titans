@@ -81,8 +81,12 @@
     <script src="src/js/ui-utils.js"></script>
     <script src="src/js/silent-audio.js"></script>
     <script src="src/js/subtab-manager.js"></script>
-    <script src="src/js/save.js"></script>
-    <script src="src/js/settings.js"></script>
+    <script src="src/js/save-settings/settingsSubtab.js"></script>
+    <script src="src/js/save-settings/statisticsSubtab.js"></script>
+    <script src="src/js/save-settings/creditsSubtab.js"></script>
+    <script src="src/js/save-settings/save.js"></script>
+    <script src="src/js/save-settings/saveSubtab.js"></script>
+    <script src="src/js/save-settings/settings.js"></script>
     <script src="src/js/structuresUI.js"></script>
     <script src="src/js/day-night-cycle.js"></script>
     <script src="src/js/day-night-setting.js"></script>
@@ -699,167 +703,184 @@
     <div id="settings" class="tab-content active">
       <!-- ... existing settings content ... -->
       <div class="container settings-container">
-          <h2>Save</h2>
-          <div class="save-slots">
-              <!-- ... table ... -->
-              <table>
-                  <thead>
-                      <tr>
-                          <th>Slot</th>
-                          <th>Date</th>
-                          <th>Actions</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      <tr>
-                        <td>Autosave</td>
-                        <td id="autosave-date">Empty</td>
-                        <td>
-                            <button class="save-button" data-slot="autosave">Save</button>
-                            <button class="load-button" data-slot="autosave">Load</button>
-                            <button class="delete-button" data-slot="autosave">Delete</button>
-                        </td>
-                    </tr>
-                    <tr id="pretravel-row" class="hidden">
-                        <td>Pre-travel</td>
-                        <td id="pretravel-date">Empty</td>
-                        <td>
-                            <button class="save-button" data-slot="pretravel" disabled>Save</button>
-                            <button class="load-button" data-slot="pretravel">Load</button>
-                            <button class="delete-button" data-slot="pretravel">Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="3">
-                            <div id="autosave-text"></div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Slot 1</td>
-                        <td id="slot1-date">Empty</td>
-                        <td>
-                            <button class="save-button" data-slot="slot1">Save</button>
-                            <button class="load-button" data-slot="slot1">Load</button>
-                            <button class="delete-button" data-slot="slot1">Delete</button>
-                        </td>
-                    </tr>
-                    <!-- ... other slots ... -->
-                     <tr>
-                          <td>Slot 2</td>
-                          <td id="slot2-date">Empty</td>
-                          <td>
-                              <button class="save-button" data-slot="slot2">Save</button>
-                              <button class="load-button" data-slot="slot2">Load</button>
-                              <button class="delete-button" data-slot="slot2">Delete</button>
-                          </td>
-                      </tr>
-                      <tr>
-                          <td>Slot 3</td>
-                          <td id="slot3-date">Empty</td>
-                          <td>
-                              <button class="save-button" data-slot="slot3">Save</button>
-                              <button class="load-button" data-slot="slot3">Load</button>
-                              <button class="delete-button" data-slot="slot3">Delete</button>
-                          </td>
-                      </tr>
-                      <tr>
-                          <td>Slot 4</td>
-                          <td id="slot4-date">Empty</td>
-                          <td>
-                              <button class="save-button" data-slot="slot4">Save</button>
-                              <button class="load-button" data-slot="slot4">Load</button>
-                              <button class="delete-button" data-slot="slot4">Delete</button>
-                          </td>
-                      </tr>
-                      <tr>
-                          <td>Slot 5</td>
-                          <td id="slot5-date">Empty</td>
-                          <td>
-                              <button class="save-button" data-slot="slot5">Save</button>
-                              <button class="load-button" data-slot="slot5">Load</button>
-                              <button class="delete-button" data-slot="slot5">Delete</button>
-                          </td>
-                      </tr>
-                      <tr>
-                        <td colspan="3">
-                          <button id="new-game-button">New Game</button>
-                          <button id="save-to-file-button">Save to File</button>
-                          <input type="file" id="load-from-file-input" accept=".json" style="display: none;">
-                          <button id="load-from-file-button">Load from File</button>
-                          <button id="save-to-clipboard-button">Save to Clipboard</button>
-                          <button id="load-from-string-button">Load from string</button>
-                        </td>
-                      </tr>
-                        <tr>
-                          <td colspan="3">
-                            <button id="pause-button">Pause</button>
-                          </td>
+          <div class="settings-subtabs">
+            <div class="settings-subtab active" data-subtab="save-settings-subtab">Save</div>
+            <div class="settings-subtab" data-subtab="preferences-settings-subtab">Settings</div>
+            <div class="settings-subtab" data-subtab="statistics-settings-subtab">Statistics</div>
+            <div class="settings-subtab" data-subtab="credits-settings-subtab">Credits</div>
+          </div>
+          <div class="subtab-content-wrapper settings-subtab-content-wrapper">
+            <div id="save-settings-subtab" class="settings-subtab-content active">
+              <h2>Save</h2>
+              <div class="save-slots">
+                  <!-- ... table ... -->
+                  <table>
+                      <thead>
+                          <tr>
+                              <th>Slot</th>
+                              <th>Date</th>
+                              <th>Actions</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                            <td>Autosave</td>
+                            <td id="autosave-date">Empty</td>
+                            <td>
+                                <button class="save-button" data-slot="autosave">Save</button>
+                                <button class="load-button" data-slot="autosave">Load</button>
+                                <button class="delete-button" data-slot="autosave">Delete</button>
+                            </td>
                         </tr>
-                  </tbody>
-              </table>
+                        <tr id="pretravel-row" class="hidden">
+                            <td>Pre-travel</td>
+                            <td id="pretravel-date">Empty</td>
+                            <td>
+                                <button class="save-button" data-slot="pretravel" disabled>Save</button>
+                                <button class="load-button" data-slot="pretravel">Load</button>
+                                <button class="delete-button" data-slot="pretravel">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <div id="autosave-text"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Slot 1</td>
+                            <td id="slot1-date">Empty</td>
+                            <td>
+                                <button class="save-button" data-slot="slot1">Save</button>
+                                <button class="load-button" data-slot="slot1">Load</button>
+                                <button class="delete-button" data-slot="slot1">Delete</button>
+                            </td>
+                        </tr>
+                        <!-- ... other slots ... -->
+                         <tr>
+                              <td>Slot 2</td>
+                              <td id="slot2-date">Empty</td>
+                              <td>
+                                  <button class="save-button" data-slot="slot2">Save</button>
+                                  <button class="load-button" data-slot="slot2">Load</button>
+                                  <button class="delete-button" data-slot="slot2">Delete</button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>Slot 3</td>
+                              <td id="slot3-date">Empty</td>
+                              <td>
+                                  <button class="save-button" data-slot="slot3">Save</button>
+                                  <button class="load-button" data-slot="slot3">Load</button>
+                                  <button class="delete-button" data-slot="slot3">Delete</button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>Slot 4</td>
+                              <td id="slot4-date">Empty</td>
+                              <td>
+                                  <button class="save-button" data-slot="slot4">Save</button>
+                                  <button class="load-button" data-slot="slot4">Load</button>
+                                  <button class="delete-button" data-slot="slot4">Delete</button>
+                              </td>
+                          </tr>
+                          <tr>
+                              <td>Slot 5</td>
+                              <td id="slot5-date">Empty</td>
+                              <td>
+                                  <button class="save-button" data-slot="slot5">Save</button>
+                                  <button class="load-button" data-slot="slot5">Load</button>
+                                  <button class="delete-button" data-slot="slot5">Delete</button>
+                              </td>
+                          </tr>
+                          <tr>
+                            <td colspan="3">
+                              <button id="new-game-button">New Game</button>
+                              <button id="save-to-file-button">Save to File</button>
+                              <input type="file" id="load-from-file-input" accept=".json" style="display: none;">
+                              <button id="load-from-file-button">Load from File</button>
+                              <button id="save-to-clipboard-button">Save to Clipboard</button>
+                              <button id="load-from-string-button">Load from string</button>
+                            </td>
+                          </tr>
+                            <tr>
+                              <td colspan="3">
+                                <button id="pause-button">Pause</button>
+                              </td>
+                            </tr>
+                      </tbody>
+                  </table>
+              </div>
+            </div>
+            <div id="preferences-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
+              <h2>Settings</h2>
+              <div class="settings-grid">
+                <label class="settings-option">
+                  <input type="checkbox" id="keep-tab-running-audio-toggle"> Use white noise to keep tab active <span class="info-tooltip-icon" title="After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution.  Much more quiet on Firefox.  May still work even if the tab is muted.">&#9432;</span>
+                </label>
+                <label class="settings-option">
+                  Autosave interval
+                  <select id="autosave-interval-select">
+                    <option value="30">30s</option>
+                    <option value="60">1 minute</option>
+                    <option value="120">2 minutes</option>
+                    <option value="300" selected>5 minutes</option>
+                    <option value="900">15 minutes</option>
+                    <option value="1800">30 minutes</option>
+                    <option value="3600">1 hour</option>
+                    <option value="0">Never</option>
+                  </select>
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="celsius-toggle"> Display temperature in Celsius
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="dark-mode-toggle"> Enable Dark Mode
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="unlock-alert-toggle"> Disable unlock alerts
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="day-night-toggle"> Disable day-night cycle <span class="info-tooltip-icon" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="preserve-project-auto-start-toggle"> Preserve project auto-start between worlds <span class="info-tooltip-icon" title="Keeps project auto-start selections when travelling.">&#9432;</span>
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="preserve-project-settings-toggle"> Preserve most project settings on travel <span id="preserve-project-settings-tooltip" class="info-tooltip-icon" title="Preserves most project settings when traveling.">&#9432;</span>
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="keep-hidden-structures-toggle"> Keep hidden buildings on travel <span class="info-tooltip-icon" title="Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.">&#9432;</span>
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="autobuild-set-active-toggle" checked> Checking autobuild also checks Set Active to Target
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> Checking Colony Upgrade unchecks autobuild
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="round-building-toggle"> Round building construction <span class="info-tooltip-icon" title="When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.  Does not apply if autobuild is on.">&#9432;</span>
+                </label>
+                <label class="settings-option">
+                  Use scientific notation above <input type="text" id="scientific-notation-threshold-input" value="1e30"> <span class="info-tooltip-icon" title="Values at or above this threshold are displayed in scientific notation, such as 1e30.">&#9432;</span>
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="simplify-golden-asteroid-toggle"> Simplify Golden Asteroid <span class="info-tooltip-icon" title="When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.">&#9432;</span>
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="suppress-faith-toggle"> Suppress Faith <span id="suppress-faith-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+              </div>
+            </div>
+            <div id="statistics-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
+              <h2>Statistics</h2>
+              <p class="settings-stat-line">Total Playtime: <span id="total-playtime-display"></span></p>
+              <p class="settings-stat-line" id="fastest-terraform-row" style="display: none;">Fastest Terraform: <span id="fastest-terraform-display"></span></p>
+            </div>
+            <div id="credits-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
+              <h2>Credits</h2>
+              <div id="settings-credits-list"></div>
+            </div>
           </div>
-          <h2>Settings</h2>
-          <div class="settings-grid">
-            <label class="settings-option">
-              <input type="checkbox" id="keep-tab-running-audio-toggle"> Use white noise to keep tab active <span class="info-tooltip-icon" title="After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution.  Much more quiet on Firefox.  May still work even if the tab is muted.">&#9432;</span>
-            </label>
-            <label class="settings-option">
-              Autosave interval
-              <select id="autosave-interval-select">
-                <option value="30">30s</option>
-                <option value="60">1 minute</option>
-                <option value="120">2 minutes</option>
-                <option value="300" selected>5 minutes</option>
-                <option value="900">15 minutes</option>
-                <option value="1800">30 minutes</option>
-                <option value="3600">1 hour</option>
-                <option value="0">Never</option>
-              </select>
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="celsius-toggle"> Display temperature in Celsius
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="dark-mode-toggle"> Enable Dark Mode
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="unlock-alert-toggle"> Disable unlock alerts
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="day-night-toggle"> Disable day-night cycle <span class="info-tooltip-icon" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="preserve-project-auto-start-toggle"> Preserve project auto-start between worlds <span class="info-tooltip-icon" title="Keeps project auto-start selections when travelling.">&#9432;</span>
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="preserve-project-settings-toggle"> Preserve most project settings on travel <span id="preserve-project-settings-tooltip" class="info-tooltip-icon" title="Preserves most project settings when traveling.">&#9432;</span>
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="keep-hidden-structures-toggle"> Keep hidden buildings on travel <span class="info-tooltip-icon" title="Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.">&#9432;</span>
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="autobuild-set-active-toggle" checked> Checking autobuild also checks Set Active to Target
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> Checking Colony Upgrade unchecks autobuild
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="round-building-toggle"> Round building construction <span class="info-tooltip-icon" title="When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.  Does not apply if autobuild is on.">&#9432;</span>
-            </label>
-            <label class="settings-option">
-              Use scientific notation above <input type="text" id="scientific-notation-threshold-input" value="1e30"> <span class="info-tooltip-icon" title="Values at or above this threshold are displayed in scientific notation, such as 1e30.">&#9432;</span>
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="simplify-golden-asteroid-toggle"> Simplify Golden Asteroid <span class="info-tooltip-icon" title="When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.">&#9432;</span>
-            </label>
-            <label class="settings-option">
-              <input type="checkbox" id="suppress-faith-toggle"> Suppress Faith <span id="suppress-faith-tooltip" class="info-tooltip-icon">&#9432;</span>
-            </label>
-          </div>
-
-          <h2>Statistics</h2>
-          <p class="settings-stat-line">Total Playtime: <span id="total-playtime-display"></span></p>
-          <p class="settings-stat-line" id="fastest-terraform-row" style="display: none;">Fastest Terraform: <span id="fastest-terraform-display"></span></p>
       </div>
     </div>
 
