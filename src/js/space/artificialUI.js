@@ -1468,6 +1468,11 @@ function ensureArtificialLayout() {
   });
   storeBtn.addEventListener('click', () => {
     if (!artificialManager) return;
+    const warning = artificialManager.getConstructedWorldWarning?.('Store');
+    if (warning) {
+      showTravelWarningPopup(warning, () => artificialManager.storeConstructedWorld());
+      return;
+    }
     artificialManager.storeConstructedWorld();
   });
   prev.addEventListener('click', () => {
