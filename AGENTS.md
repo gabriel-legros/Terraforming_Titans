@@ -206,7 +206,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Space Storage cap controls now include `By Weight`: amount/% caps are applied first, remaining storage is split proportionally across weighted resources, and resources with weight `0` or no cap setting get cap `0` while any weighted cap is used.
 - Ship automation now excludes spaceship projects that are irrelevant on the current world and releases ships from stale preset entries instead of parking them on hidden world-specific projects.
 - Resource Disposal now supports up to 10 configured disposal targets with per-target auto-start, wait-for-full-capacity, and monitoring thresholds; active auto-start targets split assigned spaceships and Mass Drivers evenly.
-- Resource panel now adds a Colony/Space view toggle (shown once any space-storage resource unlocks), and the Space view renders only `spaceStorage` resources.
+- Resource panel keeps the Colony/Space view toggle only when the `Show space resources in default resource panel` setting is off; with the setting on, the toggle is hidden and `Space Resources` render directly below `Colony` once space resources are actually unlocked.
 - Colony now uses subtabs: Population unlocks with Colony tab, Nanocolony unlocks with Nanotechnology Stage I, and unlock transitions auto-focus the corresponding subtab.
 - Save & Settings now uses four subtabs (`Save`, `Settings`, `Statistics`, `Credits`) so utility controls and metadata are split into smaller panels instead of one long page.
 - Hades chapter `hades.33.0` unlocks `followersManager`; when enabled, Colony shows a `Followers` subtab with Orbitals assignment (manual and weight modes), a live `Faith` panel, and the Holy World consecration/shop systems.

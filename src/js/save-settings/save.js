@@ -585,6 +585,12 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageResources')) {
         gameSettings.showSpaceStorageResources = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageInDefaultPanel')) {
+        gameSettings.showSpaceStorageInDefaultPanel = false;
+      }
+      if (gameSettings.showSpaceStorageInDefaultPanel) {
+        gameSettings.showSpaceStorageResources = false;
+      }
       delete gameSettings.formatAutoBuildTargets;
       const cachedSettings = cacheSettingsElements();
       cachedSettings.autosaveIntervalSelect.value = String(getAutosaveIntervalSeconds());
@@ -600,6 +606,7 @@ function loadGame(slotOrCustomString, recreate = true) {
       }
       cachedSettings.silenceToggle.checked = gameSettings.silenceSolisAlert;
       cachedSettings.milestoneToggle.checked = gameSettings.silenceMilestoneAlert;
+      cachedSettings.showSpaceStorageInDefaultPanelToggle.checked = gameSettings.showSpaceStorageInDefaultPanel;
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
       cachedSettings.darkModeToggle.checked = gameSettings.darkMode;

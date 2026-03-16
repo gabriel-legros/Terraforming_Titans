@@ -11,6 +11,7 @@ function cacheSettingsElements() {
     celsiusToggle: document.getElementById('celsius-toggle'),
     silenceToggle: document.getElementById('solis-silence-toggle'),
     milestoneToggle: document.getElementById('milestone-silence-toggle'),
+    showSpaceStorageInDefaultPanelToggle: document.getElementById('show-space-storage-in-default-panel-toggle'),
     unlockToggle: document.getElementById('unlock-alert-toggle'),
     dayNightToggle: document.getElementById('day-night-toggle'),
     darkModeToggle: document.getElementById('dark-mode-toggle'),
@@ -76,6 +77,17 @@ function addSettingsListeners() {
     cached.silenceToggle.addEventListener('change', () => {
       gameSettings.silenceSolisAlert = cached.silenceToggle.checked;
       updateHopeAlert();
+    });
+  }
+
+  if (cached.showSpaceStorageInDefaultPanelToggle) {
+    cached.showSpaceStorageInDefaultPanelToggle.checked = gameSettings.showSpaceStorageInDefaultPanel;
+    cached.showSpaceStorageInDefaultPanelToggle.addEventListener('change', () => {
+      gameSettings.showSpaceStorageInDefaultPanel = cached.showSpaceStorageInDefaultPanelToggle.checked;
+      if (gameSettings.showSpaceStorageInDefaultPanel) {
+        gameSettings.showSpaceStorageResources = false;
+      }
+      createResourceDisplay(resources);
     });
   }
 

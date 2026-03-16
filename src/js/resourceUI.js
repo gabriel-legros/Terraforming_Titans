@@ -23,15 +23,53 @@ const SPACE_STORAGE_DIVIDER_TOP_RESOURCES = new Set(['components', 'liquidWater'
 const SPACE_STORAGE_DIVIDER_MARGIN = 10;
 let resourceViewModeUpdating = false;
 
+function showSpaceStorageInDefaultPanel() {
+  return gameSettings.showSpaceStorageInDefaultPanel === true;
+}
+
 function isSpaceStorageViewActive() {
-  return gameSettings.showSpaceStorageResources === true;
+  return !showSpaceStorageInDefaultPanel() && gameSettings.showSpaceStorageResources === true;
 }
 
 function shouldRenderResourceCategory(category) {
+  if (category === 'space') {
+    return false;
+  }
+  if (showSpaceStorageInDefaultPanel()) {
+    return category !== 'space';
+  }
   if (isSpaceStorageViewActive()) {
     return category === 'spaceStorage';
   }
-  return category !== 'spaceStorage' && category !== 'space';
+  return category !== 'spaceStorage';
+}
+
+function getResourceCategoriesForDisplay(resourceSet) {
+  const categories = Object.keys(resourceSet || {});
+  if (!showSpaceStorageInDefaultPanel()) {
+    return categories;
+  }
+  const colonyIndex = categories.indexOf('colony');
+  const spaceStorageIndex = categories.indexOf('spaceStorage');
+  if (colonyIndex === -1 || spaceStorageIndex === -1 || spaceStorageIndex === colonyIndex + 1) {
+    return categories;
+  }
+  categories.splice(spaceStorageIndex, 1);
+  categories.splice(colonyIndex + 1, 0, 'spaceStorage');
+  return categories;
+}
+
+function getResourceUIKey(category, resourceName) {
+  return category === 'spaceStorage' ? `spaceStorage:${resourceName}` : resourceName;
+}
+
+function getResourceDomPrefix(category, resourceName) {
+  return category === 'spaceStorage' ? `space-storage-${resourceName}` : resourceName;
+}
+
+function getResourceDomId(category, resourceName, suffix) {
+  const prefix = getResourceDomPrefix(category, resourceName);
+  return suffix ? `${prefix}-${suffix}` : prefix;
 }
 
 function hasUnlockedSpaceStorageResources(resourceSet) {
@@ -144,7 +182,7 @@ function reorderSpaceStorageElements(container) {
   }
   for (let i = 0; i < SPACE_STORAGE_UI_ORDER.length; i += 1) {
     const resourceName = SPACE_STORAGE_UI_ORDER[i];
-    const resourceElement = document.getElementById(`${resourceName}-container`);
+    const resourceElement = document.getElementById(getResourceDomId('spaceStorage', resourceName, 'container'));
     if (resourceElement && resourceElement.parentElement === container) {
       container.appendChild(resourceElement);
     }
@@ -204,7 +242,7 @@ function getTooltipTimeCapForResource(resource) {
 function setResourcePanelViewMode(showSpaceStorage) {
   if (!resources) return;
   const canUseSpaceStorageView = hasUnlockedSpaceStorageResources(resources);
-  const nextMode = showSpaceStorage && canUseSpaceStorageView;
+  const nextMode = !showSpaceStorageInDefaultPanel() && showSpaceStorage && canUseSpaceStorageView;
   if (gameSettings.showSpaceStorageResources === nextMode) {
     updateResourceViewToggleState(resources);
     return;
@@ -218,7 +256,8 @@ function updateResourceViewToggleState(resourceSet) {
   if (resourceViewModeUpdating) return;
   const toggles = resourceUICache.viewToggles || {};
   const enabled = hasUnlockedSpaceStorageResources(resourceSet);
-  if (!enabled && isSpaceStorageViewActive()) {
+  const showToggle = enabled && !showSpaceStorageInDefaultPanel();
+  if (!showToggle && isSpaceStorageViewActive()) {
     resourceViewModeUpdating = true;
     gameSettings.showSpaceStorageResources = false;
     invalidateResourceUICache();
@@ -229,8 +268,8 @@ function updateResourceViewToggleState(resourceSet) {
   for (const key in toggles) {
     const toggle = toggles[key];
     if (!toggle) continue;
-    toggle.style.display = enabled ? 'inline-flex' : 'none';
-    toggle.disabled = !enabled;
+    toggle.style.display = showToggle ? 'inline-flex' : 'none';
+    toggle.disabled = !showToggle;
     setToggleButtonState(toggle, isSpaceStorageViewActive());
   }
 }
@@ -260,7 +299,9 @@ function createResourceContainers(resourcesData) {
   resourcesContainer.innerHTML = ''; // Clear the main container first
   resourceUICache.viewToggles = {};
 
-  for (const category in resourcesData) {
+  const categories = getResourceCategoriesForDisplay(resourcesData);
+  for (let i = 0; i < categories.length; i += 1) {
+    const category = categories[i];
     // Create a new container for each category
     const categoryContainer = document.createElement('div');
     categoryContainer.classList.add('resource-display');
@@ -328,28 +369,28 @@ function createResourceContainers(resourcesData) {
   updateResourceViewToggleState(resourcesData);
 }
 
-function createTooltipElement(resourceName) {
+function createTooltipElement(category, resourceName) {
   const tooltip = document.createElement('div');
   tooltip.classList.add('resource-tooltip');
-  tooltip.id = `${resourceName}-tooltip`;
+  tooltip.id = getResourceDomId(category, resourceName, 'tooltip');
 
   const valueDiv = document.createElement('div');
-  valueDiv.id = `${resourceName}-tooltip-value`;
+  valueDiv.id = getResourceDomId(category, resourceName, 'tooltip-value');
 
   const timeDiv = document.createElement('div');
-  timeDiv.id = `${resourceName}-tooltip-time`;
+  timeDiv.id = getResourceDomId(category, resourceName, 'tooltip-time');
   timeDiv.classList.add('resource-tooltip-time');
 
   let noteDiv;
   let wasteNoteDiv;
   if (resourceName === 'land') {
     noteDiv = document.createElement('div');
-    noteDiv.id = `${resourceName}-tooltip-note`;
+    noteDiv.id = getResourceDomId(category, resourceName, 'tooltip-note');
     noteDiv.textContent = 'Land can be recovered by turning off the corresponding building';
   }
   if (isWasteResource(resourceName)) {
     wasteNoteDiv = document.createElement('div');
-    wasteNoteDiv.id = `${resourceName}-tooltip-waste-note`;
+    wasteNoteDiv.id = getResourceDomId(category, resourceName, 'tooltip-waste-note');
     const wasteNoteIcon = document.createElement('span');
     wasteNoteIcon.classList.add('info-tooltip-icon');
     wasteNoteIcon.innerHTML = '&#9432;';
@@ -359,10 +400,10 @@ function createTooltipElement(resourceName) {
   }
 
   const assignmentsDiv = document.createElement('div');
-  assignmentsDiv.id = `${resourceName}-tooltip-assignments`;
+  assignmentsDiv.id = getResourceDomId(category, resourceName, 'tooltip-assignments');
 
   const zonesDiv = document.createElement('div');
-  zonesDiv.id = `${resourceName}-tooltip-zones`;
+  zonesDiv.id = getResourceDomId(category, resourceName, 'tooltip-zones');
   zonesDiv.style.display = 'none';
   zonesDiv.appendChild(document.createElement('br'));
   const zonesHeader = document.createElement('strong');
@@ -377,7 +418,7 @@ function createTooltipElement(resourceName) {
   });
 
   const netDiv = document.createElement('div');
-  netDiv.id = `${resourceName}-tooltip-net`;
+  netDiv.id = getResourceDomId(category, resourceName, 'tooltip-net');
   const netAutoLine = document.createElement('div');
   netAutoLine.classList.add('resource-tooltip-net-line');
   const netBaseLine = document.createElement('div');
@@ -388,11 +429,11 @@ function createTooltipElement(resourceName) {
   netDiv._lineBase = netBaseLine;
 
   const limitDiv = document.createElement('div');
-  limitDiv.id = `${resourceName}-tooltip-limit`;
+  limitDiv.id = getResourceDomId(category, resourceName, 'tooltip-limit');
   limitDiv.style.display = 'none';
 
   const warningDiv = document.createElement('div');
-  warningDiv.id = `${resourceName}-tooltip-warning`;
+  warningDiv.id = getResourceDomId(category, resourceName, 'tooltip-warning');
   warningDiv.classList.add('resource-tooltip-warning');
   warningDiv.style.display = 'none';
   const warningIcon = document.createElement('span');
@@ -417,7 +458,7 @@ function createTooltipElement(resourceName) {
   headerDiv.appendChild(warningDiv);
 
   const productionDiv = document.createElement('div');
-  productionDiv.id = `${resourceName}-tooltip-production`;
+  productionDiv.id = getResourceDomId(category, resourceName, 'tooltip-production');
   productionDiv.style.display = 'none';
   const prodHeader = document.createElement('strong');
   prodHeader.textContent = 'Production:';
@@ -449,7 +490,7 @@ function createTooltipElement(resourceName) {
   productionDiv._info = { table: prodTable, rows: new Map(), totalRow: prodTotalRow, totalRight: prodTotalRightStrong };
 
   const consumptionDiv = document.createElement('div');
-  consumptionDiv.id = `${resourceName}-tooltip-consumption`;
+  consumptionDiv.id = getResourceDomId(category, resourceName, 'tooltip-consumption');
   consumptionDiv.style.display = 'none';
   consumptionDiv.appendChild(document.createElement('br'));
   const consHeader = document.createElement('strong');
@@ -482,7 +523,7 @@ function createTooltipElement(resourceName) {
   consumptionDiv._info = { table: consTable, rows: new Map(), totalRow: consTotalRow, totalRight: consTotalRightStrong };
 
   const overflowDiv = document.createElement('div');
-  overflowDiv.id = `${resourceName}-tooltip-overflow`;
+  overflowDiv.id = getResourceDomId(category, resourceName, 'tooltip-overflow');
   overflowDiv.style.display = 'none';
   overflowDiv.appendChild(document.createElement('br'));
   const overflowHeader = document.createElement('strong');
@@ -515,7 +556,7 @@ function createTooltipElement(resourceName) {
   overflowDiv._info = { table: overflowTable, rows: new Map(), totalRow: overflowTotalRow, totalRight: overflowTotalRightStrong };
 
   const autobuildDiv = document.createElement('div');
-  autobuildDiv.id = `${resourceName}-tooltip-autobuild`;
+  autobuildDiv.id = getResourceDomId(category, resourceName, 'tooltip-autobuild');
   autobuildDiv.style.display = 'none';
   autobuildDiv.appendChild(document.createElement('br'));
   const autoHeader = document.createElement('strong');
@@ -1103,9 +1144,10 @@ function getBiomassWarningMessage(zones) {
 }
 
 function createResourceElement(category, resourceObj, resourceName) {
+  const domPrefix = getResourceDomPrefix(category, resourceName);
   const resourceElement = document.createElement('div');
   resourceElement.classList.add('resource-item');
-  resourceElement.id = `${resourceName}-container`;
+  resourceElement.id = `${domPrefix}-container`;
   resourceElement.style.display = 'none'; // Initially hidden
   const showRate = !resourceObj.hideRate || resourceName === 'workers';
 
@@ -1113,16 +1155,16 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Special display for population (colonists) as an integer
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span><span class="resource-warning" id="${resourceName}-warning"></span></div>
-        <div class="resource-value" id="${resourceName}-resources-container">${Math.floor(resourceObj.value)}</div>
+        <div class="resource-name"><strong id="${domPrefix}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${domPrefix}-autobuild-warning"></span><span class="resource-warning" id="${domPrefix}-warning"></span></div>
+        <div class="resource-value" id="${domPrefix}-resources-container">${Math.floor(resourceObj.value)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
-          <div class="resource-cap"><span id="${resourceName}-cap-resources-container">${Math.floor(resourceObj.cap)}</span></div>
+          <div class="resource-cap"><span id="${domPrefix}-cap-resources-container">${Math.floor(resourceObj.cap)}</span></div>
         ` : ''}
-        ${showRate ? `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>` : ''}
+        ${showRate ? `<div class="resource-pps" id="${domPrefix}-pps-resources-container">+0/s</div>` : ''}
       </div>
     `;
-    const tooltip = createTooltipElement(resourceName);
+    const tooltip = createTooltipElement(category, resourceName);
     resourceElement.appendChild(tooltip);
     if (typeof addTooltipHover === 'function') {
       addTooltipHover(resourceElement, tooltip);
@@ -1131,17 +1173,17 @@ function createResourceElement(category, resourceObj, resourceName) {
     // Display for deposits
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span></div>
-        <div class="resource-value" id="${resourceName}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</div>
+        <div class="resource-name"><strong id="${domPrefix}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${domPrefix}-autobuild-warning"></span></div>
+        <div class="resource-value" id="${domPrefix}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
-          <div class="resource-cap"><span id="${resourceName}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
+          <div class="resource-cap"><span id="${domPrefix}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
         ` : ''}
         ${showRate ? '<div class="resource-pps"></div>' : ''}
       </div>
     `;
     if (resourceObj.name === 'land') {
-      const tooltip = createTooltipElement(resourceName);
+      const tooltip = createTooltipElement(category, resourceName);
       resourceElement.appendChild(tooltip);
       if (typeof addTooltipHover === 'function') {
         addTooltipHover(resourceElement, tooltip);
@@ -1150,7 +1192,7 @@ function createResourceElement(category, resourceObj, resourceName) {
 
     // Add scanning progress below deposits
     const scanningProgressElement = document.createElement('div');
-    scanningProgressElement.id = `${resourceName}-scanning-progress-resources-container`;
+    scanningProgressElement.id = `${domPrefix}-scanning-progress-resources-container`;
     scanningProgressElement.classList.add('scanning-progress');
     scanningProgressElement.style.display = 'none'; // Initially hidden
     resourceElement.appendChild(scanningProgressElement);
@@ -1160,16 +1202,16 @@ function createResourceElement(category, resourceObj, resourceName) {
     const capValueText = resourceObj.hasCap ? resourceObj.cap.toFixed(2) : '0';
     resourceElement.innerHTML = `
       <div class="resource-row ${!capVisibleByDefault ? 'no-cap' : ''}">
-        <div class="resource-name"><strong id="${resourceName}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${resourceName}-autobuild-warning"></span><span class="resource-warning" id="${resourceName}-warning"></span></div>
-        <div class="resource-value" id="${resourceName}-resources-container">${resourceObj.value.toFixed(2)}</div>
+        <div class="resource-name"><strong id="${domPrefix}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${domPrefix}-autobuild-warning"></span><span class="resource-warning" id="${domPrefix}-warning"></span></div>
+        <div class="resource-value" id="${domPrefix}-resources-container">${resourceObj.value.toFixed(2)}</div>
         ${includeCap ? `
-          <div class="resource-slash" id="${resourceName}-slash-resources-container" style="${capVisibleByDefault ? '' : 'display:none;'}">/</div>
-          <div class="resource-cap" id="${resourceName}-cap-wrapper-resources-container" style="${capVisibleByDefault ? '' : 'display:none;'}"><span id="${resourceName}-cap-resources-container">${capValueText}</span></div>
+          <div class="resource-slash" id="${domPrefix}-slash-resources-container" style="${capVisibleByDefault ? '' : 'display:none;'}">/</div>
+          <div class="resource-cap" id="${domPrefix}-cap-wrapper-resources-container" style="${capVisibleByDefault ? '' : 'display:none;'}"><span id="${domPrefix}-cap-resources-container">${capValueText}</span></div>
         ` : ''}
-        ${showRate ? `<div class="resource-pps" id="${resourceName}-pps-resources-container">+0/s</div>` : ''}
+        ${showRate ? `<div class="resource-pps" id="${domPrefix}-pps-resources-container">+0/s</div>` : ''}
       </div>
     `;
-    const tooltip = createTooltipElement(resourceName);
+    const tooltip = createTooltipElement(category, resourceName);
     resourceElement.appendChild(tooltip);
     if (typeof addTooltipHover === 'function') {
       addTooltipHover(resourceElement, tooltip);
@@ -1195,7 +1237,9 @@ function createResourceElement(category, resourceObj, resourceName) {
 }
 
 function populateResourceElements(resources) {
-  for (const category in resources) {
+  const categories = getResourceCategoriesForDisplay(resources);
+  for (let i = 0; i < categories.length; i += 1) {
+    const category = categories[i];
     if (!shouldRenderResourceCategory(category)) continue;
     const containerId = `${category}-resources-resources-container`;
     const container = document.getElementById(containerId);
@@ -1209,7 +1253,7 @@ function populateResourceElements(resources) {
         const resourceName = resourceNames[i];
         const resourceObj = getDisplayResourceObject(resources, category, resourceName);
         if (!resourceObj) continue;
-        if (!document.getElementById(`${resourceName}-container`)) {
+        if (!document.getElementById(getResourceDomId(category, resourceName, 'container'))) {
           const resourceElement = createResourceElement(category, resourceObj, resourceName);
           container.appendChild(resourceElement);
         }
@@ -1223,7 +1267,7 @@ function populateResourceElements(resources) {
 
 function unlockResource(resource) {
   if (!shouldRenderResourceCategory(resource.category)) return;
-  if (resource.unlocked && !document.getElementById(`${resource.name}-resources-container`) && !document.getElementById(`${resource.name}-available-resources-container`)) {
+  if (resource.unlocked && !document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
     const container = document.getElementById(containerId);
@@ -1258,7 +1302,9 @@ function updateResourceDisplay(resources, deltaSeconds) {
   updateResourceDisplay.lastTimestamp = now;
   const smallValueTimers = resourceUICache.smallValueTimers || (resourceUICache.smallValueTimers = {});
 
-  for (const category in resources) {
+  const categories = getResourceCategoriesForDisplay(resources);
+  for (let i = 0; i < categories.length; i += 1) {
+    const category = categories[i];
     const cat = resourceUICache.categories[category] || cacheResourceCategory(category);
     const container = cat ? cat.container : null;
     const header = cat ? cat.header : null;
@@ -1311,7 +1357,8 @@ function updateResourceDisplay(resources, deltaSeconds) {
       const resourceName = resourceNames[i];
       const resourceObj = getDisplayResourceObject(resources, category, resourceName);
       if (!resourceObj) continue;
-      const entry = resourceUICache.resources[resourceName] || cacheSingleResource(category, resourceName);
+      const resourceKey = getResourceUIKey(category, resourceName);
+      const entry = resourceUICache.resources[resourceKey] || cacheSingleResource(category, resourceName);
       const resourceElement = entry ? entry.container : null;
       const resourceNameElement = entry ? entry.nameEl : null;
       const autobuildWarningEl = entry ? entry.autobuildWarningEl : null;
@@ -1320,7 +1367,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         updateSpaceStorageCapDisplay(entry, resourceName);
       }
 
-      let timer = smallValueTimers[resourceName] || 0;
+      let timer = smallValueTimers[resourceKey] || 0;
       let showResource = resourceObj.unlocked;
 
       if (showResource) {
@@ -1352,7 +1399,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         timer = 0;
       }
 
-      smallValueTimers[resourceName] = timer;
+      smallValueTimers[resourceKey] = timer;
 
       if (showResource) {
         hasUnlockedResources = true;
@@ -1478,7 +1525,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
           }
         }
 
-        updateResourceRateDisplay(resourceObj, frameDelta);
+        updateResourceRateDisplay(resourceObj, frameDelta, category, resourceName);
       } else if (category === 'underground' || resourceObj.name === 'land') {
         // Update underground resources
         const availableElement = entry ? entry.availableEl : null;
@@ -1518,7 +1565,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
           scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
         if (resourceObj.name === 'land') {
-          updateResourceRateDisplay(resourceObj, frameDelta);
+          updateResourceRateDisplay(resourceObj, frameDelta, category, resourceName);
         }
       } else {
         // Update other resources
@@ -1532,7 +1579,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
           capElement.textContent = formatNumber(resourceObj.cap);
         }
       
-        updateResourceRateDisplay(resourceObj, frameDelta);
+        updateResourceRateDisplay(resourceObj, frameDelta, category, resourceName);
       }
     }
 
@@ -1585,9 +1632,10 @@ function getDisplayConsumptionRates(resource) {
   return { total, bySource: adjustedBySource };
 }
 
-function updateResourceRateDisplay(resource, frameDelta = 0){
-  const entry = resourceUICache.resources[resource.name] || cacheSingleResource(resource.category, resource.name);
-  const ppsElement = entry ? entry.ppsEl : document.getElementById(`${resource.name}-pps-resources-container`);
+function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = resource.category, displayName = resource.name){
+  const resourceKey = getResourceUIKey(displayCategory, displayName);
+  const entry = resourceUICache.resources[resourceKey] || cacheSingleResource(displayCategory, displayName);
+  const ppsElement = entry ? entry.ppsEl : document.getElementById(getResourceDomId(displayCategory, displayName, 'pps-resources-container'));
   const showRate = !resource.hideRate || resource.name === 'workers';
   if (!showRate) {
     if (ppsElement) {
@@ -1638,13 +1686,13 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
       }
 
       const unstableTimers = resourceUICache.unstableTimers || (resourceUICache.unstableTimers = {});
-      let timer = unstableTimers[resource.name] || 0;
+      let timer = unstableTimers[resourceKey] || 0;
       if (baseUnstable) {
         timer = 0.5;
       } else if (timer > 0) {
         timer = Math.max(0, timer - elapsed);
       }
-      unstableTimers[resource.name] = timer;
+      unstableTimers[resourceKey] = timer;
 
       if (baseUnstable || timer > 0) {
         ppsElement.textContent = 'Unstable';
@@ -1666,20 +1714,20 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
     }
   }
 
-  const tooltipElement = entry?.tooltip?.root || document.getElementById(`${resource.name}-tooltip`);
+  const tooltipElement = entry?.tooltip?.root || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip'));
   if (!tooltipElement || !tooltipElement._isActive) return;
 
-  const valueDiv = entry?.tooltip?.valueDiv || document.getElementById(`${resource.name}-tooltip-value`);
-  const timeDiv = entry?.tooltip?.timeDiv || document.getElementById(`${resource.name}-tooltip-time`);
-  const assignmentsDiv = entry?.tooltip?.assignmentsDiv || document.getElementById(`${resource.name}-tooltip-assignments`);
-  const zonesDiv = entry?.tooltip?.zonesDiv || document.getElementById(`${resource.name}-tooltip-zones`);
-  const netDiv = entry?.tooltip?.netDiv || document.getElementById(`${resource.name}-tooltip-net`);
-  const limitDiv = entry?.tooltip?.limitDiv || document.getElementById(`${resource.name}-tooltip-limit`);
-  const productionDiv = entry?.tooltip?.productionDiv || document.getElementById(`${resource.name}-tooltip-production`);
-  const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(`${resource.name}-tooltip-consumption`);
-  const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(`${resource.name}-tooltip-overflow`);
-  const autobuildDiv = entry?.tooltip?.autobuildDiv || document.getElementById(`${resource.name}-tooltip-autobuild`);
-  const warningDiv = entry?.tooltip?.warningDiv || document.getElementById(`${resource.name}-tooltip-warning`);
+  const valueDiv = entry?.tooltip?.valueDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-value'));
+  const timeDiv = entry?.tooltip?.timeDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-time'));
+  const assignmentsDiv = entry?.tooltip?.assignmentsDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-assignments'));
+  const zonesDiv = entry?.tooltip?.zonesDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-zones'));
+  const netDiv = entry?.tooltip?.netDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-net'));
+  const limitDiv = entry?.tooltip?.limitDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-limit'));
+  const productionDiv = entry?.tooltip?.productionDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-production'));
+  const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-consumption'));
+  const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-overflow'));
+  const autobuildDiv = entry?.tooltip?.autobuildDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-autobuild'));
+  const warningDiv = entry?.tooltip?.warningDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-warning'));
 
   const consumptionDisplay = getDisplayConsumptionRates(resource);
   const netRate = resource.productionRate - consumptionDisplay.total;
@@ -1725,7 +1773,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
   if (timeDiv) {
     if (resource.name !== 'land') {
       let showDefaultTime = true;
-      const unstableTimer = resourceUICache.unstableTimers[resource.name] || 0;
+      const unstableTimer = resourceUICache.unstableTimers[resourceKey] || 0;
       const rateUnstable = unstableTimer > 0;
       const liquidTarget = terraforming.liquidCoverageTargets.find((entry) => entry.coverageKey === resource.name);
       if (liquidTarget) {
@@ -1892,16 +1940,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0){
 
     const warningTimers = resourceUICache.warningTimers || (resourceUICache.warningTimers = {});
     const warningTextCache = resourceUICache.warningTextCache || (resourceUICache.warningTextCache = {});
-    let warningTimer = warningTimers[resource.name] || 0;
-    let cachedText = warningTextCache[resource.name] || { text: '', title: '' };
+    let warningTimer = warningTimers[resourceKey] || 0;
+    let cachedText = warningTextCache[resourceKey] || { text: '', title: '' };
     if (warningMessages.length > 0) {
       warningTimer = 1;
       cachedText = { text: warningMessages.join(' '), title: warningMessages.join('\n') };
-      warningTextCache[resource.name] = cachedText;
+      warningTextCache[resourceKey] = cachedText;
     } else if (warningTimer > 0) {
       warningTimer = Math.max(0, warningTimer - frameDelta);
     }
-    warningTimers[resource.name] = warningTimer;
+    warningTimers[resourceKey] = warningTimer;
 
     if (warningMessages.length > 0 || warningTimer > 0) {
       const joinedText = warningMessages.length > 0 ? warningMessages.join(' ') : cachedText.text;
@@ -2106,42 +2154,45 @@ function cacheResourceCategory(category) {
 }
 
 function cacheSingleResource(category, resourceName) {
+  const domPrefix = getResourceDomPrefix(category, resourceName);
   const entry = {
-    container: document.getElementById(`${resourceName}-container`),
-    rowEl: document.querySelector(`#${resourceName}-container .resource-row`),
-    nameEl: document.getElementById(`${resourceName}-name`),
-    autobuildWarningEl: document.getElementById(`${resourceName}-autobuild-warning`),
-    warningEl: document.getElementById(`${resourceName}-warning`),
-    valueEl: document.getElementById(`${resourceName}-resources-container`),
-    slashEl: document.getElementById(`${resourceName}-slash-resources-container`),
-    capWrapperEl: document.getElementById(`${resourceName}-cap-wrapper-resources-container`),
-    capEl: document.getElementById(`${resourceName}-cap-resources-container`),
-    ppsEl: document.getElementById(`${resourceName}-pps-resources-container`),
-    availableEl: document.getElementById(`${resourceName}-available-resources-container`),
-    totalEl: document.getElementById(`${resourceName}-total-resources-container`),
-    scanEl: document.getElementById(`${resourceName}-scanning-progress-resources-container`),
+    container: document.getElementById(`${domPrefix}-container`),
+    rowEl: document.querySelector(`#${domPrefix}-container .resource-row`),
+    nameEl: document.getElementById(`${domPrefix}-name`),
+    autobuildWarningEl: document.getElementById(`${domPrefix}-autobuild-warning`),
+    warningEl: document.getElementById(`${domPrefix}-warning`),
+    valueEl: document.getElementById(`${domPrefix}-resources-container`),
+    slashEl: document.getElementById(`${domPrefix}-slash-resources-container`),
+    capWrapperEl: document.getElementById(`${domPrefix}-cap-wrapper-resources-container`),
+    capEl: document.getElementById(`${domPrefix}-cap-resources-container`),
+    ppsEl: document.getElementById(`${domPrefix}-pps-resources-container`),
+    availableEl: document.getElementById(`${domPrefix}-available-resources-container`),
+    totalEl: document.getElementById(`${domPrefix}-total-resources-container`),
+    scanEl: document.getElementById(`${domPrefix}-scanning-progress-resources-container`),
     tooltip: {
-      root: document.getElementById(`${resourceName}-tooltip`),
-      valueDiv: document.getElementById(`${resourceName}-tooltip-value`),
-      timeDiv: document.getElementById(`${resourceName}-tooltip-time`),
-      assignmentsDiv: document.getElementById(`${resourceName}-tooltip-assignments`),
-      zonesDiv: document.getElementById(`${resourceName}-tooltip-zones`),
-      netDiv: document.getElementById(`${resourceName}-tooltip-net`),
-      limitDiv: document.getElementById(`${resourceName}-tooltip-limit`),
-      productionDiv: document.getElementById(`${resourceName}-tooltip-production`),
-      consumptionDiv: document.getElementById(`${resourceName}-tooltip-consumption`),
-      overflowDiv: document.getElementById(`${resourceName}-tooltip-overflow`),
-      autobuildDiv: document.getElementById(`${resourceName}-tooltip-autobuild`),
-      warningDiv: document.getElementById(`${resourceName}-tooltip-warning`),
+      root: document.getElementById(`${domPrefix}-tooltip`),
+      valueDiv: document.getElementById(`${domPrefix}-tooltip-value`),
+      timeDiv: document.getElementById(`${domPrefix}-tooltip-time`),
+      assignmentsDiv: document.getElementById(`${domPrefix}-tooltip-assignments`),
+      zonesDiv: document.getElementById(`${domPrefix}-tooltip-zones`),
+      netDiv: document.getElementById(`${domPrefix}-tooltip-net`),
+      limitDiv: document.getElementById(`${domPrefix}-tooltip-limit`),
+      productionDiv: document.getElementById(`${domPrefix}-tooltip-production`),
+      consumptionDiv: document.getElementById(`${domPrefix}-tooltip-consumption`),
+      overflowDiv: document.getElementById(`${domPrefix}-tooltip-overflow`),
+      autobuildDiv: document.getElementById(`${domPrefix}-tooltip-autobuild`),
+      warningDiv: document.getElementById(`${domPrefix}-tooltip-warning`),
     }
   };
-  resourceUICache.resources[resourceName] = entry;
+  resourceUICache.resources[getResourceUIKey(category, resourceName)] = entry;
   return entry;
 }
 
 function cacheResourceElements(resources) {
   if (typeof document === 'undefined') return;
-  for (const category in resources) {
+  const categories = getResourceCategoriesForDisplay(resources);
+  for (let i = 0; i < categories.length; i += 1) {
+    const category = categories[i];
     if (!shouldRenderResourceCategory(category)) continue;
     cacheResourceCategory(category);
     if (category === 'spaceStorage') {
