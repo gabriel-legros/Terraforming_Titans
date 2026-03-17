@@ -649,7 +649,36 @@ class SpaceStorageProject extends SpaceshipProject {
 
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
+    this.sanitizeTransferModes();
     this.getExpansionRecipeKey();
+  }
+
+  isWithdrawalDisabled() {
+    return this.isBooleanFlagSet('disableWithdrawal');
+  }
+
+  sanitizeTransferModes() {
+    if (!this.isWithdrawalDisabled()) return;
+
+    if (this.shipTransferMode !== 'store') {
+      this.shipTransferMode = 'store';
+    }
+    this.lastUniformTransferMode = 'store';
+    this.resourceTransferModes = {};
+
+    if (!Array.isArray(this.pendingTransfers) || this.pendingTransfers.length === 0) {
+      return;
+    }
+
+    this.pendingTransfers = this.pendingTransfers.filter(transfer => transfer?.mode !== 'withdraw');
+    if (this.pendingTransfers.length > 0) {
+      return;
+    }
+
+    this.shipOperationIsActive = false;
+    this.shipOperationIsPaused = false;
+    this.shipOperationRemainingTime = 0;
+    this.shipOperationStartingDuration = 0;
   }
 
   getUnlockedSelectedResources() {
@@ -660,6 +689,9 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getResourceTransferMode(resourceKey) {
+    if (this.isWithdrawalDisabled()) {
+      return 'store';
+    }
     const storedMode = this.resourceTransferModes[resourceKey];
     if (storedMode === 'store' || storedMode === 'withdraw') {
       return storedMode;
@@ -672,6 +704,9 @@ class SpaceStorageProject extends SpaceshipProject {
 
   setShipTransferMode(mode) {
     if (mode !== 'store' && mode !== 'withdraw' && mode !== 'mixed') return;
+    if (this.isWithdrawalDisabled() && mode !== 'store') {
+      mode = 'store';
+    }
     this.shipTransferMode = mode;
     if (mode === 'store' || mode === 'withdraw') {
       this.lastUniformTransferMode = mode;
@@ -681,10 +716,17 @@ class SpaceStorageProject extends SpaceshipProject {
 
   setResourceTransferMode(resourceKey, mode) {
     if (mode !== 'store' && mode !== 'withdraw') return;
+    if (this.isWithdrawalDisabled()) {
+      mode = 'store';
+    }
     this.resourceTransferModes[resourceKey] = mode;
   }
 
   updateShipTransferModeFromResources(resourceKeys) {
+    if (this.isWithdrawalDisabled()) {
+      this.setShipTransferMode('store');
+      return;
+    }
     const uniformMode = this.getResourceTransferMode(resourceKeys[0]);
     let mixed = false;
     for (let i = 1; i < resourceKeys.length; i += 1) {
@@ -1354,6 +1396,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (this.megaProjectSpaceOnlyOnTravel) {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
     }
+    this.sanitizeTransferModes();
     this.getExpansionRecipeKey();
   }
 
@@ -1488,6 +1531,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.shipOperationKesslerElapsed = ship.kesslerElapsed || 0;
     this.shipOperationKesslerPending = ship.kesslerPending === true;
     this.shipOperationKesslerCost = ship.kesslerCost || null;
+    this.sanitizeTransferModes();
     this.getExpansionRecipeKey();
     this.syncSpaceStorageResourceUnlocks();
     this.reconcileUsedStorage();
@@ -1542,6 +1586,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (this.megaProjectSpaceOnlyOnTravel) {
       this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
     }
+    this.sanitizeTransferModes();
     this.getExpansionRecipeKey();
     this.syncSpaceStorageResourceUnlocks();
     this.reconcileUsedStorage();

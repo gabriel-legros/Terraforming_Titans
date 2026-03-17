@@ -204,6 +204,116 @@ const wolfysNightmareOverrides = {
   }
 };
 
+const theRealPoseidonOverrides = {
+  name: 'TheRealPoseidon',
+  star: {
+    name: 'Nereid',
+    spectralType: 'K1V',
+    luminositySolar: 0.46,
+    massSolar: 0.84,
+    temperatureK: 5100,
+    habitableZone: { inner: 0.67, outer: 1.05 }
+  },
+  celestialParameters: {
+    distanceFromSun: 2.9,
+    gravity: 10.5,
+    hasNaturalMagnetosphere: true,
+    radius: 7600,
+    mass: 1.31e25,
+    albedo: 0.08,
+    rotationPeriod: 21.8,
+    spinPeriod: 21.8,
+    starLuminosity: 0.46,
+    coreHeatFlux: 250_000,
+    sector: 'R5-10'
+  },
+  visualization: {
+    baseColor: '#8b3c21',
+  },
+  effects: [
+    {
+      target: 'building',
+      targetId: 'foundry',
+      type: 'enable'
+    },
+    {
+      target: 'project',
+      targetId: 'spaceStorage',
+      type: 'booleanFlag',
+      flagId: 'disableWithdrawal',
+      onTravel: false,
+      value: true
+    }
+  ],
+  resources: {
+    surface: {
+      land: { initialValue: 72_500_000_000 },
+      liquidWater: { initialValue: 0 },
+      ice: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 72_500_000_000, maxDeposits: 72_500_000_000, areaTotal: 72500000000 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 1_001_000_000_000_000_000 },
+      atmosphericMethane: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 50_000_000_000_000_000 },
+      hydrogen: { initialValue: 0 },
+      sulfuricAcid: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    tropical: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    temperate: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    },
+    polar: {
+      liquidWater: 0,
+      ice: 0,
+      buriedIce: 0,
+      dryIce: 0,
+      buriedDryIce: 0,
+      liquidCO2: 0,
+      biomass: 0,
+      hazardousBiomass: 0,
+      liquidMethane: 0,
+      hydrocarbonIce: 0,
+      buriedHydrocarbonIce: 0
+    }
+  },
+  zonalTemperatures: null
+};
+
 const sculkBioworldOverrides = {
   name: 'Sculkia-1c',
   gravityPenaltyEnabled: true,
@@ -609,6 +719,28 @@ const specialSeedDefinitions = {
       }
     ],
     overrides: wolfysNightmareOverrides
+  },
+  therealposeidon: {
+    key: 'therealposeidon',
+    seed: 'TheRealPoseidon',
+    name: 'TheRealPoseidon',
+    replayable: true,
+    target: 'planet',
+    archetype: 'molten',
+    orbitPreset: 'outer',
+    specialEffects: [
+      {
+        id: 'steam-atmosphere',
+        label: 'Steam Atmosphere',
+        description: 'Uses Poseidon parameters, but all starting carbon dioxide is replaced with water vapour.'
+      },
+      {
+        id: 'space-storage-no-withdrawal',
+        label: 'No Space Withdrawal',
+        description: 'Space Storage cannot withdraw any resources on this world.'
+      }
+    ],
+    overrides: theRealPoseidonOverrides
   },
   sculkbioworld: {
     key: 'sculkbioworld',

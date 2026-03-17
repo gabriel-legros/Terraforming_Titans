@@ -829,6 +829,7 @@ function renderSpaceStorageUI(project, container) {
   storeButton.classList.add('mode-button');
 
   const updateModeButtons = () => {
+    const withdrawalDisabled = project.isWithdrawalDisabled && project.isWithdrawalDisabled();
     if (project.shipTransferMode === 'withdraw') {
       withdrawButton.classList.add('selected');
       mixedButton.classList.remove('selected');
@@ -842,6 +843,10 @@ function renderSpaceStorageUI(project, container) {
       withdrawButton.classList.remove('selected');
       mixedButton.classList.remove('selected');
     }
+    withdrawButton.disabled = withdrawalDisabled;
+    mixedButton.disabled = withdrawalDisabled;
+    withdrawButton.title = withdrawalDisabled ? 'Withdrawal disabled on this world' : '';
+    mixedButton.title = withdrawalDisabled ? 'Withdrawal disabled on this world' : '';
   };
 
   withdrawButton.addEventListener('click', () => {
@@ -1035,11 +1040,15 @@ function updateSpaceStorageUI(project) {
       project.getResourceTransferMode('liquidWater') === 'withdraw' ? '' : 'none';
   }
   if (els.transferButtons) {
+    const withdrawalDisabled = project.isWithdrawalDisabled && project.isWithdrawalDisabled();
     storageResourceOptions.forEach(opt => {
       const button = els.transferButtons[opt.resource];
       const icon = els.transferIcons[opt.resource];
       const tooltip = els.transferTooltips[opt.resource];
       const mode = project.getResourceTransferMode(opt.resource);
+      if (button) {
+        button.disabled = withdrawalDisabled;
+      }
       if (mode === 'withdraw') {
         icon.innerHTML = '&#8595;&#xFE0E;';
         button.classList.add('withdraw');
@@ -1049,7 +1058,9 @@ function updateSpaceStorageUI(project) {
         icon.innerHTML = '&#8593;&#xFE0E;';
         button.classList.add('store');
         button.classList.remove('withdraw');
-        tooltip.textContent = 'Store in space storage';
+        tooltip.textContent = withdrawalDisabled
+          ? 'Withdrawal disabled on this world'
+          : 'Store in space storage';
       }
     });
   }
