@@ -1024,6 +1024,10 @@ function drawSingle(seed, options) {
 function attachEquilibrateHandler(res, sStr, archetype, box) {
   // Attach equilibrate handler if available
   const eqBtn = document.getElementById('rwg-equilibrate-btn');
+  if (resultSkipsEquilibration(res) && eqBtn) {
+    eqBtn.disabled = true;
+    return;
+  }
   if (eqBtn && typeof runEquilibration === 'function') {
     eqBtn.onclick = async () => {
       const prevSpeed = typeof getGameSpeed === 'function' ? getGameSpeed() : 1;
@@ -1279,6 +1283,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
   const replayAllowed = isReplayableSeedResult(res);
   const eqState = getRandomWorldEquilibrationState(seedUsed, res.seedString, isSpecialSeedResult(res), resultSkipsEquilibration(res));
+  const equilibrateDisabled = eqState.skipEquilibration;
   const alreadyTerraformed = (res.seedString && sm?.isSeedTerraformed)
     ? sm.isSeedTerraformed(res.seedString)
     : (seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false);
@@ -1318,7 +1323,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     <div class="rwg-card">
       <h3>${res.merged?.name || 'Generated World'}</h3>
       <div class="rwg-control-row">
-        <button id="rwg-equilibrate-btn" class="rwg-btn">Equilibrate</button>
+        <button id="rwg-equilibrate-btn" class="rwg-btn" ${equilibrateDisabled ? 'disabled' : ''}>Equilibrate</button>
         <span id="rwg-equilibrate-info" class="info-tooltip-icon">&#9432;</span>
         <button id="rwg-travel-btn" class="rwg-btn" ${travelDisabled ? 'disabled' : ''}>Travel</button>
       </div>
