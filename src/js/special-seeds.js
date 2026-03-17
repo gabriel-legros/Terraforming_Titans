@@ -241,7 +241,6 @@ const theRealPoseidonOverrides = {
       targetId: 'spaceStorage',
       type: 'booleanFlag',
       flagId: 'disableWithdrawal',
-      onTravel: false,
       value: true
     }
   ],
