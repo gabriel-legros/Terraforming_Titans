@@ -34,7 +34,7 @@ const K_CH4_ALB       = 0.2;     // how quickly CH4 haze brightening saturates
 
 const A_CALCITE_HEADROOM_MAX = 0.2; // calcite is a bright aerosol veil, not a full cloud deck
 const K_CALCITE_ALB  = 0.0001;          // saturates near τ_eff ≈ 1
-const CO2_HIGH_COLUMN_FACTOR = 0.94; // trims Venus-class CO2 slightly without materially changing Mars
+const CO2_HIGH_COLUMN_FACTOR = 0.97; // trims Venus-class CO2 slightly without materially changing Mars
 const OPTICS = {
   calcite: { omega0: 0.90, g: 0.70 } // bright & moderately forward-scattering
 };
