@@ -173,9 +173,9 @@ const RWG_EFFECTS = {
       effectId: "rwg-ammonia-life-points",
       target: "lifeDesigner",
       type: "lifeDesignPointBonus",
-      factor: 1,
+      factor: 2,
       computeValue(count, def) {
-        const f = def?.factor ?? 1;
+        const f = def?.factor ?? 2;
         return f * count;
       },
     },
