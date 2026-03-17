@@ -34,6 +34,7 @@ let rwgDominionLoreCloseBtnEl;
 let rwgDominionLoreItems = {};
 let rwgDominionLoreOrder = [];
 let rwgSelectedDominion = 'human';
+let rwgOrbitStateSignature = '';
 
 if (!globalThis.__rwgGravityHelpers) {
   globalThis.__rwgGravityHelpers = {};
@@ -532,6 +533,52 @@ function getTypeOrbitLockState(type, mgr) {
   };
 }
 
+function refreshOrbitSelectState(mgr) {
+  if (!rwgOrbitEl) return;
+
+  const selectedType = rwgTypeEl ? rwgTypeEl.value : 'auto';
+  const typeOrbitLock = selectedType && selectedType !== 'auto'
+    ? getTypeOrbitLockState(selectedType, mgr)
+    : { presets: [], excludedPresets: [] };
+  const allowedByType = typeOrbitLock.presets.length ? typeOrbitLock.presets : null;
+  const optionStates = Array.from(rwgOrbitEl.options).map((opt) => {
+    if (opt.value === 'auto') {
+      return { value: opt.value, disabled: false, text: opt.textContent };
+    }
+    const hardLocked = typeof mgr.isOrbitLocked === 'function' ? mgr.isOrbitLocked(opt.value) : false;
+    const typeLocked = !!(allowedByType
+      ? !allowedByType.includes(opt.value)
+      : typeOrbitLock.excludedPresets.includes(opt.value));
+    const locked = hardLocked || typeLocked;
+    const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '').replace('????', '').trim();
+    return {
+      value: opt.value,
+      base,
+      disabled: locked,
+      text: hardLocked ? '???? (Locked)' : (locked ? `${base} (Locked)` : base)
+    };
+  });
+  const signature = JSON.stringify(optionStates.map((state) => ({
+    value: state.value,
+    disabled: state.disabled,
+    text: state.text
+  })));
+  if (rwgOrbitStateSignature === signature) return;
+
+  rwgOrbitStateSignature = signature;
+  optionStates.forEach((state, index) => {
+    const opt = rwgOrbitEl.options[index];
+    if (!opt) return;
+    if (state.base) opt.dataset.baseText = state.base;
+    opt.disabled = state.disabled;
+    opt.textContent = state.text;
+  });
+  const selectedOption = Array.from(rwgOrbitEl.options).find((opt) => opt.value === rwgOrbitEl.value);
+  if (selectedOption && selectedOption.disabled) {
+    rwgOrbitEl.value = 'auto';
+  }
+}
+
 function encodeSeedOptions(seed, opts = {}) {
   const t = opts.target ?? 'auto';
   const ty = opts.type ?? 'auto';
@@ -614,6 +661,7 @@ function initializeRandomWorldUI() {
   rwgTargetEl = container.querySelector('#rwg-target');
   rwgTypeEl = container.querySelector('#rwg-type');
   rwgOrbitEl = container.querySelector('#rwg-orbit');
+  rwgOrbitStateSignature = '';
   rwgHazardEl = container.querySelector('#rwg-hazard');
   rwgHazardListEl = hazardList;
   rwgHazardItemsEl = hazardList.querySelector('#rwg-hazard-items');
@@ -810,20 +858,6 @@ function updateRandomWorldUI() {
     }
   }
 
-  if (rwgOrbitEl) {
-    Array.from(rwgOrbitEl.options).forEach(opt => {
-      if (opt.value === 'auto') return;
-      const locked = typeof mgr.isOrbitLocked === 'function' ? mgr.isOrbitLocked(opt.value) : false;
-      if (opt.disabled === locked) return; // No change needed
-
-      const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '');
-      opt.dataset.baseText = base;
-      const newText = locked ? '???? (Locked)' : base;
-      opt.disabled = locked;
-      opt.textContent = newText;
-    });
-  }
-
   if (rwgTypeEl) {
     Array.from(rwgTypeEl.options).forEach(opt => {
       if (opt.value === 'auto') return;
@@ -837,29 +871,7 @@ function updateRandomWorldUI() {
       opt.textContent = newText;
     });
   }
-  if (rwgOrbitEl) {
-    const selectedType = rwgTypeEl ? rwgTypeEl.value : 'auto';
-    const typeOrbitLock = selectedType && selectedType !== 'auto'
-      ? getTypeOrbitLockState(selectedType, mgr)
-      : { presets: [], excludedPresets: [] };
-    const allowedByType = typeOrbitLock.presets.length ? typeOrbitLock.presets : null;
-    Array.from(rwgOrbitEl.options).forEach(opt => {
-      if (opt.value === 'auto') return;
-      const hardLocked = typeof mgr.isOrbitLocked === 'function' ? mgr.isOrbitLocked(opt.value) : false;
-      const typeLocked = !!(allowedByType
-        ? !allowedByType.includes(opt.value)
-        : typeOrbitLock.excludedPresets.includes(opt.value));
-      const locked = hardLocked || typeLocked;
-      const base = opt.dataset.baseText || opt.textContent.replace(' (Locked)', '').replace('????', '').trim();
-      opt.dataset.baseText = base;
-      opt.disabled = locked;
-      opt.textContent = hardLocked ? '???? (Locked)' : (locked ? `${base} (Locked)` : base);
-    });
-    const selectedOption = Array.from(rwgOrbitEl.options).find((opt) => opt.value === rwgOrbitEl.value);
-    if (selectedOption && selectedOption.disabled) {
-      rwgOrbitEl.value = 'auto';
-    }
-  }
+  refreshOrbitSelectState(mgr);
   // Update the currently displayed world's travel lock/warning, if present
   try {
     const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
