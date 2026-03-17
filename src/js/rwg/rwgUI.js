@@ -789,12 +789,18 @@ function isSpecialSeedResult(result) {
     || result?.override?.rwgMeta?.specialSeedKey);
 }
 
+function resultSkipsEquilibration(result) {
+  return !!(result?.merged?.specialAttributes?.skipEquilibration
+    || result?.override?.specialAttributes?.skipEquilibration);
+}
+
 function writeResultDataset(box, result, seedUsed) {
   if (!box || !box.dataset) return;
   box.dataset.seedUsed = seedUsed;
   box.dataset.canonicalSeed = result?.seedString || '';
   box.dataset.allowReplay = isReplayableSeedResult(result) ? '1' : '0';
   box.dataset.specialSeed = isSpecialSeedResult(result) ? '1' : '0';
+  box.dataset.skipEquilibration = resultSkipsEquilibration(result) ? '1' : '0';
 }
 
 function hasFastTerraformEquilibrationBypass() {
@@ -808,14 +814,15 @@ function isRandomWorldEquilibrated(seedUsed, canonicalSeed) {
     || (canonicalSeed ? equilibratedWorlds.has(canonicalSeed) : false);
 }
 
-function getRandomWorldEquilibrationState(seedUsed, canonicalSeed, specialSeed) {
+function getRandomWorldEquilibrationState(seedUsed, canonicalSeed, specialSeed, skipEquilibration) {
   const fastestBypassUnlocked = hasFastTerraformEquilibrationBypass();
-  const bypassUnlocked = fastestBypassUnlocked && !specialSeed;
+  const bypassUnlocked = !!skipEquilibration || (fastestBypassUnlocked && !specialSeed);
   const eqDone = isRandomWorldEquilibrated(seedUsed, canonicalSeed);
   return {
     fastestBypassUnlocked,
     bypassUnlocked,
     specialSeed: !!specialSeed,
+    skipEquilibration: !!skipEquilibration,
     eqDone,
     satisfied: bypassUnlocked || eqDone
   };
@@ -833,7 +840,7 @@ function buildEquilibrateTooltipText() {
   const fastestRecordText = fastestTerraformRealSeconds === null
     ? 'none'
     : `${fastestTerraformRealSeconds.toFixed(2)}s`;
-  return `${RWG_EQUILIBRATE_TOOLTIP_TEXT}\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. Special seeds always require Equilibrate.\nCurrent Fastest Terraform (real time): ${fastestRecordText}.`;
+  return `${RWG_EQUILIBRATE_TOOLTIP_TEXT}\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. Special seeds require Equilibrate unless the seed explicitly skips it.\nCurrent Fastest Terraform (real time): ${fastestRecordText}.`;
 }
 
 function updateRandomWorldUI() {
@@ -881,8 +888,9 @@ function updateRandomWorldUI() {
       const seedUsed = rwgResultEl.dataset ? rwgResultEl.dataset.seedUsed : undefined;
       const canonicalSeed = rwgResultEl.dataset ? (rwgResultEl.dataset.canonicalSeed || rwgResultEl.dataset.seedString) : undefined;
       const specialSeed = rwgResultEl.dataset?.specialSeed === '1';
+      const skipEquilibration = rwgResultEl.dataset?.skipEquilibration === '1';
       const replayAllowed = rwgResultEl.dataset?.allowReplay === '1';
-      const eqState = getRandomWorldEquilibrationState(seedUsed, canonicalSeed, specialSeed);
+      const eqState = getRandomWorldEquilibrationState(seedUsed, canonicalSeed, specialSeed, skipEquilibration);
       const alreadyTerraformed = (canonicalSeed && typeof sm.isSeedTerraformed === 'function')
         ? sm.isSeedTerraformed(canonicalSeed)
         : (seedUsed && typeof sm.isSeedTerraformed === 'function' ? sm.isSeedTerraformed(seedUsed) : false);
@@ -920,7 +928,7 @@ function attachTravelHandler(res, sStr) {
   travelBtn.onclick = () => {
     const attemptTravel = (skipCurrentWorldWarnings) => {
       const canonical = res?.seedString || sStr;
-      const eqState = getRandomWorldEquilibrationState(sStr, canonical, isSpecialSeedResult(res));
+      const eqState = getRandomWorldEquilibrationState(sStr, canonical, isSpecialSeedResult(res), resultSkipsEquilibration(res));
       if (!eqState.satisfied) return;
       if (!isReplayableSeedResult(res) && spaceManager?.isSeedTerraformed && (spaceManager.isSeedTerraformed(canonical) || spaceManager.isSeedTerraformed(sStr))) return;
       if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
@@ -1270,7 +1278,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
 
   const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
   const replayAllowed = isReplayableSeedResult(res);
-  const eqState = getRandomWorldEquilibrationState(seedUsed, res.seedString, isSpecialSeedResult(res));
+  const eqState = getRandomWorldEquilibrationState(seedUsed, res.seedString, isSpecialSeedResult(res), resultSkipsEquilibration(res));
   const alreadyTerraformed = (res.seedString && sm?.isSeedTerraformed)
     ? sm.isSeedTerraformed(res.seedString)
     : (seedUsed && sm?.isSeedTerraformed ? sm.isSeedTerraformed(seedUsed) : false);

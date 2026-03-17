@@ -525,6 +525,9 @@ const sculkBioworldOverrides = {
 const earthOverrunOverrides = {
   name: 'EarthOverrun',
   gravityPenaltyEnabled: false,
+  specialAttributes: {
+    skipEquilibration: true
+  },
   effects: [
     {
       target: 'building',
@@ -552,7 +555,7 @@ const earthOverrunOverrides = {
         "initialValue": 1908006650400
       },
       "atmosphericWater": {
-        "initialValue": 23328126358241.12
+        "initialValue": 20641973960525.125
       },
       "atmosphericMethane": {
         "initialValue": 9882092383
@@ -573,14 +576,14 @@ const earthOverrunOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 552668186111523000,
+      "liquidWater": 552669147184915650,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
       "biomass": 0,
-      "hazardousBiomass": 2033907348855.9932,
+      "hazardousBiomass": 2033907348855.2986,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -592,14 +595,14 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 718382916670420100,
+      "liquidWater": 718384090511009500,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
       "biomass": 0,
-      "hazardousBiomass": 2643759309180.222,
+      "hazardousBiomass": 2643759309179.394,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -611,14 +614,14 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 2.623175757184798e-89,
-      "ice": 114992143187773180,
+      "liquidWater": 2.5585352222135616e-89,
+      "ice": 114992694426191060,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
       "biomass": 0,
-      "hazardousBiomass": 423053336967.97546,
+      "hazardousBiomass": 423053336967.83344,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -632,19 +635,19 @@ const earthOverrunOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 295.6199478829869,
-      "day": 295.77843475472804,
-      "night": 295.4614610112457
+      "value": 293.3443243228997,
+      "day": 293.4866387752018,
+      "night": 293.2020098705976
     },
     "temperate": {
-      "value": 290.63424990930633,
-      "day": 290.7660437884442,
-      "night": 290.50245603016845
+      "value": 288.3969716248327,
+      "day": 288.51531686167954,
+      "night": 288.27862638798587
     },
     "polar": {
-      "value": 265.20966532166443,
-      "day": 266.63005824841525,
-      "night": 263.7892723949136
+      "value": 263.1387153270095,
+      "day": 264.41477710829076,
+      "night": 261.8626535457282
     }
   },
   hazards: {
