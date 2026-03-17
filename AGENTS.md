@@ -148,6 +148,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Atmospheric layer boundaries now use exobase-relative heights for monotonic drag behavior.
 - Water vapor saturation effects now reduce effective pressure, with cold trapping on cold worlds.
 - Condensation/precipitation now includes a simple uplift-based saturation cap (adiabatic cooling to a representative lifted pressure), allowing condensation even when the surface is unsaturated.
+- Cloud albedo now layers water, methane, sulfuric-acid, haze, and calcite reflectivity multiplicatively instead of summing cloud sources into one bucket; water-cloud coverage was retuned upward so Earth-like seeds stay near `0.30` Bond albedo while Venus keeps its high sulfuric-cloud albedo.
 - Greenhouse optical depth now weakens on very hot worlds based on pre-greenhouse radiative equilibrium temperature and also soft-caps to a temperature-dependent maximum, preventing runaway near-IR trapping while preserving existing Mars/Venus/Titan balance.
 - Temperature-based maintenance penalties now rise linearly above 373.15 K, then switch to exponential growth beginning at 973.15 K, doubling every 100 K and capping at `1e9`; on worlds above 1 atm, mitigated building maintenance and aerostat colony maintenance cannot drop below the dry-adiabatic 1 atm temperature penalty floor.
 - Celestial parameters can now set `coreHeatFlux` in W/m^2; temperature treats it as a flat global surface heat source and the temperature UI shows it when present.

@@ -547,101 +547,104 @@ const earthOverrunOverrides = {
       ore: { initialValue: 15_000, maxDeposits: 150_000, areaTotal: 200_000_000 },
       geothermal: { initialValue: 10_000, maxDeposits: 20_000, areaTotal: 20_000_000 }
     },
-    atmospheric: {
-      carbonDioxide: { initialValue: 1.9080066504e12 },
-      inertGas: { initialValue: 4.1120010538e15 },
-      oxygen: { initialValue: 1.1094770749e15 },
-      atmosphericWater: { initialValue: 6.6574096054e13 },
-      atmosphericMethane: { initialValue: 9.882092383e9 },
-      atmosphericAmmonia: { initialValue: 520110.125421 },
-      hydrogen: { initialValue: 260055062.71 },
-      sulfuricAcid: { initialValue: 0 },
-      greenhouseGas: { initialValue: 0 }
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 1908006650400
+      },
+      "atmosphericWater": {
+        "initialValue": 23328126358241.12
+      },
+      "atmosphericMethane": {
+        "initialValue": 9882092383
+      },
+      "oxygen": {
+        "initialValue": 1109477074900000
+      },
+      "inertGas": {
+        "initialValue": 4112001053800000
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
     }
   },
-  zonalSurface: {
-    tropical: {
-      liquidWater: 0.693e18,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidAmmonia: 0,
-      ammoniaIce: 0,
-      buriedAmmoniaIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 552668186111523000,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 2033907348855.9932,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    temperate: {
-      liquidWater: 0.5544e18,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidAmmonia: 0,
-      ammoniaIce: 0,
-      buriedAmmoniaIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+    "temperate": {
+      "liquidWater": 718382916670420100,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 2643759309180.222,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     },
-    polar: {
-      liquidWater: 0.1386e18,
-      ice: 0,
-      buriedIce: 0,
-      dryIce: 0,
-      buriedDryIce: 0,
-      liquidCO2: 0,
-      biomass: 0,
-      hazardousBiomass: 0,
-      liquidMethane: 0,
-      hydrocarbonIce: 0,
-      buriedHydrocarbonIce: 0,
-      liquidAmmonia: 0,
-      ammoniaIce: 0,
-      buriedAmmoniaIce: 0,
-      liquidOxygen: 0,
-      oxygenIce: 0,
-      buriedOxygenIce: 0,
-      liquidNitrogen: 0,
-      nitrogenIce: 0,
-      buriedNitrogenIce: 0
+    "polar": {
+      "liquidWater": 2.623175757184798e-89,
+      "ice": 114992143187773180,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "biomass": 0,
+      "hazardousBiomass": 423053336967.97546,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
     }
   },
-  zonalTemperatures: {
-    tropical: {
-      value: 301,
-      day: 302,
-      night: 299
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 295.6199478829869,
+      "day": 295.77843475472804,
+      "night": 295.4614610112457
     },
-    temperate: {
-      value: 288,
-      day: 290,
-      night: 286
+    "temperate": {
+      "value": 290.63424990930633,
+      "day": 290.7660437884442,
+      "night": 290.50245603016845
     },
-    polar: {
-      value: 283,
-      day: 285,
-      night: 281
+    "polar": {
+      "value": 265.20966532166443,
+      "day": 266.63005824841525,
+      "night": 263.7892723949136
     }
   },
   hazards: {

@@ -32,8 +32,9 @@ const ALBEDO_SOFTCAP_K = 2.0;
 const A_HAZE_CH4_MAX  = 0.25; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
 const K_CH4_ALB       = 0.2;     // how quickly CH4 haze brightening saturates
 
-const A_CALCITE_HEADROOM_MAX = 0.5; // calcite can add up to +0.5 in the limit
+const A_CALCITE_HEADROOM_MAX = 0.2; // calcite is a bright aerosol veil, not a full cloud deck
 const K_CALCITE_ALB  = 0.0001;          // saturates near τ_eff ≈ 1
+const CO2_HIGH_COLUMN_FACTOR = 0.94; // trims Venus-class CO2 slightly without materially changing Mars
 const OPTICS = {
   calcite: { omega0: 0.90, g: 0.70 } // bright & moderately forward-scattering
 };
@@ -53,6 +54,31 @@ function tauEff(tau, {omega0, g}) {
 
 function hazeCoverageFromTau(tau) {
   return 1 - Math.exp(-K_HAZE_COVERAGE * Math.max(0, tau));
+}
+
+function computeCloudSpeciesLayer(spec, pBar, mix) {
+  if (!spec || !(mix > 0)) {
+    return {
+      cf: 0,
+      aGas: 0,
+      coverageRatio: 0,
+      layerReflectivity: 0
+    };
+  }
+
+  const availability = Math.min(1, mix / spec.refMix);
+  const cf = spec.cfMax * (1 - Math.exp(-pBar / spec.pScale)) * availability;
+  const aGas = spec.aBase + spec.aVar * Math.tanh(pBar / (2 * spec.pScale));
+  const coverageRatio = spec.cfMax > 0 ? Math.max(0, Math.min(1, cf / spec.cfMax)) : 0;
+  const exponent = spec.coverageExponent || 1;
+  const layerReflectivity = Math.max(0, Math.min(1, spec.layerMax * Math.pow(coverageRatio, exponent)));
+
+  return {
+    cf,
+    aGas,
+    coverageRatio,
+    layerReflectivity
+  };
 }
 
 function calculateAtmosphericPressure(mass, gravity, radius) {
@@ -200,7 +226,7 @@ const BETA  = 0.55;              // was 0.6 in old pressure law
 
 // Keep original strengths EXCEPT water (we tune only H2O)
 const GAMMA = {
-  h2o           : 20,
+  h2o           : 28,
   co2           : 10.0,
   ch4           : 22.0,
   greenhousegas : 2500.0
@@ -215,11 +241,13 @@ const SAT_EXP = { ch4: 1.0};    // exponent n_i
     cfMax   – maximum cloud-fraction achievable
     pScale  – pressure scale (bar) for cloud build-up
     aBase   – core albedo of an optically thick deck
-    aVar    – extra brightening with pressure          */
+    aVar    – extra brightening with pressure
+    layerMax – max effective planetary reflectivity from this cloud species
+    coverageExponent – curve for approaching layerMax as coverage saturates */
 const CLOUD_SPEC = {
-  h2o  : { refMix: 0.01, cfMax: 0.50, pScale: 0.8, aBase: 0.60, aVar: 0.18 },
-  ch4  : { refMix: 0.02, cfMax: 0.10, pScale: 2.0, aBase: 0.60, aVar: 0.10 },
-  h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 5.0, aBase: 0.715, aVar: 0.05 }
+  h2o  : { refMix: 0.0045, cfMax: 0.78, pScale: 0.6, aBase: 0.60, aVar: 0.10, layerMax: 0.30, coverageExponent: 1.5 },
+  ch4  : { refMix: 0.02, cfMax: 0.14, pScale: 2.5, aBase: 0.58, aVar: 0.08, layerMax: 0.10, coverageExponent: 1.2 },
+  h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 11.0, aBase: 0.72, aVar: 0.03, layerMax: 0.75, coverageExponent: 1.0 }
 };
 
 const DEFAULT_SURFACE_ALBEDO = {
@@ -270,7 +298,7 @@ function opticalDepth(comp, pBar, gSurface) {
         tau_i = G * Math.pow(R, BETA);
       }
       else{
-        tau_i = G * (Math.pow(saturationThreshold, BETA) + Math.pow(R - saturationThreshold,0.9));
+        tau_i = G * (Math.pow(saturationThreshold, BETA) + CO2_HIGH_COLUMN_FACTOR * Math.pow(R - saturationThreshold,0.9));
       }
     }
     else  {
@@ -304,22 +332,21 @@ function opticalDepthSW(composition, pBar, gSurface, aerosols = {}) {
 
 // ===== Clouds only (no haze) ========================================
 function cloudPropsOnly(pBar, comp = {}) {
-  let cfTot = 0;
+  let cfRemaining = 1;
   let aCloudWeighted = 0;
+  let cfWeight = 0;
   for (const gas in CLOUD_SPEC) {
     const spec = CLOUD_SPEC[gas];
     const mix  = comp[gas] || 0; // mass fraction
     if (mix <= 0) continue;
 
-    const availability = Math.min(1, mix / spec.refMix);
-    const cf = spec.cfMax * (1 - Math.exp(-pBar / spec.pScale)) * availability;
-    const aGas = spec.aBase + spec.aVar * Math.tanh(pBar / (2 * spec.pScale));
-
-    aCloudWeighted += cf * aGas;
-    cfTot          += cf;
+    const layer = computeCloudSpeciesLayer(spec, pBar, mix);
+    aCloudWeighted += layer.cf * layer.aGas;
+    cfWeight += layer.cf;
+    cfRemaining *= (1 - Math.max(0, Math.min(1, layer.cf)));
   }
-  const cfCloud = Math.min(0.99, cfTot);
-  const aCloud  = cfTot > 0 ? aCloudWeighted / cfTot : 0;
+  const cfCloud = Math.min(0.99, 1 - cfRemaining);
+  const aCloud  = cfWeight > 0 ? aCloudWeighted / cfWeight : 0;
   return { cfCloud, aCloud };
 }
 
@@ -351,26 +378,27 @@ function calculateCloudAlbedoContributions({
 
   // Clouds by gas
   const cloudByGas = {};
-  let cfTot = 0;
+  let cfRemaining = 1;
   let aCloudWeighted = 0;
+  let cfWeight = 0;
+  let cloudRemaining = 1;
   for (const gas in CLOUD_SPEC) {
     const spec = CLOUD_SPEC[gas];
     const mix = comp[gas] || 0;
     if (mix <= 0) continue;
 
-    const availability = Math.min(1, mix / spec.refMix);
-    const cf = spec.cfMax * (1 - Math.exp(-pBar / spec.pScale)) * availability;
-    const aGas = spec.aBase + spec.aVar * Math.tanh(pBar / (2 * spec.pScale));
-    const contribution = cf * aGas;
-    if (contribution > 0) {
-      cloudByGas[gas] = contribution;
+    const layer = computeCloudSpeciesLayer(spec, pBar, mix);
+    if (layer.layerReflectivity > 0) {
+      cloudByGas[gas] = layer.layerReflectivity;
     }
-    cfTot += cf;
-    aCloudWeighted += cf * aGas;
+    cfRemaining *= (1 - Math.max(0, Math.min(1, layer.cf)));
+    cloudRemaining *= (1 - Math.max(0, Math.min(1, layer.layerReflectivity)));
+    aCloudWeighted += layer.cf * layer.aGas;
+    cfWeight += layer.cf;
   }
-  const cloudTotal = Math.max(0, Math.min(1, Object.values(cloudByGas).reduce((sum, v) => sum + v, 0)));
-  const cfCloud = Math.min(0.99, cfTot);
-  const aCloud = cfTot > 0 ? aCloudWeighted / cfTot : 0;
+  const cloudTotal = Math.max(0, Math.min(1, 1 - cloudRemaining));
+  const cfCloud = Math.min(0.99, 1 - cfRemaining);
+  const aCloud = cfWeight > 0 ? aCloudWeighted / cfWeight : 0;
   const layerReflectivity = 1 - (1 - hazeRaw) * (1 - calciteRaw) * (1 - cloudTotal);
 
   return {

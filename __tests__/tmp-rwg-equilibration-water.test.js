@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const { JSDOM, ResourceLoader } = require('jsdom');
 
@@ -6,6 +7,7 @@ const runIt = shouldRunTempTest ? it : it.skip;
 
 const SEED = process.env.TEMP_EQ_SEED || '1982065114|planet|icy-moon|hz-mid';
 const FULL_TIMER_MS = 90_000;
+const OVERRIDE_OUT_PATH = process.env.TEMP_EQ_WRITE_OVERRIDE || '';
 
 class GameResourceLoader extends ResourceLoader {
   fetch(url, options) {
@@ -173,6 +175,36 @@ function getTotalWater(override) {
     + getResourceValue(override, 'atmospheric', 'atmosphericWater');
 }
 
+function summarizeClimate(window, override) {
+  const atmo = override?.resources?.atmospheric || {};
+  const totalAtmosphere = Object.values(atmo).reduce((sum, entry) => {
+    const value = Number.isFinite(entry?.initialValue) ? entry.initialValue : 0;
+    return sum + value;
+  }, 0);
+  const composition = {};
+  if (totalAtmosphere > 0) {
+    if (atmo.carbonDioxide?.initialValue > 0) composition.co2 = atmo.carbonDioxide.initialValue / totalAtmosphere;
+    if (atmo.atmosphericWater?.initialValue > 0) composition.h2o = atmo.atmosphericWater.initialValue / totalAtmosphere;
+    if (atmo.atmosphericMethane?.initialValue > 0) composition.ch4 = atmo.atmosphericMethane.initialValue / totalAtmosphere;
+    if (atmo.hydrogen?.initialValue > 0) composition.h2 = atmo.hydrogen.initialValue / totalAtmosphere;
+    if (atmo.sulfuricAcid?.initialValue > 0) composition.h2so4 = atmo.sulfuricAcid.initialValue / totalAtmosphere;
+  }
+  const gravity = override?.celestialParameters?.gravity;
+  const radius = override?.celestialParameters?.radius;
+  const baseAlbedo = override?.celestialParameters?.albedo;
+  const pressureBar = window.calculateAtmosphericPressure(totalAtmosphere, gravity, radius) / 100000;
+  const albedoResult = window.calculateActualAlbedoPhysics(baseAlbedo, pressureBar, composition, gravity, {});
+  return {
+    actualAlbedo: albedoResult.albedo,
+    cloudFraction: albedoResult.cfCloud,
+    hazeFraction: albedoResult.cfHaze,
+    pressureBar,
+    composition,
+    finalTemps: override?.finalTemps || null,
+    zonalTemperatures: override?.zonalTemperatures || null
+  };
+}
+
 function resolveWorldStar(res) {
   const source = (res && res.star) || ((res && res.override) ? res.override.star : null) || {};
   const mergedCelestial = (res && res.merged && res.merged.celestialParameters) || {};
@@ -239,10 +271,21 @@ describe('TEMP RWG equilibration water totals', () => {
       });
       const elapsedMs = Date.now() - startedAt;
       const finalTotalWater = getTotalWater(result.override);
+      const rawSummary = summarizeClimate(window, eqInput);
+      const equilibratedSummary = summarizeClimate(window, result.override);
 
       console.log(
         `[TEMP_EQ_WATER] seed=${SEED} initialTotalWater=${initialTotalWater} finalTotalWater=${finalTotalWater} elapsedMs=${elapsedMs}`
       );
+      console.log(
+        `[TEMP_EQ_SUMMARY] ${JSON.stringify({ seed: SEED, raw: rawSummary, equilibrated: equilibratedSummary })}`
+      );
+
+      if (OVERRIDE_OUT_PATH) {
+        const outputPath = path.resolve(OVERRIDE_OUT_PATH);
+        fs.writeFileSync(outputPath, JSON.stringify(result.override, null, 2));
+        console.log(`[TEMP_EQ_OVERRIDE] seed=${SEED} path=${outputPath}`);
+      }
 
       expect(Number.isFinite(initialTotalWater)).toBe(true);
       expect(Number.isFinite(finalTotalWater)).toBe(true);
