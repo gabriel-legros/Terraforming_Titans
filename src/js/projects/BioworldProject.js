@@ -8,6 +8,7 @@
   } catch (error) {}
 
   const EVOLUTION_POINT_DIVISOR = 1e12;
+  const EVOLUTION_POINT_GAIN_MULTIPLIER = 1.5;
   const MAX_EVOLUTION_UPGRADES = 400;
   const MAX_BIOWORKERS_UPGRADES = 200;
   const MAX_LIFE_POINT_GAIN_UPGRADES = 900;
@@ -76,7 +77,7 @@
         pointsLabel: 'Evolution Points:',
         pointsUnit: 'EP',
         shopTitle: 'Evolution Shop',
-        shopTooltip: 'You gain evolution points when travelling after completing this project: 2*log10(total biomass / 1T) + 1, then +10% per hazard on this world.',
+        shopTooltip: 'You gain evolution points when travelling after completing this project: 1.5 * (2*log10(total biomass / 1T) + 1), then +10% per hazard on this world.',
         emptyShopText: '',
         shopItems: BIOWORLD_SHOP_ITEMS,
         shopItemMap: BIOWORLD_SHOP_ITEM_MAP,
@@ -99,7 +100,7 @@
 
     getEvolutionPointGain(totalBiomass) {
       const normalized = Math.max(totalBiomass / EVOLUTION_POINT_DIVISOR, 1);
-      return (Math.log10(normalized) * 2) + 1;
+      return (((Math.log10(normalized) * 2) + 1) * EVOLUTION_POINT_GAIN_MULTIPLIER);
     }
 
     getTravelPointGain() {
