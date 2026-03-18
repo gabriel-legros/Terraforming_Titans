@@ -87,7 +87,7 @@
       data[idx] = 255;
       data[idx + 1] = 255;
       data[idx + 2] = 255;
-      data[idx + 3] = Math.max(0, Math.min(255, Math.round(215 * alphaBase * density * bandMask)));
+      data[idx + 3] = Math.max(0, Math.min(255, Math.round(190 * alphaBase * density * bandMask)));
     }
     for (let y = 0; y < h; y++) {
       const row = y * w * 4;
