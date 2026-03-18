@@ -67,9 +67,11 @@ function computeCloudSpeciesLayer(spec, pBar, mix) {
   }
 
   const availability = Math.min(1, mix / spec.refMix);
-  const cf = spec.cfMax * (1 - Math.exp(-pBar / spec.pScale)) * availability;
+  const pressureFactor = 1 - Math.exp(-pBar / spec.pScale);
+  const fractionExponent = spec.fractionExponent || 1;
+  const cf = spec.cfMax * pressureFactor * Math.pow(availability, fractionExponent);
   const aGas = spec.aBase + spec.aVar * Math.tanh(pBar / (2 * spec.pScale));
-  const coverageRatio = spec.cfMax > 0 ? Math.max(0, Math.min(1, cf / spec.cfMax)) : 0;
+  const coverageRatio = Math.max(0, Math.min(1, pressureFactor * availability));
   const exponent = spec.coverageExponent || 1;
   const layerReflectivity = Math.max(0, Math.min(1, spec.layerMax * Math.pow(coverageRatio, exponent)));
 
@@ -242,12 +244,13 @@ const SAT_EXP = { ch4: 1.0};    // exponent n_i
     pScale  – pressure scale (bar) for cloud build-up
     aBase   – core albedo of an optically thick deck
     aVar    – extra brightening with pressure
+    fractionExponent – lets thin clouds spread in coverage before they become a bright global deck
     layerMax – max effective planetary reflectivity from this cloud species
     coverageExponent – curve for approaching layerMax as coverage saturates */
 const CLOUD_SPEC = {
-  h2o  : { refMix: 0.0045, cfMax: 0.78, pScale: 0.6, aBase: 0.60, aVar: 0.10, layerMax: 0.30, coverageExponent: 1.5 },
+  h2o  : { refMix: 0.007, cfMax: 0.99, pScale: 0.6, aBase: 0.69, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.76, coverageExponent: 1.6 },
   ch4  : { refMix: 0.02, cfMax: 0.14, pScale: 2.5, aBase: 0.58, aVar: 0.08, layerMax: 0.10, coverageExponent: 1.2 },
-  h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 11.0, aBase: 0.72, aVar: 0.03, layerMax: 0.75, coverageExponent: 1.0 }
+  h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 11.0, aBase: 0.71, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.76, coverageExponent: 1.6 }
 };
 
 const DEFAULT_SURFACE_ALBEDO = {
