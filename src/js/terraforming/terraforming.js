@@ -977,7 +977,7 @@ class Terraforming extends EffectableEntity{
       this.luminosity.cloudHazeRaw = Number.isFinite(albRes.cloudHazeRaw)
         ? albRes.cloudHazeRaw
         : albRes.penalty;
-      this.luminosity.albedo = this.luminosity.surfaceAlbedo;
+      this.luminosity.albedo = this.luminosity.actualAlbedo;
       this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
     }
 
