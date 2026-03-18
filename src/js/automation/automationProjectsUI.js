@@ -313,7 +313,7 @@ function updateProjectsAutomationUI() {
 
   const presets = automation.presets.slice();
   const combinations = automation.getCombinations();
-  const automatableProjects = getAutomatableProjects();
+  const automatableProjects = getAutomatableProjects(projectAutomationUIState.builderSelectedProjects);
   const automatableProjectLookup = {};
   automatableProjects.forEach(project => {
     automatableProjectLookup[project.name] = project;
@@ -779,7 +779,7 @@ function attachProjectsAutomationHandlers() {
 
   projectsBuilderAddCategoryButton.addEventListener('click', () => {
     const selectedCategory = projectsBuilderCategorySelect.value || 'all';
-    const projects = getAutomatableProjects();
+    const projects = getAutomatableProjects(projectAutomationUIState.builderSelectedProjects);
     const additions = projects.filter(project => (
       selectedCategory === 'all' || (project.category || 'general') === selectedCategory
     ));
@@ -809,7 +809,7 @@ function attachProjectsAutomationHandlers() {
     const includeOperations = type === 'operations' || type === 'both';
     const scopeAll = projectAutomationUIState.builderScope === 'all';
     const projectIds = scopeAll
-      ? getAutomatableProjects().map(project => project.name)
+      ? getAutomatableProjects(projectAutomationUIState.builderSelectedProjects).map(project => project.name)
       : projectAutomationUIState.builderSelectedProjects.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {
@@ -951,7 +951,7 @@ function attachProjectsAutomationHandlers() {
   });
 }
 
-function getAutomatableProjects() {
+function getAutomatableProjects(extraProjectIds = []) {
   const projects = [];
   const seen = {};
   const order = Array.isArray(projectManager.projectOrder)
@@ -964,7 +964,7 @@ function getAutomatableProjects() {
     if (!project || project.category === 'story') {
       return;
     }
-    if (automation && !automation.shouldShowProjectInAutomation(project)) {
+    if (automation && !automation.shouldShowProjectInAutomation(project, extraProjectIds)) {
       return;
     }
     if (project.name === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID) {
@@ -998,7 +998,7 @@ function getAutomatableProjects() {
     if (!project || project.category === 'story' || seen[project.name]) {
       continue;
     }
-    if (automation && !automation.shouldShowProjectInAutomation(project)) {
+    if (automation && !automation.shouldShowProjectInAutomation(project, extraProjectIds)) {
       continue;
     }
     seen[project.name] = true;
@@ -1032,3 +1032,11 @@ function getProjectAutomationCategories(projects) {
   });
   return Array.from(categorySet);
 }
+
+try {
+  module.exports = {
+    getAutomatableProjects,
+    getAutomatableProjectDisplayName,
+    getProjectAutomationCategories
+  };
+} catch (error) {}

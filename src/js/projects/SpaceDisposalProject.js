@@ -208,9 +208,31 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return this.disposalTargets.filter(target => target.autoStart && target.selectedDisposalResource);
   }
 
+  canTargetStart(target) {
+    if (!this.canTargetRun(target)) {
+      return false;
+    }
+
+    const selection = target.selectedDisposalResource;
+    const available = resources[selection.category][selection.resource].value;
+    if (target.waitForCapacity) {
+      const key = `${selection.category}:${selection.resource}`;
+      const requirements = this.getTargetWaitRequirementMap([target], 1);
+      return available >= (requirements[key] || 0);
+    }
+
+    return this.getTargetClampedDisposalAmount(
+      target,
+      this.getShipCapacity(),
+      selection.category,
+      selection.resource,
+      available
+    ) > 0;
+  }
+
   getRunnableTargets() {
     const autoTargets = this.getAutoStartTargets();
-    return autoTargets.filter(target => this.canTargetRun(target));
+    return autoTargets.filter(target => this.canTargetStart(target));
   }
 
   getDisposalTargetsForDisplay() {
@@ -317,10 +339,12 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     if (!this.canTargetRun(target)) {
       return 'Blocked';
     }
-    if (!activeTargets.length) {
-      return 'Waiting';
+    for (let i = 0; i < activeTargets.length; i += 1) {
+      if (activeTargets[i].id === target.id) {
+        return 'Active';
+      }
     }
-    return 'Active';
+    return 'Waiting';
   }
 
   getTargetStatusDetail(target) {

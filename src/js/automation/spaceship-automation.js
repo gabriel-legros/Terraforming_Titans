@@ -13,6 +13,7 @@ class SpaceshipAutomation {
     this.presets = [];
     this.activePresetId = null;
     this.disabledProjects = new Set();
+    this.seenProjectTargets = new Set();
     this.collapsed = false;
     this.nextPresetId = 1;
     this.elapsed = 0;
@@ -363,6 +364,70 @@ class SpaceshipAutomation {
     return Object.values(projectManager.projects).filter(project => project instanceof SpaceshipProject);
   }
 
+  getProjectTargetById(projectId) {
+    if (!projectId || projectId === this.getMassDriverAutomationId() || projectId === 'unassignedShips') {
+      return null;
+    }
+    const project = projectManager?.projects?.[projectId];
+    return project instanceof SpaceshipProject ? project : null;
+  }
+
+  recordProjectTarget(projectId) {
+    const project = this.getProjectTargetById(projectId);
+    if (!project) {
+      return false;
+    }
+    this.seenProjectTargets.add(project.name);
+    return true;
+  }
+
+  recordCurrentlyAvailableTargets() {
+    const projects = this.getSpaceshipProjects();
+    for (let index = 0; index < projects.length; index += 1) {
+      const project = projects[index];
+      if (projectManager?.isProjectRelevantToCurrentPlanet && !projectManager.isProjectRelevantToCurrentPlanet(project)) {
+        continue;
+      }
+      this.recordProjectTarget(project.name);
+    }
+  }
+
+  getSeenProjectTargetIdSet(extraProjectIds = []) {
+    const seen = new Set();
+
+    this.seenProjectTargets.forEach((projectId) => {
+      seen.add(projectId);
+    });
+
+    for (let presetIndex = 0; presetIndex < this.presets.length; presetIndex += 1) {
+      const preset = this.presets[presetIndex];
+      const steps = Array.isArray(preset.steps) ? preset.steps : [];
+      for (let stepIndex = 0; stepIndex < steps.length; stepIndex += 1) {
+        const entries = Array.isArray(steps[stepIndex].entries) ? steps[stepIndex].entries : [];
+        for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+          const projectId = entries[entryIndex].projectId;
+          if (projectId && projectId !== this.getMassDriverAutomationId() && projectId !== 'unassignedShips') {
+            seen.add(projectId);
+          }
+        }
+      }
+    }
+
+    const extras = Array.isArray(extraProjectIds) ? extraProjectIds : [];
+    for (let index = 0; index < extras.length; index += 1) {
+      const projectId = extras[index];
+      if (projectId && projectId !== this.getMassDriverAutomationId() && projectId !== 'unassignedShips') {
+        seen.add(projectId);
+      }
+    }
+
+    return seen;
+  }
+
+  hasSeenProjectTarget(projectId, extraProjectIds = []) {
+    return this.getSeenProjectTargetIdSet(extraProjectIds).has(projectId);
+  }
+
   getUnassignedTarget() {
     return {
       name: 'unassignedShips',
@@ -375,10 +440,35 @@ class SpaceshipAutomation {
     };
   }
 
-  getAutomationTargets() {
-    const projects = this.getSpaceshipProjects().filter(project => {
-      return !projectManager?.isProjectRelevantToCurrentPlanet || projectManager.isProjectRelevantToCurrentPlanet(project);
-    });
+  getAutomationTargets(extraProjectIds = []) {
+    this.recordCurrentlyAvailableTargets();
+
+    const projects = [];
+    const added = new Set();
+    const spaceshipProjects = this.getSpaceshipProjects();
+    for (let index = 0; index < spaceshipProjects.length; index += 1) {
+      const project = spaceshipProjects[index];
+      const isRelevant = !projectManager?.isProjectRelevantToCurrentPlanet || projectManager.isProjectRelevantToCurrentPlanet(project);
+      if (isRelevant || this.hasSeenProjectTarget(project.name, extraProjectIds)) {
+        projects.push(project);
+        added.add(project.name);
+      }
+    }
+
+    const seenProjectIds = Array.from(this.getSeenProjectTargetIdSet(extraProjectIds));
+    for (let index = 0; index < seenProjectIds.length; index += 1) {
+      const projectId = seenProjectIds[index];
+      if (added.has(projectId)) {
+        continue;
+      }
+      const project = this.getProjectTargetById(projectId);
+      if (!project) {
+        continue;
+      }
+      projects.push(project);
+      added.add(project.name);
+    }
+
     projects.push(this.getMassDriverAutomationTarget());
     projects.push(this.getUnassignedTarget());
     return projects;
@@ -432,6 +522,7 @@ class SpaceshipAutomation {
   }
 
   update(delta) {
+    this.recordCurrentlyAvailableTargets();
     const active = this.isActive();
     this.syncMassDriverAutoActiveLockEffect(active);
     if (!active) {
@@ -955,6 +1046,7 @@ class SpaceshipAutomation {
     })),
       activePresetId: this.activePresetId,
       disabledProjects: Array.from(this.disabledProjects),
+      seenProjectTargets: Array.from(this.seenProjectTargets),
       collapsed: this.collapsed,
       nextPresetId: this.nextPresetId
     };
@@ -990,9 +1082,11 @@ class SpaceshipAutomation {
     })) : [];
     this.activePresetId = data.activePresetId || null;
     this.disabledProjects = new Set(Array.isArray(data.disabledProjects) ? data.disabledProjects : []);
+    this.seenProjectTargets = new Set(Array.isArray(data.seenProjectTargets) ? data.seenProjectTargets : []);
     this.collapsed = !!data.collapsed;
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.ensureDefaultPreset();
+    this.recordCurrentlyAvailableTargets();
   }
 }
 

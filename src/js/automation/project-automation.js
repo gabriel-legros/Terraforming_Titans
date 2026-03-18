@@ -91,7 +91,39 @@ class ProjectAutomation {
     return this.everEnabledProjects.has(this.normalizeProjectId(projectId));
   }
 
-  shouldShowProjectInAutomation(project) {
+  getSeenProjectIdSet(extraProjectIds = []) {
+    const seen = new Set();
+
+    this.everEnabledProjects.forEach((projectId) => {
+      seen.add(this.normalizeProjectId(projectId));
+    });
+
+    this.presets.forEach((preset) => {
+      Object.keys(preset.projects || {}).forEach((projectId) => {
+        seen.add(this.normalizeProjectId(projectId));
+      });
+    });
+
+    const extras = Array.isArray(extraProjectIds) ? extraProjectIds : [];
+    extras.forEach((projectId) => {
+      if (!projectId) {
+        return;
+      }
+      seen.add(this.normalizeProjectId(projectId));
+    });
+
+    return seen;
+  }
+
+  getSeenProjectIds(extraProjectIds = []) {
+    return Array.from(this.getSeenProjectIdSet(extraProjectIds));
+  }
+
+  hasSeenProject(projectId, extraProjectIds = []) {
+    return this.getSeenProjectIdSet(extraProjectIds).has(this.normalizeProjectId(projectId));
+  }
+
+  shouldShowProjectInAutomation(project, extraProjectIds = []) {
     if (!project || project.category === 'story') {
       return false;
     }
@@ -102,7 +134,7 @@ class ProjectAutomation {
       this.recordProjectEnabled(project.name);
       return true;
     }
-    return this.hasEverEnabledProject(project.name);
+    return this.hasSeenProject(project.name, extraProjectIds);
   }
 
   recordCurrentlyAvailableProjects() {
@@ -514,18 +546,40 @@ class ProjectAutomation {
       || projectId === PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID;
   }
 
-  normalizeProjectId(projectId) {
+  resolveProjectAutomationId(projectId) {
     if (projectId === PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_OTHER_ID) {
       return PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID;
     }
     if (projectId === PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
       return PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID;
     }
+
+    const projects = projectManager?.projects || {};
+    if (projects[projectId]) {
+      return projectId;
+    }
+
+    const keys = Object.keys(projects);
+    for (let index = 0; index < keys.length; index += 1) {
+      const key = keys[index];
+      const project = projects[key];
+      if (!project) {
+        continue;
+      }
+      if (project.name === projectId || project.displayName === projectId) {
+        return key;
+      }
+    }
+
     return projectId;
   }
 
+  normalizeProjectId(projectId) {
+    return this.resolveProjectAutomationId(projectId);
+  }
+
   getProjectForAutomationId(projectId) {
-    const normalizedProjectId = this.normalizeProjectId(projectId);
+    const normalizedProjectId = this.resolveProjectAutomationId(projectId);
     if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID
       || this.isSpaceStorageProxyProjectId(normalizedProjectId)) {
       return projectManager.projects[PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID] || null;

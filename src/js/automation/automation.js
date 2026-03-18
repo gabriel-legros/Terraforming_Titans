@@ -108,6 +108,7 @@ class AutomationManager extends EffectableEntity {
       this.projectsAutomation.recordCurrentlyAvailableProjects();
     }
     if (this.spaceshipAutomation) {
+      this.spaceshipAutomation.recordCurrentlyAvailableTargets();
       this.spaceshipAutomation.unlockManualControls();
     }
     if (this.enabled) {

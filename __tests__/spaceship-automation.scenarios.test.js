@@ -31,6 +31,7 @@ function createHarness({
       this.manualDisabled = !!options.manualDisabled;
       this.visible = options.visible !== false;
       this.permanentlyDisabled = !!options.permanentlyDisabled;
+      this.relevant = options.relevant !== false;
     }
 
     isVisible() {
@@ -125,7 +126,12 @@ function createHarness({
   setGlobal('buildings', {
     massDriver: { count: massDriverCount, active: massDriverActive, autoActiveEnabled: false },
   }, originalGlobals);
-  setGlobal('projectManager', { projects: projectObjects }, originalGlobals);
+  setGlobal('projectManager', {
+    projects: projectObjects,
+    isProjectRelevantToCurrentPlanet(project) {
+      return project.relevant !== false;
+    }
+  }, originalGlobals);
   setGlobal('automationManager', {
     enabled: true,
     hasFeature: () => true,
@@ -650,6 +656,25 @@ describe('Spaceship automation scenarios', () => {
     expect(projects.disposeResources.getAutomationShipCount()).toBe(0);
     expect(buildings.massDriver.active).toBeGreaterThanOrEqual(16666);
     expect(buildings.massDriver.active).toBeLessThanOrEqual(16667);
+    cleanup();
+  });
+
+  it('keeps previously seen project targets in the automation dropdown after travel away', () => {
+    const { automation, projects, cleanup } = createHarness({
+      projects: {
+        moltenRoute: { relevant: false },
+      },
+    });
+
+    expect(automation.getAutomationTargets().map(target => target.name)).not.toContain('moltenRoute');
+
+    projects.moltenRoute.relevant = true;
+    automation.recordCurrentlyAvailableTargets();
+    expect(automation.getAutomationTargets().map(target => target.name)).toContain('moltenRoute');
+
+    projects.moltenRoute.relevant = false;
+    expect(automation.hasSeenProjectTarget('moltenRoute')).toBe(true);
+    expect(automation.getAutomationTargets().map(target => target.name)).toContain('moltenRoute');
     cleanup();
   });
 });
