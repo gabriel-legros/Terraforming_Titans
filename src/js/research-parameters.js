@@ -2462,7 +2462,7 @@ const researchParameters = {
       {
         id: 'gigafoundries',
         name: 'Gigafoundries',
-        description: 'Enables a new gigastructure for mass superalloy production',
+        description: 'Enables a new gigastructure for mass superalloy production.',
         cost: { advancedResearch: 10_000_000_000 },
         prerequisites: [],
         effects: [
@@ -2476,7 +2476,7 @@ const researchParameters = {
       {
         id: 'core_surgery',
         name: 'Core Surgery',
-        description: 'Enables a new gigastructure capable of creating artificial natural magnetospheres',
+        description: 'Enables a new gigastructure capable of creating artificial natural magnetospheres.',
         cost: { advancedResearch: 20_000_000_000 },
         prerequisites: [],
         effects: [
