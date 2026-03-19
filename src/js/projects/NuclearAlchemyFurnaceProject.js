@@ -133,6 +133,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return `${formatNumber(rate, true, 3)} furnaces/s`;
   }
 
+  getExpansionRateSourceLabel() {
+    return `${this.displayName} expansion`;
+  }
+
   getOperationNoteText() {
     const parameter = formatNumber(this.getAlchemyParameter(), true, 3);
     return `Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x ${parameter}/s.`;
@@ -390,7 +394,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       {
         applyRates: tick.seconds > 0 && this.showsInResourcesRate(),
         seconds: tick.seconds,
-        rateSourceLabel: 'Nuclear alchemy expansion'
+        rateSourceLabel: this.getExpansionRateSourceLabel()
       }
     );
     this.lastExpansionRatePerSecond = tick.seconds > 0 ? result.progress / tick.seconds : 0;
@@ -580,7 +584,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
           storageState,
           {
             applyRates,
-            sourceLabel: 'Nuclear alchemy expansion'
+            sourceLabel: this.getExpansionRateSourceLabel()
           }
         );
         this.mergeResourceTotals(totals.cost, expansionTotals);
