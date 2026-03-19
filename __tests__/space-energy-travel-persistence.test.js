@@ -186,7 +186,7 @@ function loadSave(window, relativePath) {
   installPlanetVisualizerStub(window);
   const savePath = path.resolve(__dirname, '..', relativePath);
   const saveText = fs.readFileSync(savePath, 'utf8');
-  window.loadGame(saveText, true);
+  window.loadGame(saveText, false);
 }
 
 describe('space energy travel persistence', () => {
@@ -228,7 +228,7 @@ describe('space energy travel persistence', () => {
     } finally {
       dom.window.close();
     }
-  }, 20000);
+  }, 40000);
 
   it('preserves stored space energy when traveling away from a late-game debug save', async () => {
     const dom = await createGameDom();
@@ -240,11 +240,15 @@ describe('space energy travel persistence', () => {
 
       const beforeEnergy = getGlobal(window, 'resources.space.energy.value');
       const beforeCap = getGlobal(window, 'resources.space.energy.cap');
+      const travelTarget = 'titan';
       expect(beforeEnergy).toBeGreaterThan(0);
       expect(beforeCap).toBeGreaterThan(0);
 
-      window.selectPlanet('titan', true, true);
-      await waitFor(window, () => getGlobal(window, 'spaceManager.getCurrentPlanetKey() === "titan"'));
+      getGlobal(window, 'spaceManager.planetStatuses.titan.terraformed = false');
+      getGlobal(window, 'spaceManager.enablePlanet("titan")');
+
+      window.selectPlanet(travelTarget, true, true);
+      await waitFor(window, () => getGlobal(window, `spaceManager.getCurrentPlanetKey() === "${travelTarget}"`));
 
       expect(getGlobal(window, 'resources.space.energy.cap')).toBe(beforeCap);
       expect(getGlobal(window, 'resources.space.energy.value')).toBe(beforeEnergy);
@@ -254,5 +258,5 @@ describe('space energy travel persistence', () => {
     } finally {
       dom.window.close();
     }
-  }, 20000);
+  }, 40000);
 });

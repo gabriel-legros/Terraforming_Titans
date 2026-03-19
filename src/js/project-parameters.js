@@ -695,7 +695,7 @@ const projectParameters = {
       }
     },
     duration: 18_000_000,
-    description: 'Build a massive core surgery platform capable of creating an artificial natural magnetosphere.  Medicine for planets.',
+    description: 'Build a massive core surgery platform capable of creating an artificial natural magnetosphere.  Medicine for planets.  Project completion persists on travel.',
     repeatable: false,
     unlocked: false,
     attributes: {
