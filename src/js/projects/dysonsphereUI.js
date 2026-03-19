@@ -18,23 +18,23 @@ function renderDysonSphereUI(project, container) {
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">Collectors:</span><span id="dsph-collectors"></span></div>
-        <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="dsph-power-per"></span></div>
-        <div class="stat-item"><span class="stat-label">Total Power:</span><span id="dsph-total-power"></span></div>
+        <div class="stat-item"><span class="stat-label">Collectors:</span><span id="dsph-collectors" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="dsph-power-per" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">Total Power:</span><span id="dsph-total-power" class="stat-value"></span></div>
       </div>
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">Sphere Count:</span><span id="dsph-sphere-count"></span></div>
-        <div class="stat-item"><span class="stat-label">Max Spheres:</span><span id="dsph-max-spheres"></span></div>
-        <div class="stat-item"><span class="stat-label">Max Power:</span><span id="dsph-max-power"></span></div>
+        <div class="stat-item"><span class="stat-label">Sphere Count:</span><span id="dsph-sphere-count" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">Max Spheres:</span><span id="dsph-max-spheres" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">Max Power:</span><span id="dsph-max-power" class="stat-value"></span></div>
       </div>
       <div class="stats-grid two-col collector-cost-container">
         <div class="stat-item">
           <span class="stat-label" id="dsph-collector-cost-label">Collector Cost:</span>
-          <span id="dsph-collector-cost"></span>
+          <span id="dsph-collector-cost" class="stat-value"></span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Expansion</span>
-          <span id="dsph-expansion-rate"></span>
+          <span id="dsph-expansion-rate" class="stat-value"></span>
         </div>
       </div>
       <div class="progress-button-container dyson-progress-container"><button id="dsph-start" class="progress-button"></button></div>

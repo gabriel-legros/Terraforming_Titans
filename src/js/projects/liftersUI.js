@@ -5,6 +5,7 @@ function buildStat(label) {
   labelEl.classList.add('stat-label');
   labelEl.textContent = label;
   const valueEl = document.createElement('span');
+  valueEl.classList.add('stat-value');
   wrapper.append(labelEl, valueEl);
   return { wrapper, valueEl, labelEl };
 }

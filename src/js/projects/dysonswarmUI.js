@@ -18,18 +18,18 @@ function renderDysonSwarmUI(project, container) {
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">Collectors:</span><span id="ds-collectors"></span></div>
-        <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="ds-power-per"></span></div>
-        <div class="stat-item"><span class="stat-label">Total Power:</span><span id="ds-total-power"></span></div>
+        <div class="stat-item"><span class="stat-label">Collectors:</span><span id="ds-collectors" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="ds-power-per" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">Total Power:</span><span id="ds-total-power" class="stat-value"></span></div>
       </div>
       <div class="stats-grid two-col collector-cost-container">
         <div class="stat-item">
           <span class="stat-label">Collector Cost:</span>
-          <span id="ds-collector-cost"></span>
+          <span id="ds-collector-cost" class="stat-value"></span>
         </div>
         <div class="stat-item">
           <span class="stat-label">Expansion</span>
-          <span id="ds-expansion-rate"></span>
+          <span id="ds-expansion-rate" class="stat-value"></span>
         </div>
       </div>
       <div class="progress-button-container dyson-progress-container"><button id="ds-start" class="progress-button"></button></div>

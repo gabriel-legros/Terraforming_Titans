@@ -389,6 +389,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       const content = document.createElement('div');
       content.classList.add('project-summary-content');
       const value = document.createElement('span');
+      value.classList.add('stat-value');
       content.appendChild(value);
       box.append(label, content);
       summaryGrid.appendChild(box);

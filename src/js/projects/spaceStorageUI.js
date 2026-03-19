@@ -187,8 +187,8 @@ function renderSpaceStorageUI(project, container) {
     </div>
     <div class="card-body">
       <div class="stats-grid two-col">
-        <div class="stat-item"><span class="stat-label">Used Storage:</span><span id="ss-used"></span></div>
-        <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max"></span></div>
+        <div class="stat-item"><span class="stat-label">Used Storage:</span><span id="ss-used" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max" class="stat-value"></span></div>
       </div>
       <div id="ss-resource-grid"></div>
     </div>`;
@@ -216,14 +216,14 @@ function renderSpaceStorageUI(project, container) {
   expansionGrid.classList.add('project-details-grid');
   const expansionCostRow = document.createElement('div');
   expansionCostRow.id = 'ss-expansion-cost';
-  expansionCostRow.innerHTML = '<strong>Cost:</strong> <span class="expansion-cost"></span> <span class="info-tooltip-icon">&#9432;</span>';
+  expansionCostRow.innerHTML = '<strong>Cost:</strong> <span class="expansion-cost stat-value"></span> <span class="info-tooltip-icon">&#9432;</span>';
   const expansionCostInfo = expansionCostRow.querySelector('.info-tooltip-icon');
   attachDynamicInfoTooltip(expansionCostInfo, 'Construction time is reduced for each terraformed planet.');
   expansionGrid.appendChild(expansionCostRow);
 
   const expansionRateRow = document.createElement('div');
   expansionRateRow.id = 'ss-expansion-rate';
-  expansionRateRow.innerHTML = '<strong>Expansion/s:</strong> <span class="expansion-rate"></span>';
+  expansionRateRow.innerHTML = '<strong>Expansion/s:</strong> <span class="expansion-rate stat-value"></span>';
   expansionGrid.appendChild(expansionRateRow);
 
   const expansionRecipeRow = document.createElement('div');

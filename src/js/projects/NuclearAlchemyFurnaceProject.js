@@ -358,14 +358,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
         return;
       }
       const desired = rate * seconds * productivity;
-      const stored = storage.getStoredResourceValue(recipe.storageKey);
-      const capLimit = storage.getResourceCapLimit(recipe.storageKey);
-      const capRemaining = Math.max(0, capLimit - stored);
       entries.push({
         key,
         storageKey: recipe.storageKey,
-        desired,
-        capRemaining
+        desired
       });
     });
     return entries;
@@ -454,8 +450,6 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
     const outputDisplayAmounts = {};
     let hydrogenDisplaySpent = 0;
-    let hydrogenNetConsumed = 0;
-    let outputCapBlocked = false;
 
     entries.forEach((entry) => {
       const requested = entry.desired || 0;
@@ -466,18 +460,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       this.applySpaceStorageDeltaForTick('hydrogen', -requested, accumulatedChanges);
       outputDisplayAmounts[entry.key] = requested;
       hydrogenDisplaySpent += requested;
-      const current = this.getStoredResourceValueForTick(storage, entry.storageKey, accumulatedChanges);
-      const capLimit = storage.getResourceCapLimit(entry.storageKey);
-      const capRemaining = Math.max(0, capLimit - current);
-      const produced = Math.min(requested, capRemaining);
-      if (produced > 0) {
-        this.applySpaceStorageDeltaForTick(entry.storageKey, produced, accumulatedChanges);
-      }
-      if (requested > produced) {
-        outputCapBlocked = true;
-        this.applySpaceStorageDeltaForTick('hydrogen', requested - produced, accumulatedChanges);
-      }
-      hydrogenNetConsumed += produced;
+      this.applySpaceStorageDeltaForTick(entry.storageKey, requested, accumulatedChanges);
     });
 
     if (!accumulatedChanges) {
@@ -512,14 +495,12 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     );
 
     this.setLastRunStats(hydrogenRate, outputRates);
-    if (hydrogenNetConsumed > 0) {
+    if (hydrogenDisplaySpent > 0) {
       this.updateStatus('Running');
-    } else if (outputCapBlocked) {
-      this.updateStatus('Output storage cap reached');
     } else {
       this.updateStatus('Idle');
     }
-    this.shortfallLastTick = outputCapBlocked;
+    this.shortfallLastTick = false;
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -751,6 +732,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       label.classList.add('stat-label');
       label.textContent = labelText;
       const value = document.createElement('span');
+      value.classList.add('stat-value');
       box.append(label, value);
       summaryGrid.appendChild(box);
       return value;
@@ -781,6 +763,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     statusLabel.classList.add('stat-label');
     statusLabel.textContent = 'Status';
     const statusValue = document.createElement('span');
+    statusValue.classList.add('stat-value');
     statusField.append(statusLabel, statusValue);
     controlsGrid.appendChild(statusField);
 
@@ -790,6 +773,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     hydrogenLabel.classList.add('stat-label');
     hydrogenLabel.textContent = this.getPrimaryRateLabelText();
     const hydrogenRateValue = document.createElement('span');
+    hydrogenRateValue.classList.add('stat-value');
     hydrogenField.append(hydrogenLabel, hydrogenRateValue);
     controlsGrid.appendChild(hydrogenField);
     body.appendChild(controlsGrid);

@@ -180,6 +180,10 @@
       actionButton.style.display = 'flex';
       actionButton.style.alignItems = 'center';
       actionButton.style.justifyContent = 'center';
+      actionButton.style.font = 'inherit';
+      actionButton.style.fontWeight = '400';
+      actionButton.style.fontSize = '14px';
+      actionButton.style.lineHeight = '1.2';
       actionButton.style.paddingLeft = '36px';
       actionButton.style.paddingRight = '12px';
 
@@ -200,6 +204,7 @@
       autoToggle.appendChild(autoCheckbox);
 
       const actionLabel = document.createElement('span');
+      actionLabel.style.fontWeight = '400';
 
       autoToggle.addEventListener('click', (event) => {
         event.stopPropagation();

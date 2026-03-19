@@ -134,14 +134,12 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
       finalMetal: 0,
       finalSpaceEnergy: 0,
       finalOutput: 0,
-      ratio: 0,
+      ratio: 1,
       hasAssignments: false,
-      hasCapacity: false,
       reasons: {
         noStorage: false,
         noMetal: false,
-        noSpaceEnergy: false,
-        capped: false
+        noSpaceEnergy: false
       }
     };
 
@@ -167,27 +165,16 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
       plan.reasons.noStorage = true;
       return plan;
     }
-    const currentOutput = this.getStoredResourceValueForTick(storage, 'superalloys', accumulatedChanges);
-    const capLimit = storage.getResourceCapLimit('superalloys');
-    const capRemaining = Math.max(0, capLimit - currentOutput);
-
-    let ratio = 1;
-    if (desiredOutput > 0 && Number.isFinite(capRemaining)) {
-      ratio = Math.min(ratio, capRemaining / desiredOutput);
-    }
-    ratio = Math.max(0, Math.min(1, ratio));
 
     plan.desiredBatches = desiredBatches;
     plan.desiredMetal = desiredMetal;
     plan.desiredSpaceEnergy = desiredSpaceEnergy;
     plan.desiredOutput = desiredOutput;
-    plan.finalMetal = desiredMetal * ratio;
-    plan.finalSpaceEnergy = desiredSpaceEnergy * ratio;
-    plan.finalOutput = desiredOutput * ratio;
-    plan.ratio = ratio;
+    plan.finalMetal = desiredMetal;
+    plan.finalSpaceEnergy = desiredSpaceEnergy;
+    plan.finalOutput = desiredOutput;
+    plan.ratio = 1;
     plan.hasAssignments = true;
-    plan.hasCapacity = capRemaining > 0 || !Number.isFinite(capRemaining);
-    plan.reasons.capped = ratio > 0 && ratio < 1 && Number.isFinite(capRemaining) && capRemaining < desiredOutput;
 
     return plan;
   }
@@ -256,11 +243,6 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     }
     if (!(plan.finalOutput > 0)) {
       this.setLastRunStats(0, {}, 0);
-      if (!plan.hasCapacity) {
-        this.updateStatus('Output storage cap reached');
-        this.shortfallLastTick = true;
-        return;
-      }
       const status = this.getOperationShortfallStatus(productivity);
       this.updateStatus(status);
       this.shortfallLastTick = status !== 'Idle';
@@ -293,8 +275,8 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     resources?.spaceStorage?.superalloys?.modifyRate?.(outputRate, this.displayName, 'project');
 
     this.setLastRunStats(spaceEnergyRate, { superalloys: outputRate }, metalRate);
-    this.updateStatus(plan.reasons.capped ? 'Output storage cap reached' : 'Running');
-    this.shortfallLastTick = plan.reasons.capped;
+    this.updateStatus('Running');
+    this.shortfallLastTick = false;
   }
 
   estimateOperationCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {

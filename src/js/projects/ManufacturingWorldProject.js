@@ -876,6 +876,7 @@
         label.classList.add('stat-label');
         label.textContent = labelText;
         const value = document.createElement('span');
+        value.classList.add('stat-value');
         box.append(label, value);
         summaryGrid.appendChild(box);
         return value;
@@ -906,6 +907,7 @@
       statusLabel.classList.add('stat-label');
       statusLabel.textContent = 'Status';
       const statusValue = document.createElement('span');
+      statusValue.classList.add('stat-value');
       statusField.append(statusLabel, statusValue);
       controlsGrid.appendChild(statusField);
 
@@ -915,6 +917,7 @@
       inputLabel.classList.add('stat-label');
       inputLabel.textContent = 'Input Use';
       const inputValue = document.createElement('span');
+      inputValue.classList.add('stat-value');
       inputField.append(inputLabel, inputValue);
       controlsGrid.appendChild(inputField);
       body.appendChild(controlsGrid);

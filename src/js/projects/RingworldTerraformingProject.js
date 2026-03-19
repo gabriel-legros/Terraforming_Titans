@@ -303,7 +303,7 @@ class RingworldTerraformingProject extends Project {
     powerLabel.className = 'ringworld-terraforming-power-label';
     powerLabel.textContent = 'Power:';
     const powerValue = document.createElement('span');
-    powerValue.className = 'ringworld-terraforming-power-value';
+    powerValue.className = 'stat-value ringworld-terraforming-power-value';
     powerReadout.append(powerLabel, powerValue);
     controls.appendChild(powerReadout);
 
