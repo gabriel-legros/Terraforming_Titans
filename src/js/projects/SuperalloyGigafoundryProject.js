@@ -8,7 +8,7 @@ const SUPERALLOY_GIGAFOUNDRY_RECIPE = {
       metal: 1_000_000_000_000
     },
     space: {
-      energy: 10_000_000_000_000_000_000
+      energy: 10_000_000_000_000_000_000_000
     }
   },
   wgcUpgradeId: 'superalloyEfficiency'

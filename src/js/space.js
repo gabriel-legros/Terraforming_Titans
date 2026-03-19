@@ -150,6 +150,7 @@ class SpaceManager extends EffectableEntity {
                 foundryWorld: false,
                 foundryLandFactor: 0,
                 specialization: '',
+                naturalMagnetosphere: false,
                 rwgLock: false,
                 // Add other statuses later if needed
             };
@@ -988,6 +989,46 @@ class SpaceManager extends EffectableEntity {
         return this.allPlanetsData[this.currentPlanetKey]?.name || '';
     }
 
+    getCurrentWorldStatus() {
+        if (this.currentRandomSeed !== null) {
+            return this.randomWorldStatuses[String(this.currentRandomSeed)] || null;
+        }
+        if (this.currentArtificialKey !== null) {
+            return this.artificialWorldStatuses[String(this.currentArtificialKey)] || null;
+        }
+        return this.planetStatuses[this.currentPlanetKey] || null;
+    }
+
+    applyWorldStatusToPlanetParameters(params, worldKey = null) {
+        if (!params || !params.celestialParameters) {
+            return params;
+        }
+
+        const resolvedKey = worldKey == null ? this.currentPlanetKey : String(worldKey);
+        const status = this.getPlanetStatus(resolvedKey);
+        if (status?.naturalMagnetosphere === true) {
+            params.celestialParameters.hasNaturalMagnetosphere = true;
+        }
+        return params;
+    }
+
+    setCurrentWorldNaturalMagnetosphere(value = true) {
+        const status = this.getCurrentWorldStatus();
+        if (!status) {
+            return false;
+        }
+
+        status.naturalMagnetosphere = value === true;
+        const natural = status.naturalMagnetosphere;
+        if (status.original?.merged?.celestialParameters) {
+            status.original.merged.celestialParameters.hasNaturalMagnetosphere = natural;
+        }
+        if (status.artificialSnapshot?.celestialParameters) {
+            status.artificialSnapshot.celestialParameters.hasNaturalMagnetosphere = natural;
+        }
+        return true;
+    }
+
     getCurrentWorldHazardCount() {
         const hazards = currentPlanetParameters.hazards || {};
         return Object.keys(hazards).reduce((count, key) => (
@@ -1214,7 +1255,20 @@ class SpaceManager extends EffectableEntity {
             }
              // Ensure status object exists for the new current planet
              if (!this.planetStatuses[key]) {
-                  this.planetStatuses[key] = { terraformed: false, visited: false, enabled: false, colonists: 0 };
+                  this.planetStatuses[key] = {
+                      terraformed: false,
+                      visited: false,
+                      enabled: false,
+                      colonists: 0,
+                      orbitalRing: false,
+                      departedAt: null,
+                      ecumenopolisPercent: 0,
+                      foundryWorld: false,
+                      foundryLandFactor: 0,
+                      specialization: '',
+                      naturalMagnetosphere: false,
+                      rwgLock: false
+                  };
                   console.warn(`SpaceManager: Initialized missing status for planet ${key}.`);
              }
            return true;
@@ -1322,6 +1376,7 @@ class SpaceManager extends EffectableEntity {
                     ecumenopolisPercent: 0,
                     foundryWorld: false,
                     foundryLandFactor: 0,
+                    naturalMagnetosphere: false,
                     specialization: ''
                 };
             }
@@ -1354,6 +1409,7 @@ class SpaceManager extends EffectableEntity {
                     stored: false,
                     foundryWorld: false,
                     foundryLandFactor: 0,
+                    naturalMagnetosphere: false,
                     specialization: '',
                     artificial: true,
                     terraformedValue,
@@ -1444,6 +1500,7 @@ class SpaceManager extends EffectableEntity {
             defaultPlanet = options.planetKey;
         }
         if (params) {
+            this.applyWorldStatusToPlanetParameters(params, options?.planetKey);
             currentPlanetParameters = JSON.parse(JSON.stringify(params));
         }
         initializeGameState({ preserveManagers: true, preserveJournal: true });
@@ -1567,6 +1624,7 @@ class SpaceManager extends EffectableEntity {
                     stored: false,
                     departedAt: null,
                     ecumenopolisPercent: 0,
+                    naturalMagnetosphere: false,
                     artificial: artificialWorld,
                     cachedArchetype,
                     terraformedValue,
@@ -1896,6 +1954,9 @@ class SpaceManager extends EffectableEntity {
                         this.planetStatuses[planetKey].foundryWorld = saved.foundryWorld;
                     }
                     this.planetStatuses[planetKey].foundryLandFactor = saved.foundryLandFactor || 0;
+                    if (saved.naturalMagnetosphere === true || saved.naturalMagnetosphere === false) {
+                        this.planetStatuses[planetKey].naturalMagnetosphere = saved.naturalMagnetosphere;
+                    }
                     if (saved.specialization) {
                         this.planetStatuses[planetKey].specialization = saved.specialization;
                     }
@@ -1926,6 +1987,7 @@ class SpaceManager extends EffectableEntity {
                     entry.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(entry);
                 }
                 entry.foundryLandFactor = entry.foundryLandFactor || 0;
+                entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
                 assignSector(entry);
                 sanitizeCachedHazards(entry);
             });
@@ -1937,6 +1999,7 @@ class SpaceManager extends EffectableEntity {
                 .filter(Boolean)
                 .forEach((entry) => {
                     entry.foundryLandFactor = entry.foundryLandFactor || 0;
+                    entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
                     assignSector(entry);
                     sanitizeCachedHazards(entry);
                 });

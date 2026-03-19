@@ -2474,6 +2474,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'core_surgery',
+        name: 'Core Surgery',
+        description: 'Enables a new gigastructure capable of creating artificial natural magnetospheres',
+        cost: { advancedResearch: 20_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'apolloCoreSurgeryPlatform',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: 'Tractor Beams',
         description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',

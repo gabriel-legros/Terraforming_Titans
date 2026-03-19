@@ -683,6 +683,27 @@ const projectParameters = {
       spaceBuilding: true
     }
   },
+  apolloCoreSurgeryPlatform: {
+    type: 'ApolloCoreSurgeryPlatformProject',
+    name: 'Apollo Planetary Core Surgery Plateform',
+    category: 'giga',
+    cost: {
+      colony: {
+        superalloys: 100_000_000_000_000_000_000,
+        components: 1_000_000_000_000_000_000,
+        electronics: 10_000_000_000_000
+      }
+    },
+    duration: 18_000_000,
+    description: 'Build a massive core surgery platform capable of creating an artificial natural magnetosphere.  Medicine for planets.',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      spaceBuilding: true,
+      preserveProgressOnTravel: true
+    }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: 'Orbital Ring',

@@ -251,7 +251,7 @@
   height: 100px;
   object-fit: contain;
   transform: translateY(15px);
-  filter: brightness(0) saturate(100%) invert(61%) sepia(40%) saturate(2483%) hue-rotate(134deg) brightness(82%) contrast(104%);
+  filter: brightness(0) saturate(100%) invert(66%) sepia(39%) saturate(2516%) hue-rotate(133deg) brightness(88%) contrast(103%);
 }
 
 .wgc-class-description {

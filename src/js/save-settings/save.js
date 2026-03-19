@@ -324,6 +324,9 @@ function loadGame(slotOrCustomString, recreate = true) {
             currentPlanetParameters = getPlanetParameters(key);
           }
         }
+        if (spaceManager && typeof spaceManager.applyWorldStatusToPlanetParameters === 'function') {
+          spaceManager.applyWorldStatusToPlanetParameters(currentPlanetParameters);
+        }
         // Clear previously applied story effects so they don't carry over
         if (storyManager) {
           storyManager.appliedEffects = [];
