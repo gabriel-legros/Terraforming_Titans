@@ -237,15 +237,21 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  z-index: 2;
+  width: calc(100% - 20px);
   color: var(--wgc-text-light);
+  text-shadow: 0 0 4px rgba(13, 26, 38, 0.95);
 }
 
 .team-slot .team-icon {
-  width: 85px;
-  height: 85px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(73%) sepia(35%) saturate(3048%) hue-rotate(131deg) brightness(95%) contrast(98%);
+  transform: translateY(15px);
+  filter: brightness(0) saturate(100%) invert(61%) sepia(40%) saturate(2483%) hue-rotate(134deg) brightness(82%) contrast(104%);
 }
 
 .wgc-class-description {
