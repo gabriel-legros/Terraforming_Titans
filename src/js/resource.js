@@ -704,7 +704,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
-      if (typeof project?.estimateCostAndGain === 'function') {
+      if (shouldApplyProjectProductivity(project)) {
         project.estimateCostAndGain(deltaTime, true, 1);
       }
     }
