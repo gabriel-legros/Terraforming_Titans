@@ -1396,6 +1396,76 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (!(totalEnergy > 0)) {
       return totals;
     }
+
+    if (applyRates) {
+      resources?.space?.energy?.modifyRate?.(
+        -(totalEnergy / seconds),
+        'Lifting',
+        'project'
+      );
+    }
+
+    totals.cost.space ||= {};
+    totals.cost.space.energy = (totals.cost.space.energy || 0) + totalEnergy;
+
+    plan.entries.forEach((entry) => {
+      if (!(entry.finalUnits > 0)) {
+        return;
+      }
+
+      if (entry.recipe.type === LIFTER_RECIPE_TYPES.STRIP) {
+        const gases = this.getAtmosphericResources(accumulatedChanges);
+        const totalAtmosphere = gases.reduce((sum, gas) => sum + gas.value, 0);
+        if (!(totalAtmosphere > 0)) {
+          return;
+        }
+
+        let remaining = entry.finalUnits;
+        gases.forEach((gas, index) => {
+          const proportion = totalAtmosphere > 0 ? gas.value / totalAtmosphere : 0;
+          let removed = entry.finalUnits * proportion;
+          if (index === gases.length - 1) {
+            removed = Math.min(removed, remaining);
+          }
+          remaining -= removed;
+
+          if (!(removed > 0)) {
+            return;
+          }
+
+          if (applyRates) {
+            gas.ref?.modifyRate?.(
+              -(removed / seconds),
+              'Lifting',
+              'project'
+            );
+          }
+
+          totals.cost.atmospheric ||= {};
+          totals.cost.atmospheric[gas.key] = (totals.cost.atmospheric[gas.key] || 0) + removed;
+        });
+        return;
+      }
+
+      this.getRecipeOutputs(entry.recipe).forEach(({ resourceKey, multiplier }) => {
+        const amount = entry.finalUnits * multiplier;
+        if (!(amount > 0)) {
+          return;
+        }
+
+        if (applyRates) {
+          resources?.spaceStorage?.[resourceKey]?.modifyRate?.(
+            amount / seconds,
+            'Lifting',
+            'project'
+          );
+        }
+
+        totals.gain.spaceStorage ||= {};
+        totals.gain.spaceStorage[resourceKey] = (totals.gain.spaceStorage[resourceKey] || 0) + amount;
+      });
+    });
+
     return totals;
   }
 
@@ -1421,8 +1491,34 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     );
   }
 
-  estimateProductivityCostAndGain() {
-    return { cost: {}, gain: {} };
+  estimateProductivityCostAndGain(deltaTime = 1000) {
+    const totals = { cost: {}, gain: {} };
+    if (!this.shouldOperate()) {
+      return totals;
+    }
+
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return totals;
+    }
+
+    const entries = this.buildOperationEntries(seconds, 1);
+    if (entries.length === 0) {
+      return totals;
+    }
+
+    const desiredAssignedLifters = entries.reduce((sum, entry) => {
+      return sum + (entry.assigned * (entry.requestedProductivity || 0));
+    }, 0);
+    const desiredEnergy = desiredAssignedLifters * this.getEffectiveEnergyPerUnit() * seconds;
+    if (!(desiredEnergy > 0)) {
+      return totals;
+    }
+
+    totals.cost.space = {
+      energy: desiredEnergy
+    };
+    return totals;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {

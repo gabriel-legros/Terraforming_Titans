@@ -2460,6 +2460,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'gigafoundries',
+        name: 'Gigafoundries',
+        description: 'Enables a new gigastructure for mass superalloy production',
+        cost: { advancedResearch: 10_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'superalloyGigafoundry',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'tractor_beams',
         name: 'Tractor Beams',
         description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',

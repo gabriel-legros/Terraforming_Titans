@@ -179,10 +179,10 @@ const wgcLastNamePool = [
 ];
 const teamUnlocks = [0, 100, 500, 1000];
 const classImages = {
-  'Team Leader': 'assets/images/team_leader.png',
-  'Soldier': 'assets/images/soldier.png',
-  'Natural Scientist': 'assets/images/natural_scientist.png',
-  'Social Scientist': 'assets/images/social_scientist.png'
+  'Team Leader': 'assets/images/team_leader.webp',
+  'Soldier': 'assets/images/soldier.webp',
+  'Natural Scientist': 'assets/images/natural_scientist.webp',
+  'Social Scientist': 'assets/images/social_scientist.webp'
 };
 const classDescriptions = {
   'Team Leader': 'Balances all skills and lends half their skill to others.',

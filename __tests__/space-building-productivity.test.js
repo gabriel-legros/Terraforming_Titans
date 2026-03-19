@@ -134,6 +134,53 @@ function createDysonReceiverBuilding(energyPerSecond = 0) {
   };
 }
 
+function createSpaceStorageProducerBuilding(resourceKey, amountPerSecond = 0, name = 'Space Storage Producer') {
+  return {
+    active: amountPerSecond > 0 ? 1 : 0,
+    productivity: amountPerSecond > 0 ? 1 : 0,
+    displayProductivity: amountPerSecond > 0 ? 1 : 0,
+    dayNightActivity: false,
+    production: { spaceStorage: { [resourceKey]: amountPerSecond } },
+    consumption: {},
+    getTargetProductivity() {
+      return this.active > 0 ? 1 : 0;
+    },
+    updateProductivity() {
+      this.productivity = this.active > 0 ? 1 : 0;
+      this.displayProductivity = this.productivity;
+    },
+    getProductionRatio() {
+      return 1;
+    },
+    getEffectiveProductionMultiplier() {
+      return 1;
+    },
+    getEffectiveResourceProductionMultiplier() {
+      return 1;
+    },
+    getConsumption() {
+      return {};
+    },
+    getTotalWorkerNeed() {
+      return 0;
+    },
+    getAutomationActivityMultiplier() {
+      return 1;
+    },
+    produce(accumulatedChanges, deltaTime) {
+      if (!(this.active > 0) || !(this.productivity > 0) || !(deltaTime > 0)) {
+        return;
+      }
+      const seconds = deltaTime / 1000;
+      const amount = amountPerSecond * this.active * this.productivity * seconds;
+      accumulatedChanges.spaceStorage[resourceKey] = (accumulatedChanges.spaceStorage[resourceKey] || 0) + amount;
+      resources.spaceStorage[resourceKey].modifyRate(amount / seconds, name, 'building');
+    },
+    consume() {},
+    applyMaintenance() {},
+  };
+}
+
 function createDysonCollectorProject(collectorPowerPerSecond = 0) {
   return {
     name: 'dysonSwarmReceiver',
@@ -446,6 +493,7 @@ function setupHarness(initialStorage = {}) {
     SpecializationProject,
   }));
   const NuclearAlchemyFurnaceProject = require(path.resolve(__dirname, '../src/js/projects/NuclearAlchemyFurnaceProject.js'));
+  const SuperalloyGigafoundryProject = require(path.resolve(__dirname, '../src/js/projects/SuperalloyGigafoundryProject.js'));
   const ManufacturingWorldProject = require(path.resolve(__dirname, '../src/js/projects/ManufacturingWorldProject.js'));
   const LiftersProject = require(path.resolve(__dirname, '../src/js/projects/LiftersProject.js'));
 
@@ -457,6 +505,7 @@ function setupHarness(initialStorage = {}) {
     projectManager,
     resources: resourcesObj,
     NuclearAlchemyFurnaceProject,
+    SuperalloyGigafoundryProject,
     ManufacturingWorldProject,
     LiftersProject,
     cleanup: () => restoreGlobals(originalGlobals),
@@ -729,6 +778,57 @@ describe('Space building productivity via produceResources', () => {
     );
     expectApprox(consumedMetal, expectedMetalConsumed);
     expectApprox(producedSuperalloy, expectedSuperalloyProduced);
+    cleanup();
+  });
+
+  test('Superalloy Gigafoundry uses stored metal plus production before throttling', () => {
+    const initialMetal = 1e15;
+    const metalProductionPerSecond = 12e12;
+    const harness = setupHarness({
+      metal: initialMetal,
+      superalloys: 0,
+      spaceEnergy: 1e30,
+    });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      SuperalloyGigafoundryProject,
+      cleanup,
+    } = harness;
+
+    const gigafoundry = new SuperalloyGigafoundryProject({
+      name: 'Superalloy Gigafoundry',
+      duration: 36000000,
+      cost: {},
+      attributes: {
+        canUseSpaceStorage: true,
+        spaceBuilding: true,
+        alchemyParameter: 1,
+      },
+    }, 'superalloyGigafoundry');
+
+    gigafoundry.repeatCount = 100;
+    gigafoundry.furnaceAssignments.superalloys = 100;
+    gigafoundry.isRunning = true;
+    gigafoundry.isActive = false;
+    gigafoundry.autoStart = false;
+
+    projectManager.projects.superalloyGigafoundry = gigafoundry;
+    projectManager.projectOrder = ['superalloyGigafoundry'];
+
+    const buildings = {
+      metalProducer: createSpaceStorageProducerBuilding('metal', metalProductionPerSecond, 'Metal Producer'),
+    };
+
+    produceResources(1000, buildings);
+
+    const consumedMetal = initialMetal + metalProductionPerSecond - resources.spaceStorage.metal.value;
+    const fullDemandPerSecond = 100 * 1e12;
+    const expectedProductivity = 1;
+
+    expectApprox(gigafoundry.operationProductivity, expectedProductivity);
+    expectApprox(consumedMetal, fullDemandPerSecond);
     cleanup();
   });
 

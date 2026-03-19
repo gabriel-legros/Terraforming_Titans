@@ -2059,15 +2059,16 @@
 
 .resource-disposal-target-top {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: 76px minmax(0, 1fr) 16ch;
     gap: 8px;
     align-items: start;
 }
 
 .resource-disposal-target-marker {
-    min-width: 62px;
-    display: flex;
-    flex-direction: column;
+    width: 76px;
+    min-width: 76px;
+    display: grid;
+    grid-template-rows: 20px 1.2em;
     align-items: center;
     gap: 4px;
 }
@@ -2116,19 +2117,26 @@
 }
 
 .resource-disposal-target-side {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 1.2em auto;
     align-items: flex-end;
     gap: 4px;
+    width: 16ch;
+    min-width: 16ch;
 }
 
 .resource-disposal-target-share {
-    min-height: 1em;
+    min-height: 1.2em;
+    width: 100%;
     font-size: 0.75em;
     font-weight: 700;
     color: #475569;
     text-align: right;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .resource-disposal-target-controls-row {
@@ -2174,12 +2182,17 @@
 }
 
 .resource-disposal-target-status {
-    min-height: 16px;
+    display: block;
+    min-height: 1.2em;
     width: 100%;
     font-size: 0.72em;
     font-weight: 700;
+    line-height: 1.2;
     text-align: center;
     color: #1d4ed8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .resource-disposal-target-status[data-state="idle"] {

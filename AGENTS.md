@@ -104,6 +104,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 5. Funding/terraforming/life effects
 6. Cap clamping
 7. Aggregate display rates
+- Shared productivity availability now uses stored stock plus same-tick production, so consumers can hold 100% throughput while inventory buffers last and only throttle once the buffer is no longer sufficient for the tick.
 
 ### Nanotechnology
 - `nanotechManager` unlocks via Nanotechnology Stage I.
@@ -180,6 +181,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Advanced research now includes `Space Antimatter Safety Regulations` (12M), unlocking mega project `Space Antimatter`: the project starts completed on unlock, battery builds are instant batch actions (`-`,`+`,`/10`,`x10`) costing metal/electronics/superconductors from colony or space storage per Space Storage mode, each battery adds `1e15` to `space.energy` storage cap, and battery count persists through travel.
 - `Space Antimatter Safety Regulations` also unlocks an `Antimatter Farm` alternate recipe that converts colony `energy` into `space.energy` at a `1:1` ratio.
 - Advanced research now includes `Nuclear Alchemy` (100M), unlocking the repeatable giga `Nuclear Alchemical Furnace`: furnace expansion scales with terraformed worlds and can go continuous, run mode assigns furnaces per output resource (Carbon/Graphite, Oxygen, Nitrogen, Silica, Metal), consumes space-storage hydrogen by assignment/complexity, and reports conversion rates in space-storage tooltips.
+- Advanced research now includes `Gigafoundries` (10B), unlocking the repeatable giga `Superalloy Gigafoundry`: gigafoundry expansion scales with terraformed worlds and can go continuous, uses the Nuclear Alchemical Furnace assignment UI with a single Superalloy recipe, converts space-storage metal plus space energy into space-storage superalloys, runs at 1 batch/s per assigned gigafoundry (`1T` space metal and `1e19` space energy per second each before productivity throttling), and applies the same WGC superalloy output multiplier as the `Superalloy Foundry`.
 - Advanced research now includes `Manufacturing Worlds` (500M), unlocking a zero-cost world-specialization project (mutually exclusive with Bioworld/Foundry/Holy World): completed departures grant MP as `max(1, log10(population))`, then +10% per hazard on that world, bank departed population permanently as cumulative manufacturing potential, and enable global assignment-based space-storage manufacturing for Glass/Components/Electronics/Superconductors/Superalloys with MP-shop scaling (+1% production and consumption per level, max 900 each).
 - Galactic Market uses fixed 1x estimates for cost/gain (ignores productivity).
 - Projects can set `attributes.ignoreDurationModifiers: true` to lock runtime to base duration and ignore all project duration modifiers.

@@ -659,6 +659,30 @@ const projectParameters = {
       spaceBuilding: true
     }
   },
+  superalloyGigafoundry: {
+    type: 'SuperalloyGigafoundryProject',
+    name: 'Superalloy Gigafoundry',
+    category: 'giga',
+    cost: {
+      colony: {
+        superalloys: 1_000_000_000_000_000,
+        components: 100_000_000_000_000,
+        superconductors: 100_000_000_000_000,
+        glass: 100_000_000_000_000,
+        electronics: 50_000_000_000_000
+      }
+    },
+    duration: 36_000_000,
+    description: 'Build giga-scale foundries that convert metal and space energy into vast amounts of superalloys. Expansion scales with terraformed worlds.',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      alchemyParameter: 1,
+      spaceBuilding: true
+    }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: 'Orbital Ring',

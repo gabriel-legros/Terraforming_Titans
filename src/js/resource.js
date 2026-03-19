@@ -592,6 +592,7 @@ const SPACE_BUILDING_PRODUCTIVITY_PROJECTS = {
   manufacturingWorld: true,
   lifters: true,
   nuclearAlchemyFurnace: true,
+  superalloyGigafoundry: true,
 };
 
 const shouldApplySpaceBuildingProductivity = (project) =>
@@ -703,7 +704,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
       if (projectManager.isProjectRelevantToCurrentPlanet?.(project) === false) {
         continue;
       }
-      if (shouldApplyProjectProductivity(project)) {
+      if (typeof project?.estimateCostAndGain === 'function') {
         project.estimateCostAndGain(deltaTime, true, 1);
       }
     }
@@ -1127,7 +1128,9 @@ function calculateResourceAvailabilityRatio(resource, deltaTime) {
   if (requiredAmount <= 0) {
     return 0;
   }
-  const availableAmount = resource.value + resource.productionRate * seconds;
+  const producedAmount = Math.max(0, resource.productionRate * seconds);
+  const storedAmount = Math.max(0, resource.value - (resource.reserved || 0));
+  const availableAmount = producedAmount + storedAmount;
   return Math.max(0, Math.min(availableAmount / requiredAmount, 1));
 }
 

@@ -23,7 +23,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     const dummyButton = { textContent: '', disabled: false };
     const dummyWrapper = { style: { display: '' } };
     const rowElements = {};
-    ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', name].forEach((key) => {
+    ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', name].forEach((key) => {
       rowElements[key] = {
         wrapper: dummyWrapper,
         value: dummyText,
@@ -73,7 +73,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
   }
 
   getAllAssignableKeys() {
-    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace'];
+    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry'];
   }
 
   shouldShowNuclearAlchemyTarget() {
@@ -84,10 +84,21 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     return project.unlocked || project.isActive || project.repeatCount > 0;
   }
 
+  shouldShowSuperalloyGigafoundryTarget() {
+    const project = projectManager?.projects?.superalloyGigafoundry;
+    if (!project) {
+      return false;
+    }
+    return project.unlocked || project.isActive || project.repeatCount > 0;
+  }
+
   getOptionalAssignmentKeys() {
     const keys = [];
     if (this.shouldShowNuclearAlchemyTarget()) {
       keys.push('nuclearAlchemyFurnace');
+    }
+    if (this.shouldShowSuperalloyGigafoundryTarget()) {
+      keys.push('superalloyGigafoundry');
     }
     return keys;
   }
@@ -534,7 +545,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       };
     };
 
-    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace'];
+    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry'];
     assignmentKeys.forEach((key) => {
       const project = projectManager.projects[key];
       const labelText = project?.displayName || key;
@@ -574,7 +585,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     }
 
     const activeDyson = this.getActiveDysonKey();
-    const keys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace'];
+    const keys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry'];
     keys.forEach((key) => {
       const row = elements.rowElements[key];
       const current = this.yardAssignments[key] || 0;
@@ -603,6 +614,8 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         row.wrapper.style.display = display;
       } else if (key === 'nuclearAlchemyFurnace') {
         row.wrapper.style.display = this.shouldShowNuclearAlchemyTarget() ? '' : 'none';
+      } else if (key === 'superalloyGigafoundry') {
+        row.wrapper.style.display = this.shouldShowSuperalloyGigafoundryTarget() ? '' : 'none';
       }
     });
   }

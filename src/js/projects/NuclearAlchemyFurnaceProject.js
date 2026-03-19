@@ -93,6 +93,51 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return NUCLEAR_ALCHEMY_RECIPES[key];
   }
 
+  showsComplexityColumn() {
+    return true;
+  }
+
+  getAssignmentNameHeaderText() {
+    return 'Resource';
+  }
+
+  getComplexityHeaderText() {
+    return 'Complexity';
+  }
+
+  getComplexityValueText(key) {
+    return formatNumber(this.getRecipe(key).complexity, true);
+  }
+
+  getControlTitleText() {
+    return 'Furnace Controls';
+  }
+
+  getTotalUnitsLabelText() {
+    return 'Total Furnaces';
+  }
+
+  getRunToggleText() {
+    return 'Run furnaces';
+  }
+
+  getPrimaryRateLabelText() {
+    return 'Hydrogen Use';
+  }
+
+  getPrimaryRateText() {
+    return `${formatNumber(this.lastHydrogenPerSecond, true, 3)}/s`;
+  }
+
+  getExpansionRateText(rate) {
+    return `${formatNumber(rate, true, 3)} furnaces/s`;
+  }
+
+  getOperationNoteText() {
+    const parameter = formatNumber(this.getAlchemyParameter(), true, 3);
+    return `Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x ${parameter}/s.`;
+  }
+
   normalizeAssignments() {
     const keys = this.getAssignmentKeys();
     const keySet = new Set(keys);
@@ -273,44 +318,21 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getOperationProductivityForTick(defaultProductivity = 1, deltaTime = 1000) {
-    if (!this.shouldOperate()) {
-      return Math.max(0, Math.min(1, defaultProductivity));
-    }
+    return Math.max(0, Math.min(1, defaultProductivity));
+  }
 
-    const seconds = deltaTime / 1000;
-    if (!(seconds > 0)) {
-      return Math.max(0, Math.min(1, defaultProductivity));
+  getOperationShortfallStatus(productivity = 1) {
+    const hydrogenRatio = Math.max(
+      0,
+      Math.min(1, Number(resources?.spaceStorage?.hydrogen?.availabilityRatio) || 0)
+    );
+    if (hydrogenRatio <= 0) {
+      return 'No hydrogen in space storage';
     }
-
-    this.normalizeAssignments();
-    const storage = this.getSpaceStorageProject();
-    if (!storage) {
-      return 0;
+    if (hydrogenRatio < 1 || productivity < 1) {
+      return 'Insufficient hydrogen in space storage';
     }
-
-    const entries = this.buildConversionEntries(seconds, 1);
-    if (entries.length === 0) {
-      return 0;
-    }
-
-    let desiredHydrogen = 0;
-    entries.forEach((entry) => {
-      desiredHydrogen += entry.desired || 0;
-    });
-    if (!(desiredHydrogen > 0)) {
-      return 0;
-    }
-
-    const sharedHydrogenRatio = Number(resources?.spaceStorage?.hydrogen?.availabilityRatio);
-    if (Number.isFinite(sharedHydrogenRatio)) {
-      return Math.max(0, Math.min(1, sharedHydrogenRatio));
-    }
-
-    const hydrogenAvailable = storage.getAvailableStoredResource('hydrogen');
-    if (!(hydrogenAvailable > 0)) {
-      return 0;
-    }
-    return Math.max(0, Math.min(1, hydrogenAvailable / desiredHydrogen));
+    return 'Idle';
   }
 
   buildConversionEntries(seconds, productivity = 1) {
@@ -343,65 +365,6 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       });
     });
     return entries;
-  }
-
-  allocateHydrogen(entries, hydrogenAvailable) {
-    const allocations = {};
-    if (!(hydrogenAvailable > 0)) {
-      return allocations;
-    }
-    const allWork = entries
-      .filter((entry) => entry.desired > 0)
-      .map((entry) => ({
-        key: entry.key,
-        desiredLeft: entry.desired,
-        amount: 0
-      }));
-    const work = allWork.slice();
-
-    let remainingHydrogen = hydrogenAvailable;
-
-    while (remainingHydrogen > 1e-9 && work.length > 0) {
-      let totalDesired = 0;
-      work.forEach((entry) => {
-        totalDesired += entry.desiredLeft;
-      });
-      if (!(totalDesired > 0)) {
-        break;
-      }
-
-      const scale = Math.min(1, remainingHydrogen / totalDesired);
-      const nextWork = [];
-
-      work.forEach((entry) => {
-        const requested = entry.desiredLeft * scale;
-        const granted = Math.min(requested, remainingHydrogen);
-        if (granted > 0) {
-          entry.amount += granted;
-          entry.desiredLeft = Math.max(0, entry.desiredLeft - granted);
-          remainingHydrogen = Math.max(0, remainingHydrogen - granted);
-        }
-        if (entry.desiredLeft > 1e-9 && remainingHydrogen > 1e-9) {
-          nextWork.push(entry);
-        }
-      });
-
-      if (nextWork.length === work.length && scale >= 1) {
-        break;
-      }
-      work.length = 0;
-      nextWork.forEach((entry) => work.push(entry));
-    }
-
-    allWork.forEach((entry) => {
-      allocations[entry.key] = entry.amount;
-    });
-    entries.forEach((entry) => {
-      if (!Object.prototype.hasOwnProperty.call(allocations, entry.key)) {
-        allocations[entry.key] = 0;
-      }
-    });
-    return allocations;
   }
 
   applyExpansionCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -473,44 +436,42 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       return;
     }
 
-    const hydrogenAvailable = this.getAvailableStoredResourceForTick(storage, 'hydrogen', accumulatedChanges);
-    if (!(hydrogenAvailable > 0)) {
+    let hydrogenRequested = 0;
+    entries.forEach((entry) => {
+      hydrogenRequested += entry.desired || 0;
+    });
+    if (!(hydrogenRequested > 0)) {
       this.setLastRunStats(0, {});
-      this.updateStatus('No hydrogen in space storage');
-      this.shortfallLastTick = true;
+      const status = this.getOperationShortfallStatus(productivity);
+      this.updateStatus(status);
+      this.shortfallLastTick = status !== 'Idle';
       return;
     }
 
-    const allocations = this.allocateHydrogen(entries, hydrogenAvailable);
     const outputDisplayAmounts = {};
     let hydrogenDisplaySpent = 0;
     let hydrogenNetConsumed = 0;
     let outputCapBlocked = false;
 
     entries.forEach((entry) => {
-      const requested = allocations[entry.key] || 0;
+      const requested = entry.desired || 0;
       outputDisplayAmounts[entry.key] = 0;
       if (!(requested > 0)) {
         return;
       }
-      const availableHydrogen = this.getAvailableStoredResourceForTick(storage, 'hydrogen', accumulatedChanges);
-      const spent = Math.min(requested, availableHydrogen);
-      if (!(spent > 0)) {
-        return;
-      }
-      this.applySpaceStorageDeltaForTick('hydrogen', -spent, accumulatedChanges);
-      outputDisplayAmounts[entry.key] = spent;
-      hydrogenDisplaySpent += spent;
+      this.applySpaceStorageDeltaForTick('hydrogen', -requested, accumulatedChanges);
+      outputDisplayAmounts[entry.key] = requested;
+      hydrogenDisplaySpent += requested;
       const current = this.getStoredResourceValueForTick(storage, entry.storageKey, accumulatedChanges);
       const capLimit = storage.getResourceCapLimit(entry.storageKey);
       const capRemaining = Math.max(0, capLimit - current);
-      const produced = Math.min(spent, capRemaining);
+      const produced = Math.min(requested, capRemaining);
       if (produced > 0) {
         this.applySpaceStorageDeltaForTick(entry.storageKey, produced, accumulatedChanges);
       }
-      if (spent > produced) {
+      if (requested > produced) {
         outputCapBlocked = true;
-        this.applySpaceStorageDeltaForTick('hydrogen', spent - produced, accumulatedChanges);
+        this.applySpaceStorageDeltaForTick('hydrogen', requested - produced, accumulatedChanges);
       }
       hydrogenNetConsumed += produced;
     });
@@ -642,17 +603,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     if (entries.length === 0) {
       return totals;
     }
-    const hydrogenAvailable = storage.getAvailableStoredResource('hydrogen');
-    if (!(hydrogenAvailable > 0)) {
-      return totals;
-    }
-
-    const allocations = this.allocateHydrogen(entries, hydrogenAvailable);
     const outputDisplayAmounts = {};
     let hydrogenDisplaySpent = 0;
 
     entries.forEach((entry) => {
-      const requested = allocations[entry.key] || 0;
+      const requested = entry.desired || 0;
       outputDisplayAmounts[entry.key] = requested;
       hydrogenDisplaySpent += requested;
     });
@@ -719,7 +674,35 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   estimateProductivityCostAndGain(deltaTime = 1000) {
-    return { cost: {}, gain: {} };
+    const totals = { cost: {}, gain: {} };
+    if (!this.shouldOperate()) {
+      return totals;
+    }
+
+    const seconds = deltaTime / 1000;
+    if (!(seconds > 0)) {
+      return totals;
+    }
+
+    this.normalizeAssignments();
+    const entries = this.buildConversionEntries(seconds, 1);
+    if (entries.length === 0) {
+      return totals;
+    }
+
+    let desiredHydrogen = 0;
+    entries.forEach((entry) => {
+      desiredHydrogen += entry.desired || 0;
+    });
+    if (!(desiredHydrogen > 0)) {
+      return totals;
+    }
+
+    totals.cost.spaceStorage = {
+      hydrogen: desiredHydrogen
+    };
+
+    return totals;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
@@ -747,7 +730,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     header.classList.add('card-header');
     const title = document.createElement('span');
     title.classList.add('card-title');
-    title.textContent = 'Furnace Controls';
+    title.textContent = this.getControlTitleText();
     header.appendChild(title);
     card.appendChild(header);
 
@@ -769,7 +752,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       return value;
     };
 
-    const totalValue = createStatBox('Total Furnaces');
+    const totalValue = createStatBox(this.getTotalUnitsLabelText());
     const freeValue = createStatBox('Unassigned');
     const expansionRateValue = createStatBox('Expansion');
     body.appendChild(summaryGrid);
@@ -784,7 +767,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     runCheckbox.id = `${this.name}-run`;
     const runLabel = document.createElement('label');
     runLabel.htmlFor = runCheckbox.id;
-    runLabel.textContent = 'Run furnaces';
+    runLabel.textContent = this.getRunToggleText();
     runField.append(runCheckbox, runLabel);
     controlsGrid.appendChild(runField);
 
@@ -801,7 +784,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     hydrogenField.classList.add('stat-item');
     const hydrogenLabel = document.createElement('span');
     hydrogenLabel.classList.add('stat-label');
-    hydrogenLabel.textContent = 'Hydrogen Use';
+    hydrogenLabel.textContent = this.getPrimaryRateLabelText();
     const hydrogenRateValue = document.createElement('span');
     hydrogenField.append(hydrogenLabel, hydrogenRateValue);
     controlsGrid.appendChild(hydrogenField);
@@ -827,10 +810,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
     const headerName = document.createElement('span');
     headerName.classList.add('stat-label');
-    headerName.textContent = 'Resource';
+    headerName.textContent = this.getAssignmentNameHeaderText();
     const headerComplexity = document.createElement('span');
     headerComplexity.classList.add('stat-label');
-    headerComplexity.textContent = 'Complexity';
+    headerComplexity.textContent = this.getComplexityHeaderText();
     const headerAssigned = document.createElement('span');
     headerAssigned.classList.add('stat-label');
     headerAssigned.textContent = 'Assigned';
@@ -846,6 +829,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const headerRate = document.createElement('div');
     headerRate.classList.add('stat-label', 'nuclear-alchemy-rate-cell');
     headerRate.textContent = 'Rate';
+    if (!this.showsComplexityColumn()) {
+      headerComplexity.style.display = 'none';
+    }
     headerRow.append(headerName, headerComplexity, headerAssigned, headerControls, headerRate);
     assignmentGrid.appendChild(headerRow);
 
@@ -865,7 +851,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
       const complexityEl = document.createElement('span');
       complexityEl.classList.add('stat-value');
-      complexityEl.textContent = formatNumber(recipe.complexity, true);
+      complexityEl.textContent = this.getComplexityValueText(key);
+      if (!this.showsComplexityColumn()) {
+        complexityEl.style.display = 'none';
+      }
 
       const amountEl = document.createElement('span');
       amountEl.classList.add('stat-value');
@@ -1004,18 +993,17 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
     elements.totalValue.textContent = formatNumber(total, true, 2);
     elements.freeValue.textContent = formatNumber(available, true, 2);
-    elements.hydrogenRateValue.textContent = `${formatNumber(this.lastHydrogenPerSecond, true, 3)}/s`;
+    elements.hydrogenRateValue.textContent = this.getPrimaryRateText();
     const expansionRate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
     const limitedExpansion = this.expansionRateLimitedLastTick && this.lastExpansionRatePerSecond >= 0;
     const displayedExpansionRate = limitedExpansion ? this.lastExpansionRatePerSecond : expansionRate;
     elements.expansionRateValue.style.color = limitedExpansion ? 'orange' : '';
-    elements.expansionRateValue.textContent = `${formatNumber(displayedExpansionRate, true, 3)} furnaces/s`;
+    elements.expansionRateValue.textContent = this.getExpansionRateText(displayedExpansionRate);
     elements.statusValue.textContent = this.statusText || 'Idle';
     elements.runCheckbox.checked = this.isRunning;
     elements.runCheckbox.disabled = total <= 0;
     if (elements.note) {
-      const parameter = formatNumber(this.getAlchemyParameter(), true, 3);
-      elements.note.textContent = `Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x ${parameter}/s.`;
+      elements.note.textContent = this.getOperationNoteText();
     }
 
     this.getAssignmentKeys().forEach((key) => {
