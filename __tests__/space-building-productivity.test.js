@@ -987,4 +987,64 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(lifters.lastHydrogenPerSecond, 1);
     cleanup();
   });
+
+  test('Lifters preserve supercharge across save/load before Star Lifting effects are reapplied', () => {
+    const harness = setupHarness({ hydrogen: 0, spaceEnergy: 100 });
+    const { LiftersProject, cleanup } = harness;
+
+    const savedLifters = new LiftersProject({
+      name: 'Lifters',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        spaceBuilding: true,
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 10,
+        lifterHarvestRecipes: {
+          hydrogen: {
+            label: 'Hydrogen',
+            storageKey: 'hydrogen',
+            outputMultiplier: 1,
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'lifters');
+
+    savedLifters.booleanFlags.add('starLifting');
+    savedLifters.setSuperchargeMultiplier(7);
+    const state = savedLifters.saveState();
+
+    const loadedLifters = new LiftersProject({
+      name: 'Lifters',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        spaceBuilding: true,
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 10,
+        lifterHarvestRecipes: {
+          hydrogen: {
+            label: 'Hydrogen',
+            storageKey: 'hydrogen',
+            outputMultiplier: 1,
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'lifters');
+
+    loadedLifters.loadState(state);
+
+    expect(loadedLifters.superchargeMultiplier).toBe(7);
+    expect(loadedLifters.getEffectiveSuperchargeMultiplier()).toBe(1);
+
+    loadedLifters.booleanFlags.add('starLifting');
+
+    expect(loadedLifters.superchargeMultiplier).toBe(7);
+    expect(loadedLifters.getEffectiveSuperchargeMultiplier()).toBe(7);
+    cleanup();
+  });
 });

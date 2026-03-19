@@ -97,7 +97,12 @@ class LiftersProject extends LiftersContinuousExpansionBase {
   }
 
   normalizeSuperchargeForFlags() {
-    this.superchargeMultiplier = this.getEffectiveSuperchargeMultiplier();
+    const parsed = Number(this.superchargeMultiplier);
+    if (Number.isFinite(parsed) && parsed >= 1) {
+      this.superchargeMultiplier = Math.max(1, Math.min(10, Math.round(parsed)));
+      return;
+    }
+    this.superchargeMultiplier = 1;
   }
 
   setSuperchargeMultiplier(value) {
