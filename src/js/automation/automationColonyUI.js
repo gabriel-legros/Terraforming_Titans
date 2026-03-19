@@ -536,93 +536,97 @@ function updateColonyAutomationUI() {
     );
   colonyBuilderDirty.style.display = newDirty || existingDirty ? '' : 'none';
 
-  colonyApplyList.textContent = '';
   const assignments = automation.getAssignments();
-  assignments.forEach((assignment, index) => {
-    const row = document.createElement('div');
-    row.classList.add('building-automation-apply-row');
-    const primary = document.createElement('div');
-    primary.classList.add('building-automation-apply-primary');
-    const toggle = createToggleButton({ onLabel: 'Apply On', offLabel: 'Apply Off', isOn: assignment.enabled });
-    toggle.classList.add('building-automation-apply-toggle');
-    toggle.addEventListener('click', () => {
-      automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-    const select = document.createElement('select');
-    presets.forEach(preset => {
-      const option = document.createElement('option');
-      option.value = String(preset.id);
-      option.textContent = preset.name || `Preset ${preset.id}`;
-      if (assignment.presetId === preset.id) {
-        option.selected = true;
+  const applyHasFocus = colonyApplyList.contains(document.activeElement)
+    && document.activeElement.tagName === 'SELECT';
+  if (!applyHasFocus) {
+    colonyApplyList.textContent = '';
+    assignments.forEach((assignment, index) => {
+      const row = document.createElement('div');
+      row.classList.add('building-automation-apply-row');
+      const primary = document.createElement('div');
+      primary.classList.add('building-automation-apply-primary');
+      const toggle = createToggleButton({ onLabel: 'Apply On', offLabel: 'Apply Off', isOn: assignment.enabled });
+      toggle.classList.add('building-automation-apply-toggle');
+      toggle.addEventListener('click', () => {
+        automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+      const select = document.createElement('select');
+      presets.forEach(preset => {
+        const option = document.createElement('option');
+        option.value = String(preset.id);
+        option.textContent = preset.name || `Preset ${preset.id}`;
+        if (assignment.presetId === preset.id) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+      if (!presets.length) {
+        const empty = document.createElement('option');
+        empty.textContent = 'No presets saved';
+        empty.disabled = true;
+        empty.selected = true;
+        select.appendChild(empty);
       }
-      select.appendChild(option);
-    });
-    if (!presets.length) {
-      const empty = document.createElement('option');
-      empty.textContent = 'No presets saved';
-      empty.disabled = true;
-      empty.selected = true;
-      select.appendChild(empty);
-    }
-    const detail = document.createElement('span');
-    detail.classList.add('building-automation-apply-detail');
-    const updateDetail = (presetId) => {
-      const preset = automation.getPresetById(presetId);
-      const detailText = preset
-        ? formatColonyAutomationPresetType(preset)
-        : 'Select a preset';
-      const targetList = preset
-        ? preset.scopeAll
-          ? 'All available targets'
-          : Object.keys(preset.targets).map(targetId => automation.getTargetLabel(targetId)).join(', ')
-        : '';
-      detail.textContent = targetList ? `${detailText} / ${targetList}` : detailText;
-    };
-    updateDetail(assignment.presetId);
-    select.addEventListener('change', (event) => {
-      const presetId = Number(event.target.value);
-      automation.setAssignmentPreset(assignment.id, presetId);
-      updateDetail(presetId);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
+      const detail = document.createElement('span');
+      detail.classList.add('building-automation-apply-detail');
+      const updateDetail = (presetId) => {
+        const preset = automation.getPresetById(presetId);
+        const detailText = preset
+          ? formatColonyAutomationPresetType(preset)
+          : 'Select a preset';
+        const targetList = preset
+          ? preset.scopeAll
+            ? 'All available targets'
+            : Object.keys(preset.targets).map(targetId => automation.getTargetLabel(targetId)).join(', ')
+          : '';
+        detail.textContent = targetList ? `${detailText} / ${targetList}` : detailText;
+      };
+      updateDetail(assignment.presetId);
+      select.addEventListener('change', (event) => {
+        const presetId = Number(event.target.value);
+        automation.setAssignmentPreset(assignment.id, presetId);
+        updateDetail(presetId);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
 
-    const controls = document.createElement('div');
-    controls.classList.add('building-automation-apply-controls');
-    const moveUp = document.createElement('button');
-    moveUp.textContent = '↑';
-    moveUp.title = 'Move up';
-    moveUp.disabled = index === 0;
-    moveUp.addEventListener('click', () => {
-      automation.moveAssignment(assignment.id, -1);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
+      const controls = document.createElement('div');
+      controls.classList.add('building-automation-apply-controls');
+      const moveUp = document.createElement('button');
+      moveUp.textContent = '↑';
+      moveUp.title = 'Move up';
+      moveUp.disabled = index === 0;
+      moveUp.addEventListener('click', () => {
+        automation.moveAssignment(assignment.id, -1);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+      const moveDown = document.createElement('button');
+      moveDown.textContent = '↓';
+      moveDown.title = 'Move down';
+      moveDown.disabled = index === assignments.length - 1;
+      moveDown.addEventListener('click', () => {
+        automation.moveAssignment(assignment.id, 1);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+      const remove = document.createElement('button');
+      remove.textContent = '✕';
+      remove.title = 'Remove preset';
+      remove.addEventListener('click', () => {
+        automation.removeAssignment(assignment.id);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+      controls.append(moveUp, moveDown, remove);
+      primary.append(toggle, select);
+      row.append(primary, detail, controls);
+      colonyApplyList.appendChild(row);
     });
-    const moveDown = document.createElement('button');
-    moveDown.textContent = '↓';
-    moveDown.title = 'Move down';
-    moveDown.disabled = index === assignments.length - 1;
-    moveDown.addEventListener('click', () => {
-      automation.moveAssignment(assignment.id, 1);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-    const remove = document.createElement('button');
-    remove.textContent = '✕';
-    remove.title = 'Remove preset';
-    remove.addEventListener('click', () => {
-      automation.removeAssignment(assignment.id);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-    });
-    controls.append(moveUp, moveDown, remove);
-    primary.append(toggle, select);
-    row.append(primary, detail, controls);
-    colonyApplyList.appendChild(row);
-  });
+  }
 
   colonyAddApplyButton.disabled = presets.length === 0;
   colonyApplyHint.textContent = presets.length === 0
