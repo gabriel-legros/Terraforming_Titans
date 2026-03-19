@@ -423,7 +423,9 @@ class Aerostat extends BaseColony {
       return null;
     }
 
-    const molecularWeight = globalThis.calculateMolecularWeight?.(atmosphere);
+    const molecularWeight = globalThis.calculateMolecularWeight?.(
+      getAerostatLiftComposition(atmosphere)
+    );
     if (!Number.isFinite(molecularWeight) || molecularWeight <= 0) {
       return null;
     }
@@ -853,7 +855,9 @@ function getAerostatLiftContext() {
     return { lift: null, molecularWeight: null };
   }
 
-  const externalMolWeight = globalThis.calculateMolecularWeight?.(atmosphere);
+  const externalMolWeight = globalThis.calculateMolecularWeight?.(
+    getAerostatLiftComposition(atmosphere)
+  );
   if (!Number.isFinite(externalMolWeight) || externalMolWeight <= 0) {
     return { lift: null, molecularWeight: null };
   }
@@ -870,6 +874,21 @@ function getAerostatLiftContext() {
   }
 
   return { lift, molecularWeight: externalMolWeight };
+}
+
+function getAerostatLiftComposition(atmosphere) {
+  if (!atmosphere || typeof atmosphere !== 'object') {
+    return atmosphere;
+  }
+
+  const composition = {};
+  for (const key in atmosphere) {
+    if (key === 'calciteAerosol') {
+      continue;
+    }
+    composition[key] = atmosphere[key];
+  }
+  return composition;
 }
 
 function attachAerostatBuoyancySection(container, structure) {
@@ -936,7 +955,7 @@ function attachAerostatBuoyancySection(container, structure) {
     liftInfo.innerHTML = '&#9432;';
     const liftTooltip = attachDynamicInfoTooltip(
       liftInfo,
-      'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.  When "Land as Research Outpost" is enabled, disabled aerostats will attempt to convert into Research Outposts if land is available.'
+      'Specific lift at 1 atm and 21°C using current atmospheric composition, excluding calcite aerosol, compared to breathable air.  When "Land as Research Outpost" is enabled, disabled aerostats will attempt to convert into Research Outposts if land is available.'
     );
     liftRow.appendChild(liftInfo);
 
@@ -1180,7 +1199,7 @@ function updateAerostatBuoyancySection(structure) {
 
   if (ui.liftInfo) {
     let title =
-      'Specific lift at 1 atm and 21°C using current atmospheric composition compared to breathable air.';
+      'Specific lift at 1 atm and 21°C using current atmospheric composition, excluding calcite aerosol, compared to breathable air.';
     if (Number.isFinite(molecularWeight) && molecularWeight > 0) {
       title += `\nExternal mean molecular weight: ${formatNumber(
         molecularWeight,
