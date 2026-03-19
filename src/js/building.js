@@ -164,7 +164,9 @@ class Building extends EffectableEntity {
     let maxBuildable = this.maxBuildable(reservePercent, additionalReserves);
 
     if (this.requiresLand && typeof this.landAffordCount === 'function') {
-      maxBuildable = Math.min(maxBuildable, this.landAffordCount());
+      const inactiveCount = Math.max(0, this.count - this.active);
+      const remainingLandBackedBuilds = Math.max(0, this.landAffordCount() - inactiveCount);
+      maxBuildable = Math.min(maxBuildable, remainingLandBackedBuilds);
     }
 
     return Math.max(maxBuildable, 0);
