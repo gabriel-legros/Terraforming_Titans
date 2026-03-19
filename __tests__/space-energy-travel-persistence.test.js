@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const { JSDOM, ResourceLoader } = require('jsdom');
 
@@ -181,6 +182,13 @@ async function createGameDom() {
   return dom;
 }
 
+function loadSave(window, relativePath) {
+  installPlanetVisualizerStub(window);
+  const savePath = path.resolve(__dirname, '..', relativePath);
+  const saveText = fs.readFileSync(savePath, 'utf8');
+  window.loadGame(saveText, true);
+}
+
 describe('space energy travel persistence', () => {
   it('keeps stored space energy when traveling to another story planet', async () => {
     const dom = await createGameDom();
@@ -217,6 +225,32 @@ describe('space energy travel persistence', () => {
       getGlobal(window, 'produceResources(1000, buildings)');
 
       expect(getGlobal(window, 'resources.space.energy.value')).toBe(expectedValue);
+    } finally {
+      dom.window.close();
+    }
+  }, 20000);
+
+  it('preserves stored space energy when traveling away from a late-game debug save', async () => {
+    const dom = await createGameDom();
+    const { window } = dom;
+
+    try {
+      loadSave(window, 'test_saves/debug/oversight2.json');
+      installPlanetVisualizerStub(window);
+
+      const beforeEnergy = getGlobal(window, 'resources.space.energy.value');
+      const beforeCap = getGlobal(window, 'resources.space.energy.cap');
+      expect(beforeEnergy).toBeGreaterThan(0);
+      expect(beforeCap).toBeGreaterThan(0);
+
+      window.selectPlanet('titan', true, true);
+      await waitFor(window, () => getGlobal(window, 'spaceManager.getCurrentPlanetKey() === "titan"'));
+
+      expect(getGlobal(window, 'resources.space.energy.cap')).toBe(beforeCap);
+      expect(getGlobal(window, 'resources.space.energy.value')).toBe(beforeEnergy);
+
+      getGlobal(window, 'produceResources(1000, buildings)');
+      expect(getGlobal(window, 'resources.space.energy.value')).toBe(beforeEnergy);
     } finally {
       dom.window.close();
     }

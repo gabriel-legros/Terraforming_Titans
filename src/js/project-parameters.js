@@ -685,7 +685,7 @@ const projectParameters = {
   },
   apolloCoreSurgeryPlatform: {
     type: 'ApolloCoreSurgeryPlatformProject',
-    name: 'Apollo Planetary Core Surgery Plateform',
+    name: 'Apollo Planetary Core Surgery Platform',
     category: 'giga',
     cost: {
       colony: {
