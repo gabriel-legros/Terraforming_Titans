@@ -1697,11 +1697,16 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function buildStructureCostTooltip(structure, category, resource, buildCount) {
-    const baseCost = structure.cost?.[category]?.[resource] ?? 0;
-    const totalBaseCost = baseCost * buildCount;
-    const lines = [`Base cost: ${formatNumber(totalBaseCost, true)}`];
-    const multipliers = [];
+    const singleCost =
+      structure.getEffectiveCost(1)?.[category]?.[resource] ?? 0;
+    const selectedTotalCost =
+      structure.getEffectiveCost(buildCount)?.[category]?.[resource] ?? 0;
     const kesslerMultiplier = structure.getKesslerCostMultiplier();
+    const lines = [
+      `One additional cost: ${formatNumber(singleCost, true)}`,
+      `Selected total cost: ${formatNumber(selectedTotalCost, true)}`
+    ];
+    const multipliers = [];
 
     if (kesslerMultiplier !== 1) {
       const sizeLabel = structure.kesslerDebrisSize === 'large' ? 'large' : 'small';

@@ -672,7 +672,7 @@ const projectParameters = {
         electronics: 50_000_000_000_000
       }
     },
-    duration: 72_000_000,
+    duration: 144_000_000,
     description: 'Build giga-scale foundries that convert metal and space energy into vast amounts of superalloys. Expansion scales with terraformed worlds.',
     repeatable: true,
     maxRepeatCount: Infinity,

@@ -891,6 +891,22 @@ function getAerostatLiftComposition(atmosphere) {
   return composition;
 }
 
+function formatAerostatResearchCost(value) {
+  if (!Number.isFinite(value) || value === 0) {
+    return '0';
+  }
+
+  if (Math.abs(value) >= 1) {
+    return formatNumber(value, false, 2, true);
+  }
+
+  if (Math.abs(value) >= 0.01) {
+    return formatNumber(value, false, 4, true);
+  }
+
+  return formatNumber(value, false, 3, true);
+}
+
 function attachAerostatBuoyancySection(container, structure) {
   if (!(structure instanceof Aerostat)) {
     return;
@@ -1322,10 +1338,8 @@ function updateAerostatBuoyancySection(structure) {
           2
         )}.`;
       }
-      limitTitle += `\nCurrent surcharge per new aerostat: ${formatNumber(
-        nextSurcharge,
-        false,
-        2
+      limitTitle += `\nCurrent surcharge per new aerostat: ${formatAerostatResearchCost(
+        nextSurcharge
       )} research.`;
     }
     setTooltipText(ui.limitTooltip, limitTitle, ui, 'limitTooltipText');

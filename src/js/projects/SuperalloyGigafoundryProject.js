@@ -2,13 +2,13 @@ const SUPERALLOY_GIGAFOUNDRY_RECIPE = {
   label: 'Superalloy',
   outputCategory: 'spaceStorage',
   outputKey: 'superalloys',
-  baseOutput: 1_000_000_000,
+  baseOutput: 500_000_000,
   inputs: {
     spaceStorage: {
-      metal: 1_000_000_000_000
+      metal: 500_000_000_000
     },
     space: {
-      energy: 10_000_000_000_000_000_000_000
+      energy: 5_000_000_000_000_000_000_000
     }
   },
   wgcUpgradeId: 'superalloyEfficiency'
