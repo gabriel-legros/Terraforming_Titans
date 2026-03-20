@@ -165,11 +165,26 @@ function formatHazardList(hazards) {
   return list.join(',');
 }
 
-function getSelectedHazards() {
-  if (rwgHazardEl.value !== HAZARD_MODE_ENABLED) return [];
+function getCheckedHazards() {
   return rwgHazardListOrder
     .filter((id) => rwgHazardItems[id] && rwgHazardItems[id].input.checked)
     .map((id) => id);
+}
+
+function getPersistedHazardSelection() {
+  const checked = getCheckedHazards();
+  if (checked.length) return checked;
+  let mgr = null;
+  try { mgr = rwgManager; } catch (_) { mgr = null; }
+  if (mgr && typeof mgr.getEnabledHazards === 'function') {
+    return normalizeHazardList(mgr.getEnabledHazards());
+  }
+  return [];
+}
+
+function getSelectedHazards() {
+  if (rwgHazardEl.value !== HAZARD_MODE_ENABLED) return [];
+  return getCheckedHazards();
 }
 
 function setSelectedHazards(hazards) {
@@ -394,6 +409,7 @@ function updateHazardListVisibility() {
 
 function refreshHazardSelect() {
   if (!rwgHazardEl) return;
+  const previousSelection = getPersistedHazardSelection();
   const mgr = typeof rwgManager !== 'undefined' ? rwgManager : globalThis.rwgManager;
   const featureUnlocked = mgr && typeof mgr.isFeatureUnlocked === 'function'
     ? mgr.isFeatureUnlocked('hazards')
@@ -426,7 +442,6 @@ function refreshHazardSelect() {
   }
   const key = JSON.stringify(hazards);
   if (rwgHazardItemsEl && rwgHazardItemsEl.dataset.lastHazardList !== key) {
-    const previous = getSelectedHazards();
     rwgHazardItems = {};
     rwgHazardListOrder = hazards.slice();
     rwgHazardItemsEl.innerHTML = '';
@@ -455,11 +470,13 @@ function refreshHazardSelect() {
       rwgHazardItems[id] = { input, label: text };
     });
     rwgHazardItemsEl.dataset.lastHazardList = key;
-    setSelectedHazards(previous);
+    setSelectedHazards(previousSelection);
   }
 
   const hasSelection = Array.from(rwgHazardEl.options).some((opt) => opt.value === rwgHazardEl.value);
-  if (!hasSelection) {
+  if (previousSelection.length) {
+    rwgHazardEl.value = HAZARD_MODE_ENABLED;
+  } else if (!hasSelection) {
     rwgHazardEl.value = HAZARD_MODE_NONE;
   }
   updateHazardListVisibility();
