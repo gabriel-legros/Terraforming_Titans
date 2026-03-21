@@ -361,6 +361,9 @@ function loadGame(slotOrCustomString, recreate = true) {
                 if(newConfig){
                   resources[category][resourceName].initializeFromConfig(resourceName, newConfig);
                 }
+                if (resources[category][resourceName].hydrateSerializedState) {
+                  resources[category][resourceName].hydrateSerializedState(gameState.resources[category][resourceName]);
+                }
                 resources[category][resourceName].activeEffects = [];
                 resources[category][resourceName].booleanFlags = new Set();
                 if (typeof resources[category][resourceName].reinitializeDisplayElements === 'function') {

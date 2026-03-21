@@ -1040,7 +1040,7 @@ class Building extends EffectableEntity {
 
   canAffordLand(amount = 1){
     if (this.requiresLand) {
-      if(resources.surface.land.value - resources.surface.land.reserved < this.requiresLand * amount){
+      if (!resources.surface.land.canAffordLandAmount(this.requiresLand * amount)) {
         return false;
       }
     }
@@ -1052,7 +1052,7 @@ class Building extends EffectableEntity {
     if(!this.requiresLand){
       return Infinity;
     }
-    return Math.floor((resources.surface.land.value - resources.surface.land.reserved) / this.requiresLand);
+    return Math.floor(resources.surface.land.getLandAffordCount(this.requiresLand));
   }
 
   adjustLand(amount){

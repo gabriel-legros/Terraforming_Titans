@@ -1170,11 +1170,14 @@ function createResourceElement(category, resourceObj, resourceName) {
       addTooltipHover(resourceElement, tooltip);
     }
   } else if (category === 'underground' || resourceObj.name === 'land') {
+    const availableAmount = resourceObj.getAvailableAmount
+      ? resourceObj.getAvailableAmount()
+      : (resourceObj.value - resourceObj.reserved);
     // Display for deposits
     resourceElement.innerHTML = `
       <div class="resource-row ${!resourceObj.hasCap ? 'no-cap' : ''}">
         <div class="resource-name"><strong id="${domPrefix}-name">${resourceObj.displayName}</strong><span class="resource-autobuild-warning" id="${domPrefix}-autobuild-warning"></span></div>
-        <div class="resource-value" id="${domPrefix}-available-resources-container">${Math.floor(resourceObj.value - resourceObj.reserved)}</div>
+        <div class="resource-value" id="${domPrefix}-available-resources-container">${Math.floor(availableAmount)}</div>
         ${resourceObj.hasCap ? `
           <div class="resource-slash">/</div>
           <div class="resource-cap"><span id="${domPrefix}-total-resources-container">${Math.floor(resourceObj.value)}</span></div>
@@ -1374,7 +1377,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         const activityRate = (resourceObj.productionRate || 0) + (resourceObj.consumptionRate || 0);
         const isUndergroundDeposit = category === 'underground';
         const hideWhenSmall = resourceObj.hideWhenSmall || isUndergroundDeposit;
-        const displayedAvailable = Math.floor(Math.max(0, resourceObj.value - resourceObj.reserved));
+        const displayedAvailable = Math.floor(Math.max(0, resourceObj.getAvailableAmount ? resourceObj.getAvailableAmount() : (resourceObj.value - resourceObj.reserved)));
         const displayedTotal = Math.floor(Math.max(0, resourceObj.value));
         const isZeroDisplayDeposit = isUndergroundDeposit && displayedAvailable <= 0 && displayedTotal <= 0;
         const isSmall =
@@ -1533,7 +1536,8 @@ function updateResourceDisplay(resources, deltaSeconds) {
         const scanningProgressElement = entry ? entry.scanEl : null;
 
         if (availableElement) {
-          availableElement.textContent = formatNumber(Math.floor(resourceObj.value - resourceObj.reserved), true);
+          const available = resourceObj.getAvailableAmount ? resourceObj.getAvailableAmount() : (resourceObj.value - resourceObj.reserved);
+          availableElement.textContent = formatNumber(Math.floor(available), true);
         }
 
         if (totalElement) {
@@ -1753,7 +1757,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
         valueDiv.appendChild(hazard);
         valueDiv._hazard = hazard;
       }
-      const availText = `Available ${formatNumber(resource.value - resource.reserved, false, 3)}`;
+      const availableAmount = resource.getAvailableAmount ? resource.getAvailableAmount() : (resource.value - resource.reserved);
+      const availText = `Available ${formatNumber(availableAmount, false, 3)}`;
       const usedText = `Used ${formatNumber(resource.reserved, false, 3)}`;
       if (avail.textContent !== availText) avail.textContent = availText;
       if (used.textContent !== usedText) used.textContent = usedText;

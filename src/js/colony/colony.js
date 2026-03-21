@@ -478,7 +478,10 @@ class Colony extends Building {
     for (const category in cost) {
       for (const resource in cost[category]) {
         if (resource === 'land') {
-          const available = resources[category][resource].value - resources[category][resource].reserved;
+          const landResource = resources[category][resource];
+          const available = landResource.getAvailableAmount
+            ? landResource.getAvailableAmount()
+            : landResource.value - landResource.reserved;
           if (available < cost[category][resource]) {
             return false;
           }

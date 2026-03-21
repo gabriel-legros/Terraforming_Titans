@@ -253,7 +253,8 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
                 const cap = resObj.cap || 0;
                 const reserve = Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
                 const prioritizedReserve = extraReserves?.[category]?.[resource] || 0;
-                const available = (resObj.value || 0) - reserve - prioritizedReserve;
+                const baseAvailable = resObj.getAvailableAmount ? resObj.getAvailableAmount() : (resObj.value || 0) - (resObj.reserved || 0);
+                const available = baseAvailable - reserve - prioritizedReserve;
                 if (available + 1e-9 < required) {
                     const depositRequirement = building.requiresDeposit?.underground?.[resource];
                     const isLandResource = category === 'surface' && resource === 'land' && (building.requiresLand || 0) > 0;
@@ -282,7 +283,7 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
             if (!resObj) continue;
             const required = building.requiresDeposit.underground[deposit] * requiredAmount;
             if (required <= 0) continue;
-            const available = (resObj.value || 0) - (resObj.reserved || 0);
+            const available = resObj.getAvailableAmount ? resObj.getAvailableAmount() : (resObj.value || 0) - (resObj.reserved || 0);
             if (available + 1e-9 < required) {
                 const ratio = available / required;
                 registerShortage(resObj, ratio, {
@@ -299,7 +300,7 @@ function markAutoBuildShortages(building, requiredAmount, reservePercent, extraR
             if (landRes) {
                 const required = building.requiresLand * requiredAmount;
                 if (required > 0) {
-                    const available = (landRes.value || 0) - (landRes.reserved || 0);
+                    const available = landRes.getAvailableAmount ? landRes.getAvailableAmount() : (landRes.value || 0) - (landRes.reserved || 0);
                     if (available + 1e-9 < required) {
                         const ratio = available / required;
                         registerShortage(landRes, ratio, {

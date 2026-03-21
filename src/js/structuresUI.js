@@ -1613,7 +1613,9 @@ function updateDecreaseButtonText(button, buildCount) {
       for (const resource in cost[category]) {
         let available = resources[category][resource]?.value || 0;
         if (resource === 'land') {
-          available -= resources[category][resource].reserved;
+          available = resources[category][resource].getAvailableAmount
+            ? resources[category][resource].getAvailableAmount()
+            : (available - resources[category][resource].reserved);
         }
         items.push({
           key: `${category}.${resource}`,

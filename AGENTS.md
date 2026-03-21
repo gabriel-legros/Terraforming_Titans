@@ -105,6 +105,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 6. Cap clamping
 7. Aggregate display rates
 - Shared productivity availability now uses stored stock plus same-tick production, so consumers can hold 100% throughput while inventory buffers last and only throttle once the buffer is no longer sufficient for the tick.
+- Surface land now keeps a fixed-point `BigInt` reservation/value ledger under the normal resource fields, so building/autobuild checks, hazard reservations, UI, and save/load stay stable on giant artificial worlds.
 
 ### Nanotechnology
 - `nanotechManager` unlocks via Nanotechnology Stage I.

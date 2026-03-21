@@ -1,6 +1,82 @@
 // Resource Class and Core Logic
 var debug_production = {};
 var debug_consumption = {};
+const EXACT_LAND_SCALE_DIGITS = 15;
+
+function isExactLandResource(resource) {
+  return resource && resource.category === 'surface' && resource.name === 'land';
+}
+
+function bigIntToApproxNumber(value, decimalDigits = 0) {
+  if (value === 0n) {
+    return 0;
+  }
+
+  const negative = value < 0n;
+  const absolute = negative ? -value : value;
+  const digits = absolute.toString();
+  let numeric;
+
+  if (digits.length <= 300) {
+    numeric = Number(digits);
+  } else {
+    const exponent = digits.length - decimalDigits - 1;
+    const mantissa = digits.length > 1
+      ? `${digits[0]}.${digits.slice(1, 16)}`
+      : digits;
+    numeric = Number(`${mantissa}e${exponent}`);
+    if (decimalDigits > 0) {
+      numeric /= Math.pow(10, decimalDigits);
+    }
+  }
+
+  if (decimalDigits > 0 && digits.length <= 300) {
+    numeric /= Math.pow(10, decimalDigits);
+  }
+
+  return negative ? -numeric : numeric;
+}
+
+function exactLandAmountToApproxNumber(value) {
+  return bigIntToApproxNumber(value, EXACT_LAND_SCALE_DIGITS);
+}
+
+function numberToExactLandAmount(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric === 0) {
+    return 0n;
+  }
+
+  const negative = numeric < 0;
+  const absolute = Math.abs(numeric);
+  const scientific = absolute.toExponential(EXACT_LAND_SCALE_DIGITS);
+  const scientificParts = scientific.split('e');
+  const digitsText = scientificParts[0].replace('.', '');
+  const exponent = parseInt(scientificParts[1], 10);
+  let scaled = BigInt(digitsText);
+
+  if (exponent >= 0) {
+    scaled *= 10n ** BigInt(exponent);
+  } else {
+    scaled /= 10n ** BigInt(-exponent);
+  }
+
+  return negative ? -scaled : scaled;
+}
+
+function parseSerializedExactLandAmount(value) {
+  if (typeof value === 'bigint') {
+    return value;
+  }
+  if (typeof value === 'string' && /^-?\d+$/.test(value)) {
+    return BigInt(value);
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return numberToExactLandAmount(value);
+  }
+  return null;
+}
+
 class Resource extends EffectableEntity {
   constructor(resourceData) {
     super(resourceData);
@@ -47,6 +123,16 @@ class Resource extends EffectableEntity {
     this.preserveOnTravelFields = Array.isArray(resourceData.preserveOnTravelFields)
       ? resourceData.preserveOnTravelFields.slice()
       : null;
+    this.exactValue = null;
+    this.exactReserved = null;
+    this.exactReservedSources = null;
+
+    if (this.isExactLandResource()) {
+      this.exactValue = numberToExactLandAmount(this.value);
+      this.exactReserved = numberToExactLandAmount(this.reserved);
+      this.exactReservedSources = {};
+      this.syncApproximateLandState();
+    }
   }
 
   // Method to initialize configurable properties
@@ -115,8 +201,192 @@ class Resource extends EffectableEntity {
     }
   }
 
+  isExactLandResource() {
+    return isExactLandResource(this);
+  }
+
+  ensureExactLandState() {
+    if (!this.isExactLandResource()) {
+      return false;
+    }
+
+    if (typeof this.exactValue !== 'bigint') {
+      this.exactValue = numberToExactLandAmount(this.value);
+    }
+    if (typeof this.exactReserved !== 'bigint') {
+      this.exactReserved = numberToExactLandAmount(this.reserved);
+    }
+    if (!this.exactReservedSources || this.exactReservedSources.constructor !== Object) {
+      this.exactReservedSources = {};
+    }
+
+    return true;
+  }
+
+  syncApproximateLandState() {
+    if (!this.ensureExactLandState()) {
+      return;
+    }
+
+    const sanitizedSources = {};
+    for (const key in this.exactReservedSources) {
+      const value = this.exactReservedSources[key];
+      if (typeof value === 'bigint' && value > 0n) {
+        sanitizedSources[key] = exactLandAmountToApproxNumber(value);
+      }
+    }
+
+    this.value = exactLandAmountToApproxNumber(this.exactValue);
+    this.reserved = exactLandAmountToApproxNumber(this.exactReserved);
+    this.reservedSources = sanitizedSources;
+  }
+
+  setExactLandValue(amount) {
+    if (!this.ensureExactLandState()) {
+      this.value = Math.max(Number(amount) || 0, 0);
+      return;
+    }
+
+    const scaled = numberToExactLandAmount(amount);
+    const minimum = this.exactReserved > 0n ? this.exactReserved : 0n;
+    this.exactValue = scaled > minimum ? scaled : minimum;
+    this.syncApproximateLandState();
+  }
+
+  getExactLandValue() {
+    this.ensureExactLandState();
+    return this.exactValue;
+  }
+
+  getExactLandReserved() {
+    this.ensureExactLandState();
+    return this.exactReserved;
+  }
+
+  getExactLandAvailable() {
+    if (!this.ensureExactLandState()) {
+      return 0n;
+    }
+    const available = this.exactValue - this.exactReserved;
+    return available > 0n ? available : 0n;
+  }
+
+  getExactReservedAmountForSource(source) {
+    if (!this.ensureExactLandState()) {
+      return 0n;
+    }
+    return this.exactReservedSources[source] || 0n;
+  }
+
+  canAffordLandAmount(amount) {
+    if (!this.ensureExactLandState()) {
+      return this.value - this.reserved >= amount;
+    }
+    return this.getExactLandAvailable() >= numberToExactLandAmount(amount);
+  }
+
+  getLandAffordCount(requirement) {
+    if (!this.ensureExactLandState()) {
+      if (!(requirement > 0)) {
+        return Infinity;
+      }
+      return Math.floor((this.value - this.reserved) / requirement);
+    }
+
+    const scaledRequirement = numberToExactLandAmount(requirement);
+    if (!(scaledRequirement > 0n)) {
+      return Infinity;
+    }
+
+    return bigIntToApproxNumber(this.getExactLandAvailable() / scaledRequirement);
+  }
+
+  getAvailableAmount() {
+    if (this.isExactLandResource()) {
+      return exactLandAmountToApproxNumber(this.getExactLandAvailable());
+    }
+    return this.value - this.reserved;
+  }
+
+  hydrateSerializedState(state = {}) {
+    if (!this.ensureExactLandState()) {
+      return;
+    }
+
+    const savedValue = parseSerializedExactLandAmount(state._exactLandValue);
+    const savedReserved = parseSerializedExactLandAmount(state._exactLandReserved);
+    const savedSources = state._exactLandReservedSources;
+    const nextSources = {};
+
+    if (savedSources && savedSources.constructor === Object) {
+      for (const key in savedSources) {
+        const parsed = parseSerializedExactLandAmount(savedSources[key]);
+        if (parsed && parsed > 0n) {
+          nextSources[key] = parsed;
+        }
+      }
+    } else if (this.reservedSources && this.reservedSources.constructor === Object) {
+      for (const key in this.reservedSources) {
+        const parsed = numberToExactLandAmount(this.reservedSources[key]);
+        if (parsed > 0n) {
+          nextSources[key] = parsed;
+        }
+      }
+    }
+
+    this.exactValue = savedValue && savedValue > 0n
+      ? savedValue
+      : numberToExactLandAmount(this.value);
+
+    this.exactReservedSources = nextSources;
+
+    if (Object.keys(nextSources).length > 0) {
+      this.recalculateReservedFromSources();
+    } else {
+      this.exactReserved = savedReserved && savedReserved > 0n
+        ? savedReserved
+        : numberToExactLandAmount(this.reserved);
+      if (this.exactReserved > this.exactValue) {
+        this.exactValue = this.exactReserved;
+      }
+      this.syncApproximateLandState();
+    }
+  }
+
+  toJSON() {
+    const serialized = { ...this };
+    delete serialized.exactValue;
+    delete serialized.exactReserved;
+    delete serialized.exactReservedSources;
+
+    if (this.isExactLandResource()) {
+      this.ensureExactLandState();
+      const savedSources = {};
+      for (const key in this.exactReservedSources) {
+        const value = this.exactReservedSources[key];
+        if (value > 0n) {
+          savedSources[key] = value.toString();
+        }
+      }
+      serialized._exactLandValue = this.exactValue.toString();
+      serialized._exactLandReserved = this.exactReserved.toString();
+      serialized._exactLandReservedSources = savedSources;
+    }
+
+    return serialized;
+  }
+
   increase(amount, ignoreCap) {
     if (amount > 0) {
+      if (this.ensureExactLandState()) {
+        const change = numberToExactLandAmount(amount);
+        const target = ignoreCap
+          ? (this.exactValue + change)
+          : (this.exactValue + change);
+        this.exactValue = target > this.exactValue ? target : this.exactValue;
+        this.syncApproximateLandState();
+        return;
+      }
       this.value = ignoreCap ? this.value + amount : Math.min(this.value + amount, Math.max(this.cap, this.value));
     }
   }
@@ -142,14 +412,35 @@ class Resource extends EffectableEntity {
   }
 
   decrease(amount) {
+    if (this.ensureExactLandState()) {
+      const change = numberToExactLandAmount(amount);
+      this.exactValue = this.exactValue > change ? this.exactValue - change : 0n;
+      if (this.exactReserved > this.exactValue) {
+        this.exactValue = this.exactReserved;
+      }
+      this.syncApproximateLandState();
+      return;
+    }
     this.value = Math.max(this.value - amount, 0);
   }
 
   isAvailable(amount) {
+    if (this.ensureExactLandState()) {
+      return this.canAffordLandAmount(amount);
+    }
     return this.value - this.reserved >= amount;
   }
 
   reserve(amount) {
+    if (this.ensureExactLandState()) {
+      const currentDefault = this.exactReservedSources.default || 0n;
+      if (!this.isAvailable(amount)) {
+        return false;
+      }
+      this.exactReservedSources.default = currentDefault + numberToExactLandAmount(amount);
+      this.recalculateReservedFromSources();
+      return true;
+    }
     if (this.isAvailable(amount)) {
       this.reserved += amount;
       return true;
@@ -158,10 +449,60 @@ class Resource extends EffectableEntity {
   }
 
   release(amount) {
+    if (this.ensureExactLandState()) {
+      const currentDefault = this.exactReservedSources.default || 0n;
+      const nextDefault = currentDefault - numberToExactLandAmount(amount);
+      if (nextDefault > 0n) {
+        this.exactReservedSources.default = nextDefault;
+      } else {
+        delete this.exactReservedSources.default;
+      }
+      this.recalculateReservedFromSources();
+      return;
+    }
     this.reserved = Math.max(this.reserved - amount, 0);
   }
 
   setReservedAmountForSource(source, amount) {
+    if (this.ensureExactLandState()) {
+      const key = source || 'default';
+      const sanitized = numberToExactLandAmount(amount);
+      const existing = this.exactReservedSources[key] || 0n;
+      let tracked = 0n;
+
+      for (const existingKey in this.exactReservedSources) {
+        if (existingKey === 'default') continue;
+        const value = this.exactReservedSources[existingKey];
+        if (typeof value === 'bigint' && value > 0n) {
+          tracked += value;
+        }
+      }
+
+      const unsourced = this.exactReserved > tracked ? this.exactReserved - tracked : 0n;
+      const previousDefault = this.exactReservedSources.default || 0n;
+
+      if (unsourced > 0n) {
+        this.exactReservedSources.default = unsourced;
+      } else {
+        delete this.exactReservedSources.default;
+      }
+
+      if (sanitized > 0n) {
+        this.exactReservedSources[key] = sanitized;
+      } else {
+        delete this.exactReservedSources[key];
+      }
+
+      const updated = this.exactReservedSources[key] || 0n;
+      const nextDefault = this.exactReservedSources.default || 0n;
+
+      if (updated !== existing || nextDefault !== previousDefault) {
+        this.recalculateReservedFromSources();
+      }
+
+      return exactLandAmountToApproxNumber(updated);
+    }
+
     const key = source || 'default';
     const sanitized = Number.isFinite(amount) && amount > 0 ? amount : 0;
     const existing = this.reservedSources[key] || 0;
@@ -202,6 +543,24 @@ class Resource extends EffectableEntity {
   }
 
   recalculateReservedFromSources() {
+    if (this.ensureExactLandState()) {
+      let totalReserved = 0n;
+
+      for (const key in this.exactReservedSources) {
+        const value = this.exactReservedSources[key];
+        if (typeof value === 'bigint' && value > 0n) {
+          totalReserved += value;
+        }
+      }
+
+      this.exactReserved = totalReserved;
+      if (this.exactReserved > this.exactValue) {
+        this.exactValue = this.exactReserved;
+      }
+      this.syncApproximateLandState();
+      return;
+    }
+
     let totalReserved = 0;
 
     for (const value of Object.values(this.reservedSources)) {
@@ -214,10 +573,18 @@ class Resource extends EffectableEntity {
   }
 
   getReservedAmountForSource(source) {
+    if (this.ensureExactLandState()) {
+      return exactLandAmountToApproxNumber(this.exactReservedSources[source] || 0n);
+    }
     return this.reservedSources[source] || 0;
   }
 
   addDeposit(amount = 1) {
+    if (this.ensureExactLandState()) {
+      this.exactValue += numberToExactLandAmount(amount);
+      this.syncApproximateLandState();
+      return;
+    }
     this.value += amount;
   }
 
@@ -565,7 +932,11 @@ function reconcileLandResourceValue() {
 
   if (!(baseLand > 0)) {
     const reserved = Math.max(0, landResource.reserved || 0);
-    landResource.value = Math.max(landResource.value, reserved);
+    if (landResource.setExactLandValue) {
+      landResource.setExactLandValue(Math.max(landResource.value, reserved));
+    } else {
+      landResource.value = Math.max(landResource.value, reserved);
+    }
     return;
   }
 
@@ -607,7 +978,11 @@ function reconcileLandResourceValue() {
     }
   }
 
-  landResource.value = totalLand;
+  if (landResource.setExactLandValue) {
+    landResource.setExactLandValue(totalLand);
+  } else {
+    landResource.value = totalLand;
+  }
 }
 
 if (typeof globalThis !== 'undefined') {
