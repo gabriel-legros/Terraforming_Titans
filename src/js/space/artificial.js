@@ -1556,6 +1556,17 @@ class ArtificialManager extends EffectableEntity {
         return spaceManager.travelToRandomWorld(res, seed);
     }
 
+    discardStoredWorld(key) {
+        const seed = String(key);
+        if (!spaceManager || !spaceManager.artificialWorldStatuses) return false;
+        const status = spaceManager.artificialWorldStatuses[seed];
+        if (!status || !status.stored) return false;
+        const discarded = spaceManager.discardStoredArtificialWorld(seed);
+        if (!discarded) return false;
+        this.updateUI(true);
+        return true;
+    }
+
     getRemainingTime() {
         if (!this.activeProject || this.activeProject.status !== 'building') return 0;
         return this.activeProject.remainingMs;
@@ -1612,6 +1623,7 @@ class ArtificialManager extends EffectableEntity {
                 landHa
             });
             const canTravel = (label === 'abandoned' || label === 'stored') && !!snapshot;
+            const canDiscard = label === 'stored';
             entries.push({
                 id: key,
                 seed: key,
@@ -1629,6 +1641,7 @@ class ArtificialManager extends EffectableEntity {
                 traveledAt: status.departedAt || status.arrivedAt || null,
                 departedAt: status.departedAt || null,
                 discardedAt: null,
+                canDiscard,
                 canTravel
             });
         };

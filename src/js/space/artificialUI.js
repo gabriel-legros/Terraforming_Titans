@@ -228,6 +228,17 @@ function buildHistoryRow(entry) {
   const statusLabel = statusLabelMap[statusKey] || (statusKey ? statusKey.charAt(0).toUpperCase() + statusKey.slice(1) : '');
   status.textContent = statusLabel;
   status.className = `artificial-history-status artificial-history-${statusKey}`;
+  if (entry.canDiscard) {
+    const discardBtn = document.createElement('button');
+    discardBtn.className = 'artificial-history-travel-btn artificial-history-discard-btn';
+    discardBtn.textContent = 'Discard';
+    discardBtn.title = 'Discard this stored artificial world';
+    discardBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      artificialManager.discardStoredWorld(entry.id);
+    });
+    status.appendChild(discardBtn);
+  }
   if (entry.canTravel) {
     const travelBtn = document.createElement('button');
     travelBtn.className = 'artificial-history-travel-btn';
@@ -1600,6 +1611,7 @@ function renderArtificialHistory(force = false) {
       entry.landHa,
       entry.terraformedValue,
       entry.status,
+      entry.canDiscard,
       entry.canTravel
     ])
   });

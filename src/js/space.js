@@ -848,6 +848,21 @@ class SpaceManager extends EffectableEntity {
         });
     }
 
+    discardStoredArtificialWorld(key) {
+        const resolvedKey = String(key);
+        const status = this.artificialWorldStatuses[resolvedKey];
+        if (!status || !status.stored) {
+            return false;
+        }
+        if (this.currentArtificialKey !== null && String(this.currentArtificialKey) === resolvedKey) {
+            return false;
+        }
+        this._updateWorldCacheForStatusMutation('artificial', resolvedKey, (_, map, targetKey) => {
+            delete map[targetKey];
+        });
+        return true;
+    }
+
     _getArtificialFleetCapacityCap() {
         const managerFleetCap = artificialManager?.getFleetCapacityWorldCap?.() || 0;
         if (managerFleetCap > 0) {
