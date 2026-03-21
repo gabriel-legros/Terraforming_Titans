@@ -242,20 +242,48 @@ class Aerostat extends BaseColony {
       'colony',
       'research'
     );
-    const resourceMultiplier =
-      resources?.colony?.research?.maintenanceMultiplier !== undefined
-        ? resources.colony.research.maintenanceMultiplier
-        : 1;
-
     maintenanceCost.research =
       effectiveResearchCost *
       maintenanceFraction *
       this.maintenanceFactor *
-      multiplier *
-      resourceMultiplier *
-      this.getEffectiveMaintenanceMultiplier();
+      multiplier;
 
     return maintenanceCost;
+  }
+
+  applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime) {
+    super.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
+
+    if (!Number.isFinite(deltaTime) || deltaTime <= 0) {
+      return;
+    }
+
+    const researchMaintenanceCost = this.maintenanceCost.research || 0;
+    const activeCount = Math.max(0, Math.floor(this.active || 0));
+    if (researchMaintenanceCost <= 0 || activeCount <= 0) {
+      return;
+    }
+
+    const currentResearchUpkeep = this.currentMaintenance.research || 0;
+    const fullResearchUpkeep =
+      researchMaintenanceCost * activeCount * (deltaTime / 1000);
+    const additionalResearchUpkeep =
+      fullResearchUpkeep - currentResearchUpkeep;
+
+    if (additionalResearchUpkeep <= 0) {
+      return;
+    }
+
+    this.currentMaintenance.research = fullResearchUpkeep;
+    accumulatedChanges.colony.research =
+      (accumulatedChanges.colony.research || 0) - additionalResearchUpkeep;
+    resources.colony.research.modifyRate(
+      -(additionalResearchUpkeep * (1000 / deltaTime)),
+      this.displayName,
+      'building'
+    );
+    accumulatedMaintenance.research =
+      (accumulatedMaintenance.research || 0) + additionalResearchUpkeep;
   }
 
   build(buildCount = 1, activate = true) {
@@ -1331,6 +1359,8 @@ function updateAerostatBuoyancySection(structure) {
         structure.getCollisionAvoidanceResearchSurcharge?.(1) || 0;
       limitTitle +=
         '\nCollision avoidance allows building above this base cap for extra research cost and maintenance.';
+      limitTitle +=
+        '\nThis extra research maintenance ignores maintenance multipliers.';
       if (overCap > 0) {
         limitTitle += `\nAerostats above base cap: ${formatNumber(
           overCap,
