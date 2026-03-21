@@ -318,6 +318,7 @@
           terra.updateSurfaceTemperature();
           terra.synchronizeGlobalResources();
           clearTimeout(timeoutHandle);
+          isEquilibrating = false;
           if (typeof setStarLuminosity === 'function') {
             setStarLuminosity(prevLum);
           }
@@ -339,7 +340,6 @@
           if (!specialSeedKey) {
             applyPostEquilibrationHazardTuning(outOverride, terra);
           }
-          isEquilibrating = false;
           console.log('Equilibration finished. Final terraforming object:', terra);
           resolve({ override: outOverride, steps: stepIdx });
         }
