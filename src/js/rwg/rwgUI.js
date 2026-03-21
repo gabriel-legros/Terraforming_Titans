@@ -707,7 +707,7 @@ function initializeRandomWorldUI() {
   history.id = 'rwg-history';
   history.className = 'rwg-history';
   history.innerHTML = `
-    <h3>Visited Worlds</h3>
+    <h3>Visited Worlds (Last 10)</h3>
     <div id="rwg-history-list"></div>
     <div class="rwg-history-controls">
       <button id="rwg-history-prev" class="rwg-btn">Prev</button>

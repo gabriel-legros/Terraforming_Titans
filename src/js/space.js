@@ -24,6 +24,7 @@ const SPACE_HAZARD_KEY_SET = new Set(SPACE_HAZARD_KEYS);
 
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
+const MAX_REMEMBERED_RANDOM_WORLD_STATUSES = 10;
 
 function buildSpaceHazardKeys() {
     const keys = new Set();
@@ -115,6 +116,7 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomSeed = null;
         this.currentRandomName = '';
         this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
+        this.rwgSummary = this._createEmptyRwgSummary();
         this.currentArtificialKey = null;
         this.artificialWorldStatuses = {};
         this.extraTerraformedWorlds = 0;
@@ -284,8 +286,123 @@ class SpaceManager extends EffectableEntity {
         };
     }
 
+    _createEmptyRwgSummary() {
+        return {
+            terraformedCount: 0,
+            orbitalRingCount: 0,
+            departedColonistsTotal: 0,
+            sectorUnits: {},
+            sectorTerraformedCounts: {},
+            sectorRingCounts: {},
+            typeCounts: {},
+            typeHazardBonuses: {},
+            typeHazardCounts: {},
+            specializationCounts: {},
+            foundryWorldCount: 0,
+            foundryWorldBonus: 0
+        };
+    }
+
     _resetWorldStatsCache() {
         this.worldStatsCache = this._createEmptyWorldStatsCache();
+    }
+
+    _adjustRwgSummaryNumber(field, delta) {
+        if (!delta) {
+            return;
+        }
+        const next = (this.rwgSummary[field] || 0) + delta;
+        this.rwgSummary[field] = next > 0 ? next : 0;
+    }
+
+    _adjustRwgSummaryMapValue(mapName, key, delta) {
+        if (!delta || !key) {
+            return;
+        }
+        const map = this.rwgSummary[mapName];
+        if (!map) {
+            return;
+        }
+        const current = map[key] || 0;
+        const next = current + delta;
+        if (next > 0) {
+            map[key] = next;
+        } else {
+            delete map[key];
+        }
+    }
+
+    _adjustRwgSummaryNestedMapValue(mapName, outerKey, innerKey, delta) {
+        if (!delta || !outerKey || !innerKey) {
+            return;
+        }
+        const map = this.rwgSummary[mapName];
+        if (!map) {
+            return;
+        }
+        const outer = map[outerKey] || (map[outerKey] = {});
+        const current = outer[innerKey] || 0;
+        const next = current + delta;
+        if (next > 0) {
+            outer[innerKey] = next;
+            return;
+        }
+        delete outer[innerKey];
+        if (!Object.keys(outer).length) {
+            delete map[outerKey];
+        }
+    }
+
+    _mergeCountMaps(baseMap, extraMap) {
+        const merged = { ...(baseMap || {}) };
+        Object.keys(extraMap || {}).forEach((key) => {
+            const next = (merged[key] || 0) + (extraMap[key] || 0);
+            if (next > 0) {
+                merged[key] = next;
+            } else {
+                delete merged[key];
+            }
+        });
+        return merged;
+    }
+
+    _sanitizeCountMap(source = {}) {
+        const sanitized = {};
+        Object.keys(source || {}).forEach((key) => {
+            const value = Number(source[key]) || 0;
+            if (value > 0) {
+                sanitized[key] = value;
+            }
+        });
+        return sanitized;
+    }
+
+    _sanitizeNestedCountMap(source = {}) {
+        const sanitized = {};
+        Object.keys(source || {}).forEach((outerKey) => {
+            const child = this._sanitizeCountMap(source[outerKey]);
+            if (Object.keys(child).length) {
+                sanitized[outerKey] = child;
+            }
+        });
+        return sanitized;
+    }
+
+    _sanitizeRwgSummary(summary = {}) {
+        return {
+            terraformedCount: Math.max(0, Number(summary.terraformedCount) || 0),
+            orbitalRingCount: Math.max(0, Number(summary.orbitalRingCount) || 0),
+            departedColonistsTotal: Math.max(0, Number(summary.departedColonistsTotal) || 0),
+            sectorUnits: this._sanitizeCountMap(summary.sectorUnits),
+            sectorTerraformedCounts: this._sanitizeCountMap(summary.sectorTerraformedCounts),
+            sectorRingCounts: this._sanitizeCountMap(summary.sectorRingCounts),
+            typeCounts: this._sanitizeCountMap(summary.typeCounts),
+            typeHazardBonuses: this._sanitizeCountMap(summary.typeHazardBonuses),
+            typeHazardCounts: this._sanitizeNestedCountMap(summary.typeHazardCounts),
+            specializationCounts: this._sanitizeCountMap(summary.specializationCounts),
+            foundryWorldCount: Math.max(0, Number(summary.foundryWorldCount) || 0),
+            foundryWorldBonus: Math.max(0, Number(summary.foundryWorldBonus) || 0)
+        };
     }
 
     _getWorldStatusMap(type) {
@@ -359,12 +476,9 @@ class SpaceManager extends EffectableEntity {
         return resolved;
     }
 
-    _countRandomWorldHazards(status) {
+    _collectRandomWorldHazardKeys(status) {
         if (!status) {
-            return 0;
-        }
-        if (Number.isFinite(status.cachedHazardCount) && status.cachedHazardCount >= 0) {
-            return Math.floor(status.cachedHazardCount);
+            return new Set();
         }
         const hazardKeys = new Set(status.cachedHazards?.keys || []);
         this._addHazardsToSet(hazardKeys, status.hazard);
@@ -378,9 +492,178 @@ class SpaceManager extends EffectableEntity {
         this._addHazardsToSet(hazardKeys, override?.rwgMeta?.selectedHazard);
         this._addHazardsToSet(hazardKeys, override?.hazards);
         this._addHazardsToSet(hazardKeys, status.original?.hazards);
+        return hazardKeys;
+    }
+
+    _countRandomWorldHazards(status) {
+        if (!status) {
+            return 0;
+        }
+        if (Number.isFinite(status.cachedHazardCount) && status.cachedHazardCount >= 0) {
+            return Math.floor(status.cachedHazardCount);
+        }
+        const hazardKeys = this._collectRandomWorldHazardKeys(status);
         const count = hazardKeys.size;
         status.cachedHazardCount = count;
         return count;
+    }
+
+    _addRandomWorldStatusToSummary(status) {
+        if (!status) {
+            return;
+        }
+
+        this._adjustRwgSummaryNumber('departedColonistsTotal', Math.max(0, Number(status.colonists) || 0));
+
+        if (status.specialization) {
+            this._adjustRwgSummaryMapValue('specializationCounts', status.specialization, 1);
+        }
+
+        if (status.foundryWorld) {
+            this._adjustRwgSummaryNumber('foundryWorldCount', 1);
+            this._adjustRwgSummaryNumber('foundryWorldBonus', (status.foundryLandFactor || 0) * 1e11);
+        }
+
+        if (!status.terraformed) {
+            return;
+        }
+
+        this._adjustRwgSummaryNumber('terraformedCount', 1);
+        const sector = normalizeSectorLabel(status.sector || resolveSectorFromSources(status, status.original));
+        this._adjustRwgSummaryMapValue('sectorTerraformedCounts', sector, 1);
+        if (status.orbitalRing) {
+            this._adjustRwgSummaryNumber('orbitalRingCount', 1);
+            this._adjustRwgSummaryMapValue('sectorRingCounts', sector, 1);
+        }
+
+        const sectorUnits = 1 + (status.orbitalRing ? 1 : 0);
+        this._adjustRwgSummaryMapValue('sectorUnits', sector, sectorUnits);
+
+        const worldType = this._getRandomWorldType(status);
+        if (worldType) {
+            this._adjustRwgSummaryMapValue('typeCounts', worldType, 1);
+            const hazardKeys = Array.from(this._collectRandomWorldHazardKeys(status));
+            if (hazardKeys.length) {
+                this._adjustRwgSummaryMapValue('typeHazardBonuses', worldType, hazardKeys.length);
+                hazardKeys.forEach((hazardKey) => {
+                    this._adjustRwgSummaryNestedMapValue('typeHazardCounts', worldType, hazardKey, 1);
+                });
+            }
+        }
+    }
+
+    _compactRandomWorldStatuses() {
+        const activeKey = this.currentRandomSeed === null ? null : String(this.currentRandomSeed);
+        const inactiveEntries = Object.entries(this.randomWorldStatuses)
+            .filter(([key, status]) => !!status && key !== activeKey)
+            .sort((a, b) => (b[1].departedAt || 0) - (a[1].departedAt || 0));
+
+        if (inactiveEntries.length <= MAX_REMEMBERED_RANDOM_WORLD_STATUSES) {
+            return;
+        }
+
+        const keepKeys = new Set(
+            inactiveEntries
+                .slice(0, MAX_REMEMBERED_RANDOM_WORLD_STATUSES)
+                .map(([key]) => key)
+        );
+        if (activeKey !== null && this.randomWorldStatuses[activeKey]) {
+            keepKeys.add(activeKey);
+        }
+
+        let changed = false;
+        Object.keys(this.randomWorldStatuses).forEach((key) => {
+            if (keepKeys.has(key)) {
+                return;
+            }
+            const status = this.randomWorldStatuses[key];
+            if (!status) {
+                delete this.randomWorldStatuses[key];
+                changed = true;
+                return;
+            }
+            this._addRandomWorldStatusToSummary(status);
+            delete this.randomWorldStatuses[key];
+            if (followersManager && followersManager.resetConsecrationForSeed) {
+                followersManager.resetConsecrationForSeed(key);
+            }
+            changed = true;
+        });
+
+        if (changed) {
+            this._refreshWorldStatsCache();
+            this._refreshFoundryWorldBonusCache();
+        }
+    }
+
+    _getTotalRandomTerraformedCount() {
+        return (this.worldStatsCache.randomTerraformed || 0) + (this.rwgSummary.terraformedCount || 0);
+    }
+
+    _getTotalRandomOrbitalRingCount() {
+        return (this.worldStatsCache.randomOrbitalRings || 0) + (this.rwgSummary.orbitalRingCount || 0);
+    }
+
+    _getForgottenSectorRinglessCapacity(sectorLabel) {
+        const sector = normalizeSectorLabel(sectorLabel);
+        const terraformed = this.rwgSummary.sectorTerraformedCounts[sector] || 0;
+        const rings = this.rwgSummary.sectorRingCounts[sector] || 0;
+        return Math.max(0, terraformed - rings);
+    }
+
+    _setForgottenOrbitalRingCount(targetCount) {
+        const maxCount = Math.max(0, this.rwgSummary.terraformedCount || 0);
+        const target = Math.max(0, Math.min(maxCount, Number(targetCount) || 0));
+        let current = Math.max(0, this.rwgSummary.orbitalRingCount || 0);
+        if (target === current) {
+            return current;
+        }
+
+        if (target > current) {
+            let remaining = target - current;
+            const sectors = Object.keys(this.rwgSummary.sectorTerraformedCounts || {})
+                .filter((sector) => this._getForgottenSectorRinglessCapacity(sector) > 0)
+                .sort((a, b) => {
+                    const diff = this._getForgottenSectorRinglessCapacity(b) - this._getForgottenSectorRinglessCapacity(a);
+                    return diff || a.localeCompare(b);
+                });
+            for (let index = 0; index < sectors.length && remaining > 0; index += 1) {
+                const sector = sectors[index];
+                const capacity = this._getForgottenSectorRinglessCapacity(sector);
+                const addAmount = Math.min(remaining, capacity);
+                if (!addAmount) {
+                    continue;
+                }
+                this._adjustRwgSummaryMapValue('sectorRingCounts', sector, addAmount);
+                this._adjustRwgSummaryMapValue('sectorUnits', sector, addAmount);
+                this._adjustRwgSummaryNumber('orbitalRingCount', addAmount);
+                current += addAmount;
+                remaining -= addAmount;
+            }
+            return current;
+        }
+
+        let remaining = current - target;
+        const sectors = Object.keys(this.rwgSummary.sectorRingCounts || {})
+            .filter((sector) => (this.rwgSummary.sectorRingCounts[sector] || 0) > 0)
+            .sort((a, b) => {
+                const diff = (this.rwgSummary.sectorRingCounts[b] || 0) - (this.rwgSummary.sectorRingCounts[a] || 0);
+                return diff || a.localeCompare(b);
+            });
+        for (let index = 0; index < sectors.length && remaining > 0; index += 1) {
+            const sector = sectors[index];
+            const currentRings = this.rwgSummary.sectorRingCounts[sector] || 0;
+            const removeAmount = Math.min(remaining, currentRings);
+            if (!removeAmount) {
+                continue;
+            }
+            this._adjustRwgSummaryMapValue('sectorRingCounts', sector, -removeAmount);
+            this._adjustRwgSummaryMapValue('sectorUnits', sector, -removeAmount);
+            this._adjustRwgSummaryNumber('orbitalRingCount', -removeAmount);
+            current -= removeAmount;
+            remaining -= removeAmount;
+        }
+        return current;
     }
 
     _resolveStatusSector(type, key, status) {
@@ -577,15 +860,49 @@ class SpaceManager extends EffectableEntity {
     }
 
     getRandomWorldEffectCounts() {
+        const hazardCounts = this._sanitizeNestedCountMap(this.rwgSummary.typeHazardCounts);
+        Object.values(this.randomWorldStatuses).forEach((status) => {
+            if (!status?.terraformed) {
+                return;
+            }
+            const worldType = this._getRandomWorldType(status);
+            if (!worldType) {
+                return;
+            }
+            const hazardKeys = Array.from(this._collectRandomWorldHazardKeys(status));
+            if (!hazardKeys.length) {
+                return;
+            }
+            const current = hazardCounts[worldType] || (hazardCounts[worldType] = {});
+            hazardKeys.forEach((hazardKey) => {
+                current[hazardKey] = (current[hazardKey] || 0) + 1;
+            });
+        });
         return {
-            counts: this.worldStatsCache.randomTypeCounts,
-            hazardBonuses: this.worldStatsCache.randomTypeHazardBonuses
+            counts: this._mergeCountMaps(this.worldStatsCache.randomTypeCounts, this.rwgSummary.typeCounts),
+            hazardBonuses: this._mergeCountMaps(this.worldStatsCache.randomTypeHazardBonuses, this.rwgSummary.typeHazardBonuses),
+            hazardCounts
         };
+    }
+
+    getRandomWorldSpecializationCounts() {
+        const counts = { ...(this.rwgSummary.specializationCounts || {}) };
+        Object.values(this.randomWorldStatuses).forEach((status) => {
+            if (!status?.specialization) {
+                return;
+            }
+            counts[status.specialization] = (counts[status.specialization] || 0) + 1;
+        });
+        return counts;
+    }
+
+    getRandomWorldDepartedColonistsTotal() {
+        return Math.max(0, this.rwgSummary.departedColonistsTotal || 0);
     }
 
     getWorldCountPerSector(sectorLabel) {
         const target = normalizeSectorLabel(sectorLabel);
-        return this.worldStatsCache.sectorCounts[target] || 0;
+        return (this.worldStatsCache.sectorCounts[target] || 0) + (this.rwgSummary.sectorUnits[target] || 0);
     }
 
     currentWorldHasOrbitalRing() {
@@ -668,7 +985,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     countOrbitalRings() {
-        return (this.worldStatsCache.storyOrbitalRings || 0) + (this.worldStatsCache.randomOrbitalRings || 0);
+        return (this.worldStatsCache.storyOrbitalRings || 0) + this._getTotalRandomOrbitalRingCount();
     }
 
     assignOrbitalRings(totalRings, options = {}) {
@@ -738,7 +1055,8 @@ class SpaceManager extends EffectableEntity {
             }
         });
 
-        return assigned;
+        const forgottenAssigned = this._setForgottenOrbitalRingCount(normalizedTotal - assigned);
+        return assigned + forgottenAssigned;
     }
 
     /**
@@ -760,7 +1078,7 @@ class SpaceManager extends EffectableEntity {
             total += this.worldStatsCache.storyTerraformed || 0;
         }
         if (countRandom) {
-            total += this.worldStatsCache.randomTerraformed || 0;
+            total += this._getTotalRandomTerraformedCount();
         }
         if (countArtificial) {
             total += this.worldStatsCache.artificialTerraformed || 0;
@@ -833,8 +1151,8 @@ class SpaceManager extends EffectableEntity {
     }
 
     _refreshFoundryWorldBonusCache() {
-        let count = 0;
-        let bonus = 0;
+        let count = this.rwgSummary.foundryWorldCount || 0;
+        let bonus = this.rwgSummary.foundryWorldBonus || 0;
         Object.values(this.planetStatuses).forEach((status) => {
             if (!status?.foundryWorld) return;
             count += 1;
@@ -887,7 +1205,7 @@ class SpaceManager extends EffectableEntity {
      */
     getTerraformedPlanetCount() {
         const base = (this.worldStatsCache.storyTerraformed || 0)
-            + (this.worldStatsCache.randomTerraformed || 0)
+            + this._getTotalRandomTerraformedCount()
             + (this.worldStatsCache.artificialTerraformed || 0);
         const rings = (typeof projectManager !== 'undefined' && projectManager.projects && projectManager.projects.orbitalRing)
             ? projectManager.projects.orbitalRing.ringCount
@@ -923,7 +1241,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     getFleetCapacityWorldCount() {
-        const base = (this.worldStatsCache.storyTerraformed || 0) + (this.worldStatsCache.randomTerraformed || 0);
+        const base = (this.worldStatsCache.storyTerraformed || 0) + this._getTotalRandomTerraformedCount();
         const artificial = this.getArtificialFleetCapacityWorlds();
         const rings = projectManager?.projects?.orbitalRing?.ringCount || 0;
         const extra = Number.isFinite(this.extraTerraformedWorlds) && this.extraTerraformedWorlds > 0 ? this.extraTerraformedWorlds : 0;
@@ -1448,6 +1766,7 @@ class SpaceManager extends EffectableEntity {
             ps.foundryLandFactor = foundryLandFactor;
             ps.specialization = specialization;
         }
+        this._compactRandomWorldStatuses();
         this._refreshFoundryWorldBonusCache();
     }
 
@@ -1533,6 +1852,7 @@ class SpaceManager extends EffectableEntity {
         const firstVisit = this.visitPlanet(targetKey);
         const destinationTerraformed = this.isPlanetTerraformed(targetKey);
         this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
+        this._compactRandomWorldStatuses();
         const params = getPlanetParameters(targetKey);
         this._finalizeTravelInitialization({
             planetKey: targetKey,
@@ -1658,6 +1978,7 @@ class SpaceManager extends EffectableEntity {
             status.cachedHazardCount = null;
         });
 
+        this._compactRandomWorldStatuses();
         this._applyTravelRewards(firstVisit, departingTerraformed, destinationTerraformed);
         const latest = isArtificial ? this.artificialWorldStatuses[s] : this.randomWorldStatuses[s];
         const mergedParams = travelResult?.merged || latest?.original?.merged || null;
@@ -1818,6 +2139,7 @@ class SpaceManager extends EffectableEntity {
             currentArtificialKey: this.currentArtificialKey,
             artificialWorldStatuses: pruneStatuses(this.artificialWorldStatuses, activeArtificialKey),
             randomWorldStatuses: pruneStatuses(this.randomWorldStatuses, activeRandomKey),
+            rwgSummary: this._sanitizeRwgSummary(this.rwgSummary),
             randomTabEnabled: this.randomTabEnabled,
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
@@ -1834,6 +2156,7 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomName = '';
         this.currentArtificialKey = null;
         this.randomWorldStatuses = {};
+        this.rwgSummary = this._createEmptyRwgSummary();
         this.artificialWorldStatuses = {};
         this.randomTabEnabled = false;
         this.rwgSectorLock = null;
@@ -2047,6 +2370,8 @@ class SpaceManager extends EffectableEntity {
             });
         }
 
+        this.rwgSummary = this._sanitizeRwgSummary(savedData.rwgSummary);
+
         Object.keys(this.planetStatuses).forEach((planetKey) => {
             this._syncFoundryLandFactor(this.planetStatuses[planetKey], planetKey);
         });
@@ -2056,6 +2381,7 @@ class SpaceManager extends EffectableEntity {
         Object.keys(this.artificialWorldStatuses).forEach((key) => {
             this._syncFoundryLandFactor(this.artificialWorldStatuses[key], key);
         });
+        this._compactRandomWorldStatuses();
         this._refreshWorldStatsCache();
         this._refreshFoundryWorldBonusCache();
 

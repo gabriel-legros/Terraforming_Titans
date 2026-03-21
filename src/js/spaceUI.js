@@ -601,7 +601,7 @@ function updateSpaceStatsUI() {
     spaceStatEffectiveValueEl.textContent = effectiveDisplay;
     const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
     if (spaceStatUniqueTooltipEl) {
-        const uniqueBase = 'Counts every distinct story world and saved random seed you have fully terraformed. Ignores all other bonuses.';
+        const uniqueBase = 'Counts every distinct story world and terraformed random world you have completed. Ignores all other bonuses.';
         if (spaceStatUniqueTooltipContentEl) {
             spaceStatUniqueTooltipContentEl.textContent = uniqueBase;
         } else {

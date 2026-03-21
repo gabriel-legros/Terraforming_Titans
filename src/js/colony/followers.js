@@ -618,7 +618,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   recalculateGalacticPopulation() {
-    let total = 0;
+    let total = spaceManager.getRandomWorldDepartedColonistsTotal
+      ? Math.max(0, spaceManager.getRandomWorldDepartedColonistsTotal())
+      : 0;
     const currentStoryKey = spaceManager.currentPlanetKey;
     const currentSeed = spaceManager.currentRandomSeed === null ? null : String(spaceManager.currentRandomSeed);
     const currentArtificialKey = spaceManager.currentArtificialKey === null ? null : String(spaceManager.currentArtificialKey);
@@ -1299,6 +1301,16 @@ class FollowersManager extends EffectableEntity {
     this.holyWorldPoints = Math.max(0, holyWorld.points || 0);
     this.holyWorldCompletions = Math.max(0, holyWorld.completions || 0);
     this.holyWorldConsecratedWorlds = { ...(holyWorld.consecratedWorlds || {}) };
+    Object.keys(this.holyWorldConsecratedWorlds).forEach((key) => {
+      if (!key.startsWith('seed:')) {
+        return;
+      }
+      const seed = key.slice(5);
+      if (spaceManager.randomWorldStatuses[seed]) {
+        return;
+      }
+      delete this.holyWorldConsecratedWorlds[key];
+    });
     this.holyWorldShopPurchases = {
       ...this.createEmptyHolyWorldShopPurchases(),
       ...(holyWorld.shopPurchases || {})
