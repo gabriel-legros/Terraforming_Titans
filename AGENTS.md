@@ -132,6 +132,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Random World Generator
 - Seeded world generation with lockable options and equilibration requirement before travel.
+- Random worlds that bypass equilibration now delay Hazardous Biomass tuning/allocation until after travel and the first live terraforming update tick, so the hazard calibrates against the world's actual post-travel temperature state instead of placeholder generation temperatures.
 - Preserve compatibility: append new generation logic at the end only.
 - Supports dominion selector and dominion-specific terraforming requirements.
 - Some dominions/world types are story/sector gated.

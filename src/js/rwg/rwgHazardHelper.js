@@ -62,18 +62,8 @@
       : 0;
 
     const temperatureSamples = [];
-    if (override.finalTemps) {
-      const temps = override.finalTemps;
-      if (Number.isFinite(temps.day)) {
-        temperatureSamples.push(temps.day);
-      }
-      if (Number.isFinite(temps.night)) {
-        temperatureSamples.push(temps.night);
-      }
-    }
-
-    const zonalTemps = override.zonalTemperatures || (terra && terra.temperature ? terra.temperature.zones : null);
-    if (zonalTemps) {
+    if (terra && terra.temperature && terra.temperature.zones) {
+      const zonalTemps = terra.temperature.zones;
       for (const zone of ZONE_KEYS) {
         const entry = zonalTemps[zone] || {};
         if (Number.isFinite(entry.day)) {
@@ -84,6 +74,32 @@
         }
         if (Number.isFinite(entry.value)) {
           temperatureSamples.push(entry.value);
+        }
+      }
+    } else {
+      if (override.finalTemps) {
+        const temps = override.finalTemps;
+        if (Number.isFinite(temps.day)) {
+          temperatureSamples.push(temps.day);
+        }
+        if (Number.isFinite(temps.night)) {
+          temperatureSamples.push(temps.night);
+        }
+      }
+
+      const zonalTemps = override.zonalTemperatures || null;
+      if (zonalTemps) {
+        for (const zone of ZONE_KEYS) {
+          const entry = zonalTemps[zone] || {};
+          if (Number.isFinite(entry.day)) {
+            temperatureSamples.push(entry.day);
+          }
+          if (Number.isFinite(entry.night)) {
+            temperatureSamples.push(entry.night);
+          }
+          if (Number.isFinite(entry.value)) {
+            temperatureSamples.push(entry.value);
+          }
         }
       }
     }

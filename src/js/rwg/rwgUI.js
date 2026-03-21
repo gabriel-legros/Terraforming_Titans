@@ -954,7 +954,16 @@ function attachTravelHandler(res, sStr) {
       if (spaceManager?.travelToRandomWorld) {
         if (eqState.bypassUnlocked && !eqState.eqDone && !isSpecialSeedResult(res)) {
           const override = res.override || (res.override = {});
-          applyPostEquilibrationHazardTuning(override, null);
+          const selectedHazards = normalizeHazardList(
+            res?.hazards
+            || res?.hazard
+            || override?.rwgMeta?.selectedHazards
+            || res?.merged?.rwgMeta?.selectedHazards
+          );
+          if (selectedHazards.includes('hazardousBiomass')) {
+            const special = override.specialAttributes || (override.specialAttributes = {});
+            special.deferHazardousBiomassTravelTuning = true;
+          }
           res.merged = deepMerge(defaultPlanetParameters, override);
           syncResultStarData(res);
         }

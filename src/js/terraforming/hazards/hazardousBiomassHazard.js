@@ -1,6 +1,7 @@
 let getZonePercentageHelper;
 let zonesList;
 let getZonesHelper;
+let applyPostEquilibrationHazardTuningHelper;
 
 const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = 5;
 
@@ -25,6 +26,16 @@ try {
     getZonePercentageHelper = null;
     zonesList = null;
     getZonesHelper = null;
+  }
+}
+
+try {
+  ({ applyPostEquilibrationHazardTuning: applyPostEquilibrationHazardTuningHelper } = require('../../rwg/rwgHazardHelper.js'));
+} catch (error) {
+  try {
+    applyPostEquilibrationHazardTuningHelper = applyPostEquilibrationHazardTuning;
+  } catch (innerError) {
+    applyPostEquilibrationHazardTuningHelper = null;
   }
 }
 
@@ -119,6 +130,7 @@ function normalizeHazardousBiomassParameters(parameters) {
 class HazardousBiomassHazard {
   constructor(manager) {
     this.manager = manager;
+    this.pendingTravelTuning = false;
   }
 
   normalize(parameters) {
@@ -209,6 +221,58 @@ class HazardousBiomassHazard {
     this.manager.setHazardLandReservationShare('hazardousBiomass', 0);
   }
 
+  syncPendingTravelTuning(hazardParameters) {
+    let specialAttributes = null;
+    try {
+      specialAttributes = currentPlanetParameters.specialAttributes;
+    } catch (error) {
+      specialAttributes = null;
+    }
+    this.pendingTravelTuning = !!(hazardParameters && specialAttributes && specialAttributes.deferHazardousBiomassTravelTuning === true);
+  }
+
+  applyPendingTravelTuning(terraforming) {
+    if (!this.pendingTravelTuning || !terraforming || !applyPostEquilibrationHazardTuningHelper) {
+      return this.manager.parameters.hazardousBiomass;
+    }
+
+    this.pendingTravelTuning = false;
+
+    const zonalTemperatures = {};
+    let meanDay = 0;
+    let meanNight = 0;
+    const zoneKeys = this.getZoneKeys(terraforming);
+    zoneKeys.forEach((zone) => {
+      const zoneTemp = terraforming.temperature.zones[zone];
+      zonalTemperatures[zone] = {
+        value: zoneTemp.value,
+        day: zoneTemp.day,
+        night: zoneTemp.night
+      };
+      const weight = terraforming.zoneWeights[zone] || 0;
+      meanDay += weight * zoneTemp.day;
+      meanNight += weight * zoneTemp.night;
+    });
+
+    currentPlanetParameters.finalTemps = {
+      mean: terraforming.temperature.value,
+      day: meanDay,
+      night: meanNight
+    };
+    currentPlanetParameters.zonalTemperatures = zonalTemperatures;
+    if (currentPlanetParameters.specialAttributes) {
+      delete currentPlanetParameters.specialAttributes.deferHazardousBiomassTravelTuning;
+    }
+
+    applyPostEquilibrationHazardTuningHelper(currentPlanetParameters, terraforming);
+    const tuned = this.normalize(currentPlanetParameters.hazards.hazardousBiomass);
+    this.manager.parameters.hazardousBiomass = tuned;
+    this.manager.lastSerializedParameters = JSON.stringify(this.manager.parameters);
+    this.updateHazardousLandReservation(terraforming, tuned);
+    this.manager.syncHazardLandReservation(terraforming);
+    return tuned;
+  }
+
   updateHazardousLandReservation(terraforming, hazardParameters) {
     let resourcesState = null;
     try {
@@ -271,6 +335,10 @@ class HazardousBiomassHazard {
   }
 
   update(deltaTime, terraforming, hazardParameters) {
+    if (this.pendingTravelTuning && deltaTime > 0) {
+      hazardParameters = this.applyPendingTravelTuning(terraforming);
+    }
+
     let resourcesState = null;
     try {
       resourcesState = resources;

@@ -211,6 +211,9 @@ class HazardManager {
     this.parameters = normalized;
     this.lastSerializedParameters = serialized;
     this.updateHazardousBiomassControl(this.cachedHazardousBiomassControl, true);
+    if (this.hazardousBiomassHazard && this.hazardousBiomassHazard.syncPendingTravelTuning) {
+      this.hazardousBiomassHazard.syncPendingTravelTuning(this.parameters.hazardousBiomass);
+    }
 
     const activeTerraforming = getTerraforming();
     if (this.hazardousBiomassHazard) {
