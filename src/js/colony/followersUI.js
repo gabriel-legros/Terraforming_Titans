@@ -325,11 +325,11 @@ function buildFollowersUI() {
 
   const artGalleryTooltipText = [
     'Galactic population generates Art Power through cultural output.  HOPE has been chosen as custodian via a special orbital facility.  This has multiple effects on the population.',
-    'Base Art Power is sqrt(galactic population).',
-    'Artifact factor is sqrt(artifacts invested).',
-    'Funding factor is sqrt(funding invested).',
-    'Total Art Power = sqrt(population) * sqrt(artifacts invested) * sqrt(funding invested).',
-    'Happiness bonus is 0.5 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.'
+    'Population factor is galactic population.',
+    'Artifact factor is artifacts invested.',
+    'Funding factor is funding invested.',
+    'Total Art Power = population * artifacts invested * funding invested.',
+    'Happiness bonus is 0.25 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.'
   ].join('\n');
   const artGallery = document.createElement('div');
   artGallery.classList.add('followers-art-gallery');
@@ -368,7 +368,7 @@ function buildFollowersUI() {
   };
 
   const artPopulationStat = createArtStat('Galactic Population', '0');
-  const artBasePowerStat = createArtStat('Base Power', '0');
+  const artBasePowerStat = createArtStat('Population Factor', '0');
   const artArtifactMultiplierStat = createArtStat('Artifact Factor', 'x0');
   const artFundingMultiplierStat = createArtStat('Funding Factor', 'x0');
   const artTotalPowerStat = createArtStat('Art Power', '0');

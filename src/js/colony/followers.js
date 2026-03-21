@@ -503,15 +503,15 @@ class FollowersManager extends EffectableEntity {
   }
 
   getArtifactPowerMultiplier() {
-    return Math.max(1, Math.sqrt(Math.max(0, this.artifactsInvested)));
+    return Math.max(1, this.artifactsInvested);
   }
 
   getFundingPowerMultiplier() {
-    return Math.max(1, Math.sqrt(Math.max(0, this.fundingInvested)));
+    return Math.max(1, this.fundingInvested);
   }
 
   getArtPower() {
-    const basePower = Math.max(1, Math.sqrt(this.getArtPowerPopulation()));
+    const basePower = Math.max(1, this.getArtPowerPopulation());
     return basePower * this.getArtifactPowerMultiplier() * this.getFundingPowerMultiplier();
   }
 
@@ -520,7 +520,7 @@ class FollowersManager extends EffectableEntity {
     if (artPower <= 1) {
       return 0;
     }
-    return Math.max(0, Math.log10(artPower) / 200);
+    return Math.max(0, Math.log10(artPower) / 400);
   }
 
   getArtWorkerPerColonistMultiplier() {
@@ -529,11 +529,11 @@ class FollowersManager extends EffectableEntity {
 
   getArtPowerSnapshot() {
     const population = this.getArtPowerPopulation();
-    const basePower = Math.max(1, Math.sqrt(population));
+    const basePower = Math.max(1, population);
     const artifactMultiplier = this.getArtifactPowerMultiplier();
     const fundingMultiplier = this.getFundingPowerMultiplier();
     const artPower = basePower * artifactMultiplier * fundingMultiplier;
-    const happinessBonus = artPower > 1 ? Math.max(0, Math.log10(artPower) / 200) : 0;
+    const happinessBonus = artPower > 1 ? Math.max(0, Math.log10(artPower) / 400) : 0;
     return {
       population,
       basePower,
