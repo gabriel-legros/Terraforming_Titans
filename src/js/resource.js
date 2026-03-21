@@ -416,7 +416,39 @@ function checkDepositAvailability(depositType, requiredAmount) {
   return resources.underground[depositType].isAvailable(requiredAmount);
 }
 
+function backfillResourceConfigDefaults(targetConfig, defaultConfig) {
+  if (!targetConfig || !defaultConfig) {
+    return targetConfig;
+  }
+
+  for (const key in defaultConfig) {
+    const defaultValue = defaultConfig[key];
+    const targetValue = targetConfig[key];
+    const defaultIsObject = defaultValue && defaultValue.constructor === Object;
+    const targetIsObject = targetValue && targetValue.constructor === Object;
+
+    if (targetValue === undefined) {
+      if (Array.isArray(defaultValue)) {
+        targetConfig[key] = defaultValue.slice();
+      } else if (defaultIsObject) {
+        targetConfig[key] = backfillResourceConfigDefaults({}, defaultValue);
+      } else {
+        targetConfig[key] = defaultValue;
+      }
+      continue;
+    }
+
+    if (defaultIsObject && targetIsObject) {
+      backfillResourceConfigDefaults(targetValue, defaultValue);
+    }
+  }
+
+  return targetConfig;
+}
+
 function createResources(resourcesData) {
+  backfillResourceConfigDefaults(resourcesData, defaultPlanetParameters.resources);
+
   const landInitial = resourcesData?.surface?.land?.initialValue;
   if (Number.isFinite(landInitial) && resourcesData?.special) {
     const dustCap = landInitial * 10000;
