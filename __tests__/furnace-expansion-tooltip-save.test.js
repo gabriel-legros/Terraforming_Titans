@@ -415,6 +415,35 @@ describe('ringworld furnace expansion double counting repro', () => {
   }, 60000);
 });
 
+describe('ringworld hephaestus yard tooltip repro', () => {
+  it('keeps live yard expansion tooltip rates on space superalloys after a tick', async () => {
+    const dom = await createGameDom();
+    try {
+      const { window } = dom;
+      loadSave(window, 'ringworld_double_counting.json');
+
+      const resources = getGlobal(window, 'resources');
+      const projectManager = getGlobal(window, 'projectManager');
+      const label = 'Hephaestus Yard expansion';
+      const resource = resources.spaceStorage.superalloys;
+
+      window.eval('updateLogic(1000)');
+      const afterTickRate = getTooltipRate(window, resource, label);
+
+      resetAllResourceRates(window);
+      projectManager.projects.hephaestusMegaconstruction.estimateCostAndGain(1000, true, 1, null);
+      window.eval('recalculateTotalRates()');
+      const expectedRate = getTooltipRate(window, resource, label);
+
+      expect(afterTickRate).toBeGreaterThan(0);
+      expect(expectedRate).toBeGreaterThan(0);
+      expect(afterTickRate).toBeCloseTo(expectedRate, 6);
+    } finally {
+      dom.window.close();
+    }
+  }, 60000);
+});
+
 describe('megastructure expansion tooltip rate matrix', () => {
   let dom;
   let window;

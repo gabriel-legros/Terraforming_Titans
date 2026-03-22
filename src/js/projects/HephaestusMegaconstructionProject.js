@@ -359,6 +359,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       accumulatedChanges,
       {
         storageOptions: { reconcileOnDirectSpend: true },
+        applyRates: tick.seconds > 0 && this.showsInResourcesRate(),
+        seconds: tick.seconds,
+        rateSourceLabel: this.getExpansionRateSourceLabel(),
         applyProgress: (progress) => this.applyContinuousProgress(progress),
         onApplied: ({ storageState }) => {
           if (!accumulatedChanges && storageState?.storageProject) {
