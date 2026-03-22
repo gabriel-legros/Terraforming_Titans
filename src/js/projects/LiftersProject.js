@@ -1528,7 +1528,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const preRun = this.operationPreRunThisTick === true;
-    const expansionApplyRates = preRun ? false : applyRates;
+    const expansionApplyRates = applyRates;
     const totals = this.estimateExpansionCostAndGain(deltaTime, expansionApplyRates, productivity, accumulatedChanges);
     if (preRun) {
       return totals;
