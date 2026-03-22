@@ -5,12 +5,8 @@ let rwgUIInitialized = false;
 const equilibratedWorlds = new Set();
 let historyContainerEl;
 let historyListEl;
-let historyPageEl;
-let historyPrevBtn;
-let historyNextBtn;
 let historyCollapsed = false;
 let historyData = [];
-let historyPage = 0;
 let lastHistoryState = '';
 let rwgSeedEl;
 let rwgTargetEl;
@@ -708,52 +704,28 @@ function initializeRandomWorldUI() {
   history.className = 'rwg-history';
   history.innerHTML = `
     <h3>Visited Worlds (Last 10)</h3>
-    <div id="rwg-history-list"></div>
-    <div class="rwg-history-controls">
-      <button id="rwg-history-prev" class="rwg-btn">Prev</button>
-      <span id="rwg-history-page"></span>
-      <button id="rwg-history-next" class="rwg-btn">Next</button>
-    </div>`;
+    <div id="rwg-history-list"></div>`;
   container.appendChild(history);
 
   historyContainerEl = history;
   historyListEl = history.querySelector('#rwg-history-list');
-  historyPageEl = history.querySelector('#rwg-history-page');
-  historyPrevBtn = history.querySelector('#rwg-history-prev');
-  historyNextBtn = history.querySelector('#rwg-history-next');
   // Make header collapsible without changing markup structure
   const historyHeader = history.querySelector('h3');
   if (historyHeader) {
     historyHeader.classList.add('rwg-history-title');
-    historyHeader.innerHTML = '<span id="rwg-history-arrow" class="summary-arrow">▼</span> Visited Worlds';
+    historyHeader.innerHTML = '<span id="rwg-history-arrow" class="summary-arrow">▼</span> Visited Worlds (Last 10)';
     const arrowEl = historyHeader.querySelector('#rwg-history-arrow');
     historyHeader.addEventListener('click', () => {
       historyCollapsed = !historyCollapsed;
       if (historyCollapsed) {
         if (historyListEl) historyListEl.style.display = 'none';
-        if (historyPrevBtn?.parentElement) historyPrevBtn.parentElement.style.display = 'none';
         if (arrowEl) arrowEl.textContent = '▶';
       } else {
         if (historyListEl) historyListEl.style.display = '';
-        if (historyPrevBtn?.parentElement) historyPrevBtn.parentElement.style.display = '';
         if (arrowEl) arrowEl.textContent = '▼';
       }
     });
   }
-
-  historyPrevBtn.addEventListener('click', () => {
-    if (historyPage > 0) {
-      historyPage--;
-      renderHistoryPage();
-    }
-  });
-  historyNextBtn.addEventListener('click', () => {
-    const maxPage = Math.ceil(historyData.length / 10) - 1;
-    if (historyPage < maxPage) {
-      historyPage++;
-      renderHistoryPage();
-    }
-  });
 
   initializeDominionLoreOverlay();
 
@@ -1524,17 +1496,14 @@ function renderHistory() {
   if (historyContainerEl) {
     historyContainerEl.style.display = entries.length ? '' : 'none';
   }
-  historyPage = Math.min(historyPage, Math.max(Math.ceil(historyData.length / 10) - 1, 0));
   renderHistoryPage();
 }
 
 function renderHistoryPage() {
   if (!historyListEl) return;
-  const start = historyPage * 10;
-  const slice = historyData.slice(start, start + 10);
   const fmt = typeof formatNumber === 'function' ? formatNumber : (n => n);
   const header = `<div class="rwg-history-head"><span>Name</span><span>Type</span><span>Seed</span><span>Population</span><span>State</span><span>Departed</span></div>`;
-  const rows = slice.map(r => {
+  const rows = historyData.map(r => {
     const displayType = RWG_WORLD_TYPES[r.type]?.displayName || r.type;
     const d = r.departedAt ? new Date(r.departedAt).toLocaleString() : '—';
     const pop = fmt(r.colonists || 0);
@@ -1542,10 +1511,6 @@ function renderHistoryPage() {
     return `<div class="rwg-history-row"><span class="name">${r.name}</span><span>${displayType}</span><span class="seed">${r.seed}</span><span class="pop">${pop}</span><span class="${stateCls}">${r.state}</span><span>${d}</span></div>`;
   }).join('');
   historyListEl.innerHTML = header + rows;
-  const totalPages = Math.max(Math.ceil(historyData.length / 10), 1);
-  historyPageEl.textContent = `${historyData.length ? historyPage + 1 : 0}/${totalPages}`;
-  historyPrevBtn.disabled = historyPage === 0;
-  historyNextBtn.disabled = historyPage >= totalPages - 1;
 }
 
 // Hook into Space UI whenever Random subtab is shown
