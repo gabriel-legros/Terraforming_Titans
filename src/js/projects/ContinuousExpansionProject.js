@@ -343,6 +343,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     }
 
     const applyRates = options.applyRates === true;
+    const shouldApplyRates = applyRates && !(accumulatedChanges && this.isExpansionContinuous());
     const sourceLabel = options.sourceLabel || this.displayName || this.name;
     const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
 
@@ -362,7 +363,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
           Math.max(colonyAvailable, 0)
         );
 
-        if (applyRates) {
+        if (shouldApplyRates) {
           const colonyRate = Math.min(allocation.fromColony, Math.max(colonyAvailable, 0)) * perSecondFactor;
           if (colonyRate > 0) {
             resourceEntry?.modifyRate?.(-colonyRate, sourceLabel, 'project');

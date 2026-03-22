@@ -388,6 +388,33 @@ describe('furnace expansion tooltip save repro', () => {
   }, 60000);
 });
 
+describe('ringworld furnace expansion double counting repro', () => {
+  it('shows the live tooltip rate for space superalloys instead of a doubled furnace expansion rate', async () => {
+    const dom = await createGameDom();
+    try {
+      const { window } = dom;
+      loadSave(window, 'ringworld_double_counting.json');
+
+      const resources = getGlobal(window, 'resources');
+      const label = 'Nuclear Alchemical Furnace expansion';
+      const resource = resources.spaceStorage.superalloys;
+
+      const beforeProjected = resource.projectedConsumptionRateBySource[label] || 0;
+
+      window.eval('updateLogic(1000)');
+
+      const afterTooltip = getTooltipRate(window, resource, label);
+      const afterProjected = resource.projectedConsumptionRateBySource[label] || 0;
+
+      expect(beforeProjected).toBeGreaterThan(0);
+      expect(afterProjected).toBeGreaterThan(0);
+      expect(afterTooltip).toBeCloseTo(afterProjected, 6);
+    } finally {
+      dom.window.close();
+    }
+  }, 60000);
+});
+
 describe('megastructure expansion tooltip rate matrix', () => {
   let dom;
   let window;
