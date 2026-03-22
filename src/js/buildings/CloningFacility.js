@@ -1,10 +1,21 @@
+function getCloningFacilityText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class CloningFacility extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
     this.automationCustomBasisOptions = (this.automationCustomBasisOptions || []).concat([
       {
         value: 'colonistCapacity',
-        label: '% colonist capacity'
+        label: getCloningFacilityText(
+          'ui.buildings.automationBasis.colonistCapacity',
+          '% colonist capacity'
+        )
       }
     ]);
   }

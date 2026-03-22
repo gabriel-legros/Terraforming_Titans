@@ -67,7 +67,7 @@ try {
 
 // --- Default Planet Parameters (Based largely on Mars) ---
 const defaultPlanetParameters = {
-  name: 'Default Planet', // Will be overridden by specific planets
+  name: '',
   specialAttributes: {
     hasSand: true,
   },
@@ -88,7 +88,7 @@ const defaultPlanetParameters = {
   fundingRate: 0, // Default
   // Default host star information (for Solar System worlds)
   star: {
-    name: 'Sun',
+    name: '',
     spectralType: 'G2V',
     luminositySolar: 1,
     massSolar: 1,
@@ -128,7 +128,7 @@ const defaultPlanetParameters = {
 // Define only the properties that differ from the defaults for each planet.
 
 const marsOverrides = {
-  name: 'Mars',
+  name: '',
    "resources": {
     "atmospheric": {
       "carbonDioxide": {
@@ -237,7 +237,7 @@ const marsOverrides = {
 };
 
 const titanOverrides = {
-  name: 'Titan',
+  name: '',
   resources: {
     surface: {
       land: { initialValue : 8_300_000_000 },
@@ -356,7 +356,7 @@ const titanOverrides = {
     spinPeriod: 382.7,
     starLuminosity: 1,
     parentBody: {
-      name: 'Saturn',
+      name: '',
       radius: 60268,        // km
       mass: 5.683e26,       // kg
       orbitRadius: 1_221_870, // km
@@ -371,7 +371,7 @@ const titanOverrides = {
 };
 
 const callistoOverrides = {
-  name: 'Callisto',
+  name: '',
 
   resources: {
     /* ---------- SURFACE ---------- */
@@ -507,7 +507,7 @@ const callistoOverrides = {
     spinPeriod: 400.8,
     starLuminosity: 1,
     parentBody: {
-      name: 'Jupiter',
+      name: '',
       radius: 71492,       // km
       mass: 1.898e27,      // kg
       orbitRadius: 1882700, // km
@@ -524,7 +524,7 @@ const callistoOverrides = {
 
 /* ---------- GANYMEDE OVERRIDES ---------- */
 const ganymedeOverrides = {
-  name: 'Ganymede',
+  name: '',
 
   /* ---------- RESOURCES ---------- */
   resources: {
@@ -663,7 +663,7 @@ const ganymedeOverrides = {
     spinPeriod: 171.7,
     starLuminosity: 1,
     parentBody: {
-      name: 'Jupiter',
+      name: '',
       radius: 71492,      // km
       mass: 1.898e27,     // kg
       orbitRadius: 1070400, // km
@@ -681,7 +681,7 @@ const ganymedeOverrides = {
 /* ---------- DRY WORLD (vega2) ---------- */
 // A completely dry, Venus-sized world with a pure inert atmosphere (>0.5 atm)
 const vega2Overrides = {
-  name: 'Vega-2',
+  name: '',
   travelWarning: {
     message: 'This world has no water.  Solis can help.'
   },
@@ -784,7 +784,7 @@ const vega2Overrides = {
     }
   },
   star: {
-    name: 'Vega',
+    name: '',
     spectralType: 'A0V',
     luminositySolar: 40,
     massSolar: 2.135,
@@ -810,7 +810,7 @@ const vega2Overrides = {
 
 /* ---------- VENUS OVERRIDES ---------- */
 const venusOverrides = {
-  name: 'Venus',
+  name: '',
   travelWarning: {
     message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.',
     hint: {
@@ -951,9 +951,9 @@ const venusOverrides = {
 };
 
 const umbraOverrides = {
-  name: 'Umbra',
+  name: '',
   star: {
-    name: 'Nyx',
+    name: '',
     spectralType: 'K4V',
     luminositySolar: 0.0048246,
     massSolar: 0.2178,
@@ -970,7 +970,7 @@ const umbraOverrides = {
     spinPeriod: 18.728781030979007,
     starLuminosity: 0.0048246,
     parentBody: {
-      name: 'Nyx-1',
+      name: '',
       radius: 71492,       // km
       mass: 4.255130726862839e+27,      // kg
       orbitRadius: 1_330_049.90930277854, // km
@@ -1113,7 +1113,7 @@ const umbraOverrides = {
 };
 
 const solisPrimeOverrides = {
-  name: 'Solis Prime',
+  name: '',
   travelWarning: {
     message: 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover. \n The story will give you some initial resources, but if some mega projects are on auto start you may end up using them instantly.',
   },
@@ -1245,12 +1245,12 @@ const solisPrimeOverrides = {
 };
 
 const gabbagOverrides = {
-  name: 'Gabbag',
+  name: '',
   specialAttributes: {
     terraformingRequirementId: 'gabbagian',
   },
   star: {
-    name: 'Gabbagsol',
+    name: '',
     spectralType: 'A',
     luminositySolar: 10.19109899798825,
     massSolar: 1.9411681130761282,
@@ -1399,9 +1399,9 @@ const gabbagOverrides = {
 };
 
 const tartarusOverrides = {
-  name: 'Tartarus',
+  name: '',
   star: {
-    name: 'Erebus',
+    name: '',
     spectralType: 'K2V',
     luminositySolar: 0.42,
     massSolar: 0.78,
@@ -1531,9 +1531,9 @@ const tartarusOverrides = {
 };
 
 const hadesOverrides = {
-  name: 'Hades',
+  name: '',
   star: {
-    name: 'PSR S-17634',
+    name: '',
     spectralType: 'Pulsar',
     luminositySolar: 0.002,
     massSolar: 1.6,
@@ -1560,7 +1560,7 @@ const hadesOverrides = {
       stormDurationSeconds: 5,
       severity: 1,
       orbitalDoseBoost_mSvPerDay: 4900,
-      description: 'The pulsar emits periodic radiation bursts across the system.'
+      description: '',
     }
   },
   resources: {
@@ -1604,7 +1604,7 @@ const hadesOverrides = {
 };
 
 const poseidonOverrides = {
-  name: 'Poseidon',
+  name: '',
   travelWarning: {
     message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.  \n It is also possible to nearly softlock if using lifters too aggressively.  You have been warned.',
     hint: {
@@ -1613,7 +1613,7 @@ const poseidonOverrides = {
     }
   },
   star: {
-    name: 'Nereid',
+    name: '',
     spectralType: 'K1V',
     luminositySolar: 0.46,
     massSolar: 0.84,

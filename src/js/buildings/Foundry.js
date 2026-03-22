@@ -1,3 +1,11 @@
+function getFoundryBuildingText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class Foundry extends Building {
   getBuildLimit() {
     return Math.max(0, Math.floor(terraforming.initialLand || 0));
@@ -33,7 +41,10 @@ class Foundry extends Building {
       tooltip.innerHTML = '&#9432;';
       cache.countTooltipContent = attachDynamicInfoTooltip(
         tooltip,
-        'Foundries are limited to 1 per unit of initial land on the current world.'
+        getFoundryBuildingText(
+          'ui.buildings.foundry.limitTooltip',
+          'Foundries are limited to 1 per unit of initial land on the current world.'
+        )
       );
       cache.countTooltip = tooltip;
     }

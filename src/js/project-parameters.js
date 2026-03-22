@@ -1,12 +1,12 @@
 const projectParameters = {
   cargo_rocket: {
     type: 'CargoRocketProject',
-    name: "Cargo Rocket",
+    name: '',
     category :"resources",
     cost: {
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 3 minutes)
-    description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",
+    description: '',
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,  // Infinite repeats allowed
     unlocked: true,
@@ -29,12 +29,12 @@ const projectParameters = {
   },
   galactic_market: {
     type: 'GalacticMarketProject',
-    name: "Galactic Market",
+    name: '',
     category :"resources",
     cost: {
     },
     duration: 0,
-    description: "Open trading lanes with the wider galaxy to import resources funded through market exchanges.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -58,12 +58,12 @@ const projectParameters = {
   },
   import_colonists_1: {
     type: 'ImportColonistsProject',
-    name: "Import colonists",
+    name: '',
     category :"resources",
     cost: {
     },
     duration: 60000,  // Duration of the project in milliseconds
-    description: "Use chemical rockets to import colonists",
+    description: '',
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -77,11 +77,11 @@ const projectParameters = {
   },
   exportResources: {
     type: 'SpaceExportProject',
-    name : "Metal Exportation",
+    name : '',
     category : "resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to export resources to the market.  Generates funding.  The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -98,7 +98,7 @@ const projectParameters = {
   },
   satellite: {
     type: 'ScannerProject',
-    name: "Ore satellite",
+    name: '',
     category :"infrastructure",
     cost: {
       colony: {
@@ -108,7 +108,7 @@ const projectParameters = {
       }
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
-    description: "Deploy a satellite to enhance the discovery of valuable ore deposits. The satellite scans the surface for untapped ore veins, accelerating resource extraction. Each additional satellite increases scanning efficiency, but locating new veins becomes progressively more challenging as deposits are exhausted.",
+    description: '',
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 1000,
     unlocked: false,
@@ -123,7 +123,7 @@ const projectParameters = {
   },
   geo_satellite: {
     type: 'ScannerProject',
-    name: "Geothermal satellite",
+    name: '',
     category :"infrastructure",
     cost: {
       colony: {
@@ -133,7 +133,7 @@ const projectParameters = {
       }
     },
     duration: 60000,  // Duration of the project in milliseconds (e.g., 1 minute)
-    description: "Deploy a highly sensitive satellite to scan for geothermal energy. The satellite identifies suitable geothermal vents for energy extraction.",
+    description: '',
     repeatable: true,  // Flag indicating if the project is repeatable
     maxRepeatCount: 100,
     unlocked: false,
@@ -148,7 +148,7 @@ const projectParameters = {
   },
   spaceMirrorFacility: {
     type: 'SpaceMirrorFacilityProject',
-    name: "Space mirror facility",
+    name: '',
     category :"infrastructure",
     cost: {
       colony: {
@@ -158,7 +158,7 @@ const projectParameters = {
       }
     },
     duration: 180000,
-    description: "Built at a Lagrangian point, this facility will allow the construction of space mirrors from the buildings terraforming tab.",
+    description: '',
     repeatable: false,
     unlocked: false,
     kesslerDebrisSize: 'large',
@@ -176,11 +176,11 @@ const projectParameters = {
   },
   ringworldTerraforming: {
     type: 'RingworldTerraformingProject',
-    name: 'Ringworld Terraforming',
+    name: '',
     category: 'infrastructure',
     cost: {},
     duration: 0,
-    description: "This project keeps track of the Ringworld's spin and its effects.",
+    description: '',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -192,7 +192,7 @@ const projectParameters = {
   },
   deeperMining: {
     type: 'DeeperMiningProject',
-    name: "Deeper mining",
+    name: '',
     category : "infrastructure",
     cost: {
       colony: {
@@ -200,7 +200,7 @@ const projectParameters = {
       }
     },
     duration: 120000,
-    description: "Deepen all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.",
+    description: '',
     repeatable: true,
     maxDepth: 10000,
     unlocked : false,
@@ -221,7 +221,7 @@ const projectParameters = {
   },
   undergroundExpansion: {
     type: 'UndergroundExpansionProject',
-    name: "Underground Land Expansion",
+    name: '',
     category: "infrastructure",
     cost: {
       colony: {
@@ -230,7 +230,7 @@ const projectParameters = {
       }
     },
     duration: 240000,
-    description: "Build subterranean habitats to slightly expand usable land. Each completion increases land by a small amount.",
+    description: '',
     repeatable: true,
     maxRepeatCount: 10000,
     unlocked: false,
@@ -238,11 +238,11 @@ const projectParameters = {
   },
   oreSpaceMining: {
     type: 'SpaceMiningProject',
-    name: "Metal Asteroid Mining",
+    name: '',
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to mine asteroids for metal. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier. Without a space elevator, the metal cost per ship reduces the metal returned.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -258,11 +258,11 @@ const projectParameters = {
   },
   siliconSpaceMining: {
     type: 'SpaceMiningProject',
-    name: "Silica Asteroid Mining",
+    name: '',
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to mine asteroids for silicon. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier. Without a space elevator, the metal cost per ship reduces the silicon returned.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -278,11 +278,11 @@ const projectParameters = {
   },
   carbonSpaceMining: {
     type: 'SpaceMiningProject',
-    name: "Carbon Asteroid Mining",
+    name: '',
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to recover carbon from C-type asteroids, brought back as CO2. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -299,11 +299,11 @@ const projectParameters = {
   },
   waterSpaceMining: {
     type: 'SpaceMiningProject',
-    name: "Ice and Water importation",
+    name: '',
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Ships haul ice from space. If any zone is warm enough, it's delivered as liquid water there; otherwise it arrives frozen. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -320,11 +320,11 @@ const projectParameters = {
   },
   nitrogenSpaceMining: {
     type: 'SpaceMiningProject',
-    name: "Nitrogen harvesting",
+    name: '',
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to recover nitrogen from the outer solar system. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -340,11 +340,11 @@ const projectParameters = {
   },
   hydrogenSpaceMining: {
     type: 'SpaceMiningProject',
-    name: "Hydrogen Importation",
+    name: '',
     category :"resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to recover hydrogen from the outer solar system. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -360,7 +360,7 @@ const projectParameters = {
   },
   spaceElevator: {
     type: 'Project',
-    name: "Space Elevator",
+    name: '',
     category :"infrastructure",
     cost: {
       colony: {
@@ -370,7 +370,7 @@ const projectParameters = {
       }
     },
     duration: 360000,
-    description: "This cable eliminates all metal costs from multiple space activities.",
+    description: '',
     repeatable: false,
     unlocked : false,
     attributes : {
@@ -462,7 +462,7 @@ const projectParameters = {
   },
   magneticShield : {
     type: 'Project',
-    name : 'Magnetic Shield',
+    name : '',
     category :"infrastructure",
     cost: {
       colony: {
@@ -474,7 +474,7 @@ const projectParameters = {
       }
     },
     duration: 120000,
-    description: "This very expensive cable can carry enough current to protect the planet and its atmosphere.  The reduction in cancer rates negates the radiation penalty for life.  The cost of this project includes all the machinery and infrastructure required to build, house, cool and secure the cable.",
+    description: '',
     repeatable: false,
     unlocked : false,
     attributes : {
@@ -497,7 +497,7 @@ const projectParameters = {
   },
   klishyWeb: {
     type: 'Project',
-    name: 'Klishy web',
+    name: '',
     category: 'infrastructure',
     cost: {
       colony: {
@@ -508,7 +508,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct a massive web of Klishy-compatible copper wires and fibre optics, suitable for a new Klishy community.',
+    description: '',
     repeatable: false,
     unlocked: false,
     automationRequiresEverEnabled: true,
@@ -516,7 +516,7 @@ const projectParameters = {
   },
   artificialSky: {
     type: 'ArtificialSkyProject',
-    name: 'Artificial Sky',
+    name: '',
     category: 'infrastructure',
     cost: {
       colony: {
@@ -526,7 +526,7 @@ const projectParameters = {
       }
     },
     duration: 50000000,
-    description: 'Deploy segmented artificial sky shielding to block pulsar radiation bursts. Segment count is based on initial land, and assigned spaceships (required) accelerate construction. Partial completion proportionally reduces pulsar hazard intensity and solar flux. Full completion clears the pulsar hazard, counts as magnetic shielding for terraforming requirements, removes all solar flux, disables space mirrors (lanterns can still be used), and permanently disables Magnetic Shield.',
+    description: '',
     repeatable: true,
     maxRepeatCount: 1,
     unlocked: false,
@@ -538,7 +538,7 @@ const projectParameters = {
   },
   artificialCrust: {
     type: 'ArtificialCrustProject',
-    name: 'Artificial Crust',
+    name: '',
     category: 'infrastructure',
     cost: {
       colony: {
@@ -548,7 +548,7 @@ const projectParameters = {
       }
     },
     duration: 50000,
-    description: 'Lay down a segmented artificial crust to insulate the surface from planetary interior heat. Total cost and segment count scale directly with planetary initial land, while assigned spaceships accelerate construction. Completion proportionally reduces both core heat flux and molten-surface land reservation, reaching zero when the shell is finished.',
+    description: '',
     repeatable: true,
     maxRepeatCount: 1,
     unlocked: true,
@@ -560,7 +560,7 @@ const projectParameters = {
   },
   planetaryThruster: {
     type: 'PlanetaryThrustersProject',
-    name: 'Planetary Thrusters',
+    name: '',
     category: 'mega',
     requireStar: true,
     cost: {
@@ -571,7 +571,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Install planetary fusion thrusters for subtle maneuvering.',
+    description: '',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -580,7 +580,7 @@ const projectParameters = {
   },
   dysonSwarmReceiver : {
     type: 'DysonSwarmReceiverProject',
-    name : 'Dyson Swarm',
+    name : '',
     category : 'mega',
     cost: {
       colony: {
@@ -590,7 +590,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Expand your Dyson Swarm to produce power from the sun.  Build cheap receivers to receive power.  All colonies on terraformed worlds can help deploy collectors when materials are provided, shortening the process.  Collectors persist between worlds.  Collectors can be expanded even without the Dyson Swarm Receiver research.',
+    description: '',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -602,7 +602,7 @@ const projectParameters = {
   },
   dysonSphere: {
     type: 'DysonSphereProject',
-    name: 'Dyson Sphere',
+    name: '',
     category: 'giga',
     cost: {
       colony: {
@@ -610,7 +610,7 @@ const projectParameters = {
       }
     },
     duration: 18_000_000,
-    description: 'Assemble a Dyson Sphere frame, enabling 100x faster collectors expansion.  Disables Dyson Swarm on completion, transferring all collectors.',
+    description: '',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -622,7 +622,7 @@ const projectParameters = {
   },
   hephaestusMegaconstruction: {
     type: 'HephaestusMegaconstructionProject',
-    name: 'Hephaestus Megaconstruction Yard',
+    name: '',
     category: 'giga',
     cost: {
       colony: {
@@ -631,7 +631,7 @@ const projectParameters = {
       }
     },
     duration: 18_000_000,
-    description: 'Assemble a legendary construction yard that accelerates repeatable mega and giga projects. Each completion adds a yard that can be assigned, counting as an extra world.  Project duration scales with terraformed worlds.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -639,7 +639,7 @@ const projectParameters = {
   },
   nuclearAlchemyFurnace: {
     type: 'NuclearAlchemyFurnaceProject',
-    name: 'Nuclear Alchemical Furnace',
+    name: '',
     category: 'giga',
     cost: {
       colony: {
@@ -649,7 +649,7 @@ const projectParameters = {
       }
     },
     duration: 36_000_000,
-    description: 'Build alchemical furnaces that transmute space-storage hydrogen into space-storage selected resources. Expansion scales with terraformed worlds.  Furnaces can be run to convert hydrogen from space storage into other resources.  The focus is on resource production from complex fusion pathways, not energy.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -661,7 +661,7 @@ const projectParameters = {
   },
   superalloyGigafoundry: {
     type: 'SuperalloyGigafoundryProject',
-    name: 'Superalloy Gigafoundry',
+    name: '',
     category: 'giga',
     cost: {
       colony: {
@@ -673,7 +673,7 @@ const projectParameters = {
       }
     },
     duration: 144_000_000,
-    description: 'Build giga-scale foundries that convert metal and space energy into vast amounts of superalloys. Expansion scales with terraformed worlds.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -685,7 +685,7 @@ const projectParameters = {
   },
   apolloCoreSurgeryPlatform: {
     type: 'ApolloCoreSurgeryPlatformProject',
-    name: 'Apollo Planetary Core Surgery Platform',
+    name: '',
     category: 'giga',
     cost: {
       colony: {
@@ -695,7 +695,7 @@ const projectParameters = {
       }
     },
     duration: 18_000_000,
-    description: 'Build a massive core surgery platform capable of creating an artificial natural magnetosphere.  Medicine for planets.  Project completion persists on travel.',
+    description: '',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -706,7 +706,7 @@ const projectParameters = {
   },
   orbitalRing: {
     type: 'OrbitalRingProject',
-    name: 'Orbital Ring',
+    name: '',
     category: 'mega',
     cost: {
       colony: {
@@ -716,7 +716,7 @@ const projectParameters = {
       }
     },
     duration: 1800000,
-    description: 'Orbital rings count as an additional terraformed world.  Does not grant a skill point.  You can build a ring on previously terraformed worlds, and on the current one if terraformed.  Building a ring on the current world also increases its land by its initial land value.  You can prepay rings for each world without a ring.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -724,7 +724,7 @@ const projectParameters = {
   },
   spaceStorage : {
     type: 'SpaceStorageProject',
-    name : 'Space Storage',
+    name : '',
     category : 'mega',
     cost: {
       colony: {
@@ -732,7 +732,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time.  Resources in space storage may also be used to pay for most mega projects (planetary thrusters and world specializations excepted).  Space storage capacity and resources in storage persist between worlds.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -745,7 +745,7 @@ const projectParameters = {
       defaultExpansionRecipe: 'standard',
       expansionRecipes: {
         standard: {
-          label: 'Standard Storage',
+          label: '',
           expansionSpeedMultiplier: 1,
           cost: {
             colony: {
@@ -754,7 +754,7 @@ const projectParameters = {
           }
         },
         warp: {
-          label: 'Warp Storage',
+          label: '',
           requiresProjectFlag: 'warpStorageUpgrade',
           expansionSpeedMultiplier: 10,
           cost: {
@@ -770,7 +770,7 @@ const projectParameters = {
   },
   particleAccelerator: {
     type: 'ParticleAcceleratorProject',
-    name: 'Particle Accelerator',
+    name: '',
     category: 'mega',
     cost: {
       colony: {
@@ -779,7 +779,7 @@ const projectParameters = {
       }
     },
     duration: 600000,
-    description: 'Physicists can always use a bigger particle accelerator.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -792,7 +792,7 @@ const projectParameters = {
   },
   megaHeatSink: {
     type: 'MegaHeatSinkProject',
-    name: 'Mega Heat Sink',
+    name: '',
     category: 'mega',
     cost: {
       colony: {
@@ -801,7 +801,7 @@ const projectParameters = {
       }
     },
     duration: 60000,
-    description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 1 PW.  Will not take the current temperature below its trend.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -814,7 +814,7 @@ const projectParameters = {
   },
   spaceAntimatter: {
     type: 'SpaceAntimatterProject',
-    name: 'Space Antimatter',
+    name: '',
     category: 'mega',
     cost: {
       colony: {
@@ -824,7 +824,7 @@ const projectParameters = {
       }
     },
     duration: 1,
-    description: 'Assemble antimatter-grade battery modules in orbit capable of beaming and receiving energy. Each battery instantly adds 1Q to space energy storage.  Resources can be paid from space or colony storage, depending on space storage settings.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -835,7 +835,7 @@ const projectParameters = {
   },
   lifters: {
     type: 'LiftersProject',
-    name: 'Lifters',
+    name: '',
     category: 'mega',
     cost: {
       colony: {
@@ -847,7 +847,7 @@ const projectParameters = {
       }
     },
     duration: 300_000,
-    description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds, and taps unused Dyson power.',
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,
@@ -857,20 +857,20 @@ const projectParameters = {
       lifterEnergyPerUnit: 5_000_000_000_000_000,
       spaceBuilding: true,
       lifterStripRecipe: {
-        label: 'Strip Atmosphere',
+        label: '',
         complexity: 10,
         displayOrder: 2
       },
       lifterHarvestRecipes: {
         hydrogen: {
-          label: 'Hydrogen',
+          label: '',
           storageKey: 'hydrogen',
           outputMultiplier: 1,
           complexity: 1,
           displayOrder: 1
         },
         methane: {
-          label: 'Methane',
+          label: '',
           storageKey: 'atmosphericMethane',
           outputMultiplier: 1,
           complexity: 100,
@@ -878,7 +878,7 @@ const projectParameters = {
           requiresProjectFlag: 'methaneAmmoniaLifting'
         },
         ammonia: {
-          label: 'Ammonia',
+          label: '',
           storageKey: 'atmosphericAmmonia',
           outputMultiplier: 1,
           complexity: 100,
@@ -886,7 +886,7 @@ const projectParameters = {
           requiresProjectFlag: 'methaneAmmoniaLifting'
         },
         starLifting: {
-          label: 'Star Lifting',
+          label: '',
           storageKey: 'hydrogen',
           complexity: 100,
           displayOrder: 5,
@@ -905,11 +905,11 @@ const projectParameters = {
   },
   bioworld: {
     type: 'BioworldProject',
-    name: 'Bioworld',
+    name: '',
     category: 'mega',
     cost: {},
     duration: 300000,
-    description: 'Cultivate a bioworld-scale ecosystem. Completion removes all Ecumenopolis Districts and permanently disables new ones. Completed bioworlds grant evolution points when travelling based on total biomass.',
+    description: '',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -919,7 +919,7 @@ const projectParameters = {
   },
   foundryWorld: {
     type: 'FoundryWorldProject',
-    name: 'Foundry World',
+    name: '',
     category: 'mega',
     cost: {
       colony: {
@@ -928,7 +928,7 @@ const projectParameters = {
       }
     },
     duration: 300000,
-    description: 'Tap into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(initial land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
+    description: '',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -938,11 +938,11 @@ const projectParameters = {
   },
   manufacturingWorld: {
     type: 'ManufacturingWorldProject',
-    name: 'Manufacturing World',
+    name: '',
     category: 'mega',
     cost: {},
     duration: 300000,
-    description: 'Designate this world as a planet-scale manufacturing center. Completing it grants MP and banks this world\'s population permanently as manufacturing potential.  These benefits apply on travel.  All production is from space storage to space storage.',
+    description: '',
     repeatable: false,
     unlocked: false,
     attributes: {
@@ -953,11 +953,11 @@ const projectParameters = {
   },
   disposeResources : {
     type: 'SpaceDisposalProject',
-    name : "Resource Disposal",
+    name : '',
     category : "resources",
     cost: {},
     duration: 100000,
-    description: "Use your spaceships to dispose of unwanted resources somewhere.  Cheaper than importing.",
+    description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
     unlocked: false,

@@ -7,6 +7,14 @@
     ({ SpecializationProject: SpecializationBase } = require('./SpecializationProject.js'));
   } catch (error) {}
 
+  function getBioworldText(path) {
+    try {
+      return t(path, null, '');
+    } catch (error) {
+      return '';
+    }
+  }
+
   const EVOLUTION_POINT_DIVISOR = 1e12;
   const EVOLUTION_POINT_GAIN_MULTIPLIER = 1.5;
   const MAX_EVOLUTION_UPGRADES = 400;
@@ -16,52 +24,52 @@
   const BIOWORLD_SHOP_ITEMS = [
     {
       id: 'lifeDesignerUnlock',
-      label: 'Unlock Life Designer',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.lifeDesignerUnlock.label'),
       cost: 10,
       maxPurchases: 1,
-      description: 'Permanently completes the Life Designing and Production Research.',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.lifeDesignerUnlock.description'),
     },
     {
       id: 'lifePointGain',
-      label: 'Life Points Gain +1%',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.lifePointGain.label'),
       cost: 1,
       maxPurchases: MAX_LIFE_POINT_GAIN_UPGRADES,
-      description: 'Boosts life design point gains by 1%.',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.lifePointGain.description'),
     },
     {
       id: 'temperatureToleranceMax',
-      label: 'Temperature Tolerance Max +1',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.temperatureToleranceMax.label'),
       cost: 1,
       maxPurchases: MAX_EVOLUTION_UPGRADES,
-      description: 'Raises the max investments for minimum and maximum temperature tolerance by 1.',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.temperatureToleranceMax.description'),
     },
     {
       id: 'growthToleranceMax',
-      label: 'Growth Tolerance Max +1',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.growthToleranceMax.label'),
       cost: 1,
       maxPurchases: MAX_EVOLUTION_UPGRADES,
-      description: 'Raises the max investments for optimal growth temperature and growth tolerance by 1.',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.growthToleranceMax.description'),
     },
     {
       id: 'invasivenessMax',
-      label: 'Invasiveness Max +1',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.invasivenessMax.label'),
       cost: 1,
       maxPurchases: MAX_EVOLUTION_UPGRADES,
-      description: 'Raises the max investments for invasiveness by 1.',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.invasivenessMax.description'),
     },
     {
       id: 'spaceEfficiencyMax',
-      label: 'Space Efficiency Max +1',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.spaceEfficiencyMax.label'),
       cost: 1,
       maxPurchases: MAX_EVOLUTION_UPGRADES,
-      description: 'Raises the max investments for space efficiency by 1.',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.spaceEfficiencyMax.description'),
     },
     {
       id: 'bioworkersMax',
-      label: 'Bioworkers Max +1',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.bioworkersMax.label'),
       cost: 1,
       maxPurchases: MAX_BIOWORKERS_UPGRADES,
-      description: 'Raises the max investments for bioworkers by 1.',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.bioworkersMax.description'),
     },
   ];
 
@@ -74,10 +82,10 @@
     constructor(config, name) {
       super(config, name, {
         pointsKey: 'evolutionPoints',
-        pointsLabel: 'Evolution Points:',
+        pointsLabel: getBioworldText('catalogs.specializations.bioworld.pointsLabel'),
         pointsUnit: 'EP',
-        shopTitle: 'Evolution Shop',
-        shopTooltip: 'You gain evolution points when travelling after completing this project: 3*log10(total biomass / 1T) + 1, then +10% per hazard on this world.',
+        shopTitle: getBioworldText('catalogs.specializations.bioworld.shopTitle'),
+        shopTooltip: getBioworldText('catalogs.specializations.bioworld.shopTooltip'),
         emptyShopText: '',
         shopItems: BIOWORLD_SHOP_ITEMS,
         shopItemMap: BIOWORLD_SHOP_ITEM_MAP,
@@ -115,22 +123,22 @@
       return [
         {
           id: 'terraformed',
-          label: 'World is fully terraformed',
+          label: getBioworldText('catalogs.specializations.bioworld.requirements.terraformed'),
           met: spaceManager.isCurrentWorldTerraformed(),
         },
         {
           id: 'biomassDensity',
-          label: 'Biomass density above 1 ton/m^2',
+          label: getBioworldText('catalogs.specializations.bioworld.requirements.biomassDensity'),
           met: this.getBiomassDensity() > 1,
         },
         {
           id: 'ecumenopolisCount',
-          label: 'Fewer than 1,000 Ecumenopolis Districts',
+          label: getBioworldText('catalogs.specializations.bioworld.requirements.ecumenopolisCount'),
           met: colonies.t7_colony.count < 1000,
         },
         {
           id: 'otherSpecialization',
-          label: 'No other specialization started or completed',
+          label: getBioworldText('catalogs.specializations.bioworld.requirements.otherSpecialization'),
           met: !holyWorldBlocked
             && !foundry.isActive
             && !foundry.isCompleted
@@ -142,7 +150,7 @@
 
     getSpecializationLockedText() {
       if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-        return 'Blocked by Holy World';
+        return getBioworldText('catalogs.specializations.bioworld.lockedByHolyWorld');
       }
       return super.getSpecializationLockedText();
     }
@@ -232,7 +240,7 @@
           value: 10,
           effectId: 'bioworld-biocortex-metropolis',
           sourceId: 'bioworld-biocortex',
-          name: 'Biocortex-human integration',
+          name: getBioworldText('catalogs.specializations.bioworld.biocortexEffectName'),
         });
       }
     }

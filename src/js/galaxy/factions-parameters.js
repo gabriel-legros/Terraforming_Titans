@@ -16,14 +16,14 @@ function createKey(q, r) {
 const galaxyFactionParameters = [
     {
         id: 'uhf',
-        name: 'UHF',
+        name: '',
         color: '#3b82f6',
         startingSectors: [],
         defensiveness: null
     },
     {
         id: 'cewinsii',
-        name: 'Cewinsii',
+        name: '',
         color: '#f97316',
         startingSectors: [
             createKey(0, 0)
@@ -39,7 +39,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'helian',
-        name: 'Helian',
+        name: '',
         color: '#facc15',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -56,7 +56,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'virellan',
-        name: 'Virellan',
+        name: '',
         color: '#10b981',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -73,7 +73,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'karthid',
-        name: 'Karthid',
+        name: '',
         color: '#8b5cf6',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -90,7 +90,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'neran',
-        name: 'Neran',
+        name: '',
         color: '#ec4899',
         defensiveness: 0.5,
         autoOperationRange: {
@@ -107,7 +107,7 @@ const galaxyFactionParameters = [
     },
     {
         id: 'okoth',
-        name: 'Okoth',
+        name: '',
         color: '#ef4444',
         defensiveness: 0.5,
         autoOperationRange: {

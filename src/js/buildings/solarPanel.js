@@ -1,3 +1,11 @@
+function getSolarPanelText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class SolarPanel extends Building {
   getBuildLimit() {
     const initialLand = terraforming.initialLand || 0;
@@ -36,7 +44,10 @@ class SolarPanel extends Building {
       tooltip.innerHTML = '&#9432;';
       cache.countTooltipContent = attachDynamicInfoTooltip(
         tooltip,
-        'Solar panels are limited to 10× the initial land amount.'
+        getSolarPanelText(
+          'ui.buildings.solarPanel.limitTooltip',
+          'Solar panels are limited to 10x the initial land amount.'
+        )
       );
       cache.countTooltip = tooltip;
     }

@@ -1,3 +1,11 @@
+function getWindTurbineText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class WindTurbine extends Building {
   getBuildLimit() {
     const initialLand = terraforming.initialLand || 0;
@@ -43,7 +51,10 @@ class WindTurbine extends Building {
       tooltip.innerHTML = '&#9432;';
       cache.countTooltipContent = attachDynamicInfoTooltip(
         tooltip,
-        'Wind turbine arrays are limited to 1 per 50 units of initial land.'
+        getWindTurbineText(
+          'ui.buildings.windTurbine.limitTooltip',
+          'Wind turbine arrays are limited to 1 per 50 units of initial land.'
+        )
       );
       cache.countTooltip = tooltip;
     }

@@ -1,14 +1,14 @@
 const skillParameters = {
   build_cost: {
     id: 'build_cost',
-    name: 'Efficient Architecture',
-    description: 'Reduces Building Costs by 10% (indirectly impacts maintenance)',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effect: {
       target: 'global',
       type: 'globalCostReduction',
-      name: 'Awakening',
+      name: '',
       baseValue: 0.1,
       perRank: true
     },
@@ -16,14 +16,14 @@ const skillParameters = {
   },
   pop_growth: {
     id: 'pop_growth',
-    name: 'Population Boom',
-    description: 'Increases population growth by 20%',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effect: {
       target: 'population',
       type: 'globalPopulationGrowth',
-      name: 'Awakening',
+      name: '',
       baseValue: 0.2,
       perRank: true
     },
@@ -31,8 +31,8 @@ const skillParameters = {
   },
   worker_reduction: {
     id: 'worker_reduction',
-    name: 'Automation',
-    description: 'Reduces worker requirements by 10%',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effect: {
@@ -45,8 +45,8 @@ const skillParameters = {
   },
   research_boost: {
     id: 'research_boost',
-    name: 'Innovation Initiative',
-    description: 'Boosts research output by 50% per rank',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effect: {
@@ -59,14 +59,14 @@ const skillParameters = {
   },
   maintenance_reduction: {
     id: 'maintenance_reduction',
-    name: 'Streamlined Operations',
-    description: 'Reduces maintenance costs by 10% per rank',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effect: {
       target: 'global',
       type: 'globalMaintenanceReduction',
-      name: 'Streamlined Operations',
+      name: '',
       baseValue: 0.1,
       perRank: true
     },
@@ -74,8 +74,8 @@ const skillParameters = {
   },
   android_efficiency: {
     id: 'android_efficiency',
-    name: 'Androids Efficiency',
-    description: 'Increases android factory production by 40% per rank',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effect: {
@@ -89,8 +89,8 @@ const skillParameters = {
   },
   ship_efficiency: {
     id: 'ship_efficiency',
-    name: 'Advanced Logistics',
-    description: 'Ships import and export 30% more per rank, energy use rises by 30% per rank, and trade caps increase by 30% per rank',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effects: [
@@ -119,8 +119,8 @@ const skillParameters = {
   },
   project_speed: {
     id: 'project_speed',
-    name: 'Faster Projects',
-    description: 'Reduces project durations by 15% per rank',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effect: {
@@ -133,8 +133,8 @@ const skillParameters = {
   },
   life_design_points: {
     id: 'life_design_points',
-    name: 'More Life Design Points',
-    description: 'Grants 20 life design points per rank and boosts point shop and biodome gains by 20% per rank',
+    name: '',
+    description: '',
     cost: 1,
     maxRank: 5,
     effects: [

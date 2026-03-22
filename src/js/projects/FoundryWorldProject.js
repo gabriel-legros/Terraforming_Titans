@@ -7,55 +7,63 @@
     ({ SpecializationProject: SpecializationBase } = require('./SpecializationProject.js'));
   } catch (error) {}
 
+  function getFoundryText(path) {
+    try {
+      return t(path, null, '');
+    } catch (error) {
+      return '';
+    }
+  }
+
   const FOUNDRY_SHOP_ITEMS = [
     {
       id: 'galacticMetalMiningCap',
-      label: 'Galactic Metal Mining Expertise',
+      label: getFoundryText('catalogs.specializations.foundry.shopItems.galacticMetalMiningCap.label'),
       cost: 1,
       maxPurchases: 800,
-      description: 'Increases the galactic metal mining cap by 5%.',
+      description: getFoundryText('catalogs.specializations.foundry.shopItems.galacticMetalMiningCap.description'),
     },
     {
       id: 'galacticSilicaMiningCap',
-      label: 'Galactic Silica Mining Expertise',
+      label: getFoundryText('catalogs.specializations.foundry.shopItems.galacticSilicaMiningCap.label'),
       cost: 1,
       maxPurchases: 800,
-      description: 'Increases the galactic silica mining cap by 5%.',
+      description: getFoundryText('catalogs.specializations.foundry.shopItems.galacticSilicaMiningCap.description'),
     },
     {
       id: 'galacticEverythingElseCap',
-      label: 'Galactic Everything Else',
+      label: getFoundryText('catalogs.specializations.foundry.shopItems.galacticEverythingElseCap.label'),
       cost: 1,
       maxPurchases: 800,
-      description: 'Increases the galactic water, carbon, and nitrogen import caps by 5%.',
+      description: getFoundryText('catalogs.specializations.foundry.shopItems.galacticEverythingElseCap.description'),
     },
     {
       id: 'oreMiningOutput',
-      label: 'Planetary Ore Mining Expertise',
+      label: getFoundryText('catalogs.specializations.foundry.shopItems.oreMiningOutput.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases ore mine output by 1%.',
+      description: getFoundryText('catalogs.specializations.foundry.shopItems.oreMiningOutput.description'),
     },
     {
       id: 'silicaMiningOutput',
-      label: 'Planetary Silica Mining Expertise',
+      label: getFoundryText('catalogs.specializations.foundry.shopItems.silicaMiningOutput.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases silica mining output by 1%.',
+      description: getFoundryText('catalogs.specializations.foundry.shopItems.silicaMiningOutput.description'),
     },
     {
       id: 'glassSmelterOptimization',
-      label: 'Glass Smelter Optimization',
+      label: getFoundryText('catalogs.specializations.foundry.shopItems.glassSmelterOptimization.label'),
       cost: 1,
       maxPurchases: 400,
-      description: 'Increases glass smelter production and consumption by 1%.',
+      description: getFoundryText('catalogs.specializations.foundry.shopItems.glassSmelterOptimization.description'),
     },
     {
       id: 'deeperMiningSpeed',
-      label: 'Subterranean Expertise',
+      label: getFoundryText('catalogs.specializations.foundry.shopItems.deeperMiningSpeed.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases deeper mining and underground land expansion speed by 1%.',
+      description: getFoundryText('catalogs.specializations.foundry.shopItems.deeperMiningSpeed.description'),
     },
   ];
 
@@ -70,11 +78,11 @@
     constructor(config, name) {
       super(config, name, {
         pointsKey: 'foundryPoints',
-        pointsLabel: 'Metallurgy Points:',
+        pointsLabel: getFoundryText('catalogs.specializations.foundry.pointsLabel'),
         pointsUnit: 'MP',
-        shopTitle: 'Metallurgy Shop',
-        shopTooltip: 'You gain 10 metallurgy points times sqrt(initial land / 50B) when travelling after completing this project, then +10% per hazard on this world.',
-        emptyShopText: 'No foundry upgrades available yet.',
+        shopTitle: getFoundryText('catalogs.specializations.foundry.shopTitle'),
+        shopTooltip: getFoundryText('catalogs.specializations.foundry.shopTooltip'),
+        emptyShopText: getFoundryText('catalogs.specializations.foundry.emptyShopText'),
         shopItems: FOUNDRY_SHOP_ITEMS,
         shopItemMap: FOUNDRY_SHOP_ITEM_MAP,
         specializationSourceId: 'foundryWorld',
@@ -116,17 +124,17 @@
       return [
         {
           id: 'terraformed',
-          label: 'World is fully terraformed',
+          label: getFoundryText('catalogs.specializations.foundry.requirements.terraformed'),
           met: spaceManager.isCurrentWorldTerraformed(),
         },
         {
           id: 'deepMining',
-          label: 'Deeper mining depth at least 50,000 or a thin crust',
+          label: getFoundryText('catalogs.specializations.foundry.requirements.deepMining'),
           met: this.meetsMiningRequirement(),
         },
         {
           id: 'otherSpecialization',
-          label: 'No other specialization started or completed',
+          label: getFoundryText('catalogs.specializations.foundry.requirements.otherSpecialization'),
           met: !holyWorldBlocked
             && !bioworld.isActive
             && !bioworld.isCompleted
@@ -138,7 +146,7 @@
 
     getSpecializationLockedText() {
       if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-        return 'Blocked by Holy World';
+        return getFoundryText('catalogs.specializations.foundry.lockedByHolyWorld');
       }
       return super.getSpecializationLockedText();
     }

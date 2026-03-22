@@ -1,5 +1,13 @@
 const ENERGY_PER_ANTIMATTER = 2_000_000_000_000_000;
 
+function getAntimatterBatteryText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 let exportedAntimatterHelpers = null;
 if (
   typeof window === 'undefined' &&
@@ -29,7 +37,10 @@ class AntimatterBattery extends Building {
     let { fillButton } = cache;
     if (!fillButton) {
       fillButton = globalThis.document.createElement('button');
-      fillButton.textContent = 'Fill';
+      fillButton.textContent = getAntimatterBatteryText(
+        'ui.buildings.antimatterBattery.fill',
+        'Fill'
+      );
       fillButton.classList.add('fill-button');
       cache.fillButton = fillButton;
     }

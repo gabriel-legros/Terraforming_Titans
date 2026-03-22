@@ -1,30 +1,38 @@
+function getMilestoneText(path) {
+    try {
+        return t(path, null, '');
+    } catch (error) {
+        return '';
+    }
+}
+
 const festivalEffects = [
     {
         target: 'fundingModule',
         type: 'productionMultiplier',
         value : 3,
-        name: 'Festival'
+        name: getMilestoneText('catalogs.milestones.festivalName')
     },
     {
         target: 'building',
         targetId: 'oreMine',
         type: 'productionMultiplier',
         value: 3,
-        name: 'Festival'
+        name: getMilestoneText('catalogs.milestones.festivalName')
     },
     {
         target: 'building',
         targetId: 'componentFactory',
         type: 'productionMultiplier',
         value: 3,
-        name: 'Festival'
+        name: getMilestoneText('catalogs.milestones.festivalName')
     },
     {
         target: 'building',
         targetId: 'electronicsFactory',
         type: 'productionMultiplier',
         value: 3,
-        name: 'Festival'
+        name: getMilestoneText('catalogs.milestones.festivalName')
     },
     {
       target: 'population',
@@ -90,105 +98,125 @@ function getGlobalFestivalDurationBonusMs() {
 const terraformingMilestones = 
     [
         {
+        id: 'temperature_1',
         type : 'temperature',
         value : 1e-4,
-        name : 'Temperature 1',
-        description : 'Increase or decrease temperature in any zone by 0.1 mK',
+        name : getMilestoneText('catalogs.milestones.terraforming.temperature_1.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.temperature_1.description'),
     }, {
+        id: 'temperature_2',
         type : 'temperature',
         value : 1e-3,
-        name : 'Temperature 2',
-        description : 'Increase or decrease temperature in any zone by 1 mK',
+        name : getMilestoneText('catalogs.milestones.terraforming.temperature_2.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.temperature_2.description'),
     }, {
+        id: 'temperature_3',
         type : 'temperature',
         value : 1e-2,
-        name : 'Temperature 3',
-        description : 'Increase or decrease temperature in any zone by 10 mK',
+        name : getMilestoneText('catalogs.milestones.terraforming.temperature_3.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.temperature_3.description'),
     }, {
+        id: 'temperature_4',
         type : 'temperature',
         value : 0.1,
-        name : 'Temperature 4',
-        description : 'Increase or decrease temperature in any zone by 0.1 K',
+        name : getMilestoneText('catalogs.milestones.terraforming.temperature_4.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.temperature_4.description'),
     }, {
+        id: 'temperature_5',
         type : 'temperature',
         value : 1,
-        name : 'Temperature 5',
-        description : 'Increase or decrease temperature in any zone by 1 K',
+        name : getMilestoneText('catalogs.milestones.terraforming.temperature_5.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.temperature_5.description'),
     }, {
+        id: 'pressure_1',
         type : 'pressure',
         value : 0.01,
-        name : 'Pressure 1',
-        description : 'Increase or decrease total atmospheric pressure by 0.01 Pa',
+        name : getMilestoneText('catalogs.milestones.terraforming.pressure_1.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.pressure_1.description'),
     }, {
+        id: 'pressure_2',
         type : 'pressure',
         value : 0.1,
-        name : 'Pressure 2',
-        description : 'Increase or decrease total atmospheric pressure by 0.1 Pa',
+        name : getMilestoneText('catalogs.milestones.terraforming.pressure_2.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.pressure_2.description'),
     }, {
+        id: 'pressure_3',
         type : 'pressure',
         value : 5,
-        name : 'Pressure 3',
-        description : 'Increase or decrease total atmospheric pressure by 5 Pa',
+        name : getMilestoneText('catalogs.milestones.terraforming.pressure_3.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.pressure_3.description'),
     }, {
+        id: 'pressure_4',
         type : 'pressure',
         value : 100,
-        name : 'Pressure 4',
-        description : 'Increase or decrease total atmospheric pressure by 100 Pa',
+        name : getMilestoneText('catalogs.milestones.terraforming.pressure_4.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.pressure_4.description'),
     }, {
+        id: 'pressure_5',
         type : 'pressure',
         value : 1e3,
-        name : 'Pressure 5',
-        description : 'Increase or decrease total atmospheric pressure by 1 kPa',
+        name : getMilestoneText('catalogs.milestones.terraforming.pressure_5.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.pressure_5.description'),
     }, {
+        id: 'water_1',
         type : 'water',
         value : 1000,
-        name : 'Water 1',
-        description : 'Have at least 1k surface liquid water',
+        name : getMilestoneText('catalogs.milestones.terraforming.water_1.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.water_1.description'),
     }, {
+        id: 'water_2',
         type : 'water',
         value : 1e6,
-        name : 'Water 2',
-        description : 'Have at least 1M surface liquid water',
+        name : getMilestoneText('catalogs.milestones.terraforming.water_2.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.water_2.description'),
     }, {
+        id: 'water_3',
         type : 'water',
         value : 1e9,
-        name : 'Water 3',
-        description : 'Have at least 1B surface liquid water',
+        name : getMilestoneText('catalogs.milestones.terraforming.water_3.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.water_3.description'),
     }, {
+        id: 'water_4',
         type : 'water',
         value : 1e12,
-        name : 'Water 4',
-        description : 'Have at least 1T surface liquid water',
+        name : getMilestoneText('catalogs.milestones.terraforming.water_4.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.water_4.description'),
     }, {
+        id: 'water_5',
         type : 'water',
         value : 1e15,
-        name : 'Water 5',
-        description : 'Have at least 1Q surface liquid water',
+        name : getMilestoneText('catalogs.milestones.terraforming.water_5.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.water_5.description'),
     }, {
+        id: 'life_1',
         type : 'life',
         value : 1,
-        name : 'Life 1',
-        description : 'Have at least 1 surface biomass',
+        name : getMilestoneText('catalogs.milestones.terraforming.life_1.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.life_1.description'),
     }, {
+        id: 'life_2',
         type : 'life',
         value : 1000,
-        name : 'Life 2',
-        description : 'Have at least 1k surface biomass',
+        name : getMilestoneText('catalogs.milestones.terraforming.life_2.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.life_2.description'),
     }, {
+        id: 'life_3',
         type : 'life',
         value : 1e6,
-        name : 'Life 3',
-        description : 'Have at least 1M surface biomass',
+        name : getMilestoneText('catalogs.milestones.terraforming.life_3.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.life_3.description'),
     }, {
+        id: 'life_4',
         type : 'life',
         value : 1e9,
-        name : 'Life 4',
-        description : 'Have at least 1B surface biomass',
+        name : getMilestoneText('catalogs.milestones.terraforming.life_4.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.life_4.description'),
     }, {
+        id: 'life_5',
         type : 'life',
         value : 1e12,
-        name : 'Life 5',
-        description : 'Have at least 1T surface biomass',
+        name : getMilestoneText('catalogs.milestones.terraforming.life_5.name'),
+        description : getMilestoneText('catalogs.milestones.terraforming.life_5.description'),
     }
     ];
 
@@ -206,7 +234,7 @@ class MilestonesManager {
     saveState() {
         const state = {
             milestones: this.milestones.reduce((result, milestone) => {
-                result[milestone.name] = {
+                result[milestone.id || milestone.name] = {
                     isCompleted: milestone.isCompleted,
                 };
                 return result;
@@ -242,8 +270,9 @@ class MilestonesManager {
 
         if (state.milestones) {
             this.milestones.forEach(milestone => {
-                if (state.milestones[milestone.name]) {
-                    milestone.isCompleted = state.milestones[milestone.name].isCompleted || false;
+                const savedMilestone = state.milestones[milestone.id] || state.milestones[milestone.name];
+                if (savedMilestone) {
+                    milestone.isCompleted = savedMilestone.isCompleted || false;
                 }
             });
         }

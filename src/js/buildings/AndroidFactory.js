@@ -1,10 +1,21 @@
+function getAndroidFactoryText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class AndroidFactory extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
     this.automationCustomBasisOptions = (this.automationCustomBasisOptions || []).concat([
       {
         value: 'androidCapacity',
-        label: '% android capacity'
+        label: getAndroidFactoryText(
+          'ui.buildings.automationBasis.androidCapacity',
+          '% android capacity'
+        )
       }
     ]);
   }

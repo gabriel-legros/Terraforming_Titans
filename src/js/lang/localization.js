@@ -166,6 +166,159 @@ function applyLocalizedResourceFields(resourceGroups, localizedGroups) {
   }
 }
 
+function applyLocalizedResourcePhaseGroupFields(phaseGroups, localizedGroups) {
+  if (!phaseGroups || !localizedGroups) {
+    return;
+  }
+  for (const key in localizedGroups) {
+    const targetGroup = phaseGroups[key];
+    const localizedGroup = localizedGroups[key];
+    if (!targetGroup || !localizedGroup) {
+      continue;
+    }
+    if (localizedGroup.name !== undefined) {
+      targetGroup.name = localizedGroup.name;
+    }
+    if (Array.isArray(localizedGroup.options) && Array.isArray(targetGroup.options)) {
+      for (let i = 0; i < localizedGroup.options.length && i < targetGroup.options.length; i += 1) {
+        const localizedOption = localizedGroup.options[i];
+        const targetOption = targetGroup.options[i];
+        if (!localizedOption || !targetOption) {
+          continue;
+        }
+        if (localizedOption.label !== undefined) {
+          targetOption.label = localizedOption.label;
+        }
+      }
+    }
+  }
+}
+
+function applyLocalizedLifeFields(localizedLife) {
+  if (!localizedLife) {
+    return;
+  }
+  let targetLifeParameters;
+  try {
+    targetLifeParameters = lifeParameters;
+  } catch (error) {
+    return;
+  }
+  for (const key in localizedLife) {
+    const target = targetLifeParameters[key];
+    const localizedEntry = localizedLife[key];
+    if (!target || !localizedEntry) {
+      continue;
+    }
+    if (localizedEntry.displayName !== undefined) {
+      target.displayName = localizedEntry.displayName;
+    }
+  }
+}
+
+function applyLocalizedOrbitalFields(localizedOrbitals) {
+  if (!localizedOrbitals) {
+    return;
+  }
+  let orbitals;
+  try {
+    orbitals = followersOrbitalParameters.orbitals;
+  } catch (error) {
+    return;
+  }
+  if (!Array.isArray(orbitals)) {
+    return;
+  }
+  for (let i = 0; i < orbitals.length; i += 1) {
+    const orbital = orbitals[i];
+    const localizedEntry = localizedOrbitals[orbital.id];
+    if (!localizedEntry) {
+      continue;
+    }
+    if (localizedEntry.label !== undefined) {
+      orbital.label = localizedEntry.label;
+    }
+  }
+}
+
+function applyLocalizedFactionFields(localizedFactions) {
+  if (!localizedFactions) {
+    return;
+  }
+  let factions;
+  try {
+    factions = galaxyFactionParameters;
+  } catch (error) {
+    return;
+  }
+  if (!Array.isArray(factions)) {
+    return;
+  }
+  for (let i = 0; i < factions.length; i += 1) {
+    const faction = factions[i];
+    const localizedEntry = localizedFactions[faction.id];
+    if (!localizedEntry) {
+      continue;
+    }
+    if (localizedEntry.name !== undefined) {
+      faction.name = localizedEntry.name;
+    }
+  }
+}
+
+function applyLocalizedPlanetFields(localizedPlanets) {
+  if (!localizedPlanets) {
+    return;
+  }
+  applyLocalizedEntryFields(planetParameters, localizedPlanets, ['name', 'description', 'displayName']);
+  applyLocalizedEntryFields(planetOverrides, localizedPlanets, ['name', 'description', 'displayName']);
+  if (localizedPlanets.default) {
+    applyLocalizedEntryFields({ default: defaultPlanetParameters }, localizedPlanets, ['name', 'description', 'displayName']);
+  }
+  for (const key in localizedPlanets) {
+    const localizedPlanet = localizedPlanets[key];
+    if (!localizedPlanet) {
+      continue;
+    }
+    const targets = [];
+    if (key === 'default') {
+      targets.push(defaultPlanetParameters);
+    }
+    if (planetOverrides[key]) {
+      targets.push(planetOverrides[key]);
+    }
+    if (planetParameters[key]) {
+      targets.push(planetParameters[key]);
+    }
+    for (let i = 0; i < targets.length; i += 1) {
+      const target = targets[i];
+      if (!target) {
+        continue;
+      }
+      if (localizedPlanet.star) {
+        if (!target.star) {
+          target.star = {};
+        }
+        if (localizedPlanet.star.name !== undefined) {
+          target.star.name = localizedPlanet.star.name;
+        }
+      }
+      if (localizedPlanet.hazards) {
+        for (const hazardKey in localizedPlanet.hazards) {
+          const localizedHazard = localizedPlanet.hazards[hazardKey];
+          const targetHazard = target.hazards && target.hazards[hazardKey];
+          if (!localizedHazard || !targetHazard) {
+            continue;
+          }
+          if (localizedHazard.description !== undefined) {
+            targetHazard.description = localizedHazard.description;
+          }
+        }
+      }
+    }
+  }
+}
+
 function applyLocalizedResearchFields(localizedResearch) {
   if (!localizedResearch) {
     return;
@@ -187,6 +340,119 @@ function applyLocalizedResearchFields(localizedResearch) {
       }
       if (localizedEntry.description !== undefined) {
         research.description = localizedEntry.description;
+      }
+    }
+  }
+}
+
+function applyLocalizedSkillFields(localizedSkills) {
+  if (!localizedSkills) {
+    return;
+  }
+  for (const key in localizedSkills) {
+    const skill = skillParameters[key];
+    const localizedSkill = localizedSkills[key];
+    if (!skill || !localizedSkill) {
+      continue;
+    }
+    if (localizedSkill.name !== undefined) {
+      skill.name = localizedSkill.name;
+    }
+    if (localizedSkill.description !== undefined) {
+      skill.description = localizedSkill.description;
+    }
+    if (localizedSkill.effectName !== undefined && skill.effect) {
+      skill.effect.name = localizedSkill.effectName;
+    }
+    if (Array.isArray(localizedSkill.effectNames) && Array.isArray(skill.effects)) {
+      for (let i = 0; i < localizedSkill.effectNames.length && i < skill.effects.length; i += 1) {
+        if (localizedSkill.effectNames[i] !== undefined) {
+          skill.effects[i].name = localizedSkill.effectNames[i];
+        }
+      }
+    }
+  }
+}
+
+function applyLocalizedBuildingFields(localizedBuildings) {
+  if (!localizedBuildings) {
+    return;
+  }
+  for (const key in localizedBuildings) {
+    const building = buildingsParameters[key];
+    const localizedBuilding = localizedBuildings[key];
+    if (!building || !localizedBuilding) {
+      continue;
+    }
+    if (localizedBuilding.name !== undefined) {
+      building.name = localizedBuilding.name;
+    }
+    if (localizedBuilding.description !== undefined) {
+      building.description = localizedBuilding.description;
+    }
+    if (localizedBuilding.displayName !== undefined) {
+      building.displayName = localizedBuilding.displayName;
+    }
+    if (localizedBuilding.recipes && building.recipes) {
+      for (const recipeKey in localizedBuilding.recipes) {
+        const recipe = building.recipes[recipeKey];
+        const localizedRecipe = localizedBuilding.recipes[recipeKey];
+        if (!recipe || !localizedRecipe) {
+          continue;
+        }
+        if (localizedRecipe.shortName !== undefined) {
+          recipe.shortName = localizedRecipe.shortName;
+        }
+        if (localizedRecipe.displayName !== undefined) {
+          recipe.displayName = localizedRecipe.displayName;
+        }
+      }
+    }
+  }
+}
+
+function applyLocalizedProjectFields(localizedProjects) {
+  if (!localizedProjects) {
+    return;
+  }
+  for (const key in localizedProjects) {
+    const project = projectParameters[key];
+    const localizedProject = localizedProjects[key];
+    if (!project || !localizedProject) {
+      continue;
+    }
+    if (localizedProject.name !== undefined) {
+      project.name = localizedProject.name;
+    }
+    if (localizedProject.description !== undefined) {
+      project.description = localizedProject.description;
+    }
+    if (localizedProject.displayName !== undefined) {
+      project.displayName = localizedProject.displayName;
+    }
+    const attributes = project.attributes || null;
+    const localizedAttributes = localizedProject.attributes || null;
+    if (attributes && localizedAttributes) {
+      if (attributes.expansionRecipes && localizedAttributes.expansionRecipes) {
+        for (const recipeKey in localizedAttributes.expansionRecipes) {
+          const recipe = attributes.expansionRecipes[recipeKey];
+          const localizedRecipe = localizedAttributes.expansionRecipes[recipeKey];
+          if (recipe && localizedRecipe && localizedRecipe.label !== undefined) {
+            recipe.label = localizedRecipe.label;
+          }
+        }
+      }
+      if (attributes.lifterStripRecipe && localizedAttributes.lifterStripRecipe && localizedAttributes.lifterStripRecipe.label !== undefined) {
+        attributes.lifterStripRecipe.label = localizedAttributes.lifterStripRecipe.label;
+      }
+      if (attributes.lifterHarvestRecipes && localizedAttributes.lifterHarvestRecipes) {
+        for (const recipeKey in localizedAttributes.lifterHarvestRecipes) {
+          const recipe = attributes.lifterHarvestRecipes[recipeKey];
+          const localizedRecipe = localizedAttributes.lifterHarvestRecipes[recipeKey];
+          if (recipe && localizedRecipe && localizedRecipe.label !== undefined) {
+            recipe.label = localizedRecipe.label;
+          }
+        }
       }
     }
   }
@@ -245,13 +511,17 @@ function applyLocalizedStoryFields(localizedStory) {
 
 function applyLanguageToGameData() {
   const catalogs = activeLanguageData.catalogs || {};
-  applyLocalizedEntryFields(buildingsParameters, catalogs.buildings, ['name', 'description', 'displayName']);
-  applyLocalizedEntryFields(projectParameters, catalogs.projects, ['name', 'description', 'displayName']);
+  applyLocalizedBuildingFields(catalogs.buildings);
+  applyLocalizedProjectFields(catalogs.projects);
   applyLocalizedEntryFields(colonyParameters, catalogs.colonies, ['name', 'description', 'displayName']);
-  applyLocalizedEntryFields(skillParameters, catalogs.skills, ['name', 'description', 'displayName']);
+  applyLocalizedSkillFields(catalogs.skills);
   applyLocalizedResearchFields(catalogs.research);
   applyLocalizedResourceFields(window.defaultPlanetResources, catalogs.resources);
-  applyLocalizedEntryFields(planetParameters, catalogs.planets, ['name', 'description', 'displayName']);
+  applyLocalizedResourcePhaseGroupFields(resourcePhaseGroups, catalogs.resourcePhaseGroups);
+  applyLocalizedPlanetFields(catalogs.planets);
+  applyLocalizedLifeFields(catalogs.life);
+  applyLocalizedOrbitalFields(catalogs.orbitals);
+  applyLocalizedFactionFields(catalogs.factions);
   applyLocalizedStoryFields(catalogs.story);
 }
 

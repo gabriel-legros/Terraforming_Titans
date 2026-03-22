@@ -1,3 +1,11 @@
+function getMultiRecipesBuildingText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class MultiRecipesBuilding extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
@@ -150,7 +158,10 @@ class MultiRecipesBuilding extends Building {
     wrapper.classList.add('building-recipe-select');
 
     const label = document.createElement('label');
-    label.textContent = 'Recipe: ';
+    label.textContent = getMultiRecipesBuildingText(
+      'ui.buildings.common.recipeLabel',
+      'Recipe: '
+    );
     label.htmlFor = `${this.name}-recipe-select`;
     wrapper.appendChild(label);
 

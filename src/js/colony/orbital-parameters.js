@@ -2,7 +2,7 @@ const followersOrbitalParameters = {
   orbitals: [
     {
       id: 'energy',
-      label: 'Energy',
+      label: '',
       sourceType: 'building',
       sourceId: 'fusionPowerPlant',
       targetCategory: 'colony',
@@ -11,7 +11,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'metal',
-      label: 'Metal',
+      label: '',
       sourceType: 'fixed',
       fixedRate: 100,
       targetCategory: 'colony',
@@ -20,7 +20,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'water',
-      label: 'Water',
+      label: '',
       sourceType: 'fixed',
       fixedRate: 100,
       targetCategory: 'colony',
@@ -29,7 +29,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'glass',
-      label: 'Glass',
+      label: '',
       sourceType: 'building',
       sourceId: 'glassSmelter',
       targetCategory: 'colony',
@@ -38,7 +38,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'food',
-      label: 'Food',
+      label: '',
       sourceType: 'building',
       sourceId: 'hydroponicFarm',
       targetCategory: 'colony',
@@ -47,7 +47,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'electronics',
-      label: 'Electronics',
+      label: '',
       sourceType: 'building',
       sourceId: 'electronicsFactory',
       targetCategory: 'colony',
@@ -56,7 +56,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'components',
-      label: 'Components',
+      label: '',
       sourceType: 'building',
       sourceId: 'componentFactory',
       targetCategory: 'colony',
@@ -65,7 +65,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'superconductors',
-      label: 'Superconductors',
+      label: '',
       sourceType: 'building',
       sourceId: 'superconductorFactory',
       targetCategory: 'colony',
@@ -74,7 +74,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'androids',
-      label: 'Androids',
+      label: '',
       sourceType: 'building',
       sourceId: 'androidFactory',
       targetCategory: 'colony',
@@ -83,7 +83,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'shipyards',
-      label: 'Shipyards',
+      label: '',
       sourceType: 'building',
       sourceId: 'shipyard',
       targetCategory: 'special',
@@ -92,7 +92,7 @@ const followersOrbitalParameters = {
     },
     {
       id: 'research',
-      label: 'Research',
+      label: '',
       sourceType: 'fixed',
       fixedRate: 10,
       targetCategory: 'colony',

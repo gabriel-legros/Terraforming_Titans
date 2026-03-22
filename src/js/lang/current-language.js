@@ -19,6 +19,115 @@ setLanguageData({
       pause: 'Pause',
       refresh: 'Refresh',
     },
+    buildings: {
+      common: {
+        recipeLabel: 'Recipe: ',
+      },
+      automationBasis: {
+        androidCapacity: '% android capacity',
+        colonistCapacity: '% colonist capacity',
+        sandQuarryGlassAndElectronics: '% of G.S. + 4*E.F.',
+      },
+      solarPanel: {
+        limitTooltip: 'Solar panels are limited to 10x the initial land amount.',
+      },
+      windTurbine: {
+        limitTooltip: 'Wind turbine arrays are limited to 1 per 50 units of initial land.',
+      },
+      foundry: {
+        limitTooltip: 'Foundries are limited to 1 per unit of initial land on the current world.',
+      },
+      waterTank: {
+        emptyAboveCap: 'Empty above Cap',
+      },
+      antimatterBattery: {
+        fill: 'Fill',
+      },
+      oxygenFactory: {
+        disableIfOxygenPressureAbove: 'Disable if O2 P > ',
+        pressureUnit: 'Pa',
+      },
+      ghgFactory: {
+        mode: {
+          temperature: 'avg T',
+          opticalDepth: 'optical depth',
+        },
+        and: ' and ',
+        tooltip: 'With reversal available, the terraforming bureau now allows you to automate this factory. You can set a range of average temperature or optical depth and a solver will attempt to set the trend inside this range. When the trend leaves the band, both greenhouse gas and calcite correction aim for the midpoint, then stop again once the trend returns inside the band. Optical depth automation is GHG-only and never runs calcite aerosol mode. It may take some time to converge as the factories may need to build up or remove gas to reach the desired trend. Pressing "reverse" will disable this automation. If used alongside space mirror advanced oversight, it is best for the ranges to be compatible.',
+        labelPrefixAutomate: 'Automate ',
+        labelPrefixDisableIf: 'Disable if ',
+        labelSuffixBetween: ' between ',
+        labelSuffixGreaterThan: ' > ',
+        opticalDepthUnit: 'tau',
+      },
+      chemicalReactor: {
+        chemistryOfScaleName: 'Chemistry of Scale',
+        disableIf: 'Disable if',
+        mode: {
+          input: 'Input',
+          output: 'Output',
+        },
+        units: {
+          ton: 'ton',
+          Pa: 'Pa',
+          kPa: 'kPa',
+        },
+        categories: {
+          colony: 'Colony',
+          atmospheric: 'Atmospheric',
+          surface: 'Surface',
+          space: 'Space',
+          special: 'Special',
+        },
+      },
+      dustFactory: {
+        targetGroundAlbedo: 'Target ground albedo:',
+        dustColor: 'Dust color:',
+        resourceNames: {
+          customDust: 'Custom Dust',
+          blackDust: 'Black Dust',
+        },
+      },
+      aerostat: {
+        buoyancyNotes: 'Aerostats are immune to the pressure penalty and have reduced temperature maintenance penalty. Their own maintenance always uses at least the dry-adiabatic 1 atm temperature floor. Aerostats require additional components, electronics and lift, and form small communities that allow the use of factories. Colony researches that normally unlock new colony types will also improve aerostat comfort and enable electronics/androids consumption. Aerostats need at least 50 kPa of ambient pressure to stay buoyant. When lift fails, active aerostats can land as Research Outposts if sufficient land remains.',
+        landLimitTooltip: 'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.',
+        temperatureTooltipIntro: 'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their colonist capacity. Eligible worker requirement is summed from active buildings using active buildings x worker need x effective worker multiplier. Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty. This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.',
+        androidSpaceTooltip: 'Reserve part of each aerostat for android housing instead of colonists. The slider value is android capacity per aerostat out of 10 total housing slots.',
+        landAsResearchOutpost: 'Land as Research Outpost',
+        buoyancyTelemetryPending: 'Buoyancy telemetry pending.',
+        detailsTitle: 'Aerostats Details',
+        currentLift: 'Current Lift:',
+        temperatureMaintenanceMitigation: 'Temperature Maintenance Mitigation:',
+        maximumAerostats: 'Maximum Aerostats:',
+        androidSpace: 'Aerostat Android Space:',
+        notAvailable: 'N/A',
+        liftTooltipIntro: 'Specific lift at 1 atm and 21°C using current atmospheric composition, excluding calcite aerosol, compared to breathable air. When "Land as Research Outpost" is enabled, disabled aerostats will attempt to convert into Research Outposts if land is available.',
+        liftTooltipBase: 'Specific lift at 1 atm and 21°C using current atmospheric composition, excluding calcite aerosol, compared to breathable air.',
+        liftTooltipMolecularWeight: 'External mean molecular weight: {value} g/mol.',
+        liftTooltipCurrentLift: 'Current lift: {value} kg/m^3.',
+        liftTooltipShutdownThreshold: 'Aerostat shutdown threshold: {value} kg/m^3.',
+        liftTooltipMinimumPressure: 'Aerostats require at least {value} kPa of surface pressure to remain buoyant.',
+        mitigationValue: '{percent}% ({workers} workers/{capacity} aerostat capacity)',
+        mitigationDataUnavailable: 'Mitigation data unavailable.',
+        activeAerostats: 'Active aerostats: {value}.',
+        factoryMitigationUnavailable: 'Factory mitigation data unavailable.',
+        factoryMitigationApplied: 'Factory mitigation applied: {value}% of the penalty is negated.',
+        aerostatColonistCapacity: 'Aerostat colonist capacity: {value}.',
+        eligibleWorkerRequirement: 'Eligible staffed worker requirement: {value}.',
+        mitigationLimited: 'Mitigation is limited by available aerostat colonist capacity compared to staffed worker requirements.',
+        mitigationMaxed: 'All staffed buildings currently reduce the surface temperature penalty as far as possible, subject to the 1 atm maintenance floor.',
+        perBuildingSupport: 'Per-building support is applied afterward: remaining penalty share is multiplied by the uncovered fraction for that building.',
+        supportedBuildingsHeader: 'Aerostat-supported buildings:',
+        supportedBuildingEntry: '{name}: {supported} of {active} active covered (can support {capacity}; {perAerostat} per aerostat).',
+        noSupportedBuildings: 'No buildings currently list an Aerostat Support value.',
+        remainingCapacity: 'Remaining aerostat capacity: {value}.',
+        collisionAvoidanceIntro: 'Collision avoidance allows building above this base cap for extra research cost and maintenance.',
+        collisionAvoidanceMaintenance: 'This extra research maintenance ignores maintenance multipliers.',
+        aboveBaseCap: 'Aerostats above base cap: {value}.',
+        currentSurcharge: 'Current surcharge per new aerostat: {value} research.',
+        capacityBreakdown: 'Each active aerostat currently provides {colonists} colonist housing and {androids} android housing before storage multipliers.',
+      },
+    },
     tabs: {
       buildings: 'Buildings',
       specialProjects: 'Special Projects',
@@ -175,5 +284,1473 @@ setLanguageData({
       showJournalIndex: 'Show journal index',
     },
   },
-  catalogs: {},
+  catalogs: {
+    buildings: {
+      oreMine: {
+        name: 'Ore Mine',
+        description: 'Extracts minerals from the ground to produce metal, requires energy and minerals to operate. Requires a free ore deposit.',
+      },
+      foundry: {
+        name: 'Foundry',
+        description: 'Refines the molten crust into usable metal and silica. Requires workers.',
+      },
+      sandQuarry: {
+        name: 'Sand Quarry',
+        description: 'Digs through regolith to extract silica.',
+      },
+      iceHarvester: {
+        name: 'Ice Harvesters',
+        description: 'Drones that roam the surface looking for ice. Self sufficient, but require heavy maintenance and only work during the day.',
+      },
+      waterPump: {
+        name: 'Water Pump',
+        description: 'A pump for liquid water.  Requires liquid water to actually exist.',
+      },
+      atmosphericWaterCollector: {
+        name: 'Vapor Collector',
+        description: 'Condenses atmospheric moisture when little surface water remains.',
+      },
+      glassSmelter: {
+        name: 'Glass Smelter',
+        description: 'Uses high heat to turn silicon into glass.',
+      },
+      hydroponicFarm: {
+        name: 'Hydroponic Farm',
+        description: 'Botanists work hard to grow potatoes using local soil.  Water is provided by colonies, and recovered when the food is consumed.',
+      },
+      componentFactory: {
+        name: 'Component Factory',
+        description: 'Turns metals into valuable machine components. Requires workers.',
+      },
+      electronicsFactory: {
+        name: 'Electronics Factory',
+        description: 'Turns metals and silicon into electronics.  Requires workers.',
+      },
+      grapheneFactory: {
+        name: 'Graphene Factory',
+        description: 'Refines surface graphite into graphene using intense energy.  Graphene can be used as a metal substitute.',
+      },
+      superconductorFactory: {
+        name: 'Superconductor Factory',
+        description: 'Produces superconductors from metal.  Requires workers.',
+      },
+      superalloyFoundry: {
+        name: 'Superalloy Foundry',
+        description: 'Uses extreme energy and metal to forge advanced superalloys.',
+      },
+      androidFactory: {
+        name: 'Androids Factory',
+        description: 'Produces androids.  Difficult and takes a lot of manufacturing operations, but can act as a worker and requires little consumer goods.  ',
+      },
+      shipyard: {
+        name: 'Shipyard',
+        description: 'Produces spaceships that can be used for various space missions.  ',
+      },
+      cloningFacility: {
+        name: 'Cloning Facility',
+        description: 'Consumes energy to grow and educate new colonists.',
+      },
+      solarPanel: {
+        name: 'Solar Panel Array',
+        description: 'Generates energy during the day using sunlight, but is inactive during nighttime.',
+      },
+      windTurbine: {
+        name: 'Wind Turbine Array',
+        description: 'Produces energy consistently, unaffected by the day or night cycle, harnessing wind power.',
+      },
+      geothermalGenerator: {
+        name: 'Geothermal Generator',
+        description: 'Generates consistent energy by harnessing heat from geothermal vents. Requires a free geothermal vent deposit to build. Requires water to function and minimal maintenance.',
+      },
+      hydrocarbonGenerator: {
+        name: 'Methane Flare',
+        description: 'Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide.',
+      },
+      nuclearPowerPlant: {
+        name: 'Nuclear Power Plant',
+        description: 'Harnesses the power of the atom to generate energy.  Consumes water.',
+      },
+      dysonReceiver: {
+        name: 'Dyson Receiver',
+        description: 'Receives beamed energy from space.',
+      },
+      fusionPowerPlant: {
+        name: 'Fusion Reactor',
+        description: 'Produces energy from almost nothing.',
+        recipes: {
+          water: { shortName: 'Water -> Energy' },
+          hydrogen: { shortName: 'Hydrogen -> Energy' },
+        },
+      },
+      superalloyFusionReactor: {
+        name: 'Superalloy Fusion Reactor',
+        description: 'Enormous fusion plant using superalloys for containment.',
+        recipes: {
+          water: { shortName: 'Water -> Energy' },
+          hydrogen: { shortName: 'Hydrogen -> Energy' },
+        },
+      },
+      antimatterFarm: {
+        name: 'Antimatter Farm',
+        description: 'Harvests microscopic antimatter using staggering amounts of power.',
+        recipes: {
+          antimatter: { shortName: 'Energy -> Antimatter' },
+          spaceEnergy: { shortName: 'Colony -> Space Energy' },
+        },
+      },
+      battery: {
+        name: 'Battery',
+        description: 'Stores energy generated by renewable sources to ensure uninterrupted power supply.  Requires low maintenance.',
+      },
+      storageDepot: {
+        name: 'Storage Depot',
+        description: 'A facility for storing large quantities of essential resources like metal and food.',
+        recipes: {
+          standard: { shortName: 'Standard Storage' },
+          warp: { shortName: 'Warp Storage' },
+        },
+      },
+      waterTank: {
+        name: 'Water Tank',
+        description: 'Dedicated reservoir that preserves large water reserves with minimal upkeep.',
+      },
+      hydrogenBattery: {
+        name: 'Hydrogen Battery',
+        description: 'Stores energy in the form of hydrogen.',
+      },
+      antimatterBattery: {
+        name: 'Antimatter Battery',
+        description: 'Stores staggering amounts of energy by containing antimatter safely.',
+      },
+      androidHousing: {
+        name: 'Android Housing',
+        description: 'Recharges and stores androids.',
+      },
+      dustFactory: {
+        name: 'Black Dust Factory',
+        description: 'Generates large amount of black dust and spreads it over the surface.  May need millions to have any meaningful effect.',
+        recipes: {
+          black: { displayName: 'Black Dust Factory' },
+          white: { displayName: 'White Dust Factory' },
+        },
+      },
+      spaceMirror: {
+        name: 'Space Mirror',
+        description: 'Expands the space mirror facility.  Increases the effective luminosity.  Will cost only glass and energy after the space elevator is built.  May need billions to have any meaningful effect.',
+      },
+      hyperionLantern: {
+        name: 'Hyperion Lantern',
+        description: 'Orbital array that beams artificial sunlight onto the planet.  Controlled by Space Mirror Facility.',
+      },
+      ghgFactory: {
+        name: 'Greenhouse Gas factory',
+        description: 'Produces very potent, safe greenhouse gases.',
+        recipes: {
+          ghg: { displayName: 'Greenhouse Gas factory' },
+          calcite: { displayName: 'Calcite Aerosol Factory' },
+        },
+      },
+      oxygenFactory: {
+        name: 'Oxygen Factory',
+        description: 'Extracts oxygen from liquid water via electrolysis or uses a lot of energy to liberate oxygen from rocks.',
+        recipes: {
+          water: { shortName: 'Water -> Oxygen' },
+          silicates: { shortName: 'Silicates -> Oxygen' },
+          rocks: { shortName: 'Rocks -> Oxygen' },
+        },
+      },
+      boschReactor: {
+        name: 'Chemical Reactor',
+        description: 'Configurable reactors that combine imported hydrogen with atmospheric resources to synthesize vital compounds.',
+        recipes: {
+          recipe1: { shortName: 'Bosch Reaction' },
+          recipe2: { shortName: 'Water Synthesis' },
+          recipe3: { shortName: 'Methane Synthesis' },
+          haberBosch: { shortName: 'Haber-Bosch' },
+          ammoniaCombustion: { shortName: 'Ammonia Combustion' },
+        },
+      },
+      massDriver: {
+        name: 'Mass Driver',
+        description: 'Electromagnetic launcher capable of sending vast amount of mass every day through the Resource Disposal project.',
+      },
+      biodome: {
+        name: 'Biodome',
+        description: 'Produces life using the active life metabolism inputs and artificial light, pulling any water input from colony water.  Requires an active life design that can survive somewhere to function.  Also produces life design points regardless.  Biodome land coverage sets a minimum Ecumenopolis life-land multiplier.',
+      },
+      scrapRecycler: {
+        name: 'Scrap Recycler',
+        description: 'Recycles scrap metal into usable metal using energy.',
+      },
+      garbageSorter: {
+        name: 'Garbage Sorter',
+        description: 'Sorts garbage into trash, junk, and scrap metal for further processing.',
+      },
+      trashIncinerator: {
+        name: 'Trash Incinerator',
+        description: 'Burns trash using oxygen to produce carbon dioxide.  Suitable for trash and hazardous biomass.  Not suitable for friendly biomass and the companion satellite.',
+        recipes: {
+          trash: { shortName: 'Trash' },
+          hazardousBiomass: { shortName: 'Hazardous Biomass' },
+        },
+      },
+      junkRecycler: {
+        name: 'Junk Recycler',
+        description: 'Recycles junk into glass using energy.',
+      },
+      radioactiveRecycler: {
+        name: 'Radioactive Recycler',
+        description: 'Processes radioactive waste with android labor to recover metal.  The androids are lost in the process.',
+      },
+      laserCannon: {
+        name: 'Laser Cannon',
+        description: 'Vaporizes or knocks away orbital debris with sustained laser fire, prioritizing the highest bins.',
+      },
+    },
+    projects: {
+      cargo_rocket: {
+        name: 'Cargo Rocket',
+        description: "Launch a cargo rocket to bring in essential supplies including metal and water to boost the colony's infrastructure.",
+      },
+      galactic_market: {
+        name: 'Galactic Market',
+        description: 'Open trading lanes with the wider galaxy to import resources funded through market exchanges.',
+      },
+      import_colonists_1: {
+        name: 'Import colonists',
+        description: 'Use chemical rockets to import colonists',
+      },
+      exportResources: {
+        name: 'Metal Exportation',
+        description: 'Use your spaceships to export resources to the market.  Generates funding.  The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.',
+      },
+      satellite: {
+        name: 'Ore satellite',
+        description: 'Deploy a satellite to enhance the discovery of valuable ore deposits. The satellite scans the surface for untapped ore veins, accelerating resource extraction. Each additional satellite increases scanning efficiency, but locating new veins becomes progressively more challenging as deposits are exhausted.',
+      },
+      geo_satellite: {
+        name: 'Geothermal satellite',
+        description: 'Deploy a highly sensitive satellite to scan for geothermal energy. The satellite identifies suitable geothermal vents for energy extraction.',
+      },
+      spaceMirrorFacility: {
+        name: 'Space mirror facility',
+        description: 'Built at a Lagrangian point, this facility will allow the construction of space mirrors from the buildings terraforming tab.',
+      },
+      ringworldTerraforming: {
+        name: 'Ringworld Terraforming',
+        description: "This project keeps track of the Ringworld's spin and its effects.",
+      },
+      deeperMining: {
+        name: 'Deeper mining',
+        description: 'Deepen all ore mines to improve production, adding one layer. Each completion improves metal production by an additive 100%. Most of the cost scales with ore mines built while a small portion also scales with their average depth.',
+      },
+      undergroundExpansion: {
+        name: 'Underground Land Expansion',
+        description: 'Build subterranean habitats to slightly expand usable land. Each completion increases land by a small amount.',
+      },
+      oreSpaceMining: {
+        name: 'Metal Asteroid Mining',
+        description: 'Use your spaceships to mine asteroids for metal. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier. Without a space elevator, the metal cost per ship reduces the metal returned.',
+      },
+      siliconSpaceMining: {
+        name: 'Silica Asteroid Mining',
+        description: 'Use your spaceships to mine asteroids for silicon. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier. Without a space elevator, the metal cost per ship reduces the silicon returned.',
+      },
+      carbonSpaceMining: {
+        name: 'Carbon Asteroid Mining',
+        description: 'Use your spaceships to recover carbon from C-type asteroids, brought back as CO2. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.',
+      },
+      waterSpaceMining: {
+        name: 'Ice and Water importation',
+        description: "Ships haul ice from space. If any zone is warm enough, it's delivered as liquid water there; otherwise it arrives frozen. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.",
+      },
+      nitrogenSpaceMining: {
+        name: 'Nitrogen harvesting',
+        description: 'Use your spaceships to recover nitrogen from the outer solar system. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.',
+      },
+      hydrogenSpaceMining: {
+        name: 'Hydrogen Importation',
+        description: 'Use your spaceships to recover hydrogen from the outer solar system. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier.',
+      },
+      spaceElevator: {
+        name: 'Space Elevator',
+        description: 'This cable eliminates all metal costs from multiple space activities.',
+      },
+      magneticShield: {
+        name: 'Magnetic Shield',
+        description: 'This very expensive cable can carry enough current to protect the planet and its atmosphere.  The reduction in cancer rates negates the radiation penalty for life.  The cost of this project includes all the machinery and infrastructure required to build, house, cool and secure the cable.',
+      },
+      klishyWeb: {
+        name: 'Klishy web',
+        description: 'Construct a massive web of Klishy-compatible copper wires and fibre optics, suitable for a new Klishy community.',
+      },
+      artificialSky: {
+        name: 'Artificial Sky',
+        description: 'Deploy segmented artificial sky shielding to block pulsar radiation bursts. Segment count is based on initial land, and assigned spaceships (required) accelerate construction. Partial completion proportionally reduces pulsar hazard intensity and solar flux. Full completion clears the pulsar hazard, counts as magnetic shielding for terraforming requirements, removes all solar flux, disables space mirrors (lanterns can still be used), and permanently disables Magnetic Shield.',
+      },
+      artificialCrust: {
+        name: 'Artificial Crust',
+        description: 'Lay down a segmented artificial crust to insulate the surface from planetary interior heat. Total cost and segment count scale directly with planetary initial land, while assigned spaceships accelerate construction. Completion proportionally reduces both core heat flux and molten-surface land reservation, reaching zero when the shell is finished.',
+      },
+      planetaryThruster: {
+        name: 'Planetary Thrusters',
+        description: 'Install planetary fusion thrusters for subtle maneuvering.',
+      },
+      dysonSwarmReceiver: {
+        name: 'Dyson Swarm',
+        description: 'Expand your Dyson Swarm to produce power from the sun.  Build cheap receivers to receive power.  All colonies on terraformed worlds can help deploy collectors when materials are provided, shortening the process.  Collectors persist between worlds.  Collectors can be expanded even without the Dyson Swarm Receiver research.',
+      },
+      dysonSphere: {
+        name: 'Dyson Sphere',
+        description: 'Assemble a Dyson Sphere frame, enabling 100x faster collectors expansion.  Disables Dyson Swarm on completion, transferring all collectors.',
+      },
+      hephaestusMegaconstruction: {
+        name: 'Hephaestus Megaconstruction Yard',
+        description: 'Assemble a legendary construction yard that accelerates repeatable mega and giga projects. Each completion adds a yard that can be assigned, counting as an extra world.  Project duration scales with terraformed worlds.',
+      },
+      nuclearAlchemyFurnace: {
+        name: 'Nuclear Alchemical Furnace',
+        description: 'Build alchemical furnaces that transmute space-storage hydrogen into space-storage selected resources. Expansion scales with terraformed worlds.  Furnaces can be run to convert hydrogen from space storage into other resources.  The focus is on resource production from complex fusion pathways, not energy.',
+      },
+      superalloyGigafoundry: {
+        name: 'Superalloy Gigafoundry',
+        description: 'Build giga-scale foundries that convert metal and space energy into vast amounts of superalloys. Expansion scales with terraformed worlds.',
+      },
+      apolloCoreSurgeryPlatform: {
+        name: 'Apollo Planetary Core Surgery Platform',
+        description: 'Build a massive core surgery platform capable of creating an artificial natural magnetosphere.  Medicine for planets.  Project completion persists on travel.',
+      },
+      orbitalRing: {
+        name: 'Orbital Ring',
+        description: 'Orbital rings count as an additional terraformed world.  Does not grant a skill point.  You can build a ring on previously terraformed worlds, and on the current one if terraformed.  Building a ring on the current world also increases its land by its initial land value.  You can prepay rings for each world without a ring.',
+      },
+      spaceStorage: {
+        name: 'Space Storage',
+        description: 'Construct an orbital facility for massive resource storage. Each terraformed world reduces expansion time.  Resources in space storage may also be used to pay for most mega projects (planetary thrusters and world specializations excepted).  Space storage capacity and resources in storage persist between worlds.',
+        attributes: {
+          expansionRecipes: {
+            standard: { label: 'Standard Storage' },
+            warp: { label: 'Warp Storage' },
+          },
+        },
+      },
+      particleAccelerator: {
+        name: 'Particle Accelerator',
+        description: 'Physicists can always use a bigger particle accelerator.',
+      },
+      megaHeatSink: {
+        name: 'Mega Heat Sink',
+        description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 1 PW.  Will not take the current temperature below its trend.',
+      },
+      spaceAntimatter: {
+        name: 'Space Antimatter',
+        description: 'Assemble antimatter-grade battery modules in orbit capable of beaming and receiving energy. Each battery instantly adds 1Q to space energy storage.  Resources can be paid from space or colony storage, depending on space storage settings.',
+      },
+      lifters: {
+        name: 'Lifters',
+        description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds, and taps unused Dyson power.',
+        attributes: {
+          lifterStripRecipe: { label: 'Strip Atmosphere' },
+          lifterHarvestRecipes: {
+            hydrogen: { label: 'Hydrogen' },
+            methane: { label: 'Methane' },
+            ammonia: { label: 'Ammonia' },
+            starLifting: { label: 'Star Lifting' },
+          },
+        },
+      },
+      bioworld: {
+        name: 'Bioworld',
+        description: 'Cultivate a bioworld-scale ecosystem. Completion removes all Ecumenopolis Districts and permanently disables new ones. Completed bioworlds grant evolution points when travelling based on total biomass.',
+      },
+      foundryWorld: {
+        name: 'Foundry World',
+        description: 'Tap into the metal-rich molten planetary core and convert the surface into a mega-scale casting hub. Completion converts all Ecumenopolis Districts into Metropolises and permanently disables new ones. Each completed foundry world adds +100B * sqrt(initial land / 50B) to the metal mining cap. Completed foundry worlds grant 10 metallurgy points times sqrt(initial land / 50B) when travelling.',
+      },
+      manufacturingWorld: {
+        name: 'Manufacturing World',
+        description: "Designate this world as a planet-scale manufacturing center. Completing it grants MP and banks this world's population permanently as manufacturing potential.  These benefits apply on travel.  All production is from space storage to space storage.",
+      },
+      disposeResources: {
+        name: 'Resource Disposal',
+        description: 'Use your spaceships to dispose of unwanted resources somewhere.  Cheaper than importing.',
+      },
+    },
+    research: {
+      energy: {
+        solar_efficiency: {
+          name: 'Improved Solar Efficiency',
+          description: 'Increases the efficiency of solar panels by 25%.',
+        },
+        geothermal_plant: {
+          name: 'Geothermal Power Generation',
+          description: 'Unlocks geothermal generators, which require reduced maintenance, and a project to scan for suitable vents.',
+        },
+        battery_efficiency: {
+          name: 'Advanced batteries',
+          description: 'Doubles the storage capacity of batteries.',
+        },
+        fission_plant1: {
+          name: 'Nuclear Power Plant',
+          description: 'Unlocks nuclear power plants, which produce vast amounts of energy at great upfront cost.',
+        },
+        fission_plant1_upgrade: {
+          name: 'Closed loop water cycle',
+          description: 'Eliminates the water consumption of nuclear reactors.',
+        },
+        hydrogen_battery: {
+          name: 'Hydrogen Battery Array',
+          description: 'Stores energy using compressed or liquid hydrogen.',
+        },
+        fission_plant1_upgrade2: {
+          name: 'Adapted fission power',
+          description: 'Doubles the production of nuclear reactors.',
+        },
+        fusion: {
+          name: 'Fusion reactor MkI',
+          description: 'Enables a version of an old design from Earth.  Will require superconductors to build.',
+        },
+        improved_fusion_1: {
+          name: 'Improved fusion reactor',
+          description: 'Doubles the production of fusion reactors.',
+        },
+        improved_fusion_2: {
+          name: 'State of the art fusion reactor',
+          description: 'The best design that can be made.  Provides another 2x multiplier.',
+        },
+        hydrocarbon_generator: {
+          name: 'Hydrocarbon Generator',
+          description: 'Allows construction of generators burning methane and oxygen for power.',
+        },
+        dyson_swarm_receiver: {
+          name: 'Dyson Swarm Receiver',
+          description: 'Enables construction of a receiver for orbital solar collectors.',
+        },
+        superalloy_fusion_reactor: {
+          name: 'Superalloy Fusion Reactor',
+          description: 'Unlocks a massive fusion reactor that requires superalloys.',
+        },
+        next_generation_fusion: {
+          name: 'Next-Generation Fusion',
+          description: 'Doubles superalloy fusion reactor energy output.',
+        },
+        antimatter_containment: {
+          name: 'Antimatter Containment',
+          description: 'Unlocks antimatter farms and antimatter batteries.',
+        },
+        laser_cannon: {
+          name: 'Laser Cannon',
+          description: 'Enables clearing orbital debris using laser cannons.',
+        },
+        ai_reactor_overclocking: {
+          name: 'AI Reactor Overclocking',
+          description: 'HOPE will tune superalloy fusion reactors to unleash their potential, providing a 25% output boost per level.',
+        },
+      },
+      industry: {
+        ore_processing: {
+          name: 'Efficient Ore Processing',
+          description: 'Doubles ore output from mines.',
+        },
+        ore_scanning: {
+          name: 'Ore Scanning Satellite',
+          description: 'Enables an infrastructure special project to launch satellites for scanning the surface for new ore veins.',
+        },
+        components_factory: {
+          name: 'Component factories',
+          description: 'Allows production of components using workers.',
+        },
+        waste_processing: {
+          name: 'Industrial Waste Processing',
+          description: 'Unlocks waste sorting and recycling facilities.  Researching this does not enable any penalty.',
+        },
+        waste_workforce_automation: {
+          name: 'Waste Workforce Automation',
+          description: 'Automates material handling to reduce waste facility worker requirements by 20%.',
+        },
+        robotics_1: {
+          name: 'Farming robotics assistance',
+          description: 'Integrates robots within hydroponic farms to reduce worker requirements by 20%.',
+        },
+        electronics_factory: {
+          name: 'Electronics factories',
+          description: 'Allows production of electronics using workers.',
+        },
+        robotics_2: {
+          name: 'Assembly Lines',
+          description: 'Integrates robots within components and electronics factory to reduce worker requirements by 20%.',
+        },
+        deep_mine: {
+          name: 'Deep ore mines',
+          description: 'Unlock a repeatable special project to increase ore output from mining.',
+        },
+        android_factory: {
+          name: 'Android Manufacturing',
+          description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.  Androids require their own housing.  They may also be purchased using cargo rockets.',
+        },
+        android_assisted_mining: {
+          name: 'Android-assisted deeper mining',
+          description: 'Allows assigning androids to the Deeper mining project for massive speed boosts.',
+        },
+        underground_land_expansion: {
+          name: 'Underground Land Expansion',
+          description: 'Unlocks a repeatable android project to expand usable land via subterranean construction.',
+        },
+        superconductor_factory: {
+          name: 'Superconductor Factory',
+          description: 'Enables the fabrication of superconductors locally.',
+        },
+        graphene_factory: {
+          name: 'Graphene Factory',
+          description: 'Enables factories that refine surface graphite into metal substitutes.',
+        },
+        advanced_alloy: {
+          name: 'Advanced Alloys',
+          description: 'Doubles planet side metal production.',
+        },
+        shipyard: {
+          name: 'Shipbuilding',
+          description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.',
+        },
+        efficient_shipyards: {
+          name: 'Efficient Shipyards',
+          description: 'Doubles shipyard production and consumption.',
+        },
+        self_replicating_ships: {
+          name: 'Self Replicating Ships',
+          description: 'Unused spaceships duplicate themselves over time from unused metal mining cap.',
+        },
+        robotics_3: {
+          name: 'Precision Assembly Lines',
+          description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
+        },
+        massive_scale_glass_smelting: {
+          name: 'Injection Mold Glass Smelting',
+          description: 'Doubles glass smelter production and consumption.',
+        },
+        space_elevator: {
+          name: 'Space Elevator',
+          description: 'Enables a special project for the space elevator, which eliminates the metal cost of many space activities.',
+        },
+        robotics_4: {
+          name: 'Direct AI integration.',
+          description: 'Integrates yourself within all factories to reduce all factory worker requirements by 25%.',
+        },
+        superalloy_foundry: {
+          name: 'Superalloy Foundry',
+          description: 'Enables production of superalloys at great energy cost.',
+        },
+        ai_industrial_coordination: {
+          name: 'AI Industrial Coordination',
+          description: 'HOPE will integrate itself further into each factory, reducing worker requirements (equivalent to an additive increase in workers of 10% per level).',
+        },
+      },
+      colonization: {
+        enhanced_colonist_import_1: {
+          name: 'Enhanced Colonist Importation',
+          description: 'Halve the duration of each colonist import using optimized spacecraft and improved logistics.',
+        },
+        launch_pads: {
+          name: 'Launch Pads',
+          description: 'Allows automation of special projects.',
+        },
+        t2_colony: {
+          name: 'Permanent outpost',
+          description: 'Enables a larger colony for more efficient colonization.',
+        },
+        cloning_facilities: {
+          name: 'Cloning Facilities',
+          description: 'Unlocks cloning facilities that consume massive energy to grow colonists.',
+        },
+        enhanced_colonist_import_2: {
+          name: 'Bigger rockets',
+          description: 'Further increase the capacity of each colonist import by 5 using bigger rockets.',
+        },
+        t3_colony: {
+          name: 'Large outpost',
+          description: 'Enables a very large outpost, suitable for long-term colonization.',
+        },
+        enhanced_colonist_import_3: {
+          name: 'Biggest rockets',
+          description: 'Further increase the capacity of each colonist import by 30 using the biggest rockets available.',
+        },
+        colony_sliders: {
+          name: 'Colony Management',
+          description: 'Unlocks adjustable colony sliders.',
+        },
+        construction_office: {
+          name: 'Construction Office',
+          description: 'Allows automation of building construction.',
+        },
+        t4_colony: {
+          name: 'Dome town',
+          description: 'The first dome design.  Can use androids as consumer goods.',
+        },
+        trading: {
+          name: 'Ship trading',
+          description: 'Allows the export of metal via a new special project and purchase of ships via the cargo rocket special project.  Cargo rockets become continuous, consuming funding and delivering purchases in real time.',
+        },
+        t5_colony: {
+          name: 'Dome City',
+          description: 'A larger dome design.',
+        },
+        t6_colony: {
+          name: 'Metropolis',
+          description: 'Too big to be a dome, rather a collection of interlocked domes.',
+        },
+        t7_colony: {
+          name: 'Ecumenopolis District',
+          description: 'Creates a planet-wide city district with unmatched comfort.',
+        },
+        terraforming_bureau: {
+          name: 'Terraforming Bureau',
+          description: 'Establishes oversight to automatically halt GHG factories at a chosen temperature, oxygen factories when O2 pressure is too high, dust factories at a target rock albedo, and chemical reactors based on resource thresholds.',
+        },
+        space_mirror_oversight: {
+          name: 'Space Mirror Facility Oversight',
+          description: 'Applies automated oversight controls to the space mirror facility.',
+        },
+        atmospheric_monitoring: {
+          name: 'Atmospheric Monitoring',
+          description: 'Enables setting limits on atmospheric mining special projects.',
+        },
+        ai_ecumenopolis_expansion: {
+          name: 'AI Ecumenopolis Expansion',
+          description: 'HOPE will optimize architecture, transit and utilities, enabling 10% more space per level for people and androids.',
+        },
+      },
+      terraforming: {
+        dust_factory: {
+          name: 'Black Dust production',
+          description: 'Unlocks a blueprint for black dust production; dust color sets ground albedo between 0.05 and 0.80 over time.',
+        },
+        hydroponic_farm: {
+          name: 'Hydroponic Farm',
+          description: 'Produces food to feed colonists.',
+        },
+        surface_food_production: {
+          name: 'Surface Food Production',
+          description: 'Surface Biomass can now produce food passively at the rate of 0.01 food packs per ton of biomass per second.',
+        },
+        engineered_nitrogen_fixation: {
+          name: 'Engineered Nitrogen Fixation',
+          description: 'Boosts life growth based on nitrogen pressure, scaling up to double growth at 10 kPa.',
+        },
+        terraforming_sensor: {
+          name: 'Terraforming measurements',
+          description: 'Unlocks the terraforming tab, which allows monitoring of terraforming parameters.',
+        },
+        hydroponics_efficiency: {
+          name: 'Adapted crops',
+          description: 'Doubles the performance of our hydroponic farms using genetically modified potatoes.',
+        },
+        space_mirror: {
+          name: 'Space mirrors',
+          description: 'Unlocks a special project to launch the space mirror facility, which allows the deployment of space mirrors to increase the effective solar luminosity.',
+        },
+        dust_efficiency: {
+          name: 'Adapted black dust production',
+          description: 'Quadruples the efficiency of dust factories.',
+        },
+        water_electrolysis: {
+          name: 'Water Electrolysis',
+          description: 'Unlocks a factory to produce oxygen from water.  Very energy intensive.',
+        },
+        chemical_reactor: {
+          name: 'Chemical Reactor',
+          description: 'Unlocks configurable reactors to perform various reactions.',
+        },
+        mass_driver: {
+          name: 'Mass Driver Foundations',
+          description: 'Unlocks the mass driver launcher network and integrates surface disposal with orbital infrastructure.',
+        },
+        ghg_factory: {
+          name: 'Greenhouse Gas Factories',
+          description: 'Allows the construction of greenhouse gas factories to produce SF6, which is stable, non-toxic and 23500 times more potent than CO2.',
+        },
+        ghg_efficiency: {
+          name: 'Streamlined Greenhouse Gas Production',
+          description: 'Doubles the efficiency of GHG factories.',
+        },
+        ghg_efficiency2: {
+          name: 'Mass Greenhouse Gas Production',
+          description: 'Doubles the efficiency of GHG factories, again.',
+        },
+        life: {
+          name: 'Life Designing and Production',
+          description: 'Allows the designing and production of specially engineered biomass.',
+        },
+        carbonImport: {
+          name: 'Carbon Importation',
+          description: 'The asteroid belt is full of asteroids rich in carbon.  We can use our spaceships to extract CO2 and bring it back.',
+        },
+        waterImport: {
+          name: 'Water Importation',
+          description: 'Water is everywhere but more may be needed sometimes.  Requires ships.',
+        },
+        nitrogenImport: {
+          name: 'Nitrogen Importation',
+          description: 'Import nitrogen to fill up the atmosphere with a neutral gas.',
+        },
+        hydrogenImport: {
+          name: 'Hydrogen Importation',
+          description: 'Import hydrogen to stockpile a reducing gas for industry and fuel.',
+        },
+        magneticShield: {
+          name: 'Magnetic Shield',
+          description: 'Design for an equatorial wide superconductor wire that will carry a very large current around the planet.',
+        },
+      },
+      advanced: {
+        modular_nuclear_reactor: {
+          name: 'Modular Nuclear Reactor',
+          description: 'Miniaturizes fission reactors and automatically completes their research.',
+        },
+        hyperion_lantern: {
+          name: 'Hyperion Lantern',
+          description: 'Research the construction of a large orbital facility that increases planetary luminosity.',
+        },
+        hydrocarbon_research: {
+          name: 'Hydrocarbon Combustion Concept',
+          description: 'Opens research into burning methane for power.',
+        },
+        infrared_vision: {
+          name: 'Infrared Vision',
+          description: 'Equips ice harvesters with infrared sensors to operate around the clock.',
+        },
+        dyson_swarm_concept: {
+          name: 'Dyson Swarm Concept',
+          description: 'Opens research into building massive solar collectors in space.',
+        },
+        space_storage: {
+          name: 'Space Storage',
+          description: 'Enables construction of an orbital storage facility.',
+        },
+        cloning_concept: {
+          name: 'Cloning Concept',
+          description: 'Explores human cloning to rapidly grow population.',
+        },
+        underground_habitats: {
+          name: 'Underground habitats',
+          description: 'Opens research into expanding land through subterranean construction.',
+        },
+        hive_mind_androids: {
+          name: 'Hive Mind Androids',
+          description: 'Links androids into a cooperative network producing research.',
+        },
+        space_mirror_focusing: {
+          name: 'Space Mirror Focusing',
+          description: 'Refines the space mirror facility to concentrate sunlight, allowing production of liquid water from ice.',
+        },
+        super_alloys: {
+          name: 'Superalloys',
+          description: 'Opens research into advanced superalloy materials.',
+        },
+        nanotechnology_stage_1: {
+          name: 'Nanotechnology Stage I',
+          description: 'Unlocks the nanocolony in the colony tab.',
+        },
+        nanotechnology_stage_2: {
+          name: 'Nanotechnology Stage II',
+          description: 'Expands the nanocolony program.',
+        },
+        nanotechnology_stage_3: {
+          name: 'Nanotechnology Stage III',
+          description: 'Further expands the nanocolony program.',
+        },
+        orbital_rings: {
+          name: 'Orbital Rings',
+          description: 'Unlocks a new megastructure project for constructing orbital rings.',
+        },
+        mega_particle_accelerator: {
+          name: 'Mega Particle Accelerator',
+          description: 'Unlocks a new megastructure that can assist in boosting advanced research gains.',
+        },
+        mega_heat_sink: {
+          name: 'Mega Heat Sink',
+          description: 'Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling.',
+        },
+        lifting: {
+          name: 'Lifting',
+          description: 'Unlocks a repeatable mega project for the assembly of Lifters, persistent vessels capable of extracting hydrogen from gas giants or stripping an atmosphere at a great energy cost.',
+        },
+        bioworkforce: {
+          name: 'Bioworlds',
+          description: 'Unlocks the Bioworld mega project for evolution point upgrades and the ability to use biomass as a workforce.',
+        },
+        biocortex_integration: {
+          name: 'Biocortex-human integration',
+          description: 'Bioworlds can work together with humans and androids.  Provides a x10 production multiplier to Metropolises on bioworld completion.',
+        },
+        foundry_worlds: {
+          name: 'Foundry Worlds',
+          description: 'Planetary cores contain sextillions of tons of metal... if we can get to it.',
+        },
+        manufacturing_worlds: {
+          name: 'Manufacturing Worlds',
+          description: 'Unlocks a new world specialization to convert the world into a hub of conveyor belts, underground pipes and logistics robots.',
+        },
+        next_gen_bioengineering: {
+          name: 'Next-generation bio-engineering',
+          description: 'Enables the use of advanced research to permanently increase life design potential',
+        },
+        repeatable_ai_research: {
+          name: 'Repeatable AI Researches',
+          description: 'Authorizes repeatable research programs focused on enhancing production with the help of HOPE.',
+        },
+        hazardous_biomass_incineration: {
+          name: 'Hazardous Biomass Incineration',
+          description: 'Enables incinerators to handle hazardous biomass safely.',
+        },
+        galactic_market: {
+          name: 'Galactic Market Concordat',
+          description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',
+        },
+        mechanical_assistance: {
+          name: 'Mechanical Assistance',
+          description: 'Enables a new colony slider to provide mechanical assistance to partially counter the effects of high gravity.  The slider will only appear on high gravity worlds.',
+        },
+        warpnet: {
+          name: 'Warpnet',
+          description: "An upgrade to humanity's greatest invention.  Enables instant communication from anywhere to anywhere, at great energy cost.  Enables a new colony slider that boosts research production.",
+        },
+        ship_smelting: {
+          name: 'Ship smelting',
+          description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silicon. Water imports can now prioritize colony storage.',
+        },
+        companion_satellite: {
+          name: 'Companion Satellite',
+          description: 'An autonomous cube satellite that unlocks ore satellites and retains one per terraformed world when travelling.  Not intended for incineration.',
+        },
+        oneill_cylinders: {
+          name: "O'Neill Cylinders",
+          description: 'Worlds producing worlds producing worlds...  Enables passive generation of terraformed worlds.',
+        },
+        high_gravity_adaptation: {
+          name: 'High-gravity adaptation',
+          description: 'Complete a project initially started by PANDORA to acclimate to heavy worlds, automatically negating half of the happiness and population penalties from high gravity.  Stacks with Mechanical Assistance to cancel the rest.',
+        },
+        biostorage: {
+          name: 'Biostorage',
+          description: 'Allows safe storage of biomass in space storage.  Hazardous Biomass should be stored at the nearest incinerator.',
+        },
+        warp_gate_fabrication: {
+          name: 'Warp Gate Fabrication',
+          description: 'Enables growth of the warp gate network from terraformed worlds in the galactic tab.  Raises resource import limits.',
+        },
+        chemistry_of_scale: {
+          name: 'Chemistry of Scale',
+          description: 'Chemical reactors gain efficiency from scale, with production and consumption multiplied by 1 + log10(active reactors) / 5.',
+        },
+        self_replicating_ships_concept: {
+          name: 'Self Replicating Ships',
+          description: 'Opens research into autonomous self-building spacecraft.',
+        },
+        graphene_mastery: {
+          name: 'Graphene Mastery',
+          description: 'Unlocks advanced graphene processing techniques for industrial use as a metal substitute.',
+        },
+        dyson_sphere: {
+          name: 'Dyson Sphere',
+          description: 'Unlocks construction of a Dyson Sphere frame for faster collector deployment.  Very expensive.',
+        },
+        space_antimatter_safety_regulations: {
+          name: 'Space Antimatter Safety Regulations',
+          description: 'Standardize strict antimatter safety protocols for orbital containment, unlock modular Space Antimatter batteries, and add a safe orbital energy-transfer recipe for Antimatter Farms.',
+        },
+        additional_dyson_spheres: {
+          name: 'Additional Dyson Spheres',
+          description: 'Raises Dyson Sphere expansion beyond a single sphere up to 100 billion spheres, with extra superalloy requirements once exceeding 1 sphere worth of power.',
+        },
+        nanotechnology_recycling: {
+          name: 'Nanotechnology recycling',
+          description: 'Enables nanobots to recycle waste materials, substituting junk for silica consumption, scrap metal for metal consumption, and trash for biomass consumption.',
+        },
+        companion_mirror: {
+          name: 'Companion Mirror',
+          description: 'An adorable autonomous mirror robot that automatically completes the space mirror project and provides 1,000 inactive space mirrors per terraformed world.  The best friend of the companion satellite.  Not suitable for incineration.',
+        },
+        methane_ammonia_lifting: {
+          name: 'Methane and Ammonia Lifting',
+          description: 'Enables lifters to harvest methane and ammonia into space storage.',
+        },
+        hephaestus_megaconstruction: {
+          name: 'Hephaestus Megaconstruction Yard',
+          description: 'Unlocks a giga-scale construction yard that accelerates repeatable mega and giga projects.',
+        },
+        warp_storage: {
+          name: 'Warp Storage',
+          description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot mode and Space Storage expansion mode.',
+        },
+        nuclear_alchemy: {
+          name: 'Nuclear Alchemy',
+          description: 'Alchemy has always been possible... with the right knowledge and extreme infrastructure.',
+        },
+        gigafoundries: {
+          name: 'Gigafoundries',
+          description: 'Enables a new gigastructure for mass superalloy production.',
+        },
+        core_surgery: {
+          name: 'Core Surgery',
+          description: 'Enables a new gigastructure capable of creating artificial natural magnetospheres.',
+        },
+        tractor_beams: {
+          name: 'Tractor Beams',
+          description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
+        },
+        star_lifting: {
+          name: 'Star Lifting',
+          description: 'Upgrades lifters for shallow stellar skimming, unlocking the Star Lifting recipe and a supercharge slider from x1 to x10. Throughput scales linearly with the selected multiplier while energy per lifter scales cubically.',
+        },
+      },
+    },
+    resources: {
+      colony: {
+        funding: { name: 'Funding' },
+        colonists: { name: 'Colonists' },
+        workers: { name: 'Workers' },
+        energy: { name: 'Energy' },
+        metal: { name: 'Metal' },
+        silicon: { name: 'Silica' },
+        glass: { name: 'Glass' },
+        water: { name: 'Water' },
+        food: { name: 'Food' },
+        components: { name: 'Components' },
+        electronics: { name: 'Electronics' },
+        superconductors: { name: 'Supercond.' },
+        superalloys: { name: 'Superalloys' },
+        androids: { name: 'Android' },
+        research: { name: 'Research' },
+        advancedResearch: { name: 'Adv. Research' },
+      },
+      surface: {
+        land: { name: 'Land' },
+        ice: { name: 'Ice' },
+        liquidWater: { name: 'Water' },
+        dryIce: { name: 'Dry Ice' },
+        liquidCO2: { name: 'Liquid CO2' },
+        liquidMethane: { name: 'Liquid Methane' },
+        hydrocarbonIce: { name: 'Methane Ice' },
+        liquidAmmonia: { name: 'Liquid Ammonia' },
+        ammoniaIce: { name: 'Ammonia Ice' },
+        liquidOxygen: { name: 'Liquid Oxygen' },
+        oxygenIce: { name: 'Oxygen Ice' },
+        liquidNitrogen: { name: 'Liquid Nitrogen' },
+        nitrogenIce: { name: 'Nitrogen Ice' },
+        biomass: { name: 'Biomass' },
+        hazardousBiomass: { name: 'Hazardous Biomass' },
+        graphite: { name: 'Graphite' },
+        scrapMetal: { name: 'Scrap Metal' },
+        garbage: { name: 'Garbage' },
+        trash: { name: 'Trash' },
+        junk: { name: 'Junk' },
+        radioactiveWaste: { name: 'Radioactive Waste' },
+      },
+      underground: {
+        ore: { name: 'Ore deposits' },
+        geothermal: { name: 'Geo. vent' },
+      },
+      atmospheric: {
+        carbonDioxide: { name: 'CO2' },
+        inertGas: { name: 'Nitrogen' },
+        oxygen: { name: 'Oxygen' },
+        atmosphericWater: { name: 'Water Vap.' },
+        greenhouseGas: { name: 'Safe GHG' },
+        atmosphericMethane: { name: 'Methane' },
+        atmosphericAmmonia: { name: 'Ammonia' },
+        hydrogen: { name: 'Hydrogen' },
+        sulfuricAcid: { name: 'Sulfuric Acid' },
+        calciteAerosol: { name: 'Calcite Aerosol' },
+      },
+      special: {
+        albedoUpgrades: { name: 'Black Dust', displayName: 'Black Dust' },
+        whiteDust: { name: 'White Dust' },
+        orbitalDebris: { name: 'Orbital Debris' },
+        spaceships: { name: 'Spaceships' },
+        alienArtifact: { name: 'Alien artifact' },
+        crusaders: { name: 'Crusaders' },
+        antimatter: { name: 'Antimatter' },
+      },
+      space: {
+        energy: { name: 'Space Energy' },
+      },
+      spaceStorage: {
+        metal: { name: 'Metal' },
+        silicon: { name: 'Silica' },
+        graphite: { name: 'Graphite' },
+        glass: { name: 'Glass' },
+        components: { name: 'Components' },
+        electronics: { name: 'Electronics' },
+        superconductors: { name: 'Supercond.' },
+        superalloys: { name: 'Superalloys' },
+        liquidWater: { name: 'Water' },
+        biomass: { name: 'Biomass' },
+        carbonDioxide: { name: 'CO2' },
+        inertGas: { name: 'Nitrogen' },
+        oxygen: { name: 'Oxygen' },
+        atmosphericMethane: { name: 'Methane' },
+        atmosphericAmmonia: { name: 'Ammonia' },
+        hydrogen: { name: 'Hydrogen' },
+      },
+    },
+    resourcePhaseGroups: {
+      water: {
+        name: 'Water',
+        options: [
+          { label: 'Colony Water' },
+          { label: 'Surface Liquid Water' },
+          { label: 'Surface Ice' },
+          { label: 'Atmospheric Water' },
+        ],
+      },
+      carbonDioxide: {
+        name: 'Carbon Dioxide',
+        options: [
+          { label: 'Atmospheric CO2' },
+          { label: 'Liquid CO2' },
+          { label: 'Dry Ice' },
+        ],
+      },
+      methane: {
+        name: 'Methane',
+        options: [
+          { label: 'Atmospheric Methane' },
+          { label: 'Liquid Methane' },
+          { label: 'Methane Ice' },
+        ],
+      },
+      ammonia: {
+        name: 'Ammonia',
+        options: [
+          { label: 'Atmospheric Ammonia' },
+          { label: 'Liquid Ammonia' },
+          { label: 'Ammonia Ice' },
+        ],
+      },
+      oxygen: {
+        name: 'Oxygen',
+        options: [
+          { label: 'Atmospheric Oxygen' },
+          { label: 'Liquid Oxygen' },
+          { label: 'Oxygen Ice' },
+        ],
+      },
+      nitrogen: {
+        name: 'Nitrogen',
+        options: [
+          { label: 'Atmospheric Nitrogen' },
+          { label: 'Liquid Nitrogen' },
+          { label: 'Nitrogen Ice' },
+        ],
+      },
+    },
+    planets: {
+      default: {
+        name: 'Default Planet',
+        star: { name: 'Sun' },
+      },
+      mars: {
+        name: 'Mars',
+      },
+      titan: {
+        name: 'Titan',
+        star: { name: 'Saturn' },
+      },
+      callisto: {
+        name: 'Callisto',
+        star: { name: 'Jupiter' },
+      },
+      ganymede: {
+        name: 'Ganymede',
+        star: { name: 'Jupiter' },
+      },
+      vega2: {
+        name: 'Vega-2',
+        star: { name: 'Vega' },
+      },
+      venus: {
+        name: 'Venus',
+      },
+      umbra: {
+        name: 'Umbra',
+        star: { name: 'Nyx' },
+      },
+      solisprime: {
+        name: 'Solis Prime',
+        star: { name: 'Nyx-1' },
+      },
+      gabbag: {
+        name: 'Gabbag',
+        star: { name: 'Gabbagsol' },
+      },
+      tartarus: {
+        name: 'Tartarus',
+        star: { name: 'Erebus' },
+      },
+      hades: {
+        name: 'Hades',
+        star: { name: 'PSR S-17634' },
+        hazards: {
+          pulsar: {
+            description: 'The pulsar emits periodic radiation bursts across the system.',
+          },
+        },
+      },
+      poseidon: {
+        name: 'Poseidon',
+        star: { name: 'Nereid' },
+      },
+    },
+    life: {
+      lichen: {
+        displayName: 'Lichen',
+      },
+      grass: {
+        displayName: 'Grass',
+      },
+      trees: {
+        displayName: 'Trees',
+      },
+    },
+    orbitals: {
+      energy: {
+        label: 'Energy',
+      },
+      metal: {
+        label: 'Metal',
+      },
+      water: {
+        label: 'Water',
+      },
+      glass: {
+        label: 'Glass',
+      },
+      food: {
+        label: 'Food',
+      },
+      electronics: {
+        label: 'Electronics',
+      },
+      components: {
+        label: 'Components',
+      },
+      superconductors: {
+        label: 'Superconductors',
+      },
+      androids: {
+        label: 'Androids',
+      },
+      shipyards: {
+        label: 'Shipyards',
+      },
+      research: {
+        label: 'Research',
+      },
+    },
+    factions: {
+      uhf: {
+        name: 'UHF',
+      },
+      cewinsii: {
+        name: 'Cewinsii',
+      },
+      helian: {
+        name: 'Helian',
+      },
+      virellan: {
+        name: 'Virellan',
+      },
+      karthid: {
+        name: 'Karthid',
+      },
+      neran: {
+        name: 'Neran',
+      },
+      okoth: {
+        name: 'Okoth',
+      },
+    },
+    milestones: {
+      festivalName: 'Festival',
+      terraforming: {
+        temperature_1: { name: 'Temperature 1', description: 'Increase or decrease temperature in any zone by 0.1 mK' },
+        temperature_2: { name: 'Temperature 2', description: 'Increase or decrease temperature in any zone by 1 mK' },
+        temperature_3: { name: 'Temperature 3', description: 'Increase or decrease temperature in any zone by 10 mK' },
+        temperature_4: { name: 'Temperature 4', description: 'Increase or decrease temperature in any zone by 0.1 K' },
+        temperature_5: { name: 'Temperature 5', description: 'Increase or decrease temperature in any zone by 1 K' },
+        pressure_1: { name: 'Pressure 1', description: 'Increase or decrease total atmospheric pressure by 0.01 Pa' },
+        pressure_2: { name: 'Pressure 2', description: 'Increase or decrease total atmospheric pressure by 0.1 Pa' },
+        pressure_3: { name: 'Pressure 3', description: 'Increase or decrease total atmospheric pressure by 5 Pa' },
+        pressure_4: { name: 'Pressure 4', description: 'Increase or decrease total atmospheric pressure by 100 Pa' },
+        pressure_5: { name: 'Pressure 5', description: 'Increase or decrease total atmospheric pressure by 1 kPa' },
+        water_1: { name: 'Water 1', description: 'Have at least 1k surface liquid water' },
+        water_2: { name: 'Water 2', description: 'Have at least 1M surface liquid water' },
+        water_3: { name: 'Water 3', description: 'Have at least 1B surface liquid water' },
+        water_4: { name: 'Water 4', description: 'Have at least 1T surface liquid water' },
+        water_5: { name: 'Water 5', description: 'Have at least 1Q surface liquid water' },
+        life_1: { name: 'Life 1', description: 'Have at least 1 surface biomass' },
+        life_2: { name: 'Life 2', description: 'Have at least 1k surface biomass' },
+        life_3: { name: 'Life 3', description: 'Have at least 1M surface biomass' },
+        life_4: { name: 'Life 4', description: 'Have at least 1B surface biomass' },
+        life_5: { name: 'Life 5', description: 'Have at least 1T surface biomass' },
+      },
+    },
+    specializations: {
+      foundry: {
+        pointsLabel: 'Metallurgy Points:',
+        shopTitle: 'Metallurgy Shop',
+        shopTooltip: 'You gain 10 metallurgy points times sqrt(initial land / 50B) when travelling after completing this project, then +10% per hazard on this world.',
+        emptyShopText: 'No foundry upgrades available yet.',
+        lockedByHolyWorld: 'Blocked by Holy World',
+        requirements: {
+          terraformed: 'World is fully terraformed',
+          deepMining: 'Deeper mining depth at least 50,000 or a thin crust',
+          otherSpecialization: 'No other specialization started or completed',
+        },
+        shopItems: {
+          galacticMetalMiningCap: {
+            label: 'Galactic Metal Mining Expertise',
+            description: 'Increases the galactic metal mining cap by 5%.',
+          },
+          galacticSilicaMiningCap: {
+            label: 'Galactic Silica Mining Expertise',
+            description: 'Increases the galactic silica mining cap by 5%.',
+          },
+          galacticEverythingElseCap: {
+            label: 'Galactic Everything Else',
+            description: 'Increases the galactic water, carbon, and nitrogen import caps by 5%.',
+          },
+          oreMiningOutput: {
+            label: 'Planetary Ore Mining Expertise',
+            description: 'Increases ore mine output by 1%.',
+          },
+          silicaMiningOutput: {
+            label: 'Planetary Silica Mining Expertise',
+            description: 'Increases silica mining output by 1%.',
+          },
+          glassSmelterOptimization: {
+            label: 'Glass Smelter Optimization',
+            description: 'Increases glass smelter production and consumption by 1%.',
+          },
+          deeperMiningSpeed: {
+            label: 'Subterranean Expertise',
+            description: 'Increases deeper mining and underground land expansion speed by 1%.',
+          },
+        },
+      },
+      bioworld: {
+        pointsLabel: 'Evolution Points:',
+        shopTitle: 'Evolution Shop',
+        shopTooltip: 'You gain evolution points when travelling after completing this project: 3*log10(total biomass / 1T) + 1, then +10% per hazard on this world.',
+        lockedByHolyWorld: 'Blocked by Holy World',
+        biocortexEffectName: 'Biocortex-human integration',
+        requirements: {
+          terraformed: 'World is fully terraformed',
+          biomassDensity: 'Biomass density above 1 ton/m^2',
+          ecumenopolisCount: 'Fewer than 1,000 Ecumenopolis Districts',
+          otherSpecialization: 'No other specialization started or completed',
+        },
+        shopItems: {
+          lifeDesignerUnlock: {
+            label: 'Unlock Life Designer',
+            description: 'Permanently completes the Life Designing and Production Research.',
+          },
+          lifePointGain: {
+            label: 'Life Points Gain +1%',
+            description: 'Boosts life design point gains by 1%.',
+          },
+          temperatureToleranceMax: {
+            label: 'Temperature Tolerance Max +1',
+            description: 'Raises the max investments for minimum and maximum temperature tolerance by 1.',
+          },
+          growthToleranceMax: {
+            label: 'Growth Tolerance Max +1',
+            description: 'Raises the max investments for optimal growth temperature and growth tolerance by 1.',
+          },
+          invasivenessMax: {
+            label: 'Invasiveness Max +1',
+            description: 'Raises the max investments for invasiveness by 1.',
+          },
+          spaceEfficiencyMax: {
+            label: 'Space Efficiency Max +1',
+            description: 'Raises the max investments for space efficiency by 1.',
+          },
+          bioworkersMax: {
+            label: 'Bioworkers Max +1',
+            description: 'Raises the max investments for bioworkers by 1.',
+          },
+        },
+      },
+      manufacturing: {
+        pointsLabel: 'Manufacturing Points:',
+        shopTitle: 'MP Shop',
+        shopTooltip: "Gain MP equal to max(1, log10(population)) when travelling from a completed Manufacturing World, then +10% per hazard on this world.  This represents the ability of humanity to slowly and partially catch up to HOPE's own manufacturing abilities.  These upgrades are for post-travel Manufacturing Worlds production only.",
+        lockedByHolyWorld: 'Blocked by Holy World',
+        inputLabels: {
+          metal: 'metal',
+          silicon: 'silica',
+          graphite: 'graphite',
+          hydrogen: 'space hydrogen',
+        },
+        outputLabels: {
+          glass: 'glass',
+          metal: 'metal',
+          components: 'components',
+          electronics: 'electronics',
+          superconductors: 'superconductors',
+          superalloys: 'superalloys',
+        },
+        tooltip: {
+          produces: 'Produces: {amount} {label} ({storage} storage).',
+          consumes: 'Consumes: {inputs}.',
+          wgcBonus: 'WGC output bonus: x{multiplier} (+{percent}%).',
+        },
+        requirements: {
+          terraformed: 'World is fully terraformed',
+          otherSpecialization: 'No other specialization started or completed',
+        },
+        status: {
+          idle: 'Idle',
+          runDisabled: 'Run disabled',
+          noCumulativePopulation: 'No cumulative population',
+          buildSpaceStorage: 'Build space storage',
+          noAssignments: 'No assignments',
+          running: 'Running',
+          insufficientInput: 'Insufficient input in space storage',
+        },
+        ui: {
+          controlsTitle: 'Manufacturing Controls',
+          controlsTooltip: 'Assign cumulative manufacturing population to recipes. Output uses (Assigned x Output / Complexity). Each assigned worker also consumes a flat 1e-6 space hydrogen/s, unaffected by manufacturing multipliers. WGC bonuses apply to eligible outputs.',
+          runManufacturing: 'Run manufacturing',
+          status: 'Status',
+          inputUse: 'Input Use',
+          auto: 'Auto',
+          showShop: 'Show Shop',
+          hideShop: 'Hide Shop',
+          summary: {
+            cumulativePopulation: 'Cumulative Population',
+            assigned: 'Assigned',
+            unassigned: 'Unassigned',
+          },
+          headers: {
+            resource: 'Resource',
+            complexity: 'Complexity',
+            unitProduction: 'Unit Production',
+            assigned: 'Assigned',
+            weight: 'Weight',
+            rate: 'Rate',
+          },
+        },
+        recipes: {
+          glass: { label: 'Glass' },
+          graphene: { label: 'Graphene' },
+          components: { label: 'Components' },
+          electronics: { label: 'Electronics' },
+          superconductors: { label: 'Superconductor' },
+          superalloys: { label: 'Superalloy' },
+        },
+        shopItems: {
+          glassEfficiency: {
+            label: 'Glass Manufacturing +1%',
+            description: 'Increases both glass production and silica consumption by 1%.',
+          },
+          grapheneEfficiency: {
+            label: 'Graphene Manufacturing +1%',
+            description: 'Increases both graphene refining output and graphite consumption by 1%.',
+          },
+          componentsEfficiency: {
+            label: 'Components Manufacturing +1%',
+            description: 'Increases both components production and metal consumption by 1%.',
+          },
+          electronicsEfficiency: {
+            label: 'Electronics Manufacturing +1%',
+            description: 'Increases both electronics production and metal/silica consumption by 1%.',
+          },
+          superconductorEfficiency: {
+            label: 'Superconductor Manufacturing +1%',
+            description: 'Increases both superconductor production and metal consumption by 1%.',
+          },
+          superalloyEfficiency: {
+            label: 'Superalloy Manufacturing +1%',
+            description: 'Increases both superalloy production and metal consumption by 1%.',
+          },
+        },
+      },
+    },
+    colonies: {
+      aerostat_colony: {
+        name: 'Aerostat Colony',
+        description: 'A floating habitat that avoids surface pressure and temperature extremes.',
+      },
+      t1_colony: {
+        name: 'Research Outpost',
+        description: 'A small, self-sufficient habitat that serves as a starting point for early settlers. This outpost provides basic amenities and supports a small crew of researchers.',
+      },
+      t2_colony: {
+        name: 'Permanent Outpost',
+        description: 'As the colony expands, this larger outpost offers improved facilities and can house a growing number of colonists.',
+      },
+      t3_colony: {
+        name: 'Small Settlement',
+        description: 'A well-developed outpost that represents a significant milestone in colonial growth. It provides a comfortable living environment and supports a thriving community of colonists.',
+      },
+      t4_colony: {
+        name: 'Dome Town',
+        description: 'A self-sufficient, fully insulated habitat designed to support a large population, providing essential amenities and sustainable infrastructure for a thriving community.',
+      },
+      t5_colony: {
+        name: 'Dome City',
+        description: 'Dome City is a large, climate-controlled habitat supporting a thriving population with advanced amenities, sustainable agriculture, and cutting-edge infrastructure-an oasis of comfort and innovation on the frontier.',
+      },
+      t6_colony: {
+        name: 'Metropolis',
+        description: 'A massive arcology structure designed to be a fully autonomous city, supporting a large population with advanced research and production facilities.',
+      },
+      t7_colony: {
+        name: 'Ecumenopolis District',
+        description: 'A planet-spanning city offering unparalleled comfort and capacity. Reduces land for life growth and lowers life terraforming requirements.',
+      },
+    },
+    skills: {
+      build_cost: {
+        name: 'Efficient Architecture',
+        description: 'Reduces Building Costs by 10% (indirectly impacts maintenance)',
+        effectName: 'Awakening',
+      },
+      pop_growth: {
+        name: 'Population Boom',
+        description: 'Increases population growth by 20%',
+        effectName: 'Awakening',
+      },
+      worker_reduction: {
+        name: 'Automation',
+        description: 'Reduces worker requirements by 10%',
+      },
+      research_boost: {
+        name: 'Innovation Initiative',
+        description: 'Boosts research output by 50% per rank',
+      },
+      maintenance_reduction: {
+        name: 'Streamlined Operations',
+        description: 'Reduces maintenance costs by 10% per rank',
+        effectName: 'Streamlined Operations',
+      },
+      android_efficiency: {
+        name: 'Androids Efficiency',
+        description: 'Increases android factory production by 40% per rank',
+      },
+      ship_efficiency: {
+        name: 'Advanced Logistics',
+        description: 'Ships import and export 30% more per rank, energy use rises by 30% per rank, and trade caps increase by 30% per rank',
+      },
+      project_speed: {
+        name: 'Faster Projects',
+        description: 'Reduces project durations by 15% per rank',
+      },
+      life_design_points: {
+        name: 'More Life Design Points',
+        description: 'Grants 20 life design points per rank and boosts point shop and biodome gains by 20% per rank',
+      },
+    },
+  },
 });

@@ -3,6 +3,14 @@ const DEFAULT_OXYGEN_AUTOMATION_SETTINGS = {
   disablePressureThreshold: 15, // kPa
 };
 
+function getOxygenFactoryText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function sanitizeNumber(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -105,7 +113,10 @@ class OxygenFactory extends MultiRecipesBuilding {
 
     const pressureLabel = document.createElement('label');
     pressureLabel.htmlFor = pressureCheckbox.id;
-    pressureLabel.textContent = 'Disable if O2 P > ';
+    pressureLabel.textContent = getOxygenFactoryText(
+      'ui.buildings.oxygenFactory.disableIfOxygenPressureAbove',
+      'Disable if O2 P > '
+    );
     pressureControl.appendChild(pressureLabel);
 
     const pressureInput = document.createElement('input');
@@ -116,7 +127,10 @@ class OxygenFactory extends MultiRecipesBuilding {
 
     const unitSpan = document.createElement('span');
     unitSpan.classList.add('o2-pressure-unit');
-    unitSpan.textContent = 'Pa';
+    unitSpan.textContent = getOxygenFactoryText(
+      'ui.buildings.oxygenFactory.pressureUnit',
+      'Pa'
+    );
     pressureControl.appendChild(unitSpan);
 
     const update = () => {
@@ -163,7 +177,10 @@ class OxygenFactory extends MultiRecipesBuilding {
       o2Els.input.value = formatNumber(settings.disablePressureThreshold * 1000, true, 2);
     }
     if (o2Els.unitSpan) {
-      o2Els.unitSpan.textContent = 'Pa';
+      o2Els.unitSpan.textContent = getOxygenFactoryText(
+        'ui.buildings.oxygenFactory.pressureUnit',
+        'Pa'
+      );
     }
   }
 

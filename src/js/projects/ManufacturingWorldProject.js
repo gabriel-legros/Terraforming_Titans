@@ -7,6 +7,14 @@
     ({ SpecializationProject: SpecializationBase } = require('./SpecializationProject.js'));
   } catch (error) {}
 
+  function getManufacturingText(path, vars) {
+    try {
+      return t(path, vars, '');
+    } catch (error) {
+      return '';
+    }
+  }
+
   const MANUFACTURING_RECIPE_KEYS = [
     'glass',
     'graphene',
@@ -18,7 +26,7 @@
 
   const MANUFACTURING_RECIPES = {
     glass: {
-      label: 'Glass',
+      label: getManufacturingText('catalogs.specializations.manufacturing.recipes.glass.label'),
       outputStorageKey: 'glass',
       complexity: 5,
       baseOutput: 1,
@@ -27,7 +35,7 @@
       wgcUpgradeId: null,
     },
     graphene: {
-      label: 'Graphene',
+      label: getManufacturingText('catalogs.specializations.manufacturing.recipes.graphene.label'),
       outputStorageKey: 'metal',
       complexity: 5,
       baseOutput: 10,
@@ -36,7 +44,7 @@
       wgcUpgradeId: null,
     },
     components: {
-      label: 'Components',
+      label: getManufacturingText('catalogs.specializations.manufacturing.recipes.components.label'),
       outputStorageKey: 'components',
       complexity: 100,
       baseOutput: 1,
@@ -45,7 +53,7 @@
       wgcUpgradeId: 'componentsEfficiency',
     },
     electronics: {
-      label: 'Electronics',
+      label: getManufacturingText('catalogs.specializations.manufacturing.recipes.electronics.label'),
       outputStorageKey: 'electronics',
       complexity: 100,
       baseOutput: 1,
@@ -54,7 +62,7 @@
       wgcUpgradeId: 'electronicsEfficiency',
     },
     superconductors: {
-      label: 'Superconductor',
+      label: getManufacturingText('catalogs.specializations.manufacturing.recipes.superconductors.label'),
       outputStorageKey: 'superconductors',
       complexity: 500,
       baseOutput: 1,
@@ -63,7 +71,7 @@
       wgcUpgradeId: 'superconductorEfficiency',
     },
     superalloys: {
-      label: 'Superalloy',
+      label: getManufacturingText('catalogs.specializations.manufacturing.recipes.superalloys.label'),
       outputStorageKey: 'superalloys',
       complexity: 100,
       baseOutput: 0.001,
@@ -76,45 +84,45 @@
   const MANUFACTURING_SHOP_ITEMS = [
     {
       id: 'glassEfficiency',
-      label: 'Glass Manufacturing +1%',
+      label: getManufacturingText('catalogs.specializations.manufacturing.shopItems.glassEfficiency.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases both glass production and silica consumption by 1%.',
+      description: getManufacturingText('catalogs.specializations.manufacturing.shopItems.glassEfficiency.description'),
     },
     {
       id: 'grapheneEfficiency',
-      label: 'Graphene Manufacturing +1%',
+      label: getManufacturingText('catalogs.specializations.manufacturing.shopItems.grapheneEfficiency.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases both graphene refining output and graphite consumption by 1%.',
+      description: getManufacturingText('catalogs.specializations.manufacturing.shopItems.grapheneEfficiency.description'),
     },
     {
       id: 'componentsEfficiency',
-      label: 'Components Manufacturing +1%',
+      label: getManufacturingText('catalogs.specializations.manufacturing.shopItems.componentsEfficiency.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases both components production and metal consumption by 1%.',
+      description: getManufacturingText('catalogs.specializations.manufacturing.shopItems.componentsEfficiency.description'),
     },
     {
       id: 'electronicsEfficiency',
-      label: 'Electronics Manufacturing +1%',
+      label: getManufacturingText('catalogs.specializations.manufacturing.shopItems.electronicsEfficiency.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases both electronics production and metal/silica consumption by 1%.',
+      description: getManufacturingText('catalogs.specializations.manufacturing.shopItems.electronicsEfficiency.description'),
     },
     {
       id: 'superconductorEfficiency',
-      label: 'Superconductor Manufacturing +1%',
+      label: getManufacturingText('catalogs.specializations.manufacturing.shopItems.superconductorEfficiency.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases both superconductor production and metal consumption by 1%.',
+      description: getManufacturingText('catalogs.specializations.manufacturing.shopItems.superconductorEfficiency.description'),
     },
     {
       id: 'superalloyEfficiency',
-      label: 'Superalloy Manufacturing +1%',
+      label: getManufacturingText('catalogs.specializations.manufacturing.shopItems.superalloyEfficiency.label'),
       cost: 1,
       maxPurchases: 900,
-      description: 'Increases both superalloy production and metal consumption by 1%.',
+      description: getManufacturingText('catalogs.specializations.manufacturing.shopItems.superalloyEfficiency.description'),
     },
   ];
 
@@ -139,29 +147,29 @@
   }
 
   const MANUFACTURING_INPUT_LABELS = {
-    metal: 'metal',
-    silicon: 'silica',
-    graphite: 'graphite',
-    hydrogen: 'space hydrogen',
+    metal: getManufacturingText('catalogs.specializations.manufacturing.inputLabels.metal'),
+    silicon: getManufacturingText('catalogs.specializations.manufacturing.inputLabels.silicon'),
+    graphite: getManufacturingText('catalogs.specializations.manufacturing.inputLabels.graphite'),
+    hydrogen: getManufacturingText('catalogs.specializations.manufacturing.inputLabels.hydrogen'),
   };
 
   const MANUFACTURING_OUTPUT_LABELS = {
-    glass: 'glass',
-    metal: 'metal',
-    components: 'components',
-    electronics: 'electronics',
-    superconductors: 'superconductors',
-    superalloys: 'superalloys',
+    glass: getManufacturingText('catalogs.specializations.manufacturing.outputLabels.glass'),
+    metal: getManufacturingText('catalogs.specializations.manufacturing.outputLabels.metal'),
+    components: getManufacturingText('catalogs.specializations.manufacturing.outputLabels.components'),
+    electronics: getManufacturingText('catalogs.specializations.manufacturing.outputLabels.electronics'),
+    superconductors: getManufacturingText('catalogs.specializations.manufacturing.outputLabels.superconductors'),
+    superalloys: getManufacturingText('catalogs.specializations.manufacturing.outputLabels.superalloys'),
   };
 
   class ManufacturingWorldProject extends SpecializationBase {
     constructor(config, name) {
       super(config, name, {
         pointsKey: 'manufacturingPoints',
-        pointsLabel: 'Manufacturing Points:',
+        pointsLabel: getManufacturingText('catalogs.specializations.manufacturing.pointsLabel'),
         pointsUnit: 'MP',
-        shopTitle: 'MP Shop',
-        shopTooltip: "Gain MP equal to max(1, log10(population)) when travelling from a completed Manufacturing World, then +10% per hazard on this world.  This represents the ability of humanity to slowly and partially catch up to HOPE's own manufacturing abilities.  These upgrades are for post-travel Manufacturing Worlds production only.",
+        shopTitle: getManufacturingText('catalogs.specializations.manufacturing.shopTitle'),
+        shopTooltip: getManufacturingText('catalogs.specializations.manufacturing.shopTooltip'),
         emptyShopText: '',
         shopItems: MANUFACTURING_SHOP_ITEMS,
         shopItemMap: MANUFACTURING_SHOP_ITEM_MAP,
@@ -176,7 +184,7 @@
       this.autoAssignFlags = {};
       this.autoAssignWeights = {};
       this.isRunning = false;
-      this.statusText = 'Idle';
+      this.statusText = getManufacturingText('catalogs.specializations.manufacturing.status.idle');
       this.lastInputRates = this.createEmptyInputRates();
       this.lastOutputRatesByRecipe = {};
       this.operationPreRunThisTick = false;
@@ -262,13 +270,22 @@
         return `${formatNumber(recipe.inputs[inputKey], true)} ${label}`;
       });
       const lines = [
-        `Produces: ${formatNumber(recipe.baseOutput, true)} ${recipe.label} (${outputLabel} storage).`,
-        `Consumes: ${inputParts.join(', ')}.`,
+        getManufacturingText('catalogs.specializations.manufacturing.tooltip.produces', {
+          amount: formatNumber(recipe.baseOutput, true),
+          label: recipe.label,
+          storage: outputLabel,
+        }),
+        getManufacturingText('catalogs.specializations.manufacturing.tooltip.consumes', {
+          inputs: inputParts.join(', '),
+        }),
       ];
       if (recipe.wgcUpgradeId) {
         const wgcMultiplier = this.getRecipeWgcMultiplier(key);
         const bonusPercent = Math.max(0, (wgcMultiplier - 1) * 100);
-        lines.push(`WGC output bonus: x${formatNumber(wgcMultiplier, true, 3)} (+${formatNumber(bonusPercent, true, 2)}%).`);
+        lines.push(getManufacturingText('catalogs.specializations.manufacturing.tooltip.wgcBonus', {
+          multiplier: formatNumber(wgcMultiplier, true, 3),
+          percent: formatNumber(bonusPercent, true, 2),
+        }));
       }
       return lines.join('\n');
     }
@@ -280,12 +297,12 @@
       return [
         {
           id: 'terraformed',
-          label: 'World is fully terraformed',
+          label: getManufacturingText('catalogs.specializations.manufacturing.requirements.terraformed'),
           met: spaceManager.isCurrentWorldTerraformed(),
         },
         {
           id: 'otherSpecialization',
-          label: 'No other specialization started or completed',
+          label: getManufacturingText('catalogs.specializations.manufacturing.requirements.otherSpecialization'),
           met: !holyWorldBlocked
             && !foundry.isActive
             && !foundry.isCompleted
@@ -297,7 +314,7 @@
 
     getSpecializationLockedText() {
       if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-        return 'Blocked by Holy World';
+        return getManufacturingText('catalogs.specializations.manufacturing.lockedByHolyWorld');
       }
       return super.getSpecializationLockedText();
     }
@@ -457,13 +474,13 @@
       this.isRunning = next;
       if (!next) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
-        this.updateStatus('Run disabled');
+        this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
       }
       this.updateUI();
     }
 
     updateStatus(text) {
-      this.statusText = text || 'Idle';
+      this.statusText = text || getManufacturingText('catalogs.specializations.manufacturing.status.idle');
     }
 
     syncAssignmentRowHeights() {
@@ -576,9 +593,9 @@
       if (!this.shouldOperate()) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
         if (!this.isRunning) {
-          this.updateStatus('Run disabled');
+          this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
         } else {
-          this.updateStatus('No cumulative population');
+          this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.noCumulativePopulation'));
         }
         this.shortfallLastTick = false;
         return;
@@ -587,7 +604,7 @@
       const seconds = deltaTime / 1000;
       if (!(seconds > 0)) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
-        this.updateStatus('Idle');
+        this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.idle'));
         this.shortfallLastTick = false;
         return;
       }
@@ -595,7 +612,7 @@
       const storage = this.getSpaceStorageProject();
       if (!storage) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
-        this.updateStatus('Build space storage');
+        this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.buildSpaceStorage'));
         this.shortfallLastTick = true;
         return;
       }
@@ -633,7 +650,7 @@
 
       if (entries.length === 0) {
         this.setLastRunStats({ metal: 0, silicon: 0 }, {});
-        this.updateStatus('No assignments');
+        this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.noAssignments'));
         this.shortfallLastTick = false;
         return;
       }
@@ -709,11 +726,11 @@
       this.setLastRunStats(inputRates, outputRates);
 
       if (totalOutput > 0) {
-        this.updateStatus('Running');
+        this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.running'));
       } else if (hasInputShortfall) {
-        this.updateStatus('Insufficient input in space storage');
+        this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.insufficientInput'));
       } else {
-        this.updateStatus('Idle');
+        this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.idle'));
       }
       this.shortfallLastTick = hasInputShortfall;
     }
@@ -850,15 +867,13 @@
       header.classList.add('card-header');
       const title = document.createElement('span');
       title.classList.add('card-title');
-      title.textContent = 'Manufacturing Controls';
+      title.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.controlsTitle');
       const info = document.createElement('span');
       info.classList.add('info-tooltip-icon');
       info.innerHTML = '&#9432;';
       attachDynamicInfoTooltip(
         info,
-        'Assign cumulative manufacturing population to recipes. Output uses (Assigned x Output / Complexity). '
-        + 'Each assigned worker also consumes a flat 1e-6 space hydrogen/s, unaffected by manufacturing multipliers. '
-        + 'WGC bonuses apply to eligible outputs.'
+        getManufacturingText('catalogs.specializations.manufacturing.ui.controlsTooltip')
       );
       header.append(title, info);
       card.appendChild(header);
@@ -882,9 +897,9 @@
         return value;
       };
 
-      const cumulativeValue = createStatBox('Cumulative Population');
-      const assignedValue = createStatBox('Assigned');
-      const freeValue = createStatBox('Unassigned');
+      const cumulativeValue = createStatBox(getManufacturingText('catalogs.specializations.manufacturing.ui.summary.cumulativePopulation'));
+      const assignedValue = createStatBox(getManufacturingText('catalogs.specializations.manufacturing.ui.summary.assigned'));
+      const freeValue = createStatBox(getManufacturingText('catalogs.specializations.manufacturing.ui.summary.unassigned'));
       body.appendChild(summaryGrid);
 
       const controlsGrid = document.createElement('div');
@@ -897,7 +912,7 @@
       runCheckbox.id = `${this.name}-run`;
       const runLabel = document.createElement('label');
       runLabel.htmlFor = runCheckbox.id;
-      runLabel.textContent = 'Run manufacturing';
+      runLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.runManufacturing');
       runField.append(runCheckbox, runLabel);
       controlsGrid.appendChild(runField);
 
@@ -905,7 +920,7 @@
       statusField.classList.add('stat-item');
       const statusLabel = document.createElement('span');
       statusLabel.classList.add('stat-label');
-      statusLabel.textContent = 'Status';
+      statusLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.status');
       const statusValue = document.createElement('span');
       statusValue.classList.add('stat-value');
       statusField.append(statusLabel, statusValue);
@@ -915,7 +930,7 @@
       inputField.classList.add('stat-item');
       const inputLabel = document.createElement('span');
       inputLabel.classList.add('stat-label');
-      inputLabel.textContent = 'Input Use';
+      inputLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.inputUse');
       const inputValue = document.createElement('span');
       inputValue.classList.add('stat-value');
       inputField.append(inputLabel, inputValue);
@@ -951,13 +966,13 @@
       blockAHeader.classList.add('manufacturing-block-header', 'manufacturing-block-grid-a');
       const blockAHeaderResource = document.createElement('span');
       blockAHeaderResource.classList.add('stat-label');
-      blockAHeaderResource.textContent = 'Resource';
+      blockAHeaderResource.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.headers.resource');
       const blockAHeaderComplexity = document.createElement('span');
       blockAHeaderComplexity.classList.add('stat-label');
-      blockAHeaderComplexity.textContent = 'Complexity';
+      blockAHeaderComplexity.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.headers.complexity');
       const blockAHeaderUnit = document.createElement('span');
       blockAHeaderUnit.classList.add('stat-label');
-      blockAHeaderUnit.textContent = 'Unit Production';
+      blockAHeaderUnit.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.headers.unitProduction');
       blockAHeader.append(blockAHeaderResource, blockAHeaderComplexity, blockAHeaderUnit);
       const blockABody = document.createElement('div');
       blockABody.classList.add('manufacturing-block-body');
@@ -969,7 +984,7 @@
       blockBHeader.classList.add('manufacturing-block-header', 'manufacturing-block-grid-b');
       const blockBHeaderAssigned = document.createElement('span');
       blockBHeaderAssigned.classList.add('stat-label');
-      blockBHeaderAssigned.textContent = 'Assigned';
+      blockBHeaderAssigned.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.headers.assigned');
       const blockBHeaderControls = document.createElement('div');
       blockBHeaderControls.classList.add('manufacturing-header-step-controls');
       blockBHeaderControls.appendChild(stepButtons);
@@ -984,10 +999,10 @@
       blockCHeader.classList.add('manufacturing-block-header', 'manufacturing-block-grid-c');
       const blockCHeaderWeight = document.createElement('span');
       blockCHeaderWeight.classList.add('stat-label');
-      blockCHeaderWeight.textContent = 'Weight';
+      blockCHeaderWeight.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.headers.weight');
       const blockCHeaderRate = document.createElement('span');
       blockCHeaderRate.classList.add('stat-label');
-      blockCHeaderRate.textContent = 'Rate';
+      blockCHeaderRate.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.headers.rate');
       blockCHeader.append(blockCHeaderWeight, blockCHeaderRate);
       const blockCBody = document.createElement('div');
       blockCBody.classList.add('manufacturing-block-body');
@@ -1071,7 +1086,7 @@
           this.setAutoAssignTarget(key, autoAssign.checked);
         });
         const autoAssignLabel = document.createElement('span');
-        autoAssignLabel.textContent = 'Auto';
+        autoAssignLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.auto');
         autoAssignLabel.addEventListener('click', () => {
           autoAssign.checked = !autoAssign.checked;
           this.setAutoAssignTarget(key, autoAssign.checked);
@@ -1184,7 +1199,9 @@
           this.shopElements.itemsContainer.style.display = collapsed ? 'none' : '';
         }
         if (this.shopElements.collapseButton) {
-          this.shopElements.collapseButton.textContent = collapsed ? 'Show Shop' : 'Hide Shop';
+          this.shopElements.collapseButton.textContent = collapsed
+            ? getManufacturingText('catalogs.specializations.manufacturing.ui.showShop')
+            : getManufacturingText('catalogs.specializations.manufacturing.ui.hideShop');
         }
       }
 
@@ -1202,7 +1219,7 @@
       elements.cumulativeValue.textContent = formatNumber(this.cumulativePopulation, true, 2);
       elements.assignedValue.textContent = formatNumber(assigned, true, 2);
       elements.freeValue.textContent = formatNumber(available, true);
-      elements.statusValue.textContent = this.statusText || 'Idle';
+      elements.statusValue.textContent = this.statusText || getManufacturingText('catalogs.specializations.manufacturing.status.idle');
       elements.inputValue.textContent = MANUFACTURING_INPUT_KEYS.map((inputKey) => {
         const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
         return `${formatNumber(this.lastInputRates[inputKey] || 0, true, 3)} ${label}/s`;
@@ -1315,7 +1332,9 @@
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
       this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
       this.setLastRunStats({ metal: 0, silicon: 0 }, {});
-      this.updateStatus(this.isRunning ? 'Idle' : 'Run disabled');
+      this.updateStatus(this.isRunning
+        ? getManufacturingText('catalogs.specializations.manufacturing.status.idle')
+        : getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
       this.normalizeAssignments();
     }
 
@@ -1340,7 +1359,9 @@
       this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
       this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
       this.setLastRunStats({ metal: 0, silicon: 0 }, {});
-      this.updateStatus(this.isRunning ? 'Idle' : 'Run disabled');
+      this.updateStatus(this.isRunning
+        ? getManufacturingText('catalogs.specializations.manufacturing.status.idle')
+        : getManufacturingText('catalogs.specializations.manufacturing.status.runDisabled'));
       this.normalizeAssignments();
     }
   }

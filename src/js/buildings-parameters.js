@@ -1,8 +1,8 @@
 const buildingsParameters = {
   oreMine: {
-    name: 'Ore Mine',
+    name: '',
     category: 'resource',
-    description: 'Extracts minerals from the ground to produce metal, requires energy and minerals to operate. Requires a free ore deposit.',
+    description: '',
     cost: { colony: { metal: 50, components: 10 } },
     consumption: { colony: { energy: 50000 } },
     production: { colony: { metal: 1 } },
@@ -17,9 +17,9 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   foundry: {
-    name: 'Foundry',
+    name: '',
     category: 'resource',
-    description: 'Refines the molten crust into usable metal and silica. Requires workers.',
+    description: '',
     cost: { colony: { metal: 100, components: 50 } },
     consumption: { colony: { energy: 50000 } },
     production: { colony: { metal: 10, silicon: 20 } },
@@ -33,9 +33,9 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   sandQuarry: {
-    name: 'Sand Quarry',
+    name: '',
     category: 'resource',
-    description: 'Digs through regolith to extract silica.',
+    description: '',
     cost: { colony: { metal: 50, components: 5 } },
     consumption: { colony: { energy: 50000 } },
     production: { colony: { silicon: 1 } },
@@ -49,9 +49,9 @@ const buildingsParameters = {
     unlocked: false
   },
   iceHarvester: {
-    name: 'Ice Harvesters',
+    name: '',
     category: 'resource',
-    description: 'Drones that roam the surface looking for ice. Self sufficient, but require heavy maintenance and only work during the day.',
+    description: '',
     cost: { colony: { metal: 10, electronics: 1 } },
     consumption: { colony : {energy : 10000}, surface: { ice: 1 } },
     production: { colony: { water: 1 } },
@@ -64,9 +64,9 @@ const buildingsParameters = {
     unlocked: false
   },
   waterPump: {
-    name: 'Water Pump',
+    name: '',
     category: 'resource',
-    description: 'A pump for liquid water.  Requires liquid water to actually exist.',
+    description: '',
     cost: { colony: { metal: 10, components: 1 } },
     consumption: { colony : {energy : 10000}, surface: {liquidWater: 1000 } },
     production: { colony: { water: 1000 } },
@@ -79,9 +79,9 @@ const buildingsParameters = {
     unlocked: false
   },
   atmosphericWaterCollector: {
-    name: 'Vapor Collector',
+    name: '',
     category: 'resource',
-    description: 'Condenses atmospheric moisture when little surface water remains.',
+    description: '',
     cost: { colony: { components: 10, electronics: 1 } },
     consumption: { atmospheric: { atmosphericWater: 1 } },
     production: { colony: { water: 1 } },
@@ -94,9 +94,9 @@ const buildingsParameters = {
     unlocked: false
   },
   glassSmelter: {
-    name: 'Glass Smelter',
+    name: '',
     category: 'production',
-    description: 'Uses high heat to turn silicon into glass.',
+    description: '',
     cost: { colony: { metal: 100, components: 5 } },
     consumption: { colony: { energy: 100000, silicon: 1} },
     production: { colony: { glass: 1 } },
@@ -111,9 +111,9 @@ const buildingsParameters = {
     unlocked: false
   },
   hydroponicFarm: {
-    name: 'Hydroponic Farm',
+    name: '',
     category: 'production',
-    description: 'Botanists work hard to grow potatoes using local soil.  Water is provided by colonies, and recovered when the food is consumed.',
+    description: '',
     cost: { colony: { glass: 50} },
     consumption: { colony: { energy: 500000} },
     production: { colony: { food: 5 } },
@@ -126,9 +126,9 @@ const buildingsParameters = {
     unlocked: false
   },
   componentFactory: {
-    name: 'Component Factory',
+    name: '',
     category: 'production',
-    description: 'Turns metals into valuable machine components. Requires workers.',
+    description: '',
     cost: { colony: { metal: 1000, components: 100, electronics: 50} },
     consumption: { colony: { energy: 25000000, metal: 5} },
     production: { colony: { components: 1 } },
@@ -141,9 +141,9 @@ const buildingsParameters = {
     unlocked: false
   },
   electronicsFactory: {
-    name: 'Electronics Factory',
+    name: '',
     category: 'production',
-    description: 'Turns metals and silicon into electronics.  Requires workers.',
+    description: '',
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 50_000_000, metal: 1, silicon: 4} },
     production: { colony: { electronics: 1 } },
@@ -156,9 +156,9 @@ const buildingsParameters = {
     unlocked: false
   },
   grapheneFactory: {
-    name: 'Graphene Factory',
+    name: '',
     category: 'production',
-    description: 'Refines surface graphite into graphene using intense energy.  Graphene can be used as a metal substitute.',
+    description: '',
     cost: { colony: { metal: 1500, glass: 500, components: 150, electronics: 75 } },
     consumption: { colony: { energy: 40_000_000 }, surface: { graphite: 10 } },
     production: { colony: { metal: 10 } },
@@ -171,9 +171,9 @@ const buildingsParameters = {
     unlocked: false
   },
   superconductorFactory: {
-    name: 'Superconductor Factory',
+    name: '',
     category: 'production',
-    description: 'Produces superconductors from metal.  Requires workers.',
+    description: '',
     cost: { colony: { metal: 1000, glass : 1000, components: 1000, electronics: 500} },
     consumption: { colony: { energy: 100_000_00, metal: 5} },
     production: { colony: { superconductors: 1 } },
@@ -187,9 +187,9 @@ const buildingsParameters = {
     unlocked: false
   },
   superalloyFoundry: {
-    name: 'Superalloy Foundry',
+    name: '',
     category: 'production',
-    description: 'Uses extreme energy and metal to forge advanced superalloys.',
+    description: '',
     cost: { colony: { metal: 10000, glass: 10000, components: 10000, electronics: 5000, superconductors: 1000 } },
     consumption: { colony: { energy: 100_000_000_000, metal: 10 } },
     production: { colony: { superalloys: 0.01 } },
@@ -202,9 +202,9 @@ const buildingsParameters = {
     unlocked: false
   },
   androidFactory: {
-    name: 'Androids Factory',
+    name: '',
     category: 'production',
-    description: 'Produces androids.  Difficult and takes a lot of manufacturing operations, but can act as a worker and requires little consumer goods.  ',
+    description: '',
     cost: { colony: { metal: 500, glass : 200, components: 100, electronics: 50} },
     consumption: { colony: { energy: 100_000_000, metal: 0.4, electronics: 0.1} },
     production: { colony: { androids: 0.1 } },
@@ -217,9 +217,9 @@ const buildingsParameters = {
     unlocked: false
   },
   shipyard: {
-    name: 'Shipyard',
+    name: '',
     category: 'production',
-    description: 'Produces spaceships that can be used for various space missions.  ',
+    description: '',
     cost: { colony: { metal: 1000, components: 10, electronics: 10} },
     consumption: { colony: { energy: 100_000_000, metal: 5, components: 1, electronics: 0.1} },
     production: { special: { spaceships: 0.001 } },
@@ -232,9 +232,9 @@ const buildingsParameters = {
     unlocked: false,
   },
   cloningFacility: {
-    name: 'Cloning Facility',
+    name: '',
     category: 'production',
-    description: 'Consumes energy to grow and educate new colonists.',
+    description: '',
     cost: { colony: { metal: 1000, glass: 10, components: 100, electronics: 50 } },
     consumption: { colony: { energy: 100_000_000 } },
     production: { colony: { colonists: 0.1 } },
@@ -247,9 +247,9 @@ const buildingsParameters = {
     unlocked: false,
   },
   solarPanel: {
-    name: 'Solar Panel Array',
+    name: '',
     category: 'energy',
-    description: 'Generates energy during the day using sunlight, but is inactive during nighttime.',
+    description: '',
     cost: { colony: { metal: 10, glass: 10, electronics: 0.1 } },
     consumption: {},
     production: { colony: { energy: 300000 } },
@@ -263,9 +263,9 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   windTurbine: {
-    name: 'Wind Turbine Array',
+    name: '',
     category: 'energy',
-    description: 'Produces energy consistently, unaffected by the day or night cycle, harnessing wind power.',
+    description: '',
     cost: { colony: { metal: 25, components: 5 } },
     consumption: {},
     production: { colony: { energy: 400000 } },
@@ -279,9 +279,9 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   geothermalGenerator: {
-    name: 'Geothermal Generator',
+    name: '',
     category: 'energy',
-    description: 'Generates consistent energy by harnessing heat from geothermal vents. Requires a free geothermal vent deposit to build. Requires water to function and minimal maintenance.',
+    description: '',
     cost: { colony: { metal: 100, components: 20 } },
     consumption: { colony: { water: 0.1 } },
     production: { colony: { energy: 10000000 }, atmospheric: {atmosphericWater: 0.1} },
@@ -296,9 +296,9 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   hydrocarbonGenerator: {
-    name: 'Methane Flare',
+    name: '',
     category: 'energy',
-    description: 'Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide.',
+    description: '',
     cost: { colony: { metal: 10, components: 1} },
     consumption: { atmospheric: { atmosphericMethane: 5, oxygen: 19.95 } },
     production: {
@@ -314,9 +314,9 @@ const buildingsParameters = {
     unlocked: false
   },
   nuclearPowerPlant: {
-    name: 'Nuclear Power Plant',
+    name: '',
     category: 'energy',
-    description: 'Harnesses the power of the atom to generate energy.  Consumes water.',
+    description: '',
     cost: { colony: { metal: 10000, components: 500, electronics : 500 } },
     consumption: { colony: { metal: 0.5, water: 50 } },
     production: { colony: { energy: 500_000_000 }, surface : {radioactiveWaste : 0.5}, atmospheric: {atmosphericWater: 50} },
@@ -330,9 +330,9 @@ const buildingsParameters = {
     unlocked: false
   },
   dysonReceiver: {
-    name: 'Dyson Receiver',
+    name: '',
     category: 'energy',
-    description: 'Receives beamed energy from space.',
+    description: '',
     cost: { colony: { metal: 100000, electronics : 1000 } },
     consumption: { space: { energy: 100_000_000_000 } },
     production: { colony: { energy: 100_000_000_000 }},
@@ -348,9 +348,9 @@ const buildingsParameters = {
     kesslerDebrisSize: 'large'
   },
   fusionPowerPlant: {
-    name: 'Fusion Reactor',
+    name: '',
     category: 'energy',
-    description: 'Produces energy from almost nothing.',
+    description: '',
     cost: { colony: { metal: 50000, components: 1000, electronics : 1000, superconductors : 500 } },
     consumption: { colony: { water: 0.1 } },
     production: { colony: { energy: 5_000_000_000 }},
@@ -366,12 +366,12 @@ const buildingsParameters = {
     defaultRecipe: 'water',
     recipes: {
       water: {
-        shortName: 'Water -> Energy',
+        shortName: '',
         consumption: { colony: { water: 0.1 } },
         production: { colony: { energy: 5_000_000_000 } }
       },
       hydrogen: {
-        shortName: 'Hydrogen -> Energy',
+        shortName: '',
         requiresBuildingFlag: 'hydrogenFusionRecipe',
         consumption: { atmospheric: { hydrogen: 0.1 } },
         production: { colony: { energy: 5_000_000_000 } }
@@ -379,9 +379,9 @@ const buildingsParameters = {
     }
   },
   superalloyFusionReactor: {
-    name: 'Superalloy Fusion Reactor',
+    name: '',
     category: 'energy',
-    description: 'Enormous fusion plant using superalloys for containment.',
+    description: '',
     cost: { colony: { metal: 500000, components: 10000, electronics: 10000, superconductors: 5000, superalloys: 25000 } },
     consumption: { colony: { water: 1 } },
     production: { colony: { energy: 500_000_000_000 } },
@@ -397,12 +397,12 @@ const buildingsParameters = {
     defaultRecipe: 'water',
     recipes: {
       water: {
-        shortName: 'Water -> Energy',
+        shortName: '',
         consumption: { colony: { water: 1 } },
         production: { colony: { energy: 500_000_000_000 } }
       },
       hydrogen: {
-        shortName: 'Hydrogen -> Energy',
+        shortName: '',
         requiresBuildingFlag: 'hydrogenFusionRecipe',
         consumption: { atmospheric: { hydrogen: 1 } },
         production: { colony: { energy: 500_000_000_000 } }
@@ -410,9 +410,9 @@ const buildingsParameters = {
     }
   },
   antimatterFarm: {
-    name: 'Antimatter Farm',
+    name: '',
     category: 'energy',
-    description: 'Harvests microscopic antimatter using staggering amounts of power.',
+    description: '',
     cost: { colony: { metal: 10000, components: 1000, superconductors: 1000, electronics: 100 } },
     consumption: { colony: { energy: 2_000_000_000_000_000 } },
     production: { special: { antimatter: 1 } },
@@ -427,12 +427,12 @@ const buildingsParameters = {
     defaultRecipe: 'antimatter',
     recipes: {
       antimatter: {
-        shortName: 'Energy -> Antimatter',
+        shortName: '',
         consumption: { colony: { energy: 2_000_000_000_000_000 } },
         production: { special: { antimatter: 1 } }
       },
       spaceEnergy: {
-        shortName: 'Colony -> Space Energy',
+        shortName: '',
         requiresBuildingFlag: 'spaceEnergyTransferRecipe',
         consumption: { colony: { energy: 2_000_000_000_000_000 } },
         production: { space: { energy: 2_000_000_000_000_000 } }
@@ -440,9 +440,9 @@ const buildingsParameters = {
     }
   },
   battery: {
-    name: 'Battery',
+    name: '',
     category: 'storage',
-    description: 'Stores energy generated by renewable sources to ensure uninterrupted power supply.  Requires low maintenance.',
+    description: '',
     cost: { colony: { metal: 100} },
     consumption: {},
     production: {},
@@ -459,9 +459,9 @@ const buildingsParameters = {
     autoBuildFillPercent: 95
   },
   storageDepot: {
-    name: 'Storage Depot',
+    name: '',
     category: 'storage',
-    description: 'A facility for storing large quantities of essential resources like metal and food.',
+    description: '',
     cost: { colony: { metal: 100 } },
     consumption: {},
     production: {},
@@ -493,7 +493,7 @@ const buildingsParameters = {
     defaultRecipe: 'standard',
     recipes: {
       standard: {
-        shortName: 'Standard Storage',
+        shortName: '',
         storage: {
           colony: {
             metal: 5000,
@@ -508,7 +508,7 @@ const buildingsParameters = {
         }
       },
       warp: {
-        shortName: 'Warp Storage',
+        shortName: '',
         requiresBuildingFlag: 'warpStorageRecipe',
         consumption: { colony: { energy: 1_000_000 } },
         storage: {
@@ -527,9 +527,9 @@ const buildingsParameters = {
     }
   },
   waterTank: {
-    name: 'Water Tank',
+    name: '',
     category: 'storage',
-    description: 'Dedicated reservoir that preserves large water reserves with minimal upkeep.',
+    description: '',
     cost: { colony: { metal: 100 } },
     consumption: {},
     production: {},
@@ -546,9 +546,9 @@ const buildingsParameters = {
     autoBuildFillPercent: 95
   },
   hydrogenBattery: {
-    name: 'Hydrogen Battery',
+    name: '',
     category: 'storage',
-    description: 'Stores energy in the form of hydrogen.',
+    description: '',
     cost: { colony: { metal: 100, water: 100} },
     consumption: {},
     production: {},
@@ -565,9 +565,9 @@ const buildingsParameters = {
     autoBuildFillPercent: 95
   },
   antimatterBattery: {
-    name: 'Antimatter Battery',
+    name: '',
     category: 'storage',
-    description: 'Stores staggering amounts of energy by containing antimatter safely.',
+    description: '',
     cost: { colony: { metal: 1000, superconductors: 100 } },
     consumption: {},
     production: {},
@@ -584,9 +584,9 @@ const buildingsParameters = {
     autoBuildFillPercent: 95
   },
   androidHousing: {
-    name: 'Android Housing',
+    name: '',
     category: 'storage',
-    description: 'Recharges and stores androids.',
+    description: '',
     cost: { colony: { metal: 100, components : 1} },
     consumption: {colony : {energy : 1000000}},
     production: {},
@@ -600,9 +600,9 @@ const buildingsParameters = {
     requiresLand: 10
   },  
     dustFactory: {
-    name: 'Black Dust Factory',
+    name: '',
     category: 'terraforming',
-    description: 'Generates large amount of black dust and spreads it over the surface.  May need millions to have any meaningful effect.',
+    description: '',
     cost: { colony: { metal: 10, components: 2 } },
     consumption: { colony: { energy: 500000 } },
     production: { special: { albedoUpgrades: 100 } },
@@ -618,21 +618,21 @@ const buildingsParameters = {
     defaultRecipe: 'black',
     recipes: {
       black: {
-        displayName: 'Black Dust Factory',
+        displayName: '',
         production: { special: { albedoUpgrades: 100 } },
         reverseTarget: { category: 'special', resource: 'albedoUpgrades' }
       },
       white: {
-        displayName: 'White Dust Factory',
+        displayName: '',
         production: { special: { whiteDust: 100 } },
         reverseTarget: { category: 'special', resource: 'whiteDust' }
       }
     }
   },
   spaceMirror: {
-    name: 'Space Mirror',
+    name: '',
     category: 'terraforming',
-    description: 'Expands the space mirror facility.  Increases the effective luminosity.  Will cost only glass and energy after the space elevator is built.  May need billions to have any meaningful effect.',
+    description: '',
     cost: { colony: { metal: 10, glass:10, energy:500000 } },
     consumption : {},
     production: {},
@@ -648,9 +648,9 @@ const buildingsParameters = {
     kesslerDebrisSize: 'small'
   },
   hyperionLantern: {
-    name: 'Hyperion Lantern',
+    name: '',
     category: 'terraforming',
-    description: 'Orbital array that beams artificial sunlight onto the planet.  Controlled by Space Mirror Facility.',
+    description: '',
     cost: { colony: { metal: 1e6, glass: 1e6, electronics: 1e6, components: 1e6 } },
     consumption: { colony: { energy: 1e12 } },
     production: {},
@@ -666,9 +666,9 @@ const buildingsParameters = {
     kesslerDebrisSize: 'large'
   },
   ghgFactory: {
-    name: 'Greenhouse Gas factory',
+    name: '',
     category: 'terraforming',
-    description: 'Produces very potent, safe greenhouse gases.',
+    description: '',
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 10000000} },
     production: { atmospheric: { greenhouseGas: 5 } },
@@ -684,21 +684,21 @@ const buildingsParameters = {
     defaultRecipe: 'ghg',
     recipes: {
       ghg: {
-        displayName: 'Greenhouse Gas factory',
+        displayName: '',
         production: { atmospheric: { greenhouseGas: 5 } },
         reverseTarget: { category: 'atmospheric', resource: 'greenhouseGas' }
       },
       calcite: {
-        displayName: 'Calcite Aerosol Factory',
+        displayName: '',
         production: { atmospheric: { calciteAerosol: 5 } },
         reverseTarget: { category: 'atmospheric', resource: 'calciteAerosol' }
       }
     }
   },
   oxygenFactory: {
-    name: 'Oxygen Factory',
+    name: '',
     category: 'terraforming',
-    description: 'Extracts oxygen from liquid water via electrolysis or uses a lot of energy to liberate oxygen from rocks.',
+    description: '',
     cost: { colony: { metal: 1000, glass : 10, components: 10, electronics: 10} },
     consumption: { colony: { energy: 24000000, water: 100 } },
     production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } },
@@ -712,17 +712,17 @@ const buildingsParameters = {
     defaultRecipe: 'water',
     recipes: {
       water: {
-        shortName: 'Water -> Oxygen',
+        shortName: '',
         consumption: { colony: { energy: 24000000, water: 100 } },
         production: { atmospheric: { oxygen: 88.89, hydrogen: 11.11 } }
       },
       silicates: {
-        shortName: 'Silicates -> Oxygen',
+        shortName: '',
         consumption: { colony: { silicon : 100,energy: 150_000_000} },
         production: { atmospheric: { oxygen: 53.24 } }
       },
       rocks: {
-        shortName: 'Rocks -> Oxygen',
+        shortName: '',
         consumption: { colony: { energy: 200_000_000} },
         production: { atmospheric: { oxygen: 50 } },
         artificialAllowed: false
@@ -730,9 +730,9 @@ const buildingsParameters = {
     }
   },
   boschReactor: {
-    name: 'Chemical Reactor',
+    name: '',
     category: 'terraforming',
-    description: 'Configurable reactors that combine imported hydrogen with atmospheric resources to synthesize vital compounds.',
+    description: '',
     cost: { colony: { metal: 100, glass : 10, components: 2, electronics: 1 } },
     consumption: {
       colony: { energy: 100_000 }
@@ -749,7 +749,7 @@ const buildingsParameters = {
     defaultRecipe: 'recipe1',
     recipes: {
       recipe1: {
-        shortName: 'Bosch Reaction',
+        shortName: '',
         consumption: {
           colony: { energy: 100_000 },
           atmospheric: { carbonDioxide: 100, hydrogen: 9.09 }
@@ -757,7 +757,7 @@ const buildingsParameters = {
         production: { colony: { water: 81.82 }, surface: { graphite: 27.27 } }
       },
       recipe2: {
-        shortName: 'Water Synthesis',
+        shortName: '',
         consumption: {
           colony: { energy: 100_000 },
           atmospheric: { oxygen: 72.73, hydrogen: 9.09 }
@@ -765,7 +765,7 @@ const buildingsParameters = {
         production: { colony: { water: 81.82 } }
       },
       recipe3: {
-        shortName: 'Methane Synthesis',
+        shortName: '',
         consumption: {
           colony: { energy: 100_000 },
           atmospheric: { carbonDioxide: 100, hydrogen: 18.18 }
@@ -776,7 +776,7 @@ const buildingsParameters = {
         }
       },
       haberBosch: {
-        shortName: 'Haber-Bosch',
+        shortName: '',
         requiresBuildingFlag: 'gabbagAmmoniaChemistry',
         consumption: {
           colony: { energy: 100_000 },
@@ -785,7 +785,7 @@ const buildingsParameters = {
         production: { atmospheric: { atmosphericAmmonia: 121.43 } }
       },
       ammoniaCombustion: {
-        shortName: 'Ammonia Combustion',
+        shortName: '',
         requiresBuildingFlag: 'gabbagAmmoniaChemistry',
         consumption: {
           colony: { energy: 100_000 },
@@ -798,9 +798,9 @@ const buildingsParameters = {
     }
   },
   massDriver: {
-    name: 'Mass Driver',
+    name: '',
     category: 'terraforming',
-    description: 'Electromagnetic launcher capable of sending vast amount of mass every day through the Resource Disposal project.',
+    description: '',
     cost: { colony: { metal: 10000, components: 50, superconductors:50 } },
     consumption: {},
     production: {},
@@ -813,9 +813,9 @@ const buildingsParameters = {
     unlocked: false
   },
   biodome:{
-    name: 'Biodome',
+    name: '',
     category: 'terraforming',
-    description: 'Produces life using the active life metabolism inputs and artificial light, pulling any water input from colony water.  Requires an active life design that can survive somewhere to function.  Also produces life design points regardless.  Biodome land coverage sets a minimum Ecumenopolis life-land multiplier.',
+    description: '',
     cost: {colony: {metal: 50, glass: 500, components: 10, electronics: 10}},
     consumption: {colony: {energy: { amount: 10000000, ignoreProductivity: true }, water: 0.1}, atmospheric : {carbonDioxide : 0.244}},
     production: {atmospheric: {oxygen : 0.177388}, surface: {biomass : 0.166612}},
@@ -829,9 +829,9 @@ const buildingsParameters = {
     requiresLand: 100
   },
   scrapRecycler: {
-    name: 'Scrap Recycler',
+    name: '',
     category: 'waste',
-    description: 'Recycles scrap metal into usable metal using energy.',
+    description: '',
     cost: { colony: { metal: 300, components: 30 } },
     consumption: { colony: { energy: 5_000_000 }, surface: { scrapMetal: 50 } },
     production: { colony: { metal: 50 } },
@@ -849,9 +849,9 @@ const buildingsParameters = {
     unlocked: false
   },
   garbageSorter: {
-    name: 'Garbage Sorter',
+    name: '',
     category: 'waste',
-    description: 'Sorts garbage into trash, junk, and scrap metal for further processing.',
+    description: '',
     cost: { colony: { metal: 100, components: 10 } },
     consumption: { colony: { energy: 1000000 }, surface: { garbage: 100 } },
     production: { surface: { trash: 33.33, junk: 33.33, scrapMetal: 33.34 } },
@@ -869,21 +869,21 @@ const buildingsParameters = {
     unlocked: false
   },
   trashIncinerator: {
-    name: 'Trash Incinerator',
+    name: '',
     category: 'waste',
-    description: 'Burns trash using oxygen to produce carbon dioxide.  Suitable for trash and hazardous biomass.  Not suitable for friendly biomass and the companion satellite.',
+    description: '',
     cost: { colony: { metal: 200, components: 20 } },
     consumption: { colony: { energy: 500000 }, surface: { trash: 100 }, atmospheric: { oxygen: 106.67 } },
     production: { atmospheric: { carbonDioxide: 146.67 } },
     defaultRecipe: 'trash',
     recipes: {
       trash: {
-        shortName: 'Trash',
+        shortName: '',
         consumption: { colony: { energy: 500000 }, surface: { trash: 100 }, atmospheric: { oxygen: 106.67 } },
         production: { atmospheric: { carbonDioxide: 146.67 } }
       },
       hazardousBiomass: {
-        shortName: 'Hazardous Biomass',
+        shortName: '',
         requiresBuildingFlag: 'hazardousBiomassIncineration',
         disabledByBuildingFlag: 'disableHazardousBiomassIncineratorRecipe',
         consumption: { colony: { energy: 50000 }, surface: { hazardousBiomass: 10 }, atmospheric: { oxygen: 10.667 }, special : {spaceships : 0.001} },
@@ -904,9 +904,9 @@ const buildingsParameters = {
     unlocked: false
   },
   junkRecycler: {
-    name: 'Junk Recycler',
+    name: '',
     category: 'waste',
-    description: 'Recycles junk into glass using energy.',
+    description: '',
     cost: { colony: { metal: 500, components: 50, electronics: 25 } },
     consumption: { colony: { energy: 10000000}, surface: { junk: 50 } },
     production: { colony: { glass: 50 }},
@@ -924,9 +924,9 @@ const buildingsParameters = {
     unlocked: false
   },
   radioactiveRecycler: {
-    name: 'Radioactive Recycler',
+    name: '',
     category: 'waste',
-    description: 'Processes radioactive waste with android labor to recover metal.  The androids are lost in the process.',
+    description: '',
     cost: { colony: { metal: 600, components: 60, electronics: 20 } },
     consumption: { colony: { androids: 10, energy: 100_000_000 }, surface: { radioactiveWaste: 10 } },
     production: { colony: { metal: 10 } },
@@ -943,9 +943,9 @@ const buildingsParameters = {
     unlocked: false
   },
   laserCannon: {
-    name: 'Laser Cannon',
+    name: '',
     category: 'waste',
-    description: 'Vaporizes or knocks away orbital debris with sustained laser fire, prioritizing the highest bins.',
+    description: '',
     cost: { colony: { metal: 5000, components: 200, electronics: 150, superconductors: 50 } },
     consumption: { colony: { energy: 1_000_000_000, research: 100 } },
     production: { special: { orbitalDebris: -1 } },

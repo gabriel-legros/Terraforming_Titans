@@ -1,10 +1,21 @@
+function getSandQuarryText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class SandQuarry extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
     this.automationCustomBasisOptions = [
       {
         value: 'sandQuarry:glassSmelterPlus4ElectronicsFactory',
-        label: '% of G.S. + 4*E.F.',
+        label: getSandQuarryText(
+          'ui.buildings.automationBasis.sandQuarryGlassAndElectronics',
+          '% of G.S. + 4*E.F.'
+        ),
       },
     ];
   }

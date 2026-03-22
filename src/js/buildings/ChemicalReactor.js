@@ -8,6 +8,14 @@ const DEFAULT_CHEM_REACTOR_AUTOMATION_SETTINGS = {
   resourceId: ''
 };
 
+function getChemicalReactorText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class ChemicalReactor extends MultiRecipesBuilding {
   _getDefaultAutomationUnit(resourceCategory, resourceId) {
     if (resourceCategory === 'atmospheric') {
@@ -60,7 +68,11 @@ class ChemicalReactor extends MultiRecipesBuilding {
       for (const resource in categoryResources) {
         const resourceData = resources[category][resource];
         const displayName = resourceData.displayName || resource;
-        const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+        const fallbackCategoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+        const categoryLabel = getChemicalReactorText(
+          `ui.buildings.chemicalReactor.categories.${category}`,
+          fallbackCategoryLabel
+        );
         options.push({
           category,
           resource,
@@ -74,13 +86,25 @@ class ChemicalReactor extends MultiRecipesBuilding {
   _getAutomationUnitOptions(resourceCategory, resourceId) {
     if (resourceCategory === 'atmospheric') {
       return [
-        { value: 'ton', label: 'ton' },
-        { value: 'Pa', label: 'Pa' },
-        { value: 'kPa', label: 'kPa' }
+        {
+          value: 'ton',
+          label: getChemicalReactorText('ui.buildings.chemicalReactor.units.ton', 'ton')
+        },
+        {
+          value: 'Pa',
+          label: getChemicalReactorText('ui.buildings.chemicalReactor.units.Pa', 'Pa')
+        },
+        {
+          value: 'kPa',
+          label: getChemicalReactorText('ui.buildings.chemicalReactor.units.kPa', 'kPa')
+        }
       ];
     }
     const unit = this._getDefaultAutomationUnit(resourceCategory, resourceId);
-    return [{ value: unit, label: unit }];
+    return [{
+      value: unit,
+      label: getChemicalReactorText(`ui.buildings.chemicalReactor.units.${unit}`, unit)
+    }];
   }
 
   _getAutomationCurrentValue(settings) {
@@ -176,7 +200,10 @@ class ChemicalReactor extends MultiRecipesBuilding {
     // Create a unique effect ID for this self-inflicted effect
     const effectId = 'chemistryOfScale_selfInflicted';
     const sourceId = 'chemistryOfScale';
-    const sourceName = 'Chemistry of Scale';
+    const sourceName = getChemicalReactorText(
+      'ui.buildings.chemicalReactor.chemistryOfScaleName',
+      'Chemistry of Scale'
+    );
 
     // Apply production multiplier
     this.addAndReplace({
@@ -218,17 +245,26 @@ class ChemicalReactor extends MultiRecipesBuilding {
 
     const label = document.createElement('label');
     label.htmlFor = checkbox.id;
-    label.textContent = 'Disable if';
+    label.textContent = getChemicalReactorText(
+      'ui.buildings.chemicalReactor.disableIf',
+      'Disable if'
+    );
     control.appendChild(label);
 
     const modeSelect = document.createElement('select');
     modeSelect.classList.add('chem-reactor-mode');
     const inputOption = document.createElement('option');
     inputOption.value = 'input';
-    inputOption.textContent = 'Input';
+    inputOption.textContent = getChemicalReactorText(
+      'ui.buildings.chemicalReactor.mode.input',
+      'Input'
+    );
     const outputOption = document.createElement('option');
     outputOption.value = 'output';
-    outputOption.textContent = 'Output';
+    outputOption.textContent = getChemicalReactorText(
+      'ui.buildings.chemicalReactor.mode.output',
+      'Output'
+    );
     modeSelect.appendChild(inputOption);
     modeSelect.appendChild(outputOption);
     control.appendChild(modeSelect);

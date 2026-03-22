@@ -1,10 +1,21 @@
+function getAndroidHousingText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class AndroidHousing extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
     this.automationCustomBasisOptions = (this.automationCustomBasisOptions || []).concat([
       {
         value: 'androidCapacityShare',
-        label: '% android capacity'
+        label: getAndroidHousingText(
+          'ui.buildings.automationBasis.androidCapacity',
+          '% android capacity'
+        )
       }
     ]);
   }

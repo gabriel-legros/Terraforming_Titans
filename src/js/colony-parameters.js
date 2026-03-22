@@ -1,8 +1,8 @@
 const colonyParameters = {
     aerostat_colony: {
-      name: 'Aerostat Colony',
+      name: '',
       category: 'Colony',
-      description: 'A floating habitat that avoids surface pressure and temperature extremes.',
+      description: '',
       cost: { colony: { metal: 85, components: 10, electronics: 5, water: 50, glass: 20 } },
       consumption: { colony: { energy: 50000, food: 1 } },
       production: { colony: { research: 1 } },
@@ -16,9 +16,9 @@ const colonyParameters = {
       requiresLand: 0
     },
     t1_colony: {
-      name: 'Research Outpost',
+      name: '',
       category: 'Colony',
-      description: 'A small, self-sufficient habitat that serves as a starting point for early settlers. This outpost provides basic amenities and supports a small crew of researchers.',
+      description: '',
       cost: { colony: { metal: 100, water : 50, glass : 100 } },
       consumption: {colony : {energy : 50000, food : 1}},
       production: {colony : {research : 1}},
@@ -32,9 +32,9 @@ const colonyParameters = {
       requiresLand : 1
     },
     t2_colony: {
-      name: 'Permanent Outpost',
+      name: '',
       category: 'Colony',
-      description: 'As the colony expands, this larger outpost offers improved facilities and can house a growing number of colonists.',
+      description: '',
       cost: { colony: { metal: 900, water : 500, glass : 900 } },
       consumption: {colony : {energy : 250000, food : 10}},
       production: {colony : {research : 10}},
@@ -49,9 +49,9 @@ const colonyParameters = {
     }
     ,
     t3_colony: {
-      name: 'Small Settlement',
+      name: '',
       category: 'Colony',
-      description: 'A well-developed outpost that represents a significant milestone in colonial growth. It provides a comfortable living environment and supports a thriving community of colonists.',
+      description: '',
       cost: { colony: { metal: 8000, water : 5000, glass : 8000 } },
       consumption: {colony : {energy : 2500000, food : 100, electronics: 1}},
       production: {colony : {research : 100}},
@@ -66,9 +66,9 @@ const colonyParameters = {
     }
     ,
     t4_colony: {
-      name: 'Dome Town',
+      name: '',
       category: 'Colony',
-      description: 'A self-sufficient, fully insulated habitat designed to support a large population, providing essential amenities and sustainable infrastructure for a thriving community.',
+      description: '',
       cost: { colony: { metal: 70000, water : 50000, glass : 70000 } },
       consumption: {colony : {energy : 25000000, food : 1000, electronics: 10, androids: 0.1}},
       production: {colony : {research : 1000}},
@@ -82,9 +82,9 @@ const colonyParameters = {
       requiresLand : 1000
     },
     t5_colony: {
-      name: 'Dome City',
+      name: '',
       category: 'Colony',
-      description: 'Dome City is a large, climate-controlled habitat supporting a thriving population with advanced amenities, sustainable agriculture, and cutting-edge infrastructure—an oasis of comfort and innovation on the frontier.',
+      description: '',
       cost: { colony: { metal: 600000, water : 500000, glass : 600000 } },
       consumption: {colony : {energy : 250000000, food : 10000, electronics: 100, androids: 1}},
       production: {colony : {research : 10000}},
@@ -98,9 +98,9 @@ const colonyParameters = {
       requiresLand : 10000
     },
     t6_colony: {
-      name: 'Metropolis',
+      name: '',
       category: 'Colony',
-      description: 'A massive arcology structure designed to be a fully autonomous city, supporting a large population with advanced research and production facilities.',
+      description: '',
       cost: { colony: { metal: 5000000, water : 5000000, glass : 5000000 } },
       consumption: {colony : {energy : 2500000000, food : 100000, electronics: 1000, androids: 10}},
       production: {colony : {research : 100000}},
@@ -115,9 +115,9 @@ const colonyParameters = {
       autoBuildMaxOption: true
     },
     t7_colony: {
-      name: 'Ecumenopolis District',
+      name: '',
       category: 'Colony',
-      description: 'A planet-spanning city offering unparalleled comfort and capacity. Reduces land for life growth and lowers life terraforming requirements.',
+      description: '',
       cost: { colony: { metal: 50000000, water: 50000000, glass: 50000000, superalloys: 1000000 } },
       consumption: { colony: { energy: 25000000000, food: 1000000, electronics: 10000, androids: 100 } },
       production: { colony: { research: 1000000 } },

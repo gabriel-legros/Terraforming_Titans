@@ -1,3 +1,11 @@
+function getWaterTankText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class WaterTank extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
@@ -22,7 +30,7 @@ class WaterTank extends Building {
     let { emptyButton } = cache;
     if (!emptyButton) {
       emptyButton = globalThis.document.createElement('button');
-      emptyButton.textContent = 'Empty';
+      emptyButton.textContent = getWaterTankText('ui.common.empty', 'Empty');
       emptyButton.classList.add('empty-button');
       cache.emptyButton = emptyButton;
     }
@@ -30,7 +38,10 @@ class WaterTank extends Building {
     let { emptyAboveCapButton } = cache;
     if (!emptyAboveCapButton) {
       emptyAboveCapButton = globalThis.document.createElement('button');
-      emptyAboveCapButton.textContent = 'Empty above Cap';
+      emptyAboveCapButton.textContent = getWaterTankText(
+        'ui.buildings.waterTank.emptyAboveCap',
+        'Empty above Cap'
+      );
       emptyAboveCapButton.classList.add('empty-button');
       cache.emptyAboveCapButton = emptyAboveCapButton;
     }

@@ -2,8 +2,8 @@ const researchParameters = {
     energy: [
       {
         id: 'solar_efficiency',
-        name: 'Improved Solar Efficiency',
-        description: 'Increases the efficiency of solar panels by 25%.',
+        name: '',
+        description: '',
         cost: { research: 100 },
         prerequisites: [],
         effects: [
@@ -17,8 +17,8 @@ const researchParameters = {
       },
       {
         id: 'geothermal_plant',
-        name: 'Geothermal Power Generation',
-        description: 'Unlocks geothermal generators, which require reduced maintenance, and a project to scan for suitable vents.',
+        name: '',
+        description: '',
         cost: { research: 1000 },
         prerequisites: [],
         requiresGeothermal: true,
@@ -44,8 +44,8 @@ const researchParameters = {
       },
       {
         id: 'battery_efficiency',
-        name: 'Advanced batteries',
-        description: 'Doubles the storage capacity of batteries.',
+        name: '',
+        description: '',
         cost: { research: 5000 },
         prerequisites: [],
         effects: [
@@ -59,8 +59,8 @@ const researchParameters = {
       },
       {
         id: 'fission_plant1',
-        name: 'Nuclear Power Plant',
-        description: 'Unlocks nuclear power plants, which produce vast amounts of energy at great upfront cost.',
+        name: '',
+        description: '',
         cost: { research: 10000 },
         prerequisites: [],
         effects: [
@@ -73,8 +73,8 @@ const researchParameters = {
       },
       {
         id: 'fission_plant1_upgrade',
-        name: 'Closed loop water cycle',
-        description: 'Eliminates the water consumption of nuclear reactors.',
+        name: '',
+        description: '',
         cost: { research: 50000 },
         prerequisites: [],
         effects: [
@@ -98,8 +98,8 @@ const researchParameters = {
       },
       {
         id: 'hydrogen_battery',
-        name: 'Hydrogen Battery Array',
-        description: 'Stores energy using compressed or liquid hydrogen.',
+        name: '',
+        description: '',
         cost: { research: 100000 },
         prerequisites: [],
         effects: [
@@ -112,8 +112,8 @@ const researchParameters = {
       },
       {
         id: 'fission_plant1_upgrade2',
-        name: 'Adapted fission power',
-        description: 'Doubles the production of nuclear reactors.',
+        name: '',
+        description: '',
         cost: { research: 500000 },
         prerequisites: [],
         effects: [
@@ -135,8 +135,8 @@ const researchParameters = {
       },
       {
         id: 'fusion',
-        name: 'Fusion reactor MkI',
-        description: 'Enables a version of an old design from Earth.  Will require superconductors to build.',
+        name: '',
+        description: '',
         cost: { research: 1000000 },
         prerequisites: [],
         effects: [
@@ -155,8 +155,8 @@ const researchParameters = {
       },
       {
         id: 'improved_fusion_1',
-        name: 'Improved fusion reactor',
-        description: 'Doubles the production of fusion reactors.',
+        name: '',
+        description: '',
         cost: { research: 1000000000 },
         prerequisites: [],
         effects: [
@@ -170,8 +170,8 @@ const researchParameters = {
       },
       {
         id: 'improved_fusion_2',
-        name: 'State of the art fusion reactor',
-        description: 'The best design that can be made.  Provides another 2x multiplier.',
+        name: '',
+        description: '',
         cost: { research: 1000000000000 },
         prerequisites: [],
         effects: [
@@ -191,8 +191,8 @@ const researchParameters = {
       },
       {
         id: 'hydrocarbon_generator',
-        name: 'Hydrocarbon Generator',
-        description: 'Allows construction of generators burning methane and oxygen for power.',
+        name: '',
+        description: '',
         cost: { research: 10000 },
         prerequisites: [],
         disabled: true,
@@ -207,8 +207,8 @@ const researchParameters = {
       },
       {
         id: 'dyson_swarm_receiver',
-        name: 'Dyson Swarm Receiver',
-        description: 'Enables construction of a receiver for orbital solar collectors.',
+        name: '',
+        description: '',
         cost: { research: 100_000 },
         prerequisites: [],
         disabled: true,
@@ -219,8 +219,8 @@ const researchParameters = {
       },
       {
         id: 'superalloy_fusion_reactor',
-        name: 'Superalloy Fusion Reactor',
-        description: 'Unlocks a massive fusion reactor that requires superalloys.',
+        name: '',
+        description: '',
         cost: { research: 500000000000 },
         prerequisites: [],
         disabled: true,
@@ -230,8 +230,8 @@ const researchParameters = {
       },
       {
         id: 'next_generation_fusion',
-        name: 'Next-Generation Fusion',
-        description: 'Doubles superalloy fusion reactor energy output.',
+        name: '',
+        description: '',
         cost: { research: 100000000000000 },
         prerequisites: [],
         disabled: true,
@@ -247,8 +247,8 @@ const researchParameters = {
       },
       {
         id: 'antimatter_containment',
-        name: 'Antimatter Containment',
-        description: 'Unlocks antimatter farms and antimatter batteries.',
+        name: '',
+        description: '',
         cost: { research: 100000000000 },
         prerequisites: [],
         disabled: true,
@@ -265,8 +265,8 @@ const researchParameters = {
       },
       {
         id: 'laser_cannon',
-        name: 'Laser Cannon',
-        description: 'Enables clearing orbital debris using laser cannons.',
+        name: '',
+        description: '',
         cost: { research: 5_000_000_000 },
         prerequisites: [],
         disabled: true,
@@ -277,8 +277,8 @@ const researchParameters = {
       },
       {
         id: 'ai_reactor_overclocking',
-        name: 'AI Reactor Overclocking',
-        description: 'HOPE will tune superalloy fusion reactors to unleash their potential, providing a 25% output boost per level.',
+        name: '',
+        description: '',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         disabled: true,
@@ -299,8 +299,8 @@ const researchParameters = {
     industry: [
       {
         id: 'ore_processing',
-        name: 'Efficient Ore Processing',
-        description: 'Doubles ore output from mines.',
+        name: '',
+        description: '',
         cost: { research: 200 },
         artificialAllowed: false,
         coreHeatAllowed: false,
@@ -317,8 +317,8 @@ const researchParameters = {
       },
       {
         id: 'ore_scanning',
-        name: 'Ore Scanning Satellite',
-        description: 'Enables an infrastructure special project to launch satellites for scanning the surface for new ore veins.',
+        name: '',
+        description: '',
         cost: { research: 500 },
         artificialAllowed: false,
         coreHeatAllowed: false,
@@ -333,8 +333,8 @@ const researchParameters = {
       },
       {
         id: 'components_factory',
-        name: 'Component factories',
-        description: 'Allows production of components using workers.',
+        name: '',
+        description: '',
         cost: { research: 1000 },
         prerequisites: [],
         effects: [
@@ -347,8 +347,8 @@ const researchParameters = {
       },
       {
         id: 'waste_processing',
-        name: 'Industrial Waste Processing',
-        description: 'Unlocks waste sorting and recycling facilities.  Researching this does not enable any penalty.',
+        name: '',
+        description: '',
         cost: { research: 2000 },
         prerequisites: [],
         disabled: true,
@@ -400,8 +400,8 @@ const researchParameters = {
       },
       {
         id: 'waste_workforce_automation',
-        name: 'Waste Workforce Automation',
-        description: 'Automates material handling to reduce waste facility worker requirements by 20%.',
+        name: '',
+        description: '',
         cost: { research: 200000 },
         prerequisites: ['waste_processing'],
         disabled: true,
@@ -440,8 +440,8 @@ const researchParameters = {
       },
       {
         id: 'robotics_1',
-        name: 'Farming robotics assistance',
-        description: 'Integrates robots within hydroponic farms to reduce worker requirements by 20%.',
+        name: '',
+        description: '',
         cost: { research: 5000 },
         prerequisites: [],
         effects: [
@@ -455,8 +455,8 @@ const researchParameters = {
       },
       {
         id: 'electronics_factory',
-        name: 'Electronics factories',
-        description: 'Allows production of electronics using workers.',
+        name: '',
+        description: '',
         cost: { research: 10000 },
         prerequisites: [],
         effects: [
@@ -469,8 +469,8 @@ const researchParameters = {
       },
       {
         id: 'robotics_2',
-        name: 'Assembly Lines',
-        description: 'Integrates robots within components and electronics factory to reduce worker requirements by 20%.',
+        name: '',
+        description: '',
         cost: { research: 50000 },
         prerequisites: [],
         effects: [
@@ -490,8 +490,8 @@ const researchParameters = {
       },
       {
         id: 'deep_mine',
-        name: 'Deep ore mines',
-        description: 'Unlock a repeatable special project to increase ore output from mining.',
+        name: '',
+        description: '',
         cost: { research: 100000 },
         prerequisites: [],
         artificialAllowed: false,
@@ -507,8 +507,8 @@ const researchParameters = {
       },
       {
         id: 'android_factory',
-        name: 'Android Manufacturing',
-        description: 'Enables the manufacturing of androids, which can be both workers and colony helpers.  Androids require their own housing.  They may also be purchased using cargo rockets.',
+        name: '',
+        description: '',
         cost: { research: 500000 },
         prerequisites: [],
         effects: [
@@ -532,8 +532,8 @@ const researchParameters = {
       },
       {
         id: 'android_assisted_mining',
-        name: 'Android-assisted deeper mining',
-        description: 'Allows assigning androids to the Deeper mining project for massive speed boosts.',
+        name: '',
+        description: '',
         cost: { research: 2000000 },
         prerequisites: ['deep_mine','android_factory'],
         artificialAllowed: false,
@@ -550,8 +550,8 @@ const researchParameters = {
       },
       {
         id: 'underground_land_expansion',
-        name: 'Underground Land Expansion',
-        description: 'Unlocks a repeatable android project to expand usable land via subterranean construction.',
+        name: '',
+        description: '',
         cost: { research: 200_000 },
         prerequisites: [],
         artificialAllowed: false,
@@ -575,8 +575,8 @@ const researchParameters = {
       },
       {
         id: 'superconductor_factory',
-        name: 'Superconductor Factory',
-        description: 'Enables the fabrication of superconductors locally.',
+        name: '',
+        description: '',
         cost: { research: 1000000 },
         prerequisites: [],
         effects: [
@@ -595,8 +595,8 @@ const researchParameters = {
       },
       {
         id: 'graphene_factory',
-        name: 'Graphene Factory',
-        description: 'Enables factories that refine surface graphite into metal substitutes.',
+        name: '',
+        description: '',
         cost: { research: 10_000_000 },
         prerequisites: [],
         disabled: true,
@@ -630,8 +630,8 @@ const researchParameters = {
       //}, 
       {
         id: 'advanced_alloy',
-        name: 'Advanced Alloys',
-        description: 'Doubles planet side metal production.',
+        name: '',
+        description: '',
         cost: { research: 10000000 },
         prerequisites: [],
         artificialAllowed: false,
@@ -656,8 +656,8 @@ const researchParameters = {
       },
       {
         id: 'shipyard',
-        name: 'Shipbuilding',
-        description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.',
+        name: '',
+        description: '',
         cost: { research: 50000000 },
         prerequisites: [],
         effects: [
@@ -690,8 +690,8 @@ const researchParameters = {
     },
     {
       id: 'efficient_shipyards',
-      name: 'Efficient Shipyards',
-      description: 'Doubles shipyard production and consumption.',
+      name: '',
+      description: '',
       cost: { research: 100000000000 },
       prerequisites: [],
       effects: [
@@ -711,8 +711,8 @@ const researchParameters = {
     },
     {
       id: 'self_replicating_ships',
-      name: 'Self Replicating Ships',
-      description: 'Unused spaceships duplicate themselves over time from unused metal mining cap.',
+      name: '',
+      description: '',
       cost: { research: 10000000000 },
       prerequisites: [],
       disabled: true,
@@ -727,8 +727,8 @@ const researchParameters = {
     },
     {
       id: 'robotics_3',
-      name: 'Precision Assembly Lines',
-      description: 'Integrates robots within superconductor and android factories to reduce worker requirements by 20%.',
+      name: '',
+      description: '',
         cost: { research: 100000000 },
         prerequisites: [],
         effects: [
@@ -748,8 +748,8 @@ const researchParameters = {
       },  
       {
         id: 'massive_scale_glass_smelting',
-        name: 'Injection Mold Glass Smelting',
-        description: 'Doubles glass smelter production and consumption.',
+        name: '',
+        description: '',
         cost: { research: 500_000_000 },
         prerequisites: [],
         effects: [
@@ -769,8 +769,8 @@ const researchParameters = {
       },
       {
         id: 'space_elevator',
-        name: 'Space Elevator',
-        description: 'Enables a special project for the space elevator, which eliminates the metal cost of many space activities.',
+        name: '',
+        description: '',
         cost: { research: 1000000000 },
         prerequisites: [],
         effects: [
@@ -783,8 +783,8 @@ const researchParameters = {
       }, 
       {
         id: 'robotics_4',
-        name: 'Direct AI integration.',
-        description: 'Integrates yourself within all factories to reduce all factory worker requirements by 25%.',
+        name: '',
+        description: '',
         cost: { research: 1000000000000 },
         prerequisites: [],
         effects: [
@@ -840,8 +840,8 @@ const researchParameters = {
       },
       {
         id: 'superalloy_foundry',
-        name: 'Superalloy Foundry',
-        description: 'Enables production of superalloys at great energy cost.',
+        name: '',
+        description: '',
         cost: { research: 500000000000 },
         prerequisites: [],
         disabled: true,
@@ -851,8 +851,8 @@ const researchParameters = {
       },
       {
         id: 'ai_industrial_coordination',
-        name: 'AI Industrial Coordination',
-        description: 'HOPE will integrate itself further into each factory, reducing worker requirements (equivalent to an additive increase in workers of 10% per level).',
+        name: '',
+        description: '',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         disabled: true,
@@ -872,8 +872,8 @@ const researchParameters = {
     colonization: [
       {
         id: 'enhanced_colonist_import_1',
-        name: 'Enhanced Colonist Importation',
-        description: 'Halve the duration of each colonist import using optimized spacecraft and improved logistics.',
+        name: '',
+        description: '',
         cost: { research: 100 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
@@ -887,8 +887,8 @@ const researchParameters = {
       },
       {
         id: 'launch_pads',
-        name: 'Launch Pads',
-        description: 'Allows automation of special projects.',
+        name: '',
+        description: '',
         cost: { research: 500 },
         prerequisites: [],
         effects: [
@@ -902,8 +902,8 @@ const researchParameters = {
       },
       {
         id: 't2_colony',
-        name: 'Permanent outpost',
-        description: 'Enables a larger colony for more efficient colonization.',
+        name: '',
+        description: '',
         cost: { research: 1000 },
         prerequisites: [],
         effects: [
@@ -922,8 +922,8 @@ const researchParameters = {
       },
       {
         id: 'cloning_facilities',
-        name: 'Cloning Facilities',
-        description: 'Unlocks cloning facilities that consume massive energy to grow colonists.',
+        name: '',
+        description: '',
         cost: { research: 1000 },
         prerequisites: [],
         disabled: true,
@@ -937,8 +937,8 @@ const researchParameters = {
       },
       {
         id: 'enhanced_colonist_import_2',
-        name: 'Bigger rockets',
-        description: 'Further increase the capacity of each colonist import by 5 using bigger rockets.',
+        name: '',
+        description: '',
         cost: { research: 5000 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
@@ -954,8 +954,8 @@ const researchParameters = {
       },
       {
         id: 't3_colony',
-        name: 'Large outpost',
-        description: 'Enables a very large outpost, suitable for long-term colonization.',
+        name: '',
+        description: '',
         cost: { research: 10000 },
         prerequisites: [],
         effects: [
@@ -982,8 +982,8 @@ const researchParameters = {
       },
       {
         id: 'enhanced_colonist_import_3',
-        name: 'Biggest rockets',
-        description: 'Further increase the capacity of each colonist import by 30 using the biggest rockets available.',
+        name: '',
+        description: '',
         cost: { research: 50000 },  // Adjust the cost to make it suitable for the impact of the research
         prerequisites: [],  // Requires the initial colonist import project to be available first
         effects: [
@@ -999,8 +999,8 @@ const researchParameters = {
       },
       {
         id: 'colony_sliders',
-        name: 'Colony Management',
-        description: 'Unlocks adjustable colony sliders.',
+        name: '',
+        description: '',
         cost: { research: 50000 },
         prerequisites: [],
         effects: [
@@ -1013,8 +1013,8 @@ const researchParameters = {
       },
       {
         id: 'construction_office',
-        name: 'Construction Office',
-        description: 'Allows automation of building construction.',
+        name: '',
+        description: '',
         cost: { research: 100000 },
         prerequisites: [],
         effects: [
@@ -1033,8 +1033,8 @@ const researchParameters = {
       },
       {
         id: 't4_colony',
-        name: 'Dome town',
-        description: 'The first dome design.  Can use androids as consumer goods.',
+        name: '',
+        description: '',
         cost: { research: 500000 },
         prerequisites: [],
         effects: [
@@ -1061,8 +1061,8 @@ const researchParameters = {
       },
       {
         id: 'trading',
-        name: 'Ship trading',
-        description: 'Allows the export of metal via a new special project and purchase of ships via the cargo rocket special project.  Cargo rockets become continuous, consuming funding and delivering purchases in real time.',
+        name: '',
+        description: '',
         cost: { research: 50000000 },
         prerequisites: [],
         disableFlag: 'galacticMarket',
@@ -1089,8 +1089,8 @@ const researchParameters = {
       }, 
       {
         id: 't5_colony',
-        name: 'Dome City',
-        description: 'A larger dome design.',
+        name: '',
+        description: '',
         cost: { research: 5000000 },
         prerequisites: [],
         effects: [
@@ -1109,8 +1109,8 @@ const researchParameters = {
       },
       {
         id: 't6_colony',
-        name: 'Metropolis',
-        description: 'Too big to be a dome, rather a collection of interlocked domes.',
+        name: '',
+        description: '',
         cost: { research: 100000000 },
         prerequisites: [],
         effects: [
@@ -1129,8 +1129,8 @@ const researchParameters = {
       },
       {
         id: 't7_colony',
-        name: 'Ecumenopolis District',
-        description: 'Creates a planet-wide city district with unmatched comfort.',
+        name: '',
+        description: '',
         cost: { research: 500000000000 },
         prerequisites: [],
         disableFlag: 'ecumenopolisDisabled',
@@ -1142,8 +1142,8 @@ const researchParameters = {
       },
       {
         id: 'terraforming_bureau',
-        name: 'Terraforming Bureau',
-        description: 'Establishes oversight to automatically halt GHG factories at a chosen temperature, oxygen factories when O₂ pressure is too high, dust factories at a target rock albedo, and chemical reactors based on resource thresholds.',
+        name: '',
+        description: '',
         cost: { research: 10000000 },
         prerequisites: [],
         effects: [
@@ -1179,8 +1179,8 @@ const researchParameters = {
       },
       {
         id: 'space_mirror_oversight',
-        name: 'Space Mirror Facility Oversight',
-        description: 'Applies automated oversight controls to the space mirror facility.',
+        name: '',
+        description: '',
         cost: { research: 1000000 },
         prerequisites: [],
         effects: [
@@ -1195,8 +1195,8 @@ const researchParameters = {
       },
       {
         id: 'atmospheric_monitoring',
-        name: 'Atmospheric Monitoring',
-        description: 'Enables setting limits on atmospheric mining special projects.',
+        name: '',
+        description: '',
         cost: { research: 1000000000 },
         prerequisites: [],
         effects: [
@@ -1239,8 +1239,8 @@ const researchParameters = {
       },
       {
         id: 'ai_ecumenopolis_expansion',
-        name: 'AI Ecumenopolis Expansion',
-        description: 'HOPE will optimize architecture, transit and utilities, enabling 10% more space per level for people and androids.',
+        name: '',
+        description: '',
         cost: { research: 5_000_000_000_000 },
         prerequisites: [],
         disabled: true,
@@ -1277,8 +1277,8 @@ const researchParameters = {
     terraforming: [
       {
         id: 'dust_factory',
-        name: 'Black Dust production',
-        description: 'Unlocks a blueprint for black dust production; dust color sets ground albedo between 0.05 and 0.80 over time.',
+        name: '',
+        description: '',
         cost: { research: 100 },
         prerequisites: [],
         effects: [
@@ -1303,8 +1303,8 @@ const researchParameters = {
       },
       {
         id: 'hydroponic_farm',
-        name: 'Hydroponic Farm',
-        description: 'Produces food to feed colonists.',
+        name: '',
+        description: '',
         cost: { research: 500 },
         prerequisites: [],
         effects: [
@@ -1317,8 +1317,8 @@ const researchParameters = {
       },
       {
         id: 'surface_food_production',
-        name: 'Surface Food Production',
-        description: 'Surface Biomass can now produce food passively at the rate of 0.01 food packs per ton of biomass per second.',
+        name: '',
+        description: '',
         cost: { research: 1_000_000_000 },
         prerequisites: [],
         effects: [
@@ -1332,8 +1332,8 @@ const researchParameters = {
       },
       {
         id: 'engineered_nitrogen_fixation',
-        name: 'Engineered Nitrogen Fixation',
-        description: 'Boosts life growth based on nitrogen pressure, scaling up to double growth at 10 kPa.',
+        name: '',
+        description: '',
         cost: { research: 200_000_000 },
         prerequisites: ['life'],
         effects: [
@@ -1347,8 +1347,8 @@ const researchParameters = {
       },
       {
         id: 'terraforming_sensor',
-        name: 'Terraforming measurements',
-        description: 'Unlocks the terraforming tab, which allows monitoring of terraforming parameters.',
+        name: '',
+        description: '',
         cost: { research: 1000 },
         prerequisites: [],
         effects: [
@@ -1433,8 +1433,8 @@ const researchParameters = {
       },
       {
         id: 'hydroponics_efficiency',
-        name: 'Adapted crops',
-        description: 'Doubles the performance of our hydroponic farms using genetically modified potatoes.',
+        name: '',
+        description: '',
         cost: { research: 5000 },
         prerequisites: [],
         effects: [
@@ -1448,8 +1448,8 @@ const researchParameters = {
       },
       {
         id: 'space_mirror',
-        name: 'Space mirrors',
-        description: 'Unlocks a special project to launch the space mirror facility, which allows the deployment of space mirrors to increase the effective solar luminosity.',
+        name: '',
+        description: '',
         cost: { research: 10000 },
         prerequisites: [],
         ringworldAllowed: false,
@@ -1463,8 +1463,8 @@ const researchParameters = {
       },
       {
         id: 'dust_efficiency',
-        name: 'Adapted black dust production',
-        description: 'Quadruples the efficiency of dust factories.',
+        name: '',
+        description: '',
         cost: { research: 50000 },
         prerequisites: [],
         effects: [
@@ -1478,8 +1478,8 @@ const researchParameters = {
       },
       {
         id: 'water_electrolysis',
-        name: 'Water Electrolysis',
-        description: 'Unlocks a factory to produce oxygen from water.  Very energy intensive.',
+        name: '',
+        description: '',
         cost: { research: 100000 },
         prerequisites: [],
         effects: [
@@ -1492,8 +1492,8 @@ const researchParameters = {
       },
       {
         id: 'chemical_reactor',
-        name: 'Chemical Reactor',
-        description: 'Unlocks configurable reactors to perform various reactions.',
+        name: '',
+        description: '',
         cost: { research: 500_000 },
         prerequisites: [],
         disabled: true,
@@ -1507,8 +1507,8 @@ const researchParameters = {
       },
       {
         id: 'mass_driver',
-        name: 'Mass Driver Foundations',
-        description: 'Unlocks the mass driver launcher network and integrates surface disposal with orbital infrastructure.',
+        name: '',
+        description: '',
         cost: { research: 1_000_000_000 },
         prerequisites: [],
         disabled: true,
@@ -1529,8 +1529,8 @@ const researchParameters = {
       },
       {
         id: 'ghg_factory',
-        name: 'Greenhouse Gas Factories',
-        description: 'Allows the construction of greenhouse gas factories to produce SF6, which is stable, non-toxic and 23500 times more potent than CO2.',
+        name: '',
+        description: '',
         cost: { research: 500000 },
         prerequisites: [],
         effects: [
@@ -1555,8 +1555,8 @@ const researchParameters = {
       },
       {
         id: 'ghg_efficiency',
-        name: 'Streamlined Greenhouse Gas Production',
-        description: 'Doubles the efficiency of GHG factories.',
+        name: '',
+        description: '',
         cost: { research: 10000000 },
         prerequisites: [],
         effects: [
@@ -1570,8 +1570,8 @@ const researchParameters = {
       },
       {
         id: 'ghg_efficiency2',
-        name: 'Mass Greenhouse Gas Production',
-        description: 'Doubles the efficiency of GHG factories, again.',
+        name: '',
+        description: '',
         cost: { research: 100000000 },
         prerequisites: [],
         effects: [
@@ -1585,8 +1585,8 @@ const researchParameters = {
       },
       {
         id: 'life',
-        name: 'Life Designing and Production',
-        description: 'Allows the designing and production of specially engineered biomass.',
+        name: '',
+        description: '',
         cost: { research: 1_000_000 },
         prerequisites: [],
         effects: [
@@ -1615,8 +1615,8 @@ const researchParameters = {
       },
       {
         id: 'carbonImport',
-        name: 'Carbon Importation',
-        description: 'The asteroid belt is full of asteroids rich in carbon.  We can use our spaceships to extract CO2 and bring it back.',
+        name: '',
+        description: '',
         cost: { research: 500000000 },
         prerequisites: [],
         effects: [
@@ -1628,8 +1628,8 @@ const researchParameters = {
       },   
       {
         id: 'waterImport',
-        name: 'Water Importation',
-        description: 'Water is everywhere but more may be needed sometimes.  Requires ships.',
+        name: '',
+        description: '',
         cost: { research: 50_000_000 },
         prerequisites: [],
         effects: [
@@ -1641,8 +1641,8 @@ const researchParameters = {
       },
       {
         id: 'nitrogenImport',
-        name: 'Nitrogen Importation',
-        description: 'Import nitrogen to fill up the atmosphere with a neutral gas.',
+        name: '',
+        description: '',
         cost: { research: 10000000000 },
         prerequisites: [],
         effects: [
@@ -1654,8 +1654,8 @@ const researchParameters = {
       },
       {
         id: 'hydrogenImport',
-        name: 'Hydrogen Importation',
-        description: 'Import hydrogen to stockpile a reducing gas for industry and fuel.',
+        name: '',
+        description: '',
         cost: { research: 50_000_000 },
         prerequisites: [],
         disabled: true,
@@ -1668,8 +1668,8 @@ const researchParameters = {
       },
       {
         id: 'magneticShield',
-        name: 'Magnetic Shield',
-        description: 'Design for an equatorial wide superconductor wire that will carry a very large current around the planet.',
+        name: '',
+        description: '',
         cost: { research: 1000000000000 },
         prerequisites: [],
         requiresNoNaturalMagnetosphere: true,
@@ -1684,8 +1684,8 @@ const researchParameters = {
     advanced: [
       {
         id: 'modular_nuclear_reactor',
-        name: 'Modular Nuclear Reactor',
-        description: 'Miniaturizes fission reactors and automatically completes their research.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 1000 },
         prerequisites: [],
         effects: [
@@ -1739,8 +1739,8 @@ const researchParameters = {
       },
       {
         id: 'hyperion_lantern',
-        name: 'Hyperion Lantern',
-        description: 'Research the construction of a large orbital facility that increases planetary luminosity.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 10000 },
         prerequisites: [],
         effects: [
@@ -1753,8 +1753,8 @@ const researchParameters = {
       },
       {
         id: 'hydrocarbon_research',
-        name: 'Hydrocarbon Combustion Concept',
-        description: 'Opens research into burning methane for power.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 1000 },
         prerequisites: [],
         effects: [
@@ -1767,8 +1767,8 @@ const researchParameters = {
       },
       {
         id: 'infrared_vision',
-        name: 'Infrared Vision',
-        description: 'Equips ice harvesters with infrared sensors to operate around the clock.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 20000 },
         prerequisites: [],
         effects: [
@@ -1783,8 +1783,8 @@ const researchParameters = {
       },
       {
         id: 'dyson_swarm_concept',
-        name: 'Dyson Swarm Concept',
-        description: 'Opens research into building massive solar collectors in space.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 25000 },
         prerequisites: [],
         effects: [
@@ -1797,8 +1797,8 @@ const researchParameters = {
       },
       {
         id: 'space_storage',
-        name: 'Space Storage',
-        description: 'Enables construction of an orbital storage facility.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 30000 },
         prerequisites: [],
         effects: [
@@ -1812,8 +1812,8 @@ const researchParameters = {
        },
       {
         id: 'cloning_concept',
-        name: 'Cloning Concept',
-        description: 'Explores human cloning to rapidly grow population.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 40000 },
         prerequisites: [],
         effects: [
@@ -1826,8 +1826,8 @@ const researchParameters = {
       },
       {
         id: 'underground_habitats',
-        name: 'Underground habitats',
-        description: 'Opens research into expanding land through subterranean construction.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 50000 },
         prerequisites: [],
         effects: [
@@ -1840,8 +1840,8 @@ const researchParameters = {
       },
       {
         id: 'hive_mind_androids',
-        name: 'Hive Mind Androids',
-        description: 'Links androids into a cooperative network producing research.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 60000 },
         prerequisites: [],
         effects: [
@@ -1855,8 +1855,8 @@ const researchParameters = {
       },
       {
         id: 'space_mirror_focusing',
-        name: 'Space Mirror Focusing',
-        description: 'Refines the space mirror facility to concentrate sunlight, allowing production of liquid water from ice.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 80000 },
         prerequisites: [],
         effects: [
@@ -1871,8 +1871,8 @@ const researchParameters = {
       },
       {
         id: 'super_alloys',
-        name: 'Superalloys',
-        description: 'Opens research into advanced superalloy materials.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 100000 },
         prerequisites: [],
         effects: [
@@ -1891,8 +1891,8 @@ const researchParameters = {
       },
       {
         id: 'nanotechnology_stage_1',
-        name: 'Nanotechnology Stage I',
-        description: 'Unlocks the nanocolony in the colony tab.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 125000 },
         prerequisites: [],
         effects: [
@@ -1910,8 +1910,8 @@ const researchParameters = {
       },
       {
         id: 'nanotechnology_stage_2',
-        name: 'Nanotechnology Stage II',
-        description: 'Expands the nanocolony program.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 625000 },
         prerequisites: ['nanotechnology_stage_1'],
         effects: [
@@ -1925,8 +1925,8 @@ const researchParameters = {
       },
       {
         id: 'nanotechnology_stage_3',
-        name: 'Nanotechnology Stage III',
-        description: 'Further expands the nanocolony program.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 25_000_000 },
         prerequisites: ['nanotechnology_stage_2'],
         effects: [
@@ -1940,8 +1940,8 @@ const researchParameters = {
       },
       {
         id: 'orbital_rings',
-        name: 'Orbital Rings',
-        description: 'Unlocks a new megastructure project for constructing orbital rings.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 150000 },
         prerequisites: [],
         effects: [
@@ -1954,8 +1954,8 @@ const researchParameters = {
       },
       {
         id: 'mega_particle_accelerator',
-        name: 'Mega Particle Accelerator',
-        description: 'Unlocks a new megastructure that can assist in boosting advanced research gains.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 250000 },
         prerequisites: [],
         effects: [
@@ -1968,8 +1968,8 @@ const researchParameters = {
       },
       {
         id: 'mega_heat_sink',
-        name: 'Mega Heat Sink',
-        description: 'Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 400000 },
         prerequisites: [],
         effects: [
@@ -1982,8 +1982,8 @@ const researchParameters = {
       },
       {
         id: 'lifting',
-        name: 'Lifting',
-        description: 'Unlocks a repeatable mega project for the assembly of Lifters, persistent vessels capable of extracting hydrogen from gas giants or stripping an atmosphere at a great energy cost.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 750000 },
         prerequisites: [],
         effects: [
@@ -1996,8 +1996,8 @@ const researchParameters = {
       },
       {
         id: 'bioworkforce',
-        name: 'Bioworlds',
-        description: 'Unlocks the Bioworld mega project for evolution point upgrades and the ability to use biomass as a workforce.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 500000 },
         prerequisites: [],
         effects: [
@@ -2016,8 +2016,8 @@ const researchParameters = {
       },
       {
         id: 'biocortex_integration',
-        name: 'Biocortex-human integration',
-        description: 'Bioworlds can work together with humans and androids.  Provides a x10 production multiplier to Metropolises on bioworld completion.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 200000000 },
         prerequisites: [],
         effects: [
@@ -2032,8 +2032,8 @@ const researchParameters = {
       },
       {
         id: 'foundry_worlds',
-        name: 'Foundry Worlds',
-        description: 'Planetary cores contain sextillions of tons of metal... if we can get to it.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 50000000 },
         prerequisites: [],
         effects: [
@@ -2046,8 +2046,8 @@ const researchParameters = {
       },
       {
         id: 'manufacturing_worlds',
-        name: 'Manufacturing Worlds',
-        description: 'Unlocks a new world specialization to convert the world into a hub of conveyor belts, underground pipes and logistics robots.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 100_000_000 },
         prerequisites: [],
         effects: [
@@ -2060,8 +2060,8 @@ const researchParameters = {
       },
       {
         id: 'next_gen_bioengineering',
-        name: 'Next-generation bio-engineering',
-        description: 'Enables the use of advanced research to permanently increase life design potential',
+        name: '',
+        description: '',
         cost: { advancedResearch: 1500000 },
         prerequisites: [],
         effects: [
@@ -2075,8 +2075,8 @@ const researchParameters = {
       },
       {
         id: 'repeatable_ai_research',
-        name: 'Repeatable AI Researches',
-        description: 'Authorizes repeatable research programs focused on enhancing production with the help of HOPE.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 2_000_000 },
         prerequisites: [],
         effects: [
@@ -2087,8 +2087,8 @@ const researchParameters = {
       },
       {
         id: 'hazardous_biomass_incineration',
-        name: 'Hazardous Biomass Incineration',
-        description: 'Enables incinerators to handle hazardous biomass safely.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 2_500_000 },
         prerequisites: [],
         disabled: true,
@@ -2104,8 +2104,8 @@ const researchParameters = {
       },
       {
         id: 'galactic_market',
-        name: 'Galactic Market Concordat',
-        description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 300000 },
         prerequisites: [],
         effects: [
@@ -2136,8 +2136,8 @@ const researchParameters = {
       },
       {
         id: 'mechanical_assistance',
-        name: 'Mechanical Assistance',
-        description: 'Enables a new colony slider to provide mechanical assistance to partially counter the effects of high gravity.  The slider will only appear on high gravity worlds.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 175000 },
         prerequisites: [],
         effects: [
@@ -2151,8 +2151,8 @@ const researchParameters = {
       },
       {
         id: 'warpnet',
-        name: 'Warpnet',
-        description: "An upgrade to humanity's greatest invention.  Enables instant communication from anywhere to anywhere, at great energy cost.  Enables a new colony slider that boosts research production.",
+        name: '',
+        description: '',
         cost: { advancedResearch: 875000 },
         prerequisites: [],
         effects: [
@@ -2166,8 +2166,8 @@ const researchParameters = {
       },
       {
         id: 'ship_smelting',
-        name: 'Ship smelting',
-        description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silicon. Water imports can now prioritize colony storage.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 200000 },
         prerequisites: [],
         effects: [
@@ -2194,8 +2194,8 @@ const researchParameters = {
       },
       {
         id: 'companion_satellite',
-        name: 'Companion Satellite',
-        description: 'An autonomous cube satellite that unlocks ore satellites and retains one per terraformed world when travelling.  Not intended for incineration.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 225000 },
         prerequisites: [],
         effects: [
@@ -2208,8 +2208,8 @@ const researchParameters = {
       },
       {
         id: 'oneill_cylinders',
-        name: "O'Neill Cylinders",
-        description: 'Worlds producing worlds producing worlds...  Enables passive generation of terraformed worlds.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 1000000 },
         prerequisites: [],
         effects: [
@@ -2229,8 +2229,8 @@ const researchParameters = {
       },
       {
         id: 'high_gravity_adaptation',
-        name: 'High-gravity adaptation',
-        description: 'Complete a project initially started by PANDORA to acclimate to heavy worlds, automatically negating half of the happiness and population penalties from high gravity.  Stacks with Mechanical Assistance to cancel the rest.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 3_000_000 },
         prerequisites: [],
         effects: [
@@ -2244,8 +2244,8 @@ const researchParameters = {
       },
       {
         id: 'biostorage',
-        name: 'Biostorage',
-        description: 'Allows safe storage of biomass in space storage.  Hazardous Biomass should be stored at the nearest incinerator.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 4_000_000 },
         prerequisites: [],
         effects: [
@@ -2260,8 +2260,8 @@ const researchParameters = {
       },
       {
         id: 'warp_gate_fabrication',
-        name: 'Warp Gate Fabrication',
-        description: 'Enables growth of the warp gate network from terraformed worlds in the galactic tab.  Raises resource import limits.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 5_000_000 },
         prerequisites: [],
         effects: [
@@ -2275,8 +2275,8 @@ const researchParameters = {
       },
       {
         id: 'chemistry_of_scale',
-        name: 'Chemistry of Scale',
-        description: 'Chemical reactors gain efficiency from scale, with production and consumption multiplied by 1 + log10(active reactors) / 5.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 6_000_000 },
         prerequisites: [],
         effects: [
@@ -2291,8 +2291,8 @@ const researchParameters = {
       },
       {
         id: 'self_replicating_ships_concept',
-        name: 'Self Replicating Ships',
-        description: 'Opens research into autonomous self-building spacecraft.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 8000000 },
         prerequisites: [],
         effects: [
@@ -2305,8 +2305,8 @@ const researchParameters = {
       },
       {
         id: 'graphene_mastery',
-        name: 'Graphene Mastery',
-        description: 'Unlocks advanced graphene processing techniques for industrial use as a metal substitute.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 9_000_000 },
         prerequisites: [],
         effects: [
@@ -2326,8 +2326,8 @@ const researchParameters = {
       },
       {
         id: 'dyson_sphere',
-        name: 'Dyson Sphere',
-        description: 'Unlocks construction of a Dyson Sphere frame for faster collector deployment.  Very expensive.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 10_000_000 },
         prerequisites: [],
         effects: [
@@ -2336,8 +2336,8 @@ const researchParameters = {
       },
       {
         id: 'space_antimatter_safety_regulations',
-        name: 'Space Antimatter Safety Regulations',
-        description: 'Standardize strict antimatter safety protocols for orbital containment, unlock modular Space Antimatter batteries, and add a safe orbital energy-transfer recipe for Antimatter Farms.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 12_000_000 },
         prerequisites: [],
         effects: [
@@ -2347,8 +2347,8 @@ const researchParameters = {
       },
       {
         id: 'additional_dyson_spheres',
-        name: 'Additional Dyson Spheres',
-        description: 'Raises Dyson Sphere expansion beyond a single sphere up to 100 billion spheres, with extra superalloy requirements once exceeding 1 sphere worth of power.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 5_000_000_000 },
         prerequisites: ['dyson_sphere'],
         effects: [
@@ -2357,8 +2357,8 @@ const researchParameters = {
       },
       {
         id: 'nanotechnology_recycling',
-        name: 'Nanotechnology recycling',
-        description: 'Enables nanobots to recycle waste materials, substituting junk for silica consumption, scrap metal for metal consumption, and trash for biomass consumption.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 15_000_000 },
         prerequisites: [],
         disabled: true,
@@ -2373,8 +2373,8 @@ const researchParameters = {
       },
       {
         id: 'companion_mirror',
-        name: 'Companion Mirror',
-        description: 'An adorable autonomous mirror robot that automatically completes the space mirror project and provides 1,000 inactive space mirrors per terraformed world.  The best friend of the companion satellite.  Not suitable for incineration.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 20_000_000 },
         prerequisites: [],
         effects: [
@@ -2387,8 +2387,8 @@ const researchParameters = {
       },
       {
         id: 'methane_ammonia_lifting',
-        name: 'Methane and Ammonia Lifting',
-        description: 'Enables lifters to harvest methane and ammonia into space storage.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 30_000_000 },
         prerequisites: [],
         effects: [
@@ -2410,8 +2410,8 @@ const researchParameters = {
       },
       {
         id: 'hephaestus_megaconstruction',
-        name: 'Hephaestus Megaconstruction Yard',
-        description: 'Unlocks a giga-scale construction yard that accelerates repeatable mega and giga projects.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 40_000_000 },
         prerequisites: [],
         effects: [
@@ -2424,8 +2424,8 @@ const researchParameters = {
       },
       {
         id: 'warp_storage',
-        name: 'Warp Storage',
-        description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot mode and Space Storage expansion mode.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 75_000_000 },
         prerequisites: [],
         effects: [
@@ -2447,8 +2447,8 @@ const researchParameters = {
       },
       {
         id: 'nuclear_alchemy',
-        name: 'Nuclear Alchemy',
-        description: 'Alchemy has always been possible... with the right knowledge and extreme infrastructure.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 500_000_000 },
         prerequisites: [],
         effects: [
@@ -2461,8 +2461,8 @@ const researchParameters = {
       },
       {
         id: 'gigafoundries',
-        name: 'Gigafoundries',
-        description: 'Enables a new gigastructure for mass superalloy production.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 10_000_000_000 },
         prerequisites: [],
         effects: [
@@ -2475,8 +2475,8 @@ const researchParameters = {
       },
       {
         id: 'core_surgery',
-        name: 'Core Surgery',
-        description: 'Enables a new gigastructure capable of creating artificial natural magnetospheres.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 20_000_000_000 },
         prerequisites: [],
         effects: [
@@ -2489,8 +2489,8 @@ const researchParameters = {
       },
       {
         id: 'tractor_beams',
-        name: 'Tractor Beams',
-        description: 'Seriously?  Tractor Beams?  Sets planetary thrusters to a thrust-to-power ratio of 1, greatly reducing energy needs.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 999_999_999 },
         prerequisites: [],
         effects: [
@@ -2505,8 +2505,8 @@ const researchParameters = {
       },
       {
         id: 'star_lifting',
-        name: 'Star Lifting',
-        description: 'Upgrades lifters for shallow stellar skimming, unlocking the Star Lifting recipe and a supercharge slider from x1 to x10. Throughput scales linearly with the selected multiplier while energy per lifter scales cubically.',
+        name: '',
+        description: '',
         cost: { advancedResearch: 2_000_000_000 },
         prerequisites: ['lifting'],
         effects: [
