@@ -40,6 +40,9 @@
     <link rel="stylesheet" href="src/css/planet-visualizer.css">
     <link rel="stylesheet" href="src/css/automation.css">
 
+    <script src="src/js/lang/localization.js"></script>
+    <script src="src/js/lang/current-language.js"></script>
+
     <!-- Parameter Scripts -->
     <script src="src/js/debug_constants.js"></script>
     <script src="src/js/planet-resource-parameters.js"></script>
@@ -289,30 +292,30 @@
 <body>
 
 <div id="loading-overlay" class="loading-overlay">
-  <span class="loading-overlay__text">Loading...</span>
+  <span class="loading-overlay__text" data-i18n="ui.loading">Loading...</span>
 </div>
 
 <div id="game-container">
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <div class="tab hidden" id="buildings-tab" data-tab="buildings">Buildings<span id="buildings-alert" class="unlock-alert">!</span></div>
-    <div class="tab hidden" id="special-projects-tab" data-tab="special-projects">Special Projects<span id="projects-alert" class="unlock-alert">!</span></div>
-    <div class="tab hidden" id="colonies-tab" data-tab="colonies">Colony<span id="colonies-alert" class="unlock-alert">!</span></div>
-    <div class="tab hidden" id="research-tab" data-tab="research">Research<span id="research-alert" class="unlock-alert">!</span></div>
-    <div class="tab" id="terraforming-tab" data-tab="terraforming">Terraforming<span id="terraforming-alert" class="milestone-alert">!</span></div>
+    <div class="tab hidden" id="buildings-tab" data-tab="buildings"><span data-i18n="ui.tabs.buildings">Buildings</span><span id="buildings-alert" class="unlock-alert">!</span></div>
+    <div class="tab hidden" id="special-projects-tab" data-tab="special-projects"><span data-i18n="ui.tabs.specialProjects">Special Projects</span><span id="projects-alert" class="unlock-alert">!</span></div>
+    <div class="tab hidden" id="colonies-tab" data-tab="colonies"><span data-i18n="ui.tabs.colony">Colony</span><span id="colonies-alert" class="unlock-alert">!</span></div>
+    <div class="tab hidden" id="research-tab" data-tab="research"><span data-i18n="ui.tabs.research">Research</span><span id="research-alert" class="unlock-alert">!</span></div>
+    <div class="tab" id="terraforming-tab" data-tab="terraforming"><span data-i18n="ui.tabs.terraforming">Terraforming</span><span id="terraforming-alert" class="milestone-alert">!</span></div>
     <!-- *** NEW SPACE TAB BUTTON *** -->
-    <div class="tab hidden" id="space-tab" data-tab="space">Space<span id="space-tab-alert" class="unlock-alert">!</span><span id="space-attack-warning" class="space-tab-warning" aria-hidden="true">&#9650;</span></div>
+    <div class="tab hidden" id="space-tab" data-tab="space"><span data-i18n="ui.tabs.space">Space</span><span id="space-tab-alert" class="unlock-alert">!</span><span id="space-attack-warning" class="space-tab-warning" aria-hidden="true">&#9650;</span></div>
     <!-- *************************** -->
     <!-- *** NEW HOPE TAB BUTTON *** -->
-    <div class="tab hidden" id="hope-tab" data-tab="hope">H.O.P.E.<span id="hope-alert" class="hope-alert">!</span></div>
+    <div class="tab hidden" id="hope-tab" data-tab="hope"><span data-i18n="ui.tabs.hope">H.O.P.E.</span><span id="hope-alert" class="hope-alert">!</span></div>
     <!-- ***************************** -->
-    <div class="tab active" id="settings-tab" data-tab="settings">Save and Settings</div>
+    <div class="tab active" id="settings-tab" data-tab="settings" data-i18n="ui.tabs.settings">Save and Settings</div>
   </div>
 
   <div class="top-bar">
     <div class="day-night-progress-bar-container">
-      <span id="progress-text" class="progress-text">Day Progress</span>
+      <span id="progress-text" class="progress-text" data-i18n="ui.topBar.dayProgress">Day Progress</span>
       <div id="day-night-progress-bar" class="day-night-progress-bar"></div>
     </div>
   </div>
@@ -351,11 +354,11 @@
         <!-- ... existing special projects content ... -->
         <div class="container special-projects-container">
             <div class="projects-subtabs">
-            <div id="resources-projects-tab" class="projects-subtab active" data-subtab="resources-projects">Resources<span id="resources-projects-alert" class="unlock-alert">!</span></div>
-            <div id="infrastructure-projects-tab" class="projects-subtab" data-subtab="infrastructure-projects">Infrastructure<span id="infrastructure-projects-alert" class="unlock-alert">!</span></div>
-            <div id="mega-projects-tab" class="projects-subtab hidden" data-subtab="mega-projects">Mega<span id="mega-projects-alert" class="unlock-alert">!</span></div>
-            <div id="giga-projects-tab" class="projects-subtab hidden" data-subtab="giga-projects">Giga<span id="giga-projects-alert" class="unlock-alert">!</span></div>
-            <div id="story-projects-tab" class="projects-subtab hidden" data-subtab="story-projects">Story<span id="story-projects-alert" class="unlock-alert">!</span></div>
+            <div id="resources-projects-tab" class="projects-subtab active" data-subtab="resources-projects"><span data-i18n="ui.specialProjects.resources">Resources</span><span id="resources-projects-alert" class="unlock-alert">!</span></div>
+            <div id="infrastructure-projects-tab" class="projects-subtab" data-subtab="infrastructure-projects"><span data-i18n="ui.specialProjects.infrastructure">Infrastructure</span><span id="infrastructure-projects-alert" class="unlock-alert">!</span></div>
+            <div id="mega-projects-tab" class="projects-subtab hidden" data-subtab="mega-projects"><span data-i18n="ui.specialProjects.mega">Mega</span><span id="mega-projects-alert" class="unlock-alert">!</span></div>
+            <div id="giga-projects-tab" class="projects-subtab hidden" data-subtab="giga-projects"><span data-i18n="ui.specialProjects.giga">Giga</span><span id="giga-projects-alert" class="unlock-alert">!</span></div>
+            <div id="story-projects-tab" class="projects-subtab hidden" data-subtab="story-projects"><span data-i18n="ui.specialProjects.story">Story</span><span id="story-projects-alert" class="unlock-alert">!</span></div>
           </div>
           <div class="projects-subtab-content-wrapper">
             <div id="resources-projects" class="projects-subtab-content active">
@@ -382,16 +385,16 @@
       <!-- ... existing colonies content ... -->
       <div class="container colonies-container">
         <div class="colonies-subtabs">
-          <div id="population-colonies-tab" class="colony-subtab active" data-subtab="population-colonies">Population</div>
-          <div id="nanocolony-colonies-tab" class="colony-subtab hidden" data-subtab="nanocolony-colonies">Nanocolony</div>
-          <div id="followers-colonies-tab" class="colony-subtab hidden" data-subtab="followers-colonies">Followers</div>
+          <div id="population-colonies-tab" class="colony-subtab active" data-subtab="population-colonies" data-i18n="ui.colony.population">Population</div>
+          <div id="nanocolony-colonies-tab" class="colony-subtab hidden" data-subtab="nanocolony-colonies" data-i18n="ui.colony.nanocolony">Nanocolony</div>
+          <div id="followers-colonies-tab" class="colony-subtab hidden" data-subtab="followers-colonies" data-i18n="ui.colony.followers">Followers</div>
         </div>
         <div class="colony-subtab-content-wrapper">
           <div id="population-colonies" class="colony-subtab-content active">
             <div class="header-container">
-              <h2>Colonies</h2>
+              <h2 data-i18n="ui.colony.title">Colonies</h2>
               <div id="unhide-obsolete-container" class="unhide-obsolete-container" style="display: none;">
-                <button id="unhide-obsolete-button" class="unhide-obsolete-button">Unhide Obsolete Buildings</button>
+                <button id="unhide-obsolete-button" class="unhide-obsolete-button" data-i18n="ui.colony.unhideObsoleteBuildings">Unhide Obsolete Buildings</button>
               </div>
             </div>
             <div id="colony-structures-section">
@@ -419,45 +422,45 @@
         <!-- ... existing research content ... -->
          <div class="container">
             <div class="research-subtabs">
-                <div class="research-subtab active" data-subtab="energy-research">Energy<span id="energy-research-alert" class="unlock-alert">!</span></div>
-                <div class="research-subtab" data-subtab="industry-research">Industry<span id="industry-research-alert" class="unlock-alert">!</span></div>
-                <div class="research-subtab" data-subtab="colonization-research">Colonization<span id="colonization-research-alert" class="unlock-alert">!</span></div>
-                <div class="research-subtab" data-subtab="terraforming-research">Terraforming<span id="terraforming-research-alert" class="unlock-alert">!</span></div>
-                <div class="research-subtab hidden" data-subtab="advanced-research">Advanced<span id="advanced-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab active" data-subtab="energy-research"><span data-i18n="ui.research.energy">Energy</span><span id="energy-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab" data-subtab="industry-research"><span data-i18n="ui.research.industry">Industry</span><span id="industry-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab" data-subtab="colonization-research"><span data-i18n="ui.research.colonization">Colonization</span><span id="colonization-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab" data-subtab="terraforming-research"><span data-i18n="ui.research.terraforming">Terraforming</span><span id="terraforming-research-alert" class="unlock-alert">!</span></div>
+                <div class="research-subtab hidden" data-subtab="advanced-research"><span data-i18n="ui.research.advanced">Advanced</span><span id="advanced-research-alert" class="unlock-alert">!</span></div>
             </div>
             <div class="subtab-content-wrapper">
                 <div id="energy-research" class="research-subtab-content active">
                   <div class="research-header">
-                    <span class="research-title">Energy Research</span>
-                    <button class="toggle-completed-button">Toggle Hidden</button>
+                    <span class="research-title" data-i18n="ui.research.energyTitle">Energy Research</span>
+                    <button class="toggle-completed-button" data-i18n="ui.research.toggleHidden">Toggle Hidden</button>
                   </div>
                   <div class="research-list" id="energy-research-buttons"></div>
                 </div>
                 <div id="industry-research" class="research-subtab-content">
                   <div class="research-header">
-                    <span class="research-title">Industry Research</span>
-                    <button class="toggle-completed-button">Toggle Hidden</button>
+                    <span class="research-title" data-i18n="ui.research.industryTitle">Industry Research</span>
+                    <button class="toggle-completed-button" data-i18n="ui.research.toggleHidden">Toggle Hidden</button>
                   </div>
                   <div class="research-list" id="industry-research-buttons"></div>
                 </div>
                 <div id="colonization-research" class="research-subtab-content">
                   <div class="research-header">
-                    <span class="research-title">Colonization Research</span>
-                    <button class="toggle-completed-button">Toggle Hidden</button>
+                    <span class="research-title" data-i18n="ui.research.colonizationTitle">Colonization Research</span>
+                    <button class="toggle-completed-button" data-i18n="ui.research.toggleHidden">Toggle Hidden</button>
                   </div>
                   <div class="research-list" id="colonization-research-buttons"></div>
                 </div>
                 <div id="terraforming-research" class="research-subtab-content">
                   <div class="research-header">
-                    <span class="research-title">Terraforming Research</span>
-                    <button class="toggle-completed-button">Toggle Hidden</button>
+                    <span class="research-title" data-i18n="ui.research.terraformingTitle">Terraforming Research</span>
+                    <button class="toggle-completed-button" data-i18n="ui.research.toggleHidden">Toggle Hidden</button>
                   </div>
                   <div class="research-list" id="terraforming-research-buttons"></div>
                 </div>
                 <div id="advanced-research" class="research-subtab-content hidden">
                   <div class="research-header">
-                    <span class="research-title">Advanced Research</span>
-                    <button class="toggle-completed-button">Toggle Hidden</button>
+                    <span class="research-title" data-i18n="ui.research.advancedTitle">Advanced Research</span>
+                    <button class="toggle-completed-button" data-i18n="ui.research.toggleHidden">Toggle Hidden</button>
                   </div>
                   <div class="research-list" id="advanced-research-buttons"></div>
                 </div>
@@ -470,27 +473,27 @@
       <!-- ... existing terraforming content ... -->
        <div class="container">
         <div class="terraforming-subtabs">
-          <div class="terraforming-subtab active" data-subtab="world-terraforming">World</div>
-          <div class="terraforming-subtab hidden" data-subtab="summary-terraforming">Summary</div>
-          <div class="terraforming-subtab hidden" data-subtab="life-terraforming">Life</div>
-          <div class="terraforming-subtab hidden" data-subtab="hazard-terraforming">Hazards</div>
-          <div class="terraforming-subtab hidden" data-subtab="milestone-terraforming">Milestones<span id="milestone-subtab-alert" class="milestone-alert">!</span></div>
+          <div class="terraforming-subtab active" data-subtab="world-terraforming" data-i18n="ui.terraforming.world">World</div>
+          <div class="terraforming-subtab hidden" data-subtab="summary-terraforming" data-i18n="ui.terraforming.summary">Summary</div>
+          <div class="terraforming-subtab hidden" data-subtab="life-terraforming" data-i18n="ui.terraforming.life">Life</div>
+          <div class="terraforming-subtab hidden" data-subtab="hazard-terraforming" data-i18n="ui.terraforming.hazards">Hazards</div>
+          <div class="terraforming-subtab hidden" data-subtab="milestone-terraforming"><span data-i18n="ui.terraforming.milestones">Milestones</span><span id="milestone-subtab-alert" class="milestone-alert">!</span></div>
         </div>
       <div class="terraforming-subtab-content-wrapper">
           <div id="world-terraforming" class="terraforming-subtab-content active"></div>
           <div id = "summary-terraforming" class="terraforming-subtab-content hidden">
-              <div id="play-time-display">0 days</div>
+              <div id="play-time-display" data-i18n="ui.terraforming.playTimeDefault">0 days</div>
                <!-- Terraforming UI goes here -->
           </div>
           <div id = "life-terraforming" class="terraforming-subtab-content hidden">
-            <h2>Life</h2>
+            <h2 data-i18n="ui.terraforming.lifeTitle">Life</h2>
              <!-- Life UI goes here -->
           </div>
           <div id = "hazard-terraforming" class="terraforming-subtab-content hidden"></div>
           <div id = "milestone-terraforming" class="terraforming-subtab-content hidden">
-            <h2>Milestones</h2>
+            <h2 data-i18n="ui.terraforming.milestonesTitle">Milestones</h2>
             <div class="milestone-options">
-                <label><input type="checkbox" id="milestone-silence-toggle"> Silence milestone alert</label>
+                <label><input type="checkbox" id="milestone-silence-toggle"> <span data-i18n="ui.terraforming.silenceMilestoneAlert">Silence milestone alert</span></label>
             </div>
              <!-- Milestones UI goes here -->
           </div>
@@ -502,37 +505,37 @@
     <div id="space" class="tab-content">
         <div class="container space-container"> <!-- Add specific class if needed -->
                 <div class="space-subtabs">
-                    <div class="space-subtab active" data-subtab="space-story">Story<span id="space-story-alert" class="unlock-alert">!</span></div>
-                    <div class="space-subtab hidden" data-subtab="space-random">Random</div>
-                    <div class="space-subtab hidden" data-subtab="space-artificial">Artificial</div>
-                    <div class="space-subtab hidden" data-subtab="space-galaxy">Galaxy</div>
+                    <div class="space-subtab active" data-subtab="space-story"><span data-i18n="ui.space.story">Story</span><span id="space-story-alert" class="unlock-alert">!</span></div>
+                    <div class="space-subtab hidden" data-subtab="space-random" data-i18n="ui.space.random">Random</div>
+                    <div class="space-subtab hidden" data-subtab="space-artificial" data-i18n="ui.space.artificial">Artificial</div>
+                    <div class="space-subtab hidden" data-subtab="space-galaxy" data-i18n="ui.space.galaxy">Galaxy</div>
                 </div>
             <div class="space-subtab-content-wrapper">
                 <div id="space-story" class="space-subtab-content active">
                     <div class="space-story-layout">
                         <section class="space-card space-stats-card">
                             <div class="space-stats-header">
-                                <h3 class="space-card-title">Statistics</h3>
-                                <p class="space-card-subtitle">Track how far the campaign has spread.</p>
+                                <h3 class="space-card-title" data-i18n="ui.space.statisticsTitle">Statistics</h3>
+                                <p class="space-card-subtitle" data-i18n="ui.space.statisticsSubtitle">Track how far the campaign has spread.</p>
                             </div>
                             <div class="space-stats-grid">
                                 <div class="space-stat-card">
                                     <div class="space-stat-label">
-                                        Unique worlds terraformed
+                                        <span data-i18n="ui.space.uniqueWorldsTerraforming">Unique worlds terraformed</span>
                                         <span id="space-stat-unique-tooltip" class="info-tooltip-icon">&#9432;</span>
                                     </div>
                                     <div id="space-stat-unique-value" class="space-stat-value">0</div>
                                 </div>
                                 <div class="space-stat-card">
                                     <div class="space-stat-label">
-                                        Effective worlds terraformed
+                                        <span data-i18n="ui.space.effectiveWorldsTerraforming">Effective worlds terraformed</span>
                                         <span id="space-stat-effective-tooltip" class="info-tooltip-icon">&#9432;</span>
                                     </div>
                                     <div id="space-stat-effective-value" class="space-stat-value">0</div>
                                 </div>
                                 <div id="space-stat-oneill-card" class="space-stat-card hidden">
                                     <div class="space-stat-label">
-                                        O'Neill cylinders
+                                        <span data-i18n="ui.space.oneillCylinders">O'Neill cylinders</span>
                                         <span id="space-stat-oneill-tooltip" class="info-tooltip-icon">&#9432;</span>
                                     </div>
                                     <div class="space-stat-value-row">
@@ -544,13 +547,13 @@
                         </section>
                         <section id="current-world-section" class="space-card current-world-card">
                             <div id="current-world-header" class="space-card-header">
-                                <div class="space-card-label">Current World</div>
+                                <div class="space-card-label" data-i18n="ui.space.currentWorldLabel">Current World</div>
                                 <div class="space-card-title"><span id="current-world-name"></span></div>
                             </div>
                             <div id="current-world-details-container" class="details-container">
                                 <div class="summary-header">
                                     <span class="summary-arrow">▶</span>
-                                    <span class="summary-title">Original Properties</span>
+                                    <span class="summary-title" data-i18n="ui.space.originalProperties">Original Properties</span>
                                 </div>
                                 <div id="current-world-details" class="details-content hidden"></div>
                             </div>
@@ -558,8 +561,8 @@
                         <section class="space-card selection-card">
                             <div class="space-card-header space-selection-header">
                                 <div>
-                                    <h2 class="space-card-title">World Selection</h2>
-                                    <p class="space-card-subtitle">Finish terraforming to unlock your next destination.</p>
+                                    <h2 class="space-card-title" data-i18n="ui.space.worldSelectionTitle">World Selection</h2>
+                                    <p class="space-card-subtitle" data-i18n="ui.space.worldSelectionSubtitle">Finish terraforming to unlock your next destination.</p>
                                 </div>
                                 <div id="travel-status" class="space-travel-status">
                                     <!-- Status messages about travel preparation/progress -->
@@ -587,44 +590,44 @@
     <div id="hope" class="tab-content">
         <div class="container hope-container">
             <div class="hope-subtabs">
-                <div class="hope-subtab active" data-subtab="awakening-hope">Awakening<span id="awakening-subtab-alert" class="hope-alert">!</span></div>
-                <div class="hope-subtab hidden" data-subtab="solis-hope">Solis<span id="solis-subtab-alert" class="hope-alert">!</span></div>
-                <div class="hope-subtab hidden" data-subtab="wgc-hope">WGC<span id="wgc-subtab-alert" class="hope-alert">!</span></div>
-                <div class="hope-subtab hidden" id="patience-subtab" data-subtab="patience-hope">Patience</div>
-                <div class="hope-subtab hidden" data-subtab="automation-hope">Automation</div>
+                <div class="hope-subtab active" data-subtab="awakening-hope"><span data-i18n="ui.hope.awakening">Awakening</span><span id="awakening-subtab-alert" class="hope-alert">!</span></div>
+                <div class="hope-subtab hidden" data-subtab="solis-hope"><span data-i18n="ui.hope.solis">Solis</span><span id="solis-subtab-alert" class="hope-alert">!</span></div>
+                <div class="hope-subtab hidden" data-subtab="wgc-hope"><span data-i18n="ui.hope.wgc">WGC</span><span id="wgc-subtab-alert" class="hope-alert">!</span></div>
+                <div class="hope-subtab hidden" id="patience-subtab" data-subtab="patience-hope" data-i18n="ui.hope.patience">Patience</div>
+                <div class="hope-subtab hidden" data-subtab="automation-hope" data-i18n="ui.hope.automation">Automation</div>
             </div>
             <div class="hope-subtab-content-wrapper">
                 <div id="awakening-hope" class="hope-subtab-content active">
-                    <div id="skill-points-display">Skill Points: <span id="skill-points-value">0</span></div>
+                    <div id="skill-points-display"><span data-i18n="ui.hope.skillPoints">Skill Points:</span> <span id="skill-points-value">0</span></div>
                     <div id="skill-tree" class="skill-tree"></div>
                 </div>
                 <div id="solis-hope" class="hope-subtab-content hidden">
                     <div class="solis-container">
                         <div class="solis-header">
-                            <h2>Solis Quests</h2>
-                            <div id="solis-points-display">Solis Points: <span id="solis-points-value">0</span></div>
+                            <h2 data-i18n="ui.hope.solisQuests">Solis Quests</h2>
+                            <div id="solis-points-display"><span data-i18n="ui.hope.solisPoints">Solis Points:</span> <span id="solis-points-value">0</span></div>
                         </div>
                         <div class="solis-quest-area">
-                            <div id="solis-quest-text">No quest available</div>
+                            <div id="solis-quest-text" data-i18n="ui.hope.noQuestAvailable">No quest available</div>
                             <div id="solis-cooldown" class="hidden"></div>
                         </div>
                             <div class="solis-controls">
                             <div class="solis-reward-control">
-                                <span>Reward: <span id="solis-reward">1.00</span> point(s)</span>
-                                <span class="info-tooltip-icon" title="Multiplied by square root of worlds terraformed">&#9432;</span>
-                                <button id="solis-min-button" class="solis-multiplier-button">Min</button>
+                                <span><span data-i18n="ui.hope.reward">Reward:</span> <span id="solis-reward">1.00</span> <span data-i18n="ui.hope.rewardPointsSuffix">point(s)</span></span>
+                                <span class="info-tooltip-icon" data-i18n-title="ui.hope.rewardTooltip" title="Multiplied by square root of worlds terraformed">&#9432;</span>
+                                <button id="solis-min-button" class="solis-multiplier-button" data-i18n="ui.common.min">Min</button>
                                 <button id="solis-divide-button" class="solis-multiplier-button">-</button>
                                 <button id="solis-multiply-button" class="solis-multiplier-button">+</button>
-                                <button id="solis-max-button" class="solis-multiplier-button">Max</button>
+                                <button id="solis-max-button" class="solis-multiplier-button" data-i18n="ui.common.max">Max</button>
                             </div>
                             <div class="solis-buttons">
-                                <button id="solis-refresh-button">Refresh</button>
-                                <button id="solis-complete-button">Complete Quest</button>
+                                <button id="solis-refresh-button" data-i18n="ui.common.refresh">Refresh</button>
+                                <button id="solis-complete-button" data-i18n="ui.hope.completeQuest">Complete Quest</button>
                             </div>
                         </div>
                         <div class="solis-options">
                             <label>
-                                <input type="checkbox" id="solis-silence-toggle"> Silence quest alert
+                                <input type="checkbox" id="solis-silence-toggle"> <span data-i18n="ui.hope.silenceQuestAlert">Silence quest alert</span>
                             </label>
                         </div>
                         <div id="solis-donation-section" class="hidden">
@@ -651,46 +654,46 @@
                     <div class="automation-container">
                         <div class="automation-card" id="automation-ship-assignment">
                             <div class="automation-card-header">
-                                <h3>Ship Assignment</h3>
-                                <span id="automation-ship-assignment-status" class="automation-status">Locked</span>
+                                <h3 data-i18n="ui.hope.automationCards.shipAssignmentTitle">Ship Assignment</h3>
+                                <span id="automation-ship-assignment-status" class="automation-status" data-i18n="ui.common.locked">Locked</span>
                             </div>
-                            <div id="automation-ship-assignment-description" class="automation-description">
+                            <div id="automation-ship-assignment-description" class="automation-description" data-i18n="ui.hope.automationCards.shipAssignmentDescription">
                                 Manage automation upgrades to unlock ship assignment controls.
                             </div>
                         </div>
                         <div class="automation-card" id="automation-life-design">
                             <div class="automation-card-header">
-                                <h3>Life Automation</h3>
-                                <span id="automation-life-design-status" class="automation-status">Locked</span>
+                                <h3 data-i18n="ui.hope.automationCards.lifeAutomationTitle">Life Automation</h3>
+                                <span id="automation-life-design-status" class="automation-status" data-i18n="ui.common.locked">Locked</span>
                             </div>
-                            <div id="automation-life-design-description" class="automation-description">
+                            <div id="automation-life-design-description" class="automation-description" data-i18n="ui.hope.automationCards.lifeAutomationDescription">
                                 Configure auto-purchase and auto-design for life engineering.
                             </div>
                         </div>
                         <div class="automation-card" id="automation-buildings">
                             <div class="automation-card-header">
-                                <h3>Buildings Automation</h3>
-                                <span id="automation-buildings-status" class="automation-status">Locked</span>
+                                <h3 data-i18n="ui.hope.automationCards.buildingsAutomationTitle">Buildings Automation</h3>
+                                <span id="automation-buildings-status" class="automation-status" data-i18n="ui.common.locked">Locked</span>
                             </div>
-                            <div id="automation-buildings-description" class="automation-description">
+                            <div id="automation-buildings-description" class="automation-description" data-i18n="ui.hope.automationCards.buildingsAutomationDescription">
                                 Store building presets and apply them in priority order.
                             </div>
                         </div>
                         <div class="automation-card" id="automation-projects">
                             <div class="automation-card-header">
-                                <h3>Projects Automation</h3>
-                                <span id="automation-projects-status" class="automation-status">Locked</span>
+                                <h3 data-i18n="ui.hope.automationCards.projectsAutomationTitle">Projects Automation</h3>
+                                <span id="automation-projects-status" class="automation-status" data-i18n="ui.common.locked">Locked</span>
                             </div>
-                            <div id="automation-projects-description" class="automation-description">
+                            <div id="automation-projects-description" class="automation-description" data-i18n="ui.hope.automationCards.projectsAutomationDescription">
                                 Store project presets and apply them in priority order.
                             </div>
                         </div>
                         <div class="automation-card" id="automation-colony">
                             <div class="automation-card-header">
-                                <h3>Colony Automation</h3>
-                                <span id="automation-colony-status" class="automation-status">Locked</span>
+                                <h3 data-i18n="ui.hope.automationCards.colonyAutomationTitle">Colony Automation</h3>
+                                <span id="automation-colony-status" class="automation-status" data-i18n="ui.common.locked">Locked</span>
                             </div>
-                            <div id="automation-colony-description" class="automation-description">
+                            <div id="automation-colony-description" class="automation-description" data-i18n="ui.hope.automationCards.colonyAutomationDescription">
                                 Store colony control and autobuild presets for colony systems.
                             </div>
                         </div>
@@ -706,41 +709,41 @@
       <!-- ... existing settings content ... -->
       <div class="container settings-container">
           <div class="settings-subtabs">
-            <div class="settings-subtab active" data-subtab="save-settings-subtab">Save</div>
-            <div class="settings-subtab" data-subtab="preferences-settings-subtab">Settings</div>
-            <div class="settings-subtab" data-subtab="statistics-settings-subtab">Statistics</div>
-            <div class="settings-subtab" data-subtab="credits-settings-subtab">Credits</div>
+            <div class="settings-subtab active" data-subtab="save-settings-subtab" data-i18n="ui.settings.save">Save</div>
+            <div class="settings-subtab" data-subtab="preferences-settings-subtab" data-i18n="ui.settings.settings">Settings</div>
+            <div class="settings-subtab" data-subtab="statistics-settings-subtab" data-i18n="ui.settings.statistics">Statistics</div>
+            <div class="settings-subtab" data-subtab="credits-settings-subtab" data-i18n="ui.settings.credits">Credits</div>
           </div>
           <div class="subtab-content-wrapper settings-subtab-content-wrapper">
             <div id="save-settings-subtab" class="settings-subtab-content active">
-              <h2>Save</h2>
+              <h2 data-i18n="ui.settings.save">Save</h2>
               <div class="save-slots">
                   <!-- ... table ... -->
                   <table>
                       <thead>
                           <tr>
-                              <th>Slot</th>
-                              <th>Date</th>
-                              <th>Actions</th>
+                              <th data-i18n="ui.settings.slot">Slot</th>
+                              <th data-i18n="ui.settings.date">Date</th>
+                              <th data-i18n="ui.settings.actions">Actions</th>
                           </tr>
                       </thead>
                       <tbody>
                           <tr>
-                            <td>Autosave</td>
-                            <td id="autosave-date">Empty</td>
+                            <td data-i18n="ui.settings.autosave">Autosave</td>
+                            <td id="autosave-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
-                                <button class="save-button" data-slot="autosave">Save</button>
-                                <button class="load-button" data-slot="autosave">Load</button>
-                                <button class="delete-button" data-slot="autosave">Delete</button>
+                                <button class="save-button" data-slot="autosave" data-i18n="ui.common.save">Save</button>
+                                <button class="load-button" data-slot="autosave" data-i18n="ui.common.load">Load</button>
+                                <button class="delete-button" data-slot="autosave" data-i18n="ui.common.delete">Delete</button>
                             </td>
                         </tr>
                         <tr id="pretravel-row" class="hidden">
-                            <td>Pre-travel</td>
-                            <td id="pretravel-date">Empty</td>
+                            <td data-i18n="ui.settings.pretravel">Pre-travel</td>
+                            <td id="pretravel-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
-                                <button class="save-button" data-slot="pretravel" disabled>Save</button>
-                                <button class="load-button" data-slot="pretravel">Load</button>
-                                <button class="delete-button" data-slot="pretravel">Delete</button>
+                                <button class="save-button" data-slot="pretravel" disabled data-i18n="ui.common.save">Save</button>
+                                <button class="load-button" data-slot="pretravel" data-i18n="ui.common.load">Load</button>
+                                <button class="delete-button" data-slot="pretravel" data-i18n="ui.common.delete">Delete</button>
                             </td>
                         </tr>
                         <tr>
@@ -749,64 +752,64 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Slot 1</td>
-                            <td id="slot1-date">Empty</td>
+                            <td data-i18n="ui.settings.slot1">Slot 1</td>
+                            <td id="slot1-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
-                                <button class="save-button" data-slot="slot1">Save</button>
-                                <button class="load-button" data-slot="slot1">Load</button>
-                                <button class="delete-button" data-slot="slot1">Delete</button>
+                                <button class="save-button" data-slot="slot1" data-i18n="ui.common.save">Save</button>
+                                <button class="load-button" data-slot="slot1" data-i18n="ui.common.load">Load</button>
+                                <button class="delete-button" data-slot="slot1" data-i18n="ui.common.delete">Delete</button>
                             </td>
                         </tr>
                         <!-- ... other slots ... -->
                          <tr>
-                              <td>Slot 2</td>
-                              <td id="slot2-date">Empty</td>
+                              <td data-i18n="ui.settings.slot2">Slot 2</td>
+                              <td id="slot2-date" data-i18n="ui.common.empty">Empty</td>
                               <td>
-                                  <button class="save-button" data-slot="slot2">Save</button>
-                                  <button class="load-button" data-slot="slot2">Load</button>
-                                  <button class="delete-button" data-slot="slot2">Delete</button>
+                                  <button class="save-button" data-slot="slot2" data-i18n="ui.common.save">Save</button>
+                                  <button class="load-button" data-slot="slot2" data-i18n="ui.common.load">Load</button>
+                                  <button class="delete-button" data-slot="slot2" data-i18n="ui.common.delete">Delete</button>
                               </td>
                           </tr>
                           <tr>
-                              <td>Slot 3</td>
-                              <td id="slot3-date">Empty</td>
+                              <td data-i18n="ui.settings.slot3">Slot 3</td>
+                              <td id="slot3-date" data-i18n="ui.common.empty">Empty</td>
                               <td>
-                                  <button class="save-button" data-slot="slot3">Save</button>
-                                  <button class="load-button" data-slot="slot3">Load</button>
-                                  <button class="delete-button" data-slot="slot3">Delete</button>
+                                  <button class="save-button" data-slot="slot3" data-i18n="ui.common.save">Save</button>
+                                  <button class="load-button" data-slot="slot3" data-i18n="ui.common.load">Load</button>
+                                  <button class="delete-button" data-slot="slot3" data-i18n="ui.common.delete">Delete</button>
                               </td>
                           </tr>
                           <tr>
-                              <td>Slot 4</td>
-                              <td id="slot4-date">Empty</td>
+                              <td data-i18n="ui.settings.slot4">Slot 4</td>
+                              <td id="slot4-date" data-i18n="ui.common.empty">Empty</td>
                               <td>
-                                  <button class="save-button" data-slot="slot4">Save</button>
-                                  <button class="load-button" data-slot="slot4">Load</button>
-                                  <button class="delete-button" data-slot="slot4">Delete</button>
+                                  <button class="save-button" data-slot="slot4" data-i18n="ui.common.save">Save</button>
+                                  <button class="load-button" data-slot="slot4" data-i18n="ui.common.load">Load</button>
+                                  <button class="delete-button" data-slot="slot4" data-i18n="ui.common.delete">Delete</button>
                               </td>
                           </tr>
                           <tr>
-                              <td>Slot 5</td>
-                              <td id="slot5-date">Empty</td>
+                              <td data-i18n="ui.settings.slot5">Slot 5</td>
+                              <td id="slot5-date" data-i18n="ui.common.empty">Empty</td>
                               <td>
-                                  <button class="save-button" data-slot="slot5">Save</button>
-                                  <button class="load-button" data-slot="slot5">Load</button>
-                                  <button class="delete-button" data-slot="slot5">Delete</button>
+                                  <button class="save-button" data-slot="slot5" data-i18n="ui.common.save">Save</button>
+                                  <button class="load-button" data-slot="slot5" data-i18n="ui.common.load">Load</button>
+                                  <button class="delete-button" data-slot="slot5" data-i18n="ui.common.delete">Delete</button>
                               </td>
                           </tr>
                           <tr>
                             <td colspan="3">
-                              <button id="new-game-button">New Game</button>
-                              <button id="save-to-file-button">Save to File</button>
+                              <button id="new-game-button" data-i18n="ui.settings.newGame">New Game</button>
+                              <button id="save-to-file-button" data-i18n="ui.settings.saveToFile">Save to File</button>
                               <input type="file" id="load-from-file-input" accept=".json" style="display: none;">
-                              <button id="load-from-file-button">Load from File</button>
-                              <button id="save-to-clipboard-button">Save to Clipboard</button>
-                              <button id="load-from-string-button">Load from string</button>
+                              <button id="load-from-file-button" data-i18n="ui.settings.loadFromFile">Load from File</button>
+                              <button id="save-to-clipboard-button" data-i18n="ui.settings.saveToClipboard">Save to Clipboard</button>
+                              <button id="load-from-string-button" data-i18n="ui.settings.loadFromString">Load from string</button>
                             </td>
                           </tr>
                             <tr>
                               <td colspan="3">
-                                <button id="pause-button">Pause</button>
+                                <button id="pause-button" data-i18n="ui.common.pause">Pause</button>
                               </td>
                             </tr>
                       </tbody>
@@ -814,75 +817,75 @@
               </div>
             </div>
             <div id="preferences-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
-              <h2>Settings</h2>
+              <h2 data-i18n="ui.settings.settings">Settings</h2>
               <div class="settings-grid">
                 <label class="settings-option">
-                  <input type="checkbox" id="keep-tab-running-audio-toggle"> Use white noise to keep tab active <span class="info-tooltip-icon" title="After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution.  Much more quiet on Firefox.  May still work even if the tab is muted.">&#9432;</span>
+                  <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="ui.settings.whiteNoiseLabel">Use white noise to keep tab active</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.whiteNoiseTooltip" title="After your first click or keypress it plays a quiet white noise loop to prevent the browser from throttling background execution.  Much more quiet on Firefox.  May still work even if the tab is muted.">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  Autosave interval
+                  <span data-i18n="ui.settings.autosaveInterval">Autosave interval</span>
                   <select id="autosave-interval-select">
-                    <option value="30">30s</option>
-                    <option value="60">1 minute</option>
-                    <option value="120">2 minutes</option>
-                    <option value="300" selected>5 minutes</option>
-                    <option value="900">15 minutes</option>
-                    <option value="1800">30 minutes</option>
-                    <option value="3600">1 hour</option>
-                    <option value="0">Never</option>
+                    <option value="30" data-i18n="ui.settings.autosaveIntervals.s30">30s</option>
+                    <option value="60" data-i18n="ui.settings.autosaveIntervals.m1">1 minute</option>
+                    <option value="120" data-i18n="ui.settings.autosaveIntervals.m2">2 minutes</option>
+                    <option value="300" selected data-i18n="ui.settings.autosaveIntervals.m5">5 minutes</option>
+                    <option value="900" data-i18n="ui.settings.autosaveIntervals.m15">15 minutes</option>
+                    <option value="1800" data-i18n="ui.settings.autosaveIntervals.m30">30 minutes</option>
+                    <option value="3600" data-i18n="ui.settings.autosaveIntervals.h1">1 hour</option>
+                    <option value="0" data-i18n="ui.settings.autosaveIntervals.never">Never</option>
                   </select>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="celsius-toggle"> Display temperature in Celsius
+                  <input type="checkbox" id="celsius-toggle"> <span data-i18n="ui.settings.celsius">Display temperature in Celsius</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="dark-mode-toggle"> Enable Dark Mode
+                  <input type="checkbox" id="dark-mode-toggle"> <span data-i18n="ui.settings.darkMode">Enable Dark Mode</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="show-space-storage-in-default-panel-toggle"> Show space resources in default resource panel
+                  <input type="checkbox" id="show-space-storage-in-default-panel-toggle"> <span data-i18n="ui.settings.showSpaceResources">Show space resources in default resource panel</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="unlock-alert-toggle"> Disable unlock alerts
+                  <input type="checkbox" id="unlock-alert-toggle"> <span data-i18n="ui.settings.disableUnlockAlerts">Disable unlock alerts</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="day-night-toggle"> Disable day-night cycle <span class="info-tooltip-icon" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
+                  <input type="checkbox" id="day-night-toggle"> <span data-i18n="ui.settings.disableDayNightCycle">Disable day-night cycle</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.dayNightTooltip" title="Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance.  Leads to a more realistic, slightly easier and more relaxed experience.">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="preserve-project-auto-start-toggle"> Preserve project auto-start between worlds <span class="info-tooltip-icon" title="Keeps project auto-start selections when travelling.">&#9432;</span>
+                  <input type="checkbox" id="preserve-project-auto-start-toggle"> <span data-i18n="ui.settings.preserveProjectAutoStart">Preserve project auto-start between worlds</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.preserveProjectAutoStartTooltip" title="Keeps project auto-start selections when travelling.">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="preserve-project-settings-toggle"> Preserve most project settings on travel <span id="preserve-project-settings-tooltip" class="info-tooltip-icon" title="Preserves most project settings when traveling.">&#9432;</span>
+                  <input type="checkbox" id="preserve-project-settings-toggle"> <span data-i18n="ui.settings.preserveProjectSettings">Preserve most project settings on travel</span> <span id="preserve-project-settings-tooltip" class="info-tooltip-icon" data-i18n-title="ui.settings.preserveProjectSettingsTooltip" title="Preserves most project settings when traveling.">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="keep-hidden-structures-toggle"> Keep hidden buildings on travel <span class="info-tooltip-icon" title="Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.">&#9432;</span>
+                  <input type="checkbox" id="keep-hidden-structures-toggle"> <span data-i18n="ui.settings.keepHiddenBuildings">Keep hidden buildings on travel</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.keepHiddenBuildingsTooltip" title="Keeps buildings you hide hidden after travelling to another world instead of revealing them when you arrive.">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="autobuild-set-active-toggle" checked> Checking autobuild also checks Set Active to Target
+                  <input type="checkbox" id="autobuild-set-active-toggle" checked> <span data-i18n="ui.settings.autobuildSetActive">Checking autobuild also checks Set Active to Target</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> Checking Colony Upgrade unchecks autobuild
+                  <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> <span data-i18n="ui.settings.colonyUpgradeUnchecksAutobuild">Checking Colony Upgrade unchecks autobuild</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="round-building-toggle"> Round building construction <span class="info-tooltip-icon" title="When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.  Does not apply if autobuild is on.">&#9432;</span>
+                  <input type="checkbox" id="round-building-toggle"> <span data-i18n="ui.settings.roundBuildingConstruction">Round building construction</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.roundBuildingConstructionTooltip" title="When manually constructing buildings, your number of constructed buildings will round to your build count. For example, with a build count of 100 and a current amount of 157, manually building will result in 200 buildings.  Does not apply if autobuild is on.">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  Use scientific notation above <input type="text" id="scientific-notation-threshold-input" value="1e30"> <span class="info-tooltip-icon" title="Values at or above this threshold are displayed in scientific notation, such as 1e30.">&#9432;</span>
+                  <span data-i18n="ui.settings.scientificNotationPrefix">Use scientific notation above</span> <input type="text" id="scientific-notation-threshold-input" value="1e30"> <span class="info-tooltip-icon" data-i18n-title="ui.settings.scientificNotationTooltip" title="Values at or above this threshold are displayed in scientific notation, such as 1e30.">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="simplify-golden-asteroid-toggle"> Simplify Golden Asteroid <span class="info-tooltip-icon" title="When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.">&#9432;</span>
+                  <input type="checkbox" id="simplify-golden-asteroid-toggle"> <span data-i18n="ui.settings.simplifyGoldenAsteroid">Simplify Golden Asteroid</span> <span class="info-tooltip-icon" data-i18n-title="ui.settings.simplifyGoldenAsteroidTooltip" title="When enabled, the Golden Asteroid appears as a clickable golden button where the effect text is shown, instead of a moving image on the screen.">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="suppress-faith-toggle"> Suppress Faith <span id="suppress-faith-tooltip" class="info-tooltip-icon">&#9432;</span>
+                  <input type="checkbox" id="suppress-faith-toggle"> <span data-i18n="ui.settings.suppressFaith">Suppress Faith</span> <span id="suppress-faith-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
               </div>
             </div>
             <div id="statistics-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
-              <h2>Statistics</h2>
-              <p class="settings-stat-line">Total Playtime: <span id="total-playtime-display"></span></p>
-              <p class="settings-stat-line" id="fastest-terraform-row" style="display: none;">Fastest Terraform: <span id="fastest-terraform-display"></span></p>
+              <h2 data-i18n="ui.settings.statisticsTitle">Statistics</h2>
+              <p class="settings-stat-line"><span data-i18n="ui.settings.totalPlaytime">Total Playtime:</span> <span id="total-playtime-display"></span></p>
+              <p class="settings-stat-line" id="fastest-terraform-row" style="display: none;"><span data-i18n="ui.settings.fastestTerraform">Fastest Terraform:</span> <span id="fastest-terraform-display"></span></p>
             </div>
             <div id="credits-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
-              <h2>Credits</h2>
+              <h2 data-i18n="ui.settings.creditsTitle">Credits</h2>
               <div id="settings-credits-list"></div>
             </div>
           </div>
@@ -895,9 +898,9 @@
             <h3 class="journal-title" id="journal-title">
                 <span class="journal-title-left">
                     <span id="journal-toggle-icon">&raquo;</span>
-                    <span class="journal-title-label">Journal</span>
-                    <span id="journal-automation-toggle" class="journal-automation-toggle hidden" title="Automation shortcuts">&#9881;</span>
-                    <span id="journal-index-icon" class="journal-index-icon" title="Show journal index">&#9776;</span>
+                    <span class="journal-title-label" data-i18n="ui.journal.title">Journal</span>
+                    <span id="journal-automation-toggle" class="journal-automation-toggle hidden" data-i18n-title="ui.journal.automationShortcuts" title="Automation shortcuts">&#9881;</span>
+                    <span id="journal-index-icon" class="journal-index-icon" data-i18n-title="ui.journal.showJournalIndex" title="Show journal index">&#9776;</span>
                 </span>
                 <span id="journal-nav-container">
                     <span id="journal-prev" class="journal-nav">&#9664;</span>

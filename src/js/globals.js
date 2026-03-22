@@ -1,4 +1,6 @@
 
+applyLanguageToGameData();
+
 let defaultPlanet = 'mars';
 let tabManager;
 let currentPlanetParameters = getPlanetParameters(defaultPlanet);
