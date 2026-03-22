@@ -195,6 +195,166 @@ function loadSave(window, saveName) {
   window.loadGame(saveText, true);
 }
 
+function forEachResource(resources, iteratee) {
+  for (const category in resources) {
+    for (const resourceName in resources[category]) {
+      iteratee(resources[category][resourceName], category, resourceName);
+    }
+  }
+}
+
+function resetAllResourceRates(window) {
+  const resources = getGlobal(window, 'resources');
+  forEachResource(resources, (resource) => {
+    resource.resetRates();
+  });
+  window.eval('recalculateTotalRates()');
+}
+
+function setResourceValue(resource, value) {
+  resource.value = value;
+  if (Number.isFinite(resource.cap) && resource.cap < value) {
+    resource.cap = value;
+  }
+}
+
+function provisionExpansionResources(window, costMap) {
+  const resources = getGlobal(window, 'resources');
+  const projectManager = getGlobal(window, 'projectManager');
+  const huge = 1e60;
+
+  projectManager.projects.spaceStorage.megaProjectResourceMode = 'colony-only';
+
+  for (const category in costMap) {
+    for (const resourceName in costMap[category]) {
+      const resource = resources[category]?.[resourceName];
+      if (!resource) {
+        continue;
+      }
+      setResourceValue(resource, huge);
+      resource.reserved = 0;
+    }
+  }
+
+  const extraResources = [
+    ['space', 'energy'],
+    ['spaceStorage', 'hydrogen'],
+    ['spaceStorage', 'metal'],
+    ['spaceStorage', 'superalloys'],
+  ];
+  extraResources.forEach(([category, resourceName]) => {
+    const resource = resources[category]?.[resourceName];
+    if (!resource) {
+      return;
+    }
+    setResourceValue(resource, huge);
+    resource.reserved = 0;
+  });
+}
+
+function scaleCostMap(costMap, factor) {
+  const scaled = {};
+  for (const category in costMap) {
+    scaled[category] = {};
+    for (const resourceName in costMap[category]) {
+      scaled[category][resourceName] = costMap[category][resourceName] * factor;
+    }
+  }
+  return scaled;
+}
+
+function getTooltipRate(window, resource, label) {
+  const getDisplayConsumptionRates = getGlobal(window, 'getDisplayConsumptionRates');
+  const display = getDisplayConsumptionRates(resource);
+  return display.bySource[label] || 0;
+}
+
+function expectRelativeClose(actual, expected, context) {
+  const tolerance = Math.max(1e-6, Math.abs(expected) * 1e-9);
+  expect(Math.abs(actual - expected)).toBeLessThanOrEqual(tolerance);
+  expect(actual).toBeGreaterThan(0);
+  expect(expected).toBeGreaterThan(0);
+  void context;
+}
+
+function configureContinuousExpansionProject(project, mode, preRun = false) {
+  project.isActive = true;
+  project.isPaused = false;
+  project.isCompleted = false;
+  project.autoStart = true;
+  project.operationPreRunThisTick = preRun === true;
+  project.continuousThreshold = mode === 'continuous' ? Number.MAX_SAFE_INTEGER : 0;
+}
+
+function configureDysonSphereProject(project, mode, preRun = false) {
+  project.isActive = false;
+  project.isPaused = false;
+  project.isCompleted = true;
+  project.autoContinuousOperation = true;
+  project.operationPreRunThisTick = preRun === true;
+  project.continuousThreshold = mode === 'continuous' ? Number.MAX_SAFE_INTEGER : 0;
+  project.collectors = 1;
+  project.fractionalCollectors = 0;
+  project.collectorProgress = mode === 'discrete' ? (project.collectorDuration / 2) : 0;
+  project.lastCollectorColonyCost = project.getCollectorCost();
+}
+
+function configureSpaceStorageProject(project, mode) {
+  configureContinuousExpansionProject(project, mode, false);
+  project.shipOperationIsActive = false;
+  project.shipOperationAutoStart = false;
+  project.assignedSpaceships = 0;
+}
+
+function getExpansionExpectation(projectKey, project) {
+  if (projectKey === 'dysonSphere') {
+    const costMap = project.lastCollectorColonyCost || project.getCollectorCost();
+    return {
+      label: 'Dyson Collector',
+      rates: scaleCostMap(costMap, 1000 / project.collectorDuration),
+    };
+  }
+  if (projectKey === 'spaceStorage') {
+    return {
+      label: 'Space storage expansion',
+      rates: scaleCostMap(project.getScaledCost(), 1000 / project.getEffectiveDuration()),
+    };
+  }
+  if (projectKey === 'lifters') {
+    return {
+      label: 'Lifter expansion',
+      rates: scaleCostMap(project.getScaledCost(), 1000 / project.getEffectiveDuration()),
+    };
+  }
+  return {
+    label: project.getExpansionRateSourceLabel(),
+    rates: scaleCostMap(project.getScaledCost(), 1000 / project.getEffectiveDuration()),
+  };
+}
+
+const MATRIX_CASES = [
+  { projectKey: 'lifters', mode: 'discrete', preRun: false },
+  { projectKey: 'lifters', mode: 'discrete', preRun: true },
+  { projectKey: 'lifters', mode: 'continuous', preRun: false },
+  { projectKey: 'lifters', mode: 'continuous', preRun: true },
+  { projectKey: 'nuclearAlchemyFurnace', mode: 'discrete', preRun: false },
+  { projectKey: 'nuclearAlchemyFurnace', mode: 'discrete', preRun: true },
+  { projectKey: 'nuclearAlchemyFurnace', mode: 'continuous', preRun: false },
+  { projectKey: 'nuclearAlchemyFurnace', mode: 'continuous', preRun: true },
+  { projectKey: 'superalloyGigafoundry', mode: 'discrete', preRun: false },
+  { projectKey: 'superalloyGigafoundry', mode: 'discrete', preRun: true },
+  { projectKey: 'superalloyGigafoundry', mode: 'continuous', preRun: false },
+  { projectKey: 'superalloyGigafoundry', mode: 'continuous', preRun: true },
+  { projectKey: 'dysonSphere', mode: 'discrete', preRun: false },
+  { projectKey: 'dysonSphere', mode: 'discrete', preRun: true },
+  { projectKey: 'dysonSphere', mode: 'continuous', preRun: false },
+  { projectKey: 'dysonSphere', mode: 'continuous', preRun: true },
+  { projectKey: 'spaceStorage', mode: 'discrete', preRun: false },
+  { projectKey: 'spaceStorage', mode: 'continuous', preRun: false },
+  { projectKey: 'hephaestusMegaconstruction', mode: 'discrete', preRun: false },
+  { projectKey: 'hephaestusMegaconstruction', mode: 'continuous', preRun: false },
+];
+
 describe('furnace expansion tooltip save repro', () => {
   it('keeps actual furnace expansion consumption after load and tick', async () => {
     const dom = await createGameDom();
@@ -226,4 +386,58 @@ describe('furnace expansion tooltip save repro', () => {
       dom.window.close();
     }
   }, 60000);
+});
+
+describe('megastructure expansion tooltip rate matrix', () => {
+  let dom;
+  let window;
+  let resources;
+  let projectManager;
+
+  beforeAll(async () => {
+    dom = await createGameDom();
+    window = dom.window;
+    loadSave(window, 'furnace_expansion_tooltip_bug.json');
+    resources = getGlobal(window, 'resources');
+    projectManager = getGlobal(window, 'projectManager');
+  }, 60000);
+
+  afterAll(() => {
+    dom?.window?.close();
+  });
+
+  it.each(MATRIX_CASES)('$projectKey $mode mode preRun=$preRun writes tooltip rates that match actual /s consumption', ({ projectKey, mode, preRun }) => {
+    resetAllResourceRates(window);
+
+    const project = projectManager.projects[projectKey];
+    expect(project).toBeTruthy();
+
+    if (projectKey === 'dysonSphere') {
+      configureDysonSphereProject(project, mode, preRun);
+    } else if (projectKey === 'spaceStorage') {
+      configureSpaceStorageProject(project, mode);
+    } else {
+      configureContinuousExpansionProject(project, mode, preRun);
+    }
+
+    const { label, rates } = getExpansionExpectation(projectKey, project);
+    provisionExpansionResources(window, rates);
+
+    resetAllResourceRates(window);
+    project.estimateCostAndGain(1000, true, 1, null);
+    window.eval('recalculateTotalRates()');
+
+    for (const category in rates) {
+      for (const resourceName in rates[category]) {
+        const resource = resources[category]?.[resourceName];
+        const expectedRate = rates[category][resourceName];
+        const actualRate = getTooltipRate(window, resource, label);
+        expectRelativeClose(
+          actualRate,
+          expectedRate,
+          `${projectKey} ${mode} ${category}.${resourceName} ${label}`
+        );
+      }
+    }
+  });
 });
