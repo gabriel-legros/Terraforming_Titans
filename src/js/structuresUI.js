@@ -1699,15 +1699,59 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function buildStructureCostTooltip(structure, category, resource, buildCount) {
-    const singleCost =
-      structure.getEffectiveCost(1)?.[category]?.[resource] ?? 0;
-    const selectedTotalCost =
-      structure.getEffectiveCost(buildCount)?.[category]?.[resource] ?? 0;
+    const isAerostatResearchCost =
+      structure?.name === 'aerostat_colony'
+      && category === 'colony'
+      && resource === 'research';
+    if (isAerostatResearchCost) {
+      const singleCost =
+        structure.getEffectiveCost(1)?.[category]?.[resource] ?? 0;
+      const selectedTotalCost =
+        structure.getEffectiveCost(buildCount)?.[category]?.[resource] ?? 0;
+      const aerostatLines = [
+        `One additional aerostat cost: ${formatNumber(singleCost, true)}`,
+        `Selected total cost: ${formatNumber(selectedTotalCost, true)}`
+      ];
+      const aerostatMultipliers = [];
+      const aerostatKesslerMultiplier = structure.getKesslerCostMultiplier();
+
+      if (aerostatKesslerMultiplier !== 1) {
+        const sizeLabel = structure.kesslerDebrisSize === 'large' ? 'large' : 'small';
+        aerostatMultipliers.push({
+          name: `Kessler debris (${sizeLabel})`,
+          value: aerostatKesslerMultiplier
+        });
+      }
+
+      structure.activeEffects.forEach(effect => {
+        if (effect.type !== 'resourceCostMultiplier') return;
+        if (effect.resourceCategory !== category) return;
+        const matchesResource = effect.resourceId === resource
+          || (Array.isArray(effect.resourceId) && effect.resourceId.includes(resource));
+        if (!matchesResource) return;
+        if (effect.value === 1) return;
+        aerostatMultipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: effect.value
+        });
+      });
+
+      if (aerostatMultipliers.length) {
+        aerostatLines.push('Multipliers:');
+        aerostatMultipliers.forEach(multiplier => {
+          aerostatLines.push(`- ${multiplier.name}: x${formatNumber(multiplier.value, false, 3)}`);
+        });
+      } else {
+        aerostatLines.push('Multipliers: none');
+      }
+
+      return aerostatLines.join('\n');
+    }
+
+    const baseCost = structure.cost?.[category]?.[resource] ?? 0;
+    const totalBaseCost = baseCost * buildCount;
     const kesslerMultiplier = structure.getKesslerCostMultiplier();
-    const lines = [
-      `One additional cost: ${formatNumber(singleCost, true)}`,
-      `Selected total cost: ${formatNumber(selectedTotalCost, true)}`
-    ];
+    const lines = [`Base cost: ${formatNumber(totalBaseCost, true)}`];
     const multipliers = [];
 
     if (kesslerMultiplier !== 1) {
