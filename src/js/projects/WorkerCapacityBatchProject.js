@@ -1,3 +1,11 @@
+function getProjectFolderText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class WorkerCapacityBatchProject extends Project {
   constructor(config, name) {
     super(config, name);
@@ -160,9 +168,9 @@ class WorkerCapacityBatchProject extends Project {
   }
 
   renderWorkerCapacityControls(container, {
-    amountTitle = 'Amount',
+    amountTitle = getProjectFolderText('ui.projects.common.amount', 'Amount'),
     tooltip,
-    autoMaxLabel = 'Auto Max',
+    autoMaxLabel = getProjectFolderText('ui.projects.common.autoMax', 'Auto Max'),
     layoutClass = 'worker-capacity-layout',
   } = {}) {
     if (this.workerCapacityUI && this.workerCapacityUI.container?.isConnected) {
@@ -178,7 +186,7 @@ class WorkerCapacityBatchProject extends Project {
     costSection.className = 'project-section-container';
     const costTitle = document.createElement('h4');
     costTitle.className = 'section-title';
-    costTitle.textContent = 'Cost';
+    costTitle.textContent = getProjectFolderText('ui.projects.costLabel', 'Cost');
     costSection.appendChild(costTitle);
     if (costElement) {
       const label = costElement.querySelector('strong');
@@ -200,13 +208,13 @@ class WorkerCapacityBatchProject extends Project {
     const val = document.createElement('span');
     val.id = `${this.name}-count`;
     const slash = document.createElement('span');
-    slash.textContent = ' / ';
+    slash.textContent = getProjectFolderText('ui.projects.common.slash', ' / ');
     const max = document.createElement('span');
     max.id = `${this.name}-max`;
     const info = document.createElement('span');
     info.className = 'info-tooltip-icon';
     if (tooltip) {
-      info.title = tooltip;
+      attachDynamicInfoTooltip(info, tooltip);
     }
     info.innerHTML = '&#9432;';
     amountDisplay.append(val, slash, max, info);
@@ -216,21 +224,21 @@ class WorkerCapacityBatchProject extends Project {
     const mainControls = document.createElement('div');
     mainControls.className = 'scanner-main-controls';
     const bMin = document.createElement('button');
-    bMin.textContent = '1';
+    bMin.textContent = getProjectFolderText('ui.projects.common.one', '1');
     const bMinus = document.createElement('button');
-    bMinus.textContent = '-';
+    bMinus.textContent = getProjectFolderText('ui.projects.common.minus', '-');
     const bPlus = document.createElement('button');
-    bPlus.textContent = '+';
+    bPlus.textContent = getProjectFolderText('ui.projects.common.plus', '+');
     const bMax = document.createElement('button');
-    bMax.textContent = 'Max';
+    bMax.textContent = getProjectFolderText('ui.projects.common.max', 'Max');
     mainControls.append(bMin, bMinus, bPlus, bMax);
 
     const multControls = document.createElement('div');
     multControls.className = 'scanner-mult-controls';
     const bDiv = document.createElement('button');
-    bDiv.textContent = '/10';
+    bDiv.textContent = getProjectFolderText('ui.projects.common.divideTen', '/10');
     const bMul = document.createElement('button');
-    bMul.textContent = 'x10';
+    bMul.textContent = getProjectFolderText('ui.projects.common.timesTen', 'x10');
     multControls.append(bDiv, bMul);
 
     controls.append(mainControls, multControls);

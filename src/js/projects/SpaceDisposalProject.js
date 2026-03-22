@@ -1,4 +1,12 @@
 class SpaceDisposalProject extends SpaceExportBaseProject {
+  getSpaceDisposalText(path, fallback, vars) {
+    try {
+      return t(path, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   constructor(config, name) {
     super(config, name);
     this.massDriverEnabled = false;
@@ -18,11 +26,11 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   }
 
   getExportRateLabel() {
-    return 'Resource Disposal';
+    return this.getSpaceDisposalText('ui.projects.spaceDisposal.resourceDisposal', 'Resource Disposal');
   }
 
   getCostRateLabel() {
-    return 'Resource Disposal';
+    return this.getSpaceDisposalText('ui.projects.spaceDisposal.resourceDisposal', 'Resource Disposal');
   }
 
   getDefaultDisposalSelection() {
@@ -334,36 +342,48 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   getTargetStatusText(target, activeTargets) {
     if (!target.autoStart) {
-      return 'Idle';
+      return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.idle', 'Idle');
     }
     if (!this.canTargetRun(target)) {
-      return 'Blocked';
+      return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.blocked', 'Blocked');
     }
     for (let i = 0; i < activeTargets.length; i += 1) {
       if (activeTargets[i].id === target.id) {
-        return 'Active';
+        return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.active', 'Active');
       }
     }
-    return 'Waiting';
+    return this.getSpaceDisposalText('ui.projects.spaceDisposal.status.waiting', 'Waiting');
   }
 
   getTargetStatusDetail(target) {
     if (!target.autoStart) {
-      return 'Enable auto start to include this target in disposal runs.';
+      return this.getSpaceDisposalText('ui.projects.spaceDisposal.statusDetail.enableAutoStart', 'Enable auto start to include this target in disposal runs.');
     }
     if (this.canTargetRun(target)) {
-      return 'Included in the current disposal split.';
+      return this.getSpaceDisposalText('ui.projects.spaceDisposal.statusDetail.included', 'Included in the current disposal split.');
     }
     if (target.disableBelowTemperature && this.isTargetSafeGhgSelection(target)) {
-      return `Temperature below ${formatNumber(toDisplayTemperature(target.disableTemperatureThreshold), false, 2)}${getTemperatureUnit()}.`;
+      return this.getSpaceDisposalText(
+        'ui.projects.spaceDisposal.statusDetail.temperatureBelow',
+        `Temperature below ${formatNumber(toDisplayTemperature(target.disableTemperatureThreshold), false, 2)}${getTemperatureUnit()}.`,
+        { value: `${formatNumber(toDisplayTemperature(target.disableTemperatureThreshold), false, 2)}${getTemperatureUnit()}` }
+      );
     }
     if (target.disableBelowPressure && this.shouldTargetShowPressureControl(target)) {
-      return `Pressure below ${formatNumber(target.disablePressureThreshold * 1000, true, 2)} Pa.`;
+      return this.getSpaceDisposalText(
+        'ui.projects.spaceDisposal.statusDetail.pressureBelow',
+        `Pressure below ${formatNumber(target.disablePressureThreshold * 1000, true, 2)} Pa.`,
+        { value: formatNumber(target.disablePressureThreshold * 1000, true, 2) }
+      );
     }
     if (target.disableBelowCoverage && this.shouldTargetShowCoverageControl(target)) {
-      return `Coverage below ${formatNumber(target.disableCoverageThreshold * 100, true, 2)}%.`;
+      return this.getSpaceDisposalText(
+        'ui.projects.spaceDisposal.statusDetail.coverageBelow',
+        `Coverage below ${formatNumber(target.disableCoverageThreshold * 100, true, 2)}%.`,
+        { value: formatNumber(target.disableCoverageThreshold * 100, true, 2) }
+      );
     }
-    return 'Unavailable.';
+    return this.getSpaceDisposalText('ui.projects.spaceDisposal.statusDetail.unavailable', 'Unavailable.');
   }
 
   getTargetWaitRequirementMap(targets, transportCount) {
@@ -400,7 +420,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const title = document.createElement('h4');
     title.classList.add('section-title');
-    title.textContent = 'Export';
+    title.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.export', 'Export');
     sectionContainer.appendChild(title);
 
     const detailsGrid = document.createElement('div');
@@ -442,7 +462,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const title = document.createElement('h4');
     title.classList.add('section-title');
-    title.textContent = 'Mass Drivers';
+    title.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.massDrivers', 'Mass Drivers');
     sectionContainer.appendChild(title);
 
     const infoContent = document.createElement('div');
@@ -457,7 +477,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const activeLabel = document.createElement('span');
     activeLabel.classList.add('mass-driver-label');
-    activeLabel.textContent = 'Active: ';
+    activeLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.active', 'Active: ');
     const activeValue = document.createElement('span');
     activeValue.id = `${this.name}-active-mass-drivers`;
     activeValue.classList.add('mass-driver-count');
@@ -467,7 +487,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     builtContainer.classList.add('available-ships-container');
     const builtLabel = document.createElement('span');
     builtLabel.classList.add('mass-driver-built-label');
-    builtLabel.textContent = 'Built: ';
+    builtLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.built', 'Built: ');
     const builtValue = document.createElement('span');
     builtValue.id = `${this.name}-built-mass-drivers`;
     builtValue.classList.add('mass-driver-built-count');
@@ -496,7 +516,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       this.updateUI();
     };
 
-    const zeroButton = createButton('0', () => {
+    const zeroButton = createButton(this.getSpaceDisposalText('ui.projects.common.zero', '0'), () => {
       applyManualMassDriverChange(() => this.setMassDriverActive(0));
     }, mainButtons);
 
@@ -508,7 +528,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       applyManualMassDriverChange(() => this.adjustMassDriverActive(1));
     }, mainButtons);
 
-    const maxButton = createButton('Max', () => {
+    const maxButton = createButton(this.getSpaceDisposalText('ui.projects.common.max', 'Max'), () => {
       const structure = this.getMassDriverStructure();
       applyManualMassDriverChange(() => this.setMassDriverActive(structure.count));
     }, mainButtons);
@@ -539,7 +559,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     });
 
     const autoLabel = document.createElement('span');
-    autoLabel.textContent = 'Set active to target';
+    autoLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.setActiveToTarget', 'Set active to target');
     autoContainer.append(maxAutoActiveCheckbox, autoLabel);
     mainButtons.appendChild(autoContainer);
 
@@ -547,13 +567,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     multiplierContainer.classList.add('multiplier-container');
     buttonsContainer.appendChild(multiplierContainer);
 
-    const divideButton = createButton('/10', () => {
+    const divideButton = createButton(this.getSpaceDisposalText('ui.projects.common.divideTen', '/10'), () => {
       disableAutoActive(this.getMassDriverStructure());
       this.shiftMassDriverStep(false);
       this.updateUI();
     }, multiplierContainer);
 
-    const multiplyButton = createButton('x10', () => {
+    const multiplyButton = createButton(this.getSpaceDisposalText('ui.projects.common.timesTen', 'x10'), () => {
       disableAutoActive(this.getMassDriverStructure());
       this.shiftMassDriverStep(true);
       this.updateUI();
@@ -564,7 +584,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const infoNote = document.createElement('p');
     infoNote.classList.add('project-description', 'mass-driver-note');
-    infoNote.textContent = 'Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.';
+    infoNote.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.massDriverNote', 'Electromagnetic launch rails fling cargo without rockets. Each Mass Driver counts as 10 spaceships.');
     sectionContainer.appendChild(infoNote);
 
     const builderHeader = document.createElement('div');
@@ -575,11 +595,11 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const builderHeading = document.createElement('div');
     builderHeading.classList.add('resource-disposal-builder-heading');
-    builderHeading.textContent = 'Disposal Targets';
+    builderHeading.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.disposalTargets', 'Disposal Targets');
 
     const builderSubheading = document.createElement('div');
     builderSubheading.classList.add('resource-disposal-builder-subheading');
-    builderSubheading.textContent = 'Configure up to 10 resources. Active auto-start targets split assigned disposal evenly.';
+    builderSubheading.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.disposalTargetsSubheading', 'Configure up to 10 resources. Active auto-start targets split assigned disposal evenly.');
 
     builderCopy.append(builderHeading, builderSubheading);
 
@@ -591,7 +611,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const addTargetButton = document.createElement('button');
     addTargetButton.classList.add('resource-disposal-add-target-button');
-    addTargetButton.textContent = '+ Add target';
+    addTargetButton.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.addTarget', '+ Add target');
     addTargetButton.addEventListener('click', () => {
       this.addDisposalTarget();
     });
@@ -734,7 +754,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     typeContainer.classList.add('resource-disposal-target-select-group');
     const typeLabel = document.createElement('span');
     typeLabel.classList.add('resource-disposal-target-select-label');
-    typeLabel.textContent = 'Export';
+    typeLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.export', 'Export');
     const typeSelect = document.createElement('select');
     typeSelect.addEventListener('change', () => {
       this.handleTargetGroupChange(target.id, typeSelect.value);
@@ -745,7 +765,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     phaseContainer.classList.add('resource-disposal-target-select-group');
     const phaseLabel = document.createElement('span');
     phaseLabel.classList.add('resource-disposal-target-select-label');
-    phaseLabel.textContent = 'Phase';
+    phaseLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.phase', 'Phase');
     const phaseSelect = document.createElement('select');
     phaseSelect.addEventListener('change', () => {
       const parts = phaseSelect.value.split(':');
@@ -771,7 +791,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const removeButton = document.createElement('button');
     removeButton.classList.add('resource-disposal-remove-target-button');
-    removeButton.textContent = 'Remove';
+    removeButton.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.remove', 'Remove');
     removeButton.addEventListener('click', () => {
       this.removeDisposalTarget(target.id);
     });
@@ -785,7 +805,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const autoToggle = this.createTargetCheckbox(
       target,
       'autoStart',
-      'Auto start',
+      this.getSpaceDisposalText('ui.projects.autoStart', 'Auto start'),
       (checked) => {
         const activeTarget = this.getTargetById(target.id);
         activeTarget.autoStart = checked;
@@ -798,7 +818,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const waitToggle = this.createTargetCheckbox(
       target,
       'waitForCapacity',
-      'Wait for full capacity',
+      this.getSpaceDisposalText('ui.projects.spaceDisposal.waitForFullCapacity', 'Wait for full capacity'),
       (checked) => {
         const activeTarget = this.getTargetById(target.id);
         activeTarget.waitForCapacity = checked;
@@ -812,7 +832,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const temperatureControl = this.createTargetThresholdControl(target.id, {
       key: 'temperature',
-      labelText: 'Disable below temperature',
+      labelText: this.getSpaceDisposalText('ui.projects.spaceDisposal.disableBelowTemperature', 'Disable below temperature'),
       checkboxKey: 'disableBelowTemperature',
       thresholdKey: 'disableTemperatureThreshold',
       parse: (value) => gameSettings.useCelsius ? value + 273.15 : value,
@@ -822,7 +842,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const pressureControl = this.createTargetThresholdControl(target.id, {
       key: 'pressure',
-      labelText: 'Disable below pressure',
+      labelText: this.getSpaceDisposalText('ui.projects.spaceDisposal.disableBelowPressure', 'Disable below pressure'),
       checkboxKey: 'disableBelowPressure',
       thresholdKey: 'disablePressureThreshold',
       parse: (value) => value / 1000,
@@ -832,7 +852,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
     const coverageControl = this.createTargetThresholdControl(target.id, {
       key: 'coverage',
-      labelText: 'Disable below coverage',
+      labelText: this.getSpaceDisposalText('ui.projects.spaceDisposal.disableBelowCoverage', 'Disable below coverage'),
       checkboxKey: 'disableBelowCoverage',
       thresholdKey: 'disableCoverageThreshold',
       parse: (value) => Math.max(0, Math.min(100, value)) / 100,
@@ -1482,7 +1502,11 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const displayTargets = this.getDisposalTargetsForDisplay();
 
     if (elements.disposalPerShipElement) {
-      elements.disposalPerShipElement.textContent = `Max Export/Ship: ${formatNumber(this.getShipCapacity(), true)}`;
+      elements.disposalPerShipElement.textContent = this.getSpaceDisposalText(
+        'ui.projects.spaceDisposal.maxExportPerShip',
+        `Max Export/Ship: ${formatNumber(this.getShipCapacity(), true)}`,
+        { value: formatNumber(this.getShipCapacity(), true) }
+      );
     }
 
     if (elements.totalDisposalElement) {
@@ -1495,9 +1519,17 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       }
       if (this.isContinuous()) {
         total *= 1000 / this.getEffectiveDuration();
-        elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}/s`;
+        elements.totalDisposalElement.textContent = this.getSpaceDisposalText(
+          'ui.projects.spaceDisposal.totalExportPerSecond',
+          `Total Export: ${formatNumber(total, true)}/s`,
+          { value: formatNumber(total, true) }
+        );
       } else {
-        elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}`;
+        elements.totalDisposalElement.textContent = this.getSpaceDisposalText(
+          'ui.projects.spaceDisposal.totalExport',
+          `Total Export: ${formatNumber(total, true)}`,
+          { value: formatNumber(total, true) }
+        );
       }
       elements.totalDisposalElement.style.color = this.disposalShortfallLastTick === true ? 'red' : '';
     }
@@ -1507,7 +1539,11 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       if (reduction > 0) {
         const suffix = this.isContinuous() ? `${getTemperatureUnit()}/s` : getTemperatureUnit();
         elements.temperatureReductionElement.textContent =
-          `Temperature Reduction: ${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${suffix}`;
+          this.getSpaceDisposalText(
+            'ui.projects.spaceDisposal.temperatureReduction',
+            `Temperature Reduction: ${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${suffix}`,
+            { value: `${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${suffix}` }
+          );
         elements.temperatureReductionElement.style.display = 'block';
       } else {
         elements.temperatureReductionElement.style.display = 'none';
@@ -1546,7 +1582,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       if (document.activeElement !== row.pressureControl.input) {
         row.pressureControl.input.value = formatNumber(target.disablePressureThreshold * 1000, true, 2);
       }
-      row.pressureControl.unit.textContent = 'Pa';
+      row.pressureControl.unit.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.pa', 'Pa');
       row.pressureControl.container.style.display =
         this.shouldTargetShowPressureControl(target) && this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
 
@@ -1554,7 +1590,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       if (document.activeElement !== row.coverageControl.input) {
         row.coverageControl.input.value = formatNumber(target.disableCoverageThreshold * 100, true, 2);
       }
-      row.coverageControl.unit.textContent = '%';
+      row.coverageControl.unit.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.percent', '%');
       row.coverageControl.container.style.display =
         this.shouldTargetShowCoverageControl(target) && this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
 

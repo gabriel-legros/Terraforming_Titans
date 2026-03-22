@@ -1,4 +1,12 @@
 class AndroidProject extends Project {
+  getAndroidProjectText(path, fallback, vars) {
+    try {
+      return t(path, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   constructor(config, name) {
     super(config, name);
     this.assignedAndroids = 0;
@@ -235,11 +243,11 @@ class AndroidProject extends Project {
     const headerRow = document.createElement('div');
     headerRow.classList.add('android-assignment-headers');
     const androidHeader = document.createElement('div');
-    androidHeader.textContent = 'Androids';
+    androidHeader.textContent = this.getAndroidProjectText('ui.projects.android.androids', 'Androids');
     const controlsHeader = document.createElement('div');
-    controlsHeader.textContent = 'Controls';
+    controlsHeader.textContent = this.getAndroidProjectText('ui.projects.android.controls', 'Controls');
     const autoHeader = document.createElement('div');
-    autoHeader.textContent = 'Auto';
+    autoHeader.textContent = this.getAndroidProjectText('ui.projects.common.auto', 'Auto');
     const speedHeader = document.createElement('div');
     speedHeader.textContent = this.getAndroidSpeedLabelText();
     headerRow.append(androidHeader, controlsHeader, autoHeader, speedHeader);
@@ -254,7 +262,7 @@ class AndroidProject extends Project {
     const assignedContainer = document.createElement('div');
     assignedContainer.classList.add('assigned-ships-container');
     const assignedLabel = document.createElement('span');
-    assignedLabel.textContent = 'Assigned:';
+    assignedLabel.textContent = this.getAndroidProjectText('ui.projects.spaceship.assigned', 'Assigned:');
     const assignedDisplay = document.createElement('span');
     assignedDisplay.id = `${this.name}-assigned-androids`;
     assignedContainer.append(assignedLabel, assignedDisplay);
@@ -262,7 +270,7 @@ class AndroidProject extends Project {
     const availableContainer = document.createElement('div');
     availableContainer.classList.add('available-ships-container');
     const availableLabel = document.createElement('span');
-    availableLabel.textContent = 'Available:';
+    availableLabel.textContent = this.getAndroidProjectText('ui.projects.spaceship.available', 'Available:');
     const availableDisplay = document.createElement('span');
     availableDisplay.id = `${this.name}-available-androids`;
     availableContainer.append(availableLabel, availableDisplay);
@@ -284,10 +292,10 @@ class AndroidProject extends Project {
     mainButtons.classList.add('main-buttons');
     buttonsContainer.appendChild(mainButtons);
 
-    createButton('0', () => this.assignAndroids(-this.assignedAndroids), mainButtons);
+    createButton(this.getAndroidProjectText('ui.projects.common.zero', '0'), () => this.assignAndroids(-this.assignedAndroids), mainButtons);
     const minusButton = createButton(`-${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignAndroids(-this.assignmentMultiplier), mainButtons);
     const plusButton = createButton(`+${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignAndroids(this.assignmentMultiplier), mainButtons);
-    createButton('Max', () => {
+    createButton(this.getAndroidProjectText('ui.projects.common.max', 'Max'), () => {
       const max = Math.floor(resources.colony.androids.value - ((typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0));
       this.assignAndroids(max);
     }, mainButtons);
@@ -296,12 +304,12 @@ class AndroidProject extends Project {
     multiplierContainer.classList.add('multiplier-container');
     buttonsContainer.appendChild(multiplierContainer);
 
-    createButton('/10', () => {
+    createButton(this.getAndroidProjectText('ui.projects.common.divideTen', '/10'), () => {
       this.assignmentMultiplier = Math.max(1, this.assignmentMultiplier / 10);
       minusButton.textContent = `-${formatNumber(this.assignmentMultiplier, true)}`;
       plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
     }, multiplierContainer);
-    createButton('x10', () => {
+    createButton(this.getAndroidProjectText('ui.projects.common.timesTen', 'x10'), () => {
       this.assignmentMultiplier *= 10;
       minusButton.textContent = `-${formatNumber(this.assignmentMultiplier, true)}`;
       plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
@@ -315,7 +323,7 @@ class AndroidProject extends Project {
     autoAssignCheckbox.checked = this.autoAssignAndroids;
     const autoAssignLabel = document.createElement('label');
     autoAssignLabel.htmlFor = autoAssignCheckbox.id;
-    autoAssignLabel.textContent = 'Auto';
+    autoAssignLabel.textContent = this.getAndroidProjectText('ui.projects.common.auto', 'Auto');
     const autoAssignInput = document.createElement('input');
     autoAssignInput.type = 'text';
     autoAssignInput.inputMode = 'decimal';
@@ -326,7 +334,7 @@ class AndroidProject extends Project {
     autoAssignInput.value = String(initialAutoAssign);
     autoAssignInput.classList.add('android-auto-assign-input');
     const autoAssignSuffix = document.createElement('span');
-    autoAssignSuffix.textContent = '% of androids';
+    autoAssignSuffix.textContent = this.getAndroidProjectText('ui.projects.android.percentOfAndroids', '% of androids');
     autoAssignContainer.append(autoAssignCheckbox, autoAssignLabel, autoAssignInput, autoAssignSuffix);
 
     const speedContainer = document.createElement('div');
@@ -496,11 +504,11 @@ class AndroidProject extends Project {
   }
 
   getAndroidSpeedTooltip() {
-    return '1 + sqrt(androids assigned / ore mines built)';
+    return this.getAndroidProjectText('ui.projects.android.speedTooltip', '1 + sqrt(androids assigned / ore mines built)');
   }
 
   getAndroidSpeedLabelText() {
-    return 'Speed boost';
+    return this.getAndroidProjectText('ui.projects.android.speedBoost', 'Speed boost');
   }
 }
 

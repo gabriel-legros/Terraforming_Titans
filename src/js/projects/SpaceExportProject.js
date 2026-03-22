@@ -62,8 +62,14 @@ class SpaceExportProject extends SpaceExportBaseProject {
     if (elements && elements.maxDisposalElement) {
       const tooltip = document.createElement('span');
       tooltip.classList.add('info-tooltip-icon');
-      tooltip.title =
-        'You may not export more metal than about 2 order of magnitude Earth\'s 2025 yearly metal production.  This value may change as you progress further into the game.';
+      attachDynamicInfoTooltip(
+        tooltip,
+        t(
+          'ui.projects.spaceExport.exportCapTooltip',
+          {},
+          'You may not export more metal than about 2 orders of magnitude above Earth\'s 2025 yearly metal production. This value may change as you progress further into the game.'
+        )
+      );
       tooltip.innerHTML = '&#9432;';
       elements.maxDisposalElement.appendChild(document.createTextNode(' '));
       elements.maxDisposalElement.appendChild(tooltip);

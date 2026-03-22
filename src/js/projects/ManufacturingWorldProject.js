@@ -941,13 +941,13 @@
       assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list', 'manufacturing-assignment-list');
 
       const stepDownButton = document.createElement('button');
-      stepDownButton.textContent = '/10';
+      stepDownButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.divideTen') || '/10';
       stepDownButton.addEventListener('click', () => {
         this.setAssignmentStep(this.assignmentStep / 10);
         this.updateUI();
       });
       const stepUpButton = document.createElement('button');
-      stepUpButton.textContent = 'x10';
+      stepUpButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.timesTen') || 'x10';
       stepUpButton.addEventListener('click', () => {
         this.setAssignmentStep(this.assignmentStep * 10);
         this.updateUI();
@@ -1039,7 +1039,7 @@
         amountEl.classList.add('stat-value');
 
         const zeroButton = document.createElement('button');
-        zeroButton.textContent = '0';
+        zeroButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.zero') || '0';
         zeroButton.addEventListener('click', () => {
           if (this.autoAssignFlags[key]) {
             return;
@@ -1056,7 +1056,7 @@
         plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
 
         const maxButton = document.createElement('button');
-        maxButton.textContent = 'Max';
+        maxButton.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.common.max') || 'Max';
         maxButton.addEventListener('click', () => {
           if (this.autoAssignFlags[key]) {
             return;

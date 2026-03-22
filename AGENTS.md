@@ -73,6 +73,18 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - Load: `loadGame()` -> `initializeGameState({ skipStoryInitialization: true })`
   - Travel: `selectPlanet(key)` -> `initializeGameState({ preserveManagers: true })` then `updateSpaceUI()`
 
+## Localization
+- Do not add new player-facing English strings directly in HTML or JS. Put them in `src/js/lang/current-language.js`.
+- Keep internal ids, save keys, automation ids, resource ids, project ids, and effect ids stable and in English-like code form. Localize display text only.
+- For static HTML in `index.html`, use `data-i18n` and related localization attributes instead of hardcoding visible text.
+- For JS UI text, use `t(key, vars, fallback)` or a small local wrapper such as `getXText(...)` near the top of the file.
+- For parameter/catalog files, keep the data objects in place and localize their display fields through the language file and centralized apply logic in `src/js/lang/localization.js`.
+- Prefer full-sentence keys with placeholders like `{value}` or `{name}` over string concatenation.
+- Keep tooltip text in the language file too. Build the tooltip icon in code/HTML, then pass the localized text to `attachDynamicInfoTooltip(...)`.
+- When adding a new system with UI, add its localization keys under a matching namespace in `current-language.js` such as `ui.colony.*`, `ui.buildings.*`, or `catalogs.projects.*`.
+- If a localized string is needed before the language layer is guaranteed to exist, use a fallback string through `t(...)` rather than hardcoding separate logic paths.
+- After moving or adding localized strings, run the Windows test command and report pass/fail counts.
+
 ## Shared UI Input Patterns
 ### String-backed numeric inputs
 - Parse with `parseFlexibleNumber(value)` from `src/js/numbers.js`.

@@ -36,36 +36,45 @@ const fmt=(n,int=false,d=0)=>isNaN(n)?"–":
   n.toLocaleString(undefined,int?{maximumFractionDigits:0}:
                              {minimumFractionDigits:d,maximumFractionDigits:d});
 
+function getPlanetaryThrustersText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function formatEnergy(J){
   return formatNumber(J / 86400);
 }
 
 function formatSeconds(seconds){
   if(!Number.isFinite(seconds)) return '—';
-  if(seconds <= 0) return '0s';
+  if(seconds <= 0) return getPlanetaryThrustersText('ui.projects.planetaryThrusters.time.zeroSeconds', '0s');
   const secondsPerYear = 365 * 24 * 3600;
   if(seconds >= secondsPerYear){
     const years = seconds / secondsPerYear;
     const formattedYears = formatNumber(years, false, 1);
-    const suffix = Math.abs(years - 1) < 1e-9 ? 'year' : 'years';
-    return `${formattedYears} ${suffix}`;
+    return Math.abs(years - 1) < 1e-9
+      ? getPlanetaryThrustersText('ui.projects.planetaryThrusters.time.year', `${formattedYears} year`, { value: formattedYears })
+      : getPlanetaryThrustersText('ui.projects.planetaryThrusters.time.years', `${formattedYears} years`, { value: formattedYears });
   }
   if(seconds >= 86400){
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
-    return `${days}d ${hours}h`;
+    return getPlanetaryThrustersText('ui.projects.planetaryThrusters.time.daysHours', `${days}d ${hours}h`, { days, hours });
   }
   if(seconds >= 3600){
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
+    return getPlanetaryThrustersText('ui.projects.planetaryThrusters.time.hoursMinutes', `${hours}h ${minutes}m`, { hours, minutes });
   }
   if(seconds >= 60){
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${minutes}m ${secs}s`;
+    return getPlanetaryThrustersText('ui.projects.planetaryThrusters.time.minutesSeconds', `${minutes}m ${secs}s`, { minutes, seconds: secs });
   }
-  return `${Math.max(1, Math.ceil(seconds))}s`;
+  return getPlanetaryThrustersText('ui.projects.planetaryThrusters.time.seconds', `${Math.max(1, Math.ceil(seconds))}s`, { value: Math.max(1, Math.ceil(seconds)) });
 }
 
 function getRotationPeriodHours(p){
@@ -219,50 +228,50 @@ class PlanetaryThrustersProject extends Project{
 /* -----------------------  U I  --------------------------------------- */
   renderUI(c){
     /* spin */
-    const spinHTML=`<div class="card-header"><span class="card-title">Spin <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's rotation period. When you check Invest, continuous thruster power is applied toward the target day length, consuming colony Energy per second. Progress is measured in equivalent Δv; when the target is reached, investment stops automatically.">&#9432;</span></span></div>
+    const spinHTML=`<div class="card-header"><span class="card-title">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.title', 'Spin')} <span id="thruster-spin-tooltip" class="info-tooltip-icon">&#9432;</span></span></div>
     <div class="card-body">
       <div class="stats-grid six-col">
-        <div><span class="stat-label">Rotation:</span><span id="rotNow" class="stat-value">—</span></div>
-        <div><span class="stat-label">Target:</span>
-             <input id="rotTarget" type="number" min="0.1" step="0.1" value="1"><span>day</span></div>
-        <div><span class="stat-label">Equiv. Δv:</span><span id="rotDv" class="stat-value">—</span></div>
-        <div><span class="stat-label">Energy Cost:</span><span id="rotE" class="stat-value">—</span></div>
-        <div><span class="stat-label">Energy Spent:</span><span id="rotSpent" class="stat-value">0</span></div>
-        <div><span class="stat-label">Burn Time:</span><span id="rotBurn" class="stat-value">—</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.rotation', 'Rotation:')}</span><span id="rotNow" class="stat-value">—</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.target', 'Target:')}</span>
+             <input id="rotTarget" type="number" min="0.1" step="0.1" value="1"><span>${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.day', 'day')}</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.equivDv', 'Equiv. Δv:')}</span><span id="rotDv" class="stat-value">—</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.energyCost', 'Energy Cost:')}</span><span id="rotE" class="stat-value">—</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.energySpent', 'Energy Spent:')}</span><span id="rotSpent" class="stat-value">0</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.burnTime', 'Burn Time:')}</span><span id="rotBurn" class="stat-value">—</span></div>
       </div>
-      <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> Invest</label></div>
+      <div class="invest-container left"><label><input id="rotInvest" type="checkbox"> ${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.invest', 'Invest')}</label></div>
     </div>`;
     const spinCard=document.createElement('div');spinCard.className="info-card";spinCard.innerHTML=spinHTML;c.appendChild(spinCard);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(spinCard);
     spinCard.style.display=this.isCompleted?"block":"none";
 
     /* motion */
-    const motHTML=`<div class="card-header"><span class="card-title">Motion <span class="info-tooltip-icon" title="Use planetary thrusters to change the world's orbit. If bound to a parent body (moon), investment first drives a slow spiral to the Hill radius (escape). After escape, investment changes heliocentric distance toward the target AU. Investment consumes Energy continuously; only one mode (Spin or Motion) can be active at a time.">&#9432;</span></span></div>
+    const motHTML=`<div class="card-header"><span class="card-title">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.title', 'Motion')} <span id="thruster-motion-tooltip" class="info-tooltip-icon">&#9432;</span></span></div>
     <div class="card-body">
       <div class="stats-grid six-col">
-        <div><span class="stat-label">Distance:</span><span id="distNow" class="stat-value">—</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.distance', 'Distance:')}</span><span id="distNow" class="stat-value">—</span></div>
         <div id="parentRow" style="display:none;">
-           <span class="stat-label">Around:</span><span id="parentName" class="stat-value">—</span>
+           <span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.around', 'Around:')}</span><span id="parentName" class="stat-value">—</span>
            <span>&nbsp;at </span><span id="parentRad" class="stat-value">—</span>
         </div>
-        <div><span class="stat-label">Target:</span>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.target', 'Target:')}</span>
              <input id="distTarget" type="number" min="0.1" step="0.1" value="1"><span>AU</span></div>
-        <div><span class="stat-label">Spiral Δv:</span><span id="distDv" class="stat-value">—</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.spiralDv', 'Spiral Δv:')}</span><span id="distDv" class="stat-value">—</span></div>
         <div id="escapeRow" style="display:none;">
-             <span class="stat-label">Escape Δv:</span><span id="escDv" class="stat-value">—</span>
+             <span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.escapeDv', 'Escape Δv:')}</span><span id="escDv" class="stat-value">—</span>
         </div>
         <div id="hillRow" style="display:none;">
-            <span class="stat-label">Hill Radius:</span><span id="hillVal" class="stat-value">—</span>
+            <span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.hillRadius', 'Hill Radius:')}</span><span id="hillVal" class="stat-value">—</span>
         </div>
-        <div><span class="stat-label">Energy Cost:</span><span id="distE" class="stat-value">—</span></div>
-        <div><span class="stat-label">Energy Spent:</span><span id="distSpent" class="stat-value">0</span></div>
-        <div><span class="stat-label">Burn Time:</span><span id="distBurn" class="stat-value">—</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.energyCost', 'Energy Cost:')}</span><span id="distE" class="stat-value">—</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.energySpent', 'Energy Spent:')}</span><span id="distSpent" class="stat-value">0</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.burnTime', 'Burn Time:')}</span><span id="distBurn" class="stat-value">—</span></div>
       </div>
-      <div class="invest-container left"><label><input id="distInvest" type="checkbox"> Invest</label>
-        <button id="rogueBtn" disabled style="margin-left:8px;">Go Rogue</button>
-        <span class="info-tooltip-icon" style="margin-left:6px;" title="Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet, removes the star, and shutters planetary thrusters.">&#9432;</span>
+      <div class="invest-container left"><label><input id="distInvest" type="checkbox"> ${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.invest', 'Invest')}</label>
+        <button id="rogueBtn" disabled style="margin-left:8px;">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.goRogue', 'Go Rogue')}</button>
+        <span id="thruster-rogue-tooltip" class="info-tooltip-icon" style="margin-left:6px;">&#9432;</span>
       </div>
-      <div id="moonWarn" class="moon-warning" style="display:none;">⚠ Escape parent first</div>
+      <div id="moonWarn" class="moon-warning" style="display:none;">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.escapeParentFirst', '⚠ Escape parent first')}</div>
     </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(motCard);
@@ -270,12 +279,12 @@ class PlanetaryThrustersProject extends Project{
 
     /* power */
     const veDisplay = this.hasTractorBeams()
-      ? 'N/A'
+      ? getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.na', 'N/A')
       : `${fmt(FUSION_VE,false,0)} m/s`;
-    const pwrHTML=`<div class="card-header"><span class="card-title">Thruster Power</span></div>
+    const pwrHTML=`<div class="card-header"><span class="card-title">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.title', 'Thruster Power')}</span></div>
     <div class="card-body">
       <div class="stats-grid four-col">
-        <div><span class="stat-label">Continuous:</span><span id="pwrVal" class="stat-value">0</span></div>
+        <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.continuous', 'Continuous:')}</span><span id="pwrVal" class="stat-value">0</span></div>
         <div class="thruster-power-controls">
           <div class="main-buttons">
             <button id="p0">0</button><button id="pMinus">-</button><button id="pPlus">+</button>
@@ -284,8 +293,8 @@ class PlanetaryThrustersProject extends Project{
             <button id="pDiv">/10</button><button id="pMul">x10</button>
           </div>
         </div>
-      <div><span class="stat-label">Exhaust Velocity:<span class="info-tooltip-icon" title="Exhaust velocity (Ve) measures how fast propellant is ejected. A higher Ve provides more thrust per unit of propellant, increasing mass efficiency. It is directly related to Specific Impulse (Isp), a standard measure of engine performance, via the formula Isp = Ve / g₀ (where g₀ is standard gravity). While you must supply the energy, the required propellant is sourced locally and does not have a resource cost.">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
-      <div><span class="stat-label">Thrust / Power:<span class="info-tooltip-icon" title="This ratio measures how efficiently thrusters convert input energy (Power) into motive force (Thrust). For an ideal engine, this value is T/P = 2 / Ve. Fusion drives have very high exhaust velocity, making them extremely propellant-efficient, but this comes at the cost of a lower thrust-to-power ratio.">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(this.getThrustPowerRatio(),false,6)} N/W</span></div>
+      <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.exhaustVelocity', 'Exhaust Velocity:')}<span id="thruster-ve-tooltip" class="info-tooltip-icon">&#9432;</span></span><span id="veVal" class="stat-value">${fmt(FUSION_VE,false,0)} m/s</span></div>
+      <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.thrustPerPower', 'Thrust / Power:')}<span id="thruster-tp-tooltip" class="info-tooltip-icon">&#9432;</span></span><span id="tpVal" class="stat-value">${fmt(this.getThrustPowerRatio(),false,6)} N/W</span></div>
       </div>
     </div>`;
     const pwrCard=document.createElement('div');pwrCard.className="info-card";pwrCard.innerHTML=pwrHTML;c.appendChild(pwrCard);
@@ -312,6 +321,42 @@ class PlanetaryThrustersProject extends Project{
       pwrVal:g('#pwrVal',pwrCard),veVal:g('#veVal',pwrCard),tpVal:g('#tpVal',pwrCard),
       pPlus:g('#pPlus',pwrCard),pMinus:g('#pMinus',pwrCard),
       pDiv:g('#pDiv',pwrCard),pMul:g('#pMul',pwrCard),p0:g('#p0',pwrCard)};
+
+    attachDynamicInfoTooltip(
+      g('#thruster-spin-tooltip', spinCard),
+      getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.spin.tooltip',
+        'Use planetary thrusters to change the world\'s rotation period. When you check Invest, continuous thruster power is applied toward the target day length, consuming colony energy per second. Progress is measured in equivalent delta-v; when the target is reached, investment stops automatically.'
+      )
+    );
+    attachDynamicInfoTooltip(
+      g('#thruster-motion-tooltip', motCard),
+      getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.motion.tooltip',
+        'Use planetary thrusters to change the world\'s orbit. If bound to a parent body, investment first drives a slow spiral to the Hill radius for escape. After escape, investment changes heliocentric distance toward the target AU. Investment consumes energy continuously; only one mode, Spin or Motion, can be active at a time.'
+      )
+    );
+    attachDynamicInfoTooltip(
+      g('#thruster-rogue-tooltip', motCard),
+      getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.motion.goRogueTooltip',
+        'Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet, removes the star, and shutters planetary thrusters.'
+      )
+    );
+    attachDynamicInfoTooltip(
+      g('#thruster-ve-tooltip', pwrCard),
+      getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.power.exhaustVelocityTooltip',
+        'Exhaust velocity measures how fast propellant is ejected. A higher value provides more thrust per unit of propellant, increasing mass efficiency. It is directly related to specific impulse via Isp = Ve / g0. While you must supply the energy, the required propellant is sourced locally and has no resource cost.'
+      )
+    );
+    attachDynamicInfoTooltip(
+      g('#thruster-tp-tooltip', pwrCard),
+      getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.power.thrustPerPowerTooltip',
+        'This ratio measures how efficiently thrusters convert input energy into motive force. For an ideal engine, T/P = 2 / Ve. Fusion drives have very high exhaust velocity, making them extremely propellant-efficient, but that comes with a lower thrust-to-power ratio.'
+      )
+    );
 
     /* restore saved values */
     this.el.rotCb.checked = this.spinInvest;
@@ -428,7 +473,7 @@ class PlanetaryThrustersProject extends Project{
     this.el.moonWarn.style.display = "block";
     this.el.hillRow.style.display = "block";
     this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
-    this.el.parentName.textContent = parent.name || "Parent";
+    this.el.parentName.textContent = parent.name || getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.parentFallback', 'Parent');
     this.el.parentRad.textContent = fmt((parent.orbitRadius||1_000_000), false, 0) + " km";
     const energyRem = p.mass * escArrival / this.getThrustPowerRatio();
     this.el.distE.textContent = formatEnergy(energyRem);
@@ -539,14 +584,18 @@ class PlanetaryThrustersProject extends Project{
     // If the project state says we escaped, mirror that onto the planet on load
     if(this.escapeComplete && p && !p.hasEscapedParent){ p.hasEscapedParent = true; }
 
-    this.el.rotNow.textContent = fmt(getRotationPeriodHours(p)/24,false,3)+" days";
+    this.el.rotNow.textContent = getPlanetaryThrustersText(
+      'ui.projects.planetaryThrusters.spin.rotationValue',
+      `${fmt(getRotationPeriodHours(p)/24,false,3)} days`,
+      { value: fmt(getRotationPeriodHours(p)/24,false,3) }
+    );
     // Show parent-centric radius when truly bound; heliocentric AU otherwise
     this.el.distNow.textContent = isBoundToParent(p)
       ? fmt(p.parentBody.orbitRadius||0,false,0)+" km"
       : fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrVal.textContent = formatNumber(this.power, true)+" W";
     if(this.el.veVal) this.el.veVal.textContent = this.hasTractorBeams()
-      ? 'N/A'
+      ? getPlanetaryThrustersText('ui.projects.planetaryThrusters.power.na', 'N/A')
       : fmt(FUSION_VE,false,0)+" m/s";
     if(this.el.tpVal) this.el.tpVal.textContent = fmt(this.getThrustPowerRatio(),false,6)+" N/W";
     this.el.pPlus.textContent="+"+formatNumber(this.step,true);
@@ -591,7 +640,7 @@ class PlanetaryThrustersProject extends Project{
         this.el.moonWarn.style.display = "block";
         this.el.hillRow.style.display = "block";
         this.el.hillVal.textContent = fmt(r_hill_m / 1e3, false, 0) + " km";
-        this.el.parentName.textContent = parent.name || "Parent";
+        this.el.parentName.textContent = parent.name || getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.parentFallback', 'Parent');
         this.el.parentRad.textContent = fmt(parent.orbitRadius || 1_000_000, false, 0) + " km";
 
         // Energy cost reflects **remaining** Δv (not job bookkeeping)

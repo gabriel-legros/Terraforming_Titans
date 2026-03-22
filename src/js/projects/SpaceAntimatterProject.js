@@ -2,6 +2,14 @@
   const SPACE_ANTIMATTER_STORAGE_PER_BATTERY = 1e15;
   const SPACE_ANTIMATTER_MAX_BATCH = 1e32;
 
+  function getSpaceAntimatterText(path, vars, fallback = '') {
+    try {
+      return t(`ui.projects.spaceAntimatter.${path}`, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   class SpaceAntimatterProject extends Project {
     constructor(config, name) {
       super(config, name);
@@ -152,7 +160,7 @@
       header.classList.add('card-header');
       const title = document.createElement('span');
       title.classList.add('card-title');
-      title.textContent = 'Battery Component';
+      title.textContent = getSpaceAntimatterText('title', null, 'Battery Component');
       header.appendChild(title);
       card.appendChild(header);
 
@@ -178,16 +186,16 @@
         return { value, content };
       };
 
-      const batteriesBuilt = createSummaryBox('Batteries Built');
-      const storageBonus = createSummaryBox('Space Energy Storage');
-      const buildAmount = createSummaryBox('Build Amount');
+      const batteriesBuilt = createSummaryBox(getSpaceAntimatterText('batteriesBuilt', null, 'Batteries Built'));
+      const storageBonus = createSummaryBox(getSpaceAntimatterText('spaceEnergyStorage', null, 'Space Energy Storage'));
+      const buildAmount = createSummaryBox(getSpaceAntimatterText('buildAmount', null, 'Build Amount'));
 
       const multiplierControls = document.createElement('div');
       multiplierControls.classList.add('scanner-mult-controls');
       const divideButton = document.createElement('button');
-      divideButton.textContent = '/10';
+      divideButton.textContent = getSpaceAntimatterText('divideTen', null, '/10');
       const multiplyButton = document.createElement('button');
-      multiplyButton.textContent = 'x10';
+      multiplyButton.textContent = getSpaceAntimatterText('timesTen', null, 'x10');
       multiplierControls.append(divideButton, multiplyButton);
       buildAmount.value.style.display = 'none';
       buildAmount.content.classList.add('project-summary-flex');
@@ -238,7 +246,11 @@
       }
       this.uiElements.batteriesBuiltValue.textContent = formatNumber(this.repeatCount, true);
       this.uiElements.storageBonusValue.textContent = formatNumber(this.getTotalStorageBonus(), true);
-      this.uiElements.buildButton.textContent = `Build ${formatNumber(this.buildCount, true)} Batteries`;
+      this.uiElements.buildButton.textContent = getSpaceAntimatterText(
+        'buildButton',
+        { count: formatNumber(this.buildCount, true) },
+        `Build ${formatNumber(this.buildCount, true)} Batteries`
+      );
       this.uiElements.buildButton.disabled = !this.canStart();
     }
 

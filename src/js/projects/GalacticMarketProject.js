@@ -1,4 +1,12 @@
 class GalacticMarketProject extends Project {
+  getGalacticMarketText(path, fallback, vars) {
+    try {
+      return t(path, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   constructor(config, name) {
     super(config, name);
     this.spaceshipPriceIncrease = 0;
@@ -30,7 +38,7 @@ class GalacticMarketProject extends Project {
     totalCostDisplay.id = `${this.name}-total-cost-display`;
     totalCostDisplay.classList.add('total-cost-display');
     const totalCostLabel = document.createElement('span');
-    totalCostLabel.textContent = 'Total Cost: ';
+    totalCostLabel.textContent = this.getGalacticMarketText('ui.projects.galacticMarket.totalCost', 'Total Cost: ');
     const totalCostValue = document.createElement('span');
     totalCostValue.id = `${this.name}-total-cost-display-value`;
     totalCostDisplay.append(totalCostLabel, totalCostValue);
@@ -69,19 +77,19 @@ class GalacticMarketProject extends Project {
     rightHeaderRow.classList.add('cargo-resource-row', 'cargo-grid-header', 'galactic-market-row', 'galactic-market-header', 'galactic-market-right-row', 'galactic-market-right-header');
 
     const leftHeaderConfig = [
-      { text: 'Resource' },
-      { text: 'Saturation' },
+      { text: this.getGalacticMarketText('ui.projects.galacticMarket.resource', 'Resource') },
+      { text: this.getGalacticMarketText('ui.projects.galacticMarket.saturation', 'Saturation') },
       {
-        text: 'Sell Price',
-        tooltip: 'Sell prices fall as you approach the saturation amount, so higher sell orders lower the payout per unit.',
+        text: this.getGalacticMarketText('ui.projects.galacticMarket.sellPrice', 'Sell Price'),
+        tooltip: this.getGalacticMarketText('ui.projects.galacticMarket.sellPriceTooltip', 'Sell prices fall as you approach the saturation amount, so higher sell orders lower the payout per unit.'),
       },
-      { text: 'Sell Amount' },
+      { text: this.getGalacticMarketText('ui.projects.galacticMarket.sellAmount', 'Sell Amount') },
     ];
 
     const rightHeaderConfig = [
       { type: 'controls' },
-      { text: 'Buy Amount' },
-      { text: 'Buy Price' },
+      { text: this.getGalacticMarketText('ui.projects.galacticMarket.buyAmount', 'Buy Amount') },
+      { text: this.getGalacticMarketText('ui.projects.galacticMarket.buyPrice', 'Buy Price') },
       { type: 'spacer' },
     ];
 
@@ -192,7 +200,10 @@ class GalacticMarketProject extends Project {
           tooltip.innerHTML = '&#9432;';
           attachDynamicInfoTooltip(
             tooltip,
-            'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max first cancels this row’s sells, then buys enough to spend a positive funding gain down to zero.'
+            this.getGalacticMarketText(
+              'ui.projects.galacticMarket.stepTooltip',
+              'Use -/+ to shift the current step between sell and buy. With extra settings enabled, -Max sells the current surplus (production minus consumption). +Max first cancels this row’s sells, then buys enough to spend a positive funding gain down to zero.'
+            )
           );
           headerControls.insertBefore(tooltip, multiplyButton.nextSibling);
 
@@ -206,8 +217,8 @@ class GalacticMarketProject extends Project {
         if (config.tooltip) {
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
-          tooltip.title = config.tooltip;
           tooltip.innerHTML = '&#9432;';
+          attachDynamicInfoTooltip(tooltip, config.tooltip);
           span.appendChild(tooltip);
         }
         headerRow.appendChild(span);
@@ -241,7 +252,13 @@ class GalacticMarketProject extends Project {
         if (resourceId === 'spaceships') {
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
-          tooltip.title = 'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.';
+          attachDynamicInfoTooltip(
+            tooltip,
+            this.getGalacticMarketText(
+              'ui.projects.galacticMarket.spaceshipPriceTooltip',
+              'Each ship purchase raises funding price by 1 and this decays by 1% per second. This increase can be reduced by progressing further in the game.'
+            )
+          );
           tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         }
@@ -359,13 +376,13 @@ class GalacticMarketProject extends Project {
           }
         };
 
-        createButton('Sat', () => {
+        createButton(this.getGalacticMarketText('ui.projects.galacticMarket.sat', 'Sat'), () => {
           const saturation = this.getSaturationSellAmount(category, resourceId);
           setInputQuantity(buyInput, 0, true);
           setInputQuantity(sellInput, saturation, true);
           refreshRow();
         });
-        const minusMaxButton = createButton('-Max', () => {
+        const minusMaxButton = createButton(this.getGalacticMarketText('ui.projects.galacticMarket.minusMax', '-Max'), () => {
           const surplus = Math.max(0, Math.floor(getResourceNetRate(category, resourceId)));
           setInputQuantity(buyInput, 0, true);
           setInputQuantity(sellInput, surplus, true);
@@ -373,7 +390,7 @@ class GalacticMarketProject extends Project {
         const minusButton = createButton('', () => applyShift('toSell'));
         createButton('0', () => applyShift('reset'));
         const plusButton = createButton('', () => applyShift('toBuy'));
-        const plusMaxButton = createButton('+Max', () => {
+        const plusMaxButton = createButton(this.getGalacticMarketText('ui.projects.galacticMarket.plusMax', '+Max'), () => {
           let totalCost = getTotalCostFromInputs();
           if (totalCost >= 0) return;
 

@@ -7,6 +7,14 @@
     ({ Project: ProjectBase } = require('../projects.js'));
   } catch (error) {}
 
+  function getSpecializationText(path, vars, fallback = '') {
+    try {
+      return t(`ui.projects.specialization.${path}`, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   class SpecializationProject extends ProjectBase {
     constructor(config, name, options) {
       super(config, name);
@@ -107,7 +115,7 @@
         const projectId = this.otherSpecializationIds[i];
         const otherSpecialization = projectManager.projects[projectId];
         if (otherSpecialization && otherSpecialization.isCompleted) {
-          return 'Another Specialization has been completed';
+          return getSpecializationText('anotherCompleted', null, 'Another Specialization has been completed');
         }
       }
       return '';
@@ -193,7 +201,7 @@
       const potentialGroup = document.createElement('div');
       potentialGroup.classList.add('bioworld-shop-meta');
       const potentialLabel = document.createElement('span');
-      potentialLabel.textContent = 'Potential Points:';
+      potentialLabel.textContent = getSpecializationText('potentialPoints', null, 'Potential Points:');
       const potentialValue = document.createElement('span');
       potentialValue.classList.add('bioworld-shop-points');
       potentialGroup.append(potentialLabel, potentialValue);
@@ -234,7 +242,7 @@
 
         const button = document.createElement('button');
         button.classList.add('bioworld-shop-button');
-        button.textContent = 'Buy';
+        button.textContent = getSpecializationText('buy', null, 'Buy');
         button.addEventListener('click', (event) => {
           const purchaseCount = event.shiftKey ? this.getMaxShopPurchases(item) : 1;
           this.purchaseUpgrade(item.id, purchaseCount);

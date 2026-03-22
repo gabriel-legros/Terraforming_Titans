@@ -34,6 +34,14 @@ const NUCLEAR_ALCHEMY_RECIPE_KEYS = [
   'metal'
 ];
 
+function getNuclearAlchemyText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 let NuclearAlchemyContinuousExpansionBase = null;
 try {
   NuclearAlchemyContinuousExpansionBase = ContinuousExpansionProject;
@@ -90,7 +98,15 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getRecipe(key) {
-    return NUCLEAR_ALCHEMY_RECIPES[key];
+    const recipe = NUCLEAR_ALCHEMY_RECIPES[key];
+    if (!recipe) {
+      return recipe;
+    }
+    const localizedLabel = getNuclearAlchemyText(
+      `ui.projects.nuclearAlchemy.recipeLabels.${key}`,
+      recipe.label
+    );
+    return localizedLabel === recipe.label ? recipe : { ...recipe, label: localizedLabel };
   }
 
   showsComplexityColumn() {
@@ -98,11 +114,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getAssignmentNameHeaderText() {
-    return 'Resource';
+    return getNuclearAlchemyText('ui.projects.nuclearAlchemy.resource', 'Resource');
   }
 
   getComplexityHeaderText() {
-    return 'Complexity';
+    return getNuclearAlchemyText('ui.projects.common.complexity', 'Complexity');
   }
 
   getComplexityValueText(key) {
@@ -110,19 +126,19 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getControlTitleText() {
-    return 'Furnace Controls';
+    return getNuclearAlchemyText('ui.projects.nuclearAlchemy.title', 'Furnace Controls');
   }
 
   getTotalUnitsLabelText() {
-    return 'Total Furnaces';
+    return getNuclearAlchemyText('ui.projects.nuclearAlchemy.totalFurnaces', 'Total Furnaces');
   }
 
   getRunToggleText() {
-    return 'Run furnaces';
+    return getNuclearAlchemyText('ui.projects.nuclearAlchemy.runFurnaces', 'Run furnaces');
   }
 
   getPrimaryRateLabelText() {
-    return 'Hydrogen Use';
+    return getNuclearAlchemyText('ui.projects.nuclearAlchemy.hydrogenUse', 'Hydrogen Use');
   }
 
   getPrimaryRateText() {
@@ -130,7 +146,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getExpansionRateText(rate) {
-    return `${formatNumber(rate, true, 3)} furnaces/s`;
+    return getNuclearAlchemyText(
+      'ui.projects.nuclearAlchemy.expansionRate',
+      `${formatNumber(rate, true, 3)} furnaces/s`,
+      { value: formatNumber(rate, true, 3) }
+    );
   }
 
   getExpansionRateSourceLabel() {
@@ -139,7 +159,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
   getOperationNoteText() {
     const parameter = formatNumber(this.getAlchemyParameter(), true, 3);
-    return `Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x ${parameter}/s.`;
+    return getNuclearAlchemyText(
+      'ui.projects.nuclearAlchemy.operationNote',
+      `Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x ${parameter}/s.`,
+      { value: parameter }
+    );
   }
 
   normalizeAssignments() {
@@ -294,7 +318,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.isRunning = next;
     if (!next) {
       this.setLastRunStats(0, {});
-      this.updateStatus('Run disabled');
+      this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.runDisabled', 'Run disabled'));
     }
     this.updateUI();
   }
@@ -311,7 +335,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   updateStatus(text) {
-    this.statusText = text || 'Idle';
+    this.statusText = text || getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle');
   }
 
   shouldOperate() {
@@ -331,18 +355,18 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       Math.min(1, Number(resources?.spaceStorage?.hydrogen?.availabilityRatio) || 0)
     );
     if (hydrogenRatio <= 0) {
-      return 'No hydrogen in space storage';
+      return getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.noHydrogen', 'No hydrogen in space storage');
     }
     if (hydrogenRatio < 1 || productivity < 1) {
-      return 'Insufficient hydrogen in space storage';
+      return getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.insufficientHydrogen', 'Insufficient hydrogen in space storage');
     }
-    return 'Idle';
+    return getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle');
   }
 
   buildConversionEntries(seconds, productivity = 1) {
     const storage = this.getSpaceStorageProject();
     if (!storage) {
-      this.shortfallReason = 'Build space storage';
+      this.shortfallReason = getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.buildSpaceStorage', 'Build space storage');
       return [];
     }
     const parameter = this.getAlchemyParameter();
@@ -403,9 +427,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     if (!this.shouldOperate()) {
       this.setLastRunStats(0, {});
       if (!this.repeatCount) {
-        this.updateStatus('Complete at least one furnace');
+        this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.completeAtLeastOne', 'Complete at least one furnace'));
       } else if (!this.isRunning) {
-        this.updateStatus('Run disabled');
+        this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.runDisabled', 'Run disabled'));
       }
       this.shortfallLastTick = false;
       return;
@@ -414,7 +438,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const seconds = deltaTime / 1000;
     if (!(seconds > 0)) {
       this.setLastRunStats(0, {});
-      this.updateStatus('Idle');
+      this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle'));
       this.shortfallLastTick = false;
       return;
     }
@@ -423,7 +447,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const storage = this.getSpaceStorageProject();
     if (!storage) {
       this.setLastRunStats(0, {});
-      this.updateStatus('Build space storage');
+      this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.buildSpaceStorage', 'Build space storage'));
       this.shortfallLastTick = true;
       return;
     }
@@ -431,7 +455,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const entries = this.buildConversionEntries(seconds, productivity);
     if (entries.length === 0) {
       this.setLastRunStats(0, {});
-      this.updateStatus('No assignments');
+      this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.noAssignments', 'No assignments'));
       this.shortfallLastTick = this.expansionShortfallLastTick || true;
       return;
     }
@@ -470,7 +494,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
     if (!(hydrogenDisplaySpent > 0)) {
       this.setLastRunStats(0, {});
-      this.updateStatus('Idle');
+      this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle'));
       this.shortfallLastTick = false;
       return;
     }
@@ -496,9 +520,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
 
     this.setLastRunStats(hydrogenRate, outputRates);
     if (hydrogenDisplaySpent > 0) {
-      this.updateStatus('Running');
+      this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.running', 'Running'));
     } else {
-      this.updateStatus('Idle');
+      this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle'));
     }
     this.shortfallLastTick = false;
   }
@@ -764,7 +788,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     statusField.classList.add('stat-item');
     const statusLabel = document.createElement('span');
     statusLabel.classList.add('stat-label');
-    statusLabel.textContent = 'Status';
+    statusLabel.textContent = getNuclearAlchemyText('ui.projects.common.status', 'Status');
     const statusValue = document.createElement('span');
     statusValue.classList.add('stat-value');
     statusField.append(statusLabel, statusValue);
@@ -785,13 +809,13 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list');
 
     const stepDownButton = document.createElement('button');
-    stepDownButton.textContent = '/10';
+    stepDownButton.textContent = getNuclearAlchemyText('ui.projects.common.divideTen', '/10');
     stepDownButton.addEventListener('click', () => {
       this.setAssignmentStep(this.assignmentStep / 10);
       this.updateUI();
     });
     const stepUpButton = document.createElement('button');
-    stepUpButton.textContent = 'x10';
+    stepUpButton.textContent = getNuclearAlchemyText('ui.projects.common.timesTen', 'x10');
     stepUpButton.addEventListener('click', () => {
       this.setAssignmentStep(this.assignmentStep * 10);
       this.updateUI();
@@ -807,7 +831,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     headerComplexity.textContent = this.getComplexityHeaderText();
     const headerAssigned = document.createElement('span');
     headerAssigned.classList.add('stat-label');
-    headerAssigned.textContent = 'Assigned';
+    headerAssigned.textContent = getNuclearAlchemyText('ui.projects.common.assigned', 'Assigned');
     const headerControls = document.createElement('div');
     headerControls.classList.add('hephaestus-assignment-controls');
     const headerButtons = document.createElement('div');
@@ -815,11 +839,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     headerButtons.append(stepDownButton, stepUpButton);
     const weightHeader = document.createElement('span');
     weightHeader.classList.add('stat-label', 'hephaestus-weight-header');
-    weightHeader.textContent = 'Weight';
+    weightHeader.textContent = getNuclearAlchemyText('ui.projects.common.weight', 'Weight');
     headerControls.append(headerButtons, weightHeader);
     const headerRate = document.createElement('div');
     headerRate.classList.add('stat-label', 'nuclear-alchemy-rate-cell');
-    headerRate.textContent = 'Rate';
+    headerRate.textContent = getNuclearAlchemyText('ui.projects.common.rate', 'Rate');
     if (!this.showsComplexityColumn()) {
       headerComplexity.style.display = 'none';
     }
@@ -851,7 +875,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       amountEl.classList.add('stat-value');
 
       const zeroButton = document.createElement('button');
-      zeroButton.textContent = '0';
+      zeroButton.textContent = getNuclearAlchemyText('ui.projects.common.zero', '0');
       zeroButton.addEventListener('click', () => {
         if (this.autoAssignFlags[key]) {
           return;
@@ -868,7 +892,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
 
       const maxButton = document.createElement('button');
-      maxButton.textContent = 'Max';
+      maxButton.textContent = getNuclearAlchemyText('ui.projects.common.max', 'Max');
       maxButton.addEventListener('click', () => {
         if (this.autoAssignFlags[key]) {
           return;
@@ -894,7 +918,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
         this.setAutoAssignTarget(key, autoAssign.checked);
       });
       const autoAssignLabel = document.createElement('span');
-      autoAssignLabel.textContent = 'Auto';
+      autoAssignLabel.textContent = getNuclearAlchemyText('ui.projects.common.auto', 'Auto');
       autoAssignLabel.addEventListener('click', () => {
         autoAssign.checked = !autoAssign.checked;
         this.setAutoAssignTarget(key, autoAssign.checked);
@@ -990,7 +1014,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const displayedExpansionRate = limitedExpansion ? this.lastExpansionRatePerSecond : expansionRate;
     elements.expansionRateValue.style.color = limitedExpansion ? 'orange' : '';
     elements.expansionRateValue.textContent = this.getExpansionRateText(displayedExpansionRate);
-    elements.statusValue.textContent = this.statusText || 'Idle';
+    elements.statusValue.textContent = this.statusText || getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle');
     elements.runCheckbox.checked = this.isRunning;
     elements.runCheckbox.disabled = total <= 0;
     if (elements.note) {
@@ -1082,7 +1106,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.normalizeAssignments();
     if (!this.isRunning) {
       this.setLastRunStats(0, {});
-      this.updateStatus('Idle');
+      this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle'));
     }
   }
 
@@ -1114,7 +1138,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
     this.isCompleted = false;
     this.setLastRunStats(0, {});
-    this.updateStatus(this.isRunning ? 'Idle' : 'Run disabled');
+    this.updateStatus(
+      this.isRunning
+        ? getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle')
+        : getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.runDisabled', 'Run disabled')
+    );
     this.normalizeAssignments();
     if (state.isActive) {
       this.isActive = true;

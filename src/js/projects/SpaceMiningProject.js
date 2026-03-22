@@ -1,5 +1,13 @@
 const ATMOSPHERIC_MONITORING_TOLERANCE = 0.00001;
 
+function getSpaceMiningText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class SpaceMiningProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
@@ -95,7 +103,11 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const label = document.createElement('label');
     const gasLabel = this.getGasAbbreviation(gas);
-    label.textContent = `Disable if ${gasLabel} pressure above: `;
+    label.textContent = getSpaceMiningText(
+      'ui.projects.spaceMining.disableIfGasPressureAbove',
+      `Disable if ${gasLabel} pressure above: `,
+      { gas: gasLabel }
+    );
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
@@ -119,7 +131,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const unitLabel = document.createElement('span');
     unitLabel.classList.add(`${key}-unit`);
-    unitLabel.textContent = 'Pa';
+    unitLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.pa', 'Pa');
     control.appendChild(unitLabel);
 
     projectElements[this.name] = {
@@ -155,15 +167,15 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(checkbox);
 
     const label = document.createElement('label');
-    label.textContent = 'Disable if ';
+    label.textContent = getSpaceMiningText('ui.projects.spaceMining.disableIf', 'Disable if ');
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const modeSelect = document.createElement('select');
     modeSelect.classList.add('water-coverage-mode');
     [
-      { value: 'coverage', text: 'water coverage above' },
-      { value: 'target', text: 'water+ice above target' }
+      { value: 'coverage', text: getSpaceMiningText('ui.projects.spaceMining.waterCoverageAbove', 'water coverage above') },
+      { value: 'target', text: getSpaceMiningText('ui.projects.spaceMining.waterIceAboveTarget', 'water+ice above target') }
     ].forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
@@ -202,7 +214,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const percent = document.createElement('span');
     percent.classList.add('water-coverage-unit');
-    percent.textContent = '%';
+    percent.textContent = getSpaceMiningText('ui.projects.spaceMining.percent', '%');
     control.appendChild(percent);
 
     const updateInputVisibility = () => {
@@ -247,15 +259,15 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(checkbox);
 
     const label = document.createElement('label');
-    label.textContent = 'Disable if ';
+    label.textContent = getSpaceMiningText('ui.projects.spaceMining.disableIf', 'Disable if ');
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
     const modeSelect = document.createElement('select');
     modeSelect.classList.add('co2-coverage-mode');
     [
-      { value: 'coverage', text: 'liquid CO2 coverage above' },
-      { value: 'target', text: 'liquid CO2+dry ice above target' }
+      { value: 'coverage', text: getSpaceMiningText('ui.projects.spaceMining.liquidCo2CoverageAbove', 'liquid CO2 coverage above') },
+      { value: 'target', text: getSpaceMiningText('ui.projects.spaceMining.liquidCo2DryIceAboveTarget', 'liquid CO2+dry ice above target') }
     ].forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
@@ -294,7 +306,7 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const percent = document.createElement('span');
     percent.classList.add('co2-coverage-unit');
-    percent.textContent = '%';
+    percent.textContent = getSpaceMiningText('ui.projects.spaceMining.percent', '%');
     control.appendChild(percent);
 
     const updateControlVisibility = () => {
@@ -337,14 +349,14 @@ class SpaceMiningProject extends SpaceshipProject {
     control.style.display = this.isBooleanFlagSet('waterImportTargeting') ? 'flex' : 'none';
 
     const label = document.createElement('label');
-    label.textContent = 'Target ';
+    label.textContent = getSpaceMiningText('ui.projects.spaceMining.target', 'Target ');
     control.appendChild(label);
 
     const select = document.createElement('select');
     select.classList.add('water-import-target-select');
     [
-      { value: 'surface', text: 'Surface' },
-      { value: 'colony', text: 'Colony' }
+      { value: 'surface', text: getSpaceMiningText('ui.projects.spaceMining.surface', 'Surface') },
+      { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony') }
     ].forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
@@ -407,7 +419,7 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.pressureInput.value = formatNumber(this.disablePressureThreshold * 1000, true, 2);
     }
     if (elements.pressureUnitLabel) {
-      elements.pressureUnitLabel.textContent = 'Pa';
+      elements.pressureUnitLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.pa', 'Pa');
     }
     if (elements.waterCoverageControl) {
       elements.waterCoverageControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') ? 'flex' : 'none';
@@ -458,7 +470,7 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.oxygenPressureInput.value = formatNumber(this.disableOxygenPressureThreshold * 1000, true, 2);
     }
     if (elements.oxygenPressureUnitLabel) {
-      elements.oxygenPressureUnitLabel.textContent = 'Pa';
+      elements.oxygenPressureUnitLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.pa', 'Pa');
     }
   }
 

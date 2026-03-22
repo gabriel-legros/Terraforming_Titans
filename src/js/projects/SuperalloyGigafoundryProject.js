@@ -1,5 +1,5 @@
 const SUPERALLOY_GIGAFOUNDRY_RECIPE = {
-  label: 'Superalloy',
+  label: '',
   outputCategory: 'spaceStorage',
   outputKey: 'superalloys',
   baseOutput: 500_000_000,
@@ -29,11 +29,20 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     this.lastSpaceEnergyPerSecond = 0;
   }
 
+  getText(path, vars, fallback = '') {
+    try {
+      return t(`ui.projects.superalloyGigafoundry.${path}`, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   getAssignmentKeys() {
     return ['superalloys'];
   }
 
   getRecipe() {
+    SUPERALLOY_GIGAFOUNDRY_RECIPE.label = this.getText('recipeLabel', null, 'Superalloy');
     return SUPERALLOY_GIGAFOUNDRY_RECIPE;
   }
 
@@ -42,23 +51,23 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
   }
 
   getAssignmentNameHeaderText() {
-    return 'Output';
+    return this.getText('output', null, 'Output');
   }
 
   getControlTitleText() {
-    return 'Gigafoundry Controls';
+    return this.getText('title', null, 'Gigafoundry Controls');
   }
 
   getTotalUnitsLabelText() {
-    return 'Total Gigafoundries';
+    return this.getText('totalGigafoundries', null, 'Total Gigafoundries');
   }
 
   getRunToggleText() {
-    return 'Run gigafoundries';
+    return this.getText('runGigafoundries', null, 'Run gigafoundries');
   }
 
   getPrimaryRateLabelText() {
-    return 'Input Use';
+    return this.getText('inputUse', null, 'Input Use');
   }
 
   getPrimaryRateText() {
@@ -66,7 +75,11 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
   }
 
   getExpansionRateText(rate) {
-    return `${formatNumber(rate, true, 3)} gigafoundries/s`;
+    return this.getText(
+      'expansionRate',
+      { value: formatNumber(rate, true, 3) },
+      `${formatNumber(rate, true, 3)} gigafoundries/s`
+    );
   }
 
   getRecipeWgcMultiplier() {
@@ -79,7 +92,17 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
   getOperationNoteText() {
     const parameter = formatNumber(this.getAlchemyParameter(), true, 3);
     const wgcMultiplier = this.getRecipeWgcMultiplier();
-    return `Runs superalloy batches at Assigned x ${parameter}/s. Each batch consumes ${formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.inputs.spaceStorage.metal, true)} space metal and ${formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.inputs.space.energy, true)} space energy for ${formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.baseOutput, true)} space superalloys, multiplied by WGC superalloy output bonuses (x${formatNumber(wgcMultiplier, true, 3)}).`;
+    return this.getText(
+      'operationNote',
+      {
+        parameter,
+        spaceMetal: formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.inputs.spaceStorage.metal, true),
+        spaceEnergy: formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.inputs.space.energy, true),
+        output: formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.baseOutput, true),
+        wgcMultiplier: formatNumber(wgcMultiplier, true, 3)
+      },
+      `Runs superalloy batches at Assigned x ${parameter}/s. Each batch consumes ${formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.inputs.spaceStorage.metal, true)} space metal and ${formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.inputs.space.energy, true)} space energy for ${formatNumber(SUPERALLOY_GIGAFOUNDRY_RECIPE.baseOutput, true)} space superalloys, multiplied by WGC superalloy output bonuses (x${formatNumber(wgcMultiplier, true, 3)}).`
+    );
   }
 
   setLastRunStats(spaceEnergyRate = 0, outputRates = {}, metalRate = 0) {
@@ -193,27 +216,27 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
       Math.min(1, Number(resources?.space?.energy?.availabilityRatio) || 0)
     );
     if (metalRatio <= 0 && energyRatio <= 0) {
-      return 'No space metal or energy';
+      return this.getText('status.noSpaceMetalOrEnergy', null, 'No space metal or energy');
     }
     if (metalRatio <= 0) {
-      return 'No space metal';
+      return this.getText('status.noSpaceMetal', null, 'No space metal');
     }
     if (energyRatio <= 0) {
-      return 'No space energy';
+      return this.getText('status.noSpaceEnergy', null, 'No space energy');
     }
     if (metalRatio < 1 || energyRatio < 1 || productivity < 1) {
-      return 'Insufficient space input';
+      return this.getText('status.insufficientSpaceInput', null, 'Insufficient space input');
     }
-    return 'Idle';
+    return this.getText('status.idle', null, 'Idle');
   }
 
   applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.shouldOperate()) {
       this.setLastRunStats(0, {}, 0);
       if (!this.repeatCount) {
-        this.updateStatus('Complete at least one gigafoundry');
+        this.updateStatus(this.getText('status.completeAtLeastOne', null, 'Complete at least one gigafoundry'));
       } else if (!this.isRunning) {
-        this.updateStatus('Run disabled');
+        this.updateStatus(this.getText('status.runDisabled', null, 'Run disabled'));
       }
       this.shortfallLastTick = false;
       return;
@@ -222,7 +245,7 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     const seconds = deltaTime / 1000;
     if (!(seconds > 0)) {
       this.setLastRunStats(0, {}, 0);
-      this.updateStatus('Idle');
+      this.updateStatus(this.getText('status.idle', null, 'Idle'));
       this.shortfallLastTick = false;
       return;
     }
@@ -231,13 +254,13 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     const plan = this.buildOperationPlan(seconds, productivity, accumulatedChanges);
     if (!plan.hasAssignments) {
       this.setLastRunStats(0, {}, 0);
-      this.updateStatus('No assignments');
+      this.updateStatus(this.getText('status.noAssignments', null, 'No assignments'));
       this.shortfallLastTick = this.expansionShortfallLastTick || true;
       return;
     }
     if (plan.reasons.noStorage) {
       this.setLastRunStats(0, {}, 0);
-      this.updateStatus('Build space storage');
+      this.updateStatus(this.getText('status.buildSpaceStorage', null, 'Build space storage'));
       this.shortfallLastTick = true;
       return;
     }
@@ -252,7 +275,7 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     const storage = this.getSpaceStorageProject();
     if (!storage) {
       this.setLastRunStats(0, {}, 0);
-      this.updateStatus('Build space storage');
+      this.updateStatus(this.getText('status.buildSpaceStorage', null, 'Build space storage'));
       this.shortfallLastTick = true;
       return;
     }
@@ -275,7 +298,7 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     resources?.spaceStorage?.superalloys?.modifyRate?.(outputRate, this.displayName, 'project');
 
     this.setLastRunStats(spaceEnergyRate, { superalloys: outputRate }, metalRate);
-    this.updateStatus('Running');
+    this.updateStatus(this.getText('status.running', null, 'Running'));
     this.shortfallLastTick = false;
   }
 

@@ -9,6 +9,14 @@ if (typeof makeCollapsibleCard === 'undefined') {
   } catch (e) {}
 }
 
+function getSpaceStorageUIText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 const storageResourceOptions = [
   { label: 'Metal', category: 'colony', resource: 'metal' },
   { label: 'Silica', category: 'colony', resource: 'silicon' },
@@ -47,7 +55,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
   SpaceStorageProject.prototype.createShipAutoStartCheckbox = function () {
     const els = projectElements[this.name] || {};
     if (els.autoStartLabel) {
-      els.autoStartLabel.textContent = 'Auto Start Expansion';
+      els.autoStartLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartExpansion', 'Auto Start Expansion');
     }
     const container = document.createElement('div');
     container.classList.add('checkbox-container');
@@ -59,7 +67,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
     });
     const label = document.createElement('label');
     label.htmlFor = checkbox.id;
-    label.textContent = 'Auto Start Ships';
+    label.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
     container.append(checkbox, label);
     projectElements[this.name] = {
       ...projectElements[this.name],
@@ -113,7 +121,7 @@ if (typeof SpaceStorageProject !== 'undefined') {
     });
     const label = document.createElement('label');
     label.htmlFor = checkbox.id;
-    label.textContent = 'Set to Space Only on travel';
+    label.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.setSpaceOnlyOnTravel', 'Set to Space Only on travel');
     container.append(checkbox, label);
     projectElements[this.name] = {
       ...projectElements[this.name],
@@ -187,8 +195,8 @@ function renderSpaceStorageUI(project, container) {
     </div>
     <div class="card-body">
       <div class="stats-grid two-col">
-        <div class="stat-item"><span class="stat-label">Used Storage:</span><span id="ss-used" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">Max Storage:</span><span id="ss-max" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.usedStorage', 'Used Storage:')}</span><span id="ss-used" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getSpaceStorageUIText('ui.projects.spaceStorage.maxStorage', 'Max Storage:')}</span><span id="ss-max" class="stat-value"></span></div>
       </div>
       <div id="ss-resource-grid"></div>
     </div>`;
@@ -209,27 +217,27 @@ function renderSpaceStorageUI(project, container) {
   expansionSection.classList.add('project-section-container');
   const expansionTitle = document.createElement('h4');
   expansionTitle.classList.add('section-title');
-  expansionTitle.textContent = 'Expansion';
+  expansionTitle.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.expansion', 'Expansion');
   expansionSection.appendChild(expansionTitle);
 
   const expansionGrid = document.createElement('div');
   expansionGrid.classList.add('project-details-grid');
   const expansionCostRow = document.createElement('div');
   expansionCostRow.id = 'ss-expansion-cost';
-  expansionCostRow.innerHTML = '<strong>Cost:</strong> <span class="expansion-cost stat-value"></span> <span class="info-tooltip-icon">&#9432;</span>';
+  expansionCostRow.innerHTML = `<strong>${getSpaceStorageUIText('ui.projects.cost', 'Cost:')}</strong> <span class="expansion-cost stat-value"></span> <span class="info-tooltip-icon">&#9432;</span>`;
   const expansionCostInfo = expansionCostRow.querySelector('.info-tooltip-icon');
-  attachDynamicInfoTooltip(expansionCostInfo, 'Construction time is reduced for each terraformed planet.');
+  attachDynamicInfoTooltip(expansionCostInfo, getSpaceStorageUIText('ui.projects.spaceStorage.expansionCostTooltip', 'Construction time is reduced for each terraformed planet.'));
   expansionGrid.appendChild(expansionCostRow);
 
   const expansionRateRow = document.createElement('div');
   expansionRateRow.id = 'ss-expansion-rate';
-  expansionRateRow.innerHTML = '<strong>Expansion/s:</strong> <span class="expansion-rate stat-value"></span>';
+  expansionRateRow.innerHTML = `<strong>${getSpaceStorageUIText('ui.projects.spaceStorage.expansionPerSecondLabel', 'Expansion/s:')}</strong> <span class="expansion-rate stat-value"></span>`;
   expansionGrid.appendChild(expansionRateRow);
 
   const expansionRecipeRow = document.createElement('div');
   expansionRecipeRow.id = 'ss-expansion-recipe';
   const expansionRecipeLabel = document.createElement('strong');
-  expansionRecipeLabel.textContent = 'Mode:';
+  expansionRecipeLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.mode', 'Mode:');
   const expansionRecipeSelect = document.createElement('select');
   expansionRecipeSelect.classList.add('space-storage-priority-select');
   expansionRecipeSelect.addEventListener('change', (event) => {
@@ -280,18 +288,18 @@ function renderSpaceStorageUI(project, container) {
     capHeader.classList.add('space-storage-settings-header');
     const capTitle = document.createElement('div');
     capTitle.classList.add('space-storage-settings-title');
-    capTitle.textContent = 'Space Storage Cap';
+    capTitle.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.capTitle', 'Space Storage Cap');
     capClose = document.createElement('button');
     capClose.type = 'button';
     capClose.classList.add('space-storage-settings-close');
-    capClose.textContent = 'X';
+    capClose.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.close', 'X');
     capHeader.append(capTitle, capClose);
 
     const capResourceRow = document.createElement('div');
     capResourceRow.classList.add('space-storage-settings-row');
     const capResourceLabel = document.createElement('span');
     capResourceLabel.classList.add('space-storage-settings-label');
-    capResourceLabel.textContent = 'Resource:';
+    capResourceLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.resource', 'Resource:');
     capResourceValue = document.createElement('span');
     capResourceValue.classList.add('space-storage-settings-value');
     capResourceRow.append(capResourceLabel, capResourceValue);
@@ -300,29 +308,29 @@ function renderSpaceStorageUI(project, container) {
     capModeRow.classList.add('space-storage-settings-row');
     const capModeLabel = document.createElement('label');
     capModeLabel.classList.add('space-storage-settings-label');
-    capModeLabel.textContent = 'Cap type:';
+    capModeLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.capType', 'Cap type:');
     const capModeInfo = document.createElement('span');
     capModeInfo.classList.add('info-tooltip-icon');
     capModeInfo.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       capModeInfo,
-      'By Weight first applies all Amount and % caps, subtracts those from max storage, then splits the remainder across By Weight resources proportional to weight. Weight 0 or no cap setting gets 0 cap while any By Weight cap exists.'
+      getSpaceStorageUIText('ui.projects.spaceStorage.capTypeTooltip', 'By Weight first applies all Amount and % caps, subtracts those from max storage, then splits the remainder across By Weight resources proportional to weight. Weight 0 or no cap setting gets 0 cap while any By Weight cap exists.')
     );
     capModeLabel.appendChild(capModeInfo);
     capModeSelect = document.createElement('select');
     capModeSelect.classList.add('space-storage-settings-select');
     const capModeNone = document.createElement('option');
     capModeNone.value = 'none';
-    capModeNone.textContent = 'No cap';
+    capModeNone.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.noCap', 'No cap');
     const capModeAmount = document.createElement('option');
     capModeAmount.value = 'amount';
-    capModeAmount.textContent = 'Amount';
+    capModeAmount.textContent = getSpaceStorageUIText('ui.projects.common.amount', 'Amount');
     const capModePercent = document.createElement('option');
     capModePercent.value = 'percent';
-    capModePercent.textContent = '% of max storage';
+    capModePercent.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.percentOfMaxStorage', '% of max storage');
     const capModeWeight = document.createElement('option');
     capModeWeight.value = 'weight';
-    capModeWeight.textContent = 'By Weight';
+    capModeWeight.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.byWeight', 'By Weight');
     capModeSelect.append(capModeNone, capModeAmount, capModePercent, capModeWeight);
     capModeRow.append(capModeLabel, capModeSelect);
 
@@ -330,11 +338,11 @@ function renderSpaceStorageUI(project, container) {
     capValueRow.classList.add('space-storage-settings-row');
     capValueLabel = document.createElement('label');
     capValueLabel.classList.add('space-storage-settings-label');
-    capValueLabel.textContent = 'Cap value:';
+    capValueLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.capValue', 'Cap value:');
     const capValueInfo = document.createElement('span');
     capValueInfo.classList.add('info-tooltip-icon');
     capValueInfo.innerHTML = '&#9432;';
-    attachDynamicInfoTooltip(capValueInfo, 'Accepts scientific notation. Percent caps clamp to 0-100. By Weight uses whole numbers.');
+    attachDynamicInfoTooltip(capValueInfo, getSpaceStorageUIText('ui.projects.spaceStorage.capValueTooltip', 'Accepts scientific notation. Percent caps clamp to 0-100. By Weight uses whole numbers.'));
     capValueLabel.appendChild(capValueInfo);
     capValueInput = document.createElement('input');
     capValueInput.type = 'text';
@@ -376,29 +384,29 @@ function renderSpaceStorageUI(project, container) {
     reserveModeRow.classList.add('space-storage-settings-row');
     const reserveModeLabel = document.createElement('label');
     reserveModeLabel.classList.add('space-storage-settings-label');
-    reserveModeLabel.textContent = 'Strategic reserve:';
+    reserveModeLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.strategicReserve', 'Strategic reserve:');
     const reserveModeInfo = document.createElement('span');
     reserveModeInfo.classList.add('info-tooltip-icon');
     reserveModeInfo.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       reserveModeInfo,
-      'Projects will avoid spending the specified strategic reserve amount. Withdrawals ignore this setting.'
+      getSpaceStorageUIText('ui.projects.spaceStorage.strategicReserveTooltip', 'Projects will avoid spending the specified strategic reserve amount. Withdrawals ignore this setting.')
     );
     reserveModeLabel.appendChild(reserveModeInfo);
     reserveModeSelect = document.createElement('select');
     reserveModeSelect.classList.add('space-storage-settings-select');
     const reserveModeNone = document.createElement('option');
     reserveModeNone.value = 'none';
-    reserveModeNone.textContent = 'No reserve';
+    reserveModeNone.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.noReserve', 'No reserve');
     const reserveModeAmount = document.createElement('option');
     reserveModeAmount.value = 'amount';
-    reserveModeAmount.textContent = 'Amount';
+    reserveModeAmount.textContent = getSpaceStorageUIText('ui.projects.common.amount', 'Amount');
     const reserveModePercentCap = document.createElement('option');
     reserveModePercentCap.value = 'percentCap';
-    reserveModePercentCap.textContent = '% of resource cap';
+    reserveModePercentCap.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.percentOfResourceCap', '% of resource cap');
     const reserveModePercentTotal = document.createElement('option');
     reserveModePercentTotal.value = 'percentTotal';
-    reserveModePercentTotal.textContent = '% of max storage';
+    reserveModePercentTotal.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.percentOfMaxStorage', '% of max storage');
     reserveModeSelect.append(
       reserveModeNone,
       reserveModeAmount,
@@ -411,11 +419,11 @@ function renderSpaceStorageUI(project, container) {
     reserveValueRow.classList.add('space-storage-settings-row');
     reserveValueLabel = document.createElement('label');
     reserveValueLabel.classList.add('space-storage-settings-label');
-    reserveValueLabel.textContent = 'Reserve value:';
+    reserveValueLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.reserveValue', 'Reserve value:');
     const reserveValueInfo = document.createElement('span');
     reserveValueInfo.classList.add('info-tooltip-icon');
     reserveValueInfo.innerHTML = '&#9432;';
-    attachDynamicInfoTooltip(reserveValueInfo, 'Accepts scientific notation. Percent reserves clamp to 0-100.');
+    attachDynamicInfoTooltip(reserveValueInfo, getSpaceStorageUIText('ui.projects.spaceStorage.reserveValueTooltip', 'Accepts scientific notation. Percent reserves clamp to 0-100.'));
     reserveValueLabel.appendChild(reserveValueInfo);
     reserveValueInput = document.createElement('input');
     reserveValueInput.type = 'text';
@@ -455,13 +463,13 @@ function renderSpaceStorageUI(project, container) {
     capClampButton = document.createElement('button');
     capClampButton.type = 'button';
     capClampButton.classList.add('space-storage-settings-clamp');
-    capClampButton.textContent = 'Delete Current Resources above Cap';
+    capClampButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.deleteAboveCap', 'Delete Current Resources above Cap');
     capClampRow.appendChild(capClampButton);
 
     const capConfirm = document.createElement('button');
     capConfirm.type = 'button';
     capConfirm.classList.add('space-storage-settings-confirm');
-    capConfirm.textContent = 'Confirm';
+    capConfirm.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.confirm', 'Confirm');
 
     capWindow.append(
       capHeader,
@@ -508,8 +516,8 @@ function renderSpaceStorageUI(project, container) {
     const mode = capModeSelect.value;
     capValueInput.disabled = mode === 'none';
     capValueLabel.firstChild.textContent = mode === 'percent'
-      ? 'Cap %:'
-      : (mode === 'weight' ? 'Weight:' : 'Cap value:');
+      ? getSpaceStorageUIText('ui.projects.spaceStorage.capPercent', 'Cap %:')
+      : (mode === 'weight' ? getSpaceStorageUIText('ui.projects.spaceStorage.weight', 'Weight:') : getSpaceStorageUIText('ui.projects.spaceStorage.capValue', 'Cap value:'));
     if (mode === 'none') {
       capValueInput.value = '';
       capValueInput.dataset.spaceStorageCap = '0';
@@ -521,8 +529,8 @@ function renderSpaceStorageUI(project, container) {
     const mode = reserveModeSelect.value;
     reserveValueInput.disabled = mode === 'none';
     reserveValueLabel.firstChild.textContent = mode === 'percentCap' || mode === 'percentTotal'
-      ? 'Reserve %:'
-      : 'Reserve value:';
+      ? getSpaceStorageUIText('ui.projects.spaceStorage.reservePercent', 'Reserve %:')
+      : getSpaceStorageUIText('ui.projects.spaceStorage.reserveValue', 'Reserve value:');
     if (mode === 'none') {
       reserveValueInput.value = '';
       reserveValueInput.dataset.spaceStorageReserve = '0';
@@ -671,21 +679,21 @@ function renderSpaceStorageUI(project, container) {
       biomassInfo.innerHTML = '&#9432;';
       attachDynamicInfoTooltip(
         biomassInfo,
-        'Storing biomass removes it from all zones proportionally to their current biomass. Withdrawing places biomass into zones that can grow it first, then zones where it can survive, then anywhere, weighted by zone percentage.'
+        getSpaceStorageUIText('ui.projects.spaceStorage.biomassTooltip', 'Storing biomass removes it from all zones proportionally to their current biomass. Withdrawing places biomass into zones that can grow it first, then zones where it can survive, then anywhere, weighted by zone percentage.')
       );
     }
 
     const fullIcon = document.createElement('span');
     fullIcon.classList.add('storage-full-icon');
     fullIcon.innerHTML = '&#9888;&#xFE0E;';
-    const fullIconTooltip = attachDynamicInfoTooltip(fullIcon, 'Colony storage full', false);
+    const fullIconTooltip = attachDynamicInfoTooltip(fullIcon, getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full'), false);
     fullIcon.style.display = 'inline-block';
     fullIcon.style.visibility = 'hidden';
     fullIcon.style.fontSize = '14px';
 
     const usage = document.createElement('span');
     usage.id = `${project.name}-usage-${opt.resource}`;
-    usage.textContent = '0';
+    usage.textContent = getSpaceStorageUIText('ui.projects.common.zero', '0');
 
     const transferButton = document.createElement('button');
     transferButton.type = 'button';
@@ -693,7 +701,11 @@ function renderSpaceStorageUI(project, container) {
     const transferIcon = document.createElement('span');
     transferIcon.classList.add('storage-transfer-icon');
     transferButton.appendChild(transferIcon);
-    const transferTooltip = attachDynamicInfoTooltip(transferButton, 'Store in space storage', false);
+    const transferTooltip = attachDynamicInfoTooltip(
+      transferButton,
+      getSpaceStorageUIText('ui.projects.spaceStorage.storeInSpaceStorage', 'Store in space storage'),
+      false
+    );
     transferButton.addEventListener('click', () => {
       const current = project.getResourceTransferMode(opt.resource);
       const next = current === 'withdraw' ? 'store' : 'withdraw';
@@ -717,10 +729,10 @@ function renderSpaceStorageUI(project, container) {
       waterSelect.style.fontSize = '12px';
       const colonyOpt = document.createElement('option');
       colonyOpt.value = 'colony';
-      colonyOpt.textContent = 'Colony';
+      colonyOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.colony', 'Colony');
       const surfaceOpt = document.createElement('option');
       surfaceOpt.value = 'surface';
-      surfaceOpt.textContent = 'Surface';
+      surfaceOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.surface', 'Surface');
       waterSelect.append(colonyOpt, surfaceOpt);
       waterSelect.addEventListener('change', e => {
         project.waterWithdrawTarget = e.target.value;
@@ -817,15 +829,15 @@ function renderSpaceStorageUI(project, container) {
   const modeContainer = document.createElement('div');
   modeContainer.classList.add('mode-selection');
   const modeLabel = document.createElement('span');
-  modeLabel.textContent = 'Mode:';
+  modeLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.mode', 'Mode:');
   const withdrawButton = document.createElement('button');
-  withdrawButton.textContent = 'Withdraw';
+  withdrawButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.withdraw', 'Withdraw');
   withdrawButton.classList.add('mode-button');
   const mixedButton = document.createElement('button');
-  mixedButton.textContent = 'Mixed';
+  mixedButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.mixed', 'Mixed');
   mixedButton.classList.add('mode-button');
   const storeButton = document.createElement('button');
-  storeButton.textContent = 'Store';
+  storeButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.store', 'Store');
   storeButton.classList.add('mode-button');
 
   const updateModeButtons = () => {
@@ -845,8 +857,8 @@ function renderSpaceStorageUI(project, container) {
     }
     withdrawButton.disabled = withdrawalDisabled;
     mixedButton.disabled = withdrawalDisabled;
-    withdrawButton.title = withdrawalDisabled ? 'Withdrawal disabled on this world' : '';
-    mixedButton.title = withdrawalDisabled ? 'Withdrawal disabled on this world' : '';
+    withdrawButton.title = withdrawalDisabled ? getSpaceStorageUIText('ui.projects.spaceStorage.withdrawalDisabled', 'Withdrawal disabled on this world') : '';
+    mixedButton.title = withdrawalDisabled ? getSpaceStorageUIText('ui.projects.spaceStorage.withdrawalDisabled', 'Withdrawal disabled on this world') : '';
   };
 
   withdrawButton.addEventListener('click', () => {
@@ -919,7 +931,7 @@ function updateSpaceStorageUI(project) {
   const els = projectElements[project.name];
   if (!els) return;
   if (els.autoStartLabel) {
-    els.autoStartLabel.textContent = 'Auto Start Expansion';
+    els.autoStartLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartExpansion', 'Auto Start Expansion');
   }
   if (els.shipAutoStartContainer && els.prioritizeRowContainer) {
     const display = projectManager && typeof projectManager.isBooleanFlagSet === 'function' &&
@@ -929,8 +941,8 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipAutoStartLabel) {
     els.shipAutoStartLabel.textContent = project.isShipOperationContinuous()
-      ? 'Run'
-      : 'Auto Start Ships';
+      ? getSpaceStorageUIText('ui.projects.run', 'Run')
+      : getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
   }
   if (els.usedDisplay) {
     els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 2);
@@ -974,7 +986,9 @@ function updateSpaceStorageUI(project) {
   }
   if (els.expansionRateDisplay) {
     const rate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
-    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} expansions/s`;
+    els.expansionRateDisplay.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.expansionsPerSecond', '{value} expansions/s', {
+      value: formatNumber(rate, true, 3)
+    });
   }
   if (els.usageCells) {
     storageResourceOptions.forEach(opt => {
@@ -1053,14 +1067,14 @@ function updateSpaceStorageUI(project) {
         icon.innerHTML = '&#8595;&#xFE0E;';
         button.classList.add('withdraw');
         button.classList.remove('store');
-        tooltip.textContent = 'Withdraw from space storage';
+        tooltip.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.withdrawFromSpaceStorage', 'Withdraw from space storage');
       } else {
         icon.innerHTML = '&#8593;&#xFE0E;';
         button.classList.add('store');
         button.classList.remove('withdraw');
         tooltip.textContent = withdrawalDisabled
           ? 'Withdrawal disabled on this world'
-          : 'Store in space storage';
+          : getSpaceStorageUIText('ui.projects.spaceStorage.storeInSpaceStorage', 'Store in space storage');
       }
     });
   }
@@ -1071,14 +1085,14 @@ function updateSpaceStorageUI(project) {
       let res = resources[opt.category]?.[opt.resource];
       if (icon) {
         const mode = project.getResourceTransferMode(opt.resource);
-        let tooltipText = 'Colony storage full';
+        let tooltipText = getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full');
         if (opt.resource === 'liquidWater' && mode === 'withdraw') {
           res = project.waterWithdrawTarget === 'surface'
             ? resources.surface.liquidWater
             : resources.colony.water;
           tooltipText = project.waterWithdrawTarget === 'surface'
-            ? 'Surface storage full'
-            : 'Colony storage full';
+            ? getSpaceStorageUIText('ui.projects.spaceStorage.surfaceStorageFull', 'Surface storage full')
+            : getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full');
         }
         if (tooltip) {
           tooltip.textContent = tooltipText;
@@ -1128,8 +1142,8 @@ function updateSpaceStorageUI(project) {
     els.reserveValueInput.disabled = els.reserveModeSelect.value === 'none';
     if (els.reserveValueLabel) {
       els.reserveValueLabel.firstChild.textContent = els.reserveModeSelect.value === 'percentCap' || els.reserveModeSelect.value === 'percentTotal'
-        ? 'Reserve %:'
-        : 'Reserve value:';
+        ? getSpaceStorageUIText('ui.projects.spaceStorage.reservePercent', 'Reserve %:')
+        : getSpaceStorageUIText('ui.projects.spaceStorage.reserveValue', 'Reserve value:');
     }
     if (els.capResourceValue) {
       const key = els.capResourceKey;
@@ -1150,8 +1164,8 @@ function updateSpaceStorageUI(project) {
     }
     if (els.capValueLabel) {
       els.capValueLabel.firstChild.textContent = els.capModeSelect.value === 'percent'
-        ? 'Cap %:'
-        : (els.capModeSelect.value === 'weight' ? 'Weight:' : 'Cap value:');
+        ? getSpaceStorageUIText('ui.projects.spaceStorage.capPercent', 'Cap %:')
+        : (els.capModeSelect.value === 'weight' ? getSpaceStorageUIText('ui.projects.spaceStorage.weight', 'Weight:') : getSpaceStorageUIText('ui.projects.spaceStorage.capValue', 'Cap value:'));
     }
     const capParsed = parseFlexibleNumber(els.capValueInput.dataset.spaceStorageCap) || 0;
     let capNormalized = Math.max(0, capParsed);
@@ -1175,10 +1189,10 @@ function updateSpaceStorageUI(project) {
   if (els.shipProgressButton) {
     if (project.isShipOperationContinuous()) {
       if (project.shipOperationAutoStart) {
-        els.shipProgressButton.textContent = 'Continuous';
+        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.continuous', 'Continuous');
         els.shipProgressButton.style.background = '#4caf50';
       } else {
-        els.shipProgressButton.textContent = 'Stopped';
+        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.stopped', 'Stopped');
         els.shipProgressButton.style.background = '#f44336';
       }
     } else {
@@ -1186,16 +1200,19 @@ function updateSpaceStorageUI(project) {
       const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
       if (project.shipOperationIsActive) {
         const progressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
-        els.shipProgressButton.textContent = `In Progress: ${timeRemaining} seconds remaining (${progressPercent.toFixed(2)}%)`;
+        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.inProgressPercent', 'In Progress: {time} seconds remaining ({percent}%)', {
+          time: timeRemaining,
+          percent: progressPercent.toFixed(2)
+        });
         els.shipProgressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
       } else if (project.shipOperationIsPaused) {
-        els.shipProgressButton.textContent = `Resume ship transfers (${timeRemaining}s left)`;
+        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.resumeShipTransfers', 'Resume ship transfers ({time}s left)', { time: timeRemaining });
         els.shipProgressButton.style.background = project.canStartShipOperation() ? '#4caf50' : '#f44336';
       } else if (project.canStartShipOperation && project.canStartShipOperation()) {
-        els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.startShipTransfers', 'Start ship transfers (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) });
         els.shipProgressButton.style.background = '#4caf50';
       } else {
-        els.shipProgressButton.textContent = `Start ship transfers (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.startShipTransfers', 'Start ship transfers (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) });
         els.shipProgressButton.style.background = '#f44336';
       }
     }

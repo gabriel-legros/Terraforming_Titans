@@ -1,6 +1,10 @@
 class ArtificialCrustProject extends ArtificialSkyProject {
   getCostRateLabel() {
-    return 'Artificial Crust';
+    try {
+      return t('ui.projects.artificialCrust.costRateLabel', null, 'Artificial Crust');
+    } catch (error) {
+      return 'Artificial Crust';
+    }
   }
 
   getBaseCoreHeatFlux() {

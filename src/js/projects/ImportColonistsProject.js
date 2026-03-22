@@ -4,6 +4,14 @@ class ImportColonistsProject extends Project {
     this.importTarget = 'colonists';
   }
 
+  getText(path, vars, fallback = '') {
+    try {
+      return t(`ui.projects.importColonists.${path}`, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   canImportCrusaders() {
     return this.isBooleanFlagSet && this.isBooleanFlagSet('crusaderImportEnabled');
   }
@@ -58,7 +66,7 @@ class ImportColonistsProject extends Project {
     wrapper.appendChild(select);
 
     const separator = document.createElement('span');
-    separator.textContent = ': ';
+    separator.textContent = this.getText('separator', null, ': ');
     wrapper.appendChild(separator);
 
     const amount = document.createElement('span');
@@ -68,7 +76,14 @@ class ImportColonistsProject extends Project {
     const crusaderTooltip = document.createElement('span');
     crusaderTooltip.classList.add('info-tooltip-icon');
     crusaderTooltip.innerHTML = '&#9432;';
-    crusaderTooltip.title = 'Crusaders do not grow or produce research, but can eliminate hazardous biomass.';
+    attachDynamicInfoTooltip(
+      crusaderTooltip,
+      this.getText(
+        'crusaderTooltip',
+        null,
+        'Crusaders do not grow or produce research, but can eliminate hazardous biomass.'
+      )
+    );
     crusaderTooltip.style.display = 'none';
     crusaderTooltip.style.marginLeft = '4px';
     wrapper.appendChild(crusaderTooltip);

@@ -20,6 +20,14 @@ const DEFAULT_LIFTER_HARVEST_RECIPES = {
   },
 };
 
+function getLiftersProjectText(path, vars, fallback = '') {
+  try {
+    return t(`ui.projects.lifters.${path}`, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 let dysonManagerInstance = null;
 let LiftersContinuousExpansionBase = null;
 
@@ -71,7 +79,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.lastProductivityByRecipe = {};
     this.lastEnergyLimitedProductivityByRecipe = {};
 
-    this.statusText = 'Idle';
+    this.statusText = getLiftersProjectText('status.idle', null, 'Idle');
     this.shortfallReason = '';
     this.shortfallLastTick = false;
     this.costShortfallLastTick = false;
@@ -549,7 +557,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.isRunning = next;
     if (!next) {
       this.setLastTickStats({});
-      this.updateStatus('Run disabled');
+      this.updateStatus(getLiftersProjectText('status.runDisabled', null, 'Run disabled'));
     }
     this.updateUI();
   }
@@ -1016,24 +1024,24 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
   getBlockedStatusFromPlan(plan) {
     if (plan.reasons.noStorage) {
-      return 'Build space storage';
+      return getLiftersProjectText('status.buildSpaceStorage', null, 'Build space storage');
     }
     if (plan.reasons.storageLimited) {
-      return 'Space storage is full';
+      return getLiftersProjectText('status.spaceStorageFull', null, 'Space storage is full');
     }
     if (plan.reasons.capLimited) {
-      return 'Storage cap reached';
+      return getLiftersProjectText('status.storageCapReached', null, 'Storage cap reached');
     }
     if (plan.hasStripAssignments && this.getAtmosphereTotal() <= 0) {
-      return 'No atmosphere to strip';
+      return getLiftersProjectText('status.noAtmosphereToStrip', null, 'No atmosphere to strip');
     }
     if (plan.reasons.energyLimited) {
-      return 'Insufficient energy';
+      return getLiftersProjectText('status.insufficientEnergy', null, 'Insufficient energy');
     }
     if (plan.entries.length === 0) {
-      return 'No assignments';
+      return getLiftersProjectText('status.noAssignments', null, 'No assignments');
     }
-    return 'Idle';
+    return getLiftersProjectText('status.idle', null, 'Idle');
   }
 
   setLastTickStats(stats = {}) {
@@ -1133,11 +1141,11 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (!this.shouldOperate()) {
       this.setLastTickStats({});
       if (!this.repeatCount) {
-        this.updateStatus('Complete at least one lifter');
+        this.updateStatus(getLiftersProjectText('status.completeAtLeastOne', null, 'Complete at least one lifter'));
       } else if (!this.isRunning) {
-        this.updateStatus('Run disabled');
+        this.updateStatus(getLiftersProjectText('status.runDisabled', null, 'Run disabled'));
       } else {
-        this.updateStatus('No assignments');
+        this.updateStatus(getLiftersProjectText('status.noAssignments', null, 'No assignments'));
       }
       this.shortfallLastTick = false;
       return;
@@ -1146,7 +1154,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     const seconds = deltaTime / 1000;
     if (!(seconds > 0)) {
       this.setLastTickStats({});
-      this.updateStatus('Idle');
+      this.updateStatus(getLiftersProjectText('status.idle', null, 'Idle'));
       this.shortfallLastTick = false;
       return;
     }
@@ -1192,7 +1200,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
         displayRatesByRecipe,
         energyLimitedProductivityByRecipe,
       });
-      this.updateStatus('No assignments');
+      this.updateStatus(getLiftersProjectText('status.noAssignments', null, 'No assignments'));
       this.shortfallLastTick = false;
       return;
     }
@@ -1304,7 +1312,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     if (processedUnits > 0) {
       const wasLimited = plan.reasons.energyLimited
         || plan.reasons.atmosphereLimited;
-      this.updateStatus('Running');
+      this.updateStatus(getLiftersProjectText('status.running', null, 'Running'));
       this.shortfallLastTick = wasLimited;
     } else {
       this.updateStatus(this.getBlockedStatusFromPlan(plan));
@@ -1671,7 +1679,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
 
     if (!this.isRunning) {
       this.setLastTickStats({});
-      this.updateStatus('Idle');
+      this.updateStatus(getLiftersProjectText('status.idle', null, 'Idle'));
     }
   }
 
@@ -1732,7 +1740,7 @@ class LiftersProject extends LiftersContinuousExpansionBase {
     this.isRunning = false;
     this.isCompleted = false;
     this.setLastTickStats({});
-    this.updateStatus('Idle');
+    this.updateStatus(getLiftersProjectText('status.idle', null, 'Idle'));
 
     if (state.isActive) {
       this.isActive = true;

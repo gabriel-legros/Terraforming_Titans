@@ -14,6 +14,14 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
     this.el = {};
   }
 
+  getText(path, vars, fallback = '') {
+    try {
+      return t(`ui.projects.scanner.${path}`, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   getWorkerCapacityStep() {
     return this.step;
   }
@@ -280,7 +288,11 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
 
   renderUI(container) {
     const controls = this.renderWorkerCapacityControls(container, {
-      tooltip: 'Worker capacity lets us build scanners in parallel. One satellite can be produced per 10,000 worker cap.',
+      tooltip: this.getText(
+        'workerCapacityTooltip',
+        null,
+        'Worker capacity lets us build scanners in parallel. One satellite can be produced per 10,000 worker cap.'
+      ),
       layoutClass: 'scanner-layout',
     });
 
@@ -293,19 +305,26 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       depositSection.className = 'project-section-container';
       const depositTitle = document.createElement('h4');
       depositTitle.className = 'section-title';
-      depositTitle.textContent = 'Deposits';
+      depositTitle.textContent = this.getText('deposits', null, 'Deposits');
       const depositContainer = document.createElement('div');
       depositContainer.className = 'deposits-container';
       dVal = document.createElement('span');
       dVal.id = `${this.name}-deposit-current`;
       const dSlash = document.createElement('span');
-      dSlash.textContent = ' / ';
+      dSlash.textContent = this.getText('depositSeparator', null, ' / ');
       dMax = document.createElement('span');
       dMax.id = `${this.name}-deposit-max`;
       const dInfo = document.createElement('span');
       dInfo.className = 'info-tooltip-icon';
-      dInfo.title = 'Shows discovered and maximum deposits satellites can find on this planet.';
       dInfo.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(
+        dInfo,
+        this.getText(
+          'depositsTooltip',
+          null,
+          'Shows discovered and maximum deposits satellites can find on this planet.'
+        )
+      );
       depositContainer.append(dVal, dSlash, dMax, dInfo);
       depositSection.append(depositTitle, depositContainer);
       topSection.appendChild(depositSection);

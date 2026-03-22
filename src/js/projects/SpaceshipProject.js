@@ -1,5 +1,13 @@
 const KESSLER_SHIP_DEBRIS_TONS = 3000;
 
+function getSpaceshipProjectText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class SpaceshipProject extends Project {
 
   constructor(config, name) {
@@ -206,7 +214,7 @@ class SpaceshipProject extends Project {
   }
 
   getCostRateLabel() {
-    return 'Spaceship Cost';
+    return getSpaceshipProjectText('ui.projects.spaceship.costLabel', 'Spaceship Cost');
   }
 
   assignSpaceships(count) {
@@ -363,7 +371,11 @@ class SpaceshipProject extends Project {
             })
         )
         .join(', ');
-      elements.costPerShipElement.textContent = `Cost per Shipment: ${costPerShipText}`;
+      elements.costPerShipElement.textContent = getSpaceshipProjectText(
+        'ui.projects.spaceship.costPerShipmentValue',
+        `Cost per Shipment: ${costPerShipText}`,
+        { value: costPerShipText }
+      );
     }
 
     if (elements.totalCostElement && this.assignedSpaceships != null) {
@@ -384,7 +396,11 @@ class SpaceshipProject extends Project {
               return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
             })
         ).join(', ');
-      elements.resourceGainPerShipElement.textContent = `Gain per Shipment: ${gainPerShipText}`;
+      elements.resourceGainPerShipElement.textContent = getSpaceshipProjectText(
+        'ui.projects.spaceship.gainPerShipmentValue',
+        `Gain per Shipment: ${gainPerShipText}`,
+        { value: gainPerShipText }
+      );
     }
 
     if (elements.totalGainElement && this.assignedSpaceships != null) {
@@ -405,7 +421,7 @@ class SpaceshipProject extends Project {
 
     const title = document.createElement('h4');
     title.classList.add('section-title');
-    title.textContent = 'Assignment';
+    title.textContent = getSpaceshipProjectText('ui.projects.spaceship.assignment', 'Assignment');
     sectionContainer.appendChild(title);
 
     const assignmentContainer = document.createElement('div');
@@ -418,7 +434,7 @@ class SpaceshipProject extends Project {
     const assignedContainer = document.createElement('div');
     assignedContainer.classList.add('assigned-ships-container');
     const assignedLabel = document.createElement('span');
-    assignedLabel.textContent = 'Assigned:';
+    assignedLabel.textContent = getSpaceshipProjectText('ui.projects.spaceship.assigned', 'Assigned:');
     const assignedDisplay = document.createElement('span');
     assignedDisplay.id = `${this.name}-assigned-spaceships`;
     assignedContainer.append(assignedLabel, assignedDisplay);
@@ -426,7 +442,7 @@ class SpaceshipProject extends Project {
     const availableContainer = document.createElement('div');
     availableContainer.classList.add('available-ships-container');
     const availableLabel = document.createElement('span');
-    availableLabel.textContent = 'Available:';
+    availableLabel.textContent = getSpaceshipProjectText('ui.projects.spaceship.available', 'Available:');
     const availableDisplay = document.createElement('span');
     availableDisplay.id = `${this.name}-available-spaceships`;
     availableContainer.append(availableLabel, availableDisplay);
@@ -449,24 +465,24 @@ class SpaceshipProject extends Project {
     mainButtons.classList.add('main-buttons');
     buttonsContainer.appendChild(mainButtons);
   
-    createButton('0', () => {
+    createButton(getSpaceshipProjectText('ui.projects.common.zero', '0'), () => {
       this.assignSpaceships(-this.assignedSpaceships);
       this.disableAutoAssignSpaceships();
     }, mainButtons);
     const minusButton = createButton(`-${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignSpaceships(-this.assignmentMultiplier), mainButtons);
     const plusButton = createButton(`+${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignSpaceships(this.assignmentMultiplier), mainButtons);
-    createButton('Max', () => this.assignSpaceships(Math.floor(resources.special.spaceships.value)), mainButtons);
+    createButton(getSpaceshipProjectText('ui.projects.common.max', 'Max'), () => this.assignSpaceships(Math.floor(resources.special.spaceships.value)), mainButtons);
   
     const multiplierContainer = document.createElement('div');
     multiplierContainer.classList.add('multiplier-container');
     buttonsContainer.appendChild(multiplierContainer);
   
-    createButton('/10', () => {
+    createButton(getSpaceshipProjectText('ui.projects.common.divideTen', '/10'), () => {
       this.assignmentMultiplier = Math.max(1, this.assignmentMultiplier / 10);
       minusButton.textContent = `-${formatNumber(this.assignmentMultiplier, true)}`;
       plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
     }, multiplierContainer);
-    createButton('x10', () => {
+    createButton(getSpaceshipProjectText('ui.projects.common.timesTen', 'x10'), () => {
       this.assignmentMultiplier *= 10;
       minusButton.textContent = `-${formatNumber(this.assignmentMultiplier, true)}`;
       plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
@@ -491,7 +507,7 @@ class SpaceshipProject extends Project {
 
     const title = document.createElement('h4');
     title.classList.add('section-title');
-    title.textContent = 'Cost & Gain';
+    title.textContent = getSpaceshipProjectText('ui.projects.spaceship.costAndGain', 'Cost & Gain');
     sectionContainer.appendChild(title);
 
     const grid = document.createElement('div');
@@ -552,7 +568,7 @@ class SpaceshipProject extends Project {
   
     const autoAssignLabel = document.createElement('label');
     autoAssignLabel.htmlFor = `${this.name}-auto-assign-spaceships`;
-    autoAssignLabel.textContent = 'Auto assign';
+    autoAssignLabel.textContent = getSpaceshipProjectText('ui.projects.common.autoAssign', 'Auto assign');
 
     autoAssignCheckboxContainer.appendChild(autoAssignCheckbox);
     autoAssignCheckboxContainer.appendChild(autoAssignLabel);

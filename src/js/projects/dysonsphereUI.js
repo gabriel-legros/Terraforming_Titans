@@ -9,40 +9,48 @@ if (typeof makeCollapsibleCard === 'undefined') {
   } catch (e) {}
 }
 
+function getDysonSphereText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function renderDysonSphereUI(project, container) {
   const card = document.createElement('div');
   card.classList.add('dyson-sphere-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Dyson Sphere Collectors</span>
+      <span class="card-title">${getDysonSphereText('ui.projects.dysonSphere.title', 'Dyson Sphere Collectors')}</span>
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">Collectors:</span><span id="dsph-collectors" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="dsph-power-per" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">Total Power:</span><span id="dsph-total-power" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.collectors', 'Collectors:')}</span><span id="dsph-collectors" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.powerPerCollector', 'Power/Collector:')}</span><span id="dsph-power-per" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.totalPower', 'Total Power:')}</span><span id="dsph-total-power" class="stat-value"></span></div>
       </div>
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">Sphere Count:</span><span id="dsph-sphere-count" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">Max Spheres:</span><span id="dsph-max-spheres" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">Max Power:</span><span id="dsph-max-power" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.sphereCount', 'Sphere Count:')}</span><span id="dsph-sphere-count" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.maxSpheres', 'Max Spheres:')}</span><span id="dsph-max-spheres" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.maxPower', 'Max Power:')}</span><span id="dsph-max-power" class="stat-value"></span></div>
       </div>
       <div class="stats-grid two-col collector-cost-container">
         <div class="stat-item">
-          <span class="stat-label" id="dsph-collector-cost-label">Collector Cost:</span>
+          <span class="stat-label" id="dsph-collector-cost-label">${getDysonSphereText('ui.projects.dysonSphere.collectorCost', 'Collector Cost:')}</span>
           <span id="dsph-collector-cost" class="stat-value"></span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Expansion</span>
+          <span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.expansion', 'Expansion')}</span>
           <span id="dsph-expansion-rate" class="stat-value"></span>
         </div>
       </div>
       <div class="progress-button-container dyson-progress-container"><button id="dsph-start" class="progress-button"></button></div>
       <div class="checkbox-container">
         <input type="checkbox" id="dsph-auto">
-        <label for="dsph-auto">Auto start</label>
+        <label for="dsph-auto">${getDysonSphereText('ui.projects.autoStart', 'Auto start')}</label>
         <input type="checkbox" id="dsph-auto-travel-reset">
-        <label for="dsph-auto-travel-reset">Uncheck on travelling</label>
+        <label for="dsph-auto-travel-reset">${getDysonSphereText('ui.projects.uncheckOnTravel', 'Uncheck on travelling')}</label>
       </div>
     </div>`;
   if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
@@ -60,7 +68,7 @@ function renderDysonSphereUI(project, container) {
     collectorCostLabel.appendChild(collectorCostInfo);
     collectorCostTooltipContent = attachDynamicInfoTooltip(
       collectorCostInfo,
-      'After the first sphere worth of power (5e25), Dyson Sphere collector expansion adds a fixed superalloy cost per collector to build additional frames.'
+      getDysonSphereText('ui.projects.dysonSphere.collectorCostTooltip', 'After the first sphere worth of power (5e25), Dyson Sphere collector expansion adds a fixed superalloy cost per collector to build additional frames.')
     );
   }
 
@@ -192,7 +200,9 @@ function updateDysonSphereUI(project) {
       ? project.autoContinuousOperation && (project.isCompleted || collectors > 0)
       : project.collectorProgress > 0;
     const rate = (!atOrOverMax && active) ? (1000 / project.collectorDuration) : 0;
-    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
+    els.expansionRateDisplay.textContent = getDysonSphereText('ui.projects.dysonSphere.collectorsPerSecond', '{value} collectors/s', {
+      value: formatNumber(rate, true, 3)
+    });
   }
 
   if (els.autoCheckbox) {
@@ -217,7 +227,7 @@ function updateDysonSphereUI(project) {
     return;
   }
   if (!project.isCompleted) {
-    els.startButton.textContent = 'Build the frame to deploy collectors';
+    els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.buildFrame', 'Build the frame to deploy collectors');
     els.startButton.style.background = '#f44336';
     els.startButton.disabled = true;
     return;
@@ -226,21 +236,21 @@ function updateDysonSphereUI(project) {
   els.startButton.disabled = false;
   if (project.isCollectorContinuous()) {
     if (project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)) {
-      els.startButton.textContent = 'Continuous (On)';
+      els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.continuousOn', 'Continuous (On)');
       els.startButton.style.background = '#4caf50';
     } else {
-      els.startButton.textContent = 'Continuous (Off)';
+      els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.continuousOff', 'Continuous (Off)');
       els.startButton.style.background = '#f44336';
     }
   } else if (project.collectorProgress > 0) {
     const pct = ((project.collectorDuration - project.collectorProgress) / project.collectorDuration) * 100;
     const secs = Math.max(0, project.collectorProgress / 1000).toFixed(2);
-    els.startButton.textContent = `Deploying (${secs}s)`;
+    els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.deploying', 'Deploying ({time}s)', { time: secs });
     els.startButton.style.background = `linear-gradient(to right, #4caf50 ${pct}%, #ccc ${pct}%)`;
   } else {
     const can = project.canStartCollector();
     const dur = Math.round(project.collectorDuration / 1000);
-    els.startButton.textContent = `Deploy Collector (${dur}s)`;
+    els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.deployCollector', 'Deploy Collector ({time}s)', { time: dur });
     els.startButton.style.background = can ? '#4caf50' : '#f44336';
     els.startButton.disabled = !can;
   }

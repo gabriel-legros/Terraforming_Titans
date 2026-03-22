@@ -33,6 +33,34 @@ function getMirrorZonesWithFocusAnyUnassigned() {
   return getZones().concat(['focus', 'unassigned', 'any']);
 }
 
+function getSpaceMirrorText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function getSpaceMirrorZoneLabel(zone) {
+  const keyMap = {
+    tropical: 'ui.projects.spaceMirrorFacility.zones.tropical',
+    temperate: 'ui.projects.spaceMirrorFacility.zones.temperate',
+    polar: 'ui.projects.spaceMirrorFacility.zones.polar',
+    focus: 'ui.projects.spaceMirrorFacility.zones.focus',
+    unassigned: 'ui.projects.spaceMirrorFacility.zones.unassigned',
+    any: 'ui.projects.spaceMirrorFacility.zones.any',
+  };
+  const fallbackMap = {
+    tropical: 'Tropical',
+    temperate: 'Temperate',
+    polar: 'Polar',
+    focus: 'Focusing',
+    unassigned: 'Unassigned',
+    any: 'Any Zone',
+  };
+  return getSpaceMirrorText(keyMap[zone] || '', fallbackMap[zone] || zone);
+}
+
 function mergeSettingKeys(primary, secondary) {
   const keys = new Set(Object.keys(primary || {}));
   Object.keys(secondary || {}).forEach(key => keys.add(key));
@@ -300,7 +328,7 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
       labelNode = document.createElement('strong');
       element._labelNode = labelNode;
     }
-    labelNode.textContent = 'Cost:';
+    labelNode.textContent = getSpaceMirrorText('ui.projects.cost', 'Cost:');
     element.appendChild(labelNode);
     const list = document.createElement('span');
     element._list = list;
@@ -682,58 +710,58 @@ function initializeMirrorOversightUI(container) {
 
   div.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Mirror Oversight</span>
-      <span class="info-tooltip-icon" data-tooltip-text="Distribute mirror focus among zones."></span>
+      <span class="card-title">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.title', 'Mirror Oversight')}</span>
+      <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.tooltip', 'Distribute mirror focus among zones.')}"></span>
     </div>
     <div class="card-body">
       <div id="mirror-oversight-sliders">
       <div class="control-group">
-        <label for="mirror-oversight-tropical">Trop.:</label>
+        <label for="mirror-oversight-tropical">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.sliderLabels.tropical', 'Trop.:')}</label>
         <input type="range" id="mirror-oversight-tropical" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-tropical-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-tropical-reverse" class="slider-reversal-checkbox" data-zone="tropical" style="display:none;">
-        <label for="mirror-oversight-tropical-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
+        <label for="mirror-oversight-tropical-reverse" class="slider-reverse-label" style="display:none;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.common.reverse', 'Reverse')}</label>
       </div>
       <div class="control-group">
-        <label for="mirror-oversight-temperate">Temp.:</label>
+        <label for="mirror-oversight-temperate">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.sliderLabels.temperate', 'Temp.:')}</label>
         <input type="range" id="mirror-oversight-temperate" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-temperate-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-temperate-reverse" class="slider-reversal-checkbox" data-zone="temperate" style="display:none;">
-        <label for="mirror-oversight-temperate-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
+        <label for="mirror-oversight-temperate-reverse" class="slider-reverse-label" style="display:none;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.common.reverse', 'Reverse')}</label>
       </div>
       <div class="control-group">
-        <label for="mirror-oversight-polar">Polar:</label>
+        <label for="mirror-oversight-polar">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.sliderLabels.polar', 'Polar:')}</label>
         <input type="range" id="mirror-oversight-polar" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-polar-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-polar-reverse" class="slider-reversal-checkbox" data-zone="polar" style="display:none;">
-        <label for="mirror-oversight-polar-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
+        <label for="mirror-oversight-polar-reverse" class="slider-reverse-label" style="display:none;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.common.reverse', 'Reverse')}</label>
       </div>
       <div class="control-group">
-        <label for="mirror-oversight-any">Any Zone:</label>
+        <label for="mirror-oversight-any">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.zones.any', 'Any Zone')}:</label>
         <input type="range" id="mirror-oversight-any" min="0" max="100" step="1" value="100">
         <span id="mirror-oversight-any-value" class="slider-value">100%</span>
         <input type="checkbox" id="mirror-oversight-any-reverse" class="slider-reversal-checkbox" data-zone="any" style="display:none;">
-        <label for="mirror-oversight-any-reverse" class="slider-reverse-label" style="display:none;">Reverse</label>
+        <label for="mirror-oversight-any-reverse" class="slider-reverse-label" style="display:none;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.common.reverse', 'Reverse')}</label>
       </div>
       <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
-        <label for="mirror-oversight-focus">Focusing:<span class="info-tooltip-icon" data-tooltip-text="Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.">&#9432;</span></label>
+        <label for="mirror-oversight-focus">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.zones.focus', 'Focusing')}:<span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.focusingTooltip', 'Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.')}">&#9432;</span></label>
         <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-focus-reverse" class="slider-reversal-checkbox" data-zone="focus" style="display:none; visibility:hidden;">
-        <label for="mirror-oversight-focus-reverse" class="slider-reverse-label" style="display:none; visibility:hidden;">Reverse</label>
+        <label for="mirror-oversight-focus-reverse" class="slider-reverse-label" style="display:none; visibility:hidden;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.common.reverse', 'Reverse')}</label>
       </div>
       <div class="control-group">
-        <label for="mirror-oversight-unassigned">Unassigned:</label>
+        <label for="mirror-oversight-unassigned">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.zones.unassigned', 'Unassigned')}:</label>
         <input type="range" id="mirror-oversight-unassigned" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-unassigned-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-unassigned-reverse" class="slider-reversal-checkbox" data-zone="unassigned" style="display:none; visibility:hidden;">
-        <label for="mirror-oversight-unassigned-reverse" class="slider-reverse-label" style="display:none; visibility:hidden;">Reverse</label>
+        <label for="mirror-oversight-unassigned-reverse" class="slider-reverse-label" style="display:none; visibility:hidden;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.common.reverse', 'Reverse')}</label>
       </div>
       </div>
       <div id="mirror-oversight-lantern-div" class="control-group">
         <input type="checkbox" id="mirror-oversight-lantern">
-        <label for="mirror-oversight-lantern">Apply Oversight to Hyperion Lantern</label>
-        <span class="info-tooltip-icon" data-tooltip-text="Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.">&#9432;</span>
+        <label for="mirror-oversight-lantern">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.applyToLantern', 'Apply Oversight to Hyperion Lantern')}</label>
+        <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.applyToLanternTooltip', 'Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.')}">&#9432;</span>
       </div>
     </div>
   `;
@@ -790,11 +818,11 @@ function initializeMirrorOversightUI(container) {
   advDiv.style.display = 'none';
   advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
-    <label for="mirror-advanced-oversight">Advanced Oversight</label>
-    <span class="info-tooltip-icon" data-tooltip-text="Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.">&#9432;</span>
+    <label for="mirror-advanced-oversight">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.title', 'Advanced Oversight')}</label>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.')}">&#9432;</span>
     <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
-    <label for="mirror-allow-available-heat">Allow available to heat</label>
-    <span class="info-tooltip-icon" data-tooltip-text="When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.">&#9432;</span>
+    <label for="mirror-allow-available-heat">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeat', 'Allow available to heat')}</label>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeatTooltip', 'When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.')}">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
@@ -809,48 +837,48 @@ function initializeMirrorOversightUI(container) {
   advancedControls.style.display = 'none';
   advancedControls.innerHTML = `
     <div class="control-group">
-      <span class="control-label" style="font-weight:600;">Targets & Priority</span>
-      <span class="info-tooltip-icon" data-tooltip-text="Set temperature targets for each zone using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.">&#9432;</span>
+      <span class="control-label" style="font-weight:600;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriority', 'Targets & Priority')}</span>
+      <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriorityTooltip', 'Set temperature targets for each zone using the current unit, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.')}">&#9432;</span>
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" data-zone="tropical" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-tropical">Trop.</label>
+        <label class="stat-label" for="adv-target-tropical">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.sliderLabels.tropical', 'Trop.')}</label>
         <input type="number" id="adv-target-tropical" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
         <select id="adv-timing-tropical" class="stat-value mirror-oversight-select-small mirror-oversight-select-timing">
-          <option value="average">Average</option>
-          <option value="day">Day</option>
-          <option value="night">Night</option>
+          <option value="average">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.average', 'Average')}</option>
+          <option value="day">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.day', 'Day')}</option>
+          <option value="night">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.night', 'Night')}</option>
         </select>
         <select id="adv-priority-tropical" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
       <div class="stat-item" data-zone="temperate" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-temperate">Temp.</label>
+        <label class="stat-label" for="adv-target-temperate">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.sliderLabels.temperate', 'Temp.')}</label>
         <input type="number" id="adv-target-temperate" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
         <select id="adv-timing-temperate" class="stat-value mirror-oversight-select-small mirror-oversight-select-timing">
-          <option value="average">Average</option>
-          <option value="day">Day</option>
-          <option value="night">Night</option>
+          <option value="average">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.average', 'Average')}</option>
+          <option value="day">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.day', 'Day')}</option>
+          <option value="night">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.night', 'Night')}</option>
         </select>
         <select id="adv-priority-temperate" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
       <div class="stat-item" data-zone="polar" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-polar">Polar</label>
+        <label class="stat-label" for="adv-target-polar">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.sliderLabels.polar', 'Polar')}</label>
         <input type="number" id="adv-target-polar" class="stat-value" step="0.1" value="0" style="font-size:12px; width:60px;">
         <select id="adv-timing-polar" class="stat-value mirror-oversight-select-small mirror-oversight-select-timing">
-          <option value="average">Average</option>
-          <option value="day">Day</option>
-          <option value="night">Night</option>
+          <option value="average">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.average', 'Average')}</option>
+          <option value="day">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.day', 'Day')}</option>
+          <option value="night">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.night', 'Night')}</option>
         </select>
         <select id="adv-priority-polar" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
           <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
-        <label class="stat-label" for="adv-target-water">Melt (t/s)</label>
+        <label class="stat-label" for="adv-target-water">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.meltRate', 'Melt (t/s)')}</label>
         <input type="number" id="adv-target-water" class="stat-value" step="1" value="0" style="font-size:12px; width:50px;">
         <select id="adv-target-water-scale" class="stat-value mirror-oversight-select-small mirror-oversight-select-scale">
           <option value="1000">k</option>
@@ -871,7 +899,7 @@ function initializeMirrorOversightUI(container) {
   const setLifeOptimalButton = document.createElement('button');
   setLifeOptimalButton.id = 'adv-set-life-optimal';
   setLifeOptimalButton.type = 'button';
-  setLifeOptimalButton.textContent = 'Set all Targets to Day and Life Optimal Temperature';
+  setLifeOptimalButton.textContent = getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.setLifeOptimal', 'Set all Targets to Day and Life Optimal Temperature');
   setLifeOptimalButton.style.fontSize = '12px';
   setLifeOptimalButton.style.padding = '2px 6px';
   setLifeOptimalButton.style.marginLeft = '8px';
@@ -996,25 +1024,25 @@ function initializeMirrorOversightUI(container) {
   const tempUnit = (typeof getTemperatureUnit === 'function') ? getTemperatureUnit() : 'K';
   fluxTable.innerHTML = `
     <thead>
-      <tr><th>Zone</th><th>Average Solar Flux (W/m^2)</th><th>Temperature (${tempUnit}) Current / Trend</th><th>Day Temperature (${tempUnit}) Current / Trend</th></tr>
+      <tr><th>${getSpaceMirrorText('ui.projects.spaceMirrorFacility.table.zone', 'Zone')}</th><th>${getSpaceMirrorText('ui.projects.spaceMirrorFacility.table.averageSolarFlux', 'Average Solar Flux (W/m^2)')}</th><th>${getSpaceMirrorText('ui.projects.spaceMirrorFacility.table.temperatureCurrentTrend', `Temperature (${tempUnit}) Current / Trend`, { unit: tempUnit })}</th><th>${getSpaceMirrorText('ui.projects.spaceMirrorFacility.table.dayTemperatureCurrentTrend', `Day Temperature (${tempUnit}) Current / Trend`, { unit: tempUnit })}</th></tr>
     </thead>
     <tbody>
-      <tr data-zone="tropical"><td>Tropical</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0 / 0</td><td id="mirror-day-temp-tropical">0 / 0</td></tr>
-      <tr data-zone="temperate"><td>Temperate</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0 / 0</td><td id="mirror-day-temp-temperate">0 / 0</td></tr>
-      <tr data-zone="polar"><td>Polar</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0 / 0</td><td id="mirror-day-temp-polar">0 / 0</td></tr>
+      <tr data-zone="tropical"><td>${getSpaceMirrorZoneLabel('tropical')}</td><td id="mirror-flux-tropical">0</td><td id="mirror-temp-tropical">0 / 0</td><td id="mirror-day-temp-tropical">0 / 0</td></tr>
+      <tr data-zone="temperate"><td>${getSpaceMirrorZoneLabel('temperate')}</td><td id="mirror-flux-temperate">0</td><td id="mirror-temp-temperate">0 / 0</td><td id="mirror-day-temp-temperate">0 / 0</td></tr>
+      <tr data-zone="polar"><td>${getSpaceMirrorZoneLabel('polar')}</td><td id="mirror-flux-polar">0</td><td id="mirror-temp-polar">0 / 0</td><td id="mirror-day-temp-polar">0 / 0</td></tr>
     </tbody>
   `;
   cardBody.appendChild(fluxTable);
   // Fix mis-encoded units in header
   try {
     const fluxHeader = fluxTable.querySelector('thead tr th:nth-child(2)');
-    if (fluxHeader) fluxHeader.textContent = 'Average Solar Flux (W/m2)';
+    if (fluxHeader) fluxHeader.textContent = getSpaceMirrorText('ui.projects.spaceMirrorFacility.table.averageSolarFluxWm2', 'Average Solar Flux (W/m2)');
   } catch (e) {}
 
   const finerToggle = document.createElement('div');
   finerToggle.id = 'mirror-finer-toggle';
   finerToggle.classList.add('collapse-toggle');
-  finerToggle.innerHTML = '<span id="mirror-finer-icon">▶</span> Finer Controls';
+  finerToggle.innerHTML = `<span id="mirror-finer-icon">▶</span> ${getSpaceMirrorText('ui.projects.spaceMirrorFacility.finerControls.title', 'Finer Controls')}`;
   finerToggle.style.cursor = 'pointer';
   const finerContent = document.createElement('div');
   finerContent.id = 'mirror-finer-content';
@@ -1023,24 +1051,24 @@ function initializeMirrorOversightUI(container) {
     <div class="finer-controls-header">
       <div class="control-group">
         <input type="checkbox" id="mirror-use-finer">
-        <label for="mirror-use-finer">Use Finer Controls</label>
+        <label for="mirror-use-finer">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.finerControls.useFinerControls', 'Use Finer Controls')}</label>
       </div>
       <!-- Step controls moved next to Available counts for each type. -->
     </div>
     <div id="assignment-grid">
-      <div class="grid-header">Zone</div>
-      <div class="grid-header grid-header-mirror">Mirrors</div>
-      <div class="grid-header grid-header-reverse">Reverse</div>
-      <div class="grid-header">Lanterns</div>
-      <div class="grid-header">Auto</div>
+      <div class="grid-header">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.grid.zone', 'Zone')}</div>
+      <div class="grid-header grid-header-mirror">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.grid.mirrors', 'Mirrors')}</div>
+      <div class="grid-header grid-header-reverse">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.common.reverse', 'Reverse')}</div>
+      <div class="grid-header">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.grid.lanterns', 'Lanterns')}</div>
+      <div class="grid-header">${getSpaceMirrorText('ui.projects.common.auto', 'Auto')}</div>
 
-      <div class="grid-zone-label">Available</div>
+      <div class="grid-zone-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.grid.available', 'Available')}</div>
       <div class="assign-cell available-mirror-cell">
         <button class="assign-zero" style="visibility: hidden;">0</button>
         <button class="assignment-div10" data-type="mirrors">/10</button>
         <span id="available-mirrors">0</span>
         <button class="assignment-mul10" data-type="mirrors">x10</button>
-        <button class="assign-max" style="visibility: hidden;">Max</button>
+        <button class="assign-max" style="visibility: hidden;">${getSpaceMirrorText('ui.projects.common.max', 'Max')}</button>
       </div>
       <div class="grid-reversal-cell"></div>
       <div class="assign-cell available-lantern-cell" data-type="lanterns">
@@ -1048,18 +1076,18 @@ function initializeMirrorOversightUI(container) {
         <button class="assignment-div10" data-type="lanterns">/10</button>
         <span id="available-lanterns">0</span>
         <button class="assignment-mul10" data-type="lanterns">x10</button>
-        <button class="assign-max" style="visibility: hidden;">Max</button>
+        <button class="assign-max" style="visibility: hidden;">${getSpaceMirrorText('ui.projects.common.max', 'Max')}</button>
       </div>
       <div class="grid-auto-cell"></div>
 
       ${getMirrorZonesWithAny().map(zone => `
-        <div class="grid-zone-label" data-zone="${zone}">${zone === 'any' ? 'Any Zone' : zone.charAt(0).toUpperCase() + zone.slice(1)}</div>
+        <div class="grid-zone-label" data-zone="${zone}">${getSpaceMirrorZoneLabel(zone)}</div>
         <div class="assign-cell" data-type="mirrors" data-zone="${zone}">
           <button class="assign-zero" data-type="mirrors" data-zone="${zone}">0</button>
           <button class="assign-minus" data-type="mirrors" data-zone="${zone}">-1</button>
           <span id="mirrors-assign-${zone}">0</span>
           <button class="assign-plus" data-type="mirrors" data-zone="${zone}">+1</button>
-          <button class="assign-max" data-type="mirrors" data-zone="${zone}">Max</button>
+          <button class="assign-max" data-type="mirrors" data-zone="${zone}">${getSpaceMirrorText('ui.projects.common.max', 'Max')}</button>
         </div>
         <div class="grid-reversal-cell reversal-cell-with-checkbox">
           <input type="checkbox" class="reversal-checkbox" data-zone="${zone}">
@@ -1069,19 +1097,19 @@ function initializeMirrorOversightUI(container) {
           <button class="assign-minus" data-type="lanterns" data-zone="${zone}">-1</button>
           <span id="lanterns-assign-${zone}">0</span>
           <button class="assign-plus" data-type="lanterns" data-zone="${zone}">+1</button>
-          <button class="assign-max" data-type="lanterns" data-zone="${zone}">Max</button>
+          <button class="assign-max" data-type="lanterns" data-zone="${zone}">${getSpaceMirrorText('ui.projects.common.max', 'Max')}</button>
         </div>
         <div class="grid-auto-cell">
           <input type="checkbox" class="auto-assign" data-zone="${zone}">
         </div>
       `).join('')}
-      <div class="grid-zone-label" data-zone="focus" style="display:none;">Focusing</div>
+      <div class="grid-zone-label" data-zone="focus" style="display:none;">${getSpaceMirrorZoneLabel('focus')}</div>
       <div class="assign-cell" data-type="mirrors" data-zone="focus" style="display:none;">
         <button class="assign-zero" data-type="mirrors" data-zone="focus">0</button>
         <button class="assign-minus" data-type="mirrors" data-zone="focus">-1</button>
         <span id="mirrors-assign-focus">0</span>
         <button class="assign-plus" data-type="mirrors" data-zone="focus">+1</button>
-        <button class="assign-max" data-type="mirrors" data-zone="focus">Max</button>
+        <button class="assign-max" data-type="mirrors" data-zone="focus">${getSpaceMirrorText('ui.projects.common.max', 'Max')}</button>
       </div>
       <div class="grid-reversal-cell reversal-cell-with-checkbox" data-zone="focus" style="display:none;">
         <input type="checkbox" class="reversal-checkbox" data-zone="focus" style="visibility:hidden;">
@@ -1091,7 +1119,7 @@ function initializeMirrorOversightUI(container) {
         <button class="assign-minus" data-type="lanterns" data-zone="focus">-1</button>
         <span id="lanterns-assign-focus">0</span>
         <button class="assign-plus" data-type="lanterns" data-zone="focus">+1</button>
-        <button class="assign-max" data-type="lanterns" data-zone="focus">Max</button>
+        <button class="assign-max" data-type="lanterns" data-zone="focus">${getSpaceMirrorText('ui.projects.common.max', 'Max')}</button>
       </div>
       <div class="grid-auto-cell" data-zone="focus" style="display:none;">
         <input type="checkbox" class="auto-assign" data-zone="focus">
@@ -1477,9 +1505,17 @@ function updateZonalFluxTable() {
   ensureMirrorOversightCache();
   const C = mirrorOversightCache || {};
   const header = C.fluxTempHeader;
-  if (header) header.textContent = `Temperature (${tempUnit}) Current / Trend`;
+  if (header) header.textContent = getSpaceMirrorText(
+    'ui.projects.spaceMirrorFacility.table.temperatureCurrentTrend',
+    `Temperature (${tempUnit}) Current / Trend`,
+    { unit: tempUnit }
+  );
   const dayHeader = C.dayTempHeader;
-  if (dayHeader) dayHeader.textContent = `Day Temperature (${tempUnit}) Current / Trend`;
+  if (dayHeader) dayHeader.textContent = getSpaceMirrorText(
+    'ui.projects.spaceMirrorFacility.table.dayTemperatureCurrentTrend',
+    `Day Temperature (${tempUnit}) Current / Trend`,
+    { unit: tempUnit }
+  );
   const zones = getZones();
   zones.forEach(zone => {
     const cells = C.fluxCells[zone];
@@ -1780,28 +1816,28 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorDetails.classList.add('info-card', 'mirror-details-card');
     mirrorDetails.innerHTML = `
       <div class="card-header">
-        <span class="card-title">Mirror Status</span>
+        <span class="card-title">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.mirrorTitle', 'Mirror Status')}</span>
       </div>
       <div class="card-body">
         <div class="stats-grid three-col">
           <div class="stat-item">
-            <span class="stat-label">Mirrors:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.mirrors', 'Mirrors:')}</span>
             <span id="num-mirrors" class="stat-value">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Power/Mirror:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.powerPerMirror', 'Power/Mirror:')}</span>
             <span id="power-per-mirror" class="stat-value">0 W</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Power/m²:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.powerPerArea', 'Power/m²:')}</span>
             <span id="power-per-mirror-area" class="stat-value">0 W/m²</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Total Power:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.totalPower', 'Total Power:')}</span>
             <span id="total-power" class="stat-value">0 W</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Total Power/m²:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.totalPowerPerArea', 'Total Power/m²:')}</span>
             <span id="total-power-area" class="stat-value">0 W/m²</span>
           </div>
         </div>
@@ -1815,7 +1851,7 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorQuick.style.display = 'none';
     const mirrorQuickLabel = document.createElement('span');
     mirrorQuickLabel.classList.add('quick-build-label');
-    mirrorQuickLabel.textContent = 'Quick Build:';
+    mirrorQuickLabel.textContent = getSpaceMirrorText('ui.projects.spaceMirrorFacility.quickBuild.label', 'Quick Build:');
     mirrorQuick.appendChild(mirrorQuickLabel);
     const mirrorQuickButton = document.createElement('button');
     mirrorQuickButton.classList.add('quick-build-button');
@@ -1825,20 +1861,20 @@ class SpaceMirrorFacilityProject extends Project {
     mirrorSpacer.classList.add('qb-spacer');
     const mirrorMul = document.createElement('button');
     mirrorMul.classList.add('increment-button', 'qb-inc');
-    mirrorMul.textContent = 'x10';
+    mirrorMul.textContent = getSpaceMirrorText('ui.projects.common.timesTen', 'x10');
     mirrorQuick.appendChild(mirrorSpacer);
     mirrorQuick.appendChild(mirrorMul);
     const mirrorDiv = document.createElement('button');
     mirrorDiv.classList.add('increment-button', 'qb-inc');
-    mirrorDiv.textContent = '/10';
+    mirrorDiv.textContent = getSpaceMirrorText('ui.projects.common.divideTen', '/10');
     mirrorQuick.appendChild(mirrorDiv);
     const mirrorZero = document.createElement('button');
     mirrorZero.classList.add('increment-button', 'qb-inc');
-    mirrorZero.textContent = '0';
+    mirrorZero.textContent = getSpaceMirrorText('ui.projects.common.zero', '0');
     mirrorQuick.appendChild(mirrorZero);
     const mirrorMax = document.createElement('button');
     mirrorMax.classList.add('increment-button', 'qb-inc');
-    mirrorMax.textContent = 'Max';
+    mirrorMax.textContent = getSpaceMirrorText('ui.projects.common.max', 'Max');
     mirrorQuick.appendChild(mirrorMax);
     const mirrorCost = document.createElement('span');
     mirrorCost.classList.add('quick-build-cost');
@@ -1852,35 +1888,35 @@ class SpaceMirrorFacilityProject extends Project {
     lanternDetails.style.display = 'none';
     lanternDetails.innerHTML = `
       <div class="card-header">
-        <span class="card-title">Lantern Status</span>
+        <span class="card-title">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.lanternTitle', 'Lantern Status')}</span>
       </div>
       <div class="card-body">
         <div class="stats-grid three-col">
           <div class="stat-item">
-            <span class="stat-label">Lanterns:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.lanterns', 'Lanterns:')}</span>
             <span id="num-lanterns" class="stat-value">0</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Power/Lantern:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.powerPerLantern', 'Power/Lantern:')}</span>
             <span id="power-per-lantern" class="stat-value">0 W</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Power/m²:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.powerPerArea', 'Power/m²:')}</span>
             <span id="power-per-lantern-area" class="stat-value">0 W/m²</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Total Power:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.totalPower', 'Total Power:')}</span>
             <span id="total-lantern-power" class="stat-value">0 W</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">Total Power/m²:</span>
+            <span class="stat-label">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.totalPowerPerArea', 'Total Power/m²:')}</span>
             <span id="total-lantern-area" class="stat-value">0 W/m²</span>
           </div>
         </div>
         <div id="rogue-day-night-control" class="control-group" style="display:none; margin-top:12px; gap:8px; flex-wrap:nowrap; align-items:center;">
-          <label for="rogue-day-night-period" style="white-space:nowrap;">Day-Night Period (hours):</label>
+          <label for="rogue-day-night-period" style="white-space:nowrap;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.periodHours', 'Day-Night Period (hours):')}</label>
           <input type="number" id="rogue-day-night-period" min="1" max="1000" step="1" value="24" style="width:80px; flex-shrink:0;">
-          <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.">&#9432;</span>
+          <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.tooltip', 'Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.')}">&#9432;</span>
         </div>
       </div>
     `;
@@ -1893,7 +1929,7 @@ class SpaceMirrorFacilityProject extends Project {
     lanternQuick.style.display = 'none';
     const lanternQuickLabel = document.createElement('span');
     lanternQuickLabel.classList.add('quick-build-label');
-    lanternQuickLabel.textContent = 'Quick Build:';
+    lanternQuickLabel.textContent = getSpaceMirrorText('ui.projects.spaceMirrorFacility.quickBuild.label', 'Quick Build:');
     lanternQuick.appendChild(lanternQuickLabel);
     const lanternQuickButton = document.createElement('button');
     lanternQuickButton.classList.add('quick-build-button');
@@ -1903,20 +1939,20 @@ class SpaceMirrorFacilityProject extends Project {
     lanternSpacer.classList.add('qb-spacer');
     const lanternMul = document.createElement('button');
     lanternMul.classList.add('increment-button', 'qb-inc');
-    lanternMul.textContent = 'x10';
+    lanternMul.textContent = getSpaceMirrorText('ui.projects.common.timesTen', 'x10');
     lanternQuick.appendChild(lanternSpacer);
     lanternQuick.appendChild(lanternMul);
     const lanternDiv = document.createElement('button');
     lanternDiv.classList.add('increment-button', 'qb-inc');
-    lanternDiv.textContent = '/10';
+    lanternDiv.textContent = getSpaceMirrorText('ui.projects.common.divideTen', '/10');
     lanternQuick.appendChild(lanternDiv);
     const lanternZero = document.createElement('button');
     lanternZero.classList.add('increment-button', 'qb-inc');
-    lanternZero.textContent = '0';
+    lanternZero.textContent = getSpaceMirrorText('ui.projects.common.zero', '0');
     lanternQuick.appendChild(lanternZero);
     const lanternMax = document.createElement('button');
     lanternMax.classList.add('increment-button', 'qb-inc');
-    lanternMax.textContent = 'Max';
+    lanternMax.textContent = getSpaceMirrorText('ui.projects.common.max', 'Max');
     lanternQuick.appendChild(lanternMax);
     const lanternCost = document.createElement('span');
     lanternCost.classList.add('quick-build-cost');
@@ -2095,7 +2131,11 @@ class SpaceMirrorFacilityProject extends Project {
         const building = buildings.spaceMirror;
         syncQuickBuildCount(qb, 'spaceMirror');
         const buildCount = getQuickBuildCount(building, qb.count);
-        qb.button.textContent = `Build ${formatNumber(buildCount, true)} ${building.displayName}`;
+        qb.button.textContent = getSpaceMirrorText(
+          'ui.projects.spaceMirrorFacility.quickBuild.build',
+          `Build ${formatNumber(buildCount, true)} ${building.displayName}`,
+          { count: formatNumber(buildCount, true), name: building.displayName }
+        );
         const canAfford = typeof building.canAfford === 'function' ? building.canAfford(buildCount) : true;
         if (qb.button.classList) {
           if (!canAfford) qb.button.classList.add('cant-afford');
@@ -2160,7 +2200,11 @@ class SpaceMirrorFacilityProject extends Project {
           const qb = elements.quickBuild.lantern;
           syncQuickBuildCount(qb, 'hyperionLantern');
           const buildCount = getQuickBuildCount(lantern, qb.count);
-          qb.button.textContent = `Build ${formatNumber(buildCount, true)} ${lantern.displayName}`;
+          qb.button.textContent = getSpaceMirrorText(
+            'ui.projects.spaceMirrorFacility.quickBuild.build',
+            `Build ${formatNumber(buildCount, true)} ${lantern.displayName}`,
+            { count: formatNumber(buildCount, true), name: lantern.displayName }
+          );
           const canAfford = typeof lantern.canAfford === 'function' ? lantern.canAfford(buildCount) : true;
           if (qb.button.classList) {
             if (!canAfford) qb.button.classList.add('cant-afford');

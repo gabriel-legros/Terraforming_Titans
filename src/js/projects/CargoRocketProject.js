@@ -12,6 +12,14 @@ class CargoRocketProject extends Project {
     return this.isBooleanFlagSet && this.isBooleanFlagSet('continuousTrading');
   }
 
+  getCargoRocketText(path, fallback, vars) {
+    try {
+      return t(path, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   createCargoSelectionUI(container) {
     const sectionContainer = document.createElement('div');
     sectionContainer.classList.add('project-section-container');
@@ -65,15 +73,15 @@ class CargoRocketProject extends Project {
     headerRow.classList.add('cargo-resource-row', 'cargo-grid-header');
 
     const resourceHeader = document.createElement('span');
-    resourceHeader.textContent = 'Resource';
+    resourceHeader.textContent = this.getCargoRocketText('ui.projects.cargoRocket.resource', 'Resource');
     headerRow.appendChild(resourceHeader);
 
     const amountHeader = document.createElement('span');
-    amountHeader.textContent = 'Amount';
+    amountHeader.textContent = this.getCargoRocketText('ui.projects.cargoRocket.amount', 'Amount');
     headerRow.appendChild(amountHeader);
 
     const priceHeader = document.createElement('span');
-    priceHeader.textContent = 'Price (Funding)';
+    priceHeader.textContent = this.getCargoRocketText('ui.projects.cargoRocket.priceFunding', 'Price (Funding)');
     headerRow.appendChild(priceHeader);
 
     const headerButtons = document.createElement('div');
@@ -119,7 +127,13 @@ class CargoRocketProject extends Project {
           label.textContent = resource.displayName;
           const tooltip = document.createElement('span');
           tooltip.className = 'info-tooltip-icon';
-          tooltip.title = 'Each ship purchase raises funding price by 1 and this decays by 1% per second.  This increase can be reduced by progressing further in the game.';
+          attachDynamicInfoTooltip(
+            tooltip,
+            this.getCargoRocketText(
+              'ui.projects.cargoRocket.spaceshipPriceTooltip',
+              'Each ship purchase raises funding price by 1 and this decays by 1% per second. This increase can be reduced by progressing further in the game.'
+            )
+          );
           tooltip.innerHTML = '&#9432;';
           label.appendChild(tooltip);
         } else {
@@ -174,7 +188,7 @@ class CargoRocketProject extends Project {
           return button;
         };
 
-        createButton('0', () => {
+        createButton(this.getCargoRocketText('ui.projects.common.zero', '0'), () => {
           setInputQuantity(quantityInput, 0, true);
         });
 
@@ -212,7 +226,7 @@ class CargoRocketProject extends Project {
     totalCostDisplay.id = `${this.name}-total-cost-display`;
     totalCostDisplay.classList.add('total-cost-display');
     const totalCostLabel = document.createElement('span');
-    totalCostLabel.textContent = 'Total Cost: ';
+    totalCostLabel.textContent = this.getCargoRocketText('ui.projects.cargoRocket.totalCost', 'Total Cost: ');
     const totalCostValue = document.createElement('span');
     totalCostValue.id = `${this.name}-total-cost-display-value`;
     totalCostDisplay.append(totalCostLabel, totalCostValue);

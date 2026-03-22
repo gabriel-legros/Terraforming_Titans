@@ -5,6 +5,14 @@ const ARTIFICIAL_SKY_SPACE_MIRROR_SOURCE_ID = 'artificialSkyProject';
 const ARTIFICIAL_SKY_MAGNETIC_SHIELD_EFFECT_ID = 'artificial-sky-disable-magnetic-shield';
 const ARTIFICIAL_SKY_MAGNETIC_SHIELD_SOURCE_ID = 'artificialSkyProject';
 
+function getArtificialSkyText(path, vars, fallback = '') {
+  try {
+    return t(`ui.projects.artificialSky.${path}`, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 class ArtificialSkyProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
@@ -15,7 +23,7 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   getCostRateLabel() {
-    return 'Artificial Sky';
+    return getArtificialSkyText('costRateLabel', null, 'Artificial Sky');
   }
 
   getInitialLand() {
@@ -517,10 +525,10 @@ class ArtificialSkyProject extends SpaceshipProject {
       const totalCost = this.calculateSpaceshipTotalCost(perSecond);
       if (perSecond) {
         elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this, true)
-          .replace(/^Total Cost:/, 'Cost/s:');
+          .replace(/^Total Cost:/, getArtificialSkyText('costPerSecond', null, 'Cost/s:'));
       } else {
         elements.totalCostElement.innerHTML = formatTotalCostDisplay(totalCost, this, false)
-          .replace(/^Total Cost:/, 'Segment Cost:');
+          .replace(/^Total Cost:/, getArtificialSkyText('segmentCost', null, 'Segment Cost:'));
       }
     }
 
@@ -530,15 +538,25 @@ class ArtificialSkyProject extends SpaceshipProject {
 
     if (elements.totalGainElement) {
       const rate = this.getSegmentsPerSecond();
-      elements.totalGainElement.textContent = `Build Rate: ${formatNumber(rate, true, 3)} segments/s`;
+      elements.totalGainElement.textContent = getArtificialSkyText(
+        'buildRate',
+        { value: formatNumber(rate, true, 3) },
+        `Build Rate: ${formatNumber(rate, true, 3)} segments/s`
+      );
       elements.totalGainElement.style.display = 'block';
     }
 
     if (elements.segmentProgressElement) {
       const built = this.getBuiltSegmentsWithProgress();
       const maxSegments = this.getMaxRepeats();
-      elements.segmentProgressElement.textContent =
-        `Segments Built: ${formatNumber(built, true, 3)} / ${formatNumber(maxSegments, true, 3)}`;
+      elements.segmentProgressElement.textContent = getArtificialSkyText(
+        'segmentsBuilt',
+        {
+          built: formatNumber(built, true, 3),
+          max: formatNumber(maxSegments, true, 3)
+        },
+        `Segments Built: ${formatNumber(built, true, 3)} / ${formatNumber(maxSegments, true, 3)}`
+      );
     }
   }
 

@@ -7,6 +7,14 @@ if (typeof SubtabManager === 'undefined') {
 }
 let projectElements = {};
 
+function getProjectsUIText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 // Centralized, browser-friendly caches for Projects UI
 const projectsUICache = {
   contentWrapper: null,
@@ -249,7 +257,11 @@ function updateKesslerFailureWarning(project, elements) {
       warning.style.display = 'none';
       return;
     }
-    warningText.textContent = `Kessler Skies: ${formatNumber(percent, false, 2)}% chance of project failure.`;
+    warningText.textContent = getProjectsUIText(
+      'ui.projects.kessler.failureChance',
+      'Kessler Skies: {value}% chance of project failure.',
+      { value: formatNumber(percent, false, 2) }
+    );
     warning.style.display = 'flex';
   } catch (error) {
     // no-op
@@ -499,8 +511,8 @@ function createProjectItem(project) {
     warningIcon.textContent = '⚠';
     const warningText = document.createElement('span');
     warningText.textContent = project.name === 'import_colonists_1'
-      ? 'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.'
-      : 'This project is currently being capped due to Kessler Skies. Imports and exports are limited to 100 per second through a small warpgate.';
+      ? getProjectsUIText('ui.projects.kessler.importColonistsCap', 'This project is currently being capped due to Kessler Skies. Imports are limited to 100 per run through a small warpgate.')
+      : getProjectsUIText('ui.projects.kessler.importExportCap', 'This project is currently being capped due to Kessler Skies. Imports and exports are limited to 100 per second through a small warpgate.');
     const warningIconRight = document.createElement('span');
     warningIconRight.classList.add('project-kessler-warning__icon');
     warningIconRight.textContent = '⚠';
@@ -545,7 +557,7 @@ function createProjectItem(project) {
     const requirementsElement = document.createElement('div');
     requirementsElement.classList.add('project-requirements');
     const requirementsLabel = document.createElement('strong');
-    requirementsLabel.textContent = 'Requirements:';
+    requirementsLabel.textContent = getProjectsUIText('ui.projects.requirements', 'Requirements:');
     const requirementsList = document.createElement('ul');
     requirementsList.classList.add('project-requirements-list');
     const requirementItems = {};
@@ -574,7 +586,7 @@ function createProjectItem(project) {
     const costElement = document.createElement('p');
     costElement.classList.add('project-cost');
     const label = document.createElement('strong');
-    label.textContent = 'Cost:';
+    label.textContent = getProjectsUIText('ui.projects.cost', 'Cost:');
     costElement.append(label, ' ');
     const list = document.createElement('span');
     costElement.appendChild(list);
@@ -611,8 +623,8 @@ function createProjectItem(project) {
     const sustainText = document.createElement('span');
     const info = document.createElement('span');
     info.classList.add('info-tooltip-icon');
-    info.title = 'Project will pause if sustain cost is not met.';
     info.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(info, getProjectsUIText('ui.projects.sustainPauseTooltip', 'Project will pause if sustain cost is not met.'));
     sustainContainer.append(sustainText, info);
     projectDetails.appendChild(sustainContainer);
     projectElements[project.name] = { ...projectElements[project.name], sustainCostElement: sustainText };
@@ -633,7 +645,7 @@ function createProjectItem(project) {
     resourceGainElement.classList.add('project-resource-gain');
     resourceGainElement.id = `${project.name}-resource-gain`;
     const gainLabel = document.createElement('strong');
-    gainLabel.textContent = 'Gain:';
+    gainLabel.textContent = getProjectsUIText('ui.projects.gain', 'Gain:');
     resourceGainElement.append(gainLabel, ' ');
     const gainList = document.createElement('span');
     resourceGainElement.appendChild(gainList);
@@ -696,7 +708,7 @@ function createProjectItem(project) {
   autoStartCheckbox.addEventListener('change', (event) => { project.autoStart = event.target.checked; });
   const autoStartLabel = document.createElement('label');
   autoStartLabel.htmlFor = `${project.name}-auto-start`;
-  autoStartLabel.textContent = 'Auto start';
+  autoStartLabel.textContent = getProjectsUIText('ui.projects.autoStart', 'Auto start');
   autoStartCheckboxContainer.appendChild(autoStartCheckbox);
   autoStartCheckboxContainer.appendChild(autoStartLabel);
   automationSettingsContainer.appendChild(autoStartCheckboxContainer);
@@ -716,7 +728,7 @@ function createProjectItem(project) {
     });
     const extraSettingsLabel = document.createElement('label');
     extraSettingsLabel.htmlFor = extraSettingsCheckbox.id;
-    extraSettingsLabel.textContent = 'Enable extra settings';
+    extraSettingsLabel.textContent = getProjectsUIText('ui.projects.enableExtraSettings', 'Enable extra settings');
     extraSettingsContainer.appendChild(extraSettingsCheckbox);
     extraSettingsContainer.appendChild(extraSettingsLabel);
     automationSettingsContainer.appendChild(extraSettingsContainer);
@@ -743,7 +755,7 @@ function createProjectItem(project) {
     });
     autoStartTravelResetLabel = document.createElement('label');
     autoStartTravelResetLabel.htmlFor = autoStartTravelResetCheckbox.id;
-    autoStartTravelResetLabel.textContent = 'Uncheck on travelling';
+    autoStartTravelResetLabel.textContent = getProjectsUIText('ui.projects.uncheckOnTravel', 'Uncheck on travelling');
     autoStartTravelResetContainer.appendChild(autoStartTravelResetCheckbox);
     autoStartTravelResetContainer.appendChild(autoStartTravelResetLabel);
     automationSettingsContainer.appendChild(autoStartTravelResetContainer);
@@ -1116,10 +1128,10 @@ function updateTotalCostDisplay(project) {
     if (totalCostValue && totalCostLabel) {
       const available = resources.colony?.funding?.value || 0;
       if (totalCost < 0) {
-        totalCostLabel.textContent = 'Total Gain: ';
+        totalCostLabel.textContent = `${getProjectsUIText('ui.projects.totalGainLabel', 'Total Gain')}: `;
         totalCostValue.textContent = formatNumber(-totalCost, true);
       } else {
-        totalCostLabel.textContent = 'Total Cost: ';
+        totalCostLabel.textContent = `${getProjectsUIText('ui.projects.totalCostLabel', 'Total Cost')}: `;
         totalCostValue.textContent = formatNumber(totalCost, true);
       }
       const highlight = project.isContinuous()
@@ -1302,7 +1314,9 @@ function updateProjectUI(projectName) {
   }
   if (elements.autoStartLabel) {
     const continuous = project.isContinuous();
-    elements.autoStartLabel.textContent = continuous ? 'Run' : 'Auto start';
+    elements.autoStartLabel.textContent = continuous
+      ? getProjectsUIText('ui.projects.run', 'Run')
+      : getProjectsUIText('ui.projects.autoStart', 'Auto start');
   }
 
   if (elements.waitCapacityCheckbox) {
@@ -1368,7 +1382,9 @@ function updateProjectUI(projectName) {
     }
     if (elements.progressButton) {
       if (keepStartBarVisible) {
-        const statusText = isMaxRepeatReached ? 'Max depth reached' : 'Completed';
+        const statusText = isMaxRepeatReached
+          ? getProjectsUIText('ui.projects.status.maxDepthReached', 'Max depth reached')
+          : getProjectsUIText('ui.projects.status.completed', 'Completed');
         const statusColor = isMaxRepeatReached ? '#f44336' : '#4caf50';
         if (isImportProject && importUI) {
           importUI.setProgressLabel(elements, project, statusText);
@@ -1411,7 +1427,9 @@ function updateProjectUI(projectName) {
           elements.progressButton.style.background = '#f44336';
         } else if (!project.isActive && !project.isCompleted && project.isHazardDisabled()) {
           const hazardLabel = project.getHazardDisableLabel();
-          const statusText = hazardLabel ? `Disabled by ${hazardLabel}` : 'Disabled by Hazard';
+          const statusText = hazardLabel
+            ? getProjectsUIText('ui.projects.status.disabledBySpecificHazard', 'Disabled by {hazard}', { hazard: hazardLabel })
+            : getProjectsUIText('ui.projects.status.disabledByHazard', 'Disabled by Hazard');
           if (isImportProject && importUI) {
             importUI.setProgressLabel(elements, project, statusText);
           } else {
@@ -1420,7 +1438,7 @@ function updateProjectUI(projectName) {
           elements.progressButton.style.background = '#f44336';
         } else if (isContinuousProject) {
           if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
-            const statusText = 'Paused by pulsar';
+            const statusText = getProjectsUIText('ui.projects.status.pausedByPulsar', 'Paused by pulsar');
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
@@ -1431,10 +1449,10 @@ function updateProjectUI(projectName) {
             const showProductivity = project.attributes?.continuousAsBuilding;
             const productivity = project.continuousProductivity ?? 1;
             const productivityLabel = showProductivity
-              ? ` (${Math.round(productivity * 100)}% productivity)`
+              ? getProjectsUIText('ui.projects.status.productivitySuffix', ' ({value}% productivity)', { value: Math.round(productivity * 100) })
               : '';
             if (project.autoStart && project.isActive && !project.isPaused) {
-              const statusText = `Continuous${productivityLabel}`;
+              const statusText = `${getProjectsUIText('ui.projects.status.continuous', 'Continuous')}${productivityLabel}`;
               if (isImportProject && importUI) {
                 importUI.setProgressLabel(elements, project, statusText);
               } else {
@@ -1443,16 +1461,16 @@ function updateProjectUI(projectName) {
               elements.progressButton.style.background = '#4caf50';
             } else {
               if (isImportProject && importUI) {
-                importUI.setProgressLabel(elements, project, 'Stopped');
+                importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.stopped', 'Stopped'));
               } else {
-                elements.progressButton.textContent = 'Stopped';
+                elements.progressButton.textContent = getProjectsUIText('ui.projects.status.stopped', 'Stopped');
               }
               elements.progressButton.style.background = '#f44336';
             }
           }
         } else if (project.isActive) {
           if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
-            const statusText = 'Paused: Electromagnetic Storm';
+            const statusText = getProjectsUIText('ui.projects.status.pausedStorm', 'Paused: Electromagnetic Storm');
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
@@ -1463,7 +1481,7 @@ function updateProjectUI(projectName) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           const progressPercent = project.getProgress();
           if (project.startingDuration < 1000) {
-            const statusText = `In Progress: ${timeRemaining} seconds remaining`;
+            const statusText = getProjectsUIText('ui.projects.status.inProgress', 'In Progress: {time} seconds remaining', { time: timeRemaining });
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
@@ -1472,7 +1490,7 @@ function updateProjectUI(projectName) {
             // Avoid flashy gradients for instant projects
             elements.progressButton.style.background = '#4caf50';
           } else {
-            const statusText = `In Progress: ${timeRemaining} seconds remaining (${progressPercent}%)`;
+            const statusText = getProjectsUIText('ui.projects.status.inProgressPercent', 'In Progress: {time} seconds remaining ({percent}%)', { time: timeRemaining, percent: progressPercent });
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
@@ -1483,24 +1501,24 @@ function updateProjectUI(projectName) {
           }
         } else if (project.isCompleted) {
           if (isImportProject && importUI) {
-            importUI.setProgressLabel(elements, project, 'Completed');
+            importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.completed', 'Completed'));
           } else {
-            elements.progressButton.textContent = `Completed: ${project.displayName}`;
+            elements.progressButton.textContent = getProjectsUIText('ui.projects.status.completedNamed', 'Completed: {name}', { name: project.displayName });
           }
           elements.progressButton.style.background = '#4caf50';
         } else if (project.isPaused) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-            const statusText = `Resume storage expansion (${timeRemaining}s left)`;
+            const statusText = getProjectsUIText('ui.projects.status.resumeStorageExpansion', 'Resume storage expansion ({time}s left)', { time: timeRemaining });
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
               elements.progressButton.textContent = statusText;
             }
           } else {
-            const statusText = `Resume ${project.displayName} (${timeRemaining}s left)`;
+            const statusText = getProjectsUIText('ui.projects.status.resumeProject', 'Resume {name} ({time}s left)', { name: project.displayName, time: timeRemaining });
             if (isImportProject && importUI) {
-              importUI.setProgressLabel(elements, project, `Resume (${timeRemaining}s left)`);
+              importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.resumeShort', 'Resume ({time}s left)', { time: timeRemaining }));
             } else {
               elements.progressButton.textContent = statusText;
             }
@@ -1508,7 +1526,7 @@ function updateProjectUI(projectName) {
           elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
         } else {
           if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
-            const statusText = 'Paused: Electromagnetic Storm';
+            const statusText = getProjectsUIText('ui.projects.status.pausedStorm', 'Paused: Electromagnetic Storm');
             if (isImportProject && importUI) {
               importUI.setProgressLabel(elements, project, statusText);
             } else {
@@ -1519,16 +1537,16 @@ function updateProjectUI(projectName) {
             // Update dynamic duration for spaceMining projects
             let duration = project.getEffectiveDuration();
             if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
-              const statusText = `Start storage expansion (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+              const statusText = getProjectsUIText('ui.projects.status.startStorageExpansion', 'Start storage expansion (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) });
               if (isImportProject && importUI) {
                 importUI.setProgressLabel(elements, project, statusText);
               } else {
                 elements.progressButton.textContent = statusText;
               }
             } else {
-              const statusText = `Start ${project.displayName} (Duration: ${(duration / 1000).toFixed(2)} seconds)`;
+              const statusText = getProjectsUIText('ui.projects.status.startProject', 'Start {name} (Duration: {duration} seconds)', { name: project.displayName, duration: (duration / 1000).toFixed(2) });
               if (isImportProject && importUI) {
-                importUI.setProgressLabel(elements, project, `Start (Duration: ${(duration / 1000).toFixed(2)} seconds)`);
+                importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.startShort', 'Start (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) }));
               } else {
                 elements.progressButton.textContent = statusText;
               }
@@ -1653,7 +1671,7 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
       costArray.push(formattedResourceText);
     }
   }
-  return `Total Cost: ${costArray.join(', ')}`;
+  return getProjectsUIText('ui.projects.totalCost', 'Total Cost: {items}', { items: costArray.join(', ') });
 }
 
 
@@ -1678,7 +1696,7 @@ function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
       gainArray.push(entry);
     }
   }
-  return `Total Gain: ${gainArray.join(', ')}`;
+  return getProjectsUIText('ui.projects.totalGain', 'Total Gain: {items}', { items: gainArray.join(', ') });
 }
 
 function updateEmptyProjectMessages(activeSubtabId) {
@@ -1697,7 +1715,7 @@ function updateEmptyProjectMessages(activeSubtabId) {
         message = document.createElement('p');
         message.id = messageId;
         message.classList.add('empty-message');
-        message.textContent = 'Nothing available for now.';
+        message.textContent = getProjectsUIText('ui.projects.emptyMessage', 'Nothing available for now.');
         container.appendChild(message);
       }
     } else if (message) {

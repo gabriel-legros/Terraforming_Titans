@@ -1,3 +1,11 @@
+function getLiftersUIText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function buildStat(label) {
   const wrapper = document.createElement('div');
   wrapper.classList.add('stat-item');
@@ -27,16 +35,16 @@ function renderLiftersUI(project, container) {
   header.classList.add('card-header');
   const title = document.createElement('span');
   title.classList.add('card-title');
-  title.textContent = 'Lifter Controls';
+  title.textContent = getLiftersUIText('ui.projects.lifters.title', 'Lifter Controls');
   const titleInfo = document.createElement('span');
   titleInfo.classList.add('info-tooltip-icon');
   titleInfo.innerHTML = '&#9432;';
   attachDynamicInfoTooltip(
     titleInfo,
-    'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. '
+    getLiftersUIText('ui.projects.lifters.titleTooltip', 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. '
     + 'Gas recipes push output into space storage. Multi-output recipes add each output separately before normal resource cap handling. '
     + 'Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. '
-    + 'Strip Atmosphere removes all gases proportionally.'
+    + 'Strip Atmosphere removes all gases proportionally.')
   );
   header.append(title, titleInfo);
   card.appendChild(header);
@@ -46,10 +54,10 @@ function renderLiftersUI(project, container) {
 
   const summaryGrid = document.createElement('div');
   summaryGrid.classList.add('stats-grid', 'four-col', 'project-summary-grid');
-  const totalStat = buildStat('Total Lifters');
-  const assignedStat = buildStat('Assigned');
-  const unassignedStat = buildStat('Unassigned');
-  const expansionRateStat = buildStat('Expansion');
+  const totalStat = buildStat(getLiftersUIText('ui.projects.lifters.totalLifters', 'Total Lifters'));
+  const assignedStat = buildStat(getLiftersUIText('ui.projects.common.assigned', 'Assigned'));
+  const unassignedStat = buildStat(getLiftersUIText('ui.projects.common.unassigned', 'Unassigned'));
+  const expansionRateStat = buildStat(getLiftersUIText('ui.projects.common.expansion', 'Expansion'));
   summaryGrid.append(totalStat.wrapper, assignedStat.wrapper, unassignedStat.wrapper, expansionRateStat.wrapper);
   body.appendChild(summaryGrid);
 
@@ -63,31 +71,31 @@ function renderLiftersUI(project, container) {
   runCheckbox.id = `${project.name}-lifters-run`;
   const runLabel = document.createElement('label');
   runLabel.htmlFor = runCheckbox.id;
-  runLabel.textContent = 'Run lifters';
+  runLabel.textContent = getLiftersUIText('ui.projects.lifters.runLifters', 'Run lifters');
   runField.append(runCheckbox, runLabel);
   controlsGrid.appendChild(runField);
 
-  const statusStat = buildStat('Status');
+  const statusStat = buildStat(getLiftersUIText('ui.projects.common.status', 'Status'));
   controlsGrid.appendChild(statusStat.wrapper);
 
-  const energyPerLifterStat = buildStat('Energy per lifter');
+  const energyPerLifterStat = buildStat(getLiftersUIText('ui.projects.lifters.energyPerLifter', 'Energy per lifter'));
   const energyPerLifterInfo = document.createElement('span');
   energyPerLifterInfo.classList.add('info-tooltip-icon');
   energyPerLifterInfo.innerHTML = '&#9432;';
   attachDynamicInfoTooltip(
     energyPerLifterInfo,
-    'Each assigned lifter uses this much space energy per second, regardless of recipe.'
+    getLiftersUIText('ui.projects.lifters.energyPerLifterTooltip', 'Each assigned lifter uses this much space energy per second, regardless of recipe.')
   );
   energyPerLifterStat.labelEl.appendChild(energyPerLifterInfo);
   controlsGrid.appendChild(energyPerLifterStat.wrapper);
 
-  const energyRateStat = buildStat('Energy Use');
+  const energyRateStat = buildStat(getLiftersUIText('ui.projects.lifters.energyUse', 'Energy Use'));
   const energyRateInfo = document.createElement('span');
   energyRateInfo.classList.add('info-tooltip-icon');
   energyRateInfo.innerHTML = '&#9432;';
   attachDynamicInfoTooltip(
     energyRateInfo,
-    'Each assigned lifter consumes energy while running. Can only use space energy.'
+    getLiftersUIText('ui.projects.lifters.energyUseTooltip', 'Each assigned lifter consumes energy while running. Can only use space energy.')
   );
   energyRateStat.labelEl.appendChild(energyRateInfo);
   controlsGrid.appendChild(energyRateStat.wrapper);
@@ -97,7 +105,7 @@ function renderLiftersUI(project, container) {
   const superchargeLabel = document.createElement('div');
   superchargeLabel.classList.add('lifters-supercharge-label');
   const superchargeLabelText = document.createElement('span');
-  superchargeLabelText.textContent = 'Supercharge';
+  superchargeLabelText.textContent = getLiftersUIText('ui.projects.lifters.supercharge', 'Supercharge');
   const superchargeValue = document.createElement('span');
   superchargeValue.classList.add('stat-value', 'lifters-supercharge-value');
   superchargeLabel.append(superchargeLabelText, superchargeValue);
@@ -121,14 +129,14 @@ function renderLiftersUI(project, container) {
   assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list', 'lifters-assignment-list');
 
   const stepDownButton = document.createElement('button');
-  stepDownButton.textContent = '/10';
+  stepDownButton.textContent = getLiftersUIText('ui.projects.common.divideTen', '/10');
   stepDownButton.addEventListener('click', () => {
     project.setAssignmentStep(project.assignmentStep / 10);
     project.updateUI();
   });
 
   const stepUpButton = document.createElement('button');
-  stepUpButton.textContent = 'x10';
+  stepUpButton.textContent = getLiftersUIText('ui.projects.common.timesTen', 'x10');
   stepUpButton.addEventListener('click', () => {
     project.setAssignmentStep(project.assignmentStep * 10);
     project.updateUI();
@@ -138,13 +146,13 @@ function renderLiftersUI(project, container) {
   headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
   const headerName = document.createElement('span');
   headerName.classList.add('stat-label');
-  headerName.textContent = 'Recipe';
+  headerName.textContent = getLiftersUIText('ui.projects.lifters.recipe', 'Recipe');
   const headerComplexity = document.createElement('span');
   headerComplexity.classList.add('stat-label');
-  headerComplexity.textContent = 'Complexity';
+  headerComplexity.textContent = getLiftersUIText('ui.projects.lifters.complexity', 'Complexity');
   const headerAssigned = document.createElement('span');
   headerAssigned.classList.add('stat-label');
-  headerAssigned.textContent = 'Assigned';
+  headerAssigned.textContent = getLiftersUIText('ui.projects.common.assigned', 'Assigned');
   const headerControls = document.createElement('div');
   headerControls.classList.add('hephaestus-assignment-controls');
   const headerButtons = document.createElement('div');
@@ -152,11 +160,11 @@ function renderLiftersUI(project, container) {
   headerButtons.append(stepDownButton, stepUpButton);
   const weightHeader = document.createElement('span');
   weightHeader.classList.add('stat-label', 'hephaestus-weight-header');
-  weightHeader.textContent = 'Weight';
+  weightHeader.textContent = getLiftersUIText('ui.projects.common.weight', 'Weight');
   headerControls.append(headerButtons, weightHeader);
   const headerRate = document.createElement('div');
   headerRate.classList.add('stat-label', 'nuclear-alchemy-rate-cell');
-  headerRate.textContent = 'Rate';
+  headerRate.textContent = getLiftersUIText('ui.projects.common.rate', 'Rate');
   headerRow.append(headerName, headerComplexity, headerAssigned, headerControls, headerRate);
   assignmentGrid.appendChild(headerRow);
 
@@ -181,7 +189,7 @@ function renderLiftersUI(project, container) {
       infoIcon.innerHTML = '&#9432;';
       attachDynamicInfoTooltip(
         infoIcon,
-        'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.'
+        getLiftersUIText('ui.projects.lifters.starLiftingTooltip', 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.')
       );
       nameWrap.appendChild(infoIcon);
     }
@@ -193,7 +201,7 @@ function renderLiftersUI(project, container) {
     amountEl.classList.add('stat-value');
 
     const zeroButton = document.createElement('button');
-    zeroButton.textContent = '0';
+    zeroButton.textContent = getLiftersUIText('ui.projects.common.zero', '0');
     zeroButton.addEventListener('click', () => {
       project.clearAssignment(key);
     });
@@ -205,7 +213,7 @@ function renderLiftersUI(project, container) {
     plusButton.addEventListener('click', () => project.adjustAssignment(key, project.assignmentStep));
 
     const maxButton = document.createElement('button');
-    maxButton.textContent = 'Max';
+    maxButton.textContent = getLiftersUIText('ui.projects.common.max', 'Max');
     maxButton.addEventListener('click', () => {
       project.maximizeAssignment(key);
     });
@@ -218,7 +226,7 @@ function renderLiftersUI(project, container) {
       project.setAutoAssignTarget(key, autoAssign.checked);
     });
     const autoAssignLabel = document.createElement('span');
-    autoAssignLabel.textContent = 'Auto';
+    autoAssignLabel.textContent = getLiftersUIText('ui.projects.common.auto', 'Auto');
     autoAssignLabel.addEventListener('click', () => {
       autoAssign.checked = !autoAssign.checked;
       project.setAutoAssignTarget(key, autoAssign.checked);

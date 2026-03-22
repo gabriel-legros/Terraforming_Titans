@@ -1,5 +1,13 @@
 // projects.js
 
+function getProjectsText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 const IMPORT_RESOURCE_PROJECT_NAMES = [
   'oreSpaceMining',
   'siliconSpaceMining',
@@ -19,10 +27,10 @@ const MEGA_PROJECT_RESOURCE_MODES = {
 const EARTH_RADIUS_KM = 6371;
 
 const MEGA_PROJECT_RESOURCE_MODE_OPTIONS = [
-  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: 'Prioritize space resources for mega+ projects' },
-  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: 'Prioritize colony resources for mega+ projects' },
-  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY, label: 'Only use space resources for mega+ projects' },
-  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY, label: 'Only use colony resources for mega+ projects' },
+  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: getProjectsText('ui.projects.resourceModes.spaceFirst', 'Prioritize space resources for mega+ projects') },
+  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: getProjectsText('ui.projects.resourceModes.colonyFirst', 'Prioritize colony resources for mega+ projects') },
+  { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY, label: getProjectsText('ui.projects.resourceModes.spaceOnly', 'Only use space resources for mega+ projects') },
+  { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY, label: getProjectsText('ui.projects.resourceModes.colonyOnly', 'Only use colony resources for mega+ projects') },
 ];
 
 const MEGA_PROJECT_RESOURCE_MODE_MAP = {
@@ -249,10 +257,10 @@ class Project extends EffectableEntity {
   getHazardDisableLabel() {
     const hazardKey = this.getActiveDisableHazard();
     if (hazardKey === 'kessler') {
-      return 'Kessler';
+      return getProjectsText('ui.projects.hazards.kessler', 'Kessler');
     }
     if (hazardKey === 'pulsar') {
-      return 'Pulsar';
+      return getProjectsText('ui.projects.hazards.pulsar', 'Pulsar');
     }
     return '';
   }
@@ -1006,7 +1014,7 @@ class Project extends EffectableEntity {
 
 class ProjectManager extends EffectableEntity {
   constructor() {
-    super({description: 'Manages all special projects'});
+    super({description: getProjectsText('ui.projects.managerDescription', 'Manages all special projects')});
 
     this.projects = {};
     this.projectOrder = [];

@@ -12,6 +12,14 @@
     WorkerCapacityBatchProjectBase = WorkerCapacityBatchProject;
   }
 
+  function getMegaHeatSinkText(path, fallback, vars) {
+    try {
+      return t(path, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   class MegaHeatSinkProject extends WorkerCapacityBatchProjectBase {
     constructor(config, name) {
       super(config, name);
@@ -22,8 +30,8 @@
 
     renderUI(container) {
       this.renderWorkerCapacityControls(container, {
-        amountTitle: 'Build Amount',
-        tooltip: 'Worker capacity lets us build heat sinks in parallel. One heat sink can be produced per 1,000,000,000 worker cap.',
+        amountTitle: getMegaHeatSinkText('ui.projects.megaHeatSink.buildAmount', 'Build Amount'),
+        tooltip: getMegaHeatSinkText('ui.projects.megaHeatSink.buildAmountTooltip', 'Worker capacity lets us build heat sinks in parallel. One heat sink can be produced per 1,000,000,000 worker cap.'),
         layoutClass: 'scanner-layout worker-capacity-layout',
       });
 
@@ -34,7 +42,7 @@
       header.classList.add('card-header');
       const title = document.createElement('span');
       title.classList.add('card-title');
-      title.textContent = 'Heat Sink Summary';
+      title.textContent = getMegaHeatSinkText('ui.projects.megaHeatSink.summaryTitle', 'Heat Sink Summary');
       header.appendChild(title);
       card.appendChild(header);
 
@@ -60,13 +68,13 @@
         return { value, content };
       };
 
-      const countElements = createSummaryBox('Heat Sinks Built');
-      const fluxMitigationElements = createSummaryBox('Flux mitigation');
-      const coolingElements = createSummaryBox('Cooling per Second');
-      const controlElements = createSummaryBox('Control');
+      const countElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.heatSinksBuilt', 'Heat Sinks Built'));
+      const fluxMitigationElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.fluxMitigation', 'Flux mitigation'));
+      const coolingElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.coolingPerSecond', 'Cooling per Second'));
+      const controlElements = createSummaryBox(getMegaHeatSinkText('ui.projects.megaHeatSink.control', 'Control'));
       const coolingToggle = createToggleButton({
-        onLabel: 'On',
-        offLabel: 'Off',
+        onLabel: getMegaHeatSinkText('ui.projects.common.on', 'On'),
+        offLabel: getMegaHeatSinkText('ui.projects.common.off', 'Off'),
         isOn: this.heatSinksActive
       });
       coolingToggle.id = `${this.name}-cooling-toggle`;
@@ -116,14 +124,14 @@
       const coolingActive = this.heatSinksActive;
       setToggleButtonState(elements.coolingToggle, coolingActive);
       if (!coolingActive) {
-        elements.fluxMitigationValue.textContent = 'Off';
+        elements.fluxMitigationValue.textContent = getMegaHeatSinkText('ui.projects.common.off', 'Off');
       } else if (Number.isFinite(fluxMitigation) && fluxMitigation > 0) {
         elements.fluxMitigationValue.textContent = `${formatValue(fluxMitigation, false, fluxMitigation >= 100 ? 0 : 2)} W/m^2`;
       } else {
         elements.fluxMitigationValue.textContent = '0 W/m^2';
       }
       if (!coolingActive) {
-        elements.coolingValue.textContent = 'Off';
+        elements.coolingValue.textContent = getMegaHeatSinkText('ui.projects.common.off', 'Off');
       } else if (Number.isFinite(coolingPerSecond) && coolingPerSecond > 0) {
         elements.coolingValue.textContent = `${formatValue(coolingPerSecond, false, 2)} K/s`;
       } else {

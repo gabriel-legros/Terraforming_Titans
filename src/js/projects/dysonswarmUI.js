@@ -9,35 +9,43 @@ if (typeof makeCollapsibleCard === 'undefined') {
   } catch (e) {}
 }
 
+function getDysonSwarmText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function renderDysonSwarmUI(project, container) {
   const card = document.createElement('div');
   card.classList.add('dyson-swarm-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Dyson Swarm Collectors</span>
+      <span class="card-title">${getDysonSwarmText('ui.projects.dysonSwarm.title', 'Dyson Swarm Collectors')}</span>
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">Collectors:</span><span id="ds-collectors" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">Power/Collector:</span><span id="ds-power-per" class="stat-value"></span></div>
-        <div class="stat-item"><span class="stat-label">Total Power:</span><span id="ds-total-power" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.collectors', 'Collectors:')}</span><span id="ds-collectors" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.powerPerCollector', 'Power/Collector:')}</span><span id="ds-power-per" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.totalPower', 'Total Power:')}</span><span id="ds-total-power" class="stat-value"></span></div>
       </div>
       <div class="stats-grid two-col collector-cost-container">
         <div class="stat-item">
-          <span class="stat-label">Collector Cost:</span>
+          <span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.collectorCost', 'Collector Cost:')}</span>
           <span id="ds-collector-cost" class="stat-value"></span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">Expansion</span>
+          <span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.expansion', 'Expansion')}</span>
           <span id="ds-expansion-rate" class="stat-value"></span>
         </div>
       </div>
       <div class="progress-button-container dyson-progress-container"><button id="ds-start" class="progress-button"></button></div>
       <div class="checkbox-container">
         <input type="checkbox" id="ds-auto">
-        <label for="ds-auto">Auto start</label>
+        <label for="ds-auto">${getDysonSwarmText('ui.projects.autoStart', 'Auto start')}</label>
         <input type="checkbox" id="ds-auto-travel-reset">
-        <label for="ds-auto-travel-reset">Uncheck on travelling</label>
+        <label for="ds-auto-travel-reset">${getDysonSwarmText('ui.projects.uncheckOnTravel', 'Uncheck on travelling')}</label>
       </div>
     </div>`;
   if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
@@ -138,7 +146,9 @@ function updateDysonSwarmUI(project) {
       ? project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)
       : project.collectorProgress > 0;
     const rate = active ? (1000 / project.collectorDuration) : 0;
-    els.expansionRateDisplay.textContent = `${formatNumber(rate, true, 3)} collectors/s`;
+    els.expansionRateDisplay.textContent = getDysonSwarmText('ui.projects.dysonSwarm.collectorsPerSecond', '{value} collectors/s', {
+      value: formatNumber(rate, true, 3)
+    });
   }
   if (els.startButton) {
     els.startButton.parentElement.style.display = '';
@@ -162,22 +172,22 @@ function updateDysonSwarmUI(project) {
   // Check if in continuous mode
   if (project.isCollectorContinuous()) {
     if (project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)) {
-      els.startButton.textContent = 'Continuous';
+      els.startButton.textContent = getDysonSwarmText('ui.projects.status.continuous', 'Continuous');
       els.startButton.style.background = '#4caf50';
     } else {
-      els.startButton.textContent = 'Stopped';
+      els.startButton.textContent = getDysonSwarmText('ui.projects.status.stopped', 'Stopped');
       els.startButton.style.background = '#f44336';
     }
     els.startButton.disabled = true;
   } else if (project.collectorProgress > 0) {
     const pct = ((project.collectorDuration - project.collectorProgress) / project.collectorDuration) * 100;
     const secs = Math.max(0, project.collectorProgress / 1000).toFixed(2);
-    els.startButton.textContent = `Deploying (${secs}s)`;
+    els.startButton.textContent = getDysonSwarmText('ui.projects.dysonSwarm.deploying', 'Deploying ({time}s)', { time: secs });
     els.startButton.style.background = `linear-gradient(to right, #4caf50 ${pct}%, #ccc ${pct}%)`;
   } else {
     const can = project.canStartCollector();
     const dur = Math.round(project.collectorDuration / 1000);
-    els.startButton.textContent = `Deploy Collector (${dur}s)`;
+    els.startButton.textContent = getDysonSwarmText('ui.projects.dysonSwarm.deployCollector', 'Deploy Collector ({time}s)', { time: dur });
     els.startButton.style.background = can ? '#4caf50' : '#f44336';
     els.startButton.disabled = !can;
   }

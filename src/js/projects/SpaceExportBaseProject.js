@@ -12,6 +12,14 @@ class SpaceExportBaseProject extends SpaceshipProject {
     this.pressureUnit = 'Pa';
   }
 
+  getText(path, vars, fallback = '') {
+    try {
+      return t(`ui.projects.spaceExportBase.${path}`, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   getAutomationTemperatureReading() {
     if (typeof terraforming !== 'undefined' && terraforming.temperature) {
       const reading = terraforming.temperature.value;
@@ -180,8 +188,9 @@ class SpaceExportBaseProject extends SpaceshipProject {
       elements.activeDisposalGroupKey = groupKey;
     }
     if (elements.disposalPhaseLabel) {
-      elements.disposalPhaseLabel.textContent =
-        groupKey === 'storageDepotResource' ? 'Which one : ' : 'Phase:';
+      elements.disposalPhaseLabel.textContent = groupKey === 'storageDepotResource'
+        ? this.getText('whichOne', null, 'Which one : ')
+        : this.getText('phase', null, 'Phase:');
     }
     if (elements.disposalPhaseContainer) {
       elements.disposalPhaseContainer.style.display = options.length > 1 ? 'flex' : 'none';
@@ -225,7 +234,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
   
     const waitLabel = document.createElement('label');
     waitLabel.htmlFor = `${this.name}-wait-capacity`;
-    waitLabel.textContent = 'Wait for full capacity';
+    waitLabel.textContent = this.getText('waitForFullCapacity', null, 'Wait for full capacity');
   
     waitCheckboxContainer.appendChild(waitCheckbox);
     waitCheckboxContainer.appendChild(waitLabel);
@@ -245,7 +254,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
 
     const title = document.createElement('h4');
     title.classList.add('section-title');
-    title.textContent = 'Export';
+    title.textContent = this.getText('export', null, 'Export');
     sectionContainer.appendChild(title);
 
     const disposalContainer = document.createElement('div');
@@ -254,14 +263,14 @@ class SpaceExportBaseProject extends SpaceshipProject {
     const groupSelectContainer = document.createElement('div');
     groupSelectContainer.classList.add('disposal-select-container');
     const disposalLabel = document.createElement('label');
-    disposalLabel.textContent = 'Export:';
+    disposalLabel.textContent = this.getText('exportLabel', null, 'Export:');
     const disposalTypeSelect = document.createElement('select');
     disposalTypeSelect.id = `${this.name}-disposal-type-select`;
 
     const phaseSelectContainer = document.createElement('div');
     phaseSelectContainer.classList.add('disposal-select-container');
     const phaseLabel = document.createElement('label');
-    phaseLabel.textContent = 'Phase:';
+    phaseLabel.textContent = this.getText('phase', null, 'Phase:');
     const disposalPhaseSelect = document.createElement('select');
     disposalPhaseSelect.id = `${this.name}-disposal-phase-select`;
 
@@ -543,11 +552,11 @@ class SpaceExportBaseProject extends SpaceshipProject {
       className: 'pressure-control',
       enabledProp: 'disableBelowPressure',
       thresholdProp: 'disablePressureThreshold',
-      labelText: 'Disable if pressure below: ',
+      labelText: this.getText('disableIfPressureBelow', null, 'Disable if pressure below: '),
       datasetKey: 'pressurePa',
       toDisplay: (value) => value * 1000,
       fromDisplay: (value) => value / 1000,
-      unit: 'Pa',
+      unit: this.getText('pa', null, 'Pa'),
       controlElementKey: 'pressureControl',
       checkboxElementKey: 'pressureCheckbox',
       inputElementKey: 'pressureInput',
@@ -561,11 +570,11 @@ class SpaceExportBaseProject extends SpaceshipProject {
       className: 'coverage-control',
       enabledProp: 'disableBelowCoverage',
       thresholdProp: 'disableCoverageThreshold',
-      labelText: 'Disable if coverage below: ',
+      labelText: this.getText('disableIfCoverageBelow', null, 'Disable if coverage below: '),
       datasetKey: 'coveragePercent',
       toDisplay: (value) => value * 100,
       fromDisplay: (value) => Math.max(0, Math.min(100, value)) / 100,
-      unit: '%',
+      unit: this.getText('percent', null, '%'),
       controlElementKey: 'coverageControl',
       checkboxElementKey: 'coverageCheckbox',
       inputElementKey: 'coverageInput',
@@ -590,7 +599,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     control.appendChild(checkbox);
 
     const label = document.createElement('label');
-    label.textContent = 'Disable if temperature below: ';
+    label.textContent = this.getText('disableIfTemperatureBelow', null, 'Disable if temperature below: ');
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
@@ -680,7 +689,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
       elements.pressureInput.value = formatNumber(this.disablePressureThreshold * 1000, true, 2);
     }
     if (elements.pressureUnitLabel) {
-      elements.pressureUnitLabel.textContent = 'Pa';
+      elements.pressureUnitLabel.textContent = this.getText('pa', null, 'Pa');
     }
 
     if (elements.coverageControl) {
@@ -693,12 +702,16 @@ class SpaceExportBaseProject extends SpaceshipProject {
       elements.coverageInput.value = formatNumber(this.disableCoverageThreshold * 100, true, 2);
     }
     if (elements.coverageUnitLabel) {
-      elements.coverageUnitLabel.textContent = '%';
+      elements.coverageUnitLabel.textContent = this.getText('percent', null, '%');
     }
 
     if (elements.disposalPerShipElement) {
       const perShip = this.getShipCapacity();
-      elements.disposalPerShipElement.textContent = `Max Export/Ship: ${formatNumber(perShip, true)}`;
+      elements.disposalPerShipElement.textContent = this.getText(
+        'maxExportPerShip',
+        { value: formatNumber(perShip, true) },
+        `Max Export/Ship: ${formatNumber(perShip, true)}`
+      );
     }
 
     if (elements.totalDisposalElement) {
@@ -712,20 +725,36 @@ class SpaceExportBaseProject extends SpaceshipProject {
       if (this.isContinuous()) {
         const activeShips = this.getActiveShipCount();
         total *= activeShips * (1000 / this.getEffectiveDuration());
-        elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}/s`;
+        elements.totalDisposalElement.textContent = this.getText(
+          'totalExportPerSecond',
+          { value: formatNumber(total, true) },
+          `Total Export: ${formatNumber(total, true)}/s`
+        );
       } else {
-        elements.totalDisposalElement.textContent = `Total Export: ${formatNumber(total, true)}`;
+        elements.totalDisposalElement.textContent = this.getText(
+          'totalExport',
+          { value: formatNumber(total, true) },
+          `Total Export: ${formatNumber(total, true)}`
+        );
       }
       const disposalShortfall = this.disposalShortfallLastTick === true;
       elements.totalDisposalElement.style.color = disposalShortfall ? 'red' : '';
     }
 
     if (elements.maxDisposalText && typeof this.getExportCap === 'function') {
-      elements.maxDisposalText.textContent = `Max Export Capacity: ${formatNumber(this.getExportCap(), true)} /s`;
+      elements.maxDisposalText.textContent = this.getText(
+        'maxExportCapacity',
+        { value: formatNumber(this.getExportCap(), true) },
+        `Max Export Capacity: ${formatNumber(this.getExportCap(), true)} /s`
+      );
     }
     
     if (elements.gainPerResourceElement && this.attributes.fundingGainAmount) {
-        elements.gainPerResourceElement.textContent = `Gain/Resource: ${formatNumber(this.attributes.fundingGainAmount, true)}`;
+        elements.gainPerResourceElement.textContent = this.getText(
+          'gainPerResource',
+          { value: formatNumber(this.attributes.fundingGainAmount, true) },
+          `Gain/Resource: ${formatNumber(this.attributes.fundingGainAmount, true)}`
+        );
     }
 
     if (elements.disposalTypeSelect && elements.disposalPhaseSelect) {

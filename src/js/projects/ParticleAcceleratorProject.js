@@ -27,6 +27,14 @@ class ParticleAcceleratorProject extends Project {
     this.uiElements = null;
   }
 
+  getText(path, vars, fallback = '') {
+    try {
+      return t(`ui.projects.particleAccelerator.${path}`, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   renderUI(container) {
     const card = document.createElement('div');
     card.classList.add('info-card');
@@ -35,7 +43,7 @@ class ParticleAcceleratorProject extends Project {
     header.classList.add('card-header');
     const title = document.createElement('span');
     title.classList.add('card-title');
-    title.textContent = 'Accelerator Design';
+    title.textContent = this.getText('title', null, 'Accelerator Design');
     header.appendChild(title);
     card.appendChild(header);
 
@@ -61,7 +69,7 @@ class ParticleAcceleratorProject extends Project {
       return { box, value, content };
     };
 
-    const radiusBox = createSummaryBox('Target Radius');
+    const radiusBox = createSummaryBox(this.getText('targetRadius', null, 'Target Radius'));
     const radiusValue = radiusBox.value;
 
     const buttonRow = document.createElement('div');
@@ -75,16 +83,16 @@ class ParticleAcceleratorProject extends Project {
       return button;
     };
 
-    const zeroButton = createButton('0', () => this.setRadiusMeters(this.minimumRadiusMeters));
+    const zeroButton = createButton(this.getText('zero', null, '0'), () => this.setRadiusMeters(this.minimumRadiusMeters));
     const minusButton = createButton('', () => this.adjustRadiusBySteps(-1));
     const plusButton = createButton('', () => this.adjustRadiusBySteps(1));
 
     const multiplierRow = document.createElement('div');
     multiplierRow.classList.add('multiplier-container');
-    const divButton = createButton('/10', () => this.scaleStepMeters(1 / STEP_MULTIPLIER), multiplierRow);
-    const mulButton = createButton('x10', () => this.scaleStepMeters(STEP_MULTIPLIER), multiplierRow);
+    const divButton = createButton(this.getText('divideTen', null, '/10'), () => this.scaleStepMeters(1 / STEP_MULTIPLIER), multiplierRow);
+    const mulButton = createButton(this.getText('timesTen', null, 'x10'), () => this.scaleStepMeters(STEP_MULTIPLIER), multiplierRow);
 
-    const maxButton = createButton('Auto', () => this.setMaxAffordableRadius(), multiplierRow);
+    const maxButton = createButton(this.getText('auto', null, 'Auto'), () => this.setMaxAffordableRadius(), multiplierRow);
 
     const controlsWrapper = document.createElement('div');
     controlsWrapper.classList.add('project-radius-controls');
@@ -93,8 +101,10 @@ class ParticleAcceleratorProject extends Project {
     radiusBox.content.classList.add('project-summary-flex');
     radiusBox.content.appendChild(controlsWrapper);
 
-    const { value: bestValue } = createSummaryBox('Largest Built');
-    const { value: researchBoostValue } = createSummaryBox('Advanced Research Boost (New / Current)');
+    const { value: bestValue } = createSummaryBox(this.getText('largestBuilt', null, 'Largest Built'));
+    const { value: researchBoostValue } = createSummaryBox(
+      this.getText('advancedResearchBoost', null, 'Advanced Research Boost (New / Current)')
+    );
 
     body.appendChild(summaryGrid);
 
@@ -131,7 +141,9 @@ class ParticleAcceleratorProject extends Project {
     const stepMeters = this.radiusStepMeters;
 
     const radiusDisplay = `${format(radiusMeters, false, 2)} m`;
-    const bestText = this.bestRadiusMeters > 0 ? `${format(bestMeters, false, 2)} m` : '—';
+    const bestText = this.bestRadiusMeters > 0
+      ? `${format(bestMeters, false, 2)} m`
+      : this.getText('noneBuilt', null, '—');
     const stepDisplay = format(stepMeters, true);
 
     elements.radiusValue.textContent = radiusDisplay;
@@ -141,7 +153,7 @@ class ParticleAcceleratorProject extends Project {
       const currentBoost = this.bestRadiusMeters > 0 ? this.calculateResearchBoost(this.bestRadiusMeters) : null;
       const formatPercent = (value) => `${format(value, false, 2)}%`;
       const newDisplay = formatPercent(newBoost);
-      const currentDisplay = currentBoost !== null ? formatPercent(currentBoost) : '-';
+      const currentDisplay = currentBoost !== null ? formatPercent(currentBoost) : this.getText('noneCurrent', null, '-');
       elements.researchBoostValue.textContent = `${newDisplay} / ${currentDisplay}`;
     }
     elements.minusButton.textContent = `-${stepDisplay}`;
@@ -153,7 +165,9 @@ class ParticleAcceleratorProject extends Project {
     });
 
     const needsIncrease = this.bestRadiusMeters > 0 && this.selectedRadiusMeters <= this.bestRadiusMeters;
-    elements.notice.textContent = needsIncrease ? 'Increase the radius to beat your previous accelerator.' : '';
+    elements.notice.textContent = needsIncrease
+      ? this.getText('increaseNotice', null, 'Increase the radius to beat your previous accelerator.')
+      : '';
     elements.notice.style.display = needsIncrease ? 'block' : 'none';
   }
 

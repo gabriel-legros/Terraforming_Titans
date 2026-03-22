@@ -2,6 +2,14 @@
   const CORE_SURGERY_ACTION_COST = 1e28;
   const CORE_SURGERY_BASE_DURATION = 60000;
 
+  function getApolloCoreSurgeryText(path, fallback, vars) {
+    try {
+      return t(path, vars, fallback);
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   class ApolloCoreSurgeryPlatformProject extends Project {
     constructor(config, name) {
       super(config, name);
@@ -39,25 +47,25 @@
 
     getActivationBlockedReason() {
       if (!this.isCompleted) {
-        return 'Complete the platform first';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.completePlatformFirst', 'Complete the platform first');
       }
       if (this.coreSurgeryActive) {
-        return 'Core surgery already in progress';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.alreadyInProgress', 'Core surgery already in progress');
       }
       if (this.isArtificialWorld()) {
-        return 'Only available on story and random worlds';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.storyAndRandomOnly', 'Only available on story and random worlds');
       }
       if (this.hasNaturalMagnetosphere()) {
-        return 'World already has a natural magnetosphere';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.alreadyHasMagnetosphere', 'World already has a natural magnetosphere');
       }
       if (!this.isKesslerCleared()) {
-        return 'Clear Kessler Skies first';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.clearKesslerFirst', 'Clear Kessler Skies first');
       }
       if (!this.isPulsarCleared()) {
-        return 'Clear Pulsar first';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.clearPulsarFirst', 'Clear Pulsar first');
       }
       if (resources.space.energy.value < CORE_SURGERY_ACTION_COST) {
-        return 'Not enough space energy';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.blocked.notEnoughSpaceEnergy', 'Not enough space energy');
       }
       return '';
     }
@@ -139,7 +147,7 @@
       header.classList.add('card-header');
       const title = document.createElement('span');
       title.classList.add('card-title');
-      title.textContent = 'Core Surgery Controls';
+      title.textContent = getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.title', 'Core Surgery Controls');
       header.appendChild(title);
       card.appendChild(header);
 
@@ -165,9 +173,9 @@
         return value;
       };
 
-      const costValue = createSummaryBox('Activation Cost');
-      const durationValue = createSummaryBox('Surgery Time');
-      const statusValue = createSummaryBox('Status');
+      const costValue = createSummaryBox(getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.activationCost', 'Activation Cost'));
+      const durationValue = createSummaryBox(getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.surgeryTime', 'Surgery Time'));
+      const statusValue = createSummaryBox(getApolloCoreSurgeryText('ui.projects.common.status', 'Status'));
 
       const actionWrapper = document.createElement('div');
       actionWrapper.style.position = 'relative';
@@ -200,7 +208,7 @@
 
       const autoCheckbox = document.createElement('input');
       autoCheckbox.type = 'checkbox';
-      autoCheckbox.setAttribute('aria-label', 'Automatically perform core surgery when possible');
+      autoCheckbox.setAttribute('aria-label', getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.autoStartAriaLabel', 'Automatically perform core surgery when possible'));
       autoToggle.appendChild(autoCheckbox);
 
       const actionLabel = document.createElement('span');
@@ -244,16 +252,20 @@
 
     getStatusText() {
       if (this.coreSurgeryActive) {
-        return `In progress (${Math.max(0, this.coreSurgeryRemainingTime / 1000).toFixed(2)}s left)`;
+        return getApolloCoreSurgeryText(
+          'ui.projects.apolloCoreSurgery.status.inProgress',
+          `In progress (${Math.max(0, this.coreSurgeryRemainingTime / 1000).toFixed(2)}s left)`,
+          { time: Math.max(0, this.coreSurgeryRemainingTime / 1000).toFixed(2) }
+        );
       }
       if (this.hasNaturalMagnetosphere()) {
-        return 'Natural magnetosphere active';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.status.naturalMagnetosphereActive', 'Natural magnetosphere active');
       }
       if (!this.isCompleted) {
-        return 'Platform incomplete';
+        return getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.status.platformIncomplete', 'Platform incomplete');
       }
       const blockedReason = this.getActivationBlockedReason();
-      return blockedReason ? blockedReason : 'Ready';
+      return blockedReason || getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.status.ready', 'Ready');
     }
 
     updateUI() {
@@ -261,16 +273,28 @@
         return;
       }
 
-      this.uiElements.costValue.textContent = `${formatNumber(CORE_SURGERY_ACTION_COST, true)} space energy`;
+      this.uiElements.costValue.textContent = getApolloCoreSurgeryText(
+        'ui.projects.apolloCoreSurgery.spaceEnergyValue',
+        `${formatNumber(CORE_SURGERY_ACTION_COST, true)} space energy`,
+        { value: formatNumber(CORE_SURGERY_ACTION_COST, true) }
+      );
       this.uiElements.durationValue.textContent = formatSeconds(this.getCoreSurgeryDuration() / 1000);
       this.uiElements.statusValue.textContent = this.getStatusText();
 
       if (this.coreSurgeryActive) {
-        this.uiElements.actionLabel.textContent = `Core Surgery in Progress (${Math.max(0, this.coreSurgeryRemainingTime / 1000).toFixed(2)}s)`;
+        this.uiElements.actionLabel.textContent = getApolloCoreSurgeryText(
+          'ui.projects.apolloCoreSurgery.action.inProgress',
+          `Core Surgery in Progress (${Math.max(0, this.coreSurgeryRemainingTime / 1000).toFixed(2)}s)`,
+          { time: Math.max(0, this.coreSurgeryRemainingTime / 1000).toFixed(2) }
+        );
       } else if (this.hasNaturalMagnetosphere()) {
-        this.uiElements.actionLabel.textContent = 'Natural Magnetosphere Established';
+        this.uiElements.actionLabel.textContent = getApolloCoreSurgeryText('ui.projects.apolloCoreSurgery.action.established', 'Natural Magnetosphere Established');
       } else {
-        this.uiElements.actionLabel.textContent = `Perform Core Surgery (${formatNumber(CORE_SURGERY_ACTION_COST, true)} space energy)`;
+        this.uiElements.actionLabel.textContent = getApolloCoreSurgeryText(
+          'ui.projects.apolloCoreSurgery.action.perform',
+          `Perform Core Surgery (${formatNumber(CORE_SURGERY_ACTION_COST, true)} space energy)`,
+          { value: formatNumber(CORE_SURGERY_ACTION_COST, true) }
+        );
       }
       this.uiElements.actionButton.disabled = !this.canStartCoreSurgery();
       this.uiElements.autoCheckbox.checked = this.coreSurgeryAutoStart === true;

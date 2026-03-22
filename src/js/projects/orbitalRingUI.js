@@ -1,20 +1,28 @@
+function getOrbitalRingText(path, vars, fallback = '') {
+  try {
+    return t(`ui.projects.orbitalRing.${path}`, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 function renderOrbitalRingUI(project, container) {
   const card = document.createElement('div');
   card.classList.add('orbital-ring-card');
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-title">Orbital Ring</span>
+      <span class="card-title">${getOrbitalRingText('title', null, 'Orbital Ring')}</span>
     </div>
     <div class="card-body">
       <div class="stats-grid four-col">
-        <div class="stat-item"><span class="stat-label">Rings Built:</span><span id="or-rings-built"></span></div>
-        <div class="stat-item"><span class="stat-label">Max Rings:</span><span id="or-max-rings"></span></div>
-        <div class="stat-item"><span class="stat-label">Current World Ring:</span><span id="or-current-world"></span></div>
+        <div class="stat-item"><span class="stat-label">${getOrbitalRingText('ringsBuilt', null, 'Rings Built:')}</span><span id="or-rings-built"></span></div>
+        <div class="stat-item"><span class="stat-label">${getOrbitalRingText('maxRings', null, 'Max Rings:')}</span><span id="or-max-rings"></span></div>
+        <div class="stat-item"><span class="stat-label">${getOrbitalRingText('currentWorldRing', null, 'Current World Ring:')}</span><span id="or-current-world"></span></div>
         <div class="stat-item">
-          <span class="stat-label">Prepaid Rings: <span id="or-prepay-info" class="info-tooltip-icon">&#9432;</span></span>
+          <span class="stat-label">${getOrbitalRingText('prepaidRings', null, 'Prepaid Rings:')} <span id="or-prepay-info" class="info-tooltip-icon">&#9432;</span></span>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span id="or-prepaid-rings"></span>
-            <button id="or-prepay-button" style="padding: 2px 10px; font-size: 0.85em; line-height: 1.2;">Prepay</button>
+            <button id="or-prepay-button" style="padding: 2px 10px; font-size: 0.85em; line-height: 1.2;">${getOrbitalRingText('prepay', null, 'Prepay')}</button>
           </div>
         </div>
       </div>
@@ -25,7 +33,11 @@ function renderOrbitalRingUI(project, container) {
   const prepayInfo = card.querySelector('#or-prepay-info');
   attachDynamicInfoTooltip(
     prepayInfo,
-    'You can prepay rings for past and current worlds that do not have a ring yet. You cannot prepay for future worlds.'
+    getOrbitalRingText(
+      'prepayTooltip',
+      null,
+      'You can prepay rings for past and current worlds that do not have a ring yet. You cannot prepay for future worlds.'
+    )
   );
   prepayButton.addEventListener('click', () => {
     if (project.prepayRing()) {
@@ -55,9 +67,11 @@ function updateOrbitalRingUI(project) {
       : 0;
   els.maxRingsDisplay.textContent = terraformedWorlds;
   if (spaceManager && spaceManager.currentArtificialKey !== null) {
-    els.currentWorldDisplay.textContent = 'Not allowed on artificial';
+    els.currentWorldDisplay.textContent = getOrbitalRingText('notAllowedOnArtificial', null, 'Not allowed on artificial');
   } else {
-    els.currentWorldDisplay.textContent = project.currentWorldHasRing ? 'Yes' : 'No';
+    els.currentWorldDisplay.textContent = project.currentWorldHasRing
+      ? getOrbitalRingText('yes', null, 'Yes')
+      : getOrbitalRingText('no', null, 'No');
   }
   
   els.prepaidRingsDisplay.textContent = project.prepaidRings;

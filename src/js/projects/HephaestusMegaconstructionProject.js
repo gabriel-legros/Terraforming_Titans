@@ -1,3 +1,11 @@
+function getHephaestusText(path, fallback, vars) {
+  try {
+    return t(path, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 let HephaestusContinuousExpansionBase = null;
 try {
   HephaestusContinuousExpansionBase = ContinuousExpansionProject;
@@ -426,7 +434,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     header.classList.add('card-header');
     const title = document.createElement('span');
     title.classList.add('card-title');
-    title.textContent = 'Hephaestus Yards';
+    title.textContent = getHephaestusText('ui.projects.hephaestus.title', 'Hephaestus Yards');
     header.appendChild(title);
     card.appendChild(header);
 
@@ -452,21 +460,21 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       return { value };
     };
 
-    const totalValue = createSummaryBox('Total Yards').value;
-    const freeValue = createSummaryBox('Unassigned').value;
-    const expansionRateValue = createSummaryBox('Expansion').value;
+    const totalValue = createSummaryBox(getHephaestusText('ui.projects.hephaestus.totalYards', 'Total Yards')).value;
+    const freeValue = createSummaryBox(getHephaestusText('ui.projects.common.unassigned', 'Unassigned')).value;
+    const expansionRateValue = createSummaryBox(getHephaestusText('ui.projects.common.expansion', 'Expansion')).value;
 
     const assignmentGrid = document.createElement('div');
     assignmentGrid.classList.add('hephaestus-assignment-list');
 
     const stepDownButton = document.createElement('button');
-    stepDownButton.textContent = '/10';
+    stepDownButton.textContent = getHephaestusText('ui.projects.common.divideTen', '/10');
     stepDownButton.addEventListener('click', () => {
       this.setAssignmentStep(this.assignmentStep / 10);
       this.updateUI();
     });
     const stepUpButton = document.createElement('button');
-    stepUpButton.textContent = 'x10';
+    stepUpButton.textContent = getHephaestusText('ui.projects.common.timesTen', 'x10');
     stepUpButton.addEventListener('click', () => {
       this.setAssignmentStep(this.assignmentStep * 10);
       this.updateUI();
@@ -476,10 +484,10 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row');
     const headerName = document.createElement('span');
     headerName.classList.add('stat-label');
-    headerName.textContent = 'Project';
+    headerName.textContent = getHephaestusText('ui.projects.hephaestus.project', 'Project');
     const headerValue = document.createElement('span');
     headerValue.classList.add('stat-label');
-    headerValue.textContent = 'Assigned';
+    headerValue.textContent = getHephaestusText('ui.projects.common.assigned', 'Assigned');
     const headerControls = document.createElement('div');
     headerControls.classList.add('hephaestus-assignment-controls');
     const headerButtons = document.createElement('div');
@@ -487,7 +495,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     headerButtons.append(stepDownButton, stepUpButton);
     const weightHeader = document.createElement('span');
     weightHeader.classList.add('stat-label', 'hephaestus-weight-header');
-    weightHeader.textContent = 'Weight';
+    weightHeader.textContent = getHephaestusText('ui.projects.common.weight', 'Weight');
     headerControls.append(headerButtons, weightHeader);
     const headerSpacer = document.createElement('div');
     headerSpacer.classList.add('hephaestus-row-spacer');
@@ -511,7 +519,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       amountEl.classList.add('stat-value');
 
       const zeroButton = document.createElement('button');
-      zeroButton.textContent = '0';
+      zeroButton.textContent = getHephaestusText('ui.projects.common.zero', '0');
       zeroButton.addEventListener('click', () => {
         if (this.autoAssignFlags[key]) {
           return;
@@ -529,7 +537,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
       plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
 
       const maxButton = document.createElement('button');
-      maxButton.textContent = 'Max';
+      maxButton.textContent = getHephaestusText('ui.projects.common.max', 'Max');
       maxButton.addEventListener('click', () => {
         if (this.autoAssignFlags[key]) {
           return;
@@ -558,7 +566,7 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
         this.setAutoAssignTarget(key, autoAssign.checked);
       });
       const autoAssignLabel = document.createElement('span');
-      autoAssignLabel.textContent = 'Auto';
+      autoAssignLabel.textContent = getHephaestusText('ui.projects.common.auto', 'Auto');
       autoAssignLabel.addEventListener('click', () => {
         autoAssign.checked = !autoAssign.checked;
         this.setAutoAssignTarget(key, autoAssign.checked);
@@ -638,7 +646,9 @@ class HephaestusMegaconstructionProject extends HephaestusContinuousExpansionBas
     const step = this.assignmentStep;
     if (elements.expansionRateValue) {
       const rate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
-      elements.expansionRateValue.textContent = `${formatNumber(rate, true, 3)} yards/s`;
+      elements.expansionRateValue.textContent = getHephaestusText('ui.projects.hephaestus.yardsPerSecond', '{value} yards/s', {
+        value: formatNumber(rate, true, 3)
+      });
     }
 
     const activeDyson = this.getActiveDysonKey();

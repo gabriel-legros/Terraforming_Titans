@@ -43,6 +43,14 @@ const SPACE_STORAGE_RESOURCE_KEYS = [
 ];
 const SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY = 'standard';
 
+function getSpaceStorageProjectText(path, vars, fallback = '') {
+  try {
+    return t(`ui.projects.spaceStorage.${path}`, vars, fallback);
+  } catch (error) {
+    return fallback;
+  }
+}
+
 let SpaceStorageContinuousExpansionHelpers = null;
 try {
   SpaceStorageContinuousExpansionHelpers = ContinuousExpansionProject.prototype;
@@ -1217,7 +1225,11 @@ class SpaceStorageProject extends SpaceshipProject {
             })
         )
         .join(', ');
-      elements.costPerShipElement.textContent = `Cost per Shipment: ${costPerShipText}`;
+      elements.costPerShipElement.textContent = getSpaceStorageProjectText(
+        'costPerShipment',
+        { value: costPerShipText },
+        `Cost per Shipment: ${costPerShipText}`
+      );
     }
 
     if (elements.totalCostElement && this.assignedSpaceships != null) {
@@ -1238,7 +1250,11 @@ class SpaceStorageProject extends SpaceshipProject {
               return `${resourceDisplayName}: ${formatNumber(amount, true)}`;
             })
         ).join(', ');
-      elements.resourceGainPerShipElement.textContent = `Gain per Shipment: ${gainPerShipText}`;
+      elements.resourceGainPerShipElement.textContent = getSpaceStorageProjectText(
+        'gainPerShipment',
+        { value: gainPerShipText },
+        `Gain per Shipment: ${gainPerShipText}`
+      );
     }
 
     if (elements.totalGainElement && this.assignedSpaceships != null) {
@@ -1256,7 +1272,11 @@ class SpaceStorageProject extends SpaceshipProject {
       const amount = this.calculateTransferAmount();
       const seconds = this.getShipOperationDuration() / 1000;
       const rate = seconds > 0 ? amount / seconds : 0;
-      elements.transferRateElement.textContent = `Transfer Rate: ${formatNumber(rate, true)}/s`;
+      elements.transferRateElement.textContent = getSpaceStorageProjectText(
+        'transferRate',
+        { value: formatNumber(rate, true) },
+        `Transfer Rate: ${formatNumber(rate, true)}/s`
+      );
     }
   }
 
